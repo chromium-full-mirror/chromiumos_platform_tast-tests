@@ -551,6 +551,12 @@ func (b *BluetoothBluezFacade) PairDevice(ctx context.Context, address, pin stri
 			return errors.Wrap(err, "failed to pair bluetooth device")
 		}
 
+		// BlueZ requires calling Connect() to connect profiles after Pair().
+		testing.ContextLogf(ctx, "Connecting to device at dbus path %q", device.Path())
+		if err := device.Connect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect bluetooth device")
+		}
+
 		// Cleanup pin authentication handling.
 		testing.ContextLogf(ctx, "Removing authentication Agent at dbus path %q", agent.DBusObject().ObjectPath())
 		if err := agent.ClearExportedAgentDelegate(); err != nil {

@@ -42,6 +42,11 @@ func init() {
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
+				Name:              "floss_disabled",
+				Fixture:           "audioUIEnabledWith1BTPeerPowerFlossDisabled",
+				ExtraAttr:         []string{"bluetooth_flaky"},
+			},
+			{
 				Name:              "floss_enabled",
 				Fixture:           "audioUIEnabledWith1BTPeerPowerFlossEnabled",
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
