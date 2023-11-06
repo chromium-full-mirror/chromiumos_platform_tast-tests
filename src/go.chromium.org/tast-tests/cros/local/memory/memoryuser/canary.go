@@ -55,11 +55,15 @@ func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *brows
 
 func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, error) {
 	var cacheApp *ArcLifecycleUnit
+	var previousApp *ArcLifecycleUnit
 	var percApp *ArcLifecycleUnit
 	var fgApp *ArcLifecycleUnit
 	closer := func(ctx context.Context) {
 		if cacheApp != nil {
 			cacheApp.Close(ctx, a)
+		}
+		if previousApp != nil {
+			previousApp.Close(ctx, a)
 		}
 		if percApp != nil {
 			percApp.Close(ctx, a)
@@ -75,7 +79,7 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 		}
 	}()
 
-	if err := InstallArcLifecycleTestApps(ctx, a, 3); err != nil {
+	if err := InstallArcLifecycleTestApps(ctx, a, 4); err != nil {
 		return nil, errors.Wrap(err, "failed to install the test apps")
 	}
 
@@ -84,12 +88,20 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 		return nil, errors.Wrap(err, "failed to run cached app canary")
 	}
 
-	percApp = NewArcLifecycleUnit(1, int64(allocMiB), float64(ratio), nil, false)
+	// The most recently minimized App will have a priority of PREVIOUS_APP_ADJ
+	// so we need to launch another app after our cached app for it to actually
+	// be >= CACHED_APP_MIN_ADJ.
+	previousApp = NewArcLifecycleUnit(1, 0, 1.0, nil, true)
+	if err := previousApp.Run(ctx, a, tconn); err != nil {
+		return nil, errors.Wrap(err, "failed to run previous app")
+	}
+
+	percApp = NewArcLifecycleUnit(2, int64(allocMiB), float64(ratio), nil, false)
 	if err := percApp.Run(ctx, a, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to run perceptible app canary")
 	}
 
-	fgApp = NewArcLifecycleUnit(2, int64(allocMiB), float64(ratio), nil, false)
+	fgApp = NewArcLifecycleUnit(3, int64(allocMiB), float64(ratio), nil, false)
 	if err := fgApp.Run(ctx, a, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to run foreground app canary")
 	}

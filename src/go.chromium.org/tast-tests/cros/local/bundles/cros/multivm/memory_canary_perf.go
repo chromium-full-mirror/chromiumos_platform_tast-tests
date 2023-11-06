@@ -116,16 +116,6 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	allocationManager := memoryuser.NewMemoryAllocationManager(ctx, memoryuser.Host, allocationMiB, allocatorComplessionRatio, a)
 	defer allocationManager.Cleanup(cleanupCtx)
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to create TestConn for opening canaries")
-	}
-	canaryCloser, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
-	if err != nil {
-		return err
-	}
-	defer canaryCloser(cleanupCtx)
-
 	appKills, err := memoryuser.NewArcMemoryKillObserver(ctx, a)
 	if err != nil {
 		return errors.Wrap(err, "failed to observe ARC kills")
@@ -144,6 +134,16 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	}
 	defer vmmmsKills.Close()
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create TestConn for opening canaries")
+	}
+	canaryCloser, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
+	if err != nil {
+		return err
+	}
+	defer canaryCloser(cleanupCtx)
+
 	var allocationTime time.Duration = 0
 	var allocationTimeline []allocationTimelineEntry
 
@@ -151,8 +151,9 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	start := time.Now()
 	lastLogTime := start.Add(-11 * time.Second)
 	allocationNum := 0
-	// Keep allocating until the canary dies.
-	for {
+	// Keep allocating until the highest priority app or tab has been seen by all
+	// observers.
+	for appKills.Foreground == nil || tabDiscards.ProtectedBackground == nil || vmmmsKills.FocusedApp == nil {
 		if err := allocationManager.AssertNoDeadAllocator(); err != nil {
 			return errors.Wrap(err, "an allocator is killed before the canary")
 		}
@@ -231,13 +232,6 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		}
 		if vmmmsKills.Error != nil {
 			return errors.Wrap(vmmmsKills.Error, "failed while waiting for VMMMS kill")
-		}
-
-		if appKills.Foreground != nil && tabDiscards.ProtectedBackground != nil && vmmmsKills.FocusedApp != nil {
-			// We saw the highest priority in all the observers, so we're done. There
-			// might be some missing priorities, but if there are that is a failure
-			// which we will check below.
-			break
 		}
 	}
 	totalAllocated := allocationManager.TotalAllocatedMiB()
