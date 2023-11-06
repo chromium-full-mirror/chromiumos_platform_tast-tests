@@ -12,8 +12,10 @@ die() {
 }
 
 usage() {
-  die "Usage: $(basename "$0") <block|virtiofs|virtiofs_dax|p9|scsi> <src> " \
-      "<mountpoint> <output> <jobs>"
+  die "Usage: $(basename "$0") " \
+      "<block|block_packed|block_tpq|block_packed_tpq|" \
+      "virtiofs|virtiofs_dax|p9|scsi> " \
+      "<src> <mountpoint> <output> <jobs>"
 }
 
 main() {
@@ -38,7 +40,7 @@ main() {
   mount -t tmpfs run /run
 
   case "${kind}" in
-    block | block_packed | scsi | pmem)
+    block | block_packed | block_tpq | block_packed_tpq | scsi | pmem)
       [[ -b "${src}" ]] || die "${src} is not a block device"
       mkfs.ext4 "${src}"
       mount "${src}" "${mountpoint}"
