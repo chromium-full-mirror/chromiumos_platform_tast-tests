@@ -7,6 +7,7 @@ package familylink
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -26,7 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ParentalControlsLink,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify 'Parental controls' setting opens https://families.google.com/families when Play Store is disabled",
+		Desc:         "Verify 'Parental controls' setting opens family website when Play Store is disabled",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-sw-engprod@google.com",
@@ -50,9 +51,8 @@ func init() {
 	})
 }
 
-const familiesURL = "https://families.google.com/families"
+const familyURL = "myaccount.google.com/family/details"
 
-// ParentalControlsLink verifies 'Parental controls' opens https://families.google.com/families.
 func ParentalControlsLink(ctx context.Context, s *testing.State) {
 	var (
 		cr    = s.FixtValue().(chrome.HasChrome).Chrome()
@@ -81,9 +81,10 @@ func ParentalControlsLink(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	browserWindow := nodewith.NameContaining("Families").HasClass("BrowserFrame")
+	nodeName := "Your family on Google"
+	browserWindow := nodewith.NameContaining(nodeName).HasClass("BrowserFrame")
 	if s.Param().(browser.Type) == browser.TypeLacros {
-		browserWindow = nodewith.NameContaining("Families").ClassNameRegex(regexp.MustCompile(`^ExoShellSurface(-\d+)?$`))
+		browserWindow = nodewith.NameContaining(nodeName).ClassNameRegex(regexp.MustCompile(`^ExoShellSurface(-\d+)?$`))
 	}
 
 	if err := uiauto.Combine("open parental controls",
@@ -101,8 +102,7 @@ func ParentalControlsLink(ctx context.Context, s *testing.State) {
 	if len(tabs) != 1 {
 		s.Fatalf("Failed to verify the expected page opened: unexpected tab number: want 1, got %d", len(tabs))
 	}
-
-	if tabs[0].URL != familiesURL {
-		s.Fatalf("Failed to verify the expected page opened: want %q, got %q", familiesURL, tabs[0].URL)
+	if !strings.Contains(tabs[0].URL, familyURL) {
+		s.Errorf("Failed to verify the expected page opened: want %q, got %q", familyURL, tabs[0].URL)
 	}
 }
