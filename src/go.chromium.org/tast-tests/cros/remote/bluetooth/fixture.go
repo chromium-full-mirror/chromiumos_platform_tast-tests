@@ -153,6 +153,10 @@ type fixtureFeatures struct {
 	// true, or disabled if false.
 	EnableChromeUI bool
 
+	// EnableAudioUI will enable audio service through chrome UI. EnableChromeUI and
+	// EnableAudioUI cannot be enabled at the same time.
+	EnableAudioUI bool
+
 	// BTPeerCount requires the specified amount of btpeers to exist in the
 	// testbed and connects to them during setup. A testbed can have more btpeers
 	// than the BTPeerCount, but only that many connections are configured.
@@ -497,7 +501,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	var primaryDUTUsername, primaryDUTPassword string
 	for dutIndex, dutConfig := range tf.fv.DUTConfigs {
 		dutName := dutConfig.DUT.HostName()
-		s.Logf("SetUp for DUT %s started", dutName)
+		s.Logf("=== SetUp for DUT %s started ===", dutName)
 
 		// Start capturing incoming and outgoing bluez and floss D-Bus messages.
 		bluetoothServicesDBusMonitor, err := log.StartDBusMonitorCollector(
@@ -530,19 +534,8 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)
 		}
 
-		// Configure and enable desired DUT bluetooth stack.
-		s.Logf("Configuring DUT %s bluetooth stack to use %s", dutName, btStack.String())
-		if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
-			StackType: btStack,
-		}); err != nil {
-			s.Fatalf("Failed to configure DUT %s bluetooth stack as %s: %v", dutName, btStack.String(), err)
-		}
-		s.Logf("Enabling bluetooth on DUT %s", dutName)
-		if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatalf("Failed to enable %s bluetooth stack on DUT %s: %v", btStack.String(), dutName, err)
-		}
-
 		if tf.features.EnableChromeUI {
+			s.Log("=== Configure Chrome UI ===")
 			// Resolve chrome user credentials.
 			var chromeUsername, chromePassword string
 			s.Log("Resolving chrome user credentials")
@@ -608,8 +601,13 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			}); err != nil {
 				s.Fatalf("Failed to log into chrome on DUT %s: %v", dutName, err)
 			}
+		} else if tf.features.EnableAudioUI {
+			s.Log("=== Configure Audio Service with Chrome UI ===")
+			if _, err := tf.fv.AudioService.New(ctx, &empty.Empty{}); err != nil {
+				s.Fatal("Failed to login Chrome for audio service: ", err)
+			}
 		} else {
-			s.Logf("Stopping Chrome UI job on DUT %s", dutName)
+			s.Logf("=== Stopping Chrome UI job on DUT %s ===", dutName)
 			if _, err := dutConfig.UpstartService.StopJob(ctx, &platform.StopJobRequest{
 				JobName: "ui",
 			}); err != nil {
@@ -617,6 +615,16 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 			}
 		}
 
+		// Configure and enable desired DUT bluetooth stack.
+		s.Logf("=== Configuring DUT %s Bluetooth stack to use %s ===", dutName, btStack.String())
+		if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
+			StackType: btStack,
+		}); err != nil {
+			s.Fatalf("Failed to configure DUT %s bluetooth stack as %s: %v", dutName, btStack.String(), err)
+		}
+		if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatalf("Failed to enable %s bluetooth stack on DUT %s: %v", btStack.String(), dutName, err)
+		}
 		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
 			s.Errorf("Failed to reset state of DUT %s: %v", dutName, err)
 		}
@@ -624,11 +632,12 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		// Set up power test
 		if tf.features.PowerEnabled {
 			// Create message SetupRequest
-			s.Log("Set up for power measurement")
+			s.Log("=== Configure Power Measurement ===")
 			setupRequest := power.SetupRequest{Fixture: power.SetupRequest_NO_UI_NO_WIFI_BT,
 				IntervalSecond: DefaultBTPowerIntervalSecond}
 
-			if tf.features.EnableChromeUI {
+			if tf.features.EnableChromeUI || tf.features.EnableAudioUI {
+				s.Log("Allow UI for power measurement")
 				setupRequest = power.SetupRequest{Fixture: power.SetupRequest_UI_NO_WIFI_BT,
 					IntervalSecond: DefaultBTPowerIntervalSecond}
 			}
@@ -645,16 +654,14 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 					s.Error("Clean up power metrics failed: ", err)
 				}
 			}(cleanupCtx)
-
-			s.Logf("Set up of power measurement for DUT %s completed", dutName)
 		}
 
 		if btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ {
 			if _, err = tf.fv.BluetoothService.SetDebugLogLevels(ctx, &bts.SetDebugLogLevelsRequest{Level: 1}); err != nil {
-				testing.ContextLog(ctx, "Failed to set log level: ", err)
+				s.Log("Failed to set log level: ", err)
 			}
+			s.Log("Set debug log level")
 		}
-
 		s.Logf("Set up for DUT %s completed", dutName)
 	}
 

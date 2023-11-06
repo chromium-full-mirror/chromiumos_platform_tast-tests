@@ -128,6 +128,66 @@ func init() {
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "audioUIEnabledWith1BTPeerPowerFlossEnabled",
+		Desc: "Enables audio with Chrome UI, enables Bluetooth Floss stack with power measurements, and connects to 1 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			EnableAudioUI:  true,
+			BTPeerCount:    1,
+			FlossEnabled:   true,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+			serviceDepAudioService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "audioUIEnabledWith1BTPeerPowerFlossDisabled",
+		Desc: "Enables audio with Chrome UI, enables Bluetooth BlueZ stack with power measurements, and connects to 1 btpeer",
+		Contacts: []string{
+			"jiangzp@google.com",
+			"chromeos-bt-team@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI: false,
+			EnableAudioUI:  true,
+			BTPeerCount:    1,
+			FlossEnabled:   false,
+			PowerEnabled:   true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+			serviceDepMetricsService,
+			serviceDepAudioService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "chromeUIDisabledWith1BTPeerPowerFlossDisabled",
 		Desc: "Disables Chrome UI, enables Bluetooth BlueZ stack with power measurements, and connects to 1 btpeer",
 		Contacts: []string{

@@ -37,6 +37,9 @@ func TurnOffServoKeyboardIfOn(ctx context.Context, s *testing.State) {
 	}
 }
 
+// DiscoverAndPairTimeout is the common timeout for function DiscoverAndPairDevice.
+const DiscoverAndPairTimeout = 45 * time.Second
+
 // DiscoverAndPairDevice will use the provided bluetooth service to turn on
 // discovery, wait until the device is discovered, turn discovery back off,
 // then pair the device. A nil return means that the device has been
