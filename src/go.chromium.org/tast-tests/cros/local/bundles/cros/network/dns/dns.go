@@ -28,7 +28,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/certs"
@@ -205,10 +204,15 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		if err := toggleSecureDNS(ctx, checked.True); err != nil {
 			return err
 		}
-
-		rb := nodewith.Role(role.RadioButton).Name("With your current service provider")
-		if err := ac.LeftClick(rb)(ctx); err != nil {
-			return errors.Wrap(err, "failed to enable automatic mode")
+		selectNode := nodewith.Name("Select DNS Provider").Role(role.ComboBoxSelect)
+		optionNode := nodewith.Name("OS default (when available)").Role(role.ListBoxOption)
+		if err := uiauto.Combine("enable secure DNS automatic mode",
+			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
+			ac.LeftClick(selectNode),
+			ac.WithTimeout(10*time.Second).WaitUntilExists(optionNode),
+			ac.LeftClick(optionNode),
+		)(ctx); err != nil {
+			return err
 		}
 		break
 	case DoHAlwaysOn:
@@ -223,64 +227,19 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		}
 		defer kb.Close(ctx)
 
-		m, err := input.Mouse(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get mouse")
-		}
-		defer m.Close(ctx)
-
-		// On some devices, the text field for the provider might be hidden by the bottom bar.
-		// Scroll down then focus on the text field.
-		if err := m.ScrollDown(); err != nil {
-			return errors.Wrap(err, "failed to scroll down")
-		}
-
-		// Find secure DNS text field through its parent.
-		gcs, err := ac.NodesInfo(ctx, nodewith.Role(role.GenericContainer))
-		if err != nil {
-			return errors.Wrap(err, "failed to get generic container nodes")
-		}
-		nth := -1
-		for i, e := range gcs {
-			if attr, ok := e.HTMLAttributes["id"]; ok && attr == "secureDnsInput" {
-				nth = i
-				break
-			}
-		}
-		if nth < 0 {
-			return errors.Wrap(err, "failed to find secure DNS text field")
-		}
-		tf := nodewith.Role(role.TextField).Ancestor(nodewith.Role(role.GenericContainer).Nth(nth))
-		if err := ac.FocusAndWait(tf)(ctx); err != nil {
-			return errors.Wrap(err, "failed to focus on the text field")
-		}
-
-		rg := nodewith.Role(role.RadioGroup)
-		if err := ac.WaitForLocation(rg)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for radio group")
-		}
-		rbsInfo, err := ac.NodesInfo(ctx, nodewith.Role(role.RadioButton).Ancestor(rg))
-		if err != nil {
-			return errors.Wrap(err, "failed to get secure DNS radio buttons information")
-		}
-		var rbLocation coords.Rect
-		var found = false
-		for _, e := range rbsInfo {
-			if e.Name != "With your current service provider" {
-				rbLocation = e.Location
-				found = true
-				break
-			}
-		}
-		if !found {
-			return errors.Wrap(err, "failed to find secure DNS radio button")
-		}
-
+		selectNode := nodewith.Name("Select DNS Provider").Role(role.ComboBoxSelect)
+		optionNode := nodewith.Name("Add custom DNS service provider").Role(role.ListBoxOption)
+		textNode := nodewith.Name("Enter custom DNS query URL").Role(role.TextField)
 		if err := uiauto.Combine("enable DoH always on with a custom provider",
-			// Click use current service provider radio button.
-			ac.MouseClickAtLocation(0, rbLocation.CenterPoint()),
+			// Click add custom DNS service provider option.
+			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
+			ac.LeftClick(selectNode),
+			ac.WithTimeout(10*time.Second).WaitUntilExists(optionNode),
+			ac.LeftClick(optionNode),
+			// Wait for custom DNS provider text field to appear.
+			ac.WithTimeout(10*time.Second).WaitUntilExists(textNode),
+			ac.EnsureFocused(textNode),
 			// Input a custom DoH provider.
-			ac.LeftClick(tf),
 			kb.AccelAction("Ctrl+A"),
 			kb.AccelAction("Backspace"),
 			kb.TypeAction(dohProvider),
