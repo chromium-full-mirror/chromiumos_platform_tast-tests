@@ -34,7 +34,6 @@ func init() {
 		BugComponent: "b:1361410",
 		Contacts: []string{
 			"chromeos-platform-power@google.com",
-			"dml@chromium.org",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational"},
