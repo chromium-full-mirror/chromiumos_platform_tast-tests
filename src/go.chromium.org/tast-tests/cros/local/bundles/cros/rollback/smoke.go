@@ -19,6 +19,7 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -35,6 +36,8 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
 		Fixture:      fixture.CleanOwnership,
+		// CleanOwnership doesn't work on reven/flex.
+		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("reven")),
 		Params: []testing.Param{{
 			Name: "oobe_confg_restore_running",
 			Val:  oobeConfigRestoreRunningTest,
