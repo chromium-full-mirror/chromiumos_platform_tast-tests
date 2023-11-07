@@ -18223,7 +18223,6 @@ func (p *DeviceSystemWideTracingEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 824. WebAppSettings
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type WebAppSettings struct {
 	Stat Status
@@ -25172,6 +25171,7 @@ func (p *EssentialSearchEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1101. LegacyTechReportAllowlist
 // This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type LegacyTechReportAllowlist struct {
 	Stat Status
@@ -27152,7 +27152,6 @@ func (p *ShowHumanPresenceSensorScreenEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1170. PasswordSharingEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type PasswordSharingEnabled struct {
 	Stat Status
@@ -27245,7 +27244,6 @@ func (p *IPv6ReachabilityOverrideEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1173. UserFeedbackWithLowLevelDebugDataAllowed
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type UserFeedbackWithLowLevelDebugDataAllowed struct {
 	Stat Status
@@ -27376,6 +27374,102 @@ func (p *SiteSearchSettings) SetProto(m *protoreflect.Message) {
 }
 func (p *SiteSearchSettings) Equal(iface interface{}) bool {
 	v, ok := iface.([]*SiteSearchSettingsValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1177. PrivateNetworkAccessRestrictionsEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type PrivateNetworkAccessRestrictionsEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *PrivateNetworkAccessRestrictionsEnabled) Name() string {
+	return "PrivateNetworkAccessRestrictionsEnabled"
+}
+func (p *PrivateNetworkAccessRestrictionsEnabled) Scope() Scope          { return ScopeUser }
+func (p *PrivateNetworkAccessRestrictionsEnabled) Status() Status        { return p.Stat }
+func (p *PrivateNetworkAccessRestrictionsEnabled) UntypedV() interface{} { return p.Val }
+func (p *PrivateNetworkAccessRestrictionsEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *PrivateNetworkAccessRestrictionsEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *PrivateNetworkAccessRestrictionsEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1182. FeedbackSurveysEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type FeedbackSurveysEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *FeedbackSurveysEnabled) Name() string          { return "FeedbackSurveysEnabled" }
+func (p *FeedbackSurveysEnabled) Scope() Scope          { return ScopeUser }
+func (p *FeedbackSurveysEnabled) Status() Status        { return p.Stat }
+func (p *FeedbackSurveysEnabled) UntypedV() interface{} { return p.Val }
+func (p *FeedbackSurveysEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *FeedbackSurveysEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *FeedbackSurveysEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1183. DeskAPIDeskSaveAndShareEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeskAPIDeskSaveAndShareEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeskAPIDeskSaveAndShareEnabled) Name() string          { return "DeskAPIDeskSaveAndShareEnabled" }
+func (p *DeskAPIDeskSaveAndShareEnabled) Scope() Scope          { return ScopeUser }
+func (p *DeskAPIDeskSaveAndShareEnabled) Status() Status        { return p.Stat }
+func (p *DeskAPIDeskSaveAndShareEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeskAPIDeskSaveAndShareEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeskAPIDeskSaveAndShareEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DeskAPIDeskSaveAndShareEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
 	if !ok {
 		return ok
 	}
@@ -29069,6 +29163,12 @@ func newByName(name string) (Policy, error) {
 		return &DeviceFlexHwDataForProductImprovementEnabled{}, nil
 	case "SiteSearchSettings":
 		return &SiteSearchSettings{}, nil
+	case "PrivateNetworkAccessRestrictionsEnabled":
+		return &PrivateNetworkAccessRestrictionsEnabled{}, nil
+	case "FeedbackSurveysEnabled":
+		return &FeedbackSurveysEnabled{}, nil
+	case "DeskAPIDeskSaveAndShareEnabled":
+		return &DeskAPIDeskSaveAndShareEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -29078,9 +29178,31 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefUsbDeviceIdInclusive struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
+}
+
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
+}
+
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
+}
+
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -29101,6 +29223,11 @@ type Reffile_transfer_source_destination_schema struct {
 	FileSystemType string `json:"file_system_type"`
 }
 
+type RefUsbDeviceIdInclusive struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
+}
+
 type RefBookmarkType struct {
 	Children     []*RefBookmarkType `json:"children,omitempty"`
 	Name         string             `json:"name"`
@@ -29108,9 +29235,9 @@ type RefBookmarkType struct {
 	Url          string             `json:"url"`
 }
 
-type RefUsbDeviceId struct {
-	ProductId int `json:"product_id"`
-	VendorId  int `json:"vendor_id"`
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
 }
 
 type RefWeeklyTimeIntervals struct {
@@ -29128,47 +29255,9 @@ type RefWeeklyTime struct {
 	Time      int    `json:"time"`
 }
 
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
-}
-
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
-}
-
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
-}
-
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
-}
-
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
-}
-
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
+type RefUsbDeviceId struct {
+	ProductId int `json:"product_id"`
+	VendorId  int `json:"vendor_id"`
 }
 
 type RefPowerManagementDelays struct {
@@ -29181,6 +29270,17 @@ type RefPowerManagementDelaysDelays struct {
 	IdleWarning int `json:"IdleWarning"`
 	ScreenDim   int `json:"ScreenDim"`
 	ScreenOff   int `json:"ScreenOff"`
+}
+
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
+}
+
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
 // ****************************************************************************
