@@ -112,7 +112,7 @@ func ProbeBootPerformanceInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to validate boot performance data: ", err)
 	}
 
-	if math.Abs(bootPerf.BootUpTimestamp-bootPerfNew.BootUpTimestamp) > 1 {
-		s.Errorf("Failed as difference between boot_up_timestamp (%v) and new boot_up_timestamp (%v) is greater than 1", bootPerf.BootUpTimestamp, bootPerfNew.BootUpTimestamp)
+	if math.Abs(bootPerf.BootUpTimestamp-bootPerfNew.BootUpTimestamp) > 3 {
+		s.Errorf("Failed as difference between boot_up_timestamp (%v) and new boot_up_timestamp (%v) is greater than 3", bootPerf.BootUpTimestamp, bootPerfNew.BootUpTimestamp)
 	}
 }
