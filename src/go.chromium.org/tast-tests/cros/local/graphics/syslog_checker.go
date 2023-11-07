@@ -48,8 +48,10 @@ var (
 			`VM_L2_PROTECTION_FAULT_STATUS`, // b/271644551
 			// mediatek
 			`mtk-iommu .*: fault`,
+			`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`,
 			// Qualcomm
 			`qcom-venus .*video-codec: SFR message from FW:`,
+			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
 		}, "|")),
 	}
 	disableSysLogCheck = false
