@@ -1731,23 +1731,74 @@ func (h *Helper) DisableDevBootUSB(ctx context.Context) error {
 }
 
 // WaitFirmwareScreen waits until the DUT is in firmware with the keyboard
-// ready on x86 devices. On other platforms, such as arm, it sleeps for the
-// h.Config.FirmwareScreen duration.
-func (h *Helper) WaitFirmwareScreen(ctx context.Context) error {
+// ready by actively sending the ec command '8042 kbd', which is supported
+// mostly on x86 devices. On platforms that don't support this command, such
+// as arm devices, it sleeps for the full FirmwareScreen duration.
+// Note: Ensure that the DUT was fully shut down first before calling
+// WaitFirmwareScreen.
+// To-do: Create a new input parameter called 'timeout', that takes the
+// maximum amount of time in waiting for the firmware screen, for example,
+// FirmwareScreenRecMode to wait for the recovery screen.
+func (h *Helper) WaitFirmwareScreen(ctx context.Context) (retErr error) {
+	type ecCmd8042NotFound struct {
+		*errors.E
+	}
+	reKeyboardEnabled := `Enabled: (\d)`
+	re8042NotFound := `(Command '8042'|8042: command) not found( or ambiguous)?`
+	checkKeyboardEnabled := `(` + reKeyboardEnabled + `|` + re8042NotFound + `)`
 	if h.Config.HasECCapability(ECX86) {
+		defer func() {
+			testing.ContextLog(ctx, "Restoring chan")
+			if err := h.Servo.RestoreDUTConsoleChannelMask(ctx); err != nil {
+				retErr = errors.Join(retErr, errors.Wrap(err, "failed to send 'chan restore'"))
+			}
+		}()
+		if err := h.Servo.SaveDUTConsoleChannelMask(ctx); err != nil {
+			return errors.Wrap(err, "failed to send 'chan save' to EC")
+		}
+		if err := h.Servo.SetDUTConsoleChannelMask(ctx, 0); err != nil {
+			return errors.Wrap(err, "failed to send 'chan 0' to EC")
+		}
 		// The longest duration we've seen in waiting for keyboard enabled
 		// was slightly over 1 min, for example on a brya/anahera machine.
 		// Set a 120 seconds timeout to cover margins.
-		maxDurForWaitFirmwareKeyboard := 2 * time.Minute
-		if err := h.Servo.WaitFirmwareKeyboard(ctx, maxDurForWaitFirmwareKeyboard); err != nil {
-			return errors.Wrap(err, "waiting for DUT to be in firmware with keyboard ready")
+		// To-do: Replace 2 mins with the timeout given to WaitFirmwareScreen.
+		err := testing.Poll(ctx, func(ctx context.Context) error {
+			out, err := h.Servo.RunECCommandGetOutput(ctx, "8042 kbd", []string{checkKeyboardEnabled})
+			if err != nil {
+				return err
+			}
+			if match := regexp.MustCompile(re8042NotFound).FindStringSubmatch(out[0][0]); match != nil {
+				return testing.PollBreak(&ecCmd8042NotFound{E: errors.New("did not find ec command '8042'")})
+			}
+			if keyboardEnabled := regexp.MustCompile(reKeyboardEnabled).FindStringSubmatch(out[0][0]); keyboardEnabled != nil {
+				if val, err := strconv.ParseInt(string(keyboardEnabled[1]), 0, 0); err != nil {
+					return errors.Wrap(err, "failed to parse keyboard enabled flag")
+				} else if val == 1 {
+					// GoBigSleepLint: On some machines, for example
+					// zork/gumboz and hatch/nightfury, we've seen that when
+					// the keyboard was found enabled, there might still be a
+					// slight delay until the firmware screen was displayed.
+					// Sleeping for 1 second usually helped.
+					if err := testing.Sleep(ctx, 1*time.Second); err != nil {
+						return errors.Wrap(err, "failed to sleep")
+					}
+					return nil
+				}
+			}
+			return errors.Errorf("failed to find keyboard enabled after %s", 2*time.Minute)
+		}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: 2 * time.Minute})
+		_, ok := err.(*ecCmd8042NotFound)
+		if err == nil || !ok {
+			return err
 		}
-	} else {
-		testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
-		// GoBigSleepLint: Wait for firmware screen.
-		if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-			return errors.Wrapf(err, "sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
-		}
+	}
+	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Wait for firmware screen.
+	// To-do: Replace h.Config.FirmwareScreen with the timeout given to
+	// WaitFirmwareScreen.
+	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
 	}
 	return nil
 }

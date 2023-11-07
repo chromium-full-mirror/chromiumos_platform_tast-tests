@@ -254,7 +254,7 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 	}
 
 	// Waiting until keyboard is ready so we know we made it to recovery screen and recovery reason is set.
-	if err := h.Servo.WaitFirmwareKeyboard(ctx, h.Config.FirmwareScreen); err != nil {
+	if err := h.Servo.WaitFirmwareKeyboardNoCmd(ctx, h.Config.FirmwareScreen); err != nil {
 		// If this fails, this is the same as sleeping for the waitTimeout
 		testing.ContextLog(ctx, "Failed to wait for keyboard: ", err)
 	}
