@@ -86,8 +86,8 @@ func combineTabs(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context
 	}()
 
 	tab := nodewith.Role(role.Tab).HasClass("Tab")
-	tabPIP := tab.NameContaining("/pip.html - ")
-	tabNoPIP := tab.NameRegex(regexp.MustCompile("/pip.html$"))
+	tabPIP := tab.NameContaining("/pip.html - Video playing in picture-in-picture mode")
+	tabNoPIP := tab.NameRegex(regexp.MustCompile(`/pip.html - Memory usage - (\d+.\d+) MB$`))
 
 	firstTabRect, err := ui.Location(ctx, tabNoPIP)
 	if err != nil {
