@@ -35,6 +35,21 @@ func init() {
 		PostTestTimeout: 5 * time.Second,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCrosHealthdFixture(),
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crosHealthdRunningAndRebootDUT",
+		Desc: "The croshealthd daemon is available and running after reboot",
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com", // Team mailing list
+			"kerker@google.com",           // Fixture maintainer
+			"yycheng@google.com",          // Fixture maintainer
+		},
+		SetUpTimeout:    30 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCrosHealthdFixture(),
 		// Reboot the DUT before starting the healthd fixture to ensure that
 		// sufficient resources are available by resetting to clean state. For
 		// example, the cpu_stress and cpu_cache routine requires 628 MiB memory

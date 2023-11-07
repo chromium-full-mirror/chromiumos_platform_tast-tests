@@ -27,12 +27,12 @@ func init() {
 			// Contact: yycheng@google.com
 			Name:    "memory_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineMemoryV2},
-			Fixture: "crosHealthdRunning",
+			Fixture: "crosHealthdRunningAndRebootDUT",
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "cpu_stress_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
-			Fixture: "crosHealthdRunning",
+			Fixture: "crosHealthdRunningAndRebootDUT",
 			// TODO(b/295497926): Promote tast to critical
 			ExtraAttr: []string{"informational"},
 		}, {
@@ -46,7 +46,7 @@ func init() {
 			// Contact: yycheng@google.com
 			Name:    "cpu_cache_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
-			Fixture: "crosHealthdRunning",
+			Fixture: "crosHealthdRunningAndRebootDUT",
 			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational"},
 		}, {
