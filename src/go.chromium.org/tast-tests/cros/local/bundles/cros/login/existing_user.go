@@ -18,6 +18,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type passwordType int
+
+const (
+	gaiaPassword passwordType = iota
+	localPassword
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ExistingUser,
@@ -33,25 +40,37 @@ func init() {
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
-			"ui.gaiaPoolDefault",
 		},
 		Vars:    []string{"floatingworkspace.cros_username", "floatingworkspace.cros_password"},
 		Timeout: 2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
+		Params: []testing.Param{
+			{
+				Val: gaiaPassword,
+			}, {
+				Name:      "local",
+				Val:       localPassword,
+				ExtraAttr: []string{"informational"},
+			},
+		},
 	})
 }
 
 // ExistingUser logs in to an existing user account from the login screen.
 func ExistingUser(ctx context.Context, s *testing.State) {
+	password := s.Param().(passwordType)
+
 	var creds chrome.Creds
 
 	// Log in and log out to create a user pod on the login screen.
 	func() {
-		cr, err := chrome.New(ctx, chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}), chrome.TryReuseSession())
-		if err != nil {
-			s.Fatal("Chrome login failed: ", err)
+		var cr *chrome.Chrome
+		switch password {
+		case gaiaPassword:
+			cr, creds = logInWithGaiaPassword(ctx, s)
+		case localPassword:
+			cr, creds = logInWithLocalPassword(ctx, s)
 		}
 		defer cr.Close(ctx)
-		creds = cr.Creds()
 
 		// This is needed for reven tests, as login flow there relies on the existence of a device setting.
 		if err := userutil.WaitForOwnership(ctx, cr); err != nil {
@@ -64,12 +83,16 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
 	// screen with a user pod (instead of the OOBE login screen).
-	cr, err := chrome.New(
-		ctx,
+	opts := []chrome.Option{
 		chrome.NoLogin(),
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-	)
+	}
+	if password == localPassword {
+		opts = append(opts, chrome.EnableFeatures("LocalPasswordForConsumers"))
+	}
+
+	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
@@ -80,11 +103,6 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tLoginConn)
-
-	// Wait for the login screen to be ready for password entry.
-	if st, err := lockscreen.WaitState(ctx, tLoginConn, func(st lockscreen.State) bool { return st.ReadyForPassword }, 30*time.Second); err != nil {
-		s.Fatalf("Failed waiting for the login screen to be ready for password entry: %v, last state: %+v", err, st)
-	}
 
 	// Wait for the login screen to be ready for password entry.
 	if err := lockscreen.WaitForPasswordEntry(ctx, tLoginConn, 30*time.Second); err != nil {
@@ -110,4 +128,73 @@ func ExistingUser(ctx context.Context, s *testing.State) {
 	if err := ash.WaitForShelf(ctx, tLoginConn, 30*time.Second); err != nil {
 		s.Fatal("Shelf did not appear after logging in: ", err)
 	}
+}
+
+// logInWithGaiaPassword logs the real user in and returns the credentials that
+// can be user for the offline login afterwards.
+func logInWithGaiaPassword(ctx context.Context, s *testing.State) (c *chrome.Chrome, creds chrome.Creds) {
+	cr, err := chrome.New(ctx,
+		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}),
+		chrome.TryReuseSession())
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
+	return cr, cr.Creds()
+}
+
+// logInWithLocalPassword logs the fake user in with local password and returns
+// the credentials that can be user for the offline login afterwards.
+func logInWithLocalPassword(ctx context.Context, s *testing.State) (c *chrome.Chrome, creds chrome.Creds) {
+	const (
+		localPassword = "testpass"
+	)
+
+	cr, err := chrome.New(ctx,
+		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}),
+		chrome.DontSkipOOBEAfterLogin(),
+		chrome.EnableFeatures("LocalPasswordForConsumers"),
+	)
+	if err != nil {
+		s.Fatal("Chrome login failed: ", err)
+	}
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect Test API: ", err)
+	}
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
+	// After the Gaia login we need to navigate to the local password setup screen
+	// to set the local password (instead of the Gaia password).
+	// TODO(b/309740812): Replace the OOBE calls with one API to setup a local
+	// password.
+	oobeConn, err := cr.WaitForOOBEConnection(ctx)
+	if err != nil {
+		s.Fatal("Failed to wait for OOBE connection: ", err)
+	}
+	defer oobeConn.Close()
+	if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('local-password-setup')", nil); err != nil {
+		s.Fatal("Failed to advance to the 'local-password-setup' screen: ", err)
+	}
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.isReadyForTesting()"); err != nil {
+		s.Fatal("Failed to wait for the LocalPasswordSetupScreen to be visible: ", err)
+	}
+	if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPassword(pw); }`, localPassword); err != nil {
+		s.Fatal("Failed to enter local password: ", err)
+	}
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.isDone()"); err != nil {
+		s.Fatal("Failed to wait for the done step to be visible: ", err)
+	}
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.clickDone()", nil); err != nil {
+		s.Fatal("Failed to click on done button: ", err)
+	}
+	if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
+		// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
+		s.Log("Failed to call skip post login screens: ", err)
+	}
+	if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
+		s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
+	}
+
+	return cr, chrome.Creds{User: cr.Creds().User, Pass: localPassword}
 }
