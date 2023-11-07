@@ -19,8 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -174,42 +172,30 @@ func DataLeakPreventionRulesListFilesArc(ctx context.Context, s *testing.State) 
 	}
 
 	// Copy the file to Play files then cancel the warning.
-	if err := copyToPlayfiles(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
+	if err := copyToPlayfiles(ctx, ui, filesApp, files.DlFileName); err != nil {
 		s.Fatal("Failed to copy the file: ", err)
 	}
-	cancelButton := nodewith.Role(role.Button).Name("Cancel").First()
-	if err := uiauto.Combine("Click cancel button",
-		filesApp.WaitUntilExists(cancelButton),
-		ui.DoDefault(cancelButton),
-		filesApp.EnsureFileGone(files.DlFileName, 10*time.Second),
-	)(ctx); err != nil {
+
+	if err := files.CancelWarningAndVerify(ctx, ui, tconn, files.DlFileName); err != nil {
 		s.Fatal("Failed to cancel the warning: ", err)
 	}
 
 	// Copy the file to Play files then proceed the warning.
-	if err := copyToPlayfiles(ctx, ui, filesApp, keyboard, files.DlFileName); err != nil {
+	if err := copyToPlayfiles(ctx, ui, filesApp, files.DlFileName); err != nil {
 		s.Fatal("Failed to copy the file: ", err)
 	}
-	proceedButton := nodewith.Role(role.Button).Name("Copy anyway").First()
-	if err := uiauto.Combine("Click proceed button",
-		filesApp.WaitUntilExists(proceedButton),
-		ui.DoDefault(proceedButton),
-		filesApp.WithTimeout(10*time.Second).WaitForFile(files.DlFileName),
-	)(ctx); err != nil {
+
+	if err := files.AcceptWarningAndVerify(ctx, ui, tconn, files.DlFileName); err != nil {
 		s.Fatal("Failed to proceed the warning: ", err)
 	}
 
 	if err := files.IsFileManaged(ctx, ui, tconn, keyboard, files.DlFileName, false); err != nil {
 		s.Error("File is managed when it shouldn't be: ", err)
 	}
-
-	if err := filesApp.DeleteFileOrFolder(keyboard, files.DlFileName)(ctx); err != nil {
-		s.Error("Failed to delete file: ", err)
-	}
 }
 
 // copyToPlayfiles tries to copy a file to Play files/Pictures.
-func copyToPlayfiles(ctx context.Context, ui *uiauto.Context, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string) error {
+func copyToPlayfiles(ctx context.Context, ui *uiauto.Context, f *filesapp.FilesApp, filename string) error {
 	if err := uiauto.Combine("copy the file to Play files/Pictures",
 		f.OpenDownloads(),
 		f.CopyFileToClipboard(filename),
