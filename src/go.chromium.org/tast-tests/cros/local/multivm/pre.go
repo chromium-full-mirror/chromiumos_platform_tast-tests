@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -36,6 +37,13 @@ var TabManagerDelegateChromeOptionsVMMMS = ChromeOptions{
 	ExtraArgs:      []string{"--disable-features=AshUrgentDiscardingFromPerformanceManager"},
 	Timeout:        chrome.LoginTimeout,
 	BrowserType:    browser.TypeAsh,
+}
+
+// NoSyncChromeOptions defines special chrome options that prevent background sync.
+var NoSyncChromeOptions = ChromeOptions{
+	Timeout:     chrome.LoginTimeout,
+	BrowserType: browser.TypeAsh,
+	ExtraArgs:   arc.DisableSyncFlags(),
 }
 
 // LacrosChromeOptions creates Lacros Chrome.
@@ -149,6 +157,18 @@ var arcStartedVMMMSTabManagerDelegatePre = NewMultiVMPrecondition(
 // starts ARCVM.
 func ArcStartedVMMMSTabManagerDelegate() testing.Precondition {
 	return arcStartedVMMMSPre
+}
+
+var arcStartedNoSyncPre = NewMultiVMPrecondition(
+	"multivm_arc_nosync",
+	NewStateManager(
+		NoSyncChromeOptions,
+		DefaultARCOptions,
+	).SetForceActivate(true))
+
+// ArcStartedNoSync returns a Precondition that logs into Chrome and starts ARCVM.
+func ArcStartedNoSync() testing.Precondition {
+	return arcStartedNoSyncPre
 }
 
 var arcLacrosStartedPre = NewMultiVMPrecondition(
