@@ -423,30 +423,34 @@ func (cli *WifiClient) GetCaptivePortalList(ctx context.Context) (string, error)
 	return res.CaptivePortalList, err
 }
 
-// TurnOffBgscan turns off the DUT's background scan, and returns a shortened ctx and a restoring function.
-func (cli *WifiClient) TurnOffBgscan(ctx context.Context) (context.Context, func() error, error) {
+// TurnOffBgAndFgscan turns off the DUT's background and foreground scan, and
+// returns a shortened ctx and a restoring function.
+func (cli *WifiClient) TurnOffBgAndFgscan(ctx context.Context) (context.Context, func() error, error) {
 	ctxForRestoreBgConfig := ctx
 	ctx, cancel := ctxutil.Shorten(ctxForRestoreBgConfig, 2*time.Second)
 
-	testing.ContextLog(ctx, "Disable the DUT's background scan")
+	testing.ContextLog(ctx, "Disable the DUT's background and foreground scan")
 	bgscanResp, err := cli.ShillServiceClient.GetBgscanConfig(ctx, &empty.Empty{})
 	if err != nil {
 		return ctxForRestoreBgConfig, nil, err
 	}
 	oldBgConfig := bgscanResp.Config
 
-	turnOffBgConfig := wifi.BgscanConfig{
+	// Setting long interval affects foreground scans as well as background
+	// scans and setting it to 0 disables periodic scanning.
+	turnOffBgAndFgConfig := wifi.BgscanConfig{
 		Method:        shillconst.DeviceBgscanMethodNone,
-		LongInterval:  oldBgConfig.LongInterval,
+		LongInterval:  0,
 		ShortInterval: oldBgConfig.ShortInterval,
 	}
-	if _, err := cli.ShillServiceClient.SetBgscanConfig(ctx, &wifi.SetBgscanConfigRequest{Config: &turnOffBgConfig}); err != nil {
+	if _, err := cli.ShillServiceClient.SetBgscanConfig(ctx, &wifi.SetBgscanConfigRequest{Config: &turnOffBgAndFgConfig}); err != nil {
 		return ctxForRestoreBgConfig, nil, err
 	}
 
 	return ctx, func() error {
 		cancel()
-		testing.ContextLog(ctxForRestoreBgConfig, "Restore the DUT's background scan config: ", oldBgConfig)
+		testing.ContextLogf(ctxForRestoreBgConfig, "Restore the DUT's background scan config: %s and foreground scan interval: %d",
+			oldBgConfig, oldBgConfig.LongInterval)
 		_, err := cli.ShillServiceClient.SetBgscanConfig(ctxForRestoreBgConfig, &wifi.SetBgscanConfigRequest{Config: oldBgConfig})
 		return err
 	}, nil

@@ -53,13 +53,13 @@ func MalformedProbeResp(ctx context.Context, s *testing.State) {
 
 	// We'll use `iw scan` to trigger background scan, turn it off
 	// in shill so we won't race with shill on the device.
-	ctx, restoreBgscan, err := tf.WifiClient().TurnOffBgscan(ctx)
+	ctx, restoreBgAndFgscan, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
 	if err != nil {
-		s.Fatal("Failed to turn off background scan: ", err)
+		s.Fatal("Failed to turn off background and/or foreground scan: ", err)
 	}
 	defer func() {
-		if err := restoreBgscan(); err != nil {
-			s.Error("Failed to restore background scan config: ", err)
+		if err := restoreBgAndFgscan(); err != nil {
+			s.Error("Failed to restore background and/or foreground scan config: ", err)
 		}
 	}()
 

@@ -42,20 +42,20 @@ type ContParam struct {
 
 // ContTest holds all variables to be accessible for the whole continuity test.
 type ContTest struct {
-	tf          *wificell.TestFixture
-	r           router.StandardWithBridgeAndVeth
-	pcap        support.Capture
-	clientMAC   string
-	br          [2]string
-	veth        [2]string
-	mac         [2]net.HardwareAddr
-	apOps       [2][]hostapd.Option
-	ap          [2]*hostapd.Server
-	dserv       *dhcp.Server
-	ftEnabled   bool
-	iface       string
-	restoreBg   func() error
-	servicePath string
+	tf             *wificell.TestFixture
+	r              router.StandardWithBridgeAndVeth
+	pcap           support.Capture
+	clientMAC      string
+	br             [2]string
+	veth           [2]string
+	mac            [2]net.HardwareAddr
+	apOps          [2][]hostapd.Option
+	ap             [2]*hostapd.Server
+	dserv          *dhcp.Server
+	ftEnabled      bool
+	iface          string
+	restoreBgAndFg func() error
+	servicePath    string
 }
 
 var apID int
@@ -145,13 +145,13 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 	defer destroyIfNotExported()
 
 	var err error
-	ctx, ct.restoreBg, err = ct.tf.WifiClient().TurnOffBgscan(ctx)
+	ctx, ct.restoreBgAndFg, err = ct.tf.WifiClient().TurnOffBgAndFgscan(ctx)
 	if err != nil {
-		s.Fatal("Failed to turn off the background scan: ", err)
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
 	}
 	ds.push(func() {
-		if err := ct.restoreBg(); err != nil {
-			s.Error("Failed to restore the background scan config: ", err)
+		if err := ct.restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
 		}
 	})
 

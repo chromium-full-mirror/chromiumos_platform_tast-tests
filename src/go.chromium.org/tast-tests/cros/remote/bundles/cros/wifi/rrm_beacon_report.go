@@ -39,6 +39,7 @@ func init() {
 		Desc: "Verifies that the DUT responds properly to beacon report requests",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+			"matthewmwang@chromium.org",       // Test author
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
@@ -105,13 +106,13 @@ func RRMBeaconReport(ctx context.Context, s *testing.State) {
 		beaconRepInfoSz = binary.Size(beaconRepInfo{})
 	)
 	tf := s.FixtValue().(*wificell.TestFixture)
-	ctx, restoreBg, err := tf.WifiClient().TurnOffBgscan(ctx)
+	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
 	if err != nil {
-		s.Fatal("Failed to turn off the background scan: ", err)
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
 	}
 	defer func() {
-		if err := restoreBg(); err != nil {
-			s.Error("Failed to restore the background scan config: ", err)
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
 		}
 	}()
 

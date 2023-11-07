@@ -61,13 +61,13 @@ func MARBSSIDRoam(ctx context.Context, s *testing.State) {
 		}(ctx)
 	}
 
-	ctx, restoreBg, err := tf.WifiClient().TurnOffBgscan(ctx)
+	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
 	if err != nil {
-		s.Fatal("Failed to turn off the background scan: ", err)
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
 	}
 	defer func() {
-		if err := restoreBg(); err != nil {
-			s.Error("Failed to restore the background scan config: ", err)
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
 		}
 	}()
 
