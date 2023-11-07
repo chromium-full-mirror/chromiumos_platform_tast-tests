@@ -22,21 +22,23 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
-		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
 			// Contact: yycheng@google.com
-			Name: "cpu_stress_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
+			Name:    "cpu_stress_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
+			Fixture: "crosHealthdRunningAndRebootDUT",
 			// TODO(b/295497926): Promote tast to critical
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
-			Name: "audio_driver",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
+			Name:    "audio_driver",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
-			Name: "cpu_cache_v2",
-			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
+			Name:    "cpu_cache_v2",
+			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
+			Fixture: "crosHealthdRunningAndRebootDUT",
 			// TODO(b/281766836): Promote tast to critical
 			ExtraAttr: []string{"informational"},
 		}}})

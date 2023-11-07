@@ -24,28 +24,31 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
-		Fixture:      "crosHealthdRunning",
 		// TODO(b/277548688): Monitor test results and promote stable tests to critical.
 		Params: []testing.Param{{
 			// Contact: byronlee@google.com
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
+			Fixture:           "crosHealthdRunning",
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
 			// Contact: byronlee@google.com
 			Name:              "battery_health",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryHealth),
+			Fixture:           "crosHealthdRunning",
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
 			// Contact: yycheng@google.com
-			Name: "urandom",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
+			Name:    "urandom",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineURandom),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: dennyh@google.com
 			Name:      "smartctl_check",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
+			Fixture:   "crosHealthdRunning",
 			ExtraAttr: []string{"informational"},
 			// TODO(b/306086502): Remove unnecessary software deps.
 			ExtraSoftwareDeps: []string{"smartctl"},
@@ -54,20 +57,24 @@ func init() {
 			// Contact: yycheng@google.com
 			Name:      "cpu_cache",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
+			Fixture:   "crosHealthdRunningAndRebootDUT",
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: yycheng@google.com
 			Name:      "cpu_stress",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
+			Fixture:   "crosHealthdRunningAndRebootDUT",
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: yycheng@google.com
-			Name: "floating_point_accuracy",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
+			Name:    "floating_point_accuracy",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineFloatingPointAccurary),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "nvme_self_test",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineNVMESelfTest),
+			Fixture:           "crosHealthdRunning",
 			ExtraAttr:         []string{"informational"},
 			Timeout:           3 * time.Minute,
 			ExtraSoftwareDeps: []string{"nvme"},
@@ -76,6 +83,7 @@ func init() {
 			// Contact: dennyh@google.com
 			Name:      "nvme_wear_level",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineNVMEWearLevel),
+			Fixture:   "crosHealthdRunning",
 			ExtraAttr: []string{"informational"},
 			// nvme_wear_level requires specific offsets in the nvme log that
 			// are only currently defined for wilco devices.
@@ -83,76 +91,91 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
 			// Contact: yycheng@google.com
-			Name: "prime_search",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
+			Name:    "prime_search",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutinePrimeSearch),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "lan_connectivity",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
+			Name:    "lan_connectivity",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineLanConnectivity),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
 			Name:      "gateway_can_be_pinged",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineGatewayCanBePinged),
+			Fixture:   "crosHealthdRunning",
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "dns_resolver_present",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
+			Name:    "dns_resolver_present",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "dns_resolution",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
+			Name:    "dns_resolution",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDNSResolverPresent),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
 			Name:      "memory",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
+			Fixture:   "crosHealthdRunningAndRebootDUT",
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: byronlee@google.com
 			Name:      "sensitive_sensor",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
+			Fixture:   "crosHealthdRunning",
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
+			Fixture:           "crosHealthdRunning",
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint_alive",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
+			Fixture:           "crosHealthdRunning",
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
+			Fixture:           "crosHealthdRunning",
 			ExtraAttr:         []string{"informational"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 		}, {
 			// Contact: byronlee@google.com
 			Name:              "bluetooth_power",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothPower),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			// Contact: byronlee@google.com
 			Name:              "bluetooth_discovery",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothDiscovery),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			// Contact: byronlee@google.com
 			Name:              "bluetooth_scanning",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBluetoothScanning),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Bluetooth()),
 		}, {
 			// Contact: byronlee@google.com
-			Name: "disk_read",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
+			Name:    "disk_read",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDiskRead),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
 			Name:      "power_button",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
+			Fixture:   "crosHealthdRunning",
 			ExtraAttr: []string{"informational"},
 		}},
 	})
