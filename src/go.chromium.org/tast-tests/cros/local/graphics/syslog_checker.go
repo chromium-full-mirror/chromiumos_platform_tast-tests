@@ -34,6 +34,7 @@ var (
 			// msm, freedreno
 			`hangcheck recover!`,
 			// amdgpu
+			`amdgpu_job_timedout.*ring \S+ timeout`, // DRM_ERROR
 			`GPU reset`,
 			`IB test failed on gfx`,         // kernel 5.x, b/307550145
 			`failed testing IB on GFX ring`, // kernel 4.x, b/307550145
