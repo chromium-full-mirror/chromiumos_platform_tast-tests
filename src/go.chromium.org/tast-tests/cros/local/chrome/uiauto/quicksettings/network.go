@@ -29,7 +29,11 @@ func NavigateToNetworkDetailedView(ctx context.Context, tconn *chrome.TestConn) 
 	// The quicksettings could be collapsed during navigating to the certain view,
 	// typically caused by pop-up window, notifications or other display rendering event, retrying it is essential.
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := Expand(ctx, tconn); err != nil {
+		// Hide then show quicksettings to force its state to update.
+		if err := Hide(ctx, tconn); err != nil {
+			return err
+		}
+		if err := Show(ctx, tconn); err != nil {
 			return err
 		}
 

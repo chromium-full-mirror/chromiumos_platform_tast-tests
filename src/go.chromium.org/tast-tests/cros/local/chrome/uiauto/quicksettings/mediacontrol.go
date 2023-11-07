@@ -52,7 +52,7 @@ func UnpinMediaControlsPod(tconn *chrome.TestConn) uiauto.Action {
 // are already open.
 func NavigateToMediaControlsSubpage(tconn *chrome.TestConn, title string) uiauto.Action {
 	return func(ctx context.Context) error {
-		if err := Expand(ctx, tconn); err != nil {
+		if err := Show(ctx, tconn); err != nil {
 			return err
 		}
 
