@@ -9,3 +9,6 @@ const DefaultUser = "0"
 
 // DownloadDir is Android's default downloads directory.
 const DownloadDir = "/sdcard/Download/"
+
+// NearbyShareDir is Android's default directory for receiving Nearby Shares.
+const NearbyShareDir = DownloadDir + "Nearby Share/"
