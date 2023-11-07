@@ -6,8 +6,10 @@ package firmware
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -18,14 +20,14 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var (
 	originalBios        string
 	downgradeBios       string
-	originalMe          string
-	downgradeMe         string
 	meImageRelativePath string
 	spiMeVersion        string
 	downgradeMeVersion  string
@@ -38,10 +40,11 @@ var (
 )
 
 const (
-	defaultTempPath = "/usr/local/tmp/"
-	defaultUpdater  = "/usr/sbin/chromeos-firmwareupdate"
-	meBlob          = "me_rw.version"
-	fwSectionA      = "FW_MAIN_A"
+	defaultTempPath      = "/usr/local/tmp/"
+	defaultUpdater       = "/usr/sbin/chromeos-firmwareupdate"
+	meRwVersionFilename  = "me_rw.version"
+	meRwMetadataFilename = "me_rw.metadata"
+	fwSectionA           = "FW_MAIN_A"
 )
 
 func init() {
@@ -51,6 +54,7 @@ func init() {
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
 		BugComponent: "b:270200529", // ChromeOS > Platform > System > Firmware > FAFT > Infra
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
+		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Timeout:      40 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -67,22 +71,6 @@ func init() {
 			},
 		},
 	})
-}
-
-func isCsmeExist(ctx context.Context, s *testing.State, binPath string) bool {
-	s.Logf("Checking if %s file present in image: %s ", meBlob, binPath)
-	h := s.FixtValue().(*fixture.Value).Helper
-
-	out, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", binPath, "print", "-r", fwSectionA).Output()
-	if err != nil {
-		s.Fatal("Failed to execute cbfstool: ", err)
-	}
-	outs := string(out)
-	if !strings.Contains(outs, meBlob) {
-		s.Logf("%s is not present", meBlob)
-		return false
-	}
-	return true
 }
 
 func getFwName(ctx context.Context, s *testing.State) string {
@@ -130,10 +118,6 @@ func getCurrentBiosImage(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("SPI Bios is stored at: ", originalBios)
-	if !isCsmeExist(ctx, s, originalBios) {
-		s.Fatal("me_rw.version not present in image, Skipping test")
-	}
-
 }
 
 func getDowngradeBiosImage(ctx context.Context, s *testing.State) {
@@ -163,9 +147,6 @@ func getDowngradeBiosImage(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Downgrade Bios is stored at: ", downgradeBios)
-	if !isCsmeExist(ctx, s, downgradeBios) {
-		s.Fatal("me_rw.version not present in image, Skipping test")
-	}
 }
 
 func compareFmapScheme(ctx context.Context, s *testing.State) {
@@ -204,20 +185,62 @@ func cbfsRead(ctx context.Context, s *testing.State, binPath, region, blob, file
 	}
 }
 
-func getImageCsmeRwVersion(ctx context.Context, s *testing.State, binPath, filename string) string {
+// getImageCsmeRwVersion extracts the ME RW version from the given firmware image. Newer firmware
+// stores the version in a CBFS file called me_rw.version. Older firmware stores it in
+// me_rw.metadata, which contains both the version and a hash. Check which of these is present,
+// extract the version from it, and return it as a string, e.g. "13.50.15.1521".
+func getImageCsmeRwVersion(ctx context.Context, s *testing.State, binPath string) string {
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	cbfsRead(ctx, s, binPath, fwSectionA, meBlob, filename)
-
-	meVersionExtractCtx := fmt.Sprintf("hexdump -C %s |  cut -c 9- | cut -d'|' -f 2", filename)
-	meVersionBytes, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", meVersionExtractCtx).Output(ssh.DumpLogOnError)
+	// List CBFS files using cbfstool.
+	out, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", binPath, "print", "-r", fwSectionA).Output()
 	if err != nil {
-		s.Fatal("Failed to parse CSME version from ME binary: ", err)
+		s.Fatal("Failed to execute cbfstool: ", err)
+	}
+	outs := string(out)
+
+	// Check of which of me_rw.version and me_rw.metadata is present.
+	var versionFilename string
+	hasMeRwVersion := strings.Contains(outs, meRwVersionFilename)
+	hasMeRwMetadata := strings.Contains(outs, meRwMetadataFilename)
+	if hasMeRwVersion && hasMeRwMetadata {
+		s.Fatalf("Image contains both %s and %s", meRwVersionFilename, meRwMetadataFilename)
+	} else if !hasMeRwVersion && !hasMeRwMetadata {
+		s.Fatalf("Image contains neither %s nor %s", meRwVersionFilename, meRwMetadataFilename)
+	} else if hasMeRwVersion {
+		versionFilename = meRwVersionFilename
+		s.Logf("Getting ME RW version from %s", meRwVersionFilename)
+	} else {
+		versionFilename = meRwMetadataFilename
+		s.Logf("Getting ME RW version from %s", meRwMetadataFilename)
 	}
 
-	var meVersion = string(meVersionBytes)
-	meVersion = strings.Trim(meVersion, ". \n")
-	return meVersion
+	// Extract the file from CBFS and read its contents as a byte array.
+	file := imageDir + "me_rw_version.bin"
+	cbfsRead(ctx, s, binPath, fwSectionA, versionFilename, file)
+
+	bytes, err := linuxssh.ReadFile(ctx, h.DUT.Conn(), file)
+	if err != nil {
+		s.Fatal("Failed to read ME RW version file from DUT: ", err)
+	}
+
+	// Extract the version as a string.
+	var version string
+	if hasMeRwVersion {
+		// me_rw.version just contains the version as a string.
+		version = strings.TrimSpace(string(bytes))
+	} else {
+		// The first 8 bytes of me_rw.metadata contain the version. Each pair of bytes is
+		// converted to a decimal int, and they're concatenated with dots in between.
+		var nums []string
+		for i := 0; i < 4; i++ {
+			num := binary.LittleEndian.Uint16(bytes[i*2 : i*2+2])
+			nums = append(nums, strconv.FormatUint(uint64(num), 10))
+		}
+		version = strings.Join(nums, ".")
+	}
+
+	return version
 }
 
 func getActiveCsmeRwVersion(ctx context.Context, s *testing.State) string {
@@ -275,12 +298,10 @@ func isMeRwBlobsIdentical(ctx context.Context, s *testing.State) bool {
 
 func getCsmeVersions(ctx context.Context, s *testing.State) {
 	// Get the version of me_rw in the spi bios
-	originalMe = imageDir + "me_original.bin"
-	spiMeVersion = getImageCsmeRwVersion(ctx, s, originalBios, originalMe)
+	spiMeVersion = getImageCsmeRwVersion(ctx, s, originalBios)
 
 	// Get the version of me_rw in the downgrade bios
-	downgradeMe = imageDir + "me_downgrade.bin"
-	downgradeMeVersion = getImageCsmeRwVersion(ctx, s, downgradeBios, downgradeMe)
+	downgradeMeVersion = getImageCsmeRwVersion(ctx, s, downgradeBios)
 
 	// Get active CSME RW version from cbmem -1
 	activeMeVersion = getActiveCsmeRwVersion(ctx, s)
