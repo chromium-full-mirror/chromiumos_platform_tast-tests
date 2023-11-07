@@ -6,9 +6,10 @@ package wwcb
 
 import (
 	"context"
+	"image"
 	"image/color"
+	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -24,13 +25,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var (
-	// PhotoPattern is the filename format of photos taken by CCA.
-	photoPattern = regexp.MustCompile(`^IMG_\d{8}_\d{6}[^.]*\.jpg$`)
-	// VideoPattern is the filename format of videos recorded by CCA.
-	videoPattern = regexp.MustCompile(`^VID_\d{8}_\d{6}[^.]*\.mp4$`)
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCARecordFromExternalCamera,
@@ -40,8 +34,7 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "ExtCameraID", "wwcbIPPowerIp"},
-		Data:         []string{utils.VideoFile},
+		Vars:         []string{"ExtCameraID"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
@@ -50,7 +43,20 @@ func init() {
 		},
 	})
 }
+
+// TODO: Since this function is verify big, need to refactor into more functions and utils.
 func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
+	/*
+		1. Boot and loging to ChromeOS.
+		2. Plug the USB webcam to the Chromebook. (turn on USB Test Fixture)
+		3. Launch ""Camera"" app.
+		4. Press the camera switch button.
+		5. Take a photo.
+		6. Check the photo looks good.
+		7. Change the camera app to Video mode.
+		8. Take a one minute video.
+		9. Check the video looks good.
+	*/
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -73,101 +79,119 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	// Initialize fixtures to find the connected devices.
+	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
+	appsSvc := pb.NewAppsServiceClient(cl.Conn)
+	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
+	fs := dutfs.NewClient(cl.Conn)
+
+	// Open the red image on the external display.
+	testImageFilename := "test_image_red_color.jpg"
+	testImageFilepath := filepath.Join(utils.MyFilesPath, testImageFilename)
+	testImage := utils.GenerateImage(3840, 2160, color.RGBA{255, 0, 0, 255})
+	if err := utils.WriteImageOnDUT(ctx, fs, testImage, testImageFilepath); err != nil {
+		s.Fatal("Failed to write test image on DUT: ", err)
+	}
+	defer fs.Remove(cleanupCtx, testImageFilepath)
+
+	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
+		s.Fatal("Failed to verify display count: ", err)
+	}
+
+	if _, err := utils.OpenGalleryOnDisplay(ctx, appsSvc, uiautoSvc, displaySvc, 1, testImageFilename); err != nil {
+		s.Fatal("Failed to open file in Gallery on expected display: ", err)
+	}
+	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			uiTreeResponse, err := uiautoSvc.GetUITree(ctx, &ui.GetUITreeRequest{})
+			if err != nil {
+				s.Log("Unable to get UI tree: ", err)
+			}
+
+			if err := os.WriteFile(filepath.Join(s.OutDir(), "ui_tree.txt"), []byte(uiTreeResponse.UiTree), 0644); err != nil {
+				s.Log("Unable to save UI tree on the host: ", err)
+			}
+		}
+	}(cleanupCtx)
+
+	// Retrieve the built-in camera.
+	builtinDevices, err := utils.USBCamerasFromV4L2Test(ctx, dut)
+	if err != nil {
+		s.Fatal("Failed to get built-in devices from V4L2: ", err)
+	}
+	if len(builtinDevices) == 0 {
+		s.Fatal("Expect to get at least one built-in device, but get nothing")
+	}
+	testing.ContextLog(ctx, "Found built-in camera: ", builtinDevices)
+
+	// Connect the external camera via controlling the fixture.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	appsSvc := pb.NewAppsServiceClient(cl.Conn)
-	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
-	fs := dutfs.NewClient(cl.Conn)
-	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
-
-	testImageFile := filepath.Join(utils.MyFilesPath, utils.PictureFile)
-	testImage := utils.GenerateImage(3840, 2160, color.RGBA{255, 0, 0, 255})
-	if err := utils.WriteImageOnDUT(ctx, fs, testImage, testImageFile); err != nil {
-		s.Fatal("Failed to write test image on DUT: ", err)
-	}
-	defer fs.Remove(cleanupCtx, testImageFile)
-
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		s.Fatal("Failed to verify display count: ", err)
-	}
-	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
-		s.Fatal("Failed to launch Files app: ", err)
-	}
-	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60})
-	galleryWindow, err := utils.OpenMediaFileWithGallery(ctx, uiautoSvc, utils.PictureFile)
+	extCamera, err := utils.ConnectExternalCamera(ctx, dut, extCameraID)
 	if err != nil {
-		s.Fatal("Failed to open media file on Files app: ", err)
+		s.Fatal("Failed to plug in external camera: ", err)
 	}
-	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
+	testing.ContextLogf(ctx, "Found external camera: %s", extCamera)
 
-	if err := utils.ClickOnMaximizeButton(ctx, uiautoSvc, galleryWindow); err != nil {
-		s.Fatal("Failed to click maximize button on the Gallery window: ", err)
-	}
-	if _, err := displaySvc.SwitchWindowToDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: 1, WindowTitle: galleryWindow}); err != nil {
-		s.Fatal("Failed to switch Gallery window to external display: ", err)
-	}
-
-	// Close files window.
-	appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60})
-
+	// Launch Camera app.
 	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Camera", TimeoutSecs: 60}); err != nil {
-		s.Fatal("Failed to launch camera app: ", err)
+		s.Fatal("Failed to launch Camera app: ", err)
 	}
 	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Camera", TimeoutSecs: 60})
+
 	if err := utils.WaitForFinderLocationStable(ctx, uiautoSvc, utils.CameraWindowFinder); err != nil {
-		s.Fatal("Failedt to wait camera app to be stable: ", err)
-	}
-	defer func(ctx context.Context) {
-		if s.HasError() {
-			uiTreeResponse, err := uiautoSvc.GetUITree(ctx, &ui.GetUITreeRequest{})
-			if err != nil {
-				s.Fatal("Failed to get UI Tree string: ", err)
-			}
-			s.Log(uiTreeResponse.UiTree)
-		}
-	}(cleanupCtx)
-
-	if err := utils.ControlFixture(ctx, extCameraID, "on"); err != nil {
-		s.Fatalf("Failed to turn %s fixture of external camera: %v", "on", err)
+		s.Fatal("Failed to wait for camera window to be stabled: ", err)
 	}
 
-	if err := utils.FindInfoOnCameraApp(ctx, uiautoSvc, utils.CCAPlugged); err != nil {
-		s.Fatal("Failed to wait for Camera app to show the certain info: ", err)
+	// Switch to external camera.
+	if err := utils.SwitchCCADevice(ctx, dut, uiautoSvc, extCamera); err != nil {
+		s.Fatal("Failed to switch CCA camera to external camera: ", err)
 	}
 
-	if err := utils.SwitchCCACamera(ctx, dut, uiautoSvc); err != nil {
-		s.Fatal("Failed to switch Camera app to external camera: ", err)
-	}
-
+	// Take a photo and verify the image color.
 	photo, err := utils.TakeSinglePhoto(ctx, uiautoSvc, fs, utils.CameraPath)
 	if err != nil {
 		s.Fatal("Failed to take single photo: ", err)
 	}
 
-	imgPath, err := utils.CopyRemoteFile(ctx, fs, filepath.Join(utils.CameraPath, photo.Name()), s.OutDir())
+	photoPath, err := utils.CopyRemoteFile(ctx, fs, filepath.Join(utils.CameraPath, photo.Name()), s.OutDir())
 	if err != nil {
 		s.Error("Failed to copy remote file to local host dir: ", err)
 	}
 
-	if err := utils.ValidateImgColor(ctx, imgPath, "red"); err != nil {
+	f, err := os.Open(photoPath)
+	if err != nil {
+		s.Fatal("Failed to open file: ", err)
+	}
+	defer f.Close()
+
+	image, _, err := image.Decode(f)
+	if err != nil {
+		s.Fatal("Failed to decode image: ", err)
+	}
+
+	if err := utils.ValidateImageColor(ctx, image, color.RGBA{255, 0, 0, 255}, 60); err != nil {
 		s.Fatal("Failed to validate color of image captured from the external camera: ", err)
 	}
 
+	// Record a video and verify the frame color in the video.
 	if err := utils.SwitchCCAMode(ctx, uiautoSvc, utils.VideoMode); err != nil {
 		s.Fatal("Failed to switch video mode: ", err)
 	}
+
 	video, err := utils.RecordVideo(ctx, uiautoSvc, fs, 5*time.Second, utils.CameraPath)
 	if err != nil {
 		s.Fatal("Failed to record video: ", err)
 	}
+
 	videoPath, err := utils.CopyRemoteFile(ctx, fs, filepath.Join(utils.CameraPath, video.Name()), s.OutDir())
 	if err != nil {
 		s.Fatal("Failed to copy remote file to local host dir: ", err)
 	}
+
 	if err := utils.ValidateVideoColor(ctx, videoPath, s.OutDir()); err != nil {
 		s.Fatal("Failed to validate color of video captured from the external camera: ", err)
 	}
