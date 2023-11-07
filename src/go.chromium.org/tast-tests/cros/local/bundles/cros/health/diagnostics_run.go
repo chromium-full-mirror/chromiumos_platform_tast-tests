@@ -38,11 +38,9 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
 			// Contact: dennyh@google.com
-			Name:    "smartctl_check",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
-			Fixture: "crosHealthdRunning",
-			// TODO(b/306086502): Remove unnecessary software deps.
-			ExtraSoftwareDeps: []string{"smartctl"},
+			Name:              "smartctl_check",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
 			// Contact: yycheng@google.com
