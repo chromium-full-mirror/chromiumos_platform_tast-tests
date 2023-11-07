@@ -88,52 +88,6 @@ func init() {
 					expectedStreamsPerDevice: 1,
 				},
 			},
-
-			{
-				Name: "vhost_user_null",
-				Val: audioAplayParams{
-					vhostUserArgs:            []string{"snd", "--config", "capture=true,backend=null,socket_type=legacy"},
-					expectedCardNames:        []string{"VirtIO SoundCard"},
-					expectedDeviceNames:      []string{"VirtIO PCM 0"},
-					expectedStreamsPerDevice: 1,
-				},
-			},
-			{
-				Name: "vhost_user_cras",
-				Val: audioAplayParams{
-					vhostUserArgs:            []string{"snd", "--config", "capture=true,backend=cras,socket_type=legacy"},
-					expectedCardNames:        []string{"VirtIO SoundCard"},
-					expectedDeviceNames:      []string{"VirtIO PCM 0"},
-					expectedStreamsPerDevice: 1,
-				},
-			},
-			{
-				Name: "vhost_user_cras_3_devices_4_streams",
-				Val: audioAplayParams{
-					vhostUserArgs:            []string{"snd", "--config", "capture=true,backend=cras,socket_type=legacy,num_output_devices=3,num_output_streams=4"},
-					expectedCardNames:        []string{"VirtIO SoundCard", "VirtIO SoundCard", "VirtIO SoundCard"},
-					expectedDeviceNames:      []string{"VirtIO PCM 0", "VirtIO PCM 1", "VirtIO PCM 2"},
-					expectedStreamsPerDevice: 4,
-				},
-			},
-			{
-				Name: "vhost_user_cras_1_device_3_streams",
-				Val: audioAplayParams{
-					vhostUserArgs:            []string{"snd", "--config", "capture=true,backend=cras,socket_type=legacy,num_output_streams=3"},
-					expectedCardNames:        []string{"VirtIO SoundCard"},
-					expectedDeviceNames:      []string{"VirtIO PCM 0"},
-					expectedStreamsPerDevice: 3,
-				},
-			},
-			{
-				Name: "vhost_user_cras_3_devices_1_stream",
-				Val: audioAplayParams{
-					vhostUserArgs:            []string{"snd", "--config", "capture=true,backend=cras,socket_type=legacy,num_output_devices=3"},
-					expectedCardNames:        []string{"VirtIO SoundCard", "VirtIO SoundCard", "VirtIO SoundCard"},
-					expectedDeviceNames:      []string{"VirtIO PCM 0", "VirtIO PCM 1", "VirtIO PCM 2"},
-					expectedStreamsPerDevice: 1,
-				},
-			},
 		},
 	})
 }
@@ -152,8 +106,7 @@ func AudioAplay(ctx context.Context, s *testing.State) {
 	}
 
 	config := audioutils.Config{
-		CrosvmArgs:    param.crosvmArgs,
-		VhostUserArgs: param.vhostUserArgs,
+		CrosvmArgs: param.crosvmArgs,
 	}
 
 	// Example of the output from `aplay -l` when using 3 devices, 4 streams

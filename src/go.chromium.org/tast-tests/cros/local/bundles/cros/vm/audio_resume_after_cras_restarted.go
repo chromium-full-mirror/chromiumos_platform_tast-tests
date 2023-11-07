@@ -65,8 +65,7 @@ func AudioResumeAfterCrasRestarted(ctx context.Context, s *testing.State) {
 	}
 
 	config := audioutils.Config{
-		CrosvmArgs:    param.crosvmArgs,
-		VhostUserArgs: param.vhostUserArgs,
+		CrosvmArgs: param.crosvmArgs,
 	}
 
 	var runScriptWG sync.WaitGroup
