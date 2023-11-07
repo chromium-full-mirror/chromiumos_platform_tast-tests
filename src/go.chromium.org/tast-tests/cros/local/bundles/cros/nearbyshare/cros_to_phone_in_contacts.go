@@ -233,8 +233,8 @@ func CrosToPhoneInContacts(ctx context.Context, s *testing.State) {
 	}
 	shareCompleted = true
 
-	// Hash the file on both sides and confirm they match. Android receives shares in its default downloads directory.
-	if err := nearbytestutils.FileHashComparison(ctx, filenames, sendDir, android.DownloadDir, androidDevice); err != nil {
+	// Hash the file on both sides and confirm they match. Android receives shares in a subdirectory of the default downloads location.
+	if err := nearbytestutils.FileHashComparison(ctx, filenames, sendDir, android.NearbyShareDir, androidDevice); err != nil {
 		s.Fatal("Failed file hash comparison: ", err)
 	}
 	s.Log("Share completed and file hashes match on both sides")

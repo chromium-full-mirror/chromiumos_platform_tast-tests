@@ -231,7 +231,7 @@ func (f *nearbyShareAndroidFixture) SetUp(ctx context.Context, s *testing.FixtSt
 		s.Fatal("Failed to enable verbose logging on Android: ", err)
 	}
 
-	// Clear the Android's default directory for receiving shares.
+	// Clear the Android's default downloads directory.
 	if err := adbDevice.RemoveContents(ctx, android.DownloadDir); err != nil {
 		s.Fatal("Failed to clear Android downloads directory: ", err)
 	}
@@ -272,6 +272,7 @@ func configureAndroidNearbySettings(ctx context.Context, androidNearby *nearbysn
 	if err := androidNearby.SetEnabled(ctx, false); err != nil {
 		return errors.Wrap(err, "failed to disable Nearby Share")
 	}
+	// GoBigSleepLint: sleep to wait for Nearby Share to become enabled on Android.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		return errors.Wrap(err, "failed to sleep after setting Nearby disabld via snippets")
 	}
