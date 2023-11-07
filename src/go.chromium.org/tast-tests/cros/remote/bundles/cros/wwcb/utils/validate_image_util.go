@@ -58,18 +58,30 @@ func ValidateVideoColor(ctx context.Context, localVideoPath, localDir string) er
 
 	localScreenVideoPath := filepath.Join(localScreenVideoDir, "out-%03d.jpg")
 	if err := testexec.CommandContext(ctx, "ffmpeg", "-i", localVideoPath, "-vf", "fps=1", localScreenVideoPath).Run(); err != nil {
-		return errors.Wrap(err, "failed to take screenshot on video every second")
+		return errors.Wrap(err, "failed to cut the frame from the video every second")
 	}
 
 	files, err := os.ReadDir(localScreenVideoDir)
 	if err != nil {
-		return errors.Wrap(err, "failed to read the camera directory")
+		return errors.Wrap(err, "failed to read the directory")
 	}
 
 	for _, file := range files {
 		localFilePath := filepath.Join(localScreenVideoDir, file.Name())
-		if err := ValidateImgColor(ctx, localFilePath, "red"); err != nil {
-			return err
+		f, err := os.Open(localFilePath)
+		if err != nil {
+			return errors.Wrap(err, "failed to open file")
+		}
+		defer f.Close()
+
+		image, _, err := image.Decode(f)
+		if err != nil {
+			return errors.Wrap(err, "failed to decode image")
+		}
+
+		// TODO: Need to put color and exepct percent as parameter for this function.
+		if err := ValidateImageColor(ctx, image, color.RGBA{255, 0, 0, 255}, 60); err != nil {
+			return errors.Wrap(err, "failed to validate image color is close to red color")
 		}
 	}
 
