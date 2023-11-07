@@ -77,12 +77,6 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 	client := hwsec.NewCryptohomeClient(cmdRunner)
 	helper, err := hwseclocal.NewHelper(cmdRunner)
 
-	fpDecryptCleanup, err := helper.EnableFingerprintDecrypt(ctx)
-	if err != nil {
-		s.Fatal("Failed to enable the FingerprintDecrypt feature in cryptohomed: ", err)
-	}
-	defer fpDecryptCleanup(ctxForCleanUp)
-
 	fpLoginCleanup, err := helper.EnableFingerprintLogin(ctx)
 	if err != nil {
 		s.Fatal("Failed to enable the FingerprintLogin feature in biod: ", err)
@@ -113,6 +107,12 @@ func FingerprintManual(ctx context.Context, s *testing.State) {
 				return errors.Wrapf(err, "failed to enroll the %v", finger.name)
 			}
 		}
+		return nil
+	}); err != nil {
+		s.Fatal("Failed test fingerprint functionalities: ", err)
+	}
+	// Start auth session again because we want to authenticate fingerprint with verify-only intent.
+	if err := client.WithAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY, func(authSessionID string) error {
 		// Step 2: Test that both fingers authenticate successfully.
 		for _, finger := range fingersToEnroll {
 			if err := authFinger(ctx, client, authSessionID, allFingerLabels, finger.name); err != nil {

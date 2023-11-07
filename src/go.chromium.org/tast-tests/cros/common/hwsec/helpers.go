@@ -30,7 +30,6 @@ import (
 
 const ussFlagFile = "/var/lib/cryptohome/uss_enabled"
 const ussDisabledFlagFile = "/var/lib/cryptohome/uss_disabled"
-const fingerprintDecryptFlagFile = "/var/lib/cryptohome/fingerprint_decrypt_enable"
 const fingerprintLoginFlagFile = "/var/lib/biod/force_fp_login"
 
 // CmdHelper provides various helper functions that could be shared across all
@@ -514,23 +513,6 @@ func (h *CmdTPMClearHelper) DisableUserSecretStash(ctx context.Context) (Cleanup
 	return (func(ctx context.Context) error {
 		if _, err := h.cmdRunner.Run(ctx, "rm", ussDisabledFlagFile); err != nil {
 			return errors.Wrap(err, "failed to remove the UserSecretStash disable flag file")
-		}
-		return nil
-	}), nil
-}
-
-// EnableFingerprintDecrypt enables the fingerprint decrypt feature by creating a flag file
-// that's checked by cryptohomed.
-func (h *CmdTPMClearHelper) EnableFingerprintDecrypt(ctx context.Context) (CleanupFunc, error) {
-	if _, err := h.cmdRunner.RunWithCombinedOutput(ctx, "mkdir", "-p", path.Dir(fingerprintDecryptFlagFile)); err != nil {
-		return nil, errors.Wrap(err, "failed to create the FingerprintDecrypt flag file directory")
-	}
-	if _, err := h.cmdRunner.RunWithCombinedOutput(ctx, "touch", fingerprintDecryptFlagFile); err != nil {
-		return nil, errors.Wrap(err, "failed to write the FingerprintDecrypt flag file")
-	}
-	return (func(ctx context.Context) error {
-		if _, err := h.cmdRunner.Run(ctx, "rm", fingerprintDecryptFlagFile); err != nil {
-			return errors.Wrap(err, "failed to remove the FingerprintDecrypt flag file")
 		}
 		return nil
 	}), nil
