@@ -26,7 +26,10 @@ type baseMenuBypasser struct {
 	navigator menuNavigator
 }
 
-const recoveryMenuItemCount = 7
+const (
+	recoveryMenuItemCount   = 7
+	devWarningMenuItemCount = 7
+)
 
 func newBaseMenuBypasser(ctx context.Context, h *Helper) (baseMenuBypasser, error) {
 	if err := h.RequireConfig(ctx); err != nil {
@@ -70,11 +73,12 @@ func (lmb *legacyMenuBypasser) BypassDevMode(ctx context.Context) error {
 
 	// Menu items in developer boot options screen:
 	// 	0. Boot From Network
-	// 	1. Boot Legacy BIOS
-	// 	2. Boot From USB or SD Card
-	// 	*3. Boot From Internal Disk
+	// 	1. Boot Legacy BIOS             (default if dev_default_boot=altfw)
+	// 	2. Boot From USB or SD Card     (default if dev_default_boot=usb)
+	// 	3. Boot From Internal Disk      (default if dev_default_boot=disk)
 	// 	4. Cancel
 	// 	5. Power Off
+	//	6. Language
 	h := lmb.helper
 	if err := MoveTo(ctx, h, lmb.navigator, 3, 0); err != nil {
 		return err
@@ -85,6 +89,14 @@ func (lmb *legacyMenuBypasser) BypassDevMode(ctx context.Context) error {
 	// GoBigSleepLint: Sleep for model specific time.
 	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 		return errors.Wrapf(err, "failed to wait for %s", h.Config.KeypressDelay)
+	}
+	// Navigate to last item first, and then move up to the option for
+	// booting from the internal disk.
+	if err := MoveTo(ctx, h, lmb.navigator, 0, devWarningMenuItemCount); err != nil {
+		return err
+	}
+	if err := MoveTo(ctx, h, lmb.navigator, 6, 3); err != nil {
+		return err
 	}
 	if err := lmb.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "failed to select \"Boot From Internal Disk\"")

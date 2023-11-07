@@ -1891,3 +1891,15 @@ func (h *Helper) GetECTabletLaptopModeCommand(ctx context.Context) (TabletLaptop
 	}
 	return cmds, nil
 }
+
+// SetDefaultBootDisk sets crossystem dev_default_boot to disk.
+func (h *Helper) SetDefaultBootDisk(ctx context.Context) error {
+	testing.ContextLog(ctx, "Setting dev_default_boot")
+	return h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_default_boot=disk").Run(ssh.DumpLogOnError)
+}
+
+// SetDefaultBootUSB sets crossystem dev_default_boot to usb.
+func (h *Helper) SetDefaultBootUSB(ctx context.Context) error {
+	testing.ContextLog(ctx, "Setting dev_default_boot")
+	return h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_default_boot=usb").Run(ssh.DumpLogOnError)
+}
