@@ -24,43 +24,49 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
-		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
 			// Contact: byronlee@google.com
 			Name:              "battery_capacity",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryCapacity),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
 			// Contact: byronlee@google.com
 			Name:              "battery_health",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineBatteryHealth),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Battery()),
 		}, {
 			// Contact: dennyh@google.com
-			Name: "smartctl_check",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
+			Name:    "smartctl_check",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineSmartctlCheck),
+			Fixture: "crosHealthdRunning",
 			// TODO(b/306086502): Remove unnecessary software deps.
 			ExtraSoftwareDeps: []string{"smartctl"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
 			// Contact: yycheng@google.com
-			Name: "cpu_cache",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
+			Name:    "cpu_cache",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
+			Fixture: "crosHealthdRunningAndRebootDUT",
 		}, {
 			// Contact: yycheng@google.com
-			Name: "cpu_stress",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
+			Name:    "cpu_stress",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
+			Fixture: "crosHealthdRunningAndRebootDUT",
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "nvme_self_test",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineNVMESelfTest),
+			Fixture:           "crosHealthdRunning",
 			Timeout:           3 * time.Minute,
 			ExtraSoftwareDeps: []string{"nvme"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme(), hwdep.NvmeSelfTest()),
 		}, {
 			// Contact: dennyh@google.com
-			Name: "nvme_wear_level",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineNVMEWearLevel),
+			Name:    "nvme_wear_level",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineNVMEWearLevel),
+			Fixture: "crosHealthdRunning",
 			// nvme_wear_level requires specific offsets in the nvme log that
 			// are only currently defined for wilco devices.
 			ExtraSoftwareDeps: []string{"nvme", "wilco"},
@@ -69,40 +75,47 @@ func init() {
 			// Contact: weiluanwang@google.com
 			Name:      "captive_portal",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),
+			Fixture:   "crosHealthdRunning",
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be
 			// "Not run" in lab's network. See b/286497166.
-			Name: "signal_strength",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSignalStrength),
+			Name:    "signal_strength",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineSignalStrength),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "gateway_can_be_pinged",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineGatewayCanBePinged),
+			Name:    "gateway_can_be_pinged",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineGatewayCanBePinged),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since the result would be
 			// "Not run" in lab's network. See b/286497147.
-			Name: "has_secure_wifi_connection",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHasSecureWifiConnection),
+			Name:    "has_secure_wifi_connection",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHasSecureWifiConnection),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
 			// Cannot be added to DiagnosticsPass.* since that requires the
 			// routine to be run in a good network environment. The
 			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
-			Name: "dns_latency",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
+			Name:    "dns_latency",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineDNSLatency),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "http_firewall",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),
+			Name:    "http_firewall",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHTTPFirewall),
+			Fixture: "crosHealthdRunning",
 			// TODO(b/281464322): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "https_firewall",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSFirewall),
+			Name:    "https_firewall",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSFirewall),
+			Fixture: "crosHealthdRunning",
 			// TODO(b/281464322): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
@@ -110,24 +123,28 @@ func init() {
 			// Cannot be added to DiagnosticsPass.* since that requires the
 			// routine to be run in a good network environment. The
 			// DiagnosticsPass.* counterpart will be flaky in a normal lab.
-			Name: "https_latency",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
+			Name:    "https_latency",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineHTTPSLatency),
+			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
-			Name: "memory",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
+			Name:    "memory",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
+			Fixture: "crosHealthdRunningAndRebootDUT",
 			// TODO(b/279849842): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: byronlee@google.com
-			Name: "sensitive_sensor",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
+			Name:    "sensitive_sensor",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineSensitiveSensor),
+			Fixture: "crosHealthdRunning",
 			// TODO(b/280388091): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
 			ExtraAttr: []string{"informational"},
@@ -135,6 +152,7 @@ func init() {
 			// Contact: kerker@google.com
 			Name:              "fingerprint_alive",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 			// TODO(b/279374234): Promote to critical.
 			ExtraAttr: []string{"informational"},
@@ -142,13 +160,15 @@ func init() {
 			// Contact: dennyh@google.com
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
+			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 			// TODO(b/279707249): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: weiluanwang@google.com
-			Name: "power_button",
-			Val:  croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
+			Name:    "power_button",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
+			Fixture: "crosHealthdRunning",
 		}},
 	})
 }
