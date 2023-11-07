@@ -24,8 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
@@ -360,23 +358,13 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 
 	switch appliedRestriction {
 	case restrictionlevel.WarnProceeded:
-		proceedButton := nodewith.Role(role.Button).Name("Copy anyway").First()
 		ui := uiauto.New(tconnAsh)
-		if err := uiauto.Combine("Click proceed button",
-			filesApp.WaitUntilExists(proceedButton),
-			ui.DoDefault(proceedButton),
-			filesApp.WithTimeout(10*time.Second).WaitForFile(files.DlFileName),
-		)(ctx); err != nil {
+		if err := files.AcceptWarningAndVerify(ctx, ui, tconnAsh, files.DlFileName); err != nil {
 			s.Fatal("Failed to proceed the warning: ", err)
 		}
 	case restrictionlevel.WarnCancelled:
-		cancelButton := nodewith.Role(role.Button).Name("Cancel").First()
 		ui := uiauto.New(tconnAsh)
-		if err := uiauto.Combine("Click cancel button",
-			filesApp.WaitUntilExists(cancelButton),
-			ui.DoDefault(cancelButton),
-			filesApp.EnsureFileGone(files.DlFileName, 10*time.Second),
-		)(ctx); err != nil {
+		if err := files.CancelWarningAndVerify(ctx, ui, tconnAsh, files.DlFileName); err != nil {
 			s.Fatal("Failed to cancel the warning: ", err)
 		}
 	}
