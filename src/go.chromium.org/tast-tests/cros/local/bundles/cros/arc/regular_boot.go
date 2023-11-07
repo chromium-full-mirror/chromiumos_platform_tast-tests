@@ -6,6 +6,7 @@ package arc
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -35,6 +36,17 @@ type bootMetrics struct {
 	diskStats             diskstats.DiskStatMap
 }
 
+const (
+	// bootAttemptCountVarName is the name of the variable to specify the number of iterations.
+	bootAttemptCountVarName = "arc.RegularBoot.bootAttemptCount"
+)
+
+var bootAttemptCount = testing.RegisterVarString(
+	bootAttemptCountVarName,
+	"5",
+	"The number of iterations to try regular ARCVM boot.",
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RegularBoot,
@@ -46,6 +58,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      25 * time.Minute,
+		Vars:         []string{bootAttemptCountVarName},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
@@ -83,10 +96,17 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to do initial optin: ", err)
 	}
 
-	const iterationCount = 5
+	iterationCount, err := strconv.Atoi(bootAttemptCount.Value())
+	if err != nil {
+		s.Fatalf("Invalid %v value: %v", bootAttemptCountVarName, bootAttemptCount.Value())
+	}
+
 	perfValues := perf.NewValues()
 	for i := 0; i < iterationCount; i++ {
 		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs)
+		s.Logf("Running ARC regular boot iteration #%d out of %d",
+			i+1, iterationCount)
+
 		if err != nil {
 			s.Fatal("Failed to do regular boot: ", err)
 		}
