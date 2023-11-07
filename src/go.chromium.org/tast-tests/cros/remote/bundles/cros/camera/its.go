@@ -61,7 +61,7 @@ func init() {
 		Attr:         []string{"group:camerabox"},
 		Data:         []string{"adb", pre.SetupITSRepoScript, pre.ITSPy3Patch, pre.ChartPath, pre.NumpySrcTarGz, pre.ConfigYml},
 		Vars:         []string{"chart"},
-		SoftwareDeps: []string{"chrome", "android_vm_t", "arc_camera3", caps.BuiltinCamera},
+		SoftwareDeps: []string{"chrome", "android_vm_t", "arc_camera3", caps.BuiltinCamera, "auto_update_stable"},
 		ServiceDeps:  []string{"tast.cros.camerabox.ITSService"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
