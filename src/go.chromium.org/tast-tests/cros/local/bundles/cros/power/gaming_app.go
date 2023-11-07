@@ -51,7 +51,7 @@ func init() {
 				Val: gamingAppParams{
 					game: gameapp.NewAsphalt8,
 				},
-				ExtraData: []string{gameapp.Asphalt8IconGameScene, gameapp.Asphalt8IconRaceNow},
+				ExtraData: []string{gameapp.Asphalt8IconGameScene},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 			{

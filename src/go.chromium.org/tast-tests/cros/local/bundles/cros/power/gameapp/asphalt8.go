@@ -25,10 +25,8 @@ const (
 	Asphalt8AppName = "Asphalt 8"
 	// Asphalt8IconGameScene is the icon data of the game scene used in Asphalt8.
 	Asphalt8IconGameScene = "gameapp/asphalt8_game_scene.png"
-	// Asphalt8IconRaceNow is the icon data of the prepare scene used in Asphalt8.
-	Asphalt8IconRaceNow = "gameapp/asphalt8_race_now.png"
-	asphalt8PackageName = "com.gameloft.android.ANMP.GloftA8HM"
-	asphalt8IDPrefix    = asphalt8PackageName + ":id/"
+	asphalt8PackageName   = "com.gameloft.android.ANMP.GloftA8HM"
+	asphalt8IDPrefix      = asphalt8PackageName + ":id/"
 )
 
 // Asphalt8 holds the information for Game App testing.
@@ -80,8 +78,8 @@ func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 	ud := uidetection.NewDefault(as.tconn).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
 
 	actionBarRoot := as.d.Object(androidui.ID(asphalt8IDPrefix + "action_bar_root"))
-	gameScene := uidetection.CustomIcon(as.dataPath(Asphalt8IconGameScene))
-	raceNow := uidetection.CustomIcon(as.dataPath(Asphalt8IconRaceNow))
+	gameScene := uidetection.CustomIcon(as.dataPath(Asphalt8IconGameScene), uidetection.MinConfidence(0.65))
+	raceNow := uidetection.TextBlock([]string{"RACE", "NOW!"})
 	return uiauto.NamedCombine("enter game scene",
 		cuj.WaitForExists(actionBarRoot, defaultUITimeout),
 		uiauto.NamedAction("press enter to skip animation", kb.AccelAction("Enter")),
