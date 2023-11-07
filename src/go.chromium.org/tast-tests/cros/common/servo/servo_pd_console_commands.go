@@ -173,7 +173,7 @@ func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 	if pdState.PowerRole == PowerRoleSNK {
 		expectedResetSequence = []string{
 			"SOFT_RESET",
-			"SNK_DISCOVERYzz",
+			"SNK_DISCOVERY",
 			"SNK_REQUESTED",
 			"SNK_TRANSITION",
 			"SNK_READY",
@@ -181,7 +181,7 @@ func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 	} else if pdState.PowerRole == PowerRoleSRC {
 		expectedResetSequence = []string{
 			"SOFT_RESET",
-			"SRC_DISCOVERYxx",
+			"SRC_DISCOVERY",
 			"SRC_NEGOCIATE", // [sic]
 			"SRC_ACCEPTED",
 			"SRC_POWERED",
@@ -197,7 +197,7 @@ func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "could not trigger soft reset on Servo")
 	}
-	if checkSequenceInConsoleLog(out[0][0], 1, expectedResetSequence) {
+	if !checkSequenceInConsoleLog(out[0][0], 1, expectedResetSequence) {
 		return errors.New("expected reset state sequence not seen in Servo PD soft reset command console output")
 	}
 
