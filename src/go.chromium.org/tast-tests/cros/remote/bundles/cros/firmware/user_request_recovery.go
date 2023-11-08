@@ -146,7 +146,7 @@ func insertUSBInFirmwareScreen(ctx context.Context, h *firmware.Helper) error {
 	}
 	testing.ContextLog(ctx, "Set DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %s", err)
+		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
 	testing.ContextLog(ctx, "Inserting a valid USB to DUT")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {

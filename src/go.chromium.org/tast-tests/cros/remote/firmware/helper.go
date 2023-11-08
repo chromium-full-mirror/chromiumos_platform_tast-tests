@@ -879,7 +879,7 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 		// of waking up from hibernation.
 		if !wcOptsContain(opts, FromHibernation) && hasDUTPDDataRole {
 			if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-				testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
+				testing.ContextVLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 				dfpFailures++
 				if dfpFailures == 3 && !wcOptsContain(opts, SkipPDRoleSnk) {
 					ok, err := h.Servo.HasControl(ctx, string(servo.PDRole))

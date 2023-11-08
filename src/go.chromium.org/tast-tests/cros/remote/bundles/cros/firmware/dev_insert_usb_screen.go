@@ -155,7 +155,7 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Setting DFP mode")
 		if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
-			s.Log("Failed to set pd data role to DFP: ", err)
+			s.Logf("Failed to set pd data role to DFP: %.400s", err)
 		}
 		s.Log("Inserting a valid USB to DUT")
 		if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxDUT); err != nil {
