@@ -183,28 +183,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// lacrosVariation is similar to lacros but should be used
-	// by variation smoke tests that will launch lacros with variation service enabled,
-	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosVariationEnabled",
-		Desc:     "Lacros with variation service enabled",
-		Contacts: []string{"yjt@google.com", "lacros-team@google.com"},
-		Vars:     []string{"fakeVariationsChannel"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			channel := "beta"
-			if val, ok := s.Var("fakeVariationsChannel"); ok {
-				s.Log("Setting fake-variations-channel to ", val)
-				channel = val
-			}
-			return NewConfig(ChromeOptions(
-				chrome.LacrosExtraArgs("--fake-variations-channel="+channel),
-				chrome.LacrosExtraArgs("--variations-server-url=https://clients4.google.com/chrome-variations/seed"))).Opts()
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// lacrosGaiaLogin is used to test Lacros with a gaia user login.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosGaiaLogin",
