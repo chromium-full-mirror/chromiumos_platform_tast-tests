@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strconv"
 	"time"
+	"fmt"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -98,9 +99,24 @@ func APROVerificationReboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable write protect at boot: ", err)
 	}
 
+	bootID, err := h.Reporter.BootID(ctx)
+	if err != nil {
+		s.Fatal("Failed to get boot id: ", err)
+	}
+
 	s.Logf("Starting %d GSC reboot attempts ", rebootAttempts)
 	for i := 0; i < rebootAttempts; i++ {
-		s.Log("Reboot attempt ", i)
+		s.Logf("Reboot attempt %d (boot id %s)", i, bootID)
+
+		msg := fmt.Sprintf("tast reboot attempt %d boot id %s", i, bootID)
+		if out, err := h.DUT.Conn().CommandContext(ctx, "logger", msg).CombinedOutput(); err != nil {
+			s.Fatal("Failed to write to log: ", out)
+		}
+		// Sync to preserve /var/log/messages for the current boot, since otherwise they will be
+		// lost on GSC reboot.
+		if out, err := h.DUT.Conn().CommandContext(ctx, "sync").CombinedOutput(); err != nil {
+			s.Fatal("Failed to sync filesystem: ", out)
+		}
 
 		// Reboot GSC with 1000ms delay, this should give enough time for ssh command to return without
 		// having a timeout error. Still don't error in case it is marginal.
@@ -110,23 +126,41 @@ func APROVerificationReboot(ctx context.Context, s *testing.State) {
 			s.Log("Failed to run gsctool reboot command: ", err)
 		}
 
-		// We should be polling UART console for keyboard ready before the above reboot finishes since
-		// there is a 1000ms delay.
+		// Wait for the GSC reboot to make the DUT unreachable via ssh.
+		disconnectCtx, cancel := context.WithTimeout(ctx, time.Second*15)
+		defer cancel()
+		if err := h.DUT.WaitUnreachable(disconnectCtx); err != nil {
+			s.Fatal("Failed to wait for unreachable: ", err)
+		}
+
+		if err := h.DisconnectDUT(ctx); err != nil {
+			s.Log(ctx, "Error closing connections to DUT: ", err)
+		}
+
+		// Wait for keyboard to be enabled at the dev mode firmware screen.
 		s.Log("Waiting for DUT to reach the firmware screen")
 		if err := h.WaitFirmwareScreen(ctx); err != nil {
 			s.Fatal("Failed to get to firmware screen: ", err)
 		}
 
 		// Since we are running MP signed AP FW, we need to be in dev mode to run a Test OS image.
-		s.Log("Get passed dev mode screen")
+		s.Log("Bypass dev mode screen")
 		if err := bp.BypassDevMode(ctx); err != nil {
-			s.Fatal("Failed to boot through dev mode: ", err)
+			s.Fatal("Failed to bypass dev mode: ", err)
 		}
 
-		rebootCtx, cancel = context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		connectCtx, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancel()
-		if err = h.WaitConnect(rebootCtx); err != nil {
+		if err := h.WaitConnect(connectCtx); err != nil {
 			s.Fatal("Device did not come back up after gsctool reboot: ", err)
+		}
+
+		if newBootID, err := h.Reporter.BootID(ctx); err != nil {
+			s.Fatal("Failed to get boot id: ", err)
+		} else if newBootID == bootID {
+			s.Fatal("Boot id did not change")
+		} else {
+			bootID = newBootID
 		}
 
 		s.Log("Ensure that AP RO verification status is success")
