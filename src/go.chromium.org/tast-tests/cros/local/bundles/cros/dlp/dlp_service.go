@@ -164,9 +164,8 @@ func setupBrowser(ctx context.Context, chrome *chrome.Chrome, browserType pb.Bro
 	return br, closeBrowser, nil
 }
 
-// copyToDriveAndVerifyWarning tries to copy the file to Google Drive.
-// If waitForWarning is true waits for DLP warning to appear, otherwise ensures it doesn't appear.
-func copyToDriveAndVerifyWarning(ctx context.Context, tconn *chrome.TestConn, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string, waitForWarning bool) error {
+// copyToDrive tries to copy the file to Google Drive.
+func copyToDrive(ctx context.Context, f *filesapp.FilesApp, kb *input.KeyboardEventWriter, filename string) error {
 	if err := uiauto.Combine("copy the file to Google Drive",
 		f.OpenDownloads(),
 		f.CopyFileToClipboard(filename),
@@ -175,8 +174,6 @@ func copyToDriveAndVerifyWarning(ctx context.Context, tconn *chrome.TestConn, f 
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to copy the file to Google Drive")
 	}
-
-	files.VerifyWarning(ctx, tconn, waitForWarning)
 
 	return nil
 }
@@ -536,7 +533,7 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 	}
 
 	// Copy to Drive and cancel the warning.
-	if err := copyToDriveAndVerifyWarning(ctx, tconn, filesApp, keyboard, dlFileName, true); err != nil {
+	if err := copyToDrive(ctx, filesApp, keyboard, dlFileName); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
 	}
 
@@ -545,7 +542,7 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 	}
 
 	// Copy again and accept the warning. Copies shouldn't be managed.
-	if err := copyToDriveAndVerifyWarning(ctx, tconn, filesApp, keyboard, dlFileName, true); err != nil {
+	if err := copyToDrive(ctx, filesApp, keyboard, dlFileName); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
 	}
 
@@ -568,7 +565,7 @@ func (service *DataLeakPreventionService) TestCopyFileToDrive(ctx context.Contex
 	}
 
 	// Warning should be bypassed silently.
-	if err := copyToDriveAndVerifyWarning(ctx, tconn, filesApp, keyboard, dlFileName, false); err != nil {
+	if err := copyToDrive(ctx, filesApp, keyboard, dlFileName); err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file")
 	}
 

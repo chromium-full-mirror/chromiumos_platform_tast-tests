@@ -142,27 +142,6 @@ func IsFileManaged(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestCo
 	return nil
 }
 
-// VerifyWarning verifies expected status of a DLP warning notification.
-// If shouldAppear is true, waits for the warning to appear, otherwise ensures it doesn't appear.
-func VerifyWarning(ctx context.Context, tconn *chrome.TestConn, shouldAppear bool) error {
-	filesApp, err := filesapp.App(ctx, tconn, apps.FilesSWA.ID)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to existing Files app")
-	}
-
-	proceedButton := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(Copy|Transfer) anyway"))
-	if shouldAppear {
-		if err := filesApp.WaitUntilExists(proceedButton)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for DLP warning")
-		}
-	} else {
-		if err := filesApp.EnsureGoneFor(proceedButton, 10*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to ensure DLP warning gone")
-		}
-	}
-	return nil
-}
-
 // AcceptWarningAndVerify accepts the DLP warning notification and verifies that the file was copied.
 // Assumes that Files App is opened in the correct directory.
 func AcceptWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, filename string) error {
