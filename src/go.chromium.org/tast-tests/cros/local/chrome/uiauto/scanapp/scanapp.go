@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -31,7 +32,8 @@ import (
 // WindowFinder is the finder for the ScanApp window.
 var WindowFinder *nodewith.Finder = nodewith.Name(apps.Scan.Name).HasClass("BrowserFrame").Role(role.Window)
 
-var scanButtonFinder *nodewith.Finder = nodewith.Name("Scan").Role(role.Button)
+// Matches "Scan" or "Scan page 1".
+var scanButtonFinder *nodewith.Finder = nodewith.NameRegex(regexp.MustCompile("(Scan)(\\spage\\s1)?")).Role(role.Button)
 
 var doneButtonFinder *nodewith.Finder = nodewith.Name("Done").Role(role.Button)
 
