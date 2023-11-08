@@ -9,14 +9,18 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sync/errgroup"
 
+	"go.chromium.org/tast-tests/cros/common/android/adb"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast/core/errors"
@@ -57,6 +61,22 @@ type SharedInfo struct {
 	CrosvmGuestPss uint64
 }
 
+// CrosVMSmapsRollup stores smaps_rollup for each process belonging to a
+// specific crosvm main process. The VM can be identified by tag (ARCVM, VM).
+type CrosVMSmapsRollup struct {
+	CrosVMPid int32
+	Tag       string
+	Rollups   []*NamedSmapsRollup
+}
+
+// FullSmapsRollup holds smaps_rollup info for both host and ARCVM guest
+// processes. Host processes for crosvm are stored separately in CrosVMRollups.
+type FullSmapsRollup struct {
+	HostRollups   []*NamedSmapsRollup
+	CrosVMRollups []*CrosVMSmapsRollup
+	ARCVMRollups  []*NamedSmapsRollup
+}
+
 // NamedSmapsRollup is a SmapsRollup plus the process name and ID, and
 // information on shared memory use (Shared field).
 type NamedSmapsRollup struct {
@@ -72,7 +92,7 @@ type SharedInfoMap map[int32]*SharedInfo
 var smapsRollupRE = regexp.MustCompile(`(?m)^([^:]+):\s*(\d+)\s*kB$`)
 
 // NewSmapsRollup parses the contents of a /proc/<pid>/smaps_rollup file. All
-// sizes are in bytes.
+// sizes are in kilobytes.
 func NewSmapsRollup(smapsRollupFileData []byte) (map[string]uint64, error) {
 	result := make(map[string]uint64)
 	matches := smapsRollupRE.FindAllSubmatch(smapsRollupFileData, -1)
@@ -93,7 +113,7 @@ func NewSmapsRollup(smapsRollupFileData []byte) (map[string]uint64, error) {
 
 // smapsRollups returns a NamedSmapsRollup for every process in processes.
 // It also fills the passed summary struct with PSS data about the crosvm * processes.
-// Sizes are in bytes.
+// Sizes are in kilobytes.
 // The Shared field is initialized from sharedInfoMap, if provided.
 func smapsRollups(ctx context.Context, processes []*process.Process, sharedInfoMap SharedInfoMap, summary *HostSummary) ([]*NamedSmapsRollup, error) {
 	rollups := make([]*NamedSmapsRollup, len(processes))
@@ -395,4 +415,212 @@ func ReportHostMetrics(summary *HostSummary, p *perf.Values, suffix string) {
 			float64(value.Pss+value.PssSwap)/KiBInMiB,
 		)
 	}
+}
+
+// PerProcessSmapsRollup parses smaps and smaps_rollup information from every
+// running process on both the ChromeOS (host) side and ARCVM (guest) side,
+// without grouping. Fetching smaps_rollup from ARCVM requires adb root access.
+func PerProcessSmapsRollup(ctx context.Context, hasArc bool) (*FullSmapsRollup, error) {
+	processes, err := process.Processes()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get all processes")
+	}
+
+	// Separate host processes started by each crosvm instance.
+	crosvmRollups := make(map[int32]*CrosVMSmapsRollup)
+
+	// Regex to extract tag of crosvm.
+	crosvmTagRegex := regexp.MustCompile(`--syslog-tag (\S+)\(\d+\)`)
+
+	// Generate a map of processes and their parent PIDs so that we can separate
+	// crosvm child processes from other host processes. Also generate a map of
+	// processes names (/proc/*/comm).
+	pPidMap := make(map[int32]int32)
+	nameMap := make(map[int32]string)
+	foundARCVMPid := false
+	for _, p := range processes {
+		pPid, err := p.Ppid()
+		if err != nil {
+			continue
+		}
+		pPidMap[p.Pid] = pPid
+
+		commOut, err := os.ReadFile(fmt.Sprintf("/proc/%d/comm", p.Pid))
+		if err != nil {
+			continue
+		}
+		name := strings.Trim(string(commOut), "\n\x00")
+		nameMap[p.Pid] = name
+
+		if name == "crosvm" {
+			cmdline, err := p.Cmdline()
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get cmdline for crosvm process")
+			}
+			m := crosvmTagRegex.FindStringSubmatch(cmdline)
+			if len(m) != 2 {
+				return nil, errors.Errorf("failed to extract crosvm tag from cmdline %s", cmdline)
+			}
+			if m[1] == "ARCVM" {
+				foundARCVMPid = true
+			}
+			crosvmRollups[p.Pid] = &CrosVMSmapsRollup{
+				CrosVMPid: p.Pid,
+				Tag:       m[1],
+				Rollups:   []*NamedSmapsRollup{},
+			}
+		}
+	}
+	if hasArc && !foundARCVMPid {
+		return nil, errors.New("unable to find crosvm process for ARCVM")
+	}
+
+	sharedInfoMap, err := makeSharedInfoMap(ctx, processes)
+	if err != nil {
+		return nil, err
+	}
+
+	hostRollups, err := smapsRollups(ctx, processes, sharedInfoMap, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get smaps_rollup on host")
+	}
+
+	result := &FullSmapsRollup{
+		HostRollups:   []*NamedSmapsRollup{},
+		CrosVMRollups: []*CrosVMSmapsRollup{},
+		ARCVMRollups:  []*NamedSmapsRollup{},
+	}
+	for _, r := range hostRollups {
+		// Replace process full cmdline with `/proc/*/comm` so that crosvm
+		// processes will be separated by their functions (e.g. `pcivirtio-fs`
+		// and `pcivirtio-net` instead of `crosvm`).
+		name, ok := nameMap[r.Pid]
+		if !ok {
+			return nil, errors.Errorf("cannot find pid %d in process name map", r.Pid)
+		}
+		r.Command = name
+		pPid, ok := pPidMap[r.Pid]
+		if !ok {
+			continue
+		}
+
+		// Store the process separately if it is created by crosvm.
+		var crosvmRollup *CrosVMSmapsRollup
+		if r, ok := crosvmRollups[r.Pid]; ok {
+			crosvmRollup = r
+		}
+		if r, ok := crosvmRollups[pPid]; ok {
+			crosvmRollup = r
+		}
+		if crosvmRollup != nil {
+			crosvmRollup.Rollups = append(crosvmRollup.Rollups, r)
+		} else {
+			result.HostRollups = append(result.HostRollups, r)
+		}
+	}
+
+	for _, r := range crosvmRollups {
+		result.CrosVMRollups = append(result.CrosVMRollups, r)
+	}
+
+	// Fill in ARCVMRollups if hasArc is true.
+	if hasArc {
+		arcvmRollups, err := arcSmapsRollups(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get smaps_rollup from ARCVM")
+		}
+		result.ARCVMRollups = arcvmRollups
+	}
+
+	return result, nil
+}
+
+// arcSmapsRollups returns a NamedSmapsRollup for every process in ARCVM.
+// Sizes are in kilobytes.
+func arcSmapsRollups(ctx context.Context) ([]*NamedSmapsRollup, error) {
+	d, err := rootArcADBDevice(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get root ADB device")
+	}
+
+	var procFiles []string
+	// On slow devices "adb shell" is not immediately usable after adbd is
+	// restarted as root.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		procFiles, err = d.ListContents(ctx, "/proc")
+		return err
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 3 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to list /proc via ADB")
+	}
+
+	var result []*NamedSmapsRollup
+	for _, procFile := range procFiles {
+		pid, err := strconv.ParseInt(procFile, 10, 31)
+		if err != nil {
+			continue
+		}
+		// We're racing with this process potentially exiting, so just
+		// ignore errors and don't generate a NamesSmapsRollup if we fail to
+		// read anything from proc.
+		smapsData, err := d.ReadFile(ctx, fmt.Sprintf("/proc/%d/smaps_rollup", pid))
+		if err != nil {
+			// Not all processes have a smaps_rollup, this process may have
+			// exited.
+			continue
+		}
+		if len(smapsData) == 0 {
+			// On some processes, smaps_rollup exists but is empty.
+			continue
+		}
+		rollup, err := NewSmapsRollup(smapsData)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse /proc/%d/smaps_rollup", pid)
+		}
+
+		// Extract and clean up process name from cmdline.
+		cmdline, err := d.ReadFile(ctx, fmt.Sprintf("/proc/%d/cmdline", pid))
+		if err != nil {
+			continue
+		}
+		name := strings.ReplaceAll(string(cmdline), "\x00", " ")
+		name = strings.Split(name, " ")[0]
+		name = filepath.Base(name)
+
+		result = append(result, &NamedSmapsRollup{
+			Command: name,
+			Pid:     int32(pid),
+			Rollup:  rollup,
+			Shared:  nil,
+		})
+	}
+
+	return result, nil
+}
+
+// rootArcADBDevice gets the ADB device with root permission for the ARCVM.
+func rootArcADBDevice(ctx context.Context) (*adb.Device, error) {
+	adbDevices, err := adb.Devices(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get ADB devices")
+	}
+	var adbDevice *adb.Device
+	for _, d := range adbDevices {
+		if strings.HasPrefix(d.Serial, "emulator-") {
+			adbDevice = d
+			break
+		}
+	}
+	if adbDevice == nil {
+		return nil, errors.New("unable to find ADB device for ARCVM")
+	}
+
+	if err := adbDevice.Root(ctx); err != nil {
+		return nil, errors.Wrap(err, "unable to get root")
+	}
+	if err := adbDevice.WaitForState(ctx, adb.StateDevice, 30*time.Second); err != nil {
+		return nil, errors.Wrap(err, "wait for state failed")
+	}
+
+	return adbDevice, nil
 }
