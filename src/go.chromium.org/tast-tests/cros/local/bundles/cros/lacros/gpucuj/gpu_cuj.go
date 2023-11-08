@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosperf"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -299,11 +300,17 @@ func runLacrosTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation
 }
 
 func runCrosTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) error {
-	_, cleanup, err := lacrosperf.SetupCrosTestWithPage(ctx, cr, invoc.page.url, lacrosperf.StabilizeBeforeOpeningURL)
-	if err != nil {
-		return errors.Wrap(err, "failed to setup cros-chrome test page")
+	cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+	if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for CPU to stabilize: ", err)
 	}
-	defer cleanup(ctx)
+
+	conn, err := cr.NewConn(ctx, invoc.page.url)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open %s", invoc.page.url)
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
 
 	// Setup extra window for multi-window tests.
 	if invoc.scenario == TestTypeMoveOcclusion || invoc.scenario == TestTypeMoveOcclusionWithCrosWindow {
