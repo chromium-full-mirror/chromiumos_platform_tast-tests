@@ -398,7 +398,7 @@ func (s *OSSettings) WaitUntilToggleOption(cr *chrome.Chrome, optionName string,
 	}
 }
 
-// OpenNetworkDetailPage navigates to the detail page for a particular Cellular, WiFi, or Ethernet network.
+// OpenNetworkDetailPage navigates to the detail page for a particular Cellular, WiFi, VPN, or Ethernet network.
 func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, networkName string, networkType netconfigtypes.NetworkType) (*OSSettings, error) {
 	ui := uiauto.New(tconn)
 
@@ -423,8 +423,19 @@ func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 		enableTechnology = func(name string) action.Action { return func(ctx context.Context) error { return nil } }
 		// There is no subentry for Ethernet.
 		selectNetwork = func(ctx context.Context) error { return nil }
+	case netconfigtypes.VPN:
+		technologyName = "VPN"
+		// VPN does not need to be turned on/off but it's available only if a VPN is configured.
+		enableTechnology = func(_ string) action.Action {
+			return func(ctx context.Context) error {
+				if err := ui.WaitUntilExists(arrowFinder.NameContaining(technologyName))(ctx); err != nil {
+					return errors.Wrap(err, "failed to find a VPN network: VPN may have not been configured yet")
+				}
+				return nil
+			}
+		}
 	default:
-		return nil, errors.New("network technology must be Cellular, WiFi, or Ethernet")
+		return nil, errors.New("network technology must be Cellular, WiFi, VPN, or Ethernet")
 	}
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to determine network subpage finder")

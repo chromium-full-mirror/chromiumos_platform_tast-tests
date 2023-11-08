@@ -6,15 +6,20 @@ package network
 
 import (
 	"context"
+	"reflect"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/proxysettings"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
@@ -30,9 +35,14 @@ type vpnUITestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     VPNUI,
-		Desc:     "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI",
-		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
+		Func: VPNUI,
+		Desc: "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI, verify the availability of proxy settings for a connected VPN",
+		Contacts: []string{
+			"cros-networking@google.com",
+			"jiejiang@google.com",
+			"edgar.chang@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
+		},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
@@ -101,13 +111,14 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
 	conn, err := apps.LaunchOSSettings(ctx, cr, "chrome://os-settings/internet")
 	if err != nil {
 		s.Fatal("Failed to open the OS settings page: ", err)
 	}
 	defer conn.Close()
+	defer apps.Close(cleanupCtx, tconn, apps.Settings.ID)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "vpn_ui")
 
 	testing.ContextLog(ctx, "Setting keyboard layout to English (US)")
 	imePrefix, err := ime.Prefix(ctx, tconn)
@@ -200,10 +211,21 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if err := verifyProxySettingsAvailability(ctx, cr, tconn, s.OutDir(), svcName); err != nil {
+		s.Fatal("Failed to verify proxy settings is available: ", err)
+	}
+
+	// Ensuring settings apps is restored back to after verifying proxy settings since
+	// the `proxysettings.Manager` is used to verify proxy settings and the settings app
+	// will be closed with it.
+	if _, err := ossettings.OpenNetworkDetailPage(ctx, tconn, cr, svcName, netconfigtypes.VPN); err != nil {
+		s.Fatalf("Failed to open the %v vpn network detail page: %v", svcName, err)
+	}
+
 	// Clicks Disconnect and checks the "Not Connected" text on the page.
 	if err := uiauto.Combine("Disconnect VPN",
 		ui.LeftClick(nodewith.Name("Disconnect").Role(role.Button)),
-		ui.LeftClick(nodewith.Name("Not Connected").Role(role.StaticText)),
+		ui.WaitUntilExists(nodewith.Name("Not Connected").Role(role.StaticText)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to disconnect VPN: ", err)
 	}
@@ -217,6 +239,73 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to forget VPN: ", err)
 	}
+}
+
+// verifyProxySettingsAvailability verifies that the proxy settings of a VPN
+// network are available and can be populated. The proxy should be able to set
+// and save, they should correctly display and can be editable.
+func verifyProxySettingsAvailability(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, outDir, vpnName string) (retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	defer cancel()
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get keyboard")
+	}
+	defer kb.Close(cleanupCtx)
+
+	manager := proxysettings.NewProxySettingsManager(proxysettings.LoggedIn)
+	proxyValues := []*proxysettings.Config{
+		{
+			Protocol: proxysettings.HTTP,
+			Host:     "localhost",
+			Port:     "123",
+		}, {
+			Protocol: proxysettings.HTTPS,
+			Host:     "localhost",
+			Port:     "456",
+		}, {
+			Protocol: proxysettings.Socks,
+			Host:     "socks5://localhost",
+			Port:     "8080",
+		},
+	}
+
+	// Set and save the proxy info.
+	// Isolate the step to leverage `defer` pattern.
+	if err := func(ctx context.Context) (retErr error) {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
+		defer cancel()
+
+		if err := manager.Launch(ctx, cr, tconn, proxysettings.VPN(vpnName)); err != nil {
+			return errors.Wrap(err, "failed to launch proxy settings instance")
+		}
+		defer manager.Close(cleanupCtx)
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, cr, "proxy_settings_for_vpn")
+
+		return manager.SetManualConfig(ctx, tconn, kb, proxyValues)
+	}(ctx); err != nil {
+		return err
+	}
+
+	// Reopen the proxy settings to check whether the proxy info is saved correctly.
+	if err := manager.Launch(ctx, cr, tconn, proxysettings.VPN(vpnName)); err != nil {
+		return errors.Wrap(err, "failed to launch proxy settings instance")
+	}
+	defer manager.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, cr, "proxy_settings_for_vpn_after_reopen")
+
+	for _, pv := range proxyValues {
+		if resultPv, err := manager.ManualConfigContent(ctx, tconn, pv.Protocol); err != nil {
+			return errors.Wrapf(err, "failed to get proxy value for %q", pv.Protocol.Name())
+		} else if !reflect.DeepEqual(resultPv, pv) {
+			return errors.Errorf("failed to verify proxy value for %q: got %q, want %q", pv.Protocol.Name(), resultPv, pv)
+		}
+	}
+
+	return nil
 }
 
 type vpnDialogConfigger struct {

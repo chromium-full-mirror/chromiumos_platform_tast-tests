@@ -173,6 +173,13 @@ func Wifi(ssid string) TargetNetwork             { return &wifi{ssid: ssid} }
 func (w *wifi) Name() string                     { return w.ssid }
 func (w *wifi) Type() netconfigtypes.NetworkType { return netconfigtypes.WiFi }
 
+type vpn struct{ name string }
+
+// VPN returns the VPN network with the specified name.
+func VPN(name string) TargetNetwork             { return &vpn{name: name} }
+func (v *vpn) Name() string                     { return v.name }
+func (v *vpn) Type() netconfigtypes.NetworkType { return netconfigtypes.VPN }
+
 // LoginMode defines the login mode of the DUT.
 type LoginMode int
 
