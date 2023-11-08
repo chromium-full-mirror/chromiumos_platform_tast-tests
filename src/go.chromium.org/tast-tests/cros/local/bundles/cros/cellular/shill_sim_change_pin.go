@@ -46,7 +46,7 @@ func ShillSimChangePin(ctx context.Context, s *testing.State) {
 
 	// ResetModem needed for sim power reset to reflect locked type values.
 	if _, err := helper.ResetModem(ctx); err != nil {
-		s.Log("Failed to reset modem: ", err)
+		s.Fatal("Failed to reset modem: ", err)
 	}
 
 	// Shorten deadline to leave time for cleanup
@@ -91,7 +91,7 @@ func ShillSimChangePin(ctx context.Context, s *testing.State) {
 
 	// ResetModem needed for sim power reset to reflect locked type values.
 	if _, err = helper.ResetModem(ctx); err != nil {
-		s.Log("Failed to reset modem: ", err)
+		s.Fatal("Failed to reset modem: ", err)
 	}
 
 	enabled = helper.IsSimLockEnabled(ctx)

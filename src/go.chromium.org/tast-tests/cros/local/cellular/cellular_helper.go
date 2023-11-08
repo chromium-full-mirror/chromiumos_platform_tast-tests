@@ -251,7 +251,7 @@ func (h *Helper) WaitForEnabledState(ctx context.Context, expected bool) error {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  defaultTimeout,
+		Timeout:  4 * defaultTimeout,
 		Interval: 500 * time.Millisecond,
 	})
 }
@@ -746,10 +746,10 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 	testing.ContextLog(ctx, "Reset modem called")
 
 	if err := h.WaitForEnabledState(ctx, false); err != nil {
-		return time.Since(start), err
+		return time.Since(start), errors.Wrap(err, "expected enabled to become false")
 	}
 	if err := h.WaitForEnabledState(ctx, true); err != nil {
-		return time.Since(start), err
+		return time.Since(start), errors.Wrap(err, "expected enabled to become true")
 	}
 	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyPowered, true, defaultTimeout); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected powered to become true, got false")
@@ -757,7 +757,12 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 	if err := h.Device.WaitForProperty(ctx, shillconst.DevicePropertyScanning, false, defaultTimeout); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected scanning to become false, got true")
 	}
-
+	// GoBigSleepLint: Sleep added as reset fibocom modem taking time for modem to register
+	// and service to refresh. Not found any state/property to wait.
+	// TODO(b/216176362) : Reset modem causes pin api calls failure if not waited 30 seconds.
+	if err := testing.Sleep(ctx, 30*time.Second); err != nil {
+		return time.Since(start), errors.Wrap(err, "failed to sleep after reset modem")
+	}
 	return time.Since(start), nil
 }
 

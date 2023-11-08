@@ -82,7 +82,7 @@ func ShillSimPinLock(ctx context.Context, s *testing.State) {
 	}
 	if enabled || locked {
 		if err := helper.Device.EnterPin(ctx, currentPin); err != nil {
-			s.Log("Failed to enterpin")
+			s.Log("Failed to enterpin: ", err)
 		}
 	}
 }
