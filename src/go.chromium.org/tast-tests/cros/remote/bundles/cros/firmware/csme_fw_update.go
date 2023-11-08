@@ -55,6 +55,7 @@ func init() {
 		BugComponent: "b:270200529", // ChromeOS > Platform > System > Firmware > FAFT > Infra
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
+		SoftwareDeps: []string{"csme_update"},
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Timeout:      40 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
