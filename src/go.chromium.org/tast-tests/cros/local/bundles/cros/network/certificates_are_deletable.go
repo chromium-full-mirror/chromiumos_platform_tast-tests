@@ -32,12 +32,9 @@ func init() {
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",
-			"bossan.fang@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:network", "network_e2e_unstable"},
+		Attr:         []string{"group:network", "network_e2e"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{

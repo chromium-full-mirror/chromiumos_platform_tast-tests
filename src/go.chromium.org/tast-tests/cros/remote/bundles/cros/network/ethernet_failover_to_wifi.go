@@ -30,7 +30,7 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		Attr:         []string{"group:wificell", "wificell_e2e"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
