@@ -14,53 +14,53 @@
 tast-owners@google.com
 
 # Tast reviewers
-aaronyu@google.com
-abergman@google.com
-albertojuarez@google.com
-alexanderhartl@google.com
-alvinjia@google.com
-benreich@chromium.org
-bohdanty@google.com
-deanliao@chromium.org
-edcourtney@chromium.org
-ejcaruso@chromium.org
-eunicesun@google.com
-gabormagda@google.com
-hidehiko@chromium.org
-jbettis@chromium.org
-jeffxu@google.com
-jiejiang@chromium.org
-jinrongwu@google.com
-jsiuda@google.com
-kamchonlathorn@chromium.org
-kamilszarek@google.com
-kathrelkeld@chromium.org
-kglund@google.com
-kyleshima@chromium.org
-lamzin@google.com
-madhavadas@google.com
-mattlui@google.com
-meiring@google.com
-mhasank@chromium.org
-mohamedaomar@google.com
-mpolzer@google.com
-msta@google.com
-mwarton@google.com
-nartemiev@google.com
-neis@chromium.org
-pjlee@google.com
-pwang@chromium.org
-ramsaroop@google.com
-seewaifu@google.com
-shengjun@chromium.org
-stevensd@chromium.org
-tij@google.com
-vsavu@google.com
-xiuwen@google.com
-yamaguchi@chromium.org
-yanyeli@google.com
-yichenz@chromium.org
-zsm@chromium.org
+aaronyu@google.com #{LAST_RESORT_SUGGESTION}
+abergman@google.com #{LAST_RESORT_SUGGESTION}
+albertojuarez@google.com #{LAST_RESORT_SUGGESTION}
+alexanderhartl@google.com #{LAST_RESORT_SUGGESTION}
+alvinjia@google.com #{LAST_RESORT_SUGGESTION}
+benreich@chromium.org #{LAST_RESORT_SUGGESTION}
+bohdanty@google.com #{LAST_RESORT_SUGGESTION}
+deanliao@chromium.org #{LAST_RESORT_SUGGESTION}
+edcourtney@chromium.org #{LAST_RESORT_SUGGESTION}
+ejcaruso@chromium.org #{LAST_RESORT_SUGGESTION}
+eunicesun@google.com #{LAST_RESORT_SUGGESTION}
+gabormagda@google.com #{LAST_RESORT_SUGGESTION}
+hidehiko@chromium.org #{LAST_RESORT_SUGGESTION}
+jbettis@chromium.org #{LAST_RESORT_SUGGESTION}
+jeffxu@google.com #{LAST_RESORT_SUGGESTION}
+jiejiang@chromium.org #{LAST_RESORT_SUGGESTION}
+jinrongwu@google.com #{LAST_RESORT_SUGGESTION}
+jsiuda@google.com #{LAST_RESORT_SUGGESTION}
+kamchonlathorn@chromium.org #{LAST_RESORT_SUGGESTION}
+kamilszarek@google.com #{LAST_RESORT_SUGGESTION}
+kathrelkeld@chromium.org #{LAST_RESORT_SUGGESTION}
+kglund@google.com #{LAST_RESORT_SUGGESTION}
+kyleshima@chromium.org #{LAST_RESORT_SUGGESTION}
+lamzin@google.com #{LAST_RESORT_SUGGESTION}
+madhavadas@google.com #{LAST_RESORT_SUGGESTION}
+mattlui@google.com #{LAST_RESORT_SUGGESTION}
+meiring@google.com #{LAST_RESORT_SUGGESTION}
+mhasank@chromium.org #{LAST_RESORT_SUGGESTION}
+mohamedaomar@google.com #{LAST_RESORT_SUGGESTION}
+mpolzer@google.com #{LAST_RESORT_SUGGESTION}
+msta@google.com #{LAST_RESORT_SUGGESTION}
+mwarton@google.com #{LAST_RESORT_SUGGESTION}
+nartemiev@google.com #{LAST_RESORT_SUGGESTION}
+neis@chromium.org #{LAST_RESORT_SUGGESTION}
+pjlee@google.com #{LAST_RESORT_SUGGESTION}
+pwang@chromium.org #{LAST_RESORT_SUGGESTION}
+ramsaroop@google.com #{LAST_RESORT_SUGGESTION}
+seewaifu@google.com #{LAST_RESORT_SUGGESTION}
+shengjun@chromium.org #{LAST_RESORT_SUGGESTION}
+stevensd@chromium.org #{LAST_RESORT_SUGGESTION}
+tij@google.com #{LAST_RESORT_SUGGESTION}
+vsavu@google.com #{LAST_RESORT_SUGGESTION}
+xiuwen@google.com #{LAST_RESORT_SUGGESTION}
+yamaguchi@chromium.org #{LAST_RESORT_SUGGESTION}
+yanyeli@google.com #{LAST_RESORT_SUGGESTION}
+yichenz@chromium.org #{LAST_RESORT_SUGGESTION}
+zsm@chromium.org #{LAST_RESORT_SUGGESTION}
 
 # Tast team for bulk/emergencies
 rohitbm@chromium.org #{LAST_RESORT_SUGGESTION}
