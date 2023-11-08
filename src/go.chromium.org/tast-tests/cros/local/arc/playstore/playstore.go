@@ -260,6 +260,11 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 	testing.ContextLogf(ctx, "Waiting for app to %s", op)
 
 	tries := 0
+
+	retriesExhausted := func() bool {
+		return tryLimit != -1 && tries >= tryLimit
+	}
+
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if err := FindAndDismissErrorDialog(ctx, d); err != nil {
 			return testing.PollBreak(err)
@@ -273,29 +278,28 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 		// If retry button appears, reopen the Play Store page by sending the same intent again.
 		// (It tends to work better than clicking the retry button.)
-		if err := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches(fmt.Sprintf("(?i)(%s|%s)", retryButtonText, tryAgainButtonText))).Exists(ctx); err == nil {
-			if tryLimit == -1 || tries < tryLimit {
-				tries++
-				testing.ContextLogf(ctx, "Retry button is shown. Trying to reopen the Play Store. Total attempts so far: %d", tries)
-				if err := OpenAppPage(ctx, a, pkgName); err != nil {
-					return err
-				}
-			} else {
+		if _, err := FindActionButton(ctx, d, fmt.Sprintf("(?i)(%s|%s)", retryButtonText, tryAgainButtonText), defaultUITimeout); err == nil {
+			if retriesExhausted() {
 				return testing.PollBreak(errors.Errorf("reopen Play Store attempt limit of %d times", tryLimit))
+			}
+
+			tries++
+			testing.ContextLogf(ctx, "Retry button is shown. Trying to reopen the Play Store. Total attempts so far: %d", tries)
+			if err := OpenAppPage(ctx, a, pkgName); err != nil {
+				return err
 			}
 		}
 
 		// If the install or update button is enabled, click it.
 		if opButton, err := FindActionButton(ctx, d, btnText, 2*time.Second); err == nil {
-			// Limit number of tries to help mitigate Play Store rate limiting across test runs.
-			if tryLimit == -1 || tries < tryLimit {
-				tries++
-				testing.ContextLogf(ctx, "Trying to hit the %s button. Total attempts so far: %d", op, tries)
-				if err := opButton.Click(ctx); err != nil {
-					return err
-				}
-			} else {
+			if retriesExhausted() {
 				return testing.PollBreak(errors.Errorf("hit %s attempt limit of %d times", op, tryLimit))
+			}
+
+			tries++
+			testing.ContextLogf(ctx, "Trying to hit the %s button. Total attempts so far: %d", op, tries)
+			if err := opButton.Click(ctx); err != nil {
+				return err
 			}
 		}
 
@@ -306,40 +310,33 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 		// Handle "Want to link your PayPal account" if necessary.
 		testing.ContextLogf(ctx, "Checking existence of : %s", linkPaypalAccountText)
-		if err := d.Object(ui.TextMatches("(?i)"+linkPaypalAccountText), ui.Enabled(true)).WaitForExists(ctx, defaultUITimeout); err == nil {
+		if err := d.Object(ui.TextMatches("(?i)"+linkPaypalAccountText), ui.Enabled(true)).Exists(ctx); err == nil {
 			testing.ContextLog(ctx, "Want to link your paypal account does exist")
-			noThanksButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+noThanksButtonText))
-			if err := noThanksButton.WaitForExists(ctx, defaultUITimeout); err != nil {
+			if noThanksButton, err := FindActionButton(ctx, d, noThanksButtonText, defaultUITimeout); err != nil {
+				return testing.PollBreak(err)
+			} else if err := noThanksButton.Click(ctx); err != nil {
 				return testing.PollBreak(err)
 			}
-			if err := noThanksButton.Click(ctx); err != nil {
+			if skipButton, err := FindActionButton(ctx, d, skipButtonText, defaultUITimeout); err != nil {
 				return testing.PollBreak(err)
-			}
-			skipButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+skipButtonText))
-			if err := skipButton.WaitForExists(ctx, defaultUITimeout); err != nil {
-				return testing.PollBreak(err)
-			}
-			if err := skipButton.Click(ctx); err != nil {
+			} else if err := skipButton.Click(ctx); err != nil {
 				return testing.PollBreak(err)
 			}
 		}
 
 		// Complete account setup if necessary.
 		testing.ContextLogf(ctx, "Checking existence of : %s", accountSetupText)
-		if err := d.Object(ui.Text(accountSetupText), ui.Enabled(true)).WaitForExists(ctx, shortUITimeout); err == nil {
+		if err := d.Object(ui.Text(accountSetupText), ui.Enabled(true)).Exists(ctx); err == nil {
 			testing.ContextLog(ctx, "Completing account setup")
-			continueButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+continueButtonText))
-			if err := continueButton.WaitForExists(ctx, defaultUITimeout); err != nil {
+			if continueButton, err := FindActionButton(ctx, d, continueButtonText, defaultUITimeout); err != nil {
+				return testing.PollBreak(err)
+			} else if err := continueButton.Click(ctx); err != nil {
 				return testing.PollBreak(err)
 			}
-			if err := continueButton.Click(ctx); err != nil {
+
+			if skipButton, err := FindActionButton(ctx, d, skipButtonText, defaultUITimeout); err != nil {
 				return testing.PollBreak(err)
-			}
-			skipButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)"+skipButtonText))
-			if err := skipButton.WaitForExists(ctx, defaultUITimeout); err != nil {
-				return testing.PollBreak(err)
-			}
-			if err := skipButton.Click(ctx); err != nil {
+			} else if err := skipButton.Click(ctx); err != nil {
 				return testing.PollBreak(err)
 			}
 		}
@@ -354,7 +351,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		// One is "Download in progress", the other is "Install in progress".
 		// If one of them exists, that means the installation is still in progress.
 		progress := d.Object(ui.DescriptionContains("in progress"))
-		if err := progress.WaitForExists(ctx, defaultUITimeout); err == nil {
+		if err := progress.Exists(ctx); err == nil {
 			// Print the percentage of app installed so far.
 			printPercentageOfAppInstalled(ctx, d)
 			testing.ContextLog(ctx, "Wait until download and install complete")
@@ -365,7 +362,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 		// Make sure we are still on the Play Store installation page by checking whether the "open" or "play" button exists.
 		// If not, reopen the Play Store page by sending the same intent again.
-		if err := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches(fmt.Sprintf("(?i)(%s|%s)", openButtonText, playButtonText))).Exists(ctx); err != nil {
+		if _, err := FindActionButton(ctx, d, fmt.Sprintf("%s|%s", openButtonText, playButtonText), defaultUITimeout); err != nil {
 			testing.ContextLog(ctx, "App installation page disappeared; reopen it")
 			if err := OpenAppPage(ctx, a, pkgName); err != nil {
 				return err

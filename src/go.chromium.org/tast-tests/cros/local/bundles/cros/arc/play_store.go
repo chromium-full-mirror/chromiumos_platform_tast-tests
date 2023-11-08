@@ -6,12 +6,14 @@ package arc
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/retry"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -65,13 +67,16 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		}
 		defer cr.Close(cleanupCtx)
 
-		tconn, err := cr.TestAPIConn(ctx)
-		if err != nil {
-			rl.Exit("create test API Connection", err)
+		if err := optin.PerformWithRetry(ctx, cr, 2 /*maxAttempts*/); err != nil {
+			return rl.Retry("optin to Play Store", err)
 		}
 
-		if err := optin.Perform(ctx, cr, tconn); err != nil {
-			return rl.Retry("optin to Play Store", err)
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			return rl.Retry("create test API Connection", err)
+		}
+		if err := optin.WaitForPlayStoreShown(ctx, tconn, time.Minute); err != nil {
+			return rl.Retry("wait for Play Store to show", err)
 		}
 
 		a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
@@ -82,16 +87,21 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		defer a.DumpUIHierarchyOnError(cleanupCtx, s.OutDir(), func() bool {
 			return s.HasError() || retErr != nil
 		})
-
-		if err := optin.WaitForPlayStoreShown(ctx, tconn, time.Minute); err != nil {
-			rl.Exit("wait for Play Store to show", err)
-		}
-
 		d, err := a.NewUIDevice(ctx)
 		if err != nil {
-			rl.Exit("create UIAutomator", err)
+			return rl.Retry("create UIAutomator", err)
 		}
 		defer d.Close(cleanupCtx)
+
+		// Recording screen to make it easy to debug failures.
+		screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
+		if err != nil || screenRecorder == nil {
+			rl.Exit("create ScreenRecorder", err)
+		}
+		if err := screenRecorder.Start(ctx, tconn); err != nil {
+			rl.Exit("start ScreenRecorder", err)
+		}
+		defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.mp4"))
 
 		s.Log("Installing app")
 		if err := playstore.InstallApp(ctx, a, d, pkgName, &playstore.Options{TryLimit: -1}); err != nil {
