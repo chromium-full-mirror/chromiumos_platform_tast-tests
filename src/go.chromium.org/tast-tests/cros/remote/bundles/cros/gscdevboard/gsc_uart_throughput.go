@@ -28,8 +28,17 @@ func init() {
 			"jbk@chromium.org",         // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_fpga_cw310", "gsc_image_ti50"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.Ti50CcdOpen,
+		Params: []testing.Param{{
+			Name: "basic",
+			Val:  false,
+			ExtraAttr: []string{"gsc_h1_shield", "gsc_ot_fpga_cw310"},
+		}, {
+			Name: "endless_crypto",
+			// Run crypto operations in the background to validate it doesn't interfere with UART operations.
+			Val:  true,
+		}},
 	})
 }
 
@@ -66,6 +75,7 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(f, s)
 	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 	gscProps := b.GscProperties()
+	runEndlessCrypto := s.Param().(bool)
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
@@ -131,7 +141,8 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	// does not yet have hardware cryptolib).
 	stop := make(chan bool)
 	done := make(chan bool)
-	if b.TestbedType != ti50.GscOpentitanCw310Fpga {
+	if runEndlessCrypto {
+		s.Log("Running crypto in the background")
 		go endlessCrypto(tpm, s, stop, done)
 	}
 
@@ -162,7 +173,7 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 
 	// Tell the endlessCrypto() goroutine to stop, and wait for it to finish any ongoing
 	// operation.
-	if b.TestbedType != ti50.GscOpentitanCw310Fpga {
+	if runEndlessCrypto {
 		stop <- true
 		<-done
 	}
