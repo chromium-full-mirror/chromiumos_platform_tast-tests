@@ -460,7 +460,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		ExtraSoftwareDeps: {{ .SoftwareDeps }},
 		{{ end }}
 		ExtraData: appendJSONFiles({{ .VideoFiles }}),
-		Timeout: time.Duration(len({{ .VideoFiles }})) * time.Minute,
+		Timeout: calculateTestTimeout({{ .VideoFiles }}, {{ .Name | fmt }}),
 		Val:  chromeStackDecoderVerificationTestParam{
             videoFiles: {{ .VideoFiles  }},
             validatorType: {{ .ValidatorType }},

@@ -6,6 +6,7 @@ package video
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -543,6 +544,13 @@ func appendJSONFiles(videoFiles []string) []string {
 	return tf
 }
 
+func calculateTestTimeout(videoFiles []string, testName string) time.Duration {
+	if strings.Contains(testName, "4k") {
+		return time.Duration(len(videoFiles)) * 4 * time.Minute
+	}
+	return time.Duration(len(videoFiles)) * time.Minute
+}
+
 // chromeStackDecoderVerificationTestParam is used to describe the options used
 // to run each test.
 type chromeStackDecoderVerificationTestParam struct {
@@ -575,7 +583,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 				ExtraData:         appendJSONFiles(av1CommonFiles),
-				Timeout:           time.Duration(len(av1CommonFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(av1CommonFiles, "av1_common"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      av1CommonFiles,
 					validatorType:   decoding.MD5,
@@ -590,7 +598,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 				ExtraData:         appendJSONFiles(av1FilmGrainFiles),
-				Timeout:           time.Duration(len(av1FilmGrainFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(av1FilmGrainFiles, "av1_film_grain"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      av1FilmGrainFiles,
 					validatorType:   decoding.SSIM,
@@ -604,7 +612,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1_10BPP},
 				ExtraData:         appendJSONFiles(av110BitCommonFiles),
-				Timeout:           time.Duration(len(av110BitCommonFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(av110BitCommonFiles, "av1_10bit_common"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      av110BitCommonFiles,
 					validatorType:   decoding.MD5,
@@ -619,7 +627,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1_10BPP},
 				ExtraData:         appendJSONFiles(av110BitFilmGrainFiles),
-				Timeout:           time.Duration(len(av110BitFilmGrainFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(av110BitFilmGrainFiles, "av1_10bit_film_grain"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      av110BitFilmGrainFiles,
 					validatorType:   decoding.SSIM,
@@ -633,7 +641,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264InvalidBitstreams),
-				Timeout:           time.Duration(len(h264InvalidBitstreams)) * time.Minute,
+				Timeout:           calculateTestTimeout(h264InvalidBitstreams, "h264_invalid_bitstreams"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264InvalidBitstreams,
 					validatorType:   decoding.MD5,
@@ -647,7 +655,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["baseline"]),
-				Timeout:           time.Duration(len(h264Files["baseline"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["baseline"], "h264_baseline"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["baseline"],
 					validatorType:   decoding.MD5,
@@ -661,7 +669,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["main"]),
-				Timeout:           time.Duration(len(h264Files["main"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["main"], "h264_main"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["main"],
 					validatorType:   decoding.MD5,
@@ -675,7 +683,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["high"]),
-				Timeout:           time.Duration(len(h264Files["high"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["high"], "h264_high"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["high"],
 					validatorType:   decoding.MD5,
@@ -689,7 +697,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles(h264Files["first_mb_in_slice"]),
-				Timeout:           time.Duration(len(h264Files["first_mb_in_slice"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["first_mb_in_slice"], "h264_first_mb_in_slice"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["first_mb_in_slice"],
 					validatorType:   decoding.MD5,
@@ -703,7 +711,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8ComprehensiveFiles),
-				Timeout:           time.Duration(len(vp8ComprehensiveFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8ComprehensiveFiles, "vp8_comprehensive"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8ComprehensiveFiles,
 					validatorType:   decoding.MD5,
@@ -717,7 +725,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8InterFiles),
-				Timeout:           time.Duration(len(vp8InterFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8InterFiles, "vp8_inter"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8InterFiles,
 					validatorType:   decoding.MD5,
@@ -731,7 +739,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8InterMultiCoeffFiles),
-				Timeout:           time.Duration(len(vp8InterMultiCoeffFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8InterMultiCoeffFiles, "vp8_inter_multi_coeff"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8InterMultiCoeffFiles,
 					validatorType:   decoding.MD5,
@@ -745,7 +753,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8InterSegmentFiles),
-				Timeout:           time.Duration(len(vp8InterSegmentFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8InterSegmentFiles, "vp8_inter_segment"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8InterSegmentFiles,
 					validatorType:   decoding.MD5,
@@ -759,7 +767,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8IntraFiles),
-				Timeout:           time.Duration(len(vp8IntraFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8IntraFiles, "vp8_intra"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8IntraFiles,
 					validatorType:   decoding.MD5,
@@ -773,7 +781,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8IntraMultiCoeffSegmentFiles),
-				Timeout:           time.Duration(len(vp8IntraMultiCoeffSegmentFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8IntraMultiCoeffSegmentFiles, "vp8_intra_multi_coeff"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8IntraMultiCoeffSegmentFiles,
 					validatorType:   decoding.MD5,
@@ -787,7 +795,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 				ExtraData:         appendJSONFiles(vp8IntraSegmentFiles),
-				Timeout:           time.Duration(len(vp8IntraSegmentFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8IntraSegmentFiles, "vp8_intra_segment"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8IntraSegmentFiles,
 					validatorType:   decoding.MD5,
@@ -801,7 +809,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1Buf),
-				Timeout:           time.Duration(len(vp90Group1Buf)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1Buf, "vp9_0_group1_buf"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1Buf,
 					validatorType:   decoding.MD5,
@@ -815,7 +823,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1FrmResize),
-				Timeout:           time.Duration(len(vp90Group1FrmResize)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1FrmResize, "vp9_0_group1_frm_resize"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1FrmResize,
 					validatorType:   decoding.MD5,
@@ -829,7 +837,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1GfDist),
-				Timeout:           time.Duration(len(vp90Group1GfDist)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1GfDist, "vp9_0_group1_gf_dist"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1GfDist,
 					validatorType:   decoding.MD5,
@@ -843,7 +851,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1OddSize),
-				Timeout:           time.Duration(len(vp90Group1OddSize)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1OddSize, "vp9_0_group1_odd_size"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1OddSize,
 					validatorType:   decoding.MD5,
@@ -857,7 +865,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
-				Timeout:           time.Duration(len(vp90Group1Sub8x8)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1Sub8x8, "vp9_0_group1_sub8x8"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1Sub8x8,
 					validatorType:   decoding.MD5,
@@ -871,7 +879,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnV4L2StatelessVideoDecoding(), hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8Sf),
-				Timeout:           time.Duration(len(vp90Group1Sub8x8Sf)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1Sub8x8Sf, "vp9_0_group1_sub8x8_sf"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1Sub8x8Sf,
 					validatorType:   decoding.MD5,
@@ -885,7 +893,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1Buf),
-				Timeout:           time.Duration(len(vp92Group1Buf)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp92Group1Buf, "vp9_2_group1_buf"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp92Group1Buf,
 					validatorType:   decoding.MD5,
@@ -899,7 +907,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1FrmResize),
-				Timeout:           time.Duration(len(vp92Group1FrmResize)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp92Group1FrmResize, "vp9_2_group1_frm_resize"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp92Group1FrmResize,
 					validatorType:   decoding.MD5,
@@ -913,7 +921,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1GfDist),
-				Timeout:           time.Duration(len(vp92Group1GfDist)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp92Group1GfDist, "vp9_2_group1_gf_dist"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp92Group1GfDist,
 					validatorType:   decoding.MD5,
@@ -927,7 +935,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1OddSize),
-				Timeout:           time.Duration(len(vp92Group1OddSize)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp92Group1OddSize, "vp9_2_group1_odd_size"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp92Group1OddSize,
 					validatorType:   decoding.MD5,
@@ -941,7 +949,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1Sub8x8),
-				Timeout:           time.Duration(len(vp92Group1Sub8x8)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp92Group1Sub8x8, "vp9_2_group1_sub8x8"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp92Group1Sub8x8,
 					validatorType:   decoding.MD5,
@@ -955,7 +963,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9_2},
 				ExtraData:         appendJSONFiles(vp92Group1Sub8x8Sf),
-				Timeout:           time.Duration(len(vp92Group1Sub8x8Sf)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp92Group1Sub8x8Sf, "vp9_2_group1_sub8x8_sf"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp92Group1Sub8x8Sf,
 					validatorType:   decoding.MD5,
@@ -968,7 +976,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles(vp9SVCFiles),
-				Timeout:           time.Duration(len(vp9SVCFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp9SVCFiles, "vp9_0_svc"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp9SVCFiles,
 					validatorType:   decoding.MD5,
@@ -982,7 +990,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC},
 				ExtraData:         appendJSONFiles(hevcCommonFiles),
-				Timeout:           time.Duration(len(hevcCommonFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(hevcCommonFiles, "hevc_main"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      hevcCommonFiles,
 					validatorType:   decoding.MD5,
@@ -996,7 +1004,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"}, "h264_files_from_bugs_149068426"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_149068426_invalid_video_layout_mtk_8183_with_direct_videodecoder.h264"},
 					validatorType:   decoding.MD5,
@@ -1010,7 +1018,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"}, "h264_files_from_bugs_172838252"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_172838252_pixelated_video_on_rk3399.h264"},
 					validatorType:   decoding.MD5,
@@ -1024,7 +1032,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"}, "h264_files_from_bugs_174733646"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_174733646_video_with_out_of_order_frames_mtk_8173.h264"},
 					validatorType:   decoding.MD5,
@@ -1038,7 +1046,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"}, "h264_files_from_bugs_210895987"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_210895987_still-colors-360p.h264"},
 					validatorType:   decoding.MD5,
@@ -1052,7 +1060,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"}, "h264_files_from_bugs_276358257"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"},
 					validatorType:   decoding.MD5,
@@ -1066,7 +1074,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"}, "h264_files_from_bugs_277849540_1"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"},
 					validatorType:   decoding.MD5,
@@ -1080,7 +1088,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"}, "h264_files_from_bugs_277849540_2"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"},
 					validatorType:   decoding.MD5,
@@ -1094,7 +1102,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"}, "h264_files_from_bugs_277849540_3"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"},
 					validatorType:   decoding.MD5,
@@ -1108,7 +1116,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K, "proprietary_codecs"},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"}, "h264_4k_files_from_bugs_22704778"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_227047778_mtk_8195_artifacts.h264"},
 					validatorType:   decoding.MD5,
@@ -1122,7 +1130,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"}, "vp9_files_from_bugs_177839888"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_177839888__rk3399_vp9_artifacts_with_video_decoder_japanews24.ivf"},
 					validatorType:   decoding.MD5,
@@ -1136,7 +1144,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"}, "vp9_files_from_bugs_251040563"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/vp9/files_from_bugs/b_251040563_webrtc_libvpx.vp9.ivf"},
 					validatorType:   decoding.MD5,
@@ -1150,7 +1158,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
 				ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 				ExtraData:         appendJSONFiles([]string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"}),
-				Timeout:           time.Duration(len([]string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"})) * time.Minute,
+				Timeout:           calculateTestTimeout([]string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"}, "av1_files_from_bugs_235138734"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf"},
 					validatorType:   decoding.MD5,
@@ -1164,7 +1172,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8ComprehensiveFiles),
-				Timeout:           time.Duration(len(vp8ComprehensiveFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8ComprehensiveFiles, "v4l2_flat_vp8_comprehensive"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8ComprehensiveFiles,
 					validatorType:   decoding.MD5,
@@ -1178,7 +1186,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterFiles),
-				Timeout:           time.Duration(len(vp8InterFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8InterFiles, "v4l2_flat_vp8_inter"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8InterFiles,
 					validatorType:   decoding.MD5,
@@ -1192,7 +1200,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterMultiCoeffFiles),
-				Timeout:           time.Duration(len(vp8InterMultiCoeffFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8InterMultiCoeffFiles, "v4l2_flat_vp8_inter_multi_coeff"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8InterMultiCoeffFiles,
 					validatorType:   decoding.MD5,
@@ -1206,7 +1214,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterSegmentFiles),
-				Timeout:           time.Duration(len(vp8InterSegmentFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8InterSegmentFiles, "v4l2_flat_vp8_inter_segment"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8InterSegmentFiles,
 					validatorType:   decoding.MD5,
@@ -1220,7 +1228,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraFiles),
-				Timeout:           time.Duration(len(vp8IntraFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8IntraFiles, "v4l2_flat_vp8_intra"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8IntraFiles,
 					validatorType:   decoding.MD5,
@@ -1234,7 +1242,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraMultiCoeffSegmentFiles),
-				Timeout:           time.Duration(len(vp8IntraMultiCoeffSegmentFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8IntraMultiCoeffSegmentFiles, "v4l2_flat_vp8_intra_multi_coeff"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8IntraMultiCoeffSegmentFiles,
 					validatorType:   decoding.MD5,
@@ -1248,7 +1256,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraSegmentFiles),
-				Timeout:           time.Duration(len(vp8IntraSegmentFiles)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp8IntraSegmentFiles, "v4l2_flat_vp8_intra_segment"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp8IntraSegmentFiles,
 					validatorType:   decoding.MD5,
@@ -1262,7 +1270,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1Buf),
-				Timeout:           time.Duration(len(vp90Group1Buf)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1Buf, "v4l2_flat_vp9_0_group1_buf"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1Buf,
 					validatorType:   decoding.MD5,
@@ -1276,7 +1284,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1GfDist),
-				Timeout:           time.Duration(len(vp90Group1GfDist)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1GfDist, "v4l2_flat_vp9_0_group1_gf_dist"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1GfDist,
 					validatorType:   decoding.MD5,
@@ -1290,7 +1298,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1OddSize),
-				Timeout:           time.Duration(len(vp90Group1OddSize)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1OddSize, "v4l2_flat_vp9_0_group1_odd_size"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1OddSize,
 					validatorType:   decoding.MD5,
@@ -1304,7 +1312,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
-				Timeout:           time.Duration(len(vp90Group1Sub8x8)) * time.Minute,
+				Timeout:           calculateTestTimeout(vp90Group1Sub8x8, "v4l2_flat_vp9_0_group1_sub8x8"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      vp90Group1Sub8x8,
 					validatorType:   decoding.MD5,
@@ -1318,7 +1326,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["main"]),
-				Timeout:           time.Duration(len(h264Files["main"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["main"], "v4l2_flat_h264_main"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["main"],
 					validatorType:   decoding.MD5,
@@ -1332,7 +1340,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["baseline"]),
-				Timeout:           time.Duration(len(h264Files["baseline"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["baseline"], "v4l2_flat_h264_baseline"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["baseline"],
 					validatorType:   decoding.MD5,
@@ -1346,7 +1354,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["high"]),
-				Timeout:           time.Duration(len(h264Files["high"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["high"], "v4l2_flat_h264_high"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["high"],
 					validatorType:   decoding.MD5,
@@ -1360,7 +1368,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["first_mb_in_slice"]),
-				Timeout:           time.Duration(len(h264Files["first_mb_in_slice"])) * time.Minute,
+				Timeout:           calculateTestTimeout(h264Files["first_mb_in_slice"], "v4l2_flat_h264_first_mb_in_slice"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      h264Files["first_mb_in_slice"],
 					validatorType:   decoding.MD5,
