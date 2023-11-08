@@ -107,7 +107,7 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 		s.Error("No additional information is available for this failure")
 	}
 	p.Set(perf.Metric{
-		Name:      "ImageProcPerf" + ".cpu_usage",
+		Name:      "cpu_usage",
 		Unit:      "percent",
 		Direction: perf.SmallerIsBetter,
 	}, measurements["cpu"])
@@ -115,7 +115,7 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	// Power measurements are not supported on all platforms.
 	if power, ok := measurements["power"]; ok {
 		p.Set(perf.Metric{
-			Name:      "ImageProcPerf" + ".power_consumption",
+			Name:      "power_consumption",
 			Unit:      "watt",
 			Direction: perf.SmallerIsBetter,
 		}, power)
