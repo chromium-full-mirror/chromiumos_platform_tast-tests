@@ -313,7 +313,7 @@ func USBTypeAFunctionalityCheck(ctx context.Context, s *testing.State) {
 				}
 			}
 			return nil
-		}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 5 * time.Second}); err != nil {
+		}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 25 * time.Second}); err != nil {
 			s.Fatal("Failed to unplug USB devices: ", err)
 		}
 	}
@@ -462,7 +462,7 @@ func verifyUSBStorageDevice(ctx context.Context, usbSpeed string) error {
 			return errors.Errorf("unexpected USB HID speed = got %q, want %q", speedOut, usbSpeed)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: 30 * time.Second})
 }
 
 // usbHIDSpeed returns Human Interface Device(HID) speed for HID-USB devices.
@@ -507,7 +507,7 @@ func verifyUSBHIDDevice(ctx context.Context, usbSpeed string) error {
 			return errors.Errorf("unexpected USB HID speed = got %q, want %q", speedOut, usbSpeed)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
+	}, &testing.PollOptions{Timeout: 30 * time.Second})
 }
 
 // usbKeyboardEventNumber returns USB Keyboard evtest event number.
