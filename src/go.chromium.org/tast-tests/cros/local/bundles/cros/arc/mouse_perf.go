@@ -15,6 +15,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -57,6 +59,19 @@ func init() {
 }
 
 func MousePerf(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	// Disable powerd to ensure the device doesn't go to sleep while waiting for CPU to be stabilized
+	cleanup, err := setup.PowerTestSetup(ctx, "powerd disabled", nil, &setup.PowerTestOptions{
+		Powerd: setup.DisablePowerd,
+	})
+	if err != nil {
+		s.Fatal("Failed to disable powerd: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
