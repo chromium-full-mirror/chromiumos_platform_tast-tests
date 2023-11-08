@@ -1,0 +1,7 @@
+set noparent
+
+# ARC++ team
+mhasank@chromium.org
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
