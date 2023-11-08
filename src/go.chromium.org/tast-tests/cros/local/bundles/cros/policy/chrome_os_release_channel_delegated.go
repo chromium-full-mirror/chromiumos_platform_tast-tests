@@ -6,6 +6,7 @@ package policy
 
 import (
 	"context"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -25,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -102,7 +104,7 @@ func waitForTargetChannel(ctx context.Context, channel string) error {
 // applyPoliciesAndCheckSettingsPage sets policies and restarts Chrome to apply
 // them, then checks the settings page for the restriction on channel
 // selection.
-func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fdms *fakedms.FakeDMS, policies []policy.Policy, expectedRestriction restriction.Restriction, dumpPrefix string) (*chrome.Chrome, error) {
+func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fdms *fakedms.FakeDMS, policies []policy.Policy, expectedRestriction restriction.Restriction, dumpPrefix string) (cr *chrome.Chrome, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -128,7 +130,18 @@ func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fd
 		return nil, err
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, dumpPrefix+"_ui_tree_settings_page")
+	defer func(ctx context.Context) {
+		faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool {
+			return retErr != nil
+		}, cr, dumpPrefix+"_ui_tree_settings_page")
+	}(cleanupCtx)
+
+	defer func(ctx context.Context) {
+		logTarget := filepath.Join(s.OutDir(), dumpPrefix+"_update_engine_log.txt")
+		if err := fsutil.CopyFile("/var/log/update_engine.log", logTarget); err != nil {
+			testing.ContextLogf(ctx, "Failed to copy update engine log to %q", logTarget)
+		}
+	}(cleanupCtx)
 
 	// Restart update-engine to force reload policies.
 	if err := upstart.RestartJob(ctx, "update-engine"); err != nil {
