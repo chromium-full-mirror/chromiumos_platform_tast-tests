@@ -61,7 +61,15 @@ func AppLauncherLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	defer kb.Close(ctx)
-	if err := applauncher.SearchAndLaunch(tconn, kb, apps.Lacros.Name)(ctx); err != nil {
+
+	browser, err := apps.PrimaryBrowser(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get the primary browser")
+	}
+	if browser.ID != apps.Lacros.ID {
+		s.Fatal("Lacros is not enabled")
+	}
+	if err := applauncher.SearchAndLaunch(tconn, kb, browser.Name)(ctx); err != nil {
 		s.Fatal("Failed to search and launch Lacros app: ", err)
 	}
 

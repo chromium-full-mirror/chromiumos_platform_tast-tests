@@ -171,7 +171,17 @@ var Help = App{
 // Lacros has details about the Lacros browser app.
 var Lacros = App{
 	ID:   "jaimifaeiicidiikhmjedcgdimealfbh",
+	Name: "Google Chrome",
+}
+// LacrosOld has details about the older Lacros browser app.
+var LacrosOld = App{
+	ID:   "jaimifaeiicidiikhmjedcgdimealfbh",
 	Name: "Chrome",
+}
+// LacrosChromium has details about the Lacros browser app built without branding.
+var LacrosChromium = App{
+	ID:   "jaimifaeiicidiikhmjedcgdimealfbh",
+	Name: "Chromium",
 }
 
 // Maps has details about Arc Maps app.
@@ -548,7 +558,20 @@ func PrimaryBrowser(ctx context.Context, tconn *chrome.TestConn) (App, error) {
 	case lacrosinfo.LacrosModeDisabled:
 		return ChromeOrChromium(ctx, tconn)
 	case lacrosinfo.LacrosModeOnly:
-		return Lacros, nil
+		installedApps, err := ash.ChromeApps(ctx, tconn)
+		if err != nil {
+			return App{}, errors.Wrap(err, "failed to get installed apps")
+		}
+		for _, app := range installedApps {
+			if app.AppID == Lacros.ID && app.Name == Lacros.Name {
+				return Lacros, nil
+			} else if app.AppID == LacrosOld.ID && app.Name == LacrosOld.Name {
+				return LacrosOld, nil
+			} else if app.AppID == LacrosChromium.ID && app.Name == LacrosChromium.Name {
+				return LacrosChromium, nil
+			}
+		}
+		return App{}, errors.Wrap(err, "Lacros is the primary browser, but not installed")
 	}
 	return App{}, errors.Wrapf(err, "unexpected LacrosMode: %v", lacrosInfo.Mode)
 }
