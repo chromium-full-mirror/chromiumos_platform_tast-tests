@@ -498,3 +498,25 @@ func (ec *ECTool) SetBaseState(ctx context.Context, state ECToolBaseState) error
 	_, err := ec.Command(ctx, "basestate", string(state)).Output(ssh.DumpLogOnError)
 	return err
 }
+
+// GetECUptime returns the current ec up time in seconds as a float.
+func (ec *ECTool) GetECUptime(ctx context.Context) (float64, error) {
+	out, err := ec.Command(ctx, "uptimeinfo").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return -1, errors.Wrapf(err, "running 'ectool uptimeinfo' on DUT, got: %v", string(out))
+	}
+
+	outstr := string(out)
+	// The ectool uptimeinfo out looks like `EC uptime: 240.381 seconds`.
+	match := regexp.MustCompile(`EC uptime: (\d+\.\d+) seconds`).FindStringSubmatch(outstr)
+	if match == nil {
+		return -1, errors.Wrapf(err, "failed to parse ec uptime, got %s", outstr)
+	}
+
+	uptime, err := strconv.ParseFloat(match[1], 64)
+	if err != nil {
+		return -1, errors.Wrapf(err, "failed to parse ec uptime to int, got %s", match[1])
+	}
+
+	return uptime, nil
+}
