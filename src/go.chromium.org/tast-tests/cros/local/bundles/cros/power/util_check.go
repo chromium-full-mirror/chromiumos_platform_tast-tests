@@ -25,7 +25,7 @@ func init() {
 		// This test collects hardware info that does not apply to virtual
 		// machines (betty, tast-vm).
 		SoftwareDeps: []string{"crossystem"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      1 * time.Minute,
 	})
 }
