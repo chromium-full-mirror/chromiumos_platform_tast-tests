@@ -317,6 +317,18 @@ func setupBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser,
 		return errors.Wrap(err, "failed to open bookmark creation popup")
 	}
 	doneButton := nodewith.Name("Done").Role(role.Button)
+	// Save bookmark.
+	if err := uiauto.Combine("Save bookmark",
+		ui.LeftClick(doneButton),
+		ui.WaitUntilGone(doneButton),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to save bookmark")
+	}
+
+	// Re-open bookmark popup to rename it and save it to the correct folder.
+	if err := kb.Accel(ctx, "Ctrl+d"); err != nil {
+		return errors.Wrap(err, "failed to open bookmark creation popup")
+	}
 	// Check that "Done" button is shown to ensure that typing starts after the dialog is presented.
 	if err := ui.WaitUntilExists(doneButton)(ctx); err != nil {
 		return errors.Wrap(err, "failed to confirm bookmark creation popup")
@@ -324,7 +336,6 @@ func setupBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser,
 	if err := kb.Type(ctx, bookmarkName); err != nil {
 		return errors.Wrap(err, "failed to type bookmark name")
 	}
-
 	// Make sure that the bookmark is saved to 'Bookmarks bar' where its visible.
 	folderButton := nodewith.Name("Folder").Role(role.PopUpButton)
 	bookmarksBarOption := nodewith.Name(bookmarkFolderName).Role(role.MenuItem)
@@ -335,12 +346,6 @@ func setupBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser,
 		return errors.Wrap(err, "failed to select 'Bookmarks bar' folder")
 	}
 
-	if err := uiauto.Combine("Save bookmark",
-		ui.LeftClick(doneButton),
-		ui.WaitUntilGone(doneButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to save bookmark")
-	}
 	if err := conn.CloseTarget(ctx); err != nil {
 		return errors.Wrap(err, "failed to close downloads page")
 	}
