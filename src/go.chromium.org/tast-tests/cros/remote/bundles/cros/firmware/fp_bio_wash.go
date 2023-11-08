@@ -23,7 +23,7 @@ func init() {
 		Desc: "Validate bio_wash behavior",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
-			"josienordrum@chromium.org", // Test author
+			"josienordrum@google.com", // Test author
 			"tomhughes@chromium.org",
 		},
 		// ChromeOS > Platform > Services > Fingerprint
