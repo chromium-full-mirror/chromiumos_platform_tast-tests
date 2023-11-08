@@ -1,4 +1,4 @@
-// Copyright 2020 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -15,13 +15,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:     Add,
-		Desc:     "Verifies the lp command enqueues print jobs",
-		Contacts: []string{"project-bolton@google.com"},
-		// ChromeOS > Platform > Services > Printing
+		Func:     AddPrintscanmgr,
+		Desc:     "Verifies the lp command enqueues print jobs using printscanmgr",
+		Contacts: []string{"project-bolton@google.com", "pmoy@chromium.org"},
+		// ChromeOS > Platform > baseOS > Printing
 		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
+			"informational",
 			"group:paper-io",
 			"paper-io_printing",
 		},
@@ -469,6 +470,6 @@ func init() {
 	})
 }
 
-func Add(ctx context.Context, s *testing.State) {
-	ippprint.Run(ctx, s, s.Param().(*ippprint.Params), false)
+func AddPrintscanmgr(ctx context.Context, s *testing.State) {
+	ippprint.Run(ctx, s, s.Param().(*ippprint.Params), true)
 }

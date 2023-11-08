@@ -11,17 +11,23 @@ import (
 	"io/ioutil"
 	"time"
 
+	ppb "chromiumos/system_api/printscanmgr_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/fake"
 	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
+	"go.chromium.org/tast-tests/cros/local/printscanmgr"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 // Run runs the lp command and returns the generated print output.
-func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string) ([]byte, error) {
-	const printerID = "FakePrinterID"
+func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string, usePrintscanmgr bool) ([]byte, error) {
+	const (
+		printerID = "FakePrinterID"
+		socketAddr = "socket://localhost:9101"
+	)
 
 	ppd, err := ioutil.ReadFile(ppdFilePath)
 	if err != nil {
@@ -38,16 +44,34 @@ func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string) ([]b
 	}
 	defer fake.Close()
 
-	d, err := debugd.New(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to debugd")
-	}
+	if usePrintscanmgr {
+		p, err := printscanmgr.New(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to connect to printscanmgr")
+		}
 
-	testing.ContextLog(ctx, "Registering a printer")
-	if result, err := d.CupsAddManuallyConfiguredPrinter(ctx, printerID, "socket://localhost:9101", ppd); err != nil {
-		return nil, errors.Wrap(err, "debugd.CupsAddManuallyConfiguredPrinter failed")
-	} else if result != debugd.CUPSSuccess {
-		return nil, errors.Errorf("could not set up a printer: %v", result)
+		testing.ContextLog(ctx, "Registering a printer")
+		request := ppb.CupsAddManuallyConfiguredPrinterRequest{
+				Name:        printerID,
+				Uri:         socketAddr,
+				PpdContents: ppd}
+		if result, err := p.CupsAddManuallyConfiguredPrinter(ctx, &request); err != nil {
+			return nil, errors.Wrap(err, "printscanmgr.CupsAddManuallyConfiguredPrinter failed")
+		} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_SUCCESS {
+			return nil, errors.Errorf("could not set up a printer: %v", result.Result)
+		}
+	} else {
+		d, err := debugd.New(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to connect to debugd")
+		}
+
+		testing.ContextLog(ctx, "Registering a printer")
+		if result, err := d.CupsAddManuallyConfiguredPrinter(ctx, printerID, socketAddr, ppd); err != nil {
+			return nil, errors.Wrap(err, "debugd.CupsAddManuallyConfiguredPrinter failed")
+		} else if result != debugd.CUPSSuccess {
+			return nil, errors.Errorf("could not set up a printer: %v", result)
+		}
 	}
 
 	testing.ContextLog(ctx, "Issuing print request")

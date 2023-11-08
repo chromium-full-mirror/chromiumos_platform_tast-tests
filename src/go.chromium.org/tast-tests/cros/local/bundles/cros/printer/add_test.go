@@ -3,7 +3,7 @@
 // found in the LICENSE file.
 
 // Run "TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test add_test.go" inside the chroot
-// from the directory containing this file to regenerate parameters for add.go, proxy_add.go.
+// from the directory containing this file to regenerate parameters for add.go, add_printscanmgr.go, proxy_add.go.
 
 package printer
 
@@ -135,5 +135,6 @@ func TestAddParams(t *testing.T) {
 		test("unsupported_pin", "printer_unsupported_GenericPostScript.ppd.gz", "printer_pin_print_unsupported_golden.ps", ippprint.WithJobPassword("1234")),
 	})
 	genparams.Ensure(t, "add.go", code)
+	genparams.Ensure(t, "add_printscanmgr.go", code)
 	genparams.Ensure(t, "proxy_add.go", code)
 }
