@@ -85,17 +85,17 @@ func newVMStat(ctx context.Context, outDir string, opts *VMStatOpts) (instance, 
 	}, nil
 }
 
-// end interrupts the vmstat command and ends the recording of vmstat.data.
+// end terminates the vmstat command and ends the recording of vmstat.data.
 func (v *vmstat) end(ctx context.Context) error {
-	// Interrupt the cmd to stop recording.
-	v.cmd.Signal(unix.SIGINT)
+	// Terminate the cmd to stop recording.
+	v.cmd.Signal(unix.SIGTERM)
 	err := v.cmd.Wait()
 	if errClose := v.out.Close(); errClose != nil {
 		return errors.Wrap(errClose, "failed closing output file")
 	}
-	// The signal is interrupt intentionally, so we check the wait status
-	// instead of refusing the error.
-	if ws, ok := testexec.GetWaitStatus(err); !ok || !ws.Signaled() || ws.Signal() != unix.SIGINT {
+	// We're expecting the exit status to be non-zero if the process was killed
+	// by SIGTERM. Anything else indicates a problem.
+	if ws, ok := testexec.GetWaitStatus(err); !ok || !ws.Signaled() || ws.Signal() != unix.SIGTERM {
 		return errors.Wrap(err, "failed waiting for the command to exit")
 	}
 	return nil

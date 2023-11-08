@@ -107,10 +107,10 @@ func newTop(ctx context.Context, outDir string, opts *TopOpts) (instance, error)
 	}, nil
 }
 
-// end interrupts the top command and ends the recording of top.data.
+// end terminates the top command and ends the recording of top.data.
 func (t *top) end(ctx context.Context) error {
-	// Interrupt the cmd to stop recording.
-	t.cmdTop.Signal(unix.SIGINT)
+	// Terminate the cmd to stop recording.
+	t.cmdTop.Signal(unix.SIGTERM)
 	errTop := t.cmdTop.Wait()
 	errAwk := t.cmdAwk.Wait()
 	if errClose := t.out.Close(); errClose != nil {
