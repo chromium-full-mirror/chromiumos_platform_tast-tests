@@ -16,9 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -166,37 +163,14 @@ func verifyGPUAccel(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCo
 	}
 	defer gpuConn.Close()
 
-	// copyButton is the finder for the Copy Report to Clipboard button.
-	var copyButton = nodewith.Name("Copy Report to Clipboard").Role(role.Button)
-	ui := uiauto.New(tconn)
-	if err := ui.LeftClick(copyButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click button")
-	}
-
-	gpuInfo, err := getClipboardText(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get clipboard data")
+	var gpuInfo string
+	const getGraphicsFeature = "document.querySelector('info-view').shadowRoot.getElementById('content').innerText"
+	if err := gpuConn.Eval(ctx, getGraphicsFeature, &gpuInfo); err != nil {
+		return errors.Wrap(err, "failed to get graphics feature status from gpu")
 	}
 
 	if !(webGLPattern.MatchString(gpuInfo) && webGL2Pattern.MatchString(gpuInfo)) {
 		return errors.Wrap(err, "failed to find WebGL or WebGL2 hardware accelerated in GPU page")
 	}
 	return nil
-}
-
-// getClipboardText gets the clipboard text data.
-func getClipboardText(ctx context.Context, tconn *chrome.TestConn) (string, error) {
-	var clipData string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := tconn.Eval(ctx, `tast.promisify(chrome.autotestPrivate.getClipboardTextData)()`, &clipData); err != nil {
-			return testing.PollBreak(err)
-		}
-		if clipData == "" {
-			return errors.New("no clipboard data")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
-		return "", errors.Wrap(err, "failed to get clipboard data")
-	}
-	return clipData, nil
 }
