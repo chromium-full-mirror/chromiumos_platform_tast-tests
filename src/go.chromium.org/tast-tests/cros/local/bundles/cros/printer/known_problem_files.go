@@ -49,6 +49,11 @@ func init() {
 					GoldenFile:  "Example_1_golden.pwg",
 				},
 				ExtraData: []string{"Example_1.pdf", "Example_1_golden.pwg"},
+				// When rasterizing this file, there are a very small number of bits
+				// that are different on arm32 boards.  We don't expect this test file
+				// to cause regressions on just arm32 boards and not other boards, so
+				// it's probably safe to skip boards with arm 32-bit userspace.
+				ExtraSoftwareDeps: []string{"no_arm"},
 			}, {
 				// This is a Google Slides presentation that is printed from Google
 				// Slides (which generates a PDF on the fly).  This causes a 'Filter
