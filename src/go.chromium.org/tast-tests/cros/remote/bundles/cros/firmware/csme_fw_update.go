@@ -38,10 +38,10 @@ var (
 )
 
 const (
-	DEFAULT_TEMP_PATH = "/usr/local/tmp/"
-	DEFAULT_UPDATER   = "/usr/sbin/chromeos-firmwareupdate"
-	ME_BLOB           = "me_rw.version"
-	FW_SECTION_A      = "FW_MAIN_A"
+	defaultTempPath = "/usr/local/tmp/"
+	defaultUpdater  = "/usr/sbin/chromeos-firmwareupdate"
+	meBlob          = "me_rw.version"
+	fwSectionA      = "FW_MAIN_A"
 )
 
 func init() {
@@ -70,16 +70,16 @@ func init() {
 }
 
 func isCsmeExist(ctx context.Context, s *testing.State, binPath string) bool {
-	s.Logf("Checking if %s file present in image: %s ", ME_BLOB, binPath)
+	s.Logf("Checking if %s file present in image: %s ", meBlob, binPath)
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	out, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", binPath, "print", "-r", FW_SECTION_A).Output()
+	out, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", binPath, "print", "-r", fwSectionA).Output()
 	if err != nil {
 		s.Fatal("Failed to execute cbfstool: ", err)
 	}
 	outs := string(out)
-	if !strings.Contains(outs, ME_BLOB) {
-		s.Logf("%s is not present", ME_BLOB)
+	if !strings.Contains(outs, meBlob) {
+		s.Logf("%s is not present", meBlob)
 		return false
 	}
 	return true
@@ -131,7 +131,7 @@ func getCurrentBiosImage(ctx context.Context, s *testing.State) {
 
 	s.Log("SPI Bios is stored at: ", originalBios)
 	if !isCsmeExist(ctx, s, originalBios) {
-		s.Fatal("me_rw.version not present in image, Skipping test.")
+		s.Fatal("me_rw.version not present in image, Skipping test")
 	}
 
 }
@@ -144,11 +144,11 @@ func getDowngradeBiosImage(ctx context.Context, s *testing.State) {
 
 	// Get relative image path
 	chromeosFirmwareUpdateManifest := fmt.Sprintf("chromeos-firmwareupdate --manifest | jq -c .%s.host.image", fwName)
-	imagePath_bytes, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", chromeosFirmwareUpdateManifest).Output(ssh.DumpLogOnError)
+	imagePathBytes, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", chromeosFirmwareUpdateManifest).Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("chromeos-firmwareupdate --manifest read failed: ", err)
 	}
-	meImageRelativePath = string(imagePath_bytes)
+	meImageRelativePath = string(imagePathBytes)
 	meImageRelativePath = strings.Trim(meImageRelativePath, "\" \n")
 	// Unpack image to DUT temporary directory
 	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "--unpack", shellballDir).Run(ssh.DumpLogOnError); err != nil {
@@ -164,7 +164,7 @@ func getDowngradeBiosImage(ctx context.Context, s *testing.State) {
 
 	s.Log("Downgrade Bios is stored at: ", downgradeBios)
 	if !isCsmeExist(ctx, s, downgradeBios) {
-		s.Fatal("me_rw.version not present in image, Skipping test.")
+		s.Fatal("me_rw.version not present in image, Skipping test")
 	}
 }
 
@@ -190,34 +190,34 @@ func compareFmapScheme(ctx context.Context, s *testing.State) {
 	s.Log("fmap Downgrade Bios: ", fmapDowngradeBios)
 
 	if (len(fmapOriginalBios) == 0) != (len(fmapDowngradeBios) == 0) {
-		s.Fatal("Test setup issue : FMAP format is different in current and downgrade bios.")
+		s.Fatal("Test setup issue : FMAP format is different in current and downgrade bios")
 	}
 }
 
-func cbfsRead(ctx context.Context, s *testing.State, binPath string, region string, blob string, filename string) {
+func cbfsRead(ctx context.Context, s *testing.State, binPath, region, blob, filename string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	extract_cmd := fmt.Sprintf("cbfstool %s extract -r %s -n %s -f %s", binPath, region, blob, filename)
-	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", extract_cmd).Output(ssh.DumpLogOnError)
+	extractCmd := fmt.Sprintf("cbfstool %s extract -r %s -n %s -f %s", binPath, region, blob, filename)
+	out, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", extractCmd).Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatalf("cbfstool failed to extract binary: %s, %v", string(out), err)
 	}
 }
 
-func getImageCsmeRwVersion(ctx context.Context, s *testing.State, binPath string, filename string) string {
+func getImageCsmeRwVersion(ctx context.Context, s *testing.State, binPath, filename string) string {
 	h := s.FixtValue().(*fixture.Value).Helper
 
-	cbfsRead(ctx, s, binPath, FW_SECTION_A, ME_BLOB, filename)
+	cbfsRead(ctx, s, binPath, fwSectionA, meBlob, filename)
 
-	me_version_extract_ctx := fmt.Sprintf("hexdump -C %s |  cut -c 9- | cut -d'|' -f 2", filename)
-	me_version_bytes, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", me_version_extract_ctx).Output(ssh.DumpLogOnError)
+	meVersionExtractCtx := fmt.Sprintf("hexdump -C %s |  cut -c 9- | cut -d'|' -f 2", filename)
+	meVersionBytes, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", meVersionExtractCtx).Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to parse CSME version from ME binary: ", err)
 	}
 
-	var me_version = string(me_version_bytes)
-	me_version = strings.Trim(me_version, ". \n")
-	return me_version
+	var meVersion = string(meVersionBytes)
+	meVersion = strings.Trim(meVersion, ". \n")
+	return meVersion
 }
 
 func getActiveCsmeRwVersion(ctx context.Context, s *testing.State) string {
@@ -240,33 +240,33 @@ func getActiveCsmeRwVersion(ctx context.Context, s *testing.State) string {
 	return csmeVersion
 }
 
-func cmpLocalFiles(ctx context.Context, s *testing.State, file1 string, file2 string) string {
+func cmpLocalFiles(ctx context.Context, s *testing.State, file1, file2 string) string {
 	h := s.FixtValue().(*fixture.Value).Helper
 	out, err := h.DUT.Conn().CommandContext(ctx, "cmp", file2, file2).Output()
 	if err != nil {
-		s.Fatal("compare command failed", err)
+		s.Fatal("compare command failed: ", err)
 	}
 	return string(out)
 }
 
 func isMeRwBlobsIdentical(ctx context.Context, s *testing.State) bool {
 	downgradeRw := imageDir + "rw_downgrade.bin"
-	spi_rw_a := imageDir + "rw_spi_a.bin"
-	spi_rw_b := imageDir + "rw_spi_b.bin"
+	spiRwA := imageDir + "rw_spi_a.bin"
+	spiRwB := imageDir + "rw_spi_b.bin"
 	cbfsRead(ctx, s, downgradeBios, "ME_RW_A", "me_rw", downgradeRw)
-	cbfsRead(ctx, s, originalBios, "ME_RW_A", "me_rw", spi_rw_a)
-	cbfsRead(ctx, s, originalBios, "ME_RW_B", "me_rw", spi_rw_b)
+	cbfsRead(ctx, s, originalBios, "ME_RW_A", "me_rw", spiRwA)
+	cbfsRead(ctx, s, originalBios, "ME_RW_B", "me_rw", spiRwB)
 
 	s.Log("Comparing ME blobs")
-	diffA := cmpLocalFiles(ctx, s, downgradeRw, spi_rw_a)
-	diffB := cmpLocalFiles(ctx, s, downgradeRw, spi_rw_b)
+	diffA := cmpLocalFiles(ctx, s, downgradeRw, spiRwA)
+	diffB := cmpLocalFiles(ctx, s, downgradeRw, spiRwB)
 
 	if diffA != "" && diffB != "" {
-		s.Log("CSME RW version is same, but downgrade me_rw differs from both me_rw blobs in spi flash.")
+		s.Log("CSME RW version is same, but downgrade me_rw differs from both me_rw blobs in spi flash")
 	} else if diffA != "" {
-		s.Log("CSME RW version is same, but downgrade me_rw and FW_MAIN_A me_rw differ.")
+		s.Log("CSME RW version is same, but downgrade me_rw and FW_MAIN_A me_rw differ")
 	} else if diffB != "" {
-		s.Log("CSME RW version is same, but downgrade me_rw and FW_MAIN_B me_rw differ.")
+		s.Log("CSME RW version is same, but downgrade me_rw and FW_MAIN_B me_rw differ")
 	} else {
 		return true
 	}
@@ -293,42 +293,42 @@ func getCsmeVersions(ctx context.Context, s *testing.State) {
 		isDowngradePossible = !isMeRwBlobsIdentical(ctx, s)
 	}
 }
-func runShellball(ctx context.Context, s *testing.State, binPath string, affix string) {
+func runShellball(ctx context.Context, s *testing.State, binPath, affix string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	s.Logf("Preparing %s shellball with %s", affix, binPath)
 
-	firmware_updater := fwUpdaterDir + "chromos-firmwareupdate-" + affix
+	firmwareUpdater := fwUpdaterDir + "chromos-firmwareupdate-" + affix
 
 	// Copy chromos-firmwareupdate to temporary directory
-	if err := h.DUT.Conn().CommandContext(ctx, "cp", DEFAULT_UPDATER, firmware_updater).Run(); err != nil {
-		s.Fatalf("Failed to copy %s to %s: %s", DEFAULT_UPDATER, originalBios, err)
+	if err := h.DUT.Conn().CommandContext(ctx, "cp", defaultUpdater, firmwareUpdater).Run(); err != nil {
+		s.Fatalf("Failed to copy %s to %s: %s", defaultUpdater, originalBios, err)
 	}
 
 	// unpack bios images
-	bios_images := fwUpdaterDir + "bios_images_" + affix + "/"
-	if err := h.DUT.Conn().CommandContext(ctx, "sh", firmware_updater, "--unpack", bios_images).Run(ssh.DumpLogOnError); err != nil {
+	biosImages := fwUpdaterDir + "bios_images_" + affix + "/"
+	if err := h.DUT.Conn().CommandContext(ctx, "sh", firmwareUpdater, "--unpack", biosImages).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to extract bios images: ", err)
 	}
 
 	// update bios image
-	if err := h.DUT.Conn().CommandContext(ctx, "cp", binPath, bios_images+meImageRelativePath).Run(); err != nil {
-		s.Fatalf("Failed to copy %s to %s: %s", binPath, bios_images+meImageRelativePath, err)
+	if err := h.DUT.Conn().CommandContext(ctx, "cp", binPath, biosImages+meImageRelativePath).Run(); err != nil {
+		s.Fatalf("Failed to copy %s to %s: %s", binPath, biosImages+meImageRelativePath, err)
 	}
 
 	// repack bios image
-	if err := h.DUT.Conn().CommandContext(ctx, "sh", firmware_updater, "--repack", bios_images).Run(ssh.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "sh", firmwareUpdater, "--repack", biosImages).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to repack bios images: ", err)
 	}
 
 	// run shell ball
-	if err := h.DUT.Conn().CommandContext(ctx, "sh", firmware_updater, "--mode=recovery", "--host_only", "--wp=1").Run(ssh.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "sh", firmwareUpdater, "--mode=recovery", "--host_only", "--wp=1").Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to downgrade bios: ", err)
 	}
 }
 
 func initDirectory(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	tempdir, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", DEFAULT_TEMP_PATH+"CSME_XXXXXXXX").Output()
+	tempdir, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", defaultTempPath+"CSME_XXXXXXXX").Output()
 	if err != nil {
 		s.Fatal("Failed to create remote data path directory: ", err)
 	}
@@ -347,12 +347,12 @@ func initDirectory(ctx context.Context, s *testing.State) {
 	}
 }
 
-func switchSlotAndVerifyCsme(ctx context.Context, s *testing.State, slot string, operation string, expectedMe string) {
+func switchSlotAndVerifyCsme(ctx context.Context, s *testing.State, slot, operation, expectedMe string) {
 	s.Logf("Switching to slot %s", slot)
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", fmt.Sprintf("fw_try_next=%s", slot)).Run(); err != nil {
-		s.Fatal("failed to set crossystem fw_try_next: ", err)
+		s.Fatal("Failed to set crossystem fw_try_next: ", err)
 	}
 
 	s.Log("Reboot and wait for DUT to reconnect")
@@ -365,15 +365,13 @@ func switchSlotAndVerifyCsme(ctx context.Context, s *testing.State, slot string,
 	s.Logf("Active CSME RW Version after %s: %s", operation, activeMeVersion)
 
 	if activeMeVersion != expectedMe {
-		s.Fatalf("CSME RW %s using FW_MAIN_%s is Failed!", operation, slot)
+		s.Fatalf("CSME RW %s using FW_MAIN_%s is Failed", operation, slot)
 	}
 	s.Logf("Slot %s: %s successful", slot, operation)
 }
 
-/*
- * This tests csme rw firmware update feature by changing the me_rw
- * image in firmware main regions with a different version
- */
+// CsmeFwUpdate tests csme rw firmware update feature by changing the me_rw
+// image in firmware main regions with a different version
 func CsmeFwUpdate(ctx context.Context, s *testing.State) {
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
@@ -392,7 +390,7 @@ func CsmeFwUpdate(ctx context.Context, s *testing.State) {
 	compareFmapScheme(ctx, s)
 	getCsmeVersions(ctx, s)
 	if !isDowngradePossible {
-		s.Fatal("CSME RW blobs are same in downgrade and spi bios.")
+		s.Fatal("CSME RW blobs are same in downgrade and spi bios")
 		return
 	}
 
