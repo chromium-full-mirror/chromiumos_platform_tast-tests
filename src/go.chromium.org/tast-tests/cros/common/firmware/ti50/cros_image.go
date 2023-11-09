@@ -7,6 +7,7 @@ package ti50
 import (
 	"context"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -80,7 +81,56 @@ const (
 	ToT GscBranch = iota
 	PrePvt
 	MP
+	Unknown
 )
+
+// GscSlot contains possible GSC firmware slots.
+type GscSlot uint
+
+// Possible GSC firmware slots
+const (
+	SlotA GscSlot = iota
+	SlotB
+)
+
+// VersionCommandInfo contains structured information returned from the GSC
+// `version` command.
+type VersionCommandInfo struct {
+	RoA   RoInfo
+	RoB   RoInfo
+	RwA   RwInfo
+	RwB   RwInfo
+	Bid   BidInfo
+	Build BuildInfo
+}
+
+// RoInfo contains information about a loaded ro image slot.
+type RoInfo struct {
+	Active     bool
+	Version    string
+	ImageCheck string
+}
+
+// RwInfo contains information about a loaded rw image slot.
+type RwInfo struct {
+	Empty   bool
+	Active  bool
+	Version string
+	Branch  GscBranch
+}
+
+// BidInfo contains board id information for a slot.
+type BidInfo struct {
+	Empty   bool
+	BidType uint32
+	Mask    uint32
+	Flags   uint32
+}
+
+// BuildInfo contains information about the firmware currently running.
+type BuildInfo struct {
+	Branch GscBranch
+}
 
 // CrOSImage interacts with a board running ti50.
 type CrOSImage struct {
@@ -358,30 +408,208 @@ func (i *CrOSImage) IsCCDOpen(ctx context.Context) (bool, error) {
 	return false, err
 }
 
-// GetGscBranch uses the `version` GSC console command to extract the source
-// branch that the GSC firmware was built from.
-func (i *CrOSImage) GetGscBranch(ctx context.Context) (GscBranch, error) {
-	ti50BranchRegexp := regexp.MustCompile(`Build:.+ti50_common_([a-z]+)[:-]`)
+// GetVersionInfo uses the `version` GSC console command to returned information
+// about the running firmware.
+func (i *CrOSImage) GetVersionInfo(ctx context.Context) (VersionCommandInfo, error) {
 	output, err := i.safeCommand(ctx, "version")
 	if err != nil {
-		return MP, errors.Wrap(err, "failed to run GSC version command")
+		return VersionCommandInfo{}, errors.Wrap(err, "failed to run GSC version command")
+	}
+	return matchVersionInfo(output)
+}
+
+func matchRoInfo(s string, slot GscSlot) (RoInfo, error) {
+	slotStr := "A"
+	if slot == SlotB {
+		slotStr = "B"
 	}
 
-	match := ti50BranchRegexp.FindStringSubmatch(output)
-	if len(match) != 2 {
-		return MP, errors.Wrap(err, "regex failed to extract branch information from: "+output)
+	ret := RoInfo{}
+	regexp := regexp.MustCompile(`RO_` + slotStr + `:\s+([\s|*])\s([0-9.]+)\/([[:xdigit:]]+)`)
+	matches := regexp.FindStringSubmatch(s)
+	if len(matches) != 4 {
+		return ret, errors.New("regex failed to extract ro info from: " + s)
+	}
+	ret.Version = matches[2]
+	ret.ImageCheck = matches[3]
+
+	if matches[1] == "*" {
+		ret.Active = true
 	}
 
-	switch match[1] {
+	return ret, nil
+}
+
+var cr50RwVerStrRe = `cr50_([a-z1-9]+)\S*-([[:xdigit:]]+)`
+var ti50RwVerStrRe = `ti50_common_([a-z]+)\S*:(\S+)`
+var gscRwVerStrRe = cr50RwVerStrRe + `|` + ti50RwVerStrRe
+
+func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
+	slotStr := "A"
+	if slot == SlotB {
+		slotStr = "B"
+	}
+
+	regexp := regexp.MustCompile(`RW_` + slotStr + `:\s+([\s|*])\s(([0-9.]+)/(` + gscRwVerStrRe + `)|Empty)`)
+	matches := regexp.FindStringSubmatch(s)
+
+	// Manually figure out how many matches we got since `regexp` only returns
+	// the maximum number of matches that can be returned.
+	numMatches := 0
+	for _, value := range matches {
+		if value != "" {
+			numMatches++
+		}
+	}
+
+	ret := RwInfo{}
+	if numMatches == 3 {
+		ret.Active = false
+		ret.Empty = true
+		return ret, nil
+	} else if numMatches == 7 {
+		ret.Empty = false
+		if matches[1] == "*" {
+			ret.Active = true
+		} else {
+			ret.Active = false
+		}
+		ret.Version = matches[3]
+
+		if matches[5] != "" {
+			ret.Branch = getBranch(matches[5])
+		} else {
+			ret.Branch = getBranch(matches[7])
+		}
+
+		return ret, nil
+	}
+
+	return RwInfo{}, errors.New("regex failed to extract rw info from: " + s)
+}
+
+var bidRe = `([[:xdigit:]]+):([[:xdigit:]]+):([[:xdigit:]]+)`
+
+func matchBidInfo(s string, slot GscSlot) (BidInfo, error) {
+	slotStr := "A"
+	if slot == SlotB {
+		slotStr = "B"
+	}
+
+	ret := BidInfo{}
+	regexp := regexp.MustCompile(`BID ` + slotStr + `:\s+` + bidRe)
+	matches := regexp.FindStringSubmatch(s)
+	if len(matches) == 0 {
+		ret.Empty = true
+		return ret, nil
+	} else if len(matches) != 4 {
+		return BidInfo{}, errors.New("regex failed to extract bid info from: " + s)
+	}
+
+	hexToUint32 := func(str string) (uint32, error) {
+		res, err := strconv.ParseInt(str, 16, 32)
+		if err != nil {
+			return 0, errors.Wrap(err, "could not parse hex string")
+		}
+		return uint32(res), nil
+	}
+	bidType, err := hexToUint32(matches[1])
+	if err != nil {
+		return ret, err
+	}
+	mask, err := hexToUint32(matches[2])
+	if err != nil {
+		return ret, err
+	}
+	flags, err := hexToUint32(matches[3])
+	if err != nil {
+		return ret, err
+	}
+
+	ret.Empty = false
+	ret.BidType = bidType
+	ret.Mask = mask
+	ret.Flags = flags
+
+	return ret, nil
+}
+
+func matchBuildInfo(s string) (BuildInfo, error) {
+	ret := BuildInfo{}
+
+	regexp := regexp.MustCompile(`Build:\s+([0-9.]+/` + cr50RwVerStrRe + `|` + ti50RwVerStrRe + `)`)
+	matches := regexp.FindStringSubmatch(s)
+	if len(matches) != 6 {
+		return ret, errors.New("regex failed to extract build info from: " + s)
+	}
+	if matches[2] != "" {
+		ret.Branch = getBranch(matches[2])
+	} else {
+		ret.Branch = getBranch(matches[4])
+	}
+
+	return ret, nil
+}
+
+func getBranch(s string) GscBranch {
+	switch s {
 	case "tot":
-		return ToT, nil
+		return ToT
 	case "prepvt":
-		return PrePvt, nil
+		return PrePvt
 	case "mp":
-		return MP, nil
+		return MP
+	default:
+		return Unknown
+	}
+}
+
+func matchVersionInfo(s string) (VersionCommandInfo, error) {
+	ret := VersionCommandInfo{}
+	roInfoA, err := matchRoInfo(s, SlotA)
+	if err != nil {
+		return ret, err
+	}
+	roInfoB, err := matchRoInfo(s, SlotB)
+	if err != nil {
+		return ret, err
+	}
+	rwInfoA, err := matchRwInfo(s, SlotA)
+	if err != nil {
+		return ret, err
+	}
+	rwInfoB, err := matchRwInfo(s, SlotB)
+	if err != nil {
+		return ret, err
+	}
+	bidInfoA, err := matchBidInfo(s, SlotA)
+	if err != nil {
+		return ret, err
+	}
+	bidInfoB, err := matchBidInfo(s, SlotB)
+	if err != nil {
+		return ret, err
+	}
+	buildInfo, err := matchBuildInfo(s)
+	if err != nil {
+		return ret, err
 	}
 
-	return MP, errors.Wrap(err, "unknown GSC branch")
+	bidInfo := bidInfoA
+	if rwInfoB.Active {
+		bidInfo = bidInfoB
+	}
+
+	ret = VersionCommandInfo{
+		RoA:   roInfoA,
+		RoB:   roInfoB,
+		RwA:   rwInfoA,
+		RwB:   rwInfoB,
+		Bid:   bidInfo,
+		Build: buildInfo,
+	}
+
+	return ret, nil
 }
 
 // WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement.
