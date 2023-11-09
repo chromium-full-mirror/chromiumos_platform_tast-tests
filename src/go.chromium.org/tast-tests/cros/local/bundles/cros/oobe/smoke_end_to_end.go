@@ -53,11 +53,13 @@ func init() {
 			Name: "add_person_flow",
 			Val:  param{isAddPersonFlow: true, usePreprod: false},
 		}, {
-			Name: "preprod",
-			Val:  param{isAddPersonFlow: false, usePreprod: true},
+			ExtraAttr: []string{"group:testenv_preprod"},
+			Name:      "preprod",
+			Val:       param{isAddPersonFlow: false, usePreprod: true},
 		}, {
-			Name: "preprod_add_person_flow",
-			Val:  param{isAddPersonFlow: true, usePreprod: true},
+			ExtraAttr: []string{"group:testenv_preprod"},
+			Name:      "preprod_add_person_flow",
+			Val:       param{isAddPersonFlow: true, usePreprod: true},
 		}},
 	})
 }
@@ -83,7 +85,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err := env.SetUp(ctx); err != nil {
 			s.Fatal("Failed to set up the preprod env: ", err)
 		}
-		defer env.TearDown(ctx)
+		defer env.TearDown(cleanupCtx)
 	}
 
 	isAddPersonFlow := s.Param().(param).isAddPersonFlow
