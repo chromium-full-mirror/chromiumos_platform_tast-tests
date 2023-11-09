@@ -160,6 +160,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	s.Log("DUT tmp Directory: ", tmpFwDir)
 	defer func() {
 		s.Log("Deleting tmp directory on dut: ", tmpFwDir)
+		h.CloseRPCConnection(ctx)
 		if err := h.RequireRPCClient(ctx); err != nil {
 			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 		}
@@ -186,8 +187,8 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get AP RO ID: ", err)
 	}
+	var ecBinToFlash, monitorBinToFlash, apBinToFlash string
 	if firmwarePathVal != "" || localFirmwarePathVal != "" {
-		var ecBinToFlash, monitorBinToFlash, apBinToFlash string
 		if firmwarePathVal != "" {
 			s.Log("Downloading Firmware to Flash")
 			ecBinToFlash, monitorBinToFlash, apBinToFlash = downloadFirmwareFromGCS(ctx, s, tmpDir, firmwarePathVal, fwidModel, flashEC)
@@ -198,22 +199,27 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 		fileMap := map[string]string{
 			fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, apFirmwareFileToFlash),
 		}
+		dutFileMap := map[string]string{
+			fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, apFirmwareFileToFlash),
+		}
 		if ecBinToFlash != "" {
 			fileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, ecFirmwareFileToFlash)
+			dutFileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, ecFirmwareFileToFlash)
 		}
 		if monitorBinToFlash != "" {
 			fileMap[fmt.Sprintf("%s/%s", tmpDir, monitorBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, monitorFileToFlash)
+			dutFileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, monitorFileToFlash)
 		}
 		if err := h.ServoProxy.PutFiles(ctx, false, fileMap); err != nil {
 			s.Fatal("Failed to copy files to servo host: ", err)
 		}
-		linuxssh.PutFiles(ctx, s.DUT().Conn(),
-			map[string]string{fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, apFirmwareFileToFlash)},
-			linuxssh.PreserveSymlinks)
+		s.Log("Cpoying files to dut")
+		linuxssh.PutFiles(ctx, s.DUT().Conn(), dutFileMap, linuxssh.PreserveSymlinks)
 	}
 	flashAPFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, initialROFwid, initialRwFwid)
 	flashAPFirmware(ctx, s, h, tmpFwDir, firmwarePathVal, ecChip, initialROFwid, initialRwFwid)
-	flashECFirmware(ctx, s, h, tmpFwDir, tmpFwDir, tmpDir, firmwarePathVal, ecChip, flashEC)
+	flashECFirmware(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, ecChip, flashEC)
+	flashECFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, ecBinToFlash, monitorBinToFlash)
 }
 
 // downloadFirmwareFromGCS reads a file from GCS based on the board, branch and firmware version specified
@@ -276,7 +282,7 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 }
 
 // flashECFirmware flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
-func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, dutTmpDir, localTmpDir, firmwarePathVal, ecChip string, flashEC bool) {
+func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, localTmpDir, firmwarePathVal, ecChip string, flashEC bool) {
 	if !flashEC || firmwarePathVal == "" {
 		return
 	}
@@ -351,7 +357,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	}
 	s.Log("Completed backup of existing AP fw")
 
-	// Check that the DUT has initial fw in the end
+	// Restore the initial fw to the DUT in the end
 	defer func() {
 		s.Log("Flashing DUT with backup AP firmware file")
 		linuxssh.PutFiles(ctx, s.DUT().Conn(),
@@ -395,6 +401,41 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 	}
 }
 
+// flashECFirmwareFromDut flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
+func flashECFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, tmpFwDir, localTmpDir, firmwarePathVal, ecBinToFlash, monitorBinToFlash string) {
+	if firmwarePathVal == "" {
+		return
+	}
+	s.Log("Backing up EC firmware")
+	backupECFirmware(ctx, s, h, tmpFwDir)
+	s.Log("Completed backup of existing EC fw")
+
+	// Check that the DUT has initial fw in the end
+	defer func() {
+		// Copy backup file from servo to host
+		err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile))
+		if err != nil {
+			s.Fatal("Failed to copy file from Servo to Host: ", err)
+		}
+		s.Log("Flashing DUT with backup EC firmware file")
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+		}
+		linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile): fmt.Sprintf("%s/%s", tmpFwDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, ecBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, ecFirmwareFileToFlash)}, linuxssh.PreserveSymlinks)
+		// copyFileToDUT(ctx, s, h, fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile), fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile))
+		runECFirmwareFlashDut(ctx, s, h, tmpFwDir, backupFirmwareFile)
+		s.Log("Completed flashing of backup EC fw")
+	}()
+
+	s.Log("Flashing DUT EC with downloaded firmware file")
+	linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{fmt.Sprintf("%s/%s", localTmpDir, monitorBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, monitorFileToFlash), fmt.Sprintf("%s/%s", localTmpDir, ecBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, ecFirmwareFileToFlash)}, linuxssh.PreserveSymlinks)
+	runECFirmwareFlashDut(ctx, s, h, tmpFwDir, ecFirmwareFileToFlash)
+	s.Log("Completed flashing of downloaded fw")
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+	}
+}
+
 // safeRebootDut will close RPC connection, reboot DUT and Open a new RPC connection.
 func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 	// Close RPC connection before reboot.
@@ -423,12 +464,15 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 // backupECFirmware takes a backup of current EC firmware.
 func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir string) {
 	h.DisconnectDUT(ctx)
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		s.Fatal("Can't restore firmware, DUT is off: ", err)
-	}
 	flashCmd := fmt.Sprintf("cd %s&&flash_ec --port=%d --read=%s/%s", servoTmpDir, h.ServoProxy.GetPort(), servoTmpDir, backupFirmwareFile)
 	if err := h.ServoProxy.RunCommand(ctx, false, "bash", "-c", flashCmd); err != nil {
-		s.Fatal("Failed to change directory: ", err)
+		s.Fatal("Failed to backup EC firmware: ", err)
+	}
+	if err := safeRebootDut(ctx, h); err != nil {
+		s.Fatal("Failed to reboot DUT after backup EC: ", err)
+	}
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Can't restore firmware, DUT is off: ", err)
 	}
 }
 
@@ -442,5 +486,14 @@ func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.
 	}
 	if err := h.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("Can't restore firmware, DUT is off: ", err)
+	}
+}
+
+func runECFirmwareFlashDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, image string) {
+	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "--ec_image", fmt.Sprintf("%s/%s", dutTmpDir, image)).Run(); err != nil {
+		s.Fatal("Failed to flash firmware bin file: ", err)
+	}
+	if err := safeRebootDut(ctx, h); err != nil {
+		s.Fatal("Failed to reboot DUT after flashing: ", err)
 	}
 }
