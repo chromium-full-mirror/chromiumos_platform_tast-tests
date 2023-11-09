@@ -76,6 +76,18 @@ func TrimFileFrom(ctx context.Context, oldFileName, newFileName string, startTim
 	return nil
 }
 
+// TrimFileFromAndTo removes all samples before startTime and after startTIme + length from the file.
+func TrimFileFromAndTo(ctx context.Context, oldFileName, newFileName string, startTime, length time.Duration) error {
+	err := testexec.CommandContext(
+		ctx, "sox", oldFileName, newFileName, "trim",
+		strconv.FormatFloat(startTime.Seconds(), 'f', -1, 64),
+		strconv.FormatFloat(length.Seconds(), 'f', -1, 64)).Run(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "sox failed")
+	}
+	return nil
+}
+
 // CheckRecordingNotZero checks the recording file to see whether internal mic works normally.
 // The recorded samples can not be all zeros. It is impossible for a normal internal mic.
 //
@@ -113,17 +125,9 @@ func CheckRecordingNotZero(ctx context.Context, fileName string) error {
 	return nil
 }
 
-// GetRmsAmplitude gets signal RMS of testData by sox.
-func GetRmsAmplitude(ctx context.Context, testData TestRawData) (float64, error) {
-	cmd := testexec.CommandContext(
-		ctx, "sox",
-		"-b", strconv.Itoa(testData.BitsPerSample),
-		"-c", strconv.Itoa(testData.Channels),
-		"-r", strconv.Itoa(testData.Rate),
-		"-e", "signed",
-		"-t", "raw",
-		testData.Path, "-n", "stat")
-
+func getRmsAmplitude(ctx context.Context, inputArgs []string) (float64, error) {
+	args := append(inputArgs, "-n", "stat")
+	cmd := testexec.CommandContext(ctx, "sox", args...)
 	_, bstderr, err := cmd.SeparatedOutput()
 	if err != nil {
 		return 0.0, errors.Wrap(err, "sox failed")
@@ -143,6 +147,31 @@ func GetRmsAmplitude(ctx context.Context, testData TestRawData) (float64, error)
 	}
 
 	return rms, nil
+}
+
+// GetRmsAmplitude gets signal RMS of testData by sox.
+func GetRmsAmplitude(ctx context.Context, testData TestRawData) (float64, error) {
+	return getRmsAmplitude(
+		ctx,
+		[]string{
+			"-b", strconv.Itoa(testData.BitsPerSample),
+			"-c", strconv.Itoa(testData.Channels),
+			"-r", strconv.Itoa(testData.Rate),
+			"-e", "signed",
+			"-t", "raw",
+			testData.Path,
+		},
+	)
+}
+
+// GetRmsAmplitudeFromWav gets signal RMS of a wav file by sox.
+func GetRmsAmplitudeFromWav(ctx context.Context, filepath string) (float64, error) {
+	return getRmsAmplitude(
+		ctx,
+		[]string{
+			filepath,
+		},
+	)
 }
 
 func generateSineData(ctx context.Context, testData TestRawData, fileFormat audioFileFormat) error {
