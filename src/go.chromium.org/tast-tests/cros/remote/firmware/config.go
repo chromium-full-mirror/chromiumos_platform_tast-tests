@@ -79,6 +79,7 @@ type Config struct {
 	MiniDiagEnabled       bool              `json:"minidiag_enabled"`
 	MiniOSEnabled         bool              `json:"minios_enabled"`
 	ACOnCanWakeApFromUlp  bool              `json:"ac_on_can_wake_ap_from_ulp"`
+	ChargerProfileOverride bool             `json:"charger_profile_override"`
 
 	// Raw duration fields represent a quantity of seconds.
 	// They are used during NewConfig to populate actual duration fields, which are defined below.
@@ -101,6 +102,9 @@ type Config struct {
 	RawMiniOSScreen                  float64 `json:"minios_screen"`
 	RawECWatchdogPeriod              float64 `json:"ec_watchdog_period"`
 	RawECWatchdogLeadingTime         float64 `json:"ec_watchdog_warning_leading_time"`
+	UsbcInputVoltageLimit            float64 `json:"usbc_input_voltage_limit"`
+        UsbcVoltageOnShutdownAndFullBatt float64 `json:"usbc_voltage_on_shutdown_and_full_batt"`
+        MaxChargingPower                 float64 `json:"max_charging_power"`
 
 	// Actual duration fields are populated during NewConfig based on raw JSON duration values, defined above.
 	DelayRebootToPing             time.Duration
