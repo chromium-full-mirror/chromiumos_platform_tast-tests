@@ -30,6 +30,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
