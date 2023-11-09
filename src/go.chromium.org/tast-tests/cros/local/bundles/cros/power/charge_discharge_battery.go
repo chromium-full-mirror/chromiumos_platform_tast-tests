@@ -99,6 +99,12 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 		chargeParam.MaxChargePercentage = float64(maxPercent)
 	}
 
+	if restartPowerd, err := setup.DisableService(ctx, "powerd"); err == nil {
+		defer restartPowerd(ctx)
+	} else {
+		testing.ContextLogf(ctx, "Failed to stop powerd: %v; Still prepare battery to target range even though it might take longer", err)
+	}
+
 	if err := setup.PrepareBattery(ctx, chargeParam); err != nil {
 		s.Fatal("Failed to charge/discharge DUT: ", err)
 	}
