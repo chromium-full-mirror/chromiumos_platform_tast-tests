@@ -6,14 +6,9 @@ package usbip
 
 import (
 	"context"
-	"os"
-	"path"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
-	"go.chromium.org/tast-tests/cros/local/network/tcpdump"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -173,14 +168,16 @@ func init() {
 // LoadModuleFixture loads kernel modules required for usbip to work
 // and starts tcp traffic monitoring.
 type LoadModuleFixture struct {
-	tcpdump *tcpdump.Runner
+	modulesCleanup cleanupFn
+	tcpdumpCleanup cleanupFn
 }
 
 // SetUp loads the required kernel modules.
-func (LoadModuleFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cmd := testexec.CommandContext(ctx, "modprobe", "-a", "usbip_core", "vhci-hcd")
-	if err := cmd.Run(); err != nil {
-		s.Fatal("Failed to install usbip kernel modules: ", err)
+func (l *LoadModuleFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if modulesCleanup, err := AddUSBIPModules(ctx); err != nil {
+		s.Error("Failed to install usbip kernel modules: ", err)
+	} else {
+		l.modulesCleanup = modulesCleanup
 	}
 	// Provides pass-through for the value yielded by the parent fixture.
 	return s.ParentValue()
@@ -193,51 +190,25 @@ func (*LoadModuleFixture) Reset(ctx context.Context) error {
 
 // PreTest starts traffic capture.
 func (l *LoadModuleFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	l.tcpdump = tcpdump.NewLocalRunner()
-	iface := "lo"
-	outDir := s.OutDir()
-	pcapPath := path.Join(outDir, "tcpdump.pcap")
-	stdoutPath := path.Join(outDir, "tcpdump.stdout")
-	stderrPath := path.Join(outDir, "tcpdump.stderr")
-
-	stdoutFile, err := prepareDirFile(ctx, stdoutPath)
-	if err != nil {
-		s.Error("Failed to open stdout log of tcpdump: ", err)
-	}
-	stderrFile, err := prepareDirFile(ctx, stderrPath)
-	if err != nil {
-		s.Error("Failed to open stderr log of tcpdump: ", err)
-	}
-	if err := l.tcpdump.StartTcpdump(ctx, iface, pcapPath, stdoutFile, stderrFile); err != nil {
-		s.Error("Failed to start tcpdump: ", err)
+	if tcpdumpCleanup, err := StartLocalTCPDump(ctx, s.OutDir()); err != nil {
+		s.Error("Failed to start tcp tracing: ", err)
+	} else {
+		l.tcpdumpCleanup = tcpdumpCleanup
 	}
 }
 
 // PostTest stops traffic capture.
 func (l *LoadModuleFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := l.tcpdump.Close(ctx); err != nil {
-		s.Error("Failed to close tcpdump: ", err)
+	if err := l.tcpdumpCleanup(ctx); err != nil {
+		s.Error("Failed to stop tcp tracing: ", err)
 	}
 }
 
 // TearDown unloads the required kernel modules.
-func (*LoadModuleFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	cmd := testexec.CommandContext(ctx, "modprobe", "-r", "-a", "vhci-hcd", "usbip_core")
-	if err := cmd.Run(); err != nil {
+func (l *LoadModuleFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := l.modulesCleanup(ctx); err != nil {
 		s.Error("Failed to remove usbip kernel modules: ", err)
 	}
-}
-
-// prepareDirFile prepares the base directory for filename and opens the file.
-func prepareDirFile(ctx context.Context, filename string) (*os.File, error) {
-	if err := os.MkdirAll(path.Dir(filename), 0755); err != nil {
-		return nil, errors.Wrapf(err, "failed to create basedir for %q", filename)
-	}
-	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0644)
-	if err != nil {
-		return nil, errors.Wrapf(err, "cannot open file %q", filename)
-	}
-	return f, nil
 }
 
 // ServerFixture contains a reference to a USBIP server used by the fixture.

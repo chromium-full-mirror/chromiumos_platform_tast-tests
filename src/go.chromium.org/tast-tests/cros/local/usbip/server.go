@@ -28,7 +28,9 @@ type Server struct {
 // server is a singletone Server instance.
 var server *Server
 
-// NewServer creates and returns a new USBIP server.
+// NewServer creates and returns a new USBIP server. Server requires
+// USBIP kernel modules added to operate. This could be done via
+// usbip.AddUSBIPModules.
 func NewServer() *Server {
 	if server != nil {
 		return server
