@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -536,7 +537,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, tmpDir, fwidM
 				if err != nil {
 					testing.ContextLogf(ctx, "Unable to untar the firmware file for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
 				} else {
-					return binToFlash, nil
+					return filepath.Join(tmpDir, binToFlash), nil
 				}
 			}
 		}
