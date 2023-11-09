@@ -106,30 +106,44 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to configure btpeer as a %s device: %s", keyboardDevice.DeviceType(), err)
 	}
 
-	pollForPairedDevice := func() {
-		testing.ContextLog(ctx, "Waiting for Bluetooth keyboard device to be paired")
+	pollForPairedAndConnectedDevice := func() {
+		testing.ContextLog(ctx, "Waiting for Bluetooth keyboard device to be paired and connected")
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			resp, err := fv.BluetoothService.DeviceIsPaired(ctx, &bts.DeviceIsPairedRequest{
 				DeviceAddress: keyboardDevice.LocalBluetoothAddress(),
 			})
 			if err != nil {
-				return errors.Wrap(err, " failed to check if keyboard device is paired")
+				return errors.Wrap(err, "failed to check if keyboard device is paired")
 			}
 			if !resp.DeviceIsPaired {
-				return errors.Wrap(err, " keyboard device not paired as expected")
+				return errors.Wrap(err, "keyboard device not paired as expected")
 			}
+
+			isConnectedResp, err := fv.BluetoothService.DeviceIsConnected(ctx, &bts.DeviceIsConnectedRequest{
+				DeviceAddress: keyboardDevice.LocalBluetoothAddress(),
+			})
+
+			if err != nil {
+				return errors.Wrap(err, "failed to check if keyboard device is connected")
+			}
+			if !isConnectedResp.DeviceIsConnected {
+				return errors.New("keyboard device not connected as expected")
+			}
+
 			return nil
 		}, &testing.PollOptions{
 			Timeout:  defaultTimeout,
 			Interval: 5000 * time.Millisecond,
 		}); err != nil {
-			s.Fatal("Keyboard device not paired: ", err)
+			s.Fatal("Keyboard device not paired or connected: ", err)
 		}
 	}
 
-	pollForPairedDevice()
+	pollForPairedAndConnectedDevice()
 
 	pairedNodeName := fmt.Sprintf("\"%s Keyboard\" paired", keyboardDevice.AdvertisedName())
+
+	testing.ContextLog(ctx, "Checking that Bluetooth Keyboard was found")
 
 	// Verify keyboard device is pairing.
 	// TODO(b/254524000): use approraite authentication method.
@@ -147,14 +161,19 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	testing.ContextLog(ctx, "Turning on Bluetooth adapter")
+	testing.ContextLog(ctx, "Turning on and initializing btpeer adapter")
 
 	// Turn Bluetooth adapter on.
 	if _, err := keyboardDevice.RPC().AdapterPowerOn(ctx); err != nil {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
-	pollForPairedDevice()
+	// Initialize BTPeer adapter and ensure adapter is in the correct state before pairing.
+	if err := keyboardDevice.RPC().Init(ctx, false); err != nil {
+		s.Fatal("Failed to set init to true: ", err)
+	}
+
+	pollForPairedAndConnectedDevice()
 
 	testing.ContextLog(ctx, "Checking that paired Bluetooth keyboard node is found")
 
@@ -162,10 +181,6 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, pairedNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
-
-	testing.ContextLog(ctx, "Checking that Bluetooth keyboard is paired")
-
-	pollForPairedDevice()
 
 	testing.ContextLog(ctx, "Checking that continue button is enabled")
 

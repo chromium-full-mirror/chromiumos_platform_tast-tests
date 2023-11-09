@@ -104,28 +104,40 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to configure btpeer as a %s device: %s", mouseDevice.DeviceType(), err)
 	}
 
-	pollForPairedDevice := func() {
-		testing.ContextLog(ctx, "Waiting for Bluetooth mouse device to be paired")
+	pollForPairedAndConnectedDevice := func() {
+		testing.ContextLog(ctx, "Waiting for Bluetooth mouse device to be paired and connected")
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			resp, err := fv.BluetoothService.DeviceIsPaired(ctx, &bts.DeviceIsPairedRequest{
 				DeviceAddress: mouseDevice.LocalBluetoothAddress(),
 			})
 			if err != nil {
-				return errors.Wrap(err, " failed to check if mouse device is paired")
+				return errors.Wrap(err, "failed to check if mouse device is paired")
 			}
 			if !resp.DeviceIsPaired {
-				return errors.Wrap(err, " mouse device not paired as expected")
+				return errors.Wrap(err, "mouse device not paired as expected")
 			}
+
+			isConnectedResp, err := fv.BluetoothService.DeviceIsConnected(ctx, &bts.DeviceIsConnectedRequest{
+				DeviceAddress: mouseDevice.LocalBluetoothAddress(),
+			})
+
+			if err != nil {
+				return errors.Wrap(err, "failed to check if mouse device is connected")
+			}
+			if !isConnectedResp.DeviceIsConnected {
+				return errors.New("mouse device not connected as expected")
+			}
+
 			return nil
 		}, &testing.PollOptions{
 			Timeout:  defaultTimeout,
 			Interval: 5000 * time.Millisecond,
 		}); err != nil {
-			s.Fatal("Mouse device not paired: ", err)
+			s.Fatal("Mouse device not paired or connected: ", err)
 		}
 	}
 
-	pollForPairedDevice()
+	pollForPairedAndConnectedDevice()
 
 	testing.ContextLog(ctx, "Checking that Bluetooth mouse was found")
 
@@ -141,32 +153,32 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
-	testing.ContextLog(ctx, "Checking that we are searching for pointer")
+	testing.ContextLog(ctx, "Checking that we are searching for mouse device")
 
 	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.SearchingForPointerNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
 
-	testing.ContextLog(ctx, "Turning btpeer adapter on")
+	testing.ContextLog(ctx, "Turning on and initializing btpeer adapter")
 
 	// Turn on Bluetooth adapter
 	if result, err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil || !result {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
-	pollForPairedDevice()
+	// Initialize BTPeer adapter and ensure adapter is in the correct state before pairing.
+	if err := mouseDevice.RPC().Init(ctx, false); err != nil {
+		s.Fatal("Failed to set init to true: ", err)
+	}
+
+	pollForPairedAndConnectedDevice()
 
 	testing.ContextLog(ctx, "Checking that Bluetooth mouse node was found")
 
 	// Verify pointer device is found.
-	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.BluetoothMousePairedNodeName, defaultTimeout); err != nil {
+	if err := crui.CheckNodeWithNameExists(ctx, uiautoSvc, oobeui.BluetoothMousePairedNodeName, searchingTimeout); err != nil {
 		s.Fatal("Failed to find node: ", err)
 	}
-
-	testing.ContextLog(ctx, "Checking that Bluetooth mouse is paired")
-
-	// Verify device is paired.
-	pollForPairedDevice()
 
 	testing.ContextLog(ctx, "Waiting for continue button to be enabled")
 
