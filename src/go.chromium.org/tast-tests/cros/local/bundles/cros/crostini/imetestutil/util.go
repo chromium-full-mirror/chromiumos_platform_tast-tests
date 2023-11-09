@@ -54,7 +54,7 @@ func CheckInputViaClipboard(ctx context.Context, keyboard *input.KeyboardEventWr
 // TestInputActionsInEditor tests basic string input and editing in English in an editor app (VSCode, gedit).
 // It assumes that the editor is already opened and focused for entering test strings.
 func TestInputActionsInEditor(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
-	inputActions := getBasicInputActions(ctx, keyboard)
+	inputActions := getBasicInputActions(ctx, keyboard, tconn)
 	editorTabActions := []InputActionData{
 		{uiauto.Combine("insert Tab key at start",
 			// |Hi\nHi\n\nThis is a
@@ -80,7 +80,7 @@ func TestInputActionsInEditor(ctx context.Context, keyboard *input.KeyboardEvent
 // TestInputActionsInFirefox tests basic string input and editing in English in the firefox app.
 // It assumes Firefox is launched with a test page containing 2 input fields, and the first input box is focused.
 func TestInputActionsInFirefox(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) error {
-	inputActions := getBasicInputActions(ctx, keyboard)
+	inputActions := getBasicInputActions(ctx, keyboard, tconn)
 	firefoxTabActions := []InputActionData{
 		{uiauto.Combine("test tab functionality",
 			// Press tab to move focus to a separate input field.
@@ -98,7 +98,7 @@ func TestInputActionsInFirefox(ctx context.Context, keyboard *input.KeyboardEven
 }
 
 // getBasicInputActions returns an array of InputActions to enter a test string in English and uses a range of non-alphanumeric keys to edit the text.
-func getBasicInputActions(ctx context.Context, keyboard *input.KeyboardEventWriter) []InputActionData {
+func getBasicInputActions(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn) []InputActionData {
 	return []InputActionData{
 		{uiauto.Combine("type the initial 2-line string",
 			keyboard.TypeAction("Hi\nThis is a test."),
@@ -130,7 +130,12 @@ func getBasicInputActions(ctx context.Context, keyboard *input.KeyboardEventWrit
 			// |Hi\n|This is a
 			keyboard.AccelAction("Shift+Down"),
 			// |Hi\nThis is a
-			keyboard.AccelAction("Ctrl+C"),
+			uiauto.New(tconn).RetryUntil(
+				keyboard.AccelAction("Ctrl+C"),
+				func(ctx context.Context) error {
+					return ash.WaitUntilClipboardText(ctx, tconn, "Hi\n")
+				},
+			),
 			keyboard.AccelAction("Up"),
 			// Hi\nHi\n|This is a
 			keyboard.AccelAction("Ctrl+V"),
