@@ -34,7 +34,8 @@ func init() {
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
 		// is only shown for chrome-branded builds when the device is ARC-capable.
-		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2"},
+		// Demo Mode doesn't support VMs, use "crossystem" to exclude VMs.
+		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm2", "crossystem"},
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "alpha",
