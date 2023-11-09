@@ -56,6 +56,8 @@ var vcOpts = []chrome.Option{
 	chrome.EnableFeatures("FeatureManagementVideoConference"),
 	chrome.EnableFeatures("ShowLiveCaptionInVideoConferenceTray"),
 	chrome.ExtraArgs("--disable-sync"),
+	// Disable VK should avoid VK randomly shows up.
+	chrome.ExtraArgs("--disable-virtual-keyboard"),
 }
 
 func init() {
