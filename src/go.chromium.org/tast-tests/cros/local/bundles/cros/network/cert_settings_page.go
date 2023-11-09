@@ -34,18 +34,22 @@ import (
 
 // Certificate and key pair (both in PEM format) for the test website.
 const websiteCertFileName = "cert_settings_page_website_cert.crt"
+const ecWebsiteCertFileName = "ec_cert_settings_page_website_cert.pem"
 const websiteKeyFileName = "cert_settings_page_website_key.key"
+const ecWebsiteKeyFileName = "ec_cert_settings_page_website_key.key"
 
 // rootCertFileName is a file's name for the root certificate that
 // is used to create a client and website certificates.
 // Chrome will need to import it to trust that the website certificate is valid.
 // Website server will need to use it to trust that the client certificate is valid.
 const rootCertFileName = "cert_settings_page_root_cert.crt"
+const ecRootCertFileName = "ec_cert_settings_page_root_cert.crt"
 
 // clientCertFileName is name of file for the client certificate and key that will
 // be used by Chrome to authenticate on the website.
 // It is in a PKCS#12 format because that's what chrome supports for importing client certificates.
 const clientCertFileName = "cert_settings_page_client_cert.p12"
+const ecClientCertFileName = "ec_cert_settings_page_client_cert.p12"
 
 // clientCertPassword is a password for the client cert PCKS#12 archive.
 const clientCertPassword = "12345"
@@ -75,6 +79,13 @@ const caInvalidErrorRegex = ".*ERR_CERT_AUTHORITY_INVALID.*"
 // The message on the website that indicates that it successfully loaded.
 const websiteGreeting = "WEBSITE_LOADED"
 
+type filesConfig struct {
+	websiteCertFileName string
+	websiteKeyFileName  string
+	rootCertFileName    string
+	clientCertFileName  string
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CertSettingsPage,
@@ -95,7 +106,8 @@ func init() {
 		Fixture:      "lacros",
 		Timeout:      5 * time.Minute,
 		Data: []string{clientCertFileName, rootCertFileName,
-			websiteCertFileName, websiteKeyFileName},
+			websiteCertFileName, websiteKeyFileName, ecClientCertFileName,
+			ecRootCertFileName, ecWebsiteCertFileName, ecWebsiteKeyFileName},
 		SearchFlags: []*testing.StringPair{
 			{
 				Key: "feature_id",
@@ -136,11 +148,35 @@ func init() {
 				Value: "screenplay-fde6b3d3-987e-4690-8044-d4d84d3ede64",
 			},
 		},
+		Params: []testing.Param{
+			// RSA key and certificates.
+			{
+				Name: "",
+				Val: filesConfig{
+					websiteCertFileName: websiteCertFileName,
+					websiteKeyFileName:  websiteKeyFileName,
+					rootCertFileName:    rootCertFileName,
+					clientCertFileName:  clientCertFileName,
+				},
+			},
+			// EC key and certificates.
+			{
+				Name: "ec_key",
+				Val: filesConfig{
+					websiteCertFileName: ecWebsiteCertFileName,
+					websiteKeyFileName:  ecWebsiteKeyFileName,
+					rootCertFileName:    ecRootCertFileName,
+					clientCertFileName:  ecClientCertFileName,
+				},
+			},
+		},
 	})
 }
 
 // prepareCertificates copy certificates which are required for tests to the Downloads.
 func prepareCertificates(s *testing.State, downloadsPath string) {
+	rootCertFileName := s.Param().(filesConfig).rootCertFileName
+	clientCertFileName := s.Param().(filesConfig).clientCertFileName
 	if err := utils.CopyToDownloads(downloadsPath, s.DataPath(rootCertFileName), rootCertFileName); err != nil {
 		s.Fatal("Failed to copy CA certificate file to Download: ", err)
 	}
@@ -151,6 +187,7 @@ func prepareCertificates(s *testing.State, downloadsPath string) {
 
 // importCACert imports CA certificate.
 func importCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	rootCertFileName := s.Param().(filesConfig).rootCertFileName
 	if err := utils.ImportCACert(ctx, ui, rootCertFileName); err != nil {
 		s.Fatal("Failed to import CA certificate: ", err)
 	}
@@ -158,6 +195,7 @@ func importCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
 
 // importClientCert imports client certificate.
 func importClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
+	clientCertFileName := s.Param().(filesConfig).clientCertFileName
 	if err := utils.ImportClientCert(ctx, ui, clientCertFileName, clientCertPassword); err != nil {
 		s.Fatal("Can not import client certificate: ", err)
 	}
@@ -177,6 +215,9 @@ func waitForClientCert(ctx context.Context, s *testing.State) {
 // clients. Its server certificate will not be accepted by default Chrome, so it
 // also requires clients to use a special CA certificate.
 func createWebsite(s *testing.State) *httptest.Server {
+	websiteCertFileName := s.Param().(filesConfig).websiteCertFileName
+	rootCertFileName := s.Param().(filesConfig).rootCertFileName
+	websiteKeyFileName := s.Param().(filesConfig).websiteKeyFileName
 	handleRequest := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, websiteGreeting)
 	})
