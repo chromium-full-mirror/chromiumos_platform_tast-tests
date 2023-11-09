@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/nebraska"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/vpd"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -31,6 +32,9 @@ type updateEngineTestParam struct {
 	// expectedUpdateRequestSubstrings is a list of substrings that should be present
 	// in an update request with the given policies set.
 	expectedUpdateRequestSubstrings []string
+	// generateExpectedUpdateRequestSubstrings generates strings to be added to
+	// expectedUpdateRequestSubstrings. Use for strings that can only be obtained at runtime.
+	generateExpectedUpdateRequestSubstrings func() ([]string, error)
 
 	// excludedUpdateRequestSubstrings is a list of substrings that are not supposed to be present
 	// in an update request with given policies.
@@ -101,6 +105,7 @@ func init() {
 				expectedUpdateRequestSubstrings: []string{
 					"rollback_allowed=\"true\"",
 					fmt.Sprintf("targetversionprefix=%q", deviceTargetVersionPrefixVal)},
+				generateExpectedUpdateRequestSubstrings: rollbackExptectedSubstrings,
 			},
 		}, {
 			Name: "device_channel_stable",
@@ -224,7 +229,16 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to trigger update request: ", err)
 	}
 
-	if err := awaitUpdateServerLogEntries(ctx, updateServer, param.expectedUpdateRequestSubstrings); err != nil {
+	expectedSubstrings := param.expectedUpdateRequestSubstrings
+	if param.generateExpectedUpdateRequestSubstrings != nil {
+		generatedExpectedSubstrings, err := param.generateExpectedUpdateRequestSubstrings()
+		if err != nil {
+			s.Error("Failed to compute expected update request substring: ", err)
+		}
+		expectedSubstrings = append(expectedSubstrings, generatedExpectedSubstrings...)
+	}
+
+	if err := awaitUpdateServerLogEntries(ctx, updateServer, expectedSubstrings); err != nil {
 		s.Error("Failure while waiting for update logs: ", err)
 	}
 
@@ -276,4 +290,23 @@ func awaitUpdateServerLogEntries(ctx context.Context, updateServer *nebraska.Neb
 		return errors.Wrapf(err, "could not find all of %q in nebraska logs", entries)
 	}
 	return nil
+}
+
+func rollbackExptectedSubstrings() ([]string, error) {
+	activateDate, err := vpd.ActivateDate()
+	if err != nil {
+		return []string{}, errors.Wrap(err, "failed to read activate date")
+	}
+	versionEntry := "activate_date=\"" + *activateDate + "\""
+
+	fsiVersion, err := vpd.FsiVersion()
+	if err != nil {
+		return []string{}, errors.Wrap(err, "failed to read fsi version")
+	}
+	if fsiVersion != nil {
+		// FSI version takes precedence.
+		versionEntry = "fsi_version=\"" + *fsiVersion + "\""
+	}
+
+	return []string{versionEntry}, nil
 }
