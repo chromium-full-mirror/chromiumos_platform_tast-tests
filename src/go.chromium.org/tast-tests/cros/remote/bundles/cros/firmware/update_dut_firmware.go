@@ -20,6 +20,8 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
@@ -27,13 +29,11 @@ import (
 )
 
 const (
-	tmpServoFirmwareDir       = "/mnt/stateful_partition/tmp"
-	alternateServoFirmwareDir = "/var/tmp"
-	tmpDutFirmwareDir         = "/mnt/stateful_partition/unencrypted/preserve/firmware"
-	backupFirmwareFile        = "backupfw.bin"
-	ecFirmwareFileToFlash     = "ecFirmwareForTest.bin"
-	apFirmwareFileToFlash     = "FirmwareForTest.bin"
-	monitorFileToFlash        = "npcx_monitor.bin"
+	tmpFirmwareDir        = "/var/tmp"
+	backupFirmwareFile    = "backupfw.bin"
+	ecFirmwareFileToFlash = "ecFirmwareForTest.bin"
+	apFirmwareFileToFlash = "FirmwareForTest.bin"
+	monitorFileToFlash    = "npcx_monitor.bin"
 )
 
 var (
@@ -52,7 +52,7 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: UpdateDutFirmwareServo,
+		Func: UpdateDutFirmware,
 		Desc: "Update AP and EC firmware from Servo",
 		Contacts: []string{
 			"peep-fleet-infra-sw@google.com",
@@ -67,8 +67,8 @@ func init() {
 	})
 }
 
-// UpdateDutFirmwareServo reads the current AP firmware and flashes it back from the servo using futility
-func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
+// UpdateDutFirmware reads the current AP firmware and flashes it back from the servo using futility
+func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	firmwarePathVal := string(firmwarePath.Value())
 	localFirmwarePathVal := string(localFirmwarePath.Value())
@@ -141,24 +141,31 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 
-	servoTmpDir := tmpServoFirmwareDir
-	bashCmd := fmt.Sprintf("test -d %s;echo $?", tmpServoFirmwareDir)
-	if out, err := h.ServoProxy.OutputCommand(ctx, false, "bash", "-c", bashCmd); err != nil || string(out) != "0" {
-		s.Logf("Error while testing directory exists or directory not found: %s - %q", tmpServoFirmwareDir, err)
-		servoTmpDir = alternateServoFirmwareDir
+	tmpFwDir := fmt.Sprintf("%s-%s", tmpFirmwareDir, uuid)
+	s.Logf("Servo tmp dir: %s", tmpFwDir)
+	if err := h.ServoProxy.RunCommand(ctx, false, "mkdir", "-p", tmpFwDir); err != nil {
+		s.Fatalf("Failed to create temp directory %s on servo for saving existing firmware: %s", tmpFwDir, err)
 	}
-
-	servoTmpDir = fmt.Sprintf("%s-%s", servoTmpDir, uuid)
-	s.Logf("Servo tmp dir: %s", servoTmpDir)
-	if err := h.ServoProxy.RunCommand(ctx, false, "mkdir", "-p", servoTmpDir); err != nil {
-		s.Fatalf("Failed to create temp directory %s on servo for saving existing firmware: %s", servoTmpDir, err)
-	}
-
 	// Delete the tmp directory on the servo at the end
 	defer func() {
-		s.Log("Deleting tmp directory on servo: ", servoTmpDir)
-		if err := h.ServoProxy.RunCommand(ctx, false, "rm", "-rf", servoTmpDir); err != nil {
+		s.Log("Deleting tmp directory on servo: ", tmpFwDir)
+		if err := h.ServoProxy.RunCommand(ctx, false, "rm", "-rf", tmpFwDir); err != nil {
 			s.Fatal("Failed to delete temp directory on servo for saving existing firmware: ", err)
+		}
+	}()
+
+	fs := dutfs.NewClient(h.RPCClient.Conn)
+	if err := fs.MkDir(ctx, tmpFwDir, 0644); err != nil {
+		s.Fatalf("Failed to create temp directory on dut %s for saving existing firmware: %s", tmpFwDir, err)
+	}
+	s.Log("DUT tmp Directory: ", tmpFwDir)
+	defer func() {
+		s.Log("Deleting tmp directory on dut: ", tmpFwDir)
+		if err := h.RequireRPCClient(ctx); err != nil {
+			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+		}
+		if err := dutfs.NewClient(h.RPCClient.Conn).RemoveAll(ctx, tmpFwDir); err != nil {
+			s.Fatal("Failed to delete temp directory on dut for saving existing firmware: ", err)
 		}
 	}()
 
@@ -190,20 +197,24 @@ func UpdateDutFirmwareServo(ctx context.Context, s *testing.State) {
 		}
 		s.Logf("EC Firmware to Flash %s; monitor file to flash %s; AP Firmware to Flash %s", ecBinToFlash, monitorBinToFlash, apBinToFlash)
 		fileMap := map[string]string{
-			fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", servoTmpDir, apFirmwareFileToFlash),
+			fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, apFirmwareFileToFlash),
 		}
 		if ecBinToFlash != "" {
-			fileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", servoTmpDir, ecFirmwareFileToFlash)
+			fileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, ecFirmwareFileToFlash)
 		}
 		if monitorBinToFlash != "" {
-			fileMap[fmt.Sprintf("%s/%s", tmpDir, monitorBinToFlash)] = fmt.Sprintf("%s/%s", servoTmpDir, monitorFileToFlash)
+			fileMap[fmt.Sprintf("%s/%s", tmpDir, monitorBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, monitorFileToFlash)
 		}
 		if err := h.ServoProxy.PutFiles(ctx, false, fileMap); err != nil {
 			s.Fatal("Failed to copy files to servo host: ", err)
 		}
+		linuxssh.PutFiles(ctx, s.DUT().Conn(),
+			map[string]string{fmt.Sprintf("%s/%s", tmpDir, apBinToFlash): fmt.Sprintf("%s/%s", tmpFwDir, apFirmwareFileToFlash)},
+			linuxssh.PreserveSymlinks)
 	}
-	flashAPFirmware(ctx, s, h, servoTmpDir, firmwarePathVal, ecChip, initialROFwid, initialRwFwid)
-	flashECFirmware(ctx, s, h, servoTmpDir, tmpDir, firmwarePathVal, ecChip, flashEC)
+	flashAPFirmwareFromDut(ctx, s, h, tmpFwDir, tmpDir, firmwarePathVal, initialROFwid, initialRwFwid)
+	flashAPFirmware(ctx, s, h, tmpFwDir, firmwarePathVal, ecChip, initialROFwid, initialRwFwid)
+	flashECFirmware(ctx, s, h, tmpFwDir, tmpFwDir, tmpDir, firmwarePathVal, ecChip, flashEC)
 }
 
 // downloadFirmwareFromGCS reads a file from GCS based on the board, branch and firmware version specified
@@ -266,7 +277,7 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 }
 
 // flashECFirmware flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
-func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, localTmpDir, firmwarePathVal, ecChip string, flashEC bool) {
+func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, dutTmpDir, localTmpDir, firmwarePathVal, ecChip string, flashEC bool) {
 	if !flashEC {
 		return
 	}
@@ -278,21 +289,6 @@ func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 		s.Fatal("Requiring BiosServiceClient: ", err)
 	}
 
-	// Create temp dir on the DUT
-	uuid, _ := uuid.NewRandom()
-	dutTmpDir := fmt.Sprintf("%s-%s", tmpDutFirmwareDir, uuid)
-	if err := dutfs.NewClient(h.RPCClient.Conn).MkDir(ctx, dutTmpDir, 0644); err != nil {
-		s.Fatalf("Failed to create temp directory on dut %s for saving existing firmware: %s", dutTmpDir, err)
-	}
-	defer func() {
-		s.Log("Deleting tmp directory on dut: ", dutTmpDir)
-		if err := h.RequireRPCClient(ctx); err != nil {
-			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-		}
-		if err := dutfs.NewClient(h.RPCClient.Conn).RemoveAll(ctx, dutTmpDir); err != nil {
-			s.Fatal("Failed to delete temp directory on dut for saving existing firmware: ", err)
-		}
-	}()
 	// Backup EC Firmware
 	s.Log("Backing up current EC_RW")
 	backupRW, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
@@ -407,4 +403,86 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	if err := fwUtils.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
 	}
+}
+
+// flashAPFirmwareFromDut flashes the provided AP firmware on the DUT and restores the original AP firmware in the end.
+func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.Helper, dutTmpDir, localTmpDir, firmwarePathVal, initialROFwid, initialRwFwid string) {
+	s.Log("Backing up AP firmware")
+	if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(); err != nil {
+		s.Fatal("Failed to read fw using futility: ", err)
+	}
+	// Copy backup file from dut to host
+	err := linuxssh.GetFile(ctx, s.DUT().Conn(), fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile), fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile), linuxssh.PreserveSymlinks)
+	if err != nil {
+		s.Fatal("Failed to copy file from DUT to Host: ", err)
+	}
+	s.Log("Completed backup of existing AP fw")
+
+	// Check that the DUT has initial fw in the end
+	defer func() {
+		s.Log("Flashing DUT with backup AP firmware file")
+		linuxssh.PutFiles(ctx, s.DUT().Conn(),
+			map[string]string{fmt.Sprintf("%s/%s", localTmpDir, backupFirmwareFile): fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)},
+			linuxssh.PreserveSymlinks)
+		if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-i", fmt.Sprintf("%s/%s", dutTmpDir, backupFirmwareFile)).Run(); err != nil {
+			s.Fatal("Failed to flash firmware bin file: ", err)
+		}
+		s.Log("Completed flashing of backup AP fw")
+
+		if err := safeRebootDut(ctx, h); err != nil {
+			s.Fatal("Failed to reboot DUT after flashing: ", err)
+		}
+
+		// Verify RO/RW firmware versions are the prior ones after flashing.
+		// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
+		if err := fwUtils.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
+		}
+	}()
+	if firmwarePathVal == "" {
+		return
+	}
+
+	s.Log("Flashing DUT AP with downloaded firmware file")
+	if err := h.DUT.Conn().CommandContext(ctx, "chromeos-firmwareupdate", "-i", fmt.Sprintf("%s/%s", dutTmpDir, apFirmwareFileToFlash)).Run(); err != nil {
+		s.Fatal("Failed to flash firmware bin file: ", err)
+	}
+	s.Log("Completed flashing of downloaded fw")
+	if err := safeRebootDut(ctx, h); err != nil {
+		s.Fatal("Failed to reboot DUT after flashing: ", err)
+	}
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Failed to reconnect to DUT after unsuspending: ", err)
+	}
+
+	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
+	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
+	if err := fwUtils.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
+		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
+	}
+}
+
+// safeRebootDut will close RPC connection, reboot DUT and Open a new RPC connection.
+func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
+	// Close RPC connection before reboot.
+	h.CloseRPCConnection(ctx)
+
+	testing.ContextLog(ctx, "Power-cycling DUT with a cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		return errors.Wrap(err, "failed to reboot DUT by servo")
+	}
+
+	testing.ContextLog(ctx, "Waiting for DUT to reconnect")
+	connectCtx, cancelconnectCtx := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancelconnectCtx()
+
+	if err := h.WaitConnect(connectCtx); err != nil {
+		return errors.Wrap(err, "failed to reconnect to DUT")
+	}
+
+	// Open RPC connection after reboot.
+	if err := h.RequireRPCClient(ctx); err != nil {
+		return errors.Wrap(err, "failed to open RPC client after reboot")
+	}
+	return nil
 }
