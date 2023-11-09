@@ -12,6 +12,8 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/remote/dutfs"
+	"go.chromium.org/tast-tests/cros/remote/firmware/fingerprint/rpcdut"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -152,6 +154,16 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 }
 
 func (f *pvsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	// Copy pvs directory from pvs host to tast logs
+	rpcDut, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Error occured when trying to create a rpc dut client: ", err)
+	}
+	dutfsClient := dutfs.NewClient(rpcDut.RPC().Conn)
+	if err := copyDirToTastOutputDir(ctx, dutfsClient, pvsOutputDir); err != nil {
+		s.Fatal("Error occured when trying to copy pvs directory from pvs host to tast logs: ", err)
+	}
+
 	// skip teardown if specified so logs can be inspected
 	if _, ok := s.Var("pvs.skip_teardown"); ok {
 		return
@@ -189,7 +201,16 @@ func (f *pvsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 }
 
-func (f *pvsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (f *pvsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	rpcDut, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Error occured when trying to create a rpc dut client: ", err)
+	}
+	dutfsClient := dutfs.NewClient(rpcDut.RPC().Conn)
+	if err := copyDirToTastOutputDir(ctx, dutfsClient, pvsResultsDir); err != nil {
+		s.Fatal("Error occured when trying to copy pvs directory from pvs host to tast logs: ", err)
+	}
+}
 
 func (f *pvsFixture) Reset(ctx context.Context) error {
 	return nil

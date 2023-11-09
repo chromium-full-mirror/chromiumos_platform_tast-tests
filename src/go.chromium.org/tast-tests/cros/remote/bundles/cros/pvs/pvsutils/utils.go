@@ -235,6 +235,59 @@ func countTestCase(s *testing.State, output string, want RepeatedWord) {
 	}
 }
 
+// copyDirToTastOutputDir copies the given path on the dut to the tast output
+// directory on the host
+func copyDirToTastOutputDir(ctx context.Context, dutfsClient *dutfs.Client, fromPath string) error {
+	if _, err := dutfsClient.Stat(ctx, fromPath); os.IsNotExist(err) {
+		// If the directory doesn't exist log warning but don't fail
+		testing.ContextLogf(ctx, "WARNING: %v does not exist; unable to copy directory to tast logs", fromPath)
+		return nil
+	} else if err != nil {
+		return err
+	}
+	tastOutDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.New("no tast output directory found")
+	}
+	destDir := path.Join(tastOutDir, path.Base(fromPath))
+	return copyDirFromDut(ctx, dutfsClient, fromPath, destDir)
+}
+
+// copyDirFromDut copies the given directory on the dut to the given path on the
+// the host machine
+func copyDirFromDut(ctx context.Context, dutfsClient *dutfs.Client, fromPath, toPath string) error {
+	if err := os.MkdirAll(toPath, 0755); err != nil {
+		return err
+	}
+	files, err := dutfsClient.ReadDir(ctx, fromPath)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		newFromPath := path.Join(fromPath, file.Name())
+		newToPath := path.Join(toPath, file.Name())
+		if file.IsDir() {
+			err = copyDirFromDut(ctx, dutfsClient, newFromPath, newToPath)
+		} else {
+			err = copyFileFromDut(ctx, dutfsClient, newFromPath, newToPath)
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// copyFileFromDut copies the given file on the dut to the given path on the
+// the host machine
+func copyFileFromDut(ctx context.Context, dutfsClient *dutfs.Client, fromPath, toPath string) error {
+	bytes, err := dutfsClient.ReadFile(ctx, fromPath)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(toPath, bytes, 0644)
+}
+
 // CopyToPVSOutputDir copies the given file to the dut and places it in the PVS output directory;
 // the path to this file from the context of the container is returned.
 func CopyToPVSOutputDir(ctx context.Context, s *testing.State, filepath string) string {
@@ -274,15 +327,14 @@ func RunAsRoot(ctx context.Context, dut *ssh.Conn, cmd string) (string, string, 
 }
 
 func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, string, error) {
-	testing.ContextLogf(ctx, "Running command: `%v`", strings.Join(cmd.Args, " "))
 	var bstdout, bstderr bytes.Buffer
 	cmd.Stdout = &bstdout
 	cmd.Stderr = &bstderr
 	err := cmd.Run()
 	stdout := sanitize(string(bstdout.Bytes()))
 	stderr := sanitize(string(bstderr.Bytes()))
-	testing.ContextLog(ctx, "Output from command: ", stdout)
-	testing.ContextLog(ctx, "Stderr from command: ", stderr)
+	testing.ContextLog(ctx, "Stdout: ", stdout)
+	testing.ContextLog(ctx, "Stderr: ", stderr)
 	return stdout, stderr, err
 }
 
