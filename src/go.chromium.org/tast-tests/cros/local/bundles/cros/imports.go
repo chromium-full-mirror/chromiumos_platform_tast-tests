@@ -136,6 +136,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/u2fd"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/ui"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/uidetection"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/usb"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/usbip"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/uwb"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/vdi"
