@@ -264,6 +264,22 @@ func (h DevboardHelper) GpioApplyStrap(ctx context.Context, straps ...ti50.GpioS
 	}
 }
 
+// ResetWithStraps applies straps while resetting the chip
+func (h DevboardHelper) ResetWithStraps(ctx context.Context, straps ...ti50.GpioStrap) error {
+	if _, err := h.PlainCommand(ctx, "gpio", "write", "RESET", "false"); err != nil {
+		return err
+	}
+	for _, strap := range straps {
+		if _, err := h.PlainCommand(ctx, "gpio", "apply", string(strap)); err != nil {
+			return err
+		}
+	}
+	if _, err := h.PlainCommand(ctx, "gpio", "write", "RESET", "true"); err != nil {
+		return err
+	}
+	return nil
+}
+
 type initialLevels struct {
 	Name  ti50.GpioName `json:"signal_name"`
 	Value bool          `json:"value"`

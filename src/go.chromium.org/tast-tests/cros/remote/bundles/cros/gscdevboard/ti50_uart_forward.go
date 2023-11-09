@@ -52,13 +52,13 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	// Fixture has already done "ccd open", now boot Ti50 simulating CCD without uServo,
 	// verify that forwarding works both ways.
 	//
-	b.GpioApplyStrap(ctx, ti50.ServoMicroDisconnected)
 	// Simulate the AP processor being off initially.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
+	th.MustSucceed(b.ResetWithStraps(ctx, ti50.ServoMicroDisconnected), "Reset board")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Test forwarding on each of three ports.
+	s.Log("AP off, no uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true, "AP off, no uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false, "AP off, no uServo")
 	if gscProps.HasFpmcuUart() {
@@ -69,6 +69,7 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	// Test forwarding on each of three ports.
+	s.Log("AP on, no uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true, "AP on, no uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, true, "AP on, no uServo")
 	if gscProps.HasFpmcuUart() {
@@ -80,13 +81,13 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	// data goes from UART to USB, but that USB data is not forwarded to UART (would conflict
 	// with uServo).
 	//
-	b.GpioApplyStrap(ctx, ti50.ServoMicroConnected)
 	// Simulate the AP processor being off initially.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
+	th.MustSucceed(b.ResetWithStraps(ctx, ti50.ServoMicroConnected), "Reset board")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Test forwarding on each of three ports.
+	s.Log("AP off, with uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false, "AP off, with uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false, "AP off, with uServo")
 	if gscProps.HasFpmcuUart() {
@@ -97,6 +98,7 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	// Test forwarding on each of three ports.
+	s.Log("AP on, with uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false, "AP on, with uServo")
 	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, false, "AP on, with uServo")
 	if gscProps.HasFpmcuUart() {

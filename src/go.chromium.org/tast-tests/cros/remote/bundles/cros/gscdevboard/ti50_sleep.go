@@ -31,10 +31,10 @@ func init() {
 		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
 			Name: "no_uservo",
-			Val:  noServoMicro,
+			Val:  ti50.ServoMicroDisconnected,
 		}, {
 			Name: "uservo",
-			Val:  servoMicro,
+			Val:  ti50.ServoMicroConnected,
 		}},
 	})
 }
@@ -117,28 +117,17 @@ func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 	}
 }
 
-func servoMicro(ctx context.Context, b utils.DevboardHelper) {
-	b.GpioApplyStrap(ctx, ti50.ServoMicroConnected)
-}
-
-func noServoMicro(ctx context.Context, b utils.DevboardHelper) {
-	b.GpioApplyStrap(ctx, ti50.ServoMicroDisconnected)
-}
-
 func Ti50Sleep(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
 	b := utils.NewDevboardHelper(f, s)
 	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
-	setup := s.Param().(func(context.Context, utils.DevboardHelper))
-	setup(ctx, b)
-
 	s.Log("Restarting ti50 with SPI straps")
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	b.GpioApplyStrap(ctx, ti50.TpmSpi)
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
+	th.MustSucceed(b.ResetWithStraps(ctx, s.Param().(ti50.GpioStrap)), "Reset board")
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
 
