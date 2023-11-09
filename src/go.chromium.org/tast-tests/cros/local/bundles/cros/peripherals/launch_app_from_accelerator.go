@@ -37,7 +37,7 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Peripherals
 		BugComponent: "b:1150827",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{
