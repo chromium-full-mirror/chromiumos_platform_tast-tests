@@ -43,9 +43,14 @@ var AppCompatPhysicalKeyboardTestCases = map[ime.InputMethod][]InputData{
 			ExpectedText:   `b-hè`,
 		},
 		{
-			Description:    "typing number key 8 and 9",
-			LocationKeySeq: strings.Split("h8h9h", ""),
-			ExpectedText:   `h_hçh`,
+			Description:    "typing number key 8",
+			LocationKeySeq: strings.Split("h8h", ""),
+			ExpectedText:   `h_h`,
+		},
+		{
+			Description:    "typing number key 9",
+			LocationKeySeq: strings.Split("h9h", ""),
+			ExpectedText:   `hçh`,
 		},
 		{
 			Description:    "typing dead key [ on keyboard",
