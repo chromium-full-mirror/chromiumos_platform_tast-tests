@@ -31,18 +31,13 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_prod_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellular",
-		Timeout:      30 * time.Second,
+		Timeout:      3 * time.Minute,
 	})
 }
 
 func ExpectedElementsOnESimDetailPage(ctx context.Context, s *testing.State) {
 	if _, err := modemmanager.NewModemWithSim(ctx); err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
-	}
-
-	cr, err := chrome.New(ctx)
-	if err != nil {
-		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
@@ -53,6 +48,11 @@ func ExpectedElementsOnESimDetailPage(ctx context.Context, s *testing.State) {
 	networkName, err := helper.GetCurrentNetworkName(ctx)
 	if err != nil {
 		s.Fatal("Could not get iccid: ", err)
+	}
+
+	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to create a new instance of Chrome: ", err)
 	}
 
 	tconn, err := cr.TestAPIConn(ctx)
