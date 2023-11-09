@@ -19,6 +19,7 @@ import (
 	upstartCommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -101,6 +102,17 @@ const oobeCompletedFile = "/home/chronos/.oobe_completed"
 // Before adding a test, consider whether your test will contribute towards the above goals.
 // If it does not, it may be more suitable to create a unit test.
 func Smoke(ctx context.Context, s *testing.State) {
+	// If a test should need the cleanupCtx, expand the test function parameters and pass it.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	defer func() {
+		if err := cleanupRollbackLeftovers(cleanupCtx); err != nil {
+			s.Error("Cleanup failed: ", err)
+		}
+	}()
+
 	// Every small subtest has its own function and is declared in the test parameters.
 	// This allows to run test with different attributes but avoids creating a separate file for each subtest.
 	s.Param().(func(context.Context, *testing.State))(ctx, s)
@@ -115,7 +127,6 @@ func oobeConfigRestoreRunningTest(ctx context.Context, s *testing.State) {
 
 // oobeConfigSaveNoFlagTest checks that oobe_config_save does nothing if the flag to save data is not present
 func oobeConfigSaveNoFlagTest(ctx context.Context, s *testing.State) {
-	defer cleanupRollbackFiles(ctx)
 	if err := runOobeConfigSave(ctx); err != nil {
 		s.Fatal("Failed to run oobe_config_save: ", err)
 	}
@@ -128,7 +139,6 @@ func oobeConfigSaveNoFlagTest(ctx context.Context, s *testing.State) {
 // rollbackEncryptFailedDecryptTest checks that oobe_config_save encrypts data and leaves the key for powerwash if the flag to save is present
 // and that oobe_config_restore does not crash when attempting to decrypt (decryption will fail because we do not write to pstore).
 func rollbackEncryptFailedDecryptTest(ctx context.Context, s *testing.State) {
-	defer cleanupRollbackFiles(ctx)
 	if err := placeDataSaveFlag(ctx); err != nil {
 		s.Fatal("Failed to place data save flag: ", err)
 	}
@@ -141,8 +151,12 @@ func rollbackEncryptFailedDecryptTest(ctx context.Context, s *testing.State) {
 	if err := checkFileExists(sslKey); err != nil {
 		s.Fatal("Failed when checking that ssl key file was created: ", err)
 	}
+	// Remove TPM encrypted file to ensure decryption will fail.
+	if err := os.Remove(tpmEncryptedRollbackData); err != nil && !os.IsNotExist(err) {
+		s.Fatal("Failed to remove TPM encrypted data: ", err)
+	}
 
-	// Restarting Chrome should trigger a request to oobe_config_restore
+	// Restarting Chrome should trigger a request to oobe_config_restore.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to restart Chrome: ", err)
 	}
@@ -154,8 +168,6 @@ func rollbackEncryptFailedDecryptTest(ctx context.Context, s *testing.State) {
 // onlyCleanupMetricsWhenOobeIsNotCompletedTest checks that oobe_config_restore's
 // cleanup functionality runs but only removes stale metrics file if OOBE is not yet completed.
 func onlyCleanupMetricsWhenOobeIsNotCompletedTest(ctx context.Context, s *testing.State) {
-	defer cleanupRollbackFiles(ctx)
-
 	if err := fakePrecedingRollback(ctx); err != nil {
 		s.Fatal("Failed to fake a preceding rollback: ", err)
 	}
@@ -195,8 +207,6 @@ func onlyCleanupMetricsWhenOobeIsNotCompletedTest(ctx context.Context, s *testin
 // cleanupFilesIfOobeIsCompletedTest checks that oobe_config_restore's cleanup functionality runs
 // and removes all remaining rollback files once OOBE is completed.
 func cleanupFilesIfOobeIsCompletedTest(ctx context.Context, s *testing.State) {
-	defer cleanupRollbackFiles(ctx)
-
 	if err := fakePrecedingRollback(ctx); err != nil {
 		s.Fatal("Failed to fake a preceding rollback: ", err)
 	}
@@ -227,8 +237,6 @@ func cleanupFilesIfOobeIsCompletedTest(ctx context.Context, s *testing.State) {
 // tpmEncryptionTest runs encryption and decryption using the rollback TPM space.
 // It verifies that encrypted file and decrypted file are present and enforces use of TPM encryption.
 func tpmEncryptionTest(ctx context.Context, s *testing.State) {
-	defer cleanupRollbackFiles(ctx)
-
 	if err := triggerTpmEncryption(ctx); err != nil {
 		s.Fatal("Failed to encrypt with TPM: ", err)
 	}
@@ -273,8 +281,6 @@ func tpmEncryptionTest(ctx context.Context, s *testing.State) {
 // cleanupZeroesTpmSpaceTest verifies that running oobe_config_restore upstart job triggers
 // cleaning the rollback TPM space if OOBE is completed.
 func cleanupZeroesTpmSpaceTest(ctx context.Context, s *testing.State) {
-	defer cleanupRollbackFiles(ctx)
-
 	if err := triggerTpmEncryption(ctx); err != nil {
 		s.Fatal("Failed to encrypt with TPM: ", err)
 	}
@@ -456,7 +462,9 @@ func checkFileDoesNotExist(path string) error {
 	return errors.Errorf("file %s exists", path)
 }
 
-func cleanupRollbackFiles(ctx context.Context) error {
+func cleanupRollbackLeftovers(ctx context.Context) (err error) {
+	err = errors.Join(err, upstart.StopJob(ctx, "oobe_config_save"))
+	err = errors.Join(err, upstart.StopJob(ctx, "oobe_config_restore"))
 	paths := []string{
 		dataSaveFlag,
 		sslEncryptedRollbackData,
@@ -467,9 +475,7 @@ func cleanupRollbackFiles(ctx context.Context) error {
 		oobeCompletedFile,
 	}
 	for _, path := range paths {
-		if err := os.RemoveAll(path); err != nil {
-			return errors.Wrapf(err, "failed to remove %s", path)
-		}
+		err = errors.Join(err, os.RemoveAll(path))
 	}
-	return nil
+	return err
 }
