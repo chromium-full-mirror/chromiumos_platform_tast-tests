@@ -29,7 +29,7 @@ func init() {
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_roaming"},
+		Attr:         []string{"group:cellular", "cellular_sim_roaming"},
 		Fixture:      "cellularWithFunctioningRoamingSim",
 		Timeout:      3 * time.Minute,
 	})
