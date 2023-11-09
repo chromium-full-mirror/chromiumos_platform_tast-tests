@@ -430,9 +430,12 @@ func OpenNetworkDetailPage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 		return nil, errors.Wrap(err, "failed to determine network subpage finder")
 	}
 
+	technologyFinder := arrowFinder.NameContaining(technologyName)
+
 	err = uiauto.Combine("navigate to network detail page",
-		enableTechnology(technologyName),                         // Arrow button exists only if the technology is enabled.
-		ui.LeftClick(arrowFinder.NameContaining(technologyName)), // Clicking the arrow button of the specified technology.
+		enableTechnology(technologyName),     // Arrow button exists only if the technology is enabled.
+		ui.WaitForLocation(technologyFinder), // Wait for the location of the arrow button of the specified technology to be stable.
+		ui.LeftClick(technologyFinder),       // Clicking the arrow button of the specified technology.
 		selectNetwork,
 	)(ctx)
 
