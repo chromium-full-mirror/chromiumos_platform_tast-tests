@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/bond"
+	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/meetcuj"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
@@ -441,6 +442,8 @@ func init() {
 				Name:      "4p_present_notes_split",
 				Timeout:   defaultTestTimeout,
 				ExtraAttr: []string{"group:cuj"},
+				// Skip devices without cameras to see which devices in lab can run this variant.
+				ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
 				Val: meetTest{
 					bots:        []int{3},
 					layout:      googlemeet.TiledLayout,
