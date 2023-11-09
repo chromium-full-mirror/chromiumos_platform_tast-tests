@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/nebraska"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -33,9 +34,9 @@ type updateEngineTestParam struct {
 	testValue string
 
 	// Some values are too generic or are always set, allow skipping the check when the policies are unset.
-	// checkParam indicates whether to check for the xml attribute.
+	// checkParam indicates whether to check that the policy's parameter is not set when the policy is unset.
 	checkParam bool
-	// checkVal indicates whether to check for the value.
+	// checkVal indicates whether to check for that the given value is not sent for the parameter when the policy is unset.
 	checkVal bool
 }
 
@@ -60,7 +61,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		Timeout:      1 * time.Minute,
 		Params: []testing.Param{{
@@ -189,35 +190,25 @@ func init() {
 	})
 }
 
-// triggerUpdate requests an update check at the specified Omaha URL.
-func triggerUpdate(ctx context.Context, url string) error {
-	// Make sure update_engine_client does not hang.
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
+	// Shorten deadline to leave time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := testexec.CommandContext(ctx, "update_engine_client", "--check_for_update", fmt.Sprintf("--omaha_url=%s", url)).Run(testexec.DumpLogOnError); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	param := s.Param().(*updateEngineTestParam)
 
-	defer policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
-
-	const waitTime = 20 * time.Second
+	defer policyutil.ServeAndVerify(cleanupCtx, fdms, cr, []policy.Policy{})
 
 	s.Run(ctx, "set", func(ctx context.Context, s *testing.State) {
 		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
 		if err != nil {
 			s.Fatal("Failed to start nebraska: ", err)
 		}
-		defer updateServer.Close(ctx)
+		defer updateServer.Close(cleanupCtx)
 
 		// Set the policy and check that the attribute is set.
 		// TODO(b/285292962): Replace poll with a test-agnostic workaround.
@@ -234,23 +225,8 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		}
 
 		attributeEntry := param.policyParam + "=\"" + param.testValue + "\""
-		s.Log("Waiting for the log entry to show up")
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			var err error
-			updateServerLog, err := os.ReadFile(updateServer.LogFile)
-			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to read nebraska logs"))
-			}
-
-			if !strings.Contains(string(updateServerLog), attributeEntry) {
-				return errors.Errorf("%q not in the nebraska logs", attributeEntry)
-			}
-
-			return nil
-		}, &testing.PollOptions{
-			Timeout: waitTime,
-		}); err != nil {
-			s.Error("Could not find expected values: ", err)
+		if err := awaitUpdateServerLogEntry(ctx, updateServer, attributeEntry); err != nil {
+			s.Error("Failure while waiting for update logs: ", err)
 		}
 	})
 
@@ -259,7 +235,7 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start nebraska: ", err)
 		}
-		defer updateServer.Close(ctx)
+		defer updateServer.Close(cleanupCtx)
 
 		// Clear policies to make sure attribute is not always sent.
 		// TODO(b/285292962): Replace poll with a test-agnostic workaround.
@@ -275,24 +251,9 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to trigger update request: ", err)
 		}
 
-		s.Log("Waiting for the nebraska request to finish")
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			var err error
-			updateServerLog, err := os.ReadFile(updateServer.LogFile)
-			if err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to read nebraska logs"))
-			}
-
-			responseLog := "Sent response"
-			if !strings.Contains(string(updateServerLog), responseLog) {
-				return errors.Errorf("%q not in the nebraska logs", responseLog)
-			}
-
-			return nil
-		}, &testing.PollOptions{
-			Timeout: waitTime,
-		}); err != nil {
-			s.Error("Could not find expected values: ", err)
+		const responseLog = "Sent response"
+		if err := awaitUpdateServerLogEntry(ctx, updateServer, responseLog); err != nil {
+			s.Error("Failure while waiting for update logs: ", err)
 		}
 
 		updateServerLog, err := os.ReadFile(updateServer.LogFile)
@@ -308,4 +269,40 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			s.Errorf("Unexpectedly found test value %q in the nebraska logs", param.testValue)
 		}
 	})
+}
+
+// triggerUpdate requests an update check at the specified Omaha URL.
+func triggerUpdate(ctx context.Context, url string) error {
+	// Make sure update_engine_client does not hang.
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	if err := testexec.CommandContext(ctx, "update_engine_client", "--check_for_update", fmt.Sprintf("--omaha_url=%s", url)).Run(testexec.DumpLogOnError); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// awaitUpdateServerLogEntry waits for the given entry to show up in nebraska logs.
+func awaitUpdateServerLogEntry(ctx context.Context, updateServer *nebraska.Nebraska, entry string) error {
+	testing.ContextLogf(ctx, "Waiting for %q to show up in nebraska logs", entry)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		updateServerLog, err := os.ReadFile(updateServer.LogFile)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read nebraska logs"))
+		}
+
+		if !strings.Contains(string(updateServerLog), entry) {
+			return errors.Errorf("%q not in the nebraska logs", entry)
+		}
+
+		return nil
+	}, &testing.PollOptions{
+		Timeout: 20 * time.Second,
+	}); err != nil {
+		return errors.Wrapf(err, "could not find %q in nebraska logs", entry)
+	}
+	return nil
 }
