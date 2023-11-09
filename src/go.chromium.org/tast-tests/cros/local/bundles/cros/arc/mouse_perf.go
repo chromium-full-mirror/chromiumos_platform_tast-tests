@@ -109,6 +109,10 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	}
 	defer act.Close(ctx)
 
+	if err := inputlatency.WaitForCPUStabilized(ctx); err != nil {
+		s.Fatal("Failed to wait until CPU is stabilized: ", err)
+	}
+
 	sdkVersion, err := arc.SDKVersion()
 	if err != nil {
 		s.Fatal("ailed to get SDK version: ", err)
@@ -139,8 +143,8 @@ func MousePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("The test app is not in fullscreen: ", err)
 	}
 
-	if err := inputlatency.WaitForCPUStabilized(ctx); err != nil {
-		s.Fatal("Failed to wait until CPU is stabilized: ", err)
+	if err := inputlatency.WaitForUIRendered(ctx, d, nil); err != nil {
+		s.Fatal("Failed to wait for app UI to be renderred: ", err)
 	}
 
 	// Check latency for mouse ACTION_MOVE events which are generated when moving mouse after left-button pressing down and holding.

@@ -164,6 +164,21 @@ func WaitForEvents(ctx context.Context, d *ui.Device, count int, pkgName string)
 	return txt, nil
 }
 
+// WaitForUIRendered waits for the app UI to be rendered.
+func WaitForUIRendered(ctx context.Context, d *ui.Device, pkgNamePtr *string) error {
+	pkgName := inputLatencyPkgName
+	// Use default package name if nil.
+	if pkgNamePtr != nil {
+		pkgName = *pkgNamePtr
+	}
+
+	v := d.Object(ui.ID(fmt.Sprintf("%s:id/event_count", pkgName)))
+	if err := v.WaitForExists(ctx, appUIUpdatePollOptions.Timeout); err != nil {
+		return errors.Wrap(err, "failed to wait for the UI to be renderred")
+	}
+	return nil
+}
+
 // WaitForSomeEvents waits for at least some events to show up.
 func WaitForSomeEvents(ctx context.Context, d *ui.Device, pkgNamePtr *string) error {
 	pkgName := inputLatencyPkgName
