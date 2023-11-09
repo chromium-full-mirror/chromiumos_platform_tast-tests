@@ -734,18 +734,7 @@ func (m *Manager) DisablePortalDetection(ctx context.Context) error {
 // technologies and returns a function to restore the portal detection to its
 // previous state.
 func (m *Manager) DisablePortalDetectionWithRestore(ctx context.Context) (func(context.Context), error) {
-	portals, err := m.GetPortalDetection(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if err := m.DisablePortalDetection(ctx); err != nil {
-		return nil, err
-	}
-	return func(ctx context.Context) {
-		if err := m.SetPortalDetection(ctx, portals); err != nil {
-			testing.ContextLog(ctx, "Failed to restore portal detection: ", err)
-		}
-	}, nil
+	return m.SetPortalDetectionWithRestore(ctx, "")
 }
 
 // SetPortalDetection enables portal detection for the technologies in the cpList.
@@ -754,6 +743,24 @@ func (m *Manager) SetPortalDetection(ctx context.Context, cpList string) error {
 		return errors.Wrapf(err, "failed to set portal detection on %q", cpList)
 	}
 	return nil
+}
+
+// SetPortalDetectionWithRestore enables portal detection for the technologies
+// in cpList and returns a function to restore the portal detection to its
+// previous state.
+func (m *Manager) SetPortalDetectionWithRestore(ctx context.Context, cpList string) (func(context.Context), error) {
+	portals, err := m.GetPortalDetection(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := m.SetPortalDetection(ctx, cpList); err != nil {
+		return nil, err
+	}
+	return func(ctx context.Context) {
+		if err := m.SetPortalDetection(ctx, portals); err != nil {
+			testing.ContextLog(ctx, "Failed to restore portal detection: ", err)
+		}
+	}, nil
 }
 
 // GetPortalDetection returns the portal detection technologies.

@@ -118,10 +118,11 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 	defer shillMgr.RemoveFakeUserProfile(cleanupCtx, profileName)
 
 	testing.ContextLog(ctx, "Disabling portal detection on ethernet")
-	if err := shillMgr.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
+	restorePortals, err := shillMgr.SetPortalDetectionWithRestore(ctx, "wifi,cellular")
+	if err != nil {
 		s.Fatal("Failed to disable portal detection on ethernet: ", err)
 	}
-	defer shillMgr.SetProperty(cleanupCtx, shillconst.ProfilePropertyCheckPortalList, "ethernet,wifi,cellular")
+	defer restorePortals(cleanupCtx)
 
 	// Setup the virtual ethernet upstream.
 	pool := subnet.NewPool()
