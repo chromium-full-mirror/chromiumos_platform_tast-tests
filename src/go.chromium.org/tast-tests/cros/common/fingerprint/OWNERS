@@ -1,0 +1,5 @@
+set noparent
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+include chromiumos/owners:v1:/firmware/OWNERS.cros_fp
