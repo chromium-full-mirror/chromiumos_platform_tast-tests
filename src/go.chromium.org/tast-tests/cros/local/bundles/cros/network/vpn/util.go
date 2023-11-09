@@ -6,21 +6,43 @@ package vpn
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
-	"golang.org/x/sys/unix"
-
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const charonExitTimeout = 5 * time.Second
+const charonPath = "/usr/libexec/ipsec/charon"
+
+// checkPidIsRunningCharon returns if the given pid is pointing to a charon
+// process by reading its process path. It's possible that the pid file is just
+// a leftover and there is another process using this pid.
+func checkPidIsRunningCharon(ctx context.Context, pid int) (bool, error) {
+	procPath, err := testexec.CommandContext(ctx, "readlink", fmt.Sprintf("/proc/%d/exe", pid)).Output()
+	if err != nil {
+		if exitError, ok := err.(*exec.ExitError); ok && exitError.ExitCode() == 1 {
+			// The path does not exist. Probably means the process has stopped.
+			return false, nil
+		}
+		return false, errors.Wrapf(err, "failed to get process path for pid %d", pid)
+	}
+	if strings.TrimSpace(string(procPath)) != charonPath {
+		testing.ContextLogf(ctx, "Charon pid file (pid=%d) points to another executable %s", pid, procPath)
+		return false, nil
+	}
+
+	return true, nil
+}
 
 // waitForCharonExitOrKill waits until the charon process stopped after the
 // disconnection of an strongswan-based connection. If the connection is not
@@ -54,18 +76,29 @@ func waitForCharonExitOrKill(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to find process: %d", pid)
 	}
 
+	const errMsgCharonIsRunning = "charon is still running"
+
+	testing.ContextLogf(ctx, "Waiting for charon (pid=%d) to exit", pid)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := process.Signal(unix.Signal(0)); err == nil {
-			return errors.New("charon is still running")
+		stillRunning, err := checkPidIsRunningCharon(ctx, pid)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+		if stillRunning {
+			return errors.New(errMsgCharonIsRunning)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: charonExitTimeout}); err == nil {
+		// No error means there is no running charon process now.
 		return nil
+	} else if err.Error() != errMsgCharonIsRunning {
+		return err
 	}
 
+	testing.ContextLog(ctx, "Charon is still running. Killing it")
 	process.Kill()
 	process.Wait()
-	return errors.New("charon is still running")
+	return errors.New(errMsgCharonIsRunning)
 }
 
 // RemoveVPNProfile removes the VPN service with |name| if it exists in a
