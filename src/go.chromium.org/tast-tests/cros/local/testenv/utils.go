@@ -51,3 +51,10 @@ func isValidLabel(label string) bool {
 	}
 	return false
 }
+
+// isDUT checks if it runs in a DUT or not.
+// TODO(b/310046249): Reliable way to detect it. It would be useful to gate code that should or should not be run in a DUT.
+func isDUT() bool {
+	lsb, err := os.ReadFile("/etc/lsb-release")
+	return err == nil && strings.Contains(string(lsb), "CHROMEOS_RELEASE_BOARD")
+}

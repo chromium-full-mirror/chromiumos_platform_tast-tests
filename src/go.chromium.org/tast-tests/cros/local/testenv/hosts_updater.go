@@ -36,6 +36,14 @@ type entries map[string]entry
 // label is an identifier added to each line of the entries modified by HostsUpdater.
 const label = "#testenv-hosts-override="
 
+// Marker files that let the infra to repair or reprovision a DUT when exists (specifically when a change made in tests becomes unrecoverable)
+const (
+	provisionFailedFilePath = "/mnt/stateful_partition/unencrypted/provision_failed"
+	forceProvisionFilePath  = "/mnt/stateful_partition/.force_provision"
+)
+
+var provisionMarkers = []string{provisionFailedFilePath, forceProvisionFilePath}
+
 // Resolver is a wrapper interface for the net package. Useful for dependency injection in testing.
 type Resolver interface {
 	LookupHost(hostname string) ([]string, error)
@@ -87,11 +95,8 @@ func newHostsUpdater() (*HostsUpdater, func() error, error) {
 //	failIfNotDUT - true (default) to ensure that it runs on a DUT
 //	resolver - defaultResolver (default) or a local IP resolver that implements the Resolver interface
 func newHostsUpdaterInternal(hostsfile string, reset, failIfNotDUT bool, resolver Resolver) (*HostsUpdater, func() error, error) {
-	// Safety: This should only be run on a DUT, not a host machine.
-	if isDUT := func() bool {
-		lsb, err := os.ReadFile("/etc/lsb-release")
-		return err == nil && strings.Contains(string(lsb), "CHROMEOS_RELEASE_BOARD")
-	}(); failIfNotDUT && !isDUT {
+	// Safeguard: This should only be run on a DUT, not a host machine.
+	if failIfNotDUT && !isDUT() {
 		return nil, nil, errors.New("testenv should be run locally only on a DUT")
 	}
 
@@ -117,6 +122,9 @@ func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
 	for _, r := range rules {
 		from := r.from.hostname
 		to := r.to.hostname
+		if from == to {
+			return nil, errors.Errorf("from:to should not be the same: %v", r.from.label)
+		}
 		// Avoid overriding the same host more than once.
 		if val, ok := modified[from]; ok && val.hostname == to {
 			return nil, errors.Wrapf(err, "already overridden for %v => %v", r.from.label, r.to.label)
@@ -130,15 +138,42 @@ func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
 			ip:       addrs[0], // There will be at least one valid IP when LookupHost returns no error.
 		}
 	}
+	if len(modified) == 0 {
+		return nil, errors.New("None to override")
+	}
 
 	if err := h.writeHosts(modified, base); err != nil {
 		return nil, errors.Wrap(err, "failed to override hosts")
+	}
+	// Safeguard: Leave marker files, so the infra could force repair or provision a DUT if cleanup fails.
+	if isDUT() {
+		for _, f := range provisionMarkers {
+			if err := os.WriteFile(f, nil, 0644); err != nil {
+				return nil, errors.Wrapf(err, "failed to force provision: %v", f)
+			}
+		}
 	}
 	return modified, nil
 }
 
 // Reset clears all the host overrides.
-func (h *HostsUpdater) Reset() error {
+func (h *HostsUpdater) Reset() (retErr error) {
+	// Safeguard: Delete the marker files when the cleanup succeeded.
+	defer func() {
+		if !isDUT() || retErr != nil {
+			return
+		}
+		for _, f := range provisionMarkers {
+			if _, err := os.Stat(f); err != nil {
+				return
+			}
+			if err := os.Remove(f); err != nil {
+				retErr = errors.Wrapf(err, "failed to remove the marker: %v", f)
+				return
+			}
+		}
+	}()
+
 	modified, base, err := h.readHosts()
 	if err != nil {
 		return errors.Wrap(err, "failed to read the host file to reset")
@@ -149,9 +184,6 @@ func (h *HostsUpdater) Reset() error {
 	// Write only the base lines for reset.
 	err = h.writeHosts(entries{}, base)
 	if err != nil {
-		// Safety: If it fails to reset the host file, leave a marker file so the infra can restore it.
-		const ForceProvisionFilePath = "/mnt/stateful_partition/.force_provision"
-		_ = os.WriteFile(ForceProvisionFilePath, nil, 0644)
 		return errors.Wrap(err, "failed to write the host file for reset")
 	}
 	return nil
