@@ -44,7 +44,7 @@ func Histograms(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	if err := crash.SetUpCrashTest(ctx, crash.WithMockConsent()); err != nil {
+	if err := crash.SetUpCrashTest(ctx, crash.WithMockConsent(), crash.FilterCrashes("coreutils")); err != nil {
 		s.Fatal("Failed to set up crash test: ", err)
 	}
 	defer func(ctx context.Context) {
