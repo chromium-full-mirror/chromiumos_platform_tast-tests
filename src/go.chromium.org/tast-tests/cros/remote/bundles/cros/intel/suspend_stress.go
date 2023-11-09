@@ -31,10 +31,9 @@ func init() {
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},
 		Params: []testing.Param{{
-			Name:      "quick",
-			Val:       2,
-			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			Name:    "quick",
+			Val:     2,
+			Timeout: 5 * time.Minute,
 		}, {
 			Name:      "bronze",
 			Val:       500,
