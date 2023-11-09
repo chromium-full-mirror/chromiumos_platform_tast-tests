@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
-	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 )
 
 const (
@@ -278,86 +277,20 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 
 // flashECFirmware flashes the provided EC firmware on the DUT and restores the original EC firmware in the end.
 func flashECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, dutTmpDir, localTmpDir, firmwarePathVal, ecChip string, flashEC bool) {
-	if !flashEC {
+	if !flashEC || firmwarePathVal == "" {
 		return
 	}
-	h.DisconnectDUT(ctx)
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		s.Fatal("Can't restore firmware, DUT is off: ", err)
-	}
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
-	}
+	backupECFirmware(ctx, s, h, servoTmpDir)
 
-	// Backup EC Firmware
-	s.Log("Backing up current EC_RW")
-	backupRW, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
-		Section:    pb.ImageSection_ECRWImageSection,
-		Programmer: pb.Programmer_ECProgrammer,
-		Path:       dutTmpDir,
-	})
-	if err != nil {
-		s.Fatal("Failed to backup EC RW firmware: ", err)
-	}
-	s.Log("Backing up current EC_RO")
-	backupRO, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{
-		Section:    pb.ImageSection_ECROImageSection,
-		Programmer: pb.Programmer_ECProgrammer,
-		Path:       dutTmpDir,
-	})
-	if err != nil {
-		s.Fatal("Failed to backup EC RO firmware: ", err)
-	}
-	s.Log("Completed backup of existing EC fw")
 	// Check that the DUT has initial fw in the end
 	defer func() {
 		h.DisconnectDUT(ctx)
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Can't restore firmware, DUT is off: ", err)
-		}
-		if err := h.RequireRPCClient(ctx); err != nil {
-			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-		}
-		if err := h.RequireBiosServiceClient(ctx); err != nil {
-			s.Fatal("Requiring BiosServiceClient: ", err)
-		}
-		s.Log("Flashing DUT with backup EC RO firmware file: ", backupRO)
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, backupRO); err != nil {
-			s.Fatal("Failed to restore EC firmware: ", err)
-		}
-		s.Log("Flashing DUT with backup EC RW firmware file: ", backupRW)
-		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, backupRW); err != nil {
-			s.Fatal("Failed to restore EC firmware: ", err)
-		}
-		// Reboot and check active copy after restore.
-		ms, err := firmware.NewModeSwitcher(ctx, h)
-		if err != nil {
-			s.Fatal("Creating mode switcher: ", err)
-		}
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
-			s.Fatal("Failed to reboot: ", err)
-		}
-		s.Log("Checking ec_active_copy is RW or RW_B")
-		activeCopy, err := h.Servo.GetString(ctx, "ec_active_copy")
-		if err != nil {
-			s.Fatal("EC active copy failed: ", err)
-		}
-		if !strings.HasPrefix(activeCopy, "RW") {
-			s.Fatalf("EC active copy incorrect, got %q want RW", activeCopy)
-		}
+		runECFirmwareFlashServo(ctx, s, h, servoTmpDir, ecChip, backupFirmwareFile)
 	}()
+
 	// Flash EC
-	if firmwarePathVal == "" {
-		return
-	}
 	s.Log("Flashing DUT EC with downloaded firmware file")
-	if ecChip == "stm32" {
-		if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, ecFirmwareFileToFlash), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--bitbang_rate=57600", "--verify", "--verbose"); err != nil {
-			s.Fatal("Failed to flash EC firmware bin file: ", err)
-		}
-	} else if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, ecFirmwareFileToFlash), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"); err != nil {
-		s.Fatal("Failed to flash EC firmware bin file: ", err)
-	}
+	runECFirmwareFlashServo(ctx, s, h, servoTmpDir, ecChip, ecFirmwareFileToFlash)
 	s.Log("Completed flashing of downloaded ec fw")
 }
 
@@ -485,4 +418,29 @@ func safeRebootDut(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to open RPC client after reboot")
 	}
 	return nil
+}
+
+// backupECFirmware takes a backup of current EC firmware.
+func backupECFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir string) {
+	h.DisconnectDUT(ctx)
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Can't restore firmware, DUT is off: ", err)
+	}
+	flashCmd := fmt.Sprintf("cd %s&&flash_ec --port=%d --read=%s/%s", servoTmpDir, h.ServoProxy.GetPort(), servoTmpDir, backupFirmwareFile)
+	if err := h.ServoProxy.RunCommand(ctx, false, "bash", "-c", flashCmd); err != nil {
+		s.Fatal("Failed to change directory: ", err)
+	}
+}
+
+func runECFirmwareFlashServo(ctx context.Context, s *testing.State, h *firmware.Helper, servoTmpDir, ecChip, image string) {
+	if ecChip == "stm32" {
+		if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, image), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--bitbang_rate=57600", "--verify", "--verbose"); err != nil {
+			s.Fatal("Failed to flash EC firmware bin file: ", err)
+		}
+	} else if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", servoTmpDir, image), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"); err != nil {
+		s.Fatal("Failed to flash EC firmware bin file: ", err)
+	}
+	if err := h.EnsureDUTBooted(ctx); err != nil {
+		s.Fatal("Can't restore firmware, DUT is off: ", err)
+	}
 }
