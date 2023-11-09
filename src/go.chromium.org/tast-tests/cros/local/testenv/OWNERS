@@ -1,0 +1,13 @@
+set noparent
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+# ChromeOS EngProd UFO testing
+hsiehjun@google.com
+hyungtaekim@chromium.org
+jinrongwu@google.com
+kamilszarek@google.com
+kyleshima@chromium.org
+shengjun@chromium.org
+yanghenry@google.com
