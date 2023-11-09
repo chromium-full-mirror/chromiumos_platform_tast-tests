@@ -222,13 +222,13 @@ func (e *Element) dismissEncryptionAlert(ctx context.Context) error {
 	}
 
 	alert := e.d.Object(ui.ResourceID(elementIDPrefix + "llAlertBackground"))
-	skipButton := e.d.Object(ui.Text("SKIP"), ui.ResourceID("android:id/button2"))
+	skipButton := e.d.Object(ui.TextMatches("(?i)SKIP"), ui.ClassName(textClass), ui.PackageName(elementPackage))
 	dismissAlert := uiauto.NamedCombine("dismiss encryption alert",
 		apputil.FindAndClick(alert, defaultUITimeout),
 		apputil.WaitUntilGone(alert, defaultUITimeout),
 		// Use keyboard to trigger back action on both clamshell and tablet devices.
 		e.kb.AccelAction(topRow.BrowserBack),
-		apputil.FindAndClick(skipButton, defaultUITimeout),
+		apputil.ClickIfExist(skipButton, defaultUITimeout),
 	)
 	return uiauto.IfSuccessThen(
 		apputil.WaitForExists(alert, defaultUITimeout),
