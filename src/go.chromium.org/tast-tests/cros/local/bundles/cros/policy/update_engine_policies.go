@@ -28,16 +28,13 @@ import (
 type updateEngineTestParam struct {
 	// policyValues are the policies that need to be set.
 	policyValues []policy.Policy
-	// policyParam is the xml attribute that needs to be set by update_engine.
-	policyParam string
-	// testValue is the value for the policyParam attribute.
-	testValue string
+	// expectedUpdateRequestSubstrings is a list of substrings that should be present
+	// in an update request with the given policies set.
+	expectedUpdateRequestSubstrings []string
 
-	// Some values are too generic or are always set, allow skipping the check when the policies are unset.
-	// checkParam indicates whether to check that the policy's parameter is not set when the policy is unset.
-	checkParam bool
-	// checkVal indicates whether to check for that the given value is not sent for the parameter when the policy is unset.
-	checkVal bool
+	// excludedUpdateRequestSubstrings is a list of substrings that are not supposed to be present
+	// in an update request with given policies.
+	excludedUpdateRequestSubstrings []string
 }
 
 const (
@@ -67,11 +64,8 @@ func init() {
 		Params: []testing.Param{{
 			Name: "device_target_version_prefix",
 			Val: &updateEngineTestParam{
-				policyValues: []policy.Policy{&policy.DeviceTargetVersionPrefix{Val: deviceTargetVersionPrefixVal}},
-				testValue:    deviceTargetVersionPrefixVal,
-				policyParam:  "targetversionprefix",
-				checkParam:   true,
-				checkVal:     true,
+				policyValues:                    []policy.Policy{&policy.DeviceTargetVersionPrefix{Val: deviceTargetVersionPrefixVal}},
+				expectedUpdateRequestSubstrings: []string{fmt.Sprintf("targetversionprefix=%q", deviceTargetVersionPrefixVal)},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -87,10 +81,8 @@ func init() {
 		}, {
 			Name: "device_release_lts_tag",
 			Val: &updateEngineTestParam{
-				policyValues: []policy.Policy{&policy.DeviceReleaseLtsTag{Val: deviceReleaseLtsTagVal}},
-				testValue:    deviceReleaseLtsTagVal,
-				policyParam:  "ltstag",
-				checkParam:   true,
+				policyValues:                    []policy.Policy{&policy.DeviceReleaseLtsTag{Val: deviceReleaseLtsTagVal}},
+				expectedUpdateRequestSubstrings: []string{fmt.Sprintf("ltstag=%q", deviceReleaseLtsTagVal)},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -106,8 +98,9 @@ func init() {
 					&policy.DeviceTargetVersionPrefix{Val: deviceTargetVersionPrefixVal},
 					&policy.DeviceRollbackToTargetVersion{Val: 2},
 				},
-				testValue:   "true",
-				policyParam: "rollback_allowed",
+				expectedUpdateRequestSubstrings: []string{
+					"rollback_allowed=\"true\"",
+					fmt.Sprintf("targetversionprefix=%q", deviceTargetVersionPrefixVal)},
 			},
 		}, {
 			Name: "device_channel_stable",
@@ -116,8 +109,7 @@ func init() {
 					&policy.ChromeOsReleaseChannel{Val: "stable-channel"},
 					&policy.ChromeOsReleaseChannelDelegated{Val: false},
 				},
-				testValue:   "stable-channel",
-				policyParam: "track",
+				expectedUpdateRequestSubstrings: []string{"track=\"stable-channel\""},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -139,8 +131,7 @@ func init() {
 					&policy.ChromeOsReleaseChannel{Val: "beta-channel"},
 					&policy.ChromeOsReleaseChannelDelegated{Val: false},
 				},
-				testValue:   "beta-channel",
-				policyParam: "track",
+				expectedUpdateRequestSubstrings: []string{"track=\"beta-channel\""},
 			},
 		}, {
 			Name: "device_channel_dev",
@@ -149,8 +140,7 @@ func init() {
 					&policy.ChromeOsReleaseChannel{Val: "dev-channel"},
 					&policy.ChromeOsReleaseChannelDelegated{Val: false},
 				},
-				testValue:   "dev-channel",
-				policyParam: "track",
+				expectedUpdateRequestSubstrings: []string{"track=\"dev-channel\""},
 			},
 			ExtraSearchFlags: []*testing.StringPair{{
 				Key: "feature_id",
@@ -166,8 +156,7 @@ func init() {
 					&policy.ChromeOsReleaseChannel{Val: "ltc-channel"},
 					&policy.ChromeOsReleaseChannelDelegated{Val: false},
 				},
-				testValue:   "ltc-channel",
-				policyParam: "track",
+				expectedUpdateRequestSubstrings: []string{"track=\"ltc-channel\""},
 			},
 		}, {
 			Name: "device_channel_lts",
@@ -176,8 +165,20 @@ func init() {
 					&policy.ChromeOsReleaseChannel{Val: "lts-channel"},
 					&policy.ChromeOsReleaseChannelDelegated{Val: false},
 				},
-				testValue:   "lts-channel",
-				policyParam: "track",
+				expectedUpdateRequestSubstrings: []string{"track=\"lts-channel\""},
+			},
+		}, {
+			Name: "no_policy",
+			Val: &updateEngineTestParam{
+				policyValues:                    []policy.Policy{},
+				expectedUpdateRequestSubstrings: []string{"Sent response"},
+				excludedUpdateRequestSubstrings: []string{
+					"targetversionprefix",
+					"ltstag",
+					"rollback_allowed",
+					"activate_date",
+					"fsi_version",
+				},
 			},
 		}},
 		SearchFlags: []*testing.StringPair{
@@ -203,72 +204,40 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 
 	defer policyutil.ServeAndVerify(cleanupCtx, fdms, cr, []policy.Policy{})
 
-	s.Run(ctx, "set", func(ctx context.Context, s *testing.State) {
-		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
-		if err != nil {
-			s.Fatal("Failed to start nebraska: ", err)
-		}
-		defer updateServer.Close(cleanupCtx)
+	updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
+	if err != nil {
+		s.Fatal("Failed to start nebraska: ", err)
+	}
+	defer updateServer.Close(cleanupCtx)
 
-		// Set the policy and check that the attribute is set.
-		// TODO(b/285292962): Replace poll with a test-agnostic workaround.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return policyutil.ServeAndVerify(ctx, fdms, cr, param.policyValues)
-		}, &testing.PollOptions{
-			Timeout: 30 * time.Second,
-		}); err != nil {
-			s.Fatal("Failed to update policies: ", err)
-		}
+	// Set the policy and check that the attribute is set.
+	// TODO(b/285292962): Replace poll with a test-agnostic workaround.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		return policyutil.ServeAndVerify(ctx, fdms, cr, param.policyValues)
+	}, &testing.PollOptions{
+		Timeout: 30 * time.Second,
+	}); err != nil {
+		s.Fatal("Failed to update policies: ", err)
+	}
 
-		if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
-			s.Fatal("Failed to trigger update request: ", err)
-		}
+	if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
+		s.Fatal("Failed to trigger update request: ", err)
+	}
 
-		attributeEntry := param.policyParam + "=\"" + param.testValue + "\""
-		if err := awaitUpdateServerLogEntry(ctx, updateServer, attributeEntry); err != nil {
-			s.Error("Failure while waiting for update logs: ", err)
-		}
-	})
+	if err := awaitUpdateServerLogEntries(ctx, updateServer, param.expectedUpdateRequestSubstrings); err != nil {
+		s.Error("Failure while waiting for update logs: ", err)
+	}
 
-	s.Run(ctx, "unset", func(ctx context.Context, s *testing.State) {
-		updateServer, err := nebraska.New(ctx, nebraska.ConfigureUpdateEngine())
-		if err != nil {
-			s.Fatal("Failed to start nebraska: ", err)
-		}
-		defer updateServer.Close(cleanupCtx)
+	updateServerLog, err := os.ReadFile(updateServer.LogFile)
+	if err != nil {
+		s.Fatal("Failed to read nebraska logs: ", err)
+	}
 
-		// Clear policies to make sure attribute is not always sent.
-		// TODO(b/285292962): Replace poll with a test-agnostic workaround.
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{})
-		}, &testing.PollOptions{
-			Timeout: 30 * time.Second,
-		}); err != nil {
-			s.Fatal("Failed to update policies: ", err)
+	for _, entry := range param.excludedUpdateRequestSubstrings {
+		if strings.Contains(string(updateServerLog), entry) {
+			s.Errorf("Unexpectedly found %q in nebraska logs", entry)
 		}
-
-		if err := triggerUpdate(ctx, nebraska.UpdateURL(updateServer.Port, true)); err != nil {
-			s.Fatal("Failed to trigger update request: ", err)
-		}
-
-		const responseLog = "Sent response"
-		if err := awaitUpdateServerLogEntry(ctx, updateServer, responseLog); err != nil {
-			s.Error("Failure while waiting for update logs: ", err)
-		}
-
-		updateServerLog, err := os.ReadFile(updateServer.LogFile)
-		if err != nil {
-			s.Fatal("Failed to read nebraska logs: ", err)
-		}
-
-		if param.checkParam && strings.Contains(string(updateServerLog), param.policyParam) {
-			s.Errorf("Unexpectedly found %q in the nebraska logs", param.policyParam)
-		}
-
-		if param.checkVal && strings.Contains(string(updateServerLog), param.testValue) {
-			s.Errorf("Unexpectedly found test value %q in the nebraska logs", param.testValue)
-		}
-	})
+	}
 }
 
 // triggerUpdate requests an update check at the specified Omaha URL.
@@ -284,9 +253,9 @@ func triggerUpdate(ctx context.Context, url string) error {
 	return nil
 }
 
-// awaitUpdateServerLogEntry waits for the given entry to show up in nebraska logs.
-func awaitUpdateServerLogEntry(ctx context.Context, updateServer *nebraska.Nebraska, entry string) error {
-	testing.ContextLogf(ctx, "Waiting for %q to show up in nebraska logs", entry)
+// awaitUpdateServerLogEntries waits for all of the given entries to show up in nebraska logs.
+func awaitUpdateServerLogEntries(ctx context.Context, updateServer *nebraska.Nebraska, entries []string) error {
+	testing.ContextLogf(ctx, "Waiting for %q to show up in nebraska logs", entries)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
 		updateServerLog, err := os.ReadFile(updateServer.LogFile)
@@ -294,15 +263,17 @@ func awaitUpdateServerLogEntry(ctx context.Context, updateServer *nebraska.Nebra
 			return testing.PollBreak(errors.Wrap(err, "failed to read nebraska logs"))
 		}
 
-		if !strings.Contains(string(updateServerLog), entry) {
-			return errors.Errorf("%q not in the nebraska logs", entry)
+		for _, entry := range entries {
+			if !strings.Contains(string(updateServerLog), entry) {
+				return errors.Errorf("%q not in the nebraska logs", entry)
+			}
 		}
 
 		return nil
 	}, &testing.PollOptions{
 		Timeout: 20 * time.Second,
 	}); err != nil {
-		return errors.Wrapf(err, "could not find %q in nebraska logs", entry)
+		return errors.Wrapf(err, "could not find all of %q in nebraska logs", entries)
 	}
 	return nil
 }
