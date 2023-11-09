@@ -2,6 +2,11 @@ set noparent
 
 # ARC++ team
 mhasank@chromium.org
+kinaba@chromium.org
+khmel@google.com
+niwa@chromium.org
+jinrongwu@google.com
+hirono@chromium.org
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
