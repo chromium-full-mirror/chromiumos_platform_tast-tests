@@ -124,34 +124,70 @@ type CheckpointEvent struct {
 
 // Flatten takes all the Checkpoints and flattens them into a sequence of
 // starts / ends of all the Checkpoint Sections, sorted by timestamp.
-func (c Checkpoints) Flatten() []CheckpointEvent {
-	var checkpointEvents []CheckpointEvent
-	for checkpointName, sections := range c.checkpoints {
+func (c *Checkpoints) Flatten() []CheckpointEvent {
+	var events []CheckpointEvent
+	for name, sections := range c.checkpoints {
 		for _, section := range sections {
 			start := CheckpointEvent{
-				CheckpointName: checkpointName,
+				CheckpointName: name,
 				Ts:             section.startTs,
 				IsStart:        true,
 			}
 			end := CheckpointEvent{
-				CheckpointName: checkpointName,
+				CheckpointName: name,
 				Ts:             section.endTs,
 				IsStart:        false,
 			}
-			checkpointEvents = append(checkpointEvents, start)
-			checkpointEvents = append(checkpointEvents, end)
+			events = append(events, start)
+			events = append(events, end)
 		}
 	}
 
-	sort.Slice(checkpointEvents, func(i, j int) bool {
+	sort.Slice(events, func(i, j int) bool {
 		// Sort events by timestamps.
-		byTs := checkpointEvents[i].Ts.Before(checkpointEvents[j].Ts)
+		byTs := events[i].Ts.Before(events[j].Ts)
 		// If two events share the same checkpoint name and have the same
 		// timestamps, the start event should be sorted before the end event.
-		startBeforeEnd := checkpointEvents[i].CheckpointName == checkpointEvents[j].CheckpointName &&
-			checkpointEvents[i].Ts.Equal(checkpointEvents[j].Ts) &&
-			checkpointEvents[i].IsStart && !checkpointEvents[j].IsStart
+		startBeforeEnd := events[i].CheckpointName == events[j].CheckpointName &&
+			events[i].Ts.Equal(events[j].Ts) &&
+			events[i].IsStart && !events[j].IsStart
 		return byTs || startBeforeEnd
 	})
-	return checkpointEvents
+	return events
+}
+
+// FlattenPerCheckpoint takes all the Checkpoints with the same Checkpoint name,
+// and flattens them into a sequence of starts / ends of the Checkpoint
+// Sections, sorted by timestamp. Every Checkpoint name is mapped to a list of
+// sorted timestamps.
+func (c *Checkpoints) FlattenPerCheckpoint() map[string][]CheckpointEvent {
+	events := make(map[string][]CheckpointEvent)
+	for name, sections := range c.checkpoints {
+		for _, section := range sections {
+			start := CheckpointEvent{
+				CheckpointName: name,
+				Ts:             section.startTs,
+				IsStart:        true,
+			}
+			end := CheckpointEvent{
+				CheckpointName: name,
+				Ts:             section.endTs,
+				IsStart:        false,
+			}
+			events[name] = append(events[name], start)
+			events[name] = append(events[name], end)
+		}
+
+		sort.Slice(events[name], func(i, j int) bool {
+			// Sort events by timestamps.
+			byTs := events[name][i].Ts.Before(events[name][j].Ts)
+			// If two events have the same timestamps, the start event should be
+			// sorted before the end event.
+			startBeforeEnd := events[name][i].Ts.Equal(events[name][j].Ts) &&
+				events[name][i].IsStart && !events[name][j].IsStart
+			return byTs || startBeforeEnd
+		})
+	}
+
+	return events
 }

@@ -280,6 +280,90 @@ func (p *Values) Set(s Metric, vs ...float64) {
 	validate(s, p.values[s])
 }
 
+// filter creates a new Metric with suffix to indicate the Checkpoint, and
+// creates new values that are filtered by this Checkpoint.
+func filter(p *Values, m *Metric, checkpointName string, indices []int) (*Metric, []float64) {
+	value := p.GetValueByMetric(*m)
+	filteredValue := make([]float64, len(indices))
+	for i, index := range indices {
+		filteredValue[i] = value[index]
+	}
+	filteredMetric := *m
+	filteredMetric.Name = filteredMetric.Name + "." + checkpointName
+	if !filteredMetric.HasStartTs {
+		filteredMetric.Interval = filteredMetric.Interval + "." + checkpointName
+	}
+	return &filteredMetric, filteredValue
+}
+
+// FilterTimelineByCheckpoints assumes that Values come from perf.Timeline.
+// It filters perf.Values by Checkpoints, and generates a new Checkpoints
+// object. The number of Metrics in the new Values =
+// (# of Metrics in the old Values * # of Checkpoints).
+func (p *Values) FilterTimelineByCheckpoints(ckpts *Checkpoints) *Values {
+	filtered := NewValues()
+
+	// Map a timestamp Metric to the data Metrics that use it.
+	tsMetricToData := make(map[Metric][]Metric)
+	for metric := range p.GetValues() {
+		if metric.HasStartTs {
+			tsMetricToData[metric] = make([]Metric, 0)
+		}
+	}
+	for metric := range p.GetValues() {
+		if metric.HasStartTs {
+			continue
+		}
+		for tsMetric := range tsMetricToData {
+			if metric.Interval == tsMetric.Name {
+				tsMetricToData[tsMetric] = append(tsMetricToData[tsMetric], metric)
+			}
+		}
+	}
+
+	for name, events := range ckpts.FlattenPerCheckpoint() {
+		for tsMetric, data := range tsMetricToData {
+			// Calculate Unix timestamps from relative timestamps in
+			// perf.Timeline.
+			unixTss := make([]time.Time, len(p.GetValues()[tsMetric]))
+			for i, relativeTs := range p.GetValues()[tsMetric] {
+				unixTss[i] = tsMetric.StartTs.Add(time.Duration(relativeTs * float64(time.Second)))
+			}
+
+			// Compare Unix timestamp with Checkpoints. Collect the indices of
+			// the Unix timestamps that are within Checkpoint coverage.
+			j := 0
+			started := 0
+			indices := make([]int, 0)
+			for i, unixTs := range unixTss {
+				for j < len(events) &&
+					(events[j].Ts.Before(unixTs) ||
+						events[j].Ts.Equal(unixTs)) {
+					if events[j].IsStart {
+						started++
+					} else {
+						started--
+					}
+					j = j + 1
+				}
+				if started > 0 {
+					indices = append(indices, i)
+				}
+			}
+
+			if len(indices) == 0 {
+				continue
+			}
+			// Apply the indices to tsMetric and the data Metrics.
+			for _, metric := range append(data, tsMetric) {
+				filteredMetric, filteredValue := filter(p, &metric, name, indices)
+				filtered.Append(*filteredMetric, filteredValue...)
+			}
+		}
+	}
+	return filtered
+}
+
 // Format describes the output format for perf data.
 type Format int
 

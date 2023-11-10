@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+	"time"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testutil"
@@ -219,6 +220,126 @@ func TestSetMalformedInterval(t *testing.T) {
 	testSetMalformedInterval(t, Metric{Name: "metric", Unit: "unit", Interval: "TPSt"})
 	testSetMalformedInterval(t, Metric{Name: "metric", Unit: "unit", Interval: "555"})
 
+}
+
+func initializeValues() *Values {
+	data := Metric{
+		Name:     "data",
+		Unit:     "count",
+		Multiple: true,
+		Interval: "t",
+	}
+	ts := Metric{
+		Name:       "t",
+		Unit:       "s",
+		Multiple:   true,
+		HasStartTs: true,
+		StartTs:    time.Unix(3, 0),
+	}
+	p := NewValues()
+	p.Append(data, 1, 2, 3, 4, 5)
+	p.Append(ts, 1.05, 2.1, 3.17, 4.24, 5.31)
+	return p
+}
+
+func checkValuesEmpty(t *testing.T, p *Values) {
+	if len(p.GetValues()) != 0 {
+		json, _ := p.toCrosbolt()
+		t.Fatalf("Values should be empty, but is not: \n%s", string(json))
+	}
+}
+
+func TestFilterTimelineByCheckpoints(t *testing.T) {
+	p := initializeValues()
+
+	c := NewCheckpoints()
+	work1 := NewSection(time.UnixMilli(work1StartMs))
+	work1.SetEnd(time.UnixMilli(work1EndMs))
+	c.AddSectionForTesting("work1", work1)
+	work2 := NewSection(time.UnixMilli(work2StartMs))
+	work2.SetEnd(time.UnixMilli(work2EndMs))
+	c.AddSectionForTesting("work2", work2)
+	work3 := NewSection(time.UnixMilli(work3StartMs))
+	work3.SetEnd(time.UnixMilli(work3EndMs))
+	c.AddSectionForTesting("work3", work3)
+
+	saveAndCompare(t, p.FilterTimelineByCheckpoints(c), "testdata/TestFilterTimelineByCheckpoints.json")
+}
+
+// One Checkpoint name maps to multiple Sections.
+func TestFilterTimelineByCheckpointsOverlap(t *testing.T) {
+	p := initializeValues()
+
+	c := NewCheckpoints()
+	work1 := NewSection(time.UnixMilli(work1StartMs))
+	work1.SetEnd(time.UnixMilli(work1EndMs))
+	c.AddSectionForTesting("work1", work1)
+	work2 := NewSection(time.UnixMilli(work2StartMs))
+	work2.SetEnd(time.UnixMilli(work2EndMs))
+	c.AddSectionForTesting("work1", work2)
+	work3 := NewSection(time.UnixMilli(work3StartMs))
+	work3.SetEnd(time.UnixMilli(work3EndMs))
+	c.AddSectionForTesting("work1", work3)
+
+	saveAndCompare(t, p.FilterTimelineByCheckpoints(c), "testdata/TestFilterTimelineByCheckpointsOverlap.json")
+}
+
+func TestFilterTimelineByCheckpointsEmpty(t *testing.T) {
+	p := initializeValues()
+	c := NewCheckpoints()
+	filtered := p.FilterTimelineByCheckpoints(c)
+	checkValuesEmpty(t, filtered)
+}
+
+// Checkpoints do not cover the timestamps in Values.
+func TestFilterTimelineByCheckpointsFrontBack(t *testing.T) {
+	p := initializeValues()
+
+	c := NewCheckpoints()
+	idle1 := NewSection(time.UnixMilli(idle1StartMs))
+	idle1.SetEnd(time.UnixMilli(idle1EndMs))
+	c.AddSectionForTesting("idle1", idle1)
+	idle2 := NewSection(time.UnixMilli(idle2StartMs))
+	idle2.SetEnd(time.UnixMilli(idle2EndMs))
+	c.AddSectionForTesting("idle2", idle2)
+
+	filtered := p.FilterTimelineByCheckpoints(c)
+	checkValuesEmpty(t, filtered)
+}
+
+// TestFilterTimelineByCheckpointsOnTimestamp tests the filtering behavior when
+// the start and end of a Checkpoint Section each fall on a different timestamp.
+// Example:
+// Data timestamp: t1 t2 t3 t4 t5
+// Checkpoint Section: [t2, t4]
+// Then t2 & t3 count in this Section, while t4 is not. Only the left end is
+// included in tagging.
+func TestFilterTimelineByCheckpointsOnTimestamp(t *testing.T) {
+	p := initializeValues()
+
+	c := NewCheckpoints()
+	s := NewSection(time.UnixMilli(tsStartMs))
+	s.SetEnd(time.UnixMilli(tsEndMs))
+	c.AddSectionForTesting("work", s)
+
+	saveAndCompare(t, p.FilterTimelineByCheckpoints(c), "testdata/TestFilterTimelineByCheckpointsOnTimestamp.json")
+}
+
+// TestCheckpointTagsOnSameTimestamp tests the filtering behavior when the start
+// and end of a Checkpoint Section both fall on the same timestamp.
+// Example:
+// Data timestamp: t1 t2 t3 t4 t5
+// Checkpoint Section: [t2, t2]
+// Then no data point get counted in this Section.
+func TestFilterTimelineByCheckpointsOnSameTimestamp(t *testing.T) {
+	p := initializeValues()
+
+	c := NewCheckpoints()
+	s := NewSection(time.UnixMilli(tsStartMs))
+	c.AddSectionForTesting("work", s)
+
+	filtered := p.FilterTimelineByCheckpoints(c)
+	checkValuesEmpty(t, filtered)
 }
 
 func saveAsAndCompare(t *testing.T, p *Values, goldenPath string, format Format, expectedFileName string) {
