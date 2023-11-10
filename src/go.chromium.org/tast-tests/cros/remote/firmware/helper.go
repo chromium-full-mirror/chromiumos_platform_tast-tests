@@ -1743,6 +1743,9 @@ func (h *Helper) WaitFirmwareScreen(ctx context.Context) (retErr error) {
 	type ecCmd8042NotFound struct {
 		*errors.E
 	}
+	if err := h.RequireConfig(ctx); err != nil {
+		return errors.Wrap(err, "failed to create config")
+	}
 	reKeyboardEnabled := `Enabled: (\d)`
 	re8042NotFound := `(Command '8042'|8042: command) not found( or ambiguous)?`
 	checkKeyboardEnabled := `(` + reKeyboardEnabled + `|` + re8042NotFound + `)`
