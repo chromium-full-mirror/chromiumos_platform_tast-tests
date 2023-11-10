@@ -110,7 +110,9 @@ func DataCollection(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_dump")
+	s.AttachErrorHandlers(handler, handler)
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
