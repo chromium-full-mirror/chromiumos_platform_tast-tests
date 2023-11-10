@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/geekbenchcuj"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
+	"go.chromium.org/tast-tests/cros/local/ui/geekbench"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -42,14 +43,14 @@ func init() {
 				Timeout:           15*time.Minute + cujrecorder.CooldownTimeout,
 				Fixture:           "chromeLoggedInDisableSync",
 				ExtraSoftwareDeps: []string{"amd64"},
-				Val:               geekbenchcuj.GetGBInfo("native", 5, true /*needLicense*/),
+				Val:               geekbench.GetGBInfo("native", 5, true /*needLicense*/),
 			},
 			{
 				Name:              "battery_saver",
 				Timeout:           15*time.Minute + cujrecorder.CooldownTimeout,
 				Fixture:           fixture.ChromeLoggedInDisableSyncWithBatterySaver,
 				ExtraSoftwareDeps: []string{"amd64"},
-				Val:               geekbenchcuj.GetGBInfo("native", 5, true /*needLicense*/),
+				Val:               geekbench.GetGBInfo("native", 5, true /*needLicense*/),
 			},
 			{
 				Name:              "crostini",
@@ -61,7 +62,7 @@ func init() {
 				},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Pre:               crostini.StartedByDlcBullseye(),
-				Val:               geekbenchcuj.GetGBInfo("crostini", 5, true /*needLicense*/),
+				Val:               geekbench.GetGBInfo("crostini", 5, true /*needLicense*/),
 			},
 			// custom and crostini_custom are run only by tools/geekbench.py
 			{
@@ -69,7 +70,7 @@ func init() {
 				Timeout:   15*time.Minute + cujrecorder.CooldownTimeout,
 				Fixture:   "chromeLoggedInDisableSync",
 				ExtraData: []string{"geekbench_custom"},
-				Val:       geekbenchcuj.GetGBInfo("native_custom", 5, true /*needLicense*/),
+				Val:       geekbench.GetGBInfo("native_custom", 5, true /*needLicense*/),
 			},
 			{
 				Name:              "crostini_custom",
@@ -82,7 +83,7 @@ func init() {
 				},
 				ExtraHardwareDeps: crostini.CrostiniStable,
 				Pre:               crostini.StartedByDlcBullseye(),
-				Val:               geekbenchcuj.GetGBInfo("crostini_custom", 5, true /*needLicense*/),
+				Val:               geekbench.GetGBInfo("crostini_custom", 5, true /*needLicense*/),
 			},
 		},
 	})
