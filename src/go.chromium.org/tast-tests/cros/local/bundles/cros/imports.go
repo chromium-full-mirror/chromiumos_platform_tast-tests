@@ -68,6 +68,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/kerberos"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/kernel"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/kiosk"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/labqual"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/lacros"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/launcher"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/lockscreen"

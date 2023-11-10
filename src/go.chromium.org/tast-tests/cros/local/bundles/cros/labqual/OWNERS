@@ -1,0 +1,9 @@
+set noparent
+
+# Fleet Infra Software Team Members
+gowriden@google.com
+xianuowang@chromium.org
+otabek@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
