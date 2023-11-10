@@ -237,6 +237,42 @@ const (
 	// WiFiTputVHT80UDPRxTx with Wi-Fi connection of 802.11ac 80Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 347 mbps.
 	WiFiTputVHT80UDPRxTx = "wifi-tput-0018-v01"
 
+	// WiFiTputHE20UDPTx with Wi-Fi connection of 802.11ax 20Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 122 mpbs..
+	WiFiTputHE20UDPTx = "wifi-tput-0019-v01"
+
+	// WiFiTputHE20UDPRx with Wi-Fi connection of 802.11ax 20Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 122 mpbs
+	WiFiTputHE20UDPRx = "wifi-tput-0020-v01"
+
+	// WiFiTputHE20UDPRxTx with Wi-Fi connection of 802.11ax 20Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 143 mpbs.
+	WiFiTputHE20UDPRxTx = "wifi-tput-0021-v01"
+
+	// WiFiTputHE40UDPTx with Wi-Fi connection of 802.11ax 40Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE40UDPTx = "wifi-tput-0022-v01"
+
+	// WiFiTputHE40UDPRx with Wi-Fi connection of 802.11ax 40Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE40UDPRx = "wifi-tput-0023-v01"
+
+	// WiFiTputHE40UDPRxTx with Wi-Fi connection of 802.11ax 40Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE40UDPRxTx = "wifi-tput-0024-v01"
+
+	// WiFiTputHE80UDPTx with Wi-Fi connection of 802.11ax 80Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE80UDPTx = "wifi-tput-0025-v01"
+
+	// WiFiTputHE80UDPRx with Wi-Fi connection of 802.11ax 80Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE80UDPRx = "wifi-tput-0026-v01"
+
+	// WiFiTputHE80UDPRxTx with Wi-Fi connection of 802.11ax 80Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE80UDPRxTx = "wifi-tput-0027-v01"
+
+	// WiFiTputHE160UDPTx with Wi-Fi connection of 802.11ax 160Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE160UDPTx = "wifi-tput-0028-v01"
+
+	// WiFiTputHE160UDPRx with Wi-Fi connection of 802.11ax 160Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE160UDPRx = "wifi-tput-0029-v01"
+
+	// WiFiTputHE160UDPRxTx with Wi-Fi connection of 802.11ax 160Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum UDP throughput of 200 mpbs.
+	WiFiTputHE160UDPRxTx = "wifi-tput-0030-v01"
+
 	// WiFiTputHT20TCPTx with Wi-Fi connection of 802.11n 20Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 61 mpbs.
 	WiFiTputHT20TCPTx = "wifi-tput-0031-v01"
 
@@ -281,6 +317,42 @@ const (
 
 	// WiFiTputVHT80TCPRxTx with Wi-Fi connection of 802.11ac 80Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
 	WiFiTputVHT80TCPRxTx = "wifi-tput-0047-v01"
+
+	// WiFiTputHE20TCPTx with Wi-Fi connection of 802.11ax 20Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 122 mpbs..
+	WiFiTputHE20TCPTx = "wifi-tput-0048-v01"
+
+	// WiFiTputHE20TCPRx with Wi-Fi connection of 802.11ax 20Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 122 mpbs
+	WiFiTputHE20TCPRx = "wifi-tput-0049-v01"
+
+	// WiFiTputHE20TCPRxTx with Wi-Fi connection of 802.11ax 20Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 122 mpbs.
+	WiFiTputHE20TCPRxTx = "wifi-tput-0050-v01"
+
+	// WiFiTputHE40TCPTx with Wi-Fi connection of 802.11ax 40Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE40TCPTx = "wifi-tput-0051-v01"
+
+	// WiFiTputHE40TCPRx with Wi-Fi connection of 802.11ax 40Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE40TCPRx = "wifi-tput-0052-v01"
+
+	// WiFiTputHE40TCPRxTx with Wi-Fi connection of 802.11ax 40Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE40TCPRxTx = "wifi-tput-0053-v01"
+
+	// WiFiTputHE80TCPTx with Wi-Fi connection of 802.11ax 80Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE80TCPTx = "wifi-tput-0054-v01"
+
+	// WiFiTputHE80TCPRx with Wi-Fi connection of 802.11ax 80Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE80TCPRx = "wifi-tput-0055-v01"
+
+	// WiFiTputHE80TCPRxTx with Wi-Fi connection of 802.11ax 80Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE80TCPRxTx = "wifi-tput-0056-v01"
+
+	// WiFiTputHE160TCPTx with Wi-Fi connection of 802.11ax 160Mhz, 2 streams in AES TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE160TCPTx = "wifi-tput-0057-v01"
+
+	// WiFiTputHE160TCPRx with Wi-Fi connection of 802.11ax 160Mhz, 2 streams in AES RX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE160TCPRx = "wifi-tput-0058-v01"
+
+	// WiFiTputHE160TCPRxTx with Wi-Fi connection of 802.11ax 160Mhz, 2 streams in AES RX+TX mode, the Wi-Fi controller SHOULD provide a minimum TCP throughput of 200 mpbs.
+	WiFiTputHE160TCPRxTx = "wifi-tput-0059-v01"
 
 	// [[ WiFi certification ]]
 
