@@ -49,6 +49,28 @@ func init() {
 			"config_name", // Used in "custom" variant. The name of config file.
 		},
 		Params: []testing.Param{{
+			Name:    "ash",
+			Fixture: "powerAsh",
+			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:     browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+		}, {
+			Name:              "lacros",
+			Fixture:           "powerLacros",
+			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
+			Name:    "20min_ash",
+			Fixture: "powerAsh",
+			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:     browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
+		}, {
+			Name:              "20min_lacros",
+			Fixture:           "powerLacros",
+			Timeout:           20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:               browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
+			ExtraSoftwareDeps: []string{"lacros"},
+		}, {
 			Name:    "heavy_ash",
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
@@ -58,17 +80,6 @@ func init() {
 			Fixture:           "powerLacros",
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "heavy", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:    "live_ash",
-			Fixture: "powerAsh",
-			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:     browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-		}, {
-			Name:              "live_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:      "heavy_20min_ash",
@@ -95,26 +106,15 @@ func init() {
 			Val:               browsingTestParam{ConfigName: "custom", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
-			Name:    "ash",
+			Name:    "live_ash",
 			Fixture: "powerAsh",
 			Timeout: time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:     browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
+			Val:     browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 		}, {
-			Name:              "lacros",
+			Name:              "live_lacros",
 			Fixture:           "powerLacros",
 			Timeout:           time.Hour + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
-			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:    "20min_ash",
-			Fixture: "powerAsh",
-			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:     browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
-		}, {
-			Name:              "20min_lacros",
-			Fixture:           "powerLacros",
-			Timeout:           20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:               browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
+			Val:               browsingTestParam{ConfigName: "live", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:    "multitab_ash",
