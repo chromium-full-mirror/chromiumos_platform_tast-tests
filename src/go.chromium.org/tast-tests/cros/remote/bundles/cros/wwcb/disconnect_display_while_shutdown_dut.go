@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
-	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 
@@ -35,8 +34,13 @@ func init() {
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.wwcb.DisplayService", "tast.cros.inputs.KeyboardService"},
-		Data:         []string{utils.VideoFile},
+		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
+			"tast.cros.apps.AppsService",
+			"tast.cros.ui.AutomationService",
+			"tast.cros.wwcb.DisplayService",
+		},
+		Data: []string{utils.VideoFile},
 	})
 }
 
@@ -71,26 +75,16 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
-	appsSvc := pb.NewAppsServiceClient(cl.Conn)
-	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
-	keyboardSvc := inputspb.NewKeyboardServiceClient(cl.Conn)
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	extDispIDArray := []string{extDispID}
-
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
+
 	dockingID, hasDockingID := s.Var("DockingID")
 	if hasDockingID {
 		ipPowerPorts := []int{1}
@@ -98,45 +92,64 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to open IP power: ", err)
 		}
 		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+
 		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 			s.Fatal("Failed to connect to the docking station: ", err)
 		}
 	}
+
+	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
+	appsSvc := pb.NewAppsServiceClient(cl.Conn)
+	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 	fs := dutfs.NewClient(cl.Conn)
-	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
-		s.Fatal("Failed to initialize the mapping webcams: ", err)
-	}
+
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		s.Fatal("Failed to verify display count after mapping webcams: ", err)
+		s.Fatal("Failed to verify display count: ", err)
 	}
 
 	displayIDs, err := displaySvc.GetDisplayIDs(ctx, &emptypb.Empty{})
 	if err != nil {
 		s.Fatal("Failed to get display ID: ", err)
 	} else if len(displayIDs.DisplayIds) < 2 {
-		s.Fatal("Failed to get display ID;it must be greater than or equal to 2")
+		s.Fatal("Failed to get display ID; it must be greater than or equal to 2")
 	}
 
-	normalScreenLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	// GoBigSleepLint: Wait for external display screen to show up.
+	testing.Sleep(ctx, 30*time.Second)
+
+	if err := utils.OpenRGBImageOnDisplays(ctx, fs, appsSvc, uiautoSvc, displaySvc); err != nil {
+		s.Fatal("Failed to open RGB image on each display: ", err)
+	}
+	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
+
+	if err := utils.InitWebcam(ctx, s); err != nil {
+		s.Fatal("Failed to initialize webcam: ", err)
+	}
+
+	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+		s.Fatal("Failed to pair webcam to display: ", err)
+	}
+
+	screenOn, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
 	if err != nil {
-		s.Fatal("Failed to get DUT screen light from camera: ", err)
+		s.Fatal("Failed to get DUT screen light while DUT is turned on: ", err)
 	}
 
 	if err := utils.ShutdownDUT(ctx, pxy, dut); err != nil {
 		s.Fatal("Failed to shutdown DUT: ", err)
 	}
-	defer utils.PowerOnDUT(ctx, pxy, dut)
+	defer utils.PowerOnDUT(cleanupCtx, pxy, dut)
 
 	if err := utils.ControlFixture(ctx, extDispID, "off"); err != nil {
 		s.Fatal("Failed to disconnect the external display: ", err)
 	}
 
-	shutdownScreenLight, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
+	screenOff, err := utils.GetGamLightingValue(ctx, s, displayIDs.DisplayIds[0])
 	if err != nil {
-		s.Fatal("Failed to get DUT screen light from camera after disconnect the external display: ", err)
+		s.Fatal("Failed to get DUT screen light while DUT is shutdown: ", err)
 	}
 
-	if shutdownScreenLight >= normalScreenLight {
-		s.Fatalf("Expect DUT screen light is equal to lower than normal during shutdown; normal light value: %d, shutdown light value: %d", normalScreenLight, shutdownScreenLight)
+	if screenOff >= screenOn {
+		s.Fatalf("Expect DUT screen light in shutdown state is lower than in turned-on state; shutdown light value: %d, turned-on light value: %d", screenOff, screenOn)
 	}
 }
