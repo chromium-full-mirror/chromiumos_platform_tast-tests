@@ -1377,7 +1377,8 @@ func (x *EndSessionResponse) GetErr() string {
 	return ""
 }
 
-// Request info about the AP flash.
+// Request info about the AP flash. This is intended to bypass GSC and only
+// use debug device (e.g. hyperdebug) to communication with SPI chip.
 type GetApFlashInfoRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1532,7 +1533,8 @@ func (x *ApFlashRegion) GetSectionName() string {
 	return ""
 }
 
-// The contents of a given AP flash region.
+// The contents of a given AP flash region. This is intended to bypass GSC and
+// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 type ApFlashRegionContents struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1590,7 +1592,8 @@ func (x *ApFlashRegionContents) GetContents() []byte {
 	return nil
 }
 
-// Request to read contents of AP flash.
+// Request to read contents of AP flash. This is intended to bypass GSC and
+// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 type ReadApFlashRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -3073,13 +3076,16 @@ type DutControlClient interface {
 	// End a debugging "session".  No-op for devboards, for host emulation, the
 	// emulation process is terminated.
 	EndSession(ctx context.Context, in *EndSessionRequest, opts ...grpc.CallOption) (*EndSessionResponse, error)
-	// Reads info about the AP flash.
+	// Reads info about the AP flash. This is intended to bypass GSC and
+	// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 	GetApFlashInfo(ctx context.Context, in *GetApFlashInfoRequest, opts ...grpc.CallOption) (*GetApFlashInfoResponse, error)
-	// Reads the contents of AP flash.
+	// Reads the contents of AP flash. This is intended to bypass GSC and
+	// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 	ReadApFlash(ctx context.Context, in *ReadApFlashRequest, opts ...grpc.CallOption) (*ReadApFlashResponse, error)
-	// Writes to AP flash.
+	// Writes to AP flash. This is intended to bypass GSC and
+	// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 	WriteApFlash(ctx context.Context, in *WriteApFlashRequest, opts ...grpc.CallOption) (*WriteApFlashResponse, error)
-	// Enable HW WP on the AP flash chip with the given protected region.
+	// Enable SW WP on the AP flash chip with the given protected region.
 	EnableApWriteProtect(ctx context.Context, in *EnableApWriteProtectRequest, opts ...grpc.CallOption) (*EnableApWriteProtectResponse, error)
 	RunTcgTests(ctx context.Context, in *RunTcgTestsRequest, opts ...grpc.CallOption) (DutControl_RunTcgTestsClient, error)
 }
@@ -3266,13 +3272,16 @@ type DutControlServer interface {
 	// End a debugging "session".  No-op for devboards, for host emulation, the
 	// emulation process is terminated.
 	EndSession(context.Context, *EndSessionRequest) (*EndSessionResponse, error)
-	// Reads info about the AP flash.
+	// Reads info about the AP flash. This is intended to bypass GSC and
+	// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 	GetApFlashInfo(context.Context, *GetApFlashInfoRequest) (*GetApFlashInfoResponse, error)
-	// Reads the contents of AP flash.
+	// Reads the contents of AP flash. This is intended to bypass GSC and
+	// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 	ReadApFlash(context.Context, *ReadApFlashRequest) (*ReadApFlashResponse, error)
-	// Writes to AP flash.
+	// Writes to AP flash. This is intended to bypass GSC and
+	// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 	WriteApFlash(context.Context, *WriteApFlashRequest) (*WriteApFlashResponse, error)
-	// Enable HW WP on the AP flash chip with the given protected region.
+	// Enable SW WP on the AP flash chip with the given protected region.
 	EnableApWriteProtect(context.Context, *EnableApWriteProtectRequest) (*EnableApWriteProtectResponse, error)
 	RunTcgTests(*RunTcgTestsRequest, DutControl_RunTcgTestsServer) error
 }

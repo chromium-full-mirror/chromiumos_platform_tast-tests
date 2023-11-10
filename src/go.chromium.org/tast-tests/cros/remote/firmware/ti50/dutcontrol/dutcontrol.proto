@@ -158,7 +158,8 @@ message EndSessionResponse {
     string err = 1;
 }
 
-// Request info about the AP flash.
+// Request info about the AP flash. This is intended to bypass GSC and only
+// use debug device (e.g. hyperdebug) to communication with SPI chip.
 message GetApFlashInfoRequest {}
 
 message GetApFlashInfoResponse {
@@ -179,7 +180,8 @@ message ApFlashRegion {
     string section_name = 1;
 }
 
-// The contents of a given AP flash region.
+// The contents of a given AP flash region. This is intended to bypass GSC and
+// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 message ApFlashRegionContents {
     // Which region is this for? If empty, this is for the entire flash image.
     ApFlashRegion region = 1;
@@ -188,7 +190,8 @@ message ApFlashRegionContents {
     bytes contents = 2;
 }
 
-// Request to read contents of AP flash.
+// Request to read contents of AP flash. This is intended to bypass GSC and
+// only use debug device (e.g. hyperdebug) to communication with SPI chip.
 message ReadApFlashRequest {
     // Which regions of AP flash to read.
     // If none are specified, the response contains a single section
@@ -295,16 +298,19 @@ service DutControl {
     // emulation process is terminated.
     rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
 
-    // Reads info about the AP flash.
+    // Reads info about the AP flash. This is intended to bypass GSC and
+    // only use debug device (e.g. hyperdebug) to communication with SPI chip.
     rpc GetApFlashInfo(GetApFlashInfoRequest) returns (GetApFlashInfoResponse);
 
-    // Reads the contents of AP flash.
+    // Reads the contents of AP flash. This is intended to bypass GSC and
+    // only use debug device (e.g. hyperdebug) to communication with SPI chip.
     rpc ReadApFlash(ReadApFlashRequest) returns (ReadApFlashResponse);
 
-    // Writes to AP flash.
+    // Writes to AP flash. This is intended to bypass GSC and
+    // only use debug device (e.g. hyperdebug) to communication with SPI chip.
     rpc WriteApFlash(WriteApFlashRequest) returns (WriteApFlashResponse);
 
-    // Enable HW WP on the AP flash chip with the given protected region.
+    // Enable SW WP on the AP flash chip with the given protected region.
     rpc EnableApWriteProtect(EnableApWriteProtectRequest)
         returns (EnableApWriteProtectResponse);
 
