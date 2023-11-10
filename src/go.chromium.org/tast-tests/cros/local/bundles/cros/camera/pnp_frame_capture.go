@@ -57,11 +57,6 @@ type traceMetrics struct {
 					} `json:"stream"`
 					FunctionMetrics []functionMetric `json:"function_metrics"`
 				} `json:"result_buffer_metrics"`
-				ResultMetrics []struct {
-					PartialResultNumber int              `json:"partial_result_number"`
-					NumOutputBuffers    int              `json:"num_output_buffers"`
-					FunctionMetrics     []functionMetric `json:"function_metrics"`
-				} `json:"result_metrics"`
 			} `json:"stream_metrics"`
 		} `json:"sessions"`
 	} `json:"perfetto.protos.camera_core_metrics"`
@@ -84,7 +79,6 @@ func init() {
 func setMetric(pv *perf.Values, name, unit string, value float64, direction bool) {
 	// perf.Values valid metric names only allow "^[a-zA-Z0-9._-]{1,256}$"
 	name = strings.Replace(name, "::", "-", -1)
-	name = strings.Replace(name, " ", "-", -1)
 	name = strings.Replace(name, "~", "Destructor-", -1)
 	perfDirection := perf.SmallerIsBetter
 	if direction {
@@ -152,16 +146,8 @@ func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir
 		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_width", i), "pix", float64(resultBuffer.Stream.Width), false)
 		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_height", i), "pix", float64(resultBuffer.Stream.Height), false)
 		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_format", i), "category", float64(resultBuffer.Stream.Format), false)
-		for _, functionMetric := range resultBuffer.FunctionMetrics {
+		for _, functionMetric := range session.FunctionMetrics {
 			setMetricFromFunction(pv, functionMetric, fmt.Sprintf("ResultBuffer_%d_", i))
-		}
-	}
-
-	for i, result := range stream.ResultMetrics {
-		setMetric(pv, fmt.Sprintf("Result_%d_partial_result_number", i), "id", float64(result.PartialResultNumber), false)
-		setMetric(pv, fmt.Sprintf("Result_%d_num_output_buffers", i), "count", float64(result.NumOutputBuffers), false)
-		for _, functionMetric := range result.FunctionMetrics {
-			setMetricFromFunction(pv, functionMetric, fmt.Sprintf("Result_%d_", i))
 		}
 	}
 
