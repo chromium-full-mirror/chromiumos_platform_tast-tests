@@ -130,7 +130,7 @@ func HotspotPolicy(ctx context.Context, s *testing.State) {
 	}
 
 	const title = "Hotspot is off"
-	const message = "Your administrator has turned Hotspot off."
+	const message = "Your administrator has turned hotspot off."
 	if _, err := ash.WaitForNotification(ctx, tconn, 5*time.Second, ash.WaitTitle(title), ash.WaitMessageContains(message)); err != nil {
 		s.Fatal("Failed to wait for the notification with title: Hotspot is off, err: ", err)
 	}
