@@ -104,7 +104,13 @@ const (
 
 // NetworksAreRememberedAfterLogin verifies that the networks added at OOBE/sign-in screen are remembered after logged in.
 func NetworksAreRememberedAfterLogin(ctx context.Context, s *testing.State) {
-	apOptions := wificell.DefaultOpenNetworkAPOptions()
+	apOptions := []hostapd.Option{
+		hostapd.Channel(48),
+		hostapd.Mode(hostapd.Mode80211nPure),
+		hostapd.HTCaps(hostapd.HTCapHT40),
+		hostapd.SpectrumManagement(),
+	}
+
 	params := s.Param().(*remainsRememberedTestParams)
 	if params.isHidden {
 		apOptions = append(apOptions, hostapd.Hidden())
@@ -211,11 +217,15 @@ func signInAndVerify(ctx context.Context, rpcClient *rpc.Client, accessPoints ..
 
 	for _, ap := range accessPoints {
 		wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
-		if _, err := wifiSvc.WifiPageControl(ctx, &wifi.WifiPageControlRequest{
-			Ssid:    ap.Config().SSID,
-			Control: wifi.WifiPageControlRequest_WaitUntilExist,
-		}); err != nil {
-			return errors.Wrap(err, "failed to verify that added networks are shown in WiFi scan list after logged in")
+
+		// If the AP is hidden and we have not explicitly marked the network as hidden the network will not be shown in the WiFi list.
+		if !ap.Config().Hidden {
+			if _, err := wifiSvc.WifiPageControl(ctx, &wifi.WifiPageControlRequest{
+				Ssid:    ap.Config().SSID,
+				Control: wifi.WifiPageControlRequest_WaitUntilExist,
+			}); err != nil {
+				return errors.Wrap(err, "failed to verify that added networks are shown in WiFi scan list after logged in")
+			}
 		}
 
 		if _, err := wifiSvc.KnownNetworksControls(ctx, &wifi.KnownNetworksControlsRequest{
