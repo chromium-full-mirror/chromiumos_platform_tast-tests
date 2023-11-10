@@ -8,7 +8,6 @@ import (
 	"context"
 	"strconv"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/utils"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
@@ -52,39 +51,26 @@ func init() {
 	})
 }
 
-func checkBatteryStringProperty(sysfsPath, field, got string) error {
-	// When there is an error to read answer from sysfs file (e.g. IO error, file missing),
-	// it means that powerd will also report empty value to cros_healthd.
-	// So cros_healthd reports empty string in this case.
-	//
-	// What we want to verify in this test is make sure that we align with the powerd behavior.
-	// This kind of error is out of this test's scope.
-	//
-	// Our goal:
-	// 1. Make sure there is no crash when fetching data.
-	// 2. Make sure that cros_healthd can have same output with powerd.
-	//
-	// Keep the leading spaces since there might be spaces at the beginning of the serial number.
-	want, _ := utils.ReadStringFileWithLeadingSpaces(sysfsPath + "/" + field)
-	if got != want {
-		return errors.Errorf("unexpected value for %v: got %v, want %v", field, got, want)
+func compareInt64Property(want *int64, got string) error {
+	if want == nil {
+		return errors.New("unexpected want: nil")
+	}
+	gotValue, err := strconv.ParseInt(got, 10, 64)
+	if err != nil {
+		return errors.Errorf("failed to parse got: %v", got)
+	}
+	if gotValue != *want {
+		return errors.Errorf("got %v, want %v", gotValue, *want)
 	}
 	return nil
 }
 
-func checkBatteryFloatProperty(sysfsPath, field string, got float64) error {
-	s, err := utils.ReadStringFile(sysfsPath + "/" + field)
-	if err != nil {
-		return err
+func compareStringProperty(want *string, got string) error {
+	if want == nil {
+		return errors.New("unexpected want: nil")
 	}
-
-	micros, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		return err
-	}
-	want := float64(micros) / 1e6
-	if err := compareFloatProperty(&want, got); err != nil {
-		return errors.Wrapf(err, "unexpected value for %v", field)
+	if got != *want {
+		return errors.Errorf("got %v, want %v", got, *want)
 	}
 	return nil
 }
@@ -112,8 +98,20 @@ func validateBatteryData(ctx context.Context, battery *batteryInfo) error {
 	if err != nil {
 		return err
 	}
-	if err := compareFloatProperty(powerSupply.BatteryCharge, battery.ChargeNow); err != nil {
-		return errors.Wrap(err, "failed to verify ChargeNow field")
+	if err := compareInt64Property(powerSupply.BatteryCycleCount, battery.CycleCount); err != nil {
+		return errors.Wrap(err, "failed to verify CycleCount field")
+	}
+	if err := compareStringProperty(powerSupply.BatteryModelName, battery.ModelName); err != nil {
+		return errors.Wrap(err, "failed to verify ModelName field")
+	}
+	if err := compareStringProperty(powerSupply.BatterySerialNumber, battery.SerialNumber); err != nil {
+		return errors.Wrap(err, "failed to verify SerialNumber field")
+	}
+	if err := compareStringProperty(powerSupply.BatteryTechnology, battery.Technology); err != nil {
+		return errors.Wrap(err, "failed to verify Technology field")
+	}
+	if err := compareStringProperty(powerSupply.BatteryVendor, battery.Vendor); err != nil {
+		return errors.Wrap(err, "failed to verify Vendor field")
 	}
 	if err := compareFloatProperty(powerSupply.BatteryChargeFull, battery.ChargeFull); err != nil {
 		return errors.Wrap(err, "failed to verify ChargeFull field")
@@ -121,24 +119,14 @@ func validateBatteryData(ctx context.Context, battery *batteryInfo) error {
 	if err := compareFloatProperty(powerSupply.BatteryChargeFullDesign, battery.ChargeFullDesign); err != nil {
 		return errors.Wrap(err, "failed to verify ChargeFullDesign field")
 	}
-
-	sysfsPath, err := power.SysfsBatteryPath(ctx)
-	if err != nil {
-		return err
+	if err := compareFloatProperty(powerSupply.BatteryCharge, battery.ChargeNow); err != nil {
+		return errors.Wrap(err, "failed to verify ChargeNow field")
 	}
-
-	batteryStringFields := map[string]string{
-		"cycle_count":   battery.CycleCount,
-		"manufacturer":  battery.Vendor,
-		"model_name":    battery.ModelName,
-		"serial_number": battery.SerialNumber,
-		"technology":    battery.Technology,
+	if err := compareFloatProperty(powerSupply.BatteryVoltageMinDesign, battery.VoltageMinDesign); err != nil {
+		return errors.Wrap(err, "failed to verify VoltageMinDesign field")
 	}
-
-	for field, got := range batteryStringFields {
-		if err := checkBatteryStringProperty(sysfsPath, field, got); err != nil {
-			return err
-		}
+	if err := compareFloatProperty(powerSupply.BatteryVoltage, battery.VoltageNow); err != nil {
+		return errors.Wrap(err, "failed to verify VoltageNow field")
 	}
 
 	// Battery status changes from time to time, so we only check if the status string is expected or not.
@@ -147,21 +135,8 @@ func validateBatteryData(ctx context.Context, battery *batteryInfo) error {
 		return errors.Errorf("status %v is not expected", battery.Status)
 	}
 
-	batteryFloatFields := map[string]float64{
-		"voltage_min_design": battery.VoltageMinDesign,
-		"voltage_now":        battery.VoltageNow,
-		// Skip float64 fields:
-		//
-		// |current_now|
-		// We can't test it, because the value varies quickly.
-		// For example, cros_healthd get 0.639 but when we fetch the value from sysfs, it becomes 0.961.
-	}
-
-	for field, got := range batteryFloatFields {
-		if err := checkBatteryFloatProperty(sysfsPath, field, got); err != nil {
-			return err
-		}
-	}
+	// We can't test battery.CurrentNow, because the value varies quickly.
+	// For example, cros_healthd get 0.639 but when we fetch the value from power manager, it becomes 0.961.
 
 	// Validate Smart Battery metrics.
 	val, err := crosconfig.Get(ctx, "/cros-healthd/battery", "has-smart-battery-info")
