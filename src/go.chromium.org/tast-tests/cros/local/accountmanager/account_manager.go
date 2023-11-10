@@ -42,19 +42,14 @@ type ARCAccountOptions struct {
 	accountName string
 	// Whether the account is expected to be present in ARC.
 	expectedPresentInARC bool
-	// Whether the account was previously present in ARC. If set to `true` -
-	// `WaitUntilGone` will be used instead of `WaitForExists` while checking the
-	// account presence.
-	previouslyPresentInARC bool
 }
 
 // NewARCAccountOptions returns a `ARCAccountOptions` object for provided username.
 // `expectedPresentInARC` and `previouslyPresentInARC` flags are set to `false`.
 func NewARCAccountOptions(accountName string) ARCAccountOptions {
 	return ARCAccountOptions{
-		accountName:            accountName,
-		expectedPresentInARC:   false,
-		previouslyPresentInARC: false,
+		accountName:          accountName,
+		expectedPresentInARC: false,
 	}
 }
 
@@ -62,9 +57,8 @@ func NewARCAccountOptions(accountName string) ARCAccountOptions {
 // `previouslyPresentInARC` flag set to the specified value.
 func (c ARCAccountOptions) PreviouslyPresentInARC(present bool) ARCAccountOptions {
 	return ARCAccountOptions{
-		accountName:            c.accountName,
-		expectedPresentInARC:   c.expectedPresentInARC,
-		previouslyPresentInARC: present,
+		accountName:          c.accountName,
+		expectedPresentInARC: c.expectedPresentInARC,
 	}
 }
 
@@ -72,20 +66,14 @@ func (c ARCAccountOptions) PreviouslyPresentInARC(present bool) ARCAccountOption
 // `expectedPresentInARC` flag set to the specified value.
 func (c ARCAccountOptions) ExpectedPresentInARC(expected bool) ARCAccountOptions {
 	return ARCAccountOptions{
-		accountName:            c.accountName,
-		expectedPresentInARC:   expected,
-		previouslyPresentInARC: c.previouslyPresentInARC,
+		accountName:          c.accountName,
+		expectedPresentInARC: expected,
 	}
 }
 
 // AccountName returns `accountName`.
 func (c ARCAccountOptions) AccountName() string {
 	return c.accountName
-}
-
-// IsPreviouslyPresentInARC returns `previouslyPresentInARC`.
-func (c ARCAccountOptions) IsPreviouslyPresentInARC() bool {
-	return c.previouslyPresentInARC
 }
 
 // IsExpectedPresentInARC returns `expectedPresentInARC`.
@@ -422,22 +410,26 @@ func CheckIsAccountPresentInARC(ctx context.Context, tconn *chrome.TestConn, d *
 	account := d.Object(androidui.ClassName("android.widget.TextView"),
 		androidui.TextMatches(options.AccountName()), androidui.Enabled(true))
 
-	if options.IsPreviouslyPresentInARC() {
-		goneErr := account.WaitUntilGone(ctx, arcAccountCheckTimeout)
-		if goneErr == nil && options.IsExpectedPresentInARC() {
-			return errors.New("the account is gone, but expected to be present")
-		} else if goneErr != nil && !options.IsExpectedPresentInARC() {
-			return errors.Wrap(goneErr, "failed to wait for account to be gone")
-		}
+	scrollLayout := d.Object(androidui.ClassName(scrollClassName),
+		androidui.Scrollable(true))
 
-		return nil
+	findAccount := func() error {
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			if err := scrollLayout.WaitForExists(ctx, DefaultUITimeout); err != nil {
+				return errors.Wrap(err, "scroll layout not found")
+			}
+			if err := scrollLayout.ScrollTo(ctx, account); err != nil {
+				return errors.Wrap(err, "failed to scroll to account")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: arcAccountCheckTimeout})
 	}
 
-	existsErr := account.WaitForExists(ctx, arcAccountCheckTimeout)
-	if existsErr == nil && !options.IsExpectedPresentInARC() {
-		return errors.New("the account is present, but expected to be gone")
-	} else if existsErr != nil && options.IsExpectedPresentInARC() {
-		return errors.Wrap(existsErr, "failed to wait for account present")
+	findErr := findAccount()
+	if findErr != nil && options.IsExpectedPresentInARC() {
+		return errors.Wrap(findErr, "the account is missing, but expected to be present")
+	} else if findErr == nil && !options.IsExpectedPresentInARC() {
+		return errors.New("the account is found, but expected to be missing")
 	}
 
 	return nil

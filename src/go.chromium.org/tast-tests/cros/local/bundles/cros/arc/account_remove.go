@@ -6,6 +6,7 @@ package arc
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -17,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/errors"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -168,31 +169,20 @@ func AccountRemove(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add secondary account: ", err)
 	}
 
-	act, err := arc.NewActivity(a, settingPkgName, settingActName)
-	if err != nil {
-		s.Fatal("Failed to launch Android Settings: ", err)
-	}
-	defer act.Close(cleanupCtx)
-	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
-		s.Fatal("Failed to start activity: ", err)
-	}
-	defer act.Stop(cleanupCtx, tconn)
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
-	// Without maximizing the window, we don't see all the accounts in the list.
-	if _, err := ash.SetARCAppWindowStateAndWait(ctx, tconn, act.PackageName(), ash.WindowStateMaximized); err != nil {
-		s.Fatalf("Failed to set %s window state to maximized: %v", act.PackageName(), err)
-	}
 	s.Log("Verifying the primary account removal")
-	if err := verifyAccountRemovable(ctx, tconn, d, primary.User, false /*removable*/); err != nil {
+	if err := verifyAccountRemovable(ctx, tconn, a, d, primary.User, false /*removable*/); err != nil {
 		s.Fatal("Failed to verify primary account is not removable: ", err)
 	}
 	s.Log("Verifying the secondary account removal")
-	if err := verifyAccountRemovable(ctx, tconn, d, secondary.User, true /*removable*/); err != nil {
+	if err := verifyAccountRemovable(ctx, tconn, a, d, secondary.User, true /*removable*/); err != nil {
 		s.Fatal("Failed to verify secondary account is removable: ", err)
 	}
 }
 
-func verifyAccountRemovable(ctx context.Context, tconn *chrome.TestConn, d *ui.Device, email string, removable bool) error {
+func verifyAccountRemovable(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, email string, removable bool) error {
 	const (
 		removeButtonClassName  = "android.widget.Button"
 		removeButtonResourceID = "com.android.settings:id/button"
@@ -205,11 +195,30 @@ func verifyAccountRemovable(ctx context.Context, tconn *chrome.TestConn, d *ui.D
 		notAllowedClassName  = "android.widget.TextView"
 		notAllowedResourceID = "android:id/message"
 		notAllowedText       = "(?i).*allowed by your admin"
+
+		settingPkgName = "com.android.settings"
+		settingActName = ".Settings"
+
+		defaultUITimeout = 5 * time.Second
 	)
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+	defer cancel()
+
+	act, err := arc.NewActivity(a, settingPkgName, settingActName)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch Android Settings")
+	}
+	defer act.Close(cleanupCtx)
+	if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to start activity")
+	}
+	defer act.Stop(cleanupCtx, tconn)
 
 	if err := accountmanager.CheckIsAccountPresentInARCAction(tconn, d,
 		accountmanager.NewARCAccountOptions(email).ExpectedPresentInARC(true))(ctx); err != nil {
-		return errors.Wrap(err, "failed to check that primary account is present in ARC")
+		return errors.Wrap(err, "failed to check that account is present in ARC")
 	}
 
 	account := d.Object(ui.ClassName("android.widget.TextView"),
@@ -222,7 +231,7 @@ func verifyAccountRemovable(ctx context.Context, tconn *chrome.TestConn, d *ui.D
 	removeButton := d.Object(ui.ClassName(removeButtonClassName),
 		ui.ResourceID(removeButtonResourceID),
 		ui.TextMatches(removeButtonText))
-	if err := removeButton.WaitForExists(ctx, 5*time.Second); err != nil {
+	if err := removeButton.WaitForExists(ctx, defaultUITimeout); err != nil {
 		return errors.Wrap(err, "failed to find remove account option")
 	}
 	if err := removeButton.Click(ctx); err != nil {
@@ -232,16 +241,16 @@ func verifyAccountRemovable(ctx context.Context, tconn *chrome.TestConn, d *ui.D
 	confirmButton := d.Object(ui.ClassName(confirmButtonClassName),
 		ui.ResourceID(confirmButtonResourceID),
 		ui.TextMatches(confirmButtonText))
-	if err := confirmButton.WaitForExists(ctx, 5*time.Second); err != nil {
+	if err := confirmButton.WaitForExists(ctx, defaultUITimeout); err != nil {
 		return errors.Wrap(err, "failed to find remove confirmation")
 	}
 	if err := confirmButton.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click remove confirmation")
 	}
 
-	err := d.Object(ui.ClassName(notAllowedClassName),
+	err = d.Object(ui.ClassName(notAllowedClassName),
 		ui.ResourceID(notAllowedResourceID),
-		ui.TextMatches(notAllowedText)).WaitForExists(ctx, 5*time.Second)
+		ui.TextMatches(notAllowedText)).WaitForExists(ctx, defaultUITimeout)
 	removed := err != nil
 
 	if removed != removable {
