@@ -16,21 +16,6 @@ import (
 	"go.chromium.org/tast/core/testutil"
 )
 
-const (
-	idle1StartMs = 100
-	idle1EndMs   = 10200
-
-	work1StartMs = 50300
-	work2StartMs = 70315
-	work2EndMs   = 80435
-	work3StartMs = 90000
-	work1EndMs   = 100400
-	work3EndMs   = 110000
-
-	idle2StartMs = 200500
-	idle2EndMs   = 600600
-)
-
 func saveCheckpointsAndCompare(t *testing.T, c *Checkpoints, goldenPath string) {
 	t.Helper()
 
