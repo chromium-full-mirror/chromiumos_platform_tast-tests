@@ -52,7 +52,8 @@ func init() {
 		Data: []string{"nocturne_fp_v2.0.3266-99b5e2c98_20201214.bin",
 			"nami_fp_v2.0.3266-99b5e2c98_20201214.bin",
 			"bloonchipper_v2.0.14206-ad46faf_20220718.bin",
-			"dartmonkey_v2.0.2887-311310808_20201214.bin"},
+			"dartmonkey_v2.0.2887-311310808_20201214.bin",
+			"helipilot_v2.0.22861-6d50c1e39d_20231220.bin"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
 }
@@ -68,6 +69,8 @@ func getOldFirmwarePath(s *testing.State, fpBoard fp.BoardName) (string, error) 
 		return s.DataPath("bloonchipper_v2.0.14206-ad46faf_20220718.bin"), nil
 	case fp.BoardNameDartmonkey:
 		return s.DataPath("dartmonkey_v2.0.2887-311310808_20201214.bin"), nil
+	case fp.BoardNameHelipilot:
+		return s.DataPath("helipilot_v2.0.22861-6d50c1e39d_20231220.bin"), nil
 	default:
 		return "", errors.Errorf("no old firmware for %q", fpBoard)
 	}
