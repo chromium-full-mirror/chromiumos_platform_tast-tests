@@ -309,7 +309,9 @@ func (tf *TestFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 // PostTest cleans up the test fixture after each test run.
 func (tf TestFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if _, err := tf.RemoteCellularClient.PostTest(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed PostTest cleanup on remote client: ", err)
+		// Don't fail on post-test since it's possible the remote client was disconnected
+		// during the test.
+		s.Log("Failed PostTest cleanup on remote client: ", err)
 	}
 }
 
@@ -317,16 +319,18 @@ func (tf TestFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 func (tf *TestFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if tf.fcm != nil {
 		if err := tf.fcm.Close(ctx); err != nil {
-			s.Error("Failed to close tunnel to CallboxManager: ", err)
+			// Don't fail on tear-down since it's possible the remote client was disconnected
+			// during the test.
+			s.Log("Failed to close tunnel to CallboxManager: ", err)
 		}
 	}
 
 	if _, err := tf.RemoteCellularClient.TearDown(ctx, &empty.Empty{}); err != nil {
-		s.Error("Failed to tear down cellular remote service: ", err)
+		s.Log("Failed to tear down cellular remote service: ", err)
 	}
 
 	if err := tf.rpcClient.Close(ctx); err != nil {
-		s.Error("Failed to close DUT RPC client: ", err)
+		s.Log("Failed to close DUT RPC client: ", err)
 	}
 }
 
