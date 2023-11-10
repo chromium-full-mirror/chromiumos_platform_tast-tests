@@ -25,6 +25,9 @@ const (
 	work3EndMs   = 8500
 	idle2StartMs = 9000
 	idle2EndMs   = 10000
+
+	tsStartMs = 5100
+	tsEndMs   = 7240
 )
 
 func compareTags(t *testing.T, tags, example [][]string) {
@@ -47,10 +50,7 @@ func compareTags(t *testing.T, tags, example [][]string) {
 	}
 }
 
-func TestCheckpointTags(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
+func initializeValues() *perf.Values {
 	data := perf.Metric{
 		Name:     "data",
 		Unit:     "count",
@@ -67,6 +67,14 @@ func TestCheckpointTags(t *testing.T) {
 	p := perf.NewValues()
 	p.Append(data, 1, 2, 3, 4, 5)
 	p.Append(ts, 1.05, 2.1, 3.17, 4.24, 5.31)
+	return p
+}
+
+func TestCheckpointTags(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	p := initializeValues()
 
 	c := perf.NewCheckpoints()
 	work1 := perf.NewSection(time.UnixMilli(work1StartMs))
@@ -89,22 +97,7 @@ func TestCheckpointTagsOverlap(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	data := perf.Metric{
-		Name:     "data",
-		Unit:     "count",
-		Multiple: true,
-		Interval: "t",
-	}
-	ts := perf.Metric{
-		Name:       "t",
-		Unit:       "s",
-		Multiple:   true,
-		HasStartTs: true,
-		StartTs:    time.Unix(3, 0),
-	}
-	p := perf.NewValues()
-	p.Append(data, 1, 2, 3, 4, 5)
-	p.Append(ts, 1.05, 2.1, 3.17, 4.24, 5.31)
+	p := initializeValues()
 
 	c := perf.NewCheckpoints()
 	work1 := perf.NewSection(time.UnixMilli(work1StartMs))
@@ -127,22 +120,7 @@ func TestCheckpointTagsEmpty(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	data := perf.Metric{
-		Name:     "data",
-		Unit:     "count",
-		Multiple: true,
-		Interval: "t",
-	}
-	ts := perf.Metric{
-		Name:       "t",
-		Unit:       "s",
-		Multiple:   true,
-		HasStartTs: true,
-		StartTs:    time.Unix(3, 0),
-	}
-	p := perf.NewValues()
-	p.Append(data, 1, 2, 3, 4, 5)
-	p.Append(ts, 1.05, 2.1, 3.17, 4.24, 5.31)
+	p := initializeValues()
 
 	c := perf.NewCheckpoints()
 
@@ -156,22 +134,7 @@ func TestCheckpointTagsFrontBack(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	data := perf.Metric{
-		Name:     "data",
-		Unit:     "count",
-		Multiple: true,
-		Interval: "t",
-	}
-	ts := perf.Metric{
-		Name:       "t",
-		Unit:       "s",
-		Multiple:   true,
-		HasStartTs: true,
-		StartTs:    time.Unix(3, 0),
-	}
-	p := perf.NewValues()
-	p.Append(data, 1, 2, 3, 4, 5)
-	p.Append(ts, 1.05, 2.1, 3.17, 4.24, 5.31)
+	p := initializeValues()
 
 	c := perf.NewCheckpoints()
 	idle1 := perf.NewSection(time.UnixMilli(idle1StartMs))
@@ -180,6 +143,52 @@ func TestCheckpointTagsFrontBack(t *testing.T) {
 	idle2 := perf.NewSection(time.UnixMilli(idle2StartMs))
 	idle2.SetEnd(time.UnixMilli(idle2EndMs))
 	c.AddSectionForTesting("idle2", idle2)
+
+	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	example := [][]string{{}, {}, {}, {}, {}}
+
+	compareTags(t, tags, example)
+}
+
+// TestCheckpointTagsOnTimestamp tests the tagging behavior when the start and
+// end of a Checkpoint Section each fall on a different timestamp.
+// Example:
+// Data timestamp: t1 t2 t3 t4 t5
+// Checkpoint Section: [t2, t4]
+// Then t2 & t3 count in this Section, while t4 is not. Only the left end is
+// included in tagging.
+func TestCheckpointTagsOnTimestamp(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	p := initializeValues()
+
+	c := perf.NewCheckpoints()
+	s := perf.NewSection(time.UnixMilli(tsStartMs))
+	s.SetEnd(time.UnixMilli(tsEndMs))
+	c.AddSectionForTesting("work", s)
+
+	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	example := [][]string{{}, {"work"}, {"work"}, {}, {}}
+
+	compareTags(t, tags, example)
+}
+
+// TestCheckpointTagsOnSameTimestamp tests the tagging behavior when the start and
+// end of a Checkpoint Section both fall on the same timestamp.
+// Example:
+// Data timestamp: t1 t2 t3 t4 t5
+// Checkpoint Section: [t2, t2]
+// Then no data point get tagged in this Section.
+func TestCheckpointTagsOnSameTimestamp(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	p := initializeValues()
+
+	c := perf.NewCheckpoints()
+	s := perf.NewSection(time.UnixMilli(tsStartMs))
+	c.AddSectionForTesting("work", s)
 
 	tags := tagTimelineWithCheckpoints(ctx, p, c)
 	example := [][]string{{}, {}, {}, {}, {}}
