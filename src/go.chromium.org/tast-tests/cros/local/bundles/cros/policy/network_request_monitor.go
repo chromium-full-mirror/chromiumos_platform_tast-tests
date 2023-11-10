@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"time"
 
 	"golang.org/x/exp/slices"
@@ -47,6 +48,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const tbuVar = "tbu"
+
+var tbuUnsupportedServices = []string{"domain_reliability"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NetworkRequestMonitor,
@@ -60,6 +65,7 @@ func init() {
 		},
 		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},
+		Vars:         []string{tbuVar},
 		Attr:         []string{"group:golden_tier"},
 		VarDeps: []string{"policy.managedUserAccountPool",
 			"ui.bond_credentials"},
@@ -392,6 +398,17 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 	}
 
 	// Update policies.
+	tbuVarStr, ok := s.Var(tbuVar)
+	if ok {
+		tbu, err := strconv.ParseBool(tbuVarStr)
+		if err != nil {
+			s.Fatalf("Invalid value for var tbu: got %q, expected bool", tbuVarStr)
+		} else if tbu {
+			testing.ContextLog(ctx, "Running test on tbu")
+			tcs.ExcludeServices = append(tcs.ExcludeServices, tbuUnsupportedServices...)
+		}
+	}
+
 	services := removeExcludedServices(optionalServices(tcs.PolicyStatus), tcs.ExcludeServices)
 	var policies []policy.Policy
 	for _, service := range services {
