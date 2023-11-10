@@ -118,6 +118,18 @@ const (
 	pdStatePollInterval time.Duration = 500 * time.Millisecond
 )
 
+// SendRequestSourceVoltage sends a voltage request to the source that's initiated by the DUT.
+func (s *Servo) SendRequestSourceVoltage(ctx context.Context, voltage int) error {
+	cmd := fmt.Sprintf("pd %d dev %d", s.dutPDInfo.activePort, voltage)
+
+	testing.ContextLog(ctx, "Sending request source voltage: ", cmd)
+	if err := s.RunECCommand(ctx, cmd); err != nil {
+		return errors.Wrap(err, "EC pd command failed")
+	}
+
+	return nil
+}
+
 // SendPowerSwapRequest sends power swap request to be initiated by the DUT.
 func (s *Servo) SendPowerSwapRequest(ctx context.Context) error {
 	cmd := fmt.Sprintf("pd %d swap power", s.dutPDInfo.activePort)
