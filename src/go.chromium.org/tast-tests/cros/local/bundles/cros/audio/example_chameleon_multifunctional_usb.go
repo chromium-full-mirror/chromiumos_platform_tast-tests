@@ -29,8 +29,7 @@ func init() {
 		},
 		// BugComponent of CrOS Platform EngProd Interactive Technology
 		BugComponent: "b:1280385",
-		// TODO: (Optional) create a group for tast tests that use chameleon
-		Attr:         []string{"group:audio_e2e_experimental"},
+		Attr:         []string{"group:audio_e2e_experimental", "audio_e2e_experimental_usb"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      fixture.ChameleonAudioTestbed,
 	})
