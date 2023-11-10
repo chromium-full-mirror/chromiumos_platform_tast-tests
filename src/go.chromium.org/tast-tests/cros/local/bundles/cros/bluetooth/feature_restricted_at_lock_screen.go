@@ -25,9 +25,9 @@ func init() {
 		Desc:           "Verifies users are not able to use the quick settings Bluetooth feature at the lock screen",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
-			"vivian.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
 		BugComponent: "b:1131776",
