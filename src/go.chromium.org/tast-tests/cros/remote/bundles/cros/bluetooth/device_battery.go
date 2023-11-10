@@ -25,9 +25,8 @@ func init() {
 		Desc:           "Test that the battery information can be correctly presented to the end user",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
+			"chromeos-connectivity-engprod@google.com",
 			"alfredyu@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth

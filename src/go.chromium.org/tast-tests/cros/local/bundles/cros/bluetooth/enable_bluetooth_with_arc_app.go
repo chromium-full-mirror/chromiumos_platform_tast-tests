@@ -32,9 +32,9 @@ func init() {
 		Desc:           "Verify that user can turn Bluetooth on with an ARC++ app",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
+			"chromeos-connectivity-engprod@google.com",
 			"kinwang.lao@cienet.com",
-			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
 		BugComponent: "b:1131776",

@@ -30,9 +30,8 @@ func init() {
 		Desc:           "Verify that the user is able to use Bluetooth HID keyboard/mouse for input",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
+			"chromeos-connectivity-engprod@google.com",
 			"edgar.change@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth

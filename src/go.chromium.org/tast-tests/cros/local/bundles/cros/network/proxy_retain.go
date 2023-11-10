@@ -44,9 +44,6 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
-			"cienet-development@googlegroups.com",
-			"chromeos-connectivity-cienet-external@google.com",
-			"alfredyu@cienet.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:network", "network_e2e"},

@@ -28,8 +28,8 @@ func init() {
 		Desc:           "Verify the UI for proxy settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
-			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-engprod@google.com",
+			"chromeos-connectivity-cienet-external@google.com",
 			"cj.tsai@cienet.com",
 			"bossan.fang@cienet.com",
 		},

@@ -32,9 +32,9 @@ func init() {
 		Desc:           "Verify Wi-Fi status is correctly represented in the Settings and Quick Settings UI",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
+			"chromeos-connectivity-engprod@google.com",
 			"sun.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > WiFi
 		BugComponent: "b:1131912",

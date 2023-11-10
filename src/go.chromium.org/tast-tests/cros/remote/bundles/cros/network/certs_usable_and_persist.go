@@ -39,7 +39,6 @@ func init() {
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
 			"edgar.chang@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General

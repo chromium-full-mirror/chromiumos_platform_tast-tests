@@ -121,7 +121,6 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
-			"cienet-development@googlegroups.com",
 			"chromeos-connectivity-cienet-external@google.com",
 			"alfredyu@cienet.com",
 		},

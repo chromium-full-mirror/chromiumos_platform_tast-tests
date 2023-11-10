@@ -33,9 +33,8 @@ func init() {
 		Desc:           "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
+			"chromeos-connectivity-engprod@google.com",
 			"alfredyu@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi

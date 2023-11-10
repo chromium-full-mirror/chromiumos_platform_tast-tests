@@ -38,12 +38,10 @@ func init() {
 		Desc:           "Verify the networks added at OOBE and sign-in screen are remembered after logged in",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
+			"chromeos-connectivity-engprod@google.com",
 			"alfredyu@cienet.com",
 			"cj.tsai@cienet.com",
-			"vivian.tsai@cienet.com",
-			"tim.chang@cienet.com",
-			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > WiFi
 		BugComponent: "b:1131912",

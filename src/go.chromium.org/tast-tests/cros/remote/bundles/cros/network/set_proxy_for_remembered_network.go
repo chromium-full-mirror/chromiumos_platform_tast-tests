@@ -39,9 +39,9 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that proxy settings can be set for shared or non-shared network",
 		Contacts: []string{
-			"cros-conn-test-team@google.com",
 			"cros-connectivity@google.com",
-			"cienet-development@googlegroups.com",
+			"chromeos-connectivity-engprod@google.com",
+			"chromeos-connectivity-cienet-external@google.com",
 			"edgar.chang@cienet.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General

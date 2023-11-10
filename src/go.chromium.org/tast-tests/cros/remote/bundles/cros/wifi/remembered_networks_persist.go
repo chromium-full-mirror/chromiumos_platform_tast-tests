@@ -42,10 +42,8 @@ func init() {
 		Desc:           "Verify remembered networks persist across suspend/resume, reboot and logout/login",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"cros-conn-test-team@google.com",
-			"toby.leung@cienet.com",
+			"chromeos-connectivity-engprod@google.com",
 			"cj.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi

@@ -33,9 +33,6 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
-			"cienet-development@googlegroups.com",
-			"chromeos-connectivity-cienet-external@google.com",
-			"alfredyu@cienet.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		// TODO(b/275127708): Move this test to network suite.
