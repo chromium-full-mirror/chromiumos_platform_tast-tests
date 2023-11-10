@@ -37,6 +37,25 @@ var pages = []string{"checker1", "black", "white", "red", "green", "blue"}
 // Pages used for testing with all 16 nonlinear brightnesses.
 var pagesForBrightnessTest = []string{"checker1", "black", "white"}
 
+// Pages used for CABC tests. CABC or Content adaptive backlight control is the
+// technique that will adjust panel backlight brightness according to the content.
+// For details: go/cros-cabc-test. The link is about the autotest, but the concept
+// is the same.
+var pagesForCABCTest = []string{
+	"white", "black",
+	"white", "grey10",
+	"white", "grey20",
+	"white", "grey30",
+	"white", "grey40",
+	"white", "grey50",
+	"white", "checker1",
+	"white", "checker90",
+	"white", "checker80",
+	"white", "checker70",
+	"white", "checker60",
+	"white", "checker50",
+}
+
 // DisplayParams used for displaying each page in default brightness
 // for DisplayTimeParams.Total length.
 var defaultDisplayParams = power.DisplayParams{
@@ -68,6 +87,22 @@ var brightnessDisplayParams = power.DisplayParams{
 	Pages:             pagesForBrightnessTest,
 }
 
+// DisplayParams used for settings that usually utilize panel CABC algorithm
+// under default brightness. Each page will be displayed in default brightness.
+var defaultCABCDisplayParams = power.DisplayParams{
+	Brightness:        "default",
+	DisplayTimeParams: fastTimeParams,
+	Pages:             pagesForCABCTest,
+}
+
+// DisplayParams used for settings that usually utilize panel CABC algorithm
+// under default brightness. Each page will be displayed in max brightness.
+var maxCABCDisplayParams = power.DisplayParams{
+	Brightness:        "max",
+	DisplayTimeParams: fastTimeParams,
+	Pages:             pagesForCABCTest,
+}
+
 // Commonly used page data for most subtests.
 var pageData = []string{
 	"display/html/checker1.html",
@@ -82,6 +117,21 @@ var pageDataForBrightnessTest = []string{
 	"display/html/checker1.html",
 	"display/html/black.html",
 	"display/html/white.html",
+}
+
+var pageDataForCABCTest = []string{
+	"display/html/white.html", "display/html/black.html",
+	"display/html/white.html", "display/html/grey10.html",
+	"display/html/white.html", "display/html/grey20.html",
+	"display/html/white.html", "display/html/grey30.html",
+	"display/html/white.html", "display/html/grey40.html",
+	"display/html/white.html", "display/html/grey50.html",
+	"display/html/white.html", "display/html/checker1.html",
+	"display/html/white.html", "display/html/checker90.html",
+	"display/html/white.html", "display/html/checker80.html",
+	"display/html/white.html", "display/html/checker70.html",
+	"display/html/white.html", "display/html/checker60.html",
+	"display/html/white.html", "display/html/checker50.html",
 }
 
 const tmpPath = "/tmp"
@@ -116,6 +166,16 @@ func init() {
 			Val:       brightnessDisplayParams,
 			ExtraData: pageDataForBrightnessTest,
 		}, {
+			Name:      "default_cabc_ash",
+			Fixture:   "powerAsh",
+			Val:       defaultCABCDisplayParams,
+			ExtraData: pageDataForCABCTest,
+		}, {
+			Name:      "max_cabc_ash",
+			Fixture:   "powerAsh",
+			Val:       maxCABCDisplayParams,
+			ExtraData: pageDataForCABCTest,
+		}, {
 			Name:              "default_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -139,6 +199,18 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               brightnessDisplayParams,
 			ExtraData:         pageDataForBrightnessTest,
+		}, {
+			Name:              "default_cabc_lacros",
+			Fixture:           "powerLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               defaultCABCDisplayParams,
+			ExtraData:         pageDataForCABCTest,
+		}, {
+			Name:              "max_cabc_lacros",
+			Fixture:           "powerLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               maxCABCDisplayParams,
+			ExtraData:         pageDataForCABCTest,
 		}},
 	})
 }
