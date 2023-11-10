@@ -61,6 +61,7 @@ func init() {
 			"pvs.feature_flags",
 			"pvs.force_dlm_sku_id",
 			"pvs.ignore_git_access_failures",
+			"pvs.skip_pvs_version_validation",
 		},
 	})
 }
@@ -250,6 +251,9 @@ func shopEnv(s *testing.FixtState) RuntimeEnv {
 	if _, ok := s.Var("pvs.simulated_mode"); ok {
 		env.SimulatedDut = true
 		env.SimulatedTestRunner = true
+	}
+	if _, ok := s.Var("pvs.skip_pvs_version_validation"); ok {
+		env.SkipPvsVersionValidation = true
 	}
 	return env
 }
