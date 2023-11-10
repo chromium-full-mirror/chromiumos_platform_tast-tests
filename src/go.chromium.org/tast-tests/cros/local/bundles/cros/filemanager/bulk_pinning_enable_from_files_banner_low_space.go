@@ -87,14 +87,17 @@ func BulkPinningEnableFromFilesBannerLowSpace(ctx context.Context, s *testing.St
 	defer files.Close(cleanupCtx)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	bulkPinningBanner := nodewith.Role(role.Banner).ClassName("tast-bulk-pinning-banner")
+	bulkPinningBannerFinder := files.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.Banner).ClassName("tast-bulk-pinning-banner"))
 	dismissButton := nodewith.Role(role.Button).Name("Dismiss")
 	getStartedButton := nodewith.Role(role.Button).Name("Get started")
 	turnOnButton := nodewith.Role(role.Button).Name("Turn on")
 	notEnoughStorageFooter := nodewith.Role(role.StaticText).NameStartingWith("Not enough storage")
 	if err := uiauto.Combine("open drive and enable bulk pinning",
 		files.OpenDrive(),
-		files.LeftClickUntil(dismissButton, files.WithTimeout(2*time.Second).WaitUntilExists(bulkPinningBanner)),
+		uiauto.IfFailThen(
+			bulkPinningBannerFinder,
+			files.LeftClickUntil(dismissButton, bulkPinningBannerFinder),
+		),
 		files.LeftClickUntil(getStartedButton, files.WaitUntilExists(turnOnButton)),
 		files.WaitUntilExists(notEnoughStorageFooter),
 	)(ctx); err != nil {
