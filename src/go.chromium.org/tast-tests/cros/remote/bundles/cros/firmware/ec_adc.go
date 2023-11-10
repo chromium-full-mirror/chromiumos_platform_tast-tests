@@ -68,7 +68,7 @@ func ECADC(ctx context.Context, s *testing.State) {
 
 	s.Logf("Reading EC temperature sensors for %d iterations", readCount)
 	for i := 1; i <= readCount; i++ {
-		ecTemperatureOut, err := h.Servo.RunECCommandGetOutput(ctx, "temps", []string{`.*>`})
+		ecTemperatureOut, err := h.Servo.RunECCommandGetOutput(ctx, "temps", []string{`.*(>|~\$)`})
 		if err != nil {
 			s.Fatal("Failed to read EC temperature sensors: ", err)
 		}
@@ -91,7 +91,7 @@ type temp struct {
 	TempKelvin int64
 }
 
-var tempRe = regexp.MustCompile(`(\S+)\s*:\s*(\d+) K`)
+var tempRe = regexp.MustCompile(`(\S+)\s*:?\s*(\d+) K`)
 
 func parseTempsOutput(ctx context.Context, output string) ([]temp, error) {
 	var result []temp
