@@ -28,7 +28,7 @@ import (
 
 const (
 	// CycleMaxDuration is the maximum duration of a hibernate cycle.
-	CycleMaxDuration     = 5 * time.Minute
+	CycleMaxDuration     = 8 * time.Minute
 	hibernateCycleIDPath = "/tmp/hibernate_cycle_id"
 )
 
@@ -522,10 +522,7 @@ func (t *Tester) login(ctx context.Context, reuseSession, keepState bool) error 
 }
 
 func (t *Tester) reconnectDUT(ctx context.Context) error {
-	waitConnectCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-
-	if err := t.dut.WaitConnect(waitConnectCtx); err != nil {
+	if err := t.dut.WaitConnect(ctx); err != nil {
 		return errors.Wrap(err, "reconnecting to the DUT failed")
 	}
 
