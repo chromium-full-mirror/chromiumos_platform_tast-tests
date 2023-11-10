@@ -30,6 +30,11 @@ type TabletModeFixture struct {
 	proxy *servo.Proxy
 }
 
+// Servo obtain the proxy of a servo.
+func (f *TabletModeFixture) Servo() *servo.Proxy {
+	return f.proxy
+}
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "enableServoAndTabletMode",
@@ -92,7 +97,7 @@ func (f *TabletModeFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 
 	f.revertInitialModeCmd = cmd
 	f.proxy = pxy
-	return nil
+	return f
 }
 
 // TearDown release resources.
