@@ -81,6 +81,7 @@ type RuntimeEnv struct {
 	PvsImageTag             string
 	ShopRef                 string
 	IgnoreGitAccessFailures bool
+	SkipPvsVersionValidation bool
 }
 
 // EnsurePass runs the given subtest and fatally errors if it fails.
@@ -166,6 +167,9 @@ func (p RuntimeEnv) generateEnvMap() map[string]string {
 	}
 	if p.IgnoreGitAccessFailures {
 		env["IGNORE_GIT_ACCESS_FAILURES"] = "1"
+	}
+	if p.SkipPvsVersionValidation {
+		env["SKIP_PVS_VERSION_VALIDATION"] = "1"
 	}
 	return env
 }
