@@ -1,5 +1,12 @@
 set noparent
 
+# Essential Inputs team
+shend@chromium.org
+jopalmer@google.com
+tranbaoduy@google.com
+mehrab@chromium.org
+curtismcmullan@google.com
+
 per-file physical_keyboard_kernel_mode.go=file:chromiumos/owners:v1:/platform/OWNERS.p12s
 
 # Tast team for bulk/emergencies
