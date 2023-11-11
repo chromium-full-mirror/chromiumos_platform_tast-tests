@@ -93,15 +93,8 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		}
 		defer d.Close(cleanupCtx)
 
-		// Recording screen to make it easy to debug failures.
-		screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
-		if err != nil || screenRecorder == nil {
-			rl.Exit("create ScreenRecorder", err)
-		}
-		if err := screenRecorder.Start(ctx, tconn); err != nil {
-			rl.Exit("start ScreenRecorder", err)
-		}
-		defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.mp4"))
+		recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+		defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 		s.Log("Installing app")
 		if err := playstore.InstallApp(ctx, a, d, pkgName, &playstore.Options{TryLimit: -1}); err != nil {
