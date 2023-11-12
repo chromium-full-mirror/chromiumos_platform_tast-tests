@@ -6,7 +6,6 @@ package usbip
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/usbdevice"
@@ -70,7 +69,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	testText := "This is a test message."
 	promptText := "crosh>"
 	window := nodewith.Name("crosh").Role(role.Window).ClassName("BrowserFrame")
-	prompt := nodewith.Ancestor(window).Name(promptText).Role(role.StaticText).First()
+	prompt := nodewith.Ancestor(window).NameStartingWith(promptText).Role(role.StaticText).First()
 	ui := uiauto.New(tconn)
 	if err := uiauto.Repeat(2, uiauto.Combine("Open launcher and type text",
 		func(ctx context.Context) error { return apps.Launch(ctx, tconn, apps.Crosh.ID) },
@@ -85,7 +84,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 			k.Type(testText)
 			return nil
 		},
-		ui.WaitUntilExists(nodewith.Ancestor(window).Name(fmt.Sprintf("%s %s", promptText, testText)).Role(role.StaticText).First()),
+		ui.WaitUntilExists(nodewith.Ancestor(window).Name(testText).Role(role.StaticText).First()),
 		// Close crosh.
 		kb.AccelAction("Enter"),
 		kb.TypeAction("exit"),
