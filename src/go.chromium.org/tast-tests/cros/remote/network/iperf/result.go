@@ -21,7 +21,7 @@ const (
 	jitterIndex         = 9
 	percentLossIndex    = 12
 
-	fieldCount    = 8
+	fieldCount    = 9
 	fieldCountUDP = 14
 )
 
@@ -42,7 +42,8 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 
 	var allErrors error
 	count := 0
-	for _, line := range strings.Split(output, "\n") {
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
 		fields := strings.Split(line, ",")
 
 		// only use client side results for UDP
@@ -89,6 +90,41 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 		totalJitter = append(totalJitter, time.Duration(jitter*float64(time.Millisecond)))
 
 		count++
+	}
+
+	// OpenWrt iperf clients and the ones connected to OpenWrt iperf server
+	// don't show server side results for UDP. The fallback approach to
+	// calculate the throughput is to use client side results, although
+	// they are missing packet loss columns.
+	if config.Protocol == ProtocolUDP && count == 0 {
+		for _, line := range lines {
+			fields := strings.Split(line, ",")
+			if len(fields) != fieldCount {
+				continue
+			}
+
+			// ignore summary lines
+			if logID, err := strconv.Atoi(fields[logIDIndex]); err != nil || logID == -1 {
+				continue
+			}
+
+			byteCount, err := strconv.ParseFloat(fields[dataTransferedIndex], 64)
+			if err != nil {
+				allErrors = errors.Wrapf(allErrors, "failed to parse bytes from %q: %v ", fields[dataTransferedIndex], err) // NOLINT
+				continue
+			}
+
+			duration, err := parseInterval(fields[intervalIndex])
+			if err != nil {
+				allErrors = errors.Wrapf(allErrors, "failed to parse duration from: %q: %v ", fields[intervalIndex], err) // NOLINT
+				continue
+			}
+
+			totalDuration += duration
+			totalByteCount += byteCount
+
+			count++
+		}
 	}
 
 	expectedCount := config.PortCount

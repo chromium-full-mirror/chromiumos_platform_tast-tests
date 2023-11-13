@@ -52,6 +52,7 @@ var iperfProtocolMap = map[TestType]iperf.Protocol{
 
 // TestManager is a helper class that manages running different types of iperf and netperf tests.
 type TestManager struct {
+	use2WaySetup bool
 	routerType   routerSupport.RouterType
 	router       *ssh.Conn
 	routerIPAdd  string
@@ -59,7 +60,6 @@ type TestManager struct {
 	testDevIface string
 	testDevIPAdd string
 	peerDev      *ssh.Conn
-	peerDevIface string
 	peerDevIPAdd string
 	iperfClient  *iperf.RemoteClient
 	iperfServer  *iperf.RemoteServer
@@ -67,23 +67,33 @@ type TestManager struct {
 
 // NewTestManager creates a new TestManager utility.
 func NewTestManager(ctx context.Context, dutConn, routerConn, pcapConn *ssh.Conn, routerType routerSupport.RouterType, dutIP, routerIP, dutIface string) (*TestManager, error) {
-	if routerType != routerSupport.LegacyT {
-		return nil, errors.New("failed router type is not Gale")
-	}
-	testing.ContextLog(ctx, "using 3-way setup")
-	if err := setup3WayIPConfig(ctx, dutConn, routerConn, pcapConn, dutIP, routerIP, dutIface); err != nil {
-		return nil, err
+	var use2WaySetup bool
+	var peerDevice *ssh.Conn
+	var peerDeviceIPAddress string
+	if routerType == routerSupport.OpenWrtT {
+		testing.ContextLog(ctx, "using 2-way setup")
+		use2WaySetup = true
+		peerDevice = routerConn
+		peerDeviceIPAddress = routerIP
+	} else {
+		testing.ContextLog(ctx, "using 3-way setup")
+		use2WaySetup = false
+		if err := setup3WayIPConfig(ctx, dutConn, routerConn, pcapConn, dutIP, routerIP, dutIface); err != nil {
+			return nil, err
+		}
+		peerDevice = pcapConn
+		peerDeviceIPAddress = defaultPcapLANIPAddress
 	}
 	return &TestManager{
+		use2WaySetup: use2WaySetup,
 		routerType:   routerType,
 		router:       routerConn,
 		routerIPAdd:  routerIP,
 		testDev:      dutConn,
 		testDevIface: dutIface,
 		testDevIPAdd: dutIP,
-		peerDev:      pcapConn,
-		peerDevIface: defaultPcapLANIfaceName,
-		peerDevIPAdd: defaultPcapLANIPAddress,
+		peerDev:      peerDevice,
+		peerDevIPAdd: peerDeviceIPAddress,
 	}, nil
 }
 
@@ -177,7 +187,7 @@ func (p *TestManager) Session(ctx context.Context, testType TestType) (*iperf.Se
 
 // Close deconfigures all connections and routing.
 func (p *TestManager) Close(ctx context.Context) error {
-	if p.routerType == routerSupport.LegacyT {
+	if !p.use2WaySetup {
 		if err := p.delete3WayIPConfig(ctx); err != nil {
 			return err
 		}

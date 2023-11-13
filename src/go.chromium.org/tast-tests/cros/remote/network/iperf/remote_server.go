@@ -30,6 +30,7 @@ type Server interface {
 
 // RemoteServer represents a remote host to launch an iperf server on.
 type RemoteServer struct {
+	useMiniJail  bool
 	conn         *ssh.Conn
 	iperfPath    string
 	minijailPath string
@@ -44,12 +45,20 @@ func NewRemoteServer(ctx context.Context, conn *ssh.Conn) (*RemoteServer, error)
 		return nil, errors.Wrap(err, "failed to find iperf on host")
 	}
 
+	// minijail isn't available on openwrt, but is required on gale
+	// If minijail0 is on ${PATH} on any host, use it. If not,
+	// use the original invocation.
+	useMiniJail := true
 	minijailPath, err := cmd.FindCmdPath(ctx, conn, "minijail0")
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to find minijail0 on host")
+		useMiniJail = false
+		testing.ContextLog(ctx, "minijail0 not present on host, proceeding without minijail")
+	} else {
+		testing.ContextLog(ctx, "minijail0 found on host, proceeding to use minijail")
 	}
 
 	return &RemoteServer{
+		useMiniJail:  useMiniJail,
 		conn:         conn,
 		iperfPath:    iperfPath,
 		minijailPath: minijailPath,
@@ -60,8 +69,7 @@ func NewRemoteServer(ctx context.Context, conn *ssh.Conn) (*RemoteServer, error)
 // Start launches a new Iperf server instance on the remote machine.
 func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 	args := getServerArguments(config)
-	args = append([]string{c.iperfPath}, args...)
-	iperfCommand := fmt.Sprintf("%s %s", c.minijailPath, strings.Join(args, " "))
+	iperfCommand := fmt.Sprintf("%s %s %s", c.minijailPath, c.iperfPath, strings.Join(args, " "))
 	testing.ContextLog(ctx, "Starting iperf server")
 	testing.ContextLogf(ctx, "iperf server invocation: %s", iperfCommand)
 
@@ -69,7 +77,14 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 		return errors.Wrap(err, "failed to configure server firewall")
 	}
 
-	cmd := c.conn.CommandContext(ctx, c.minijailPath, args...)
+	var cmd *ssh.Cmd
+	if c.useMiniJail {
+		args = append([]string{c.iperfPath}, args...)
+		cmd = c.conn.CommandContext(ctx, c.minijailPath, args...)
+	} else {
+		cmd = c.conn.CommandContext(ctx, c.iperfPath, args...)
+	}
+
 	c.stdout = new(bytes.Buffer)
 	cmd.Stdout = c.stdout
 

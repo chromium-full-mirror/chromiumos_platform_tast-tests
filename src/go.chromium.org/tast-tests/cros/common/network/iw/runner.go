@@ -790,11 +790,48 @@ func (r *Runner) SetFreq(ctx context.Context, iface string, freq int, ops ...Set
 	return nil
 }
 
-// SetAntennaBitmap sets the antenna bitmap.
+// GetAntennaBitmap gets the configured antenna chain mask on a given phy (radio).
+// The bitmap configuration consists of two hex values for Tx and Rx, such as:
+//     Configured Antennas: TX 0x3 RX 0x3
+// The hex value 0x3 means that the device is using all four of its available
+// antennas for both transmitting and receiving data. This configuration can
+// provide the best possible performance in terms of range and data rate.
+func (r *Runner) GetAntennaBitmap(ctx context.Context, phy string) (int, int, error) {
+	out, err := r.cmd.Output(ctx, "iw", "phy", phy, "info")
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to get Antenna bitmap")
+	}
+	return parseBitmap(ctx, string(out))
+}
+
+func parseBitmap(ctx context.Context, iwOut string) (int, int, error) {
+	bitmapRegexp := regexp.MustCompile(`\s*Configured Antennas: TX (\S+) RX (\S+)`)
+	bitmapMatches := bitmapRegexp.FindStringSubmatch(iwOut)
+	var txBitmap, rxBitmap int
+	var err error
+	if bitmapMatches != nil {
+		txBitmap, err = strconv.Atoi(bitmapMatches[1])
+		if err != nil {
+			return 0, 0, errors.New("could not parse txBitmap")
+		}
+		rxBitmap, err = strconv.Atoi(bitmapMatches[2])
+		if err != nil {
+			return 0, 0, errors.New("could not parse rxBitmap")
+		}
+	}
+	return txBitmap, rxBitmap, nil
+}
+
+// SetAntennaBitmap sets the antenna chain mask on given phy (radio).
+// This function will set the antennas allowed to use for TX and
+// RX on the |phy| based on the |tx_bitmap| and |rx_bitmap|.
 func (r *Runner) SetAntennaBitmap(ctx context.Context, phy string, txBitmap, rxBitmap int) error {
-	if err := r.cmd.Run(ctx, "iw", "phy", phy, "set", "antenna", strconv.Itoa(txBitmap),
-		strconv.Itoa(rxBitmap)); err != nil {
-		return errors.Wrap(err, "failed to set Antenna bitmap")
+	configTxBitmap, configRxBitmap, err := r.GetAntennaBitmap(ctx, phy)
+	if err == nil && (configTxBitmap != txBitmap || configRxBitmap != rxBitmap) {
+		if err := r.cmd.Run(ctx, "iw", "phy", phy, "set", "antenna", strconv.Itoa(txBitmap),
+			strconv.Itoa(rxBitmap)); err != nil {
+			return errors.Wrap(err, "failed to set Antenna bitmap")
+		}
 	}
 	return nil
 }
