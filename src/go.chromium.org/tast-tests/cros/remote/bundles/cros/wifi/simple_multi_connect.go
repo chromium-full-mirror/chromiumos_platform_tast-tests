@@ -15,13 +15,12 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SimpleMultiConnect,
-		Desc: "Verifies that 2 DUTs can connect to a single AP in default WiFi configuration",
+		Desc: "Verifies that 2+ DUTs can connect to a single AP in default WiFi configuration",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		//TODO(b/304831175): Add Wificell_cross_decive_multidut.
 		//TODO(b/304830047): Promote test to stable by removing wificell_cross_device_unstable tag.
-		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_unstable"},
+		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_multidut", "wificell_cross_device_unstable"},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT),
