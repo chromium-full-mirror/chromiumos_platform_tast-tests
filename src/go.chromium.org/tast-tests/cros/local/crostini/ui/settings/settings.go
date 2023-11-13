@@ -47,12 +47,14 @@ const shortUITimeout = 5 * time.Second
 // Sub settings name.
 const (
 	ManageSharedFolders = "Manage shared folders"
+	ManageUSBDevices    = "Manage USB devices"
 )
 
 // Window names for different settings page.
 const (
 	PageNameLinux = "Settings - Linux development environment"
 	PageNameMSF   = "Settings - " + ManageSharedFolders
+	PageNameMUD   = "Settings - " + ManageUSBDevices
 )
 
 // find params for fixed items.
@@ -83,6 +85,10 @@ var (
 	RestoreFileWindow     = nodewith.Name("Restore").Role(role.Window).ClassName("WebDialogView").Onscreen()
 	RestoreTiniFile       = nodewith.NameContaining(".tini").Role(role.StaticText).Ancestor(RestoreFileWindow).Onscreen()
 	RestoreOpen           = nodewith.Name("Open").Role(role.Button).Ancestor(RestoreFileWindow).Onscreen()
+	manageUSBPage         = nodewith.Role(role.Window).Name(PageNameMUD).First().Onscreen()
+	emptySharedUSBMsg     = nodewith.Name("Available USB devices will appear here.").Role(role.StaticText).Onscreen()
+	shareUSBFailDlg       = nodewith.Name("Device in use").Role(role.Dialog).Onscreen()
+	continueButton        = nodewith.Name("Continue").Role(role.Button).Ancestor(shareUSBFailDlg).Onscreen()
 )
 
 // Settings represents an instance of the Linux settings in Settings App.
@@ -634,4 +640,55 @@ func (s *Settings) LeftClickUI(findParams *nodewith.Finder) uiauto.Action {
 // WaitForUI waits until findParams exists
 func (s *Settings) WaitForUI(findParams *nodewith.Finder) uiauto.Action {
 	return s.ui.WaitUntilExists(findParams)
+}
+
+// GetUSBDevices returns a list USB devices that could be shared with Crostini.
+// Settings must be open at the Linux Manage USB Devices page.
+func (s *Settings) GetUSBDevices(ctx context.Context) ([]string, error) {
+	var listOfUSBDevices []string
+	if err := s.ui.WithTimeout(shortUITimeout).WaitUntilExists(emptySharedUSBMsg)(ctx); err == nil {
+		return listOfUSBDevices, nil
+	}
+
+	shareUSBButtons := nodewith.Role(role.ToggleButton).Ancestor(manageUSBPage)
+	shareUSB, err := s.ui.NodesInfo(ctx, shareUSBButtons)
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to get NodesInfo")
+	}
+	for _, device := range shareUSB {
+		listOfUSBDevices = append(listOfUSBDevices, device.Name)
+	}
+
+	return listOfUSBDevices, nil
+}
+
+// ShareUSBDevice shares a USB device with Crostini.
+// Settings must be open at the Linux Manage USB Devices page.
+func (s *Settings) ShareUSBDevice(ctx context.Context, deviceName string) error {
+	deviceButton := nodewith.Name(deviceName).Role(role.ToggleButton).Ancestor(manageUSBPage)
+	waitUntilShared := s.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(deviceButton, true)
+	return uiauto.Combine(fmt.Sprintf("share a USB device %q", deviceName),
+		s.ui.LeftClick(deviceButton),
+		uiauto.IfFailThen(
+			waitUntilShared,
+			uiauto.IfSuccessThen(
+				s.ui.Exists(shareUSBFailDlg),
+				uiauto.Combine("share device in use",
+					s.ui.LeftClick(continueButton),
+					waitUntilShared,
+				),
+			),
+		),
+	)(ctx)
+}
+
+// UnshareUSBDevice unshares a USB device previously shared with Crostini.
+// Settings must be open at the Linux Manage USB Devices page.
+func (s *Settings) UnshareUSBDevice(ctx context.Context, deviceName string) error {
+	deviceButton := nodewith.Name(deviceName).Role(role.ToggleButton).Ancestor(manageUSBPage)
+	waitUntilUnshared := s.ui.WithTimeout(shortUITimeout).WaitUntilCheckedState(deviceButton, false)
+	return uiauto.Combine(fmt.Sprintf("unshare a USB device %q", deviceName),
+		s.ui.LeftClick(deviceButton),
+		waitUntilUnshared,
+	)(ctx)
 }
