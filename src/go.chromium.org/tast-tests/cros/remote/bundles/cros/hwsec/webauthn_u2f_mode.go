@@ -94,6 +94,24 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec remote helper: ", err)
 	}
 
+	var pbHelper util.PowerButtonHelper
+	if !s.Param().(webauthnU2fModeParam).isSimulator {
+		// Connect to servo.
+		servoSpec, _ := s.Var("servo")
+		pxy, err := servo.NewProxy(ctx, servoSpec, s.DUT().KeyFile(), s.DUT().KeyDir())
+		if err != nil {
+			s.Fatal("Failed to connect to servo: ", err)
+		}
+		defer pxy.Close(ctx)
+		svo := pxy.Servo()
+		if err := svo.RequireDebugHeader(ctx); err != nil {
+			s.Fatal("Require debug servo header: ", err)
+		}
+		pbHelper = util.NewServoPowerButtonHelper(svo)
+	} else {
+		pbHelper = util.NewSocketPowerButtonHelper(cmdRunner)
+	}
+
 	// Ensure TPM is ready before running the tests.
 	if err := helper.EnsureTPMIsReady(ctx, hwsec.DefaultTakingOwnershipTimeout); err != nil {
 		s.Fatal("Failed to ensure TPM is ready: ", err)
@@ -138,21 +156,6 @@ func WebauthnU2fMode(ctx context.Context, s *testing.State) {
 	// U2F didn't depend on chaps, but chaps would block the TPM operations, and caused U2F timeout.
 	if err := util.EnsureChapsSlotsInitialized(ctx, chaps); err != nil {
 		s.Fatal("Failed to ensure chaps slots: ", err)
-	}
-
-	var pbHelper util.PowerButtonHelper
-	if !s.Param().(webauthnU2fModeParam).isSimulator {
-		// Connect to servo.
-		servoSpec, _ := s.Var("servo")
-		pxy, err := servo.NewProxy(ctx, servoSpec, s.DUT().KeyFile(), s.DUT().KeyDir())
-		if err != nil {
-			s.Fatal("Failed to connect to servo: ", err)
-		}
-		defer pxy.Close(ctx)
-		svo := pxy.Servo()
-		pbHelper = util.NewServoPowerButtonHelper(svo)
-	} else {
-		pbHelper = util.NewSocketPowerButtonHelper(cmdRunner)
 	}
 
 	// Set u2f mode to enable power button press authentication.
