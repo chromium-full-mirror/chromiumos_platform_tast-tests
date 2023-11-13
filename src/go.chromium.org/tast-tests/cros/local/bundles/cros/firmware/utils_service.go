@@ -6,6 +6,10 @@ package firmware
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -14,6 +18,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/common/firmware/usb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -326,4 +331,172 @@ func (us *UtilsService) CheckCrosConfigProperty(ctx context.Context, req *fwpb.C
 		return nil, err
 	}
 	return &fwpb.CheckCrosConfigResponse{CrosConfigPropertyValue: out}, nil
+}
+
+type devserverStatus struct {
+	url string
+	err error
+}
+
+type localRunner struct{}
+
+func (lr *localRunner) RunCommand(ctx context.Context, asRoot bool, name string, args ...string) error {
+	return testexec.CommandContext(ctx, name, args...).Run(testexec.DumpLogOnError)
+}
+
+func (lr *localRunner) RunCommandQuiet(ctx context.Context, asRoot bool, name string, args ...string) error {
+	return testexec.CommandContext(ctx, name, args...).Run()
+}
+
+func (lr *localRunner) OutputCommand(ctx context.Context, asRoot bool, name string, args ...string) ([]byte, error) {
+	return testexec.CommandContext(ctx, name, args...).Output(testexec.DumpLogOnError)
+}
+
+// FlashUSBDrive flashes a test image on a usb drive.
+// - Find the USB device in /dev/sd*, make sure it is removable by reading /sys/block/sdX/removable
+// - Find a healthy devserver
+// - Stage the OS image
+// - Extract the OS image and write it to /dev/sdX
+// - sync /dev/sdX
+// - blockdev --rereadpt /dev/sdX
+func (us *UtilsService) FlashUSBDrive(ctx context.Context, req *fwpb.FlashUSBDriveRequest) (*empty.Empty, error) {
+	artifactsURL := strings.TrimSuffix(req.GetGsPath(), "/")
+
+	files, err := os.ReadDir("/dev")
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read /dev")
+	}
+
+	usbDevice := ""
+	for _, file := range files {
+		if strings.HasPrefix(file.Name(), "sd") && len(file.Name()) == 3 {
+			testing.ContextLogf(ctx, "Found usb drive: /dev/%s", file.Name())
+			removeable := fmt.Sprintf("/sys/block/%s/removable", file.Name())
+			f, err := os.Open(removeable)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to open %s", removeable)
+			}
+			buf := make([]byte, 1)
+			c, err := f.Read(buf)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to read %s", removeable)
+			}
+			if c == 1 && buf[0] == '1' {
+				usbDevice = fmt.Sprintf("/dev/%s", file.Name())
+				break
+			}
+		}
+	}
+	usbRelease, _, err := usb.ValidateUSBImage(ctx, usbDevice, "/media/usbkey", &localRunner{})
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to verify %s", usbDevice)
+	}
+	if usbRelease != "" && strings.HasSuffix(artifactsURL, usbRelease) {
+		testing.ContextLogf(ctx, "USB drive version is already correct %s", usbRelease)
+		return &empty.Empty{}, nil
+	}
+
+	ch := make(chan devserverStatus, len(req.GetDevserver()))
+	cl := &http.Client{
+		Transport: &http.Transport{
+			MaxIdleConnsPerHost: 10,
+			Proxy:               http.ProxyFromEnvironment,
+		},
+	}
+
+	for _, dsURL := range req.GetDevserver() {
+		go func(dsURL string) {
+			req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/check_health", dsURL), nil)
+			if err != nil {
+				ch <- devserverStatus{dsURL, err}
+				return
+			}
+			res, err := cl.Do(req)
+			if err != nil {
+				ch <- devserverStatus{dsURL, err}
+				return
+			}
+			res.Body.Close()
+			if res.StatusCode == http.StatusOK {
+				ch <- devserverStatus{dsURL, nil}
+			}
+		}(dsURL)
+	}
+	for range req.GetDevserver() {
+		s := <-ch
+		if s.err != nil {
+			testing.ContextLogf(ctx, "Devserver %s not healthy:%v", s.url, s.err)
+			continue
+		}
+		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=chromiumos_test_image.tar.xz", s.url, artifactsURL)
+		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
+		req, err := http.NewRequestWithContext(ctx, "GET", stagingURL, nil)
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
+			continue
+		}
+		res, err := cl.Do(req)
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
+			continue
+		}
+		res.Body.Close()
+		if res.StatusCode != http.StatusOK {
+			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, res.Status)
+			continue
+		}
+		testImageURL := fmt.Sprintf("%s/extract/%s/chromiumos_test_image.tar.xz?file=chromiumos_test_image.bin", s.url, strings.TrimPrefix(artifactsURL, "gs://"))
+		if err := func() (retErr error) {
+			defer func() {
+				testing.ContextLogf(ctx, "Syncing %s", usbDevice)
+				if err := testexec.CommandContext(ctx, "sync", usbDevice).Run(testexec.DumpLogOnError); err != nil {
+					retErr = errors.Join(retErr, err)
+				}
+				if err := testexec.CommandContext(ctx, "blockdev", "--rereadpt", usbDevice).Run(testexec.DumpLogOnError); err != nil {
+					retErr = errors.Join(retErr, err)
+				}
+			}()
+			testing.ContextLogf(ctx, "Flashing test OS image to USB from %q", testImageURL)
+			req, err = http.NewRequestWithContext(ctx, "GET", testImageURL, nil)
+			if err != nil {
+				return err
+			}
+			res, err = cl.Do(req)
+			if err != nil {
+				return err
+			}
+			defer res.Body.Close()
+			if res.StatusCode != http.StatusOK {
+				return err
+			}
+			outF, err := os.OpenFile(usbDevice, os.O_WRONLY, 0)
+			if err != nil {
+				return err
+			}
+			defer outF.Close()
+
+			bytes, err := io.Copy(outF, res.Body)
+			if err != nil {
+				return err
+			}
+			if res.ContentLength >= 0 && bytes != res.ContentLength {
+				return errors.Errorf("failed to write all data, got %d, want %d", bytes, res.ContentLength)
+			}
+			return nil
+		}(); err != nil {
+			return nil, errors.Wrapf(err, "failed to download %q", testImageURL)
+		}
+
+		// ensure that image was successfully flashed by reading back OS version
+		usbRelease, _, err := usb.ValidateUSBImage(ctx, usbDevice, "/media/usbkey", &localRunner{})
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to verify %s", usbDevice)
+		}
+		if usbRelease != "" && strings.HasSuffix(artifactsURL, usbRelease) {
+			testing.ContextLogf(ctx, "Successfully flashed %q from %q", usbDevice, testImageURL)
+			return &empty.Empty{}, nil
+		}
+		return nil, errors.Errorf("wrong version on %s after flashing, got %s, want %s", usbDevice, usbRelease, artifactsURL)
+	}
+	return &empty.Empty{}, errors.New("no healthy devservers")
 }
