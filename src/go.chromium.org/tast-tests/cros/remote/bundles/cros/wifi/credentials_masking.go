@@ -184,13 +184,29 @@ func CredentialsMasking(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to wait for WiFi connection: ", err)
 			}
 		} else {
+			const (
+				defaultTimeout  = 15 * time.Second
+				extendedTimeout = 60 * time.Second
+			)
+
+			start := time.Now()
+
 			// Expecting the "Join Wi-Fi network" dialog pops up when attempt to connect to a known network that has stored an incorrect password.
-			if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: wifiutil.JoinWiFiNetworkDialogFinder}); err != nil {
+			if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
+				Finder:  wifiutil.JoinWiFiNetworkDialogFinder,
+				Timeout: durationpb.New(extendedTimeout),
+			}); err != nil {
 				s.Fatal("Failed to check if the Network Settings dialog shown: ", err)
 			}
 			// Ensure the "Join Wi-Fi network" dialog will be closed after test.
 			defer keyboardSvc.Accel(ctx, &inputs.AccelRequest{Key: "Esc"})
 			defer wifiutil.DumpUITreeWithScreenshotToFile(cleanupCtx, rpcClient.Conn, s.HasError, s.TestName())
+
+			// "Join Wi-Fi network" dialog might take a long time to pop up, raising error for record.
+			elapsed := time.Since(start)
+			if elapsed > defaultTimeout {
+				s.Fatalf("Failed to check if the Network Settings dialog shown: the dialog doesn't pop up in time, time elapsed: %s", elapsed)
+			}
 
 			// Clicking the eye icon and check that previously used wrong network is not displayed in the next step.
 			eyeIconFinder := ui.Node().HasClass("icon-visibility").Finder()
