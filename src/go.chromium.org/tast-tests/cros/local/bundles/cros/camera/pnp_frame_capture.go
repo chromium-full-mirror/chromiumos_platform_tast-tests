@@ -43,10 +43,10 @@ type functionMetric struct {
 
 type traceMetrics struct {
 	PerfettoProtosCameraCoreMetrics struct {
-		Sessions []struct {
+		SessionMetrics []struct {
 			Sid             int              `json:"sid"`
 			FunctionMetrics []functionMetric `json:"function_metrics"`
-			StreamMetrics   []struct {
+			ConfigMetrics   []struct {
 				FunctionMetrics     []functionMetric `json:"function_metrics"`
 				ResultBufferMetrics []struct {
 					Stream struct {
@@ -57,8 +57,8 @@ type traceMetrics struct {
 					} `json:"stream"`
 					FunctionMetrics []functionMetric `json:"function_metrics"`
 				} `json:"result_buffer_metrics"`
-			} `json:"stream_metrics"`
-		} `json:"sessions"`
+			} `json:"config_metrics"`
+		} `json:"session_metrics"`
 	} `json:"perfetto.protos.camera_core_metrics"`
 }
 
@@ -79,6 +79,7 @@ func init() {
 func setMetric(pv *perf.Values, name, unit string, value float64, direction bool) {
 	// perf.Values valid metric names only allow "^[a-zA-Z0-9._-]{1,256}$"
 	name = strings.Replace(name, "::", "-", -1)
+	name = strings.Replace(name, " ", "-", -1)
 	name = strings.Replace(name, "~", "Destructor-", -1)
 	perfDirection := perf.SmallerIsBetter
 	if direction {
@@ -123,20 +124,20 @@ func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir
 
 	// If there are multiple camera sessions, only use the last session to
 	// exclude preparation time for redoing OpenDevice().
-	if len(metrics.PerfettoProtosCameraCoreMetrics.Sessions) == 0 {
+	if len(metrics.PerfettoProtosCameraCoreMetrics.SessionMetrics) == 0 {
 		return errors.Wrap(err, "failed to find any session")
 	}
-	session := metrics.PerfettoProtosCameraCoreMetrics.Sessions[len(metrics.PerfettoProtosCameraCoreMetrics.Sessions)-1]
+	session := metrics.PerfettoProtosCameraCoreMetrics.SessionMetrics[len(metrics.PerfettoProtosCameraCoreMetrics.SessionMetrics)-1]
 	for _, functionMetric := range session.FunctionMetrics {
 		setMetricFromFunction(pv, functionMetric, "")
 	}
 
 	// If there are multiple configurations, only use the last subsession to
 	// exclude preparation time for redoing ConfigureStream().
-	if len(session.StreamMetrics) == 0 {
+	if len(session.ConfigMetrics) == 0 {
 		return errors.Wrap(err, "failed to find any stream in the last session")
 	}
-	stream := session.StreamMetrics[len(session.StreamMetrics)-1]
+	stream := session.ConfigMetrics[len(session.ConfigMetrics)-1]
 	for _, functionMetric := range stream.FunctionMetrics {
 		setMetricFromFunction(pv, functionMetric, "")
 	}
@@ -146,7 +147,7 @@ func parseMetrics(ctx context.Context, pv *perf.Values, traceDataAbsPath, outDir
 		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_width", i), "pix", float64(resultBuffer.Stream.Width), false)
 		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_height", i), "pix", float64(resultBuffer.Stream.Height), false)
 		setMetric(pv, fmt.Sprintf("ResultBuffer_%d_format", i), "category", float64(resultBuffer.Stream.Format), false)
-		for _, functionMetric := range session.FunctionMetrics {
+		for _, functionMetric := range resultBuffer.FunctionMetrics {
 			setMetricFromFunction(pv, functionMetric, fmt.Sprintf("ResultBuffer_%d_", i))
 		}
 	}
