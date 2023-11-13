@@ -39,7 +39,6 @@ func init() {
 				Val:               vm.DebianBullseye,
 			}, {
 				Name:              "lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,

@@ -40,7 +40,6 @@ func init() {
 				},
 			}, {
 				Name:              "wayland_to_wayland_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -61,7 +60,6 @@ func init() {
 				},
 			}, {
 				Name:              "wayland_to_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
@@ -82,7 +80,6 @@ func init() {
 				},
 			}, {
 				Name:              "wayland_to_x11_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -103,7 +100,6 @@ func init() {
 				},
 			}, {
 				Name:              "wayland_to_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
@@ -124,7 +120,6 @@ func init() {
 				},
 			}, {
 				Name:              "x11_to_wayland_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -145,7 +140,6 @@ func init() {
 				},
 			}, {
 				Name:              "x11_to_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
@@ -166,7 +160,6 @@ func init() {
 				},
 			}, {
 				Name:              "x11_to_x11_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -187,7 +180,6 @@ func init() {
 				},
 			}, {
 				Name:              "x11_to_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",

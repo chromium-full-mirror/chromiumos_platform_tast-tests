@@ -42,7 +42,6 @@ func init() {
 				Timeout:           14 * time.Minute,
 			}, {
 				Name:              "lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",

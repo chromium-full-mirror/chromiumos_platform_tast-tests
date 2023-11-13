@@ -41,7 +41,6 @@ func init() {
 				Val:               guestos.WaylandDemoConfig(),
 			}, {
 				Name:              "wayland_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -56,7 +55,6 @@ func init() {
 				Val:               guestos.WaylandDemoConfig(),
 			}, {
 				Name:              "wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",
@@ -71,7 +69,6 @@ func init() {
 				Val:               guestos.X11DemoConfig(),
 			}, {
 				Name:              "x11_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -86,7 +83,6 @@ func init() {
 				Val:               guestos.X11DemoConfig(),
 			}, {
 				Name:              "x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",

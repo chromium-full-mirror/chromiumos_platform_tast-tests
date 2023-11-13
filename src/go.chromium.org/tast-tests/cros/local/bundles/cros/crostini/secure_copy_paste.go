@@ -63,7 +63,6 @@ func init() {
 				},
 			}, {
 				Name:              "copy_wayland_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -88,7 +87,6 @@ func init() {
 				},
 			}, {
 				Name:              "copy_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -113,7 +111,6 @@ func init() {
 				},
 			}, {
 				Name:              "copy_x11_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -138,7 +135,6 @@ func init() {
 				},
 			}, {
 				Name:              "copy_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -163,7 +159,6 @@ func init() {
 				},
 			}, {
 				Name:              "paste_wayland_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -188,7 +183,6 @@ func init() {
 				},
 			}, {
 				Name:              "paste_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -213,7 +207,6 @@ func init() {
 				},
 			}, {
 				Name:              "paste_x11_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -238,7 +231,6 @@ func init() {
 				},
 			}, {
 				Name:              "paste_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,

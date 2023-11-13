@@ -39,7 +39,6 @@ func init() {
 				Val:               browser.TypeAsh,
 			}, {
 				Name:              "bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -54,7 +53,6 @@ func init() {
 				Val:               browser.TypeAsh,
 			}, {
 				Name:              "bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",

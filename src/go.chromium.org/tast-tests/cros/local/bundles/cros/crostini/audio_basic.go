@@ -34,7 +34,6 @@ func init() {
 				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -47,7 +46,6 @@ func init() {
 				Timeout:           7 * time.Minute,
 			}, {
 				Name:              "bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBookwormWithoutArc",

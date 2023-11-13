@@ -39,7 +39,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk3_wayland_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -62,7 +61,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk3_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -85,7 +83,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk3_x11_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -108,7 +105,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk3_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -131,7 +127,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk4_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk4_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -154,7 +149,6 @@ func init() {
 				},
 			}, {
 				Name:              "gtk4_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_gtk4_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -177,7 +171,6 @@ func init() {
 				},
 			}, {
 				Name:              "qt5_x11_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -200,7 +193,6 @@ func init() {
 				},
 			}, {
 				Name:              "qt5_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -271,7 +263,6 @@ func init() {
 				},
 			}, {
 				Name:              "qt6_x11_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_qt6_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -294,7 +285,6 @@ func init() {
 				},
 			}, {
 				Name:              "qt6_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_qt6_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -317,7 +307,6 @@ func init() {
 				},
 			}, {
 				Name:              "tkinter_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_tkinter_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
@@ -340,7 +329,6 @@ func init() {
 				},
 			}, {
 				Name:              "tkinter_bookworm_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraData:         []string{"toolkit_tkinter_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
