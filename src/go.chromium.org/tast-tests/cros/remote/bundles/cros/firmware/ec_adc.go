@@ -23,11 +23,11 @@ func init() {
 		Desc: "Check that all temperature sensors return reasonable values over 200 iterations",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"aaboagye@google.com",
+			"jbettis@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_ec"},
+		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      10 * time.Minute,
@@ -35,7 +35,7 @@ func init() {
 	})
 }
 
-// ECADC mesaures the EC internal temperature sensors in a loop for
+// ECADC measures the EC internal temperature sensors in a loop for
 // couple of retries. This test might fail on boards which don't have
 // "temps" EC command available.
 func ECADC(ctx context.Context, s *testing.State) {
