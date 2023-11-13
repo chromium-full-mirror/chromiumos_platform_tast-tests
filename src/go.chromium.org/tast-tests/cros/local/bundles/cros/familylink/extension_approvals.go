@@ -26,7 +26,11 @@ func init() {
 		Func:         ExtensionApprovals,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks if Unicorn user can add extension with parent permission",
-		Contacts:     []string{"chromeos-sw-engprod@google.com", "cros-families-eng+test@google.com", "courtneywong@chromium.org"},
+		Contacts:     []string{
+			"chromeos-sw-engprod@google.com",
+			"cros-families-eng+test@google.com",
+			"courtneywong@chromium.org",
+		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
 		Attr:         []string{"group:mainline", "informational"},

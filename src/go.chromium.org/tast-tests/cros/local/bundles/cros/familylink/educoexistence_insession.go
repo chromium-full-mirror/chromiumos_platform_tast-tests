@@ -22,7 +22,8 @@ func init() {
 		Desc:         "Checks if in-session EDU Coexistence flow is working",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
-			"agawronska@chromium.org",
+			"chromeos-sw-engprod@google.com",
+			"amberhaynes@chromium.org",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",

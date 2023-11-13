@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -24,7 +25,7 @@ func init() {
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
 			"chromeos-sw-engprod@google.com",
-			"xiqiruan@chromium.org",
+			"agawronska@chromium.org",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
@@ -32,6 +33,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "familyLinkUnicornPolicyLogin",
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ForceGoogleSafeSearch{}, pci.VerifiedValue),
+		},
 	})
 }
 

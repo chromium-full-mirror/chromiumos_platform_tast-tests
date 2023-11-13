@@ -10,6 +10,7 @@ import (
 	"time"
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -27,7 +28,9 @@ func init() {
 		Desc:         "Checks ARC behavior for account added via in-session EDU Coexistence flow",
 		Contacts: []string{
 			"cros-families-eng+test@google.com",
+			"chromeos-sw-engprod@google.com",
 			"anastasiian@chromium.org",
+			"amberhaynes@chromium.org",
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
@@ -42,6 +45,9 @@ func init() {
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		VarDeps: []string{"arc.parentUser", "arc.parentPassword", "family.eduEmail", "family.eduPassword"},
 		Fixture: "familyLinkUnicornArcPolicyLogin",
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityUI),
+		},
 	})
 }
 
