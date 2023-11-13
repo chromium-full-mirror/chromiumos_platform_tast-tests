@@ -6,11 +6,11 @@ package intel
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
+	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -30,9 +30,9 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Detachable)),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Clamshell, hwdep.Detachable)),
 		Vars: []string{"servo",
-			"power.mode", // Optional. Expecting "tablet". By defaault power.mode will be "clamshell".
+			"power.mode", // Optional. Expecting "tablet". By default power.mode will be "clamshell".
 		},
 		Params: []testing.Param{
 			{
@@ -75,30 +75,21 @@ func ShutdownPwrbuttonStress(ctx context.Context, s *testing.State) {
 	defer pxy.Close(ctxForCleanUp)
 	iterations := s.Param().(int)
 
-	// Get the initial tablet_mode_angle settings to restore at the end of test.
-	re := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
-	out, err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output()
-	if err != nil {
-		s.Fatal("Failed to retrieve tablet_mode_angle settings: ", err)
+	tmc := &tabletmode.ConvertibleModeControl{}
+	if err := tmc.InitControl(ctx, dut); err != nil {
+		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
-	m := re.FindSubmatch(out)
-	if len(m) != 3 {
-		s.Fatalf("Failed to get initial tablet_mode_angle settings: got submatches %+v", m)
-	}
-	initLidAngle := m[1]
-	initHys := m[2]
-
-	defaultMode := "clamshell"
-	if mode, ok := s.Var("power.mode"); ok {
-		defaultMode = mode
-	}
-
-	if defaultMode == "tablet" {
-		// Set tabletModeAngle to 0 to force the DUT into tablet mode.
-		testing.ContextLog(ctx, "Put DUT into tablet mode")
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(); err != nil {
-			s.Fatal("Failed to set DUT into tablet mode: ", err)
+	defer func(ctx context.Context) {
+		testing.ContextLog(ctx, "Resetting tabletmode")
+		if err := tmc.Reset(ctx); err != nil {
+			s.Fatal("Failed to restore tabletmode to the original settings: ", err)
 		}
+	}(ctxForCleanUp)
+
+	// Force DUT into tablet mode.
+	testing.ContextLog(ctx, "Put DUT into tablet mode")
+	if err := tmc.ForceTabletMode(ctx); err != nil {
+		s.Fatal("Failed to set DUT into tablet mode: ", err)
 	}
 
 	defer func(ctx context.Context) {
@@ -106,9 +97,6 @@ func ShutdownPwrbuttonStress(ctx context.Context, s *testing.State) {
 			if err := pwrOnDut(ctx, pxy, dut); err != nil {
 				s.Fatal("Failed to login to power on DUT: ", err)
 			}
-		}
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", string(initLidAngle), string(initHys)).Run(); err != nil {
-			s.Fatal("Failed to restore tablet_mode_angle to the original settings: ", err)
 		}
 	}(ctxForCleanUp)
 
