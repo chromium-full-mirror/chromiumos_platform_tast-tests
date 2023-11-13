@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -672,6 +673,11 @@ func (f *crostiniFixture) Reset(ctx context.Context) error {
 
 	if err := BasicCommandWorks(ctx, f.cont); err != nil {
 		return errors.Wrap(err, "failed to check basic commands in the existing container")
+	}
+
+	// Make sure the clipboard is empty.
+	if err := ash.SetClipboard(ctx, f.tconn, ""); err != nil {
+		return errors.Wrap(err, "failed to clear clipboard")
 	}
 
 	resetSucceeds = true

@@ -26,11 +26,6 @@ type InputActionData struct {
 // The input field must be focused before this function is called.
 // Note that the cursor will be moved to the end of the input field before returning.
 func CheckInputViaClipboard(ctx context.Context, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, expectedText string) error {
-	// Make sure the clipboard is empty.
-	if err := ash.SetClipboard(ctx, tconn, ""); err != nil {
-		return errors.Wrap(err, "failed to clear clipboard")
-	}
-
 	if err := uiauto.Combine("copy text to clipboard",
 		// Select all the text in the input box.
 		keyboard.AccelAction("ctrl+A"),
@@ -163,6 +158,11 @@ func runInputActions(ctx context.Context, keyboard *input.KeyboardEventWriter, t
 	}
 
 	for _, inputAction := range inputActions {
+		// Make sure the clipboard is empty.
+		if err := ash.SetClipboard(ctx, tconn, ""); err != nil {
+			return errors.Wrap(err, "failed to clear clipboard")
+		}
+
 		testing.ContextLogf(ctx, "Typing %q", inputAction.TestString)
 		if err := inputAction.Actions(ctx); err != nil {
 			return errors.Wrap(err, "failed to complete keyboard action ")
