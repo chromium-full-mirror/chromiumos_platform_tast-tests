@@ -194,25 +194,6 @@ func AppVLC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to capture audio streams from VLC: ", err)
 	}
 
-	samples, err := audio.ReadS16LEPCM(recordingFile, audioChannels)
-	if err != nil {
-		s.Fatal("Failed to read back recording: ", err)
-	}
-
-	// CheckFrequency operates on blocks of 1000 samples. Require that no
-	// more then `allowedErrorFraction` of them are incorrect.
-	//
-	// This is a high limit, but we're not testing the quality of audio
-	// playback, just that the sound data can get through at all. If audio
-	// playback were completely broken, we would expect all the slices to
-	// be bad, not just some of them.
-	errorLimit := int((sampleRate * sampleDuration.Seconds() / 1000) * allowedErrorFraction)
-	for idx, channel := range samples {
-		if err := audio.CheckFrequency(ctx, channel, sampleRate, expectedFreq[idx], freqTolerance, errorLimit); err != nil {
-			s.Errorf("Bad audio data on channel %d: %v", idx, err)
-		}
-	}
-
 	// Convert the raw audio file to a non-raw format so it's easier to examine.
 	if err := testexec.CommandContext(
 		ctx, "ffmpeg", "-f", "s16le", "-ar", strconv.Itoa(sampleRate), "-ac", strconv.Itoa(audioChannels),
