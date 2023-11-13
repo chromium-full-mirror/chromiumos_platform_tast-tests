@@ -97,14 +97,15 @@ func DisplayProperTimeFormat(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to find status area widget: ", err)
 			}
 
-			// Verify time format. There are 2 TimeView nodes and the names are identical too, just one shows the date and one shows the time.
-			TimeView := nodewith.ClassName("TimeView").First()
+			// Verify time format.
+			// Example content of the date tray: "Calendar view, Monday, November 13, 2023, 1:38 PM".
+			TimeView := nodewith.ClassName("DateTray").First()
 			info, err := ui.Info(ctx, TimeView)
 			if err != nil {
 				s.Fatal("Failed to get node info for the time view: ", err)
 			}
 			if is24HourFormat(info.Name) != param.use24HourFormat {
-				s.Fatal("Wrong date time format")
+				s.Fatal("Wrong date time format: ", info.Name)
 			}
 		})
 	}
