@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"bufio"
-	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -20,6 +19,7 @@ import (
 	gossh "golang.org/x/crypto/ssh"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/firmware/usb"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast-tests/cros/remote/firmware/rpm"
@@ -32,8 +32,6 @@ import (
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
-
-	"go.chromium.org/tast/core/lsbrelease"
 )
 
 // Helper tracks several firmware-related objects. The recommended way to initialize the helper is to use firmware.fixture:
@@ -548,93 +546,49 @@ func (h *Helper) SyncTastFilesToDUT(ctx context.Context) error {
 }
 
 func (h *Helper) validateUSBImage(ctx context.Context, usbdev string, cloudStorage *testing.CloudStorage, opts ...SetupUSBOption) (bool, error) {
-	testing.ContextLog(ctx, "Checking ChromeOS image name on usbkey")
 	mountPath := fmt.Sprintf("/media/servo_usb/%d", h.ServoProxy.GetPort())
-	// Unmount whatever might be mounted.
-	h.ServoProxy.RunCommandQuiet(ctx, true, "umount", "-q", mountPath)
-
-	// ChromeOS kernel is at /dev/sdx2.
-	kernelPart := usbdev + "2"
-	// ChromeOS root fs is in /dev/sdx3.
-	mountSrc := usbdev + "3"
-	if err := h.ServoProxy.RunCommand(ctx, true, "mkdir", "-p", mountPath); err != nil {
-		return false, errors.Wrapf(err, "mkdir failed at %q", mountPath)
-	}
-	var lsb map[string]string
-	// Failures here are a bad USB image, so don't fail, just write the new image.
-	var err error
-	err = func() error {
-		if output, err := h.ServoProxy.OutputCommand(ctx, true, "dd", fmt.Sprintf("if=%s", kernelPart), "bs=8", "count=1"); err != nil {
-			return errors.Wrap(err, "failed to read kernel magic")
-		} else if bytes.Compare(output, []byte("CHROMEOS")) != 0 {
-			return errors.Errorf("incorrect kernel magic string got %v want %v", output, []byte("CHROMEOS"))
-		}
-		if err = h.ServoProxy.RunCommand(ctx, true, "mount", "-o", "ro", mountSrc, mountPath); err != nil {
-			return errors.Wrapf(err, "failed to mount %q at %q", mountSrc, mountPath)
-		}
-		defer h.ServoProxy.RunCommand(ctx, true, "umount", mountPath)
-		output, err := h.ServoProxy.OutputCommand(ctx, true, "cat", fmt.Sprintf("%s/etc/lsb-release", mountPath))
-		if err != nil {
-			return errors.Wrap(err, "failed to read lsb-release")
-		}
-		lsb, err = lsbrelease.Parse(bytes.NewReader(output))
-		if err != nil {
-			return errors.Wrap(err, "failed to parse lsb-release")
-		}
-		return nil
-	}()
+	usbRelease, usbMilestone, err := usb.ValidateUSBImage(ctx, usbdev, mountPath, h.ServoProxy)
 	if err != nil {
-		if cloudStorage == nil {
-			return false, errors.Wrap(err, "bad USB image, and requested no USB image download")
-		}
-		testing.ContextLog(ctx, "Bad USB image: ", err)
+		return false, err
 	}
-
-	releaseBuilderPath := lsb[lsbrelease.BuilderPath]
 	dutBuilderPath, err := h.Reporter.BuilderPath(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get DUT builder path")
 	}
 	if strings.Contains(dutBuilderPath, "-postsubmit") {
-		testing.ContextLogf(ctx, "Current build on DUT (%s) is not a release image, using %s from USB stick", dutBuilderPath, releaseBuilderPath)
-		if releaseBuilderPath == "" {
-			return false, errors.New("did not find release image path on the USB")
+		testing.ContextLogf(ctx, "Current build on DUT (%s) is not a release image, using %s from USB stick", dutBuilderPath, usbRelease)
+		if usbRelease == "" {
+			return false, errors.New("refusing to use -postsubmit version")
 		}
 		return true, nil
 	}
 
-	if !strings.Contains(lsb[lsbrelease.ReleaseTrack], "test") {
-		if cloudStorage == nil {
-			return false, errors.New("the image on usbkey is not a test image")
-		}
-		testing.ContextLog(ctx, "The image on usbkey is not a test image")
-		releaseBuilderPath = ""
-	}
-
 	for _, opt := range opts {
 		if opt == DontFlashIfSameMilestone {
-			releaseMilestone := lsb[lsbrelease.Milestone]
 			dutMilestone, err := h.Reporter.Milestone(ctx)
 			if err != nil {
 				return false, errors.Wrap(err, "failed to get DUT milestone")
 			}
-			if releaseMilestone == dutMilestone {
+			if usbMilestone == dutMilestone {
 				testing.ContextLog(ctx, "USB image contains the same milestone as the one running on the DUT")
 				return true, nil
 			}
 		}
 	}
 
-	if releaseBuilderPath == dutBuilderPath {
-		testing.ContextLogf(ctx, "Current build on USB (%s) matches DUT (%s), no need to download", releaseBuilderPath, dutBuilderPath)
+	if usbRelease == dutBuilderPath {
+		testing.ContextLogf(ctx, "Current build on USB (%s) matches DUT (%s), no need to download", usbRelease, dutBuilderPath)
 		return true, nil
 	}
 
 	if cloudStorage == nil {
-		testing.ContextLogf(ctx, "User requested no USB image download, using %s even though it differs from DUT %s", releaseBuilderPath, dutBuilderPath)
+		if usbRelease == "" {
+			return false, errors.New("bad USB image, and requested no USB image download")
+		}
+		testing.ContextLogf(ctx, "User requested no USB image download, using %s even though it differs from DUT %s", usbRelease, dutBuilderPath)
 		return true, nil
 	}
-	testing.ContextLogf(ctx, "Current build on USB (%s) differs from DUT (%s), proceed with download", releaseBuilderPath, dutBuilderPath)
+	testing.ContextLogf(ctx, "Current build on USB (%s) differs from DUT (%s), proceed with download", usbRelease, dutBuilderPath)
 	return false, nil
 }
 
