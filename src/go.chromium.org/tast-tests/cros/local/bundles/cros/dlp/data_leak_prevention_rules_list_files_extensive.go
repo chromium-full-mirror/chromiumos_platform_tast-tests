@@ -62,7 +62,7 @@ func init() {
 			{
 				Name:              "arc_container",
 				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-				Fixture:           fixture.ChromePolicyLoggedInARCTrashFilesUXEnabled,
+				Fixture:           fixture.ChromePolicyLoggedInARCFilesUXEnabled,
 				ExtraSoftwareDeps: []string{"android_p"},
 			}, {
 				Name: "arc_vm",
@@ -72,7 +72,7 @@ func init() {
 					"group:hardware",
 					"group:complementary",
 				},
-				Fixture:           fixture.ChromePolicyLoggedInARCTrashFilesUXEnabled,
+				Fixture:           fixture.ChromePolicyLoggedInARCFilesUXEnabled,
 				ExtraSoftwareDeps: []string{"android_vm"},
 			},
 		},

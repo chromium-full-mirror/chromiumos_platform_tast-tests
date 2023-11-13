@@ -127,24 +127,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromePolicyLoggedInARCTrashFilesUXEnabled,
-		Desc:     "Logged into a user session with ARC support, trash, and files new policy UX enabled",
-		Contacts: []string{"aidazolic@google.com", "chromeos-commercial-remote-management@google.com"},
-		Impl: &policyChromeFixture{
-			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.EnableFeatures("FilesTrash"), chrome.EnableFeatures("NewFilesPolicyUX"),
-					chrome.ExtraArgs(arc.DisableSyncFlags()...)}, nil
-			},
-			waitForARC: true,
-		},
-		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		PostTestTimeout: 15 * time.Second,
-		Parent:          fixture.FakeDMS,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromePolicyLoggedInFilesUXEnabled,
 		Desc:     "Logged into a user session with files new policy UX enabled",
 		Contacts: []string{"ayaelattar@google.com", "chromeos-commercial-remote-management@google.com"},

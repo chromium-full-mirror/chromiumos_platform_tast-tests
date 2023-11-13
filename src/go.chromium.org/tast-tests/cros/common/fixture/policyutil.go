@@ -43,8 +43,6 @@ const (
 	ChromePolicyLoggedInFeatureChromeLabs = "chromePolicyLoggedInFeatureChromeLabs"
 	// ChromePolicyLoggedInARCFilesUXEnabled is a fixture name.
 	ChromePolicyLoggedInARCFilesUXEnabled = "chromePolicyLoggedInARCFilesUXEnabled"
-	// ChromePolicyLoggedInARCTrashFilesUXEnabled is a fixture name.
-	ChromePolicyLoggedInARCTrashFilesUXEnabled = "chromePolicyLoggedInARCTrashFilesUXEnabled"
 	// ChromePolicyLoggedInFilesUXEnabled is a fixture name.
 	ChromePolicyLoggedInFilesUXEnabled = "chromePolicyLoggedInFilesUXEnabled"
 	// ChromePolicyLoggedInBruschetta is a fixture name.
