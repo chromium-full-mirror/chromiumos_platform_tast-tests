@@ -17,7 +17,9 @@ import (
 	dutcontrol "go.chromium.org/tast-tests/cros/common/camera/dut"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/assistant"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	audioFixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -35,7 +37,8 @@ const (
 	ccaSetUpTimeout        = 25 * time.Second
 	ccaTearDownTimeout     = 5 * time.Second
 	testBridgeSetUpTimeout = 20 * time.Second
-	setUpTimeout           = chrome.LoginTimeout + testBridgeSetUpTimeout
+	cleanupTimeout         = 10 * time.Second
+	setUpTimeout           = chrome.LoginTimeout + testBridgeSetUpTimeout + cleanupTimeout
 	tearDownTimeout        = chrome.ResetTimeout
 )
 
@@ -212,6 +215,20 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedAudioLoopback",
+		Desc:            "Launched CCA with fake camera HAL input and audio loopback",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
+		Impl:            &fixture{launchCCA: true, useCameraType: testutil.UseFakeHALCamera, requireAudioLoopback: true},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: tearDownTimeout,
+		// Add AloopLoaded as parent since we need to verify the sound using audio loopback.
+		Parent:          audioFixture.AloopLoaded{Channels: 2}.Instance(),
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithFakeHALCameraLacros",
 		Desc:            "Set up test bridge for CCA with fake camera HAL input and lacros",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "pihsun@chromium.org"},
@@ -339,6 +356,7 @@ type fixture struct {
 	guestMode              bool
 	launchCCAInCameraBox   bool
 	forceEnableAutoFraming bool
+	requireAudioLoopback   bool
 	debugParams            DebugParams
 	enableFeatures         []feature
 	disableFeatures        []feature
@@ -348,6 +366,10 @@ type fixture struct {
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, cleanupTimeout)
+	defer cancel()
+
 	success := false
 
 	var chromeOpts []chrome.Option
@@ -421,7 +443,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	f.cr = cr
 	defer func() {
 		if !success {
-			f.cr.Close(ctx)
+			f.cr.Close(cleanupCtx)
 			f.cr = nil
 		}
 	}()
@@ -434,7 +456,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		f.arc = a
 		defer func() {
 			if !success {
-				f.arc.Close(ctx)
+				f.arc.Close(cleanupCtx)
 				f.arc = nil
 			}
 		}()
@@ -446,7 +468,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		}
 		defer func() {
 			if !success {
-				dutcontrol.CCARestoreBacklight(ctx, f.brightnessVal)
+				dutcontrol.CCARestoreBacklight(cleanupCtx, f.brightnessVal)
 			}
 		}()
 
@@ -455,6 +477,12 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			s.Fatal("Failed to get tabletIP from the remote fixture: ", err)
 		}
 		f.tabletIP = tabletIP
+	}
+	if f.requireAudioLoopback {
+		if err := audio.SetupLoopback(ctx, cr); err != nil {
+			crastestclient.DumpAudioDiagnostics(cleanupCtx, s.OutDir())
+			s.Fatal("Failed to setup loopback device: ", err)
+		}
 	}
 
 	tb, err := testutil.NewTestBridge(ctx, cr, f.useCameraType)

@@ -6,6 +6,7 @@ package cca
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"regexp"
 	"strconv"
@@ -14,10 +15,16 @@ import (
 
 	"github.com/abema/go-mp4"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 )
+
+type actionFunc func(ctx context.Context) error
 
 // DeviceWithLayoutMonitored lists the devices we want to monitor the layout correctness.
 var DeviceWithLayoutMonitored = hwdep.D(hwdep.Model(
@@ -127,4 +134,69 @@ func CheckVideoMuted(ctx context.Context, path string) error {
 	}
 
 	return errors.New("volume detection failed")
+}
+
+func recordSound(ctx context.Context, recording audio.TestRawData, recordingErr chan error) {
+	if err := crastestclient.CaptureFileCommand(
+		ctx,
+		recording.Path,
+		recording.Duration,
+		recording.Channels,
+		recording.Rate).Run(testexec.DumpLogOnError); err != nil {
+		recordingErr <- errors.Wrap(err, "failed to capture sound")
+		return
+	}
+	recordingErr <- nil
+}
+
+// VerifySound records the sound by loopback when triggering the given `action`
+// and return true if any sound is played.
+func VerifySound(ctx context.Context, action actionFunc) (bool, error) {
+	duration := 5 * time.Second
+	captureFile, err := ioutil.TempFile("", "")
+	if err != nil {
+		return false, err
+	}
+	defer os.Remove(captureFile.Name())
+
+	recording := audio.TestRawData{
+		Path:          captureFile.Name(),
+		BitsPerSample: 16,
+		Channels:      2,
+		Rate:          48000,
+		Duration:      int(duration.Seconds()),
+	}
+
+	if ctxutil.DeadlineBefore(ctx, time.Now().Add(duration)) {
+		return false, errors.New("failed to start sound recording since the remaining time in this context is not sufficient")
+	}
+
+	testing.ContextLogf(ctx, "Capture sound for %v seconds", recording.Duration)
+	recordingErr := make(chan error)
+	go recordSound(ctx, recording, recordingErr)
+
+	// Wait until the sound recording starts.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := testexec.CommandContext(ctx, "pgrep", "-f", "cras_test_client").Run(); err != nil {
+			return errors.Wrap(err, "the sound recording hasn't been started")
+		}
+		return nil
+	}, nil); err != nil {
+		return false, errors.Wrap(err, "failed to wait for the sound recording to start")
+	}
+
+	if err := action(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to run action successfully")
+	}
+
+	err = <-recordingErr
+	if err != nil {
+		return false, errors.Wrap(err, "failed to record sound successfully")
+	}
+
+	rms, err := audio.GetRmsAmplitude(ctx, recording)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get Rms Amplitude")
+	}
+	return rms != 0, nil
 }
