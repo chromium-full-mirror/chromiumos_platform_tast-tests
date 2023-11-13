@@ -57,6 +57,7 @@ func init() {
 			pci.SearchFlag(&policy.DataLeakPreventionRulesList{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.Served),
 			pci.SearchFlag(&policy.PromptForDownloadLocation{}, pci.Served),
+			pci.SearchFlag(&policy.TrashEnabled{}, pci.Served),
 		},
 		Params: []testing.Param{
 			{
@@ -103,8 +104,6 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	}
 	defer keyboard.Close(ctx)
 
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
-
 	// Update the policies.
 	filesARCWarnPolicies := []policy.Policy{&policy.DataLeakPreventionRulesList{
 		Val: []*policy.DataLeakPreventionRulesListValue{
@@ -132,6 +131,7 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	},
 		&policy.ArcEnabled{Val: true, Stat: policy.StatusSet},
 		&policy.PromptForDownloadLocation{Val: true},
+		&policy.TrashEnabled{Val: true},
 	}
 
 	if err := policyutil.ServeAndVerify(ctx, fakeDMS, cr, filesARCWarnPolicies); err != nil {
@@ -188,6 +188,21 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 		s.Error("Failed to create a test file: ", err)
 	}
 
+	// Open the Files app early so it is closed after the faillog screenshot.
+	filesApp, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to launch the Files App: ", err)
+	}
+	defer filesApp.Close(cleanupCtx)
+
+	filesWin, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get active Window for OS Settings: ", err)
+	}
+
+	// Write faillog before Files app and other windows get closed.
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree_error")
+
 	// Start interacting with the UI.
 	ui := uiauto.New(tconn)
 
@@ -195,13 +210,9 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 		s.Fatal("Failed to testDownload: ", err)
 	}
 
-	// Open the Files app.
-	filesApp, err := filesapp.Launch(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to launch the Files App: ", err)
+	if err := filesWin.ActivateWindow(ctx, tconn); err != nil {
+		s.Fatal("Cannot activate files window: ", err)
 	}
-	defer filesApp.Close(cleanupCtx)
-
 	// Move the file to another local location and check that it's still managed,
 	// and the created local file is not.
 	if err := uiauto.Combine("move the file into the test folder",
