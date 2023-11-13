@@ -141,7 +141,7 @@ func (c *PolicyService) WaitForEnrollmentError(ctx context.Context, req *empty.E
 
 // StoreIDsForDeprovisioningAndLogErrors calls StoreIDsForDeprovisioning and logs returned errors.
 func (c *PolicyService) StoreIDsForDeprovisioningAndLogErrors(ctx context.Context) {
-	if err := c.StoreIDsForDeprovisioning(ctx); err != nil {
+	if err := c.StoreIDsForDeprovisioning(ctx); err != nil && !errors.Is(err, lt.ErrNoPolicies) {
 		testing.ContextLog(ctx, "StoreIDsForDeprovisioning failed: ", err)
 	}
 }

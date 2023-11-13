@@ -7,15 +7,23 @@ package tape
 import (
 	"context"
 	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
 )
 
+// ErrNoPolicies indicates that device policies are not present.
+var ErrNoPolicies = errors.New("device policies not found")
+
 // GetDeviceIDHelper retrieves the device id from the /var/lib/devicesettings/policy.1 file.
 func GetDeviceIDHelper(ctx context.Context) (deviceID, customerID string, retErr error) {
 	const deviceSettingsFileName = "/var/lib/devicesettings/policy.1"
+
+	if _, err := os.Stat(deviceSettingsFileName); errors.Is(err, os.ErrNotExist) {
+		return "", "", ErrNoPolicies
+	}
 
 	data, err := ioutil.ReadFile(deviceSettingsFileName)
 	if err != nil {
