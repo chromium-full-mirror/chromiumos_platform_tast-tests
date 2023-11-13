@@ -133,7 +133,7 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.HighResTimerOffEnrolled,
+				Fixture:           fixture.HighResTimerOff,
 				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
@@ -232,7 +232,7 @@ func init() {
 					MaxLatencyThreshold: 10000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.HighResTimerOffEnrolled,
+				Fixture:           fixture.HighResTimerOff,
 				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
@@ -264,7 +264,7 @@ func init() {
 					MaxLatencyThreshold: 5000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-				Fixture:           fixture.HighResTimerOffEnrolled,
+				Fixture:           fixture.HighResTimerOff,
 				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
@@ -352,7 +352,6 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 	chrome, err := chrome.New(
 		ctx,
 		chrome.GuestLogin(),
-		chrome.KeepEnrollment(),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
