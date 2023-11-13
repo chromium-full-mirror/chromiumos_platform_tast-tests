@@ -6,6 +6,8 @@ package crostini
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crostini"
-	"go.chromium.org/tast-tests/cros/local/terminalapp"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -104,15 +105,41 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to bring eth0 down: ", err)
 	}
 
-	// Open Terminal app.
-	terminalApp, err := terminalapp.Launch(ctx, tconn)
+	stdout, err := os.Create(filepath.Join(s.OutDir(), "android_studio_stdout.txt"))
 	if err != nil {
-		s.Fatal("Failed to open Terminal app: ", err)
+		s.Fatal("Failed to create stdout log file: ", err)
+	}
+	defer func() {
+		if err := stdout.Close(); err != nil {
+			s.Log("Failed to close stdout log file: ", err)
+		}
+	}()
+
+	stderr, err := os.Create(filepath.Join(s.OutDir(), "android_studio_stderr.txt"))
+	if err != nil {
+		s.Fatal("Failed to create stderr log file: ", err)
+	}
+	defer func() {
+		if err := stderr.Close(); err != nil {
+			s.Log("Failed to close stderr log file: ", err)
+		}
+	}()
+
+	cmd := cont.Command(ctx, "android-studio/bin/studio.sh")
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+
+	if err := cmd.Start(); err != nil {
+		s.Fatal("Failed to start Android Studio: ", err)
 	}
 	defer func() {
 		// Stop Android Studio by stopping all java processes.
-		if err := cont.Command(ctx, "killall", "java").Run(testexec.DumpLogOnError); err != nil {
+		if err := cont.Command(cleanupCtx, "killall", "java").Run(testexec.DumpLogOnError); err != nil {
 			s.Log("Failed to stop java: ", err)
+		}
+
+		if err := cmd.Wait(); err != nil {
+			s.Log("Android Studio exited: ", err)
 		}
 	}()
 
@@ -120,13 +147,6 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	s.AttachErrorHandlers(handler, handler)
 
 	androidWindow := nodewith.NameStartingWith("Import Android Studio Settings").Role(role.Window).First()
-	if err := uiauto.Combine("Open android studio",
-		terminalApp.RunCommand(keyboard, "android-studio/bin/studio.sh &"),
-		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(androidWindow),
-		crostini.TakeAppScreenshot("android_studio"))(ctx); err != nil {
-		s.Fatal("Failed to start android studio in Terminal: ", err)
-	}
-
 	newProjectWindow := nodewith.NameStartingWith("My Application").Role(role.Window).First()
 	setupWizardWindow := nodewith.NameStartingWith("Android Studio Setup Wizard").Role(role.Window).First()
 	newProjectDialog := nodewith.NameStartingWith("New Project").Role(role.Window).First()
@@ -135,7 +155,8 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 	analyticsText := uidetection.TextBlock(strings.Split("Allow Google", " "))
 	firstRunText := uidetection.TextBlock(strings.Split("First Run", " "))
 	ud := uidetection.NewDefault(tconn).WithScreenshotResizing()
-	if err := uiauto.Combine("Create a new project with defaults",
+	if err := uiauto.NamedCombine("Create a new project with defaults",
+		uiauto.New(tconn).WithTimeout(30*time.Second).WaitUntilExists(androidWindow),
 		// Two-letter words normally need an exact match.
 		ud.LeftClick(uidetection.Word("O?K", uidetection.RegexMode(true)).First()),
 		// The analytics consent dialog is flaky. Look for the body
@@ -173,6 +194,7 @@ func AppAndroidStudio(ctx context.Context, s *testing.State) {
 		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock(strings.Split("Empty Activity", " ")).First()),
 		ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).LeftClick(finishButton.WithinA11yNode(newProjectDialog)),
 		uiauto.New(tconn).WithTimeout(time.Minute).WaitUntilExists(newProjectWindow),
+		crostini.TakeAppScreenshot("android_studio"),
 	)(ctx); err != nil {
 		s.Fatal("Failed to create a new project with defaults: ", err)
 	}
