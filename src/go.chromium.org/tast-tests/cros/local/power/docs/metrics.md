@@ -18,6 +18,7 @@ This document lists the metrics collected in power package through TestMetrics()
 | page_tables                 | KiB   | Memory used for the lowest-level page tables.                                |
 | free                        | KiB   | Amount of free memory.                                                       |
 | available                   | KiB   | Amount of available memory without swapping.                                 |
+| drm_rank${rank}\_memory_${type}                     | KiB     | The amount of memory that a GPU process is using, ranked by GPU utilization. Types include _total, active, shared_.                                 |
 | **RAPL Power Metrics**      |
 | Name                        | Unit  | Note                                                                         |
 | package-0                   | W     | Energy consumption across the entire SoC.                                    |
@@ -46,7 +47,7 @@ This document lists the metrics collected in power package through TestMetrics()
 | fan_${fan name}             | RPM   | Speed of each fan.                                                           |
 | **GPU Metrics**             |
 | Name                        | Unit  | Note                                                                         |
-| drm_rank${rank}\_memory_${type}                     | kiB     | The amount of memory that a GPU process is using, ranked by GPU utilization. Types include _total, active, shared_.                                 |
+| drm_rank${rank}\_utilization_${process_name}\_${type}                     | %     | The percentage time the GPU was active ranked by per-process utilization. Types include GPU engines for render and video. If process name is empty, it is the sum total of all processes.                                 |
 | gpu_freq                    | MHz   | GPU clock frequency.                                                         |
 | **Zram IO Metrics**         |
 | Name                        | Unit  | Note                                                                         |

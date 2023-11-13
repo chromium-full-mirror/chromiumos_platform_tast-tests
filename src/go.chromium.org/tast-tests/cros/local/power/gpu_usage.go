@@ -511,7 +511,7 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 				}
 				values.Set(perf.Metric{
 					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, engine, procName),
-					Unit:      cp.GPUUsageUtilizationTypeUnit,
+					Unit:      cp.GPUUsageMetricTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -523,8 +523,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 					continue
 				}
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, kind, procName),
-					Unit:      cp.GPUUsageMemoryTypeUnit,
+					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s.%s", ds.prefix, cp.GPUMemoryMetricType, drmRank, kind, procName),
+					Unit:      cp.GPUMemoryMetricTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -536,7 +536,7 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 			for engine := range drm.allEngines {
 				values.Set(perf.Metric{
 					Name:      fmt.Sprintf("%s%sDRM_%s.Utilization.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, engine),
-					Unit:      cp.GPUUsageUtilizationTypeUnit,
+					Unit:      cp.GPUUsageMetricTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
@@ -546,8 +546,8 @@ func (ds *GPUUsageDataSource) Stop(ctx context.Context, values *perf.Values) err
 		if drmHasMemory {
 			for kind := range drm.allMemoryKinds {
 				values.Set(perf.Metric{
-					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s", ds.prefix, cp.GPUUsageMetricType, drmRank, kind),
-					Unit:      cp.GPUUsageMemoryTypeUnit,
+					Name:      fmt.Sprintf("%s%sDRM_%s.Memory.%s", ds.prefix, cp.GPUMemoryMetricType, drmRank, kind),
+					Unit:      cp.GPUMemoryMetricTypeUnit,
 					Direction: perf.SmallerIsBetter,
 					Multiple:  true,
 					Interval:  ds.intervalName,
