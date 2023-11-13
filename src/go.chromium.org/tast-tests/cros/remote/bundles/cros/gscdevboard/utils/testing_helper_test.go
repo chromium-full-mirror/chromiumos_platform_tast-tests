@@ -6,6 +6,8 @@ package utils
 
 import (
 	"testing"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 func TestCrc8(t *testing.T) {
@@ -27,5 +29,37 @@ func TestCrc8(t *testing.T) {
 		if got != tc.want {
 			t.Errorf("Want 0x%X, but got 0x%X for %v", tc.want, got, tc.input)
 		}
+	}
+}
+
+type calledFatal struct {
+	bool
+}
+
+func (cf *calledFatal) Fatalf(_ string, _ ...interface{}) {
+	cf.bool = true
+}
+
+func okMultiReturn() (string, error) {
+	return "ok", nil
+}
+
+func errMultiReturn() (int32, error) {
+	return 0, errors.New("expected error")
+}
+
+func TestResultMustSucceed(t *testing.T) {
+	cf := &calledFatal{false}
+	if NewResult(okMultiReturn()).MustSucceed(cf, "") != "ok" {
+		t.Errorf("Expected Ok Result MustSucceed to return value")
+	}
+	if cf.bool {
+		t.Errorf("Expected Ok Result MustSucceed to not call Fatalf")
+	}
+	if NewResult(errMultiReturn()).MustSucceed(cf, "") != 0 {
+		t.Errorf("Expected Err Result MustSucceed to return Ok value")
+	}
+	if !cf.bool {
+		t.Errorf("Expected Err Result MustSucceed to call Fatalf")
 	}
 }
