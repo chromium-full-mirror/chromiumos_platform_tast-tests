@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
-	"go.chromium.org/tast-tests/cros/local/arc/apputil/youtubemusic"
+	"go.chromium.org/tast-tests/cros/local/arc/apputil/vlc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -28,7 +28,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const testfile = "fivemin_audio.mp3"
+const (
+	testVideoFile     = "cars_144_h264.mp4"
+	testAudiofile     = "fivemin_audio.mp3"
+	testVideoSubtitle = "cars_144"
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -44,10 +48,10 @@ func init() {
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "gaia"},
-		Data:         []string{testfile},
+		Data:         []string{testVideoFile, testAudiofile},
 		// There are two apps to be installed in this case.
 		Timeout: 2*time.Minute + 2*apputil.InstallationTimeout,
-		Fixture: "arcBootedWithPlayStore",
+		Fixture: "arcBooted",
 	})
 }
 
@@ -68,27 +72,36 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(ctx)
 
-	s.Log("Copy audio file")
+	res := &vlcAppTestResources{
+		chrome: cr,
+		kb:     kb,
+		tconn:  tconn,
+		arc:    a,
+		device: device,
+	}
+
+	s.Log("Copy test file")
 
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to retrieve user's Downloads path: ", err)
 	}
-	audioFileLocation := filepath.Join(downloadsPath, testfile)
-	if _, err := os.Stat(audioFileLocation); os.IsNotExist(err) {
-		if err := fsutil.CopyFile(s.DataPath(testfile), audioFileLocation); err != nil {
-			s.Fatal("Failed to copy file: ", err)
+
+	// Copy test files to Downloads directory.
+	for _, file := range []string{testVideoFile, testAudiofile} {
+		fileLocation := filepath.Join(downloadsPath, file)
+		if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
+			if err := fsutil.CopyFile(s.DataPath(file), fileLocation); err != nil {
+				s.Fatal("Failed to copy file: ", err)
+			}
+			defer os.Remove(fileLocation)
+		} else if err != nil {
+			s.Fatal("Failed to get test file info: ", err)
 		}
-		defer os.Remove(audioFileLocation)
-	} else {
-		s.Fatal("Failed to get audio file info: ", err)
 	}
-
-	ytmusicVideo := "Beat It (Official 4K Video)"
-
 	for appName, media := range map[string]*apputil.Media{
-		apps.Gallery.Name:    apputil.NewMedia("", testfile),
-		youtubemusic.AppName: apputil.NewMedia(ytmusicVideo, ytmusicVideo),
+		apps.Gallery.Name: apputil.NewMedia("", testAudiofile),
+		vlc.AppName:       apputil.NewMedia(testVideoFile, testVideoSubtitle),
 	} {
 		f := func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
@@ -100,8 +113,8 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 			switch appName {
 			case apps.Gallery.Name:
 				app = newGallery(ctx, tconn, cr, filepath.Join(s.OutDir(), appName))
-			case youtubemusic.AppName:
-				app, err = newYtMusic(ctx, kb, tconn, a, device)
+			case vlc.AppName:
+				app = newVLCPlayer(ctx, res)
 			default:
 				s.Fatal("Failed to create media app instance: unexpected media source: ", appName)
 			}
@@ -147,27 +160,6 @@ func MediaSourceUI(ctx context.Context, s *testing.State) {
 
 		s.Run(ctx, appName, f)
 	}
-}
-
-// ytMusic represents the media app: YouTube Music.
-type ytMusic struct {
-	*youtubemusic.YouTubeMusic
-}
-
-// ytMusic is built to override the original play() function to play a video
-// and conform to ARCMediaPlayer interface.
-var _ apputil.ARCMediaPlayer = (*ytMusic)(nil)
-
-// newYtMusic returns ytMusic instance.
-func newYtMusic(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (*ytMusic, error) {
-	ytm, err := youtubemusic.New(ctx, kb, tconn, a, d)
-	return &ytMusic{ytm}, err
-}
-
-// Play searches the specified media source and plays it by YouTube Music.
-func (ytm *ytMusic) Play(ctx context.Context, media *apputil.Media) error {
-	// YouTube Music needs to play a video in this test case.
-	return ytm.PlayVideo(ctx, media)
 }
 
 // gallery represents the media app: Gallery.
@@ -224,4 +216,54 @@ func (g *gallery) Close(ctx context.Context, cr *chrome.Chrome, hasErr func() bo
 		testing.ContextLog(ctx, "Failed to close gallery")
 	}
 	return nil
+}
+
+// vlcPlayer represents the media app: VLC.
+type vlcPlayer struct {
+	*vlc.Vlc
+	res *vlcAppTestResources
+}
+
+// vlcAppTestResources represents the resources needed for ARC app test.
+type vlcAppTestResources struct {
+	chrome *chrome.Chrome
+	kb     *input.KeyboardEventWriter
+	tconn  *chrome.TestConn
+	arc    *arc.ARC
+	device *ui.Device
+}
+
+// vlcPlayer is built to conform to ARCMediaPlayer interface.
+var _ apputil.ARCMediaPlayer = (*vlcPlayer)(nil)
+
+// newVLCPlayer returns vlcPlayer instance.
+func newVLCPlayer(ctx context.Context, resources *vlcAppTestResources) *vlcPlayer {
+	return &vlcPlayer{
+		res: resources,
+	}
+}
+
+// Play searches the specified media source and plays it by VLCPlayer.
+func (vp *vlcPlayer) Play(ctx context.Context, media *apputil.Media) error {
+	if err := vp.EnterDownloadFolder(ctx); err != nil {
+		return err
+	}
+	return vp.Vlc.Play(ctx, &vlc.MediaInfo{
+		FileName: media.Query,
+		FileType: vlc.Video,
+	})
+}
+
+// Install installs the VLCPlayer.
+func (vp *vlcPlayer) Install(ctx context.Context) error {
+	var err error
+	if vp.Vlc, err = vlc.NewVLCPlayer(ctx, vp.res.chrome, vp.res.kb, vp.res.tconn, vp.res.arc, vp.res.device); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Launch launches the VLCPlayer.
+func (vp *vlcPlayer) Launch(ctx context.Context) (time.Duration, error) {
+	return 0, vp.Vlc.Launch(ctx)
 }

@@ -50,15 +50,15 @@ func UnpinMediaControlsPod(tconn *chrome.TestConn) uiauto.Action {
 // NavigateToMediaControlsSubpage navigates to the detailed Media controls view
 // within the Quick Settings. This is safe to call even when the Quick Settings
 // are already open.
-func NavigateToMediaControlsSubpage(tconn *chrome.TestConn, title string) uiauto.Action {
+func NavigateToMediaControlsSubpage(tconn *chrome.TestConn) uiauto.Action {
 	return func(ctx context.Context) error {
 		if err := Show(ctx, tconn); err != nil {
 			return err
 		}
-
 		ui := uiauto.New(tconn)
-		return uiauto.Combine("click the Media controls title",
-			ui.LeftClick(nodewith.Name(title).HasClass("Label").Ancestor(MediaControlsPod())),
+
+		return uiauto.Combine("click the Media controls pod",
+			ui.LeftClick(MediaControlsPod()),
 			ui.WaitUntilExists(MediaControlsDetailView),
 		)(ctx)
 	}

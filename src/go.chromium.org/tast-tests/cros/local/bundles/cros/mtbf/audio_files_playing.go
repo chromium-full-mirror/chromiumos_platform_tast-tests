@@ -181,7 +181,10 @@ func playAudioFiles(ctx context.Context, vh *audio.Helper, volumeAction map[volu
 	}
 
 	for _, filename := range files {
-		if err := vlcPlayer.PlayAudio(ctx, filename); err != nil {
+		if err := vlcPlayer.Play(ctx, &vlc.MediaInfo{
+			FileName: filename,
+			FileType: vlc.Audio,
+		}); err != nil {
 			return err
 		}
 

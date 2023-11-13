@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 
@@ -21,31 +20,39 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	// AppName is the name of ARC app.
-	AppName     = "VLC"
+	AppName = "VLC"
+	// PackageName is the package name of ARC app.
+	PackageName = "org.videolan.vlc"
 	version     = "3.4.2"
-	packageName = "org.videolan.vlc"
 	idPrefix    = "org.videolan.vlc:id/"
 
-	titleID   = idPrefix + "title"
-	navDirID  = idPrefix + "nav_directories"
-	doneBtnID = idPrefix + "doneButton"
-	nextBtnID = idPrefix + "nextButton"
+	titleID      = idPrefix + "title"
+	navDirID     = idPrefix + "nav_directories"
+	doneBtnID    = idPrefix + "doneButton"
+	nextBtnID    = idPrefix + "nextButton"
+	playerRootID = idPrefix + "player_root"
+	closeTipsID  = idPrefix + "close"
 
 	shortTimeout   = 5 * time.Second
 	defaultTimeout = 15 * time.Second
 	longTimeout    = 2 * time.Minute
+)
+
+// MediaType represents the type of media to be played by the vlc player.
+type MediaType int
+
+// Media types supported by Vlc player.
+const (
+	Video MediaType = 0
+	Audio MediaType = 1
 )
 
 // Vlc holds resources of ARC app VLC player.
@@ -53,9 +60,15 @@ type Vlc struct {
 	app *apputil.App
 }
 
+// MediaInfo holds information of a media file.
+type MediaInfo struct {
+	FileName string    // Name of the media file.
+	FileType MediaType // Type of the media file
+}
+
 // NewVLCPlayer returns VLC instance.
 func NewVLCPlayer(ctx context.Context, cr *chrome.Chrome, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device) (*Vlc, error) {
-	app, err := apputil.NewApp(ctx, kb, tconn, a, d, AppName, packageName)
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, AppName, PackageName)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create arc resource")
 	}
@@ -66,8 +79,9 @@ func NewVLCPlayer(ctx context.Context, cr *chrome.Chrome, kb *input.KeyboardEven
 	return vlcPlayer, nil
 }
 
-// Install installs Vlc app through Apk downloaded from "https://get.videolan.org/vlc-android",
-// because the version installed from the play store will be inconsistent under different accounts.
+// Install downloads and installs the Vlc player APK from
+// "https://get.videolan.org/vlc-android", because the version installed
+// from the play store will be inconsistent under different accounts.
 // If the wrong version is installed, it will reinstall.
 func (vlc *Vlc) Install(ctx context.Context, cr *chrome.Chrome) error {
 	isInstalled, err := vlc.app.ARC.PackageInstalled(ctx, vlc.app.PkgName)
@@ -88,57 +102,32 @@ func (vlc *Vlc) Install(ctx context.Context, cr *chrome.Chrome) error {
 		}
 	}
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
-	conn, err := cr.NewConn(ctx, fmt.Sprintf("https://get.videolan.org/vlc-android/%s/", version))
-	if err != nil {
-		return errors.Wrap(err, "failed to open download page")
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
-
-	if err := webutil.WaitForQuiescence(ctx, conn, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for page load")
-	}
-
-	apkName, err := vlc.getApkName(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get apk name")
-	}
-	testing.ContextLog(ctx, "Start to install ", apkName)
-
-	done := false
-	script := fmt.Sprintf(`() => {
-		const apkName = '%s';
-		const name = "a[href*='" + apkName + "']";
-		const els = document.querySelectorAll(name);
-		if (els.length <= 0) return false;
-		els[0].click();
-		return true;
-	}`, apkName)
-	if err := conn.Call(ctx, &done, script); err != nil {
-		return errors.Wrap(err, "failed to execute JavaScript query to click HTML link to download")
-	}
-	if !done {
-		return errors.New("failed to find element to click")
-	}
-
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
 		return errors.Wrap(err, "failed to retrieve users Downloads path")
 	}
+	apkName, err := vlc.getApkName(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get apk name")
+	}
+
+	// Downloading the APK by "curl" rather than UI (e.g. Chrome browser) so that
+	// this package doesn't need the lacros variant.
+	// The apk download link in "https://get.videolan.org/vlc-android" is redirected.
+	// To address this, the -LO argument needs to be specified to ensure the download
+	// of the complete original file along with the filename.
+	cmd := testexec.CommandContext(ctx, "curl", "-LO", fmt.Sprintf("https://get.videolan.org/vlc-android/%s/%s", version, apkName))
+	// The curl doesn't have an option to specify the destination path, so
+	// change work dir to user's Downloads directory to download result to it
+	cmd.Dir = downloadsPath
+
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to download apk file")
+	}
+
 	apkPath := filepath.Join(downloadsPath, apkName)
 	// Defer call remove apk file in advance to make sure the apk will be deleted.
 	defer os.Remove(apkPath)
-
-	chromeui := uiauto.New(vlc.app.Tconn)
-	showInFolder := nodewith.Role(role.Button).NameRegex(regexp.MustCompile("(?i)SHOW IN FOLDER"))
-	// When downloading apk file finishes, the notitfication, "Show in folder", will prompt.
-	if err := chromeui.WithTimeout(3 * time.Minute).WaitUntilExists(showInFolder)(ctx); err != nil {
-		return err
-	}
 
 	return vlc.app.ARC.Install(ctx, apkPath, adb.InstallOptionGrantPermissions)
 }
@@ -181,32 +170,53 @@ func (vlc *Vlc) EnterAudioFolder(ctx context.Context) error {
 	)(ctx)
 }
 
-// PlayAudio plays audio.
-func (vlc *Vlc) PlayAudio(ctx context.Context, filetype string) error {
-	testing.ContextLogf(ctx, "Playing media file(%s)", filetype)
+// EnterDownloadFolder enters into download folder.
+func (vlc *Vlc) EnterDownloadFolder(ctx context.Context) error {
+	return uiauto.NamedCombine("Navigate to vlc download folder",
+		apputil.FindAndClick(vlc.app.Device.Object(ui.ID(navDirID)), longTimeout),
+		apputil.FindAndClick(vlc.app.Device.Object(ui.ID(titleID), ui.Text("Download")), longTimeout),
+	)(ctx)
+}
 
+// Play plays the media file.
+func (vlc *Vlc) Play(ctx context.Context, mediaInfo *MediaInfo) error {
 	testing.ContextLog(ctx, "Click on file")
-	filename := vlc.app.Device.Object(ui.TextContains(filetype))
-	if err := apputil.FindAndClick(filename, defaultTimeout)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to find the target file: %s", filetype)
+	fileUIObject := vlc.app.Device.Object(ui.TextContains(mediaInfo.FileName))
+	if err := apputil.FindAndClick(fileUIObject, defaultTimeout)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to find the target file: %s", mediaInfo.FileName)
 	}
 
-	if err := vlc.clearPromptAfterPlay(ctx); err != nil {
-		return errors.Wrap(err, "failed to clear prompt after play")
+	switch mediaInfo.FileType {
+	case Video:
+		if err := apputil.ClickIfExist(vlc.app.Device.Object(ui.ID(playerRootID)), shortTimeout)(ctx); err != nil {
+			return errors.Wrap(err, "failed to show control panel")
+		}
+
+		testing.ContextLog(ctx, "Close tips")
+		closeTips := vlc.app.Device.Object(ui.ID(closeTipsID))
+		if err := apputil.ClickIfExist(closeTips, shortTimeout)(ctx); err != nil {
+			return errors.Wrap(err, "failed to close tips")
+		}
+	case Audio:
+		if err := vlc.clearPromptAfterPlay(ctx); err != nil {
+			return errors.Wrap(err, "failed to clear prompt after play")
+		}
+
+		testing.ContextLog(ctx, "Verify playing filename")
+		playingFilename := vlc.app.Device.Object(ui.ID(titleID), ui.TextContains(mediaInfo.FileName))
+		if err := playingFilename.WaitForExists(ctx, defaultTimeout); err != nil {
+			return errors.Wrap(err, "the VLC player is not playing")
+		}
+
+		testing.ContextLog(ctx, "Wait for pause button")
+		playPauseID := idPrefix + "header_play_pause"
+		pauseButton := vlc.app.Device.Object(ui.ID(playPauseID), ui.Description("Pause"))
+		if err := pauseButton.WaitForExists(ctx, defaultTimeout); err != nil {
+			return errors.Wrap(err, "the VLC player is not playing")
+		}
 	}
 
-	testing.ContextLog(ctx, "Verify playing filename")
-	playingFilename := vlc.app.Device.Object(ui.ID(titleID), ui.TextContains(filetype))
-	if err := playingFilename.WaitForExists(ctx, defaultTimeout); err != nil {
-		return errors.Wrap(err, "the VLC player is not playing")
-	}
-
-	testing.ContextLog(ctx, "Wait for pause button")
-	playPauseID := idPrefix + "header_play_pause"
-	pauseButton := vlc.app.Device.Object(ui.ID(playPauseID), ui.Description("Pause"))
-	if err := pauseButton.WaitForExists(ctx, defaultTimeout); err != nil {
-		return errors.Wrap(err, "the VLC player is not playing")
-	}
+	testing.ContextLogf(ctx, "Start playing media file: %s", mediaInfo.FileName)
 
 	return nil
 }
@@ -255,12 +265,7 @@ func (vlc *Vlc) clearPromptAfterPlay(ctx context.Context) error {
 	return nil
 }
 
-// Play plays audio.
-func (vlc *Vlc) Play(ctx context.Context) error {
-	return vlc.app.Device.PressKeyCode(ctx, ui.KEYCODE_MEDIA_PLAY, 0)
-}
-
-// IsPaused check if the player paused.
+// IsPaused check if the player is paused.
 func (vlc *Vlc) IsPaused(ctx context.Context) error {
 	playPauseID := idPrefix + "header_play_pause"
 	playButton := vlc.app.Device.Object(ui.ID(playPauseID), ui.Description("Play"))

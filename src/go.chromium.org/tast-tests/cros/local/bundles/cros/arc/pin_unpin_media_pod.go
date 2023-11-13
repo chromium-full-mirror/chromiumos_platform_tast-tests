@@ -6,16 +6,19 @@ package arc
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 
+	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
-	"go.chromium.org/tast-tests/cros/local/arc/apputil/youtube"
+	"go.chromium.org/tast-tests/cros/local/arc/apputil/vlc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil/youtubemusic"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -24,6 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 )
 
@@ -41,6 +45,7 @@ func init() {
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "gaia"},
+		Data:         []string{vlcVideo},
 		// There are two apps to be installed in this case.
 		Timeout: 2*time.Minute + 2*apputil.InstallationTimeout,
 		Fixture: "arcBootedWithPlayStore",
@@ -48,10 +53,10 @@ func init() {
 }
 
 const (
-	ytAppLink       = "https://www.youtube.com/watch?v=JE3-LkMqBfM"
-	ytAppVideo      = "Whale Songs and AI, for everyone to explore"
-	ytMusicVideo    = "Beat It"
-	ytMusicSubtitle = "Michael Jackson • 4:19"
+	vlcVideo         = "cars_144_h264.mp4"
+	vlcVideoSubtitle = "cars_144"
+	ytMusicVideo     = "Beat It"
+	ytMusicSubtitle  = "Michael Jackson • 4:19"
 )
 
 // PinUnpinMediaPod checks the pin/unpin/re-pin for media control pod.
@@ -75,6 +80,30 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
+	res := &arcAppTestResources{
+		chrome: cr,
+		kb:     kb,
+		tconn:  tconn,
+		arc:    a,
+		device: device,
+	}
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to retrieve user's Downloads path: ", err)
+	}
+
+	// Copy test files to Downloads directory.
+	fileLocation := filepath.Join(downloadsPath, vlcVideo)
+	if _, err := os.Stat(fileLocation); os.IsNotExist(err) {
+		if err := fsutil.CopyFile(s.DataPath(vlcVideo), fileLocation); err != nil {
+			s.Fatal("Failed to copy file: ", err)
+		}
+		defer os.Remove(fileLocation)
+	} else if err != nil {
+		s.Fatal("Failed to get test file info: ", err)
+	}
+
 	// This test plays music from two ARC++ apps to verify that there are two music display in media control.
 	// The media control will be dismissed once another full-screen app has launched.
 	// Therefore, this test can only be conducted under clamshell mode.
@@ -89,21 +118,18 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 	// which any full-screen window will cause all other medias to be paused automatically and the media controls will be gone.
 	var playMediaActions []uiauto.Action
 
-	var currentMediaName string
 	for appName, media := range map[string]*apputil.Media{
 		youtubemusic.AppName: apputil.NewMedia(ytMusicVideo, ytMusicSubtitle),
-		youtube.AppName:      apputil.NewMedia(ytAppLink, ytAppVideo),
+		vlc.AppName:          apputil.NewMedia(vlcVideo, vlcVideoSubtitle),
 	} {
 		var err error
 		var app apputil.ARCMediaPlayer
 		var appPkgName string
 		switch appName {
-		case youtube.AppName:
-			currentMediaName = media.Subtitle
-			appPkgName = youtube.PkgName
-			app, err = youtube.NewApp(ctx, kb, tconn, a, device)
+		case vlc.AppName:
+			appPkgName = vlc.PackageName
+			app = newVLCVideoPlayer(ctx, res)
 		case youtubemusic.AppName:
-			currentMediaName = media.Query
 			appPkgName = youtubemusic.PkgName
 			app, err = youtubemusic.New(ctx, kb, tconn, a, device)
 		default:
@@ -159,9 +185,7 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 	defer quicksettings.Hide(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_quicksettings")
 
-	// currentMediaName is used to enter the media control pod detail view,
-	// where the pin button and all media control panels are located.
-	if err := pinAndVerify(ctx, ui, tconn, currentMediaName)(ctx); err != nil {
+	if err := pinAndVerify(ctx, ui, tconn)(ctx); err != nil {
 		s.Fatal("Failed to pin and verify: ", err)
 	}
 
@@ -169,7 +193,7 @@ func PinUnpinMediaPod(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unpin and verify: ", err)
 	}
 
-	if err := pinAndVerify(ctx, ui, tconn, currentMediaName)(ctx); err != nil {
+	if err := pinAndVerify(ctx, ui, tconn)(ctx); err != nil {
 		s.Fatal("Failed to pin again and verify: ", err)
 	}
 }
@@ -201,7 +225,7 @@ func unpinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestC
 	return uiauto.Combine("unpin and find media pod in quick settings",
 		ui.LeftClick(quicksettings.PinnedMediaControls),
 		ui.WaitUntilExists(dialogView.Role(role.ListItem).NameStartingWith(ytMusicVideo)),
-		ui.WaitUntilExists(dialogView.Role(role.ListItem).NameStartingWith(ytAppVideo)),
+		ui.WaitUntilExists(dialogView.Role(role.ListItem).NameStartingWith(vlcVideoSubtitle)),
 		quicksettings.UnpinMediaControlsPod(tconn),
 		reopenQuickSettings(tconn),
 		ui.WaitUntilExists(quicksettings.MediaControlsPod()),
@@ -210,16 +234,16 @@ func unpinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestC
 
 // pinAndVerify verifies both media control panels are inside detail view,
 // then pins media pod and verifies it is disappeared in quick settings.
-func pinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, title string) uiauto.Action {
+func pinAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn) uiauto.Action {
 	detailView := nodewith.Ancestor(quicksettings.MediaControlsDetailView)
 
 	return uiauto.Combine("pin media pod and verify it is disappeared in quick settings",
-		quicksettings.NavigateToMediaControlsSubpage(tconn, title),
-		ui.WaitUntilExists(detailView.Role(role.ListItem).NameStartingWith(ytMusicVideo)),
-		ui.WaitUntilExists(detailView.Role(role.ListItem).NameStartingWith(ytAppVideo)),
+		quicksettings.NavigateToMediaControlsSubpage(tconn),
+		ui.WaitUntilExists(detailView.Role(role.StaticText).NameStartingWith(ytMusicVideo)),
+		ui.WaitUntilExists(detailView.Role(role.StaticText).NameStartingWith(vlcVideoSubtitle)),
 		quicksettings.PinMediaControlsPod(tconn),
 		reopenQuickSettings(tconn),
-		ui.WaitUntilExists(quicksettings.MediaControlsPod()),
+		ui.EnsureGoneFor(quicksettings.MediaControlsPod(), 10*time.Second),
 	)
 }
 
@@ -231,4 +255,54 @@ func reopenQuickSettings(tconn *chrome.TestConn) uiauto.Action {
 		}
 		return quicksettings.Show(ctx, tconn)
 	}
+}
+
+// vlcVideoPlayer represents the media app: VLC.
+type vlcVideoPlayer struct {
+	*vlc.Vlc
+	res *arcAppTestResources
+}
+
+// arcAppTestResources represents the resources needed for ARC app test.
+type arcAppTestResources struct {
+	chrome *chrome.Chrome
+	kb     *input.KeyboardEventWriter
+	tconn  *chrome.TestConn
+	arc    *arc.ARC
+	device *ui.Device
+}
+
+// vlcVideoPlayer is built to conform to ARCMediaPlayer interface.
+var _ apputil.ARCMediaPlayer = (*vlcVideoPlayer)(nil)
+
+// newVLCVideoPlayer returns vlcVideoPlayer instance.
+func newVLCVideoPlayer(ctx context.Context, resources *arcAppTestResources) *vlcVideoPlayer {
+	return &vlcVideoPlayer{
+		res: resources,
+	}
+}
+
+// Play searches the specified media source and plays it by vlcVideoPlayer.
+func (vp *vlcVideoPlayer) Play(ctx context.Context, media *apputil.Media) error {
+	if err := vp.EnterDownloadFolder(ctx); err != nil {
+		return err
+	}
+	return vp.Vlc.Play(ctx, &vlc.MediaInfo{
+		FileName: media.Query,
+		FileType: vlc.Video,
+	})
+}
+
+// Install installs the vlcVideoPlayer.
+func (vp *vlcVideoPlayer) Install(ctx context.Context) error {
+	var err error
+	if vp.Vlc, err = vlc.NewVLCPlayer(ctx, vp.res.chrome, vp.res.kb, vp.res.tconn, vp.res.arc, vp.res.device); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Launch launches the vlcVideoPlayer.
+func (vp *vlcVideoPlayer) Launch(ctx context.Context) (time.Duration, error) {
+	return 0, vp.Vlc.Launch(ctx)
 }
