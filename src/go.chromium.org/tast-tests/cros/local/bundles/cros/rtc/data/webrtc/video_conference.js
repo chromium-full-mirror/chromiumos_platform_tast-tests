@@ -61,6 +61,13 @@ class VideoConference {
     return { width: streamSettings.width, height: streamSettings.height};
   }
 
+  // Get the display capture resolution. This must not be called if
+  // present() is not called.
+  getDisplayCaptureResolution() {
+    const streamSettings = this.displayStream.getVideoTracks()[0].getSettings();
+    return { width: streamSettings.width, height: streamSettings.height};
+  }
+
   // Shows the camera preview.
   async showCameraPreview() {
     this.cameraPreview.srcObject = this.sentStream;
@@ -303,17 +310,17 @@ class VideoConference {
         displaySurface: "browser", // Tab
       }
     };
-    const displayStream =
+    this.displayStream =
           await navigator.mediaDevices.getDisplayMedia(constraints);
-    displayStream.getVideoTracks()[0].applyConstraints(constraints);
-    this.displayPreview.srcObject = displayStream;
+    this.displayStream.getVideoTracks()[0].applyConstraints(constraints);
+    this.displayPreview.srcObject = this.displayStream;
 
     this.displayLocalPC =
           new RTCPeerConnection({encodedInsertableStreams: true});
     const displayLocalPCStream = this.displayLocalPC.addTransceiver(
-      displayStream.getVideoTracks()[0], {
+      this.displayStream.getVideoTracks()[0], {
         degradationPreference: 'maintain-resolution',
-        streams : [ displayStream ],
+        streams : [ this.displayStream ],
         sendEncodings : [{'scalabilityMode': 'L1T3'}],
       }).sender.createEncodedStreams();
 

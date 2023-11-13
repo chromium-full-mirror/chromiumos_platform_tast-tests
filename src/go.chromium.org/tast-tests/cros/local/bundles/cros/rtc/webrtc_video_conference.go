@@ -26,8 +26,9 @@ func init() {
 		Desc:         "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
 		Vars: []string{
 			"rtc.WebRTCVideoConference.NumPeople",
-			"rtc.WebRTCVideoConference.Trace",
 			"rtc.WebRTCVideoConference.Present",
+			"rtc.WebRTCVideoConference.Text",
+			"rtc.WebRTCVideoConference.Trace",
 		},
 		Contacts: []string{
 			"hiroh@google.com", // Test Author.
@@ -89,6 +90,27 @@ func init() {
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
+			{
+				Name: "4p_text",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+					Text:      true,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_present_text",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+					Present:   true,
+					Text:      true,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
 		},
 	})
 }
@@ -103,11 +125,14 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		}
 		params.NumPeople = int(numPeople)
 	}
-	if val, ok := s.Var("rtc.WebRTCVideoConference.Trace"); ok {
-		params.Trace = (strings.ToLower(val) == "true")
-	}
 	if val, ok := s.Var("rtc.WebRTCVideoConference.Present"); ok {
 		params.Present = (strings.ToLower(val) == "true")
+	}
+	if val, ok := s.Var("rtc.WebRTCVideoConference.Text"); ok {
+		params.Text = (strings.ToLower(val) == "true")
+	}
+	if val, ok := s.Var("rtc.WebRTCVideoConference.Trace"); ok {
+		params.Trace = (strings.ToLower(val) == "true")
 	}
 
 	if params.Step {
