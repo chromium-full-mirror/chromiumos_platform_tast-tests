@@ -56,7 +56,10 @@ func PublicAccountPolicies(accountID string, policies []policy.Policy) Option {
 // instance running in Kiosk mode.
 func ExtraChromeOptions(opts ...chrome.Option) Option {
 	return func(cfg *MutableConfig) error {
-		cfg.ExtraChromeOptions = opts
+		if cfg.ExtraChromeOptions == nil {
+			cfg.ExtraChromeOptions = []chrome.Option{}
+		}
+		cfg.ExtraChromeOptions = append(cfg.ExtraChromeOptions, opts...)
 		return nil
 	}
 }
