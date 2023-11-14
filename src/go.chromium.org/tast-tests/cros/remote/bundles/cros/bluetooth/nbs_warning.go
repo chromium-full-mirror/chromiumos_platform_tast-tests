@@ -92,11 +92,11 @@ func NbsWarning(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to emulate the device type: ", err)
 	}
 
-	if _, err := emulatedDevice.RPCAudio().StartPulseaudio(ctx, "hfp_wbs"); err != nil {
+	if err := emulatedDevice.RPCAudio().StartPulseaudio(ctx, cbt.AudioProfileHFPWPS); err != nil {
 		s.Fatal("Failed to start Pulseaudio: ", err)
 	}
 
-	if _, err := emulatedDevice.RPCAudio().StartOfono(ctx); err != nil {
+	if err := emulatedDevice.RPCAudio().StartOfono(ctx); err != nil {
 		s.Fatal("Failed to start Ofono: ", err)
 	}
 

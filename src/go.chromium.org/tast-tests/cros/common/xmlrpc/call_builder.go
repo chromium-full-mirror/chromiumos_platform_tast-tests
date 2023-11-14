@@ -162,6 +162,20 @@ func (b *CallBuilder) CallForBool(ctx context.Context) (bool, error) {
 	return result, nil
 }
 
+// CallForBoolSuccess is a convenience method for calling an RPC method that
+// returns a single bool which is true if the method is successful. Returns
+// a non-nil error if the call fails or does not return a true bool.
+func (b *CallBuilder) CallForBoolSuccess(ctx context.Context) error {
+	result, err := b.CallForBool(ctx)
+	if err != nil {
+		return err
+	}
+	if !result {
+		return errors.New("call completed but returned an unsuccessful result")
+	}
+	return nil
+}
+
 // CallForString is a convenience method for calling an RPC method that returns
 // a single string. The result of the RPC method call and Call is returned.
 func (b *CallBuilder) CallForString(ctx context.Context) (string, error) {

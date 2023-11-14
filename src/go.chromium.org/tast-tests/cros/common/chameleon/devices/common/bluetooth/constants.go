@@ -160,3 +160,58 @@ const (
 func (pac PairingAgentCapability) String() string {
 	return string(pac)
 }
+
+// AudioServer refers to audio server names, as they would be returned by
+// AudioPeripheral.GetAudioServerName.
+type AudioServer string
+
+const (
+	// AudioServerPulseaudio is the "pulseaudio" AudioServer.
+	AudioServerPulseaudio AudioServer = "pulseaudio"
+
+	// AudioServerPipewire is the "pipewire" AudioServer.
+	AudioServerPipewire AudioServer = "pipewire"
+)
+
+// String returns AudioServer as a string.
+func (s AudioServer) String() string {
+	return string(s)
+}
+
+// AudioProfile refers to an audio profile configuration for the btpeer.
+type AudioProfile string
+
+const (
+
+	// AudioProfileA2DP is the "a2dp" AudioProfile
+	AudioProfileA2DP AudioProfile = "a2dp"
+
+	// AudioProfileA2DPMedium is the "a2dp_medium" AudioProfile
+	AudioProfileA2DPMedium AudioProfile = "a2dp_medium"
+
+	// AudioProfileA2DPLong is the "a2dp_long" AudioProfile
+	AudioProfileA2DPLong AudioProfile = "a2dp_long"
+
+	// AudioProfileA2DPRate4410 is the "a2dp_rate_44100" AudioProfile
+	AudioProfileA2DPRate4410 AudioProfile = "a2dp_rate_44100"
+
+	// AudioProfileAVRCP is the "avrcp" AudioProfile
+	AudioProfileAVRCP AudioProfile = "avrcp"
+
+	// AudioProfileHFPNBS is the "hfp_nbs" AudioProfile
+	AudioProfileHFPNBS AudioProfile = "hfp_nbs"
+
+	// AudioProfileHFPNBSMedium is the "hfp_nbs_medium" AudioProfile
+	AudioProfileHFPNBSMedium AudioProfile = "hfp_nbs_medium"
+
+	// AudioProfileHFPWPS is the "hfp_wbs" AudioProfile
+	AudioProfileHFPWPS AudioProfile = "hfp_wbs"
+
+	// AudioProfileHFPWPSMedium is the "hfp_wbs_medium" AudioProfile
+	AudioProfileHFPWPSMedium AudioProfile = "hfp_wbs_medium"
+)
+
+// String returns AudioProfile as a string.
+func (p AudioProfile) String() string {
+	return string(p)
+}
