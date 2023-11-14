@@ -140,10 +140,12 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (*MGS, *chr
 		return nil, nil, errors.Wrap(err, "failed preparing Chrome to start with MGS")
 	}
 
-	var cr *chrome.Chrome
 	crOpts := []chrome.Option{
 		chrome.DMSPolicy(fdms.URL),
 		chrome.KeepEnrollment(),
+		// Forcibly allow Lacros in platforms where it is (temporarily) disallowed. Note this *allows*
+		// Lacros, but does not *enable* it. Tests still need to do so as usual via policy.
+		chrome.ExtraArgs("--disable-disallow-lacros"),
 	}
 
 	if cfg.m.AutoLaunch {
@@ -160,7 +162,7 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, opts ...Option) (*MGS, *chr
 	crOpts = append(crOpts, cfg.m.ExtraChromeOptions...)
 
 	// Restart Chrome.
-	cr, err = chrome.New(ctx, crOpts...)
+	cr, err := chrome.New(ctx, crOpts...)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "Chrome restart failed")
 	}

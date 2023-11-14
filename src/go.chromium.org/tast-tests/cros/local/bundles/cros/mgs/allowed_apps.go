@@ -48,7 +48,8 @@ func init() {
 		Fixture: fixture.FakeDMSEnrolled,
 		Params: []testing.Param{
 			{
-				Val: testParams{isLacros: false},
+				Name: "ash",
+				Val:  testParams{isLacros: false},
 			},
 			{
 				Name:              "lacros",
