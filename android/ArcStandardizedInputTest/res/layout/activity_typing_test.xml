@@ -13,7 +13,7 @@
     tools:context=".TypingTestActivity">
 
   <!-- Typing test components -->
-  <EditText
+  <org.chromium.arc.testapp.arcstandardizedinputtest.KeyLoggingEditText
       android:id="@+id/textKeyboardInput"
       android:layout_width="match_parent"
       android:layout_height="53dp"
