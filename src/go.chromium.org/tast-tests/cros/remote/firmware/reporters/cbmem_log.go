@@ -24,6 +24,15 @@ func (r *Reporter) GetCBMEMLogs(ctx context.Context) (string, error) {
 	return cbmem, nil
 }
 
+// GetCBMEMTimestamps gets CBMEM timestamps.
+func (r *Reporter) GetCBMEMTimestamps(ctx context.Context) (string, error) {
+	timeStamps, err := r.CommandOutput(ctx, "cbmem", "-t")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get CBMEM timestamps")
+	}
+	return timeStamps, nil
+}
+
 // GetDisplayedFWScreens gets the CBMEM logs, and returns a list of all the
 // recorded firmware screens, specifically their ids.
 func (r *Reporter) GetDisplayedFWScreens(ctx context.Context) ([]firmware.FwScreenID, error) {
