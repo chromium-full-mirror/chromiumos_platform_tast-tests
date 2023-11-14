@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package platform
+package labqual
 
 import (
 	"context"
@@ -20,7 +20,7 @@ import (
 
 var (
 	waitBootTimeout = testing.RegisterVarString(
-		"platform.BootupTimesUSB.bootTime",
+		"labqual.BootupTimesUSB.bootTime",
 		"600",
 		"Expected bootup time in seconds")
 )
