@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
@@ -26,10 +27,12 @@ var idleFastTimeParams = power.TimeParams{Interval: 10 * time.Second, Total: 1 *
 var displayOffBTOff = power.IdleParams{
 	DisplayPower:   false,
 	BluetoothPower: false,
+	PSRState:       display.PSRDefault,
 	IdleTimeParams: idleTimeParams}
 var displayOnBTOff = power.IdleParams{
 	DisplayPower:   true,
 	BluetoothPower: false,
+	PSRState:       display.PSRDefault,
 	IdleTimeParams: idleTimeParams}
 
 // By default, both display and bluetooth are on. So tests using this parameter
@@ -37,15 +40,18 @@ var displayOnBTOff = power.IdleParams{
 var displayOnBTOn = power.IdleParams{
 	DisplayPower:   true,
 	BluetoothPower: true,
+	PSRState:       display.PSRDefault,
 	IdleTimeParams: idleTimeParams}
 var displayOffBTOn = power.IdleParams{
 	DisplayPower:   false,
 	BluetoothPower: true,
+	PSRState:       display.PSRDefault,
 	IdleTimeParams: idleTimeParams}
 
 var defaultFast = power.IdleParams{
 	DisplayPower:   true,
 	BluetoothPower: true,
+	PSRState:       display.PSRDefault,
 	IdleTimeParams: idleFastTimeParams}
 
 var tracingIdle = power.IdleParams{
@@ -187,6 +193,13 @@ func Idle(ctx context.Context, s *testing.State) {
 		}
 	}
 	setBluetoothPower(params.BluetoothPower)
+
+	if err := display.SetPSRState(params.PSRState); err != nil {
+		s.Error("Failed to set psr state: ", err)
+	}
+	if params.PSRState != display.PSRDefault {
+		defer display.SetPSRState(display.PSRDefault)
+	}
 
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
