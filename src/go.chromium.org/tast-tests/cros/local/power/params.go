@@ -4,7 +4,11 @@
 
 package power
 
-import "time"
+import (
+	"time"
+
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
+)
 
 // TimeParams defines the time interval used in power.NewRecorder
 // and the total sleep duration in each power test.
@@ -53,6 +57,7 @@ type IdleParams struct {
 	DisplayPower   bool
 	BluetoothPower bool
 	CollectTrace   bool
+	PSRState       display.PSRState
 	IdleTimeParams TimeParams
 }
 
