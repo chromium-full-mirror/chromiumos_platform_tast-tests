@@ -7,10 +7,13 @@ package cws
 
 import (
 	"context"
+	"net/url"
+	"path"
 	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -64,11 +67,10 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(closeCtx, outDir, func() bool { return retErr != nil }, tconn, "install_app_dump")
 
 	var (
-		installed = nodewith.Role(role.Button).NameRegex(regexp.MustCompile(`(Remove from Chrome|Launch app)`)).First()
-		add       = nodewith.Role(role.Button).Name(`Add to Chrome`).First()
-		confirm   = nodewith.Role(role.Button).NameRegex(regexp.MustCompile(`Add (app|extension)`))
-		emailRE   = regexp.MustCompile(`^[-.+\w]+@([-.+\w]+?\.)+[-.+\w]+$`)
-		account   = nodewith.Role(role.PopUpButton).NameRegex(emailRE)
+		add     = nodewith.Role(role.Button).Name(`Add to Chrome`).First()
+		confirm = nodewith.Role(role.Button).NameRegex(regexp.MustCompile(`Add (app|extension)`))
+		emailRE = regexp.MustCompile(`^[-.+\w]+@([-.+\w]+?\.)+[-.+\w]+$`)
+		account = nodewith.Role(role.PopUpButton).NameRegex(emailRE)
 		// User account restricts for the new (dogfood) CWS page.
 		newAccountRE = regexp.MustCompile(`^Google Account:[^\(]+\([-.+\w]+@([-.+\w]+?\.)+[-.+\w]+\)`)
 		newAccount   = nodewith.Role(role.Button).NameRegex(newAccountRE)
@@ -101,13 +103,28 @@ func InstallApp(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn
 			return errors.Wrap(err, "failed to wait for account to be added")
 		}
 	}
+	// Retrieving the ID of the app out from the URL.
+	u, err := url.Parse(app.URL)
+	if err != nil {
+		return err
+	}
+	// The ID should be the last element of path.
+	appID := path.Base(u.Path)
+
+	// Get a test API connection for the browser.
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		return err
+	}
 
 	// Click the add button at most once to prevent triggering
 	// weird UI behaviors in Chrome Web Store.
 	addClicked := false
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Check if the app is installed.
-		if err := ui.Exists(installed)(ctx); err == nil {
+		if installed, err := ash.ExtensionAppInstalled(ctx, bTconn, appID); err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to check if app is installed"))
+		} else if installed {
 			return nil
 		}
 
