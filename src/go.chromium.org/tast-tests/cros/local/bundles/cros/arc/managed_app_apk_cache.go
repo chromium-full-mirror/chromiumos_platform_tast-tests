@@ -111,14 +111,9 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 			return rl.Retry("force install packages", err)
 		}
 
-		numFiles, err := waitForCacheDirectoryAndCountFiles(ctx, rl)
+		err = waitForCacheSizeToIncrease(ctx, rl)
 		if err != nil {
-			return err
-		}
-
-		s.Logf("Number of files in cache: %d", numFiles)
-		if numFiles <= 0 {
-			return rl.Exit("count new files in cache", errors.New("Number of files in cache did not increase"))
+			return rl.Exit("count new files in cache", err)
 		}
 
 		tconn, err := cr.TestAPIConn(ctx)
@@ -193,8 +188,7 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 	return a, cr, nil
 }
 
-func waitForCacheDirectoryAndCountFiles(ctx context.Context, rl *retry.Loop) (int, error) {
-	var result int
+func waitForCacheSizeToIncrease(ctx context.Context, rl *retry.Loop) (error) {
 	err := testing.Poll(ctx, func(ctx context.Context) error {
 		files, err := os.ReadDir(apkCacheFilesDir)
 		if err != nil {
@@ -204,13 +198,16 @@ func waitForCacheDirectoryAndCountFiles(ctx context.Context, rl *retry.Loop) (in
 			}
 			return testing.PollBreak(err)
 		}
-		result = len(files)
+		if len(files) <= 0 {
+			// Wait for new file to be cached.
+			return errors.New("Number of files in cache did not increase")
+		}
 		return nil
 	}, &testing.PollOptions{Interval: time.Second})
 
 	if err != nil {
-		return -1, rl.Exit("read cache file directory", err)
+		return rl.Exit("read cache file directory", err)
 	}
 
-	return result, nil
+	return nil
 }
