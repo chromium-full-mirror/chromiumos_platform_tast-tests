@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/chameleon"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
@@ -94,7 +93,7 @@ func PassiveScanPower(ctx context.Context, s *testing.State) {
 	// Emulate two btpeers with the specified device type.
 	s.Logf("Configuring two btpeers as %q and %q device", tc.DeviceType0.String(), tc.DeviceType1.String())
 
-	emulateBTPeer := func(btpeer chameleon.Chameleond, btType cbt.DeviceType) *bluetooth.EmulatedBTPeerDevice {
+	emulateBTPeer := func(btpeer *bluetooth.BtpeerClient, btType cbt.DeviceType) *bluetooth.EmulatedBTPeerDevice {
 		newDev, err := bluetooth.NewEmulatedBTPeerDevice(ctx, btpeer, &bluetooth.EmulatedBTPeerDeviceConfig{
 			DeviceType: btType,
 		})

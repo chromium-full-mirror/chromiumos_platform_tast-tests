@@ -51,10 +51,10 @@ func init() {
 func TestConnectToBTPeers(ctx context.Context, s *testing.State) {
 	fv := s.FixtValue().(*bluetooth.FixtValue)
 
-	if _, err := fv.BTPeers[0].GetMacAddress(ctx); err != nil {
+	if _, err := fv.BTPeers[0].ChameleondClient().GetMacAddress(ctx); err != nil {
 		s.Fatal("Failed to call chameleond method 'GetMacAddress' on btpeer1: ", err)
 	}
-	if err := fv.BTPeers[1].BluetoothAudioDevice().Reboot(ctx); err != nil {
+	if err := fv.BTPeers[1].ChameleondClient().BluetoothAudioDevice().Reboot(ctx); err != nil {
 		s.Fatal("Failed to call chameleond method 'Reboot' on btpeer2.BluetoothAudioDevice: ", err)
 	}
 }

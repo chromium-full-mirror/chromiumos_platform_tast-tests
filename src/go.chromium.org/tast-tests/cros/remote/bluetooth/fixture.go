@@ -12,13 +12,9 @@ import (
 	"strings"
 	"time"
 
-	cryptossh "golang.org/x/crypto/ssh"
-	"golang.org/x/sync/errgroup"
 	"google.golang.org/protobuf/types/known/emptypb"
 
-	"go.chromium.org/tast-tests/cros/common/chameleon"
 	"go.chromium.org/tast-tests/cros/common/tape"
-	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	qs "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
@@ -43,7 +39,7 @@ import (
 // Fixture variable keys.
 const (
 	// fixtureVarBTPeers is the name of the tast var that specifies a
-	// comma-separated list of btpeer host addresses.
+	// comma-separated list of btpeer hostname addresses.
 	//
 	// This is an optional override to the usual btpeer hosts which are normally
 	// resolved based on the DUT hostname.
@@ -152,11 +148,6 @@ const (
 	btpeerResetBuffer = 15 * time.Second
 )
 
-const (
-	btpeerVersionLogFilePath    = "/var/log/chameleon_commits"
-	btpeerChameleondLogFilePath = "/var/log/chameleond"
-)
-
 type fixtureFeatures struct {
 	// EnableChromeUI will ensure that chrome UI is enabled during the test if
 	// true, or disabled if false.
@@ -249,7 +240,7 @@ type DUTConfig struct {
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
 	rpcClient, err := rpc.Dial(ctx, dut, RPCHint)
 	if err != nil {
-		return nil, errors.Wrapf(err, "failed to connect to the local gRPC service on DUT %s", dut.HostName())
+		return nil, errors.Wrapf(err, "failed to Connect to the local gRPC service on DUT %s", dut.HostName())
 	}
 	return &DUTConfig{
 		DUT:                  dut,
@@ -264,26 +255,13 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 	}, nil
 }
 
-type bTPeerCompanion struct {
-	host                    string
-	sshConn                 *ssh.Conn
-	chameleondClient        chameleon.Chameleond
-	chameleondPortForwarder *ssh.Forwarder
-	systemLogCollector      log.Collector
-	chameleondLogCollector  log.Collector
-	chameleondLastCommit    string
-	chameleondUpdatedAt     string
-}
-
 // FixtValue is the value of the test fixture accessible within a test. All
 // variables are configured in fixture.SetUp so that tests can use them without
 // any further configuration.
 type FixtValue struct {
-	bTPeerCompanions []*bTPeerCompanion
-
-	// BTPeers is a list of chameleond clients that are connected to each btpeer
+	// BTPeers is a list of btpeer clients that are connected to each btpeer
 	// available to the test fixture.
-	BTPeers []chameleon.Chameleond
+	BTPeers []*BtpeerClient
 
 	// tapeAccountManager stores the OTA Manager returned by tape.NewClient.
 	tapeAccountManager *tape.OwnedTestAccountManager
@@ -478,9 +456,6 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	// Connect to btpeers and reset them to a fresh state.
 	if err := tf.setUpBTPeers(ctx, s, tf.features.BTPeerCount); err != nil {
 		s.Fatal("Failed to set up btpeers: ", err)
-	}
-	if err := tf.resetBTPeers(ctx); err != nil {
-		s.Fatal("Failed to reset all btpeers: ", err)
 	}
 
 	// Configure primary DUT.
@@ -696,7 +671,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) Reset(ctx context.Context) error {
-	if err := tf.resetBTPeers(ctx); err != nil {
+	if err := GetBtpeerProvider().Reset(ctx, tf.fv.BTPeers...); err != nil {
 		return errors.Wrap(err, "failed to reset all btpeers")
 	}
 	for _, dutConfig := range tf.fv.DUTConfigs {
@@ -734,14 +709,9 @@ func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	// Reset btpeers to original state and shut down tunnels.
-	if err := tf.resetBTPeers(ctx); err != nil {
+	// Reset btpeers.
+	if err := GetBtpeerProvider().Reset(ctx, tf.fv.BTPeers...); err != nil {
 		s.Error("Failed to reset all btpeers: ", err)
-	}
-	for _, btpeerCompanion := range tf.fv.bTPeerCompanions {
-		if err := btpeerCompanion.chameleondPortForwarder.Close(); err != nil {
-			s.Errorf("Failed to shut down forwarded chameleond port tunnel for btpeer %q: %v", btpeerCompanion.host, btpeerCompanion)
-		}
 	}
 
 	// Tear down each DUT.
@@ -794,15 +764,8 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Error("Failed to close btsnoop log collectors: ", err)
 		}
 	}
-	for i, bTPeerCompanion := range tf.fv.bTPeerCompanions {
-		if err := bTPeerCompanion.systemLogCollector.Close(); err != nil {
-			s.Errorf("Failed to close system log collector on btpeer%d: %v", i+1, err)
-		}
-		if bTPeerCompanion.chameleondLogCollector != nil {
-			if err := bTPeerCompanion.chameleondLogCollector.Close(); err != nil {
-				s.Errorf("Failed to close chameleond log collector on btpeer%d: %v", i+1, err)
-			}
-		}
+	for _, btpeer := range tf.fv.BTPeers {
+		btpeer.StopLogCollection(ctx)
 	}
 
 	// Clean up Tape helpers if it was used for credentials.
@@ -817,252 +780,51 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requiredBTPeers int) error {
 	ctx, st := timing.Start(ctx, fmt.Sprintf("setUpBTPeers_%d", requiredBTPeers))
 	defer st.End()
-
 	if requiredBTPeers <= 0 {
 		return nil
 	}
-
-	// Resolve the btpeer hosts.
-	var btpeerHosts []string
+	// Register the btpeer hosts.
+	btpeerManager := GetBtpeerProvider()
+	sshOptions := &ssh.Options{
+		KeyDir:  s.DUT().KeyDir(),
+		KeyFile: s.DUT().KeyFile(),
+	}
 	if btpeersVar, isSet := s.Var(fixtureVarBTPeers); isSet && btpeersVar != "" {
-		btpeerHosts = strings.Split(btpeersVar, ",")
+		btpeerHosts := strings.Split(btpeersVar, ",")
 		if len(btpeerHosts) < requiredBTPeers {
 			return errors.Errorf("fixture requires at least %d btpeers, but "+
 				"only %d were provided in the %s tast var (%q)",
 				requiredBTPeers, len(btpeerHosts),
 				fixtureVarBTPeers, btpeersVar)
 		}
-		btpeerHosts = btpeerHosts[:requiredBTPeers]
+		testing.ContextLogf(ctx, "Registering %d btpeer hosts from fixture var %q", len(btpeerHosts), fixtureVarBTPeers)
+		if err := btpeerManager.RegisterBtpeerHosts(ctx, sshOptions, btpeerHosts...); err != nil {
+			return errors.Wrapf(err, "failed to %d btpeer hosts from fixture var %q", len(btpeerHosts), fixtureVarBTPeers)
+		}
 	} else {
 		// Imply btpeer hostnames based on DUT hostname.
-		btpeerHosts = make([]string, requiredBTPeers)
-		dutHostname := strings.Split(s.DUT().HostName(), ":")[0]
-		if dutHostname == "localhost" || dutHostname == "" || dutHostname == "127.0.0.1" {
-			for i := 0; i < requiredBTPeers; i++ {
-				btpeerHosts[i] = fmt.Sprintf("localhost:%d", 2201+i)
-			}
-			exampleTastCall := fmt.Sprintf("tast run --var=%s=%s %s <test>",
-				fixtureVarBTPeers, strings.Join(btpeerHosts, ","),
-				s.DUT().HostName())
-			return errors.Errorf("btpeer hostname resolution not supported "+
-				"when DUT hostname is %q. If tast is being run in a local "+
-				"development environment outside of the lab, ssh tunnel to the "+
-				"btpeers outside of the chroot and provide the local forwarded"+
-				" address to tast using the %q tast var (e.g. %q)",
-				dutHostname, fixtureVarBTPeers, exampleTastCall)
-		}
-		for i := 0; i < requiredBTPeers; i++ {
-			btpeerNum := i + 1
-			btpeerHostnameSuffix := fmt.Sprintf("-btpeer%d", btpeerNum)
-			btpeerHostname, err := utils.CompanionDeviceHostname(s.DUT().HostName(), btpeerHostnameSuffix)
-			if err != nil {
-				return errors.Wrapf(err, "failed to build companion device hostname for btpeer%d", btpeerNum)
-			}
-			btpeerHosts[i] = btpeerHostname
+		dutHostname := s.DUT().HostName()
+		testing.ContextLogf(ctx, "Registering btpeer hosts based on dut hostname %q", dutHostname)
+		if err := btpeerManager.RegisterBtpeerHostsByWificellDutHostname(ctx, sshOptions, dutHostname); err != nil {
+			return errors.Wrapf(err, "failed to register btpeer hosts based on dut hostname %q", dutHostname)
 		}
 	}
-
-	// Connect to btpeers over ssh and access chameleond over through a tunnel.
-	testing.ContextLogf(ctx, "Connecting to %d btpeers: %s",
-		len(btpeerHosts), strings.Join(btpeerHosts, ", "))
-	for _, host := range btpeerHosts {
-		// Connect to btpeer over ssh using standard test credentials.
-		sshOptions := &ssh.Options{
-			KeyDir:  s.DUT().KeyDir(),
-			KeyFile: s.DUT().KeyFile(),
-		}
-		if err := ssh.ParseTarget(host, sshOptions); err != nil {
-			return errors.Wrapf(err, "failed to parse ssh target btpeer host %q", host)
-		}
-		sshConn, err := ssh.New(ctx, sshOptions)
-		if err != nil {
-			return errors.Wrapf(err, "failed to connect to btpeer host %q over ssh", host)
-		}
-
-		var systemLogCollector *log.JournalctlCollector
-		var chameleondLogCollector *log.TailCollector
-		var chameleondPortForwarder *ssh.Forwarder
-		prepareBTPeerForChameleond := func() error {
-			var err error
-
-			// Start collecting system and chameleond logs on the btpeer.
-			systemLogCollector, err = log.StartJournalctlCollector(ctx, sshConn, "--output", "short-full")
-			if err != nil {
-				return errors.Wrapf(err, "failed to start collecting system logs on btpeer host %q", host)
-			}
-			hasChameleondLogFile, err := remoteFileExists(ctx, sshConn, btpeerChameleondLogFilePath)
-			if err != nil {
-				return errors.Wrapf(err, "failed to check for chameleond log file %q on btpeer host %q", btpeerChameleondLogFilePath, host)
-			}
-			if hasChameleondLogFile {
-				chameleondLogCollector, err = log.StartTailCollector(ctx, sshConn, btpeerChameleondLogFilePath, true)
-				if err != nil {
-					return errors.Wrapf(err, "failed to start collecting chameleond logs on btpeer host %q", host)
-				}
-			}
-
-			// Port forward chameleond port.
-			onFwdError := func(err error) {
-				testing.ContextLogf(ctx, "ssh forwarding error for btpeer host %q: %v", host, err)
-			}
-
-			chameleondPortForwarder, err = sshConn.ForwardLocalToRemote("tcp", "localhost:0", "localhost:9992", onFwdError)
-			if err != nil {
-				return errors.Wrapf(err, "failed to port forward chameleond port for btpeer host %q", host)
-			}
-			return nil
-		}
-		if err := prepareBTPeerForChameleond(); err != nil {
-			if systemLogCollector != nil {
-				_ = systemLogCollector.Close()
-			}
-			if chameleondLogCollector != nil {
-				_ = chameleondLogCollector.Close()
-			}
-			if chameleondPortForwarder != nil {
-				_ = chameleondPortForwarder.Close()
-			}
-			return err
-		}
-
-		// Connect chameleond client to forwarded port. Reboot once if the first try
-		// fails, as sometimes the btpeer can be left in an unstable state.
-		testing.ContextLogf(ctx, "Connecting to chameleond on btpeer host %q through forwarded chameleond port at %q", host, chameleondPortForwarder.ListenAddr().String())
-		chameleondClient, err := chameleon.NewChameleond(ctx, chameleondPortForwarder.ListenAddr().String())
-		if err != nil {
-			testing.ContextLogf(ctx, "Initial chameleond connection attempt for btpeer host %q failed, rebooting btpeer and retrying", host)
-
-			// Reboot, ignoring the ssh error that occurs due to severed connection.
-			_ = systemLogCollector.Close()
-			_ = chameleondLogCollector.Close()
-			_ = sshConn.CommandContext(ctx, "reboot").Run()
-
-			// Try to reconnect via ssh until successful.
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				var err error
-				sshConn, err = ssh.New(ctx, sshOptions)
-				if err != nil {
-					return errors.Wrapf(err, "failed to reconnect to btpeer host %q over ssh after reboot", host)
-				}
-				return nil
-			}, &testing.PollOptions{
-				Interval: 1 * time.Second,
-				Timeout:  1 * time.Minute,
-			}); err != nil {
-				return err
-			}
-
-			if err := prepareBTPeerForChameleond(); err != nil {
-				if systemLogCollector != nil {
-					_ = systemLogCollector.Close()
-				}
-				if chameleondLogCollector != nil {
-					_ = chameleondLogCollector.Close()
-				}
-				if chameleondPortForwarder != nil {
-					_ = chameleondPortForwarder.Close()
-				}
-				return err
-			}
-
-			// Try chameleond again with a short poll as ssh may come up before
-			// chameleond does.
-			testing.ContextLogf(ctx, "Connecting to chameleond on btpeer host %q through forwarded chameleond port at %q after reboot", host, chameleondPortForwarder.ListenAddr().String())
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				var err error
-				chameleondClient, err = chameleon.NewChameleond(ctx, chameleondPortForwarder.ListenAddr().String())
-				return err
-			}, &testing.PollOptions{
-				Interval: 500 * time.Millisecond,
-				Timeout:  10 * time.Second,
-			}); err != nil {
-				return errors.Wrapf(err, "failed to connect to chameleond on btpeer host %q through forward chameleond port at %q", host, chameleondPortForwarder.ListenAddr().String())
-			}
-		}
-
-		// Attempt to fetch the chameleond version (not supported on old versions).
-		var chameleondLastCommit, chameleondUpdatedAt string
-		btpeerVersionLogFileExists, err := remoteFileExists(ctx, sshConn, btpeerVersionLogFilePath)
-		if err != nil {
-			return errors.Wrapf(err, "failed to check for chameleond log file %q on btpeer host %q", btpeerChameleondLogFilePath, host)
-		}
-		if btpeerVersionLogFileExists {
-			lastLogLine, err := sshConn.CommandContext(ctx, "tail", "-1", btpeerVersionLogFilePath).Output()
-			if err == nil {
-				lastLogLineParts := strings.Split(strings.TrimSpace(string(lastLogLine)), " ")
-				if len(lastLogLineParts) == 2 {
-					chameleondLastCommit = lastLogLineParts[0]
-					chameleondUpdatedAt = lastLogLineParts[1]
-				}
-			}
-		}
-		if chameleondLastCommit == "" {
-			chameleondLastCommit = "unknown"
-		}
-		if chameleondUpdatedAt == "" {
-			chameleondUpdatedAt = "unknown"
-		}
-
-		// Save btpeer companion for later use.
-		btpeerCompanion := &bTPeerCompanion{
-			host:                    host,
-			sshConn:                 sshConn,
-			chameleondClient:        chameleondClient,
-			chameleondPortForwarder: chameleondPortForwarder,
-			systemLogCollector:      systemLogCollector,
-			chameleondLogCollector:  chameleondLogCollector,
-			chameleondLastCommit:    chameleondLastCommit,
-			chameleondUpdatedAt:     chameleondUpdatedAt,
-		}
-		tf.fv.bTPeerCompanions = append(tf.fv.bTPeerCompanions, btpeerCompanion)
-		tf.fv.BTPeers = append(tf.fv.BTPeers, btpeerCompanion.chameleondClient)
+	// Connect to the desired amount of hosts.
+	testing.ContextLogf(ctx, "Connecting to %d btpeers", requiredBTPeers)
+	btpeers, err := btpeerManager.ConnectAndReset(ctx, requiredBTPeers)
+	if err != nil {
+		return errors.Wrapf(err, "failed to connect to %d btpeers", requiredBTPeers)
 	}
-
-	testing.ContextLogf(ctx, "Successfully connected to %d btpeers", len(tf.fv.bTPeerCompanions))
-	for i, btpeer := range tf.fv.bTPeerCompanions {
-		testing.ContextLogf(ctx, "Chameleond on btpeer%d was last updated at %q to commit %q", i+1, btpeer.chameleondUpdatedAt, btpeer.chameleondLastCommit)
+	testing.ContextLogf(ctx, "Successfully connected to %d btpeers", len(btpeers))
+	// Start collecting logs on all the btpeers.
+	testing.ContextLogf(ctx, "Starting log collection on %d btpeers", len(btpeers))
+	for _, btpeer := range btpeers {
+		if err := btpeer.StartLogCollection(s.FixtContext()); err != nil {
+			return errors.Wrapf(err, "failed to start log collection on btpeer %s", btpeer)
+		}
 	}
-	return nil
-}
-
-// resetBTPeers resets each configured btpeer to return them to their normal
-// state and clear any changes a test may have made to them.
-// Each btpeer is reset in parallel to save time. If any reset fails, the first
-// error is returned and any pending resets are cancelled.
-func (tf *fixture) resetBTPeers(ctx context.Context) error {
-	ctx, st := timing.Start(ctx, fmt.Sprintf("resetBTPeers_%d", len(tf.fv.bTPeerCompanions)))
-	defer st.End()
-	if len(tf.fv.bTPeerCompanions) == 0 {
-		return nil
-	}
-	testing.ContextLogf(ctx, "Resetting %d btpeers", len(tf.fv.bTPeerCompanions))
-	resetCtx, cancelResetCtx := context.WithTimeout(ctx, 1*time.Minute)
-	defer cancelResetCtx()
-	resetGroup, resetCtx := errgroup.WithContext(resetCtx)
-	for i, btpeerCompanion := range tf.fv.bTPeerCompanions {
-		// Note: loop var values are copied to inner vars for use in func literal.
-		i := i
-		btpeerCompanion := btpeerCompanion
-		resetGroup.Go(func() error {
-			return tf.resetBTPeer(resetCtx, i, btpeerCompanion)
-		})
-	}
-	if err := resetGroup.Wait(); err != nil {
-		return errors.Wrap(err, "failed to reset btpeers")
-	}
-	return nil
-}
-
-func (tf *fixture) resetBTPeer(ctx context.Context, btpeerIndex int, btpeerCompanion *bTPeerCompanion) error {
-	// Reset the base chameleond service state.
-	if err := btpeerCompanion.chameleondClient.Reset(ctx); err != nil {
-		return errors.Wrapf(err, "failed to reset chameleond on btpeer[%d] at %q", btpeerIndex, btpeerCompanion.host)
-	}
-	// Reset the bluetooth service state, through the keyboard device interface
-	// since this method is not exposed at a higher level.
-	if err := btpeerCompanion.chameleondClient.BluetoothKeyboardDevice().ResetStack(ctx, ""); err != nil {
-		return errors.Wrapf(err, "failed to reset bluetooth stack on btpeer[%d] at %q", btpeerIndex, btpeerCompanion.host)
-	}
+	testing.ContextLogf(ctx, "Successfully set up %d btpeers", len(btpeers))
+	tf.fv.BTPeers = btpeers
 	return nil
 }
 
@@ -1076,18 +838,9 @@ func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) err
 			return errors.Wrapf(err, "failed to dump collected dbus-monitor messages from %s", dutName)
 		}
 	}
-	for i, btpeer := range tf.fv.bTPeerCompanions {
-		btpeerName := fmt.Sprintf("btpeer%d", i+1)
-		baseLogDir := filepath.Join("btpeer_logs", btpeerName)
-		systemLogDir := filepath.Join(baseLogDir, "system")
-		chameleondLogDir := filepath.Join(baseLogDir, "chameleond")
-		if err := log.DumpCollectedLogsToFile(ctx, btpeer.systemLogCollector, systemLogDir, logName); err != nil {
-			return errors.Wrapf(err, "failed to dump collected btpeer system logs from btpeer %q", btpeerName)
-		}
-		if btpeer.chameleondLogCollector != nil {
-			if err := log.DumpCollectedLogsToFile(ctx, btpeer.chameleondLogCollector, chameleondLogDir, logName); err != nil {
-				return errors.Wrapf(err, "failed to dump collected btpeer chameleond logs from btpeer %q", btpeerName)
-			}
+	for _, btpeer := range tf.fv.BTPeers {
+		if err := btpeer.DumpLogs(ctx, logName); err != nil {
+			return errors.Wrapf(err, "failed to dump logs for btpeer %q", btpeer.Hostname())
 		}
 	}
 	for i, btmonLog := range tf.btsnoopCollectors {
@@ -1125,19 +878,4 @@ func (tf *fixture) resetDutBluetoothState(ctx context.Context, dutConfig *DUTCon
 		}
 	}
 	return nil
-}
-
-// remoteFileExists runs the `test -f <path>` command using the provided ssh
-// connection to verify file existence. Returns true if the test passes and
-// false if the test fails. A non-nil error is returned if the command fails
-// to run as expected.
-func remoteFileExists(ctx context.Context, sshConn *ssh.Conn, path string) (bool, error) {
-	if err := sshConn.CommandContext(ctx, "test", "-f", path).Run(); err != nil {
-		exitErr, ok := err.(*cryptossh.ExitError)
-		if !ok || exitErr.ExitStatus() != 1 {
-			return false, errors.Wrapf(err, "failed to run 'test -f %q' on remote host", path)
-		}
-		return false, nil
-	}
-	return true, nil
 }

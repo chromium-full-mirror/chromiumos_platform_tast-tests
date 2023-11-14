@@ -9,6 +9,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chameleon/devices"
 	"go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
@@ -800,7 +801,7 @@ func (c *CommonChameleond) callForPortIDs(ctx context.Context, callBuilder *xmlr
 // Reset calls the Chameleond RPC method of the same name.
 // This implements Chameleond.Reset, see that for more details.
 func (c *CommonChameleond) Reset(ctx context.Context) error {
-	return c.RPC("Reset").Call(ctx)
+	return c.RPC("Reset").Timeout(30 * time.Second).Call(ctx)
 }
 
 // Reboot calls the Chameleond RPC method of the same name.

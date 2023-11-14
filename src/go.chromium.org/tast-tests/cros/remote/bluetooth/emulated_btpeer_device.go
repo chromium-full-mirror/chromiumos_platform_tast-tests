@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 
-	"go.chromium.org/tast-tests/cros/common/chameleon"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -76,17 +75,17 @@ type EmulatedBTPeerDevice struct {
 // discoverable afterwards as well.
 //
 // This assumes the btpeer has not yet used in a test to emulate a specific
-// device, or that BluezPeripheral.ResetStack has been called on it since.
+// device, or that BtpeerClient.Reset has been called on it since.
 //
 // Note: A btpeer can only act as one device at a time. If you require multiple
 // devices at once, use different btpeers.
-func NewEmulatedBTPeerDevice(ctx context.Context, btpeer chameleon.Chameleond, deviceConfig *EmulatedBTPeerDeviceConfig) (*EmulatedBTPeerDevice, error) {
+func NewEmulatedBTPeerDevice(ctx context.Context, btpeer *BtpeerClient, deviceConfig *EmulatedBTPeerDeviceConfig) (*EmulatedBTPeerDevice, error) {
 	d := &EmulatedBTPeerDevice{}
 	if deviceConfig == nil || deviceConfig.DeviceType == "" {
 		return nil, errors.New("device config is required and must specify a device type")
 	}
 	var err error
-	d.rpc, err = btpeer.BluetoothPeripheralDevice(deviceConfig.DeviceType)
+	d.rpc, err = btpeer.ChameleondClient().BluetoothPeripheralDevice(deviceConfig.DeviceType)
 	if err != nil {
 		return nil, err
 	}
