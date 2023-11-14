@@ -29,9 +29,6 @@ const ManagedChromeCustomerIDPath = "policy.managedchrome_obfuscated_customer_id
 // EventsAPIKeyPath is the path to the secret api key var for the events API.
 const EventsAPIKeyPath = "policy.events_api_key"
 
-// DmServerURL is the URL to the autopush DM server.
-const DmServerURL = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
-
 // ReportingServerURL is the URL to the autopush reporting server.
 const ReportingServerURL = "https://autopush-chromereporting-pa.sandbox.googleapis.com/v1"
 

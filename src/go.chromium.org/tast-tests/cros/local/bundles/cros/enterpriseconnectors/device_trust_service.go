@@ -21,8 +21,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const sandboxDMServer = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
-
 func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
@@ -42,7 +40,7 @@ func (service *DeviceTrustService) Enroll(ctx context.Context, req *pb.EnrollReq
 	cr, err := chrome.New(
 		ctx,
 		chrome.GAIAEnterpriseEnroll(chrome.Creds{User: req.User, Pass: req.Pass}),
-		chrome.DMSPolicy(sandboxDMServer),
+		chrome.DMSPolicy(policy.DMServerAlphaURL),
 		chrome.NoLogin(),
 		chrome.LoadSigninProfileExtension(req.SigninProfileTestExtensionManifestKey),
 	)
@@ -101,7 +99,7 @@ func (service *DeviceTrustService) LoginWithFakeIdP(ctx context.Context, req *pb
 	cr, err := chrome.New(
 		ctx,
 		chrome.KeepEnrollment(),
-		chrome.DMSPolicy(sandboxDMServer),
+		chrome.DMSPolicy(policy.DMServerAlphaURL),
 		chrome.LoadSigninProfileExtension(req.SigninProfileTestExtensionManifestKey),
 		chrome.SAMLLogin(fakeCreds),
 		chrome.EnableFeatures(devicetrust.DeviceTrustFeature),
@@ -131,7 +129,7 @@ func (service *DeviceTrustService) ConnectToFakeIdP(ctx context.Context, req *pb
 	cr, err := chrome.New(
 		ctx,
 		chrome.KeepEnrollment(),
-		chrome.DMSPolicy(sandboxDMServer),
+		chrome.DMSPolicy(policy.DMServerAlphaURL),
 		chrome.GAIALogin(chrome.Creds{User: req.User, Pass: req.Pass}),
 		chrome.EnableFeatures(devicetrust.DeviceTrustFeature),
 	)

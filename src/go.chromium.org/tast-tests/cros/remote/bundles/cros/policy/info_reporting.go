@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/reportingutil"
@@ -144,7 +145,7 @@ func InfoReporting(ctx context.Context, s *testing.State) {
 	if _, err := pc.GAIAEnrollForReporting(ctx, &pspb.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
 		Password:           acc.Password,
-		DmserverUrl:        reportingutil.DmServerURL,
+		DmserverUrl:        policy.DMServerAlphaURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",
 		SkipLogin:          true,

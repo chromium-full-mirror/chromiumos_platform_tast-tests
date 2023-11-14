@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	types "go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/rollback"
 	rpb "go.chromium.org/tast-tests/cros/services/cros/rollback"
@@ -28,9 +29,6 @@ import (
 
 const enterpriseRollbackEnrolledTimeout = 12 * time.Minute
 const networkID = "rollback-PSK-Wifi"
-
-// Alpha DMServer always enforces EID upload, thus auto re-enrollment should work.
-const dmServerURL = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -138,7 +136,7 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 		LoginData: &rpb.LoginData{
 			Username:    acc.Username,
 			Password:    acc.Password,
-			DmserverUrl: dmServerURL,
+			DmserverUrl: policy.DMServerAlphaURL,
 		},
 	}); err != nil {
 		s.Fatal("Failed to enroll and connect to network API on the client: ", err)
@@ -193,7 +191,7 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 		LoginData: &rpb.LoginData{
 			Username:    acc.Username,
 			Password:    acc.Password,
-			DmserverUrl: dmServerURL,
+			DmserverUrl: policy.DMServerAlphaURL,
 		},
 	}); err != nil {
 		s.Fatal("Failed to re-enroll and connect to network API on the client: ", err)

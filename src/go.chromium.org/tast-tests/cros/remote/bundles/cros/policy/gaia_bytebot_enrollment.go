@@ -42,7 +42,7 @@ func init() {
 			{
 				Name: "autopush",
 				Val: gaiaenrollment.TestParams{
-					DMServer: "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api",
+					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.ChromeosbytebotCom,
 				},
 			},
@@ -50,7 +50,7 @@ func init() {
 				Name:      "live",
 				ExtraAttr: []string{"group:dmserver-enrollment-live"},
 				Val: gaiaenrollment.TestParams{
-					DMServer: "https://m.google.com/devicemanagement/data/api",
+					DMServer: policy.DMServerProdURL,
 					PoolID:   tape.ChromeosbytebotCom,
 				},
 			},

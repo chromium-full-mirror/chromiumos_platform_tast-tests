@@ -16,8 +16,8 @@ import (
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 
-	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	ps "go.chromium.org/tast-tests/cros/services/cros/demomode"
@@ -41,7 +41,7 @@ func init() {
 		Impl: &fixtureImpl{
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser: "admin-tast",
-			dmServerURL:    constants.DMServerAlphaURL,
+			dmServerURL:    policy.DMServerAlphaURL,
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -63,7 +63,7 @@ func init() {
 		Impl: &fixtureImpl{
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser: "admin-tast",
-			dmServerURL:    constants.DMServerProdURL,
+			dmServerURL:    policy.DMServerProdURL,
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -86,7 +86,7 @@ func init() {
 			// This user has infinite idle time-out value for demo mode, thus will not end demo mode session in middle of test.
 			enrollmentUser:  "admin-tast",
 			enabledFeatures: []string{"CloudGamingDevice"},
-			dmServerURL:     constants.DMServerAlphaURL,
+			dmServerURL:     policy.DMServerAlphaURL,
 		},
 		SetUpTimeout:    setUpTimeout,
 		TearDownTimeout: tearDownTimeout,

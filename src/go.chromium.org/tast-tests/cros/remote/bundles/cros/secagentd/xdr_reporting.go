@@ -134,7 +134,7 @@ func XdrReporting(ctx context.Context, s *testing.State) {
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
 		Password:           acc.Password,
-		DmserverUrl:        reportingutil.DmServerURL,
+		DmserverUrl:        policy.DMServerAlphaURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",
 		SkipLogin:          false,

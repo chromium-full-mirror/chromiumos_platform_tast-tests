@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -44,14 +44,14 @@ func init() {
 		Params: []testing.Param{{
 			Name: "online_alpha",
 			Val: demoModeSWATestCase{
-				dmServerURL:     constants.DMServerAlphaURL,
+				dmServerURL:     policy.DMServerAlphaURL,
 				shouldRunOnline: true,
 			},
 			Fixture: fixture.PostDemoModeOOBEAlpha,
 		}, {
 			Name: "online_prod",
 			Val: demoModeSWATestCase{
-				dmServerURL:     constants.DMServerProdURL,
+				dmServerURL:     policy.DMServerProdURL,
 				shouldRunOnline: true,
 			},
 			Fixture: fixture.PostDemoModeOOBEProd,
@@ -59,7 +59,7 @@ func init() {
 			// DMServer URL is irrelevant for offline test case, so we don't have two separate cases
 			Name: "offline",
 			Val: demoModeSWATestCase{
-				dmServerURL:     constants.DMServerAlphaURL,
+				dmServerURL:     policy.DMServerAlphaURL,
 				shouldRunOnline: false,
 			},
 			Fixture: fixture.PostDemoModeOOBEAlpha,

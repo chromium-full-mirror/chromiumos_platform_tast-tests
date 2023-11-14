@@ -186,7 +186,7 @@ func PrivacyScreenReporting(ctx context.Context, s *testing.State) {
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
 		Password:           acc.Password,
-		DmserverUrl:        reportingutil.DmServerURL,
+		DmserverUrl:        policy.DMServerAlphaURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",
 		SkipLogin:          false,
@@ -217,7 +217,7 @@ func PrivacyScreenReporting(ctx context.Context, s *testing.State) {
 		s.Error("Failed to verify graphics policy: ", err)
 	}
 
-	// Events sent from the metric reporting manager won't be reported for the first minute.
+	// GoBigSleepLint: Events sent from the metric reporting manager won't be reported for the first minute.
 	if err = testing.Sleep(ctx, 60*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

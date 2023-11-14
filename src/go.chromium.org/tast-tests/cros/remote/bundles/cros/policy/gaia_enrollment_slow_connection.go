@@ -10,8 +10,8 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
-	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/gaiaenrollment"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
@@ -55,21 +55,21 @@ func init() {
 			{
 				Name: "prod",
 				Val: gaiaenrollment.TestParams{
-					DMServer: constants.DMServerProdURL,
+					DMServer: policy.DMServerProdURL,
 					PoolID:   tape.Enrollment,
 				},
 			},
 			{
 				Name: "autopush",
 				Val: gaiaenrollment.TestParams{
-					DMServer: constants.DMServerAlphaURL,
+					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.Enrollment,
 				},
 			},
 			{
 				Name: "autopush_new_saml",
 				Val: gaiaenrollment.TestParams{
-					DMServer: constants.DMServerAlphaURL,
+					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.Crosprqa4Com,
 				},
 			},

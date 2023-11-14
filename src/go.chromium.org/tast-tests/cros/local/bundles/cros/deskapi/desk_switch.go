@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/deskapi/apis"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/deskapi/constants"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -75,7 +75,7 @@ func DeskSwitch(ctx context.Context, s *testing.State) {
 	}
 
 	// Use the same DMServer endpoint as the in the enrollment
-	opts = append(opts, chrome.KeepState(), chrome.TryReuseSession(), chrome.GAIALogin(chrome.Creds{User: structVal.Username, Pass: structVal.Password}), chrome.DMSPolicy(constants.DmServerURL))
+	opts = append(opts, chrome.KeepState(), chrome.TryReuseSession(), chrome.GAIALogin(chrome.Creds{User: structVal.Username, Pass: structVal.Password}), chrome.DMSPolicy(policy.DMServerAlphaURL))
 
 	cr, err := chrome.New(ctx, opts...)
 

@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/enterpriseconnectors/devicetrust"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -17,7 +18,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const sandboxDMServerByod = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
 const deviceTrustByodTimeout = chrome.GAIALoginTimeout + time.Minute
 const deviceTrustFeatureByod = "UnmanagedDeviceDeviceTrustConnectorEnabled"
 
@@ -86,7 +86,7 @@ func DeviceTrustInsessionByod(ctx context.Context, s *testing.State) {
 	// Create a new user session with the leased account.
 	cr, err := chrome.New(
 		ctx,
-		chrome.DMSPolicy(sandboxDMServerByod),
+		chrome.DMSPolicy(policy.DMServerAlphaURL),
 		chrome.GAIALogin(chrome.Creds{User: tapeAccount.Username, Pass: tapeAccount.Password}),
 		chrome.EnableFeatures(devicetrust.DeviceTrustFeature),
 		chrome.EnableFeatures(deviceTrustFeatureByod),

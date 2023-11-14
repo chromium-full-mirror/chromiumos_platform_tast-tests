@@ -187,7 +187,7 @@ func TouchScreenReporting(ctx context.Context, s *testing.State) {
 	if _, err := pc.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 		Username:           acc.Username,
 		Password:           acc.Password,
-		DmserverUrl:        reportingutil.DmServerURL,
+		DmserverUrl:        policy.DMServerAlphaURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",
 		SkipLogin:          true,
@@ -202,7 +202,7 @@ func TouchScreenReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to grab client ID from device: ", err)
 	}
 
-	// Info sent from the metric reporting manager won't be reported for the first minute.
+	// GoBigSleepLint: Info sent from the metric reporting manager won't be reported for the first minute.
 	if err = testing.Sleep(ctx, 60*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

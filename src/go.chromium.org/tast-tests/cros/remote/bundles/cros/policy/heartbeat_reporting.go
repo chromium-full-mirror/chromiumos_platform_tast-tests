@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
 	"go.chromium.org/tast-tests/cros/remote/reportingutil"
@@ -135,7 +136,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		if _, err := policyClient.GAIALoginForReporting(ctx, &ps.GAIALoginForReportingRequest{
 			Username:           acc.Username,
 			Password:           acc.Password,
-			DmserverUrl:        reportingutil.DmServerURL,
+			DmserverUrl:        policy.DMServerAlphaURL,
 			ReportingServerUrl: reportingutil.ReportingServerURL,
 			// Enable user heart beat events, reporting from unmanaged devices, and legacy/non-multigenerational storage for all priorities except FAST_BATCH (the priority that heartbeat events use).
 			EnabledFeatures: params.EnabledFeatures,
@@ -147,7 +148,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		if _, err := policyClient.GAIAEnrollForReporting(ctx, &ps.GAIAEnrollForReportingRequest{
 			Username:           acc.Username,
 			Password:           acc.Password,
-			DmserverUrl:        reportingutil.DmServerURL,
+			DmserverUrl:        policy.DMServerAlphaURL,
 			ReportingServerUrl: reportingutil.ReportingServerURL,
 			EnabledFeatures:    params.EnabledFeatures,
 			SkipLogin:          true,

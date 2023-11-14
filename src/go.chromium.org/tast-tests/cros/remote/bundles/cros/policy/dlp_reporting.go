@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/policy/dlputil"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
@@ -237,7 +238,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 	if _, err := service.EnrollAndLogin(ctx, &dlp.EnrollAndLoginRequest{
 		Username:           username,
 		Password:           password,
-		DmserverUrl:        reportingutil.DmServerURL,
+		DmserverUrl:        policy.DMServerAlphaURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnableLacros:       params.BrowserType == dlp.BrowserType_LACROS,
 		EnabledFeatures:    "EncryptedReportingPipeline, ClientAutomatedTest",

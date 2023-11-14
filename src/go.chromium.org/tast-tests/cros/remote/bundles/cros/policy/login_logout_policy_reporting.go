@@ -219,7 +219,7 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 	if _, err := pc.GAIAEnrollForReporting(ctx, &pspb.GAIAEnrollForReportingRequest{
 		Username:           user,
 		Password:           pass,
-		DmserverUrl:        reportingutil.DmServerURL,
+		DmserverUrl:        policy.DMServerAlphaURL,
 		ReportingServerUrl: reportingutil.ReportingServerURL,
 		EnabledFeatures:    "EncryptedReportingPipeline, EnableTelemetryTestingRates, OobeConsolidatedConsent, ClientAutomatedTest",
 		SkipLogin:          false,
@@ -276,8 +276,8 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to logout from the device: ", err)
 	}
 
-	// Wait 1 min for events to reach the server.
 	testing.ContextLog(ctx, "Waiting for 1 min to check for reported events")
+	// GoBigSleepLint: Wait 1 min for events to reach the server.
 	if err = testing.Sleep(ctx, 1*time.Minute); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}

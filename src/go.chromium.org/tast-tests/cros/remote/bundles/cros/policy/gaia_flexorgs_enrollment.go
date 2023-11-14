@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
@@ -49,7 +50,7 @@ func init() {
 				Val: testDetails{
 					username: "policy.GAIAFlexorgsEnrollment.flex_user_name",
 					password: "policy.GAIAFlexorgsEnrollment.flex_password",
-					dmserver: "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api",
+					dmserver: policy.DMServerAlphaURL,
 				},
 			},
 		},

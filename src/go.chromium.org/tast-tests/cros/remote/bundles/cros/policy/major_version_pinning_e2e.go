@@ -200,11 +200,10 @@ func MajorVersionPinningE2E(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the release channel: ", err)
 	}
 
-	dmServerURL := "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
 	if _, err := policyClient.GAIAEnrollAndLoginUsingChrome(ctx, &pspb.GAIAEnrollAndLoginUsingChromeRequest{
 		Username:    acc.Username,
 		Password:    acc.Password,
-		DmserverURL: dmServerURL,
+		DmserverURL: policy.DMServerAlphaURL,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}

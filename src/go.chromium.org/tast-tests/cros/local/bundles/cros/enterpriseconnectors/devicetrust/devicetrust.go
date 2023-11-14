@@ -20,9 +20,6 @@ import (
 // DefaultUITimeout is the default timeout for UI interactions.
 const DefaultUITimeout = 20 * time.Second
 
-// SandboxDMServer is the DMServer used for most tast tests.
-const SandboxDMServer = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
-
 // DeviceTrustFeature is the name of the Device Trust feature flag.
 const DeviceTrustFeature = "DeviceTrustConnectorEnabled"
 

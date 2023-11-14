@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/demomode/constants"
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -39,11 +39,11 @@ func init() {
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "alpha",
-			Val:     constants.DMServerAlphaURL, // DMServerURL
+			Val:     policy.DMServerAlphaURL, // DMServerURL
 			Fixture: fixture.PostDemoModeOOBEAlpha,
 		}, {
 			Name:    "prod",
-			Val:     constants.DMServerProdURL, // DMServerURL
+			Val:     policy.DMServerProdURL, // DMServerURL
 			Fixture: fixture.PostDemoModeOOBEProd,
 		}},
 	})

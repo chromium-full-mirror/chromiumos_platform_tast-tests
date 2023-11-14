@@ -6,17 +6,16 @@ package policyutil
 
 import (
 	"context"
+	"time"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
-	"time"
 )
-
-// DmServerURL is the URL to the autopush DM server.
-const dmServerURL = "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api"
 
 var deskAPIAllowlist = []string{"https://continuous-sincere-relation.glitch.me/*", "https://engage.ringcentral.com/*"}
 
@@ -139,27 +138,27 @@ func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	}
 
 	// Enable Desk API.
-	policy := &tape.DeskApiUsers{
+	policies := &tape.DeskApiUsers{
 		DeskApiThirdPartyAccessEnabled: true,
 		DeskApiThirdPartyAllowlist:     deskAPIAllowlist,
 	}
-	if err := tapeClient.SetPolicy(ctx, policy, []string{"deskApiThirdPartyAccessEnabled", "deskApiThirdPartyAllowlist"}, nil, acc.RequestID); err != nil {
+	if err := tapeClient.SetPolicy(ctx, policies, []string{"deskApiThirdPartyAccessEnabled", "deskApiThirdPartyAllowlist"}, nil, acc.RequestID); err != nil {
 		s.Fatal("Failed to set the Desk API policy: ", err)
 	}
 
 	// Set Lacros policy.
 	if e.isLacros {
-		policy := &tape.LacrosAvailabilityUsers{
+		policies := &tape.LacrosAvailabilityUsers{
 			LacrosAvailability: tape.LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_ONLY,
 		}
-		if err := tapeClient.SetPolicy(ctx, policy, []string{"lacrosAvailability"}, nil, acc.RequestID); err != nil {
+		if err := tapeClient.SetPolicy(ctx, policies, []string{"lacrosAvailability"}, nil, acc.RequestID); err != nil {
 			s.Fatal("Failed to enable lacros: ", err)
 		}
 	} else {
-		policy := &tape.LacrosAvailabilityUsers{
+		policies := &tape.LacrosAvailabilityUsers{
 			LacrosAvailability: tape.LACROSAVAILABILITYENUM_LACROS_AVAILABILITY_ENUM_LACROS_DISALLOWED,
 		}
-		if err := tapeClient.SetPolicy(ctx, policy, []string{"lacrosAvailability"}, nil, acc.RequestID); err != nil {
+		if err := tapeClient.SetPolicy(ctx, policies, []string{"lacrosAvailability"}, nil, acc.RequestID); err != nil {
 			s.Fatal("Failed to disable lacros: ", err)
 		}
 	}
@@ -168,7 +167,7 @@ func (e *deskFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	if _, err := pc.GAIAEnrollUsingChrome(ctx, &pspb.GAIAEnrollUsingChromeRequest{
 		Username:    e.acc.Username,
 		Password:    e.acc.Password,
-		DmserverURL: dmServerURL,
+		DmserverURL: policy.DMServerAlphaURL,
 	}); err != nil {
 		s.Fatal("Failed to enroll using chrome: ", err)
 	}

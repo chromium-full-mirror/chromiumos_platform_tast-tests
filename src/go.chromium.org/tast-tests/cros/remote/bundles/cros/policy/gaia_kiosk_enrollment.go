@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/gaiaenrollment"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
@@ -49,7 +50,7 @@ func init() {
 			{
 				Name: "autopush",
 				Val: gaiaenrollment.TestParams{
-					DMServer: "https://crosman-alpha.sandbox.google.com/devicemanagement/data/api",
+					DMServer: policy.DMServerAlphaURL,
 					PoolID:   tape.EnrollmentKiosk,
 				},
 			},
