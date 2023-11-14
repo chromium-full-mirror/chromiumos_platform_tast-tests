@@ -65,28 +65,34 @@ const canaryAllocationKiB = canaryAllocationMiB * 1024
 const canaryCompressionRatio = 0.67
 const allocatorComplessionRatio = 0.67
 
+// allocationTimelineEntry tracks the amount of memory allocated before a given
+// time.
 type allocationTimelineEntry struct {
 	allocatedMiB int64
 	time         time.Time
 }
 
-func appendAllocatedMetric(p *perf.Values, allocationTimeline []allocationTimelineEntry, label string, target time.Time) {
-	var prevEntry *allocationTimelineEntry
-	for i := range allocationTimeline {
-		curEntry := &allocationTimeline[i]
-		if prevEntry != nil {
-			if prevEntry.time.Before(target) && target.Before(curEntry.time) {
-				p.Append(perf.Metric{
-					Name:      label,
-					Unit:      "MiB",
-					Direction: perf.BiggerIsBetter,
-					Multiple:  true,
-				}, float64(prevEntry.allocatedMiB))
-				return
-			}
-		}
-		prevEntry = curEntry
+func allocatedMiBAtTime(allocationTimeline []allocationTimelineEntry, t time.Time) int64 {
+	if len(allocationTimeline) == 0 {
+		return 0.0
 	}
+
+	for _, a := range allocationTimeline {
+		if !t.After(a.time) {
+			return a.allocatedMiB
+		}
+	}
+
+	return allocationTimeline[len(allocationTimeline)-1].allocatedMiB
+}
+
+func appendAllocatedMetric(p *perf.Values, allocationTimeline []allocationTimelineEntry, label string, target time.Time) {
+	p.Append(perf.Metric{
+		Name:      label,
+		Unit:      "MiB",
+		Direction: perf.BiggerIsBetter,
+		Multiple:  true,
+	}, float64(allocatedMiBAtTime(allocationTimeline, target)))
 }
 
 func appendKillLatencyMetric(p *perf.Values, label string, latency time.Duration) {
@@ -163,6 +169,17 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 			return errors.Wrap(err, "failed to get available memory")
 		}
 
+		// Check to see if any observer failed.
+		if appKills.Error != nil {
+			return errors.Wrap(appKills.Error, "failed while waiting for app kill")
+		}
+		if tabDiscards.Error != nil {
+			return errors.Wrap(tabDiscards.Error, "failed while waiting for tab discard")
+		}
+		if vmmmsKills.Error != nil {
+			return errors.Wrap(vmmmsKills.Error, "failed while waiting for VMMMS kill")
+		}
+
 		// Don't allocate unless after this allocation we would still be less than
 		// one half of a canary size below the ChromeOS critical margin. We don't
 		// want Chrome discarding two canaries at once.
@@ -185,11 +202,13 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 			return errors.Wrap(err, "failed to add an allocator")
 		}
 		allocationTime += time.Since(allocationStart)
-		allocationNum++
+		// The previous allocation timeline entry ended when this allocation
+		// started.
 		allocationTimeline = append(allocationTimeline, allocationTimelineEntry{
 			allocationMiB * int64(allocationNum),
-			time.Now(),
+			allocationStart,
 		})
+		allocationNum++
 
 		if time.Since(lastLogTime) > 10*time.Second {
 			testing.ContextLogf(ctx, "Allocated %d MiB", allocationManager.TotalAllocatedMiB())
@@ -222,20 +241,14 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 				}
 			}
 		}
-
-		// Check to see if the test is over.
-		if appKills.Error != nil {
-			return errors.Wrap(appKills.Error, "failed while waiting for app kill")
-		}
-		if tabDiscards.Error != nil {
-			return errors.Wrap(tabDiscards.Error, "failed while waiting for tab discard")
-		}
-		if vmmmsKills.Error != nil {
-			return errors.Wrap(vmmmsKills.Error, "failed while waiting for VMMMS kill")
-		}
 	}
 	totalAllocated := allocationManager.TotalAllocatedMiB()
 	testing.ContextLogf(ctx, "Canary died after %d MiB allocations", totalAllocated)
+
+	allocationTimeline = append(allocationTimeline, allocationTimelineEntry{
+		totalAllocated,
+		time.Now(),
+	})
 
 	p.Append(perf.Metric{
 		Name:      "unthrottledSpeed",
@@ -366,6 +379,7 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 
 	for i := 0; i < iterations; i++ {
 		if i > 0 {
+			s.Log("Sleeping between iterations to allow VMMMS blockers to expire")
 			// GoBigSleepLint: Sleep for 10s in between iterations so that the
 			// highest priority blockers have a chance to expire.
 			// TODO (kalutes): Figure out a good way to clear the blockers in tests
@@ -373,7 +387,26 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
 				s.Fatal("Failed to sleep between iterations: ", err)
 			}
+
+			const psiLowThreshold = 0.1
+			s.Logf("Waiting for arc and host psi some avg10 to be below %.2f", psiLowThreshold)
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				psi, err := memory.NewPSIStats(ctx, preARC)
+				if err != nil {
+					return err
+				}
+				if psi.Arc.Some.Avg10 > psiLowThreshold || psi.Host.Some.Avg10 > psiLowThreshold {
+					s.Logf("psi some avg10 arc=%f host=%f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10)
+					return errors.Errorf("psi some avg10 arc=%.2f host=%.2f above threshold=%.2f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10, psiLowThreshold)
+				}
+				return nil
+			}, &testing.PollOptions{
+				Interval: 5 * time.Second,
+			}); err != nil {
+				s.Fatal("Failed to wait for PSI to be low between tests: ", err)
+			}
 		}
+		s.Logf("Starting iteration %d of %d", i+1, iterations)
 		if err := stressCanary(ctx, s.DataFileSystem(), param, allocationMiB, allocationPeriod, pre.Chrome, br, preARC, p); err != nil {
 			s.Fatal("Error in the canary stress test: ", err)
 		}
