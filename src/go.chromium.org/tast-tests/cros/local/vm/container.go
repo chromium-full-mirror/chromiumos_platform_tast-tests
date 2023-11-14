@@ -305,8 +305,9 @@ func (c *Container) Stop(ctx context.Context) error {
 		testing.ContextLog(ctx, "Failed to wait for D-Bus LxdContainerStoppingSignal_STOPPED signal: ", err)
 
 		// The container didn't stop, try to stop it with more force.
+		// This can fail if the container stopped already.
 		if _, err := c.VM.LXCCommand(ctx, "stop", c.containerName, "-f"); err != nil {
-			return errors.Wrap(err, "failed to stop container with command")
+			testing.ContextLog(ctx, "Failed to stop container with force: ", err)
 		}
 	}
 
