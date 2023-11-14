@@ -11,6 +11,10 @@ package display
 import (
 	"context"
 	"math"
+	"os"
+
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -20,9 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-
-	"github.com/google/go-cmp/cmp"
-	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 // Insets holds onscreen insets.
@@ -455,4 +456,44 @@ func MinimizePrimaryDisplayZoomFactor(ctx context.Context, tconn *chrome.TestCon
 		}
 		return nil
 	}, nil
+}
+
+// PSRState is an enumeration to control PSR behavior in tests.
+type PSRState string
+
+// PSRState values correspond to valid values for i915_edp_psr_status.
+const (
+	PSRDefault      PSRState = "PSRDefault"
+	PSRForceDisable PSRState = "PSRForceDisable"
+	PSRForceEnable  PSRState = "PSRForceEnable"
+)
+
+// SetPSRState sets PSR state. Only supports i915 platforms.
+func SetPSRState(state PSRState) error {
+	edpPsrStatusPath := "/sys/kernel/debug/dri/0/i915_edp_psr_debug"
+	if _, err := os.Lstat(edpPsrStatusPath); os.IsNotExist(err) {
+		// It's not a failure to set to default if PSR is not supported.
+		if state == PSRDefault {
+			return nil
+		}
+		return errors.New("SetPSRState is only supported on i915 devices with PSR")
+	} else if err != nil {
+		return err
+	}
+
+	// stateString is the value to be written to the psr debug file.
+	var stateString []byte
+	switch state {
+	case PSRDefault:
+		stateString = []byte("0")
+	case PSRForceDisable:
+		stateString = []byte("1")
+	case PSRForceEnable:
+		stateString = []byte("2")
+	}
+
+	if err := os.WriteFile(edpPsrStatusPath, stateString, 0644); err != nil {
+		return errors.Wrapf(err, "could not write to file %s", edpPsrStatusPath)
+	}
+	return nil
 }
