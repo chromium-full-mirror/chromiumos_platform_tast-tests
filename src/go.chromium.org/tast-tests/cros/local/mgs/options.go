@@ -71,7 +71,10 @@ func AutoLaunch(accountID string) Option {
 // instance running in MGS mode.
 func ExtraChromeOptions(opts ...chrome.Option) Option {
 	return func(cfg *MutableConfig) error {
-		cfg.ExtraChromeOptions = opts
+		if cfg.ExtraChromeOptions == nil {
+			cfg.ExtraChromeOptions = []chrome.Option{}
+		}
+		cfg.ExtraChromeOptions = append(cfg.ExtraChromeOptions, opts...)
 		return nil
 	}
 }
