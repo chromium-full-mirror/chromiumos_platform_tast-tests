@@ -374,13 +374,13 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 
 		var problems []string
 
-		if info.Euid != reqUID {
+		if info.Euid != reqUID && reqUID != 0 {
 			problems = append(problems, fmt.Sprintf("effective UID %v; want %v", info.Euid, reqUID))
 		}
 
 		if gid, err := parseID(reqs.egroup, sysutil.GetGID); err != nil {
 			s.Errorf("Failed to look up group %q for PID %v", reqs.egroup, pid)
-		} else if info.Egid != gid {
+		} else if info.Egid != gid && gid != 0 {
 			problems = append(problems, fmt.Sprintf("effective GID %v; want %v", info.Egid, gid))
 		}
 

@@ -33,7 +33,6 @@ var Exclusions = []string{
 	"autotestd_monitor",
 	"check_ethernet.hook",
 	"chrome",
-	"chrome-sandbox",
 	"cras_test_client",
 	"crash_reporter",
 	"endpoint",
@@ -56,7 +55,6 @@ var Exclusions = []string{
 	"sudo",
 	"tail",
 	"timeout",
-	"x11vnc",
 	"bash", // TODO: check against script name instead
 	"dash",
 	"python",
@@ -73,8 +71,7 @@ var Exclusions = []string{
 	"(agetty)", // initial name when systemd starts serial-getty; changes to "agetty" later
 	"adb",      // sometimes appears on test images: https://crbug.com/792541
 	"postinst", // runs cros_installer
-	// TODO:b/277156105, put ml_service in exclusion to allow sandbox test goes back to critical.
-	// This is a temporary measure, will need to be reverted once there is a proper fix.
+	// TODO(b/310972967): Remove ml_service from the exclusion list.
 	"ml_service",
 }
 
