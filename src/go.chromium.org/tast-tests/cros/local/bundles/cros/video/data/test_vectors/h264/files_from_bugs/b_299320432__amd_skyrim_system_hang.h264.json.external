@@ -1,0 +1,5 @@
+{
+  "sha256sum": "29be6d2e36f62d2292685dad66a4cad7c3b00707b26bbcce128dcb8c806d1505",
+  "size": 46338,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang_20231114.h264.json"
+}

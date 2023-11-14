@@ -1111,6 +1111,20 @@ func init() {
 				},
 			},
 			{
+				Name:              "h264_files_from_bugs_299320432",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"}),
+				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"}, "h264_files_from_bugs_299320432"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
+				},
+			},
+			{
 				Name:              "h264_4k_files_from_bugs_22704778",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
