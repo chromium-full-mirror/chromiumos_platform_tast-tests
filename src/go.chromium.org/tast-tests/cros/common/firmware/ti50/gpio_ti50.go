@@ -71,8 +71,20 @@ const (
 	ServoMicroConnected GpioStrap = "SERVO_MICRO_CONNECTED"
 )
 
-// All well known gpio names for ti50 image.
+// All well known gpio names for gsc images.
 const (
+	// GpioCr50RBOXKey0In RBOX Key0 Input signal.
+	GpioCr50RBOXKey0In GpioName = "KSI_03"
+	// GpioCr50RBOXKey0Out Rbox Key0 Output signal.
+	GpioCr50RBOXKey0Out GpioName = "EC_KSI_03"
+	// GpioCr50RBOXKey1In RBOX Key1 Input signal (active low).
+	GpioCr50RBOXKey1In GpioName = "EC_KSO_02_INV"
+	// GpioCr50RBOXKey1Out RBOX Key1 Output signal.
+	GpioCr50RBOXKey1Out GpioName = "KSO_02"
+	// GpioCr50RBOXPwrbLIn RBOX power button input (active low).
+	GpioCr50RBOXPwrbLIn GpioName = "PWR_BTN_L"
+	// GpioCr50RBOXPwrbLOut RBOX power button output (active low).
+	GpioCr50RBOXPwrbLOut GpioName = "EC_PWR_BTN_L"
 	// GpioTi50ResetL is reset pin to GSC (active low).
 	GpioTi50ResetL GpioName = "RESET"
 	// GpioTi50SysRstL is the SYS reset signal to the AP (active low).
