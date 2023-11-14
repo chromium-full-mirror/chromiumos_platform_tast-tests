@@ -55,7 +55,7 @@ func init() {
 			"tast.cros.shimlessrma.AppService",
 			"tast.cros.graphics.ScreenshotService",
 		},
-		Fixture: fixture.NormalMode,
+		Fixture: fixture.DevModeGBB,
 		Timeout: 10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "accel",

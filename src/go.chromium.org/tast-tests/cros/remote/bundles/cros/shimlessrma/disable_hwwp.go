@@ -46,7 +46,7 @@ func init() {
 			"tast.cros.shimlessrma.AppService",
 			"tast.cros.graphics.ScreenshotService",
 		},
-		Fixture: fixture.NormalMode,
+		Fixture: fixture.DevModeGBB,
 		Timeout: 150 * time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"shimless_rma_normal"},
@@ -151,7 +151,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Wait for reboot start.
+	// GoBigSleepLint: Wait for reboot start.
 	// TODO(chenghan): Replace testing.Sleep with testing.Poll.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
@@ -167,7 +167,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to navigate to WP disable Complete page: ", err)
 	}
 
-	// Wait for reboot start.
+	// GoBigSleepLint: Wait for reboot start.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
 	}
@@ -191,7 +191,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Wait for reboot start.
+	// GoBigSleepLint: Wait for reboot start.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
 	}
@@ -211,7 +211,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to bypass calibration after firmware installation: ", err)
 	}
 
-	// Wait for reboot start.
+	// GoBigSleepLint: Wait for reboot start.
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
 	}
@@ -229,7 +229,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Fatal("Fail to navigate to Device Provision page: ", err)
 	}
 
-	// Another reboot after provisioning
+	// GoBigSleepLint: Another reboot after provisioning
 	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
 		s.Error("Fail to sleep: ", err)
 	}

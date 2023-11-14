@@ -42,7 +42,7 @@ func init() {
 			wificell.ShillServiceName,
 			wificell.BluetoothServiceName,
 		},
-		Fixture: fixture.NormalMode,
+		Fixture: fixture.DevModeGBB,
 		Timeout: 10 * time.Minute,
 	})
 }
