@@ -38,7 +38,7 @@ func init() {
 		Desc:         "Measures boot performance from USB",
 		Contacts:     []string{"peep-fleet-infra-sw@google.com"},
 		BugComponent: "b:1032353", // Chrome Operations > Fleet > Software > OS Fleet Automation
-		Attr:         []string{"group:labqual_informational"},
+		Attr:         []string{"group:labqual_informational", "group:labqual_stable"},
 		SoftwareDeps: []string{"crossystem"},
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService"},
 		Vars:         []string{"servo"},
