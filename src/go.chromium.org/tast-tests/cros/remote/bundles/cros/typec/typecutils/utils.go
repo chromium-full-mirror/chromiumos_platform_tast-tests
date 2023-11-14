@@ -38,8 +38,14 @@ const (
 	pinDBitMask = 0x800
 )
 
-// Filepath on the DUT for the servo Type C partner device.
-const partnerPath = "/sys/class/typec/port0-partner"
+const (
+	// Filepath on the DUT for the servo Type C partner device.
+	partnerPath           = "/sys/class/typec/port0-partner"
+	thunderboltDevicePath = "/sys/bus/thunderbolt/devices"
+)
+
+// List of built-in Thunderbolt devices enumerated by the OS.
+var builtInTBTDevices = []string{"domain0", "domain1", "0-0", "1-0"}
 
 // CcOffAndWait performs a CC Off command, followed by a sleep to ensure VBus discharges safely before any further modification.
 func CcOffAndWait(ctx context.Context, svo *servo.Servo) error {
@@ -181,4 +187,55 @@ func VerifyRXSpeed(ctx context.Context, dut *dut.DUT, device, port string) (bool
 	}
 
 	return true, nil
+}
+
+// builtInTBTDevice returns whether the specified name is a built-in Thunderbolt device or not.
+func builtInTBTDevice(name string) bool {
+	for _, device := range builtInTBTDevices {
+		if name == device {
+			return true
+		}
+	}
+
+	return false
+}
+
+// CheckTBTDevice is a helper function which checks for TBT device connection to a DUT.
+// |expected| specifies whether we want to check for the presence of a TBT device (true) or the
+// absence of one (false).
+func CheckTBTDevice(ctx context.Context, d *dut.DUT, expected bool) error {
+	out, err := d.Conn().CommandContext(ctx, "ls", thunderboltDevicePath).Output()
+	if err != nil {
+		return errors.Wrap(err, "could not run ls command on DUT")
+	}
+
+	found := ""
+	for _, device := range strings.Split(string(out), "\n") {
+		if device == "" {
+			continue
+		}
+
+		if builtInTBTDevice(device) {
+			continue
+		}
+
+		// Check for retimers.
+		// They are of the form "0-0:1.1" or "0-0:3.1".
+		if matched, err := regexp.MatchString(`[\d\-\:]+\.\d`, device); err != nil {
+			return errors.Wrap(err, "couldn't execute retimer regexp")
+		} else if matched {
+			continue
+		}
+
+		found = device
+		break
+	}
+
+	if expected && found == "" {
+		return errors.New("no TBT device found")
+	} else if !expected && found != "" {
+		return errors.Errorf("TBT device found: %s", found)
+	}
+
+	return nil
 }

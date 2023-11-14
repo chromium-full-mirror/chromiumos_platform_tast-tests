@@ -8,11 +8,10 @@ import (
 	"bytes"
 	"context"
 	"path/filepath"
-	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -24,9 +23,6 @@ import (
 
 // The maximum number of USB Type C ports that a Chromebook supports.
 const maxTypeCPorts = 8
-
-// List of built-in Thunderbolt devices enumerated by the OS.
-var builtInTBTDevices = []string{"domain0", "domain1", "0-0", "1-0"}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -115,7 +111,7 @@ func ModeReboot(ctx context.Context, s *testing.State) {
 
 	s.Log("Verifying that a TBT device is enumerated")
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
-		return checkTBTDevice(ctx, d, true)
+		return typecutils.CheckTBTDevice(ctx, d, true)
 	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 20 * time.Second}); err != nil {
 		s.Fatal("Failed TBT enumeration after login: ", err)
 	}
@@ -135,63 +131,12 @@ func ModeReboot(ctx context.Context, s *testing.State) {
 	}
 
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
-		return checkTBTDevice(ctx, d, false)
+		return typecutils.CheckTBTDevice(ctx, d, false)
 	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed TBT non-enumeration after reboot: ", err)
 	}
 
 	// TODO(b/179338646): Check that there is a connected DP monitor.
-}
-
-// builtInTBTDevice returns whether the specified name is a built-in Thunderbolt device or not.
-func builtInTBTDevice(name string) bool {
-	for _, device := range builtInTBTDevices {
-		if name == device {
-			return true
-		}
-	}
-
-	return false
-}
-
-// checkTBTDevice is a helper function which checks for TBT device connection to a DUT.
-// |expected| specifies whether we want to check for the presence of a TBT device (true) or the
-// absence of one (false).
-func checkTBTDevice(ctx context.Context, d *dut.DUT, expected bool) error {
-	out, err := d.Conn().CommandContext(ctx, "ls", "/sys/bus/thunderbolt/devices").Output()
-	if err != nil {
-		return errors.Wrap(err, "could not run ls command on DUT")
-	}
-
-	found := ""
-	for _, device := range strings.Split(string(out), "\n") {
-		if device == "" {
-			continue
-		}
-
-		if builtInTBTDevice(device) {
-			continue
-		}
-
-		// Check for retimers.
-		// They are of the form "0-0:1.1" or "0-0:3.1".
-		if matched, err := regexp.MatchString(`[\d\-\:]+\.\d`, device); err != nil {
-			return errors.Wrap(err, "couldn't execute retimer regexp")
-		} else if matched {
-			continue
-		}
-
-		found = device
-		break
-	}
-
-	if expected && found == "" {
-		return errors.New("no TBT device found")
-	} else if !expected && found != "" {
-		return errors.Errorf("TBT device found: %s", found)
-	}
-
-	return nil
 }
 
 // checkPortsForTBTPartner checks whether the device has a connected Thunderbolt device.
