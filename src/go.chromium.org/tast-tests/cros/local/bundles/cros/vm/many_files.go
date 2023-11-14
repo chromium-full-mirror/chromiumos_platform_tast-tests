@@ -240,11 +240,23 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	}
 	defer toGuest.Close()
 
+	// Prepare the deadline for the FIFO files.
+	deadline, ok := ctx.Deadline()
+	if !ok {
+		s.Fatal("No deadline is set to the context")
+	}
+	if err = toGuest.SetDeadline(deadline); err != nil {
+		s.Fatal("Failed to set deadline for FIFO file to the guest")
+	}
+
 	fromGuest, err := os.Open(fromGuestFIFO)
 	if err != nil {
 		s.Fatal("Failed to open guest output")
 	}
 	defer fromGuest.Close()
+	if err = fromGuest.SetDeadline(deadline); err != nil {
+		s.Fatal("Failed to set deadline for FIFO file to the guest")
+	}
 	reader := bufio.NewReaderSize(fromGuest, 4096)
 
 	enableTraceCmd, err := strconv.ParseBool(enableTraceCmdVar.Value())
