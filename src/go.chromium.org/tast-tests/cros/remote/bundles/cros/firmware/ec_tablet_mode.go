@@ -93,7 +93,7 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 	args := s.Param().(tabletModeTestParams)
 	cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
 	if args.hasLid {
-		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, args.tabletModeOn); err != nil {
+		if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, args.tabletModeOn); err != nil {
 			s.Logf("Failed to run %s, attempting rotation angles with ectool instead", args.tabletModeOn)
 			// Setting tabletModeAngle to 0 will force DUT into tablet mode.
 			if err := cmd.ForceTabletModeAngle(ctx, "0", "0"); err != nil {
@@ -101,7 +101,7 @@ func ECTabletMode(ctx context.Context, s *testing.State) {
 			}
 		}
 		defer func() {
-			if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, args.tabletModeOff); err != nil {
+			if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, args.tabletModeOff); err != nil {
 				s.Logf("Failed to run %s, attempting rotation angles with ectool instead", args.tabletModeOff)
 				// Setting tabletModeAngle to 360 will force DUT into clamshell mode.
 				if err := cmd.ForceTabletModeAngle(ctx, "360", "0"); err != nil {

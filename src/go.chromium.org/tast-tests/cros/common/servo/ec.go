@@ -48,7 +48,7 @@ const (
 	reCheckKBLight       string = `Keyboard backlight: \d+\%|Command 'kblight' not found or ambiguous.`
 	reTabletmodeNotFound string = `Command 'tabletmode' not found or ambiguous`
 	reBasestateNotFound  string = `Command 'basestate' not found or ambiguous`
-	reTabletmodeStatus   string = `\[\S+ tablet mode (enabled|disabled)\]`
+	reTabletmodeStatus   string = `\[\S+ tablet mode\s?(enabled|disabled)?|clamshell mode\]`
 	reBasestateStatus    string = `\[\S+ base state: (attached|detached)\]`
 	reBdStatus           string = `\[\S+ BD forced (connected|disconnected)\]`
 	reLidAccel           string = `\[\S+ Lid Accel ODR:(?i)[^\n\r]*(?i)(1|0)\S+]`
@@ -338,9 +338,11 @@ func (s *Servo) CheckUnresponsiveEC(ctx context.Context) error {
 	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 1 * time.Minute})
 }
 
-// CheckAndRunTabletModeCommand checks if relevant EC commands exist and use them for setting tablet mode.
-// For example, detachables use 'basestate (attach|detach)', and convertibles use 'tabletmode (on|off)'.
-func (s *Servo) CheckAndRunTabletModeCommand(ctx context.Context, command string) (string, error) {
+// RunTabletModeCommandGetOutput runs EC commands to set tablet mode and
+// returns the output matching pattern for the resulting tablet mode state.
+// Before calling RunTabletModeCommand(), a test can call
+// h.GetECTabletLaptopModeCommand() to determine the corresponding command.
+func (s *Servo) RunTabletModeCommandGetOutput(ctx context.Context, command string) (string, error) {
 	// regular expressions.
 	reStr := strings.Join([]string{reTabletmodeNotFound, reTabletmodeStatus,
 		reBasestateNotFound, reBasestateStatus, reBdStatus, reLidAccel}, "|")

@@ -290,7 +290,7 @@ func ensureClamshellMode(ctx context.Context, h *firmware.Helper, dut *dut.DUT) 
 	}
 	if inTabletMode {
 		testing.ContextLog(ctx, "DUT is in tablet mode. Attempting to turn tablet mode off")
-		_, err := h.Servo.CheckAndRunTabletModeCommand(ctx, "tabletmode off")
+		_, err := h.Servo.RunTabletModeCommandGetOutput(ctx, "tabletmode off")
 		if err != nil {
 			testing.ContextLogf(ctx, "Failed to run tabletmode_off: %v. Attempting to set rotation angles with ectool instead", err)
 			ecToolCmd := firmware.NewECTool(dut, firmware.ECToolNameMain)

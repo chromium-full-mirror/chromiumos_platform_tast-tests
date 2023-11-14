@@ -344,7 +344,7 @@ func ensureClamshellMode(ctx context.Context, h *firmware.Helper, dut *dut.DUT, 
 	}
 	if inTabletMode {
 		testing.ContextLog(ctx, "DUT is in tablet mode. Attempting to turn tablet mode off")
-		out, err := h.Servo.CheckAndRunTabletModeCommand(ctx, tabletModeOff)
+		out, err := h.Servo.RunTabletModeCommandGetOutput(ctx, tabletModeOff)
 		if err != nil {
 			if formFactor == "convertible" {
 				testing.ContextLogf(ctx, "Failed to run %s: %v. Attempting to set rotation angles with ectool instead", tabletModeOff, err)

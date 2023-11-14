@@ -56,13 +56,13 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	// If switching between tablet and laptop mode is supported, for example, on
 	// detachables and convertibles, set DUT in laptop mode in order for a key
 	// press to be effective later in waking DUT from suspend.
-	cmds, err := h.CheckECTabletLaptopModeCommand(ctx)
+	cmds, err := h.GetECTabletLaptopModeCommand(ctx)
 	if err != nil {
 		s.Fatal("Failed to determine the commands for switching to tablet or laptop mode: ", err)
 	}
 	if cmds.SetECLaptopModeCmd != "" {
 		s.Logf("Running ec command %s to set DUT in laptop mode", cmds.SetECLaptopModeCmd)
-		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, cmds.SetECLaptopModeCmd); err != nil {
+		if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, cmds.SetECLaptopModeCmd); err != nil {
 			s.Fatal("Failed to set DUT in laptop mode: ", err)
 		}
 	}

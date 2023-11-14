@@ -97,11 +97,11 @@ func WaysToSuspendDUT(ctx context.Context, s *testing.State) {
 	isTabletMode := s.Param().(bool)
 	if isTabletMode {
 		tabletModeOn := "tabletmode on"
-		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, tabletModeOn); err != nil {
+		if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, tabletModeOn); err != nil {
 			s.Fatal("Unablet to reset EC tablet mode setting: ", err)
 		}
 		tabletModeOff := "tabletmode off"
-		defer h.Servo.CheckAndRunTabletModeCommand(cleanupCtx, tabletModeOff)
+		defer h.Servo.RunTabletModeCommandGetOutput(cleanupCtx, tabletModeOff)
 	}
 
 	// Performs Chrome login.

@@ -196,7 +196,7 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 	defer func(ctx context.Context, restoreECTabletMode *bool) {
 		if *restoreECTabletMode {
 			s.Log("Restoring ec tablet mode setting at the end of test")
-			if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, args.tabletModeOff); err != nil {
+			if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, args.tabletModeOff); err != nil {
 				s.Fatal("Unablet to reset EC tablet mode setting: ", err)
 			}
 		}
@@ -311,7 +311,7 @@ func switchDUTMode(ctx context.Context, h *firmware.Helper, canDoTabletSwitch, t
 		return nil
 	}
 	testing.ContextLogf(ctx, "Running EC command %s to change DUT's tablet mode state", tabletModeCmd)
-	out, err := h.Servo.CheckAndRunTabletModeCommand(ctx, tabletModeCmd)
+	out, err := h.Servo.RunTabletModeCommandGetOutput(ctx, tabletModeCmd)
 	if err != nil {
 		testing.ContextLogf(ctx, "Failed to set DUT tablet mode state, and got: %v. Attempting to set tablet_mode_angle with ectool instead", err)
 		if err := forceTabletModeAngle(ctx); err != nil {

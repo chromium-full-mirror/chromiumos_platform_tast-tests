@@ -1814,9 +1814,9 @@ type TabletLaptopModeCmds struct {
 	SetECLaptopModeCmd string
 }
 
-// CheckECTabletLaptopModeCommand returns TabletLaptopModeCmds, containing the
+// GetECTabletLaptopModeCommand returns TabletLaptopModeCmds, containing the
 // ec commands for swtiching to tablet and laptop mode, if they are supported.
-func (h *Helper) CheckECTabletLaptopModeCommand(ctx context.Context) (TabletLaptopModeCmds, error) {
+func (h *Helper) GetECTabletLaptopModeCommand(ctx context.Context) (TabletLaptopModeCmds, error) {
 	var cmds TabletLaptopModeCmds
 	if err := h.RequireRPCUtils(ctx); err != nil {
 		return cmds, errors.Wrap(err, "requiring RPC utils")

@@ -82,7 +82,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 	// Make sure internal keyboard is connected for convertible devices.
 	// Isn't always required so attempt test anyway if this fails.
 	if testType == convertibleKeyboard {
-		if _, err := h.Servo.CheckAndRunTabletModeCommand(ctx, "tabletmode off"); err != nil {
+		if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, "tabletmode off"); err != nil {
 			s.Log("Failed to set tabletmode to off: ", err)
 		}
 	}
