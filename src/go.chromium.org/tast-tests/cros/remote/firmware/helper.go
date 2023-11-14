@@ -1164,7 +1164,7 @@ func (h *Helper) VerifyCCDIsOpen(ctx context.Context) error {
 // OpenCCDNoTestlab opens CCD when it's locked and testlab disabled.
 // From observation, this process would generally take 11 minutes.
 // Servo micro is required in order to open CCD without testlab enabled.
-func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
+func (h *Helper) OpenCCDNoTestlab(ctx context.Context) (retErr error) {
 	// Check if there is micro-servo connected.
 	hasMicroOrC2D2, err := h.Servo.PreferDebugHeader(ctx)
 	if err != nil {
@@ -1188,19 +1188,18 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 
 	// Restore DUT's boot mode to the initial mode if
 	// it ends up in a different one after CCD is open.
-	defer func(ctx context.Context, initMode fwCommon.BootMode) error {
+	defer func(ctx context.Context, initMode fwCommon.BootMode) {
 		currentMode, err := h.Reporter.CurrentBootMode(ctx)
 		if err != nil {
-			return errors.Wrap(err, "failed to check boot mode after opening CCD")
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed to check boot mode after opening CCD'"))
 		}
 
 		if currentMode != initMode {
 			testing.ContextLogf(ctx, "Current boot mode %q, switching back to %q", currentMode, initMode)
 			if err := ms.RebootToMode(ctx, initMode); err != nil {
-				return errors.Wrap(err, "failed to reboot into initial mode")
+				retErr = errors.Join(retErr, errors.Wrap(err, "failed to reboot into initial mode"))
 			}
 		}
-		return nil
 	}(cleanupCtx, initMode)
 
 	// Verify OpenNoDevMode status.
@@ -1238,14 +1237,11 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 
 	// Enable stream for cr50 log, so that if the process for opening ccd
 	// fails later, we could process the log for error messaging.
-	if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.On); err != nil {
-		return errors.Wrap(err, "failed to enable GSC UART capture")
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.CR50UARTCapture)
+	if err != nil {
+		return errors.Wrap(err, "failed to enable capture Cr50 UART")
 	}
-	defer func() {
-		if err := h.Servo.SetOnOff(ctx, servo.CR50UARTCapture, servo.Off); err != nil {
-			testing.ContextLog(ctx, "Failed to disable GSC UART capture: ", err)
-		}
-	}()
+	defer func() { retErr = errors.Join(retErr, closeUART(ctx)) }()
 
 	// If OpenFromUSB is accessible (i.e. ="Y"), we can send the request through USB.
 	// Otherwise, we need to send the request through the AP.
@@ -1276,7 +1272,22 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 			defer cancelWaitConnect()
 
 			if err := h.DUT.WaitUnreachable(waitDisconnectCtx); err != nil {
-				return errors.Wrap(err, "failed to wait for DUT to become unreachable")
+				// Based on Testhaus results, some devices weren't rebooting after 'gsctool -a -o',
+				// and the cr50 console reports 'nvmem_erase_tpm_data_selective' failures. Document
+				// this failure in the returned error message.
+				errorMsg := errors.Wrap(err, "failed to wait for DUT to become unreachable")
+				captureCr50Msg := `nvmem_erase_tpm_data_selective: adding var failed!`
+				out, err := h.GetUartOutputAndSaveToFile(ctx, servo.CR50UARTStream, "open_ccd_cr50")
+				if err != nil {
+					return err
+				}
+				r := regexp.MustCompile(captureCr50Msg)
+				matches := r.FindAllStringSubmatch(out, -1)
+				if len(matches) > 0 {
+					newErr := errors.Errorf("found %q appeared %d times", captureCr50Msg, len(matches))
+					return errors.Join(errorMsg, newErr)
+				}
+				return errorMsg
 			}
 		}
 	}
@@ -1288,36 +1299,22 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 		defer cancelWaitConnect()
 
 		if err := h.WaitConnect(waitConnectCtx); err != nil {
-			checkTpmRequest := func() (int, error) {
-				out, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream)
-				if err != nil {
-					return 0, errors.Wrap(err, "failed to read cr50")
-				}
-				// Deposit cr50 log in the remote context dir.
-				outDir, ok := testing.ContextOutDir(ctx)
-				if !ok {
-					return 0, errors.New("failed to get remote context dir")
-				}
-				destPath := filepath.Join(outDir, "open_ccd_cr50.log")
-				if err := ioutil.WriteFile(destPath, []byte(out), 0666); err != nil {
-					return 0, errors.Wrapf(err, "failed to write %s", destPath)
-				}
-				// Some DUTs were stuck in a loop with multiple requests for tpm reset
-				// when they failed to reconnect. Document this scene in the returned
-				// error message.
-				r := regexp.MustCompile(`tpm_reset_request: already scheduled`)
-				matches := r.FindAllStringSubmatch(out, -1)
-				if len(matches) == 0 {
-					return 0, errors.New("did not find any matches for tpm reset request")
-				}
-				return len(matches), nil
+			// As reported on ticket b/276237637, some devices were found stuck in a loop
+			// of multiple requests for the tpm reset, until reaching timeout in WaitConnect()
+			// and failing the test. Document this failure in the returned error message.
+			errorMsg := errors.Wrap(err, "failed to reconnect to DUT")
+			captureCr50Msg := `tpm_reset_request: already scheduled`
+			out, err := h.GetUartOutputAndSaveToFile(ctx, servo.CR50UARTStream, "open_ccd_cr50")
+			if err != nil {
+				return err
 			}
-			if tpmRequestCounts, err := checkTpmRequest(); err != nil {
-				testing.ContextLog(ctx, "Error in collecting cr50 info: ", err)
-			} else {
-				return errors.Wrapf(err, "failed to reconnect to DUT and found tpm reset request scheduled for %d times", tpmRequestCounts)
+			r := regexp.MustCompile(captureCr50Msg)
+			matches := r.FindAllStringSubmatch(out, -1)
+			if len(matches) > 0 {
+				newErr := errors.Errorf("found %q appeared %d times", captureCr50Msg, len(matches))
+				return errors.Join(errorMsg, newErr)
 			}
-			return errors.Wrap(err, "failed to reconnect to DUT")
+			return errorMsg
 		}
 	}
 
@@ -1331,6 +1328,24 @@ func (h *Helper) OpenCCDNoTestlab(ctx context.Context) error {
 		return err
 	}
 	return nil
+}
+
+// GetUartOutputAndSaveToFile reads from the given uart stream, saves the output,
+// and returns it. You may need to call EnableUARTCapture() before.
+func (h *Helper) GetUartOutputAndSaveToFile(ctx context.Context, stream servo.StringControl, fileName string) (string, error) {
+	out, err := h.Servo.GetQuotedString(ctx, stream)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to read %s", stream)
+	}
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return "", errors.New("failed to get remote context directory")
+	}
+	destPath := filepath.Join(outDir, fileName+".log")
+	if err := os.WriteFile(destPath, []byte(out), 0666); err != nil {
+		return "", errors.Wrapf(err, "failed to write %s", destPath)
+	}
+	return out, nil
 }
 
 // pressPowerSequenceToOpenCCD will perform power presses for 5 minutes or until DUT disconnects.
