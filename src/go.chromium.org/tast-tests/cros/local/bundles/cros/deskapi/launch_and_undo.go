@@ -35,7 +35,7 @@ func init() {
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"aprilzhou@google.com",
-			"alphonsea@google.com",
+			"avynn@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
