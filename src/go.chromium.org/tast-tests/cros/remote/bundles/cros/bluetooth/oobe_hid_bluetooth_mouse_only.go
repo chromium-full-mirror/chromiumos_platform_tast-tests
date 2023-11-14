@@ -47,15 +47,30 @@ func init() {
 		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		Params: []testing.Param{
 			{
-				Name:      "floss_disabled",
+				Name:      "floss_disabled_mouse",
 				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: cbt.DeviceTypeMouse,
 			},
 			{
-				Name:              "floss_enabled",
+				Name:              "floss_enabled_mouse",
 				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				Val: cbt.DeviceTypeMouse,
+			},
+			{
+				Name:      "floss_disabled_le_mouse",
+				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val: cbt.DeviceTypeLEMouse,
+			},
+			{
+				Name:              "floss_enabled_le_mouse",
+				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
+				ExtraSoftwareDeps: []string{"bluetooth_floss"},
+				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				Val: cbt.DeviceTypeLEMouse,
 			},
 		},
 		Timeout: time.Minute * 15,
@@ -71,6 +86,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	const searchingTimeout time.Duration = time.Second * 300
 
 	fv := s.FixtValue().(*bluetooth.FixtValue)
+	deviceType := s.Param().(cbt.DeviceType)
 
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
@@ -98,7 +114,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 
 	// Discover btpeer as a mouse.
 	mouseDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
-		DeviceType: cbt.DeviceTypeMouse,
+		DeviceType: deviceType,
 	})
 	if err != nil {
 		s.Fatalf("Failed to configure btpeer as a %s device: %s", mouseDevice.DeviceType(), err)
@@ -166,9 +182,21 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
-	// Initialize BTPeer adapter and ensure adapter is in the correct state before pairing.
-	if err := mouseDevice.RPC().Init(ctx, false); err != nil {
-		s.Fatal("Failed to set init to true: ", err)
+	if deviceType == cbt.DeviceTypeMouse {
+		// For classic mouse, the mouse will initiate the connection.
+		resp, err := fv.BluetoothService.Address(ctx, &emptypb.Empty{})
+		if err != nil {
+			s.Fatal("Failed to get adapter address: ", err)
+		}
+		adapterAddress := resp.GetAdapterAddress()
+		if status, err := mouseDevice.RPC().ConnectToRemoteAddress(ctx, adapterAddress); err != nil || !status {
+			s.Fatal("Failed to connect to remote address: ", adapterAddress)
+		}
+	}
+	if deviceType == cbt.DeviceTypeLEMouse {
+		if err := mouseDevice.RPC().SetDiscoverable(ctx, true); err != nil {
+			s.Fatal("Failed to set discoverable: ", err)
+		}
 	}
 
 	pollForPairedAndConnectedDevice()
