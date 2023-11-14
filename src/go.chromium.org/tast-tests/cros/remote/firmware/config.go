@@ -94,6 +94,7 @@ type Config struct {
 	RawUSBImageBootTimeout           float64 `json:"usb_image_boot_timeout"`
 	RawECBootToPwrButton             float64 `json:"ec_boot_to_pwr_button"`
 	RawFirmwareScreen                float64 `json:"firmware_screen"`
+	RawFirmwareScreenRecMode         float64 `json:"firmware_screen_rec_mode"`
 	RawHoldPwrButtonNoPowerdShutdown float64 `json:"hold_pwr_button_nopowerd_shutdown"`
 	RawHoldPwrButtonPowerOff         float64 `json:"hold_pwr_button_poweroff"`
 	RawHoldPwrButtonPowerOn          float64 `json:"hold_pwr_button_poweron"`
@@ -110,6 +111,7 @@ type Config struct {
 	USBImageBootTimeout           time.Duration
 	ECBootToPwrButton             time.Duration
 	FirmwareScreen                time.Duration
+	FirmwareScreenRecMode         time.Duration
 	HoldPwrButtonNoPowerdShutdown time.Duration
 	HoldPwrButtonPowerOff         time.Duration
 	HoldPwrButtonPowerOn          time.Duration
@@ -215,6 +217,7 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	cfg.USBImageBootTimeout = toSeconds(cfg.RawUSBImageBootTimeout)
 	cfg.ECBootToPwrButton = toSeconds(cfg.RawECBootToPwrButton)
 	cfg.FirmwareScreen = toSeconds(cfg.RawFirmwareScreen)
+	cfg.FirmwareScreenRecMode = toSeconds(cfg.RawFirmwareScreenRecMode)
 	cfg.HoldPwrButtonNoPowerdShutdown = toSeconds(cfg.RawHoldPwrButtonNoPowerdShutdown)
 	cfg.HoldPwrButtonPowerOff = toSeconds(cfg.RawHoldPwrButtonPowerOff)
 	cfg.HoldPwrButtonPowerOn = toSeconds(cfg.RawHoldPwrButtonPowerOn)

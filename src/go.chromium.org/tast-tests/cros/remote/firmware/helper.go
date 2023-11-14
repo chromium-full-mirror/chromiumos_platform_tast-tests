@@ -1733,13 +1733,10 @@ func (h *Helper) DisableDevBootUSB(ctx context.Context) error {
 // WaitFirmwareScreen waits until the DUT is in firmware with the keyboard
 // ready by actively sending the ec command '8042 kbd', which is supported
 // mostly on x86 devices. On platforms that don't support this command, such
-// as arm devices, it sleeps for the full FirmwareScreen duration.
+// as arm devices, it sleeps for the full 'timeout' duration.
 // Note: Ensure that the DUT was fully shut down first before calling
-// WaitFirmwareScreen.
-// To-do: Create a new input parameter called 'timeout', that takes the
-// maximum amount of time in waiting for the firmware screen, for example,
-// FirmwareScreenRecMode to wait for the recovery screen.
-func (h *Helper) WaitFirmwareScreen(ctx context.Context) (retErr error) {
+// WaitFirmwareScreen to wait for firmware screen from power-on.
+func (h *Helper) WaitFirmwareScreen(ctx context.Context, timeout time.Duration) (retErr error) {
 	type ecCmd8042NotFound struct {
 		*errors.E
 	}
@@ -1762,10 +1759,6 @@ func (h *Helper) WaitFirmwareScreen(ctx context.Context) (retErr error) {
 		if err := h.Servo.SetDUTConsoleChannelMask(ctx, 0); err != nil {
 			return errors.Wrap(err, "failed to send 'chan 0' to EC")
 		}
-		// The longest duration we've seen in waiting for keyboard enabled
-		// was slightly over 1 min, for example on a brya/anahera machine.
-		// Set a 120 seconds timeout to cover margins.
-		// To-do: Replace 2 mins with the timeout given to WaitFirmwareScreen.
 		err := testing.Poll(ctx, func(ctx context.Context) error {
 			out, err := h.Servo.RunECCommandGetOutput(ctx, "8042 kbd", []string{checkKeyboardEnabled})
 			if err != nil {
@@ -1789,19 +1782,17 @@ func (h *Helper) WaitFirmwareScreen(ctx context.Context) (retErr error) {
 					return nil
 				}
 			}
-			return errors.Errorf("failed to find keyboard enabled after %s", 2*time.Minute)
-		}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: 2 * time.Minute})
+			return errors.Errorf("failed to find keyboard enabled after %s", timeout)
+		}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: timeout})
 		_, ok := err.(*ecCmd8042NotFound)
 		if err == nil || !ok {
 			return err
 		}
 	}
-	testing.ContextLogf(ctx, "Sleeping %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	testing.ContextLogf(ctx, "Sleeping for %s", timeout)
 	// GoBigSleepLint: Wait for firmware screen.
-	// To-do: Replace h.Config.FirmwareScreen with the timeout given to
-	// WaitFirmwareScreen.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		return errors.Wrapf(err, "sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
+	if err := testing.Sleep(ctx, timeout); err != nil {
+		return errors.Wrapf(err, "sleeping for %s", timeout)
 	}
 	return nil
 }

@@ -644,7 +644,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 	// If in dev mode, bypass the TO_DEV screen.
 	if fromMode == fwCommon.BootModeDev && !msOptsContain(opts, AllowGBBForce) {
 		testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen before bypassing dev")
-		if err := h.WaitFirmwareScreen(ctx); err != nil {
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
 			return errors.Wrap(err, "failed to get to firmware screen")
 		}
 		params := RunBypasser{BypasserMethod: ms.bypasser.BypassDevMode, RepeatBypasser: true, WaitUntilDUTConnected: h.Config.DelayRebootToPing}
@@ -703,7 +703,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 func (ms *ModeSwitcher) RecScreenToDevMode(ctx context.Context, opts ...ModeSwitchOption) error {
 	h := ms.Helper
 	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen before TriggerRecToDev")
-	if err := h.WaitFirmwareScreen(ctx); err != nil {
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
 		return errors.Wrap(err, "failed to get to firmware screen")
 	}
 
@@ -872,7 +872,7 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 
 	if usbMux == servo.USBMuxDUT {
 		testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen before USB enable")
-		if err := h.WaitFirmwareScreen(ctx); err != nil {
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
 			return errors.Wrap(err, "failed to get to firmware screen")
 		}
 		testing.ContextLog(ctx, "Set DFP mode")

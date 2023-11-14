@@ -72,7 +72,7 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for DUT to become unreachable, warm reset failed: ", err)
 	}
 	s.Log("Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx); err != nil {
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
 		s.Fatal("Failed to get to firmware screen: ", err)
 	}
 	newbp, err := firmware.NewBypasser(ctx, h)

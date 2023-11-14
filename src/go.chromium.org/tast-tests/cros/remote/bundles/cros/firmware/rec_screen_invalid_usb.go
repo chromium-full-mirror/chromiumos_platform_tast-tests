@@ -105,7 +105,7 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)
 	}
 	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx); err != nil {
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
 		return errors.Wrap(err, "failed to get to firmware screen")
 	}
 	if h.Config.ModeSwitcherType == firmware.MenuSwitcher {

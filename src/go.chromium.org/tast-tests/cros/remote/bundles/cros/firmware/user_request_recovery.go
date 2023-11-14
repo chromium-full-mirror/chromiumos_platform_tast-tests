@@ -87,6 +87,10 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	}
 
 	if hasBrokenScreen {
+		s.Log("Waiting for DUT to reach the firmware screen")
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
+			s.Fatal("Failed to get to firmware screen: ", err)
+		}
 		if err := insertUSBInFirmwareScreen(ctx, h); err != nil {
 			s.Fatal("Failed to insert USB in firmware screen: ", err)
 		}
@@ -104,6 +108,10 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	s.Log("Waiting for DUT to reach the firmware screen")
+	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
+		s.Fatal("Failed to get to firmware screen: ", err)
+	}
 	if err := insertUSBInFirmwareScreen(ctx, h); err != nil {
 		s.Fatal("Failed to insert USB in firmware screen: ", err)
 	}
@@ -140,10 +148,6 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 }
 
 func insertUSBInFirmwareScreen(ctx context.Context, h *firmware.Helper) error {
-	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
-	if err := h.WaitFirmwareScreen(ctx); err != nil {
-		return errors.Wrap(err, "failed to get to firmware screen")
-	}
 	testing.ContextLog(ctx, "Set DFP mode")
 	if err := h.Servo.SetDUTPDDataRole(ctx, servo.DFP); err != nil {
 		testing.ContextLogf(ctx, "Failed to set pd data role to DFP: %.400s", err)

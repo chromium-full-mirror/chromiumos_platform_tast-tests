@@ -6,10 +6,10 @@ package firmware
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strconv"
 	"time"
-	"fmt"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -139,7 +139,7 @@ func APROVerificationReboot(ctx context.Context, s *testing.State) {
 
 		// Wait for keyboard to be enabled at the dev mode firmware screen.
 		s.Log("Waiting for DUT to reach the firmware screen")
-		if err := h.WaitFirmwareScreen(ctx); err != nil {
+		if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreen); err != nil {
 			s.Fatal("Failed to get to firmware screen: ", err)
 		}
 
