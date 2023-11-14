@@ -158,6 +158,9 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifest
 		chrome.NoLogin(),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.KeepEnrollment(),
+		// Forcibly allow Lacros in platforms where it is (temporarily) disallowed. Note this *allows*
+		// Lacros, but does not *enable* it. Tests still need to do so as usual via policy.
+		chrome.ExtraArgs("--disable-disallow-lacros"),
 	}
 	crOpts = append(crOpts, cfg.m.ExtraChromeOptions...)
 	cr, err := chrome.New(ctx, crOpts...)

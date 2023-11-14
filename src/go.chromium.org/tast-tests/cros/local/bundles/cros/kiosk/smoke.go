@@ -169,11 +169,9 @@ func (param smokeTestParam) kioskModeOptions(signinProfileTestExtensionManifestK
 		options = append(options,
 			kioskmode.PublicAccountPolicies(
 				param.appAccountID(),
-				[]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}}),
-			// On some platforms, ash-chrome is launched with --disallow-lacros temporarily.
-			// To forcibly run the tests for those devices, too, add overriding flag here.
-			kioskmode.ExtraChromeOptions(
-				chrome.ExtraArgs("--disable-disallow-lacros")))
+				[]policy.Policy{&policy.LacrosAvailability{Val: "lacros_only"}},
+			),
+		)
 	}
 
 	if param.autoLaunch {
