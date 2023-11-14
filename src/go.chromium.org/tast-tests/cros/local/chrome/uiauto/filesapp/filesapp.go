@@ -262,10 +262,11 @@ func (f *FilesApp) OpenDir(dirName, expectedTitle string) uiauto.Action {
 
 // FormatDevice returns a function that formats USB drive with the default options.
 func (f *FilesApp) FormatDevice() uiauto.Action {
+	button := nodewith.Name("Erase and Format").Role(role.Button)
 	return uiauto.Combine("FormatDevice",
 		f.LeftClick(nodewith.Name("Format device").Role(role.Button)),
-		f.WaitUntilExists(nodewith.Name("Erase and Format").Role(role.Button)),
-		f.LeftClick(nodewith.Name("Erase and Format").Role(role.Button)),
+		f.WaitUntilExists(button),
+		f.LeftClickUntil(button, f.Gone(button)),
 	)
 }
 

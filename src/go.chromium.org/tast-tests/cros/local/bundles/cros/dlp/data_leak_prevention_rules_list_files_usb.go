@@ -331,6 +331,11 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}
 	defer filesApp.Close(cleanupCtx)
 
+	// Close new notifications again in case they overlap something on screen.
+	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
+		s.Fatal("Failed to close notifications: ", err)
+	}
+
 	if err := filesApp.OpenUSBDrive()(ctx); err != nil {
 		s.Fatal("Failed to open unformatted USB drive: ", err)
 	}
