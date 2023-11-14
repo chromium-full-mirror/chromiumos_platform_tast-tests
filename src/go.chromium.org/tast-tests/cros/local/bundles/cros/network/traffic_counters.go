@@ -325,7 +325,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		cros := s.FixtValue().(crostini.FixtureData).Cont
 
 		vmTest(
-			[]pp.TrafficCounter_Source{pp.TrafficCounter_CROSVM},
+			[]pp.TrafficCounter_Source{pp.TrafficCounter_CROSTINI_VM},
 			func() error {
 				// Use curl to generate some traffic to/from the HTTP server.
 				args := []string{
