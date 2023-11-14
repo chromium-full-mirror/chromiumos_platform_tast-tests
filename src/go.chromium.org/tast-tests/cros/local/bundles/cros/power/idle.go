@@ -23,6 +23,7 @@ import (
 var idleTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 10 * time.Minute}
 var idleTracingTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}
 var idleFastTimeParams = power.TimeParams{Interval: 10 * time.Second, Total: 1 * time.Minute}
+var idleLongTimeParams = power.TimeParams{Interval: 20 * time.Second, Total: 10 * time.Minute}
 
 var displayOffBTOff = power.IdleParams{
 	DisplayPower:   false,
@@ -60,6 +61,13 @@ var tracingIdle = power.IdleParams{
 	CollectTrace:   true,
 	IdleTimeParams: idleTracingTimeParams}
 
+// Disable PSR to better understand the effect of display refresh rate on power.
+var displayOnPSROff = power.IdleParams{
+	DisplayPower:   true,
+	BluetoothPower: false,
+	PSRState:       display.PSRForceDisable,
+	IdleTimeParams: idleTimeParams}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Idle,
@@ -96,6 +104,26 @@ func init() {
 			Fixture:   "powerAsh",
 			Val:       tracingIdle,
 			ExtraData: []string{tracing.TBMTracedProbesConfigFile},
+		}, {
+			Name:    "refresh_high_psr",
+			Fixture: "powerAshHighRefresh",
+			Val:     displayOnBTOff,
+		}, {
+			Name:    "refresh_low_psr",
+			Fixture: "powerAshLowRefresh",
+			Val:     displayOnBTOff,
+		}, {
+			Name:    "refresh_high",
+			Fixture: "powerAshHighRefresh",
+			Val:     displayOnPSROff,
+		}, {
+			Name:    "refresh_low",
+			Fixture: "powerAshLowRefresh",
+			Val:     displayOnPSROff,
+		}, {
+			Name:    "refresh_vrr",
+			Fixture: "powerAshVRR",
+			Val:     displayOnPSROff,
 		}, {
 			Name:              "display_off_bt_off_lacros",
 			Fixture:           "powerLacros",
