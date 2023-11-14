@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	chromeMetrics "go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/memory"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
@@ -105,6 +106,17 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 	basemem, err := metrics.NewBaseMemoryStats(ctx, preARC)
 	if err != nil {
 		s.Fatal("Failed to retrieve base memory stats: ", err)
+	}
+
+	umaFirstKill := chromeMetrics.NewHistogramMetrics(
+		"Memory.LowMemoryKiller.FirstKillLatency",
+		chromeMetrics.SetMeanHistogramMetricWriter("", "ms", perf.SmallerIsBetter),
+		chromeMetrics.SetPercentileHistogramMetricWriter(50, "_p50", "ms", perf.SmallerIsBetter),
+		chromeMetrics.SetPercentileHistogramMetricWriter(90, "_p90", "ms", perf.SmallerIsBetter),
+	)
+
+	if umaFirstKill.Start(ctx, tconn); err != nil {
+		s.Fatal("Failed to Start FirstKillLatency metric: ", err)
 	}
 
 	var server *memoryuser.MemoryStressServer
@@ -227,6 +239,9 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 	}
 	if killsBefore != nil && killsAfter != nil {
 		killsAfter.Subtract(killsBefore).LogPerfMetrics(p, "")
+	}
+	if err := umaFirstKill.Write(ctx, tconn, p); err != nil {
+		s.Error("Failed to write FirstKillLatency metrics: ", err)
 	}
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save perf.Values: ", err)

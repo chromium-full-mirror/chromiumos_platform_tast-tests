@@ -164,6 +164,73 @@ func TestHistogramDiff(t *testing.T) {
 	}
 }
 
+func TestHistogramPercentile(t *testing.T) {
+	const expectErr = "err"
+	for _, tc := range []struct {
+		hist       string
+		percentile int
+		result     float64
+		err        bool
+	}{
+		{
+			hist:       "0 1 1",
+			percentile: -1,
+			result:     0,
+			err:        true, // Percentile less than 0.
+		},
+		{
+			hist:       "0 1 1",
+			percentile: 101,
+			result:     0,
+			err:        true, // Percentile greater than 100.
+		},
+		{
+			hist:       "",
+			percentile: 50,
+			result:     0,
+			err:        true, // No histogram data.
+		},
+		{
+			hist:       "0 1 100",
+			percentile: 0,
+			result:     0.5,
+			err:        false,
+		},
+		{
+			hist:       "0 1 100",
+			percentile: 100,
+			result:     0.5,
+			err:        false,
+		},
+		{
+			hist:       "0 1 1 | 1 2 1 | 2 3 1 | 3 4 1",
+			percentile: 75,
+			result:     2.5,
+			err:        false,
+		},
+		{
+			hist:       "0 1 1 | 1 2 1 | 2 3 1 | 3 4 1",
+			percentile: 76,
+			result:     3.5,
+			err:        false,
+		},
+	} {
+		hist := makeHist(t, tc.hist)
+		result, err := hist.Percentile(tc.percentile)
+		if err != nil {
+			if !tc.err {
+				t.Errorf("%v.Percentile(%d) failed: %v", hist, tc.percentile, err)
+			}
+		} else {
+			if tc.err {
+				t.Errorf("%v.Percentile(%d) = %v; want error", hist, tc.percentile, result)
+			} else if result != tc.result {
+				t.Errorf("%v.Percentile(%d) = %v; want %v", hist, tc.percentile, result, tc.result)
+			}
+		}
+	}
+}
+
 func TestClearHistogramTransferFile(t *testing.T) {
 	dir, err := ioutil.TempDir("", "TestClearHistogramTransferFile")
 	if err != nil {

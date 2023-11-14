@@ -132,6 +132,31 @@ func (h *Histogram) Mean() (float64, error) {
 	return float64(h.Sum) / float64(h.TotalCount()), nil
 }
 
+// Percentile calculates a given percentile of the histogram. It is an error when there are no data points. The percentile is approximate.
+func (h *Histogram) Percentile(percentile int) (float64, error) {
+	totalCount := h.TotalCount()
+	if totalCount == 0 {
+		return 0, errors.New("no histogram data")
+	}
+
+	if percentile < 0 {
+		return 0, errors.New("percentile is less than 0")
+	}
+
+	if percentile > 100 {
+		return 0, errors.New("percentile is greater than 100")
+	}
+
+	var count int64 = 0
+	for _, b := range h.Buckets {
+		count += b.Count
+		if (count*100)/totalCount >= int64(percentile) {
+			return 0.5 * float64(b.Max+b.Min), nil
+		}
+	}
+	return 0, errors.New("buckets contained fewer than total count elements")
+}
+
 // HistogramBucket contains a set of reported samples within a fixed range.
 type HistogramBucket struct {
 	// Min contains the minimum value that can be stored in this bucket.
@@ -451,7 +476,7 @@ func SaveHistogramsMeanValue(ctx context.Context, pv *perf.Values, histograms []
 	for _, h := range histograms {
 		mean, err := h.Mean()
 		if err != nil {
-			return errors.Wrapf(err, "failed to get mean for histogram %s: %v", h.Name, err)
+			return errors.Wrapf(err, "failed to get mean for histogram %s", h.Name)
 		}
 
 		metric.Name = fmt.Sprintf("%s", h.Name)

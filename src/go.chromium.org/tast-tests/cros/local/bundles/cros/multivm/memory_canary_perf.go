@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/memory"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/memory/memoryuser"
@@ -144,6 +145,25 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	if err != nil {
 		return errors.Wrap(err, "failed to create TestConn for opening canaries")
 	}
+
+	umaMetrics := []*metrics.HistogramMetrics{
+		metrics.NewHistogramMetrics(
+			"Memory.LowMemoryKiller.FirstKillLatency",
+			metrics.AppendMeanHistogramMetricWriter("", "ms", perf.SmallerIsBetter),
+		),
+		metrics.NewHistogramMetrics(
+			"Discarding.ReclaimTargetAge",
+			metrics.AppendMeanHistogramMetricWriter("", "ms", perf.SmallerIsBetter),
+		),
+		metrics.NewHistogramMetrics(
+			"Discarding.UnnecessaryDiscards",
+			metrics.AppendMeanHistogramMetricWriter("", "tabs", perf.SmallerIsBetter),
+		),
+	}
+	if metrics.StartHistogramMetrics(ctx, tconn, umaMetrics); err != nil {
+		return errors.Wrap(err, "failed to Start UMA metrics")
+	}
+
 	canaryCloser, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
 	if err != nil {
 		return err
@@ -282,6 +302,10 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	appendKillLatencyMetric(p, "arc_cached", appKills.Cached.Time.Sub(vmmmsKills.CachedApp.Time))
 	appendKillLatencyMetric(p, "tab_protected", tabDiscards.ProtectedBackground.Time.Sub(vmmmsKills.PerceptibleTab.Time))
 	appendKillLatencyMetric(p, "tab_background", tabDiscards.Background.Time.Sub(vmmmsKills.CachedTab.Time))
+
+	if err := metrics.WriteHistogramMetrics(ctx, tconn, p, umaMetrics); err != nil {
+		return err
+	}
 
 	// Check that app kills and tab discards happened in the right order.
 	// NB: We do this here after observing all tab discards and app killed because
