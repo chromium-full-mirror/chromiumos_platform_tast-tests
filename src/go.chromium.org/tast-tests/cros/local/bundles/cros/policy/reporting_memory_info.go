@@ -148,17 +148,17 @@ func ReportingMemoryInfo(ctx context.Context, s *testing.State) {
 
 	// If there is no encyrption the field should be marked with the disabled enum.
 	if inputResult.EncryptionState == "" && *reportedInfo.EncryptionState != reporting.MemoryEncryptionState_MEMORY_ENCRYPTION_STATE_DISABLED {
-		s.Fatal("Encryption state is not disabled when it should be")
+		s.Fatal("Encryption state is not disabled when it should be. Full TME event: ", reportedInfo)
 	}
 
 	// If there is an encryption state then the fields KeyLength
 	// and MaxKeys should match the data gotten from croshealthd.
 	if inputResult.EncryptionState != "" {
 		if *reportedInfo.KeyLength != inputResult.KeyLength {
-			s.Fatal("Key length mismatch")
+			s.Fatal("Key length mismatch. Full TME event: ", reportedInfo)
 		}
 		if *reportedInfo.MaxKeys != inputResult.MaxKeyNumber {
-			s.Fatal("Max keys mismatch")
+			s.Fatal("Max keys mismatch. Full TME event: ", reportedInfo)
 		}
 	}
 }
