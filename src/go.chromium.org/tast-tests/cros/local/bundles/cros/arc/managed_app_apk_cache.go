@@ -6,6 +6,7 @@ package arc
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
@@ -63,11 +64,11 @@ func init() {
 }
 
 func ManagedAppApkCache(ctx context.Context, s *testing.State) {
-	const (
-		noCachedApkRegEx     = "no cachedApk found for " + testPackage
-		pushingInCacheRegEx  = "Pushing in cache " + testPackage
-		cachedApkLoadedRegEx = "cachedApk loaded for " + testPackage
-	)
+	notCachedRegEx       := fmt.Sprintf(
+		"(no cachedApk found for %s)|(Package %s version [0-9]* does not exist in cache)",
+		testPackage, testPackage)
+	pushingInCacheRegEx  := "Pushing in cache " + testPackage
+	cachedApkLoadedRegEx := "cachedApk loaded for " + testPackage
 
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
@@ -96,7 +97,7 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 			return err
 		}
 
-		exp := regexp.MustCompile(noCachedApkRegEx)
+		exp := regexp.MustCompile(notCachedRegEx)
 		if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
 			return rl.Exit("find log that package is not already cached", err)
 		}
