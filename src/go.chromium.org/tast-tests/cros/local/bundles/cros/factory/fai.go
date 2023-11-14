@@ -8,6 +8,8 @@ import (
 	"context"
 	"encoding/json"
 	"os"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -22,7 +24,7 @@ const (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:     FAI,
-		Desc:     "Test Factory First Article Inspection is able to collect all expected data",
+		Desc:     "Test if Factory First Article Inspection (FAI) is able to collect all expected components",
 		Contacts: []string{"chromeos-factory-fai@google.com", "wyuang@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
@@ -32,7 +34,8 @@ func init() {
 	})
 }
 
-func getSkippedItems() []string {
+// getKnownFailedItems returns the elements that factory_fai might fail to collect.
+func getKnownFailedItems() []string {
 	return []string{
 		// Statful partition is unable to mount in test image.
 		"release_image_stateful_partition",
@@ -43,11 +46,9 @@ func getSkippedItems() []string {
 	}
 }
 
-func getWaivedItems() []string {
+// getKnownEmptyItems returns the elements that are expected to be empty on some projects.
+func getKnownEmptyItems() []string {
 	return []string{
-		// AP RO hash is not stored in Ti50.
-		"gsc_ap_ro_hash",
-		// CBI is intentional empty on some projects.
 		"cbi_data",
 	}
 }
@@ -67,7 +68,9 @@ func prepareFaiConfig(ctx context.Context) (string, error) {
 	var jsonConfig map[string]interface{}
 	json.Unmarshal(rawConfig, &jsonConfig)
 
-	for _, key := range getSkippedItems() {
+	// Removes the fields that factory_fai might fail to collect.
+	// Plus, we don't care about these values on lab devices.
+	for _, key := range getKnownFailedItems() {
 		delete(jsonConfig, key)
 	}
 
@@ -77,7 +80,7 @@ func prepareFaiConfig(ctx context.Context) (string, error) {
 	}
 
 	if _, err := tempFile.Write(modifiedConfig); err != nil {
-		return "", errors.Wrap(err, "failed to wrtie fai config")
+		return "", errors.Wrap(err, "failed to write fai config")
 	}
 
 	return tempFile.Name(), nil
@@ -89,15 +92,41 @@ func FAI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prepare fai config: ", err)
 	}
 	defer os.Remove(configPath)
-	output, err := testexec.CommandContext(ctx, factoryFaiPath, "-c", configPath).CombinedOutput()
+
+	// File to store the FAI result.
+	faiResultFile := filepath.Join(s.OutDir(), "factory_fai_result.json")
+
+	_, stderr, err := testexec.CommandContext(ctx, factoryFaiPath, "-c", configPath, "--output-path", faiResultFile).SeparatedOutput()
+	if len(stderr) > 0 {
+		s.Log("factory_fai stderr:", string(stderr))
+	}
 	if err != nil {
-		s.Error("Failed to execute factory_fai: ", err)
-		s.Fatal("Output: ", string(output[:]))
+		s.Fatal("Failed to execute factory_fai: ", err)
+	}
+
+	re := regexp.MustCompile(`Error: Failed to collect "(?P<component>\w+)".`)
+	matches := re.FindAllStringSubmatch(string(stderr), -1)
+	if matches != nil {
+		var components []string;
+		for _, match := range matches {
+			components = append(components, match[1])
+		}
+		s.Error("Failed to collect the components: ", components)
+	}
+
+	faiResult, err := os.ReadFile(faiResultFile)
+	if err != nil {
+		s.Fatal("Failed to read the FAI result file: ", err)
 	}
 	var jsonResult map[string]interface{}
-	json.Unmarshal(output, &jsonResult)
+	json.Unmarshal(faiResult, &jsonResult)
 
-	for _, key := range getWaivedItems() {
+	if len(jsonResult) == 0 {
+		s.Fatal("FAI result is empty")
+	}
+
+	// Removes the items that are known to be empty on some projects.
+	for _, key := range getKnownEmptyItems() {
 		delete(jsonResult, key)
 	}
 
