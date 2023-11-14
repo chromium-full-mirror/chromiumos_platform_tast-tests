@@ -40,11 +40,10 @@ func init() {
 		Params: []testing.Param{{
 			Name: "connected_before_suspend",
 			Val:  false, // disconnect
-		},
-			{
-				Name: "disconnected_before_suspend",
-				Val:  true, //disconnect
-			}},
+		}, {
+			Name: "disconnected_before_suspend",
+			Val:  true, //disconnect
+		}},
 	})
 }
 

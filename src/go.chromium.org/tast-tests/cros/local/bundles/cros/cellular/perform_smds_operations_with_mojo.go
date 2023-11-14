@@ -44,15 +44,13 @@ func init() {
 			Val: &testConfig{
 				shouldInstallProfiles: false,
 			},
-		},
-			{
-				// Ensures profiles can be installed.
-				Name: "install",
-				Val: &testConfig{
-					shouldInstallProfiles: true,
-				},
+		}, {
+			// Ensures profiles can be installed.
+			Name: "install",
+			Val: &testConfig{
+				shouldInstallProfiles: true,
 			},
-		},
+		}},
 	})
 }
 
