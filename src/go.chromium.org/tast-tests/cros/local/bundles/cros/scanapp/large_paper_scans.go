@@ -6,6 +6,7 @@ package scanapp
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/scanapp/scanning"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -27,6 +28,7 @@ func init() {
 			"group:paper-io",
 			"paper-io_scanning",
 		},
+		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"cups", "chrome"},
 		Fixture:      "virtualUsbPrinterModulesLoadedWithChromeLoggedIn",
 		Data: []string{
