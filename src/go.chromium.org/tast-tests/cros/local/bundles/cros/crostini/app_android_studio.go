@@ -37,7 +37,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Android Studio from terminal and performs UI interactions to create new project",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host", "amd64"},
 		// b/238714120: kohaku performance is insufficient
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kohaku")),
