@@ -15,6 +15,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -77,6 +78,21 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	}
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to get config: ", err)
+	}
+
+	// Reboot the DUT with a cold reset so that the keyboard backlight
+	// value from the ec command 'kblight' gets restored, just in case
+	// it was left at the value set by previous tests.
+	s.Log("Rebooting the DUT with a cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		s.Fatal("Failed to cold reset the DUT: ", err)
+	}
+
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancelWaitConnect()
+
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+		s.Fatal("Failed to reconnect to dut: ", err)
 	}
 
 	if err := h.RequireRPCClient(ctx); err != nil {
@@ -152,11 +168,12 @@ func CheckKeyboardBacklightFunctionality(ctx context.Context, s *testing.State) 
 	getKBLightFnc = func(h *firmware.Helper, ctx context.Context) (int, error) {
 		return h.Servo.GetKBBacklight(ctx)
 	}
-	initValue, err := checkInitKBBacklight(ctx, h, kbLightUp)
+
+	currKBLight, err := getKBLightFnc(h, ctx)
 	if err != nil {
-		s.Fatal("Failed to check initial keybaord backlight value: ", err)
+		s.Fatal("Failed to get current kblight: ", err)
 	}
-	switch initValue {
+	switch currKBLight {
 	case 0:
 		s.Log("Keyboard initial backlight value is 0, attempting to increase the light to at least 30 percent before test")
 		err = adjustKBBacklight(ctx, h, s.DUT(), 30, 15*time.Second, kbLightUp, "increasing")
@@ -227,19 +244,6 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut 
 	return nil
 }
 
-// checkInitKBBacklight presses on a key and checks the initial keyboard backlight value.
-func checkInitKBBacklight(ctx context.Context, h *firmware.Helper, initPress string) (int, error) {
-	// Press kb-light-up shortcut and check for the initial keyboard brightness value.
-	if err := pressShortcut(ctx, h, initPress); err != nil {
-		return 0, errors.Wrap(err, "failed to check initial kb backlight")
-	}
-	kbLight, err := getKBLightFnc(h, ctx)
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get kb backlight")
-	}
-	return kbLight, nil
-}
-
 // shouldContinue continues adjustment on keyboard backlight until reaching the desired value.
 func shouldContinue(kbBacklight, extremeValue int, action string) bool {
 	switch action {
@@ -296,6 +300,10 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 		testing.ContextLogf(ctx, "Attempting to match, current: %d, expected: %d", kbLight, extremeValue)
 		if err := pressShortcut(ctx, h, actionKey); err != nil {
 			return errors.Wrap(err, "failed to adjust kb backlight brightness")
+		}
+		// GoBigSleepLint: key presses delay to adjust the keyboard backlight.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			return errors.Wrap(err, "failed to sleep")
 		}
 		kbLight, err = getKBLightFnc(h, ctx)
 		if err != nil {

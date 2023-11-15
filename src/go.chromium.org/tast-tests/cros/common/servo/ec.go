@@ -242,11 +242,11 @@ func (s *Servo) GetKeyRowCol(key, model string) (int, int, error) {
 // getKeyMatrix returns the ec key map based on the model name.
 func getKeyMatrix(model string) map[string]KBMatrixPair {
 	nonStandardKeyMatrixMap := map[string]map[string]KBMatrixPair{
-		"mithrax": MithraxECKeyMatrix,
-		"frost":   FrostECKeyMatrix,
-		"osiris":  OsirisECKeyMatrix,
-		"banshee": BansheeECKeyMatrix,
-		"delbin":  DelbinECKeyMatrix,
+		"mithrax":   MithraxECKeyMatrix,
+		"frostflow": FrostECKeyMatrix,
+		"osiris":    OsirisECKeyMatrix,
+		"banshee":   BansheeECKeyMatrix,
+		"delbin":    DelbinECKeyMatrix,
 	}
 	matrix, ok := nonStandardKeyMatrixMap[model]
 	if !ok {
