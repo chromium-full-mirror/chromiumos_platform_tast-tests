@@ -98,6 +98,43 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
 			},
 			{
+				Name: "dsp_0x10_conflict", // 0x10 is exactly the same as 0x0.
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x10"}},
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
+						CrasAPM: internal.EffectEnabled,  // For AP NC.
+						APNC:    internal.EffectEnabled,  // NC fallback.
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+			},
+			{
+				Name: "dsp_0x10_0x11_conflict",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{flags: []string{"--effects=0x10"}},
+						{flags: []string{"--effects=0x11"}},
+					},
+					expectEffects: effects{
+						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
+						CrasAPM: internal.EffectEnabled,  // For AP NC.
+						APNC:    internal.EffectEnabled,  // NC fallback.
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAECModels...)),
+			},
+			{
 				Name: "dsp_0x0_dont_care",
 				Val: crasEffectsParam{
 					noiseCancellationEnabled: true,
