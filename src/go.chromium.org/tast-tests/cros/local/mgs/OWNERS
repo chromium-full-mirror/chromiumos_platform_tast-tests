@@ -1,0 +1,7 @@
+set noparent
+
+# Kiosk team.
+include /src/go.chromium.org/tast-tests/cros/local/kioskmode/OWNERS
+
+# Tast team for bulk/emergencies.
+include /OWNERS.tast
