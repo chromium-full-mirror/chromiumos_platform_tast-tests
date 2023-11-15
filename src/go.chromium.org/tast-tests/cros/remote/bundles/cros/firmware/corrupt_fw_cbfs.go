@@ -27,6 +27,7 @@ type apCorruptCBFSMetadataConfig struct {
 	Filename        string
 	CorruptType     pb.CBFSCorruptType
 	FirmwareVariant fwCommon.RWSection
+	RequireECSync   bool
 }
 
 func init() {
@@ -38,7 +39,7 @@ func init() {
 			"czapiga@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_unstable"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.VbootCbfsIntegration()),
 		Timeout:      30 * time.Minute,
 		SoftwareDeps: []string{"chromeos_firmware", "crossystem", "flashrom"},
@@ -48,102 +49,122 @@ func init() {
 			{
 				Name:    "normal_mode_a_file_header",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_attributes",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_length",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_loaded_in_romstage",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_loaded_in_ramstage",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
+			},
+			{
+				Name:    "normal_mode_a_depthcharge_file",
+				Fixture: fixture.NormalMode,
+				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, true},
 			},
 			{
 				Name:    "normal_mode_b_file_header",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_attributes",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_length",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_loaded_in_romstage",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_loaded_in_ramstage",
 				Fixture: fixture.NormalMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
+			},
+			{
+				Name:    "normal_mode_b_depthcharge_file",
+				Fixture: fixture.NormalMode,
+				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, true},
 			},
 			{
 				Name:    "dev_mode_a_file_header",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_attributes",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_length",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_loaded_in_romstage",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_loaded_in_ramstage",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
+			},
+			{
+				Name:    "dev_mode_a_depthcharge_file",
+				Fixture: fixture.DevMode,
+				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, true},
 			},
 			{
 				Name:    "dev_mode_b_file_header",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_attributes",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_length",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_loaded_in_romstage",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_loaded_in_ramstage",
 				Fixture: fixture.DevMode,
-				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB},
+				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
+			},
+			{
+				Name:    "dev_mode_b_depthcharge_file",
+				Fixture: fixture.DevMode,
+				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, true},
 			},
 		},
 	})
@@ -211,7 +232,19 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 		s.Fatal(err, "failed to set the USB Mux direction to the Host")
 	}
 
+	testing.ContextLog(ctx, "Get intial GBB flags")
+	oldGBBFlags, err := fwCommon.GetGBBFlags(ctx, h.DUT)
+	if err != nil {
+		s.Fatal("Failed get gbb flags: ", err)
+	}
+
 	defer func(ctx context.Context) {
+		if testConfig.RequireECSync {
+			if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, oldGBBFlags); err != nil {
+				s.Fatal("Failed to set gbb flag: ", err)
+			}
+		}
+
 		// Disable WP so backup can be restored.
 		if err := fwUtils.SetFWWriteProtect(ctx, h, false); err != nil {
 			s.Fatal("Failed to set FW write protect state: ", err)
@@ -260,6 +293,18 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 			}
 		}
 	}(cleanupCtx)
+
+	if testConfig.RequireECSync {
+		s.Log("Check DISABLE_EC_SOFTWARE_SYNC GBB flag is not set, if it is, clear it")
+		if fwCommon.GBBFlagsContains(oldGBBFlags, pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
+			testing.ContextLog(ctx, "Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
+			req := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
+
+			if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &req); err != nil {
+				s.Fatal("Failed to set gbb flag: ", err)
+			}
+		}
+	}
 
 	// Always start from RW/A.
 	if err := fwUtils.ChangeFWVariant(ctx, h, ms, fwCommon.RWSectionA); err != nil {
