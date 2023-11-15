@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -40,8 +39,8 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "ExtDispID1", "USBTypeAIDArray", "wwcbIPPowerIp"},
-		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService"},
+		Vars:         []string{"DockingID", "USBTypeAIDArray", "wwcbIPPowerIp"},
+		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
 		Data:         []string{sampleTXT},
 	})
 }
@@ -52,7 +51,6 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	dockingID := s.RequiredVar("DockingID")
-	extDispID := s.RequiredVar("ExtDispID1")
 	var USBTypeAIDArray []string
 	for _, ID := range strings.Split(s.RequiredVar("USBTypeAIDArray"), ",") {
 		USBTypeAIDArray = append(USBTypeAIDArray, ID)
@@ -75,8 +73,6 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	}
 	defer cs.Close(cleanupCtx, &empty.Empty{})
 
-	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
-
 	// Open IP power to supply docking power.
 	if err := utils.OpenIppower(ctx, []int{1}); err != nil {
 		s.Fatal("Failed to open IP power: ", err)
@@ -89,16 +85,8 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
-		s.Fatal("Failed to connect external display: ", err)
-	}
-
 	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 		s.Fatal("Failed to connect docking station: ", err)
-	}
-
-	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
-		s.Fatal("Failed to verify external display is connected: ", err)
 	}
 
 	before, err := utils.GetUSBDevice(ctx, dut)
