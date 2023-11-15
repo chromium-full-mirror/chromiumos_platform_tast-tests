@@ -207,7 +207,6 @@ func (d *differ) initialize(ctx context.Context) error {
 		"scale":                  fmt.Sprintf("%.2f", uiScale),
 		"tablet_mode":            fmt.Sprintf("%t", d.isTablet),
 		"test_group":             d.state.TestName(),
-		"version":                release[lsbrelease.Version],
 	}
 
 	dir, ok := testing.ContextOutDir(ctx)
@@ -233,6 +232,9 @@ func (d *differ) initialize(ctx context.Context) error {
 	baseArgs := []string{
 		"--corpus", corpus,
 		"--passfail",
+		// Don't include version in keysFile, so fuzzy matching can match across
+		// different version.
+		"--add-test-optional-key", fmt.Sprintf("version:%s", release[lsbrelease.Version]),
 	}
 
 	v := url.Values{}
