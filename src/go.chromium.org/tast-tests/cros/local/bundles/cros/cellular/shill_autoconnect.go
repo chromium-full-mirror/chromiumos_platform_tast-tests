@@ -77,7 +77,7 @@ func ShillAutoconnect(ctx context.Context, s *testing.State) {
 	}
 
 	timeout := 2 * time.Minute
-	s.Logf("Waiting for %v for IsCOnnected = true", timeout)
+	s.Logf("Waiting for %v for IsConnected = true", timeout)
 	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyIsConnected, true, timeout); err != nil {
 		s.Fatalf("Service not connected after %v, error: %v", timeout, err)
 	}
