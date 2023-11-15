@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // checkDebugd makes sure debugd is running and responding to printer setup requests.  It does this
@@ -25,8 +24,7 @@ func checkDebugd(ctx context.Context) error {
 	defer cancel()
 
 	if err := upstart.EnsureJobRunning(ctx, "debugd"); err != nil {
-		testing.ContextLogf(ctx, "debugd not running: %q", err)
-		return err
+		return errors.Wrap(err, "failed to ensure debugd job is up")
 	}
 	d, err := debugd.New(ctx)
 	if err != nil {
