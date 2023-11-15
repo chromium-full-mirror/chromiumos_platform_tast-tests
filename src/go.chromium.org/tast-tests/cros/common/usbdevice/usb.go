@@ -192,10 +192,14 @@ const (
 
 	// VendorIDGoogle represents Google Vendor ID.
 	VendorIDGoogle = 0x18D1
+	// VendorIDNetchip represents Netchip Technology Vendor ID.
+	VendorIDNetchip = 0x0525
 	// ProductIDGoogleKeyboard represents Google Virtual USB Keyboard Product ID.
 	ProductIDGoogleKeyboard = 0x5062
 	// ProductIDGoogleMouse represents Google Virtual USB Mouse Product ID.
 	ProductIDGoogleMouse = 0x5063
+	// ProductIDNetchipMassStorage represents Netchip Virtual USB Mass Storage Product ID.
+	ProductIDNetchipMassStorage = 0xA4A5
 	// BcdDeviceVersion1 represents device release number 1.0.0.
 	BcdDeviceVersion1 = 0x0100
 

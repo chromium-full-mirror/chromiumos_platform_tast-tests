@@ -86,6 +86,7 @@ var standardTests = map[string]testOptions{
 	"sync_time.go":                      {},
 	"task_manager.go":                   {},
 	"uninstall_invalid_app.go":          {},
+	"usb_share_mass_storage.go":         {},
 	"verify_app_x11.go":                 {},
 	"vmc_extra_disk.go":                 {},
 	"vmc_start.go":                      {},
