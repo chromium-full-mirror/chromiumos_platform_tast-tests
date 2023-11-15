@@ -449,6 +449,7 @@ func (d *differ) capture(ctx context.Context, screenshotName string, finder *nod
 	// it's already translated).
 	windowFinder := nodewith.Role(role.Window).Attribute("name", window.Title).First()
 
+	// If resizing the window is needed.
 	if options.WindowState == ash.WindowStateNormal {
 		shouldResize := window.CanResize && !options.SkipWindowResize
 		if shouldResize && (options.WindowWidthDP == 0 || options.WindowHeightDP == 0) {
@@ -488,14 +489,13 @@ func (d *differ) capture(ctx context.Context, screenshotName string, finder *nod
 		if err := ash.WaitWindowFinishAnimating(ctx, d.tconn, window.ID); err != nil {
 			return testArgs, errors.Wrap(err, "Unable to wait for the window to finish animating")
 		}
-	} else {
-		window, err := ash.GetActiveWindow(ctx, d.tconn)
-		if err != nil {
-			return testArgs, errors.Wrapf(err, "Unable to find window after setting window state to %s", options.WindowState)
-		}
-		windowBoundsDP = window.BoundsInRoot
 	}
 
+	window, err = ash.GetActiveWindow(ctx, d.tconn)
+	if err != nil {
+		return testArgs, errors.Wrapf(err, "Unable to find window after setting window state to %s", options.WindowState)
+	}
+	windowBoundsDP = window.BoundsInRoot
 	windowBoundsDP = windowBoundsDP.WithInset(options.WindowBorderWidthDP, options.WindowBorderWidthDP)
 
 	dir := filepath.Join(d.dir, screenshotName)
