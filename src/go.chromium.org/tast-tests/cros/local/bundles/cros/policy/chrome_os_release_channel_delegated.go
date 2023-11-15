@@ -104,7 +104,7 @@ func waitForTargetChannel(ctx context.Context, channel string) error {
 // applyPoliciesAndCheckSettingsPage sets policies and restarts Chrome to apply
 // them, then checks the settings page for the restriction on channel
 // selection.
-func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fdms *fakedms.FakeDMS, policies []policy.Policy, expectedRestriction restriction.Restriction, dumpPrefix string) (cr *chrome.Chrome, retErr error) {
+func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fdms *fakedms.FakeDMS, policies []policy.Policy, expectedRestriction restriction.Restriction, dumpPrefix string) (retChrome *chrome.Chrome, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -131,6 +131,11 @@ func applyPoliciesAndCheckSettingsPage(ctx context.Context, s *testing.State, fd
 	}
 
 	defer func(ctx context.Context) {
+		if cr == nil {
+			testing.ContextLog(ctx, "cr is nil, skipping screenshot")
+			return
+		}
+
 		faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool {
 			return retErr != nil
 		}, cr, dumpPrefix+"_ui_tree_settings_page")
