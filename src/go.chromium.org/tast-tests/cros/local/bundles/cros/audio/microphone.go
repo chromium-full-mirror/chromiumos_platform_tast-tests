@@ -33,7 +33,8 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"audio_stable"},
 		// TODO(b:268542791): Skip hoglin until the issue is fixed.
-		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("hoglin")),
+		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
+		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("hoglin", "brya")),
 	})
 }
 

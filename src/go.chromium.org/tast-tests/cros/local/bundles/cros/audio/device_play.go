@@ -26,14 +26,15 @@ func init() {
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"audio_stable"},
 			// TODO(b/244254621) : remove "sasukette" when b/244254621 is fixed.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette")),
+			// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("sasukette", "brya")),
 		}, {
 			Name:              "unstable_platform",
 			ExtraSoftwareDeps: []string{"audio_unstable"},
 			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "unstable_model",
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette", "brya")),
 			ExtraAttr:         []string{"informational"},
 		}},
 	})

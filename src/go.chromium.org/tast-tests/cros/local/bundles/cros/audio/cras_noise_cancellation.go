@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -36,6 +37,8 @@ func init() {
 		Fixture:      fixture.AloopLoaded{Channels: 2}.Instance(),
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"chrome"},
+		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("brya")),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{

@@ -27,7 +27,8 @@ import (
 // TODO(b/239385484) : remove "beetley" when b/239385484 is fixed.
 // TODO(b/245058202) : remove "bob" when b/245058202 is fixed.
 // TODO(b/285830729) : remove "geralt" when b/285830729 is fixed.
-var alsaConformanceUnstableModels = []string{"beetley", "bob", "geralt"}
+// TODO(b/312097873) : remove "brya" when b/309904720 is fixed.
+var alsaConformanceUnstableModels = []string{"beetley", "bob", "geralt", "brya"}
 
 // TODO(b/136614687): Relex the criteria for grunt devices, the audio still sounds fine as CRAS can compensate the rate, if the rate error is not huge.
 var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya360", "treeya"}

@@ -40,6 +40,8 @@ var unstableModelsPlaybackCapture = []string{
 	"akali", "akali360", "bard", "pantheon", "sona", "syndra", "vayne",
 	// TODO(b/198322358): Undo skip after fix.
 	"ekko", "nautilus", "nautiluslte", "soraka",
+	// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
+	"brya",
 }
 
 func init() {

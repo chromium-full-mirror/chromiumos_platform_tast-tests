@@ -30,7 +30,8 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Fixture:      "powerAshPlatformAudio",
 		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker()),
+		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
+		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Speaker(), hwdep.SkipOnModel("brya")),
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Timeout:      10*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
