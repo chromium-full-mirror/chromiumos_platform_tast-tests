@@ -119,7 +119,7 @@ func signinAndVerify(ctx context.Context, tconn *chrome.TestConn, kb *input.Keyb
 	userButton := nodewith.Name(creds.User).Role(role.Button).Ancestor(loginWindow)
 	if err := uiauto.NamedCombine(fmt.Sprintf("ensure user %q is visible", creds.User),
 		ui.WaitUntilExists(userButton),
-		ui.MakeVisible(userButton),
+		ui.ScrollToVisible(userButton),
 	)(ctx); err != nil {
 		return err
 	}
