@@ -1,0 +1,4 @@
+set noparent
+
+# Tast team
+include /OWNERS.tast
