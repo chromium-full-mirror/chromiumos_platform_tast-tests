@@ -53,6 +53,8 @@ var (
 			// Qualcomm
 			`qcom-venus .*video-codec: SFR message from FW:`,
 			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
+			// Kernel splats
+			`------------\[ cut here \]------------`,
 		}, "|")),
 	}
 	disableSysLogCheck = false
