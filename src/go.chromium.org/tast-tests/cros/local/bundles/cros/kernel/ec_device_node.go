@@ -19,7 +19,8 @@ func init() {
 		Contacts: []string{
 			"chromeos-kernel-test@google.com",
 			"chromeos-kernel-team@google.com",
-			"kmshelton@google.com", // Original test author
+			"jbettis@chromium.org",
+			"skbhasin@google.com",
 		},
 		BugComponent: "b:167278",
 		Attr:         []string{"group:mainline"},

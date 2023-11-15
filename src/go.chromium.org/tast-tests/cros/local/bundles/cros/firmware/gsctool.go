@@ -21,7 +21,6 @@ func init() {
 		Desc: "Checks that gsctool can communicate with the GSC",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"kmshelton@chromium.org",  // Test Author
 			"mruthven@chromium.org",   // GSC Firmware Developer
 			"chromeos-gsc@google.com", // GSC Firmware Developers
 		},
