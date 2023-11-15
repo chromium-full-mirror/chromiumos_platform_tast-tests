@@ -15,9 +15,6 @@ service UtilsService {
   // BlockingSync syncs the root device and internal device.
   rpc BlockingSync (google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  // ReadServoKeyboard reads from the servo's keyboard emulator and decodes the key presses.
-  rpc ReadServoKeyboard (ReadServoKeyboardRequest) returns (ReadServoKeyboardResponse) {}
-
   // FindPhysicalKeyboard finds /dev/input/event* file for physical a keyboard.
   rpc FindPhysicalKeyboard (google.protobuf.Empty) returns (InputDevicePath) {}
 
@@ -47,16 +44,6 @@ service UtilsService {
 
   // CheckCrosConfigProperty checks cros_config and returns the value of a hardware property.
   rpc CheckCrosConfigProperty (CheckCrosConfigRequest) returns (CheckCrosConfigResponse) {}
-}
-
-// ReadServoKeyboardRequest listens the servo's keyboard emulator for a specified duration in seconds.
-message ReadServoKeyboardRequest {
-  uint32 duration = 1;
-}
-
-// ReadServoKeyboardResponse provides what keys were pressed.
-message ReadServoKeyboardResponse {
-  repeated string keys = 1;
 }
 
 // InputDevicePath provides the path to /dev/input/event* for a device.
