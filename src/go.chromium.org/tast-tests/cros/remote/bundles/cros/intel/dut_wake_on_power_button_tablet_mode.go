@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
+	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -58,22 +59,19 @@ func DUTWakeOnPowerButtonTabletMode(ctx context.Context, s *testing.State) {
 		pkgCstateFile = "/sys/kernel/debug/pmc_core/package_cstate_show"
 	)
 
-	// Get the initial tablet_mode_angle settings to restore at the end of test.
-	reTabletModeAngle := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
-	out, err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output()
-	if err != nil {
-		s.Fatal("Failed to retrieve tablet_mode_angle settings: ", err)
+	tmc := &tabletmode.ConvertibleModeControl{}
+	if err := tmc.InitControl(ctx, dut); err != nil {
+		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
-	m := reTabletModeAngle.FindSubmatch(out)
-	if len(m) != 3 {
-		s.Fatalf("Failed to get initial tablet_mode_angle settings: got submatches %+v", m)
-	}
-	initLidAngle := m[1]
-	initTabModeHysteresis := m[2]
+	defer func(ctx context.Context) {
+		testing.ContextLog(ctx, "Resetting tabletmode")
+		if err := tmc.Reset(ctx); err != nil {
+			s.Fatal("Failed to restore tabletmode to the original settings: ", err)
+		}
+	}(ctxForCleanUp)
 
-	// Set tabletModeAngle to 0 to force the DUT into tablet mode.
 	testing.ContextLog(ctx, "Put DUT into tablet mode")
-	if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(); err != nil {
+	if err := tmc.ForceTabletMode(ctx); err != nil {
 		s.Fatal("Failed to set DUT into tablet mode: ", err)
 	}
 
@@ -93,9 +91,6 @@ func DUTWakeOnPowerButtonTabletMode(ctx context.Context, s *testing.State) {
 			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
 				s.Fatal("Failed to power on DUT at cleanup: ", err)
 			}
-		}
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", string(initLidAngle), string(initTabModeHysteresis)).Run(); err != nil {
-			s.Fatal("Failed to restore tablet_mode_angle to the original settings: ", err)
 		}
 	}(ctxForCleanUp)
 
