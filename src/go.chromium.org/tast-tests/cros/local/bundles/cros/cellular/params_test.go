@@ -15,19 +15,30 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crostini"
 )
 
-var standardTests = []string{
-	"is_connected.go",
-	"smoke.go",
-	"smoke_ip_connectivity.go",
+// Map tests to whether or not they belong in AVL.
+var standardTests = map[string]bool{
+	"is_connected.go":          false,
+	"smoke.go":                 true,
+	"smoke_ip_connectivity.go": true,
 }
 
 func TestFixTestParams(t *testing.T) {
-	params := `
+	getParams := func(isAVL bool) string {
+		localParams := `
 		{
 			Name:      "",
 			Val:       "",
 			ExtraAttr: []string{"cellular_carrier_local"},
-		},
+		},`
+		if isAVL {
+			localParams = `
+		{
+			Name:      "",
+			Val:       "",
+			ExtraAttr: []string{"cellular_carrier_local", "cellular_ota_avl"},
+		},`
+		}
+		return localParams + `
 		{
 			Name:      "att",
 			Val:       "att",
@@ -98,8 +109,10 @@ func TestFixTestParams(t *testing.T) {
 			Val:       "telus",
 			ExtraAttr: []string{"cellular_carrier_telus"},
 		},`
-	for _, filename := range standardTests {
-		genparams.Ensure(t, filename, params)
+	}
+
+	for filename, isAVL := range standardTests {
+		genparams.Ensure(t, filename, getParams(isAVL))
 	}
 }
 
