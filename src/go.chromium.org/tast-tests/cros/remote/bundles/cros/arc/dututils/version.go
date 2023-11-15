@@ -176,10 +176,8 @@ func GetBuildDescriptorRemotely(ctx context.Context, dut *dut.DUT, vmEnabled boo
 	}
 
 	abiMap := map[string]string{
-		"armeabi-v7a": "arm",
-		"arm64-v8a":   "arm64",
-		"x86":         "x86",
-		"x86_64":      "x86_64",
+		"arm64-v8a": "arm64",
+		"x86_64":    "x86_64",
 	}
 
 	abi, ok := abiMap[mCPUAbi[2]]

@@ -7,7 +7,6 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -322,8 +321,7 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
 			// x86-64 ARC: eve(eve-Intel), gimble(brya-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
-			// arm ARC: kodama(kukui), katsu(kukui)
-			// arm64 ARC: pompom(trogdor), pazquel(trogdor)
+			// arm64 ARC: kodama(kukui), katsu(kukui), pompom(trogdor), pazquel(trogdor)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("eve", "gimble", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
 			Val: testParam{
 				vmEnabled:                     true,
@@ -332,7 +330,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native", "arm-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
@@ -340,8 +338,10 @@ func init() {
 			Name:              "vm_t_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
-			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel), screebo4es(rex-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
-			// arm64 ARC: steelix(corsola), magneton(corsola), starmie(staryu-64only)
+			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
+			// x64only ARC: screebo4es(rex-Intel)
+			// arm64 ARC: steelix(corsola), magneton(corsola)
+			// arm64only ARC: starmie(staryu)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon", "screebo4es", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
 			Val: testParam{
 				vmEnabled:                     true,
@@ -350,7 +350,7 @@ func init() {
 				uploadPackagesReference:       true,
 				uprevBranch:                   true,
 				dexOptCacheGen:                true,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x86_64-ndk", "arm64-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-houdini", "x64only-houdini", "x86_64-ndk", "arm64-native", "arm64only-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
@@ -427,7 +427,19 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	}
 
 	v := fmt.Sprintf("%s_%s_%s", desc.CPUAbi, desc.BuildType, desc.BuildID)
-	vUreadahead := fmt.Sprintf("host_%s_%s_%s_%s", desc.HostUreadaheadAbi, desc.BinaryTranslationType, desc.BuildType, desc.BuildID)
+
+	// Given all ARCVM arm boards migrated to arm64 as of b/309907468 and ureadahead does not support
+	// 32-bit x86, we can deprecate arm32 support and use the same guest abi as other caches.
+	ureadaheadAbi := desc.HostUreadaheadAbi
+	if param.vmEnabled {
+		if ureadaheadAbi == "arm" {
+			s.Fatal("ureadahead ELF arm 32-bit is no longer supported for ARCVM")
+		}
+		ureadaheadAbi = desc.CPUAbi
+	}
+
+	// TODO(b/310748903): Stop using "host" naming once we remove host arch dependency completely.
+	vUreadahead := fmt.Sprintf("host_%s_%s_%s_%s", ureadaheadAbi, desc.BinaryTranslationType, desc.BuildType, desc.BuildID)
 	s.Logf("Detected version %s(host %s_%s)", v, desc.HostUreadaheadAbi, desc.BinaryTranslationType)
 	if desc.BuildType != "user" {
 		s.Fatal("Data collector should only be run on a user build")
@@ -436,7 +448,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	dataDir := param.dataDir
 	// If data dir is not provided, use temp folder and remove after use.
 	if dataDir == "" {
-		dataDir, err = ioutil.TempDir("", "data_collector")
+		dataDir, err = os.MkdirTemp("", "data_collector")
 		if err != nil {
 			s.Fatal("Failed to create temp dir: ", err)
 		}
@@ -608,7 +620,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 			response.GsfCacheName}
 		packAndUploadData(shortCtx, gmsCoreCache, response.TargetDir, resources)
 
-		tempDir, err := ioutil.TempDir("", "cachebuilder")
+		tempDir, err := os.MkdirTemp("", "cachebuilder")
 		if err != nil {
 			s.Fatal("Failed to create temp dir: ", err)
 		}
@@ -716,7 +728,7 @@ func DataCollector(ctx context.Context, s *testing.State) {
 		}
 
 		logcatPath := filepath.Join(s.OutDir(), fmt.Sprintf("logcat_%s_%d.txt", mode, attempt))
-		err = ioutil.WriteFile(logcatPath, log, 0644)
+		err = os.WriteFile(logcatPath, log, 0644)
 		if err != nil {
 			s.Logf("Failed to save logcat, continue after this error: %q", err)
 			return
@@ -945,7 +957,7 @@ func maybeUprevBranch(ctx context.Context, desc *dututils.BuildDescriptor, andro
 
 	// Create local copy of pin.
 	localPinPath := filepath.Join(outDir, pinName)
-	if err := ioutil.WriteFile(localPinPath, []byte(fmt.Sprintf("%d\n", desc.BuildVersion)), 0644); err != nil {
+	if err := os.WriteFile(localPinPath, []byte(fmt.Sprintf("%d\n", desc.BuildVersion)), 0644); err != nil {
 		return errors.Wrapf(err, "failed to create pin locally %q", localPinPath)
 	}
 
