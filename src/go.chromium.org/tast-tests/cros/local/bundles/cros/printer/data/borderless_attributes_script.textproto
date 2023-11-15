@@ -1,0 +1,692 @@
+# proto-file:
+# third_party/virtual-usb-printer/mock_printer/proto/control_flow.proto
+# proto-message: mocking.TestCase
+
+# Instructs the mock printer to wait for the series of requests that lpadmin
+# sends to set up the printer. After that, it waits for cupsd to set up and
+# send the print job with a media type of "photographic" and all four margins
+# set to zero, indicating borderless printing. Finally, handle all of the
+# requests sent to the virtual-usb-printer when cupsd is polling the status
+# of the print job.
+
+steps {
+  cardinality {
+    type: SOME_OF
+    count { at_least: 1 }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `get-printer-attributes`
+        operation_id: 0x000b
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://18d1_505e/ipp/print" } }
+            }
+            attributes {
+              name: "requested-attributes"
+              type: KEYWORD
+              string_values { string_values { value: "document-format-supported" } }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `get-printer-attributes`
+        operation_id: 0x000b
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://18d1_505e/ipp/print" } }
+            }
+            attributes {
+              name: "document-format"
+              type: MIME_MEDIA_TYPE
+              string_values { string_values { value: "application/pdf" } }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `get-printer-attributes`
+        operation_id: 0x000b
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://18d1_505e/ipp/print" } }
+            }
+            attributes {
+              name: "requested-attributes"
+              type: KEYWORD
+              string_values { string_values { value: "printer-strings-uri" } }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `get-printer-attributes`
+        operation_id: 0x000b
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://%2Frun%2Fippusb%2F18d1-505e.sock:631/ipp/print" } }
+            }
+            attributes {
+              name: "requested-attributes"
+              type: KEYWORD
+              string_values {
+                string_values { value: "client-info-supported" }
+                string_values { value: "compression-supported" }
+                string_values { value: "copies-supported" }
+                string_values { value: "cups-version" }
+                string_values { value: "document-format-supported" }
+                string_values { value: "job-password-encryption-supported" }
+                string_values { value: "marker-colors" }
+                string_values { value: "marker-high-levels" }
+                string_values { value: "marker-levels" }
+                string_values { value: "marker-low-levels" }
+                string_values { value: "marker-message" }
+                string_values { value: "marker-names" }
+                string_values { value: "marker-types" }
+                string_values { value: "max-client-info-supported" }
+                string_values { value: "media-col-supported" }
+                string_values { value: "multiple-document-handling-supported" }
+                string_values { value: "operations-supported" }
+                string_values { value: "print-color-mode-supported" }
+                string_values { value: "printer-alert" }
+                string_values { value: "printer-alert-description" }
+                string_values { value: "printer-is-accepting-jobs" }
+                string_values { value: "printer-mandatory-job-attributes" }
+                string_values { value: "printer-requested-client-type" }
+                string_values { value: "printer-state" }
+                string_values { value: "printer-state-message" }
+                string_values { value: "printer-state-reasons" }
+              }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+}
+steps {
+  cardinality {
+    type: ALL_IN_ORDER
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `create-job`
+        #operation_id: 0x0005
+        # `validate-job`
+        operation_id: 0x0004
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://%2Frun%2Fippusb%2F18d1-505e.sock:631/ipp/print" } }
+            }
+            attributes {
+              name: "requesting-user-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "chronos" } }
+            }
+            attributes {
+              name: "job-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "Untitled" } }
+            }
+            attributes {
+              name: "document-format"
+              type: MIME_MEDIA_TYPE
+              string_values { string_values { value: "application/pdf" } }
+            }
+          }
+        }
+        groups {
+          tag: JOB_ATTRIBUTES
+          collections {
+            attributes {
+              name: "media-col"
+              type: BEGIN_COLLECTION
+              collections { collections {
+                attributes {
+                  name: "media-size"
+                  type: BEGIN_COLLECTION
+                  collections { collections {
+                    attributes {
+                      name: "x-dimension"
+                      type: INTEGER
+                      int_values { int_values: 21000 }
+                    }
+                    attributes {
+                      name: "y-dimension"
+                      type: INTEGER
+                      int_values { int_values: 29700 }
+                    }
+                  } }
+                }
+                attributes {
+                  name: "media-bottom-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-left-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-right-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-top-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-type"
+                  type: KEYWORD
+                  string_values { string_values { value: "photographic" } }
+                }
+              } }
+            }
+            attributes {
+              name: "output-bin"
+              type: KEYWORD
+              string_values { string_values { value: "face-down" } }
+            }
+            attributes {
+              name: "print-color-mode"
+              type: KEYWORD
+              string_values { string_values { value: "auto-monochrome" } }
+            }
+            attributes {
+              name: "print-quality"
+              type: ENUM
+              int_values { int_values: 4 }
+            }
+            attributes {
+              name: "sides"
+              type: KEYWORD
+              string_values { string_values { value: "one-sided" } }
+            }
+            attributes {
+              name: "multiple-document-handling"
+              type: KEYWORD
+              string_values { string_values { value: "separate-documents-collated-copies" } }
+            }
+
+          }
+
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `create-job`
+        operation_id: 0x0005
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://%2Frun%2Fippusb%2F18d1-505e.sock:631/ipp/print" } }
+            }
+            attributes {
+              name: "requesting-user-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "chronos" } }
+            }
+            attributes {
+              name: "job-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "Untitled" } }
+            }
+          }
+        }
+        groups {
+          tag: JOB_ATTRIBUTES
+          collections {
+            attributes {
+              name: "media-col"
+              type: BEGIN_COLLECTION
+              collections { collections {
+                attributes {
+                  name: "media-size"
+                  type: BEGIN_COLLECTION
+                  collections { collections {
+                    attributes {
+                      name: "x-dimension"
+                      type: INTEGER
+                      int_values { int_values: 21000 }
+                    }
+                    attributes {
+                      name: "y-dimension"
+                      type: INTEGER
+                      int_values { int_values: 29700 }
+                    }
+                  } }
+                }
+                attributes {
+                  name: "media-bottom-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-left-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-right-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-top-margin"
+                  type: INTEGER
+                  int_values { int_values: 0 }
+                }
+                attributes {
+                  name: "media-type"
+                  type: KEYWORD
+                  string_values { string_values { value: "photographic" } }
+                }
+              } }
+            }
+            attributes {
+              name: "output-bin"
+              type: KEYWORD
+              string_values { string_values { value: "face-down" } }
+            }
+            attributes {
+              name: "print-color-mode"
+              type: KEYWORD
+              string_values { string_values { value: "auto-monochrome" } }
+            }
+            attributes {
+              name: "print-quality"
+              type: ENUM
+              int_values { int_values: 4 }
+            }
+            attributes {
+              name: "sides"
+              type: KEYWORD
+              string_values { string_values { value: "one-sided" } }
+            }
+            attributes {
+              name: "multiple-document-handling"
+              type: KEYWORD
+              string_values { string_values { value: "separate-documents-collated-copies" } }
+            }
+
+          }
+
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+}
+steps {
+  cardinality {
+    type: ALL_IN_ANY_ORDER
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `get-printer-attributes`
+        operation_id: 0x000b
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://%2Frun%2Fippusb%2F18d1-505e.sock:631/ipp/print" } }
+            }
+            attributes {
+              name: "requesting-user-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "chronos" } }
+            }
+            attributes {
+              name: "requested-attributes"
+              type: KEYWORD
+              string_values {
+                string_values { value: "client-info-supported" }
+                string_values { value: "compression-supported" }
+                string_values { value: "copies-supported" }
+                string_values { value: "cups-version" }
+                string_values { value: "document-format-supported" }
+                string_values { value: "job-password-encryption-supported" }
+                string_values { value: "marker-colors" }
+                string_values { value: "marker-high-levels" }
+                string_values { value: "marker-levels" }
+                string_values { value: "marker-low-levels" }
+                string_values { value: "marker-message" }
+                string_values { value: "marker-names" }
+                string_values { value: "marker-types" }
+                string_values { value: "max-client-info-supported" }
+                string_values { value: "media-col-supported" }
+                string_values { value: "multiple-document-handling-supported" }
+                string_values { value: "operations-supported" }
+                string_values { value: "print-color-mode-supported" }
+                string_values { value: "printer-alert" }
+                string_values { value: "printer-alert-description" }
+                string_values { value: "printer-is-accepting-jobs" }
+                string_values { value: "printer-mandatory-job-attributes" }
+                string_values { value: "printer-requested-client-type" }
+                string_values { value: "printer-state" }
+                string_values { value: "printer-state-message" }
+                string_values { value: "printer-state-reasons" }
+              }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `send-document`
+        operation_id: 0x0006
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://%2Frun%2Fippusb%2F18d1-505e.sock:631/ipp/print" } }
+            }
+            attributes {
+              name: "job-id"
+              type: INTEGER
+              int_values { int_values: 2097086496 }
+            }
+            attributes {
+              name: "requesting-user-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "chronos" } }
+            }
+            attributes {
+              name: "last-document"
+              type: BOOLEAN
+              int_values { int_values: 1 }
+            }
+            attributes {
+              name: "document-format"
+              type: MIME_MEDIA_TYPE
+              string_values { string_values { value: "application/pdf" } }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+}
+steps {
+  cardinality {
+    type: SOME_OF
+    count { at_least: 1 }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `get-printer-attributes`
+        operation_id: 0x000b
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://%2Frun%2Fippusb%2F18d1-505e.sock:631/ipp/print" } }
+            }
+            attributes {
+              name: "requesting-user-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "chronos" } }
+            }
+            attributes {
+              name: "requested-attributes"
+              type: KEYWORD
+              string_values {
+                string_values { value: "client-info-supported" }
+                string_values { value: "compression-supported" }
+                string_values { value: "copies-supported" }
+                string_values { value: "cups-version" }
+                string_values { value: "document-format-supported" }
+                string_values { value: "job-password-encryption-supported" }
+                string_values { value: "marker-colors" }
+                string_values { value: "marker-high-levels" }
+                string_values { value: "marker-levels" }
+                string_values { value: "marker-low-levels" }
+                string_values { value: "marker-message" }
+                string_values { value: "marker-names" }
+                string_values { value: "marker-types" }
+                string_values { value: "max-client-info-supported" }
+                string_values { value: "media-col-supported" }
+                string_values { value: "multiple-document-handling-supported" }
+                string_values { value: "operations-supported" }
+                string_values { value: "print-color-mode-supported" }
+                string_values { value: "printer-alert" }
+                string_values { value: "printer-alert-description" }
+                string_values { value: "printer-is-accepting-jobs" }
+                string_values { value: "printer-mandatory-job-attributes" }
+                string_values { value: "printer-requested-client-type" }
+                string_values { value: "printer-state" }
+                string_values { value: "printer-state-message" }
+                string_values { value: "printer-state-reasons" }
+              }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+  expectation_with_response {
+    expectation {
+      ipp_matcher {
+        # `get-job-attributes`
+        operation_id: 0x0009
+        groups {
+          tag: OPERATION_ATTRIBUTES
+          collections {
+            attributes {
+              name: "attributes-charset"
+              type: CHARSET
+              string_values { string_values { value: "utf-8" } }
+            }
+            attributes {
+              name: "attributes-natural-language"
+              type: NATURAL_LANGUAGE
+              string_values { string_values { value: "en-us" } }
+            }
+            attributes {
+              name: "printer-uri"
+              type: URI
+              string_values { string_values { value: "ipp://%2Frun%2Fippusb%2F18d1-505e.sock:631/ipp/print" } }
+            }
+            attributes {
+              name: "job-id"
+              type: INTEGER
+              int_values { int_values: 2097086496 }
+            }
+            attributes {
+              name: "requesting-user-name"
+              type: NAME_WITHOUT_LANGUAGE
+              string_values { string_values { value: "chronos" } }
+            }
+            attributes {
+              name: "requested-attributes"
+              type: KEYWORD
+              string_values {
+                string_values { value: "job-id" }
+                string_values { value: "job-impressions-completed" }
+                string_values { value: "job-media-sheets-completed" }
+                string_values { value: "job-name" }
+                string_values { value: "job-originating-user-name" }
+                string_values { value: "job-state" }
+                string_values { value: "job-state-reasons" }
+              }
+            }
+          }
+        }
+      }
+    }
+    response {
+      default_response: true
+    }
+  }
+}

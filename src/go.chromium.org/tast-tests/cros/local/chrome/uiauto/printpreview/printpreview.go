@@ -265,9 +265,23 @@ func setDropdownInternal(ui *uiauto.Context, dropdown *nodewith.Finder, value st
 func SetDropdown(ctx context.Context, tconn *chrome.TestConn, name, value string) error {
 	ui := uiauto.New(tconn)
 	dropdown := nodewith.Name(name).Role(role.ComboBoxSelect)
+
+	// Do nothing if the requested value is already selected.
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(dropdown.Focusable())(ctx); err != nil {
+		return errors.Wrap(err, "failed to find dropdown")
+	}
+	info, err := ui.Info(ctx, dropdown)
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve dropdown info")
+	}
+	if info.Value == value {
+		return nil
+	}
+
 	if err := setDropdownInternal(ui, dropdown, value)(ctx); err != nil {
 		return errors.Wrap(err, "failed to select dropdown option")
 	}
+
 	return nil
 }
 
