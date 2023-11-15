@@ -153,7 +153,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Turning off Bluetooth adapter")
 
-	if _, err := keyboardDevice.RPC().AdapterPowerOff(ctx); err != nil {
+	if err := keyboardDevice.RPC().AdapterPowerOff(ctx); err != nil {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
@@ -164,7 +164,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Turning on and initializing btpeer adapter")
 
 	// Turn Bluetooth adapter on.
-	if _, err := keyboardDevice.RPC().AdapterPowerOn(ctx); err != nil {
+	if err := keyboardDevice.RPC().AdapterPowerOn(ctx); err != nil {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 

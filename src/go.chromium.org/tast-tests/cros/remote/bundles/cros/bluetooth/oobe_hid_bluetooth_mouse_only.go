@@ -50,27 +50,27 @@ func init() {
 				Name:      "floss_disabled_mouse",
 				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
-				Val: cbt.DeviceTypeMouse,
+				Val:       cbt.DeviceTypeMouse,
 			},
 			{
 				Name:              "floss_enabled_mouse",
 				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				Val: cbt.DeviceTypeMouse,
+				Val:               cbt.DeviceTypeMouse,
 			},
 			{
 				Name:      "floss_disabled_le_mouse",
 				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
-				Val: cbt.DeviceTypeLEMouse,
+				Val:       cbt.DeviceTypeLEMouse,
 			},
 			{
 				Name:              "floss_enabled_le_mouse",
 				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
-				Val: cbt.DeviceTypeLEMouse,
+				Val:               cbt.DeviceTypeLEMouse,
 			},
 		},
 		Timeout: time.Minute * 15,
@@ -165,7 +165,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Turning btpeer adapter off")
 
 	// Turn off mouse device and check that DUT is searching for mouse.
-	if result, err := mouseDevice.RPC().AdapterPowerOff(ctx); err != nil || !result {
+	if err := mouseDevice.RPC().AdapterPowerOff(ctx); err != nil {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
@@ -178,7 +178,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Turning on and initializing btpeer adapter")
 
 	// Turn on Bluetooth adapter
-	if result, err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil || !result {
+	if err := mouseDevice.RPC().AdapterPowerOn(ctx); err != nil {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
@@ -189,7 +189,7 @@ func OobeHidBluetoothMouseOnly(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get adapter address: ", err)
 		}
 		adapterAddress := resp.GetAdapterAddress()
-		if status, err := mouseDevice.RPC().ConnectToRemoteAddress(ctx, adapterAddress); err != nil || !status {
+		if err := mouseDevice.RPC().ConnectToRemoteAddress(ctx, adapterAddress); err != nil {
 			s.Fatal("Failed to connect to remote address: ", adapterAddress)
 		}
 	}

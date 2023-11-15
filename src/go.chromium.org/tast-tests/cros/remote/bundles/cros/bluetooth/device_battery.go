@@ -113,10 +113,8 @@ func DeviceBattery(ctx context.Context, s *testing.State) {
 
 	// Disconnect from the BT device (by powering it off) to verify that the device
 	// detail page should not report the battery level of a disconnected BT device.
-	if success, err := device.RPC().AdapterPowerOff(ctx); err != nil {
+	if err := device.RPC().AdapterPowerOff(ctx); err != nil {
 		s.Fatal("Failed to power off the device: ", err)
-	} else if !success {
-		s.Fatal("Failed to power off the device: device is not power off")
 	}
 
 	if _, err := fv.BluetoothService.WaitForConnectState(ctx, &bts.WaitForConnectStateRequest{

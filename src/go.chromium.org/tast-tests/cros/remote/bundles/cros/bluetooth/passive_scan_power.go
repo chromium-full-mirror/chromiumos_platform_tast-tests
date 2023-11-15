@@ -125,7 +125,7 @@ func PassiveScanPower(ctx context.Context, s *testing.State) {
 	}
 
 	// Turn off connected BTPeer0's Bluetooth adapter to trigger DUT's passive scan.
-	if _, err := device0.RPC().AdapterPowerOff(ctx); err != nil {
+	if err := device0.RPC().AdapterPowerOff(ctx); err != nil {
 		s.Fatal("Failed to turn off btpeer0's adapter: ", err)
 	}
 

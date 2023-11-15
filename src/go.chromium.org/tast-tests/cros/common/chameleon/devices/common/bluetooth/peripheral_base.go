@@ -26,7 +26,7 @@ type BasePeripheral interface {
 
 	// EnableServod calls the Chameleond RPC method of the same name.
 	// Enables servod for the given board.
-	EnableServod(ctx context.Context, board string) (bool, error)
+	EnableServod(ctx context.Context, board string) error
 }
 
 // CommonBasePeripheral is a base implementation of BasePeripheral that
@@ -52,6 +52,6 @@ func (c *CommonBasePeripheral) SpecifyDeviceType(ctx context.Context, deviceType
 
 // EnableServod calls the Chameleond RPC method of the same name.
 // This implements BasePeripheral.EnableServod, see that for more details.
-func (c *CommonBasePeripheral) EnableServod(ctx context.Context, board string) (bool, error) {
-	return c.RPC("EnableServod").Args(board).CallForBool(ctx)
+func (c *CommonBasePeripheral) EnableServod(ctx context.Context, board string) error {
+	return c.RPC("EnableServod").Args(board).CallForBoolSuccess(ctx)
 }

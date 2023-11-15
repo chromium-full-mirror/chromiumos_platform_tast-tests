@@ -35,13 +35,11 @@ type PeripheralKit interface {
 
 	// EnterCommandMode calls the Chameleond RPC method of the same name.
 	// Makes the kit enter command mode.
-	// Returns true if successful.
-	EnterCommandMode(ctx context.Context) (bool, error)
+	EnterCommandMode(ctx context.Context) error
 
 	// LeaveCommandMode calls the Chameleond RPC method of the same name.
 	// Makes the kit leave command mode.
-	// Returns true if successful.
-	LeaveCommandMode(ctx context.Context) (bool, error)
+	LeaveCommandMode(ctx context.Context) error
 
 	// Reboot calls the Chameleond RPC method of the same name.
 	// Reboots (or partially reset) the kit.
@@ -49,13 +47,11 @@ type PeripheralKit interface {
 
 	// FactoryReset calls the Chameleond RPC method of the same name.
 	// Resets the kit to the factory defaults.
-	// Returns true if successful.
-	FactoryReset(ctx context.Context) (bool, error)
+	FactoryReset(ctx context.Context) error
 
 	// PowerCycle calls the Chameleond RPC method of the same name.
 	// Power cycles the USB port where kit is attached.
-	// Returns true if successful.
-	PowerCycle(ctx context.Context) (bool, error)
+	PowerCycle(ctx context.Context) error
 
 	// GetAdvertisedName calls the Chameleond RPC method of the same name.
 	// Returns the name advertised by the kit to other bluetooth devices.
@@ -71,13 +67,11 @@ type PeripheralKit interface {
 
 	// SetCentralMode calls the Chameleond RPC method of the same name.
 	// Sets the kit to central mode.
-	// Returns true if successful.
-	SetCentralMode(ctx context.Context) (bool, error)
+	SetCentralMode(ctx context.Context) error
 
 	// SetPeripheralMode calls the Chameleond RPC method of the same name.
 	// Sets the kit to peripheral mode.
-	// Returns true if successful.
-	SetPeripheralMode(ctx context.Context) (bool, error)
+	SetPeripheralMode(ctx context.Context) error
 
 	// GetAuthenticationMode calls the Chameleond RPC method of the same name.
 	// Returns the authentication mode of the kit.
@@ -85,8 +79,7 @@ type PeripheralKit interface {
 
 	// SetAuthenticationMode calls the Chameleond RPC method of the same name.
 	// Sets the authentication mode to the specified mode.
-	// Returns true if successful.
-	SetAuthenticationMode(ctx context.Context, mode string) (bool, error)
+	SetAuthenticationMode(ctx context.Context, mode string) error
 
 	// GetPinCode calls the Chameleond RPC method of the same name.
 	// Returns the pin code for kit authentication.
@@ -94,22 +87,19 @@ type PeripheralKit interface {
 
 	// SetPinCode calls the Chameleond RPC method of the same name.
 	// Sets the pin code for kit authentication.
-	// Returns true if successful.
-	SetPinCode(ctx context.Context, pinCode string) (bool, error)
+	SetPinCode(ctx context.Context, pinCode string) error
 
 	// GetServiceProfile calls the Chameleond RPC method of the same name.
 	// Returns the service profile currently in use by the kit.
-	GetServiceProfile(ctx context.Context) error
+	GetServiceProfile(ctx context.Context) (string, error)
 
 	// SetServiceProfileSPP calls the Chameleond RPC method of the same name.
 	// Sets SPP as the service profile.
-	// Returns true if successful.
-	SetServiceProfileSPP(ctx context.Context) (bool, error)
+	SetServiceProfileSPP(ctx context.Context) error
 
 	// SetServiceProfileHID calls the Chameleond RPC method of the same name.
 	// Sets HID as the service profile.
-	// Returns true if successful.
-	SetServiceProfileHID(ctx context.Context) (bool, error)
+	SetServiceProfileHID(ctx context.Context) error
 
 	// GetLocalBluetoothAddress calls the Chameleond RPC method of the same name.
 	// Returns the local (kit's) bluetooth MAC address.
@@ -124,14 +114,12 @@ type PeripheralKit interface {
 	// EnableConnectionStatusMessage calls the Chameleond RPC method of the same
 	// name.
 	// Enables the connection status message.
-	// Returns true if successful.
-	EnableConnectionStatusMessage(ctx context.Context) (bool, error)
+	EnableConnectionStatusMessage(ctx context.Context) error
 
 	// DisableConnectionStatusMessage calls the Chameleond RPC method of the same
 	// name.
 	// Disables the connection status message.
-	// Returns true if successful.
-	DisableConnectionStatusMessage(ctx context.Context) (bool, error)
+	DisableConnectionStatusMessage(ctx context.Context) error
 
 	// GetRemoteConnectedBluetoothAddress calls the Chameleond RPC method of the
 	// same name.
@@ -144,8 +132,7 @@ type PeripheralKit interface {
 
 	// SetHIDType calls the Chameleond RPC method of the same name.
 	// Sets HID type to the specified device type.
-	// Returns true if successful.
-	SetHIDType(ctx context.Context, deviceType string) (bool, error)
+	SetHIDType(ctx context.Context, deviceType string) error
 
 	// GetClassOfService calls the Chameleond RPC method of the same name.
 	// Returns the class of the service, if supported, which is usually a number
@@ -155,15 +142,11 @@ type PeripheralKit interface {
 	// SetClassOfService calls the Chameleond RPC method of the same name.
 	// Sets the class of service, if supported, which is usually a number assigned
 	// by the bluetooth SIG.
-	// Returns true if the class of service was set successfully, or if this
-	// action is not supported.
-	SetClassOfService(ctx context.Context, classOfService int) (bool, error)
+	SetClassOfService(ctx context.Context, classOfService int) error
 
 	// SetDefaultClassOfService calls the Chameleond RPC method of the same name.
 	// Sets the default class of service, if supported.
-	// Returns true if the class of service was set to the default successfully,
-	// or if this action is not supported.
-	SetDefaultClassOfService(ctx context.Context) (bool, error)
+	SetDefaultClassOfService(ctx context.Context) error
 
 	// GetClassOfDevice calls the Chameleond RPC method of the same name.
 	// Returns the class of device, if supported, which is usually a number
@@ -173,37 +156,29 @@ type PeripheralKit interface {
 	// SetClassOfDevice calls the Chameleond RPC method of the same name.
 	// Sets the class of device, if supported, which is usually a number assigned
 	// by the bluetooth SIG.
-	// Returns true if the class of device was set successfully, or if this
-	// action is not supported.
-	SetClassOfDevice(ctx context.Context, deviceType int) (bool, error)
+	SetClassOfDevice(ctx context.Context, deviceType int) error
 
 	// SetRemoteAddress calls the Chameleond RPC method of the same name.
 	// Sets the remote bluetooth MAC address.
-	// Returns true if successful.
-	SetRemoteAddress(ctx context.Context, remoteAddress string) (bool, error)
+	SetRemoteAddress(ctx context.Context, remoteAddress string) error
 
 	// Connect calls the Chameleond RPC method of the same name.
 	// Connects to the stored remote bluetooth address.
-	// Returns true if connecting to the stored remote address succeeded, or
-	// false if a timeout occurs.
-	Connect(ctx context.Context) (bool, error)
+	Connect(ctx context.Context) error
 
 	// ConnectToRemoteAddress calls the Chameleond RPC method of the same name.
 	// Connects to the remote bluetooth MAC address.
-	// Returns true if connecting to the remote address succeeded.
-	ConnectToRemoteAddress(ctx context.Context, remoteAddress string) (bool, error)
+	ConnectToRemoteAddress(ctx context.Context, remoteAddress string) error
 
 	// Disconnect calls the Chameleond RPC method of the same name.
 	// Disconnects from the remote device. Specifically, this causes the
 	// peripheral emulation kit to disconnect from the remote connected device,
 	// usually the DUT.
-	// Returns true if disconnecting from the remote device succeeded.
-	Disconnect(ctx context.Context) (bool, error)
+	Disconnect(ctx context.Context) error
 
 	// Discover calls the Chameleond RPC method of the same name.
 	// Discovers the remote bluetooth MAC address.
-	// Returns true if discovering the remote address succeeded.
-	Discover(ctx context.Context, remoteAddress string) (bool, error)
+	Discover(ctx context.Context, remoteAddress string) error
 
 	// SetDiscoverable calls the Chameleond RPC method of the same name.
 	// Sets the discoverability of the device.
@@ -211,8 +186,7 @@ type PeripheralKit interface {
 
 	// Close calls the Chameleond RPC method of the same name.
 	// Attempts to close the device gracefully.
-	// Returns true if successful.
-	Close(ctx context.Context) (bool, error)
+	Close(ctx context.Context) error
 }
 
 // CommonPeripheralKit is a base implementation of PeripheralKit that
@@ -255,14 +229,14 @@ func (c *CommonPeripheralKit) GetCapabilities(ctx context.Context) (map[string]i
 
 // EnterCommandMode calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.EnterCommandMode, see that for more details.
-func (c *CommonPeripheralKit) EnterCommandMode(ctx context.Context) (bool, error) {
-	return c.RPC("EnterCommandMode").CallForBool(ctx)
+func (c *CommonPeripheralKit) EnterCommandMode(ctx context.Context) error {
+	return c.RPC("EnterCommandMode").CallForBoolSuccess(ctx)
 }
 
 // LeaveCommandMode calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.LeaveCommandMode, see that for more details.
-func (c *CommonPeripheralKit) LeaveCommandMode(ctx context.Context) (bool, error) {
-	return c.RPC("LeaveCommandMode").CallForBool(ctx)
+func (c *CommonPeripheralKit) LeaveCommandMode(ctx context.Context) error {
+	return c.RPC("LeaveCommandMode").CallForBoolSuccess(ctx)
 }
 
 // Reboot calls the Chameleond RPC method of the same name.
@@ -273,14 +247,14 @@ func (c *CommonPeripheralKit) Reboot(ctx context.Context) error {
 
 // FactoryReset calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.FactoryReset, see that for more details.
-func (c *CommonPeripheralKit) FactoryReset(ctx context.Context) (bool, error) {
-	return c.RPC("FactoryReset").CallForBool(ctx)
+func (c *CommonPeripheralKit) FactoryReset(ctx context.Context) error {
+	return c.RPC("FactoryReset").CallForBoolSuccess(ctx)
 }
 
 // PowerCycle calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.PowerCycle, see that for more details.
-func (c *CommonPeripheralKit) PowerCycle(ctx context.Context) (bool, error) {
-	return c.RPC("PowerCycle").CallForBool(ctx)
+func (c *CommonPeripheralKit) PowerCycle(ctx context.Context) error {
+	return c.RPC("PowerCycle").CallForBoolSuccess(ctx)
 }
 
 // GetAdvertisedName calls the Chameleond RPC method of the same name.
@@ -303,14 +277,14 @@ func (c *CommonPeripheralKit) GetOperationMode(ctx context.Context) (string, err
 
 // SetCentralMode calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetCentralMode, see that for more details.
-func (c *CommonPeripheralKit) SetCentralMode(ctx context.Context) (bool, error) {
-	return c.RPC("SetCentralMode").CallForBool(ctx)
+func (c *CommonPeripheralKit) SetCentralMode(ctx context.Context) error {
+	return c.RPC("SetCentralMode").CallForBoolSuccess(ctx)
 }
 
 // SetPeripheralMode calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetPeripheralMode, see that for more details.
-func (c *CommonPeripheralKit) SetPeripheralMode(ctx context.Context) (bool, error) {
-	return c.RPC("SetPeripheralMode").CallForBool(ctx)
+func (c *CommonPeripheralKit) SetPeripheralMode(ctx context.Context) error {
+	return c.RPC("SetPeripheralMode").CallForBoolSuccess(ctx)
 }
 
 // GetAuthenticationMode calls the Chameleond RPC method of the same name.
@@ -322,8 +296,8 @@ func (c *CommonPeripheralKit) GetAuthenticationMode(ctx context.Context) (string
 // SetAuthenticationMode calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetAuthenticationMode, see that for more
 // details.
-func (c *CommonPeripheralKit) SetAuthenticationMode(ctx context.Context, mode string) (bool, error) {
-	return c.RPC("SetAuthenticationMode").Args(mode).CallForBool(ctx)
+func (c *CommonPeripheralKit) SetAuthenticationMode(ctx context.Context, mode string) error {
+	return c.RPC("SetAuthenticationMode").Args(mode).CallForBoolSuccess(ctx)
 }
 
 // GetPinCode calls the Chameleond RPC method of the same name.
@@ -334,28 +308,28 @@ func (c *CommonPeripheralKit) GetPinCode(ctx context.Context) (string, error) {
 
 // SetPinCode calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetPinCode, see that for more details.
-func (c *CommonPeripheralKit) SetPinCode(ctx context.Context, pinCode string) (bool, error) {
-	return c.RPC("SetPinCode").Args(pinCode).CallForBool(ctx)
+func (c *CommonPeripheralKit) SetPinCode(ctx context.Context, pinCode string) error {
+	return c.RPC("SetPinCode").Args(pinCode).CallForBoolSuccess(ctx)
 }
 
 // GetServiceProfile calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.GetServiceProfile, see that for more details.
-func (c *CommonPeripheralKit) GetServiceProfile(ctx context.Context) error {
-	return c.RPC("GetServiceProfile").Call(ctx)
+func (c *CommonPeripheralKit) GetServiceProfile(ctx context.Context) (string, error) {
+	return c.RPC("GetServiceProfile").CallForString(ctx)
 }
 
 // SetServiceProfileSPP calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetServiceProfileSPP, see that for more
 // details.
-func (c *CommonPeripheralKit) SetServiceProfileSPP(ctx context.Context) (bool, error) {
-	return c.RPC("SetServiceProfileSPP").CallForBool(ctx)
+func (c *CommonPeripheralKit) SetServiceProfileSPP(ctx context.Context) error {
+	return c.RPC("SetServiceProfileSPP").CallForBoolSuccess(ctx)
 }
 
 // SetServiceProfileHID calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetServiceProfileHID, see that for more
 // details.
-func (c *CommonPeripheralKit) SetServiceProfileHID(ctx context.Context) (bool, error) {
-	return c.RPC("SetServiceProfileHID").CallForBool(ctx)
+func (c *CommonPeripheralKit) SetServiceProfileHID(ctx context.Context) error {
+	return c.RPC("SetServiceProfileHID").CallForBoolSuccess(ctx)
 }
 
 // GetLocalBluetoothAddress calls the Chameleond RPC method of the same name.
@@ -374,15 +348,15 @@ func (c *CommonPeripheralKit) GetConnectionStatus(ctx context.Context) (bool, er
 // EnableConnectionStatusMessage calls the Chameleond RPC method of the same
 // name. This implements PeripheralKit.EnableConnectionStatusMessage, see that
 // for more details.
-func (c *CommonPeripheralKit) EnableConnectionStatusMessage(ctx context.Context) (bool, error) {
-	return c.RPC("EnableConnectionStatusMessage").CallForBool(ctx)
+func (c *CommonPeripheralKit) EnableConnectionStatusMessage(ctx context.Context) error {
+	return c.RPC("EnableConnectionStatusMessage").CallForBoolSuccess(ctx)
 }
 
 // DisableConnectionStatusMessage calls the Chameleond RPC method of the same
 // name. This implements PeripheralKit.DisableConnectionStatusMessage, see that
 // for more details.
-func (c *CommonPeripheralKit) DisableConnectionStatusMessage(ctx context.Context) (bool, error) {
-	return c.RPC("DisableConnectionStatusMessage").CallForBool(ctx)
+func (c *CommonPeripheralKit) DisableConnectionStatusMessage(ctx context.Context) error {
+	return c.RPC("DisableConnectionStatusMessage").CallForBoolSuccess(ctx)
 }
 
 // GetRemoteConnectedBluetoothAddress calls the Chameleond RPC method of the
@@ -400,8 +374,8 @@ func (c *CommonPeripheralKit) GetDeviceType(ctx context.Context) (string, error)
 
 // SetHIDType calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetHIDType, see that for more details.
-func (c *CommonPeripheralKit) SetHIDType(ctx context.Context, deviceType string) (bool, error) {
-	return c.RPC("SetHIDType").Args(deviceType).CallForBool(ctx)
+func (c *CommonPeripheralKit) SetHIDType(ctx context.Context, deviceType string) error {
+	return c.RPC("SetHIDType").Args(deviceType).CallForBoolSuccess(ctx)
 }
 
 // GetClassOfService calls the Chameleond RPC method of the same name.
@@ -412,15 +386,15 @@ func (c *CommonPeripheralKit) GetClassOfService(ctx context.Context) (int, error
 
 // SetClassOfService calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetClassOfService, see that for more details.
-func (c *CommonPeripheralKit) SetClassOfService(ctx context.Context, classOfService int) (bool, error) {
-	return c.RPC("SetClassOfService").Args(classOfService).CallForBool(ctx)
+func (c *CommonPeripheralKit) SetClassOfService(ctx context.Context, classOfService int) error {
+	return c.RPC("SetClassOfService").Args(classOfService).CallForBoolSuccess(ctx)
 }
 
 // SetDefaultClassOfService calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetDefaultClassOfService, see that for more
 // details.
-func (c *CommonPeripheralKit) SetDefaultClassOfService(ctx context.Context) (bool, error) {
-	return c.RPC("SetDefaultClassOfService").CallForBool(ctx)
+func (c *CommonPeripheralKit) SetDefaultClassOfService(ctx context.Context) error {
+	return c.RPC("SetDefaultClassOfService").CallForBoolSuccess(ctx)
 }
 
 // GetClassOfDevice calls the Chameleond RPC method of the same name.
@@ -431,39 +405,39 @@ func (c *CommonPeripheralKit) GetClassOfDevice(ctx context.Context) (int, error)
 
 // SetClassOfDevice calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetClassOfDevice, see that for more details.
-func (c *CommonPeripheralKit) SetClassOfDevice(ctx context.Context, deviceType int) (bool, error) {
-	return c.RPC("SetClassOfDevice").Args(deviceType).CallForBool(ctx)
+func (c *CommonPeripheralKit) SetClassOfDevice(ctx context.Context, deviceType int) error {
+	return c.RPC("SetClassOfDevice").Args(deviceType).CallForBoolSuccess(ctx)
 }
 
 // SetRemoteAddress calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.SetRemoteAddress, see that for more details.
-func (c *CommonPeripheralKit) SetRemoteAddress(ctx context.Context, remoteAddress string) (bool, error) {
-	return c.RPC("SetRemoteAddress").Args(remoteAddress).CallForBool(ctx)
+func (c *CommonPeripheralKit) SetRemoteAddress(ctx context.Context, remoteAddress string) error {
+	return c.RPC("SetRemoteAddress").Args(remoteAddress).CallForBoolSuccess(ctx)
 }
 
 // Connect calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.Connect, see that for more details.
-func (c *CommonPeripheralKit) Connect(ctx context.Context) (bool, error) {
-	return c.RPC("Connect").CallForBool(ctx)
+func (c *CommonPeripheralKit) Connect(ctx context.Context) error {
+	return c.RPC("Connect").CallForBoolSuccess(ctx)
 }
 
 // ConnectToRemoteAddress calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.ConnectToRemoteAddress, see that for more
 // details.
-func (c *CommonPeripheralKit) ConnectToRemoteAddress(ctx context.Context, remoteAddress string) (bool, error) {
-	return c.RPC("ConnectToRemoteAddress").Args(remoteAddress).CallForBool(ctx)
+func (c *CommonPeripheralKit) ConnectToRemoteAddress(ctx context.Context, remoteAddress string) error {
+	return c.RPC("ConnectToRemoteAddress").Args(remoteAddress).CallForBoolSuccess(ctx)
 }
 
 // Disconnect calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.Disconnect, see that for more details.
-func (c *CommonPeripheralKit) Disconnect(ctx context.Context) (bool, error) {
-	return c.RPC("Disconnect").CallForBool(ctx)
+func (c *CommonPeripheralKit) Disconnect(ctx context.Context) error {
+	return c.RPC("Disconnect").CallForBoolSuccess(ctx)
 }
 
 // Discover calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.Discover, see that for more details.
-func (c *CommonPeripheralKit) Discover(ctx context.Context, remoteAddress string) (bool, error) {
-	return c.RPC("Discover").Args(remoteAddress).CallForBool(ctx)
+func (c *CommonPeripheralKit) Discover(ctx context.Context, remoteAddress string) error {
+	return c.RPC("Discover").Args(remoteAddress).CallForBoolSuccess(ctx)
 }
 
 // SetDiscoverable calls the Chameleond RPC method of the same name.
@@ -474,6 +448,6 @@ func (c *CommonPeripheralKit) SetDiscoverable(ctx context.Context, discoverable 
 
 // Close calls the Chameleond RPC method of the same name.
 // This implements PeripheralKit.Close, see that for more details.
-func (c *CommonPeripheralKit) Close(ctx context.Context) (bool, error) {
-	return c.RPC("Close").CallForBool(ctx)
+func (c *CommonPeripheralKit) Close(ctx context.Context) error {
+	return c.RPC("Close").CallForBoolSuccess(ctx)
 }

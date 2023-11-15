@@ -99,10 +99,7 @@ func (d *EmulatedBTPeerDevice) initializeEmulatedBTPeerDevice(ctx context.Contex
 	testing.ContextLogf(ctx, "Initializing btpeer emulation of %q device", deviceConfig.DeviceType.String())
 
 	// Make btpeer emulate newDeviceType.
-	if success, err := d.rpc.AdapterPowerOn(ctx); err != nil || !success {
-		if err == nil {
-			err = errors.New("rpc method executed, but returned failure result")
-		}
+	if err := d.rpc.AdapterPowerOn(ctx); err != nil {
 		return errors.Wrap(err, "failed to power on bluetooth adapter")
 	}
 	if err := d.rpc.SpecifyDeviceType(ctx, deviceConfig.DeviceType.String()); err != nil {

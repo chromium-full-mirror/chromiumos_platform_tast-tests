@@ -56,22 +56,19 @@ type BluezPeripheral interface {
 
 	// Init calls the Chameleond RPC method of the same name.
 	// Ensures the chip is in the correct state for the tests to be run.
-	// Returns true if successful.
 	Init(ctx context.Context, factoryReset bool) error
 
 	// CleanCachedFiles calls the Chameleond RPC method of the same name.
 	// Cleans up files that bluetoothd loads when starts.
-	CleanCachedFiles(ctx context.Context) (bool, error)
+	CleanCachedFiles(ctx context.Context) error
 
 	// AdapterPowerOff calls the Chameleond RPC method of the same name.
 	// Powers off the bluez adapter.
-	// Returns true if successful.
-	AdapterPowerOff(ctx context.Context) (bool, error)
+	AdapterPowerOff(ctx context.Context) error
 
 	// AdapterPowerOn calls the Chameleond RPC method of the same name.
 	// Powers on the bluez adapter.
-	// Returns true if successful.
-	AdapterPowerOn(ctx context.Context) (bool, error)
+	AdapterPowerOn(ctx context.Context) error
 
 	// SetAdapterAlias calls the Chameleond RPC method of the same name.
 	// Sets the bluez adapter alias to name.
@@ -97,23 +94,19 @@ type BluezPeripheral interface {
 
 	// StartDiscovery calls the Chameleond RPC method of the same name.
 	// Tries to start discovery on the bluez adapter.
-	// Returns true if successful.
-	StartDiscovery(ctx context.Context) (bool, error)
+	StartDiscovery(ctx context.Context) error
 
 	// StopDiscovery calls the Chameleond RPC method of the same name.
 	// Tries to stop discovery on the adapter.
-	// Returns true if successful.
-	StopDiscovery(ctx context.Context) (bool, error)
+	StopDiscovery(ctx context.Context) error
 
 	// StartUnfilteredDiscovery calls the Chameleond RPC method of the same name.
 	// Starts unfiltered discovery session for DUT advertisement testing.
-	// Returns true if successful.
-	StartUnfilteredDiscovery(ctx context.Context) (bool, error)
+	StartUnfilteredDiscovery(ctx context.Context) error
 
 	// StopUnfilteredDiscovery calls the Chameleond RPC method of the same name.
 	// Stops unfiltered discovery session for DUT advertisement testing
-	// Returns true if successful.
-	StopUnfilteredDiscovery(ctx context.Context) (bool, error)
+	StopUnfilteredDiscovery(ctx context.Context) error
 
 	// FindAdvertisementWithAttributes calls the Chameleond RPC method of the same name.
 	// Locates an advertisement containing the requested attributes from btmon.
@@ -165,7 +158,7 @@ func (c *CommonBluezPeripheral) GetBaseDeviceType(ctx context.Context, deviceTyp
 // SpecifyDeviceType calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.SpecifyDeviceType, see that for more details.
 func (c *CommonBluezPeripheral) SpecifyDeviceType(ctx context.Context, deviceType string) error {
-	return c.RPC("SpecifyDeviceType").Args(deviceType).Call(ctx)
+	return c.RPC("SpecifyDeviceType").Args(deviceType).CallForBoolSuccess(ctx)
 }
 
 // SetBtdFlags calls the Chameleond RPC method of the same name.
@@ -201,8 +194,7 @@ func (c *CommonBluezPeripheral) ResetStack(ctx context.Context, nextDeviceType s
 
 	// Verify chameleond is back up by making a different call until it succeeds.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := c.AdapterPowerOff(ctx)
-		return err
+		return c.AdapterPowerOff(ctx)
 	}, &testing.PollOptions{
 		Timeout:  30 * time.Second,
 		Interval: 1 * time.Second,
@@ -210,7 +202,7 @@ func (c *CommonBluezPeripheral) ResetStack(ctx context.Context, nextDeviceType s
 		// Calling AdapterPowerOff should execute successfully when chameleond is
 		// back up, but should not have any additional side effects as it is also
 		// called by the initial ResetStack call within chameleond.
-		if _, err := c.AdapterPowerOff(ctx); err != nil {
+		if err := c.AdapterPowerOff(ctx); err != nil {
 			return errors.Wrap(err, "failed to confirm chameleond service is back up after calling ResetStack")
 		}
 	}
@@ -220,25 +212,25 @@ func (c *CommonBluezPeripheral) ResetStack(ctx context.Context, nextDeviceType s
 // Init calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.Init, see that for more details.
 func (c *CommonBluezPeripheral) Init(ctx context.Context, factoryReset bool) error {
-	return c.RPC("Init").Args(factoryReset).Call(ctx)
+	return c.RPC("Init").Args(factoryReset).CallForBoolSuccess(ctx)
 }
 
 // CleanCachedFiles calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.CleanCachedFiles, see that for more details.
-func (c *CommonBluezPeripheral) CleanCachedFiles(ctx context.Context) (bool, error) {
-	return c.RPC("CleanCachedFiles").CallForBool(ctx)
+func (c *CommonBluezPeripheral) CleanCachedFiles(ctx context.Context) error {
+	return c.RPC("CleanCachedFiles").CallForBoolSuccess(ctx)
 }
 
 // AdapterPowerOff calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.AdapterPowerOff, see that for more details.
-func (c *CommonBluezPeripheral) AdapterPowerOff(ctx context.Context) (bool, error) {
-	return c.RPC("AdapterPowerOff").CallForBool(ctx)
+func (c *CommonBluezPeripheral) AdapterPowerOff(ctx context.Context) error {
+	return c.RPC("AdapterPowerOff").CallForBoolSuccess(ctx)
 }
 
 // AdapterPowerOn calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.AdapterPowerOn, see that for more details.
-func (c *CommonBluezPeripheral) AdapterPowerOn(ctx context.Context) (bool, error) {
-	return c.RPC("AdapterPowerOn").CallForBool(ctx)
+func (c *CommonBluezPeripheral) AdapterPowerOn(ctx context.Context) error {
+	return c.RPC("AdapterPowerOn").CallForBoolSuccess(ctx)
 }
 
 // SetAdapterAlias calls the Chameleond RPC method of the same name.
@@ -269,28 +261,28 @@ func (c *CommonBluezPeripheral) RemoveDevice(ctx context.Context, remoteAddress 
 
 // StartDiscovery calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.StartDiscovery, see that for more details.
-func (c *CommonBluezPeripheral) StartDiscovery(ctx context.Context) (bool, error) {
-	return c.RPC("StartDiscovery").CallForBool(ctx)
+func (c *CommonBluezPeripheral) StartDiscovery(ctx context.Context) error {
+	return c.RPC("StartDiscovery").CallForBoolSuccess(ctx)
 }
 
 // StopDiscovery calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.StopDiscovery, see that for more details.
-func (c *CommonBluezPeripheral) StopDiscovery(ctx context.Context) (bool, error) {
-	return c.RPC("StopDiscovery").CallForBool(ctx)
+func (c *CommonBluezPeripheral) StopDiscovery(ctx context.Context) error {
+	return c.RPC("StopDiscovery").CallForBoolSuccess(ctx)
 }
 
 // StartUnfilteredDiscovery calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.StartUnfilteredDiscovery, see that for more
 // details.
-func (c *CommonBluezPeripheral) StartUnfilteredDiscovery(ctx context.Context) (bool, error) {
-	return c.RPC("StartUnfilteredDiscovery").CallForBool(ctx)
+func (c *CommonBluezPeripheral) StartUnfilteredDiscovery(ctx context.Context) error {
+	return c.RPC("StartUnfilteredDiscovery").CallForBoolSuccess(ctx)
 }
 
 // StopUnfilteredDiscovery calls the Chameleond RPC method of the same name.
 // This implements BluezPeripheral.StopUnfilteredDiscovery, see that for more
 // details.
-func (c *CommonBluezPeripheral) StopUnfilteredDiscovery(ctx context.Context) (bool, error) {
-	return c.RPC("StopUnfilteredDiscovery").CallForBool(ctx)
+func (c *CommonBluezPeripheral) StopUnfilteredDiscovery(ctx context.Context) error {
+	return c.RPC("StopUnfilteredDiscovery").CallForBoolSuccess(ctx)
 }
 
 // FindAdvertisementWithAttributes calls the Chameleond RPC method of the same
