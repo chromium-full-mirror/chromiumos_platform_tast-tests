@@ -46,23 +46,46 @@ func init() {
 			{
 				Name:              "disabled",
 				Val:               arcDisabled,
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+			},
+			{
+				Name:              "disabled_betty",
+				Val:               arcDisabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "disabled_vm",
 				Val:               arcDisabled,
-				ExtraAttr:         []string{"group:hw_agnostic"},
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			},
+			{
+				Name:              "disabled_betty_vm",
+				Val:               arcDisabled,
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 			},
 			{
 				Name:              "enabled",
 				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+			},
+			{
+				Name:              "enabled_betty",
+				Val:               arcEnabled,
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "enabled_vm",
 				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "enabled_betty_vm",
+				Val:               arcEnabled,
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
 	})

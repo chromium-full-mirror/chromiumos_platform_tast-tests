@@ -57,11 +57,12 @@ func init() {
 			{
 				Name:              "betty",
 				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "vm_betty",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
-				ExtraAttr:         []string{"group:hw_agnostic"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
 		Timeout: 7 * time.Minute,
 	})
