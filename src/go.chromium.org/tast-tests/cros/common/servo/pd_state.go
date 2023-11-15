@@ -271,6 +271,13 @@ func (s *Servo) getPDStateByTargetAndVersion(
 		}
 		t = pdStateTokens(cmdOutput[0])
 	} else if target == pdStateServo {
+		if err := s.RunServoCommand(ctx, "chan save"); err != nil {
+			return nil, errors.Wrap(err, "servo console command failed")
+		}
+		if err := s.RunServoCommand(ctx, "chan 0"); err != nil {
+			return nil, errors.Wrap(err, "servo console command failed")
+		}
+		defer s.RunServoCommand(ctx, "chan restore")
 		// Run command on the servo console
 		cmdOutput, err := s.RunServoCommandGetOutput(ctx, cmd, []string{regex})
 		if err != nil {
