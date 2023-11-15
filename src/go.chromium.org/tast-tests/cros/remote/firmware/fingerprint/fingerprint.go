@@ -648,15 +648,6 @@ func CheckRunningFirmwareVersionMatches(ctx context.Context, d *rpcdut.RPCDUT, e
 	return nil
 }
 
-// CheckRollbackSetToInitialValue checks the anti-rollback block is set to initial values.
-func CheckRollbackSetToInitialValue(ctx context.Context, d *rpcdut.RPCDUT) error {
-	return CheckRollbackState(ctx, d, RollbackState{
-		BlockID:    1,
-		MinVersion: 0,
-		RWVersion:  0,
-	})
-}
-
 // CheckRollbackState checks that the anti-rollback block is set to expected values.
 func CheckRollbackState(ctx context.Context, d *rpcdut.RPCDUT, expected RollbackState) error {
 	actual, err := RollbackInfo(ctx, d.DUT())

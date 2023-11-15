@@ -48,6 +48,12 @@ type testRWFlashParams struct {
 }
 
 func testFlashingRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, params *testRWFlashParams) error {
+	testing.ContextLog(ctx, "Saving current rollback information")
+	rollbackInfo, err := fingerprint.RollbackInfo(ctx, d.DUT())
+	if err != nil {
+		return errors.Wrap(err, "failed to read rollback information")
+	}
+
 	testing.ContextLog(ctx, "Flashing RW firmware: ", params.firmwarePath)
 	if err := fingerprint.FlashFirmwareUpdate(ctx, d, fingerprint.ImageTypeRW, params.firmwarePath); err != nil {
 		return errors.Wrapf(err, "failed to flash firmware: %q", params.firmwarePath)
@@ -62,9 +68,10 @@ func testFlashingRWFirmware(ctx context.Context, d *rpcdut.RPCDUT, params *testR
 	if err := fingerprint.CheckRunningFirmwareCopy(ctx, d.DUT(), params.expectedRunningFirmwareCopy); err != nil {
 		return errors.Wrap(err, "running unexpected firmware copy")
 	}
+
 	testing.ContextLog(ctx, "Checking that rollback meets expected values")
-	if err := fingerprint.CheckRollbackSetToInitialValue(ctx, d); err != nil {
-		return errors.Wrap(err, "rollback not set to initial value")
+	if err := fingerprint.CheckRollbackState(ctx, d, rollbackInfo); err != nil {
+		return errors.Wrap(err, "rollback information changed during test")
 	}
 
 	return nil
