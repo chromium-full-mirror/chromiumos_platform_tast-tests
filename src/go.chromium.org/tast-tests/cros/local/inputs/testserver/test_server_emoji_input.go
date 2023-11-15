@@ -74,9 +74,9 @@ func (its *InputsTestServer) InputEmojiWithEmojiPickerSearch(uc *useractions.Use
 	action := uiauto.Combine(fmt.Sprintf("input emoji with emoji picker on field %v", inputField),
 		its.Clear(inputField),
 		its.TriggerEmojiPickerFromContextMenu(inputField),
-		ui.LeftClick(emojipicker.SearchFieldFinder),
+		ui.LeftClickUntil(emojipicker.SearchFieldFinder, ui.Exists(emojipicker.SearchFieldFinder)),
 		keyboard.TypeAction(searchString),
-		util.WaitForFieldEmpty(its.tconn, emojipicker.NodeFinder.Name("😄").First()),
+		ui.WithTimeout(time.Second).WaitUntilExists(emojiResultFinder),
 		ui.LeftClickUntil(emojiResultFinder, ui.WithTimeout(time.Second).WaitUntilGone(emojipicker.RootFinder)),
 		// Wait for input value to be test Emoji.
 		util.WaitForFieldTextToBe(uc.TestAPIConn(), inputField.Finder(), emojiChar),
