@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
-		// Vars:         []string{"servo"},
+		Vars:         []string{"servo", "USBTypeCID"},
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
@@ -92,6 +92,16 @@ func RaidenSettingsForTypecDualRole(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(cleanupCtx)
+
+	if err := utils.InitFixture(ctx); err != nil {
+		s.Fatal("Failed to initialize fixture: ", err)
+	}
+	defer utils.CloseAllFixture(cleanupCtx)
+
+	usbTypeCID := s.RequiredVar("USBTypeCID")
+	if err := utils.ControlFixture(ctx, usbTypeCID, "on"); err != nil {
+		s.Fatal("Failed to connect type c device: ", err)
+	}
 
 	// Start Chrome on the DUT.
 	cs := ui.NewChromeServiceClient(cl.Conn)
