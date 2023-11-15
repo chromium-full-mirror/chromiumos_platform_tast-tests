@@ -246,6 +246,15 @@ func performHiberate(ctx context.Context, h *firmware.Helper, dut *dut.DUT) erro
 	sdCtx, cancel := context.WithTimeout(ctx, 40*time.Second)
 	defer cancel()
 	if err := dut.WaitUnreachable(sdCtx); err != nil {
+		// Since Rex boards are using PSL (Power Switch Logic) hibernate
+		// with timeout is not supported, hence use only "hibernate" command.
+		if err := h.Servo.RunECCommand(ctx, "hibernate"); err != nil {
+			return errors.Wrap(err, "failed to run EC command")
+		}
+	}
+	sdCtx, cancel = context.WithTimeout(ctx, 40*time.Second)
+	defer cancel()
+	if err := dut.WaitUnreachable(sdCtx); err != nil {
 		return errors.Wrap(err, "failed wait for unreachable")
 	}
 	testing.ContextLog(ctx, "Verify EC is non-responsive")
