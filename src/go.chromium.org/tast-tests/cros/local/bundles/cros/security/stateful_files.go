@@ -19,7 +19,7 @@ func init() {
 			"chromeos-hardening@google.com",
 		},
 		BugComponent: "b:1040049",
-		Attr:         []string{"group:enterprise-reporting", "group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:enterprise-reporting", "group:mainline"},
 	})
 }
 
