@@ -9,12 +9,8 @@ package setup
 
 import (
 	"context"
-	"fmt"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/personalization"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -22,7 +18,7 @@ import (
 // TurnOnDarkTheme turns dark theme on.
 // Reset to auto theme (OS default after logging in) when cleaning power test setup.
 func TurnOnDarkTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback, error) {
-	if err := setTheme(ctx, c, personalization.DarkModeName); err != nil {
+	if err := setAutoThemeMode(ctx, c, true /* enabled */); err != nil {
 		return nil, errors.Wrap(err, "failed to enable dark theme")
 	}
 	// TODO(b/267686390): Add CleanupCallback when more controls over dark theme scheduler
@@ -33,7 +29,7 @@ func TurnOnDarkTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback, 
 // TurnOnLightTheme turns light theme on.
 // Reset to auto theme (OS default after logging in) when cleaning power test setup.
 func TurnOnLightTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback, error) {
-	if err := setTheme(ctx, c, personalization.LightModeName); err != nil {
+	if err := setAutoThemeMode(ctx, c, false /* enabled */); err != nil {
 		return nil, errors.Wrap(err, "failed to enable light theme")
 	}
 	// TODO(b/267686390): Add CleanupCallback when more controls over dark theme scheduler
@@ -41,25 +37,7 @@ func TurnOnLightTheme(ctx context.Context, c *chrome.TestConn) (CleanupCallback,
 	return nil, nil
 }
 
-// setTheme opens the "Wallpaper & style" app from settings and toggles the theme as |theme|.
-func setTheme(ctx context.Context, c *chrome.TestConn, themeName string) error {
-	ui := uiauto.New(c).WithTimeout(30 * time.Second)
-
-	var toggleThemeAction uiauto.Action
-	switch themeName {
-	case personalization.AutoModeName:
-		toggleThemeAction = personalization.ToggleAutoMode(ui)
-	case personalization.DarkModeName:
-		toggleThemeAction = personalization.ToggleDarkMode(ui)
-	case personalization.LightModeName:
-		toggleThemeAction = personalization.ToggleLightMode(ui)
-	default:
-		return errors.Errorf("unknown theme: %s", themeName)
-	}
-
-	return uiauto.Combine(fmt.Sprintf("enable %s theme", themeName),
-		personalization.OpenPersonalizationHub(ui),
-		toggleThemeAction,
-		personalization.ClosePersonalizationHub(ui),
-	)(ctx)
+// setAutoThemeMode sets the theme to dark or light theme through autotest API.
+func setAutoThemeMode(ctx context.Context, c *chrome.TestConn, enabled bool) error {
+	return c.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.forceAutoThemeMode)`, enabled)
 }

@@ -310,9 +310,6 @@ const (
 // DarkThemeMode indicates what dark theme setup is needed for a test.
 type DarkThemeMode int
 
-// If EnableDarkTheme or EnableLightTheme were to be used, make sure the test is on desktop
-// when performing power setup at the start.
-//
 // Currently there is not a good way to cleanup the theme set.
 // If EnableDarkTheme or EnableLightTheme were to be used, the device would remain in the
 // theme until next log-in or manual inputs.
