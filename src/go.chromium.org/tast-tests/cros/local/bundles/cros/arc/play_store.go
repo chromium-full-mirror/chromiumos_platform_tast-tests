@@ -30,11 +30,19 @@ func init() {
 		Attr:         []string{"group:arc-functional", "group:mainline"},
 		SoftwareDeps: []string{"play_store", "chrome"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_container"},
+			ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+		}, {
+			Name:              "betty",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"android_container", "qemu"},
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
-			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+		}, {
+			Name:              "betty_vm",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 		}},
 		Timeout: 15 * time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
