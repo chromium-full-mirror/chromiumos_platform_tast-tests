@@ -7,6 +7,7 @@ package labqual
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,6 +30,7 @@ func init() {
 		},
 		VarDeps:      []string{"servo"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		TestBedDeps:  []string{tbdep.ServoUSBState("NORMAL")},
 	})
 }
 
