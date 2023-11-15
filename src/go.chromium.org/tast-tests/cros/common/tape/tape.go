@@ -171,7 +171,7 @@ func (c *client) releaseAccount(ctx context.Context, account interface{}, endpoi
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal data")
 	}
-	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, requestAccountTimeout, 4, payloadBytes)
+	response, err := c.sendRequestWithTimeout(ctx, "POST", endpoint, callTimeout, 2, payloadBytes)
 	if err != nil {
 		return errors.Wrap(err, "failed to make request")
 	}
