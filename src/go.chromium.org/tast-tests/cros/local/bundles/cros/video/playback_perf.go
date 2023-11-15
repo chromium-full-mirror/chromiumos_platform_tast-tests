@@ -1346,12 +1346,16 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 	//
 	// Note that we do this before possibly launching LaCrOS so that setup.PowerTest() doesn't
 	// get confused with multiple windows.
+	// Devices not supporting Chrome EC (e.g. drallion and sarien) fail to set the battery to discharge mode.
+	// We ignore the error as this is expected. We simply won't collect the system power consumption metrics if the battery
+	// is not set to discharge and the device does not support Chrome EC.
+	// TODO(b/311061743): Set ignoreErr to false once all boards support chrome EC.
 	cleanup, err := setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
 		Wifi:               setup.DisableWifiInterfaces,
 		NightLight:         setup.DisableNightLight,
 		DarkTheme:          setup.EnableLightTheme,
 		KeyboardBrightness: setup.SetKbBrightnessToZero,
-	}, setup.NewBatteryDischarge(true /*discharge*/, false /*ignoreErr*/, setup.DefaultDischargeThreshold))
+	}, setup.NewBatteryDischarge(true /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold))
 	if err != nil {
 		// This is not really an error: sometimes powerd is down or lost and setting
 		// up the power test fails. Just don't provide any metric.

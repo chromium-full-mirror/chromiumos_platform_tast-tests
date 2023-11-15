@@ -654,15 +654,27 @@ func GetBacklightLevel(ctx context.Context) (nonlinear, linear float64) {
 	return nonlinear, linear
 }
 
-// TODO: b/281632991 - Consider remove this list once chargeoverride is verified
-// to be working on these boards.
-var boardsCannotChargeOverride = []string{"jacuzzi", "kukui"}
-
 // SupportChargeOverride returns a boolean indicating if 'ectool chargeoverride'
 // is supported on the board.
 func SupportChargeOverride() bool {
 	board := GetBoard()
+	// TODO: b/281632991 - Consider remove this list once chargeoverride is verified
+	// to be working on these boards.
+	var boardsCannotChargeOverride = []string{"jacuzzi", "kukui"}
 	for _, boardPrefix := range boardsCannotChargeOverride {
+		if strings.HasPrefix(board, boardPrefix) {
+			return false
+		}
+	}
+	return true
+}
+
+// SupportChromeEC returns a boolean indicating if a device supports Chrome EC.
+func SupportChromeEC() bool {
+	board := GetBoard()
+	// TODO: b/281632991 - Remove the devices once they support Chrome EC.
+	var boardsNotSupportChromeEC = []string{"drallion", "sarien"}
+	for _, boardPrefix := range boardsNotSupportChromeEC {
 		if strings.HasPrefix(board, boardPrefix) {
 			return false
 		}

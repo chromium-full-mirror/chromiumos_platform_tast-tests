@@ -1347,12 +1347,17 @@ func RTCPeerConnectionPerf(ctx context.Context, s *testing.State) {
 	//
 	// Note that we do this before possibly launching LaCrOS so that setup.PowerTest() doesn't
 	// get confused with multiple windows.
-	cleanup, err := setup.PowerTest(ctx, tconn, setup.PowerTestOptions{
-		Wifi:               setup.DisableWifiInterfaces,
-		NightLight:         setup.DisableNightLight,
-		DarkTheme:          setup.EnableLightTheme,
-		KeyboardBrightness: setup.SetKbBrightnessToZero,
-	}, setup.NewBatteryDischarge(true /*discharge*/, false /*ignoreErr*/, setup.DefaultDischargeThreshold))
+	// Devices not supporting Chrome EC (e.g. drallion and sarien) fails discharging. We ignore
+	// the error as it is expected. The power consumption metric is not collected if a power is charged.
+	// TODO(b/311061743): Set ignoreErr to false once all boards support chrome EC.
+	cleanup, err := setup.PowerTest(ctx, tconn,
+		setup.PowerTestOptions{
+			Wifi:               setup.DisableWifiInterfaces,
+			NightLight:         setup.DisableNightLight,
+			DarkTheme:          setup.EnableLightTheme,
+			KeyboardBrightness: setup.SetKbBrightnessToZero,
+		},
+		setup.NewBatteryDischarge(true /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold))
 	if err != nil {
 		// This is not really an error: sometimes powerd is down or lost and setting
 		// up the power test fails. Just don't provide any metric.
