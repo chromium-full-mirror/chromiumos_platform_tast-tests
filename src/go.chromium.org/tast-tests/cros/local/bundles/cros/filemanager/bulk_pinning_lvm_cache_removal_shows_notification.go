@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -45,6 +46,7 @@ func init() {
 			"cbx_feature_enabled",
 			"cbx_stable",
 		},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		Vars: []string{
 			"drivefs.accountPool",
 		},

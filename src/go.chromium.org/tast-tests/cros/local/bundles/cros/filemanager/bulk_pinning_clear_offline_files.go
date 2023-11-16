@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
@@ -44,6 +45,7 @@ func init() {
 		Data: []string{
 			"test_1KB.txt",
 		},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-a5c390c9-43ea-46c8-8fad-8337d7547f9f",

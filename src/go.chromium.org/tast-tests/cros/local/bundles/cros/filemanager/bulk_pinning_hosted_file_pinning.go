@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/helpers"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -46,6 +47,7 @@ func init() {
 			"cbx_feature_enabled",
 			"cbx_unstable",
 		},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-3d076472-1afc-4bd8-a1a5-94017965d55e",

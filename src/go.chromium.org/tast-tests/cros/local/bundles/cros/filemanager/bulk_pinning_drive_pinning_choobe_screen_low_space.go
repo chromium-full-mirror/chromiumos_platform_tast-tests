@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -46,6 +47,7 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 			"drivefs.accountPool",
 		},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-eff7dccd-84e0-451e-87ff-c55c25698648",

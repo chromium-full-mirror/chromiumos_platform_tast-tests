@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -44,8 +45,9 @@ func init() {
 		Data: []string{
 			"test_1KB.txt",
 		},
-		Timeout: 5 * time.Minute,
-		Fixture: "driveFsStartedBulkPinningEnabled",
+		TestBedDeps: []string{tbdep.Cbx(true)},
+		Timeout:     5 * time.Minute,
+		Fixture:     "driveFsStartedBulkPinningEnabled",
 	})
 }
 

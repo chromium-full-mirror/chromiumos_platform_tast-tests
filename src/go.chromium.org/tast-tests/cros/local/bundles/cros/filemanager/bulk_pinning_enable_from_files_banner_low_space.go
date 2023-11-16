@@ -9,6 +9,7 @@ import (
 	"os"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -44,6 +45,7 @@ func init() {
 			"cbx_feature_enabled",
 			"cbx_stable",
 		},
+		TestBedDeps: []string{tbdep.Cbx(true)},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
 			Value: "screenplay-953ca1fc-5d60-49f2-aa76-283dc47ccde7",
@@ -87,7 +89,7 @@ func BulkPinningEnableFromFilesBannerLowSpace(ctx context.Context, s *testing.St
 	defer files.Close(cleanupCtx)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	bulkPinningBannerFinder := files.WithTimeout(2*time.Second).WaitUntilExists(nodewith.Role(role.Banner).ClassName("tast-bulk-pinning-banner"))
+	bulkPinningBannerFinder := files.WithTimeout(2 * time.Second).WaitUntilExists(nodewith.Role(role.Banner).ClassName("tast-bulk-pinning-banner"))
 	dismissButton := nodewith.Role(role.Button).Name("Dismiss")
 	getStartedButton := nodewith.Role(role.Button).Name("Get started")
 	turnOnButton := nodewith.Role(role.Button).Name("Turn on")
