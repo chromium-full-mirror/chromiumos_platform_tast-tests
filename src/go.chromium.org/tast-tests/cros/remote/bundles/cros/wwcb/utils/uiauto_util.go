@@ -16,6 +16,7 @@ import (
 	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -33,22 +34,10 @@ const MyFilesPath = "/home/chronos/user/MyFiles/"
 
 var (
 	// FilesWindowFinder is the finder of Files app window.
-	FilesWindowFinder = &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: "Files - My files"}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
+	FilesWindowFinder = ui.Node().Role(ui.Role_ROLE_WINDOW).Name("Files - My files").Nth(0).Finder()
 
 	// openFileFinder is the finder used to open the file on the Files app.
-	openFileFinder = &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
-			{Value: &ui.NodeWith_Name{Name: "Open"}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: FilesWindowFinder}},
-		},
-	}
+	openFileFinder = ui.Node().Role(ui.Role_ROLE_BUTTON).Name("Open").Ancestor(FilesWindowFinder).Finder()
 )
 
 // PushFileToDUT copies the specified fileName from the test's data folder to the DUT's remoteDir.
@@ -67,37 +56,14 @@ func PushFileToDUT(ctx context.Context, s *testing.State, dut *dut.DUT, fileName
 
 // OpenMediaFileOnFilesapp clicks the file and open it on Filesapp.
 func OpenMediaFileOnFilesapp(ctx context.Context, uiautoSvc ui.AutomationServiceClient, videoName string) error {
-	filesWindowFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: "Files - My files"}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
+	filesWindowFinder := ui.Node().Role(ui.Role_ROLE_WINDOW).Name("Files - My files").Nth(0).Finder()
 
-	fileNameFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
-			{Value: &ui.NodeWith_Name{Name: videoName}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: filesWindowFinder}},
-		},
-	}
+	fileNameFinder := ui.Node().Role(ui.Role_ROLE_STATIC_TEXT).Name(videoName).Ancestor(filesWindowFinder).Finder()
 
-	filesOpenButtonFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
-			{Value: &ui.NodeWith_Name{Name: "Open"}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: filesWindowFinder}},
-		},
-	}
+	filesOpenButtonFinder := ui.Node().Role(ui.Role_ROLE_BUTTON).Name("Open").Ancestor(filesWindowFinder).Finder()
 
 	galleryWindowName := fmt.Sprintf("Gallery - %s", videoName)
-	galleryWindowFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: galleryWindowName}},
-		},
-	}
+	galleryWindowFinder := ui.Node().Role(ui.Role_ROLE_WINDOW).Name(galleryWindowName).Finder()
 
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: filesWindowFinder}); err != nil {
 		return errors.Wrap(err, "failed to wait for FilesApp showing on screen")
@@ -120,12 +86,7 @@ func OpenMediaFileOnFilesapp(ctx context.Context, uiautoSvc ui.AutomationService
 
 // ClickOnPlayButton clicks button to play the file on Gallery.
 func ClickOnPlayButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient) error {
-	galleryPlayButtonFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_TOGGLE_BUTTON}},
-			{Value: &ui.NodeWith_Name{Name: "Toggle play pause"}},
-		},
-	}
+	galleryPlayButtonFinder := ui.Node().Role(ui.Role_ROLE_TOGGLE_BUTTON).Name("Toggle play pause").Finder()
 
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: galleryPlayButtonFinder}); err != nil {
 		return errors.Wrap(err, "failed to wait for play button to show")
@@ -147,12 +108,7 @@ func ClickOnPlayButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient
 
 // CloseWindow closes the certain window using keyboard accelerators.
 func CloseWindow(ctx context.Context, keyboardSvc inputspb.KeyboardServiceClient, uiautoSvc ui.AutomationServiceClient, windowName string) error {
-	windowFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: windowName}},
-		},
-	}
+	windowFinder := ui.Node().Role(ui.Role_ROLE_WINDOW).Name(windowName).Finder()
 
 	//Use keyboard shortcut to close app.
 	if _, err := keyboardSvc.Accel(ctx, &inputspb.AccelRequest{Key: "Ctrl+W"}); err != nil {
@@ -173,12 +129,7 @@ func CloseWindow(ctx context.Context, keyboardSvc inputspb.KeyboardServiceClient
 
 // ClickFullScreenButton clicks button to full screen on Gallery.
 func ClickFullScreenButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient) error {
-	connectButtonNode := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_NameContaining{NameContaining: "fullscreen"}},
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
-		},
-	}
+	connectButtonNode := ui.Node().NameContaining("fullscreen").Role(ui.Role_ROLE_BUTTON).Finder()
 
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: connectButtonNode}); err != nil {
 		return errors.Wrap(err, "failed to wait for fullscreen button to show")
@@ -194,21 +145,10 @@ func ClickFullScreenButton(ctx context.Context, uiautoSvc ui.AutomationServiceCl
 
 // OpenMediaFileWithGallery clicks the file on the Filesapp and open it with the Gallery app.
 func OpenMediaFileWithGallery(ctx context.Context, uiautoSvc ui.AutomationServiceClient, fileName string) (string, error) {
-	fileNameFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
-			{Value: &ui.NodeWith_Name{Name: fileName}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: FilesWindowFinder}},
-		},
-	}
+	fileNameFinder := ui.Node().Role(ui.Role_ROLE_STATIC_TEXT).Name(fileName).Ancestor(FilesWindowFinder).Finder()
 
 	galleryWindow := fmt.Sprintf("Gallery - %s", fileName)
-	galleryWindowFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: galleryWindow}},
-		},
-	}
+	galleryWindowFinder := ui.Node().Role(ui.Role_ROLE_WINDOW).Name(galleryWindow).Finder()
 
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: FilesWindowFinder}); err != nil {
 		return "", errors.Wrap(err, "failed to wait for FilesApp showing on screen")
@@ -239,22 +179,8 @@ func OpenMediaFileWithGallery(ctx context.Context, uiautoSvc ui.AutomationServic
 
 // ClickOnMaximizeButton clicks on the maximize button of the given window name.
 func ClickOnMaximizeButton(ctx context.Context, uiautoSvc ui.AutomationServiceClient, windowName string) error {
-	window := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_WINDOW}},
-			{Value: &ui.NodeWith_Name{Name: windowName}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
-
-	maxButton := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Name{Name: "Maximize"}},
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_BUTTON}},
-			{Value: &ui.NodeWith_First{First: true}},
-			{Value: &ui.NodeWith_Ancestor{Ancestor: window}},
-		},
-	}
+	window := ui.Node().Role(ui.Role_ROLE_WINDOW).Name(windowName).Nth(0).Finder()
+	maxButton := ui.Node().Name("Maximize").Role(ui.Role_ROLE_BUTTON).Nth(0).Ancestor(window).Finder()
 
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: maxButton}); err != nil {
 		return errors.Wrap(err, "failed to wait for maximize button from context menu")
@@ -285,18 +211,8 @@ func ClickPowerSourceOption(ctx context.Context, uiautoSvc ui.AutomationServiceC
 func OpenPowerSettings(ctx context.Context, cs ui.ChromeServiceClient, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient) error {
 	launchAppTimeout := 60
 
-	deviceFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Name{Name: "Device"}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
-	powerFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_Name{Name: "Power"}},
-			{Value: &ui.NodeWith_First{First: true}},
-		},
-	}
+	deviceFinder := ui.Node().Name("Device").Nth(0).Finder()
+	powerFinder := ui.Node().Name("Power").Nth(0).Finder()
 
 	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Settings", TimeoutSecs: int32(launchAppTimeout)}); err != nil {
 		return errors.Wrap(err, "launch settings app")
@@ -324,11 +240,7 @@ func WaitUntilBatteryStatus(ctx context.Context, uiautoSvc ui.AutomationServiceC
 		CheckTimeout, CheckInterval    = 10 * time.Second, 200 * time.Millisecond
 		batteryCharging, batteryIsFull = "charging", "Battery is full"
 	)
-	batteryInfo := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_HasClass{HasClass: "PowerTrayView"}},
-		},
-	}
+	batteryInfo := ui.Node().HasClass("PowerTrayView").Nth(0).Finder()
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		batteryInformation, err := uiautoSvc.Info(ctx, &ui.InfoRequest{Finder: batteryInfo})
@@ -347,4 +259,83 @@ func WaitUntilBatteryStatus(ctx context.Context, uiautoSvc ui.AutomationServiceC
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: CheckTimeout, Interval: CheckInterval})
+}
+
+// OpenDeviceSettings opens the device settings sub page.
+func OpenDeviceSettings(ctx context.Context, subItem string, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient) error {
+	launchAppTimeout := 60
+
+	deviceFinder := ui.Node().Name("Device").Nth(0).Finder()
+	subItemFinder := ui.Node().Name(subItem).Nth(0).Finder()
+
+	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Settings", TimeoutSecs: int32(launchAppTimeout)}); err != nil {
+		return errors.Wrap(err, "launch settings app")
+	}
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: deviceFinder}); err != nil {
+		return errors.Wrap(err, "wait device button")
+	}
+	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: deviceFinder}); err != nil {
+		return errors.Wrap(err, "click device button")
+	}
+
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: subItemFinder}); err != nil {
+		return errors.Wrapf(err, "wait %s button", subItem)
+	}
+	if _, err := uiautoSvc.DoDefault(ctx, &ui.DoDefaultRequest{Finder: subItemFinder}); err != nil {
+		return errors.Wrapf(err, "click %s button", subItem)
+	}
+	return nil
+}
+
+// OpenFileInDownloads opens the file on downloads folder.
+func OpenFileInDownloads(ctx context.Context, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient, fileName, windowTitle string) error {
+	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
+		return errors.Wrap(err, "failed to launch files app")
+	}
+
+	fileNameFinder := ui.Node().Name(fileName).Role(ui.Role_ROLE_STATIC_TEXT).Finder()
+	downloadsFinder := ui.Node().Name("Downloads").Nth(0).Finder()
+
+	for _, finder := range []*ui.Finder{
+		downloadsFinder,
+		fileNameFinder,
+	} {
+		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: finder}); err != nil {
+			return errors.Wrapf(err, "failed to wait until the %q exists", finder)
+		}
+		if _, err := uiautoSvc.DoubleClick(ctx, &ui.DoubleClickRequest{Finder: finder}); err != nil {
+			return errors.Wrapf(err, "failed to click on the %q", finder)
+		}
+	}
+
+	Window := ui.Node().Name(windowTitle).Role(ui.Role_ROLE_WINDOW).Nth(0).Finder()
+	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: Window}); err != nil {
+		return errors.Wrap(err, "failed to wait until html window exist")
+	}
+	return nil
+}
+
+// VerifyGuestLearnMore Verify that the guest help page is shown for Learn More.
+func VerifyGuestLearnMore(ctx context.Context, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Chrome"}); err != nil {
+		return errors.Wrap(err, "failed to launch chrome")
+	}
+	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Chrome"})
+	learnMoreFinder := ui.Node().Name("Learn more").Nth(0).Finder()
+	helpPageFinder := ui.Node().NameContaining("Use a Chromebook as a guest").Role(ui.Role_ROLE_STATIC_TEXT).Nth(0).Finder()
+	for _, finder := range []*ui.Finder{
+		learnMoreFinder,
+		helpPageFinder,
+	} {
+		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: finder}); err != nil {
+			return errors.Wrap(err, "failed to wait for exists")
+		}
+		if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: finder}); err != nil {
+			return errors.Wrap(err, "failed to click")
+		}
+	}
+	return nil
 }
