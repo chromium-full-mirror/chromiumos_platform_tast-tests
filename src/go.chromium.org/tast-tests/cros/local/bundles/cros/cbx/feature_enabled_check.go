@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/cbx/util"
 
 	"go.chromium.org/tast/core/testing"
@@ -20,6 +21,7 @@ func init() {
 		Contacts:     []string{"tast-core@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:cbx", "cbx_feature_enabled", "cbx_stable"},
+		TestBedDeps:  []string{tbdep.Cbx(true)},
 	})
 }
 

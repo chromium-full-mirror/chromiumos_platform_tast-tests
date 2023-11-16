@@ -7,6 +7,7 @@ package cbx
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/cbx/util"
 
 	"go.chromium.org/tast/core/testing"
@@ -21,6 +22,7 @@ func init() {
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:cbx", "cbx_feature_enabled", "cbx_stable"},
 		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
+		TestBedDeps:  []string{tbdep.Cbx(true)},
 	})
 }
 
