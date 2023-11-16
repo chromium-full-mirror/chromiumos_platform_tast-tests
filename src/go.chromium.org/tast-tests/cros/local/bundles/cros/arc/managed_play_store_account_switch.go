@@ -52,8 +52,17 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeBlockList,
 					accountSwitchEnabled: true,
 				},
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			},
+			{
+				Name: "blocklist_betty",
+				Val: managedPlayStoreAccountSwitchArgs{
+					playStoreMode:        arcent.PlayStoreModeBlockList,
+					accountSwitchEnabled: true,
+				},
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name: "blocklist_vm",
@@ -61,7 +70,16 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeBlockList,
 					accountSwitchEnabled: true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "blocklist_betty_vm",
+				Val: managedPlayStoreAccountSwitchArgs{
+					playStoreMode:        arcent.PlayStoreModeBlockList,
+					accountSwitchEnabled: true,
+				},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			},
 			{
@@ -70,7 +88,16 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "allowlist_betty",
+				Val: managedPlayStoreAccountSwitchArgs{
+					playStoreMode:        arcent.PlayStoreModeAllowList,
+					accountSwitchEnabled: false,
+				},
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
@@ -79,7 +106,16 @@ func init() {
 					playStoreMode:        arcent.PlayStoreModeAllowList,
 					accountSwitchEnabled: false,
 				},
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "allowlist_betty_vm",
+				Val: managedPlayStoreAccountSwitchArgs{
+					playStoreMode:        arcent.PlayStoreModeAllowList,
+					accountSwitchEnabled: false,
+				},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
 	})

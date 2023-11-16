@@ -27,18 +27,29 @@ func init() {
 		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
 		// ChromeOS > Software > ARC++ > Commercial
 		BugComponent: "b:157100",
-		Attr:         []string{"group:mainline", "group:arc-functional", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Vars:         []string{"arc.parentUser"},
-		Params: []testing.Param{{
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_container"},
-		}, {
-			Name:              "vm",
-			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
+		Params: []testing.Param{
+			{
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+			},
+			{
+				Name:              "betty",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+			},
+			{
+				Name:              "vm",
+				ExtraAttr:         []string{"informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+			}, {
+				Name:              "betty_vm",
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+			}},
 		Fixture: "familyLinkUnicornArcPolicyLogin",
 	})
 }

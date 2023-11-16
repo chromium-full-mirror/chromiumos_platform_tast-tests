@@ -51,12 +51,22 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"android_container"},
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
+				Name:              "betty",
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
 				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "betty_vm",
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
 		Fixture: fixture.CleanOwnership,
@@ -189,7 +199,7 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 	return a, cr, nil
 }
 
-func waitForCacheSizeToIncrease(ctx context.Context, rl *retry.Loop) (error) {
+func waitForCacheSizeToIncrease(ctx context.Context, rl *retry.Loop) error {
 	err := testing.Poll(ctx, func(ctx context.Context) error {
 		files, err := os.ReadDir(apkCacheFilesDir)
 		if err != nil {
