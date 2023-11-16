@@ -330,6 +330,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		s.Fatal("Failed to relaunch the Files App: ", err)
 	}
 	defer filesApp.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "filesapp_ui_dump")
 
 	// Close new notifications again in case they overlap something on screen.
 	if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
