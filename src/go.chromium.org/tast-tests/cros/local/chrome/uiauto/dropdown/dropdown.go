@@ -22,6 +22,7 @@ func getValueNodeInfos(ctx context.Context, tconn *chrome.TestConn, dropdown *no
 	ui := uiauto.New(tconn)
 	// Click on the dropdown and wait for it to expand.
 	if err := uiauto.Combine("open dropdown",
+		ui.MakeVisible(dropdown),
 		ui.DoDefault(dropdown),
 		ui.WaitUntilExists(dropdown.State("expanded", true)))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to expand dropdown")

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -18,7 +19,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -187,6 +190,62 @@ func (m *Manager) ImportCACert(fileName string, org Organization, trustSettings 
 	)
 }
 
+// CreateCertAndImport create and import the CA certificate and the client certificate contained in the CertStore.
+func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) (retErr error) {
+	// Reserve a longer time in case the certificate needs to be deleted.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve user's downloads path")
+	}
+
+	// Write client certificate file to Downloads path.
+	clientCertFileName := "test_client_cert.p12"
+	clientCertDest := certificate.NewLocalDestination(downloadsPath, clientCertFileName)
+	cleanUpClientCert, err := certificate.WriteClientCertWithPassword(ctx, clientCertDest, certs, password)
+	if err != nil {
+		return errors.Wrap(err, "failed to create the client certificate file")
+	}
+	defer cleanUpClientCert(cleanupCtx)
+
+	// Write CA certificate file to Downloads path.
+	serverCAFileName := "test_server_CA.pem"
+	caCertDest := certificate.NewLocalDestination(downloadsPath, serverCAFileName)
+	cleanUpCaCert, err := certificate.WriteCACert(ctx, caCertDest, certs)
+	if err != nil {
+		return errors.Wrap(err, "failed to create the CA certificate file")
+	}
+	defer cleanUpCaCert(cleanupCtx)
+
+	// Import the CA certificate and the client certificate.
+	for _, cert := range []*CertData{
+		NewCertData(certs, TypeCA),
+		NewCertData(certs, TypeClient),
+	} {
+		certName := cert.Name()
+		organization := cert.Organization()
+		certType := cert.CertType()
+
+		importAction := m.ImportClientCert(clientCertFileName, password, certName, organization, importType)
+		if certType == TypeCA {
+			importAction = m.ImportCACert(serverCAFileName, organization, trustSettings)
+		}
+
+		if err := importAction(ctx); err != nil {
+			return errors.Wrapf(err, "failed to import %q certificate", certType)
+		}
+		defer func(ctx context.Context) {
+			if retErr != nil {
+				m.DeleteCert(certName, organization, certType)
+			}
+		}(cleanupCtx)
+	}
+	return nil
+}
+
 // DeleteCert deletes the certificate from the Certificates Manager.
 func (m *Manager) DeleteCert(name string, org Organization, certType CertType) uiauto.Action {
 	organizationText := certFinder.Name(org.displayName()).Role(role.StaticText)
@@ -311,4 +370,42 @@ func uploadFile(tconn *chrome.TestConn, fileName string) uiauto.Action {
 			filePicker.OpenFile(fileName),
 		)(ctx)
 	}
+}
+
+// CertData stores the credential information.
+type CertData struct {
+	certType CertType
+	certificate.Credential
+}
+
+// NewCertData retrieves the credential from the certificate and returns the CertData.
+func NewCertData(certStore certificate.CertStore, certType CertType) *CertData {
+	cred := certStore.ClientCred
+	if certType == TypeCA {
+		cred = certStore.CACred
+	}
+	return &CertData{
+		certType:   certType,
+		Credential: cred,
+	}
+}
+
+// Name returns the common name of the certificate.
+func (cert *CertData) Name() string {
+	return cert.Info.CommonName
+}
+
+// CertType returns the certificate type.
+func (cert *CertData) CertType() CertType {
+	return cert.certType
+}
+
+// Organization returns the organization of the certificate.
+func (cert *CertData) Organization() Organization {
+	organizationName := cert.Info.Organization
+	// ChromeOS will use its common name if the certificates doesn't have organization name.
+	if organizationName == "" {
+		organizationName = cert.Info.CommonName
+	}
+	return Organization{Name: organizationName}
 }
