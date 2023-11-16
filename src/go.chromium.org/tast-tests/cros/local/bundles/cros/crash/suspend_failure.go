@@ -108,7 +108,7 @@ func SuspendFailure(ctx context.Context, s *testing.State) {
 	// We might not be logged in, so also allow system crash dir.
 	crashDirs = append(crashDirs, crash.SystemCrashDir)
 
-	files, err := crash.WaitForCrashFiles(ctx, crashDirs, expectedRegexes)
+	files, err := crash.WaitForCrashFiles(ctx, crashDirs, expectedRegexes, crash.Timeout(30 * time.Second))
 	if err != nil {
 		s.Fatal("Couldn't find expected files: ", err)
 	}
