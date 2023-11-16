@@ -56,7 +56,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 		Timeout:      15 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		Params: []testing.Param{

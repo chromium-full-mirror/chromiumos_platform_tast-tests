@@ -86,10 +86,13 @@ func init() {
 	params[TFFeaturesRouters|TFFeaturesAttenuator] = "WiFi roaming setup with multiple routers and attenuators"
 	params[TFFeaturesEnroll] = "Wificell setup with router and pcap object and chrome enrolled"
 	params[TFFeaturesCompanionDUT] = "Wificell setup with companion Chromebook DUT"
+	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP] = "Wificell setup with companion Chromebook DUT and a self managed AP"
 	params[TFFeaturesCompanionDUT|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and packet capture from the pcap device"
+	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and a self managed AP and packet capture from the pcap device"
 	params[TFFeaturesPower] = "Default wificell setup with power diagnostics"
 	params[TFFeaturesCellular] = "Wificell setup on a cellular capable device"
 	params[TFFeaturesCompanionDUT|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT"
+	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT and self managed AP"
 	params[TFFeaturesWithUI] = "Wificell setup with the UI"
 
 	fixtures := make(map[TFFeatures]*testing.Fixture)
@@ -165,6 +168,8 @@ const (
 	TFFeaturesEnroll
 	// TFFeaturesCompanionDUT is a feature that spawns companion DUT in TestFixture.
 	TFFeaturesCompanionDUT
+	// TFFeaturesSelfManagedAP is a feature that uses a companion DUT and a self managed AP.
+	TFFeaturesSelfManagedAP
 	// TFFeaturesPower is a feature that enables power measurements.
 	TFFeaturesPower
 	// TFFeaturesCellular set up cellular shill service on the DUT.
@@ -203,6 +208,10 @@ func (enum TFFeatures) String() string {
 	if enum&TFFeaturesCompanionDUT != 0 {
 		ret = append(ret, "CompanionDut")
 		enum ^= TFFeaturesCompanionDUT
+	}
+	if enum&TFFeaturesSelfManagedAP != 0 {
+		ret = append(ret, "SelfManagedAP")
+		enum ^= TFFeaturesSelfManagedAP
 	}
 	if enum&TFFeaturesPower != 0 {
 		ret = append(ret, "Power")
@@ -606,7 +615,7 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 		}
 	}
 
-	if f.features&TFFeaturesCompanionDUT != 0 {
+	if f.features&TFFeaturesSelfManagedAP != 0 {
 		if err := f.tf.SeedRegdomain(ctx); err != nil {
 			s.Fatal("Failed to configure Regdomain seeding AP: ", err)
 		}
@@ -639,7 +648,7 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 		}
 	}
 
-	if f.features&TFFeaturesCompanionDUT != 0 {
+	if f.features&TFFeaturesSelfManagedAP != 0 {
 		if err := f.tf.DeconfigSeedingAP(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to deconfig seeding AP: ", err) // Do nothing else, the primary error is more important.
 		}

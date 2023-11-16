@@ -24,7 +24,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 		HardwareDeps: hwdep.D(hwdep.WifiP2P()),
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
 	})
