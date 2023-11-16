@@ -94,6 +94,18 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil {
+		s.Fatal("Failed to get modem info: ", err)
+	}
+
+	// TODO(b/311268236): Remove this check and replace it with a similar logic that returns
+	// early when the entitlement check returns not_allowed_by_carrier.
+	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	if err == nil && operatorID == "311480" {
+		s.Fatal("Early exit since Verizon doesn't support hotspot")
+	}
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 4*time.Second)
 	defer cancel()
@@ -124,11 +136,6 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	testing.ContextLog(ctx, "Connect before enabling tethering")
 	if _, err := helper.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to Cellular for hotspot: ", err)
-	}
-
-	modem, err := modemmanager.NewModem(ctx)
-	if err != nil {
-		s.Fatal("Failed to get modem info: ", err)
 	}
 
 	apnBeforeTethering, err := getDefaultBearerApn(ctx, modem)
