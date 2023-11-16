@@ -223,7 +223,7 @@ func OpenTabSearch(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to find active window with title having %q as a substring: %v", expectedTabTitle, err)
 	}
 	if !tabletMode {
-		tabFinder := nodewith.Role(role.Tab).HasClass("Tab").Name(expectedTabTitle)
+		tabFinder := nodewith.Role(role.Tab).HasClass("Tab").NameStartingWith(expectedTabTitle)
 		tabInfo, err := ui.Info(ctx, tabFinder)
 		if err != nil {
 			s.Fatal("Failed to get info on tab: ", err)
