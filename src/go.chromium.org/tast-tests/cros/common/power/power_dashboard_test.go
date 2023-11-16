@@ -5,7 +5,6 @@
 package power
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -71,9 +70,6 @@ func initializeValues() *perf.Values {
 }
 
 func TestCheckpointTags(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	p := initializeValues()
 
 	c := perf.NewCheckpoints()
@@ -87,16 +83,16 @@ func TestCheckpointTags(t *testing.T) {
 	work3.SetEnd(time.UnixMilli(work3EndMs))
 	c.AddSectionForTesting("work3", work3)
 
-	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
 	example := [][]string{{}, {"work1"}, {"work1", "work2"}, {"work1", "work3"}, {"work3"}}
 
 	compareTags(t, tags, example)
 }
 
 func TestCheckpointTagsOverlap(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	p := initializeValues()
 
 	c := perf.NewCheckpoints()
@@ -110,30 +106,30 @@ func TestCheckpointTagsOverlap(t *testing.T) {
 	work3.SetEnd(time.UnixMilli(work3EndMs))
 	c.AddSectionForTesting("work1", work3)
 
-	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
 	example := [][]string{{}, {"work1"}, {"work1"}, {"work1"}, {"work1"}}
 
 	compareTags(t, tags, example)
 }
 
 func TestCheckpointTagsEmpty(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	p := initializeValues()
 
 	c := perf.NewCheckpoints()
 
-	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
 	example := [][]string{{}, {}, {}, {}, {}}
 
 	compareTags(t, tags, example)
 }
 
 func TestCheckpointTagsFrontBack(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	p := initializeValues()
 
 	c := perf.NewCheckpoints()
@@ -144,7 +140,10 @@ func TestCheckpointTagsFrontBack(t *testing.T) {
 	idle2.SetEnd(time.UnixMilli(idle2EndMs))
 	c.AddSectionForTesting("idle2", idle2)
 
-	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
 	example := [][]string{{}, {}, {}, {}, {}}
 
 	compareTags(t, tags, example)
@@ -158,9 +157,6 @@ func TestCheckpointTagsFrontBack(t *testing.T) {
 // Then t2 & t3 count in this Section, while t4 is not. Only the left end is
 // included in tagging.
 func TestCheckpointTagsOnTimestamp(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	p := initializeValues()
 
 	c := perf.NewCheckpoints()
@@ -168,7 +164,10 @@ func TestCheckpointTagsOnTimestamp(t *testing.T) {
 	s.SetEnd(time.UnixMilli(tsEndMs))
 	c.AddSectionForTesting("work", s)
 
-	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
 	example := [][]string{{}, {"work"}, {"work"}, {}, {}}
 
 	compareTags(t, tags, example)
@@ -181,16 +180,16 @@ func TestCheckpointTagsOnTimestamp(t *testing.T) {
 // Checkpoint Section: [t2, t2]
 // Then no data point get tagged in this Section.
 func TestCheckpointTagsOnSameTimestamp(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	p := initializeValues()
 
 	c := perf.NewCheckpoints()
 	s := perf.NewSection(time.UnixMilli(tsStartMs))
 	c.AddSectionForTesting("work", s)
 
-	tags := tagTimelineWithCheckpoints(ctx, p, c)
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
 	example := [][]string{{}, {}, {}, {}, {}}
 
 	compareTags(t, tags, example)

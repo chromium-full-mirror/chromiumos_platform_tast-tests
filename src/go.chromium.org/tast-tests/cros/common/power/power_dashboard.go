@@ -18,6 +18,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/maps"
+
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
@@ -650,7 +652,10 @@ func uploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 // tagTimelineWithCheckpoints assumes that values come from perf.Timeline. For
 // every data point, it generates a list of Checkpoint names that describe this
 // data point.
-func tagTimelineWithCheckpoints(ctx context.Context, values *perf.Values, checkpoints *perf.Checkpoints) [][]string {
+func tagTimelineWithCheckpoints(values *perf.Values, checkpoints *perf.Checkpoints) ([][]string, error) {
+	btoi := map[bool]int{true: 1, false: -1}
+
+	// Look for the 1 timestampSource Metric.
 	var tsMetric perf.Metric
 	for metric := range values.GetValues() {
 		if metric.HasStartTs {
@@ -659,33 +664,31 @@ func tagTimelineWithCheckpoints(ctx context.Context, values *perf.Values, checkp
 		}
 	}
 
-	unixTss := make([]time.Time, len(values.GetValues()[tsMetric]))
-	for i, relativeTs := range values.GetValues()[tsMetric] {
-		unixTss[i] = tsMetric.StartTs.Add(time.Duration(relativeTs * float64(time.Second)))
+	// Calculate Unix timestamps from relative timestamps in perf.Timeline.
+	unixTss, err := values.ConvertToUnixTss(tsMetric)
+	if err != nil {
+		return nil, err
 	}
 
-	tags := map[string]int{}
+	// Compare Unix timestamps with Checkpoints. If a Unix timestamp is within
+	// some Checkpoints coverage, tag it with the Checkpoint names.
 	checkpointTags := make([][]string, len(values.GetValues()[tsMetric]))
-	checkpointEvents := checkpoints.Flatten()
+	events := checkpoints.Flatten()
 	j := 0
+	started := make(map[string]int)
 
 	for i, unixTs := range unixTss {
-		for j < len(checkpointEvents) &&
-			(checkpointEvents[j].Ts.Before(unixTs) ||
-				checkpointEvents[j].Ts.Equal(unixTs)) {
-			if checkpointEvents[j].IsStart {
-				tags[checkpointEvents[j].CheckpointName]++
-			} else {
-				tags[checkpointEvents[j].CheckpointName]--
-			}
-			j = j + 1
-		}
-		for tag, counter := range tags {
-			if counter > 0 {
-				checkpointTags[i] = append(checkpointTags[i], tag)
+		for ; j < len(events) && !events[j].Ts.After(unixTs); j++ {
+			// Count the Checkpoints that are on now for a timestamp.
+			name := events[j].CheckpointName
+			started[name] += btoi[events[j].IsStart]
+			if started[name] == 0 {
+				delete(started, name)
 			}
 		}
+		// Tag each Unix timestamp with the Checkpoint names.
+		checkpointTags[i] = maps.Keys(started)
 	}
 
-	return checkpointTags
+	return checkpointTags, nil
 }

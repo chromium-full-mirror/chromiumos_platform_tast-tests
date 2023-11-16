@@ -263,7 +263,11 @@ func TestFilterTimelineByCheckpoints(t *testing.T) {
 	work3.SetEnd(time.UnixMilli(work3EndMs))
 	c.AddSectionForTesting("work3", work3)
 
-	saveAndCompare(t, p.FilterTimelineByCheckpoints(c), "testdata/TestFilterTimelineByCheckpoints.json")
+	f, err := p.FilterTimelineByCheckpoints(c)
+	if err != nil {
+		t.Fatal("Fail to filter Timeline Values by Checkpoints: ", err)
+	}
+	saveAndCompare(t, f, "testdata/TestFilterTimelineByCheckpoints.json")
 }
 
 // One Checkpoint name maps to multiple Sections.
@@ -281,14 +285,21 @@ func TestFilterTimelineByCheckpointsOverlap(t *testing.T) {
 	work3.SetEnd(time.UnixMilli(work3EndMs))
 	c.AddSectionForTesting("work1", work3)
 
-	saveAndCompare(t, p.FilterTimelineByCheckpoints(c), "testdata/TestFilterTimelineByCheckpointsOverlap.json")
+	f, err := p.FilterTimelineByCheckpoints(c)
+	if err != nil {
+		t.Fatal("Fail to filter Timeline Values by Checkpoints: ", err)
+	}
+	saveAndCompare(t, f, "testdata/TestFilterTimelineByCheckpointsOverlap.json")
 }
 
 func TestFilterTimelineByCheckpointsEmpty(t *testing.T) {
 	p := initializeValues()
 	c := NewCheckpoints()
-	filtered := p.FilterTimelineByCheckpoints(c)
-	checkValuesEmpty(t, filtered)
+	f, err := p.FilterTimelineByCheckpoints(c)
+	if err != nil {
+		t.Fatal("Fail to filter Timeline Values by Checkpoints: ", err)
+	}
+	checkValuesEmpty(t, f)
 }
 
 // Checkpoints do not cover the timestamps in Values.
@@ -303,8 +314,11 @@ func TestFilterTimelineByCheckpointsFrontBack(t *testing.T) {
 	idle2.SetEnd(time.UnixMilli(idle2EndMs))
 	c.AddSectionForTesting("idle2", idle2)
 
-	filtered := p.FilterTimelineByCheckpoints(c)
-	checkValuesEmpty(t, filtered)
+	f, err := p.FilterTimelineByCheckpoints(c)
+	if err != nil {
+		t.Fatal("Fail to filter Timeline Values by Checkpoints: ", err)
+	}
+	checkValuesEmpty(t, f)
 }
 
 // TestFilterTimelineByCheckpointsOnTimestamp tests the filtering behavior when
@@ -322,7 +336,11 @@ func TestFilterTimelineByCheckpointsOnTimestamp(t *testing.T) {
 	s.SetEnd(time.UnixMilli(tsEndMs))
 	c.AddSectionForTesting("work", s)
 
-	saveAndCompare(t, p.FilterTimelineByCheckpoints(c), "testdata/TestFilterTimelineByCheckpointsOnTimestamp.json")
+	f, err := p.FilterTimelineByCheckpoints(c)
+	if err != nil {
+		t.Fatal("Fail to filter Timeline Values by Checkpoints: ", err)
+	}
+	saveAndCompare(t, f, "testdata/TestFilterTimelineByCheckpointsOnTimestamp.json")
 }
 
 // TestCheckpointTagsOnSameTimestamp tests the filtering behavior when the start
@@ -338,8 +356,11 @@ func TestFilterTimelineByCheckpointsOnSameTimestamp(t *testing.T) {
 	s := NewSection(time.UnixMilli(tsStartMs))
 	c.AddSectionForTesting("work", s)
 
-	filtered := p.FilterTimelineByCheckpoints(c)
-	checkValuesEmpty(t, filtered)
+	f, err := p.FilterTimelineByCheckpoints(c)
+	if err != nil {
+		t.Fatal("Fail to filter Timeline Values by Checkpoints: ", err)
+	}
+	checkValuesEmpty(t, f)
 }
 
 func saveAsAndCompare(t *testing.T, p *Values, goldenPath string, format Format, expectedFileName string) {

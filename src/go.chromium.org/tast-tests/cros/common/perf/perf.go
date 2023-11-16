@@ -280,30 +280,9 @@ func (p *Values) Set(s Metric, vs ...float64) {
 	validate(s, p.values[s])
 }
 
-// filter creates a new Metric with suffix to indicate the Checkpoint, and
-// creates new values that are filtered by this Checkpoint.
-func filter(p *Values, m *Metric, checkpointName string, indices []int) (*Metric, []float64) {
-	value := p.GetValueByMetric(*m)
-	filteredValue := make([]float64, len(indices))
-	for i, index := range indices {
-		filteredValue[i] = value[index]
-	}
-	filteredMetric := *m
-	filteredMetric.Name = filteredMetric.Name + "." + checkpointName
-	if !filteredMetric.HasStartTs {
-		filteredMetric.Interval = filteredMetric.Interval + "." + checkpointName
-	}
-	return &filteredMetric, filteredValue
-}
-
-// FilterTimelineByCheckpoints assumes that Values come from perf.Timeline.
-// It filters perf.Values by Checkpoints, and generates a new Checkpoints
-// object. The number of Metrics in the new Values =
-// (# of Metrics in the old Values * # of Checkpoints).
-func (p *Values) FilterTimelineByCheckpoints(ckpts *Checkpoints) *Values {
-	filtered := NewValues()
-
-	// Map a timestamp Metric to the data Metrics that use it.
+// mapTsMetricToData maps every timestampSource Metric to the data Metrics that
+// use it. It assumes that Values come from perf.Timeline.
+func (p *Values) mapTsMetricToData() map[Metric][]Metric {
 	tsMetricToData := make(map[Metric][]Metric)
 	for metric := range p.GetValues() {
 		if metric.HasStartTs {
@@ -320,48 +299,87 @@ func (p *Values) FilterTimelineByCheckpoints(ckpts *Checkpoints) *Values {
 			}
 		}
 	}
+	return tsMetricToData
+}
 
-	for name, events := range ckpts.FlattenPerCheckpoint() {
-		for tsMetric, data := range tsMetricToData {
-			// Calculate Unix timestamps from relative timestamps in
-			// perf.Timeline.
-			unixTss := make([]time.Time, len(p.GetValues()[tsMetric]))
-			for i, relativeTs := range p.GetValues()[tsMetric] {
-				unixTss[i] = tsMetric.StartTs.Add(time.Duration(relativeTs * float64(time.Second)))
-			}
+// ConvertToUnixTss takes a timestampSource Metric, and translates the relative
+// timestamps into Unix timestamps. It assumes that Values come from
+// perf.Timeline.
+func (p *Values) ConvertToUnixTss(tsMetric Metric) ([]time.Time, error) {
+	if !tsMetric.HasStartTs {
+		return nil, errors.Errorf("%s Metric does not have a start timestamp", tsMetric.Name)
+	}
+	unixTss := make([]time.Time, len(p.GetValueByMetric(tsMetric)))
+	for i, relativeTs := range p.GetValueByMetric(tsMetric) {
+		unixTss[i] = tsMetric.StartTs.Add(time.Duration(relativeTs * float64(time.Second)))
+	}
+	return unixTss, nil
+}
 
-			// Compare Unix timestamp with Checkpoints. Collect the indices of
-			// the Unix timestamps that are within Checkpoint coverage.
-			j := 0
-			started := 0
-			indices := make([]int, 0)
-			for i, unixTs := range unixTss {
-				for j < len(events) &&
-					(events[j].Ts.Before(unixTs) ||
-						events[j].Ts.Equal(unixTs)) {
-					if events[j].IsStart {
-						started++
-					} else {
-						started--
-					}
-					j = j + 1
-				}
-				if started > 0 {
-					indices = append(indices, i)
-				}
-			}
+// filterMetric creates a new Metric with suffix to indicate the Checkpoint.
+func filterMetric(m Metric, checkpointName string) Metric {
+	filteredMetric := m
+	filteredMetric.Name = filteredMetric.Name + "." + checkpointName
+	if !filteredMetric.HasStartTs {
+		filteredMetric.Interval = filteredMetric.Interval + "." + checkpointName
+	}
+	return filteredMetric
+}
 
-			if len(indices) == 0 {
-				continue
-			}
-			// Apply the indices to tsMetric and the data Metrics.
-			for _, metric := range append(data, tsMetric) {
-				filteredMetric, filteredValue := filter(p, &metric, name, indices)
-				filtered.Append(*filteredMetric, filteredValue...)
-			}
+// updateFilteredValues updates f Values. Iterate over m Metrics in p Values,
+// for every data point at index i, add it to f Values if there is a Checkpoint
+// name that is on at its Unix timestamp.
+func updateFilteredValues(f, p *Values, m []Metric, i int, names map[string]int) {
+	for name := range names {
+		for _, metric := range m {
+			filteredMetric := filterMetric(metric, name)
+			f.Append(filteredMetric, p.GetValueByMetric(metric)[i])
 		}
 	}
-	return filtered
+}
+
+// FilterTimelineByCheckpoints assumes that Values come from perf.Timeline.
+// It filters perf.Values by Checkpoints, and generates a new perf.Values
+// object. The number of Metrics in the new Values =
+// (# of Metrics in the old Values * # of Checkpoints).
+func (p *Values) FilterTimelineByCheckpoints(ckpts *Checkpoints) (*Values, error) {
+	filtered := NewValues()
+	btoi := map[bool]int{true: 1, false: -1}
+
+	// Map a timestampSource Metric to the data Metrics that use it.
+	tsMetricToData := p.mapTsMetricToData()
+
+	events := ckpts.Flatten()
+	for tsMetric, data := range tsMetricToData {
+		// Calculate Unix timestamps from relative timestamps in perf.Timeline.
+		unixTss, err := p.ConvertToUnixTss(tsMetric)
+		if err != nil {
+			return nil, err
+		}
+
+		// Compare Unix timestamps with Checkpoints. If a Unix timestamp is
+		// within the Checkpoint coverage, add the corresponding data points to
+		// the new perf.Values under the name "Metric.Checkpoint".
+		j := 0
+		started := make(map[string]int)
+
+		for i, unixTs := range unixTss {
+			for ; j < len(events) && !events[j].Ts.After(unixTs); j++ {
+				// Count the Checkpoints that are turned on now for a timestamp.
+				name := events[j].CheckpointName
+				started[name] += btoi[events[j].IsStart]
+				if started[name] == 0 {
+					delete(started, name)
+				}
+			}
+			// Update filtered Values. For every data point at index i, add it
+			// to filtered Values if there is a Checkpoint that is on at its
+			// Unix timestamp.
+			updateFilteredValues(filtered, p, append(data, tsMetric), i, started)
+		}
+	}
+
+	return filtered, nil
 }
 
 // Format describes the output format for perf data.
