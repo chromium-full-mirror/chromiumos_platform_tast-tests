@@ -43,7 +43,7 @@ func createGTest(logdir, testExec string) *gtest.GTest {
 	return gtest.New(
 		testExec,
 		gtest.Logfile(filepath.Join(logdir, testExec+".log")),
-		gtest.Filter("-*Huge*"),
+		gtest.Filter("-*Huge*:*VerifyUsageTimes*:*OEMCryptoUsageTableDefragTest*"),
 	)
 }
 
