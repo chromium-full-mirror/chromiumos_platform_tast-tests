@@ -220,6 +220,21 @@ func init() {
 				0,     // sleepAtLoginScreen
 			},
 		}, {
+			Name:              "lacros_chrome_root_fs_only_enable_preload_delay_login",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           40 * time.Minute,
+			Val: loginPerfTestParam{
+				[]int{2, 8},
+				[]string{noarc, arcenabled},
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				true,            // preloadLacros
+				false,           // dropCaches
+				5 * time.Second, // sleepAtLoginScreen
+			},
+		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -233,6 +248,21 @@ func init() {
 				true, // preloadLacros
 				true, // dropCaches
 				0,    // sleepAtLoginScreen
+			},
+		}, {
+			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot_delay_login",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           40 * time.Minute,
+			Val: loginPerfTestParam{
+				[]int{2, 8},
+				[]string{noarc, arcenabled},
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				true,            // preloadLacros
+				true,            // dropCaches
+				5 * time.Second, // sleepAtLoginScreen
 			},
 		}, {
 			Name: "lacros_chrome_omaha_only",
