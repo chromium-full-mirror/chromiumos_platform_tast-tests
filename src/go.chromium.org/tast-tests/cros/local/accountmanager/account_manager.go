@@ -415,7 +415,10 @@ func CheckIsAccountPresentInARC(ctx context.Context, tconn *chrome.TestConn, d *
 
 	findAccount := func() error {
 		return testing.Poll(ctx, func(ctx context.Context) error {
-			if err := scrollLayout.WaitForExists(ctx, DefaultUITimeout); err != nil {
+			if err := account.Exists(ctx); err == nil {
+				return nil
+			}
+			if err := scrollLayout.Exists(ctx); err != nil {
 				return errors.Wrap(err, "scroll layout not found")
 			}
 			if err := scrollLayout.ScrollTo(ctx, account); err != nil {
