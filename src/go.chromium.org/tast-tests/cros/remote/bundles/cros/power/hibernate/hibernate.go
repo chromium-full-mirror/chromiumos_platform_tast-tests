@@ -535,6 +535,7 @@ func (t *Tester) reconnectDUT(ctx context.Context) error {
 func (t *Tester) checkForFileSystemCorruptions(ctx context.Context, kernelLog string) error {
 	fileCorruptionPatterns := []string{
 		"space map common: bitmap check failed:",
+		"failed to insert inode",
 		"sm_bitmap validator check failed",
 		"metadata operation 'dm_pool_alloc_data_block' failed",
 		"aborting current metadata transaction",
@@ -547,6 +548,7 @@ func (t *Tester) checkForFileSystemCorruptions(ctx context.Context, kernelLog st
 		"block bitmap corrupt",
 		"block bitmap and bg descriptor inconsistent",
 		"ext4_journal_check_start:83: Detected aborted journal",
+		"EXT4-fs error",
 		"I/O error while writing superblock",
 		"blk_update_request: I/O error",
 		"Buffer I/O error on device",
