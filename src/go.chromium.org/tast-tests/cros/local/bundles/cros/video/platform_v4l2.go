@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/shutil"
@@ -68,6 +69,9 @@ func PlatformV4L2(ctx context.Context, s *testing.State) {
 			s.Error("Unmet expectation: ", err)
 		}
 	}()
+
+	// TODO(b/311270670): Re-enable after we can disable just [MTK_V4L2][ERROR] logs
+	graphics.DisableSysLogCheck()
 
 	command := s.Param().([]string)
 
