@@ -20,9 +20,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ExpectedElementsOnESimDetailPage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that expected elements are shown on the detail view page of an eSIM profile",
+		Func:           ExpectedElementsOnESimDetailPage,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that expected elements are shown on the detail view page of an eSIM profile",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

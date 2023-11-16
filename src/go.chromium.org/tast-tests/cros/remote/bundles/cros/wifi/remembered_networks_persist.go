@@ -36,9 +36,10 @@ type rememberedNetworksPersistParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RememberedNetworksPersist,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify remembered networks persist across suspend/resume, reboot and logout/login",
+		Func:           RememberedNetworksPersist,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify remembered networks persist across suspend/resume, reboot and logout/login",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

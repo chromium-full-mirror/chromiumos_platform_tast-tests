@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PairNewDeviceFromBluetoothSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that the pairing dialog can be opened from the Bluetooth Settings sub-page",
+		Func:           PairNewDeviceFromBluetoothSettings,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that the pairing dialog can be opened from the Bluetooth Settings sub-page",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chadduffin@chromium.org",

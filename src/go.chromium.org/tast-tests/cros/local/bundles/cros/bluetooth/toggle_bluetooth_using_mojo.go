@@ -13,9 +13,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ToggleBluetoothUsingMojo,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Bluetooth can be enabled and disabled using Mojo API",
+		Func:           ToggleBluetoothUsingMojo,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that Bluetooth can be enabled and disabled using Mojo API",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",

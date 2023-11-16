@@ -24,9 +24,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HIDDeviceFunctionalityCheck,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the user is able to use Bluetooth HID keyboard/mouse for input",
+		Func:           HIDDeviceFunctionalityCheck,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify that the user is able to use Bluetooth HID keyboard/mouse for input",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

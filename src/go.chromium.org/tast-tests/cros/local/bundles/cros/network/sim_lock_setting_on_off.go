@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SimLockSettingOnOff,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that SIM Lock in Settings PIN locks and unlocks the SIM",
+		Func:           SimLockSettingOnOff,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that SIM Lock in Settings PIN locks and unlocks the SIM",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

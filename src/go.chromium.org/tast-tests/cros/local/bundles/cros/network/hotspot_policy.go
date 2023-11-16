@@ -29,9 +29,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotspotPolicy,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test hotspot policy will turn off active hotspot and restrict user from using hotspot properly",
+		Func:           HotspotPolicy,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test hotspot policy will turn off active hotspot and restrict user from using hotspot properly",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

@@ -22,9 +22,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IPSettingsView,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that user is able to view the current ip/gateway/subnet mask/MAC address of the device",
+		Func:           IPSettingsView,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify that user is able to view the current ip/gateway/subnet mask/MAC address of the device",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",

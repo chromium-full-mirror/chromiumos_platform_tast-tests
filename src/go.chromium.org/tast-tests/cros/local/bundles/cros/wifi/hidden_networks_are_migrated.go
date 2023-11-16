@@ -31,14 +31,15 @@ type testConfig struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HiddenNetworksAreMigrated,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that hidden networks are migrated, for more details see go/cros-hidden-ssid-dd-software",
-		Contacts:     []string{"cros-connectivity@google.com", "chadduffin@google.com"},
-		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "hiddenNetworkMigration",
+		Func:           HiddenNetworksAreMigrated,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that hidden networks are migrated, for more details see go/cros-hidden-ssid-dd-software",
+		Contacts:       []string{"cros-connectivity@google.com", "chadduffin@google.com"},
+		BugComponent:   "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
+		Attr:           []string{"group:mainline", "informational"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "hiddenNetworkMigration",
 		Params: []testing.Param{{
 			Name: "not_shared_and_not_hidden",
 			Val: &testConfig{

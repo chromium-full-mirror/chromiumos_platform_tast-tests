@@ -20,9 +20,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeHidBluetoothAdapterState,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks bluetooth adapter states updates correctly in OOBE",
+		Func:           OobeHidBluetoothAdapterState,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks bluetooth adapter states updates correctly in OOBE",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"tjohnsonkanu@google.com",

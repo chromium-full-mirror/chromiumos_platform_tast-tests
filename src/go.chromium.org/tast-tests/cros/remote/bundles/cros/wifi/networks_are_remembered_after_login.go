@@ -32,9 +32,10 @@ type remainsRememberedTestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NetworksAreRememberedAfterLogin,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the networks added at OOBE and sign-in screen are remembered after logged in",
+		Func:           NetworksAreRememberedAfterLogin,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify the networks added at OOBE and sign-in screen are remembered after logged in",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

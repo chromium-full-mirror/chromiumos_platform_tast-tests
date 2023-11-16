@@ -24,8 +24,8 @@ type testConfig struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           PerformSmdsOperationsWithMojo,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "An API test that performs SMDS eSIM operations on a test eSIM to validate the logic for the subset of functions in the esim_manager Mojo API (RequestAvailableProfiles, InstallProfileFromActivationCode)",
 		Contacts: []string{
 			"cros-network-health-team@google.com",

@@ -31,9 +31,10 @@ type enableHotspotTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableHotspotWithOSSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that hotspot can be turned on and off with os settings",
+		Func:           EnableHotspotWithOSSettings,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that hotspot can be turned on and off with os settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

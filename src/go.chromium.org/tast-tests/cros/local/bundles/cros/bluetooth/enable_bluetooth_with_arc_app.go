@@ -26,9 +26,10 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EnableBluetoothWithArcApp,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that user can turn Bluetooth on with an ARC++ app",
+		Func:           EnableBluetoothWithArcApp,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify that user can turn Bluetooth on with an ARC++ app",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DeviceBattery,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that the battery information can be correctly presented to the end user",
+		Func:           DeviceBattery,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test that the battery information can be correctly presented to the end user",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HidScreenUsbKeyboardOnly,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that a single usb keyboard device can be connected in OOBE HID Detection screen",
+		Func:           HidScreenUsbKeyboardOnly,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that a single usb keyboard device can be connected in OOBE HID Detection screen",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"tjohnsonkanu@google.com",

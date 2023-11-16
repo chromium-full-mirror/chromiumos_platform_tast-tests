@@ -22,9 +22,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProxySettingsUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the UI for proxy settings",
+		Func:           ProxySettingsUI,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify the UI for proxy settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

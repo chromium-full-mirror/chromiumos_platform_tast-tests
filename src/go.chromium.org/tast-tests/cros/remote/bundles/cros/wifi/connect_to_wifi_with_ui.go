@@ -46,9 +46,10 @@ type connectToWifiWithUITestData struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConnectToWifiWithUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that WiFi can be connected to with different UI surfaces",
+		Func:           ConnectToWifiWithUI,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that WiFi can be connected to with different UI surfaces",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chadduffin@google.com",

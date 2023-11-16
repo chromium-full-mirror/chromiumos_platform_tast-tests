@@ -23,9 +23,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularConnectDisconnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests connecting/disconnecting from OS Settings and connecting from Quick Settings",
+		Func:           CellularConnectDisconnect,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests connecting/disconnecting from OS Settings and connecting from Quick Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

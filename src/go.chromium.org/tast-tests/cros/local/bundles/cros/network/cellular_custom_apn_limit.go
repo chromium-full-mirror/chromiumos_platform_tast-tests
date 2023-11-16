@@ -22,9 +22,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularCustomApnLimit,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the UI status when the max custom APN number is hit",
+		Func:           CellularCustomApnLimit,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests the UI status when the max custom APN number is hit",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

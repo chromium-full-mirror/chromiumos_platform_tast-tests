@@ -25,9 +25,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularSuspendResumeConnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that cellular reconnects after a suspend and resume only when autoconnect is enabled",
+		Func:           CellularSuspendResumeConnect,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that cellular reconnects after a suspend and resume only when autoconnect is enabled",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

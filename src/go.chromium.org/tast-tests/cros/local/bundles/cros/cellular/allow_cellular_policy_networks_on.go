@@ -24,8 +24,8 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AllowCellularPolicyNetworksOn,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Tests the policy that only allows managed cellular networks",
 		Contacts: []string{
 			"cros-connectivity@google.com",

@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ToggleWifiFromNetworkQuickSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that WiFi can be enabled and disabled from within the Network Quick Settings",
+		Func:           ToggleWifiFromNetworkQuickSettings,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that WiFi can be enabled and disabled from within the Network Quick Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"tjohnsonkanu@google.com",

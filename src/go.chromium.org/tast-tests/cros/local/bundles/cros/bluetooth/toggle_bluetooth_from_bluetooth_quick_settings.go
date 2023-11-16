@@ -17,9 +17,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ToggleBluetoothFromBluetoothQuickSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that Bluetooth can be enabled and disabled from within the Bluetooth Quick Settings",
+		Func:           ToggleBluetoothFromBluetoothQuickSettings,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that Bluetooth can be enabled and disabled from within the Bluetooth Quick Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chadduffin@chromium.org",

@@ -21,9 +21,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotspotAbortEnable,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test hotspot enable operation can be aborted",
+		Func:           HotspotAbortEnable,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test hotspot enable operation can be aborted",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

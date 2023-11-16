@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularAutomaticallyDetectedApn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the correctness of the UI for automatically detected APNs",
+		Func:           CellularAutomaticallyDetectedApn,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests the correctness of the UI for automatically detected APNs",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

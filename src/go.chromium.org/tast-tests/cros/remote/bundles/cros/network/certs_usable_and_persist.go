@@ -29,9 +29,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CertsUsableAndPersist,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verify that installed certificates are usable and persist after different test scenarios",
+		Func:           CertsUsableAndPersist,
+		LacrosStatus:   testing.LacrosVariantNeeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify that installed certificates are usable and persist after different test scenarios",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",

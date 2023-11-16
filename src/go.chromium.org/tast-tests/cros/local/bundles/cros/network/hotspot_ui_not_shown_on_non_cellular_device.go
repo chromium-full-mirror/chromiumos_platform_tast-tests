@@ -20,9 +20,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotspotUINotShownOnNonCellularDevice,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that hotspot UI should not show on non-cellular capable devices",
+		Func:           HotspotUINotShownOnNonCellularDevice,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that hotspot UI should not show on non-cellular capable devices",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

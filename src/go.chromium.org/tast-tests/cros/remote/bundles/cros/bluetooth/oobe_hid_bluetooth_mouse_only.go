@@ -25,9 +25,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OobeHidBluetoothMouseOnly,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that a bluetooth mouse is connected to in OOBE",
+		Func:           OobeHidBluetoothMouseOnly,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that a bluetooth mouse is connected to in OOBE",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"tjohnsonkanu@google.com",

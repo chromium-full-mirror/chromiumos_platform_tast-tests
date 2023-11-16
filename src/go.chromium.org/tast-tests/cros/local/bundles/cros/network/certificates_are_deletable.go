@@ -27,8 +27,9 @@ func init() {
 		Func: CertificatesAreDeletable,
 		// This test launches a web page so there should be a lacros variant.
 		// Lacros test will be added once the issue(crbug/1366609) is fixed.
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verify that ChromeOS User/CA certificates can be deleted",
+		LacrosStatus:   testing.LacrosVariantNeeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify that ChromeOS User/CA certificates can be deleted",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

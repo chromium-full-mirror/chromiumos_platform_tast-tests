@@ -35,9 +35,10 @@ type eSimPolicyTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularPolicyConnect,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that managed eSIM profile can be connected and disconnected and restrict managed only cellular network works properly",
+		Func:           CellularPolicyConnect,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test that managed eSIM profile can be connected and disconnected and restrict managed only cellular network works properly",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

@@ -23,9 +23,10 @@ const addCellularURL = "chrome://os-settings/networks?type=Cellular&showCellular
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenAddCellularSettingsFromQuickSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the add cellular button in Quick Settings",
+		Func:           OpenAddCellularSettingsFromQuickSettings,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests the add cellular button in Quick Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

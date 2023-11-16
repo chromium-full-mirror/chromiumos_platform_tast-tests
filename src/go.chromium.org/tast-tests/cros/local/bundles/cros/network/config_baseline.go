@@ -23,9 +23,10 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ConfigBaseline,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Use the CrosNetworkConfig API during OOBE and after login to configure a basic network and check it is set as expected",
+		Func:           ConfigBaseline,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Use the CrosNetworkConfig API during OOBE and after login to configure a basic network and check it is set as expected",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"crisguerrero@chromium.org", // Test author

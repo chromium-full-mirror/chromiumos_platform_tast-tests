@@ -27,9 +27,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ForgetRememberedNetwork,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the behavior when a user forgets a remembered network which is currently connected",
+		Func:           ForgetRememberedNetwork,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify the behavior when a user forgets a remembered network which is currently connected",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",

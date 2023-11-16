@@ -20,8 +20,8 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ConnectNotification,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Checks that a notification is shown when the user connects to cellular the first time",
 		Contacts: []string{
 			"cros-connectivity@google.com",

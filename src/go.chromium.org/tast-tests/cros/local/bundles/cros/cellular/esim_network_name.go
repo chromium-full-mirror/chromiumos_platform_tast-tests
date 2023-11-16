@@ -16,9 +16,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ESimNetworkName,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the carrier name on connected esim",
+		Func:           ESimNetworkName,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests the carrier name on connected esim",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"nikhilcn@google.com",

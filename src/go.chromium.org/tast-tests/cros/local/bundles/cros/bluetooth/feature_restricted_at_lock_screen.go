@@ -19,9 +19,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FeatureRestrictedAtLockScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies users are not able to use the quick settings Bluetooth feature at the lock screen",
+		Func:           FeatureRestrictedAtLockScreen,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies users are not able to use the quick settings Bluetooth feature at the lock screen",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

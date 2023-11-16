@@ -24,9 +24,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotspotDisabledWhenNoUpstreamNetwork,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test hotspot toggle is disabled and learn more link shown when no upstream network",
+		Func:           HotspotDisabledWhenNoUpstreamNetwork,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test hotspot toggle is disabled and learn more link shown when no upstream network",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

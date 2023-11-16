@@ -16,9 +16,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HidPreconnectedTouchscreenOnly,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that OOBE HID Detection screen is shown with the correct devices enabled on touchscreen devices",
+		Func:           HidPreconnectedTouchscreenOnly,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that OOBE HID Detection screen is shown with the correct devices enabled on touchscreen devices",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 		},

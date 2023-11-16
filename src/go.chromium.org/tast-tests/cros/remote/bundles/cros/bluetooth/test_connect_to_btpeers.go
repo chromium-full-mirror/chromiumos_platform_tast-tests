@@ -15,9 +15,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestConnectToBTPeers,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that a remote test can connect to btpeers and call a chameleond method",
+		Func:           TestConnectToBTPeers,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that a remote test can connect to btpeers and call a chameleond method",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jaredbennett@google.com",

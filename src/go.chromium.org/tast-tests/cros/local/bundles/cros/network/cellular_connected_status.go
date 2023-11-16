@@ -15,9 +15,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularConnectedStatus,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that active primary SIM is displayed correctly",
+		Func:           CellularConnectedStatus,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that active primary SIM is displayed correctly",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

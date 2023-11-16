@@ -19,9 +19,10 @@ const bluetoothSubPageURL = "chrome://os-settings/bluetoothDevices"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OpenBluetoothSettingsFromQuickSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that clicking the Settings button on the detailed Bluetooth page within the Quick Settings navigates to the Bluetooth Settings",
+		Func:           OpenBluetoothSettingsFromQuickSettings,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that clicking the Settings button on the detailed Bluetooth page within the Quick Settings navigates to the Bluetooth Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chadduffin@chromium.org",

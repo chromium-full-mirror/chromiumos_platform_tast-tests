@@ -17,9 +17,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PairBluetoothDeviceWithUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that we can pair a Bluetooth device with the UI",
+		Func:           PairBluetoothDeviceWithUI,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that we can pair a Bluetooth device with the UI",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chadduffin@google.com",

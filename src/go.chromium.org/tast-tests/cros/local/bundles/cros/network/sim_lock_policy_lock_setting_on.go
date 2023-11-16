@@ -28,9 +28,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SimLockPolicyLockSettingOn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test the notification flow that's triggered when the 'Lock SIM' setting is turned on before the policy is turned on",
+		Func:           SimLockPolicyLockSettingOn,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test the notification flow that's triggered when the 'Lock SIM' setting is turned on before the policy is turned on",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

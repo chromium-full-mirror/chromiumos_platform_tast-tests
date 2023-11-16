@@ -29,9 +29,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularMigrateManagedUnselectedApn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the correctness of the UI for a managed network's unselected APN that is migrated to the new UI",
+		Func:           CellularMigrateManagedUnselectedApn,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests the correctness of the UI for a managed network's unselected APN that is migrated to the new UI",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"gordonseto@google.com",

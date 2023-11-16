@@ -16,8 +16,8 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           MojoChangeESimNickname,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Installs a new eSIM profile on the device and then changes its nickname",
 		Contacts: []string{
 			"cros-connectivity@google.com",

@@ -20,9 +20,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TurnOffWifi,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify WiFi networks should not to be listed after WiFi is turned off and should not be able to ping through the previously assigned IP",
+		Func:           TurnOffWifi,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify WiFi networks should not to be listed after WiFi is turned off and should not be able to ping through the previously assigned IP",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",

@@ -45,9 +45,10 @@ type testNetworkInfo struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CredentialsMasking,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify the behaviors of connecting to networks that store valid and invalid password on the Sign in screen",
+		Func:           CredentialsMasking,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify the behaviors of connecting to networks that store valid and invalid password on the Sign in screen",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",

@@ -35,8 +35,9 @@ func init() {
 		// This test requires fetch proxy configs from a web page (CrosNetworkConfig),
 		// however, that page isn't available in lacros, only ash-Chrome is able to browse the page,
 		// therefore the lacros variant is not needed.
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that proxy settings can be set for shared or non-shared network",
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify that proxy settings can be set for shared or non-shared network",
 		Contacts: []string{
 			"cros-conn-test-team@google.com",
 			"cros-connectivity@google.com",

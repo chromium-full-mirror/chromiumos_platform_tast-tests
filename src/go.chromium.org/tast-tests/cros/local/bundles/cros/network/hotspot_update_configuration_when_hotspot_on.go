@@ -23,9 +23,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HotspotUpdateConfigurationWhenHotspotOn,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test hotspot configuration can be updated correctly when hotspot is active",
+		Func:           HotspotUpdateConfigurationWhenHotspotOn,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test hotspot configuration can be updated correctly when hotspot is active",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jiajunz@google.com",

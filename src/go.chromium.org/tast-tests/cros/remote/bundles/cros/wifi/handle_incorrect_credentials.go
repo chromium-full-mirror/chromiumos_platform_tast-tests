@@ -60,9 +60,10 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HandleIncorrectCredentials,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify ChromeOS handles incorrect credentials gracefully and displays error messages correctly",
+		Func:           HandleIncorrectCredentials,
+		LacrosStatus:   testing.LacrosVariantExists,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify ChromeOS handles incorrect credentials gracefully and displays error messages correctly",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

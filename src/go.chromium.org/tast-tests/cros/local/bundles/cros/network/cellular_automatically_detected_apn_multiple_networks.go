@@ -24,9 +24,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularAutomaticallyDetectedApnMultipleNetworks,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the correctness of the UI for automatically detected APNs in case of multiple cellular networks",
+		Func:           CellularAutomaticallyDetectedApnMultipleNetworks,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests the correctness of the UI for automatically detected APNs in case of multiple cellular networks",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"nikhilcn@google.com",

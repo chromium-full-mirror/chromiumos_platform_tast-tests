@@ -18,9 +18,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularNoApnMigrationRequired,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests the correctness of the UI for when no custom APN was set before APN revamp is enabled",
+		Func:           CellularNoApnMigrationRequired,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests the correctness of the UI for when no custom APN was set before APN revamp is enabled",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

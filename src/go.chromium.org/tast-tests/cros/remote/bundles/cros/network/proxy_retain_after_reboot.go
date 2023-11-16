@@ -24,9 +24,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProxyRetainAfterReboot,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests that the proxy values remain the same after DUT reboots",
+		Func:           ProxyRetainAfterReboot,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests that the proxy values remain the same after DUT reboots",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",

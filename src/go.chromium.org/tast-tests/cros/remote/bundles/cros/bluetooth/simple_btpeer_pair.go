@@ -22,9 +22,10 @@ type simpleBTPeerTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         SimpleBTPeerPair,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests pairing of classic and LE btpeers, with pairing done through dbus",
+		Func:           SimpleBTPeerPair,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests pairing of classic and LE btpeers, with pairing done through dbus",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"jaredbennett@google.com",

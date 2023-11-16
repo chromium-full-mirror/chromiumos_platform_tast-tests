@@ -18,9 +18,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularAutoconnectToSameNetwork,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Checks that when mobile data is turned off then back on, the previously connected network autoconnects",
+		Func:           CellularAutoconnectToSameNetwork,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Checks that when mobile data is turned off then back on, the previously connected network autoconnects",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

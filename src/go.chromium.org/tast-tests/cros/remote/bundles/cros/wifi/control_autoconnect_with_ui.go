@@ -27,9 +27,10 @@ const subTestTimeout = 2 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ControlAutoconnectWithUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
+		Func:           ControlAutoconnectWithUI,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

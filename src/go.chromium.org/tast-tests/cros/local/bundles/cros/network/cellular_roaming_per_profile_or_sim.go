@@ -22,9 +22,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CellularRoamingPerProfileOrSim,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Tests connecting to two cellular networks that require roaming one after the next",
+		Func:           CellularRoamingPerProfileOrSim,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Tests connecting to two cellular networks that require roaming one after the next",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

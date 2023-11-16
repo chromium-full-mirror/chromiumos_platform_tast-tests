@@ -23,9 +23,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RenameESimProfileNickname,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Renames connected and disconnected eSIM profiles name via the UI",
+		Func:           RenameESimProfileNickname,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Renames connected and disconnected eSIM profiles name via the UI",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",

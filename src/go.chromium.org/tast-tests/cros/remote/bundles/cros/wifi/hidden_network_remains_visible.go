@@ -30,9 +30,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         HiddenNetworkRemainsVisible,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that hidden networks are visible after logging out/logging in and rebooting",
+		Func:           HiddenNetworkRemainsVisible,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verify that hidden networks are visible after logging out/logging in and rebooting",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"cros-conn-test-team@google.com",

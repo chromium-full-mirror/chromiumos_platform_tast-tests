@@ -35,9 +35,10 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ProxyRetain,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that the proxy settings will be retained after login or across different users",
+		Func:           ProxyRetain,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Verifies that the proxy settings will be retained after login or across different users",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",
