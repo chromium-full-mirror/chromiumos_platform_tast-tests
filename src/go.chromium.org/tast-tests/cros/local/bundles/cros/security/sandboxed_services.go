@@ -127,8 +127,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"trunksd", "trunks", "trunks", restrictCaps | noNewPrivs | seccomp},
 		{"imageloader", "root", "root", 0}, // uses NNP/seccomp but sometimes seen before sandboxing: https://crbug.com/936703#c16
 		{"imageloader", "imageloaderd", "imageloaderd", mntNSNoPivotRoot | restrictCaps | noNewPrivs | seccomp},
-		{"patchpaneld", "root", "root", noNewPrivs},
-		{"patchpaneld", "patchpaneld", "patchpaneld", restrictCaps},
+		{"patchpaneld", "patchpaneld", "patchpaneld", restrictCaps | noNewPrivs},
 		{"cros_healthd", "root", "root", mntNS},                                                       // cros_healthd's root-level executor
 		{"cros_healthd", "cros_healthd", "cros_healthd", mntNS | restrictCaps | noNewPrivs | seccomp}, // main cros_healthd daemon
 		{"featured", "root", "root", 0},
