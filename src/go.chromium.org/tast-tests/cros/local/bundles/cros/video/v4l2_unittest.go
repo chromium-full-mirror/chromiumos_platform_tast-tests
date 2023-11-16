@@ -38,6 +38,7 @@ func V4L2Unittest(ctx context.Context, s *testing.State) {
 	if report, err := gtest.New(
 		filepath.Join(chrome.BinTestDir, exec),
 		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
+		gtest.ExtraArgs("--single-process-tests"),
 		gtest.UID(int(sysutil.ChronosUID)),
 	).Run(ctx); err != nil {
 		s.Errorf("Failed to run %v: %v", exec, err)
