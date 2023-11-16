@@ -9,12 +9,20 @@ import (
 	"context"
 	"time"
 
+	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
+
+// DeviceTypeTestParam is a type that can be used a test param type when the
+// only param is the device type. Prevents the need to make individual test
+// param types as many just need the device type.
+type DeviceTypeTestParam struct {
+	DeviceType cbt.DeviceType
+}
 
 // TurnOffServoKeyboardIfOn turns off servo keyboard if on.
 func TurnOffServoKeyboardIfOn(ctx context.Context, s *testing.State) {
