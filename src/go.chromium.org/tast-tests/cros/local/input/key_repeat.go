@@ -62,3 +62,24 @@ func SetKeyRepeatSettings(ctx context.Context, tconn *chrome.TestConn, settings 
 	}
 	return nil
 }
+
+// EnsureKeyRepeatEnabled makes sure that the key repeat settings are enabled or disabled,
+// and returns a function which reverts back to the original settings.
+func EnsureKeyRepeatEnabled(ctx context.Context, tconn *chrome.TestConn, enabled bool) (func(ctx context.Context, tconn *chrome.TestConn) error, error) {
+	originalSettings, err := CurrentKeyRepeatSettings(ctx, tconn)
+	if err != nil {
+		return nil, err
+	}
+	if originalSettings.Enabled != enabled {
+		s := KeyRepeatSettings{enabled, originalSettings.Delay, originalSettings.Interval}
+		if err := SetKeyRepeatSettings(ctx, tconn, s); err != nil {
+			return nil, err
+		}
+	}
+
+	// Always revert to the original settings so it can always be back to the original settings
+	// even when the settings changes during the test.
+	return func(ctx context.Context, tconn *chrome.TestConn) error {
+		return SetKeyRepeatSettings(ctx, tconn, originalSettings)
+	}, nil
+}

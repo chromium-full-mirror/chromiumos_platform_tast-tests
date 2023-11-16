@@ -176,6 +176,10 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 	a := s.FixtValue().(*arc.PreData).ARC
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	if isResizeLockTest {
 		if err := a.Install(ctx, arc.APKPath(apkName), adb.InstallOptionFromPlayStore); err != nil {
 			s.Fatal("Failed to install the APK with Play Store install option: ", err)
@@ -195,7 +199,17 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 	if err != nil {
 		s.Fatalf("Failed to set tablet mode to %v: %v", t.InTabletMode, err)
 	}
-	defer cleanupTabletMode(ctx)
+	defer cleanupTabletMode(cleanupCtx)
+
+	cleanupKeyRepeat, err := input.EnsureKeyRepeatEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure keyRepeatSettings: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := cleanupKeyRepeat(ctx, tconn); err != nil {
+			s.Error("Failed to reset key repeat: ", err)
+		}
+	}(cleanupCtx)
 
 	// Run the different test cases.
 	for idx, windowState := range t.WindowStates {

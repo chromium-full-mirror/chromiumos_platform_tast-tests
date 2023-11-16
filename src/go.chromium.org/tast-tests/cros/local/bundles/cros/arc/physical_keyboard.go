@@ -176,6 +176,10 @@ func PhysicalKeyboard(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	d := s.FixtValue().(*arc.PreData).UIDevice
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
@@ -186,11 +190,21 @@ func PhysicalKeyboard(ctx context.Context, s *testing.State) {
 		pkg = "org.chromium.arc.testapp.keyboard"
 	)
 
+	cleanupKeyRepeat, err := input.EnsureKeyRepeatEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure keyRepeatSettings: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := cleanupKeyRepeat(ctx, tconn); err != nil {
+			s.Error("Failed to reset key repeat: ", err)
+		}
+	}(cleanupCtx)
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	s.Log("Installing app")
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {

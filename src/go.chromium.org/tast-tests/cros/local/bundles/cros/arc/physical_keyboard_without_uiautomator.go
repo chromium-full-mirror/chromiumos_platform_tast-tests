@@ -54,6 +54,16 @@ func PhysicalKeyboardWithoutUiautomator(ctx context.Context, s *testing.State) {
 		activity = ".MainActivity"
 	)
 
+	cleanupKeyRepeat, err := input.EnsureKeyRepeatEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure keyRepeatSettings: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := cleanupKeyRepeat(ctx, tconn); err != nil {
+			s.Error("Failed to reset key repeat: ", err)
+		}
+	}(cleanupCtx)
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
