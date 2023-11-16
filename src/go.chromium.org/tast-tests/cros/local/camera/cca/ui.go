@@ -166,6 +166,8 @@ const (
 	TiltUpButton UIComponentName = "tiltUpButton"
 	// TimeLapseRecordingOption is the radio button to toggle time-lapse recording option.
 	TimeLapseRecordingOption UIComponentName = "timeLapseRecordingOption"
+	// ToggleMicButton is the button to toggle microphone option.
+	ToggleMicButton UIComponentName = "toggleMicButton"
 	// VideoPauseResumeButton is the button for pausing or resuming video recording.
 	VideoPauseResumeButton UIComponentName = "videoPauseResumeButton"
 	// VideoProfileSelect is select-options for selecting video profile.

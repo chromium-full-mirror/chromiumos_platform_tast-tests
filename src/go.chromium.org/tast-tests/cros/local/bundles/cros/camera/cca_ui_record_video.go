@@ -170,14 +170,16 @@ func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 		name  string
 		run   func(context.Context, *cca.App) error
 		timer cca.TimerState
+		mic   cca.MicState
 	}{
-		{"testRecordVideoWithWindowChanged", testRecordVideoWithWindowChanged, cca.TimerOff},
-		{"testVideoProfile", testVideoProfile, cca.TimerOff},
-		{"testRecordVideoWithTimer", testRecordVideoWithTimer, cca.TimerOn},
-		{"testRecordCancelTimer", testRecordCancelTimer, cca.TimerOn},
-		{"testVideoSnapshot", testVideoSnapshot, cca.TimerOff},
-		{"testStopInPause", testStopInPause, cca.TimerOff},
-		{"testPauseResume", testPauseResume, cca.TimerOff},
+		{"testRecordVideoWithWindowChanged", testRecordVideoWithWindowChanged, cca.TimerOff, cca.MicOn},
+		{"testVideoProfile", testVideoProfile, cca.TimerOff, cca.MicOn},
+		{"testRecordVideoWithTimer", testRecordVideoWithTimer, cca.TimerOn, cca.MicOn},
+		{"testRecordVideoWithMute", testRecordVideoWithMute, cca.TimerOff, cca.MicOff},
+		{"testRecordCancelTimer", testRecordCancelTimer, cca.TimerOn, cca.MicOn},
+		{"testVideoSnapshot", testVideoSnapshot, cca.TimerOff, cca.MicOn},
+		{"testStopInPause", testStopInPause, cca.TimerOff, cca.MicOn},
+		{"testPauseResume", testPauseResume, cca.TimerOff, cca.MicOn},
 	} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tc.name, func(ctx context.Context, s *testing.State) {
@@ -192,6 +194,9 @@ func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 				return app.RunThroughCameras(ctx, func(_ cca.Facing) error {
 					if err := app.SetTimerOption(ctx, tc.timer); err != nil {
 						return errors.Wrapf(err, "failed to set timer option %v", tc.timer)
+					}
+					if err := app.SetMicOption(ctx, tc.mic); err != nil {
+						return errors.Wrap(err, "failed to set microphone option")
 					}
 					return tc.run(ctx, app)
 				})
@@ -276,6 +281,22 @@ func testRecordVideoWithTimer(ctx context.Context, app *cca.App) error {
 	return err
 }
 
+func testRecordVideoWithMute(ctx context.Context, app *cca.App) error {
+	info, err := app.RecordVideo(ctx, cca.TimerOff, time.Second)
+	if err != nil {
+		return errors.Wrap(err, "failed to record muted video")
+	}
+
+	path, err := app.FilePathInSavedDir(ctx, info.Name())
+	if err != nil {
+		return errors.Wrap(err, "failed to get file path in saved path")
+	}
+	if err := cca.CheckVideoMuted(ctx, path); err != nil {
+		return errors.Wrap(err, "failed to check if the recorded video is muted")
+	}
+	return nil
+}
+
 func testRecordCancelTimer(ctx context.Context, app *cca.App) error {
 	testing.ContextLog(ctx, "Click on start shutter")
 	if err := app.ClickShutter(ctx); err != nil {
@@ -319,7 +340,7 @@ func testVideoSnapshot(ctx context.Context, app *cca.App) error {
 		return errors.Wrap(err, "failed to get saved directories")
 	}
 	if _, err := app.WaitForFileSaved(ctx, dir, cca.PhotoPattern, startTime); err != nil {
-		return errors.Wrap(err, "failed find saved video snapshot file")
+		return errors.Wrap(err, "failed to find saved video snapshot file")
 	}
 
 	if _, _, err := app.StopRecording(ctx, cca.TimerOff, startTime); err != nil {

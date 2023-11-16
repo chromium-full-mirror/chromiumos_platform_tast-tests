@@ -88,6 +88,16 @@ const (
 	TimerOff = false
 )
 
+// MicState is the information of whether microphone is on.
+type MicState bool
+
+const (
+	// MicOn means microphone is on.
+	MicOn MicState = true
+	// MicOff means microphone is off.
+	MicOff = false
+)
+
 var (
 	// PhotoPattern is the filename format of photos taken by CCA.
 	PhotoPattern = regexp.MustCompile(`^IMG_\d{8}_\d{6}[^.]*\.jpg$`)
@@ -1037,6 +1047,22 @@ func (a *App) SetTimerOption(ctx context.Context, state TimerState) error {
 			if err := a.WaitForState(ctx, "timer", false); err != nil {
 				return errors.Wrap(err, "failed to wait for timer being inactive")
 			}
+		}
+	}
+	return nil
+}
+
+// SetMicOption sets the mic option to on/off.
+func (a *App) SetMicOption(ctx context.Context, state MicState) error {
+	active := state == MicOn
+	if micOn, err := a.State(ctx, "mic"); err != nil {
+		return errors.Wrap(err, "failed to get state mic")
+	} else if micOn != active {
+		if err := a.Click(ctx, ToggleMicButton); err != nil {
+			return errors.Wrap(err, "failed to click the microphone button")
+		}
+		if err := a.WaitForState(ctx, "mic", active); err != nil {
+			return errors.Wrapf(err, "failed to wait for mic state being changed to %v", active)
 		}
 	}
 	return nil

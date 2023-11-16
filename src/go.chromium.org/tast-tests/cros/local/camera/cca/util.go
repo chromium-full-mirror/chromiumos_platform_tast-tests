@@ -7,6 +7,10 @@ package cca
 import (
 	"context"
 	"os"
+	"os/exec"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/abema/go-mp4"
@@ -104,4 +108,37 @@ func VideoDuration(ctx context.Context, path string) (time.Duration, error) {
 	}
 
 	return time.Duration(duration * float64(time.Second)), nil
+}
+
+// CheckVideoMuted returns error if the check fails or the video file in the given |path| is not muted.
+func CheckVideoMuted(ctx context.Context, path string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open file %v", path)
+	}
+	defer file.Close()
+
+	args := []string{"-i", path, "-filter:a", "volumedetect", "-f", "null", "-"}
+	output, err := exec.CommandContext(ctx, "ffmpeg", args...).CombinedOutput()
+	if err != nil {
+		return errors.Wrap(err, "failed to execute ffmpeg command")
+	}
+	lines := strings.Split(string(output), "\n")
+	// Example line: `[Parsed_volumedetect_0 @ 0x584d634e9920] max_volume: -91.0 dB`
+	re := regexp.MustCompile(`\[Parsed_volumedetect_[0-9]+ @ 0x[0-9a-f]+\] max_volume: (.*?) dB`)
+	for _, line := range lines {
+		submatch := re.FindStringSubmatch(line)
+		if len(submatch) > 0 {
+			// In case of a muted video, the max volume is -91.0 dB and if it isn't, the max volume is bigger than that.
+			vol, err := strconv.ParseFloat(submatch[1], 64)
+			if err != nil {
+				return errors.Wrap(err, "failed to convert float to string")
+			} else if vol > -91.0 {
+				return errors.Errorf("video is not muted. Expected max volume: -91.0 dB but got %v dB", vol)
+			}
+			return nil
+		}
+	}
+
+	return errors.New("volume detection failed")
 }
