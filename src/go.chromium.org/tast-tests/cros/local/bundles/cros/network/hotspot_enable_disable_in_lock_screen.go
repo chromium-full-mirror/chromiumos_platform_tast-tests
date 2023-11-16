@@ -118,6 +118,7 @@ func HotspotEnableDisableInLockScreen(ctx context.Context, s *testing.State) {
 		ui.LeftClick(quicksettings.HotspotDetailedViewToggle),
 		ui.WaitUntilExists(quicksettings.HotspotOnNoDeviceConnectedText),
 		ui.LeftClick(quicksettings.HotspotDetailedViewToggle),
+		ui.WaitUntilGone(quicksettings.HotspotOnNoDeviceConnectedText),
 		ui.EnsureGoneFor(quicksettings.HotspotOnNoDeviceConnectedText, 5*time.Second),
 	)(ctx); err != nil {
 		s.Fatal("Failed to toggle on and off hotspot in Hotspot detailed view: ", err)
