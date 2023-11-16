@@ -291,7 +291,7 @@ func openGlanceablesBubble(ctx context.Context, ui *uiauto.Context) error {
 
 	calendarView := nodewith.ClassName("CalendarView")
 	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.ClassName("View").Ancestor(mainHeaderTriView).Nth(1)
+	mainHeaderContainer := nodewith.ClassName("RelayoutView").Ancestor(mainHeaderTriView).Nth(1)
 	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderContainer)
 
 	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
