@@ -24,7 +24,8 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
-		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
+		// TODO(b/243048705): skip the test on faulty flash
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnCameraUSBModule("0408:3028", "0408:4021", "05c8:03f4")),
 		Fixture:      "chromeLoggedIn",
 	})
 }
