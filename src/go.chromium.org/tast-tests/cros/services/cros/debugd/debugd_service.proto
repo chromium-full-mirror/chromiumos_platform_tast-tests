@@ -1,0 +1,55 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.debugd;
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/debugd";
+
+// DebugdService provides functionality to interact with the debugd D-Bus
+// service.
+service DebugdService {
+  // PacketCapture is a streaming RPC, it starts a packet capture based on the
+  // requested options and streams the captured packet data back to the client.
+  // This RPC accepts one job at a time, additional requests will be hanged
+  // until the previous job returns.
+  // This service only supports frequency-based (Layer-2) capture for now and
+  // not device-based (Layer-3) capture.
+  rpc PacketCapture(PacketCaptureRequest)
+      returns (stream PacketCaptureResponse) {}
+}
+
+message PacketCaptureRequest {
+  // HTLocation is an option of the PacketCaptureStart D-bus method.
+  // The string "above" or "below", representing the offset of any secondary
+  // channel used in a 40 MHz HT (high throughput) caputre.
+  enum HTLocation {
+    HTLOCATION_UNSPECIFIED = 0;
+    ABOVE = 1;
+    BELOW = 2;
+  }
+
+  // VHTWidth is an option of the PacketCaptureStart D-bus method.
+  // This option representing the different channel widths of the very high
+  // throughput (VHT) of the operation of the IEEE 802.11 WLAN.
+  enum VHTWidth {
+    VHTWIDTH_UNSPECIFIED = 0;
+    VHTCh_WIDTH_80 = 1;
+    VHTCh_WIDTH_160 = 2;
+  }
+
+  HTLocation ht_location = 1;
+  VHTWidth vht_width = 2;
+
+  // frequency is an option of the PacketCaptureStart D-bus method.
+  // This option representing the fundamental frequency of the Wi-Fi
+  int32 frequency = 3;
+
+  // monitored_interface is used to specify the network interface to be
+  // monitored.
+  optional string monitored_interface = 4;
+}
+
+message PacketCaptureResponse { bytes data = 1; }
