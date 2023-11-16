@@ -154,7 +154,7 @@ var pdStateCmdRegexp = map[TCPMVersion]string{
 	//      6 - VConn (optional "-VC")
 	//      7 - PE State     -- 8
 	//      8 - PE Flags     -- 16946
-	TCPMv1: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(-VC)?\s+State:\s+(\d+)\(\w*\),\s+Flags:\s+0x(\w+)[\r\n]`,
+	TCPMv1: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(-VC)?\s+State:\s+(\S+),\s+Flags:\s+0x(\w+)[\r\n]`,
 	// For TCPMv2 DUTs
 	//   Example: "Port C0 CC1, Enable - Role: SNK-DFP TC State: Attached.SNK, Flags: 0x9012 PE State: PE_SNK_Ready, Flags: 0x0201 SPR"
 	//   Match Index:
@@ -186,22 +186,31 @@ func (t *pdStateTokens) lookup(field string, ver TCPMVersion) (string, error) {
 	return "", errors.Errorf("PD field %q contains unknown value %q", field, token)
 }
 
+var peStateNameRe = regexp.MustCompile(`(\d+)\((\w*)\)`)
+
 func (t *pdStateTokens) peStateName(ver TCPMVersion) (string, error) {
 	token := (*t)[pdStateFieldIndex[ver]["PEState"]]
 
 	if ver == TCPMv1 {
-		// Token is a string integer. Convert and map to state name.
-		stateNum, err := strconv.Atoi(token)
-		if err != nil {
-			return "", errors.Wrap(err, "cannot convert PE state")
+		// Token may be a string, or a number followed by a string in () or just a number. Convert and map to state name.
+		m := peStateNameRe.FindStringSubmatch(token)
+		if len(m) > 2 && m[2] != "" { // State name in parens
+			return m[2], nil
 		}
+		if len(m) > 1 && m[1] != "" { // Integer before parens, but nothing in the parens
+			stateNum, err := strconv.Atoi(m[1])
+			if err != nil {
+				return "", errors.Wrap(err, "cannot convert PE state")
+			}
 
-		stateName, ok := peStateNameLookup[stateNum]
-		if !ok {
-			return "", errors.Errorf("unknown PE state %d", stateNum)
+			stateName, ok := peStateNameLookup[stateNum]
+			if !ok {
+				return "", errors.Errorf("unknown PE state %d", stateNum)
+			}
+			return stateName, nil
 		}
-		return stateName, nil
-
+		// Didn't match the regex, must be a state name.
+		return token, nil
 	} else if ver == TCPMv2 {
 		// Token is already the state name
 		return token, nil
