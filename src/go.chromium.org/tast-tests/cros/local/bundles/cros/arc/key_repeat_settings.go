@@ -11,27 +11,17 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-	// Chrome pref names
-	keyRepeatEnabledPrefName  = "settings.language.xkb_auto_repeat_enabled_r2"
-	keyRepeatDelayPrefName    = "settings.language.xkb_auto_repeat_delay_r2"
-	keyRepeatIntervalPrefName = "settings.language.xkb_auto_repeat_interval_r2"
 	// ARC settings names
 	keyRepeatDelaySettingsName    = "key_repeat_timeout"
 	keyRepeatIntervalSettingsName = "key_repeat_delay"
 )
-
-type keyRepeatSettings struct {
-	enabled  bool
-	delay    int
-	interval int
-}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -61,19 +51,19 @@ func KeyRepeatSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 	// Defer cleanup
-	currentSettings, err := chromeKeyRepeatSettings(ctx, tconn)
+	currentSettings, err := input.CurrentKeyRepeatSettings(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to get current keyRepeatSettings: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := setKeyRepeatSettings(ctx, tconn, currentSettings); err != nil {
+		if err := input.SetKeyRepeatSettings(ctx, tconn, currentSettings); err != nil {
 			s.Fatal("Failed to set keyRepeatSettings: ", err)
 		}
 	}(cleanupCtx)
 
 	// Set expected settings values.
-	expected := keyRepeatSettings{true, 123, 1000}
-	if err := setKeyRepeatSettings(ctx, tconn, expected); err != nil {
+	expected := input.KeyRepeatSettings{Enabled: true, Delay: 123, Interval: 1000}
+	if err := input.SetKeyRepeatSettings(ctx, tconn, expected); err != nil {
 		s.Fatal("Failed to set keyRepeatSettings: ", err)
 	}
 
@@ -95,54 +85,18 @@ func arcSecureSettingsValue(ctx context.Context, a *arc.ARC, name string) (int, 
 	return value, nil
 }
 
-func validateKeyRepeatSettings(ctx context.Context, a *arc.ARC, expected keyRepeatSettings) error {
+func validateKeyRepeatSettings(ctx context.Context, a *arc.ARC, expected input.KeyRepeatSettings) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		delay, err := arcSecureSettingsValue(ctx, a, keyRepeatDelaySettingsName)
-		if delay != expected.delay {
-			return errors.Wrapf(err, "key repeat delay %d doesn't match expected %d", delay, expected.delay)
+		if delay != expected.Delay {
+			return errors.Wrapf(err, "key repeat delay %d doesn't match expected %d", delay, expected.Delay)
 		}
 
 		interval, err := arcSecureSettingsValue(ctx, a, keyRepeatIntervalSettingsName)
-		if interval != expected.interval {
-			return errors.Wrapf(err, "key repeat interval %d doesn't match expected %d", interval, expected.interval)
+		if interval != expected.Interval {
+			return errors.Wrapf(err, "key repeat interval %d doesn't match expected %d", interval, expected.Interval)
 		}
 
 		return nil
 	}, &testing.PollOptions{Timeout: 5 * time.Second})
-}
-
-func chromeKeyRepeatSettings(ctx context.Context, tconn *chrome.TestConn) (keyRepeatSettings, error) {
-	var enabled struct {
-		Value bool `json:"value"`
-	}
-	if err := tconn.Call(ctx, &enabled, "tast.promisify(chrome.settingsPrivate.getPref)", keyRepeatEnabledPrefName); err != nil {
-		return keyRepeatSettings{}, errors.Wrap(err, "failed to get keyRepeatEnabled")
-	}
-	var delay struct {
-		Value int `json:"value"`
-	}
-	if err := tconn.Call(ctx, &delay, "tast.promisify(chrome.settingsPrivate.getPref)", keyRepeatDelayPrefName); err != nil {
-		return keyRepeatSettings{}, errors.Wrap(err, "failed to get keyRepeatDelay")
-	}
-	var interval struct {
-		Value int `json:"value"`
-	}
-	if err := tconn.Call(ctx, &interval, "tast.promisify(chrome.settingsPrivate.getPref)", keyRepeatIntervalPrefName); err != nil {
-		return keyRepeatSettings{}, errors.Wrap(err, "failed to get keyRepeatInterval")
-	}
-
-	return keyRepeatSettings{enabled.Value, delay.Value, interval.Value}, nil
-}
-
-func setKeyRepeatSettings(ctx context.Context, tconn *chrome.TestConn, settings keyRepeatSettings) error {
-	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", keyRepeatEnabledPrefName, settings.enabled); err != nil {
-		return errors.Wrap(err, "failed to set keyRepeatEnabled")
-	}
-	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", keyRepeatDelayPrefName, settings.delay); err != nil {
-		return errors.Wrap(err, "failed to set keyRepeatDelay")
-	}
-	if err := tconn.Call(ctx, nil, "tast.promisify(chrome.settingsPrivate.setPref)", keyRepeatIntervalPrefName, settings.interval); err != nil {
-		return errors.Wrap(err, "failed to set keyRepeatInterval")
-	}
-	return nil
 }
