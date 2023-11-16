@@ -97,13 +97,11 @@ func AppFirefoxEmoji(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Firefox test page: ", err)
 	}
 
-	if err := uiauto.Retry(5,
-		uiauto.Combine("enter emoji in Firefox",
-			imetestutil.OpenEmojiPickerAndInputEmoji(ctx, cr, keyboard, tconn, inputEmoji),
-			func(ctx context.Context) error {
-				return imetestutil.CheckInputViaClipboard(ctx, keyboard, tconn, inputEmoji)
-			},
-		),
+	if err := uiauto.Combine("enter emoji in Firefox",
+		imetestutil.OpenEmojiPickerAndInputEmoji(ctx, cr, keyboard, tconn, inputEmoji),
+		func(ctx context.Context) error {
+			return imetestutil.CheckInputViaClipboard(ctx, keyboard, tconn, inputEmoji)
+		},
 	)(ctx); err != nil {
 		s.Fatal("Failed to enter emoji and verify input via clipboard: ", err)
 	}
