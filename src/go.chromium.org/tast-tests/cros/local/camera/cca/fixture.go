@@ -17,6 +17,7 @@ import (
 	dutcontrol "go.chromium.org/tast-tests/cros/common/camera/dut"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/assistant"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -462,6 +463,10 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 	f.tb = tb
 
+	if err := crastestclient.Mute(ctx); err != nil {
+		s.Fatal("Failed to mute audio: ", err)
+	}
+
 	success = true
 	return FixtureData{
 		Chrome:          f.cr,
@@ -481,6 +486,10 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 }
 
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if err := crastestclient.Unmute(ctx); err != nil {
+		s.Error("Failed to unmute audio: ", err)
+	}
+
 	if err := f.tb.TearDown(ctx); err != nil {
 		s.Error("Failed to tear down test bridge: ", err)
 	}
