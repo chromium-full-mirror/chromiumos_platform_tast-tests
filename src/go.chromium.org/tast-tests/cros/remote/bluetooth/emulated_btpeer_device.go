@@ -64,6 +64,7 @@ type EmulatedBTPeerDeviceConfig struct {
 // NewEmulatedBTPeerDevice. The cached data can be refreshed by calling
 // RefreshCache manually.
 type EmulatedBTPeerDevice struct {
+	btpeer     *BtpeerClient
 	rpc        cbt.BluezPeripheral
 	cache      *emulatedBTPeerDeviceCache
 	deviceType cbt.DeviceType
@@ -80,7 +81,9 @@ type EmulatedBTPeerDevice struct {
 // Note: A btpeer can only act as one device at a time. If you require multiple
 // devices at once, use different btpeers.
 func NewEmulatedBTPeerDevice(ctx context.Context, btpeer *BtpeerClient, deviceConfig *EmulatedBTPeerDeviceConfig) (*EmulatedBTPeerDevice, error) {
-	d := &EmulatedBTPeerDevice{}
+	d := &EmulatedBTPeerDevice{
+		btpeer: btpeer,
+	}
 	if deviceConfig == nil || deviceConfig.DeviceType == "" {
 		return nil, errors.New("device config is required and must specify a device type")
 	}
@@ -188,7 +191,13 @@ func (d *EmulatedBTPeerDevice) RefreshCache(ctx context.Context) error {
 // String returns a string representation of this EmulatedBTPeerDevice with
 // key identifiable information included.
 func (d *EmulatedBTPeerDevice) String() string {
-	return fmt.Sprintf("EmulatedBTPeerDevice(Type=%q,Addr=%q,Name=%q)", d.deviceType, d.cache.localBluetoothAddress, d.cache.advertisedName)
+	return fmt.Sprintf(
+		"EmulatedBTPeerDevice(Btpeer=%q,Type=%q,Addr=%q,Name=%q)",
+		d.btpeer,
+		d.deviceType,
+		d.cache.localBluetoothAddress,
+		d.cache.advertisedName,
+	)
 }
 
 // evaluateCapabilities calls RPC().GetCapabilities and caches the result. It

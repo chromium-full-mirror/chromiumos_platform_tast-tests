@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -27,6 +28,7 @@ const (
 // BtpeerClient manages connections and provides clients to btpeers.
 type BtpeerClient struct {
 	// Device-specific.
+	registrationID     int
 	hostname           string
 	sshConn            *ssh.Conn
 	sshOptions         *ssh.Options
@@ -38,13 +40,14 @@ type BtpeerClient struct {
 	chameleondLogCollector  log.Collector
 }
 
-func newBtpeerClient(hostname string, sshOptions *ssh.Options) (*BtpeerClient, error) {
+func newBtpeerClient(hostname string, sshOptions *ssh.Options, registrationID int) (*BtpeerClient, error) {
 	if err := ssh.ParseTarget(hostname, sshOptions); err != nil {
 		return nil, errors.Wrapf(err, "failed to parse ssh target btpeer hostname %q", hostname)
 	}
 	return &BtpeerClient{
-		hostname:   hostname,
-		sshOptions: sshOptions,
+		hostname:       hostname,
+		sshOptions:     sshOptions,
+		registrationID: registrationID,
 	}, nil
 }
 
@@ -56,38 +59,38 @@ func (c *BtpeerClient) Connect(ctx context.Context) error {
 		return nil
 	}
 	// Connect ssh.
-	testing.ContextLogf(ctx, "Connecting to btpeer host %q over ssh", c.hostname)
+	testing.ContextLogf(ctx, "Connecting to %s over ssh", c)
 	if err := c.connectSSH(ctx); err != nil {
-		return errors.Wrapf(err, "failed to Connect to btpeer host %q over ssh", c.hostname)
+		return errors.Wrapf(err, "failed to Connect to %s over ssh", c)
 	}
-	testing.ContextLogf(ctx, "Successfully connected to btpeer host %q over ssh", c.hostname)
+	testing.ContextLogf(ctx, "Successfully connected to %s over ssh", c)
 	// Connect chameleond.
-	testing.ContextLogf(ctx, "Connecting to chameleond on btpeer host %q", c.hostname)
+	testing.ContextLogf(ctx, "Connecting to chameleond on %s", c)
 	if err := c.connectChameleond(ctx); err != nil {
-		testing.ContextLogf(ctx, "WARNING: Failed to Connect to chameleond on btpeer %q in first attempt: %v", c.hostname, err)
-		testing.ContextLogf(ctx, "Rebooting btpeer host %q and retrying chameleond connection", c.hostname)
+		testing.ContextLogf(ctx, "WARNING: Failed to Connect to chameleond on %s in first attempt: %v", c, err)
+		testing.ContextLogf(ctx, "Rebooting %s and retrying chameleond connection", c)
 		if err := c.Reboot(ctx); err != nil {
-			return errors.Wrapf(err, "failed to Reboot btpeer %q after first chameleond connection failure", c.hostname)
+			return errors.Wrapf(err, "failed to Reboot %s after first chameleond connection failure", c)
 		}
 		// Try chameleond again with a short poll as ssh may come up before
 		// chameleond does.
-		testing.ContextLogf(ctx, "Connecting to chameleond on btpeer host %q after successful Reboot", c.hostname)
+		testing.ContextLogf(ctx, "Connecting to chameleond on %s after successful Reboot", c)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			return c.connectChameleond(ctx)
 		}, &testing.PollOptions{
 			Interval: 500 * time.Millisecond,
 			Timeout:  10 * time.Second,
 		}); err != nil {
-			return errors.Wrapf(err, "failed to Connect to chameleond on btpeer host %q after successful Reboot", c.hostname)
+			return errors.Wrapf(err, "failed to Connect to chameleond on %s after successful Reboot", c)
 		}
 	}
-	testing.ContextLogf(ctx, "Successfully connected to chameleond on btpeer host %q", c.hostname)
+	testing.ContextLogf(ctx, "Successfully connected to chameleond on %s", c)
 	// Log chameleond version.
-	testing.ContextLogf(ctx, "Fetching chameleond version information from btpeer %q", c.hostname)
+	testing.ContextLogf(ctx, "Fetching chameleond version information from %s", c)
 	if chameleondUpdatedAt, chameleondLastCommit, err := c.fetchChameleondVersion(ctx); err != nil {
-		testing.ContextLogf(ctx, "WARNING: Failed to fetch chameleond version information from btpeer %q: %v", c.hostname, err)
+		testing.ContextLogf(ctx, "WARNING: Failed to fetch chameleond version information from %s: %v", c, err)
 	} else {
-		testing.ContextLogf(ctx, "Chameleond on btpeer host %q was last updated at %q to commit %q", c.hostname, chameleondUpdatedAt, chameleondLastCommit)
+		testing.ContextLogf(ctx, "Chameleond on %s was last updated at %q to commit %q", c, chameleondUpdatedAt, chameleondLastCommit)
 	}
 	return nil
 }
@@ -109,7 +112,7 @@ func (c *BtpeerClient) connectSSH(ctx context.Context) error {
 	// Establish new ssh connection.
 	sshConn, err := ssh.New(ctx, c.sshOptions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to Connect to btpeer hostname %q over ssh", c.hostname)
+		return errors.Wrapf(err, "failed to Connect to btpeer%d hostname %q over ssh", c.registrationID, c.hostname)
 	}
 	c.sshConn = sshConn
 	return nil
@@ -118,7 +121,7 @@ func (c *BtpeerClient) connectSSH(ctx context.Context) error {
 func (c *BtpeerClient) disconnectSSH(ctx context.Context) {
 	if c.sshConn != nil {
 		if err := c.sshConn.Close(ctx); err != nil {
-			testing.ContextLogf(ctx, "WARNING: Failed to close ssh connection to btpeer %q: %v", c.hostname, err)
+			testing.ContextLogf(ctx, "WARNING: Failed to close ssh connection to %s: %v", c, err)
 		}
 		c.sshConn = nil
 	}
@@ -133,7 +136,7 @@ func (c *BtpeerClient) disconnectSSH(ctx context.Context) {
 // calling Connect.
 func (c *BtpeerClient) Reboot(ctx context.Context) error {
 	if c.sshConn == nil {
-		return errors.Errorf("failed to Reboot btpeer %d: no active ssh connection to device", c.hostname)
+		return errors.Errorf("failed to Reboot %s: no active ssh connection to device", c)
 	}
 	// Reboot, ignoring the ssh error that occurs due to severed connection.
 	_ = c.sshConn.CommandContext(ctx, "Reboot").Run()
@@ -146,7 +149,7 @@ func (c *BtpeerClient) Reboot(ctx context.Context) error {
 		Interval: 1 * time.Second,
 		Timeout:  1 * time.Minute,
 	}); err != nil {
-		return errors.Wrapf(err, "failed to reconnect to btpeer hostname %q over ssh after Reboot", c.hostname)
+		return errors.Wrapf(err, "failed to reconnect to %s over ssh after Reboot", c)
 	}
 	return nil
 }
@@ -158,22 +161,22 @@ func (c *BtpeerClient) Reboot(ctx context.Context) error {
 func (c *BtpeerClient) connectChameleond(ctx context.Context) error {
 	c.disconnectChameleond(ctx)
 	if c.sshConn == nil {
-		return errors.Errorf("failed to Connect to chameleond for btpeer %d: no active ssh connection to device", c.hostname)
+		return errors.Errorf("failed to Connect to chameleond for %s: no active ssh connection to device", c)
 	}
 	// Create an ssh tunnel to the chameleond port.
 	onFwdError := func(err error) {
-		testing.ContextLogf(ctx, "ssh forwarding error for btpeer host %q: %v", c.hostname, err)
+		testing.ContextLogf(ctx, "ssh forwarding error for %s: %v", c, err)
 		c.chameleondClient = nil
 	}
 	chameleondPortForwarder, err := c.sshConn.ForwardLocalToRemote("tcp", "localhost:0", "localhost:9992", onFwdError)
 	if err != nil {
-		return errors.Wrapf(err, "failed to port forward chameleond port for btpeer host %q", c.hostname)
+		return errors.Wrapf(err, "failed to port forward chameleond port for %s", c)
 	}
 	c.chameleondPortForwarder = chameleondPortForwarder
 	// Create a new chameleond client which uses forward chameleond port.
 	chameleondClient, err := chameleon.NewChameleond(ctx, c.chameleondPortForwarder.ListenAddr().String())
 	if err != nil {
-		return errors.Wrapf(err, "failed to Connect to chameleond on btpeer host %q through forward chameleond port at %q", c.hostname, chameleondPortForwarder.ListenAddr().String())
+		return errors.Wrapf(err, "failed to Connect to chameleond on %s through forward chameleond port at %q", c, chameleondPortForwarder.ListenAddr().String())
 	}
 	c.chameleondClient = chameleondClient
 	return nil
@@ -183,13 +186,13 @@ func (c *BtpeerClient) connectChameleond(ctx context.Context) error {
 // chameleond version log file on the btpeer device.
 func (c *BtpeerClient) fetchChameleondVersion(ctx context.Context) (string, string, error) {
 	if c.sshConn == nil {
-		return "", "", errors.Errorf("failed to fetch chameleond version from btpeer host %q: no active ssh connection to device", c.hostname)
+		return "", "", errors.Errorf("failed to fetch chameleond version from %s: no active ssh connection to device", c)
 	}
 	// Attempt to fetch the chameleond version (not supported on old versions).
 	var chameleondLastCommit, chameleondUpdatedAt string
 	btpeerVersionLogFileExists, err := c.remoteFileExists(ctx, c.sshConn, btpeerVersionLogFilePath)
 	if err != nil {
-		return "", "", errors.Wrapf(err, "failed to check for chameleond log file %q on btpeer hostname %q", btpeerChameleondLogFilePath, c.hostname)
+		return "", "", errors.Wrapf(err, "failed to check for chameleond log file %q on %s", btpeerChameleondLogFilePath, c)
 	}
 	if btpeerVersionLogFileExists {
 		lastLogLine, err := c.sshConn.CommandContext(ctx, "tail", "-1", btpeerVersionLogFilePath).Output()
@@ -216,7 +219,7 @@ func (c *BtpeerClient) disconnectChameleond(ctx context.Context) {
 	// Close ssh tunnel.
 	if c.chameleondPortForwarder != nil {
 		if err := c.chameleondPortForwarder.Close(); err != nil {
-			testing.ContextLogf(ctx, "WARNING: Failed to shut down forwarded chameleond port tunnel for btpeer %q: %v", c.hostname, err)
+			testing.ContextLogf(ctx, "WARNING: Failed to shut down forwarded chameleond port tunnel for %s: %v", c, err)
 		}
 	}
 }
@@ -227,23 +230,23 @@ func (c *BtpeerClient) disconnectChameleond(ctx context.Context) {
 func (c *BtpeerClient) StartLogCollection(ctx context.Context) error {
 	c.StopLogCollection(ctx)
 	if c.sshConn == nil {
-		return errors.Errorf("failed to start log collection on btpeer host %q: no active ssh connection to device", c.hostname)
+		return errors.Errorf("failed to start log collection on %s: no active ssh connection to device", c)
 	}
 	// Start collecting system logs.
 	systemLogCollector, err := log.StartJournalctlCollector(ctx, c.sshConn, "--output", "short-full")
 	if err != nil {
-		return errors.Wrapf(err, "failed to start collecting system logs on btpeer host %q", c.hostname)
+		return errors.Wrapf(err, "failed to start collecting system logs on %s", c)
 	}
 	c.systemLogCollector = systemLogCollector
 	// Start collecting chameleond logs.
 	hasChameleondLogFile, err := c.remoteFileExists(ctx, c.sshConn, btpeerChameleondLogFilePath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to check for chameleond log file %q on btpeer host %q", btpeerChameleondLogFilePath, c.hostname)
+		return errors.Wrapf(err, "failed to check for chameleond log file %q on %s", btpeerChameleondLogFilePath, c)
 	}
 	if hasChameleondLogFile {
 		chameleondLogCollector, err := log.StartTailCollector(ctx, c.sshConn, btpeerChameleondLogFilePath, true)
 		if err != nil {
-			return errors.Wrapf(err, "failed to start collecting chameleond logs on btpeer host %q", c.hostname)
+			return errors.Wrapf(err, "failed to start collecting chameleond logs on %s", c)
 		}
 		c.chameleondLogCollector = chameleondLogCollector
 	}
@@ -254,13 +257,13 @@ func (c *BtpeerClient) StartLogCollection(ctx context.Context) error {
 func (c *BtpeerClient) StopLogCollection(ctx context.Context) {
 	if c.systemLogCollector != nil {
 		if err := c.systemLogCollector.Close(); err != nil {
-			testing.ContextLogf(ctx, "WARNING: Failed to close system log collector for btpeer %q: %v", c.hostname, err)
+			testing.ContextLogf(ctx, "WARNING: Failed to close system log collector for %s: %v", c, err)
 		}
 		c.systemLogCollector = nil
 	}
 	if c.chameleondLogCollector != nil {
 		if err := c.chameleondLogCollector.Close(); err != nil {
-			testing.ContextLogf(ctx, "WARNING: Failed to close chameleond log collector for btpeer %q: %v", c.hostname, err)
+			testing.ContextLogf(ctx, "WARNING: Failed to close chameleond log collector for %s: %v", c, err)
 		}
 		c.chameleondLogCollector = nil
 	}
@@ -279,6 +282,19 @@ func (c *BtpeerClient) Hostname() string {
 	return c.hostname
 }
 
+// RegistrationID returns the ID set when the BtpeerClient was created. This
+// should be the btpeer number in the testbed (e.g. 1 for btpeer1), or the order
+// in which the btpeer hostnames were provided to Tast.
+func (c *BtpeerClient) RegistrationID() int {
+	return c.registrationID
+}
+
+// String returns a loggable description of the btpeer this client is for,
+// including its Hostname and RegistrationID.
+func (c *BtpeerClient) String() string {
+	return fmt.Sprintf("btpeer%d[%s]", c.registrationID, c.hostname)
+}
+
 // ChameleondClient returns a chameleond client for this btpeer device.
 //
 // Note: All chameleond method calls are routed through an ssh tunnel to the
@@ -287,7 +303,7 @@ func (c *BtpeerClient) ChameleondClient() chameleon.Chameleond {
 	if c.chameleondClient == nil {
 		// Panic rather than throw an error to allow for ease of use, as this is not
 		// meant to happen during expected usage in tests.
-		panic(fmt.Sprintf("no open chameleond client available for btpeer %q", c.hostname))
+		panic(fmt.Sprintf("no open chameleond client available for %s", c))
 	}
 	return c.chameleondClient
 }
@@ -302,19 +318,19 @@ func (c *BtpeerClient) IsConnected() bool {
 // changes any test may have made to them.
 func (c *BtpeerClient) Reset(ctx context.Context) error {
 	if !c.IsConnected() {
-		return errors.Errorf("failed to reset btpeer %q: not connected to device", c.hostname)
+		return errors.Errorf("failed to reset %s: not connected to device", c)
 	}
-	testing.ContextLogf(ctx, "Resetting btpeer %q", c.hostname)
+	testing.ContextLogf(ctx, "Resetting %s", c)
 	// Reset the base chameleond service state.
 	if err := c.chameleondClient.Reset(ctx); err != nil {
-		return errors.Wrapf(err, "failed to reset chameleond on btpeer %q", c.hostname)
+		return errors.Wrapf(err, "failed to reset chameleond on %q", c)
 	}
 	// Reset the bluetooth service state, through the keyboard device interface
 	// since this method is not exposed at a higher level.
 	if err := c.chameleondClient.BluetoothKeyboardDevice().ResetStack(ctx, ""); err != nil {
-		return errors.Wrapf(err, "failed to reset bluetooth stack on btpeer %q", c.hostname)
+		return errors.Wrapf(err, "failed to reset bluetooth stack on %s", c)
 	}
-	testing.ContextLogf(ctx, "Successfully reset btpeer %q", c.hostname)
+	testing.ContextLogf(ctx, "Successfully reset %s ", c)
 	return nil
 }
 
@@ -329,10 +345,10 @@ func (c *BtpeerClient) Reset(ctx context.Context) error {
 // "SetUp", "Reset", "TearDown", "AfterSomeOtherNotableEvent", etc.)
 //
 // Generated log files will look like this:
-// <context_dir>/
 //
+// <context_dir>/
 //	    btpeer_logs/
-//	        <btpeer_hostname>/
+//	        btpeer<registrationID>_<hostname>/
 //		           chameleond/
 //		               <dump_timestamp>_<dumpContext1>.log
 //		               <dump_timestamp>_<dumpContext2>.log
@@ -342,19 +358,21 @@ func (c *BtpeerClient) Reset(ctx context.Context) error {
 //		               <dump_timestamp>_<dumpContext2>.log
 //		               ...
 func (c *BtpeerClient) DumpLogs(ctx context.Context, dumpContext string) error {
-	baseLogDir := filepath.Join("btpeer_logs", c.hostname)
+	btpeerDirName := fmt.Sprintf("btpeer%d_%s", c.registrationID, c.hostname)
+	btpeerDirName = regexp.MustCompile(`[\W_]+`).ReplaceAllString(btpeerDirName, "_")
+	baseLogDir := filepath.Join("btpeer_logs", btpeerDirName)
 	systemLogDir := filepath.Join(baseLogDir, "system")
 	chameleondLogDir := filepath.Join(baseLogDir, "chameleond")
 	if c.systemLogCollector != nil {
-		testing.ContextLogf(ctx, "Dumping collected system logs from btpeer %q for %q", c.hostname, dumpContext)
+		testing.ContextLogf(ctx, "Dumping collected system logs from %s for %q", c, dumpContext)
 		if err := log.DumpCollectedLogsToFile(ctx, c.systemLogCollector, systemLogDir, dumpContext); err != nil {
-			return errors.Wrapf(err, "failed to dump collected btpeer system logs from btpeer %q", c.hostname)
+			return errors.Wrapf(err, "failed to dump collected system logs from %s", c)
 		}
 	}
 	if c.chameleondLogCollector != nil {
-		testing.ContextLogf(ctx, "Dumping collected chameleond logs from btpeer %q for %q", c.hostname, dumpContext)
+		testing.ContextLogf(ctx, "Dumping collected chameleond logs from %s for %q", c, dumpContext)
 		if err := log.DumpCollectedLogsToFile(ctx, c.chameleondLogCollector, chameleondLogDir, dumpContext); err != nil {
-			return errors.Wrapf(err, "failed to dump collected btpeer chameleond logs from btpeer %q", c.hostname)
+			return errors.Wrapf(err, "failed to dump collected chameleond logs from %s", c)
 		}
 	}
 	return nil

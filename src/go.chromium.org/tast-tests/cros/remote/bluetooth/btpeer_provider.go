@@ -29,13 +29,16 @@ var btpeerProviderSingleton *BtpeerProvider
 // ConnectAndReset may be used to get a BtpeerClient for the desired amount of
 // btpeers.
 type BtpeerProvider struct {
-	registeredBtpeers []*BtpeerClient
+	nextRegistrationID int
+	registeredBtpeers  []*BtpeerClient
 }
 
 // GetBtpeerProvider returns the singleton instance of BtpeerProvider.
 func GetBtpeerProvider() *BtpeerProvider {
 	if btpeerProviderSingleton == nil {
-		btpeerProviderSingleton = &BtpeerProvider{}
+		btpeerProviderSingleton = &BtpeerProvider{
+			nextRegistrationID: 1,
+		}
 	}
 	return btpeerProviderSingleton
 }
@@ -81,10 +84,11 @@ func (m *BtpeerProvider) RegisterBtpeerHostsByWificellDutHostname(ctx context.Co
 	testing.ContextLogf(ctx, "Found %d new btpeer hosts to register for dut %q", len(newBtpeerHostnames), dutHostnameWithoutPort)
 	for _, host := range newBtpeerHostnames {
 		testing.ContextLogf(ctx, "Registering new btpeer host %q", host)
-		if err := m.registerBtpeerHost(ctx, sshOptions, host); err != nil {
+		btpeer, err := m.registerBtpeerHost(ctx, sshOptions, host)
+		if err != nil {
 			return errors.Wrapf(err, "failed to register btpeer host %q", host)
 		}
-		testing.ContextLogf(ctx, "Successfully registered new btpeer host %q", host)
+		testing.ContextLogf(ctx, "Successfully registered new btpeer host %q as btpeer %s", host, btpeer)
 	}
 	return nil
 }
@@ -108,10 +112,11 @@ func (m *BtpeerProvider) RegisterBtpeerHosts(ctx context.Context, sshOptions *ss
 			continue
 		}
 		testing.ContextLogf(ctx, "Registering new btpeer host %q", host)
-		if err := m.registerBtpeerHost(ctx, sshOptions, host); err != nil {
+		btpeer, err := m.registerBtpeerHost(ctx, sshOptions, host)
+		if err != nil {
 			return errors.Wrapf(err, "failed to register btpeer host %q", host)
 		}
-		testing.ContextLogf(ctx, "Successfully registered new btpeer host %q", host)
+		testing.ContextLogf(ctx, "Successfully registered new btpeer host %q as btpeer %s", host, btpeer)
 	}
 	return nil
 }
@@ -119,7 +124,7 @@ func (m *BtpeerProvider) RegisterBtpeerHosts(ctx context.Context, sshOptions *ss
 // registerBtpeerHost validates that the hostname is either a localhost tunnel
 // or is resolvable, initializes a new BtpeerClient, connects to the btpeer,
 // and saves the client for later use.
-func (m *BtpeerProvider) registerBtpeerHost(ctx context.Context, sshOptions *ssh.Options, btpeerHost string) error {
+func (m *BtpeerProvider) registerBtpeerHost(ctx context.Context, sshOptions *ssh.Options, btpeerHost string) (*BtpeerClient, error) {
 	// Remove port from hostname.
 	hostnameHadPort := false
 	hostnameWithoutPort := btpeerHost
@@ -130,23 +135,24 @@ func (m *BtpeerProvider) registerBtpeerHost(ctx context.Context, sshOptions *ssh
 	// Allow only localhost tunnels or resolvable hostnames.
 	if hostnameWithoutPort == "localhost" || hostnameWithoutPort == "127.0.0.1" {
 		if !hostnameHadPort {
-			return errors.New("btpeer hostname identified as localhost, but is missing forwarding port")
+			return nil, errors.New("btpeer hostname identified as localhost, but is missing forwarding port")
 		}
 	} else if _, err := net.LookupIP(hostnameWithoutPort); err != nil {
-		return errors.Wrapf(err, "failed to resolve IP for btpeer hostname %q", hostnameWithoutPort)
+		return nil, errors.Wrapf(err, "failed to resolve IP for btpeer hostname %q", hostnameWithoutPort)
 	}
 	// Prepare a client.
-	btpeer, err := newBtpeerClient(btpeerHost, sshOptions)
+	btpeer, err := newBtpeerClient(btpeerHost, sshOptions, m.nextRegistrationID)
+	m.nextRegistrationID++
 	if err != nil {
-		return errors.Wrapf(err, "failed to initialize new BtpeerClient for btpeer host %q", btpeerHost)
+		return nil, errors.Wrapf(err, "failed to initialize new BtpeerClient for btpeer host %q", btpeerHost)
 	}
 	// Connect to btpeer.
 	if err := btpeer.Connect(ctx); err != nil {
-		return errors.Wrapf(err, "failed to connect to btpeer host %q during registration", btpeerHost)
+		return nil, errors.Wrapf(err, "failed to connect to btpeer %s during registration", btpeer)
 	}
 	// Register for later use.
 	m.registeredBtpeers = append(m.registeredBtpeers, btpeer)
-	return nil
+	return btpeer, nil
 }
 
 func (m *BtpeerProvider) isRegisteredBtpeerHost(btpeerHostname string) bool {
@@ -189,18 +195,18 @@ func (m *BtpeerProvider) ConnectAndReset(ctx context.Context, btpeerCount int) (
 		btpeer := m.registeredBtpeers[i]
 		if i < btpeerCount {
 			if !btpeer.IsConnected() {
-				testing.ContextLogf(ctx, "Connecting to btpeer %q", btpeer.hostname)
+				testing.ContextLogf(ctx, "Connecting to %s", btpeer)
 				if err := btpeer.Connect(ctx); err != nil {
-					return nil, errors.Errorf("failed to connect to btpeer %q", btpeer.hostname)
+					return nil, errors.Errorf("failed to connect to %s", btpeer)
 				}
-				testing.ContextLogf(ctx, "Successfully connected to btpeer %q", btpeer.hostname)
+				testing.ContextLogf(ctx, "Successfully connected to %s", btpeer)
 			} else {
-				testing.ContextLogf(ctx, "Reusing existing connection to btpeer %q", btpeer.hostname)
+				testing.ContextLogf(ctx, "Reusing existing connection to %s", btpeer)
 			}
 			btpeersToReset = append(btpeersToReset, btpeer)
 			selectedBtpeers = append(selectedBtpeers, btpeer)
 		} else if btpeer.IsConnected() {
-			testing.ContextLogf(ctx, "Found unwanted connected btpeer %q", btpeer.hostname)
+			testing.ContextLogf(ctx, "Found unwanted connected btpeer %s", btpeer)
 			btpeersToReset = append(btpeersToReset, btpeer)
 			btpeersToDisconnect = append(btpeersToDisconnect, btpeer)
 		}
@@ -209,7 +215,7 @@ func (m *BtpeerProvider) ConnectAndReset(ctx context.Context, btpeerCount int) (
 		return nil, errors.Wrapf(err, "failed to reset all %d btpeers", len(btpeersToReset))
 	}
 	for _, btpeer := range btpeersToDisconnect {
-		testing.ContextLogf(ctx, "Disconnecting from unwanted connected btpeer %q", btpeer.hostname)
+		testing.ContextLogf(ctx, "Disconnecting from unwanted connected btpeer %s", btpeer)
 		btpeer.Disconnect(ctx)
 	}
 	return selectedBtpeers, nil
