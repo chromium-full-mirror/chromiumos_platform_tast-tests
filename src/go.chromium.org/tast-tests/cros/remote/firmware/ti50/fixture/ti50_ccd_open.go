@@ -8,14 +8,12 @@ package fixture
 import (
 	"context"
 	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/go-tpm/legacy/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -44,36 +42,6 @@ func init() {
 	})
 }
 
-// Copied from tpm_helper
-
-func gpioSet(ctx context.Context, s *testing.FixtTestState, b ti50.DevBoard, g ti50.GpioName, val bool) {
-	if _, err := b.PlainCommand(ctx, "gpio", "write", string(g), strconv.FormatBool(val)); err != nil {
-		s.Fatalf("Failed to set gpio %s: %s", g, err)
-	}
-}
-
-func gpioApplyStrap(ctx context.Context, s *testing.FixtTestState, b ti50.DevBoard, straps ...ti50.GpioStrap) {
-	for _, strap := range straps {
-		if _, err := b.PlainCommand(ctx, "gpio", "apply", string(strap)); err != nil {
-			s.Fatalf("Failed to apply gpio strap %s: %s", strap, err)
-		}
-	}
-}
-
-func mustSucceed(s *testing.FixtTestState, err error, format string, args ...interface{}) {
-	if err != nil {
-		s.Fatalf(format+": %s", append(args, err)...)
-	}
-}
-
-func runCommand(ctx context.Context, s *testing.FixtTestState, image *ti50.CrOSImage, command string) string {
-	out, err := image.Command(ctx, command)
-	if err != nil {
-		s.Fatalf("Running Command `%s` failed", command)
-	}
-	return out
-}
-
 type ccdOpenImpl struct {
 	v *Value
 }
@@ -82,8 +50,6 @@ func (c *ccdOpenImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 	if s.ParentValue() != nil {
 		c.v = s.ParentValue().(*Value)
 	}
-	// Note that devboard services does not start until PreTest, so we cannot enable testlab mode
-	// in setup
 	return c.v
 }
 
@@ -91,11 +57,9 @@ func (c *ccdOpenImpl) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTestState) {
+func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, i *ti50.CrOSImage, s *testing.FixtTestState) {
 	b := c.v.devboard
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 
-	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	out := runCommand(ctx, s, i, "ccd testlab")
 
 	if strings.Contains(out, "CCD test lab mode enabled") {
@@ -128,7 +92,7 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTest
 	runCommand(ctx, s, i, "ccd reset")
 	// Use WriteSerial here so we can WaitUntilMatch(pushButton) below. runCommand doesn't work
 	// because the pushButton message comes before the console prompt.
-	mustSucceed(s, b.WriteSerial(ctx, []byte("ccd testlab enable\r")), "Testlab enable")
+	mustSucceed(s, i.WriteSerial(ctx, []byte("ccd testlab enable\r")), "Testlab enable")
 
 	for powerPush := 1; powerPush <= 5; powerPush++ {
 		// Wait for prompt before pushing
@@ -145,15 +109,8 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, s *testing.FixtTest
 	s.Log("Testlab mode is now enabled")
 }
 
-func (c *ccdOpenImpl) wipeTpmAndOpenCcd(ctx context.Context, s *testing.FixtTestState) {
+func (c *ccdOpenImpl) wipeTpmAndOpenCcd(ctx context.Context, i *ti50.CrOSImage, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Erasing TPM data and opening CCD")
-	i, err := ti50.NewCrOSImage(ctx, c.v.devboard)
-	if err != nil {
-		s.Fatal("NewCrOSImage failed: ", err)
-	}
-	// If we don't close the UART connections here, then tests don't get uart data correctly
-	defer c.v.devboard.Close(ctx)
-	mustSucceed(s, i.WaitUntilBooted(ctx), "GSC did not boot")
 	runCommand(ctx, s, i, "ccd testlab open")
 	runCommand(ctx, s, i, "ccd reset factory")
 	runCommand(ctx, s, i, "ccd set OpenNoTPMWipe ifopened")
@@ -163,22 +120,36 @@ func (c *ccdOpenImpl) wipeTpmAndOpenCcd(ctx context.Context, s *testing.FixtTest
 }
 
 func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	props, err := c.v.devboard.Query(ctx)
-	mustSucceed(s, err, "Testbed query failed")
-	if props.TestbedType == ti50.GscHostEmulation {
+	if c.v.TestbedType == ti50.GscHostEmulation {
 		// TODO(b/283151960): Enabling Testlab mode not yet supported on host emulation
 		// (no SPI).
 		return
 	}
-	if props.TestbedType == ti50.GscOpentitanCw310Fpga {
+	if c.v.TestbedType == ti50.GscOpentitanCw310Fpga {
 		// TODO(jbk): Once OpenTitan port has SPI TPM capability, and other feature
 		// parity, this should be re-enabled.
 		return
 	}
 
+	b := c.v.devboard
+
+	// We can keep the same session that the parent created, but the UART connection must be
+	// closed before going into the main test code
+	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second)
+	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
+	defer i.Close(ctx)
+
+	// Allow GSC of reset so we can perform interact on GSC console
+	mustSucceed(s, b.Reset(ctx), "Release GSC from reset")
+	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+
 	// Ensure that test lab is open before we try to open ccd
-	c.ensureTestLabOpen(ctx, s)
-	c.wipeTpmAndOpenCcd(ctx, s)
+	c.ensureTestLabOpen(ctx, i, s)
+	c.wipeTpmAndOpenCcd(ctx, i, s)
+
+	// Hold GSC in reset until test can take is out of reset after first opening a new UART connection
+	gpioApplyStrap(ctx, s, b, ti50.StrapReset)
+
 	testing.ContextLog(ctx, "Board ready for test")
 }
 

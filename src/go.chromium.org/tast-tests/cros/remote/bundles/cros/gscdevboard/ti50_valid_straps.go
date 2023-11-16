@@ -82,18 +82,13 @@ func init() {
 
 func Ti50ValidStraps(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(ti50ValidStrapsParam)
-
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	s.Log("Restarting ti50 with " + string(userParams.tpmCommunication) + " transport straps and " + string(userParams.formFactor) + " rbox straps")
-	b.GpioApplyStrap(ctx, userParams.tpmCommunication)
-	b.GpioApplyStrap(ctx, userParams.formFactor)
-
-	s.Log("Hard resetting board")
-	th.MustSucceed(b.Reset(ctx), "Reset board")
+	b.ResetWithStraps(ctx, userParams.tpmCommunication, userParams.formFactor)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	if err := checkGSCBrdpropCommandOutput(ctx, i, userParams.brdpropOutput); err != nil {
 		s.Error("Failed verify straps after hard reset: ", err)

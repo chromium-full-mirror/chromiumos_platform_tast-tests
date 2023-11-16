@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -76,10 +75,14 @@ func init() {
 }
 
 func Ti50Efs2(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	b := utils.NewDevboardHelper(s)
 	ecUart := b.PhysicalUart(ti50.UartEC, time.Second)
+	th.MustSucceed(ecUart.Open(ctx), "Open EC UART")
+	defer ecUart.Close(ctx)
+
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
 

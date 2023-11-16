@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,35 +33,32 @@ func init() {
 }
 
 func Ti50UartForward(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
 	gscProps := b.GscProperties()
-
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	seed := time.Now().UnixNano()
 	s.Logf("Random seed: %d", seed)
 	r := rand.New(rand.NewSource(seed))
-
-	s.Log("(Re)starting ti50")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 
 	//
 	// Fixture has already done "ccd open", now boot Ti50 simulating CCD without uServo,
 	// verify that forwarding works both ways.
 	//
 	// Simulate the AP processor being off initially.
+	s.Log("(Re)starting ti50")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	th.MustSucceed(b.ResetWithStraps(ctx, ti50.ServoMicroDisconnected), "Reset board")
+	b.ResetWithStraps(ctx, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, no uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true, "AP off, no uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false, "AP off, no uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, true, "AP off, no uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartAP, false, false, "AP off, no uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true, "AP off, no uServo")
+		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, true, "AP off, no uServo")
 	}
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
@@ -70,10 +66,10 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 
 	// Test forwarding on each of three ports.
 	s.Log("AP on, no uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, true, "AP on, no uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, true, "AP on, no uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, true, "AP on, no uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartAP, true, true, "AP on, no uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, true, "AP on, no uServo")
+		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, true, "AP on, no uServo")
 	}
 
 	//
@@ -83,15 +79,15 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	//
 	// Simulate the AP processor being off initially.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	th.MustSucceed(b.ResetWithStraps(ctx, ti50.ServoMicroConnected), "Reset board")
+	b.ResetWithStraps(ctx, ti50.ServoMicroConnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, with uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false, "AP off, with uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, false, false, "AP off, with uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, false, "AP off, with uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartAP, false, false, "AP off, with uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false, "AP off, with uServo")
+		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, false, "AP off, with uServo")
 	}
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
@@ -99,18 +95,20 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 
 	// Test forwarding on each of three ports.
 	s.Log("AP on, with uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartEC, true, false, "AP on, with uServo")
-	testForwarding(ctx, s, f, th, r, ti50.UartAP, true, false, "AP on, with uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartEC, true, false, "AP on, with uServo")
+	testForwarding(ctx, s, b, th, r, ti50.UartAP, true, false, "AP on, with uServo")
 	if gscProps.HasFpmcuUart() {
-		testForwarding(ctx, s, f, th, r, ti50.UartFPMCU, true, false, "AP on, with uServo")
+		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, false, "AP on, with uServo")
 	}
 }
 
-func testForwarding(ctx context.Context, s *testing.State, f *fixture.Value, th utils.FirmwareTestingHelper, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool, caseStr string) {
-	uart := f.DevBoard().PhysicalUart(port, time.Second)
-	ccd := f.DevBoard().CcdSerialInterface(port, time.Second)
+func testForwarding(ctx context.Context, s *testing.State, b utils.DevboardHelper, th utils.FirmwareTestingHelper, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool, caseStr string) {
+	uart := b.PhysicalUart(port, time.Second)
+	ccd := b.CcdSerialInterface(port, time.Second)
 	th.MustSucceed(ccd.Open(ctx), "Failed to open %s ccd", port)
+	defer ccd.Close(ctx)
 	th.MustSucceed(uart.Open(ctx), "Failed to open %s uart", port)
+	defer uart.Close(ctx)
 
 	// Flush out any "DATA LOST" message along with other queued-up data.
 	uart.WriteSerial(ctx, []byte{13, 10})
@@ -163,7 +161,4 @@ func testForwarding(ctx context.Context, s *testing.State, f *fixture.Value, th 
 			}
 		}
 	}
-
-	th.MustSucceed(ccd.Close(ctx), "Failed to close %s ccd", port)
-	th.MustSucceed(uart.Close(ctx), "Failed to close %s uart", port)
 }

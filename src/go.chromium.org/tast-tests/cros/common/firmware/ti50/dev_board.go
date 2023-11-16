@@ -40,6 +40,8 @@ const (
 type UartName string
 
 const (
+	// UartConsole represents the GSC console
+	UartConsole UartName = "console"
 	// UartAP represents the AP UART
 	UartAP UartName = "AP"
 	// UartEC represents the EC UART
@@ -50,28 +52,14 @@ const (
 
 // DevBoard is the generic interface for development boards.
 type DevBoard interface {
-	// Open opens the ti50 console and EC consoles.
-	Open(ctx context.Context) error
-	// ReadSerialSubmatch reads gsc console output from port until regex is matched.
-	ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error)
-	// WriteSerial writes to gsc console.
-	WriteSerial(ctx context.Context, bytes []byte) error
-	// ClearInput clears any pending input that hasn't been read yet.
-	ClearInput(ctx context.Context) error
 	// OpenTitanToolCommand runs an arbitrary OpenTitan tool command (without up-/downloading any files).
 	OpenTitanToolCommand(ctx context.Context, cmd string, args ...string) (output map[string]interface{}, err error)
 	// PlainCommand executes a opentitantool subcommand that uses no file arguments.
 	PlainCommand(ctx context.Context, cmd string, args ...string) (output []byte, err error)
 	// Reset the DevBoard.
 	Reset(ctx context.Context) error
-	// Close closes all open consoles.
-	Close(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
-	// WithApFlashAccess prepares the devboard for access to the SPI flash chip, then runs `f`.
-	// After `f` is run, the GSC is reset. If `holdReset` is true, it will be held in reset.
-	// If there's an error in establishing the connection, `f` will not be run.
-	WithApFlashAccess(ctx context.Context, holdReset HoldReset, f func(ApFlash)) error
 	// Executes TCG tests.
 	RunTcgTests(ctx context.Context, outdir, testSuite string) error
 	// PhysicalUart allows reading/writing data to a physical UART of the GSC under test.
@@ -105,7 +93,7 @@ type SerialChannel interface {
 }
 
 // ApFlash provides access to the SPI flash chip connected to the devboard.
-// Constructed by `DevBoard.WithApFlashAccess`.
+// Constructed by `DevBoardHelper.WithApFlashAccess`.
 type ApFlash interface {
 	// FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.
 	FetchApFlashInfo(ctx context.Context) (output *ApFlashInfo, err error)

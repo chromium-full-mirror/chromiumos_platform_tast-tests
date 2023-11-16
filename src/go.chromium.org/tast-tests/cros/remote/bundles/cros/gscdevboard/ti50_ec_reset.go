@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -42,11 +41,13 @@ func init() {
 
 func Ti50EcReset(ctx context.Context, s *testing.State) {
 	subTest := s.Param().(func(context.Context, *testing.State, utils.DevboardHelper, *ti50.CrOSImage, utils.FirmwareTestingHelper))
-
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
+
+	b.ResetWithStraps(ctx)
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	subTest(ctx, s, b, i, th)
 }

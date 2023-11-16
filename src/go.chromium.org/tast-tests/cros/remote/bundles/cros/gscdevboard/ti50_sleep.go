@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -122,16 +121,14 @@ func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 }
 
 func Ti50Sleep(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	s.Log("Restarting ti50 with SPI straps")
-	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
-	b.GpioApplyStrap(ctx, ti50.TpmSpi)
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	th.MustSucceed(b.ResetWithStraps(ctx, s.Param().(ti50.GpioStrap)), "Reset board")
+	b.ResetWithStraps(ctx, s.Param().(ti50.GpioStrap), ti50.CcdDisconnected, ti50.TpmSpi)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
 

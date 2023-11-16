@@ -32,7 +32,7 @@ type DUTControlPort struct {
 //	any data is read, whereas if the ctx's timeout is exceeded, the error will
 //	be context.DeadlineExceeded, "context deadline exceeded".
 func (p *DUTControlPort) Read(ctx context.Context, buf []byte) (n int, err error) {
-	if len(p.unreadBuf) >= len(buf) {
+	if len(p.unreadBuf) > 0 {
 		n := copy(buf, p.unreadBuf)
 		p.unreadBuf = p.unreadBuf[n:]
 		return n, nil
@@ -88,18 +88,7 @@ func (p *DUTControlPort) Write(ctx context.Context, buf []byte) (int, error) {
 
 // Flush un-read/written bytes.
 func (p *DUTControlPort) Flush(ctx context.Context) error {
-	p.unreadBuf = nil
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-p.data:
-		case <-p.written:
-		default:
-			return nil
-		}
-	}
+	return errors.New("Flush not supported")
 }
 
 // Close closes the port.

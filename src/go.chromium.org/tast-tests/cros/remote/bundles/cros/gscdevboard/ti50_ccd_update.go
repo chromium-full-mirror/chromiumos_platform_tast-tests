@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -49,8 +48,7 @@ func init() {
 // Ti50CCDUpdate requires HW setup with SuzyQ cable from Andreib to drone/workstation.
 func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
-
-	b := utils.NewDevboardHelper(f, s)
+	b := utils.NewDevboardHelper(s)
 
 	s.Log("Simulating insertion of SuzyQ")
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
@@ -64,8 +62,9 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset: ", err)
 	}
 
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	// Wait for reboot output to finish before reading version.
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")

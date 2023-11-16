@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -41,16 +40,13 @@ func init() {
 }
 
 func Ti50RboxClamshell(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	s.Log("Restarting ti50 with clamshell straps and SuzyQ connected")
-	b.GpioApplyStrap(ctx, ti50.FfClamshell)
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-
-	th.MustSucceed(b.Reset(ctx), "Reset board")
+	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CcdSuzyQ)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	s.Log("Verifying KSO is passed through when power button not pressed")

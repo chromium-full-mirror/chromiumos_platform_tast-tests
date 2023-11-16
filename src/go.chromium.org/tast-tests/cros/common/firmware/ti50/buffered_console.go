@@ -39,7 +39,7 @@ func NewBufferedConsole(filename string, bufMax int, portOpener serial.PortOpene
 // Open opens the console port.
 func (c *BufferedConsole) Open(ctx context.Context) error {
 	if c.port != nil {
-		return nil
+		return errors.New("BufferedConsole already open")
 	}
 	p, err := c.portOpener.OpenPort(ctx)
 	if err != nil {
@@ -71,6 +71,9 @@ func (c *BufferedConsole) IsOpen() bool {
 
 // Close closes the console port.
 func (c *BufferedConsole) Close(ctx context.Context) error {
+	// Pull everything from console we can and write to file, but ignore error if encountered
+	_ = c.ClearInput(ctx)
+
 	if c.logfile != nil {
 		c.logfile.Close()
 		c.logfile = nil
@@ -96,8 +99,8 @@ func (c *BufferedConsole) appendToLogFile(ctx context.Context, buf []byte) error
 }
 
 func (c *BufferedConsole) readSerial(ctx context.Context) error {
-	if err := c.Open(ctx); err != nil {
-		return errors.Wrap(err, "port open error")
+	if c.port == nil {
+		return errors.New("BufferedConsole not open")
 	}
 	if c.readBufLen == len(c.readBuf) {
 		return errors.New("buffer full")
@@ -169,8 +172,8 @@ func (c *BufferedConsole) ClearInput(ctx context.Context) error {
 
 // WriteSerial writes to the serial port.
 func (c *BufferedConsole) WriteSerial(ctx context.Context, b []byte) error {
-	if err := c.Open(ctx); err != nil {
-		return err
+	if c.port == nil {
+		return errors.New("BufferedConsole not open")
 	}
 	n, err := c.port.Write(ctx, b)
 

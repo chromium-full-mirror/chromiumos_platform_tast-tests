@@ -44,10 +44,10 @@ func genContent(fill byte) []byte {
 
 // Ti50CCDFlashrom measures flashrom speed over CCD.
 func Ti50CCDFlashrom(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
+	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	// Enable CCD.
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)

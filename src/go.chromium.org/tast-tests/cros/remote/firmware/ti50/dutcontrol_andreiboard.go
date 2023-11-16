@@ -22,12 +22,15 @@ import (
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const (
 	// A value that is big enough so that console data from the raw uart shouldn't have to be broken up to multiple messages in most cases.
 	consoleDataLen = 1024
+
+	// The number of pending console request and responses we can have pending a tast read before
+	// running out of space.
+	consoleQueueSize = 10000
 )
 
 var (
@@ -39,54 +42,14 @@ var (
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
 type DUTControlAndreiboard struct {
-	client     dutcontrol.DutControlClient
-	gscConsole *common.BufferedConsole
+	client dutcontrol.DutControlClient
 }
 
 // NewDUTControlAndreiboard creates a DUTControlAndreiboard.
-//
-// grpcConn should be to a host running the dutcontrol service.
-// bufSize should be set to the max outstanding chars waiting to be read.
-// readTimeout should be set to the max expected duration between char outputs.
-//
-//	This option provides several advantages:
-//	  1) Reduces the wait time before declaring test failure from a read operation
-//	     that does not match an expected pattern.
-//	  2) Avoids having to use shortened context timeouts for each individual
-//	     read call.
-//	  3) Still allows calling code to optimize by setting a shorter timeout
-//	     in the context if it knows that a particular operation has a shorter
-//	     time bound.
-//	  4) Each test or fixture can adjust the timeout to suit the testcase or
-//	     board under test.
-//	ReadSerialSubmatch will return serial.ErrReadTimeout when this timeout is
-//	exceeded.
-//
-// Example:
-// conn, err := grpc.DialContext(ctx, hostPort, grpc.WithInsecure())
-//
-//	if err != nil {
-//	    return nil, err
-//	}
-//
-// defer conn.Close(ctx)
-// board := NewDUTControlAndreiboard(conn, 4096, 200 * time.Millisecond)
-// defer board.Close(ctx)
-func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn, bufSize int, readTimeout time.Duration) *DUTControlAndreiboard {
+func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn) *DUTControlAndreiboard {
 	dutControlClient := dutcontrol.NewDutControlClient(grpcConn)
-
-	gscOpener := &DUTControlRawUARTPortOpener{
-		Client:      dutControlClient,
-		Uart:        ConsoleUart,
-		Baud:        UartBaud,
-		DataLen:     consoleDataLen,
-		ReadTimeout: readTimeout,
-	}
-	gscConsole := common.NewBufferedConsole("gsc.log", bufSize, gscOpener)
-
 	return &DUTControlAndreiboard{
-		client:     dutControlClient,
-		gscConsole: gscConsole,
+		client: dutControlClient,
 	}
 }
 
@@ -142,8 +105,10 @@ func (a *DUTControlAndreiboard) Setup(ctx context.Context, image string, fwConfs
 }
 
 // StartSession will initialize the devboard and debugger to a known state.
-func (a *DUTControlAndreiboard) StartSession(ctx context.Context) (err error) {
+func (a *DUTControlAndreiboard) StartSession(ctx context.Context, gpioStrap ti50.GpioStrap) (err error) {
 	req := &dutcontrol.StartSessionRequest{}
+
+	req.GpioStrap = string(gpioStrap)
 
 	resp, err := a.client.StartSession(ctx, req)
 	if err != nil {
@@ -167,31 +132,6 @@ func (a *DUTControlAndreiboard) EndSession(ctx context.Context) (err error) {
 		return errors.Errorf("EndSession operation failed: %s", resp.Err)
 	}
 	return nil
-}
-
-// Open opens the ti50 console.
-func (a *DUTControlAndreiboard) Open(ctx context.Context) error {
-	return a.gscConsole.Open(ctx)
-}
-
-// ReadSerialSubmatch reads gsc console output from port until regex is matched.
-func (a *DUTControlAndreiboard) ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error) {
-	return a.gscConsole.ReadSerialSubmatch(ctx, re)
-}
-
-// WriteSerial writes to gsc console.
-func (a *DUTControlAndreiboard) WriteSerial(ctx context.Context, bytes []byte) error {
-	return a.gscConsole.WriteSerial(ctx, bytes)
-}
-
-// ClearInput clears any pending input that hasn't been read yet.
-func (a *DUTControlAndreiboard) ClearInput(ctx context.Context) error {
-	return a.gscConsole.ClearInput(ctx)
-}
-
-// Close closes the gsc consoles.
-func (a *DUTControlAndreiboard) Close(ctx context.Context) error {
-	return a.gscConsole.Close(ctx)
 }
 
 // PlainCommand executes a opentitantool subcommand that uses no file arguments.
@@ -227,10 +167,10 @@ func (a *DUTControlAndreiboard) OpenTitanToolCommand(ctx context.Context, cmd st
 
 // Reset the chip by asking opentitantool to toggle the reset pin.
 func (a *DUTControlAndreiboard) Reset(ctx context.Context) error {
-	if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "false"); err != nil {
+	if _, err := a.PlainCommand(ctx, "gpio", "apply", string(ti50.StrapReset)); err != nil {
 		return err
 	}
-	if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "true"); err != nil {
+	if _, err := a.PlainCommand(ctx, "gpio", "remove", string(ti50.StrapReset)); err != nil {
 		return err
 	}
 	return nil
@@ -342,7 +282,12 @@ func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName, readTimeout t
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 	}
-	return common.NewBufferedConsole("uart_"+string(name), 2048, uartOpener)
+	// Record all of the raw uarts as "uart_<NAME>.log" expect main console as "gsc.log"
+	logName := "uart_" + string(name) + ".log"
+	if name == common.UartConsole {
+		logName = "gsc.log"
+	}
+	return common.NewBufferedConsole(logName, consoleQueueSize, uartOpener)
 }
 
 // CcdSerialInterface opens a handle for communication to/from a USB interface on the chip under
@@ -370,7 +315,7 @@ func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTim
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 	}
-	return common.NewBufferedConsole("ccd_"+string(name), 2048, uartOpener)
+	return common.NewBufferedConsole("ccd_"+string(name)+".log", consoleQueueSize, uartOpener)
 }
 
 // CCDFlashromRead reads the SPI flash chip via CCD.
@@ -425,41 +370,9 @@ type andreiboardApFlash struct {
 	ab *DUTControlAndreiboard
 }
 
-// WithApFlashAccess runs `f` with the proper setup and teardown to access the SPI flash chip.
-// This function asserts the SuzyQ strapping and leaves it in that state, so `gsctool` should work immediately.
-func (a *DUTControlAndreiboard) WithApFlashAccess(ctx context.Context, holdReset ti50.HoldReset, f func(ti50.ApFlash)) error {
-	i, err := ti50.NewCrOSImage(ctx, a)
-	if err != nil {
-		return err
-	}
-	if _, err = a.PlainCommand(ctx, "gpio", "apply", string(ti50.CcdSuzyQ)); err != nil {
-		return err
-	}
-	if err := i.WaitUntilMatch(ctx, regexp.MustCompile(`USB:\s+Connected`), 20*time.Second); err != nil {
-		return errors.Wrap(err, "expected to see Ti50 connect CCD USB")
-	}
-	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: flashrom doesn't detect the device immediately.
-	flash := &andreiboardApFlash{ab: a}
-	if _, err := flash.FetchApFlashInfo(ctx); err != nil {
-		return err
-	}
-	// TODO(kupiakos): consider warning/erroring if an unrecognized chip is seen
-	// on the andreishield, or pass this info to `f` so it can check itself.
-	f(flash)
-	// Reset the GSC
-	if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "false"); err != nil {
-		return err
-	}
-	if !holdReset {
-		// Turn the GSC back on
-		if _, err := a.PlainCommand(ctx, "gpio", "write", "RESET", "true"); err != nil {
-			return err
-		}
-		if err := i.WaitUntilBooted(ctx); err != nil {
-			return err
-		}
-	}
-	return nil
+// NewApFlash creates a new object that can be used to interact the AP SPI flash
+func NewApFlash(ab *DUTControlAndreiboard) ti50.ApFlash {
+	return &andreiboardApFlash{ab: ab}
 }
 
 // FetchApFlashInfo fetches the name and vendor of the SPI flash chip connected to the devboard.

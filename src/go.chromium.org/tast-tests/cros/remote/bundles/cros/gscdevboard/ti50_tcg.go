@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -522,16 +521,14 @@ func init() {
 }
 
 func Ti50Tcg(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("Restarting ti50 with SPI straps")
-	b.GpioApplyStrap(ctx, ti50.TpmSpi)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
+	b.ResetWithStraps(ctx, ti50.TpmSpi)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to

@@ -8,6 +8,7 @@ package fixture
 import (
 	"context"
 	"os"
+	"strconv"
 	"time"
 
 	"google.golang.org/grpc"
@@ -82,14 +83,15 @@ func init() {
 
 // Value allows tests to obtain a ti50 devboard.
 type Value struct {
-	grpcConn    *grpc.ClientConn
-	devboard    *remoteTi50.DUTControlAndreiboard
-	ImagePath   string
-	TestbedType ti50.TestbedType
+	grpcConn      *grpc.ClientConn
+	devboard      *remoteTi50.DUTControlAndreiboard
+	ImagePath     string
+	FwConfigJsons []string
+	TestbedType   ti50.TestbedType
 }
 
 // DevBoard returns the existing DevBoard connection instance.
-func (v *Value) DevBoard() ti50.DevBoard {
+func (v *Value) DevBoard() *remoteTi50.DUTControlAndreiboard {
 	return v.devboard
 }
 
@@ -113,10 +115,10 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	if err := i.dialGrpc(ctx); err != nil {
 		s.Fatal("dial grpc: ", err)
 	}
-	board := remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 0, 0*time.Second)
-	defer board.Close(ctx)
+	// Create devboard controller used for remainder of tests
+	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn)
 
-	testbedProperties, err := board.Query(ctx)
+	testbedProperties, err := i.v.devboard.Query(ctx)
 	if err != nil {
 		s.Fatal("querying testbed: ", err)
 	}
@@ -136,76 +138,34 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	testing.ContextLog(ctx, "Setting up image: ", imagePath)
-	if err := board.Setup(ctx, imagePath, fwConfigJsons); err != nil {
+	if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
 
-	i.v.ImagePath = i.imageValue.ImagePath()
+	i.v.ImagePath = imagePath
+	i.v.FwConfigJsons = fwConfigJsons
 
 	return i.v
 }
 
 func (i *devboardFixture) Reset(ctx context.Context) error {
-	if i.v.devboard != nil {
-		if err := i.v.devboard.Reset(ctx); err != nil {
-			return err
-		}
-		if err := i.v.devboard.Close(ctx); err != nil {
-			return err
-		}
-		i.v.devboard = nil
-	}
-	return nil
-}
-
-// resetTpmOpenCcd assumes that testlab has already been enabled for this device previously.
-// If not, then this code will silently fail and not do anything
-func resetTpmOpenCcd(ctx context.Context, board ti50.DevBoard) error {
-	testing.ContextLog(ctx, "Erasing TPM data and opening CCD")
-	image, err := ti50.NewCrOSImage(ctx, board)
-	if err != nil {
-		return err
-	}
-	// If we don't close the UART connections here, then tests don't get uart data correctly
-	defer board.Close(ctx)
-	image.WaitUntilBooted(ctx)
-	image.Command(ctx, "ccd testlab open")
-	image.Command(ctx, "ccd reset factory")
-	image.Command(ctx, "ccd set OpenNoTPMWipe ifopened")
-	image.Command(ctx, "ccd lock")
-	image.Command(ctx, "ccd open")
-	image.Command(ctx, "ccd reset factory")
 	return nil
 }
 
 func (i *devboardFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	testing.ContextLog(ctx, "Starting OTT session")
-	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn, 10000, time.Second)
-	// At this point, the plan is to start an opentitantool session, which could invove either
+	// At this point, start an opentitantool session, which could involve either
 	// starting a host emulation instance, or resetting a devboard and its debugger to a known
 	// state.
-	if err := i.v.devboard.StartSession(ctx); err != nil {
-		if err2 := i.v.devboard.Close(ctx); err2 != nil {
-			s.Error("Failed to close devboard: ", err2)
-		}
-		i.v.devboard = nil
-		s.Fatal("Failed to start session: ", err)
-	}
+	mustSucceed(s, i.v.devboard.StartSession(ctx, ti50.StrapReset), "Start testing session")
 }
 
 func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	// Ensure any pending console output is written to log file.
-	i.v.devboard.ClearInput(ctx)
+	b := i.v.devboard
 	testing.ContextLog(ctx, "Ending OTT session")
-	// At this point, we should end the opentitantool session, that is, stop host emulator, or
-	// disconnect from devboard.
-	if err := i.v.devboard.EndSession(ctx); err != nil {
+	if err := b.EndSession(ctx); err != nil {
 		s.Error("Failed to end session: ", err)
 	}
-	if err := i.v.devboard.Close(ctx); err != nil {
-		s.Fatal("Failed to close devboard: ", err)
-	}
-	i.v.devboard = nil
 }
 
 func (i *devboardFixture) TearDown(ctx context.Context, s *testing.FixtState) {
@@ -239,4 +199,38 @@ func (i *devboardFixture) dialGrpc(ctx context.Context) error {
 	}
 	i.v.grpcConn = conn
 	return nil
+}
+
+// Convenience functions copied from tpm_helper (since the helper isn't accessible at this layer)
+
+type errorThrower interface {
+	Fatalf(format string, args ...interface{})
+}
+
+func gpioSet(ctx context.Context, s errorThrower, b ti50.DevBoard, g ti50.GpioName, val bool) {
+	if _, err := b.PlainCommand(ctx, "gpio", "write", string(g), strconv.FormatBool(val)); err != nil {
+		s.Fatalf("Failed to set gpio %s: %s", g, err)
+	}
+}
+
+func gpioApplyStrap(ctx context.Context, s errorThrower, b ti50.DevBoard, straps ...ti50.GpioStrap) {
+	for _, strap := range straps {
+		if _, err := b.PlainCommand(ctx, "gpio", "apply", string(strap)); err != nil {
+			s.Fatalf("Failed to apply gpio strap %s: %s", strap, err)
+		}
+	}
+}
+
+func mustSucceed(s errorThrower, err error, format string, args ...interface{}) {
+	if err != nil {
+		s.Fatalf(format+": %s", append(args, err))
+	}
+}
+
+func runCommand(ctx context.Context, s errorThrower, image *ti50.CrOSImage, command string) string {
+	out, err := image.Command(ctx, command)
+	if err != nil {
+		s.Fatalf("Running Command `%s` failed: %s", command, err)
+	}
+	return out
 }

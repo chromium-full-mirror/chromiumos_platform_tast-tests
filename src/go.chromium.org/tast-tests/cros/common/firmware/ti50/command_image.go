@@ -28,33 +28,33 @@ var (
 
 // CommandImage displays a prompt and responds to cli commands.
 type CommandImage struct {
-	board           DevBoard
+	SerialChannel
 	promptCmd       string
 	promptPattern   string
 	promptPatternRe *regexp.Regexp
 }
 
-// NewCommandImage creates a new CommandImage. Typical examples of promptCmd and
+// OpenCommandImage creates a new CommandImage. Typical examples of promptCmd and
 // promptPattern are "\n" and "> " respectively.
-func NewCommandImage(ctx context.Context, board DevBoard, promptCmd, promptPattern string) (*CommandImage, error) {
+func OpenCommandImage(ctx context.Context, console SerialChannel, promptCmd, promptPattern string) (*CommandImage, error) {
 	// Ensure that the board is open with the correct context (b/298714011)
-	if err := board.Open(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed NewCommandImage board open")
+	if err := console.Open(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to open image console")
 	}
-	return &CommandImage{board, promptCmd, promptPattern, regexp.MustCompile(promptPattern)}, nil
+	return &CommandImage{console, promptCmd, promptPattern, regexp.MustCompile(promptPattern)}, nil
 }
 
 // RawCommand sends a command to the image and waits for the regex to be matched
 // before returning the captured groups.  It does not append the promptCmd as
 // opposed to Command.
 func (i *CommandImage) RawCommand(ctx context.Context, rawCmd string, re *regexp.Regexp) ([]string, error) {
-	if err := i.board.WriteSerial(ctx, []byte(rawCmd)); err != nil {
+	if err := i.WriteSerial(ctx, []byte(rawCmd)); err != nil {
 		return nil, err
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	match, err := i.board.ReadSerialSubmatch(ctx, re)
+	match, err := i.ReadSerialSubmatch(ctx, re)
 	if err != nil {
 		return nil, err
 	}
@@ -108,14 +108,14 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, interval time.Duration) error {
 	pOpts := testing.PollOptions{Timeout: interval}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, re)
+		_, err := i.ReadSerialSubmatch(ctx, re)
 		return err
 	}, &pOpts)
 }
 
 // GetPrompt gets a fresh prompt from the image by  the prompt.
 func (i *CommandImage) GetPrompt(ctx context.Context) error {
-	if err := i.board.ClearInput(ctx); err != nil {
+	if err := i.ClearInput(ctx); err != nil {
 		return err
 	}
 	_, err := i.Command(ctx, "")

@@ -18,8 +18,8 @@ const (
 )
 
 // Demo uses some of the CrOSImage to control the board.
-func Demo(ctx context.Context, board DevBoard) error {
-	i, err := NewCrOSImage(ctx, board)
+func Demo(ctx context.Context, console SerialChannel) error {
+	i, err := OpenCrOSImage(ctx, console)
 	if err != nil {
 		return err
 	}

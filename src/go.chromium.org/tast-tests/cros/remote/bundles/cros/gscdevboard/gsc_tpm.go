@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,10 +39,9 @@ func init() {
 
 func GscTpm(ctx context.Context, s *testing.State) {
 	bus := s.Param().(ti50.TpmBus)
-
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	tpmHandle := b.ResetAndTpmStartup(ctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
 

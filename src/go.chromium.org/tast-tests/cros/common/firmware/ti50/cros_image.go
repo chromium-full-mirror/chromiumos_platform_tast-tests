@@ -142,10 +142,9 @@ type Fatal interface {
 	Fatalf(format string, args ...interface{})
 }
 
-// NewCrOSImage creates a new CrOSImage.
-// ctx is used as the context for opening necessary ports.
-func NewCrOSImage(ctx context.Context, board DevBoard) (*CrOSImage, error) {
-	i, err := NewCommandImage(ctx, board, "\n", "^(\\[[ 0-9.]+.\\] )?> ")
+// OpenCrOSImage creates a new CrOSImage. This must be closed to free connection.
+func OpenCrOSImage(ctx context.Context, console SerialChannel) (*CrOSImage, error) {
+	i, err := OpenCommandImage(ctx, console, "\n", "^(\\[[ 0-9.]+.\\] )?> ")
 	if err != nil {
 		return nil, err
 	}
@@ -153,9 +152,9 @@ func NewCrOSImage(ctx context.Context, board DevBoard) (*CrOSImage, error) {
 	return &CrOSImage{CommandImage: i}, nil
 }
 
-// MustOpenNewCrOSImage is shorthand for NewCrOSImage that will Fatalf the test/fixture if failed.
-func MustOpenNewCrOSImage(ctx context.Context, board DevBoard, failWith Fatal) *CrOSImage {
-	i, err := NewCrOSImage(ctx, board)
+// MustOpenCrOSImage is shorthand for OpenCrOSImage that will Fatalf the test/fixture if failed.
+func MustOpenCrOSImage(ctx context.Context, console SerialChannel, failWith Fatal) *CrOSImage {
+	i, err := OpenCrOSImage(ctx, console)
 	if err != nil {
 		failWith.Fatalf("New CrOS Image: %v", err)
 	}
@@ -271,7 +270,7 @@ func (i *CrOSImage) SetCCDCapability(ctx context.Context, capability CCDCap, sta
 // is expected to reboot. Note that this does not detect if reboot was not performed because
 // CCD wasn't open.
 func (i *CrOSImage) SendConsoleRebootCmd(ctx context.Context) error {
-	if err := i.board.WriteSerial(ctx, []byte("reboot")); err != nil {
+	if err := i.WriteSerial(ctx, []byte("reboot")); err != nil {
 		return err
 	}
 	return nil
@@ -616,7 +615,7 @@ func matchVersionInfo(s string) (VersionCommandInfo, error) {
 func (i *CrOSImage) WaitUntilNormalSleep(ctx context.Context, interval time.Duration) error {
 	pOpts := testing.PollOptions{Timeout: interval}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, normalSleep)
+		_, err := i.ReadSerialSubmatch(ctx, normalSleep)
 		return err
 	}, &pOpts)
 }
@@ -625,7 +624,7 @@ func (i *CrOSImage) WaitUntilNormalSleep(ctx context.Context, interval time.Dura
 func (i *CrOSImage) WaitUntilDeepSleep(ctx context.Context, interval time.Duration) error {
 	pOpts := testing.PollOptions{Timeout: interval}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, deepSleep)
+		_, err := i.ReadSerialSubmatch(ctx, deepSleep)
 		return err
 	}, &pOpts)
 }
@@ -634,7 +633,7 @@ func (i *CrOSImage) WaitUntilDeepSleep(ctx context.Context, interval time.Durati
 func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, interval time.Duration) error {
 	pOpts := testing.PollOptions{Timeout: interval}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, anySleep)
+		_, err := i.ReadSerialSubmatch(ctx, anySleep)
 		return err
 	}, &pOpts)
 }
@@ -644,7 +643,7 @@ func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, interval time.Duratio
 func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, interval time.Duration) error {
 	pOpts := testing.PollOptions{Timeout: interval}
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.board.ReadSerialSubmatch(ctx, roBoot)
+		_, err := i.ReadSerialSubmatch(ctx, roBoot)
 		return err
 	}, &pOpts)
 }

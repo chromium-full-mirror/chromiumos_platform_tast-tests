@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,9 +31,10 @@ func init() {
 }
 
 func Ti50TpmSpiCorners(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
+
 	tpmHandle := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
 
 	// Perform irregular SPI TPM transaction, ask for content of status register, but never

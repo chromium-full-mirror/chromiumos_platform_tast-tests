@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -49,15 +48,15 @@ func init() {
 }
 
 func Ti50Breadcrumbs(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
+
 	var expected []int
 
 	s.Log("Reset with clamshell straps and CCD connected")
-	b.GpioApplyStrap(ctx, ti50.FfClamshell, ti50.CcdSuzyQ)
-	th.MustSucceed(b.Reset(ctx), "Reset board")
+	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CcdSuzyQ)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	expected = append(expected, projectMain, pmuPreInit, projectStart, projectRun)
 	checkBreadcrumbs(ctx, s, i, expected)

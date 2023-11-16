@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -31,13 +30,13 @@ func init() {
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.Ti50CcdOpen,
 		Params: []testing.Param{{
-			Name: "basic",
-			Val:  false,
+			Name:      "basic",
+			Val:       false,
 			ExtraAttr: []string{"gsc_h1_shield", "gsc_ot_fpga_cw310"},
 		}, {
 			Name: "endless_crypto",
 			// Run crypto operations in the background to validate it doesn't interfere with UART operations.
-			Val:  true,
+			Val: true,
 		}},
 	})
 }
@@ -71,13 +70,12 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 
 	var consoles []consoleChannel
 
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
 	gscProps := b.GscProperties()
 	runEndlessCrypto := s.Param().(bool)
-
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	s.Log("(Re)starting ti50")
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusI2c, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
@@ -89,16 +87,16 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	consoles = append(consoles, consoleChannel{
 		name:  ti50.UartEC,
 		magic: ecMagic,
-		ccd:   f.DevBoard().CcdSerialInterface(ti50.UartEC, time.Second),
-		uart:  f.DevBoard().PhysicalUart(ti50.UartEC, time.Second),
+		ccd:   b.CcdSerialInterface(ti50.UartEC, time.Second),
+		uart:  b.PhysicalUart(ti50.UartEC, time.Second),
 	})
 
 	// Set up the AP console.
 	consoles = append(consoles, consoleChannel{
 		name:  ti50.UartAP,
 		magic: apMagic,
-		ccd:   f.DevBoard().CcdSerialInterface(ti50.UartAP, time.Second),
-		uart:  f.DevBoard().PhysicalUart(ti50.UartAP, time.Second),
+		ccd:   b.CcdSerialInterface(ti50.UartAP, time.Second),
+		uart:  b.PhysicalUart(ti50.UartAP, time.Second),
 	})
 
 	// Set up the FPMCU console on chips that support it.
@@ -106,15 +104,17 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 		consoles = append(consoles, consoleChannel{
 			name:  ti50.UartFPMCU,
 			magic: fpmcuMagic,
-			ccd:   f.DevBoard().CcdSerialInterface(ti50.UartFPMCU, time.Second),
-			uart:  f.DevBoard().PhysicalUart(ti50.UartFPMCU, time.Second),
+			ccd:   b.CcdSerialInterface(ti50.UartFPMCU, time.Second),
+			uart:  b.PhysicalUart(ti50.UartFPMCU, time.Second),
 		})
 	}
 
 	// Open the CCD and UART interfaces.
 	for _, console := range consoles {
 		th.MustSucceed(console.ccd.Open(ctx), fmt.Sprintf("Failed to open %s ccd", console.name))
+		defer console.ccd.Close(ctx)
 		th.MustSucceed(console.uart.Open(ctx), fmt.Sprintf("Failed to open %s uart", console.name))
+		defer console.uart.Close(ctx)
 	}
 
 	// Flush out any "DATA LOST" message along with other queued-up data.
@@ -132,7 +132,7 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	for ; sendBlockNo < uartThroughputNumWarmupBlocks; sendBlockNo++ {
 		// Transmit block on each UART.
 		for _, console := range consoles {
-			sendIteration(ctx, s, f, th, console.uart, console.magic, sendBlockNo)
+			sendIteration(ctx, s, th, console.uart, console.magic, sendBlockNo)
 		}
 	}
 
@@ -153,11 +153,11 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 	for ; recvBlockNo < uartThroughputNumWarmupBlocks+uartThroughputNumMeasurementBlocks; recvBlockNo, sendBlockNo = recvBlockNo+1, sendBlockNo+1 {
 		// Read a block from each console USB endpoint.
 		for _, console := range consoles {
-			recvIteration(ctx, s, f, th, console.ccd, console.magic, recvBlockNo)
+			recvIteration(ctx, s, th, console.ccd, console.magic, recvBlockNo)
 		}
 		// Transmit block on each UART.
 		for _, console := range consoles {
-			sendIteration(ctx, s, f, th, console.uart, console.magic, sendBlockNo)
+			sendIteration(ctx, s, th, console.uart, console.magic, sendBlockNo)
 		}
 	}
 	elapsed := time.Since(start)
@@ -177,21 +177,10 @@ func GscUartThroughput(ctx context.Context, s *testing.State) {
 		stop <- true
 		<-done
 	}
-
-	// Gracefully shut down connections.
-	for _, console := range consoles {
-		th.MustSucceed(console.ccd.ClearInput(ctx), "Error clearing buffer")
-	}
-
-	// Close all the console UART and USB endpoints.
-	for _, console := range consoles {
-		th.MustSucceed(console.ccd.Close(ctx), fmt.Sprintf("Failed to close %s ccd", console.name))
-		th.MustSucceed(console.uart.Close(ctx), fmt.Sprintf("Failed to close %s uart", console.name))
-	}
 }
 
 // recvIteration receives a block of data from one specific UART, verifying that it was as expected.
-func recvIteration(ctx context.Context, s *testing.State, f *fixture.Value, th utils.FirmwareTestingHelper, ccd ti50.SerialChannel, magic byte, iteration int) {
+func recvIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, ccd ti50.SerialChannel, magic byte, iteration int) {
 	databuf, err := ccd.ReadSerialBytes(ctx, uartThroughputBlockSize)
 	th.MustSucceed(err, "Read error")
 
@@ -216,7 +205,7 @@ func recvIteration(ctx context.Context, s *testing.State, f *fixture.Value, th u
 }
 
 // sendIteration sends a block of data on one specific UART.
-func sendIteration(ctx context.Context, s *testing.State, f *fixture.Value, th utils.FirmwareTestingHelper, uart ti50.SerialChannel, magic byte, iteration int) {
+func sendIteration(ctx context.Context, s *testing.State, th utils.FirmwareTestingHelper, uart ti50.SerialChannel, magic byte, iteration int) {
 	databuf := make([]byte, uartThroughputBlockSize)
 	var idx = 0
 	for idx < uartThroughputBlockSize {

@@ -14,10 +14,12 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/google/go-tpm/legacy/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
+	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -199,14 +201,18 @@ func (s GpioMonitorSession) Save(ctx context.Context, e GpioEvents, filename str
 
 // DevboardHelper wraps a DevBoard service and adds higher level commands that tests should use
 type DevboardHelper struct {
-	ti50.DevBoard
+	*remoteTi50.DUTControlAndreiboard
+	ti50.SerialChannel
 	FirmwareTestingHelperDelegate
 	TestbedType ti50.TestbedType
 }
 
-// NewDevboardHelper creates a new object from a DevBoard and testing state
-func NewDevboardHelper(f *fixture.Value, state FirmwareTestingHelperDelegate) DevboardHelper {
-	return DevboardHelper{f.DevBoard(), state, f.TestbedType}
+// NewDevboardHelper creates a new object from testing state provided by fixture
+func NewDevboardHelper(s *testing.State) DevboardHelper {
+	f := s.FixtValue().(*fixture.Value)
+	b := f.DevBoard()
+	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second)
+	return DevboardHelper{b, gscConsole, s, f.TestbedType}
 }
 
 // GscProperties returns an object that can be queried about varios aspects of the GSC currently
@@ -264,20 +270,22 @@ func (h DevboardHelper) GpioApplyStrap(ctx context.Context, straps ...ti50.GpioS
 	}
 }
 
-// ResetWithStraps applies straps while resetting the chip
-func (h DevboardHelper) ResetWithStraps(ctx context.Context, straps ...ti50.GpioStrap) error {
-	if _, err := h.PlainCommand(ctx, "gpio", "write", "RESET", "false"); err != nil {
-		return err
-	}
+// GpioRemoveStrap removes one or more known gpio strap setting
+func (h DevboardHelper) GpioRemoveStrap(ctx context.Context, straps ...ti50.GpioStrap) {
 	for _, strap := range straps {
-		if _, err := h.PlainCommand(ctx, "gpio", "apply", string(strap)); err != nil {
-			return err
+		if _, err := h.PlainCommand(ctx, "gpio", "remove", string(strap)); err != nil {
+			h.Fatalf("failed to remove gpio strap %s: %s", strap, err)
 		}
 	}
-	if _, err := h.PlainCommand(ctx, "gpio", "write", "RESET", "true"); err != nil {
-		return err
+}
+
+// ResetWithStraps applies straps while resetting the chip
+func (h DevboardHelper) ResetWithStraps(ctx context.Context, straps ...ti50.GpioStrap) {
+	h.GpioApplyStrap(ctx, ti50.StrapReset)
+	for _, strap := range straps {
+		h.GpioApplyStrap(ctx, strap)
 	}
-	return nil
+	h.GpioRemoveStrap(ctx, ti50.StrapReset)
 }
 
 type initialLevels struct {
@@ -404,14 +412,10 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	// Turn off the AP while reading the straps.
 	straps = append(straps, ti50.ApOff)
 
-	testing.ContextLogf(ctx, "Restarting Ti50 for %s TPM", bus)
-	h.GpioApplyStrap(ctx, straps...)
-
-	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
 	// Ensure the GSC UART is open and collecting results before we reset GSC to ensure that
 	// the UART messages right after GSC reset are captured.
-	th.MustSucceed(h.Open(ctx), "Could not open GSC UART")
-	th.MustSucceed(h.Reset(ctx), "Reset board")
+	testing.ContextLogf(ctx, "Restarting Ti50 for %s TPM", bus)
+	h.ResetWithStraps(ctx, straps...)
 	// TODO(b/305814102): check board properties on H1 to verify SPI vs I2C
 	if h.TestbedType != ti50.GscH1Shield {
 		// Ti50 prints "I2C" or "SPI" based on the TPM Bus type.
@@ -422,6 +426,7 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 			h.Fatalf("Wrong TPM strap: got %s, wanted %s", m[1], bus)
 		}
 	}
+	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to
@@ -467,4 +472,30 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	}
 
 	return tpmHandle
+}
+
+// WithApFlashAccess runs `f` with the proper setup and teardown to access the SPI flash chip.
+// This function asserts the SuzyQ strapping and leaves it in that state, so `gsctool` should work immediately.
+func (h DevboardHelper) WithApFlashAccess(ctx context.Context, i *ti50.CrOSImage, holdReset ti50.HoldReset, f func(ti50.ApFlash)) {
+	h.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+
+	if err := i.WaitUntilMatch(ctx, regexp.MustCompile(`USB:\s+Connected`), 20*time.Second); err != nil {
+		h.Fatalf("Expected to see Ti50 connect CCD USB: %s", err)
+	}
+	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: flashrom doesn't detect the device immediately.
+	flash := remoteTi50.NewApFlash(h.DUTControlAndreiboard)
+	if _, err := flash.FetchApFlashInfo(ctx); err != nil {
+		h.Fatalf("Could not get ap flash info: %s", err)
+	}
+	// TODO(kupiakos): consider warning/erroring if an unrecognized chip is seen
+	// on the andreishield, or pass this info to `f` so it can check itself.
+	f(flash)
+	// Reset the GSC
+	h.GpioApplyStrap(ctx, ti50.StrapReset)
+	if !holdReset {
+		h.GpioRemoveStrap(ctx, ti50.StrapReset)
+		if err := i.WaitUntilBooted(ctx); err != nil {
+			h.Fatalf("GSC did not restart: %s", err)
+		}
+	}
 }

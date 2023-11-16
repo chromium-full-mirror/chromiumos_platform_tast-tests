@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -50,9 +49,9 @@ func init() {
 
 func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(cCDCapabilitiesOpenFromUSB)
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	b := utils.NewDevboardHelper(s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	// Open CCD + chassis when finished
 	defer func() {
@@ -63,7 +62,6 @@ func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
 	}()
 
 	s.Log("Resetting GSC and starting up")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	b.GpioSet(ctx, ti50.GpioTi50ChassisOpen, true)
 	_ = b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
 

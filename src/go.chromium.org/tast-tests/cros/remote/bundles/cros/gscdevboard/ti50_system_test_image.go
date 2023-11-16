@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
-
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -46,41 +45,36 @@ func init() {
 }
 
 func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	b := utils.NewDevboardHelper(s)
 
-	f := s.FixtValue().(*fixture.Value)
-	board := utils.NewDevboardHelper(f, s)
+	th.MustSucceed(b.Open(ctx), "Open gsc UART")
+	defer b.Close(ctx)
 
-	err := board.Open(ctx)
-	if err != nil {
-		s.Fatal("Open console port: ", err)
-	}
-
-	if err = board.Reset(ctx); err != nil {
-		s.Fatal("Failed to reset: ", err)
-	}
+	b.ResetWithStraps(ctx)
 
 	// Deassert PLT_RST_L to prevent deep sleep while tests are running.
-	board.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 
 	hasKernelTests := s.Param().(bool)
 	if hasKernelTests {
 		s.Log("Kernel tests:")
-		checkTestResults(ctx, s, board, "KERNEL")
+		checkTestResults(ctx, s, b, "KERNEL")
 	}
 
 	s.Log("App tests:")
-	checkTestResults(ctx, s, board, "APP")
+	checkTestResults(ctx, s, b, "APP")
 }
 
-func checkTestResults(ctx context.Context, s *testing.State, board ti50.DevBoard, sectionName string) {
-	_, err := board.ReadSerialSubmatch(ctx, regexp.MustCompile("##"+regexp.QuoteMeta(sectionName)+" TESTS START"))
+func checkTestResults(ctx context.Context, s *testing.State, b utils.DevboardHelper, sectionName string) {
+	_, err := b.ReadSerialSubmatch(ctx, regexp.MustCompile("##"+regexp.QuoteMeta(sectionName)+" TESTS START"))
 	if err != nil {
 		s.Fatal("Failed to read section start: ", err)
 	}
 	endMarker := "##" + regexp.QuoteMeta(sectionName) + " TESTS END"
 	re := regexp.MustCompile("(" + endMarker + `|##TEST (SKIP|START) (\S+)\s)`)
 	for {
-		m, err := board.ReadSerialSubmatch(ctx, re)
+		m, err := b.ReadSerialSubmatch(ctx, re)
 		if err != nil {
 			s.Fatal("Failed to read next test: ", err)
 		}
@@ -92,7 +86,7 @@ func checkTestResults(ctx context.Context, s *testing.State, board ti50.DevBoard
 		testName := string(m[3])
 		result := "Skip"
 		if start != "SKIP" {
-			result = waitForTest(ctx, s, board, testName)
+			result = waitForTest(ctx, s, b, testName)
 		}
 		if result == "Fail" {
 			s.Errorf("%s test failed", testName)
@@ -100,7 +94,7 @@ func checkTestResults(ctx context.Context, s *testing.State, board ti50.DevBoard
 	}
 }
 
-func waitForTest(ctx context.Context, s *testing.State, board ti50.DevBoard, testName string) string {
+func waitForTest(ctx context.Context, s *testing.State, b utils.DevboardHelper, testName string) string {
 	lineRe := regexp.MustCompile(`.*[\r\n]+`)
 	slowCryptoRe := regexp.MustCompile("Long running SW crypto operation")
 	resultRe := regexp.MustCompile("##TEST RESULT " + regexp.QuoteMeta(testName) + `: (\S+)`)
@@ -111,7 +105,7 @@ func waitForTest(ctx context.Context, s *testing.State, board ti50.DevBoard, tes
 
 	var elapsedTime time.Duration
 	for ; elapsedTime < timeLimit; elapsedTime = time.Since(testTime) {
-		m, err := board.ReadSerialSubmatch(ctx, lineRe)
+		m, err := b.ReadSerialSubmatch(ctx, lineRe)
 		if err != nil {
 			// Tests might be silent for several seconds, so just
 			// try the read again.

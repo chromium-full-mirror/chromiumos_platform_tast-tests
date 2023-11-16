@@ -47,10 +47,10 @@ func flashImageContents(s *testing.State) []byte {
 
 // Ti50ApRoVerificationSuccess tests AP RO verification succeeds against a production image.
 func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
-	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(f, s)
+	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	i := ti50.MustOpenNewCrOSImage(ctx, b, s)
+	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	// First, provision the GSC and AP flash so it can run AP RO verification correctly.
 
@@ -70,7 +70,7 @@ func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
 	_, err = i.Command(ctx, "ap_ro_verify wpsr d4 fc 0 41")
 	th.MustSucceed(err, "Set wpsr")
 
-	th.MustSucceed(b.WithApFlashAccess(ctx, ti50.DoNotHoldInReset, func(flash ti50.ApFlash) {
+	b.WithApFlashAccess(ctx, i, ti50.DoNotHoldInReset, func(flash ti50.ApFlash) {
 		// Enable SW WP on the AP SPI chip so the status registers are as expected.
 		// This range represents the RO section of the AP flash.
 		// We are able to modify SW WP because HW WP is disabled due to some previous "ccd reset factory".
@@ -80,7 +80,7 @@ func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
 		// this will write the whole 32M image. The SW WP is ignored because HW WP is disabled.
 		s.Log("Flashing new AP image")
 		flash.WriteApFlash(ctx, flashImageContents(s))
-	}), "Access AP flash")
+	})
 
 	// `WithApFlashAccess` has reset the GSC, and we've waited until boot.
 	// AP RO verification has thus been run again.
