@@ -131,12 +131,22 @@ func testTextField(ctx context.Context, st pkTestState, s *testing.State, activi
 }
 
 func physicalKeyboardBasicEditingTest(ctx context.Context, st pkTestState, s *testing.State) {
+	// Ensure that default (English US) IME is installed and activated.
+	if err := ime.AddAndSetInputMethod(ctx, st.tconn, ime.ChromeIMEPrefix+ime.DefaultInputMethod.ID); err != nil {
+		s.Fatalf("Failed to set default ime %q: %v", ime.DefaultInputMethod, err)
+	}
+
 	if err := testTextField(ctx, st, s, ".MainActivity", "google", "google"); err != nil {
 		s.Error("Failed to type in normal text field: ", err)
 	}
 }
 
 func physicalKeyboardOnTypeNullTextFieldTest(ctx context.Context, st pkTestState, s *testing.State) {
+	// Ensure that default (English US) IME is installed and activated.
+	if err := ime.AddAndSetInputMethod(ctx, st.tconn, ime.ChromeIMEPrefix+ime.DefaultInputMethod.ID); err != nil {
+		s.Fatalf("Failed to set default ime %q: %v", ime.DefaultInputMethod, err)
+	}
+
 	if err := testTextField(ctx, st, s, ".NullEditTextActivity", "abcdef\b\b\bghi", "abcghi"); err != nil {
 		s.Error("Failed to type in TYPE_NULL text field: ", err)
 	}

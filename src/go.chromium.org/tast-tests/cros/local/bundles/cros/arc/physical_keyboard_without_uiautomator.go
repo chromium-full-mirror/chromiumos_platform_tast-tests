@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/a11y"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -69,6 +70,11 @@ func PhysicalKeyboardWithoutUiautomator(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
 	defer kb.Close(cleanupCtx)
+
+	// Ensure that default (English US) IME is installed and activated.
+	if err := ime.AddAndSetInputMethod(ctx, tconn, ime.ChromeIMEPrefix+ime.DefaultInputMethod.ID); err != nil {
+		s.Fatalf("Failed to set default ime %q: %v", ime.DefaultInputMethod, err)
+	}
 
 	// Enable an a11y feature to enable ArcAccessibilityHelperService.
 	// TODO(yhanada): Add a dedicated autotestPrivate API to enable it later.

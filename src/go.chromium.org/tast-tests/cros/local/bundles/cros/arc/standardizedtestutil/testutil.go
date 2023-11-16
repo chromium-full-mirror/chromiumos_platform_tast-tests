@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
+	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -210,6 +211,11 @@ func runTest(ctx context.Context, s *testing.State, apkName, appPkgName, appActi
 			s.Error("Failed to reset key repeat: ", err)
 		}
 	}(cleanupCtx)
+
+	// Ensure that default (English US) IME is installed and activated.
+	if err := ime.AddAndSetInputMethod(ctx, tconn, ime.ChromeIMEPrefix+ime.DefaultInputMethod.ID); err != nil {
+		s.Fatalf("Failed to set default ime %q: %v", ime.DefaultInputMethod, err)
+	}
 
 	// Run the different test cases.
 	for idx, windowState := range t.WindowStates {
