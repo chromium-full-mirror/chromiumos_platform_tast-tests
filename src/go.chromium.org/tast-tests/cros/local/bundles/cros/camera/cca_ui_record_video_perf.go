@@ -114,7 +114,7 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Switch to the 60 FPS button for 4K resolution.
-	if err := switchTo60FPS(ctx, app); err != nil {
+	if err := app.SwitchTo60FPS(ctx); err != nil {
 		s.Fatal("Failed to switch to 60 fps: ", err)
 	}
 
@@ -184,20 +184,4 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 	if err := perfValues.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save perf metrics: ", err)
 	}
-}
-
-func switchTo60FPS(ctx context.Context, app *cca.App) error {
-	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
-		return err
-	}
-	if err := app.OpenSettingMenu(ctx, cca.VideoResolutionMenu); err != nil {
-		return err
-	}
-	if err := app.ClickWithIndex(ctx, cca.FPS60Buttons, 0); err != nil {
-		return err
-	}
-	if err := app.WaitForVisibleState(ctx, cca.SettingsButton, true); err != nil {
-		return err
-	}
-	return nil
 }

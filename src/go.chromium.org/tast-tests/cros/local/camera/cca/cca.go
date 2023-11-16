@@ -1570,3 +1570,25 @@ func (a *App) EnableGa4Metrics(ctx context.Context, url string) error {
 	}
 	return nil
 }
+
+// SwitchTo60FPS switch current camera's FPS setting to 60.
+func (a *App) SwitchTo60FPS(ctx context.Context) error {
+	if err := a.OpenSettingMenu(ctx, MainMenu); err != nil {
+		return errors.Wrap(err, "failed to open main settings menu")
+	}
+
+	if err := a.OpenSettingMenu(ctx, VideoResolutionMenu); err != nil {
+		return errors.Wrap(err, "failed to open video resolution settings menu")
+	}
+
+	if err := a.ClickWithIndex(ctx, FPS60Buttons, 0); err != nil {
+		return errors.Wrap(err, "failed to click 60 FPS button of the first resolution")
+	}
+	if err := a.WaitForVisibleState(ctx, SettingsButton, true); err != nil {
+		return errors.Wrap(err, "settings button is not shown")
+	}
+	if err := a.WaitForVideoActive(ctx); err != nil {
+		return errors.Wrap(err, "preview is inactive after switching FPS setting")
+	}
+	return nil
+}

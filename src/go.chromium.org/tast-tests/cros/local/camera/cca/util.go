@@ -88,6 +88,34 @@ func VideoDurationFromHeader(ctx context.Context, path string) (time.Duration, e
 	return duration, nil
 }
 
+// BaseVideoFPS returns the base frame rate of the video, guessed from the video's time base and each frame's timer ticks (see https://github.com/FFmpeg/FFmpeg/blob/release/5.1/libavformat/avformat.h#L1099).
+func BaseVideoFPS(ctx context.Context, path string) (float64, error) {
+	output, err := videoInfo(ctx, "stream=r_frame_rate", path)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get info of base video FPS")
+	}
+	return parseFraction(output)
+}
+
+func parseFraction(fraction string) (float64, error) {
+	parts := strings.Split(fraction, "/")
+	if len(parts) != 2 {
+		return 0, errors.New("invalid faction format")
+	}
+
+	numerator, err := strconv.ParseFloat(parts[0], 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse numerator")
+	}
+
+	denominator, err := strconv.ParseFloat(parts[1], 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse denominator")
+	}
+
+	return numerator / denominator, nil
+}
+
 // videoInfo returns information of a video by ffprobe. See https://ffmpeg.org/ffprobe.html#Main-options for the definition of entries.
 func videoInfo(ctx context.Context, entry, path string) (string, error) {
 	f, err := os.Open(path)
