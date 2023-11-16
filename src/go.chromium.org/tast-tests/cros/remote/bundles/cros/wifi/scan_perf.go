@@ -13,11 +13,13 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -31,6 +33,8 @@ type scanPerfTestCase struct {
 	apOpts []ap.Option
 	// useRelaxedThreshold indicates whether to allow extra time for WiFi scan.
 	useRelaxedThreshold bool
+	// isPassive6GHzScan indicates WiFi RequestScan type, true = passive 6GHz-only scan, false = active full scan
+	isPassive6GHzScan bool
 }
 
 // TODO(b/263890395): The following chipsets are known to fail the AVL. Remove
@@ -77,6 +81,15 @@ func init() {
 				Val: scanPerfTestCase{
 					useRelaxedThreshold: true,
 				},
+			},
+			{
+				Name: "passive6ghz",
+				Val: scanPerfTestCase{
+					useRelaxedThreshold: false,
+					isPassive6GHzScan:   true,
+				},
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
 			{
 				// This variant runs on unstable chipsets with default parameters.
@@ -127,8 +140,8 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		scanTimes = 5
 
 		// Upper bounds for different scan methods.
-		fgFullScanTimeout = 10 * time.Second
-		bgFullScanTimeout = 15 * time.Second
+		fgFullScanTimeout = 15 * time.Second
+		bgFullScanTimeout = 20 * time.Second
 		pollTimeout       = 15 * time.Second
 
 		// Thresholds for scan tests.
@@ -138,6 +151,9 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		// TODO(b/256486257): Move these 6E requirements to new test variants when new AVL requirements are settled.
 		fgFullScanThresholdWiFi6ERelaxed = 15 * time.Second
 		bgFullScanThresholdWiFi6ERelaxed = 15 * time.Second
+		// Thresholds for passive scan tests.
+		fgPassiveScanThreshold = 8 * time.Second
+		bgPassiveScanThreshold = 14 * time.Second
 	)
 
 	// TODO(b/253096914): The following chipsets are known to have slower bg scan times.
@@ -184,6 +200,8 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			s.Error("Failed to reset the regulatory domain: ", err)
 		}
 	}(ctx)
+	ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
+	defer cancel()
 
 	r, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
@@ -203,6 +221,13 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	options := wificell.DefaultOpenNetworkAPOptions()
 	tc := s.Param().(scanPerfTestCase)
 	options = append(options, tc.apOpts...)
+
+	var requestScanType string
+	if tc.isPassive6GHzScan {
+		requestScanType = shillconst.WiFiRequestScanTypePassive
+	} else {
+		requestScanType = shillconst.WiFiRequestScanTypeActive
+	}
 
 	apIface, err := tf.ConfigureAP(ctx, options, nil)
 	if err != nil {
@@ -233,6 +258,19 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	defer stop()
 
 	runner := wpacli.NewRunner(&cmd.RemoteCmdRunner{Host: s.DUT().Conn()})
+
+	originalRequestScanType, err := tf.WifiClient().GetRequestScanTypeProperty(ctx)
+	if err != nil {
+		s.Fatal("Failed to get WiFi RequestScan type: ", err)
+	}
+	defer func(ctx context.Context) {
+		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, originalRequestScanType); err != nil {
+			s.Errorf("Failed to reset WiFi RequestScan type to %s: %v", originalRequestScanType, err)
+		}
+		s.Log("Reset WiFi RequestScan type to ", originalRequestScanType)
+	}(ctx)
+	ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
+	defer cancel()
 
 	logDuration := func(label string, duration time.Duration) {
 		pv.Set(perf.Metric{
@@ -299,10 +337,13 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 				break
 			}
 		}
-
-		if err := runner.CheckScanResults(ctx, ssid); err != nil {
-			return 0, errors.Wrap(err, "failed to discover AP")
+		// If the DUT performs passive 6GHz-only scan, it doesn't scan legacy channels and thus cannot discover the AP on 5 GHz band
+		if requestScanType != shillconst.WiFiRequestScanTypePassive {
+			if err := runner.CheckScanResults(ctx, ssid); err != nil {
+				return 0, errors.Wrap(err, "failed to discover AP")
+			}
 		}
+
 		return scanTime, nil
 	}
 
@@ -310,12 +351,18 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	count := 0
 	var sum time.Duration
 	threshold := fgFullScanThreshold
-	if tc.useRelaxedThreshold {
+	if requestScanType == shillconst.WiFiRequestScanTypePassive {
+		threshold = fgPassiveScanThreshold
+	} else if tc.useRelaxedThreshold {
 		if _, ok := wifi6eRelaxedChipsets[devID]; ok {
 			threshold = fgFullScanThresholdWiFi6ERelaxed
 			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
 	}
+	if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, requestScanType); err != nil {
+		s.Fatalf("Failed to set WiFi RequestScan type to %s: %v", requestScanType, err)
+	}
+	s.Log("Set WiFi RequestScan type to ", requestScanType)
 	for i := 1; i <= scanTimes; i++ {
 		if duration, err := pollTimedScan(ctx, fgFullScanTimeout, pollTimeout, ssid); err != nil {
 			s.Error("Failed to perform full channel scan: ", err)
@@ -348,6 +395,14 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// If the WiFi RequestScan type is passive, switch to active scan so that the DUT can discover and connect to the AP
+	if requestScanType == shillconst.WiFiRequestScanTypePassive {
+		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, shillconst.WiFiRequestScanTypeActive); err != nil {
+			s.Fatalf("Failed to set WiFi RequestScan type to %s: %v", shillconst.WiFiRequestScanTypeActive, err)
+		}
+		s.Log("Set WiFi RequestScan type to active to discover and connect to the AP")
+	}
+
 	// DUT connecting to the AP.
 	if _, err := tf.ConnectWifiAP(ctx, apIface); err != nil {
 		s.Fatal("DUT: failed to connect to WiFi: ", err)
@@ -364,7 +419,9 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	count = 0
 	sum = 0
 	threshold = bgFullScanThreshold
-	if tc.useRelaxedThreshold {
+	if requestScanType == shillconst.WiFiRequestScanTypePassive {
+		threshold = bgPassiveScanThreshold
+	} else if tc.useRelaxedThreshold {
 		if _, ok := bgRelaxedChipsets[devID]; ok {
 			threshold = bgFullScanThresholdRelaxed
 			s.Logf("There is a known issue (b/253096914) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
@@ -372,6 +429,12 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			threshold = bgFullScanThresholdWiFi6ERelaxed
 			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
+	}
+	if requestScanType == shillconst.WiFiRequestScanTypePassive {
+		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, requestScanType); err != nil {
+			s.Fatalf("Failed to set WiFi RequestScan type to %s: %v", requestScanType, err)
+		}
+		s.Log("Set WiFi RequestScan type to ", requestScanType)
 	}
 	for i := 1; i <= scanTimes; i++ {
 		if duration, err := pollTimedScan(ctx, bgFullScanTimeout, pollTimeout, ssid); err != nil {
