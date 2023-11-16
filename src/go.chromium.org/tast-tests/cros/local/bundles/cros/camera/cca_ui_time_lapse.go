@@ -167,7 +167,7 @@ func validateTimeLapseDuration(ctx context.Context, app *cca.App, fileName strin
 	if err != nil {
 		return errors.Wrap(err, "failed to get file path in saved path")
 	}
-	duration, err := cca.VideoDuration(ctx, filePath)
+	duration, err := cca.VideoDurationFromHeader(ctx, filePath)
 	if err != nil {
 		return err
 	}

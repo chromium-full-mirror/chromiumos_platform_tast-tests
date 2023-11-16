@@ -150,7 +150,7 @@ func (v *video) stop(ctx context.Context, app *cca.App) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get file path in saved path")
 	}
-	duration, err := cca.VideoDuration(ctx, path)
+	duration, err := cca.VideoDurationFromHeader(ctx, path)
 	if err != nil {
 		return err
 	}
