@@ -28,7 +28,7 @@ chromeos {
       # only imported by firmware tests.
       # TODO(b/291923441): Enforce this dep graph constraint via linting.
       path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/common/servo/.+"
-      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote|common)/firmware/.+"
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote|common|services)/firmware/.+"
     }
     source_test_plans {
       test_plan_starlark_files {
@@ -38,7 +38,7 @@ chromeos {
       }
       # Firmware tests and libraries don't need to run in VMs.
       path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/common/servo/.+"
-      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote|common)/firmware/.+"
+      path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote|common|services)/firmware/.+"
       path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/(local|remote)/bundles/cros/firmware/.+"
       path_regexp_excludes: "src/go\\.chromium\\.org/tast-tests/cros/remote/bundles/cros/gscdevboard"
     }
