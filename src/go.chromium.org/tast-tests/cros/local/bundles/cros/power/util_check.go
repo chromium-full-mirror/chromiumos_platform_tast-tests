@@ -23,8 +23,9 @@ func init() {
 			"yanyeli@google.com",
 		},
 		// This test collects hardware info that does not apply to virtual
-		// machines (betty, tast-vm).
-		SoftwareDeps: []string{"crossystem"},
+		// machines (betty, tast-vm) and devices that don't have ChromeOS
+		// firmware (reven).
+		SoftwareDeps: []string{"crossystem", "chromeos_firmware"},
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      1 * time.Minute,
 	})
