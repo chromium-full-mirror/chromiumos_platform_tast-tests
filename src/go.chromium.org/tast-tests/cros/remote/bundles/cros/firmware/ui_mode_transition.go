@@ -91,6 +91,11 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 			if err := ms.EnableRecMode(ctx, servo.PowerStateRec, servo.USBMuxHost); err != nil {
 				s.Fatal("Failed to enable recovery mode: ", err)
 			}
+			s.Logf("Waiting for %s (firmware screen)", h.Config.FirmwareScreen)
+			// GoBigSleepLint: Allow time for DUT to reach firmware screen.
+			if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+				s.Fatal("Failed to wait for firmware screen: ", err)
+			}
 			if err := triggerRecToDev(ctx); err != nil {
 				s.Fatal("Failed to trigger recovery to dev: ", err)
 			}
