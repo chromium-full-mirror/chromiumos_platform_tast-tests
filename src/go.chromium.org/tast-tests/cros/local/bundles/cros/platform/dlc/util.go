@@ -35,7 +35,7 @@ const (
 	TestDir     = "/usr/local/dlc"
 	TestID1     = "test1-dlc"
 	TestID2     = "test2-dlc"
-	TestPackage = "test-package"
+	TestPackage = "package"
 )
 
 // ListOutput holds the output from running `dlcservice_util --list`.
