@@ -23,6 +23,10 @@ var (
 	// the keyboard settings page.
 	CustomizeKeyboardKeys = nodewith.ClassName(
 		"hr bottom-divider remap-keyboard-keys-row-internal").Role(role.GenericContainer)
+	// OverviewMode is the a finder for to confirm if the over view mode is enabled.
+	OverviewMode = nodewith.Name("Desk: Desk 1").Role(role.Button)
+	// Dropdown is the finder for the action drop down list in the customize mouse button page.
+	Dropdown = nodewith.ClassName("md-select").Role(role.ComboBoxSelect)
 )
 
 // List of modifier keys.
@@ -51,4 +55,15 @@ const (
 	F11ShiftShortcut = "shift + back"
 	F12              = "F12"
 	F12AltShortcut   = "alt + forward"
+)
+
+// Button or node names in Mouse device section ui.
+const (
+	MouseLabel  	= "Tast virtual mouse"
+	MiddleButton    = "Middle Button"
+	OtherButton     = "Other Button 1"
+	EditButton      = "edit-button"
+	SaveButton 	    = "Save"
+	RenamedButton1  = "RenamedButton 1"
+	RenamedButton2  = "RenamedButton 2"
 )
