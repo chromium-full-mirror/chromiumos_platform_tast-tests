@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -40,6 +41,7 @@ func init() {
 			"video_conference_cq_critical",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
+		TestBedDeps:  []string{tbdep.Cbx(false)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Fixture:      fixture.LoggedInWithFakeHALAndEffectsEnabled,

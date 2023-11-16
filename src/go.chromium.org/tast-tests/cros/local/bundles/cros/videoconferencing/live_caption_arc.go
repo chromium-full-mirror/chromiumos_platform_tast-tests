@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil/vlc"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
@@ -44,6 +45,7 @@ func init() {
 			"video_conference_per_build",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
+		TestBedDeps:  []string{tbdep.Cbx(false)},
 		Data:         []string{data.SpeechInputFile},
 		Fixture:      fixture.GAIALoggedInARCWithInternalCameraAndEffectsEnabled,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},

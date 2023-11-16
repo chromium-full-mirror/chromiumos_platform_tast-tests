@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
@@ -44,6 +45,7 @@ func init() {
 			"video_conference_per_build",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
+		TestBedDeps:  []string{tbdep.Cbx(false)},
 		Data:         []string{data.SpeechInputFile},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,

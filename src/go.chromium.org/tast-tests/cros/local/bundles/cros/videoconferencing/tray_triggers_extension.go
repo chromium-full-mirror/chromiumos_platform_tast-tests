@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakeextension"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -36,6 +37,7 @@ func init() {
 			"group:video_conference",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
+		TestBedDeps:  []string{tbdep.Cbx(false)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Params: []testing.Param{

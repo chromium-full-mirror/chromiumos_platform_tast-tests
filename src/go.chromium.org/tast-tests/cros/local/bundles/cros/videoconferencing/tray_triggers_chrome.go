@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/zoom"
@@ -60,6 +61,7 @@ func init() {
 			"group:video_conference", "video_conference_per_build", "group:external-dependency",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
+		TestBedDeps:  []string{tbdep.Cbx(false)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		SearchFlags: []*testing.StringPair{

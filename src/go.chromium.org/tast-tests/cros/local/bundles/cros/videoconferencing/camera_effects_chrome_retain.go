@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/fakehtml"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -40,6 +41,7 @@ func init() {
 			"group:video_conference", "video_conference_per_build",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
+		TestBedDeps: []string{tbdep.Cbx(false)},
 		Data: []string{
 			"effects_frame_metrics.js",
 			"effects_video_script.html",
