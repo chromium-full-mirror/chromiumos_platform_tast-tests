@@ -150,6 +150,15 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 	return webMFileName, webMJSONFileName
 }
 
+func hardwareDeps(height int) string {
+	// Some grunt and octopus devices fails due to disk space shortage in 1080p and 2160p test cases.
+	// Set 24GB requirement.
+	if height >= 1080 {
+		return "hwdep.D(hwdep.MinStorage(24))"
+	}
+	return ""
+}
+
 func TestEncodeAccelPerfParams(t *testing.T) {
 	type encodeAccelPerfParam struct {
 		Name         string
@@ -162,6 +171,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		Attr         []string
 		Data         []string
 		SoftwareDeps []string
+		HardwareDeps string
 	}
 	type testPatterns struct {
 		title    string
@@ -197,6 +207,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 					Attr:         []string{"graphics_perbuild"},
 					Data:         []string{webMFile, webMJSONFile},
 					SoftwareDeps: encodePerfSoftwareDeps(profile, height, false),
+					HardwareDeps: hardwareDeps(height),
 				}
 				params = append(params, param)
 			}
@@ -243,6 +254,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			Attr:         []string{"graphics_perbuild"},
 			Data:         []string{webMFile, webMJSONFile},
 			SoftwareDeps: deps,
+			HardwareDeps: hardwareDeps(height),
 		}
 		params = append(params, param)
 	}
@@ -261,6 +273,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			Attr:         []string{"graphics_perbuild"},
 			Data:         []string{webMFile, webMJSONFile},
 			SoftwareDeps: encodePerfSoftwareDeps(profile, height, true),
+			HardwareDeps: hardwareDeps(height),
 		}
 		params = append(params, param)
 	}
@@ -281,6 +294,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			Attr:         []string{"graphics_weekly"},
 			Data:         []string{webMFile, webMJSONFile},
 			SoftwareDeps: encodePerfSoftwareDeps(profile, height, true),
+			HardwareDeps: hardwareDeps(height),
 		}
 		params = append(params, param)
 	}
@@ -302,6 +316,9 @@ func TestEncodeAccelPerfParams(t *testing.T) {
             ExtraAttr: {{ .Attr | fmt}},
             ExtraData: {{ .Data | fmt}},
             ExtraSoftwareDeps: {{ .SoftwareDeps | fmt}},
+            {{ if .HardwareDeps }}
+            ExtraHardwareDeps : {{ .HardwareDeps }},
+            {{ end }}
 		},
 		{{ end }}`, params)
 	genparams.Ensure(t, "encode_accel_perf.go", code)
