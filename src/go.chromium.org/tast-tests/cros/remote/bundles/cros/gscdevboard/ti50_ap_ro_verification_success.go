@@ -59,7 +59,7 @@ func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
 	// This is a write-once field, so this is a best-effort provisioning.
 	// If this fails, then the test will fail since the GSCVD won't be accepted.
 
-	_, err := i.Command(ctx, "bid ZZCR 0")
+	_, err := i.Command(ctx, "bid ZZCR 0x7fffffff")
 	th.MustSucceed(err, "Set BID")
 
 	// Use 4 byte addressing since this is a 32 MiB chip.

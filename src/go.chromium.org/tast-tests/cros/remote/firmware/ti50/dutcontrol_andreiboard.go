@@ -22,6 +22,7 @@ import (
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -389,6 +390,7 @@ func (a *DUTControlAndreiboard) WithApFlashAccess(ctx context.Context, holdReset
 	if err := i.WaitUntilMatch(ctx, regexp.MustCompile(`USB:\s+Connected`), 20*time.Second); err != nil {
 		return errors.Wrap(err, "expected to see Ti50 connect CCD USB")
 	}
+	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: flashrom doesn't detect the device immediately.
 	flash := &andreiboardApFlash{ab: a}
 	if _, err := flash.FetchApFlashInfo(ctx); err != nil {
 		return err
