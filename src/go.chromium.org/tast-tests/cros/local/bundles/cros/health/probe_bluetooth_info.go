@@ -83,7 +83,7 @@ func init() {
 			},
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithBlueZ",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			Name: "floss",
 			Val: bluetoothInfoTestParams{
@@ -91,7 +91,7 @@ func init() {
 			},
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}},
 	})

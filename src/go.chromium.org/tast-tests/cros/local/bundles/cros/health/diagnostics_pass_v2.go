@@ -85,7 +85,7 @@ func init() {
 			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
 			// TODO(b/306101885): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: byronlee@google.com
 			Name: "bluetooth_power",
@@ -93,7 +93,7 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}, {
 			// Contact: byronlee@google.com
@@ -102,7 +102,7 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}, {
 			// Contact: byronlee@google.com
@@ -111,7 +111,7 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}}})
 }
