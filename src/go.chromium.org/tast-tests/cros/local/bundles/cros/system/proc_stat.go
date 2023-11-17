@@ -25,7 +25,7 @@ func init() {
 		Attr: []string{
 			"group:mainline",
 			"group:hw_agnostic",
-			"informational", "group:criticalstaging", // TODO(b/285592661): Promote.
+			"informational", // TODO(b/285592661): Promote.
 		},
 		Timeout: 10 * time.Second,
 	})
