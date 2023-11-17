@@ -87,7 +87,7 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 	brokenToDevWaitConnectCtx, cancelWaitConnectBrokenToDev := context.WithTimeout(ctx, firmware.DevScreenShortDelay+h.Config.DelayRebootToPing)
 	defer cancelWaitConnectBrokenToDev()
 
-	err = h.WaitConnect(brokenToDevWaitConnectCtx)
+	err = h.WaitConnect(brokenToDevWaitConnectCtx, firmware.ResetEthernetDongle)
 	switch err.(type) {
 	case nil:
 		s.Fatal("DUT woke up unexpectedly")
@@ -104,7 +104,7 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 	s.Log("Reconnecting to the DUT")
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 

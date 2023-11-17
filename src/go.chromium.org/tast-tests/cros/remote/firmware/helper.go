@@ -1574,7 +1574,7 @@ func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bo
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 	defer cancelWaitConnect()
 
-	err := h.WaitConnect(waitConnectCtx)
+	err := h.WaitConnect(waitConnectCtx, ResetEthernetDongle)
 	switch err.(type) {
 	case nil:
 		if expBoot {
