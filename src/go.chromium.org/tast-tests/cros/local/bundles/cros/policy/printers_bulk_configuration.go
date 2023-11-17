@@ -70,13 +70,13 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 	}
 
 	// All the common policies that define the printers configuration, allowlist and blocklist.
-	// PrintersBulkConfiguration configures 4 printers with the following names: "wl", "bl", "both", "other".
+	// PrintersBulkConfiguration configures 4 printers with the following names: "al", "bl", "both", "other".
 	commonPolicies := []policy.Policy{
-		&policy.PrintersBulkAllowlist{Val: []string{"both", "wl"}},
+		&policy.PrintersBulkAllowlist{Val: []string{"both", "al"}},
 		&policy.PrintersBulkBlocklist{Val: []string{"both", "bl"}},
 		&policy.PrintersBulkConfiguration{Val: &policy.PrintersBulkConfigurationValue{
-			Url:  "https://storage.googleapis.com/chromiumos-test-assets-public/enterprise/printers.json",
-			Hash: "7a052c5e4f23c159668148df2a3c202bed4d65749cab5ecd0fa7db211c12a3b8",
+			Url:  "https://storage.googleapis.com/chromiumos-test-assets-public/enterprise/managed_printers.json",
+			Hash: "5085c7d240b89aac22ed52bfa48a046ae36e8a8389664f1d834f68ae5f3fbde7",
 		}},
 		// UserPrintersAllowed is set to mitigate against finding other printers in the lab network (see b/284300892).
 		&policy.UserPrintersAllowed{Val: false},
@@ -89,7 +89,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 	}{
 		{
 			name:        "all_except_blocklist",
-			expectedIDs: []string{"wl", "other"},
+			expectedIDs: []string{"al", "other"},
 			policies: append(
 				commonPolicies,
 				&policy.PrintersBulkAccessMode{Val: 0},
@@ -97,7 +97,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 		},
 		{
 			name:        "allowlist",
-			expectedIDs: []string{"wl", "both"},
+			expectedIDs: []string{"al", "both"},
 			policies: append(
 				commonPolicies,
 				&policy.PrintersBulkAccessMode{Val: 1},
@@ -105,7 +105,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 		},
 		{
 			name:        "all",
-			expectedIDs: []string{"bl", "wl", "other", "both"},
+			expectedIDs: []string{"bl", "al", "other", "both"},
 			policies: append(
 				commonPolicies,
 				&policy.PrintersBulkAccessMode{Val: 2},
@@ -113,7 +113,7 @@ func PrintersBulkConfiguration(ctx context.Context, s *testing.State) {
 		},
 		{
 			name:        "unset",
-			expectedIDs: []string{"bl", "wl", "other", "both"},
+			expectedIDs: []string{"bl", "al", "other", "both"},
 			policies: append(
 				commonPolicies,
 				&policy.PrintersBulkAccessMode{Stat: policy.StatusUnset},
