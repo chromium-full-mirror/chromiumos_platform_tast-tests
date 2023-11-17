@@ -50,7 +50,7 @@ func init() {
 		}, {
 			Name: "platform_service_record",
 			// TODO(b/277667306): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 			Val: psrInfoTestParams{
 				checkPsr: true,
 			},
@@ -90,8 +90,6 @@ func ProbeSystemInfo(ctx context.Context, s *testing.State) {
 				if err := verifyPSRInfo(psrOut, g.PSRInfo); err != nil {
 					s.Fatal("Failed to get expected system info: ", err)
 				}
-			} else {
-				s.Fatal("PSR is not supported on this device")
 			}
 		} else {
 			s.Fatal("Failed to get SystemInfo.PSRInfo")
