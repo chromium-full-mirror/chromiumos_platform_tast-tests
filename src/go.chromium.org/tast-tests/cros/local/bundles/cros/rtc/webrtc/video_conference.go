@@ -149,7 +149,7 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 	}
 
 	// GoBigSleepLint: Sleep to measure the performance metrics
-	if err := testing.Sleep(ctx, profileInterval*2); err != nil {
+	if err := testing.Sleep(ctx, profileInterval); err != nil {
 		return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
 	}
 
