@@ -30,7 +30,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Virtualization > VM Technology
 		BugComponent: "b:930563",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"android_vm", "chrome", "crosvm_swap"},
 		Fixture:      "arcBootedBoostedVmmSwap",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,

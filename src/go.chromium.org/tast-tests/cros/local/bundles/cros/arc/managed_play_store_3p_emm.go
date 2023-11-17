@@ -46,7 +46,7 @@ func init() {
 			},
 			{
 				Name:              "vm",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 			}},
 	})

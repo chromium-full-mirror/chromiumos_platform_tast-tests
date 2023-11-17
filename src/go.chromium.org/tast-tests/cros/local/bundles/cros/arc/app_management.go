@@ -44,7 +44,7 @@ func init() {
 			"tsergeant@chromium.org",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>AppManagement",
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		// Read-only permissions is currently only enabled on ARC-T.
 		SoftwareDeps: []string{"chrome", "android_vm_t"},
 		Fixture:      "arcBooted",
