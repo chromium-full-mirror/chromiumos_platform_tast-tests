@@ -1,0 +1,7 @@
+set noparent
+
+# ChromeOS Assistant team
+include /src/go.chromium.org/tast-tests/cros/local/assistant/OWNERS
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
