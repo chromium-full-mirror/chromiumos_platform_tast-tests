@@ -29,20 +29,17 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_bios"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		SoftwareDeps: []string{"wilco"},
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{{
-			// TODO: When stable, change firmware_unstable to a different attr.
-			Name:      "verify_recovery_screen",
-			Val:       true,
-			ExtraAttr: []string{"firmware_unstable"},
-			Timeout:   40 * time.Minute,
+			Name:    "verify_recovery_screen",
+			Val:     true,
+			Timeout: 40 * time.Minute,
 		}, {
-			Val:               false,
-			ExtraAttr:         []string{"firmware_bios"},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
-			Timeout:           30 * time.Minute,
+			Val:     false,
+			Timeout: 30 * time.Minute,
 		}},
 	})
 }
