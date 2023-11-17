@@ -129,7 +129,7 @@ func DecodeInI420WithNumFrames(ctx context.Context, webMFile string, numFrames i
 		return "", err
 	}
 	if yuvHash != expectedHash {
-		return "", errors.Errorf("unexpected MD5 value of %s (got %s, want %s)", yuvName, yuvHash, md5OfYUV[yuvName])
+		return "", errors.Errorf("unexpected MD5 value of %s (got %s, want %s)", yuvName, yuvHash, expectedHash)
 	}
 
 	keep = true
