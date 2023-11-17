@@ -68,16 +68,20 @@ package perf
 
 import (
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math"
+	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
 	"time"
 
 	"github.com/google/uuid"
+
+	"golang.org/x/exp/maps"
 
 	"go.chromium.org/tast-tests/cros/common/perf/perfpb"
 	"go.chromium.org/tast/core/errors"
@@ -390,6 +394,8 @@ const (
 	Crosbolt Format = iota
 	// Chromeperf is used for ChromeOS infra dashboards (go/chromeperf).
 	Chromeperf
+	// DebugCSV is used for manual debugging and viewing result summary.
+	DebugCSV
 )
 
 func (format Format) fileName() (string, error) {
@@ -398,6 +404,8 @@ func (format Format) fileName() (string, error) {
 		return "results-chart.json", nil
 	case Chromeperf:
 		return "perf_results.json", nil
+	case DebugCSV:
+		return "debug_summary.csv", nil
 	default:
 		return "", errors.Errorf("invalid perf format: %d", format)
 	}
@@ -610,6 +618,72 @@ func (p *Values) SaveAs(ctx context.Context, outDir string, format Format) error
 	}
 
 	return ioutil.WriteFile(filepath.Join(outDir, fileName), json, 0644)
+}
+
+// SaveAsDebugCSV saves a CSV file of the value statistics to outDir. This is
+// meant to help with manual debugging.
+func (p *Values) SaveAsDebugCSV(outDir string) error {
+	fileName, err := DebugCSV.fileName()
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filepath.Join(outDir, fileName))
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+	headers := []string{"name", "mean", "stddev", "min", "max", "# data"}
+	if err = writer.Write(headers); err != nil {
+		return errors.Wrapf(err, "Encountered error while writing %q", headers)
+	}
+
+	metrics := maps.Keys(p.GetValues())
+	sort.Slice(metrics, func(i, j int) bool {
+		return metrics[i].Name < metrics[j].Name
+	})
+	for _, metric := range metrics {
+		value := p.GetValueByMetric(metric)
+		line := []string{metric.Name}
+		if len(value) == 0 {
+			nan := "NaN"
+			line = append(line, nan, nan, nan, nan, "0")
+		} else {
+			sum := 0.0
+			min := math.Inf(1)
+			max := math.Inf(-1)
+			for _, n := range value {
+				sum += n
+				if n < min {
+					min = n
+				}
+				if n > max {
+					max = n
+				}
+			}
+			mean := sum / float64(len(value))
+			stddev := 0.0
+			for _, n := range value {
+				stddev += math.Pow((n - mean), 2)
+			}
+			stddev = math.Sqrt(stddev / float64(len(value)))
+			line = append(
+				line,
+				fmt.Sprintf("%f", mean),
+				fmt.Sprintf("%f", stddev),
+				fmt.Sprintf("%f", min),
+				fmt.Sprintf("%f", max),
+				fmt.Sprintf("%d", len(value)),
+			)
+		}
+		if err := writer.Write(line); err != nil {
+			return errors.Wrapf(err, "Encountered error while writing %q", line)
+		}
+	}
+	return nil
 }
 
 func validate(s Metric, vs []float64) {

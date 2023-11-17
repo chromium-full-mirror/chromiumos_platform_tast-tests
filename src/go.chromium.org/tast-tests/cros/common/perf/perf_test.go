@@ -6,6 +6,7 @@ package perf
 
 import (
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"io/ioutil"
 	"os"
@@ -61,6 +62,55 @@ func saveAndCompare(t *testing.T, p *Values, goldenPath string) {
 	path := filepath.Join(td, "results-chart.json")
 	if err := jsonEquals(path, goldenPath); err != nil {
 		data, _ := ioutil.ReadFile(path)
+		t.Fatalf("%v; output:\n%s", err, string(data))
+	}
+}
+
+func loadCSV(path string) ([][]string, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed opening %s", path)
+	}
+	defer f.Close()
+
+	r := csv.NewReader(f)
+	table, err := r.ReadAll()
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed reading %s", path)
+	}
+
+	return table, nil
+}
+
+func csvEquals(path1, path2 string) error {
+	v1, err := loadCSV(path1)
+	if err != nil {
+		return err
+	}
+	v2, err := loadCSV(path2)
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(v1, v2) {
+		return errors.New("CSV files differ")
+	}
+	return nil
+}
+
+func saveAndCompareCSV(t *testing.T, p *Values, goldenPath string) {
+	t.Helper()
+
+	td := testutil.TempDir(t)
+	defer os.RemoveAll(td)
+
+	if err := p.SaveAsDebugCSV(td); err != nil {
+		t.Fatal("Failed saving CSV: ", err)
+	}
+
+	path := filepath.Join(td, "debug_summary.csv")
+	if err := csvEquals(path, goldenPath); err != nil {
+		data, _ := os.ReadFile(path)
 		t.Fatalf("%v; output:\n%s", err, string(data))
 	}
 }
@@ -403,4 +453,27 @@ func TestSaveAsCrosbolt(t *testing.T) {
 
 func TestSaveAsChromeperf(t *testing.T) {
 	saveFormat(t, Chromeperf, "testdata/TestSaveAsChromeperf.json", "perf_results.json")
+}
+
+func TestSaveAsDebugCSV(t *testing.T) {
+	var (
+		metric1 = Metric{Name: "metric1", Unit: "unit1", Direction: SmallerIsBetter}
+		metric2 = Metric{Name: "metric2", Unit: "unit2", Direction: SmallerIsBetter, Multiple: true}
+		metric3 = Metric{Name: "metric3", Unit: "bytes", Direction: BiggerIsBetter, Multiple: true}
+		ts      = Metric{
+			Name:       "t",
+			Unit:       "s",
+			Multiple:   true,
+			HasStartTs: true,
+			StartTs:    time.Unix(3, 0),
+		}
+	)
+
+	p := NewValues()
+	p.Set(metric1, 100)
+	p.Append(metric2, 1.1, 200.5, 1003.7)
+	p.Set(metric3)
+	p.Append(ts, 6.2, 16.9, 26.3)
+
+	saveAndCompareCSV(t, p, "testdata/TestSaveAsDebugCSV.csv")
 }
