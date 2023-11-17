@@ -69,6 +69,12 @@ func (di *devInfo) isAudioJack() bool {
 		di.hasBit(switchGroup, uint16(SW_MICROPHONE_INSERT))))
 }
 
+// isPowerKey returns true if this appears to be a power key device.
+func (di *devInfo) isPowerKey() bool {
+	return di.path != "" &&
+		(di.hasBit(evGroup, uint16(EV_KEY)) && di.hasBit(keyGroup, uint16(KEY_POWER)))
+}
+
 // isKeyboard returns true if this appears to be a keyboard device.
 func (di *devInfo) isKeyboard() bool {
 	// Just check some arbitrary keys. The choice of Escape, Back, VolumeUP and

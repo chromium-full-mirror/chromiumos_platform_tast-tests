@@ -103,17 +103,17 @@ func FindPhysicalKeyboardName(ctx context.Context) (bool, string, error) {
 }
 
 // FindPowerKeyDevice returns the path to the power key device if the device
-// with name cros_ec_buttons, Power Button or gpio-keys is found, otherwise
-// returns the regular physical keyboard.
+// with name cros_ec_buttons, Power Button or gpio-keys is found and it appears
+// to be a power key, otherwise returns the regular physical keyboard.
 func FindPowerKeyDevice(ctx context.Context) (bool, string, error) {
 	infos, err := readDevices("")
 	if err != nil {
 		return false, "", errors.Wrap(err, "failed to read devices")
 	}
 	for _, info := range infos {
-		if strings.Contains(info.name, "cros_ec_buttons") ||
+		if (strings.Contains(info.name, "cros_ec_buttons") ||
 			strings.Contains(info.name, "Power Button") ||
-			strings.Contains(info.name, "gpio-keys") {
+			strings.Contains(info.name, "gpio-keys")) && info.isPowerKey() {
 			testing.ContextLogf(ctx, "Using %s device %+v", info.name, info)
 			return true, info.path, nil
 		}
