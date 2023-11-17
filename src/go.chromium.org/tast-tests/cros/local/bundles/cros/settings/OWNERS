@@ -1,10 +1,4 @@
-set noparent
-
-# ChromeOS Peripherals team
-dpad@google.com
-michaelcheco@google.com
-wangdanny@google.com
-yyhyyh@google.com
-
-# Tast team for bulk/emergencies
-include /OWNERS.tast
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+include /src/go.chromium.org/tast-tests/cros/common/devicesettings/OWNERS
