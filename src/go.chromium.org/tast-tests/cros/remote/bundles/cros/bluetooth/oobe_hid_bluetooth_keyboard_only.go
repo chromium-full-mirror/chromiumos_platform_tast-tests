@@ -50,15 +50,31 @@ func init() {
 		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		Params: []testing.Param{
 			{
-				Name:      "floss_disabled",
+				Name:      "floss_disabled_keyboard",
 				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
 				ExtraAttr: []string{"bluetooth_flaky"},
+				Val:       cbt.DeviceTypeKeyboard,
 			},
+
 			{
-				Name:              "floss_enabled",
+				Name:              "floss_enabled_keyboard",
 				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				Val:               cbt.DeviceTypeKeyboard,
+			},
+			{
+				Name:              "floss_enabled_le_keyboard",
+				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
+				ExtraSoftwareDeps: []string{"bluetooth_floss"},
+				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				Val:               cbt.DeviceTypeLEKeyboard,
+			},
+			{
+				Name:      "floss_disabled_le_keyboard",
+				Fixture:   "chromeOobeWith1BTPeerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
+				Val:       cbt.DeviceTypeLEKeyboard,
 			},
 		},
 		Timeout: time.Minute * 15,
@@ -74,6 +90,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 	const searchingTimeout time.Duration = time.Second * 300
 
 	fv := s.FixtValue().(*bluetooth.FixtValue)
+	deviceType := s.Param().(cbt.DeviceType)
 
 	// Shorten deadline to leave time for cleanup
 	cleanupCtx := ctx
@@ -100,7 +117,7 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 
 	// Discover btpeer as a keyboard.
 	keyboardDevice, err := bluetooth.NewEmulatedBTPeerDevice(ctx, fv.BTPeers[0], &bluetooth.EmulatedBTPeerDeviceConfig{
-		DeviceType: cbt.DeviceTypeKeyboard,
+		DeviceType: deviceType,
 	})
 	if err != nil {
 		s.Fatalf("Failed to configure btpeer as a %s device: %s", keyboardDevice.DeviceType(), err)
@@ -168,9 +185,21 @@ func OobeHidBluetoothKeyboardOnly(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn of btpeer adapter: ", err)
 	}
 
-	// Initialize BTPeer adapter and ensure adapter is in the correct state before pairing.
-	if err := keyboardDevice.RPC().Init(ctx, false); err != nil {
-		s.Fatal("Failed to set init to true: ", err)
+	if deviceType == cbt.DeviceTypeKeyboard {
+		// For classic keyboard, the keyboard will initiate the connection.
+		resp, err := fv.BluetoothService.Address(ctx, &emptypb.Empty{})
+		if err != nil {
+			s.Fatal("Failed to get adapter address: ", err)
+		}
+		adapterAddress := resp.GetAdapterAddress()
+		if err := keyboardDevice.RPC().ConnectToRemoteAddress(ctx, adapterAddress); err != nil {
+			s.Fatal("Failed to connect to remote address: ", adapterAddress)
+		}
+	}
+	if deviceType == cbt.DeviceTypeLEKeyboard {
+		if err := keyboardDevice.RPC().SetDiscoverable(ctx, true); err != nil {
+			s.Fatal("Failed to set discoverable: ", err)
+		}
 	}
 
 	pollForPairedAndConnectedDevice()
