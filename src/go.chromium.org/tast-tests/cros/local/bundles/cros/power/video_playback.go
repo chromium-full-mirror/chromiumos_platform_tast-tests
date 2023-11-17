@@ -24,6 +24,8 @@ type videoPlaybackTestParam struct {
 	TimeParams power.TimeParams
 }
 
+var videoPlaybackDefaultTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 6 * time.Minute}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoPlayback,
@@ -346,18 +348,17 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	}
 
 	// Copy file to ramfs. We don't want the difference between storage type to affect this test.
-	// The reason is that the most common usecase, video streaming, the data load from RAM.
+	// The reason is that the most common use case, video streaming, the data are loaded from RAM.
 	format := s.Param().(videoPlaybackTestParam).VideoName
 	interval := s.Param().(videoPlaybackTestParam).TimeParams.Interval
 	total := s.Param().(videoPlaybackTestParam).TimeParams.Total
 
 	// Use default value for timeParam if not set
-	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}
 	if interval == time.Duration(0) {
-		interval = defaultTimeParams.Interval
+		interval = videoPlaybackDefaultTimeParams.Interval
 	}
 	if total == time.Duration(0) {
-		total = defaultTimeParams.Total
+		total = videoPlaybackDefaultTimeParams.Total
 	}
 
 	// VP8 and VP9 use webm, h264, av1 use mp4.
