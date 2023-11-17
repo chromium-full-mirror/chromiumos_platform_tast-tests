@@ -62,11 +62,11 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name:    "volume_button",
-			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
-			Fixture: "crosHealthdRunning",
-			// TODO(b/311514342): Fix hwdep issue.
-			ExtraAttr: []string{"informational"},
+			Name:              "volume_button",
+			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
+			Fixture:           "crosHealthdRunning",
+			ExtraAttr:         []string{"informational"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasSideVolumeButton()),
 		}, {
 			// Contact: weiluanwang@google.com
 			Name:              "led_lit_up",
