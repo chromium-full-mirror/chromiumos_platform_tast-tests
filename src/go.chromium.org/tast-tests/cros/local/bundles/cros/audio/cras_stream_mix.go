@@ -83,7 +83,7 @@ func init() {
 			},
 			{
 				Name:              "all_unstable",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(crasStreamMixUnstableModels...)),
 				Val: crasStreamMixVal{
 					rate:      44100,

@@ -30,7 +30,7 @@ func init() {
 		}, {
 			Name:              "unstable_platform",
 			ExtraSoftwareDeps: []string{"audio_unstable"},
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "unstable_model",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("sasukette")),
