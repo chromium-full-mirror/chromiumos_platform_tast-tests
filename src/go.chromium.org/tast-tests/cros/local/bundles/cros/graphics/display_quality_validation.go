@@ -543,7 +543,7 @@ func init() {
 func DisplayQualityValidation(ctx context.Context, s *testing.State) {
 	testOpt := s.Param().(graphics.IgtTest)
 	if testOpt.DisableSysLogCheck {
-		graphics.DisableSysLogCheck()
+		graphics.DisableSysLogCheck(s.TestName())
 	}
 
 	f, err := os.Create(filepath.Join(s.OutDir(), filepath.Base(testOpt.Exe)+".txt"))

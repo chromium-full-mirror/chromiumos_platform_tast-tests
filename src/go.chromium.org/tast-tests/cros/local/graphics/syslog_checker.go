@@ -20,10 +20,29 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// SysLogCategory is the category we use to check syslog.
+type SysLogCategory string
+
+const (
+	// SysLogGpuHangs are hang signatures.
+	SysLogGpuHangs SysLogCategory = "GPU hangs"
+	// SysLogAmdGpuErrors are signatures for amdgpu errors.
+	SysLogAmdGpuErrors = "AMDGPU error"
+	// SysLogKernelSplats are signatures for kernel splats.
+	SysLogKernelSplats = "Kernel splats"
+	// SysLogMediatekIOMMUErrors are signatures for mediatek driver IOMMU errors.
+	SysLogMediatekIOMMUErrors = "Mediatek IOMMU fault"
+	// SysLogMediatekVideoErrors are signatures for mediatek video driver errors.
+	SysLogMediatekVideoErrors = "Mediatek video error"
+	// SysLogQualcommVideoErrors are signatures for qualcomm video driver errors.
+	SysLogQualcommVideoErrors = "Qualcomm video error"
+)
+
 var (
 	// Signatures in /var/log/messages to look for.
-	sysLogSignatureMap = map[string]*regexp.Regexp{
-		"GPU hangs": regexp.MustCompile(strings.Join([]string{
+	// TODO: Consider skips certain regexp check by GPU family.
+	sysLogSignatureMap = map[SysLogCategory]*regexp.Regexp{
+		SysLogGpuHangs: regexp.MustCompile(strings.Join([]string{
 			// i915
 			`drm:i915_hangcheck_elapsed`,
 			`drm:i915_hangcheck_hung`,
@@ -43,34 +62,51 @@ var (
 			`mtk-mdp.*: cmdq timeout`,
 			`scp ipi .* ack time out !`,
 		}, "|")),
-		"Problematic strings": regexp.MustCompile(strings.Join([]string{
-			// amdgpu
+		SysLogAmdGpuErrors: regexp.MustCompile(strings.Join([]string{
 			`Error scheduling IBs`,          // b/288942766
 			`VM_L2_PROTECTION_FAULT_STATUS`, // b/271644551
-			// mediatek
-			`mtk-iommu .*: fault`,
-			`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`,
-			// Qualcomm
+		}, "|")),
+		SysLogKernelSplats:        regexp.MustCompile(`------------\[ cut here \]------------`),
+		SysLogMediatekIOMMUErrors: regexp.MustCompile(`mtk-iommu .*: fault`),
+		SysLogMediatekVideoErrors: regexp.MustCompile(`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`),
+		SysLogQualcommVideoErrors: regexp.MustCompile(strings.Join([]string{
 			`qcom-venus .*video-codec: SFR message from FW:`,
 			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
-			// Kernel splats
-			`------------\[ cut here \]------------`,
 		}, "|")),
 	}
-	disableSysLogCheck = false
+	// ignoreCategoriesMap maps testName to a list of SysLogCategory it would like to ignore when calling checkSysLog.
+	ignoreCategoriesMap = map[string][]SysLogCategory{}
 )
 
 // checkSysLog checks signatures from the reader. It returns error if failed to read the file or certain patterns are detected.
-func checkSysLog(ctx context.Context, reader *syslog.Reader) error {
-	if disableSysLogCheck {
-		// Enable hangcheck for the next call.
-		disableSysLogCheck = false
-		testing.ContextLog(ctx, "DisableSysLogCheck detected. Skipping checking syslog")
-		return nil
-	}
+func checkSysLog(ctx context.Context, testName string, reader *syslog.Reader) error {
 	if reader == nil {
 		return errors.New("nil syslog.Reader")
 	}
+
+	inList := func(a SysLogCategory, b []SysLogCategory) bool {
+		for _, v := range b {
+			if a == v {
+				return true
+			}
+		}
+		return false
+	}
+
+	var checkCategory []SysLogCategory
+	for category := range sysLogSignatureMap {
+		if ignoreCategories, ok := ignoreCategoriesMap[testName]; ok {
+			// If empty, ignore all categories.
+			if ignoreCategories == nil || inList(category, ignoreCategories) {
+				testing.ContextLogf(ctx, "Test %s has request to ignore check for `%v`", testName, category)
+				continue
+			}
+		}
+		checkCategory = append(checkCategory, category)
+	}
+
+	testing.ContextLogf(ctx, "Checking syslog with folowing categories: %q", checkCategory)
+
 	for {
 		e, err := reader.Read()
 		if err == io.EOF {
@@ -79,7 +115,8 @@ func checkSysLog(ctx context.Context, reader *syslog.Reader) error {
 			return errors.Wrap(err, "failed to read syslog")
 		}
 
-		for category, re := range sysLogSignatureMap {
+		for _, category := range checkCategory {
+			re := sysLogSignatureMap[category]
 			if re.MatchString(e.Content) {
 				// Only output the full regex once we already found to prevent the reader reads the output itself.
 				testing.ContextLog(ctx, "Found with following regex: ", re.String())
@@ -94,11 +131,11 @@ func checkSysLog(ctx context.Context, reader *syslog.Reader) error {
 	return nil
 }
 
-// DisableSysLogCheck skips the next syslog check.
-// Only DisableSysLogCheck is provided as checkSysLog are often called in fixture's preTest function which is out of the test control.
-// And checkSysLog would re-enable the flag for the next test run.
-func DisableSysLogCheck() {
-	disableSysLogCheck = true
+// DisableSysLogCheck skips checking the given categories after running test. If ignoreCategories is not set, skips all category checks.
+// e.g. DisableSysLogCheck("graphics.IgtKms.kms_flip") to disable all syslog checks.
+// e.g. DisableSysLogCheck("graphics.IgtKms.kms_flip", SysLogGpuHangs, SysLogKernelSplats) to disable checking GPU hangs and kernel splats.
+func DisableSysLogCheck(testName string, ignoreCategories ...SysLogCategory) {
+	ignoreCategoriesMap[testName] = ignoreCategories
 }
 
 // SetHangCheckTimer sets the hangcheck timer to d to allow longer gpu runtime before hangcheck kicks in.

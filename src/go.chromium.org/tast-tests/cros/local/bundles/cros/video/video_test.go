@@ -17,6 +17,6 @@ func TestFixture(t *gotesting.T) {
 	testcheck.CheckFixtures(t, tastcheck.Glob(t, namePattern), []string{"gpuWatchHangs|gpuWatchHangsEnrolled"})
 	if t.Failed() {
 		t.Error("If the test already has a fixture, check gpuWatchHangs is inherited in the test's fixture. Or add fixture \"chromeVideo\".")
-		t.Error("If the test intentionally causes alarming syslog messages, e.g. GPU hangs, consider calling graphics.DisableSysLogCheck() at the start of the test.")
+		t.Error("If the test intentionally causes alarming syslog messages, e.g. GPU hangs, consider calling graphics.DisableSysLogCheck at the start of the test.")
 	}
 }

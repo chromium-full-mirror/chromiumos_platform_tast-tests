@@ -70,8 +70,7 @@ func PlatformV4L2(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// TODO(b/311270670): Re-enable after we can disable just [MTK_V4L2][ERROR] logs
-	graphics.DisableSysLogCheck()
+	graphics.DisableSysLogCheck(s.TestName(), graphics.SysLogMediatekVideoErrors)
 
 	command := s.Param().([]string)
 
