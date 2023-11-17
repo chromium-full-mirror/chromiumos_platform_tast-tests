@@ -16,28 +16,34 @@ import (
 
 func TestFio(t *testing.T) {
 	type paramData struct {
-		Name string
-		Kind string
-		Job  string
-		Dep  string
+		Name   string
+		Kind   string
+		Job    string
+		DepDax string
+		DepLvm string
 	}
 
 	jobs := []string{"boot", "login", "surfing", "randread", "randwrite", "seqread", "seqwrite", "stress_rw"}
-	kind := []string{"block", "block_packed", "block_tpq", "block_packed_tpq", "virtiofs", "virtiofs_dax", "scsi", "pmem"}
+	kinds := []string{"block", "block_packed", "block_tpq", "block_packed_tpq", "block_lvm", "virtiofs", "virtiofs_dax", "scsi", "pmem"}
 
 	var params []paramData
 	for _, job := range jobs {
-		for _, kind := range kind {
-			dep := ""
+		for _, kind := range kinds {
+			depDax := ""
+			DepLvm := ""
+
 			if kind == "virtiofs_dax" {
-				dep = "amd64"
+				depDax = "amd64"
+			} else if kind == "block_lvm" {
+				DepLvm = "lvm_stateful_partition"
 			}
 
 			params = append(params, paramData{
-				Name: fmt.Sprintf("%s_%s", kind, job),
-				Kind: kind,
-				Job:  fmt.Sprintf("fio_%s.job", job),
-				Dep:  dep,
+				Name:   fmt.Sprintf("%s_%s", kind, job),
+				Kind:   kind,
+				Job:    fmt.Sprintf("fio_%s.job", job),
+				DepDax: depDax,
+				DepLvm: DepLvm,
 			})
 		}
 	}
@@ -50,10 +56,13 @@ func TestFio(t *testing.T) {
 				kind: {{ .Kind | fmt }},
 				job: {{ .Job | fmt }},
 			},
-			{{ if .Dep }}
+			{{ if .DepDax }}
 			// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
 			// on ARM.
-			ExtraSoftwareDeps: []string { {{ .Dep | fmt }} },
+			ExtraSoftwareDeps: []string { {{ .DepDax | fmt }} },
+			{{ end }}
+			{{ if .DepLvm }}
+			ExtraSoftwareDeps: []string { {{ .DepLvm | fmt }} },
 			{{ end }}
 		},
 		{{ end }}`,

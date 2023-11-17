@@ -6,13 +6,17 @@
 package storage
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VirtioFSCacheTimeoutSecond represents the duration of virtiofs device's cache.
@@ -30,7 +34,7 @@ type Option struct {
 func NewOption(kind, cache string, caseFold bool) (Option, error) {
 	var opt Option
 	opt.Kind = kind
-	if kind == "block" || kind == "block_packed" || kind == "block_tpq" || kind == "block_packed_tpq" {
+	if strings.HasPrefix(kind, "block") {
 		opt.Tag = "/dev/vda"
 	} else if kind == "virtiofs" || kind == "virtiofs_dax" || kind == "p9" {
 		opt.Tag = "shared"
@@ -46,22 +50,63 @@ func NewOption(kind, cache string, caseFold bool) (Option, error) {
 	return opt, nil
 }
 
-// GenCrosvmCmd constructs a new crosvm command using the given parameters.
-func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option, scriptArgs []string) (crosvmParams *vm.CrosvmParams, err error) {
-	shared := filepath.Join(userDir, "shared")
-	if err := os.Mkdir(shared, 0755); err != nil {
-		return nil, errors.Wrap(err, "failed to create shared directory")
+// SetUpLogicVolume creates a 8G logic volume with lvName in thinpool
+//
+// Returns file path of newly created logical volume and cleanup function that removes the logical volume (if no error)
+func SetUpLogicVolume(ctx context.Context, lvName string) (lvPath string, cleanUp func(ctx context.Context), _ error) {
+	// Create command to get volume group name
+	out, err := testexec.CommandContext(ctx, "vgs", "-o", "vg_name", "--noheadings").Output()
+	if err != nil {
+		return "", func(_ context.Context) {}, errors.Wrap(err, "failed to get volume group name")
 	}
 
-	block := filepath.Join(userDir, "block")
-	f, err := os.Create(block)
+	vgName := strings.TrimSpace(string(out))
+	thinpool := vgName + "/thinpool"
+	lvPath = filepath.Join("/dev/mapper/", vgName+"-"+lvName)
+
+	// Create a logic volume in thinpool
+	if err := testexec.CommandContext(ctx, "lvcreate", "-V8G", "-T", thinpool, "-n", lvName).Run(); err != nil {
+		return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create logical volume")
+	}
+
+	cleanUp = func(ctx context.Context) {
+		if err := testexec.CommandContext(ctx, "lvremove", "-y", lvPath).Run(); err != nil {
+			testing.ContextLog(ctx, "Failed to remove logical volume: ", err)
+		}
+	}
+
+	return lvPath, cleanUp, nil
+}
+
+// SetUpBlockFile creates a 8G file and returns the file path
+//
+// Returns path of created block image file and cleanup function that removes the file (if no error)
+func SetUpBlockFile(ctx context.Context, userDir string) (blockPath string, cleanUp func(ctx context.Context), _ error) {
+	blockPath = filepath.Join(userDir, "block")
+	f, err := os.Create(blockPath)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create block device file")
+		return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create block device file")
 	}
 	defer f.Close()
 
+	cleanUp = func(ctx context.Context) {
+		if err := os.Remove(blockPath); err != nil {
+			testing.ContextLog(ctx, "Failed to remove host block image: ", err)
+		}
+	}
+
 	if err := f.Truncate(8 * 1024 * 1024 * 1024); err != nil {
-		return nil, errors.Wrap(err, "failed to set block device file size")
+		return "", cleanUp, errors.Wrap(err, "failed to set block device file size")
+	}
+
+	return blockPath, cleanUp, nil
+}
+
+// GenCrosvmCmd constructs a new crosvm command using the given parameters.
+func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt Option, scriptArgs []string) (crosvmParams *vm.CrosvmParams, err error) {
+	shared := filepath.Join(userDir, "shared")
+	if err := os.Mkdir(shared, 0755); err != nil {
+		return nil, errors.Wrap(err, "failed to create shared directory")
 	}
 
 	logFilePath := filepath.Join(outDir, "serial.log")
@@ -71,10 +116,11 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, script string, opt Option,
 
 	var storageOpt vm.Option
 
-	if opt.Kind == "block" || opt.Kind == "block_packed" || opt.Kind == "block_tpq" || opt.Kind == "block_packed_tpq" {
+	if opt.Kind == "block" || opt.Kind == "block_packed" || opt.Kind == "block_tpq" || opt.Kind == "block_packed_tpq" || opt.Kind == "block_lvm" {
 		isPacked := opt.Kind == "block_packed" || opt.Kind == "block_packed_tpq"
 		isTpq := opt.Kind == "block_tpq" || opt.Kind == "block_packed_tpq"
-		blockOption := fmt.Sprintf("%s,packed-queue=%v,multiple-workers=%v", block, isPacked, isTpq)
+		isODIRECT := opt.Kind == "block_lvm"
+		blockOption := fmt.Sprintf("%s,packed-queue=%v,multiple-workers=%v,o_direct=%v", block, isPacked, isTpq, isODIRECT)
 		storageOpt = vm.RWDisks(blockOption)
 	} else if opt.Kind == "virtiofs" || opt.Kind == "virtiofs_dax" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{

@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast-tests/cros/local/vm"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -155,6 +156,11 @@ func runOneTestCase(ctx context.Context, toGuest *os.File, reader *bufio.Reader,
 }
 
 func ManyFiles(ctx context.Context, s *testing.State) {
+	// Reserve 5 seconds for clean up
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	data := s.FixtValue().(dlc.FixtData)
 	kernelPath := data.Kernel
 	if kernelPathOverride, ok := s.Var("vm.ManyFiles.kernelPath"); ok {
@@ -196,8 +202,15 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		outputJSON,
 	}
 
+	blockPath, cleanUp, err := storage.SetUpBlockFile(ctx, ud)
+	if err != nil {
+		s.Fatal("Failed to set up block image file: ", err)
+	}
+	defer cleanUp(cleanupCtx)
+
 	// Constructs a crosvm command
 	ps, err := storage.GenCrosvmCmd(td, ud, s.OutDir(), kernelPath,
+		blockPath,
 		s.DataPath(runManyFiles),
 		opt, scriptArgs)
 	if err != nil {

@@ -47,7 +47,7 @@ main() {
   # that can affect performance.
   FS_MOUNT_OPTIONS="rw,noatime"
   case "${kind}" in
-    block | block_packed | block_tpq | block_packed_tpq | scsi | pmem)
+    block | block_* | scsi | pmem)
       [[ -b "${src}" ]] || die "${src} is not a block device"
       mkfs.ext4 "${src}"
       mount -o "${BLK_MOUNT_OPTIONS}" "${src}" "${mountpoint}"

@@ -79,6 +79,15 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_lvm_boot",
+				ExtraData: []string{"fio_boot.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_boot.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
 				Name:      "virtiofs_boot",
 				ExtraData: []string{"fio_boot.job"},
 				Val: param{
@@ -144,6 +153,15 @@ func init() {
 					kind: "block_packed_tpq",
 					job:  "fio_login.job",
 				},
+			},
+			{
+				Name:      "block_lvm_login",
+				ExtraData: []string{"fio_login.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_login.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
 			},
 			{
 				Name:      "virtiofs_login",
@@ -213,6 +231,15 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_lvm_surfing",
+				ExtraData: []string{"fio_surfing.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_surfing.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
 				Name:      "virtiofs_surfing",
 				ExtraData: []string{"fio_surfing.job"},
 				Val: param{
@@ -278,6 +305,15 @@ func init() {
 					kind: "block_packed_tpq",
 					job:  "fio_randread.job",
 				},
+			},
+			{
+				Name:      "block_lvm_randread",
+				ExtraData: []string{"fio_randread.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_randread.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
 			},
 			{
 				Name:      "virtiofs_randread",
@@ -347,6 +383,15 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_lvm_randwrite",
+				ExtraData: []string{"fio_randwrite.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_randwrite.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
 				Name:      "virtiofs_randwrite",
 				ExtraData: []string{"fio_randwrite.job"},
 				Val: param{
@@ -412,6 +457,15 @@ func init() {
 					kind: "block_packed_tpq",
 					job:  "fio_seqread.job",
 				},
+			},
+			{
+				Name:      "block_lvm_seqread",
+				ExtraData: []string{"fio_seqread.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_seqread.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
 			},
 			{
 				Name:      "virtiofs_seqread",
@@ -481,6 +535,15 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_lvm_seqwrite",
+				ExtraData: []string{"fio_seqwrite.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_seqwrite.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
 				Name:      "virtiofs_seqwrite",
 				ExtraData: []string{"fio_seqwrite.job"},
 				Val: param{
@@ -546,6 +609,15 @@ func init() {
 					kind: "block_packed_tpq",
 					job:  "fio_stress_rw.job",
 				},
+			},
+			{
+				Name:      "block_lvm_stress_rw",
+				ExtraData: []string{"fio_stress_rw.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_stress_rw.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
 			},
 			{
 				Name:      "virtiofs_stress_rw",
@@ -641,7 +713,23 @@ func Fio(ctx context.Context, s *testing.State) {
 		s.DataPath(job),
 	}
 
-	ps, err := storage.GenCrosvmCmd(td, ud, s.OutDir(), kernelPath, s.DataPath(runFio), opt, scriptArgs)
+	var blockPath string
+	// Create a disk image for virtio block
+	if opt.Kind == "block_lvm" {
+		blockPath, cleanup, err = storage.SetUpLogicVolume(ctx, "vm_test_lv")
+		if err != nil {
+			s.Fatal("Failed to set up logic volume: ", err)
+		}
+		defer cleanup(cleanupCtx)
+	} else {
+		blockPath, cleanup, err = storage.SetUpBlockFile(ctx, ud)
+		if err != nil {
+			s.Fatal("Failed to set up block image file: ", err)
+		}
+		defer cleanup(cleanupCtx)
+	}
+
+	ps, err := storage.GenCrosvmCmd(td, ud, s.OutDir(), kernelPath, blockPath, s.DataPath(runFio), opt, scriptArgs)
 	if err != nil {
 		s.Fatal("Failed to construct crosvm command: ", err)
 	}
