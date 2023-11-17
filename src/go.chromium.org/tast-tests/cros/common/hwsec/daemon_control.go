@@ -239,6 +239,13 @@ var OobeConfigRestoreDaemon = &DaemonInfo{
 	DBusName:   "org.chromium.OobeConfigRestore",
 }
 
+// LockboxCacheJob represents the upstart job for lockbox-cache.
+var LockboxCacheJob = &DaemonInfo{
+	Name:       "lockbox-cache",
+	DaemonName: "lockbox-cache",
+	HasDBus:    false,
+}
+
 // HighLevelTPMDaemons represents the high level TPM daemons.
 var HighLevelTPMDaemons = []*DaemonInfo{
 	TPMManagerDaemon,

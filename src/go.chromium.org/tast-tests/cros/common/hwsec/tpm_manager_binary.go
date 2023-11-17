@@ -101,3 +101,8 @@ func (c *tpmManagerBinary) nonsensitiveStatusIgnoreCache(ctx context.Context) ([
 func (c *tpmManagerBinary) clearOwnerPassword(ctx context.Context) ([]byte, error) {
 	return c.call(ctx, "clear_owner_password")
 }
+
+// getSupportedFeatures calls "tpm_manager_client get_supported_features"
+func (c *tpmManagerBinary) getSupportedFeatures(ctx context.Context) ([]byte, error) {
+	return c.call(ctx, "get_supported_features")
+}

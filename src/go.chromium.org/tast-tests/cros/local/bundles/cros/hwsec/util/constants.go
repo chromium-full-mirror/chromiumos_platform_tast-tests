@@ -29,4 +29,15 @@ const (
 	TestFileName1   = "TESTFILE1"
 	TestFileName2   = "TESTFILE2"
 	TestFileContent = "TEST_CONTENT"
+
+	// Install attributes x-ver test constants
+	NvramTpm2Index   = "0x800004" // Note: currently only TPM2.0 is supported.
+	LockboxNvramPath = "/tmp/lockbox.nvram"
 )
+
+// InstallAttrsContents list of install-attributes contents to use in x-ver test.
+var InstallAttrsContents = map[string]string{
+	"Ibuprofen":            "C13H18O2",
+	"Acetaminophen":        "C8H9NO2",
+	"Acetylsalicylic Acid": "C9H8O4",
+}

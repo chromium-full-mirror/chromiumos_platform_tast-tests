@@ -19,6 +19,17 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+func pathExists(ctx context.Context, path string) (bool) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true
+	}
+	if !errors.Is(err, os.ErrNotExist) {
+		testing.ContextLog(ctx, "Failed to stat /var/lib/device_management dir: ", err)
+	}
+	return false
+}
+
 func runCmdOrFailWithOut(cmd *testexec.Cmd) error {
 	out, err := cmd.CombinedOutput()
 	if err != nil {
@@ -71,6 +82,7 @@ func compressData(ctx context.Context, dst string, paths, ignorePaths []string) 
 // - /home/.shadow
 // - /home/chronos
 // - /mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip (if includeTpm is set to true).
+// - /var/lib/device_management (for install-time attributes, starting from R119)
 func SaveLoginData(ctx context.Context, daemonController *hwsec.DaemonController, archivePath string, includeTpm bool) error {
 	if err := stopHwsecDaemons(ctx, daemonController, includeTpm); err != nil {
 		return err
@@ -87,6 +99,12 @@ func SaveLoginData(ctx context.Context, daemonController *hwsec.DaemonController
 	if includeTpm {
 		paths = append(paths, "/mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip")
 	}
+
+	// Starting from R119, we started storing install_attributes.pb inside /var/lib/device_management/
+	if pathExists(ctx, "/var/lib/device_management") {
+		paths = append(paths, "/var/lib/device_management")
+	}
+
 	// Skip packing the "mount" directories, since the file systems it's
 	// used for don't allow taking snapshots. E.g., ext4 fscrypt complains
 	// "Required key not available" when trying to read encrypted files.
@@ -134,6 +152,12 @@ func LoadLoginData(ctx context.Context, daemonController *hwsec.DaemonController
 	// Clean up `/home/chronos` as well (note that deleting this directory itself would fail).
 	if err := removeAllChildren("/home/chronos"); err != nil {
 		return errors.Wrap(err, "failed to remove old /home/chronos data")
+	}
+	// Clean up `/var/lib/device_management` if exists
+	if pathExists(ctx, "/var/lib/device_management") {
+		if err := removeAllChildren("/var/lib/device_management"); err != nil {
+			return errors.Wrap(err, "failed to remove old /var/lib/device_management data")
+		}
 	}
 
 	if err := decompressData(ctx, archivePath); err != nil {

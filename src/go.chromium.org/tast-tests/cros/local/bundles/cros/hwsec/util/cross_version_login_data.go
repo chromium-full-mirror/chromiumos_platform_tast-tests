@@ -66,6 +66,7 @@ type CrossVersionLoginConfig struct {
 	ExtraVaultKeys []VaultKeyInfo
 	VaultFSType    VaultFSType
 	WebAuthnCred   *u2fd.WebAuthnCredential
+	InstallAttrs   map[string]string
 }
 
 // NewPassAuthCrossVersionLoginConfig creates cross version-login config from password auth config
@@ -315,6 +316,16 @@ func ecryptfsVaultExists(ctx context.Context, cryptohome *hwsec.CryptohomeClient
 	return true, nil
 }
 
+// setInstallAttributes sets the install attributes for preparing install_attributes.pb
+func setInstallAttributes(ctx context.Context, cryptohome *hwsec.CryptohomeClient) error {
+	for name, value := range InstallAttrsContents {
+		if err := cryptohome.InstallAttributesSet(ctx, name, value); err != nil {
+			return errors.Wrapf(err, "failed to set install attributes %s to value %s", name, value)
+		}
+	}
+	return nil
+}
+
 // PrepareCrossVersionLoginData prepares the login data and config for CrossVersionLogin and saves them to dataPath and configPath respectively
 func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, daemonController *hwsec.DaemonController, dataPath, configPath, webauthnURL string) (retErr error) {
 	var configList []CrossVersionLoginConfig
@@ -332,6 +343,10 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptoh
 		}
 	}()
 
+	if err := setInstallAttributes(ctx, cryptohome); err != nil {
+		return errors.Wrap(err, "failed to populate install attributes")
+	}
+
 	supportsLE, err := cryptohome.SupportsLECredentials(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get supported policies")
@@ -346,6 +361,7 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptoh
 	if err != nil {
 		return errors.Wrap(err, "failed to create password data")
 	}
+	config.InstallAttrs = InstallAttrsContents
 	configList = append(configList, *config)
 
 	if err := daemonController.Restart(ctx, hwsec.UIDaemon); err != nil {

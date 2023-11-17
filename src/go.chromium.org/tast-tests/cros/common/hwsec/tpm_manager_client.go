@@ -9,6 +9,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
@@ -146,6 +147,15 @@ func (u *TPMManagerClient) ClearOwnerPassword(ctx context.Context) (string, erro
 	return checkStatusCommandAndReturn(ctx, binaryMsg, err, "ClearOwnerPassword")
 }
 
+// RuntimeSelectionSupportStatus returns the runtime TPM selection support status.
+func (u *TPMManagerClient) RuntimeSelectionSupportStatus(ctx context.Context) (bool, error) {
+	binaryMsg, err := u.binary.getSupportedFeatures(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to call get_supported_features from tpm_manager_client")
+	}
+	return parseSupportedFeaturesForRuntimeSelectionSupportStatus(ctx, string(binaryMsg), true)
+}
+
 // NonsensitiveStatusInfo contains the dictionary attack related information.
 type NonsensitiveStatusInfo struct {
 	// Whether a TPM is enabled on the system.
@@ -181,6 +191,32 @@ func parseStringMap(ctx context.Context, msg string, checkMatch bool, prefixes [
 		return nil, errors.Errorf("missing attribute/prefix, message %q", msg)
 	}
 	return parsed, nil
+}
+
+func parseSupportedFeaturesForRuntimeSelectionSupportStatus(ctx context.Context, msg string, checkStatus bool) (bool, error) {
+	const (
+		StatusPrefix            = "  status: "
+		SupportRuntimeSelection = "  support_runtime_selection: "
+	)
+	prefixes := []string{
+		StatusPrefix,
+		SupportRuntimeSelection,
+	}
+	parsed, err := parseStringMap(ctx, msg, checkStatus, prefixes)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to parse string map")
+	}
+	if checkStatus {
+		// We need to check the status.
+		if parsed[StatusPrefix] != tpmManagerStatusSuccessMessage {
+			return false, errors.Errorf("incorrect status %q from GetSupportedFeatures", parsed[StatusPrefix])
+		}
+	}
+	supported, err := strconv.ParseBool(parsed[SupportRuntimeSelection])
+	if err != nil {
+		return false, errors.Wrap(err, "failed to parse status to boolean")
+	}
+	return supported, nil
 }
 
 // parseNonsensitiveStatusInfo tries to parse the output of NonsensitiveStatus from msg, if checkStatus is true, then we'll verify that the output of the command contains a success message.
