@@ -407,6 +407,8 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 		"interface=" + apIf,
 		"ssid=" + ssid,
 		"bridge=" + wifi.br,
+		// Set a channel to speed up the AP setup.
+		"channel=1",
 	}, "\n")
 	hostapdConfFile, err := os.CreateTemp(outDir, "hostapd*.conf")
 	if err != nil {
@@ -444,7 +446,7 @@ func CreateWifiRouterEnv(ctx context.Context, apIf string, m *shill.Manager, poo
 
 	// Disable and re-enable the WiFi device to force stopping the ongoing scan,
 	// to make sure that the scan is triggered after AP is created, otherwise the
-	// AP cannot be found by the scan (b/261666421).
+	// AP cannot be found by the scan (b/262366537).
 	d, err := m.DeviceByType(ctx, shillconst.TypeWifi)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get WiFi device")
