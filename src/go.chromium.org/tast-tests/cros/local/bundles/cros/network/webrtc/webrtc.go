@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
@@ -73,6 +74,11 @@ func (e *env) StartConn(ctx context.Context, localIPAfterNAT, remoteIPAfterNAT s
 	}
 
 	e.conn = conn
+
+	// Shorten the ctx for establishing the WebRTC connection.
+	d := time.Now().Add(10 * time.Second)
+	ctx, cancel := context.WithDeadline(ctx, d)
+	defer cancel()
 
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 		return errors.Wrap(err, "failed to wait for page to load")
