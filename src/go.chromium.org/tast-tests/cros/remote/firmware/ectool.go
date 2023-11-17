@@ -520,3 +520,25 @@ func (ec *ECTool) GetECUptime(ctx context.Context) (float64, error) {
 
 	return uptime, nil
 }
+
+// GetAPResetCount returns the number of AP resets since EC boot.
+func (ec *ECTool) GetAPResetCount(ctx context.Context) (int, error) {
+	out, err := ec.Command(ctx, "uptimeinfo").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return -1, errors.Wrapf(err, "running 'ectool uptimeinfo' on DUT, got: %v", string(out))
+	}
+
+	outstr := string(out)
+	// Find AP reset string like `AP resets since EC boot: 3`.
+	match := regexp.MustCompile(`AP resets since EC boot: (\d+)`).FindStringSubmatch(outstr)
+	if match == nil {
+		return -1, errors.Wrapf(err, "failed to parse ec uptime, got %s", outstr)
+	}
+
+	apResetCount, err := strconv.Atoi(match[1])
+	if err != nil {
+		return -1, errors.Wrapf(err, "failed to parse ec uptime to int, got %s", match[1])
+	}
+
+	return apResetCount, nil
+}
