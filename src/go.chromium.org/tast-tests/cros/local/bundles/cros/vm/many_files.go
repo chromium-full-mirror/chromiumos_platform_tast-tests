@@ -277,31 +277,45 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to parse enableTraceCmdVar %v: %v", enableTraceCmdVar.Value(), err)
 	}
 
+	const (
+		prefixReady       = "READY:"
+		prefixReadyNoDrop = "READY_NO_DROP:"
+		prefixComplete    = "COMPLETE"
+	)
+
 	for {
-		// Waiting for the guest sending "READY" or "COMPLETE".
-		line, err := waitForPrefix(reader, []string{"READY:", "COMPLETE"})
+		// Waiting for the guest sending messages with special prefixes.
+		line, err := waitForPrefix(reader, []string{prefixReady, prefixReadyNoDrop, prefixComplete})
 		if err != nil {
-			s.Fatal("Failed to wait for 'READY:' or 'COMPLETE': ", err)
+			s.Fatal("Failed to wait for 'READY' or 'COMPLETE': ", err)
 		}
 
 		// "COMPLETE" means that the all test cases completed
-		if strings.HasPrefix(line, "COMPLETE") {
+		if strings.HasPrefix(line, prefixComplete) {
 			s.Log("All the guest test cases are completed")
 			break
 		}
-		// line must start with "READY:"
+
 		trimed := strings.TrimRight(line, " \r\n")
-		testCase := strings.TrimPrefix(trimed, "READY:")
+		var testCase string
+		dropCaches := true
+		if strings.HasPrefix(trimed, prefixReadyNoDrop) {
+			dropCaches = false
+			testCase = strings.TrimPrefix(trimed, prefixReadyNoDrop)
+		} else {
+			testCase = strings.TrimPrefix(trimed, prefixReady)
+		}
 		s.Logf("Guest is ready for test case %q", testCase)
 
-		// Drop host caches before starting crosvm
-		if err := disk.DropCaches(ctx); err != nil {
-			s.Fatal("Failed to drop caches: ", err)
-		}
-
-		// GoBigSleepLint: Sleep until virtiofs's cache is invalidated
-		if err != testing.Sleep(ctx, storage.VirtioFSCacheTimeoutSecond*time.Second) {
-			s.Fatal("Failed to sleep until cache is invalidated: ", err)
+		// Drop host caches before running a test in the guest
+		if dropCaches {
+			if err := disk.DropCaches(ctx); err != nil {
+				s.Fatal("Failed to drop caches: ", err)
+			}
+			// GoBigSleepLint: Sleep until virtiofs's cache is invalidated
+			if err != testing.Sleep(ctx, storage.VirtioFSCacheTimeoutSecond*time.Second) {
+				s.Fatal("Failed to sleep until cache is invalidated: ", err)
+			}
 		}
 
 		if err := runOneTestCase(ctx, toGuest, reader, testCase, s.OutDir(), enableTraceCmd); err != nil {

@@ -25,7 +25,7 @@ def command(cmd: List[str]):
     print(f'RUN: {joined}')
     subprocess.run(cmd, check=True)
 
-def sync_and_drop_caches(name: str):
+def test_setup(name: str):
     """Runs sync and drop_caches on the guest and ask host to do the same.
 
     This function is supposed to be called before running a benchmark.
@@ -39,12 +39,23 @@ def sync_and_drop_caches(name: str):
     # Wait for host being ready to run the next test case
     HOST_CONNECTION.wait_for_host_signal()
 
+def test_setup_without_drop_caches(name: str):
+    """Notify the host that we are ready to run the next test and not to drop
+    caches.
 
-def measure(code: str) -> float:
+    This function is supposed to be called before running a benchmark.
+    """
+    HOST_CONNECTION.signal_host_ready_no_drop(name)
+    HOST_CONNECTION.wait_for_host_signal()
+
+def measure(name: str, code: str, drop_caches: bool) -> float:
     """Measures how many milliseconds it takes to run the given code snippet."""
-    print(f'Measure {code}')
-    sec = timeit.timeit(code, setup=f'sync_and_drop_caches("{code}")',
-                        number=1, globals=globals())
+    print(f'Measure "{name}"')
+    if drop_caches:
+        setup = lambda: test_setup(name)
+    else:
+        setup = lambda: test_setup_without_drop_caches(name)
+    sec = timeit.timeit(code, setup=setup, number=1, globals=globals())
     return sec * 1000 # Converts seconds to milliseconds
 
 
@@ -134,6 +145,13 @@ class HostConnection:
         self.output.write(f'READY:{name}\n')
         self.output.flush()
 
+    def signal_host_ready_no_drop(self, name: str):
+        """Sends a string 'READY_NO_DROP' to the host for a test case that does
+        not drop caches.
+        """
+        self.output.write(f'READY_NO_DROP:{name}\n')
+        self.output.flush()
+
     def signal_host_end(self):
         """Sends a string 'END' to the host
         This should be sent when each test case is completed.
@@ -205,15 +223,20 @@ def main():
     os.mkdir(OUT_DIR)
 
     test_cases = [
-        'create',
-        'open',
-        'open_non_existent',
-        'remove',
+        # (test name, function name, whether caches are dropped before the test)
+        # The test cases '*_twice' are ones that run without dropping caches to
+        # evaluate the effects of caches.
+        ('create', 'create', True),
+        ('open', 'open', True),
+        ('open_second', 'open', False),
+        ('open_non_existent', 'open_non_existent', True),
+        ('open_non_existent_second', 'open_non_existent', False),
+        ('remove', 'remove', True),
     ]
     results = {}
 
-    for case in test_cases:
-        results[case] = measure(f'test_{case}()')
+    for (case, func, drop_caches) in test_cases:
+        results[case] = measure(case, f'test_{func}()', drop_caches)
         HOST_CONNECTION.signal_host_end()
 
     HOST_CONNECTION.signal_host_complete()
