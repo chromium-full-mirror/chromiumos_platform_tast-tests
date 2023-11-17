@@ -38,8 +38,9 @@ func init() {
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Params: []testing.Param{
 			{
-				Val:     browser.TypeAsh,
-				Fixture: "tabSwitchCUJWPRAsh",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
+				Val:       browser.TypeAsh,
+				Fixture:   "tabSwitchCUJWPRAsh",
 			}, {
 				Name:              "lacros",
 				Val:               browser.TypeLacros,

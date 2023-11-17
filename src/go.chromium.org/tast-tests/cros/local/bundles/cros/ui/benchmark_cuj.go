@@ -37,7 +37,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "speedometer",
-				ExtraAttr: []string{"group:cuj"},
+				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
 				Timeout:   defaultTimeout,
 				Fixture:   "loggedInToCUJUserWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
