@@ -45,7 +45,7 @@ func AltVolupRWarmReboot(ctx context.Context, s *testing.State) {
 	// Press three keys together: Alt + Vol Up + R
 	if err := func(ctx context.Context) error {
 		for _, targetKey := range []string{"<alt_l>", "<f10>", "r"} {
-			row, col, err := h.Servo.GetKeyRowCol(targetKey, h.Model)
+			row, col, err := h.Servo.GetKeyRowCol(ctx, targetKey, h.Model)
 			if err != nil {
 				return errors.Wrapf(err, "failed to get key %s column and row", targetKey)
 			}

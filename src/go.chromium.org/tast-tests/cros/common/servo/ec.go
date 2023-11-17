@@ -58,6 +58,7 @@ const (
 	reVdownBtnReleased   string = `\[\S+ Button \'Volume Down\' was released(.|\n)*buttons: 0\]`
 	rePwrBtnPressed      string = `\[\S+ power button pressed(.|\n)*buttons: 1\]`
 	rePwrBtnReleased     string = `\[\S+ power button released(.|\n)*buttons: 0\]`
+	reSKUID              string = `SKU_ID:\s+(\d+)`
 )
 
 // USBCDataRole is a USB-C data role.
@@ -166,7 +167,7 @@ func (s *Servo) ECHibernate(ctx context.Context, model string, option Hibernatio
 	case "keyboard":
 		if err := func(ctx context.Context) error {
 			for _, targetKey := range []string{"<alt_l>", "<f10>", "h"} {
-				row, col, err := s.GetKeyRowCol(targetKey, model)
+				row, col, err := s.GetKeyRowCol(ctx, targetKey, model)
 				if err != nil {
 					return errors.Wrapf(err, "failed to get key %s column and row", targetKey)
 				}
@@ -229,8 +230,11 @@ func (s *Servo) SetDUTPDDataRole(ctx context.Context, role USBCDataRole) error {
 }
 
 // GetKeyRowCol returns the key row and column for kbpress cmd
-func (s *Servo) GetKeyRowCol(key, model string) (int, int, error) {
-	keyMatrix := getKeyMatrix(model)
+func (s *Servo) GetKeyRowCol(ctx context.Context, key, model string) (int, int, error) {
+	keyMatrix, err := s.getKeyMatrix(ctx, model)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "failed to get ec key matrix")
+	}
 	pair, ok := keyMatrix[key]
 	if !ok {
 		return 0, 0, errors.New("failed to find key in KeyMatrix map")
@@ -240,24 +244,32 @@ func (s *Servo) GetKeyRowCol(key, model string) (int, int, error) {
 }
 
 // getKeyMatrix returns the ec key map based on the model name.
-func getKeyMatrix(model string) map[string]KBMatrixPair {
+func (s *Servo) getKeyMatrix(ctx context.Context, model string) (map[string]KBMatrixPair, error) {
 	nonStandardKeyMatrixMap := map[string]map[string]KBMatrixPair{
 		"mithrax":   MithraxECKeyMatrix,
-		"frostflow": FrostECKeyMatrix,
+		"frostflow": FrostFlowECKeyMatrix,
 		"osiris":    OsirisECKeyMatrix,
 		"banshee":   BansheeECKeyMatrix,
-		"delbin":    DelbinECKeyMatrix,
+	}
+	if model == "delbin" {
+		skuID, err := s.GetSkuID(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get SKU_ID")
+		}
+		if skuID == 65543 || skuID == 65542 {
+			nonStandardKeyMatrixMap["delbin"] = DelbinECKeyMatrix
+		}
 	}
 	matrix, ok := nonStandardKeyMatrixMap[model]
 	if !ok {
-		return BaseECKeyMatrix
+		return BaseECKeyMatrix, nil
 	}
-	return matrix
+	return matrix, nil
 }
 
 // ECPressKey simulates a keypress on the DUT from the servo using kbpress.
 func (s *Servo) ECPressKey(ctx context.Context, key, model string) error {
-	row, col, err := s.GetKeyRowCol(key, model)
+	row, col, err := s.GetKeyRowCol(ctx, key, model)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get key %q in key matrix", key)
 	}
@@ -274,7 +286,7 @@ func (s *Servo) ECPressKey(ctx context.Context, key, model string) error {
 // baseKey is the key to press while Ctrl is held down, e.g. "d"
 func (s *Servo) ECPressCtrlKey(ctx context.Context, baseKey, model string) error {
 	const ctrlL = "<ctrl_l>"
-	ctrlRow, ctrlCol, err := s.GetKeyRowCol(ctrlL, model)
+	ctrlRow, ctrlCol, err := s.GetKeyRowCol(ctx, ctrlL, model)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get %s in key matrix", ctrlL)
 	}
@@ -555,4 +567,13 @@ func (s *Servo) WaitFirmwareKeyboardNoCmd(ctx context.Context, timeout time.Dura
 	}
 
 	return nil
+}
+
+// GetSkuID runs the ec command 'cbi' and checks for the sku-id.
+func (s *Servo) GetSkuID(ctx context.Context) (int, error) {
+	skuID, err := s.RunECCommandGetOutput(ctx, "cbi", []string{reSKUID})
+	if err != nil {
+		return -1, err
+	}
+	return strconv.Atoi(skuID[0][1])
 }

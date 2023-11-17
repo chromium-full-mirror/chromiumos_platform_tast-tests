@@ -165,8 +165,8 @@ var MithraxECKeyMatrix = map[string]KBMatrixPair{
 	"<left>":      KBMatrixPair{0, 12},
 }
 
-// FrostECKeyMatrix is a map for frost model that stores a row/col pair for each key using KBMatrixPair.
-var FrostECKeyMatrix = map[string]KBMatrixPair{
+// FrostFlowECKeyMatrix is a map for frostflow model that stores a row/col pair for each key using KBMatrixPair.
+var FrostFlowECKeyMatrix = map[string]KBMatrixPair{
 	"`":           KBMatrixPair{3, 1},
 	"1":           KBMatrixPair{7, 1},
 	"2":           KBMatrixPair{6, 4},

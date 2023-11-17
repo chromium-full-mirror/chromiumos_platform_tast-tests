@@ -324,7 +324,7 @@ func pressShortcut(ctx context.Context, h *firmware.Helper, actionKey string) er
 	if err := func(ctx context.Context) error {
 		keyNames := []string{"<alt_l>", actionKey}
 		for _, key := range keyNames {
-			row, col, err := h.Servo.GetKeyRowCol(key, h.Model)
+			row, col, err := h.Servo.GetKeyRowCol(ctx, key, h.Model)
 			if err != nil {
 				return errors.Wrapf(err, "failed to get key column and row for %s", key)
 			}
