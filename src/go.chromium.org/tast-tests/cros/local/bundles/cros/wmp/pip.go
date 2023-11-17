@@ -32,7 +32,9 @@ import (
 )
 
 const (
-	arcPipTestPkgName = "org.chromium.arc.testapp.pictureinpicture"
+	arcPipTestPkgName  = "org.chromium.arc.testapp.pictureinpicture"
+	arcPipAppName      = "ArcPipTest"
+	shelfIconClassName = "ash/ShelfAppButton"
 )
 
 type pipTestFunc func(context.Context, *chrome.TestConn, *uiauto.Context, *display.Info, *input.TouchscreenEventWriter) error
@@ -57,6 +59,8 @@ var ashPipTests = pipTestParams{
 	tests: []pipTestFunc{
 		testPipPinchResize,
 		testPipTuck,
+		testPipMove,
+		testPipExpandViaMenu,
 	},
 	browserType:   browser.TypeAsh,
 	pipWindowName: "Picture in picture",
@@ -68,6 +72,8 @@ var lacrosPipTests = pipTestParams{
 	tests: []pipTestFunc{
 		testPipPinchResize,
 		testPipTuck,
+		testPipMove,
+		testPipExpandViaMenu,
 	},
 	browserType:   browser.TypeLacros,
 	pipWindowName: "Picture in picture",
@@ -79,9 +85,12 @@ var arcPipTests = pipTestParams{
 	tests: []pipTestFunc{
 		testPipPinchResize,
 		testPipTuck,
+		testPipMove,
+		testPipExpandViaMenu,
+		testPipExpandViaShelfIcon,
 	},
 	browserType:   browser.TypeAsh,
-	pipWindowName: "ArcPipTest",
+	pipWindowName: arcPipAppName,
 	pipClassName:  "Widget",
 }
 
@@ -94,7 +103,6 @@ func init() {
 			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
 			"takise@chromium.org",
-			"massan@google.com",
 		},
 		// ChromeOS > Software > Window Management > PiP Window
 		BugComponent: "b:1252568",
@@ -271,9 +279,6 @@ func testPipPinchResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 		return errors.Wrap(err, "failed to get PiP window")
 	}
 	afterBounds := window.BoundsInRoot
-	if err != nil {
-		return errors.Wrap(err, "failed to get bounds for the PiP window")
-	}
 	if beforeBounds.Width >= afterBounds.Width ||
 		beforeBounds.Height >= afterBounds.Height {
 		return errors.Wrapf(err, "unexpected PiP window size; window size changed from %v to %v",
@@ -336,6 +341,106 @@ func testPipTuck(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context
 	}
 
 	return nil
+}
+
+
+// testPipMove verifies that drag-moving the PIP window works as expected.
+func testPipMove(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+	stw, err := tsw.NewSingleTouchWriter()
+	if err != nil {
+		return errors.Wrap(err, "failed to get touch event writer")
+	}
+	defer stw.Close()
+
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+
+	// Perform swipe gesture on the PiP window.
+	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
+	offset := coords.NewPoint(dispInfo.Bounds.Width/2, 0)
+
+	// Lacros PiP can't be drag resized by grabbing one of the buttons on the menu.
+	// Grab the upper part of PiP, where no UI can be placed on PiP menu.
+	start := coords.Point{X: beforeBounds.CenterX(), Y: beforeBounds.Top + beforeBounds.Height/5}
+	startX, startY := tcc.ConvertLocation(start)
+	endX, endY := tcc.ConvertLocation(start.Sub(offset))
+
+	if err := stw.Swipe(ctx, startX, startY, endX, endY, time.Second); err != nil {
+		return errors.Wrap(err, "failed to perform swipe move")
+	}
+	if err := stw.End(); err != nil {
+		return errors.Wrap(err, "failed to finish swipe gesture")
+	}
+
+	// Confirm that the window has moved due to the gesture.
+	// Note that PiP drag move is asynchronously started by the client, we can't assert the exact position.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		window, err = getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get PiP window")
+		}
+		afterBounds := window.BoundsInRoot
+		if beforeBounds.Left <= afterBounds.Left {
+			return errors.Wrapf(err, "unexpected PiP window position; want: left position=>%v, actual: left position=%v", beforeBounds.Left, afterBounds.Left)		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// testPipExpandViaMenu verifies that PiP can be expanded by tapping the center of the menu overlay of the window.
+func testPipExpandViaMenu(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+	stw, err := tsw.NewSingleTouchWriter()
+	if err != nil {
+		return errors.Wrap(err, "failed to get touch event writer")
+	}
+	defer stw.Close()
+
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	bounds := window.BoundsInRoot
+
+	tcc := tsw.NewTouchCoordConverter(dispInfo.Bounds.Size())
+	centerX, centerY := tcc.ConvertLocation(bounds.CenterPoint())
+
+	// Tap the center of the PiP menu, where the expand button exists for any type of PiP.
+	// Here, we retry tapping until PiP is gone because we don't know when PiP menu starts accepting input events (PiP menu is rendered on the client side).
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if err := stw.Move(centerX, centerY); err != nil {
+			return errors.Wrap(err, "failed to tap the center of PiP")
+		}
+		if err := stw.End(); err != nil {
+			return errors.Wrap(err, "failed to finish tap gesture")
+		}
+		ws, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get the window list"))
+		}
+		for _, window := range ws {
+			if window.IsVisible && window.State == ash.WindowStatePIP {
+				return errors.New("PiP still exists")
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
+}
+
+// testPipExpandViaShelfIcon verifies that PiP can be expanded by pressing the shelf icon of the app.
+func testPipExpandViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, _ *display.Info, _ *input.TouchscreenEventWriter) error {
+	return expandPipViaShelfIcon(ctx, tconn, ac)
+}
+
+// expandPipViaShelfIcon expands the PiP window by pressing the shelf icon of the app.
+// Note that this behavior is currently supported only by ARC PiP.
+func expandPipViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
+	pipShelfIcon := nodewith.Name(arcPipAppName).HasClass(shelfIconClassName)
+	if err := ac.WithTimeout(10 * time.Second).LeftClick(pipShelfIcon)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to click on the shelf icon of %s", arcPipAppName)
+	}
+	return waitUntilPipWindowIsGone(ctx, tconn)
 }
 
 func createArcPip(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, dispInfo *display.Info, test pipTestParams) (*arc.Activity, error) {
@@ -465,4 +570,20 @@ func waitForNewBounds(ctx context.Context, tconn *chrome.TestConn) (coords.Rect,
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
 	return rect, err
+}
+
+// waitUntilPipWindowIsGone keeps looking for a PiP window until it gets gone.
+func waitUntilPipWindowIsGone(ctx context.Context, tconn *chrome.TestConn) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		ws, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get the window list"))
+		}
+		for _, window := range ws {
+			if window.State == ash.WindowStatePIP {
+				return errors.New("PiP still exists")
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
