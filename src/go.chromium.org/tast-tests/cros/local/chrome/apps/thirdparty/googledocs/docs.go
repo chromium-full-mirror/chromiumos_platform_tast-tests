@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -148,6 +149,27 @@ func DeleteDoc(tconn *chrome.TestConn) action.Action {
 		prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt),
 		ui.WithTimeout(longUITimeout).WaitUntilExists(docHomeWebArea),
 	)
+}
+
+// DeleteDocWithURL returns an action to open the doc url and delete the document.
+func DeleteDocWithURL(tconn *chrome.TestConn, cr *chrome.Chrome, url string) action.Action {
+	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		conn, err := cr.NewConn(ctx, url)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open %s", url)
+		}
+		defer conn.Close()
+		defer conn.CloseTarget(cleanupCtx)
+
+		if err := webutil.WaitForQuiescence(ctx, conn, 30*time.Second); err != nil {
+			return errors.Wrap(err, "failed to wait for the page to load")
+		}
+		return DeleteDoc(tconn)(ctx)
+	}
 }
 
 // waitForDocsSaved waits for the docs document state to be saved.
