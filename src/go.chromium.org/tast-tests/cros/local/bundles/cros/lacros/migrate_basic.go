@@ -25,7 +25,7 @@ func init() {
 			"hidehiko@google.com",
 		},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 	})
 }
