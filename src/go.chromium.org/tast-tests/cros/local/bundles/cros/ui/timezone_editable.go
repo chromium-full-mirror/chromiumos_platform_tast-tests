@@ -350,15 +350,15 @@ func verifyHourClock(ctx context.Context, ui *uiauto.Context, is24Hour bool) err
 	date := `Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday`
 	Month := `January|February|March|April|May|June|July|August|September|October|November|December`
 
-	// Expecting name with pattern like "10:59 AM, Friday, January 21, 2022".
+	// Expecting name with pattern like "Thursday, October 5, 2023, 6:26 PM".
 	// The character " " before "AM"/"PM" is unicode character U+202F, different with the normal space (U+0020).
-	reg := regexp.MustCompile(fmt.Sprintf(`(\d+):(\d+) (AM|PM), (%s), (%s) (\d+), (\d+)`, date, Month))
+	reg := regexp.MustCompile(fmt.Sprintf(`(%s), (%s) (\d+), (\d+), (\d+):(\d+) (AM|PM)`, date, Month))
 	if is24Hour {
-		// Expecting name with pattern like "10:59, Friday, January 21, 2022".
-		reg = regexp.MustCompile(fmt.Sprintf(`(\d+):(\d+), (%s), (%s) (\d+), (\d+)`, date, Month))
+		// Expecting name with pattern like "Thursday, October 5, 2023, 6:26".
+		reg = regexp.MustCompile(fmt.Sprintf(`(%s), (%s) (\d+), (\d+), (\d+):(\d+)`, date, Month))
 	}
 
-	if err := ui.WaitUntilExists(nodewith.NameRegex(reg).Ancestor(quicksettings.SystemTray))(ctx); err != nil {
+	if err := ui.WaitUntilExists(nodewith.NameRegex(reg).HasClass("DateTray").Ancestor(quicksettings.StatusAreaWidget))(ctx); err != nil {
 		if is24Hour {
 			return errors.Wrap(err, `AM/PM should disappear when 24-hour clock mode is enable`)
 		}
@@ -373,28 +373,30 @@ func verifyTimeZone(ctx context.Context, ui *uiauto.Context, timeZoneReg *regexp
 	if err != nil {
 		return errors.Wrapf(err, "failed to parse timezone: %q", timezoneName)
 	}
-	expectTime := time.Now().In(loc)
-	testing.ContextLog(ctx, "Expect time: ", expectTime)
+
+	expectedTime := time.Now().In(loc)
+	testing.ContextLog(ctx, "Expected time: ", expectedTime)
 
 	timeFormat := map[bool]string{
-		true:  `15:04, Monday, January _2, 2006`,
-		false: `15:04 PM, Monday, January _2, 2006`, // The character " " before "PM" is unicode character U+202F, different with the normal space (U+0020).
+		true:  `Calendar view, Monday, January _2, 2006, 15:04`,
+		false: `Calendar view, Monday, January _2, 2006, 15:04 PM`, // The character " " before "PM" is unicode character U+202F, different with the normal space (U+0020).
 	}
 
-	timeviewInfo, err := ui.Info(ctx, nodewith.HasClass("TimeView").Ancestor(quicksettings.SystemTray))
+	dateTray, err := ui.Info(ctx, nodewith.HasClass("DateTray").Ancestor(quicksettings.StatusAreaWidget))
 	if err != nil {
-		return errors.Wrap(err, "failed to get information of TimeView")
+		return errors.Wrap(err, "failed to DateTray info")
 	}
-	testing.ContextLog(ctx, "Time view: ", timeviewInfo.Name)
+	actualTime := dateTray.Name
+	testing.ContextLog(ctx, "Actual time: ", actualTime)
 
-	currentTime, err := time.ParseInLocation(timeFormat[is24Hour], timeviewInfo.Name, loc)
+	currentTime, err := time.ParseInLocation(timeFormat[is24Hour], actualTime, loc)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse timeview")
 	}
 
-	deviation := currentTime.Sub(expectTime)
+	deviation := currentTime.Sub(expectedTime)
 	if deviation > 2*time.Minute || deviation < -2*time.Minute {
-		return errors.Wrapf(err, "the clock didn't updated dynamically, expect: %s, got: %s", expectTime.String(), currentTime.String())
+		return errors.Wrapf(err, "the clock does not reflect the current time: expected: %s actual: %s", expectedTime.String(), currentTime.String())
 	}
 
 	return nil
