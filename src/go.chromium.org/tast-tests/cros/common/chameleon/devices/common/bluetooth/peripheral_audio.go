@@ -7,8 +7,10 @@ package bluetooth
 import (
 	"context"
 	"time"
+	"strconv"
 
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
+	"go.chromium.org/tast/core/errors"
 )
 
 // AudioPeripheral is an interface for making RPC calls to a chameleond daemon
@@ -345,7 +347,15 @@ func (c *CommonAudioPeripheral) GetBluezSinkHFPDevice(ctx context.Context, audio
 // This implements AudioPeripheral.GetBluezSourceA2DPDevice, see that for more
 // details.
 func (c *CommonAudioPeripheral) GetBluezSourceA2DPDevice(ctx context.Context, audioProfile AudioProfile) (int, error) {
-	return c.RPC("GetBluezSourceA2DPDevice").Args(audioProfile.String()).CallForInt(ctx)
+	val, err := c.RPC("GetBluezSourceA2DPDevice").Args(audioProfile.String()).CallForString(ctx)
+	if err != nil {
+		return 0, err
+	}
+	sourceDeviceInt, err := strconv.Atoi(val)
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to parse result of successful GetBluezSourceA2DPDevice RPC call %q as an int", val)
+	}
+	return sourceDeviceInt, nil
 }
 
 // StartRecordingAudioSubprocessPulseaudio calls the Chameleond RPC method of
