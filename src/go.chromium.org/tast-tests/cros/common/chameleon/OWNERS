@@ -1,0 +1,14 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+set noparent
+
+# Developers of chameleon and chameleond that this client is for.
+include chromiumos/platform/chameleon:/OWNERS
+
+# Teams that enable chameleond usage.
+include chromiumos/owners:v1:/engprod/OWNERS.connectivity
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
