@@ -22,9 +22,6 @@ nikhilcn@google.com
 tjohnsonkanu@google.com
 
 # ChromeOS Connectivity (EngProd)
-harpreet@chromium.org
-jaredbennett@google.com
-jstanko@google.com
-shijinabraham@google.com
+include chromiumos/owners:v1:/engprod/OWNERS.connectivity
 
 include /OWNERS.tast
