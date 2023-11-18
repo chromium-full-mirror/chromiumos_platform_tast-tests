@@ -11,11 +11,11 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
-	"go.chromium.org/tast-tests/cros/common/audio/cras"
-	audiopb "go.chromium.org/tast-tests/cros/services/cros/audio"
 
+	"go.chromium.org/tast-tests/cros/common/audio/cras"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	audiopb "go.chromium.org/tast-tests/cros/services/cros/audio"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -517,4 +517,10 @@ func (c *Cras) GetForceHFPSwbEnabled(ctx context.Context) (enabled bool, err err
 // SetForceHFPSwbEnabled calls the dbus method of the same name.
 func (c *Cras) SetForceHFPSwbEnabled(ctx context.Context, enabled bool) error {
 	return c.call(ctx, "SetForceHFPSwbEnabled", enabled).Err
+}
+
+// GetDSPOffloadSupported returns whether the given node supports DSP offload to SOF.
+func (c *Cras) GetDSPOffloadSupported(ctx context.Context, node CrasNode) (supported bool, err error) {
+	err = c.call(ctx, "GetDSPOffloadSupported", node.ID).Store(&supported)
+	return supported, err
 }

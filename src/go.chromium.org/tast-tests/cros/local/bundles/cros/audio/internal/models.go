@@ -12,4 +12,12 @@ var (
 	DSPAPNCModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 	// Models that support DSP NC but not AP NC.
 	DSPNCOnlyModels = []string{"dojo"}
+	// Models that support DSP DRC and EQ.
+	DSPOffloadDRCEQModels = []string{
+		// Upon "brya" board
+		"aviko", "banshee", "dochi", "marasov", "omnigul", "omniknight", "osiris",
+		// Upon "nissa" board
+		"anraggar", "craask", "craaskana", "craaskbowl", "craaskino", "craaskov",
+		"craaskvin", "gothrax", "hideo", "joxer", "pirrha", "quandiso", "uldren", "xivu",
+	}
 )
