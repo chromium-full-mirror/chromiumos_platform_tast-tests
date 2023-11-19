@@ -984,6 +984,17 @@ func genDexOptCache(ctx context.Context, s *testing.State, cl *rpc.Client, targe
 		s.Fatalf("Failed to get %q from the device: %v", response.DexOptCacheName, err)
 	}
 
+	// Unpack dexopt tar file for local runs to make it easier for testing.
+	if !du.shouldUpload {
+		unpackedDexOptDir := filepath.Join(s.OutDir(), "raw_dex_opt")
+		if err = os.Mkdir(unpackedDexOptDir, 0744); err != nil {
+			s.Fatalf("Failed to create %q: %v", unpackedDexOptDir, err)
+		}
+		if err := testexec.CommandContext(ctx, "tar", "-xvf", targetFile, "-C", unpackedDexOptDir).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to unpack dexopt cache: ", err)
+		}
+	}
+
 	if err := du.uploadIfNeeded(targetFile, dexOptCache); err != nil {
 		s.Fatalf("Failed to upload %q: %v", targetFile, err)
 	}
