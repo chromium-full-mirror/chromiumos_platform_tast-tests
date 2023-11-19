@@ -1523,7 +1523,7 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 		opts := []chrome.Option{
 			chrome.GAIALogin(creds),
-			chrome.ExtraArgs("--disable-sync"),
+			chrome.ExtraArgs("--disable-sync", "--disable-drive-fs-for-testing"),
 		}
 		if f.keepState {
 			opts = append(opts, chrome.KeepState())
