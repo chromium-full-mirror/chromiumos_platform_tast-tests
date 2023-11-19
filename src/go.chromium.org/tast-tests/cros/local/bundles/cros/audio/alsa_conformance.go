@@ -24,16 +24,16 @@ import (
 )
 
 // TODO(b/239385484) : remove "beetley" when b/239385484 is fixed.
-// TODO(b/272410497) : remove "redrix" when b/239385850 is fixed.
-// TODO(b/272410497) : remove "gimble" when b/239409160 is fixed.
-// TODO(b/272410497) : remove "anahera" when b/239412769 is fixed.
 // TODO(b/245058202) : remove "bob" when b/245058202 is fixed.
-// TODO(b/272410497) : remove "yaviks", "yavikso" when b/244418775 is fixed.
 // TODO(b/285830729) : remove "geralt" when b/285830729 is fixed.
-var alsaConformanceUnstableModels = []string{"beetley", "redrix", "gimble", "anahera", "bob", "yaviks", "yavikso", "geralt"}
+var alsaConformanceUnstableModels = []string{"beetley", "bob", "geralt"}
 
 // TODO(b/136614687): Relex the criteria for grunt devices, the audio still sounds fine as CRAS can compensate the rate, if the rate error is not huge.
 var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya360", "treeya"}
+
+// AEC requires the processing data in s16le format while the present SOF does not respect the capabilities for processing modules. The client will still get available formats s16,s24,s32le on querying PCM capabilities (device info).
+// TODO(b/244418775): remove this when b/244418775 is fixed
+var fixFormatS16CaptureModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 
 var mergeThresholdSize480Models = []string{
 	"anahera",
@@ -128,6 +128,15 @@ func isInRelexedCriteriaModel(ctx context.Context, model string) bool {
 
 func isInMergeThresholdSize480Model(ctx context.Context, model string) bool {
 	for _, name := range mergeThresholdSize480Models {
+		if name == model {
+			return true
+		}
+	}
+	return false
+}
+
+func isInFixFormatS16CaptureModel(ctx context.Context, model string) bool {
+	for _, name := range fixFormatS16CaptureModels {
 		if name == model {
 			return true
 		}
@@ -265,6 +274,9 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 		var args = []string{arg, alsaDev, "--rate-criteria-diff-pct", fmt.Sprintf("%f", rateCriteria), "--rate-err-criteria", fmt.Sprintf("%f", rateErrCriteria), "--json"}
 		if isInMergeThresholdSize480Model(ctx, model) {
 			args = append(args, "--merge-thld-size", "480")
+		}
+		if isInFixFormatS16CaptureModel(ctx, model) && stream == audio.InputStream {
+			args = append(args, "--allow-formats", "S16_LE")
 		}
 
 		out, err := testexec.CommandContext(
