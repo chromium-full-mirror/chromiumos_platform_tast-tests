@@ -102,7 +102,6 @@ func init() {
 				testFunc: testChronosCrasher,
 			},
 			Fixture:           localcrash.MockConsentFieldTrialConfigEnable,
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 		}, {
 			Name: "chronos_crasher_no_consent_fieldtrial_testing_config_off",
@@ -138,7 +137,6 @@ func init() {
 				testFunc: testRootCrasher,
 			},
 			Fixture:           localcrash.MockConsentFieldTrialConfigEnable,
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"chrome"},
 		}, {
 			Name: "root_crasher_no_consent",

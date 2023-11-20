@@ -44,7 +44,6 @@ func init() {
 		}, {
 			Name:      "mock_consent_fieldtrial_testing_config_on",
 			Fixture:   crash.MockConsentFieldTrialConfigEnable,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
