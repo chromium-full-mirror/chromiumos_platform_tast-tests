@@ -64,7 +64,7 @@ func init() {
 		SoftwareDeps: []string{"vm_host"},
 		Fixture:      "uiStopped",
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
