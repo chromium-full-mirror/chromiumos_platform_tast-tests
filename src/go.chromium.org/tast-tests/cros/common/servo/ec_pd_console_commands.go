@@ -32,6 +32,15 @@ const (
 	TCPMv2 TCPMVersion = 2
 )
 
+// Supported DualRole states
+const (
+	DROn     string = `on`
+	DROff    string = `off`
+	DRFreeze string = `freeze`
+	DRSink   string = `sink`
+	DRSource string = `source`
+)
+
 // DUTPDInfo caches the fixed PD testing information for the DUT.
 type DUTPDInfo struct {
 	version    TCPMVersion // TCPM stack version in use by DUT
@@ -123,6 +132,18 @@ func (s *Servo) SendRequestSourceVoltage(ctx context.Context, voltage int) error
 	cmd := fmt.Sprintf("pd %d dev %d", s.dutPDInfo.activePort, voltage)
 
 	testing.ContextLog(ctx, "Sending request source voltage: ", cmd)
+	if err := s.RunECCommand(ctx, cmd); err != nil {
+		return errors.Wrap(err, "EC pd command failed")
+	}
+
+	return nil
+}
+
+// SetDualroleState sets the dual-role state of the DUT
+func (s *Servo) SetDualroleState(ctx context.Context, drs string) error {
+	cmd := fmt.Sprintf("pd %d dualrole %s", s.dutPDInfo.activePort, drs)
+
+	testing.ContextLog(ctx, "Sending request: ", cmd)
 	if err := s.RunECCommand(ctx, cmd); err != nil {
 		return errors.Wrap(err, "EC pd command failed")
 	}
