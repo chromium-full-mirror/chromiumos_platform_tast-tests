@@ -100,8 +100,8 @@ func Ti50RboxTablet(ctx context.Context, s *testing.State) {
 			}
 
 			resetDelayMs := assertReset.TimestampUS / 1000
-			// Allow 1% measurement error.
-			if resetDelayMs < uint64(float64(tabletEcResetHoldDelay.Milliseconds())*0.99) {
+			// Allow 2% measurement error (b/311438894).
+			if resetDelayMs < uint64(float64(tabletEcResetHoldDelay.Milliseconds())*0.98) {
 				s.Errorf("EC_RST_L asserted before 10s minimum hold time: %dms", resetDelayMs)
 			} else {
 				s.Logf("EC_RST_L delayed by %dms", resetDelayMs)
