@@ -52,7 +52,7 @@ func init() {
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			Name:      "blocked_ash_to_lacros",
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:golden_tier"},
 			Val: dragdrop.MixedBrowsersParams{
 				Source:      dragdrop.Settings,
 				Destination: dragdrop.Chrome,
