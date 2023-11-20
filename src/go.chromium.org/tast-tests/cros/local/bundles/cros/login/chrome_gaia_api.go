@@ -95,7 +95,7 @@ func ChromeGaiaAPI(ctx context.Context, s *testing.State) {
 		if err == io.EOF {
 			break
 		}
-		if strings.Contains(entry.Content, "SamlHandler.onAPICall_") && entry.Severity == "ERROR" {
+		if strings.Contains(entry.Content, "SamlHandler.onAPICall_") && entry.Severity == "WARNING" {
 			s.Fatal("Found error in the Chrome log: ", entry.Content)
 		}
 	}
