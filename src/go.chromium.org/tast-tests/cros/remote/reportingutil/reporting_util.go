@@ -35,7 +35,7 @@ const ReportingServerURL = "https://autopush-chromereporting-pa.sandbox.googleap
 // UpdatePolicy is used to identify which policies need to updated for a test.
 type UpdatePolicy int
 
-// EnablAll and DisableAll enable/disable all reporting.
+// EnableAll and DisableAll enable/disable all reporting.
 // Custom enables reporting with an allowlist.
 const (
 	EnableAll UpdatePolicy = iota
@@ -62,10 +62,10 @@ func PruneEvents(ctx context.Context, events []InputEvent, correctEventType Veri
 		prunedEvents = append(prunedEvents, event)
 		j, err := json.Marshal(event)
 		if err != nil {
-			testing.ContextLog(ctx, "Failed to marshall event: ", err)
+			testing.ContextLog(ctx, "Reporting: Failed to marshall event: ", err)
 			return []InputEvent{}, errors.Wrap(err, "failed to marshal event")
 		}
-		testing.ContextLog(ctx, "Found a valid event ", string(j))
+		testing.ContextLog(ctx, "Reporting: Found a valid event ", string(j))
 	}
 
 	return prunedEvents, nil
@@ -122,6 +122,7 @@ func LookupEventsByRequestPath(ctx context.Context, requestPath string, testStar
 			filteredEvents = append(filteredEvents, event)
 		}
 	}
+	testing.ContextLogf(ctx, "Reporting: Found %d events after querying the reporting server", len(filteredEvents))
 	return filteredEvents, nil
 }
 
@@ -129,6 +130,7 @@ func LookupEventsByRequestPath(ctx context.Context, requestPath string, testStar
 // endpoint to get a list of events received by the server from a managed device.
 func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, clientID, apiKey, destination string, testStartTime time.Time) ([]InputEvent, error) {
 	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&deviceId=%v&destination=%v", reportingServerURL, apiKey, obfuscatedCustomerID, clientID, destination)
+	testing.ContextLog(ctx, "Reporting: Querying the reporting server for device events")
 	return LookupEventsByRequestPath(ctx, reqPath, testStartTime)
 }
 
@@ -136,6 +138,7 @@ func LookupEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID,
 // endpoint to get a list of events received by the server from a managed user.
 func LookupUserEvents(ctx context.Context, reportingServerURL, obfuscatedCustomerID, apiKey, destination, userEmail string, testStartTime time.Time) ([]InputEvent, error) {
 	reqPath := fmt.Sprintf("%v/test/events?key=%v&obfuscatedCustomerId=%v&destination=%v&userEmail=%v", reportingServerURL, apiKey, obfuscatedCustomerID, destination, userEmail)
+	testing.ContextLog(ctx, "Reporting: Querying the reporting server for user events")
 	return LookupEventsByRequestPath(ctx, reqPath, testStartTime)
 }
 
@@ -175,7 +178,7 @@ func DisableUpdatingDeviceAttribute(ctx context.Context, client tapeClient, requ
 // SleepWithContextLog sleeps for the given number of minutes and log it to the context.
 func SleepWithContextLog(ctx context.Context, minutes int) error {
 	testing.ContextLogf(ctx,
-		"Waiting for %d minutes to check for reported telemetry", minutes)
+		"Reporting: Waiting for %d minutes to check for reported telemetry", minutes)
 
 	// GoBigSleepLint: Waiting for reported telemetry.
 	if err := testing.Sleep(ctx, time.Duration(minutes)*time.Minute); err != nil {
