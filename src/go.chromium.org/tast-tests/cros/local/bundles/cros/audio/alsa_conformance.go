@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+	"golang.org/x/exp/slices"
 )
 
 // TODO(b/239385484) : remove "beetley" when b/239385484 is fixed.
@@ -117,33 +118,6 @@ func init() {
 	})
 }
 
-func isInRelexedCriteriaModel(ctx context.Context, model string) bool {
-	for _, name := range relexedCriteriaModels {
-		if name == model {
-			return true
-		}
-	}
-	return false
-}
-
-func isInMergeThresholdSize480Model(ctx context.Context, model string) bool {
-	for _, name := range mergeThresholdSize480Models {
-		if name == model {
-			return true
-		}
-	}
-	return false
-}
-
-func isInFixFormatS16CaptureModel(ctx context.Context, model string) bool {
-	for _, name := range fixFormatS16CaptureModels {
-		if name == model {
-			return true
-		}
-	}
-	return false
-}
-
 func ALSAConformance(ctx context.Context, s *testing.State) {
 	model, err := crosconfig.Get(ctx, "/", "name")
 	if err != nil {
@@ -151,13 +125,10 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 	}
 
 	// TODO(yuhsuan): Tighten the ratio if the current version is stable. (b/136614687)
-	var rateCriteria, rateErrCriteria float32
-	if !isInRelexedCriteriaModel(ctx, model) {
-		rateCriteria = 0.1
-		rateErrCriteria = 100.0
-	} else {
+	rateCriteria := 0.1
+	rateErrCriteria := 100.0
+	if slices.Contains(relexedCriteriaModels, model) {
 		rateCriteria = 0.15
-		rateErrCriteria = 100.0
 	}
 
 	// Stop UI in advance for this test to avoid the node being selected by UI.
@@ -272,10 +243,10 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 			arg = "-P"
 		}
 		var args = []string{arg, alsaDev, "--rate-criteria-diff-pct", fmt.Sprintf("%f", rateCriteria), "--rate-err-criteria", fmt.Sprintf("%f", rateErrCriteria), "--json"}
-		if isInMergeThresholdSize480Model(ctx, model) {
+		if slices.Contains(mergeThresholdSize480Models, model) {
 			args = append(args, "--merge-thld-size", "480")
 		}
-		if isInFixFormatS16CaptureModel(ctx, model) && stream == audio.InputStream {
+		if slices.Contains(fixFormatS16CaptureModels, model) && stream == audio.InputStream {
 			args = append(args, "--allow-formats", "S16_LE")
 		}
 
