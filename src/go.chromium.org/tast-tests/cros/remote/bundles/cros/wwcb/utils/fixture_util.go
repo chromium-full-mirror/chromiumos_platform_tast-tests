@@ -17,6 +17,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// wwcbPowerCycleFixture is a variable to enable to power cycle fixture in the WWCB tests.
+var wwcbPowerCycleFixture = testing.RegisterVarString(
+	"utils.wwcbPowerCycleFixture",
+	"off",
+	"A variable to enable to power cycle fixture in the WWCB tests",
+)
+
 var (
 	fixtureUID = map[string]string{
 		"AUS19129_C01_01": "1912901",
@@ -250,6 +257,10 @@ func OpenAllFixture(ctx context.Context) {
 func CloseAllFixture(ctx context.Context) {
 	for uid := range fixtureOnline {
 		ControlFixture(ctx, uid, "off")
+	}
+
+	if wwcbPowerCycleFixture.Value() == "on" {
+		PowerCycleFixture(ctx)
 	}
 }
 
