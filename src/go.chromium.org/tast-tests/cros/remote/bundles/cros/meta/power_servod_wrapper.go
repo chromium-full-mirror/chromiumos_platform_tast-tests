@@ -268,7 +268,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	servoResult := <-ch
 
 	subtestDir := filepath.Join(resultsDir, "tests", subtest)
-	measureStarted, err = servod.FindSubtestStartTime(subtestDir)
+	measureStarted, err = servod.FindSubtestStartTime(resultsDir)
 	if err != nil {
 		s.Fatal("Failed to get subtest start time: ", err)
 	}

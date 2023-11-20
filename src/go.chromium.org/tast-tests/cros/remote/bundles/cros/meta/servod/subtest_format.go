@@ -9,32 +9,39 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
 )
 
-// FindSubtestStartTime gets first occurring timestamp (seconds since January 1, 1970)
-// of a test from the log.txt result.
-func FindSubtestStartTime(subtestDir string) (float64, error) {
-	logPath := filepath.Join(subtestDir, "log.txt")
-	log, err := os.ReadFile(logPath)
-	if err != nil {
-		return 0.0, errors.Wrapf(err, "failed to read %q", logPath)
-	}
-	// TODO: b/303755525 - Change method of seeking test start time.
-	re := regexp.MustCompile("(.*Z) .* Start tracking zram IO stats")
-	match := re.FindStringSubmatch(string(log))
-	if len(match) > 1 {
-		t, err := time.Parse(time.RFC3339Nano, match[1])
-		if err != nil {
-			return 0.0, errors.Wrapf(err, "failed to parse time from %s", match[1])
-		}
-		return float64(t.Unix()), nil
-	}
+// SubtestResult is the mapping to the results.json object.
+type SubtestResult struct {
+	Name  string `json:"name"`
+	Start string `json:"start"`
+}
 
-	return 0.0, errors.New("no start time found")
+// FindSubtestStartTime gets the start timestamp (seconds since January 1, 1970)
+// of a test from the results.json file.
+func FindSubtestStartTime(subtestDir string) (float64, error) {
+	var results []SubtestResult
+	rf, err := os.Open(filepath.Join(subtestDir, "results.json"))
+	if err != nil {
+		return 0.0, errors.Wrap(err, "couldn't open results file")
+	}
+	defer rf.Close()
+
+	if err = json.NewDecoder(rf).Decode(&results); err != nil {
+		return 0.0, errors.Wrapf(err, "couldn't decode results from %v", rf.Name())
+	}
+	if len(results) > 1 {
+		return 0.0, errors.New("more than one subtest was run")
+	}
+	t, err := time.Parse(time.RFC3339Nano, results[0].Start)
+	if err != nil {
+		return 0.0, errors.Wrapf(err, "failed to parse time from %s", results[0].Start)
+	}
+	return float64(t.Unix()), nil
+
 }
 
 // FindSubtestLastTimelineValue returns the last recorder timeline value (seconds)
