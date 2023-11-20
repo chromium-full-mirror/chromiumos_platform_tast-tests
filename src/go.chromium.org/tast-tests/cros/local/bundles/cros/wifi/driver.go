@@ -95,6 +95,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"5.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel22560: {
 		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
