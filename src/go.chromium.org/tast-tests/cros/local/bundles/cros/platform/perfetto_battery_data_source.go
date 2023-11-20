@@ -63,6 +63,7 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 	//   { "batt.sbs-12-000b.capacity_pct", "100.000000" }
 	//   { "batt.sbs-12-000b.charge_uah", "5450000.000000" }
 	//   { "batt.sbs-12-000b.current_ua", "0.000000" }
+	//   { "batt.sbs-12-000b.voltage_uv", "80000000.000000" }
 	// }
 	batt, err := sess.RunQuery(ctx, s.DataPath(batteryTraceQueryFile))
 	if err != nil {
@@ -81,8 +82,8 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	var capacity, charge, current []float64 // Use slices since there can be multiple batteries.
-	for _, row := range batt[1:] {          // Skip the 1st row of column names.
+	var capacity, charge, current, voltage []float64 // Use slices since there can be multiple batteries.
+	for _, row := range batt[1:] {                   // Skip the 1st row of column names.
 		name, val := row[0], row[1]
 		v, err := strconv.ParseFloat(val, 64)
 		if err != nil {
@@ -94,6 +95,8 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 			charge = append(charge, v)
 		} else if strings.HasSuffix(name, "current_ua") {
 			current = append(current, v)
+		} else if strings.HasSuffix(name, "voltage_uv") {
+			voltage = append(voltage, v)
 		} else {
 			s.Fatalf("Unexpected battery counter: %s", name)
 		}
@@ -130,6 +133,13 @@ func PerfettoBatteryDataSource(ctx context.Context, s *testing.State) {
 		// The kernel doc states that for batteries, negative values are used for discharge, but not all drivers follow that.
 		if current == nil {
 			s.Fatal("Battery current counter is missing")
+		}
+	}
+	if status.BatteryVoltage != 0.0 {
+		const maxBatteryVoltageUV = 50 * 1e6
+		if !validateValueRange(voltage, 0.0, maxBatteryVoltageUV) {
+			// TODO(skyostil): Turn this into Fatal() after the Perfetto roll.
+			s.Log("Invalid battery voltage value: ", voltage)
 		}
 	}
 }
