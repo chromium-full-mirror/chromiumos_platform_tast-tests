@@ -52,7 +52,7 @@ const BubbleSearchPage = "AppListBubbleSearchPage"
 const BubbleAppsPage = "AppListBubbleAppsPage"
 
 // PagedAppsGridViewClass defines the class name of the paged apps grid.
-const PagedAppsGridViewClass = "AppsGridView"
+const PagedAppsGridViewClass = "PagedAppsGridView"
 
 // SearchResultPageView defines the class name of the search view shown in
 // tablet mode.
