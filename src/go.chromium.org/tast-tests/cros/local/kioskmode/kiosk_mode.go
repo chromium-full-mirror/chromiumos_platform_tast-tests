@@ -360,6 +360,10 @@ func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Opt
 		}
 	}()
 
+	// Forcibly allow Lacros in platforms where it is (temporarily) disallowed. Note this *allows*
+	// Lacros, but does not *enable* it. Tests still need to do so as usual via policy.
+	opts = append(opts, chrome.ExtraArgs("--disable-disallow-lacros"))
+
 	cr, err := chrome.New(ctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start new Chrome")
