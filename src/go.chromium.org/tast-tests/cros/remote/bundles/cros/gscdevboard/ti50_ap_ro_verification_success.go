@@ -71,10 +71,13 @@ func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
 	th.MustSucceed(err, "Set wpsr")
 
 	th.MustSucceed(b.WithApFlashAccess(ctx, ti50.DoNotHoldInReset, func(flash ti50.ApFlash) {
-		// Enable HW WP on the AP SPI chip so the status registers are as expected.
+		// Enable SW WP on the AP SPI chip so the status registers are as expected.
+		// This range represents the RO section of the AP flash.
+		// We are able to modify SW WP because HW WP is disabled due to some previous "ccd reset factory".
 		flash.EnableApWriteProtect(ctx, 0, 0x00100000)
 
-		// Write the fresh AP flash image
+		// Write the fresh AP flash image. We only care about the RO section for verification but
+		// this will write the whole 32M image. The SW WP is ignored because HW WP is disabled.
 		s.Log("Flashing new AP image")
 		flash.WriteApFlash(ctx, flashImageContents(s))
 	}), "Access AP flash")
@@ -85,6 +88,7 @@ func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
 	stdout, err := b.GSCToolCommand(ctx, "", "-D", "-B")
 	th.MustSucceed(err, "Get AP RO verification status")
 
+	// HW WP is still disabled, but that doesn't prevent a verification pass.
 	if !gsctoolApRoPassed.Match(stdout) {
 		s.Errorf("AP RO verification did not pass, got %s", string(stdout))
 	}
