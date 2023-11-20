@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -35,6 +36,10 @@ func init() {
 			"group:complementary",
 		},
 		Fixture: fixture.FakeDMSEnrolled,
+		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.PrintersBulkAccessMode{}, pci.VerifiedFunctionalityJS),
+			pci.SearchFlag(&policy.PrintersBulkConfiguration{}, pci.VerifiedFunctionalityJS),
+		},
 	})
 }
 
@@ -49,8 +54,8 @@ func PrintersBulkAccessDefaultMode(ctx context.Context, s *testing.State) {
 		mgs.AutoLaunch(mgs.MgsAccountID),
 		mgs.AddPublicAccountPolicies(mgs.MgsAccountID, []policy.Policy{
 			&policy.PrintersBulkConfiguration{Val: &policy.PrintersBulkConfigurationValue{
-				Url:  "https://storage.googleapis.com/chromiumos-test-assets-public/enterprise/printers.json",
-				Hash: "7a052c5e4f23c159668148df2a3c202bed4d65749cab5ecd0fa7db211c12a3b8",
+				Url:  "https://storage.googleapis.com/chromiumos-test-assets-public/enterprise/managed_printers.json",
+				Hash: "5085c7d240b89aac22ed52bfa48a046ae36e8a8389664f1d834f68ae5f3fbde7",
 			}},
 		}),
 	)
@@ -70,7 +75,7 @@ func PrintersBulkAccessDefaultMode(ctx context.Context, s *testing.State) {
 	}
 
 	// The default PrintersBulkAccessMode will allow all printers.
-	expectedIDs := []string{"bl", "wl", "other", "both"}
+	expectedIDs := []string{"bl", "al", "other", "both"}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
 
