@@ -27,9 +27,7 @@ type crasStreamMixVal struct {
 	blockSize int
 }
 
-// b/291180821: Skip "kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360" until b/291180821 is fixed.
-// b/293263346: Skip "gladios", "lisbon" before b/293263346 is fixed.
-var crasStreamMixUnstableModels = []string{"kevin", "wormdingler", "quackingstick", "homestar", "pazquel", "limozeen", "pompom", "kingoftown", "pazquel360", "gladios", "lisbon"}
+var crasStreamMixUnstableModels = []string{}
 
 func init() {
 	testing.AddTest(&testing.Test{
