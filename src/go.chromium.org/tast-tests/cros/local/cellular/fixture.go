@@ -21,8 +21,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
+	"go.chromium.org/tast-tests/cros/local/modemloggerd"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/network"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/starfish"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -116,7 +118,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true),
+		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true).setModemLoggingAllowed(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularResetShillProfileOnPostTest",
@@ -211,6 +213,8 @@ type cellularFixture struct {
 	crashFilesTracker []string
 	helper            *Helper
 	modemfwdStopped   bool
+	modemLoggingAllowed bool
+	modemLoggingStarted bool
 	sf                *starfish.Starfish
 	netUnlock         func()
 	// Per-test logging marker
@@ -273,6 +277,10 @@ func (f *cellularFixture) setDisableCellularInShill(value bool) *cellularFixture
 	f.disableCellularInShill = value
 	return f
 }
+func (f *cellularFixture) setModemLoggingAllowed(value bool) *cellularFixture {
+	f.modemLoggingAllowed = value
+	return f
+}
 
 // FixtData holds information made available to tests that specify this fixture.
 type FixtData struct {
@@ -321,6 +329,22 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to setup starfish module on supported setup: ", err)
 	}
 	f.sf = sfish
+
+	if f.modemLoggingAllowed {
+		// check if OS version is divisible by 10. If it is, start modem logging if available
+		modemLoggingStarted, err := triggerModemLoggingConditionally(ctx)
+		if err != nil {
+			s.Fatal("Failed to trigger modem logging: ", err)
+		}
+		f.modemLoggingStarted = modemLoggingStarted
+		defer func(s *testing.FixtState) {
+			if f.modemLoggingStarted && s.HasError() {
+				if err := stopModemLogging(ctx); err != nil {
+					s.Log("Could not stop modem logging: ", err)
+				}
+			}
+		}(s)
+	}
 
 	// b/289540816: Ensure the APN in the modem doesn't contain a leftover value from a manual test.
 	CheckIfL850VerizonAndFixDefaultAPN(ctx)
@@ -648,6 +672,11 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 }
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.modemLoggingStarted {
+		if err := stopModemLogging(ctx); err != nil {
+			s.Fatal("Could not stop modem logging: ", err)
+		}
+	}
 	if f.disableCellularInShill {
 		if err := f.helper.Manager.EnableTechnology(ctx, shill.TechnologyCellular); err != nil {
 			s.Fatal("Unable to enable Cellular: ", err)
@@ -717,4 +746,52 @@ func waitForModemToBeExported(ctx context.Context) (*modemmanager.Modem, error) 
 		return nil, err
 	}
 	return modem, nil
+}
+
+func triggerModemLoggingConditionally(ctx context.Context) (bool, error) {
+	releaseVersion := util.GetChromeOSReleaseVersion()
+	// enable modem logging every 10'th version. Modem logging may change modem runtime behavior, so enable it sparsely.
+	if !strings.HasSuffix(releaseVersion, "0.0.0") {
+		return false, nil
+	}
+	modemLoggerPaths, err := modemloggerd.GetModemLoggerPaths(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get modem logger paths")
+	}
+	if len(modemLoggerPaths) == 0 {
+		return false, nil
+	}
+	if err := startModemLogging(ctx); err != nil {
+		return false, errors.Wrap(err, "failed to start modem logging")
+	}
+	return true, nil
+}
+
+func startModemLogging(ctx context.Context) error {
+	modemLogger, err := modemloggerd.NewModemLogger(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get a logger for the modem")
+	}
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return errors.Wrap(err, "failed to get test output dir")
+	}
+	if err := modemLogger.SetOutputDir(ctx, outDir); err != nil {
+		return errors.Wrap(err, "failed to set modem logs output dir")
+	}
+	if err := modemLogger.Start(ctx); err != nil {
+		return errors.Wrap(err, "failed to start modem logging")
+	}
+	return nil
+}
+
+func stopModemLogging(ctx context.Context) error {
+	modemLogger, err := modemloggerd.NewModemLogger(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get a logger for the modem")
+	}
+	if err := modemLogger.Stop(ctx); err != nil {
+		return errors.Wrap(err, "failed to stop modem logging")
+	}
+	return nil
 }
