@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -124,11 +125,17 @@ func CameraEffectsChromeResolution(ctx context.Context, s *testing.State) {
 		},
 	}
 
+	ui := uiauto.New(tconn)
+
 	for _, subTest := range subTests {
 		s.Run(ctx, subTest.name, func(ctx context.Context, s *testing.State) {
 			urlWithResolution := url + strconv.Itoa(subTest.resolution)
 			if err := conn.Navigate(ctx, urlWithResolution); err != nil {
 				s.Fatalf("Failed to navigate to %q: %v", urlWithResolution, err)
+			}
+
+			if err := ui.WithTimeout(time.Minute).WaitUntilExists(fakehtml.VideoNode)(ctx); err != nil {
+				s.Fatal("Failed to fully load the page : ", err)
 			}
 
 			d, err := screenshot.NewDifferFromChrome(ctx, s, cr,
