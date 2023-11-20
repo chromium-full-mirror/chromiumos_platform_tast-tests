@@ -319,6 +319,12 @@ func buttonDisabled(ctx context.Context, f *filesapp.FilesApp, button *nodewith.
 }
 
 func testCopyingToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, f *filesapp.FilesApp, kb *input.KeyboardEventWriter) error {
+	// Silently removing stale file in case it's present from other tests.
+	uiauto.Combine("Removing stale file",
+		f.OpenPlayfiles(),
+		f.OpenFile("Pictures"),
+		f.DeleteFileOrFolder(kb, restrictedFile))(ctx)
+
 	// The folder which contains a restricted file and a non-restricted file.
 	if err := uiauto.Combine("copy the folder to Play files/Pictures",
 		f.OpenDownloads(),
@@ -332,6 +338,7 @@ func testCopyingToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chro
 
 	if err := uiauto.Combine("Verify the files in the copied folder",
 		f.OpenFile(folder),
+		f.WaitUntilFileGone(folder),  // Ensure that navigated inside the folder.
 		f.EnsureFileGone(restrictedFile, 10*time.Second),
 		f.WaitForFile(unrestrictedFile))(ctx); err != nil {
 		return errors.Wrap(err, "failed to verify the files")
