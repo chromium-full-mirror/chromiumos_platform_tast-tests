@@ -204,7 +204,7 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		if err := toggleSecureDNS(ctx, checked.True); err != nil {
 			return err
 		}
-		selectNode := nodewith.Name("Select DNS Provider").Role(role.ComboBoxSelect)
+		selectNode := nodewith.Name("Select DNS provider").Role(role.ComboBoxSelect)
 		optionNode := nodewith.Name("OS default (when available)").Role(role.ListBoxOption)
 		if err := uiauto.Combine("enable secure DNS automatic mode",
 			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
@@ -226,7 +226,7 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 		}
 		defer kb.Close(ctx)
 
-		selectNode := nodewith.Name("Select DNS Provider").Role(role.ComboBoxSelect)
+		selectNode := nodewith.Name("Select DNS provider").Role(role.ComboBoxSelect)
 		optionNode := nodewith.Name("Add custom DNS service provider").Role(role.ListBoxOption)
 		textNode := nodewith.Name("Enter custom DNS query URL").Role(role.TextField)
 		if err := uiauto.Combine("enable DoH always on with a custom provider",
