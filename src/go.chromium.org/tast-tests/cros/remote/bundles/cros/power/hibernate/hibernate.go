@@ -509,7 +509,7 @@ func (t *Tester) login(ctx context.Context, reuseSession, keepState bool) error 
 	// Start Chrome with the username and password.
 	cs := pb.NewChromeServiceClient(t.grpcClient.Conn)
 	if _, err := cs.New(ctx, &pb.NewRequest{
-		EnableFeatures: []string{"CrOSSuspendToDisk", "CrOSSuspendToDiskAllowS4"},
+		EnableFeatures: []string{"CrOSSuspendToDisk"},
 		LoginMode:      pb.LoginMode_LOGIN_MODE_GAIA_LOGIN,
 		Credentials: &pb.NewRequest_Credentials{
 			Username: t.userAccount.Username,
