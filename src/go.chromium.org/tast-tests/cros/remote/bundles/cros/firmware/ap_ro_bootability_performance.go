@@ -489,14 +489,8 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, tmpDir, fwidM
 
 	// downloadFwFromURL stages and downloads the firmware file from the given URL.
 	downloadFwFromURL := func(url string) bool {
-		cs := s.CloudStorage()
-		r, err := cs.Stage(ctx, url)
-		if err != nil {
-			testing.ContextLog(ctx, "Failed to stage: ", err)
-			return false
-		}
-
-		if err = testexec.CommandContext(ctx, "wget", "-O", tmpDir+"/"+firmwareFileName, r.String()).Run(ssh.DumpLogOnError); err != nil {
+		// Use the url without the prefix 'gs://'.
+		if err := fwUtils.DownloadFirmwareFile(ctx, s, tmpDir, url[5:]); err != nil {
 			testing.ContextLog(ctx, "Failed to download the file: ", err)
 			return false
 		}
