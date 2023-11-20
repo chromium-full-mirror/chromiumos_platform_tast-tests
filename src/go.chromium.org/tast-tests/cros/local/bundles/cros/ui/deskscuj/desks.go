@@ -9,7 +9,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj/inputsimulations"
@@ -65,6 +67,8 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cs ash.ConnSource, ur
 // additional RAM pressure. This function returns a list of actions
 // to be performed on the corresponding desk, as well as the total
 // number of windows that should be open after setUpDesks completes.
+// This function also returns the cleanup function to delete the doc
+// created by setUpDesks.
 //
 // Desks are arranged based on the following:
 // Desk 1:
@@ -82,7 +86,7 @@ func openDesk(ctx context.Context, tconn *chrome.TestConn, cs ash.ConnSource, ur
 // Desk 4:
 //   - Windows: 1
 //   - User Input: Keyboard typing
-func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.ConnSource, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter) ([]action.Action, int, error) {
+func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.ConnSource, kw *input.KeyboardEventWriter, mw *input.MouseEventWriter, tpw *input.TrackpadEventWriter, tw *input.TouchEventWriter) ([]action.Action, int, func(ctx context.Context) error, error) {
 	// Create a separate desks-setup deadline. 15 minutes should be
 	// enough time to open all of the windows and desks. This limits
 	// the time that desk setup can take, to ensure we have time
@@ -90,22 +94,23 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 	setupCtx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
 
+	cleanup := func(ctx context.Context) error { return nil }
 	const notes = "The quick brown fox jumps over the lazy dog in the afternoon on Saturday!"
 
 	docsURL, err := cuj.GetTestDocURL(setupCtx)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get Google Doc URL")
+		return nil, 0, cleanup, errors.Wrap(err, "failed to get Google Doc URL")
 	}
 
 	// Open additional tabs for RAM pressure.
 	tabs, err := cuj.NewTabs(setupCtx, cs, false, 3)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to open multiple tabs in a window")
+		return nil, 0, cleanup, errors.Wrap(err, "failed to open multiple tabs in a window")
 	}
 
 	info, err := display.GetPrimaryInfo(setupCtx, tconn)
 	if err != nil {
-		return nil, 0, errors.Wrap(err, "failed to get the primary display info")
+		return nil, 0, cleanup, errors.Wrap(err, "failed to get the primary display info")
 	}
 
 	var totalOpenWindows int
@@ -162,7 +167,7 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 		},
 		{
 			urls: []string{
-				"https://docs.new/",
+				cuj.NewGoogleDocsURL,
 			},
 			onVisitAction:      kw.TypeAction(notes),
 			expectedNumWindows: 1,
@@ -171,7 +176,34 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 		totalOpenWindows += desk.expectedNumWindows
 		deskTabs, err := openDesk(setupCtx, tconn, cs, desk.urls, totalOpenWindows, i)
 		if err != nil {
-			return nil, totalOpenWindows, errors.Wrapf(err, "failed to complete setup for desk %d", i)
+			return nil, totalOpenWindows, cleanup, errors.Wrapf(err, "failed to complete setup for desk %d", i)
+		}
+
+		if desk.urls[0] == cuj.NewGoogleDocsURL {
+			var url string
+			if err := deskTabs[0].Conn.Eval(ctx, "window.location.href", &url); err != nil {
+				return nil, totalOpenWindows, cleanup, errors.Wrap(err, "failed to get URL")
+			}
+			cleanup = func(ctx context.Context) error {
+				uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
+				if err != nil {
+					return errors.Wrap(err, "failed to create clamshell action handler")
+				}
+				defer uiHandler.Close(ctx)
+
+				chromeApp, err := apps.PrimaryBrowser(ctx, tconn)
+				if err != nil {
+					return errors.Wrap(err, "failed to find the Chrome app")
+				}
+
+				if err := uiHandler.SwitchToAppWindowByName(chromeApp.Name, "Untitled document - Google Docs")(ctx); err != nil {
+					return errors.Wrap(err, "failed to switch to Google Docs")
+				}
+				if err := googledocs.DeleteDoc(tconn)(ctx); err != nil {
+					return errors.Wrap(err, "failed to delete doc")
+				}
+				return nil
+			}
 		}
 
 		onVisitActions = append(onVisitActions, desk.onVisitAction)
@@ -181,9 +213,9 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 	// Close connections to each tab because we don't need them.
 	for _, tab := range tabs {
 		if err := tab.Conn.Close(); err != nil {
-			return nil, totalOpenWindows, errors.Wrapf(err, "failed to close connection to %s", tab.URL)
+			return nil, totalOpenWindows, cleanup, errors.Wrapf(err, "failed to close connection to %s", tab.URL)
 		}
 	}
 
-	return onVisitActions, totalOpenWindows, nil
+	return onVisitActions, totalOpenWindows, cleanup, nil
 }

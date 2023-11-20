@@ -135,7 +135,7 @@ func RedoDoc(tconn *chrome.TestConn) action.Action {
 // DeleteDoc returns an action to delete the document.
 func DeleteDoc(tconn *chrome.TestConn) action.Action {
 	ui := uiauto.New(tconn)
-	docHomeWebArea := nodewith.Name(docsName).Role(role.RootWebArea)
+	docHomeWebArea := nodewith.Name(docsName).Role(role.RootWebArea).First()
 	fileButton := nodewith.Name("File").Role(role.MenuItem).Ancestor(docsApplication)
 	menu := nodewith.Role(role.Menu).Ancestor(docsApplication)
 	moveToTrash := nodewith.NameContaining("Move to trash t").Role(role.MenuItem)

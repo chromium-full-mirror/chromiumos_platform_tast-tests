@@ -125,12 +125,24 @@ func Run(ctx context.Context, s *testing.State) {
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
 
+	// Shorten the context to cleanup document.
+	// Some low-end devices take a long time to delete docs, so extend
+	// timeout to one minute.
+	cleanUpDeskCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+
 	// Open all desks and windows for each desk. Additionally, initialize
 	// unique user input actions that will be performed on each desk.
-	onVisitActions, expectedNumWindows, err := setUpDesks(ctx, tconn, bTconn, br, kw, mw, tpw, tw)
+	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, bTconn, br, kw, mw, tpw, tw)
 	if err != nil {
 		s.Fatal("Failed to set up desks: ", err)
 	}
+	defer func(ctx context.Context) {
+		if err := cleanUpDesks(ctx); err != nil {
+			s.Log("Failed to clean up desks: ", err)
+		}
+	}(cleanUpDeskCtx)
 
 	topRow, err := input.KeyboardTopRowLayout(ctx, kw)
 	if err != nil {
