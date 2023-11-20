@@ -13,11 +13,10 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/action"
-	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/arcvideoplayback"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/socialapp"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -25,12 +24,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/mtbf/youtube"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -77,12 +73,10 @@ type browsingConfig struct {
 	URLData urlData `json:"url_data"`
 }
 
-var (
-	videoSrc = youtube.VideoSrc{
-		URL:     cuj.YoutubeGoogleTVVideoURL,
-		Title:   "Chris Paul | Watch With Me | Google TV",
-		Quality: youtube.Quality720P60,
-	}
+const (
+	// VideoSrc is the video used for this test.
+	VideoSrc  = "multitaskingapp/vp9_720_60fps.webm"
+	videoName = "vp9_720_60fps"
 )
 
 // Run runs the MultitaskingApp test.
@@ -105,9 +99,8 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		uiHandler     = resources.UIHandler
 	)
 
-	// Give 10 seconds to clean up device objects connected to UI Automator server resources.
 	closeCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	browserApp, err := apps.PrimaryBrowser(ctx, tconn)
@@ -136,11 +129,13 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	if err := socialApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install social app")
 	}
+	defer socialApp.Uninstall(closeCtx)
 
-	videoApp := youtube.NewYtApp(cr, tconn, kb, a, d, outDir, "")
+	videoApp := arcvideoplayback.NewMxPlayerApp(tconn, kb, a, d)
 	if err := videoApp.Install(ctx); err != nil {
-		return errors.Wrap(err, "failed to install Youtube app")
+		return errors.Wrap(err, "failed to install MxPlayer app")
 	}
+	defer videoApp.Uninstall(closeCtx)
 
 	const recordInterval = 5 * time.Second
 	recorder := power.NewRecorder(ctx, recordInterval, outDir, testName)
@@ -164,14 +159,20 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to set Element window state and wait")
 	}
 
-	// Launch Youtube app and arrange window.
+	// Launch MxPlayer app and arrange window.
 	if err := videoApp.Launch(ctx); err != nil {
-		return errors.Wrap(err, "failed to launch Youtube app")
+		return errors.Wrap(err, "failed to launch MxPlayer app")
 	}
 	defer videoApp.Close(closeCtx)
 
-	if err := arrangeWindow(ctx, tconn, apps.Youtube.ID, ash.WindowStateNormal, params.TabletMode); err != nil {
-		return errors.Wrap(err, "failed to set Youtube window state and wait")
+	if err := uiauto.NamedCombine("set up MxPlayer",
+		videoApp.DismissPrompts,
+		videoApp.ChangeToResizable,
+	)(ctx); err != nil {
+		return err
+	}
+	if err := arrangeWindow(ctx, tconn, apps.MxPlayer.ID, ash.WindowStateNormal, params.TabletMode); err != nil {
+		return errors.Wrap(err, "failed to set MxPlayer window state and wait")
 	}
 
 	// Launch Chrome window and arrange window.
@@ -225,7 +226,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 			return errors.Wrap(err, "failed to run social app procedure")
 		}
 
-		if err := videoAppActivity(ctx, tconn, uiHandler, d, params.TabletMode, videoApp, videoAppTime); err != nil {
+		if err := videoAppActivity(ctx, uiHandler, i == 0 /*isFirstRun*/, videoApp, videoAppTime); err != nil {
 			return errors.Wrap(err, "failed to run video app procedure")
 		}
 
@@ -344,50 +345,23 @@ func socialAppActivity(ctx context.Context, tconn *chrome.TestConn, uiHandler cu
 	return nil
 }
 
-// videoAppActivity defines test scenario of video app (Youtube in this case).
-// Search a video on Youtube, play it for a while then close the video.
-func videoAppActivity(ctx context.Context, tconn *chrome.TestConn, uiHandler cuj.UIActionHandler, d *androidui.Device, tabletMode bool, videoApp *youtube.YtApp, videoPlayTime time.Duration) error {
-	var backAction action.Action
-	const (
-		youtubeNodeID  = "com.google.android.youtube:id"
-		shortUITimeout = 5 * time.Second
-	)
-
-	if tabletMode {
-		playerFrame := d.Object(androidui.ID(youtubeNodeID + "/player_overlays"))
-		minimizeButton := d.Object(androidui.ID(youtubeNodeID + "/player_collapse_button"))
-		backAction = uiauto.Combine("minimize video player",
-			cuj.FindAndClick(playerFrame, shortUITimeout),
-			cuj.FindAndClick(minimizeButton, shortUITimeout),
-		)
-	} else {
-		ui := uiauto.New(tconn)
-		ytWindow := nodewith.Name("YouTube").ClassName("RootView")
-		backButton := nodewith.Name("Back button").Role(role.Button).Ancestor(ytWindow)
-		backAction = ui.LeftClick(backButton)
-	}
-
-	closeButton := d.Object(androidui.Description("Close miniplayer"))
-	navigateUp := d.Object(androidui.PackageName("com.google.android.youtube"), androidui.Description("Navigate up"))
-	nextVideo := d.Object(androidui.Description("Play next video"))
-	// All apps should be visible at the same time.
-	// So close the video instead of closing the YouTube app.
-	closeVideo := uiauto.NamedCombine("close the video and back to home page",
-		cuj.ClickIfExist(nextVideo, shortUITimeout),
-		backAction,
-		cuj.FindAndClick(closeButton, shortUITimeout),
-		cuj.FindAndClick(navigateUp, shortUITimeout),
-		cuj.WaitUntilGone(closeButton, shortUITimeout),
-	)
-
-	playVideo := func(ctx context.Context) error {
-		return videoApp.SearchAndPlayVideo(ctx, videoSrc)
+// videoAppActivity defines test scenario of video app (MxPlayer in this case).
+// Play a video on MxPlayer for a while, then close the video.
+func videoAppActivity(ctx context.Context, uiHandler cuj.UIActionHandler, isFirstRun bool, videoApp *arcvideoplayback.MxPlayerApp, videoPlayTime time.Duration) error {
+	setLoopOn := func(ctx context.Context) error {
+		// The loop settings of the video will be remembered. Only set the loop on
+		// when it's the first time playing the video.
+		if isFirstRun {
+			return videoApp.SetLoopOn(ctx)
+		}
+		return nil
 	}
 	message := fmt.Sprintf("play a video for %v", videoPlayTime)
 	return uiauto.NamedCombine(message,
-		uiHandler.SwitchToAppWindow(apps.YouTubeCWS.Name),
-		playVideo,
+		uiHandler.SwitchToAppWindow(apps.MxPlayer.Name),
+		videoApp.OpenAndPlayVideo(videoName),
+		setLoopOn,
 		uiauto.Sleep(videoPlayTime),
-		closeVideo,
+		videoApp.CloseVideo,
 	)(ctx)
 }
