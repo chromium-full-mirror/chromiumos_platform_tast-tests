@@ -39,6 +39,8 @@ type inputDevice struct {
 	IsEnabled        bool   `json:"is_enabled"`
 }
 
+const connectionTypeInternal = "Internal"
+
 type touchpadInfoTestParams struct {
 	TouchpadValidation bool
 }
@@ -56,11 +58,12 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "diagnostics"},
 		Params: []testing.Param{{
-			Name: "with_touchpad",
+			Name: "with_internal_touchpad",
 			Val: touchpadInfoTestParams{
 				TouchpadValidation: true,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.Touchpad()),
+			// TODO(b/313704138): Use the internal TouchpadType hardware dependency when available.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Detachable), hwdep.Touchpad()),
 			ExtraAttr:         []string{"informational"},
 		}, {
 			Name: "",
@@ -76,6 +79,33 @@ func init() {
 func validateTouchpads(ctx context.Context, info *inputInfo) error {
 	if info.TouchpadDevices == nil || len(*info.TouchpadDevices) == 0 {
 		return errors.New("failed to get touchpads")
+	}
+
+	devices := *info.TouchpadDevices
+
+	for _, device := range devices {
+		if device.DriverName == "" {
+			return errors.New("touchpad driver name is empty")
+		}
+
+		touchpadInputDevice := device.InputDevice
+
+		if !touchpadInputDevice.IsEnabled {
+			return errors.New("touchpad input device is not enabled")
+		}
+
+		if touchpadInputDevice.ConnectionType != connectionTypeInternal {
+			fmtString := "touchpad connection type is invalid: got %s; want %s"
+			return errors.Errorf(fmtString, touchpadInputDevice.ConnectionType, connectionTypeInternal)
+		}
+
+		if touchpadInputDevice.Name == "" {
+			return errors.New("touchpad input device name is empty")
+		}
+
+		if touchpadInputDevice.PhysicalLocation == "" {
+			return errors.New("touchpad input device physical location is empty")
+		}
 	}
 	return nil
 }
