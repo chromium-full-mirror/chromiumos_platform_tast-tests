@@ -54,7 +54,7 @@ func DiagnosticsRunV2(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Unable to run routine: %s", err)
 	}
-	if err := result.VerifyFinished(); err != nil {
+	if err := croshealthd.VerifyRoutineFinishedV2(result); err != nil {
 		s.Fatalf("Routine is not finished: %s", err)
 	}
 }

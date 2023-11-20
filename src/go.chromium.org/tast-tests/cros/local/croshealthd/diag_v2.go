@@ -5,17 +5,14 @@
 package croshealthd
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -29,7 +26,6 @@ const (
 	RoutineCPUCacheV2           string = "cpu_cache_v2"
 	RoutineUFSLifetime          string = "ufs_lifetime"
 	RoutinePrimeSearchV2        string = "prime_search_v2"
-	RoutineVolumeButton         string = "volume_button"
 	RoutineLedLitUp             string = "led_lit_up"
 	RoutineFloatingPointV2      string = "floating_point_v2"
 	Fan                         string = "fan"
@@ -46,8 +42,8 @@ type RoutineResultV2 struct {
 	Output   string
 }
 
-// VerifyPassed returns nil if the routine status is passed and the progress is 100. Returns an error otherwise.
-func (result RoutineResultV2) VerifyPassed() error {
+// VerifyRoutinePassedV2 returns nil if the routine status is passed and the progress is 100. Returns an error otherwise.
+func VerifyRoutinePassedV2(result RoutineResultV2) error {
 	if result.Status != StatusPassed {
 		return errors.Errorf("unexpected status: got %q, want %q; output = %q", result.Status, StatusPassed, result.Output)
 	}
@@ -57,7 +53,7 @@ func (result RoutineResultV2) VerifyPassed() error {
 	return nil
 }
 
-// VerifyFinished returns nil if both the following conditions hold
+// VerifyRoutineFinishedV2 returns nil if both the following conditions hold
 // (1) the routine status is either passed or failed,
 // (2) the routine progress is 100.
 // Returns an error otherwise.
@@ -66,7 +62,7 @@ func (result RoutineResultV2) VerifyPassed() error {
 // errors. For example, some lab machines might have old batteries that would
 // fail the battery diagnostic routines, but this is regarded as a "successful
 // run".
-func (result RoutineResultV2) VerifyFinished() error {
+func VerifyRoutineFinishedV2(result RoutineResultV2) error {
 	if result.Status != StatusPassed && result.Status != StatusFailed {
 		return errors.Errorf("unexpected status: got %q, want %q or %q; output = %q",
 			result.Status, StatusPassed, StatusFailed, result.Output)
@@ -78,6 +74,41 @@ func (result RoutineResultV2) VerifyFinished() error {
 	return nil
 }
 
+// RoutineTestingConfigV2 contains the necessary functions to run and verify
+// the result of a diagnostic routine.
+type RoutineTestingConfigV2 struct {
+	// ArgsBuilder returns a slice of arguments for the command
+	// `cros-health-tool diag`. The arguments are used by `RoutineRunner`.
+	ArgsBuilder func(context.Context) ([]string, error)
+	// RoutineRunner runs a routine with the given `args` and returns the stdout
+	// of `cros-health-tool diag`.
+	RoutineRunner func(ctx context.Context, args []string) (string, error)
+	// ResultVerifier returns an error if the result is not expected. Otherwise,
+	// it returns nil.
+	ResultVerifier func(RoutineResultV2) error
+}
+
+// TestDiagRoutineV2 runs a diagnostic routine and verifies the result. It
+// returns the error found during the process.
+func TestDiagRoutineV2(ctx context.Context, r RoutineTestingConfigV2) error {
+	args, err := r.ArgsBuilder(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to build routine arguments")
+	}
+	args = append(args, "--single_line_json")
+
+	output, err := r.RoutineRunner(ctx, args)
+	if err != nil {
+		return errors.Wrap(err, "failed to run routine")
+	}
+
+	result, err := parseDiagOutputV2(ctx, output)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse output")
+	}
+	return r.ResultVerifier(result)
+}
+
 // RoutineParamsV2 are different configuration options for running a diagnostic
 // routine.
 type RoutineParamsV2 struct {
@@ -86,7 +117,7 @@ type RoutineParamsV2 struct {
 
 // RunDiagRoutineV2 runs the specified routine based on `params`. Returns a
 // RoutineResult on success or an error.
-func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResultV2, error) {
+func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (RoutineResultV2, error) {
 	testing.ContextLogf(ctx, "Running routine: %s", params.Routine)
 	diagParams := []string{params.Routine, "--single_line_json"}
 	switch params.Routine {
@@ -96,23 +127,19 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResu
 	case RoutineCPUStressV2, RoutineCPUCacheV2, RoutinePrimeSearchV2, RoutineFloatingPointV2:
 		// Runs the CPU routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
-	case RoutineVolumeButton:
-		// Runs the routine for 5 second.
-		diagParams = append(diagParams, "--length_seconds=5")
-		diagParams = append(diagParams, "--button_type=up")
 	case RoutineLedLitUp:
 		// Use an arbitrary supported LED and color for testing. Here, we use
 		// the first supported LED and its first supported color from `getSupportedLED`.
 		supportedLED, err := getSupportedLED(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, "failed to get supported LEDs")
+			return RoutineResultV2{}, errors.Wrap(err, "failed to get supported LEDs")
 		}
 		if len(supportedLED) == 0 {
-			return nil, errors.Wrap(err, "no supported LEDs")
+			return RoutineResultV2{}, errors.Wrap(err, "no supported LEDs")
 		}
 		for ledName, ledColors := range supportedLED {
 			if len(ledColors) == 0 {
-				return nil, errors.Wrap(err, "the list of supported colors should not be empty")
+				return RoutineResultV2{}, errors.Wrap(err, "the list of supported colors should not be empty")
 			}
 			diagParams = append(diagParams, fmt.Sprintf("--led_name=%s", ledName), fmt.Sprintf("--led_color=%s", ledColors[0]))
 			break
@@ -124,15 +151,13 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (*RoutineResu
 	}
 	var output string
 	var err error
-	if params.Routine == RoutineVolumeButton {
-		output, err = runVolumeButtonDiag(ctx, diagParams)
-	} else if params.Routine == RoutineLedLitUp {
+	if params.Routine == RoutineLedLitUp {
 		output, err = runLEDDiag(ctx, diagParams)
 	} else {
 		output, err = runDiagV2(ctx, diagParams)
 	}
 	if err != nil {
-		return nil, err
+		return RoutineResultV2{}, err
 	}
 	return parseDiagOutputV2(ctx, output)
 }
@@ -149,46 +174,6 @@ func runDiagV2(ctx context.Context, args []string) (string, error) {
 		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
 	}
 	return string(stdout), nil
-}
-
-// runVolumeButtonDiag is a helper function similar to `runDiagV2` while simulating the
-// volume button event for volume button routine.
-func runVolumeButtonDiag(ctx context.Context, args []string) (string, error) {
-	kb, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to open the keyboard")
-	}
-	defer kb.Close(ctx)
-
-	// Start cros_healthd routine.
-	var stdoutBuf bytes.Buffer
-	args = append([]string{"diag"}, args...)
-	runRoutineCmd := testexec.CommandContext(ctx, "cros-health-tool", args...)
-	runRoutineCmd.Stdout = &stdoutBuf
-	if err := runRoutineCmd.Start(); err != nil {
-		testing.ContextLogf(ctx, "stdout of command: %q", stdoutBuf.String())
-		runRoutineCmd.DumpLog(ctx)
-		return "", errors.Wrapf(err, "failed to run %q", shutil.EscapeSlice(runRoutineCmd.Args))
-	}
-	testing.ContextLogf(ctx, "Running %q", shutil.EscapeSlice(runRoutineCmd.Args))
-
-	// Press the volume button repeatedly until the routine finishes.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err = kb.Accel(ctx, "volumeup"); err != nil {
-			return errors.Wrap(err, "failed to press VolumeUp")
-		}
-		if strings.Contains(stdoutBuf.String(), "Status: ") {
-			return nil
-		}
-		return errors.New("routine not finished")
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 6 * time.Second}); err != nil {
-		return "", errors.Wrap(err, "routine timeout")
-	}
-
-	if err := runRoutineCmd.Wait(); err != nil {
-		return "", errors.Wrap(err, "failed to wait command")
-	}
-	return stdoutBuf.String(), nil
 }
 
 // runLEDDiag is a helper function similar to `runDiag` while simulating the
@@ -271,7 +256,7 @@ func getSupportedLED(ctx context.Context) (map[string][]string, error) {
 //
 // Some examples for `raw`:
 // "\rRunning Progress: 0\rWaiting: kWaitingToBeScheduled\n\rRunning Progress: 0\rRunning Progress: 1\rRunning Progress: 2\rRunning Progress: 98\rRunning Progress: 99\rRunning Progress: 100\nStatus: Passed\n"
-func parseDiagOutputV2(ctx context.Context, raw string) (*RoutineResultV2, error) {
+func parseDiagOutputV2(ctx context.Context, raw string) (RoutineResultV2, error) {
 	status := ""
 	progress := 0
 	output := ""
@@ -294,7 +279,7 @@ func parseDiagOutputV2(ctx context.Context, raw string) (*RoutineResultV2, error
 		case "Running Progress":
 			i, err := strconv.Atoi(value)
 			if err != nil {
-				return nil, errors.Wrapf(err, "Unable to parse Progress value %q as int", value)
+				return RoutineResultV2{}, errors.Wrapf(err, "Unable to parse Progress value %q as int", value)
 			}
 			// Override the old value because only the last progress will be reported.
 			progress = i
@@ -305,5 +290,5 @@ func parseDiagOutputV2(ctx context.Context, raw string) (*RoutineResultV2, error
 			output = value
 		}
 	}
-	return &RoutineResultV2{progress, status, output}, nil
+	return RoutineResultV2{progress, status, output}, nil
 }

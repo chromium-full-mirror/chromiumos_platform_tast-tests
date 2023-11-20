@@ -56,7 +56,7 @@ func TestParseDiagOutputV2(t *testing.T) {
 		if err != nil {
 			t.Error("error in parseDiagOutput: ", err)
 		}
-		if diff := cmp.Diff(&c.expected, got); diff != "" {
+		if diff := cmp.Diff(c.expected, got); diff != "" {
 			t.Error("parse diag test failed (-expected + got): ", diff)
 		}
 	}

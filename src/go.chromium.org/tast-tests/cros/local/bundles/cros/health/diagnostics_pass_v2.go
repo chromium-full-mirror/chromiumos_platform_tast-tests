@@ -62,13 +62,6 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name:              "volume_button",
-			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineVolumeButton},
-			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasSideVolumeButton()),
-		}, {
-			// Contact: weiluanwang@google.com
 			Name:              "led_lit_up",
 			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineLedLitUp},
 			Fixture:           "crosHealthdRunning",
@@ -126,7 +119,7 @@ func DiagnosticsPassV2(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Unable to run routine: %s", err)
 	}
-	if err := result.VerifyPassed(); err != nil {
+	if err := croshealthd.VerifyRoutinePassedV2(result); err != nil {
 		s.Fatalf("Routine is not passed: %s", err)
 	}
 }
