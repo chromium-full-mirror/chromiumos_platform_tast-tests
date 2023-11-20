@@ -17,7 +17,6 @@ import (
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/remotepower"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -117,10 +116,9 @@ func init() {
 
 const (
 	// defaultServoPowerMeasureInterval in seconds.
-	defaultServoPowerMeasureInterval = "2"
+	// Note: Do not set the interval too low as this will cause the snapshots to fail.
+	defaultServoPowerMeasureInterval = "4"
 	chargeTarget                     = 75.
-	cpdPrefixFilter                  = "ft4232h_generic"
-	servoAccumSuffix                 = "_mw"
 )
 
 func PowerServodWrapper(ctx context.Context, s *testing.State) {
@@ -175,18 +173,11 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	var filters []*regexp.Regexp
 	filters = make([]*regexp.Regexp, 0)
 	if param.cpd {
-		filters = append(filters, regexp.MustCompile(cpdPrefixFilter))
+		filters = append(filters, regexp.MustCompile(cp.CpdPrefix))
 	}
 	if param.filter != "" {
 		filters = append(filters, regexp.MustCompile(param.filter))
 	}
-
-	// Query for available accumulator rails.
-	rails, clearRails, err := servo.FindAccumRailsWithFilter(ctx, pxy.Servo(), filters)
-	if err != nil {
-		s.Fatal("Failed to get accum rails: ", err)
-	}
-	s.Log("Avg power rail commands found:", rails)
 
 	chargeBattery(ctx, s)
 
@@ -203,55 +194,20 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	intervalMetric := perf.Metric{
-		Name:      remotepower.ServoIntervalMetricName,
-		Unit:      "s",
-		Multiple:  true,
-		Direction: perf.SmallerIsBetter,
+	sm, err := cp.NewServodMetrics(servoCtx, pxy.Servo(), param.cpd, filters)
+	if err != nil {
+		s.Fatal("Failed to setup servod metrics: ", err)
 	}
-
-	ch := make(chan *perf.Values)
-	defer close(ch)
-	// TODO: b/304655966 - Implement timeline interface.
-	go func() {
-		if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
-			// TODO: b/308515270 - consolidate error handling.
-			commandCancel()
-			s.Fatal("Unable to clear servo accumulators: ", err)
-		}
-		pv := perf.NewValues()
-		for {
-			select {
-			case <-time.After(servoPowerMeasureInterval):
-
-				for _, railMw := range rails {
-					mw, err := pxy.Servo().GetFloat(ctx, railMw)
-					if err != nil {
-						commandCancel()
-						s.Fatalf("Failed to get %s mw from servo instance: %s", string(railMw), err)
-					}
-					name := formatRailName(ctx, string(railMw), param.cpd)
-
-					pv.Append(perf.Metric{
-						Name:      cp.ServodMetricType + name,
-						Unit:      "W",
-						Direction: perf.SmallerIsBetter,
-						Multiple:  true,
-						Interval:  remotepower.ServoIntervalMetricName,
-					}, mw/1000.0)
-				}
-				// Clear the accumulator at the end of the loop to measure the interval.
-				if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
-					commandCancel()
-					s.Fatal("Unable to clear servo accumulators: ", err)
-				}
-				pv.Append(intervalMetric, float64(time.Now().Unix()))
-			case <-servoCtx.Done():
-				ch <- pv
-				return
-			}
-		}
-	}()
+	servoTimeline, err := perf.NewTimeline(servoCtx, []perf.TimelineDatasource{sm}, perf.Interval(servoPowerMeasureInterval))
+	if err != nil {
+		s.Fatal("Failed to build metrics timeline: ", err)
+	}
+	if err := servoTimeline.Start(servoCtx); err != nil {
+		s.Fatal("Failed to start metrics: ", err)
+	}
+	if err := servoTimeline.StartRecording(servoCtx); err != nil {
+		s.Fatal("Failed to start recording: ", err)
+	}
 
 	s.Log("Starting subtest: ", subtest)
 	resultsDir := filepath.Join(s.OutDir(), "subtest_results")
@@ -260,6 +216,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Test is skipped, abort post-processing")
 	}
 
+	// The subtest has finished, so cancel the servoCtx.
 	servoCancel()
 	select {
 	case <-commandCtx.Done():
@@ -268,24 +225,16 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		// Not canceled in servo goroutine.
 		s.Log("Finished subtest: ", subtest)
 	}
-	servoResult := <-ch
 
-	servoResult, err = remotepower.TrimSubtestResults(ctx, resultsDir, subtest, servoResult)
+	servoResult, err := servoTimeline.StopRecording(servoCtx)
 	if err != nil {
-		s.Fatal(err, "Failed to format subtest results: ", err)
+		s.Fatal("Failed to stop recording: ", err)
+	}
+	servoResult, err = cp.TrimSubtestResults(ctx, resultsDir, subtest, servoResult)
+	if err != nil {
+		s.Fatal("Failed to format subtest results: ", err)
 	}
 
-	for metric, values := range servoResult.GetValues() {
-		if metric.Name == remotepower.IntervalMetricName {
-			s.Logf("%d samples collected over %f secs", len(values), values[len(values)-1]-values[0])
-		} else {
-			sum := 0.
-			for _, v := range values {
-				sum += v
-			}
-			s.Logf("Average power measured by %s: %f W", metric.Name, sum/float64(len(values)))
-		}
-	}
 	if err := servoResult.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save perf data for crosbolt: ", err)
 	}
@@ -348,11 +297,4 @@ func chargeBattery(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 30 * time.Minute, Interval: 5 * time.Second}); err != nil {
 		s.Fatal("Failed to finish charging battery: ", err)
 	}
-}
-
-func formatRailName(ctx context.Context, name string, cpd bool) string {
-	if cpd {
-		name = name[len(cpdPrefixFilter)+1 : len(name)]
-	}
-	return name[:len(name)-len(servoAccumSuffix)]
 }

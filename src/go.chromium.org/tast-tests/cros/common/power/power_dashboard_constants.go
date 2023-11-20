@@ -54,6 +54,7 @@ const (
 	WebrtcQPMetricTypeUnit         = "point"
 	ZramMetricTypeUnit             = "requests"
 	MemoryMetricTypeUnit           = "kiB"
+	ServodMetricTypeUnit           = "milliwatt"
 )
 
 const (
