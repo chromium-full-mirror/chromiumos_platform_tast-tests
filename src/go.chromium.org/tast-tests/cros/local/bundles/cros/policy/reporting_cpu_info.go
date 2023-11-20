@@ -150,17 +150,17 @@ func ReportingCPUInfo(ctx context.Context, s *testing.State) {
 	isSupported := cpuResult.KeylockerInfo != nil
 	if isSupported {
 		if !*keyLockerInfo.Supported {
-			s.Fatal("Event is not supported on a supported device")
+			s.Fatal("Event is not supported on a supported device. Full event: ", keyLockerInfo)
 		}
 		if *keyLockerInfo.Configured != cpuResult.KeylockerInfo.KeylockerConfigured {
-			s.Fatal("Event configured doesn't match")
+			s.Fatal("Event configured doesn't match. Full event: ", keyLockerInfo)
 		}
 	} else {
 		if *keyLockerInfo.Supported {
-			s.Fatal("Event is supported on a non supported device")
+			s.Fatal("Event is supported on a non supported device. Full event: ", keyLockerInfo)
 		}
 		if *keyLockerInfo.Configured {
-			s.Fatal("Event is configured on a non supported device")
+			s.Fatal("Event is configured on a non supported device. Full event: ", keyLockerInfo)
 		}
 	}
 }

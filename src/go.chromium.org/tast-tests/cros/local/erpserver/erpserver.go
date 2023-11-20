@@ -282,6 +282,7 @@ func (erpserver *ErpServer) Start(ctx context.Context) error {
 	erpserver.server = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		erpserver.handleUpload(ctx, w, r)
 	}))
+	testing.ContextLog(ctx, "ERP fake server started on: ", erpserver.server.URL)
 	return nil
 }
 
