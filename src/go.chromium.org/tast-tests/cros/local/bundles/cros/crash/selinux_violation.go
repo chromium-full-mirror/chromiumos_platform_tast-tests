@@ -28,13 +28,14 @@ func init() {
 		Desc:         "Verify selinux violations are logged as expected",
 		Contacts:     []string{"cros-telemetry@google.com", "mutexlox@google.com"},
 		BugComponent: "b:1032705",
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"selinux"},
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
 			Val:               crash.RealConsent,
 			Fixture:           fixture.ChromeLoggedInVerboseConsentLogs,
+			ExtraAttr:         []string{"informational"},
 		}, {
 			Name: "mock_consent",
 			Val:  crash.MockConsent,
