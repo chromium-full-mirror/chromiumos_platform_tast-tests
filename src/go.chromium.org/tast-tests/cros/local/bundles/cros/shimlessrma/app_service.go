@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/shimlessrmaapp"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	pb "go.chromium.org/tast-tests/cros/services/cros/shimlessrma"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -56,13 +57,14 @@ type AppService struct {
 func (shimlessRMA *AppService) NewShimlessRMA(ctx context.Context,
 	req *pb.NewShimlessRMARequest) (*empty.Empty, error) {
 
-	// If Reconnect is true, it means UI restarting during Shimless RMA testing.
-	// Then, we don't need to stop rmad or create empty state file.
-	if !req.Reconnect {
-		// Make sure rmad is not currently running.
-		// Ignore the error since ramd may not run at all.
-		testexec.CommandContext(ctx, "stop", "rmad").Run()
+	// Make sure rmad is not currently running and let the new chrome instance to
+	// bring up rmad.
+	if err := upstart.StopJob(ctx, "rmad"); err != nil {
+		return nil, errors.Wrap(err, "failed to stop rmad")
+	}
 
+	// If Reconnect is true, it means UI restarting during Shimless RMA testing.
+	if !req.Reconnect {
 		// Create a valid empty rmad state file.
 		if err := shimlessrmaapp.CreateEmptyStateFile(); err != nil {
 			return nil, errors.Wrap(err, "failed to create rmad state file")
