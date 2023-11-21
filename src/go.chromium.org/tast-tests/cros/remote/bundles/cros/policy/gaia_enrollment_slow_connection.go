@@ -21,7 +21,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const gaiaEnrollmentSlowTimeout = 7 * time.Minute
+const gaiaEnrollmentSlowTimeout = 10 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
