@@ -41,6 +41,7 @@ type ChargeParams struct {
 type IdleParams struct {
 	DisplayPower   bool
 	BluetoothPower bool
+	CollectTrace   bool
 	IdleTimeParams TimeParams
 }
 

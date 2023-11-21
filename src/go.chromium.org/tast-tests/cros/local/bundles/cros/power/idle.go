@@ -6,6 +6,7 @@ package power
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
@@ -13,11 +14,13 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
-var idleTimeParams = power.TimeParams{Interval: 20 * time.Second, Total: 4 * time.Minute}
+var idleTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 10 * time.Minute}
+var idleTracingTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}
 var idleFastTimeParams = power.TimeParams{Interval: 10 * time.Second, Total: 1 * time.Minute}
 
 var displayOffBTOff = power.IdleParams{
@@ -44,6 +47,12 @@ var defaultFast = power.IdleParams{
 	DisplayPower:   true,
 	BluetoothPower: true,
 	IdleTimeParams: idleFastTimeParams}
+
+var tracingIdle = power.IdleParams{
+	DisplayPower:   true,
+	BluetoothPower: true,
+	CollectTrace:   true,
+	IdleTimeParams: idleTracingTimeParams}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -77,6 +86,11 @@ func init() {
 			Fixture: "powerAsh",
 			Val:     defaultFast,
 		}, {
+			Name:      "tracing_display_on_bt_on_ash",
+			Fixture:   "powerAsh",
+			Val:       tracingIdle,
+			ExtraData: []string{tracing.TBMTracedProbesConfigFile},
+		}, {
 			Name:              "display_off_bt_off_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
@@ -103,6 +117,12 @@ func init() {
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               defaultFast,
+		}, {
+			Name:              "tracing_display_on_bt_on_lacros",
+			Fixture:           "powerLacros",
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val:               tracingIdle,
+			ExtraData:         []string{tracing.TBMTracedProbesConfigFile},
 		}},
 	})
 }
@@ -166,6 +186,20 @@ func Idle(ctx context.Context, s *testing.State) {
 		}
 	}
 	setBluetoothPower(params.BluetoothPower)
+
+	if params.CollectTrace {
+		var session *tracing.Session
+		traceConfigPath := s.DataPath(tracing.TBMTracedProbesConfigFile)
+		traceDataPath := filepath.Join(s.OutDir(), "trace.perfetto-trace")
+		session, err = tracing.StartSession(ctx, traceConfigPath, tracing.WithTraceDataPath(traceDataPath))
+		if err != nil {
+			s.Fatal("Failed to start tracing: ", err)
+		}
+		s.Log("Collecting Perfetto trace File at: ", session.TraceDataPath())
+
+		defer session.Finalize(cleanupCtx)
+		defer session.Stop()
+	}
 
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
