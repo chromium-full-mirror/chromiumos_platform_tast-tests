@@ -303,7 +303,7 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
 			// x86-64 ARC: careena(grunt-AMD), treeya(grunt-AMD)
-			// arm ARC: hana(hana)
+			// arm64 ARC: hana(hana)
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("treeya", "careena", "hana")),
 			Val: testParam{
 				vmEnabled:                     false,
@@ -312,7 +312,7 @@ func init() {
 				uploadPackagesReference:       false,
 				uprevBranch:                   true,
 				dexOptCacheGen:                false,
-				requiredCPUAbisForBranchUprev: []string{"x86_64-ndk", "arm-native"},
+				requiredCPUAbisForBranchUprev: []string{"x86_64-ndk", "arm64-native"},
 				dataDir:                       "/tmp/data_collector",
 				tmpCachesDir:                  "",
 			},
@@ -425,22 +425,13 @@ func DataCollector(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get ARC build desc: ", err)
 	}
-
-	v := fmt.Sprintf("%s_%s_%s", desc.CPUAbi, desc.BuildType, desc.BuildID)
-
-	// Given all ARCVM arm boards migrated to arm64 as of b/309907468 and ureadahead does not support
-	// 32-bit x86, we can deprecate arm32 support and use the same guest abi as other caches.
-	ureadaheadAbi := desc.HostUreadaheadAbi
-	if param.vmEnabled {
-		if ureadaheadAbi == "arm" {
-			s.Fatal("ureadahead ELF arm 32-bit is no longer supported for ARCVM")
-		}
-		ureadaheadAbi = desc.CPUAbi
+	if desc.CPUAbi == "arm" || desc.CPUAbi == "x86" {
+		s.Fatal("Failed because 32-bit CPU ABI is no longer supported")
 	}
 
-	// TODO(b/310748903): Stop using "host" naming once we remove host arch dependency completely.
-	vUreadahead := fmt.Sprintf("host_%s_%s_%s_%s", ureadaheadAbi, desc.BinaryTranslationType, desc.BuildType, desc.BuildID)
-	s.Logf("Detected version %s(host %s_%s)", v, desc.HostUreadaheadAbi, desc.BinaryTranslationType)
+	v := fmt.Sprintf("%s_%s_%s", desc.CPUAbi, desc.BuildType, desc.BuildID)
+	vUreadahead := fmt.Sprintf("%s_%s_%s_%s", desc.CPUAbi, desc.BinaryTranslationType, desc.BuildType, desc.BuildID)
+	s.Logf("Detected version: %s (binary translation type: %s)", v, desc.BinaryTranslationType)
 	if desc.BuildType != "user" {
 		s.Fatal("Data collector should only be run on a user build")
 	}
@@ -947,7 +938,7 @@ func maybeUprevBranch(ctx context.Context, desc *dututils.BuildDescriptor, andro
 		}
 		set[arch] = true
 
-		ureadaheadURL := fmt.Sprintf("%s/%s/ureadahead_pack_host_%s_%s_%s_%s.tar", runtimeArtifactsRoot, androidPackage, arch, binaryTranslationType, desc.BuildType, desc.BuildID)
+		ureadaheadURL := fmt.Sprintf("%s/%s/ureadahead_pack_%s_%s_%s_%s.tar", runtimeArtifactsRoot, androidPackage, arch, binaryTranslationType, desc.BuildType, desc.BuildID)
 		if err := exec.Command(gsUtil, "stat", ureadaheadURL).Run(); err != nil {
 			testing.ContextLogf(ctx, "Required ureadahead pack %q does not exist. Branch is not yet ready for uprev", ureadaheadURL)
 			return nil
