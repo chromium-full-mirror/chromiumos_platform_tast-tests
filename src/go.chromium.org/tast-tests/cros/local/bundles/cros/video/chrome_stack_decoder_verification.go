@@ -544,11 +544,31 @@ func appendJSONFiles(videoFiles []string) []string {
 	return tf
 }
 
+const defaultPerVideoTimeoutHD = time.Minute
+const defaultPerVideoTimeout4K = 4 * time.Minute
+
+// videoTimeoutOverrides are used to allow for longer timeouts for particular
+// video files. Otherwise the default timeouts will be used.
+var videoTimeoutOverrides = map[string]time.Duration{
+	"test_vectors/h264/files_from_bugs/b_299320432__amd_skyrim_system_hang.h264": 3 * time.Minute, // 3 minutes because the video is long. b/311840410
+}
+
 func calculateTestTimeout(videoFiles []string, testName string) time.Duration {
+	defaultPerVideoTimeout := defaultPerVideoTimeoutHD
 	if strings.Contains(testName, "4k") {
-		return time.Duration(len(videoFiles)) * 4 * time.Minute
+		defaultPerVideoTimeout = defaultPerVideoTimeout4K
 	}
-	return time.Duration(len(videoFiles)) * time.Minute
+
+	var timeout time.Duration
+
+	for _, f := range videoFiles {
+		t, ok := videoTimeoutOverrides[f]
+		if !ok {
+			t = defaultPerVideoTimeout
+		}
+		timeout = timeout + t
+	}
+	return timeout
 }
 
 // chromeStackDecoderVerificationTestParam is used to describe the options used
