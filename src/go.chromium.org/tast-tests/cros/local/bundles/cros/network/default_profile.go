@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -38,7 +39,6 @@ func init() {
 func DefaultProfile(ctx context.Context, s *testing.State) {
 	expectedSettings := []string{
 		"CheckPortalList=ethernet,wifi,cellular",
-		"IgnoredDNSSearchPaths=gateway.2wire.net",
 	}
 
 	// We lose connectivity briefly. Tell recover_duts not to worry.
@@ -63,34 +63,23 @@ func DefaultProfile(ctx context.Context, s *testing.State) {
 	}
 
 	// Wait for default profile creation.
-	func() {
-		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-		defer cancel()
-
-		isDefaultProfileReady := func() bool {
-			if _, err := os.Stat(shillconst.DefaultProfilePath); err != nil {
-				return false
-			}
-
-			paths, err := manager.ProfilePaths(ctx)
-			if err != nil {
-				s.Fatal("Failed getting profiles: ", err)
-			}
-
-			for _, p := range paths {
-				if p == shillconst.DefaultProfileObjectPath {
-					return true
-				}
-			}
-			return false
+	testing.Poll(ctx, func(ctx context.Context) error {
+		if _, err := os.Stat(shillconst.DefaultProfilePath); err != nil {
+			return err
 		}
 
-		for !isDefaultProfileReady() {
-			if err := testing.Sleep(ctx, 100*time.Millisecond); err != nil {
-				s.Fatal("Timed out waiting for the default profile to get ready: ", err)
+		paths, err := manager.ProfilePaths(ctx)
+		if err != nil {
+			s.Fatal("Failed getting profiles: ", err)
+		}
+
+		for _, p := range paths {
+			if p == shillconst.DefaultProfileObjectPath {
+				return nil
 			}
 		}
-	}()
+		return errors.New("default profile object not ready yet")
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
 
 	// Read the default profile and check expected settings.
 	b, err := ioutil.ReadFile(shillconst.DefaultProfilePath)
