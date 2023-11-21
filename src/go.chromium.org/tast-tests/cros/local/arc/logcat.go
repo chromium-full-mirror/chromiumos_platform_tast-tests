@@ -52,3 +52,8 @@ func (a *ARC) ClearLogcat(ctx context.Context) error {
 func (a *ARC) LogcatDeviceTime(ctx context.Context) (adb.LogcatTimestampLong, error) {
 	return a.device.LogcatDeviceTime(ctx)
 }
+
+// DumpLogcat writes logcat dump to specified filePath.
+func (a *ARC) DumpLogcat(ctx context.Context, filePath string) (error) {
+	return a.device.DumpLogcat(ctx, filePath)
+}

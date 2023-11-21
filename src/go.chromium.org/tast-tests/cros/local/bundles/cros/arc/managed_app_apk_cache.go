@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -31,6 +32,8 @@ const (
 	arcApkCacheTestTimeout = 13 * time.Minute
 	apkCacheDir            = "/mnt/stateful_partition/unencrypted/apkcache"
 	apkCacheFilesDir       = "/mnt/stateful_partition/unencrypted/apkcache/files"
+	createdSessionPrefix   = "CacheManager: Created session: "
+	closedSessionPrefix    = "CacheManager: Closed session: "
 	testPackage            = "com.google.android.calculator"
 )
 
@@ -74,10 +77,6 @@ func init() {
 }
 
 func ManagedAppApkCache(ctx context.Context, s *testing.State) {
-	notCachedRegEx       := fmt.Sprintf(
-		"(no cachedApk found for %s)|(Package %s version [0-9]* does not exist in cache)",
-		testPackage, testPackage)
-	pushingInCacheRegEx  := "Pushing in cache " + testPackage
 	cachedApkLoadedRegEx := "cachedApk loaded for " + testPackage
 
 	rl := &retry.Loop{Attempts: 1,
@@ -107,24 +106,8 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 			return err
 		}
 
-		exp := regexp.MustCompile(notCachedRegEx)
-		if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
-			return rl.Exit("find log that package is not already cached", err)
-		}
-
-		exp = regexp.MustCompile(pushingInCacheRegEx)
-		if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
-			return rl.Exit("find log that package was cached", err)
-		}
-
-		// Confirm that test app is force-installed by ARC policy.
-		if err := a.WaitForPackages(ctx, packages); err != nil {
-			return rl.Retry("force install packages", err)
-		}
-
-		err = waitForCacheSizeToIncrease(ctx, rl)
-		if err != nil {
-			return rl.Exit("count new files in cache", err)
+		if err := verifyFirstUserSession(ctx, s, a, rl, packages); err != nil {
+			return err
 		}
 
 		tconn, err := cr.TestAPIConn(ctx)
@@ -139,7 +122,7 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 		cr.Close(cleanupCtx)
 		a.Close(cleanupCtx)
 
-		// Log in different user, check that test app is served from cache
+		// Log in different user, check that test app is served from cache.
 		a, cr, err = loginAndWaitForARC(ctx, cleanupCtx, s, chrome.KeepEnrollment(), creds[1], packages, rl)
 		if err != nil {
 			return err
@@ -147,7 +130,7 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 		defer cr.Close(cleanupCtx)
 		defer a.Close(cleanupCtx)
 
-		exp = regexp.MustCompile(cachedApkLoadedRegEx)
+		exp := regexp.MustCompile(cachedApkLoadedRegEx)
 		if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
 			return rl.Exit("find log that package was retrieved from cache", err)
 		}
@@ -199,6 +182,45 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 	return a, cr, nil
 }
 
+func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, rl *retry.Loop, packages []string) error {
+	notCachedRegEx       := fmt.Sprintf(
+		"(no cachedApk found for %s)|(Package %s version [0-9]+ does not exist in cache)",
+		testPackage, testPackage)
+	pushingInCacheRegEx  := "Pushing in cache " + testPackage
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Dump logcat from the first user session since it gets overwritten
+	// by the second user session.
+	defer dumpLogcatToOutDir(cleanupCtx, s, a, "logcat_first_session.txt")
+
+	exp := regexp.MustCompile(notCachedRegEx)
+	if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
+		return rl.Exit("find log that package is not already cached", err)
+	}
+
+	exp = regexp.MustCompile(pushingInCacheRegEx)
+	if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
+		return rl.Exit("find log that package was cached", err)
+	}
+
+	// Confirm that test app is force-installed by ARC policy.
+	if err := a.WaitForPackages(ctx, packages); err != nil {
+		return rl.Retry("force install packages", err)
+	}
+
+	if err := waitForCacheSizeToIncrease(ctx, rl); err != nil {
+		return rl.Exit("count new files in cache", err)
+	}
+
+	if err := waitForCacheSessionsToClose(ctx, s, a); err != nil {
+		return rl.Exit("wait for open cache sessions to close", err)
+	}
+	return nil
+}
+
 func waitForCacheSizeToIncrease(ctx context.Context, rl *retry.Loop) error {
 	err := testing.Poll(ctx, func(ctx context.Context) error {
 		files, err := os.ReadDir(apkCacheFilesDir)
@@ -221,4 +243,70 @@ func waitForCacheSizeToIncrease(ctx context.Context, rl *retry.Loop) error {
 	}
 
 	return nil
+}
+
+func waitForCacheSessionsToClose(ctx context.Context, s *testing.State, a *arc.ARC) error {
+	createdSessionRegEx  := createdSessionPrefix + "[id=[0-9]+"
+	closedSessionRegEx   := closedSessionPrefix + "[0-9]+"
+
+	grepArg := fmt.Sprintf("-E \"(%s)|(%s)\"", createdSessionRegEx, closedSessionRegEx)
+	logcat, err := a.OutputLogcatGrep(ctx, grepArg)
+	if err != nil {
+		return err
+	}
+	openSessionIds := getOpenSessionIds(s, logcat)
+	for _, id := range openSessionIds {
+		exp := regexp.MustCompile(closedSessionPrefix + id)
+		s.Log("Waiting for cache session to close: " + id)
+		if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func getOpenSessionIds(s *testing.State, logcat []byte) []string {
+	createdSessionRegEx := createdSessionPrefix + "\\[id=([0-9]+)"
+	closedSessionRegEx  := closedSessionPrefix + "([0-9]+)"
+
+	createdSessionIds := getSessionIds(s, createdSessionRegEx, string(logcat))
+	closedSessionIds := getSessionIds(s, closedSessionRegEx, string(logcat))
+	return getDifference(createdSessionIds, closedSessionIds)
+}
+
+func getSessionIds(s *testing.State, regex, logContent string) map[string]bool {
+	sessionIds := make(map[string]bool)
+	r := regexp.MustCompile(regex)
+	matches := r.FindAllStringSubmatch(logContent, -1)
+	if matches == nil {
+		s.Log("No matches found for pattern: " + regex)
+		return sessionIds
+	}
+	for _, m := range matches {
+		sessionIds[m[1]] = true
+	}
+	return sessionIds
+}
+
+func getDifference(a, b map[string]bool) []string {
+	var diff []string
+	for key := range a {
+		if _, ok := b[key]; !ok {
+			// Add any keys in a that are not in b.
+			diff = append(diff, key)
+	   }
+	}
+    return diff
+}
+
+func dumpLogcatToOutDir(ctx context.Context, s *testing.State, a *arc.ARC, fileName string) {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		s.Log("Failed to get out dir")
+	}
+
+	logPath := filepath.Join(dir, fileName)
+	if err := a.DumpLogcat(ctx, logPath); err != nil {
+		s.Log("Failed to dump logcat: ", err)
+	}
 }
