@@ -77,6 +77,7 @@ func CryptohomeRecoveryFromSettings(ctx context.Context, s *testing.State) {
 		cr, err := chrome.New(ctx,
 			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 			chrome.EnableFeatures("CryptohomeRecovery"),
+			chrome.EnableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
 		)
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)

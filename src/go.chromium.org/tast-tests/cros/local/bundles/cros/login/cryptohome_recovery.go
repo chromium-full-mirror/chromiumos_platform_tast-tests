@@ -150,6 +150,7 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.EnableFeatures("CryptohomeRecovery"),
+		chrome.EnableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome on the login screen: ", err)
