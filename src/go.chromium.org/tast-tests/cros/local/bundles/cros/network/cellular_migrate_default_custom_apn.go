@@ -106,9 +106,21 @@ func CellularMigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 
 		ui := uiauto.New(tconn)
 
-		// Disconnect from the network and attempt a connect with the custom APN.
 		if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.ConnectedStatus)(ctx); err != nil {
 			s.Fatal("Failed to verify Connected: ", err)
+		}
+
+		// Disconnect from the network and attempt a connect to ensure the custom APN is used.
+		if err := ui.EnsureExistsFor(ossettings.DisconnectButton, 5*time.Second)(ctx); err == nil {
+			if err := uiauto.Combine("Disconnect and re-connect",
+				ui.LeftClickUntil(ossettings.DisconnectButton,
+					ui.EnsureGoneFor(ossettings.DisconnectButton, 5*time.Second)),
+				ui.WithTimeout(15*time.Second).WaitUntilExists(ossettings.ConnectButton),
+				ui.LeftClick(ossettings.ConnectButton),
+				ui.WithTimeout(15*time.Second).WaitUntilExists(ossettings.ConnectedStatus),
+			)(ctx); err != nil {
+				s.Fatal("Failed to disconnect and re-connect: ", err)
+			}
 		}
 	}()
 
