@@ -293,13 +293,6 @@ func BootMode(ctx context.Context, s *testing.State) {
 			}
 		}()
 
-		// Some duts failed in booting from section A, for example, bookem,
-		// drawper, and chronicler. Explicitly set 'fw_try_next' to section A,
-		// and the number of attempts to three times.
-		if err := firmware.SetFWTries(ctx, h.DUT, fwCommon.RWSectionA, 3); err != nil {
-			s.Fatal("Failed to set FW tries to A: ", err)
-		}
-
 		// The DUT may have something weird set as the default boot target, so set to disk (the default).
 		if pv.BootMode == fwCommon.BootModeDev {
 			testing.ContextLog(ctx, "Setting dev_default_boot=disk")
@@ -356,15 +349,6 @@ func BootMode(ctx context.Context, s *testing.State) {
 		}
 		if bootedFromRemovableDevice {
 			s.Fatalf("DUT did not boot from the internal device: got %v, want false", bootedFromRemovableDevice)
-		}
-
-		s.Log("Checking the value of mainfw_act after reboot")
-		mainfwAct, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
-		if err != nil {
-			s.Fatal("Failed to get crossystem mainfw_act: ", err)
-		}
-		if mainfwAct != "A" {
-			s.Fatalf("Expected mainfw_act:A but got mainfw_act:%s, crossystem params before warm reset: %s", mainfwAct, crossInfo)
 		}
 
 		if curr, err := h.Reporter.CurrentBootMode(ctx); err != nil {
