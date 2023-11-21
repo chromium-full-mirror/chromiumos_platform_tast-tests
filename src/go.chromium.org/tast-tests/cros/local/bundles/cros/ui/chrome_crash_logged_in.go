@@ -81,7 +81,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				consent:     crash.RealConsent,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -103,7 +103,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				consent:     crash.MockConsent,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -159,7 +159,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				consent:     crash.RealConsent,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -181,7 +181,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				consent:     crash.MockConsent,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -216,7 +216,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				consent:     crash.MockConsent,
 			},
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline"},
 			// If the gpu process is not sandboxed, it will not create a broker.
 			ExtraSoftwareDeps: []string{"crashpad", "gpu_sandboxing", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
