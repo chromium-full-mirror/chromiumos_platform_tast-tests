@@ -62,6 +62,10 @@ func DevModeBootFromUSB(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to create config: ", err)
+	}
+
 	s.Log("Setting dev boot usb value to 1")
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_boot_usb=1").Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed to set crossystem dev_boot_usb to 1: ", err)
