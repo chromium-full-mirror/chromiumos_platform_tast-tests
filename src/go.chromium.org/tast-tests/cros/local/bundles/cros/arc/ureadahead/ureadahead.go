@@ -81,10 +81,21 @@ func DumpGuestPack(ctx context.Context, a *arc.ARC, logPath string) error {
 	}
 	defer logFile.Close()
 
-	// Capture stdout into log file.
-	cmd := a.Command(ctx, "/system/bin/ureadahead", "--dump", "--verbose")
-	cmd.Stdout = logFile
-	return cmd.Run(testexec.DumpLogOnError)
+	// TODO(b:312323135): Use ureadahead.sh only after rolling to
+	// ureadahead prebuilt.
+	bins := []string{"/system/bin/ureadahead", "/system/bin/ureadahead.sh"}
+	for _, bin := range bins {
+		if a.Command(ctx, "/system/bin/stat", bin).Run() != nil {
+			continue
+		}
+		// Capture stdout into log file.
+		cmd := a.Command(ctx, bin, "--dump", "--verbose")
+		cmd.Stdout = logFile
+		return cmd.Run(testexec.DumpLogOnError)
+	}
+
+	return errors.New("ureadahead is not found")
+
 }
 
 // CheckPackFileDump verifies the validity of the generated pack file using
