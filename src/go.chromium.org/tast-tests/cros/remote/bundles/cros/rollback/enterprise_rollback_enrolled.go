@@ -136,7 +136,7 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 		LoginData: &rpb.LoginData{
 			Username:    acc.Username,
 			Password:    acc.Password,
-			DmserverUrl: policy.DMServerAlphaURL,
+			DmserverUrl: policy.DMServerProdURL,
 		},
 	}); err != nil {
 		s.Fatal("Failed to enroll and connect to network API on the client: ", err)
@@ -191,7 +191,7 @@ func EnterpriseRollbackEnrolled(ctx context.Context, s *testing.State) {
 		LoginData: &rpb.LoginData{
 			Username:    acc.Username,
 			Password:    acc.Password,
-			DmserverUrl: policy.DMServerAlphaURL,
+			DmserverUrl: policy.DMServerProdURL,
 		},
 	}); err != nil {
 		s.Fatal("Failed to re-enroll and connect to network API on the client: ", err)
