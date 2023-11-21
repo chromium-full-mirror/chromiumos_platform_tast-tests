@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -44,12 +45,24 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	defer func() {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT connected at the end of test: ", err)
+		}
+		s.Log("Restoring crossystem recovery_request to 0")
+		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=0").Run(); err != nil {
+			s.Fatal("Failed to restore crossystem recovery_request to 0: ", err)
+		}
 		s.Log("Clearing the GBBFlag_DEV_SCREEN_SHORT_DELAY flag after test ends")
 		if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}); err != nil {
 			s.Fatal("Failed to clear the GBBFlag_DEV_SCREEN_SHORT_DELAY flag: ", err)
 		}
-	}()
+	}(cleanupCtx)
+
 	s.Log("Setting GBB flags to enable dev screen short delay")
 	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DEV_SCREEN_SHORT_DELAY}}); err != nil {
 		s.Fatal("Failed to set the GBBFlag_DEV_SCREEN_SHORT_DELAY flag: ", err)
@@ -58,6 +71,7 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 	if err := h.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
+
 	s.Log("Setting crossystem recovery_request to 193")
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=193").Run(); err != nil {
 		s.Fatal("Failed to set crossystem recovery_request to 193: ", err)

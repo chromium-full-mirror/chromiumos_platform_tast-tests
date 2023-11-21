@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -71,6 +72,20 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxOff); err != nil {
 		s.Fatal("Failed to power off the USB: ", err)
 	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT connected at the end of test: ", err)
+		}
+		s.Log("Restoring crossystem recovery_request to 0")
+		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=0").Run(); err != nil {
+			s.Fatal("Failed to restore crossystem recovery_request to 0: ", err)
+		}
+	}(cleanupCtx)
 
 	s.Log("Setting crossystem recovery_request to 193")
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=193").Run(); err != nil {
