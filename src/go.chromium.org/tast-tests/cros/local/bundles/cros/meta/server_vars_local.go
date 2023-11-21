@@ -39,6 +39,12 @@ func ServerVarsLocal(ctx context.Context, s *testing.State) {
 		s.Error("Failed to verify DUT server variable: ", err)
 	}
 	testing.ContextLog(ctx, "DUT server hosts Info: ", dutServerHosts)
+
+	devboardServerHosts, err := verifyServerVars(servers.Devboard)
+	if err != nil {
+		s.Error("Failed to verify devboard server variable: ", err)
+	}
+	testing.ContextLog(ctx, "Devboard server hosts Info: ", devboardServerHosts)
 }
 
 func verifyServerVars(serverType servers.ServerType) (map[string]string, error) {

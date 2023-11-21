@@ -23,6 +23,7 @@ const (
 	Servo ServerType = iota
 	Provision
 	DUT
+	Devboard
 )
 
 // Provide constant for primary DUTs roles for tests to use.
@@ -57,6 +58,13 @@ var (
 		"servers.dut",
 		"",
 		"A variable to store host information of DUT servers")
+
+	// devBoardServers is a runtime variable to store host information
+	// of devboard servers.
+	devBoardServers = testing.RegisterVarString(
+		"servers.devboard",
+		"",
+		"A variable to store host information of dev servers")
 )
 
 // Server returns the host target information of a server.
@@ -70,6 +78,8 @@ func Server(serverType ServerType, role string) (string, error) {
 		serverTypeName = "provision server"
 	case DUT:
 		serverTypeName = "DUT server"
+	case Devboard:
+		serverTypeName = "Devboard server"
 	}
 	allServer, err := allServerHosts()
 	if err != nil {
@@ -122,10 +132,16 @@ func allServerHosts() (map[ServerType](map[string]string), error) {
 			parseErr = errors.Wrap(err, "failed to parse DUT server information")
 			return
 		}
+		devboardServerHosts, err := parseServerVarValues(devBoardServers.Value())
+		if err != nil {
+			parseErr = errors.Wrap(err, "failed to parse devboard server information")
+			return
+		}
 		allServers = map[ServerType](map[string]string){
 			Servo:     servoHosts,
 			Provision: provisionServerHosts,
 			DUT:       dutServerHosts,
+			Devboard:  devboardServerHosts,
 		}
 	})
 	return allServers, parseErr
