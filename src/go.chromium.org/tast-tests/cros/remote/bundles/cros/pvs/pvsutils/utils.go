@@ -68,19 +68,19 @@ type PVSRunner struct {
 // RuntimeEnv represents the environment variables that will be set during
 // an execution of the SHoP and PVS CLI's.
 type RuntimeEnv struct {
-	ReuseTLEDir             string
-	SimulatedDut            bool
-	SimulatedTestRunner     bool
-	SimulatedDutInfo        string
-	SimulatedTestsSkip      string
-	SimulatedTestsError     string
-	SimulatedTestsNoResult  string
-	SimulatedTestsFail      string
-	SimulatedTestKeyval     string
-	ForceDlmSkuID           string
-	PvsImageTag             string
-	ShopRef                 string
-	IgnoreGitAccessFailures bool
+	ReuseTLEDir              string
+	SimulatedDut             bool
+	SimulatedTestRunner      bool
+	SimulatedDutInfo         string
+	SimulatedTestsSkip       string
+	SimulatedTestsError      string
+	SimulatedTestsNoResult   string
+	SimulatedTestsFail       string
+	SimulatedTestKeyval      string
+	ForceDlmSkuID            string
+	PvsImageTag              string
+	ShopRef                  string
+	IgnoreGitAccessFailures  bool
 	SkipPvsVersionValidation bool
 }
 
@@ -240,8 +240,8 @@ func countTestCase(s *testing.State, output string, want RepeatedWord) {
 }
 
 // copyDirToTastOutputDir copies the given path on the dut to the tast output
-// directory on the host
-func copyDirToTastOutputDir(ctx context.Context, dutfsClient *dutfs.Client, fromPath string) error {
+// directory on the host; does not copy any file/dir that matches excludeRegex
+func copyDirToTastOutputDir(ctx context.Context, dutfsClient *dutfs.Client, fromPath string, excludeRegex *regexp.Regexp) error {
 	if _, err := dutfsClient.Stat(ctx, fromPath); os.IsNotExist(err) {
 		// If the directory doesn't exist log warning but don't fail
 		testing.ContextLogf(ctx, "WARNING: %v does not exist; unable to copy directory to tast logs", fromPath)
@@ -254,12 +254,12 @@ func copyDirToTastOutputDir(ctx context.Context, dutfsClient *dutfs.Client, from
 		return errors.New("no tast output directory found")
 	}
 	destDir := path.Join(tastOutDir, path.Base(fromPath))
-	return copyDirFromDut(ctx, dutfsClient, fromPath, destDir)
+	return copyDirFromDut(ctx, dutfsClient, fromPath, destDir, excludeRegex)
 }
 
 // copyDirFromDut copies the given directory on the dut to the given path on the
-// the host machine
-func copyDirFromDut(ctx context.Context, dutfsClient *dutfs.Client, fromPath, toPath string) error {
+// the host machine; does not copy any file/dir that matches excludeRegex
+func copyDirFromDut(ctx context.Context, dutfsClient *dutfs.Client, fromPath, toPath string, excludeRegex *regexp.Regexp) error {
 	if err := os.MkdirAll(toPath, 0755); err != nil {
 		return err
 	}
@@ -269,9 +269,12 @@ func copyDirFromDut(ctx context.Context, dutfsClient *dutfs.Client, fromPath, to
 	}
 	for _, file := range files {
 		newFromPath := path.Join(fromPath, file.Name())
+		if excludeRegex != nil && excludeRegex.MatchString(newFromPath) {
+			continue
+		}
 		newToPath := path.Join(toPath, file.Name())
 		if file.IsDir() {
-			err = copyDirFromDut(ctx, dutfsClient, newFromPath, newToPath)
+			err = copyDirFromDut(ctx, dutfsClient, newFromPath, newToPath, excludeRegex)
 		} else {
 			err = copyFileFromDut(ctx, dutfsClient, newFromPath, newToPath)
 		}
@@ -334,6 +337,7 @@ func runAsRoot(ctx context.Context, cmd *ssh.Cmd) (string, string, error) {
 	var bstdout, bstderr bytes.Buffer
 	cmd.Stdout = &bstdout
 	cmd.Stderr = &bstderr
+	testing.ContextLogf(ctx, "Running: `%v`", strings.Join(cmd.Args, " "))
 	err := cmd.Run()
 	stdout := sanitize(string(bstdout.Bytes()))
 	stderr := sanitize(string(bstderr.Bytes()))

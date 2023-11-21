@@ -161,7 +161,9 @@ func (f *pvsFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Fatal("Error occured when trying to create a rpc dut client: ", err)
 	}
 	dutfsClient := dutfs.NewClient(rpcDut.RPC().Conn)
-	if err := copyDirToTastOutputDir(ctx, dutfsClient, pvsOutputDir); err != nil {
+	// exclude the results dir so it doesn't affect the automated testing results
+	excludeRegex := regexp.MustCompile(pvsResultsDir)
+	if err := copyDirToTastOutputDir(ctx, dutfsClient, pvsOutputDir, excludeRegex); err != nil {
 		s.Fatal("Error occured when trying to copy pvs directory from pvs host to tast logs: ", err)
 	}
 
@@ -202,16 +204,7 @@ func (f *pvsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	}
 }
 
-func (f *pvsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	rpcDut, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
-	if err != nil {
-		s.Fatal("Error occured when trying to create a rpc dut client: ", err)
-	}
-	dutfsClient := dutfs.NewClient(rpcDut.RPC().Conn)
-	if err := copyDirToTastOutputDir(ctx, dutfsClient, pvsResultsDir); err != nil {
-		s.Fatal("Error occured when trying to copy pvs directory from pvs host to tast logs: ", err)
-	}
-}
+func (f *pvsFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
 func (f *pvsFixture) Reset(ctx context.Context) error {
 	return nil
