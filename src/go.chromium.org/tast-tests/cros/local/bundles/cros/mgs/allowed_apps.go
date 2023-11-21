@@ -61,6 +61,15 @@ func init() {
 			pci.SearchFlag(&policy.SystemFeaturesDisableList{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.SystemFeaturesDisableMode{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.LacrosAvailability{}, pci.VerifiedFunctionalityOS),
+			{
+				Key: "feature_id",
+				// As an admin, I want to ensure that right policies are
+				// propagated to managed guest sessions, so I verify that
+				// a user who logs into a managed guest session receives
+				// correct policies.
+				// COM_FOUND_CUJ32_TASK2_WF1
+				Value: "screenplay-c3de8ec3-7d5d-4ee2-a8fd-98db60363e5c",
+			},
 		},
 	})
 }
