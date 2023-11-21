@@ -61,27 +61,27 @@ func (c *BtpeerClient) Connect(ctx context.Context) error {
 	// Connect ssh.
 	testing.ContextLogf(ctx, "Connecting to %s over ssh", c)
 	if err := c.connectSSH(ctx); err != nil {
-		return errors.Wrapf(err, "failed to Connect to %s over ssh", c)
+		return errors.Wrapf(err, "failed to connect to %s over ssh", c)
 	}
 	testing.ContextLogf(ctx, "Successfully connected to %s over ssh", c)
 	// Connect chameleond.
 	testing.ContextLogf(ctx, "Connecting to chameleond on %s", c)
 	if err := c.connectChameleond(ctx); err != nil {
-		testing.ContextLogf(ctx, "WARNING: Failed to Connect to chameleond on %s in first attempt: %v", c, err)
+		testing.ContextLogf(ctx, "WARNING: Failed to connect to chameleond on %s in first attempt: %v", c, err)
 		testing.ContextLogf(ctx, "Rebooting %s and retrying chameleond connection", c)
 		if err := c.Reboot(ctx); err != nil {
-			return errors.Wrapf(err, "failed to Reboot %s after first chameleond connection failure", c)
+			return errors.Wrapf(err, "failed to reboot %s after first chameleond connection failure", c)
 		}
 		// Try chameleond again with a short poll as ssh may come up before
 		// chameleond does.
-		testing.ContextLogf(ctx, "Connecting to chameleond on %s after successful Reboot", c)
+		testing.ContextLogf(ctx, "Connecting to chameleond on %s after successful reboot", c)
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			return c.connectChameleond(ctx)
 		}, &testing.PollOptions{
 			Interval: 500 * time.Millisecond,
 			Timeout:  10 * time.Second,
 		}); err != nil {
-			return errors.Wrapf(err, "failed to Connect to chameleond on %s after successful Reboot", c)
+			return errors.Wrapf(err, "failed to connect to chameleond on %s after successful reboot", c)
 		}
 	}
 	testing.ContextLogf(ctx, "Successfully connected to chameleond on %s", c)
@@ -112,7 +112,7 @@ func (c *BtpeerClient) connectSSH(ctx context.Context) error {
 	// Establish new ssh connection.
 	sshConn, err := ssh.New(ctx, c.sshOptions)
 	if err != nil {
-		return errors.Wrapf(err, "failed to Connect to btpeer%d hostname %q over ssh", c.registrationID, c.hostname)
+		return errors.Wrapf(err, "failed to connect to btpeer%d hostname %q over ssh", c.registrationID, c.hostname)
 	}
 	c.sshConn = sshConn
 	return nil
@@ -127,7 +127,7 @@ func (c *BtpeerClient) disconnectSSH(ctx context.Context) {
 	}
 }
 
-// Reboot will trigger a Reboot of the btpeer device over ssh then attempt to
+// Reboot will trigger a reboot of the btpeer device over ssh then attempt to
 // reestablish a new ssh connection to device until it is successful or times
 // out.
 //
@@ -136,10 +136,10 @@ func (c *BtpeerClient) disconnectSSH(ctx context.Context) {
 // calling Connect.
 func (c *BtpeerClient) Reboot(ctx context.Context) error {
 	if c.sshConn == nil {
-		return errors.Errorf("failed to Reboot %s: no active ssh connection to device", c)
+		return errors.Errorf("failed to reboot %s: no active ssh connection to device", c)
 	}
 	// Reboot, ignoring the ssh error that occurs due to severed connection.
-	_ = c.sshConn.CommandContext(ctx, "Reboot").Run()
+	_ = c.sshConn.CommandContext(ctx, "reboot").Run()
 	_ = c.sshConn.Close(ctx)
 	c.sshConn = nil
 	// Try to reconnect via ssh until successful.
@@ -149,7 +149,7 @@ func (c *BtpeerClient) Reboot(ctx context.Context) error {
 		Interval: 1 * time.Second,
 		Timeout:  1 * time.Minute,
 	}); err != nil {
-		return errors.Wrapf(err, "failed to reconnect to %s over ssh after Reboot", c)
+		return errors.Wrapf(err, "failed to reconnect to %s over ssh after reboot", c)
 	}
 	return nil
 }
@@ -161,7 +161,7 @@ func (c *BtpeerClient) Reboot(ctx context.Context) error {
 func (c *BtpeerClient) connectChameleond(ctx context.Context) error {
 	c.disconnectChameleond(ctx)
 	if c.sshConn == nil {
-		return errors.Errorf("failed to Connect to chameleond for %s: no active ssh connection to device", c)
+		return errors.Errorf("failed to connect to chameleond for %s: no active ssh connection to device", c)
 	}
 	// Create an ssh tunnel to the chameleond port.
 	onFwdError := func(err error) {
@@ -176,7 +176,7 @@ func (c *BtpeerClient) connectChameleond(ctx context.Context) error {
 	// Create a new chameleond client which uses forward chameleond port.
 	chameleondClient, err := chameleon.NewChameleond(ctx, c.chameleondPortForwarder.ListenAddr().String())
 	if err != nil {
-		return errors.Wrapf(err, "failed to Connect to chameleond on %s through forward chameleond port at %q", c, chameleondPortForwarder.ListenAddr().String())
+		return errors.Wrapf(err, "failed to connect to chameleond on %s through forward chameleond port at %q", c, chameleondPortForwarder.ListenAddr().String())
 	}
 	c.chameleondClient = chameleondClient
 	return nil
@@ -347,6 +347,7 @@ func (c *BtpeerClient) Reset(ctx context.Context) error {
 // Generated log files will look like this:
 //
 // <context_dir>/
+//
 //	    btpeer_logs/
 //	        btpeer<registrationID>_<hostname>/
 //		           chameleond/

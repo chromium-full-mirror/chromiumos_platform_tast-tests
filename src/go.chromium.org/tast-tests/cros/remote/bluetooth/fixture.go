@@ -791,7 +791,7 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 		return nil
 	}
 	// Register the btpeer hosts.
-	btpeerManager := GetBtpeerProvider()
+	btpeerProvider := GetBtpeerProvider()
 	sshOptions := &ssh.Options{
 		KeyDir:  s.DUT().KeyDir(),
 		KeyFile: s.DUT().KeyFile(),
@@ -805,20 +805,18 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 				fixtureVarBTPeers, btpeersVar)
 		}
 		testing.ContextLogf(ctx, "Registering %d btpeer hosts from fixture var %q", len(btpeerHosts), fixtureVarBTPeers)
-		if err := btpeerManager.RegisterBtpeerHosts(ctx, sshOptions, btpeerHosts...); err != nil {
-			return errors.Wrapf(err, "failed to %d btpeer hosts from fixture var %q", len(btpeerHosts), fixtureVarBTPeers)
-		}
+		btpeerProvider.RegisterBtpeerHosts(ctx, sshOptions, btpeerHosts...)
 	} else {
 		// Imply btpeer hostnames based on DUT hostname.
 		dutHostname := s.DUT().HostName()
 		testing.ContextLogf(ctx, "Registering btpeer hosts based on dut hostname %q", dutHostname)
-		if err := btpeerManager.RegisterBtpeerHostsByWificellDutHostname(ctx, sshOptions, dutHostname); err != nil {
+		if err := btpeerProvider.RegisterBtpeerHostsByWificellDutHostname(ctx, sshOptions, dutHostname); err != nil {
 			return errors.Wrapf(err, "failed to register btpeer hosts based on dut hostname %q", dutHostname)
 		}
 	}
 	// Connect to the desired amount of hosts.
 	testing.ContextLogf(ctx, "Connecting to %d btpeers", requiredBTPeers)
-	btpeers, err := btpeerManager.ConnectAndReset(ctx, requiredBTPeers)
+	btpeers, err := btpeerProvider.ConnectAndReset(ctx, requiredBTPeers)
 	if err != nil {
 		return errors.Wrapf(err, "failed to connect to %d btpeers", requiredBTPeers)
 	}
