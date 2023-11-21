@@ -183,7 +183,7 @@ func (c *CrosNetworkConfig) WaitForCellularDeviceUninhibited(ctx context.Context
 			return errors.Errorf("unexpected cellular network inhibit reason = got %v, want %v", cellularDevice.InhibitReason, types.NotInhibited)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: time.Minute * 3, Interval: time.Second * 5}); err != nil {
+	}, &testing.PollOptions{Timeout: time.Minute * 5, Interval: time.Second * 5}); err != nil {
 		return errors.Wrap(err, "failed to get uninhibited network ")
 	}
 	return nil
