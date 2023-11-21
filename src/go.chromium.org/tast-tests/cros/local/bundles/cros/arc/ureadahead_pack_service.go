@@ -150,6 +150,7 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 	opts := []chrome.Option{
 		chrome.ARCSupported(), // This does not start ARC automatically.
 		chrome.GAIALoginPool(request.Creds),
+		chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(chromeArgs...)}
 
 	cr, err := chrome.New(ctx, opts...)
@@ -531,6 +532,7 @@ func performGuestProvisionedBootTrace(ctx context.Context, outDir, packPath, log
 	opts := []chrome.Option{
 		chrome.ARCSupported(), // ARC is started automatically since this isn't initial boot.
 		chrome.GAIALogin(creds),
+		chrome.UnRestrictARCCPU(),
 		chrome.KeepState(), // To make sure this is not initial boot.
 		chrome.ExtraArgs(chromeArgs...)}
 
