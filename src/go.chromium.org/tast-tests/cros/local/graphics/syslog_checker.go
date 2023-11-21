@@ -36,6 +36,8 @@ const (
 	SysLogMediatekVideoErrors = "Mediatek video error"
 	// SysLogQualcommVideoErrors are signatures for qualcomm video driver errors.
 	SysLogQualcommVideoErrors = "Qualcomm video error"
+	// SysLogAll is a metacategory that can be used to ignore all categories. It should not be used in sysLogSignatureMap.
+	SysLogAll SysLogCategory = "*"
 )
 
 var (
@@ -94,15 +96,18 @@ func checkSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 	}
 
 	var checkCategory []SysLogCategory
-	for category := range sysLogSignatureMap {
-		if ignoreCategories, ok := ignoreCategoriesMap[testName]; ok {
-			// If empty, ignore all categories.
-			if ignoreCategories == nil || inList(category, ignoreCategories) {
-				testing.ContextLogf(ctx, "Test %s has request to ignore check for `%v`", testName, category)
+	if ignoreCategories, ok := ignoreCategoriesMap[testName]; ok {
+		if inList(SysLogAll, ignoreCategories) {
+			testing.ContextLogf(ctx, "Test %s requested to ignore all syslog checks", testName)
+			return nil
+		}
+		for category := range sysLogSignatureMap {
+			if inList(category, ignoreCategories) {
+				testing.ContextLogf(ctx, "Test %s requested to ignore check for `%v`", testName, category)
 				continue
 			}
+			checkCategory = append(checkCategory, category)
 		}
-		checkCategory = append(checkCategory, category)
 	}
 
 	testing.ContextLogf(ctx, "Checking syslog with folowing categories: %q", checkCategory)
@@ -133,8 +138,13 @@ func checkSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 
 // DisableSysLogCheck skips checking the given categories after running test. If ignoreCategories is not set, skips all category checks.
 // e.g. DisableSysLogCheck("graphics.IgtKms.kms_flip") to disable all syslog checks.
+// e.g. DisableSysLogCheck("graphics.IgtKms.kms_flip", SysLogAll) to disable all syslog checks.
 // e.g. DisableSysLogCheck("graphics.IgtKms.kms_flip", SysLogGpuHangs, SysLogKernelSplats) to disable checking GPU hangs and kernel splats.
 func DisableSysLogCheck(testName string, ignoreCategories ...SysLogCategory) {
+	// If empty, ignore all categories.
+	if ignoreCategories == nil {
+		ignoreCategories = []SysLogCategory{SysLogAll}
+	}
 	ignoreCategoriesMap[testName] = ignoreCategories
 }
 
