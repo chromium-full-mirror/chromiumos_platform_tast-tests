@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Checks that WiFi can be enabled and disabled from within the Network Quick Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"tjohnsonkanu@chromium.org",
+			"tjohnsonkanu@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "informational"},

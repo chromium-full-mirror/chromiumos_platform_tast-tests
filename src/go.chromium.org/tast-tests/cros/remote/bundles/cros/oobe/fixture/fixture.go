@@ -17,7 +17,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "turnOffServoKeyboard",
 		Desc:            "Fixture for turning off Servo in Chrome devices",
-		Contacts:        []string{"tjohnsonkanu@chromium.org", "cros-connectivity@google.com"},
+		Contacts:        []string{"tjohnsonkanu@google.com", "cros-connectivity@google.com"},
 		Impl:            &fixture{},
 		Vars:            []string{"servo"},
 		SetUpTimeout:    10 * time.Second,
