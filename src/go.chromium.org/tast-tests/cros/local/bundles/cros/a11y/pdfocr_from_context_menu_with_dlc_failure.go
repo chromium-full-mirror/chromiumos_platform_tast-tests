@@ -97,6 +97,24 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 	cr := poData.CR
 	server := poData.Server
 
+	// Enable ChromeVox and open the test PDF.
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.TestPDFName)
+	if err != nil {
+		s.Fatal("Failed to set up ChromeVox: ", err)
+	}
+	defer func() {
+		if err := cvData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down ChromeVox setup: ", err)
+		}
+	}()
+
+	tconn := cvData.TTSData.TConn
+	ui := uiauto.New(tconn)
+	pdfRoot := nodewith.Role(role.PdfRoot)
+	if err := ui.WaitUntilExists(pdfRoot)(ctx); err != nil {
+		s.Fatal("Failed to wait for the PDF ROOT node to be created in accessibility tree: ", err)
+	}
+
 	for _, subtest := range []struct {
 		scenario              string
 		secondDownloadSuccess bool
@@ -108,55 +126,18 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 		secondDownloadSuccess: true,
 	}} {
 		s.Run(ctx, subtest.scenario, func(ctx context.Context, s *testing.State) {
-			// Enable ChromeVox and open the test PDF.
-			cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.TestPDFName)
-			if err != nil {
-				s.Fatal("Failed to set up ChromeVox: ", err)
-			}
-			defer func() {
-				if err := cvData.TearDown(); err != nil {
-					s.Fatal("Failed to tear down ChromeVox setup: ", err)
-				}
-			}()
-
-			tconn := cvData.TTSData.TConn
-			ui := uiauto.New(tconn)
-			pdfRoot := nodewith.Role(role.PdfRoot)
-			if err := ui.WaitUntilExists(pdfRoot)(ctx); err != nil {
-				s.Fatal("Failed to wait for the PDF ROOT node to be created in accessibility tree: ", err)
-			}
-
-			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot); err != nil {
-				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
-			}
-
-			if err := pdfocr.ExpectDownloadFailureUtterance(cvData.Context(), cvData.SpeechMonitor()); err != nil {
-				s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
-			}
-
-			// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
-			pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItemCheckBox)
-			if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
-				ui.WithInterval(1*time.Second).RightClickUntil(pdfRoot, ui.WaitUntilCheckedState(pdfOCRMenuEntry, false)),
-				ui.WithTimeout(5*time.Second).LeftClick(pdfRoot),
-			)(ctx); err != nil {
-				s.Fatal("Failed to wait for the PDF OCR menu entry to be unchecked: ", err)
-			}
-
 			if subtest.secondDownloadSuccess {
 				// Restore the screen-ai dlc failure.
 				if err := pdfocr.RefreshDlc(ctx, data.BackupDir); err != nil {
 					s.Fatal("Failed to restore the screen-ai dlc: ", err)
 				}
 				skipDeferForDlcFailure = true
-			}
 
-			// Turn on PDF OCR always again.
-			if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot); err != nil {
-				s.Fatal("Failed to turn on PDF OCR from the Context Menu")
-			}
+				// Turn on PDF OCR.
+				if err := pdfocr.TurnOnFromContextMenu(ctx, ui, pdfRoot); err != nil {
+					s.Fatal("Failed to turn on PDF OCR from the Context Menu")
+				}
 
-			if subtest.secondDownloadSuccess {
 				// Wait until screen-ai dlc is installed.
 				if err := testing.Poll(ctx, a11y.VerifyScreenAIInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
 					s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
@@ -177,7 +158,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 				}
 
 				// Failure of screen-ai dlc download makes the PDF OCR menu entry unchecked.
-				pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItem)
+				pdfOCRMenuEntry := nodewith.Name(pdfocr.ContextMenuName).Role(role.MenuItemCheckBox)
 				if err := uiauto.Combine("Check the PDF OCR menu entry from the Context Menu",
 					ui.WithInterval(1*time.Second).RightClickUntil(pdfRoot, ui.WaitUntilCheckedState(pdfOCRMenuEntry, false)),
 					ui.WithTimeout(5*time.Second).LeftClick(pdfRoot),

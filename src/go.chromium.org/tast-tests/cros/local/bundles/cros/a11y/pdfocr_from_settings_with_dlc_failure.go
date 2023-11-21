@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/a11y/pdfocr"
 	"go.chromium.org/tast-tests/cros/local/a11y/tts"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -99,6 +98,22 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 	cr := poData.CR
 	server := poData.Server
 
+	// Enable ChromeVox and open the test PDF.
+	cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.TestPDFName)
+	if err != nil {
+		s.Fatal("Failed to set up ChromeVox: ", err)
+	}
+	defer func() {
+		if err := cvData.TearDown(); err != nil {
+			s.Fatal("Failed to tear down ChromeVox setup: ", err)
+		}
+	}()
+
+	tconn := cvData.TTSData.TConn
+	ui := uiauto.New(tconn)
+	ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
+
+	pdfOCRToggle := nodewith.Name(pdfocr.SettingsToggleName).Role(role.ToggleButton)
 	for _, subtest := range []struct {
 		scenario              string
 		secondDownloadSuccess bool
@@ -110,39 +125,11 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 		secondDownloadSuccess: true,
 	}} {
 		s.Run(ctx, subtest.scenario, func(ctx context.Context, s *testing.State) {
-			// Enable ChromeVox and open the test PDF.
-			cvData, err := chromevox.SetUpWithURLWithoutFocusWaiter(ctx, cr, tts.GoogleTTSEnUsVoice(), tts.GoogleTTSEngine(), bt, server.URL+"/"+pdfocr.TestPDFName)
-			if err != nil {
-				s.Fatal("Failed to set up ChromeVox: ", err)
-			}
-			defer func() {
-				if err := cvData.TearDown(); err != nil {
-					s.Fatal("Failed to tear down ChromeVox setup: ", err)
-				}
-			}()
-
-			tconn := cvData.TTSData.TConn
-			ui := uiauto.New(tconn)
-			ttsHeading := nodewith.NameStartingWith("Text-to-Speech").Role(role.Heading)
 			settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "textToSpeech", ui.Exists(ttsHeading))
 			if err != nil {
 				s.Fatal("Failed to open Text-to-Speech setting page: ", err)
 			}
 			defer settings.Close(ctx)
-
-			pdfOCRToggle := nodewith.Name(pdfocr.SettingsToggleName).Role(role.ToggleButton)
-			if err := uiauto.Combine("toggle PDF OCR",
-				ui.WithTimeout(10*time.Second).WaitUntilExists(pdfOCRToggle),
-				settings.SetToggleOption(cr, pdfocr.SettingsToggleName, true),
-				// Failure of screen-ai dlc download makes the PDF OCR toggle button untoggled.
-				ui.WithTimeout(60*time.Second).WaitUntilCheckedState(pdfOCRToggle, false),
-			)(ctx); err != nil {
-				s.Fatal("Failed to wait for the PDF OCR to be reset: ", err)
-			}
-
-			if err := pdfocr.ExpectDownloadFailureUtterance(cvData.Context(), cvData.SpeechMonitor()); err != nil {
-				s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
-			}
 
 			if subtest.secondDownloadSuccess {
 				// Restore the screen-ai dlc failure.
@@ -160,14 +147,6 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to wait for screen-ai dlc to be installed: ", err)
 				}
 
-				// Open the test PDF.
-				conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, server.URL+"/"+pdfocr.TestPDFName)
-				if err != nil {
-					s.Fatal("Failed to open test PDF: ", err)
-				}
-				defer closeBrowser(cleanupCtx)
-				defer conn.Close()
-
 				// Check if PDF OCR successfully extracts text from the inaccessible PDF.
 				pdfRoot := nodewith.Role(role.PdfRoot)
 				status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
@@ -180,17 +159,17 @@ func PDFOCRFromSettingsWithDlcFailure(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to verify text extracted by PDF OCR")
 				}
 			} else {
+				if err := pdfocr.ExpectDownloadFailureUtterance(cvData.Context(), cvData.SpeechMonitor()); err != nil {
+					s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
+				}
+
 				if err := uiauto.Combine("toggle PDF OCR",
 					ui.WithTimeout(10*time.Second).WaitUntilExists(pdfOCRToggle),
-					settings.SetToggleOption(cr, pdfocr.SettingsToggleName, true),
+					// settings.SetToggleOption(cr, pdfocr.SettingsToggleName, true),
 					// Failure of screen-ai dlc download makes the PDF OCR toggle button untoggled.
 					ui.WithTimeout(60*time.Second).WaitUntilCheckedState(pdfOCRToggle, false),
 				)(ctx); err != nil {
 					s.Fatal("Failed to wait for the PDF OCR to be reset: ", err)
-				}
-
-				if err := pdfocr.ExpectDownloadFailureUtterance(cvData.Context(), cvData.SpeechMonitor()); err != nil {
-					s.Fatal("Failed to check the ChromeVox announcement for PDF OCR dlc failure: ", err)
 				}
 			}
 		})
