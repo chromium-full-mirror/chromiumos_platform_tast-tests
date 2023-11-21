@@ -60,6 +60,11 @@ func AudioPlayPower(ctx context.Context, s *testing.State) {
 
 	const audioPlayIntervalSec = 300 // Audio play time for the power measurement
 
+	// Set bluetoothd config execution flags for audio.
+	if err := btpeer.ChameleondClient().BluetoothAudioDevice().ResetStack(ctx, cbt.DeviceTypeBluetoothAudio.String()); err != nil {
+		s.Fatal("Fail to reset stack: ", err)
+	}
+
 	s.Log("Prepare peer")
 	// Emulate the bluetooth audio device with btpeer.
 	s.Logf("Configuring a btpeer as %q device", cbt.DeviceTypeBluetoothAudio.String())
@@ -71,14 +76,8 @@ func AudioPlayPower(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Device %s is ready to pair", device.String())
 
-	// Configure audio profile.
-	err = device.RPCAudio().StartAudioServer(ctx, cbt.AudioProfileA2DP)
-	if err != nil {
-		s.Fatal("Start Pulseaudio failed")
-	}
-	err = device.RPCAudio().StopOfono(ctx)
-	if err != nil {
-		s.Fatal("Stop Ofono failed")
+	if err := bluetoothutil.ConfigureAudioDevice(ctx, device, cbt.AudioProfileA2DP, "", ""); err != nil {
+		s.Fatal("Failed to config audio device: ", err)
 	}
 
 	if err := device.RPCAudio().SetDiscoverable(ctx, true); err != nil {
@@ -99,7 +98,7 @@ func AudioPlayPower(ctx context.Context, s *testing.State) {
 		}
 		s.Log("A2dp BlueZ source device number ", id)
 		return nil
-	}, &testing.PollOptions{Timeout: 20 * time.Second, Interval: 4 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 4 * time.Second}); err != nil {
 		s.Fatal("Failed to get a2dp BlueZ source: ", err)
 	}
 

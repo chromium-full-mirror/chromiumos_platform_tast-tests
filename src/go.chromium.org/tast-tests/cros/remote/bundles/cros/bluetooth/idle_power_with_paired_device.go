@@ -81,6 +81,11 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	btpeer := fv.BTPeers[0]
 	tc := s.Param().(*idlePowerWithPairedDeviceTestCase)
 
+	s.Log("Set bluetoothd config execution flags")
+	if err := btpeer.ChameleondClient().BluetoothAudioDevice().ResetStack(ctx, tc.DeviceType.String()); err != nil {
+		s.Fatal("Fail to reset stack: ", err)
+	}
+
 	// Emulate the desired device type with btpeer.
 	testing.ContextLogf(ctx, "Configuring a btpeer as %q device", tc.DeviceType.String())
 	device, err := bluetooth.NewEmulatedBTPeerDevice(ctx, btpeer, &bluetooth.EmulatedBTPeerDeviceConfig{
@@ -91,6 +96,11 @@ func IdlePowerWithPairedDevice(ctx context.Context, s *testing.State) {
 	}
 	testing.ContextLogf(ctx, "Device %s is ready to pair", device.String())
 
+	if tc.DeviceType == cbt.DeviceTypeBluetoothAudio {
+		if err := bluetoothutil.ConfigureAudioDevice(ctx, device, cbt.AudioProfileA2DP, "", ""); err != nil {
+			s.Fatal("Failed to config audio device: ", err)
+		}
+	}
 	interval := 5 * time.Minute // Power measurement interval in minutes
 
 	// Attempt pairing device with DUT.
