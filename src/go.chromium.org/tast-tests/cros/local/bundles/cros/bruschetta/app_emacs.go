@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Emacs from terminal and does some edits via keyboard",
 		Contacts:     []string{"clumptini+oncall@google.com", "davidmunro@google.com"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
