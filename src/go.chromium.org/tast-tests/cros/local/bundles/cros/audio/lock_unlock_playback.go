@@ -38,6 +38,16 @@ func init() {
 	})
 }
 
+type trimmedAudioFile struct {
+	path      string
+	startTime time.Duration
+	amplitude float64
+}
+
+func (t *trimmedAudioFile) baseName() string {
+	return filepath.Base(t.path)
+}
+
 // LockUnlockPlayback checks playback still works after lock and unlock.
 func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 	const segmentLength = 5 * time.Second
@@ -153,11 +163,7 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 	//
 	// We only care with segment a, b, c and d, which are 5 seconds before and after lock,
 	// and 5 seconds before and after unlock
-	trimmedFiles := []*struct {
-		path      string
-		startTime time.Duration
-		amplitude float64
-	}{
+	trimmedFiles := []*trimmedAudioFile{
 		{
 			path:      filepath.Join(s.OutDir(), "beforeLock.wav"),
 			startTime: lockTime - segmentLength,
@@ -192,19 +198,19 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 	similarityTolerance := 1e-5
 	if math.Abs(trimmedFiles[0].amplitude-trimmedFiles[1].amplitude) >= similarityTolerance {
 		s.Errorf("RMS Amplitude of %s and %s differ, got %v and %v",
-			trimmedFiles[0].path, trimmedFiles[1].path,
+			trimmedFiles[0].baseName(), trimmedFiles[1].baseName(),
 			trimmedFiles[0].amplitude, trimmedFiles[1].amplitude)
 	}
 	if math.Abs(trimmedFiles[2].amplitude-trimmedFiles[3].amplitude) >= similarityTolerance {
 		s.Errorf("RMS Amplitude of %s and %s differ, got %v and %v",
-			trimmedFiles[2].path, trimmedFiles[3].path,
+			trimmedFiles[2].baseName(), trimmedFiles[3].baseName(),
 			trimmedFiles[2].amplitude, trimmedFiles[3].amplitude)
 	}
 
 	minimumDifference := 1e-3
 	if trimmedFiles[1].amplitude-trimmedFiles[2].amplitude < minimumDifference {
 		s.Errorf("RMS Amplitude of %s and %s should be different, got %v and %v",
-			trimmedFiles[1].path, trimmedFiles[2].path,
+			trimmedFiles[1].baseName(), trimmedFiles[2].baseName(),
 			trimmedFiles[1].amplitude, trimmedFiles[2].amplitude)
 	}
 }
