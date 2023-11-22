@@ -26,6 +26,12 @@ func init() {
 		}, {
 			Name:    "unmount_cros_x86",
 			Fixture: "unmountPtsWorldForCrOSx86",
+		}, {
+			Name:    "mount_cros_arm64",
+			Fixture: "mountPtsWorldForCrOSarm64",
+		}, {
+			Name:    "unmount_cros_arm64",
+			Fixture: "unmountPtsWorldForCrOSarm64",
 		}},
 	})
 }

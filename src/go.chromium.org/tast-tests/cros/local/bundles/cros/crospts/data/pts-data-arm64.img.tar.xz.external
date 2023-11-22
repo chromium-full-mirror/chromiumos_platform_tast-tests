@@ -1,0 +1,5 @@
+{
+    "url": "gs://chromiumos-test-assets-public/tast/cros/crospts/pts-data-arm64.img-20231123.161951.tar.xz",
+    "size": 3586579360,
+    "sha256sum": "9abc0ecbcb98825e6e5f535b3793caecf12228c6a1758202bbfa082e096e8cc5"
+}

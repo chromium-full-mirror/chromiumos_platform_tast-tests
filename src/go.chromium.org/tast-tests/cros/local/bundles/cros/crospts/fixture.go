@@ -17,6 +17,10 @@ const (
 	ptsWorldBaseImagex86 = "base-x86_64.img.tar.xz"
 	// ptsWorldDataImagex86 is the tast external data name of x86 data image.
 	ptsWorldDataImagex86 = "pts-data-x86_64.img.tar.xz"
+	// ptsWorldBaseImagearm64 is the tast external data name of arm64 base image.
+	ptsWorldBaseImagearm64 = "base-arm64.img.tar.xz"
+	// ptsWorldDataImagearm64 is the tast external data name of arm64 data image.
+	ptsWorldDataImagearm64 = "pts-data-arm64.img.tar.xz"
 )
 
 const (
@@ -61,6 +65,46 @@ func init() {
 		Data: []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
 		Impl: &PtsWorldFixture{
 			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagex86, ptsWorldDataImagex86),
+			mount:   false,
+			unmount: true,
+		},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "mountPtsWorldForCrOSarm64",
+		Desc: "The fixture to mount PTSWorld for CrOS host on arm64",
+		Contacts: []string{
+			"cros-core-systems-perf@google.com",
+			"darrenwu@google.com",
+		},
+		Data: []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
+		Impl: &PtsWorldFixture{
+			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagearm64, ptsWorldDataImagearm64),
+			mount:   true,
+			unmount: false,
+		},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "unmountPtsWorldForCrOSarm64",
+		Desc: "The fixture to unmount PTSWorld for CrOS host on arm64",
+		Contacts: []string{
+			"darrenwu@google.com",
+			"cros-core-systems-perf@google.com",
+		},
+		Data: []string{ptsWorldBaseImagearm64, ptsWorldDataImagearm64},
+		Impl: &PtsWorldFixture{
+			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagearm64, ptsWorldDataImagearm64),
 			mount:   false,
 			unmount: true,
 		},
