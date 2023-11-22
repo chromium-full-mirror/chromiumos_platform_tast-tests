@@ -61,12 +61,6 @@ func init() {
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutinePrimeSearchV2},
 			Fixture: "crosHealthdRunning",
 		}, {
-			// Contact: weiluanwang@google.com
-			Name:              "led_lit_up",
-			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineLedLitUp},
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		}, {
 			// Contact: yycheng@google.com
 			Name:    "floating_point_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},

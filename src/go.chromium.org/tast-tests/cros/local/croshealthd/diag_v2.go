@@ -6,8 +6,6 @@ package croshealthd
 
 import (
 	"context"
-	"fmt"
-	"io"
 	"regexp"
 	"strconv"
 	"strings"
@@ -26,7 +24,6 @@ const (
 	RoutineCPUCacheV2           string = "cpu_cache_v2"
 	RoutineUFSLifetime          string = "ufs_lifetime"
 	RoutinePrimeSearchV2        string = "prime_search_v2"
-	RoutineLedLitUp             string = "led_lit_up"
 	RoutineFloatingPointV2      string = "floating_point_v2"
 	Fan                         string = "fan"
 	RoutineBluetoothPowerV2     string = "bluetooth_power_v2"
@@ -127,35 +124,12 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (RoutineResul
 	case RoutineCPUStressV2, RoutineCPUCacheV2, RoutinePrimeSearchV2, RoutineFloatingPointV2:
 		// Runs the CPU routine for 1 second.
 		diagParams = append(diagParams, "--length_seconds=1")
-	case RoutineLedLitUp:
-		// Use an arbitrary supported LED and color for testing. Here, we use
-		// the first supported LED and its first supported color from `getSupportedLED`.
-		supportedLED, err := getSupportedLED(ctx)
-		if err != nil {
-			return RoutineResultV2{}, errors.Wrap(err, "failed to get supported LEDs")
-		}
-		if len(supportedLED) == 0 {
-			return RoutineResultV2{}, errors.Wrap(err, "no supported LEDs")
-		}
-		for ledName, ledColors := range supportedLED {
-			if len(ledColors) == 0 {
-				return RoutineResultV2{}, errors.Wrap(err, "the list of supported colors should not be empty")
-			}
-			diagParams = append(diagParams, fmt.Sprintf("--led_name=%s", ledName), fmt.Sprintf("--led_color=%s", ledColors[0]))
-			break
-		}
 	default:
 		// No extra parameters required for the following routines:
 		//   - RoutineAudioDriver
 		//   - RoutineUFSLifetime
 	}
-	var output string
-	var err error
-	if params.Routine == RoutineLedLitUp {
-		output, err = runLEDDiag(ctx, diagParams)
-	} else {
-		output, err = runDiagV2(ctx, diagParams)
-	}
+	output, err := runDiagV2(ctx, diagParams)
 	if err != nil {
 		return RoutineResultV2{}, err
 	}
@@ -174,81 +148,6 @@ func runDiagV2(ctx context.Context, args []string) (string, error) {
 		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
 	}
 	return string(stdout), nil
-}
-
-// runLEDDiag is a helper function similar to `runDiag` while simulating the
-// user input for LED routine.
-func runLEDDiag(ctx context.Context, args []string) (string, error) {
-	args = append([]string{"diag"}, args...)
-	cmd := testexec.CommandContext(ctx, "cros-health-tool", args...)
-	testing.ContextLogf(ctx, "Running %q", shutil.EscapeSlice(cmd.Args))
-
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get cmd.StdinPipe()")
-	}
-
-	go func() {
-		defer stdin.Close()
-		// Input `y` to proceed. The `y` indicates that the color is correct.
-		io.WriteString(stdin, "y")
-	}()
-
-	stdout, stderr, err := cmd.SeparatedOutput(testexec.DumpLogOnError)
-	if err != nil {
-		return "", errors.Wrapf(err, "command failed with stdout: %q, stderr: %q", string(stdout), string(stderr))
-	}
-	return string(stdout), nil
-}
-
-// getSupportedLED returns a map of the list of supported colors for each
-// supported LED. For example, {"battery": ["red", "yellow", "green"], ...}.
-func getSupportedLED(ctx context.Context) (map[string][]string, error) {
-	re := regexp.MustCompile(`([^:]+): 0x([a-fA-F0-9]+)`)
-	possibleLEDColor := map[string]bool{
-		"red":    true,
-		"green":  true,
-		"blue":   true,
-		"yellow": true,
-		"white":  true,
-		"amber":  true,
-	}
-
-	m := make(map[string][]string)
-	for _, ledName := range []string{"battery", "power", "adapter", "left", "right"} {
-		out, err := testexec.CommandContext(ctx, "ectool", "led", ledName, "query").Output()
-		if err != nil {
-			// The command will fail if this LED is not supported.
-			testing.ContextLogf(ctx, "Failed to query brightness range for LED %q", ledName)
-			continue
-		}
-		// Example output:
-		// Brightness range for LED 0:
-		//         red     : 0x1
-		//         green   : 0x1
-		//         blue    : 0x0
-		//         yellow  : 0x0
-		//         white   : 0x0
-		//         amber   : 0x1
-		for _, line := range strings.Split(string(out), "\n") {
-			match := re.FindStringSubmatch(line)
-			if match == nil {
-				continue
-			}
-
-			colorName := strings.TrimSpace(match[1])
-			if _, exists := possibleLEDColor[colorName]; !exists {
-				testing.ContextLogf(ctx, "Invalid LED name: %q", colorName)
-				continue
-			}
-
-			// Brightness range other than 0x0 means the color is supported.
-			if match[2] != "0" {
-				m[ledName] = append(m[ledName], colorName)
-			}
-		}
-	}
-	return m, nil
 }
 
 // parseDiagOutputV2 is a helper function that takes the `raw` output from running a
