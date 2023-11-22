@@ -315,19 +315,13 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			alreadyInformational := slices.Contains(testCase.ExtraAttr, "informational")
 
 			// Unstable test variants are informational.
-			// Lacros tests are informational.
 			// Tablet mode tests are informational.
 			// Low-perf test cases are NOT informational.
-			informational := (!i.stable && !testCase.LowPerfEligible) || bt == browser.TypeLacros || testCase.DeviceMode == devicemode.TabletMode
+			informational := (!i.stable && !testCase.LowPerfEligible) || testCase.DeviceMode == devicemode.TabletMode
 			// Informational status is only applicable to mainline tests.
 			// Don't add informational status if the test is already informational.
 			if !testCase.IsNotMainline && !alreadyInformational && informational {
 				extraAttr = append(extraAttr, "informational")
-
-				// TODO(b/269175095): Promote Lacros tests to critical after stabilizing for two weeks.
-				if bt == browser.TypeLacros {
-					extraAttr = append(extraAttr, "group:criticalstaging")
-				}
 			}
 
 			var extraSoftwareDeps []string

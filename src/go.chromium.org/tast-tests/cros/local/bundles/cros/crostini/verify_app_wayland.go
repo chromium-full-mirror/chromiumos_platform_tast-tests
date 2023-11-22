@@ -59,7 +59,6 @@ func init() {
 				Val:               browser.TypeAsh,
 			}, {
 				Name:              "bullseye_stable_lacros",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc", "lacros"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseyeWithLacros",
@@ -67,7 +66,6 @@ func init() {
 				Val:               browser.TypeLacros,
 			}, {
 				Name:              "bookworm_stable_lacros",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"dlc", "lacros"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookwormWithLacros",
