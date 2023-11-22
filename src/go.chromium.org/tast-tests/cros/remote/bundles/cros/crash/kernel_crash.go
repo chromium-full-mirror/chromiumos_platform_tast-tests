@@ -100,12 +100,7 @@ func restoreLsbRelease(ctx context.Context, d *dut.DUT) error {
 	return nil
 }
 
-const kernelPanicCmd = `
-  if [ -f /sys/kernel/debug/provoke-crash/DIRECT ]; then
-    echo PANIC > /sys/kernel/debug/provoke-crash/DIRECT
-  else
-    echo panic > /proc/breakme
-  fi`
+const kernelPanicCmd = "echo PANIC > /sys/kernel/debug/provoke-crash/DIRECT"
 
 func KernelCrash(ctx context.Context, s *testing.State) {
 	const systemCrashDir = "/var/spool/crash"
