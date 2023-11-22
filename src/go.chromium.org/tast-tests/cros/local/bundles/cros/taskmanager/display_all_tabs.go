@@ -29,14 +29,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DisplayAllTabs,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test that all tabs should be displayed in the task manager",
+		Func:           DisplayAllTabs,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Test that all tabs should be displayed in the task manager",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"afakhry@google.com",
-			"cienet-development@googlegroups.com",
-			"sun.tsai@cienet.com",
+			// "afakhry@google.com",
+			// "chromeos-sw-engprod@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "crbug:UI>TaskManager",
 		Attr:         []string{"group:mainline", "informational"},

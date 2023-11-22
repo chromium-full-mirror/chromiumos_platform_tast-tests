@@ -32,13 +32,14 @@ const testfile = "fivemin_audio.mp3"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MediaSourceUI,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check if the media control widget is displaying correct media source",
+		Func:           MediaSourceUI,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Check if the media control widget is displaying correct media source",
 		Contacts: []string{
-			"cros-arc-te@google.com",
-			"cienet-development@googlegroups.com",
+			// "cros-arc-te@google.com",
 			"cj.tsai@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational"},

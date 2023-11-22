@@ -29,13 +29,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         PinUnpinMediaPod,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Check the pin/unpin/re-pin for media control pod",
+		Func:           PinUnpinMediaPod,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Check the pin/unpin/re-pin for media control pod",
 		Contacts: []string{
-			"cros-arc-te@google.com",
-			"cienet-development@googlegroups.com",
+			// "cros-arc-te@google.com",
 			"cj.tsai@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
 		Attr:         []string{"group:mainline", "informational"},

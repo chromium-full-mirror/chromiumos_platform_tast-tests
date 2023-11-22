@@ -117,12 +117,12 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify the share property of a network across different users",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
-			"shijinabraham@google.com",
-			"chadduffin@chromium.org",
-			"chromeos-connectivity-cienet-external@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
+			// "shijinabraham@google.com",
+			// "chadduffin@chromium.org",
 			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e"},

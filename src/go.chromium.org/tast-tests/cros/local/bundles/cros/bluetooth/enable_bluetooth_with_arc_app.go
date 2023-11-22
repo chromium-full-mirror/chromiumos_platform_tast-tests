@@ -31,8 +31,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that user can turn Bluetooth on with an ARC++ app",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
 			"kinwang.lao@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},

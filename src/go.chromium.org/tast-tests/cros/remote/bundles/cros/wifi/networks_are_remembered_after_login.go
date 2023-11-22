@@ -37,8 +37,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify the networks added at OOBE and sign-in screen are remembered after logged in",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
 			"alfredyu@cienet.com",
 			"cj.tsai@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",

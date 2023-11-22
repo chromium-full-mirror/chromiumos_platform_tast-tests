@@ -23,14 +23,15 @@ const writeGuardSettingTestHTML = "file_system_write_for_urls_index.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultFileSystemWriteGuardSetting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests the DefaultFileSystemWriteGuardSetting policy",
+		Func:           DefaultFileSystemWriteGuardSetting,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Tests the DefaultFileSystemWriteGuardSetting policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"bob.yang@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			// "cros-engprod-muc@google.com",
+			// "chromeos-sw-engprod@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},

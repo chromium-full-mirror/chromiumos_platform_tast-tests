@@ -23,14 +23,15 @@ const writeAskTestHTML = "file_system_write_for_urls_index.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FileSystemWriteAskForUrls,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checking if file system writes are allowed depending on the value of this policy",
+		Func:           FileSystemWriteAskForUrls,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Checking if file system writes are allowed depending on the value of this policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"vivian.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			// "cros-engprod-muc@google.com",
+			// "chromeos-sw-engprod@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},

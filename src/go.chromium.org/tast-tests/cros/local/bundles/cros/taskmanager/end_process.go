@@ -34,14 +34,15 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         EndProcess,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify the 'End process' button works on plugin, non-plugin and grouped tabs",
+		Func:           EndProcess,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verify the 'End process' button works on plugin, non-plugin and grouped tabs",
 		Contacts: []string{
-			"chromeos-sw-engprod@google.com",
-			"afakhry@google.com",
-			"cienet-development@googlegroups.com",
-			"sun.tsai@cienet.com",
+			// "chromeos-sw-engprod@google.com",
+			// "afakhry@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1238037", // ChromeOS > Software > Task Manager
 		Attr:         []string{"group:mainline", "informational"},

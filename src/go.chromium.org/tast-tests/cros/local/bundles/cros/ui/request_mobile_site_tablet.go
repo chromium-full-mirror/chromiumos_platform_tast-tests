@@ -28,13 +28,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         RequestMobileSiteTablet,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Test request mobile site function on websites under different types of login account",
+		Func:           RequestMobileSiteTablet,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Test request mobile site function on websites under different types of login account",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
-			"cienet-development@googlegroups.com",
+			// "chromeos-wmp@google.com",
 			"cj.tsai@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1238037", // ChromeOS > Software > Window Management
 		Attr:         []string{"group:mainline", "informational"},

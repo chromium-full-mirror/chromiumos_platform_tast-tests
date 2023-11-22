@@ -23,14 +23,15 @@ const readBlockTestHTML = "file_system_read_for_urls_index.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FileSystemReadBlockedForUrls,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Checking if file system reads are blocked depending on the value of this policy",
+		Func:           FileSystemReadBlockedForUrls,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Checking if file system reads are blocked depending on the value of this policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"vivian.tsai@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			// "cros-engprod-muc@google.com",
+			// "chromeos-sw-engprod@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},

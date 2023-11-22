@@ -31,9 +31,9 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify Wi-Fi status is correctly represented in the Settings and Quick Settings UI",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
-			"sun.tsai@cienet.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
+			"alfredyu@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > WiFi

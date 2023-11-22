@@ -29,8 +29,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify that the user is able to use Bluetooth HID keyboard/mouse for input",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
 			"edgar.change@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},

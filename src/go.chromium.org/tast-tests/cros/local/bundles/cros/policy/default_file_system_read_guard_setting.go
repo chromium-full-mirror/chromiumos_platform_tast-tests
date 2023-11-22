@@ -23,14 +23,15 @@ const readGuardSettingTestHTML = "file_system_read_for_urls_index.html"
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DefaultFileSystemReadGuardSetting,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests the DefaultFileSystemReadGuardSetting policy",
+		Func:           DefaultFileSystemReadGuardSetting,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Tests the DefaultFileSystemReadGuardSetting policy",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
-			"bob.yang@cienet.com",
-			"cienet-development@googlegroups.com",
-			"chromeos-sw-engprod@google.com",
+			// "cros-engprod-muc@google.com",
+			// "chromeos-sw-engprod@google.com",
+			"alfredyu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},

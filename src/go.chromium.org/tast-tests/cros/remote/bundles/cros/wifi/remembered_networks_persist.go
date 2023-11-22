@@ -41,8 +41,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify remembered networks persist across suspend/resume, reboot and logout/login",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
 			"cj.tsai@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},

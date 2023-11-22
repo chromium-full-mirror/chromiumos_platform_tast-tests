@@ -25,8 +25,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify WiFi networks should not to be listed after WiFi is turned off and should not be able to ping through the previously assigned IP",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
 			"edgar.chang@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},

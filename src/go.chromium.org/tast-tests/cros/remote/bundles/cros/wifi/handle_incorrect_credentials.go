@@ -65,8 +65,8 @@ func init() {
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verify ChromeOS handles incorrect credentials gracefully and displays error messages correctly",
 		Contacts: []string{
-			"cros-connectivity@google.com",
-			"chromeos-connectivity-engprod@google.com",
+			// "cros-connectivity@google.com",
+			// "chromeos-connectivity-engprod@google.com",
 			"vivian.chen@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
