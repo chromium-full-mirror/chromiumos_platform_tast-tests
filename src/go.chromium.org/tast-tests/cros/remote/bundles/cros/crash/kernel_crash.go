@@ -40,6 +40,7 @@ func init() {
 			Val: testParams{
 				consent:    crash_service.SetUpCrashTestRequest_REAL_CONSENT,
 				panicCmd:   kernelPanicCmd,
+				goodSig:    kernelPanicSig,
 				execName:   "kernel",
 				earlyCrash: false,
 			},
@@ -48,6 +49,7 @@ func init() {
 			Val: testParams{
 				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
 				panicCmd:   kernelPanicCmd,
+				goodSig:    kernelPanicSig,
 				execName:   "kernel",
 				earlyCrash: false,
 			},
@@ -68,6 +70,7 @@ func init() {
 type testParams struct {
 	consent    crash_service.SetUpCrashTestRequest_ConsentType
 	panicCmd   string
+	goodSig    string
 	execName   string
 	earlyCrash bool
 }
@@ -101,6 +104,7 @@ func restoreLsbRelease(ctx context.Context, d *dut.DUT) error {
 }
 
 const kernelPanicCmd = "echo PANIC > /sys/kernel/debug/provoke-crash/DIRECT"
+const kernelPanicSig = "kernel-dumptest-[[:xdigit:]]{8}"
 
 func KernelCrash(ctx context.Context, s *testing.State) {
 	const systemCrashDir = "/var/spool/crash"
@@ -215,15 +219,18 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 	}
 
 	execNameRegexp := regexp.MustCompile("(?m)^exec_name=" + crash.execName + "$")
-	badSigRegexp := regexp.MustCompile("sig=kernel-.+-00000000")
-	goodSigRegexp := regexp.MustCompile("sig=kernel-.+-[[:xdigit:]]{8}")
+	sigRegexp := regexp.MustCompile("sig=(.*)")
+	badSigRegexp := regexp.MustCompile("kernel-.+-00000000")
+	goodSigRegexp := regexp.MustCompile("kernel-.+-[[:xdigit:]]{8}")
+	if crash.goodSig != "" {
+		goodSigRegexp = regexp.MustCompile(crash.goodSig)
+	}
 	savedVersionRegexp := regexp.MustCompile(`ver=99999\.`)
 	savedLsbRegexp := regexp.MustCompile(`upload_var_lsb-release=99999\.`)
 	for _, match := range res.Matches {
 		if !strings.HasSuffix(match.Regex, ".meta") {
 			continue
 		}
-		s.Log("Checking signature line for non-zero")
 		if err := d.GetFile(ctx, match.Files[0],
 			filepath.Join(s.OutDir(), path.Base(match.Files[0]))); err != nil {
 			s.Error("Failed to save meta file")
@@ -238,10 +245,17 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 		if !execNameRegexp.Match(f) {
 			s.Error("Found wrong exec_name in meta file ", match.Files[0])
 		}
-		if badSigRegexp.Match(f) {
-			s.Error("Found all zero signature in meta file ", match.Files[0])
-		} else if !goodSigRegexp.Match(f) {
-			s.Error("Couldn't find unique signature in meta file ", match.Files[0])
+		s.Log("Checking signature")
+		sigMatchResult := sigRegexp.FindSubmatch(f)
+		if len(sigMatchResult) == 0 {
+			s.Error("Missing signature in meta file ", match.Files[0])
+		} else {
+			sig := sigMatchResult[1]
+			if badSigRegexp.Match(sig) {
+				s.Errorf("Found all zero signature (%s) in meta file %s", sig, match.Files[0])
+			} else if !goodSigRegexp.Match(f) {
+				s.Errorf("Signature mismatch (%s vs %s) in meta file %s", sig, goodSigRegexp, match.Files[0])
+			}
 		}
 
 		if crash.earlyCrash {
