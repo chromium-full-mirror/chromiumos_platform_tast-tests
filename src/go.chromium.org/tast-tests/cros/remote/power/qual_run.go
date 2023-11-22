@@ -14,15 +14,20 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"gonum.org/v1/gonum/stat"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/power"
+	"go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/power/config"
 	"go.chromium.org/tast-tests/cros/remote/power/result"
 
+	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 // QualRun holds the power qual run information.
@@ -42,7 +47,7 @@ type QualRun struct {
 	// testPowers holds the power results for each test.
 	testPowers map[string]*result.Power
 	// deviceInfo contains the DUT information.
-	deviceInfo map[string]interface{}
+	deviceInfo *powerpb.DeviceInfo
 	// otherInfo contains other device or test information, such as the
 	// backlight percentage, in a map.
 	otherInfo map[string]interface{}
@@ -51,7 +56,7 @@ type QualRun struct {
 }
 
 // NewQualRun returns a new QualRun from a test configuration URL.
-func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
+func NewQualRun(ctx context.Context, url string, dut *dut.DUT, rpcHint *testing.RPCHint) (*QualRun, error) {
 	configJSON, err := utils.FetchFromURL(ctx, url)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to fetch configuration from %s", url)
@@ -67,6 +72,17 @@ func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
 		return nil, errors.Wrap(err, "failed to validate configuration")
 	}
 
+	cl, err := rpc.Dial(ctx, dut, rpcHint)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to the RPC service")
+	}
+	defer cl.Close(ctx)
+	client := powerpb.NewLocalInfoServiceClient(cl.Conn)
+	deviceInfo, err := client.GetDeviceInfoFromDUT(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get DUT device info")
+	}
+
 	weightedTests := config.FindWeightedTests(cfg)
 
 	return &QualRun{
@@ -76,6 +92,7 @@ func NewQualRun(ctx context.Context, url string) (*QualRun, error) {
 		UnorderedTests: unorderedTests,
 		WeightedTests:  weightedTests,
 		testPowers:     make(map[string]*result.Power),
+		deviceInfo:     deviceInfo,
 		otherInfo:      make(map[string]interface{}),
 	}, nil
 }
@@ -117,7 +134,7 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
 		}
 		// Read the power metrics from the test power_log json file.
-		average, deviceInfo, err := ReadPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
+		average, err := readPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
 		if err != nil {
 			return errors.Wrapf(err, "failed to read power metrics for test %s", t)
 		}
@@ -125,7 +142,6 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			MinutesBatteryLife:       average[power.MinutesBatteryLifeKey].(float64),
 			MinutesBatteryLifeTested: average[power.MinutesBatteryLifeTestedKey].(float64),
 		}}
-		r.deviceInfo = deviceInfo
 		// Record other average values.
 		for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
 			if value, ok := average[key]; ok {
@@ -303,18 +319,17 @@ type powerLogResult struct {
 	Power struct {
 		Average map[string]interface{} `json:"average"`
 	} `json:"power"`
-	DUT map[string]interface{} `json:"dut"`
 }
 
-// ReadPowerMetrics reads the power metric values from the given power_log.json file.
-func ReadPowerMetrics(file string) (map[string]interface{}, map[string]interface{}, error) {
+// readPowerMetrics reads the power metric values from the given power_log.json file.
+func readPowerMetrics(file string) (map[string]interface{}, error) {
 	bytes, err := os.ReadFile(file)
 	if err != nil {
-		return nil, nil, errors.Wrapf(err, "failed to read file %s", file)
+		return nil, errors.Wrapf(err, "failed to read file %s", file)
 	}
 	res := &powerLogResult{}
 	if err := json.Unmarshal(bytes, res); err != nil {
-		return nil, nil, errors.Wrapf(err, "failed to unmarshal json from file %s", file)
+		return nil, errors.Wrapf(err, "failed to unmarshal json from file %s", file)
 	}
-	return res.Power.Average, res.DUT, nil
+	return res.Power.Average, nil
 }

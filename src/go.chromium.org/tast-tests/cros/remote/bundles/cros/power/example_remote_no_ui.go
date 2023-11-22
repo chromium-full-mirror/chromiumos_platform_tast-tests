@@ -104,7 +104,7 @@ func ExampleRemoteNoUI(ctx context.Context, s *testing.State) {
 		s.TestName(),
 		"",
 		perfVals,
-		cp.FormatDeviceInfoForPowerLog(rRes.GetDeviceInfo()),
+		rRes.GetDeviceInfo(),
 		rRes.GetOneTimeMetrics(),
 	); err != nil {
 		s.Fatal("Failed to save and upload power log: ", err)

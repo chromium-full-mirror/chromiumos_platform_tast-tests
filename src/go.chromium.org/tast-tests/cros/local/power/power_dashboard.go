@@ -68,7 +68,7 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 // It will not save perf values and custom perf values
 // passed as an OptionalRecorderArg will not be handled.
 func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
-	devInfo := cp.FormatDeviceInfoForPowerLog(GetDeviceInfo(ctx, args...))
+	devInfo := GetDeviceInfo(ctx, args...)
 	metrics := CollectOneTimeMetrics(ctx)
 	pwrLog, err := cp.CreatePowerLogAndUpdatePerfValues(ctx, testName, values, devInfo, metrics)
 	if err != nil {
@@ -85,7 +85,7 @@ func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf
 // It will merge custom perf values passed as OptionalRecorderArg
 // and saves perf results to Crosbolt.
 func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
-	devInfo := cp.FormatDeviceInfoForPowerLog(GetDeviceInfo(ctx, args...))
+	devInfo := GetDeviceInfo(ctx, args...)
 
 	metrics := CollectOneTimeMetrics(ctx)
 	if _, err := cp.CreateSaveUploadPowerLog(ctx, outDir, testName, "", values, devInfo, metrics); err != nil {

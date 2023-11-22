@@ -26,6 +26,7 @@ func init() {
 			// Optional. If given, it overrides the default URL.
 			"meta.PowerQualV2.configURL",
 		},
+		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService"},
 		// Use a big enough timeout value for the tests. Actual test context timeout value will
 		// be adjusted based on the configuration.
 		Timeout: 24 * time.Hour,
@@ -62,7 +63,7 @@ func PowerQualV2(ctx context.Context, s *testing.State) {
 		configURL = v
 	}
 
-	run, err := power.NewQualRun(ctx, configURL)
+	run, err := power.NewQualRun(ctx, configURL, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to create new power qual run: ", err)
 	}

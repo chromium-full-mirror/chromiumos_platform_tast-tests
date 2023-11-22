@@ -16,7 +16,6 @@ import (
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
-	rp "go.chromium.org/tast-tests/cros/remote/power"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/remotepower"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
@@ -283,8 +282,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save perf data for crosbolt: ", err)
 	}
 
-	subtestDir := filepath.Join(resultsDir, "tests", subtest)
-	devInfo, oneTimeMetrics, err := getLocalDUTInfo(ctx, subtestDir, s.DUT(), s.RPCHint())
+	devInfo, oneTimeMetrics, err := localDUTInfo(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to get local DUT info: ", err)
 	}
@@ -295,7 +293,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 
 }
 
-func getLocalDUTInfo(ctx context.Context, subtestDir string, dut *dut.DUT, rpchint *testing.RPCHint) (map[string]interface{}, *ps.OneTimeMetrics, error) {
+func localDUTInfo(ctx context.Context, dut *dut.DUT, rpchint *testing.RPCHint) (*ps.DeviceInfo, *ps.OneTimeMetrics, error) {
 	cl, err := rpc.Dial(ctx, dut, rpchint)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
@@ -303,10 +301,9 @@ func getLocalDUTInfo(ctx context.Context, subtestDir string, dut *dut.DUT, rpchi
 	defer cl.Close(ctx)
 
 	client := ps.NewLocalInfoServiceClient(cl.Conn)
-	// TODO: b/310761918 - Use gRPC when power qual v2 test is modified.
-	_, devInfo, err := rp.ReadPowerMetrics(filepath.Join(subtestDir, "power_log.json"))
+	devInfo, err := client.GetDeviceInfoFromDUT(ctx, &empty.Empty{})
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to read from subtest power_log")
+		return nil, nil, errors.Wrap(err, "failed to call gRPC service for device info")
 	}
 
 	oneTimeMetrics, err := client.GetOneTimeMetricsFromDUT(ctx, &empty.Empty{})
