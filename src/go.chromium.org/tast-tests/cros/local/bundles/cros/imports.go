@@ -29,6 +29,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/clipboardhistory"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/crash"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/crosh"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/crospts"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/crossdevice"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/crostini"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/cryptohome"
