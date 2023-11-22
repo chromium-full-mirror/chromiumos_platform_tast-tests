@@ -124,6 +124,7 @@ func AudioStreamsConformance(ctx context.Context, s *testing.State) {
 	dump, err := testexec.CommandContext(
 		runCtx, "/usr/local/bin/audio_streams_conformance_test",
 		"-P", string(param.StreamSource),
+		"-b", "480",
 		"--iterations", "400",
 		"--json",
 	).Output(testexec.DumpLogOnError)
