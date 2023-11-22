@@ -719,7 +719,7 @@ func (f *crostiniFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 		s.Log("keepState not uninstalling Crostini and deleting image in cleanUp")
 	} else {
 		if f.cont != nil {
-			if err := uninstallLinuxFromUI(ctx, f.tconn, f.cr); err != nil {
+			if err := uninstallLinux(ctx, f.tconn); err != nil {
 				s.Log("Failed to uninstall Linux: ", err)
 			}
 			f.cont = nil

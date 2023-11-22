@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	cui "go.chromium.org/tast-tests/cros/local/crostini/ui"
-	"go.chromium.org/tast-tests/cros/local/crostini/ui/settings"
 	dlcutil "go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/terminalapp"
@@ -735,8 +734,8 @@ func (p *preImpl) cleanUp(ctx context.Context, s *testing.PreState) {
 		s.Log("keepState not uninstalling Crostini and deleting image in cleanUp")
 	} else {
 		if p.cont != nil {
-			if err := uninstallLinuxFromUI(ctx, p.tconn, p.cr); err != nil {
-				s.Log("Failed to close settings window after uninstalling Linux: ", err)
+			if err := uninstallLinux(ctx, p.tconn); err != nil {
+				s.Log("Failed to uninstall Linux: ", err)
 			}
 			p.cont = nil
 		}
@@ -765,21 +764,11 @@ func (p *preImpl) cleanUp(ctx context.Context, s *testing.PreState) {
 	}
 }
 
-func uninstallLinuxFromUI(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
-	// Open the Linux settings.
-	st, err := settings.OpenLinuxSettings(ctx, tconn, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to open Linux Settings")
+func uninstallLinux(ctx context.Context, tconn *chrome.TestConn) error {
+	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.runCrostiniUninstaller)`); err != nil {
+		return errors.Wrap(err, "failed to uninstall crostini with autotest API")
 	}
 
-	// Uninstall Crostini.
-	if err := st.Remove()(ctx); err != nil {
-		return err
-	}
-
-	if err := st.Close(ctx); err != nil {
-		return errors.Wrap(err, "failed to close settings window after uninstalling Linux")
-	}
 	return nil
 }
 
