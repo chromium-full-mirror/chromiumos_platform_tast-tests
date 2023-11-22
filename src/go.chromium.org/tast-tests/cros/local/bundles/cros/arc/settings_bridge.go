@@ -66,73 +66,58 @@ func checkAndroidAccessibility(ctx context.Context, a *arc.ARC, enable bool) err
 	return nil
 }
 
-// disableAccessibilityFeatures disables the features specified in features.
-func disableAccessibilityFeatures(ctx context.Context, tconn *chrome.TestConn, features []a11y.Feature) error {
-	var failedFeatures []string
-	for _, feature := range features {
-		if err := a11y.ClearFeature(ctx, tconn, feature); err != nil {
-			failedFeatures = append(failedFeatures, string(feature))
-			testing.ContextLogf(ctx, "Failed disabling %s: %v", feature, err)
-		}
-	}
-
-	if len(failedFeatures) > 0 {
-		return errors.Errorf("failed to disable following features: %v", failedFeatures)
-	}
-	return nil
-}
-
 // testAccessibilitySync runs the test to ensure spoken feedback settings
 // are synchronized between Chrome and Android.
-func testAccessibilitySync(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, features []a11y.Feature) (retErr error) {
+func testAccessibilitySync(ctx context.Context, s *testing.State, tconn *chrome.TestConn, a *arc.ARC) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	if res, err := arca11y.IsEnabledAndroid(ctx, a); err != nil {
-		return err
-	} else if res {
-		return errors.New("accessibility is unexpectedly enabled on boot")
+	if enabled, err := arca11y.IsEnabledAndroid(ctx, a); err != nil {
+		s.Error("Failed to check if android accessibility is enabled: ", err)
+		return
+	} else if enabled {
+		s.Error("accessibility is unexpectedly enabled on boot")
+		return
 	}
 
-	defer func(ctx context.Context) {
-		if err := disableAccessibilityFeatures(ctx, tconn, features); err != nil {
-			if retErr == nil {
-				retErr = err
-			} else {
-				testing.ContextLog(ctx, "Failed to disable accessibliity features: ", err)
-			}
-		}
-	}(cleanupCtx)
+	// Ensure that disable switch access confirmation dialog does not get shown.
+	if err := tconn.Eval(ctx, `chrome.autotestPrivate.disableSwitchAccessDialog();`, nil); err != nil {
+		s.Error(err, "Failed to disable Switch Access dialog")
+		return
+	}
+
+	features := []a11y.Feature{
+		a11y.SpokenFeedback,
+		a11y.SwitchAccess,
+		a11y.SelectToSpeak,
+		a11y.FocusHighlight,
+		a11y.ScreenMagnifier,
+		a11y.DockedMagnifier,
+	}
 
 	for _, feature := range features {
-		testing.ContextLog(ctx, "Testing ", feature)
-		if feature == a11y.SwitchAccess {
-			// Ensure that disable switch access confirmation dialog does not get shown.
-			// If there is an err here, switch access will not be enabled, meaning that switch access
-			// will not be disabled in the above disableA11yFeatures(). In this situation, the "switch access
-			// disable dialog" will not be shown.
-			if err := tconn.Eval(ctx, `chrome.autotestPrivate.disableSwitchAccessDialog();`, nil); err != nil {
-				return err
-			}
-		}
-		for _, enable := range []bool{true, false} {
-			if err := a11y.SetFeatureEnabled(ctx, tconn, feature, enable); err != nil {
-				return err
-			}
-
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				if err := checkAndroidAccessibility(ctx, a, enable); err != nil {
-					return err
+		s.Run(ctx, string(feature), func(ctx context.Context, s *testing.State) {
+			for _, enable := range []bool{true, false} {
+				if err := a11y.SetFeatureEnabled(ctx, tconn, feature, enable); err != nil {
+					s.Fatalf("Failed to toggle %s to %t: %v", feature, enable, err)
 				}
-				return nil
-			}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-				return errors.Wrapf(err, "could not toggle %s to %t", feature, enable)
+
+				if err := testing.Poll(ctx, func(ctx context.Context) error {
+					if err := checkAndroidAccessibility(ctx, a, enable); err != nil {
+						return err
+					}
+					return nil
+				}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+					s.Fatalf("Failed to synchronize accessibility status of %s to be %t: %v", feature, enable, err)
+				}
 			}
+		})
+
+		if err := a11y.ClearFeature(ctx, tconn, feature); err != nil {
+			s.Errorf("Failed clear settings of %s: %v", feature, err)
 		}
 	}
-
-	return nil
 }
 
 // proxySettingsTestCase contains fields necessary to test proxy settings.
@@ -275,19 +260,7 @@ func SettingsBridge(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for ArcIntentHelper: ", err)
 	}
 
-	// Run accessibility test.
-	accessibilityFeatures := []a11y.Feature{
-		a11y.SpokenFeedback,
-		a11y.SwitchAccess,
-		a11y.SelectToSpeak,
-		a11y.FocusHighlight,
-		a11y.ScreenMagnifier,
-		a11y.DockedMagnifier,
-	}
-	if err := testAccessibilitySync(ctx, tconn, a, accessibilityFeatures); err != nil {
-		s.Error("Failed to sync accessibility: ", err)
-	}
+	testAccessibilitySync(ctx, s, tconn, a)
 
-	// Run proxy settings test.
 	testProxySync(ctx, s, tconn, a)
 }
