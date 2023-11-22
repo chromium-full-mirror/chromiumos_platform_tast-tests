@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -82,6 +83,23 @@ func Close(tconn *chrome.TestConn, windowFinder *nodewith.Finder) uiauto.Action 
 	)
 }
 
+func diffWindowInTabletMode(ctx context.Context, tconn *chrome.TestConn, d screenshot.Differ, name string, options ...screenshot.Option) uiauto.Action {
+	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
+		defer cancel()
+
+		revert, err := ash.EnsureTabletModeEnabled(ctx, tconn, true)
+		if err != nil {
+			return err
+		}
+
+		defer revert(cleanupCtx)
+
+		return screenshot.DiffWindow(ctx, d, name, options...)(ctx)
+	}
+}
+
 // TestMaximizeRestoreMinimizeClose tests the nominal window operations for the
 // specified application.
 // TODO(b/298575662): HACK: Bruschetta windows are missing from the autotest
@@ -131,6 +149,18 @@ func TestMaximizeRestoreMinimizeClose(ctx context.Context, appName, appWindowNam
 			// Check that the app is still on the shelf.
 			ui.Exists(nodewith.NameContaining(appName).Role(role.Button).Visible().Ancestor(shelf)),
 			ShowFromShelf(tconn, appWindow, appName),
+			Close(tconn, appWindow),
+			// Check the app disappears from the shelf.
+			ui.WithTimeout(5*time.Second).WaitUntilGone(nodewith.NameContaining(appName).Role(role.Button).Visible().Ancestor(shelf)),
+		)},
+		{"switch_tablet", uiauto.Combine("launch app and switch to tablet mode and back",
+			launcher.SearchAndLaunchWithQuery(tconn, keyboard, appName, appName),
+			// Wait until the window is stable.
+			uda.WaitUntilExists(uidetection.Word(appDetect).First().WithinA11yNode(appWindow)),
+			// Some apps (e.g, Firefox) may launch in maximized window by default on certain devices.
+			resetNormalWindowState,
+			diffWindowInTabletMode(ctx, tconn, d, "tablet", screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
+			screenshot.DiffWindow(ctx, d, "clamshell", screenshot.Retries(5), screenshot.SkipSetWindowState(true)),
 			Close(tconn, appWindow),
 			// Check the app disappears from the shelf.
 			ui.WithTimeout(5*time.Second).WaitUntilGone(nodewith.NameContaining(appName).Role(role.Button).Visible().Ancestor(shelf)),
