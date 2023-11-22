@@ -37,59 +37,7 @@ var relexedCriteriaModels = []string{"aleena", "barla", "careena", "kasumi", "ka
 // TODO(b/244418775): remove this when b/244418775 is fixed
 var fixFormatS16CaptureModels = []string{"redrix", "gimble", "anahera", "yaviks", "yavikso"}
 
-var mergeThresholdSize480Models = []string{
-	"anahera",
-	"banshee",
-	"brya",
-	"chronicler",
-	"collis",
-	"copano",
-	"craask",
-	"craaskbowl",
-	"craaskino",
-	"craaskvin",
-	"craasneto",
-	"crota",
-	"crota360",
-	"delbin",
-	"drobit",
-	"eldrid",
-	"elemi",
-	"felwinter",
-	"gimble",
-	"gothrax",
-	"joxer",
-	"kano",
-	"lillipup",
-	"lindar",
-	"marasov",
-	"mithrax",
-	"nereid",
-	"nirwen",
-	"nivviks",
-	"omnigul",
-	"osiris",
-	"primus",
-	"redrix",
-	"skolas",
-	"taeko",
-	"taniks",
-	"uldren",
-	"uldren360",
-	"vell",
-	"voema",
-	"volet",
-	"volmar",
-	"volta",
-	"volteer2",
-	"voxel",
-	"yaviks",
-	"yavikso",
-	"yahiko",
-	"xivu",
-	"xivu360",
-	"zavala",
-}
+var mergeThresholdSize480Boards = []string{"volteer", "brya", "nissa"}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -244,7 +192,13 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 			arg = "-P"
 		}
 		var args = []string{arg, alsaDev, "--rate-criteria-diff-pct", fmt.Sprintf("%f", rateCriteria), "--rate-err-criteria", fmt.Sprintf("%f", rateErrCriteria), "--json"}
-		if slices.Contains(mergeThresholdSize480Models, model) {
+		board, err := crosconfig.Get(ctx, "/pvs", "program")
+		if err != nil {
+			s.Log("Failed to query board: ", err)
+			// Setting board to be empty string and it should not be run with merge-thld-size 480
+			board = ""
+		}
+		if slices.Contains(mergeThresholdSize480Boards, board) {
 			args = append(args, "--merge-thld-size", "480")
 		}
 		if slices.Contains(fixFormatS16CaptureModels, model) && stream == audio.InputStream {
