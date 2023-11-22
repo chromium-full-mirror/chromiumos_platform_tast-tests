@@ -62,6 +62,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "paulhsia@google.com"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		SoftwareDeps: []string{"vm_host"},
+		Fixture:      "uiStopped",
 		BugComponent: "b:1332660",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
