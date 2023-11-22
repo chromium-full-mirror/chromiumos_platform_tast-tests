@@ -187,6 +187,10 @@ func Idle(ctx context.Context, s *testing.State) {
 	}
 	setBluetoothPower(params.BluetoothPower)
 
+	if err := r.Cooldown(ctx); err != nil {
+		s.Error("Cooldown failed: ", err)
+	}
+
 	if params.CollectTrace {
 		var session *tracing.Session
 		traceConfigPath := s.DataPath(tracing.TBMTracedProbesConfigFile)
@@ -199,10 +203,6 @@ func Idle(ctx context.Context, s *testing.State) {
 
 		defer session.Finalize(cleanupCtx)
 		defer session.Stop()
-	}
-
-	if err := r.Cooldown(ctx); err != nil {
-		s.Error("Cooldown failed: ", err)
 	}
 
 	if err := r.Start(ctx); err != nil {
