@@ -8,6 +8,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -72,6 +73,86 @@ func CheckVideoProfile(path string, profile Profile) error {
 		return errors.Errorf("mismatch video profile, got %v; want %v", config.Profile, profile.Value)
 	}
 	return nil
+}
+
+func parseResolution(s string) (*Resolution, error) {
+	fs := strings.Fields(s)
+
+	if len(fs) != 2 {
+		return nil, errors.Errorf("expect exactly 2 space separated numbers, found %d", len(fs))
+	}
+
+	w, err := strconv.Atoi(fs[0])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse width")
+	}
+
+	h, err := strconv.Atoi(fs[1])
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse height")
+	}
+
+	return &Resolution{Width: w, Height: h}, nil
+}
+
+// PhotoResolution returns the resolution of a jpeg photo file.
+func PhotoResolution(ctx context.Context, path string) (*Resolution, error) {
+	args := []string{
+		"-auto-orient", // Handles orientation tag in jpeg EXIF.
+		"-format",
+		"%w %h",
+		path,
+		"info:",
+	}
+	out, err := testexec.CommandContext(ctx, "convert", args...).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to run convert")
+	}
+	return parseResolution(string(out))
+}
+
+// VideoResolution returns the resolution of a mp4 video file.
+func VideoResolution(ctx context.Context, path string) (*Resolution, error) {
+	output, err := videoInfo(ctx, "stream=width,height", path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get video info")
+	}
+
+	res, err := parseResolution(output)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse resolution")
+	}
+
+	// The video may have rotation metadata and it should be applied properly.
+	rot := 0
+	output, err = videoInfo(ctx, "stream_side_data=rotation", path)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get video info")
+	}
+	if output != "" {
+		rot, err = strconv.Atoi(output)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse rotation")
+		}
+	}
+
+	rot = (rot + 360) % 360
+	if rot == 90 || rot == 270 {
+		return &Resolution{Width: res.Height, Height: res.Width}, nil
+	}
+	return res, nil
+}
+
+// ExtractResolution extracts the resolution of given photo or video file.
+func ExtractResolution(ctx context.Context, path string) (*Resolution, error) {
+	switch ext := filepath.Ext(path); ext {
+	case ".mp4":
+		return VideoResolution(ctx, path)
+	case ".jpg":
+		return PhotoResolution(ctx, path)
+	default:
+		return nil, errors.Errorf("unexpected extension name %s", ext)
+	}
 }
 
 // VideoDurationFromHeader returns the duration of the video file in the given "path", extracted from the header.

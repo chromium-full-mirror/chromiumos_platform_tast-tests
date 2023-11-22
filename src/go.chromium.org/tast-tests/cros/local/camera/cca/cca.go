@@ -27,7 +27,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -153,16 +152,6 @@ var (
 func (p Profile) Option() string {
 	return strconv.Itoa(int(p.Value))
 }
-
-// ResolutionType is different capture resolution type.
-type ResolutionType string
-
-const (
-	// PhotoResolution represents photo resolution type.
-	PhotoResolution ResolutionType = "photo"
-	// VideoResolution represents video resolution type.
-	VideoResolution = "video"
-)
 
 // App represents a CCA (Chrome Camera App) instance.
 type App struct {

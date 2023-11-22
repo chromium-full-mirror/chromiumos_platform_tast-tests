@@ -6,12 +6,14 @@ package camera
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -23,16 +25,36 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational", "group:intel-nda"},
-		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		Fixture:      "ccaLaunched",
+		SoftwareDeps: []string{"camera_app", "chrome"},
 		Params: []testing.Param{{
-			Name: "photo",
-			Val:  cca.Photo,
+			Name:    "fake",
+			Fixture: "ccaLaunchedWithFakeHALCamera",
 		}, {
-			Name: "video",
-			Val:  cca.Video,
+			Name:              "real",
+			Fixture:           "ccaLaunched",
+			ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
 		}},
 	})
+}
+
+func checkOrientation(facing cca.Facing, screen cca.Orientation, resolution *cca.Resolution) error {
+	landscapePic := resolution.Width > resolution.Height
+	landscapeScreen := screen == cca.LandscapePrimary || screen == cca.LandscapeSecondary
+
+	if facing == cca.FacingExternal {
+		// For external cameras, the taken picture should not be rotated with screen.
+		if !landscapePic {
+			return errors.New("external camera should have portrait picture")
+		}
+		return nil
+	}
+
+	if landscapeScreen != landscapePic {
+		return errors.Errorf("unexpected %dx%d picture when screen orientation is %s",
+			resolution.Width, resolution.Height, screen)
+	}
+
+	return nil
 }
 
 // CCAUIMultiCameraScreenRotate Open CCA, rotate the display to either take
@@ -50,17 +72,11 @@ func CCAUIMultiCameraScreenRotate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
 
-	numCameras, err := app.GetNumOfCameras(ctx)
+	cleanup, err := app.EnsureTabletModeEnabled(ctx, true)
 	if err != nil {
-		s.Fatal("Failed to get number of cameras: ", err)
+		s.Fatal("Failed to enable tablet mode: ", err)
 	}
-	s.Log("No. of cameras: ", numCameras)
-
-	mode := s.Param().(cca.Mode)
-
-	if err := app.SwitchMode(ctx, mode); err != nil {
-		s.Fatalf("Failed to switch to %v viewfinder: %v, ", mode, err)
-	}
+	defer cleanup(cleanupCtx)
 
 	// Get display info.
 	dispInfo, err := display.GetInternalInfo(ctx, tconn)
@@ -75,55 +91,79 @@ func CCAUIMultiCameraScreenRotate(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	for camera := 0; camera < numCameras; camera++ {
-		if camera == 1 {
-			if err := app.SwitchCamera(ctx); err != nil {
-				s.Fatal("Switch camera failed: ", err)
-			}
-		}
-		facing, err := app.GetFacing(ctx)
-		if err != nil {
-			s.Fatal("Failed to get facing: ", err)
-		}
+	app.RunThroughCameras(ctx, func(facing cca.Facing) error {
 		s.Logf("Starting test with %v facing camera", facing)
 
 		for _, tc := range []struct {
 			name         string
+			mode         cca.Mode
 			screenOrient cca.Orientation
 			dispRotate   display.RotationAngle
 		}{
-			{"testRotate90", cca.PortraitPrimary, display.Rotate90},
-			{"testRotate180", cca.LandscapeSecondary, display.Rotate180},
-			{"testRotate270", cca.PortraitSecondary, display.Rotate270},
-			{"testRotate360", cca.LandscapePrimary, display.Rotate0},
+			{"testPhotoRotate0", cca.Photo, cca.LandscapePrimary, display.Rotate0},
+			{"testPhotoRotate90", cca.Photo, cca.PortraitPrimary, display.Rotate90},
+			{"testPhotoRotate180", cca.Photo, cca.LandscapeSecondary, display.Rotate180},
+			{"testPhotoRotate270", cca.Photo, cca.PortraitSecondary, display.Rotate270},
+			{"testVideoRotate0", cca.Video, cca.LandscapePrimary, display.Rotate0},
+			{"testVideoRotate90", cca.Video, cca.PortraitPrimary, display.Rotate90},
+			{"testVideoRotate180", cca.Video, cca.LandscapeSecondary, display.Rotate180},
+			{"testVideoRotate270", cca.Video, cca.PortraitSecondary, display.Rotate270},
 		} {
 			s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
 				if err := display.SetDisplayRotationSync(ctx, tconn, dispInfo.ID, tc.dispRotate); err != nil {
 					s.Fatalf("Failed to rotate display %v degree: %v", tc.dispRotate, err)
 				}
-				if mode == cca.Photo {
-					if _, err := app.TakeSinglePhoto(ctx, cca.TimerOff); err != nil {
-						s.Fatalf("Failed to capture picture in %v subtest: %v", tc.name, err)
-					}
+
+				if err := app.SwitchMode(ctx, tc.mode); err != nil {
+					s.Fatal("Failed to switch mode: ", err)
 				}
-				if mode == cca.Video {
-					if _, err := app.RecordVideo(ctx, cca.TimerOff, 1*time.Second); err != nil {
-						s.Fatalf("Failed to record video in %v subtest: %v", tc.name, err)
+
+				info := func() os.FileInfo {
+					switch tc.mode {
+					case cca.Photo:
+						info, err := app.TakeSinglePhoto(ctx, cca.TimerOff)
+						if err != nil {
+							s.Fatal("Failed to take photo: ", err)
+						}
+						return info[0]
+					case cca.Video:
+						info, err := app.RecordVideo(ctx, cca.TimerOff, 1*time.Second)
+						if err != nil {
+							s.Fatal("Failed to record video: ", err)
+							return nil
+						}
+						return info
+					default:
+						s.Fatal("Unexpected mode: ", tc.mode)
+						return nil
 					}
+				}()
+				path, err := app.FilePathInSavedDir(ctx, info.Name())
+				if err != nil {
+					s.Fatal("Failed to get file path: ", err)
+				}
+				resolution, err := cca.ExtractResolution(ctx, path)
+				if err != nil {
+					s.Fatalf("Failed to extract resolution from %s: %v", path, err)
 				}
 
 				if err := app.SaveScreenshot(ctx); err != nil {
-					s.Errorf("Failed to save a screenshot in %v subtest: %v", tc.name, err)
+					s.Error("Failed to save a screenshot: ", err)
 				}
 
 				orient, err := app.GetScreenOrientation(ctx)
 				if err != nil {
-					s.Fatalf("Failed to get screen orientation in %v subtest: %v", tc.name, err)
+					s.Fatal("Failed to get screen orientation: ", err)
 				}
 				if orient != tc.screenOrient {
 					s.Fatalf("Failed to match screen orientation: got %q; want %q", orient, tc.screenOrient)
 				}
+
+				if err = checkOrientation(facing, orient, resolution); err != nil {
+					s.Errorf("Failed to check orientation in %v subtest: %v:", tc.name, err)
+				}
 			})
 		}
-	}
+		return nil
+	})
 }
