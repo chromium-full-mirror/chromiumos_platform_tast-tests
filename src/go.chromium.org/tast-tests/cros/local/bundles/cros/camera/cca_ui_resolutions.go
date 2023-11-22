@@ -6,14 +6,9 @@ package camera
 
 import (
 	"context"
-	"image/jpeg"
 	"math"
-	"os"
 	"strconv"
 	"time"
-
-	"github.com/abema/go-mp4"
-	"github.com/rwcarlsen/goexif/exif"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
@@ -88,45 +83,8 @@ func getOrientedResolution(ctx context.Context, app *cca.App, r cca.Resolution) 
 	return r, nil
 }
 
-func imageResolution(path string, handleOrientation bool) (*cca.Resolution, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to open captured file for decoding jpeg")
-	}
-	defer f.Close()
-	c, err := jpeg.DecodeConfig(f)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode captured file")
-	}
-
-	if handleOrientation {
-		// Read display rotation number from exif.
-		f2, err := os.Open(path)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to open captured file for reading exif")
-		}
-		defer f2.Close()
-		x, err := exif.Decode(f2)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to decode exif")
-		}
-		tag, err := x.Get(exif.Orientation)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get orientation from exif")
-		}
-		o, err := tag.Int(0)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get integer value of orientation tag")
-		}
-		if 5 <= o && o <= 8 {
-			return &cca.Resolution{Width: c.Height, Height: c.Width}, nil
-		}
-	}
-	return &cca.Resolution{Width: c.Width, Height: c.Height}, nil
-}
-
 // takePhotoAndGetResolution takes a photo and extract the resolution of the taken photo
-func takePhotoAndGetResolution(ctx context.Context, app *cca.App, handleOrientation bool) (*cca.Resolution, error) {
+func takePhotoAndGetResolution(ctx context.Context, app *cca.App) (*cca.Resolution, error) {
 	info, err := app.TakeSinglePhoto(ctx, cca.TimerOff)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to take photo")
@@ -135,7 +93,7 @@ func takePhotoAndGetResolution(ctx context.Context, app *cca.App, handleOrientat
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get file path")
 	}
-	ir, err := imageResolution(path, handleOrientation)
+	ir, err := cca.PhotoResolution(ctx, path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get image resolution")
 	}
@@ -152,52 +110,11 @@ func recordVideoAndGetResolution(ctx context.Context, app *cca.App) (*cca.Resolu
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get file path")
 	}
-	vr, err := videoTrackResolution(path)
+	vr, err := cca.VideoResolution(ctx, path)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to extract resolution from the video")
 	}
 	return vr, nil
-}
-
-// videoTrackResolution returns the resolution from video file under specified path.
-func videoTrackResolution(path string) (*cca.Resolution, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to open video file %v", path)
-	}
-	defer file.Close()
-
-	boxes, err := mp4.ExtractBoxWithPayload(
-		file, nil, mp4.BoxPath{mp4.BoxTypeMoov(), mp4.BoxTypeTrak(), mp4.BoxTypeTkhd()})
-	if err != nil {
-		return nil, errors.Wrapf(err, "failed to find track boxes in video file %v", path)
-	}
-	for _, b := range boxes {
-		thkd := b.Payload.(*mp4.Tkhd)
-		if thkd.Width > 0 && thkd.Height > 0 {
-			// Ignore the 16 low bits of fractional part.
-			intW := int(thkd.Width >> 16)
-			intH := int(thkd.Height >> 16)
-
-			// All possible rotation matrices(values in matrices are 32-bit fixed-point) in mp4 thkd produced from CCA.
-			rotate0 := [9]int32{65536, 0, 0, 0, 65536, 0, 0, 0, 1073741824}
-			rotate90 := [9]int32{0, 65536, 0, -65536, 0, 0, 0, 0, 1073741824}
-			rotate180 := [9]int32{-65536, 0, 0, 0, -65536, 0, 0, 0, 1073741824}
-			rotate270 := [9]int32{0, -65536, 0, 65536, 0, 0, 0, 0, 1073741824}
-			switch thkd.Matrix {
-			case rotate0:
-			case rotate180:
-			case rotate90:
-				fallthrough
-			case rotate270:
-				intW, intH = intH, intW
-			default:
-				return nil, errors.Errorf("unknown mp4 thkd matrix %v", thkd.Matrix)
-			}
-			return &cca.Resolution{Width: intW, Height: intH}, nil
-		}
-	}
-	return nil, errors.Errorf("no video track found in the file %v", path)
 }
 
 // selectOptionAndWaitConfiguration selects the |optionUIName| and waits for the
@@ -370,9 +287,7 @@ func clickThroughAllPhotoResolutionOptions(ctx context.Context, app *cca.App, fa
 			}
 		}
 
-		// Ensure captured photo has correct aspect ratio.
-		handleOrientation := checkAspectRatio && aspectRatio != float64(1)
-		ir, err := takePhotoAndGetResolution(ctx, app, handleOrientation)
+		ir, err := takePhotoAndGetResolution(ctx, app)
 		if err != nil {
 			return err
 		}
