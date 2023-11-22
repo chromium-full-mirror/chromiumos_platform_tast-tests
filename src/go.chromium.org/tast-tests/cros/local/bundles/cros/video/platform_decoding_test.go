@@ -1169,6 +1169,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Decoder            string
 		DecoderArgsBuilder string
 		Files              []string
+		IgnoredSysLogs     string
 		Timeout            time.Duration
 		HardwareDeps       string
 		SoftwareDeps       []string
@@ -1379,11 +1380,14 @@ func TestPlatformDecodingParams(t *testing.T) {
 						Metadata:           genExtraData(files),
 						Attr:               []string{"graphics_video_vp9"},
 					}
+					var ignoredSysLogs = []string{}
 					if extension, ok := vp9GroupExtensions[levelGroup]; ok {
 						param.Timeout = extension
 					}
 					if stateness == "Stateless" {
 						param.Attr = append(param.Attr, "graphics_perbuild")
+						// TODO(b/311261558) - when this resolves, we can remove the IgnoredSysLogs entry.
+						ignoredSysLogs = append(ignoredSysLogs, "graphics.SysLogKernelSplats")
 					} else {
 						param.Attr = append(param.Attr, "graphics_weekly")
 					}
@@ -1414,6 +1418,7 @@ func TestPlatformDecodingParams(t *testing.T) {
 						hardwareDeps = append(hardwareDeps, `hwdep.SkipGPUFamily("rogue")`)
 					}
 
+					param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 					param.HardwareDeps = strings.Join(hardwareDeps, ", ")
 					params = append(params, param)
 				}
@@ -1440,12 +1445,16 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:           genExtraData(files),
 				Attr:               []string{"graphics_video_vp8"},
 			}
+			var ignoredSysLogs = []string{}
 			if stateness == "Stateless" {
 				param.Attr = append(param.Attr, "graphics_perbuild")
+				// TODO(b/311261558) - when this resolves, we can remove the IgnoredSysLogs entry.
+				ignoredSysLogs = append(ignoredSysLogs, "graphics.SysLogKernelSplats")
 			} else {
 				param.Attr = append(param.Attr, "graphics_weekly")
 			}
 
+			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 			params = append(params, param)
 		}
 
@@ -1474,11 +1483,15 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:           genExtraData(files),
 				Attr:               []string{"graphics_video_h264"},
 			}
+			var ignoredSysLogs = []string{}
 			if stateness == "Stateless" {
 				param.Attr = append(param.Attr, "graphics_perbuild")
+				// TODO(b/311261558) - when this resolves, we can remove the IgnoredSysLogs entry.
+				ignoredSysLogs = append(ignoredSysLogs, "graphics.SysLogKernelSplats")
 			} else {
 				param.Attr = append(param.Attr, "graphics_weekly")
 			}
+			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 			params = append(params, param)
 		}
 
@@ -1502,11 +1515,15 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Metadata:           genExtraData(files),
 				Attr:               []string{"graphics_video_hevc"},
 			}
+			var ignoredSysLogs = []string{}
 			if stateness == "Stateless" {
 				param.Attr = append(param.Attr, "graphics_perbuild")
+				// TODO(b/311261558) - when this resolves, we can remove the IgnoredSysLogs entry.
+				ignoredSysLogs = append(ignoredSysLogs, "graphics.SysLogKernelSplats")
 			} else {
 				param.Attr = append(param.Attr, "graphics_weekly")
 			}
+			param.IgnoredSysLogs = strings.Join(ignoredSysLogs, ", ")
 			params = append(params, param)
 		}
 	}
@@ -1534,8 +1551,10 @@ func TestPlatformDecodingParams(t *testing.T) {
 				Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
 				DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
 				Files:              files,
-				Timeout:            defaultTimeout,
-				SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
+				// TODO(b/311261558) - when this resolves, we can remove the IgnoredSysLogs entry.
+				IgnoredSysLogs: "graphics.SysLogKernelSplats",
+				Timeout:        defaultTimeout,
+				SoftwareDeps:   []string{"v4l2_codec", caps.HWDecodeAV1},
 				// TODO(b/242075797): use HW capabilities.
 				HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
 				Metadata:     genExtraData(files),
@@ -1697,6 +1716,9 @@ func TestPlatformDecodingParams(t *testing.T) {
 			filenames: {{ .Files | fmt }},
 			decoder: {{ .Decoder | fmt }},
 			decoderArgsBuilder: {{ .DecoderArgsBuilder }},
+			{{ if .IgnoredSysLogs }}
+			ignoredSysLogs: []graphics.SysLogCategory{ {{ .IgnoredSysLogs }} },
+			{{ end }}
 		},
 		Timeout: {{ .Timeout | fmt }},
 		{{ if .HardwareDeps }}
