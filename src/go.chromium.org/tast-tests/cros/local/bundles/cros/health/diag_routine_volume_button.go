@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.HasSideVolumeButton()),
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
 			Name: "v2_passed",
