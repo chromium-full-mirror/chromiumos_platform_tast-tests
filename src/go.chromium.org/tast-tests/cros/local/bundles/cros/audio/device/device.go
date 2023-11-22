@@ -7,7 +7,6 @@ package device
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -35,7 +34,7 @@ func TestDeviceFiles(ctx context.Context, s *testing.State, pattern string) {
 		mode = 0660
 	)
 
-	files, err := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
 	if err != nil {
 		s.Fatal("Failed to list files at /dev/snd: ", err)
 	}
@@ -55,7 +54,11 @@ func TestDeviceFiles(ctx context.Context, s *testing.State, pattern string) {
 	check := func(ps string) {
 		p := regexp.MustCompile(ps)
 		found := false
-		for _, fi := range files {
+		for _, dirEntry := range files {
+			fi, err := dirEntry.Info()
+			if err != nil {
+				s.Errorf("%s is removed or renamed since the directory read: %v", dirEntry.Name(), err)
+			}
 			if p.MatchString(fi.Name()) {
 				if fi.Mode()&0777 != mode {
 					s.Errorf("%s: permission mismatch: expected %o, actually %o", fi.Name(), mode, fi.Mode())
@@ -114,7 +117,7 @@ func findRunningDevice(ctx context.Context, pathPattern string) error {
 		return err
 	}
 	for _, p := range paths {
-		b, err := ioutil.ReadFile(p)
+		b, err := os.ReadFile(p)
 		if err != nil {
 			return errors.Wrapf(err, "failed to read %q", p)
 		}

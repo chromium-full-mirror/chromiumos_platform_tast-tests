@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -258,7 +258,7 @@ func ALSAConformance(ctx context.Context, s *testing.State) {
 		}
 
 		filename := fmt.Sprintf("%s.json", stream)
-		if err := ioutil.WriteFile(filepath.Join(s.OutDir(), filename), out, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), filename), out, 0644); err != nil {
 			s.Error("Failed to save raw results: ", err)
 		}
 

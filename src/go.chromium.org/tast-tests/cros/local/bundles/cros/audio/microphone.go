@@ -6,7 +6,6 @@ package audio
 
 import (
 	"context"
-	"io/ioutil"
 	"math"
 	"os"
 	"strconv"
@@ -142,7 +141,7 @@ func Microphone(ctx context.Context, s *testing.State) {
 	// - numChans is the number of channels for the recording.
 	// - samplingRate is the number of samples per second.
 	test := func(numChans, samplingRate int) {
-		tmpfile, err := ioutil.TempFile("", "audio")
+		tmpfile, err := os.CreateTemp("", "audio")
 		if err != nil {
 			s.Fatal("Failed to create a tempfile: ", err)
 		}

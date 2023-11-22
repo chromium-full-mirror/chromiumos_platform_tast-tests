@@ -7,7 +7,6 @@ package soundcardinit
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -61,7 +60,7 @@ func CreateCalibFiles(ctx context.Context, soundCardID string, count uint) error
 	for i := 0; i < int(count); i++ {
 		s := fmt.Sprintf(calibYamlFile)
 		calib := fmt.Sprintf(CalibFiles, soundCardID, i)
-		if err := ioutil.WriteFile(calib, []byte(s), 0644); err != nil {
+		if err := os.WriteFile(calib, []byte(s), 0644); err != nil {
 			return errors.Wrapf(err, "failed to create %s", calib)
 		}
 	}
@@ -72,13 +71,13 @@ func CreateCalibFiles(ctx context.Context, soundCardID string, count uint) error
 func CreateRunTimeFile(ctx context.Context, soundCardID string, ts int64) error {
 	s := fmt.Sprintf(timestampYamlFile, ts)
 	f := fmt.Sprintf(RunTimeFile, soundCardID)
-	return ioutil.WriteFile(f, []byte(s), 0644)
+	return os.WriteFile(f, []byte(s), 0644)
 }
 
 // CreateStopTimeFile create a StopTimeFile containing given unix time in secs.
 func CreateStopTimeFile(ctx context.Context, ts int64) error {
 	s := fmt.Sprintf(timestampYamlFile, ts)
-	return ioutil.WriteFile(StopTimeFile, []byte(s), 0644)
+	return os.WriteFile(StopTimeFile, []byte(s), 0644)
 }
 
 // VerifyCalibExist verifies calib* exist.
