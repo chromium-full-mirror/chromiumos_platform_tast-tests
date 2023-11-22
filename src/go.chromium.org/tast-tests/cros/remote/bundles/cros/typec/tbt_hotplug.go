@@ -20,9 +20,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// Number of iterations we want the test to run for.
-const numIterations = 10
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TbtHotplug,
@@ -56,6 +53,8 @@ func init() {
 //	 |                              |
 //	 |______________________________|
 func TbtHotplug(ctx context.Context, s *testing.State) {
+	numIterations := 10
+
 	d := s.DUT()
 
 	portUsed, err := strconv.Atoi(s.RequiredVar("typec.McciPort"))
