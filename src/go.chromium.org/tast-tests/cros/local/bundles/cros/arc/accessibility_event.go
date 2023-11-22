@@ -303,7 +303,8 @@ func AccessibilityEvent(ctx context.Context, s *testing.State) {
 		{arca11y.LiveRegionActivity, LiveRegionActivityTestSteps},
 	} {
 		s.Run(ctx, test.activity.Name, func(ctx context.Context, s *testing.State) {
-			arca11y.AttachFaillog(ctx, s, tconn, test.activity.Name)
+			arca11y.AttachUIFaillog(ctx, s, tconn, "uifaillog-"+test.activity.Name)
+			arca11y.AttachSystemFaillog(ctx, s, a, "dumpsys-"+test.activity.Name)
 
 			cleanup, err = arca11y.StartActivityWithChromeVox(ctx, s, a, tconn, cvconn, test.activity)
 			if err != nil {

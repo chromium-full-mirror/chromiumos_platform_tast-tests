@@ -59,7 +59,8 @@ func AccessibilitySelectToSpeak(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupS2S(cleanupCtx)
 
-	arca11y.AttachFaillog(ctx, s, tconn, "faillog")
+	arca11y.AttachUIFaillog(ctx, s, tconn, "uifaillog")
+	arca11y.AttachSystemFaillog(ctx, s, a, "dumpsys")
 	cleanupAct, err := arca11y.StartActivityWithSelectToSpeak(ctx, s, a, tconn, arca11y.MainActivity)
 	if err != nil {
 		s.Fatal("Failed to setup activity with S2S: ", err)

@@ -98,6 +98,8 @@ func testAccessibilitySync(ctx context.Context, s *testing.State, tconn *chrome.
 
 	for _, feature := range features {
 		s.Run(ctx, string(feature), func(ctx context.Context, s *testing.State) {
+			arca11y.AttachSystemFaillog(ctx, s, a, "dumpsys-"+string(feature))
+
 			for _, enable := range []bool{true, false} {
 				if err := a11y.SetFeatureEnabled(ctx, tconn, feature, enable); err != nil {
 					s.Fatalf("Failed to toggle %s to %t: %v", feature, enable, err)

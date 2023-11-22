@@ -60,7 +60,8 @@ func AccessibilityTextLocation(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(cleanupCtx)
 
-	arca11y.AttachFaillog(ctx, s, tconn, "faillog")
+	arca11y.AttachUIFaillog(ctx, s, tconn, "uifaillog")
+	arca11y.AttachSystemFaillog(ctx, s, a, "dumpsys")
 
 	cleanupAct, err := arca11y.StartActivityWithSelectToSpeak(ctx, s, a, tconn, arca11y.MainActivity)
 	if err != nil {

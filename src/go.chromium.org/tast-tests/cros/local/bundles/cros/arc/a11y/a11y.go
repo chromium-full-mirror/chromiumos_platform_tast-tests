@@ -8,6 +8,8 @@ package a11y
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -236,11 +238,43 @@ func SetUpSelectToSpeak(ctx context.Context, s *testing.State, cr *chrome.Chrome
 	return stsconn, tdh.tearDown, nil
 }
 
-// AttachFaillog sets an error handler to the given testing.State struct.
+// AttachUIFaillog sets an error handler to the given testing.State struct.
 // In the handler, UI dump and screenshot is saved on error with a given prefix filename.
-func AttachFaillog(ctx context.Context, s *testing.State, tconn *chrome.TestConn, prefix string) {
+func AttachUIFaillog(ctx context.Context, s *testing.State, tconn *chrome.TestConn, prefix string) {
 	handler := func(msg string) {
 		faillog.DumpUITreeWithScreenshotWithTestAPIOnError(ctx, s.OutDir(), s.HasError, tconn, prefix)
+	}
+	s.AttachErrorHandlers(handler, handler)
+}
+
+// AttachSystemFaillog sets an error handler to the given testing.State struct.
+// In the handler, some settings values are recorded and `dumpsys accessibility` is saved on a file with a given prefix.
+func AttachSystemFaillog(ctx context.Context, s *testing.State, a *arc.ARC, prefix string) {
+	handler := func(msg string) {
+		for _, key := range []string{
+			"accessibility_enabled", "enabled_accessibility_services",
+		} {
+			if out, err := a.Command(ctx, "settings", "get", "secure", key).Output(); err != nil {
+				testing.ContextLogf(ctx, "Failed to get %s, %v", key, err)
+			} else {
+				testing.ContextLogf(ctx, "%s: %s", key, strings.TrimSpace(string(out)))
+			}
+		}
+
+		path := filepath.Join(s.OutDir(), prefix+"-a11y-dumpsys.txt")
+		file, err := os.Create(path)
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to open %s: %v", path, err)
+			return
+		}
+		defer file.Close()
+
+		cmd := a.Command(ctx, "dumpsys", "accessibility")
+		cmd.Stdout = file
+		if err := cmd.Run(); err != nil {
+			testing.ContextLog(ctx, "Failed to get dumpsys: ", err)
+			return
+		}
 	}
 	s.AttachErrorHandlers(handler, handler)
 }
