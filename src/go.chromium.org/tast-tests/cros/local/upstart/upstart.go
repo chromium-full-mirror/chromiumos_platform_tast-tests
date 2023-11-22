@@ -178,10 +178,12 @@ func JobExists(ctx context.Context, job string) bool {
 }
 
 // RestartJob restarts the job (single-instance) or the specified instance of
-// the job (multiple-instance). If the job (instance) is currently stopped, it will be started.
-// Note that the job is reloaded if it is already running; this differs from the
-// "initctl restart" behavior as described in Section 10.1.2, "restart", in the Upstart Cookbook.
-// args is passed to the job as extra parameters, e.g. multiple-instance jobs can use it to specify an instance.
+// the job (multiple-instance). This function differs from the "initctl restart"
+// behavior as described in Section 10.1.2, "restart", in the Upstart Cookbook:
+// (1) This function starts the job if it is currently stopped; (2) This
+// function causes the job to re-read its Job Configuration File.
+// args is passed to the job as extra parameters, e.g. multiple-instance jobs
+// can use it to specify an instance.
 func RestartJob(ctx context.Context, job string, args ...Arg) error {
 	ctx, st := timing.Start(ctx, fmt.Sprintf("upstart_restart_%s", job))
 	defer st.End()
