@@ -176,7 +176,7 @@ def main():
     """Mount a given virtual storage device and measure performance of file operations there."""
     parser = argparse.ArgumentParser(
         description="Run test accessing many files")
-    parser.add_argument('--kind', choices=['block', 'virtiofs'], required=True)
+    parser.add_argument('--kind', choices=['block', 'block_lvm', 'virtiofs'], required=True)
     parser.add_argument('--mount-src', metavar='PATH',
                         required=True, help='path to mount from')
     parser.add_argument('--working-dir', metavar='PATH',
@@ -192,7 +192,7 @@ def main():
     # Mount guest's procfs on `/proc` to overload the host's procfs shared via virtiofs.
     command(['mount', '-t', 'proc', 'proc', '/proc'])
 
-    if args.kind == 'block':
+    if args.kind == 'block' or args.kind == 'block_lvm':
         # Use mkfs flags that are close to the one used for ARCVM's /data/.
         # https://source.corp.google.com/rvc-arc/vendor/google_arc/services/arc-mkfs-blk-data/main.cpp;l=70;rcl=4968db28c8d4466aefda34adcec9a81b30dc3e61
         # TODO(b/275507715): Add 'casefold,project,quota' to `-O` and pass

@@ -72,6 +72,13 @@ func init() {
 				},
 			},
 			{
+				Name: "block_lvm",
+				Val: manyFilesParams{
+					kind: "block_lvm",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
 				Name: "virtiofs",
 				Val: manyFilesParams{
 					kind:  "virtiofs",
@@ -202,9 +209,18 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		outputJSON,
 	}
 
-	blockPath, cleanUp, err := storage.SetUpBlockFile(ctx, ud)
-	if err != nil {
-		s.Fatal("Failed to set up block image file: ", err)
+	var blockPath string
+	var cleanUp func(context.Context)
+	if opt.Kind == "block_lvm" {
+		blockPath, cleanUp, err = storage.SetUpLogicVolume(ctx, "vm_test_lv")
+		if err != nil {
+			s.Fatal("Failed to set up logic volume: ", err)
+		}
+	} else {
+		blockPath, cleanUp, err = storage.SetUpBlockFile(ctx, ud)
+		if err != nil {
+			s.Fatal("Failed to set up block image file: ", err)
+		}
 	}
 	defer cleanUp(cleanupCtx)
 
