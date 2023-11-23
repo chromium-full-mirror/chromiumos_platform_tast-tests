@@ -109,8 +109,10 @@ func (m *usbMassStorageImpl) PlugOut(ctx context.Context) error {
 
 // FormatFileSystem formats the first partition.
 // "command" for example, "mkfs.fat", "mkfs.ext4", "mkfs.ntfs".
-func (m *usbMassStorageImpl) FormatFileSystem(ctx context.Context, command string) error {
-	if err := testexec.CommandContext(ctx, command, m.devicePath).Run(testexec.DumpLogOnError); err != nil {
+// "arg" - arguments to pass to the command.
+func (m *usbMassStorageImpl) FormatFileSystem(ctx context.Context, command string, arg ...string) error {
+	arg = append(arg, m.devicePath)
+	if err := testexec.CommandContext(ctx, command, arg...).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to format the file system")
 	}
 
