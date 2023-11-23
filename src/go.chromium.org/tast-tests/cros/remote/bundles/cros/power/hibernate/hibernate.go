@@ -489,7 +489,8 @@ func (t *Tester) loginToResume(ctx context.Context) error {
 	}
 
 	if err != nil &&
-		!strings.Contains(err.Error(), "rpcc: the connection is closing") {
+		!strings.Contains(err.Error(), "rpcc: the connection is closing") ||
+		!strings.Contains(err.Error(), "waiting for OOBE to be dismissed failed: OOBE not dismissed") {
 		return errors.Wrap(err, "unexpected error type from login")
 	}
 
