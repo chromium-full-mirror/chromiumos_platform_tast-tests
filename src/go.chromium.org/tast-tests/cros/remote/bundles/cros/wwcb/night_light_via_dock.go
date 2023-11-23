@@ -148,10 +148,6 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect to the external display: ", err)
 	}
@@ -174,9 +170,20 @@ func NightLightViaDock(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: Wait for external display screen to show up.
 	testing.Sleep(ctx, 30*time.Second)
 
-	extDispIDArray := []string{extDispID}
-	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
-		s.Fatal("Failed to do the map about the displays & the webcams: ", err)
+	if err := utils.OpenRGBImageOnDisplays(ctx, fs, appsSvc, uiautoSvc, displaySvc); err != nil {
+		s.Fatal("Failed to open RGB image on each display: ", err)
+	}
+
+	if err := utils.InitWebcam(ctx, s); err != nil {
+		s.Fatal("Failed to initialize webcam: ", err)
+	}
+
+	if err := utils.PairWebcamToDisplay(ctx, s, displayIDs.DisplayIds); err != nil {
+		s.Fatal("Failed to pair webcam to display: ", err)
+	}
+
+	if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60}); err != nil {
+		s.Fatal("Failed to close Gallery app: ", err)
 	}
 
 	defer func(ctx context.Context) {
