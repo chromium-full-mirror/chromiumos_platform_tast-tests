@@ -57,16 +57,39 @@ func ECSystemLocked(ctx context.Context, s *testing.State) {
 }
 
 func setFWWriteProtectStateAndReboot(ctx context.Context, h *firmware.Helper, s *testing.State, newFWWriteProtectState bool) {
-	if err := setFWWriteProtectState(ctx, h, newFWWriteProtectState); err != nil {
-		s.Fatal("Failed to set FW write protect state: ", err)
-	}
-	s.Log("Rebooting the DUT")
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		s.Fatal("Creating mode switcher: ", err)
 	}
-	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
-		s.Fatal("Failed to perform mode aware reboot: ", err)
+
+	if newFWWriteProtectState {
+		// enable SW WP before hardware WP
+		if err := h.Servo.RunECCommand(ctx, "flashwp enable"); err != nil {
+			s.Fatal("Failed to enable flashwp: ", err)
+		}
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+			s.Fatal("Failed to disable firmware write protect: ", err)
+		}
+		s.Log("Rebooting the DUT")
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+			s.Fatal("Failed to perform mode aware reboot: ", err)
+		}
+	} else {
+		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
+			s.Fatal("Failed to disable firmware write protect: ", err)
+		}
+		s.Log("Rebooting the DUT")
+		// Reboot after deasserting hardware write protect pin to deactivate
+		// write protect. And then remove software write protect flag.
+		// Some ITE ECs can only clear their WP status on a power-on reset,
+		// no software-initiated reset will do.
+		if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+			s.Fatal("Failed to perform mode aware reboot: ", err)
+		}
+		// disable SW WP after hardware WP
+		if err := h.Servo.RunECCommand(ctx, "flashwp disable"); err != nil {
+			s.Fatal("Failed to disable flashwp: ", err)
+		}
 	}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancelWaitConnect()
@@ -85,27 +108,6 @@ func setFWWriteProtectStateAndReboot(ctx context.Context, h *firmware.Helper, s 
 		s.Fatal("Failed to set write protect state to ", state)
 	}
 	s.Log("FW write protect state has been successfully set to ", state)
-}
-
-func setFWWriteProtectState(ctx context.Context, h *firmware.Helper, enable bool) error {
-	if enable {
-		// enable SW WP before hardware WP
-		if err := h.Servo.RunECCommand(ctx, "flashwp enable"); err != nil {
-			return errors.Wrap(err, "failed to enable flashwp")
-		}
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
-			return errors.Wrap(err, "failed to disable firmware write protect")
-		}
-	} else {
-		if err := h.Servo.SetFWWPState(ctx, servo.FWWPStateOff); err != nil {
-			return errors.Wrap(err, "failed to disable firmware write protect")
-		}
-		// disable SW WP after hardware WP
-		if err := h.Servo.RunECCommand(ctx, "flashwp disable"); err != nil {
-			return errors.Wrap(err, "failed to disable flashwp")
-		}
-	}
-	return nil
 }
 
 func verifyFWWriteProtectState(state string) (bool, error) {
