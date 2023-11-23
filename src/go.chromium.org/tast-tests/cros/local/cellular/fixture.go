@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"golang.org/x/exp/slices"
@@ -16,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
@@ -206,10 +208,11 @@ type cellularFixture struct {
 	systemUptimeBeforeTest      time.Duration
 	disableCellularInShill      bool
 	// Fixture variables
-	helper          *Helper
-	modemfwdStopped bool
-	sf              *starfish.Starfish
-	netUnlock       func()
+	crashFilesTracker []string
+	helper            *Helper
+	modemfwdStopped   bool
+	sf                *starfish.Starfish
+	netUnlock         func()
 	// Per-test logging marker
 	logMarker *logsaver.Marker
 }
@@ -287,6 +290,11 @@ func (fd FixtData) FakeDMS() *fakedms.FakeDMS {
 }
 
 func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var err error
+	f.crashFilesTracker, err = crash.GetCrashes(crash.DefaultDirs()...)
+	if err != nil {
+		s.Fatal("Failed to get crashes: ", err)
+	}
 	// Give some time for cellular daemons to perform any modem operations. Stopping them via upstart might leave the modem in a bad state.
 	if err := EnsureUptime(ctx, f.systemUptimeBeforeTest); err != nil {
 		s.Fatal("Failed to wait for system uptime: ", err)
@@ -572,7 +580,32 @@ func (f *cellularFixture) restartJobsAndWaitOnFailure(ctx context.Context) {
 	}
 }
 
+func (f *cellularFixture) getCrashedDaemonName(ctx context.Context) (string, []string, error) {
+	crashFiles, err := crash.GetCrashes(crash.DefaultDirs()...)
+	if err != nil {
+		return "", crashFiles, err
+	}
+
+	for _, file := range crashFiles {
+		if slices.Contains(f.crashFilesTracker, file) {
+			// Skip if the crash was from a previous test
+			continue
+		}
+		filename := filepath.Base(file)
+		testing.ContextLog(ctx, "crash found: ", filename)
+		for _, prefix := range []string{"ModemManager", "shill", "qmi", "mbim", "hermes", "modemfwd"} {
+			if strings.HasPrefix(filename, prefix) {
+				return filename, crashFiles, nil
+			}
+		}
+	}
+	return "", crashFiles, nil
+}
+
 func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	crashToBlame, newCrashFiles, getCrashErr := f.getCrashedDaemonName(ctx)
+	f.crashFilesTracker = newCrashFiles
+
 	if s.HasError() {
 		f.restartJobsAndWaitOnFailure(ctx)
 	}
@@ -605,6 +638,13 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 		}
 		f.logMarker = nil
 	}
+	if getCrashErr != nil {
+		s.Fatal("Failed to get crashes: ", getCrashErr)
+	}
+	if crashToBlame != "" {
+		s.Fatal("Failed due to previous daemon crash: ", crashToBlame)
+	}
+
 }
 
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
