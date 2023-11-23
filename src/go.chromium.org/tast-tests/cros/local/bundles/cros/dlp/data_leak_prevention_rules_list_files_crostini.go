@@ -113,7 +113,7 @@ func DataLeakPreventionRulesListFilesCrostini(ctx context.Context, s *testing.St
 	}
 
 	// Open the Files app.
-	filesApp, err := filesapp.Launch(ctx, tconn)
+	filesApp, err := files.LaunchFilesAppFullscreen(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch the Files App: ", err)
 	}

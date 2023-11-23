@@ -308,7 +308,7 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	}
 
 	// Open the Files app to cleanup USB devices. Closed at relaunch or Chrome reset.
-	filesApp, err := filesapp.Launch(ctx, tconnAsh)
+	filesApp, err := files.LaunchFilesAppFullscreen(ctx, tconnAsh)
 	if err != nil {
 		s.Fatal("Failed to launch the Files App: ", err)
 	}

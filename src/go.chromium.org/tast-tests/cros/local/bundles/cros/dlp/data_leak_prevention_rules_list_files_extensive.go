@@ -189,7 +189,7 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	}
 
 	// Open the Files app early so it is closed after the faillog screenshot.
-	filesApp, err := filesapp.Launch(ctx, tconn)
+	filesApp, err := files.LaunchFilesAppFullscreen(ctx, tconn)
 	if err != nil {
 		s.Fatal("Failed to launch the Files App: ", err)
 	}
@@ -338,7 +338,7 @@ func testCopyingToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chro
 
 	if err := uiauto.Combine("Verify the files in the copied folder",
 		f.OpenFile(folder),
-		f.WaitUntilFileGone(folder),  // Ensure that navigated inside the folder.
+		f.WaitUntilFileGone(folder), // Ensure that navigated inside the folder.
 		f.EnsureFileGone(restrictedFile, 10*time.Second),
 		f.WaitForFile(unrestrictedFile))(ctx); err != nil {
 		return errors.Wrap(err, "failed to verify the files")

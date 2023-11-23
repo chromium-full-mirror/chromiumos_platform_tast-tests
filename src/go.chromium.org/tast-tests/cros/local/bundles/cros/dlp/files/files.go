@@ -181,3 +181,23 @@ func CancelWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chro
 	}
 	return nil
 }
+
+// LaunchFilesAppFullscreen launches Files App in fullscreen to avoid being partially covered by the taskbar.
+func LaunchFilesAppFullscreen(ctx context.Context, tconn *chrome.TestConn) (*filesapp.FilesApp, error) {
+	keyboard, err := input.VirtualKeyboard(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer keyboard.Close(ctx)
+
+	filesApp, err := filesapp.Launch(ctx, tconn)
+	if err != nil {
+		return filesApp, err
+	}
+
+	if err := keyboard.AccelAction("Alt+=")(ctx); err != nil {
+		return filesApp, err
+	}
+
+	return filesApp, nil
+}
