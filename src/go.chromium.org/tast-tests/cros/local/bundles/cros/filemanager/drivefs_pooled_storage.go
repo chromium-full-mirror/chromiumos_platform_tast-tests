@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
-			"msalomao@google.org",
+			"benreich@chromium.org",
 		},
 		SoftwareDeps: []string{
 			"chrome",

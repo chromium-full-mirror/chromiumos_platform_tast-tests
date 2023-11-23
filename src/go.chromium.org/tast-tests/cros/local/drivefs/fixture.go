@@ -128,7 +128,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "driveFsStartedWithNativeMessagingAndBulkPinningEnabledLacros",
 		Desc:     "Lacros variant of driveFsStartedWithNativeMessagingLacros",
-		Contacts: []string{"msalomao@chromium.org", "chromeos-files-syd@chromium.org"},
+		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl: &fixture{
 			enableBulkPinning: true,
 			drivefsOptions: map[string]string{
