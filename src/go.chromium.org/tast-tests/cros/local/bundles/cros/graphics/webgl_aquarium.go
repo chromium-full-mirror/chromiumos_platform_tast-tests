@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/testing"
@@ -63,7 +64,7 @@ func init() {
 		// ChromeOS > Platform > Graphics > GPU
 		BugComponent: "b:995569",
 		Attr:         []string{"graphics_perbuild", "group:graphics", "group:mainline", "informational"},
-		Timeout:      2 * time.Minute,
+		Timeout:      7 * time.Minute,
 		Data:         []string{webGlAquarium},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
@@ -119,6 +120,9 @@ func savePerfVal(number float64, name, unit string, pv *perf.Values) {
 }
 
 func WebGLAquarium(ctx context.Context, s *testing.State) {
+	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)); err != nil {
+		s.Log("WARNING: Failed to wait until CPU is cooled down: ", err)
+	}
 	numFish := s.Param().(aquariumParamData).fishCount
 	webGlAquariumSrc := s.DataPath(webGlAquarium)
 	webglLocalDir, err := os.MkdirTemp("", "")
@@ -127,7 +131,7 @@ func WebGLAquarium(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(webglLocalDir)
 	if err := testexec.CommandContext(ctx, "tar", "-xf", webGlAquariumSrc, "-C", webglLocalDir).Run(testexec.DumpLogOnError); err != nil {
-		s.Logf("Failed to extract %s", webGlAquarium)
+		s.Logf("Failed to extract %s: %s", webGlAquarium, err)
 	}
 	server := httptest.NewServer(http.FileServer(http.Dir(webglLocalDir + "/webgl_aquarium_static")))
 	defer server.Close()
