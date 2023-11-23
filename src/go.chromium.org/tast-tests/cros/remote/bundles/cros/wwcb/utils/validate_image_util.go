@@ -36,18 +36,6 @@ func CopyRemoteFile(ctx context.Context, fs *dutfs.Client, remoteFilePath, local
 	return savedFilePath, nil
 }
 
-// ValidateImgColor validate the local host image matches the specified color.
-func ValidateImgColor(ctx context.Context, localFilePath, color string) error {
-	expectedColor, err := GetColor(localFilePath)
-	if err != nil {
-		return errors.Wrap(err, "failed to get image color")
-	}
-	if expectedColor != color {
-		return errors.Wrap(err, "image did not have matching dominant color")
-	}
-	return nil
-}
-
 // ValidateVideoColor divide the local host video into individual frames per second and verify if they match the specified color.
 func ValidateVideoColor(ctx context.Context, localVideoPath, localDir string) error {
 	localScreenVideoDir := filepath.Join(filepath.Dir(localVideoPath), "frame_of_video")
