@@ -87,6 +87,21 @@ func init() {
 		Impl:            newCrosHealthdFixture(),
 		Parent:          "bluetoothEnabledWithFloss",
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crosHealthdRunningWithChromeLoggedIn",
+		Desc: "The croshealthd daemon is running and a user is logged in",
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com", // Team mailing list
+			"weiluanwang@google.com",      // Fixture maintainer
+		},
+		SetUpTimeout:    30 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCrosHealthdFixture(),
+		Parent:          "chromeLoggedIn",
+	})
 }
 
 // checkNewCrashes checks if there are new healthd related crash files.

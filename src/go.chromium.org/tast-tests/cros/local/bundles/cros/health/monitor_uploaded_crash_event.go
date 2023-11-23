@@ -29,7 +29,6 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -58,8 +57,9 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"diagnostics", "chrome"},
-		Fixture:      "crosHealthdRunning",
+		SoftwareDeps: []string{"diagnostics"},
+		// The crash sender doesn't upload crashes in guest mode.
+		Fixture: "crosHealthdRunningWithChromeLoggedIn",
 		// crash_sender needs more time to run because crash_sender
 		// would hold off for 30 seconds if the crash meta file is too
 		// new. See the comments above
@@ -112,19 +112,6 @@ func checkUploadedOutput(ctx context.Context, s *testing.State, stdout []byte) b
 }
 
 func MonitorUploadedCrashEvent(ctx context.Context, s *testing.State) {
-	// Reserve 10 seconds for cleaning up login.
-	ctxForCleanUpLogin := ctx
-	ctx, cancelForCleanUpLogin := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancelForCleanUpLogin()
-
-	// Run this test with a user logged in. The crash sender doesn't upload
-	// crashes in guest mode.
-	cr, err := chrome.New(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to Chrome: ", err)
-	}
-	defer cr.Close(ctxForCleanUpLogin)
-
 	// Reserve 5 seconds for cleaning up crash tests.
 	ctxForCleanUpCrashSetup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -159,7 +146,7 @@ func MonitorUploadedCrashEvent(ctx context.Context, s *testing.State) {
 	if err := sleepCmd.Signal(unix.SIGSEGV); err != nil {
 		s.Fatal("Failed to crash the sleep command: ", err)
 	}
-	err = sleepCmd.Wait()
+	err := sleepCmd.Wait()
 	waitStatus, ok := testexec.GetWaitStatus(err)
 	if !ok {
 		s.Fatal("Failed to get sleep's wait status: ", err)
