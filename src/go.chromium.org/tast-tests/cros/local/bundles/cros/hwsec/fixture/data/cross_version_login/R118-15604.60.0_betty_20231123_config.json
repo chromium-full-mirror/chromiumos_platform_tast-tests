@@ -25,12 +25,17 @@
     ],
     "VaultFSType": 1,
     "WebAuthnCred": {
-      "credentialIDB64": "ASTQ6XoiXDWF9ro4jxKdtbph0IlQE99PzS1yOcnHlnksFMveLuysNaDQWJ91d5jhVU7Ga8upMMnIn0zqV9K8JYbaGgD_Y9CuEKmQvileuFpe4pWFh9bvSP1FIMmv4M-_7GgF_ugBWGLIHwu-YndL1z7qXgngUe6iI105ijPcaS0zAJ6xniZOkRjITAFfsMq2qQ",
+      "credentialIDB64": "AbVEaP0_N42OfMd7rKQwoQ3dte_lwtOxs-J24urlY2XrbR-y7gEjODPGzRrdif9FPTDILBAMa2mEqSV0wm9uK56OxhleFKLN0rPLA5-xJmvD00Z5fpnsWILCkTudTLQzRxRhcSM926W6DHU6CGrSmSeea7i3BkURz6d8ad3724Nqd9i65ANyEhGXLgSUjf0uLQ",
       "publicKey": {
-        "dataB64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7ydgLjtyTCEeJ0kzUhbytAWs5xPBgvZKa6LHdaOecUapwCqYS5cxflVnn_asLgmNBO8FFzWg624rM62EeiXrJQ",
+        "dataB64": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElabpPa2N54ovMuEDcQggBoz-XsOJ3ykJwsPeSXoCcvXBzlHWwOtCTm4SYY6WuQlerzfJLJTtEnbeObGB4oPr7Q",
         "keyType": "ecc"
       },
       "serialNumberB64": ""
+    },
+    "InstallAttrs": {
+      "Acetaminophen": "C8H9NO2",
+      "Acetylsalicylic Acid": "C9H8O4",
+      "Ibuprofen": "C13H18O2"
     }
   },
   {
@@ -66,6 +71,7 @@
     "KeyLabel": "challenge_response_key_label",
     "ExtraVaultKeys": null,
     "VaultFSType": 1,
-    "WebAuthnCred": null
+    "WebAuthnCred": null,
+    "InstallAttrs": null
   }
 ]

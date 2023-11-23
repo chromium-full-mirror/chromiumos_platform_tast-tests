@@ -199,12 +199,12 @@ func init() {
 		TearDownTimeout: crossVersionTearDownTimeout,
 		Parent:          "crossVersionBackup",
 		Impl: &crossVersionFixtImpl{
-			dataPrefix: "R118-15604.60.0_betty_20231031",
+			dataPrefix: "R118-15604.60.0_betty_20231123",
 			useCurrent: false,
 		},
 		Data: []string{
-			"cross_version_login/R118-15604.60.0_betty_20231031_config.json",
-			"cross_version_login/R118-15604.60.0_betty_20231031_data.tar.gz",
+			"cross_version_login/R118-15604.60.0_betty_20231123_config.json",
+			"cross_version_login/R118-15604.60.0_betty_20231123_data.tar.gz",
 		},
 	})
 
@@ -801,12 +801,12 @@ func init() {
 		TearDownTimeout: crossVersionTearDownTimeout,
 		Parent:          "crossVersionBackup",
 		Impl: &crossVersionFixtImpl{
-			dataPrefix: "R118-15604.33.0_novato_20231031",
+			dataPrefix: "R118-15604.33.0_novato_20231123",
 			useCurrent: false,
 		},
 		Data: []string{
-			"cross_version_login/R118-15604.33.0_novato_20231031_config.json",
-			"cross_version_login/R118-15604.33.0_novato_20231031_data.tar.gz",
+			"cross_version_login/R118-15604.33.0_novato_20231123_config.json",
+			"cross_version_login/R118-15604.33.0_novato_20231123_data.tar.gz",
 		},
 	})
 
@@ -1263,12 +1263,12 @@ func init() {
 		TearDownTimeout: crossVersionTearDownTimeout,
 		Parent:          "crossVersionBackup",
 		Impl: &crossVersionFixtImpl{
-			dataPrefix: "R118-15604.60.0_reven-vmtest_20231031",
+			dataPrefix: "R118-15604.60.0_reven-vmtest_20231123",
 			useCurrent: false,
 		},
 		Data: []string{
-			"cross_version_login/R118-15604.60.0_reven-vmtest_20231031_config.json",
-			"cross_version_login/R118-15604.60.0_reven-vmtest_20231031_data.tar.gz",
+			"cross_version_login/R118-15604.60.0_reven-vmtest_20231123_config.json",
+			"cross_version_login/R118-15604.60.0_reven-vmtest_20231123_data.tar.gz",
 		},
 	})
 }
