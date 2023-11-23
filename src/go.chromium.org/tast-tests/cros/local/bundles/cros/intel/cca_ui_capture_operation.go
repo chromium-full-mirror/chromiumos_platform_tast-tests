@@ -194,9 +194,6 @@ func captureVideo(ctx context.Context, app *cca.App) error {
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
-	if err := app.WaitForVideoActive(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for video to active")
-	}
 	fileInfo, err := app.RecordVideo(ctx, cca.TimerOff, 3*time.Second)
 	if err != nil {
 		return errors.Wrap(err, "failed to record video")
