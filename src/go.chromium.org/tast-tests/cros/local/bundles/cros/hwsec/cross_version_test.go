@@ -98,6 +98,8 @@ var tpmVersions = []tpmVersion{
 // We didn't prepare WebAuthn data until M112.
 const webauthnMinMilestone = 112
 const defaultMinMilestone = 88
+// We didn't prepare InstallAttrs data until M118.
+const installAttrsMinMilestone = 118
 
 func toCamelCase(s string) string {
 	var ret []string
@@ -164,9 +166,11 @@ func makeTestParamsCode(t *testing.T, testMilestoneBegin int, isStable bool) str
 }
 
 func TestCrossVersionParams(t *testing.T) {
+	installAttrsParamsCode := makeTestParamsCode(t, installAttrsMinMilestone, false)
 	paramsCode := makeTestParamsCode(t, defaultMinMilestone, true)
 	webauthnParamsCode := makeTestParamsCode(t, webauthnMinMilestone, false)
 	genparams.Ensure(t, "cross_version_auth_factor.go", paramsCode)
 	genparams.Ensure(t, "cross_version_chrome_login.go", paramsCode)
+	genparams.Ensure(t, "cross_version_install_attributes.go", installAttrsParamsCode)
 	genparams.Ensure(t, "cross_version_webauthn_login.go", webauthnParamsCode)
 }

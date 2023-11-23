@@ -35,6 +35,21 @@ func init() {
 				Name:      "current",
 				Fixture:   "crossVersionCurrent",
 				ExtraAttr: []string{"group:mainline", "informational"},
+			}, {
+				Name:              "ti50_r118",
+				Fixture:           "crossVersionTi50R118",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "tpm2_r118",
+				Fixture:           "crossVersionTpm2R118",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r118",
+				Fixture:           "crossVersionTpmDynamicR118",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			},
 		},
 	})
