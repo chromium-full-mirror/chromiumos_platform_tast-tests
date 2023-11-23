@@ -44,6 +44,12 @@ const (
 	thunderboltDevicePath = "/sys/bus/thunderbolt/devices"
 )
 
+// Identifiers used to specify which Thunderbolt generation is being checked.
+const (
+	TbtGenAny = iota
+	TbtGen4   = 4
+)
+
 // List of built-in Thunderbolt devices enumerated by the OS.
 var builtInTBTDevices = []string{"domain0", "domain1", "0-0", "1-0"}
 
@@ -203,7 +209,10 @@ func builtInTBTDevice(name string) bool {
 // CheckTBTDevice is a helper function which checks for TBT device connection to a DUT.
 // |expected| specifies whether we want to check for the presence of a TBT device (true) or the
 // absence of one (false).
-func CheckTBTDevice(ctx context.Context, d *dut.DUT, expected bool) error {
+//
+// Caller can specify |gen| to check for a specific Thunderbolt
+// generation, or `TbtGenAny` if the check is not necessary.
+func CheckTBTDevice(ctx context.Context, d *dut.DUT, expected bool, gen int) error {
 	out, err := d.Conn().CommandContext(ctx, "ls", thunderboltDevicePath).Output()
 	if err != nil {
 		return errors.Wrap(err, "could not run ls command on DUT")
@@ -235,6 +244,19 @@ func CheckTBTDevice(ctx context.Context, d *dut.DUT, expected bool) error {
 		return errors.New("no TBT device found")
 	} else if !expected && found != "" {
 		return errors.Errorf("TBT device found: %s", found)
+	}
+
+	if expected && gen != TbtGenAny {
+		out, err := d.Conn().CommandContext(ctx, "cat", filepath.Join(thunderboltDevicePath, found, "generation")).Output()
+		if err != nil {
+			return errors.Wrap(err, "couldn't read Thunderbolt generation")
+		}
+
+		if genFound, err := strconv.Atoi(strings.TrimSpace(string(out))); err != nil {
+			return errors.Wrap(err, "couldn't parse Thunderbolt generation")
+		} else if genFound != gen {
+			return errors.Errorf("incorrect Thunderbolt generation; found: %d expected: %d", genFound, gen)
+		}
 	}
 
 	return nil

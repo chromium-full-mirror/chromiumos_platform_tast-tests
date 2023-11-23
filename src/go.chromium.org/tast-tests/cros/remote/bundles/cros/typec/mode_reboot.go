@@ -111,7 +111,7 @@ func ModeReboot(ctx context.Context, s *testing.State) {
 
 	s.Log("Verifying that a TBT device is enumerated")
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, true)
+		return typecutils.CheckTBTDevice(ctx, d, true, typecutils.TbtGenAny)
 	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 20 * time.Second}); err != nil {
 		s.Fatal("Failed TBT enumeration after login: ", err)
 	}
@@ -131,7 +131,7 @@ func ModeReboot(ctx context.Context, s *testing.State) {
 	}
 
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
-		return typecutils.CheckTBTDevice(ctx, d, false)
+		return typecutils.CheckTBTDevice(ctx, d, false, typecutils.TbtGenAny)
 	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 10 * time.Second}); err != nil {
 		s.Fatal("Failed TBT non-enumeration after reboot: ", err)
 	}
