@@ -88,13 +88,17 @@ func OobeConfigSaveShutdown(ctx context.Context, s *testing.State) {
 	// Need to poll here because it may take a bit longer for content in /var to be readable after relaunch.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Note that this check relies on log format in /var/log/messages.
+		// Ignore error, as grep not findining anything in the logs results in an error.
 		logs, _ := s.DUT().Conn().CommandContext(ctx, "sh", "-c", `grep --text "INFO oobe_config_save" /var/log/messages`).Output()
-		if len(string(logs)) == 0 {
+		if len(logs) == 0 {
 			return errors.New("found no indication of oobe_config_save running in /var/log/messages")
 		}
 
-		logs, _ = s.DUT().Conn().CommandContext(ctx, "sh", "-c", `grep --text "ERR oobe_config_save" /var/log/messages`).Output()
-		if len(string(logs)) > 0 {
+		// Ignore error, as grep not findining anything in the logs results in an error.
+		// "feature_library will decide" is not really an error.
+		// See https://source.chromium.org/chromium/chromium/src/+/main:chrome/browser/ash/dbus/chrome_features_service_provider.cc;l=247;drc=aabae1d4c6baf58d346d85f2fc03bad50b45c2b8
+		logs, _ = s.DUT().Conn().CommandContext(ctx, "sh", "-c", `grep -v "feature_library will decide" /var/log/messages | grep --text "ERR oobe_config_save"`).Output()
+		if len(logs) > 0 {
 			return testing.PollBreak(errors.Errorf("found oobe_config_save issue in the logs: %v", string(logs)))
 		}
 
