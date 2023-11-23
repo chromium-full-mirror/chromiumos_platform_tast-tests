@@ -226,18 +226,6 @@ func SwitchCCAMode(ctx context.Context, uiautoSvc ui.AutomationServiceClient, mo
 	return nil
 }
 
-// SwitchCCACamera switches to the next camera on the camera app.
-func SwitchCCACamera(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient) error {
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: switchDeviceFinder}); err != nil {
-		return errors.Wrap(err, "failed to wait for switch button from context menu")
-	}
-
-	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: switchDeviceFinder}); err != nil {
-		return errors.Wrap(err, "failed to to click switch button from context menu")
-	}
-	return nil
-}
-
 // ConnectUSBDevice returns the USB device info using command "lsusb" to find the difference before and after connect the fixture.
 func ConnectUSBDevice(ctx context.Context, dut *dut.DUT, usbDeviceID string) (string, error) {
 	before, err := GetUSBDevice(ctx, dut)
@@ -301,20 +289,6 @@ func waitForFileSaved(ctx context.Context, fs *dutfs.Client, dir string, pat *re
 		return nil, errors.Wrapf(err, "no matching output file found after %v", timeout)
 	}
 	return result, nil
-}
-
-// FindInfoOnCameraApp check the info of plug/unplug
-func FindInfoOnCameraApp(ctx context.Context, uiautoSvc ui.AutomationServiceClient, infoRegex string) error {
-	infoFinder := &ui.Finder{
-		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_NameRegex{NameRegex: infoRegex}},
-			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
-		},
-	}
-	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: infoFinder}); err != nil {
-		return errors.Wrap(err, "failed to wait for the info from context menu")
-	}
-	return nil
 }
 
 // ConnectExternalCamera connects an external camera through a fixture and returns device information.
