@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mouse Wheel Count</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    #wheel-count {
+        font-size: 24px;
+    }
+    #click-button {
+        padding: 10px 20px;
+        font-size: 16px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<div id="wheel-count">Mouse Wheel Count: 0</div>
+<button id="click-button">Reset</button>
+
+<script>
+    var wheelCountElement = document.getElementById('wheel-count');
+    var clickButton = document.getElementById('click-button');
+    var wheelCount = 0;
+
+    function handleWheel(event) {
+        event.preventDefault(); // Prevent scrolling of the page
+
+        wheelCount += event.deltaY > 0 ? 1 : -1;
+        wheelCountElement.textContent = "Mouse Wheel Count: " + wheelCount;
+    }
+
+    function handleClick() {
+        wheelCount = 0;
+        wheelCountElement.textContent = "Mouse Wheel Count: " + wheelCount;
+    }
+
+    document.addEventListener('wheel', handleWheel);
+    clickButton.addEventListener('click', handleClick);
+</script>
+</body>
+</html>
