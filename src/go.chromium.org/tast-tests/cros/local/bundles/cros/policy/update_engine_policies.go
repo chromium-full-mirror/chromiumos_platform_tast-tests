@@ -17,8 +17,10 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/metrics"
 	"go.chromium.org/tast-tests/cros/local/nebraska"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/rollback"
 	"go.chromium.org/tast-tests/cros/local/vpd"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -39,11 +41,16 @@ type updateEngineTestParam struct {
 	// excludedUpdateRequestSubstrings is a list of substrings that are not supposed to be present
 	// in an update request with given policies.
 	excludedUpdateRequestSubstrings []string
+
+	// verifyRollbackMetricsFile is only need for Enterprise Rollback to ensure the
+	// rollback metrics file is on sync with the policy.
+	verifyRollbackMetricsFile bool
 }
 
 const (
 	deviceTargetVersionPrefixVal = "1000."
 	deviceReleaseLtsTagVal       = "lts"
+	rollbackAndRestoreIfPossible = 3
 )
 
 func init() {
@@ -100,8 +107,11 @@ func init() {
 			Val: &updateEngineTestParam{
 				policyValues: []policy.Policy{
 					&policy.DeviceTargetVersionPrefix{Val: deviceTargetVersionPrefixVal},
-					&policy.DeviceRollbackToTargetVersion{Val: 2},
+					&policy.DeviceRollbackToTargetVersion{Val: rollbackAndRestoreIfPossible},
+					// Metrics reporting must be enabled to ensure rollback metrics file is created with the rollback policy.
+					&policy.DeviceMetricsReportingEnabled{Stat: policy.StatusSetRecommended, Val: true},
 				},
+				verifyRollbackMetricsFile: true,
 				expectedUpdateRequestSubstrings: []string{
 					"rollback_allowed=\"true\"",
 					fmt.Sprintf("targetversionprefix=%q", deviceTargetVersionPrefixVal)},
@@ -192,6 +202,7 @@ func init() {
 			pci.SearchFlag(&policy.DeviceTargetVersionPrefix{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DeviceMetricsReportingEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
@@ -214,6 +225,12 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start nebraska: ", err)
 	}
 	defer updateServer.Close(cleanupCtx)
+
+	if param.verifyRollbackMetricsFile {
+		if err := rollback.CheckFileDoesNotExist(rollback.MetricsData); err != nil {
+			s.Fatal("Failure when checking the rollback metrics file does not exist if policy is disabled: ", err)
+		}
+	}
 
 	// Set the policy and check that the attribute is set.
 	// TODO(b/285292962): Replace poll with a test-agnostic workaround.
@@ -252,6 +269,33 @@ func UpdateEnginePolicies(ctx context.Context, s *testing.State) {
 			s.Errorf("Unexpectedly found %q in nebraska logs", entry)
 		}
 	}
+
+	if param.verifyRollbackMetricsFile {
+		if err := verifyRollbackMetricsFileSyncsWithPolicy(ctx, fdms, cr); err != nil {
+			s.Fatal("Rollback metrics file not in sync with rollback policy: ", err)
+		}
+	}
+}
+
+func verifyRollbackMetricsFileSyncsWithPolicy(ctx context.Context, fdms *fakedms.FakeDMS, cr *chrome.Chrome) error {
+	// Metrics consent must be enabled because of DeviceMetricsReportingEnabled.
+	if consent, err := metrics.HasConsent(ctx); err != nil {
+		return errors.Wrap(err, "failed to check metrics consent status")
+	} else if !consent {
+		return errors.New("Consent metrics is disabled")
+	}
+
+	if err := rollback.CheckFileExists(rollback.MetricsData); err != nil {
+		return errors.Wrap(err, "rollback metrics file missing despite policy")
+	}
+	if err := policyutil.ServeAndVerify(ctx, fdms, cr, []policy.Policy{}); err != nil {
+		return errors.Wrap(err, "failed to restore default policies")
+	}
+	if err := rollback.CheckFileDoesNotExist(rollback.MetricsData); err != nil {
+		return errors.Wrap(err, "rollback metrics file not deleted despite policy change")
+	}
+
+	return nil
 }
 
 // triggerUpdate requests an update check at the specified Omaha URL.
