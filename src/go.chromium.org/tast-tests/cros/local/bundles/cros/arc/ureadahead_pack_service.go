@@ -202,6 +202,11 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 			return nil, errors.Wrapf(err, "failed to verify guest ureadahead initial pack file dump, please check %q", vmInitialLogPath)
 		}
 
+		// Verify host ureadahead compatibility in guest OS.
+		if err := ureadahead.CheckHostCompatibility(ctx, outDir); err != nil {
+			return nil, errors.Wrap(err, "failed to verify host ureadahead is compatible with ARCVM")
+		}
+
 		packPath = filepath.Join(ureadaheadDataDir, arcvmProvisionedPackName)
 		if vmProvisionedPackPath, err = performGuestProvisionedBootTrace(ctx, outDir, packPath, vmProvisionedLogPath, cr.Creds()); err != nil {
 			return nil, errors.Wrap(err, "failed to perform guest provisioned boot with ureadahead tracing")
@@ -318,12 +323,12 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 
 		testing.ContextLog(ctx, "Ureadahead pack was generated")
 
-		if err = ureadahead.DumpHostPack(ctx, packPath, logPath); err != nil {
+		if err := ureadahead.DumpHostPack(ctx, packPath, logPath); err != nil {
 			return nil, errors.Wrap(err, "failed to dump host ureadahead pack")
 		}
 
 		// Verify the host pack file dump for Container.
-		if err = ureadahead.CheckPackFileDump(ctx, logPath, ureadahead.MinHostPackSizeKB); err != nil {
+		if err := ureadahead.CheckPackFileDump(ctx, logPath, ureadahead.MinHostPackSizeKB); err != nil {
 			return nil, errors.Wrapf(err, "failed to verify host ureadahead pack file dump, please check %q", logName)
 		}
 

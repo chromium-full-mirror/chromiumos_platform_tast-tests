@@ -60,7 +60,7 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get whether ARCVM is enabled: ", err)
 	}
 
-	// If VM, only verify guest OS ureadahead dump.
+	// If VM, verify guest OS ureadahead dump as well as host ureadahead compatibility.
 	if vmEnabled {
 		outDir, ok := testing.ContextOutDir(ctx)
 		if !ok {
@@ -71,6 +71,10 @@ func UreadaheadValidation(ctx context.Context, s *testing.State) {
 		}
 		if err := verifyGuestUreadaheadDump(ctx, outDir, ureadaheadGuestProvisionedLogName, false /*isInitialBoot*/); err != nil {
 			s.Fatal("Failed to verify guest ureadahead provisioned pack: ", err)
+		}
+		// Verify host ureadahead compatibility in guest OS.
+		if err := ureadahead.CheckHostCompatibility(ctx, outDir); err != nil {
+			s.Fatal("Failed to verify host ureadahead is compatible with ARCVM: ", err)
 		}
 		return
 	}

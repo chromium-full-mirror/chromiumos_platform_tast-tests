@@ -107,6 +107,10 @@ func CheckPackFileDump(ctx context.Context, logPath string, minPackSize int) err
 	}
 	defer logFile.Close()
 
+	// Example output:
+	// <text>
+	// 0 inode groups, 1638 files, 2350 blocks (805408 kB)
+	// <text>
 	re := regexp.MustCompile(`^(\d+) inode groups, (\d+) files, (\d+) blocks \((\d+) kB\)$`)
 	scanner := bufio.NewScanner(logFile)
 
@@ -143,5 +147,59 @@ func CheckPackFileDump(ctx context.Context, logPath string, minPackSize int) err
 		return errors.Errorf("failed due to pack size %d kB too small. It is expected to be min %d kB", sizeKB, minPackSize)
 	}
 
+	return nil
+}
+
+// CheckHostCompatibility verifies host ureadahead is compatible for use in guest.
+func CheckHostCompatibility(ctx context.Context, outDir string) error {
+	const (
+		// Must use BootstrapCommand since exec-cros-binary is not accessible by adb.
+		cmd               = "/system/bin/exec-cros-binary"
+		crosUreadaheadBin = "/var/run/arc/sbin/ureadahead"
+		logName           = "cros_ureadahead_check.log"
+	)
+
+	logPath := filepath.Join(outDir, logName)
+	logFile, err := os.Create(logPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to create log file")
+	}
+	defer logFile.Close()
+
+	// Verify generate mode can run to completion with timeout since otherwise ureadahead process doesn't complete.
+	outGenerate, err := arc.BootstrapCommand(ctx, cmd, crosUreadaheadBin, "--force-trace", "--use-existing-trace-events",
+		"--force-ssd-mode", "--verbose", "--timeout=5").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to run CrOS ureadahead trace in guest OS")
+	}
+	generateStr := string(outGenerate[:])
+	// Example output:
+	// Counted 12 CPUs
+	// <text>
+	reGenerate := regexp.MustCompile(`Counted (\d+) CPUs`)
+	if _, err = logFile.WriteString(generateStr + "\n\n"); err != nil {
+		return errors.Wrap(err, "failed to write file")
+	}
+	if matched := reGenerate.MatchString(generateStr); !matched {
+		return errors.Errorf("failed to verify compatibility in generate mode, see %s for details", logPath)
+	}
+
+	// Verify readahead mode can run to completion.
+	outReadahead, err := arc.BootstrapCommand(ctx, cmd, crosUreadaheadBin, "--use-existing-trace-events", "--verbose").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to run CrOS ureadahead pack read in guest OS")
+	}
+	readaheadStr := string(outReadahead[:])
+	// Example output:
+	// <text>
+	// Read pack: 0.000s
+	// Readahead: 0.004s
+	reReadahead := regexp.MustCompile(`Read pack:*(.+)[\r\n]Readahead:*(.*)`)
+	if _, err = logFile.WriteString(readaheadStr + "\n"); err != nil {
+		return errors.Wrap(err, "failed to write file")
+	}
+	if matched := reReadahead.MatchString(readaheadStr); !matched {
+		return errors.Errorf("failed to verify compatibility in readahead mode, see %s for details", logPath)
+	}
 	return nil
 }
