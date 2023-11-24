@@ -176,7 +176,7 @@ func init() {
 			Name:      "power_button",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
 			Fixture:   "crosHealthdRunning",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
