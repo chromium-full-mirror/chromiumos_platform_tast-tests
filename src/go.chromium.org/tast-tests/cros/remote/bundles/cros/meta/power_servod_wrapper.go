@@ -56,7 +56,7 @@ func init() {
 		Desc:         "Runs test while capturing power data using servod",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
-		Contacts:     []string{"cros-pe-pnp@google.com", "khwon@google.com"},
+		Contacts:     []string{"cros-pe-pnp@google.com", "khwon@google.com", "zhaon@google.com"},
 		Timeout:      24 * time.Hour, // Depends on subtest, so set maximum value here.
 		Params: []testing.Param{
 			// Special test cases can be added as a Param here.
@@ -112,14 +112,11 @@ const (
 	// defaultServoPowerMeasureInterval in seconds.
 	defaultServoPowerMeasureInterval = "2"
 	chargeTarget                     = 75.
-	intervalMetricName               = "t"
 	cpdPrefixFilter                  = "ft4232h_generic"
 	servoAccumSuffix                 = "_mw"
 )
 
 func PowerServodWrapper(ctx context.Context, s *testing.State) {
-	resultsDir := filepath.Join(s.OutDir(), "subtest_results")
-
 	// servoCtx is used for async function measuring power.
 	servoCtx, servoCancel := context.WithCancel(ctx)
 	defer servoCancel()
@@ -200,7 +197,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}()
 
 	intervalMetric := perf.Metric{
-		Name:      intervalMetricName,
+		Name:      remotepower.ServoIntervalMetricName,
 		Unit:      "s",
 		Multiple:  true,
 		Direction: perf.SmallerIsBetter,
@@ -208,8 +205,6 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 
 	ch := make(chan *perf.Values)
 	defer close(ch)
-	// TODO: b/304656798 - Investigate timestamps.
-	measureStarted := float64(time.Now().Unix())
 	// TODO: b/304655966 - Implement timeline interface.
 	go func() {
 		if err = servo.ClearServoAccumulators(ctx, pxy.Servo(), clearRails); err != nil {
@@ -235,7 +230,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 						Unit:      "W",
 						Direction: perf.SmallerIsBetter,
 						Multiple:  true,
-						Interval:  intervalMetricName,
+						Interval:  remotepower.ServoIntervalMetricName,
 					}, mw/1000.0)
 				}
 				// Clear the accumulator at the end of the loop to measure the interval.
@@ -252,6 +247,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}()
 
 	s.Log("Starting subtest: ", subtest)
+	resultsDir := filepath.Join(s.OutDir(), "subtest_results")
 	skippedTests := tastrun.RunAndEvaluate(commandCtx, s, []string{}, []string{subtest}, resultsDir, tastrun.SkipPolicyDisallowSkipping)
 	if len(skippedTests) > 0 {
 		s.Fatal("Test is skipped, abort post-processing")
@@ -267,59 +263,15 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	}
 	servoResult := <-ch
 
-	subtestDir := filepath.Join(resultsDir, "tests", subtest)
-	measureStarted, err = remotepower.FindSubtestStartTime(resultsDir)
+	servoResult, err = remotepower.TrimSubtestResults(ctx, resultsDir, subtest, servoResult)
 	if err != nil {
-		s.Fatal("Failed to get subtest start time: ", err)
-	}
-	lastTimelineValue, err := remotepower.FindSubtestLastTimelineValue(subtestDir)
-	if err != nil {
-		s.Fatal("Failed to get subtest last timeline value: ", err)
+		s.Fatal(err, "Failed to format subtest results: ", err)
 	}
 
-	measureEnded := measureStarted + lastTimelineValue
-
-	// Perf maps metrics to value but they modify key before saving, so dig up metric again.
-	for metric := range servoResult.GetValues() {
-		if metric.Name == intervalMetricName {
-			intervalMetric = metric
-			break
-		}
-	}
-
-	intervalData := servoResult.GetValues()[intervalMetric]
-	overlapStartIdx := 0
-	overlapEndIdx := len(intervalData)
-	for index, value := range intervalData {
-		if value >= measureStarted {
-			overlapStartIdx = index
-			break
-		}
-	}
-	for index, value := range intervalData {
-		if value > measureEnded {
-			overlapEndIdx = index
-			break
-		}
-	}
-
-	if overlapStartIdx == overlapEndIdx {
-		s.Fatal("No data from Servo")
-	}
-
-	// Trim start and end values to subtest timing only.
-	for key, values := range servoResult.GetValues() {
-		servoResult.GetValues()[key] = values[overlapStartIdx:overlapEndIdx]
-	}
-
-	intervalData = servoResult.GetValues()[intervalMetric]
-	for i, val := range intervalData {
-		intervalData[i] = val - measureStarted
-	}
-
-	s.Logf("%d sample collected over %f secs", len(intervalData), intervalData[len(intervalData)-1]-intervalData[0])
 	for metric, values := range servoResult.GetValues() {
-		if metric.Name != intervalMetricName {
+		if metric.Name == remotepower.IntervalMetricName {
+			s.Logf("%d samples collected over %f secs", len(values), values[len(values)-1]-values[0])
+		} else {
 			sum := 0.
 			for _, v := range values {
 				sum += v
@@ -331,6 +283,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save perf data for crosbolt: ", err)
 	}
 
+	subtestDir := filepath.Join(resultsDir, "tests", subtest)
 	devInfo, oneTimeMetrics, err := getLocalDUTInfo(ctx, subtestDir, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to get local DUT info: ", err)

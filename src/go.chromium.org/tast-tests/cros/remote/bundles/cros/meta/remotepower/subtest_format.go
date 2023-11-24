@@ -6,12 +6,21 @@
 package remotepower
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
+)
+
+const (
+	// IntervalMetricName is the name of the key for perf interval metric.
+	IntervalMetricName = "t"
+	// ServoIntervalMetricName is a custom name for the key for servo interval metric.
+	ServoIntervalMetricName = "servod.t"
 )
 
 // SubtestResult is the mapping to the results.json object.
@@ -20,9 +29,9 @@ type SubtestResult struct {
 	Start string `json:"start"`
 }
 
-// FindSubtestStartTime gets the start timestamp (seconds since January 1, 1970)
-// of a test from the results.json file.
-func FindSubtestStartTime(subtestDir string) (float64, error) {
+// findSubtestStartTime gets the start timestamp (seconds since January 1, 1970)
+// of a test from the perf results.json file
+func findSubtestStartTime(subtestDir string) (float64, error) {
 	var results []SubtestResult
 	rf, err := os.Open(filepath.Join(subtestDir, "results.json"))
 	if err != nil {
@@ -44,9 +53,9 @@ func FindSubtestStartTime(subtestDir string) (float64, error) {
 
 }
 
-// FindSubtestLastTimelineValue returns the last recorder timeline value (seconds)
+// findSubtestLastTimelineValue returns the last recorder timeline value (seconds)
 // from a test in the results-chart.json result.
-func FindSubtestLastTimelineValue(subtestDir string) (float64, error) {
+func findSubtestLastTimelineValue(subtestDir string) (float64, error) {
 	var resultsDict map[string]interface{}
 	jsonData, err := os.ReadFile(filepath.Join(subtestDir, "results-chart.json"))
 	if err != nil {
@@ -69,9 +78,80 @@ func FindSubtestLastTimelineValue(subtestDir string) (float64, error) {
 		return 0.0, errors.New("no timeline data in original test")
 	}
 
-	var lastTimelineValue float64
-	for _, v := range timelineValues {
-		lastTimelineValue = v.(float64)
-	}
+	lastTimelineValue := timelineValues[len(timelineValues)-1].(float64)
 	return lastTimelineValue, nil
+}
+
+// TrimSubtestResults creates a deep copy of servod test perf.Values trimmed to the duration of the subtest.
+func TrimSubtestResults(ctx context.Context, resultsDir, subtest string, values *perf.Values) (*perf.Values, error) {
+	subtestDir := filepath.Join(resultsDir, "tests", subtest)
+	measureStarted, err := findSubtestStartTime(resultsDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get subtest start time")
+	}
+
+	lastTimelineValue, err := findSubtestLastTimelineValue(subtestDir)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get last timeline value")
+	}
+
+	measureEnded := measureStarted + lastTimelineValue
+
+	// Get perf metric by name.
+	var servoIntervalMetric perf.Metric
+	for metric := range values.GetValues() {
+		if metric.Name == ServoIntervalMetricName {
+			servoIntervalMetric = metric
+			break
+		}
+	}
+	if servoIntervalMetric.Name != ServoIntervalMetricName {
+		return nil, errors.New("couldn't find servod interval metric")
+	}
+
+	// Get start and end index of timestamps that overlap with subtest.
+	intervalData := values.GetValueByMetric(servoIntervalMetric)
+	overlapStartIdx := 0
+	overlapEndIdx := len(intervalData)
+	for index, value := range intervalData {
+		if value >= measureStarted {
+			overlapStartIdx = index
+			break
+		}
+	}
+
+	for index := overlapStartIdx + 1; index < overlapEndIdx; index++ {
+		if intervalData[index] > measureEnded {
+			overlapEndIdx = index
+			break
+		}
+	}
+
+	if overlapStartIdx == overlapEndIdx {
+		return nil, errors.New("no data overlap with servo and subtest")
+	}
+
+	// Create deep copy with trimmed values to match subtest.
+	pv := perf.NewValues()
+	for metric, value := range values.GetValues() {
+		if metric.Name == IntervalMetricName {
+			// Skip these timestamps as they are not used.
+			continue
+		}
+		if metric.Name == ServoIntervalMetricName {
+			intervalMetric := perf.Metric{
+				Name:      IntervalMetricName,
+				Unit:      "s",
+				Multiple:  true,
+				Direction: perf.SmallerIsBetter,
+			}
+			first := intervalData[overlapStartIdx]
+			for i := overlapStartIdx; i < overlapEndIdx; i++ {
+				pv.Append(intervalMetric, value[i]-first)
+			}
+		} else {
+			pv.Append(metric, value[overlapStartIdx:overlapEndIdx]...)
+		}
+	}
+	return pv, nil
 }
