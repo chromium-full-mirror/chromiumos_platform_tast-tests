@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -204,19 +203,12 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	sm, err := cp.NewServodMetrics(servoCtx, pxy.Servo(), param.cpd, filters...)
+	servodRecorder, err := rp.NewServodRecorder(servoCtx, servoPowerMeasureInterval, pxy.Servo(), param.cpd, filters...)
 	if err != nil {
-		s.Fatal("Failed to setup servod metrics: ", err)
+		s.Fatal("Failed to create servod recorder: ", err)
 	}
-	servoTimeline, err := perf.NewTimeline(servoCtx, []perf.TimelineDatasource{sm}, perf.Interval(servoPowerMeasureInterval))
-	if err != nil {
-		s.Fatal("Failed to build metrics timeline: ", err)
-	}
-	if err := servoTimeline.Start(servoCtx); err != nil {
-		s.Fatal("Failed to start metrics: ", err)
-	}
-	if err := servoTimeline.StartRecording(servoCtx); err != nil {
-		s.Fatal("Failed to start recording: ", err)
+	if err := servodRecorder.Start(servoCtx); err != nil {
+		s.Fatal("Failed to start servod recorder: ", err)
 	}
 
 	s.Log("Starting subtest: ", subtest)
@@ -236,20 +228,16 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Log("Finished subtest: ", subtest)
 	}
 
-	servoResult, err := servoTimeline.StopRecording(servoCtx)
-	if err != nil {
-		s.Fatal("Failed to stop recording: ", err)
+	if _, err := servodRecorder.Stop(ctx); err != nil {
+		s.Fatal("Failed to stop servod recorder: ", err)
 	}
 
-	mS, mE, err := cp.FindMeasureStartAndEnd(ctx, s.OutDir(), subtest)
+	servoResult, err := servodRecorder.ProcessResults(ctx, s.OutDir(), subtest)
 	if err != nil {
-		s.Fatal("Failed to find start and end of subtest: ", err)
+		s.Fatal("Failed to process servod results with subtest values: ", err)
 	}
-	servoResult, err = cp.TrimSubtestResults(mS, mE, servoResult)
-	if err != nil {
-		s.Fatal("Failed to format subtest results: ", err)
-	}
-	if err := servoResult.Save(s.OutDir()); err != nil {
+
+	if err = servoResult.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save perf data for crosbolt: ", err)
 	}
 

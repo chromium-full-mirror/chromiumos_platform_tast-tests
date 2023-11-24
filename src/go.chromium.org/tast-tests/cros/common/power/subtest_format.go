@@ -41,7 +41,8 @@ func findSubtestStartTime(ctx context.Context, resultsDir, subtest string) (time
 
 // powerLogJSON is the mapping to the power_log.json object.
 type powerLogJSON struct {
-	Timestamp float64 `json:"timestamp"`
+	Timestamp      float64 `json:"timestamp"`
+	SampleDuration float64 `json:"sample_duration"`
 }
 
 // findSubtestStartTimeFromPowerLog gets the start timestamp (seconds since January 1, 1970)
@@ -58,7 +59,8 @@ func findSubtestStartTimeFromPowerLog(subtestDir string) (time.Time, error) {
 		return time.Time{}, errors.Wrap(err, "couldn't decode results from power log")
 	}
 
-	return time.Unix(0, int64(powerLog.Timestamp*float64(time.Second))).UTC(), nil
+	// Since Timestamp refers to the first data point, subtract SampleDuration to get the start of test.
+	return time.Unix(0, int64((powerLog.Timestamp-powerLog.SampleDuration)*float64(time.Second))), nil
 }
 
 // subtestResult is the mapping to the results.json object.
