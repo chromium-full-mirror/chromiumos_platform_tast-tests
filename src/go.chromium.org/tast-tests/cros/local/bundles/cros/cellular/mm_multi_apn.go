@@ -98,6 +98,7 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 		// Set the multiplex property
 		mmApnInfo[mmconst.BearerPropertyMultiplex] = mmconst.BearerMultiplexSupportRequested
 		testing.ContextLogf(ctx, "Creating connection number: %d with APN: %q", len(bearerPaths)+1, mmApnInfo)
+		mmApnInfo[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
 		path, err := modemmanager.Connect(ctx, simpleModem, mmApnInfo)
 		if err != nil {
 			if len(bearerPaths) == 1 {

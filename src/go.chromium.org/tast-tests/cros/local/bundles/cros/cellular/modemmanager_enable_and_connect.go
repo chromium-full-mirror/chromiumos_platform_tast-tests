@@ -110,6 +110,7 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		// Set the multiplex property
 		mmApnInfo[mmconst.BearerPropertyMultiplex] = mmconst.BearerMultiplexSupportRequested
 		s.Log("Connecting with ", mmApnInfo)
+		mmApnInfo[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
 
 		if _, err = modemmanager.Connect(ctx, simpleModem, mmApnInfo); err != nil {
 			if knownAPN.Optional {

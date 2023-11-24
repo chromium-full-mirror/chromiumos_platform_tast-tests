@@ -713,6 +713,10 @@ func EnsureRegistered(ctx context.Context, modem, simpleModem *Modem) error {
 // Connect calls the connect function on simple modem D-Bus and returns the bearer path if it connects successfully.
 func Connect(ctx context.Context, modem *Modem, props map[string]interface{}) (dbus.ObjectPath, error) {
 	bearerPath := dbus.ObjectPath("")
+	// Validate the apn settings for consistency.
+	if _, ok := props[mmconst.BearerPropertyApnType]; !ok {
+		props[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
+	}
 	response := modem.Call(ctx, mmconst.ModemConnect, props)
 	if (response.Err != nil) && (strings.Contains(response.Err.Error(), "no-service")) {
 		return bearerPath, errors.Wrap(response.Err, "failed to connect can be network issue")
@@ -885,6 +889,10 @@ func (m *Modem) GetMaxActiveMultiplexedBearers(ctx context.Context, modem *Modem
 
 // SetInitialEpsBearerSettings sets the Attach APN.
 func SetInitialEpsBearerSettings(ctx context.Context, modem3gpp *Modem, props map[string]interface{}) error {
+	// Validate the apn settings for consistency.
+	if _, ok := props[mmconst.BearerPropertyApnType]; !ok {
+		props[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeInitial
+	}
 	if c := modem3gpp.Call(ctx, "SetInitialEpsBearerSettings", props); c.Err != nil {
 		return errors.Wrap(c.Err, "failed to set initial EPS bearer settings")
 	}
