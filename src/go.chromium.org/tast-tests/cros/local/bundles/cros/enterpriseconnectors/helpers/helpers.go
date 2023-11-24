@@ -408,17 +408,17 @@ func GetCleanDconnSafebrowsing(ctx context.Context, cr *chrome.Chrome, br *brows
 		}
 
 		success := false
-		defer func() {
+		defer func(ctx context.Context) {
 			if success {
 				return
 			}
-			if err := dconnSafebrowsing.CloseTarget(cleanupCtx); err != nil {
-				testing.ContextLog(cleanupCtx, "Failed to close tab: ", err)
+			if err := dconnSafebrowsing.CloseTarget(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close tab: ", err)
 			}
 			if err := dconnSafebrowsing.Close(); err != nil {
-				testing.ContextLog(cleanupCtx, "Failed to close dconn: ", err)
+				testing.ContextLog(ctx, "Failed to close dconn: ", err)
 			}
-		}()
+		}(cleanupCtx)
 
 		var numRows int
 		if err := dconnSafebrowsing.Eval(ctx, `document.getElementById("deep-scan-list").rows.length`, &numRows); err != nil {

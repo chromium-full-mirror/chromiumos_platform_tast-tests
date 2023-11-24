@@ -318,7 +318,13 @@ func testFileTransferForFile(
 	}
 
 	// Delete potentially copied file.
-	defer filesApp.DeleteFileOrFolder(keyboard, fileName)(cleanupCtx)
+	defer func(ctx context.Context) {
+		if err := filesApp.FileExists(fileName)(ctx); err != nil {
+			testing.ContextLog(ctx, "No file exists, not deleting on cleanup, err: ", err)
+			return
+		}
+		filesApp.DeleteFileOrFolder(keyboard, fileName)(ctx)
+	}(cleanupCtx)
 
 	// Verify: Verify copy of file, UI and scanning results.
 
@@ -472,7 +478,7 @@ func launchFilesAppWithFormattedUsb(ctx context.Context, tconnAsh *chrome.TestCo
 		}
 	}(cleanupCtx)
 
-	if err := filesApp.OpenUSBDrive()(ctx); err != nil {
+	if err := filesApp.WithTimeout(5 * time.Second).OpenUSBDrive()(ctx); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to open unformatted USB drive")
 	}
 	if err := filesApp.FormatDevice()(ctx); err != nil {
