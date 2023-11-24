@@ -47,6 +47,12 @@ func RunSaveAndRestore(ctx context.Context) error {
 
 // RunOobeConfigSave runs rollback's save and waits until it finishes.
 func RunOobeConfigSave(ctx context.Context) error {
+	// Stop oobe_config_restore to make sure it's not just in the process of starting and tries to decrypt our data while we encrypt it.
+	if err := upstart.StopJob(ctx, "oobe_config_restore"); err != nil {
+		return errors.Wrap(err, "failed to stop oobe_config_restore")
+	}
+	defer upstart.StartJob(ctx, "oobe_config_restore")
+
 	if err := testexec.CommandContext(ctx, "start", "oobe_config_save").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to start oobe_config_save")
 	}
@@ -56,8 +62,14 @@ func RunOobeConfigSave(ctx context.Context) error {
 	return nil
 }
 
-// TriggerTpmEncryption sds
+// TriggerTpmEncryption triggers TPM encryption.
 func TriggerTpmEncryption(ctx context.Context) error {
+	// Stop oobe_config_restore to make sure it's not just in the process of starting and tries to decrypt our data while we encrypt it.
+	if err := upstart.StopJob(ctx, "oobe_config_restore"); err != nil {
+		return errors.Wrap(err, "failed to stop oobe_config_restore")
+	}
+	defer upstart.StartJob(ctx, "oobe_config_restore")
+
 	if err := testexec.CommandContext(ctx, "systemd-tmpfiles", "--create", "--remove", "--clean", "/usr/lib/tmpfiles.d/on-demand/oobe_config_save.conf").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to run tmpfiles for oobe_config_save")
 	}
@@ -70,7 +82,7 @@ func TriggerTpmEncryption(ctx context.Context) error {
 	return nil
 }
 
-// ReadRollbackTpmNvramSpace sds
+// ReadRollbackTpmNvramSpace read the rollback TPM space.
 func ReadRollbackTpmNvramSpace(ctx context.Context) ([]byte, error) {
 	tmpFile, err := os.CreateTemp("", "rollback_space_content_*")
 	if err != nil {
