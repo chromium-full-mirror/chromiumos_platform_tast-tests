@@ -18,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	rp "go.chromium.org/tast-tests/cros/remote/power"
 
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/servod"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/remotepower"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -268,11 +268,11 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	servoResult := <-ch
 
 	subtestDir := filepath.Join(resultsDir, "tests", subtest)
-	measureStarted, err = servod.FindSubtestStartTime(resultsDir)
+	measureStarted, err = remotepower.FindSubtestStartTime(resultsDir)
 	if err != nil {
 		s.Fatal("Failed to get subtest start time: ", err)
 	}
-	lastTimelineValue, err := servod.FindSubtestLastTimelineValue(subtestDir)
+	lastTimelineValue, err := remotepower.FindSubtestLastTimelineValue(subtestDir)
 	if err != nil {
 		s.Fatal("Failed to get subtest last timeline value: ", err)
 	}

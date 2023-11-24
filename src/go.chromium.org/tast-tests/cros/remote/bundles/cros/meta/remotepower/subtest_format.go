@@ -2,8 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package servod includes util functions for ServodWrapper.
-package servod
+// Package remotepower includes helper functions for remote power tests.
+package remotepower
 
 import (
 	"encoding/json"

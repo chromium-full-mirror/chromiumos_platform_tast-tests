@@ -2,4 +2,4 @@ set noparent
 
 # Tast team
 include /OWNERS.tast
-per-file power_*.go=file:chromiumos/owners:v1:/power/OWNERS.tast
+per-file remotepower*, power_*.go=file:chromiumos/owners:v1:/power/OWNERS.tast
