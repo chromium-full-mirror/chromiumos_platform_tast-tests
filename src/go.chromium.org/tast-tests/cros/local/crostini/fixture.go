@@ -523,6 +523,10 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to create keyboard device: ", err)
 	}
 
+	if err := guestos.SetSolidColorWallpaper(ctx, f.tconn); err != nil {
+		s.Log("Failed to change wallpaper: ", err)
+	}
+
 	// Setup the screen recorder.
 	screenRecorder := uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
 	hasChromeBeenReset := false
@@ -776,7 +780,11 @@ func terminaDiskExists(ownerID string) bool {
 
 // generateChromeOpts generates common chrome options for crostini fixtures.
 func generateChromeOpts(s *testing.FixtState) []chrome.Option {
-	opts := []chrome.Option{chrome.ExtraArgs("--vmodule=crostini*=1")}
+	opts := []chrome.Option{
+		chrome.ExtraArgs("--vmodule=crostini*=1"),
+		// Don't show time-of-day wallpapers. We want a solid color for screenshots.
+		chrome.DisableFeatures("TimeOfDayWallpaper"),
+	}
 
 	useLocalImage := checkKeepState(s)
 	if useLocalImage {

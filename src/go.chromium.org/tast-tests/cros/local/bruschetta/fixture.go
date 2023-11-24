@@ -212,6 +212,10 @@ func (f *bruschettaFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 		s.Fatal("Failed to serve bruschetta policy to chrome: ", err)
 	}
 
+	if err := guestos.SetSolidColorWallpaper(ctx, f.tconn); err != nil {
+		s.Log("Failed to change wallpaper: ", err)
+	}
+
 	concierge, err := vm.GetRunningConcierge(ctx, f.chrome.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get concierge: ", err)
