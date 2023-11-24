@@ -779,6 +779,9 @@ func startModemLogging(ctx context.Context) error {
 	if err := modemLogger.SetOutputDir(ctx, outDir); err != nil {
 		return errors.Wrap(err, "failed to set modem logs output dir")
 	}
+	if err := modemLogger.SetEnabled(ctx, true); err != nil {
+		return errors.Wrap(err, "failed to enable modem logging")
+	}
 	if err := modemLogger.Start(ctx); err != nil {
 		return errors.Wrap(err, "failed to start modem logging")
 	}
@@ -792,6 +795,9 @@ func stopModemLogging(ctx context.Context) error {
 	}
 	if err := modemLogger.Stop(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop modem logging")
+	}
+	if err := modemLogger.SetEnabled(ctx, false); err != nil {
+		return errors.Wrap(err, "failed to disable modem logging")
 	}
 	return nil
 }

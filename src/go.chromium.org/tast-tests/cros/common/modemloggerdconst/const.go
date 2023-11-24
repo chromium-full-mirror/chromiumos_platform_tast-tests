@@ -26,4 +26,5 @@ const (
 	ModemMethodStart        = "Start"
 	ModemMethodStop         = "Stop"
 	ModemMethodSetOutputDir = "SetOutputDir"
+	ModemMethodSetEnabled   = "SetEnabled"
 )

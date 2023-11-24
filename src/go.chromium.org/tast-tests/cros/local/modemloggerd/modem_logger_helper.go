@@ -56,3 +56,11 @@ func (m *ModemLogger) SetOutputDir(ctx context.Context, outputDir string) error 
 	}
 	return nil
 }
+
+// SetEnabled sets up/ tears down modem logging functionality.
+func (m *ModemLogger) SetEnabled(ctx context.Context, enable bool) error {
+	if err := m.DBusObject.Call(ctx, modemloggerdconst.ModemMethodSetEnabled, enable).Err; err != nil {
+		return errors.Wrap(err, "failed to call SetEnabled")
+	}
+	return nil
+}
