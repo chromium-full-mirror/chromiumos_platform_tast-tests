@@ -204,7 +204,11 @@ func init() {
 		Contacts: []string{"clumptini+oncall@google.com"},
 		Impl: &policyChromeFixture{
 			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(chrome.EnableFeatures("Bruschetta"))).Opts()
+				return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+					chrome.EnableFeatures("Bruschetta"),
+					// Don't show time-of-day wallpapers. We want a solid color for screenshots.
+					chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
+				)).Opts()
 			},
 		},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
