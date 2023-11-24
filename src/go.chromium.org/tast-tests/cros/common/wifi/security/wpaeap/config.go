@@ -29,6 +29,24 @@ type Config struct {
 	domainSuffixMatch []string
 }
 
+// Security returns security of WPA network.
+func (c *Config) Security() (string, error) {
+	switch c.mode {
+	case wpa.ModePureWPA:
+		return shillconst.SecurityWPAEnterprise, nil
+	case wpa.ModeMixed:
+		return shillconst.SecurityWPAWPA2Enterprise, nil
+	case wpa.ModePureWPA2:
+		return shillconst.SecurityWPA2Enterprise, nil
+	case wpa.ModeMixedWPA3:
+		return shillconst.SecurityWPA2WPA3Enterprise, nil
+	case wpa.ModePureWPA3:
+		return shillconst.SecurityWPA3Enterprise, nil
+	default:
+		return shillconst.SecurityWPAAllEnterprise, nil
+	}
+}
+
 // HostapdConfig returns hostapd config of WPA-EAP network.
 func (c *Config) HostapdConfig() (map[string]string, error) {
 	ret, err := c.Config.HostapdConfig()

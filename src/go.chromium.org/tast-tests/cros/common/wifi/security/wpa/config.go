@@ -77,6 +77,24 @@ type Config struct {
 	ftMode         FTModeEnum
 }
 
+// Security returns security of WPA network.
+func (c *Config) Security() (string, error) {
+	switch c.mode {
+	case ModePureWPA:
+		return shillconst.SecurityWPA, nil
+	case ModeMixed:
+		return shillconst.SecurityWPAWPA2, nil
+	case ModePureWPA2:
+		return shillconst.SecurityWPA2, nil
+	case ModeMixedWPA3:
+		return shillconst.SecurityWPA2WPA3, nil
+	case ModePureWPA3:
+		return shillconst.SecurityWPA3, nil
+	default:
+		return shillconst.SecurityWPAAll, nil
+	}
+}
+
 // Class returns security class of WPA network.
 func (c *Config) Class() string {
 	return shillconst.SecurityClassPSK

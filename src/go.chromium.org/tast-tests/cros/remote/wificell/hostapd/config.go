@@ -1414,9 +1414,21 @@ func (c *Config) validatePMF() error {
 	case PMFDisabled:
 		return nil
 	case PMFOptional, PMFRequired:
-		secClass := c.SecurityConfig.Class()
-		if secClass == shillconst.SecurityNone || secClass == shillconst.SecurityWEP {
-			return errors.Errorf("class %s does not support PMF", secClass)
+		sec, err := c.SecurityConfig.Security()
+		if err != nil {
+			return errors.Wrap(err, "failed to get Security of config")
+		}
+		if sec == shillconst.SecurityNone || sec == shillconst.SecurityWEP {
+			return errors.Errorf("security %s does not support PMF", sec)
+		}
+		if sec == shillconst.SecurityTransOWE {
+			h, err := c.SecurityConfig.HostapdConfig()
+			if err != nil {
+				return errors.Wrap(err, "failed to get HostapdConfig")
+			}
+			if h["wpa_key_mgmt"] != "OWE" {
+				return errors.New("open BSS of trans-owe AP does not support PMF")
+			}
 		}
 		return nil
 	default:

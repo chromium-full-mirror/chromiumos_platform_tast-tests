@@ -85,6 +85,14 @@ func NewConfigFactory(m ModeEnum, ops ...TransOption) *ConfigFactory {
 // Static check: ConfigFactory implements security.ConfigFactory interface.
 var _ security.ConfigFactory = (*ConfigFactory)(nil)
 
+// Security returns security of OWE network.
+func (c *Config) Security() (string, error) {
+	if c.mode == ModePureOWE {
+		return shillconst.SecurityOWE, nil
+	}
+	return shillconst.SecurityTransOWE, nil
+}
+
 // Class returns the security class of an open network - there is no
 // pre-shared secret, OWE network behaves like open network.
 func (*Config) Class() string {

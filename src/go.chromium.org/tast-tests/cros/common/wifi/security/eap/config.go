@@ -51,6 +51,13 @@ type Config struct {
 	NetCertID    string
 }
 
+// Security to satisfy the interface requirements, but EAP is an abstract
+// class capturing common implementation for WPA-EAP and DynamicWEP and can't
+// implement Security. The derived types should implement it.
+func (c *Config) Security() (string, error) {
+	return "", errors.New("EAP is abstract - implement Security in derived types")
+}
+
 // Class returns the security class of EAP network.
 func (c *Config) Class() string {
 	return shillconst.SecurityClass8021x

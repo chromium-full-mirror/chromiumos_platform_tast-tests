@@ -18,6 +18,8 @@ import (
 
 // Config defines methods to generate hostapd and shill config of protected network.
 type Config interface {
+	// Security returns the Security of the WiFi service (defined in shill/service.go).
+	Security() (string, error)
 	// Class returns the SecurityClass (defined in shill/service.go) of the WiFi service
 	// which is used for searching for WiFi service.
 	Class() string

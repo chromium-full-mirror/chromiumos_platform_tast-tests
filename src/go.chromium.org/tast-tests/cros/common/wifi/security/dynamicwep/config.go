@@ -27,6 +27,11 @@ type Config struct {
 	rekeyPeriod int
 }
 
+// Security returns security of DynamicWEP network.
+func (c *Config) Security() (string, error) {
+	return shillconst.SecurityWEP, nil
+}
+
 // Class returns security class of DynamicWEP network.
 func (c *Config) Class() string {
 	return shillconst.SecurityWEP

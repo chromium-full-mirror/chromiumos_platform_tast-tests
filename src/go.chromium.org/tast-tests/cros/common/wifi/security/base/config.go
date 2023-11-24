@@ -36,6 +36,11 @@ func NewConfigFactory() *ConfigFactory {
 // Static check: ConfigFactory implements security.ConfigFactory interface.
 var _ security.ConfigFactory = (*ConfigFactory)(nil)
 
+// Security returns the security of open network.
+func (*Config) Security() (string, error) {
+	return shillconst.SecurityNone, nil
+}
+
 // Class returns the security class of open network.
 func (*Config) Class() string {
 	return shillconst.SecurityClassNone

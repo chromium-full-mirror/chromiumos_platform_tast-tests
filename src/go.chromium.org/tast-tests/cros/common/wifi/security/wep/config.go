@@ -35,6 +35,11 @@ type Config struct {
 	authAlgs   AuthAlgo
 }
 
+// Security returns security of WEP network.
+func (c *Config) Security() (string, error) {
+	return shillconst.SecurityWEP, nil
+}
+
 // Class returns security class of WEP network.
 func (c *Config) Class() string {
 	return shillconst.SecurityClassWEP
