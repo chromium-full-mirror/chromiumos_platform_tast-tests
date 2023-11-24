@@ -33,13 +33,15 @@ func init() {
 		Params: []testing.Param{{
 			Name: "default",
 			Val: &ps.DeviceSetupRequest{
-				UiAndBacklight: ps.UIAndBacklightMode_DISABLE_UI_WITH_ZERO_BACKLIGHT,
+				Ui:               ps.UIMode_DISABLE_UI,
+				ScreenBrightness: ps.ScreenMode_ZERO_SCREEN_BRIGHTNESS,
 			},
 		}, {
 			Name: "no_wifi",
 			Val: &ps.DeviceSetupRequest{
-				UiAndBacklight: ps.UIAndBacklightMode_DISABLE_UI_WITH_ZERO_BACKLIGHT,
-				Wifi:           ps.WifiInterfacesMode_DISABLE_WIFI_INTERFACES,
+				Ui:               ps.UIMode_DISABLE_UI,
+				ScreenBrightness: ps.ScreenMode_ZERO_SCREEN_BRIGHTNESS,
+				Wifi:             ps.WifiMode_DISABLE_WIFI,
 			},
 		}},
 	})
@@ -70,7 +72,6 @@ func ExampleRemoteNoUI(ctx context.Context, s *testing.State) {
 
 	// Create a recorder that takes 1 sample every 5 second.
 	rReq := &ps.RecorderRequest{
-		TestName:    s.TestName(),
 		IntervalSec: 5,
 	}
 	if _, err = rs.Create(ctx, rReq); err != nil {

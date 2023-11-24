@@ -49,26 +49,40 @@ func (d *DeviceSetupService) Setup(ctx context.Context, req *power.DeviceSetupRe
 
 	opt := new(setup.PowerTestOptions)
 
-	opt.KeyboardBrightness = setup.SetKbBrightnessToZero
-
-	switch req.UiAndBacklight {
-	case power.UIAndBacklightMode_DO_NOT_CHANGE_UI_WITH_DEFAULT_BACKLIGHT:
+	switch req.Ui {
+	case power.UIMode_DO_NOT_CHANGE_UI:
 		opt.UI = setup.DoNotChangeUI
-		opt.Backlight = setup.SetBacklight
-	case power.UIAndBacklightMode_DISABLE_UI_WITH_ZERO_BACKLIGHT:
+	case power.UIMode_DISABLE_UI:
 		opt.UI = setup.DisableUI
+	}
+
+	switch req.ScreenBrightness {
+	case power.ScreenMode_DEFAULT_SCREEN_BRIGHTNESS:
+		opt.Backlight = setup.SetBacklight
+	case power.ScreenMode_DO_NOT_CHANGE_SCREEN_BRIGHTNESS:
+		opt.Backlight = setup.DoNotChangeBacklight
+	case power.ScreenMode_ZERO_SCREEN_BRIGHTNESS:
 		opt.Backlight = setup.SetBacklightToZero
 	}
 
+	switch req.KeyboardBrightness {
+	case power.KeyboardMode_DEFAULT_KEYBOARD_BRIGHTNESS:
+		opt.KeyboardBrightness = setup.SetKbBrightness
+	case power.KeyboardMode_DO_NOT_CHANGE_KEYBOARD_BRIGHTNESS:
+		opt.KeyboardBrightness = setup.DoNotChangeKbBrightness
+	case power.KeyboardMode_ZERO_KEYBOARD_BRIGHTNESS:
+		opt.KeyboardBrightness = setup.SetKbBrightnessToZero
+	}
+
 	switch req.Wifi {
-	case power.WifiInterfacesMode_DO_NOT_CHANGE_WIFI_INTERFACES:
+	case power.WifiMode_DO_NOT_CHANGE_WIFI:
 		opt.Wifi = setup.DoNotChangeWifiInterfaces
-	case power.WifiInterfacesMode_DISABLE_WIFI_INTERFACES:
+	case power.WifiMode_DISABLE_WIFI:
 		opt.Wifi = setup.DisableWifiInterfaces
 	}
 
 	switch req.Bluetooth {
-	case power.BluetoothMode_DISABLE_BLUETOOTH_INTERFACES:
+	case power.BluetoothMode_DISABLE_BLUETOOTH:
 		opt.Bluetooth = setup.DisableBluetoothInterfaces
 	case power.BluetoothMode_DO_NOT_CHANGE_BLUETOOTH:
 		opt.Bluetooth = setup.DoNotChangeBluetooth

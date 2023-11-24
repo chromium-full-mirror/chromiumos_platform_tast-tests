@@ -36,7 +36,9 @@ func (r *RecorderService) Create(ctx context.Context, req *ps.RecorderRequest) (
 		return nil, errors.New("cannot create a new recorder as one already exists")
 	}
 
-	r.recorder = pl.NewRecorder(ctx, time.Duration(req.IntervalSec)*time.Second, "", req.TestName)
+	// Outdir and testname fields are not used in this implementation, and this
+	// implementation does not save test results locally on the DUT.
+	r.recorder = pl.NewRecorder(ctx, time.Duration(req.IntervalSec)*time.Second, "", "")
 	return &empty.Empty{}, nil
 }
 

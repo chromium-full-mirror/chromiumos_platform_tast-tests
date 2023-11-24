@@ -21,23 +21,36 @@ service DeviceSetupService {
 message DeviceSetupRequest {
     // Describes this device setup and it is used for logging purposes.
     optional string setup_name = 1;
-    UIAndBacklightMode ui_and_backlight = 2;
-    WifiInterfacesMode wifi = 3;
-    BluetoothMode bluetooth = 4;
+    UIMode ui = 2;
+    ScreenMode screen_brightness = 3;
+    KeyboardMode keyboard_brightness= 4;
+    WifiMode wifi = 5;
+    BluetoothMode bluetooth = 6;
 }
 
-enum UIAndBacklightMode {
-    DO_NOT_CHANGE_UI_WITH_DEFAULT_BACKLIGHT = 0;
-    DISABLE_UI_WITH_ZERO_BACKLIGHT = 1;
+enum UIMode {
+    DO_NOT_CHANGE_UI = 0;
+    DISABLE_UI = 1;
 }
 
-enum WifiInterfacesMode {
-    DO_NOT_CHANGE_WIFI_INTERFACES = 0;
-    DISABLE_WIFI_INTERFACES = 1;
+enum ScreenMode {
+    DEFAULT_SCREEN_BRIGHTNESS = 0;
+    DO_NOT_CHANGE_SCREEN_BRIGHTNESS = 1;
+    ZERO_SCREEN_BRIGHTNESS = 2;
+}
+
+enum KeyboardMode {
+    DEFAULT_KEYBOARD_BRIGHTNESS = 0;
+    DO_NOT_CHANGE_KEYBOARD_BRIGHTNESS = 1;
+    ZERO_KEYBOARD_BRIGHTNESS = 2;
+}
+
+enum WifiMode {
+    DO_NOT_CHANGE_WIFI = 0;
+    DISABLE_WIFI = 1;
 }
 
 enum BluetoothMode {
-    DISABLE_BLUETOOTH_INTERFACES = 0;
+    DISABLE_BLUETOOTH = 0;
     DO_NOT_CHANGE_BLUETOOTH = 1;
 }
-

@@ -22,8 +22,7 @@ service RecorderService {
 }
 
 message RecorderRequest {
-    string test_name = 1;
-    int64 interval_sec = 2;
+    int64 interval_sec = 1;
 }
 
 message RecorderResult {
