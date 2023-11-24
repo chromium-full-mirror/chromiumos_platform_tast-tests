@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -73,6 +74,8 @@ func init() {
 		}, {
 			Name:      "stress_repeatedly_start_app",
 			ExtraData: []string{audioSynthmarkJitterOboetesterAPK},
+			// Only run on VM as it's flaky on ARC++ and the test also intended for catching regression only found on VM.
+			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: audioSynthmarkJitterParam{
 				stressMode: audioSynthmarkJitterStressRepeatedlyStartApp,
 			},
@@ -119,6 +122,13 @@ func AudioSynthmarkJitter(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
+
+	// Set clamshell mode to be able to launch Oboetester alongside Synthmark.
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure set clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	// Start stress test
 	stressStopChan := make(chan struct{}) // Once the test finished, this channel will be closed to signal the stress to stop.
@@ -178,15 +188,27 @@ func AudioSynthmarkJitter(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start cyclic bench on the host: ", err)
 	}
 
-	// Launch app
+	// On some models the app will crash if we directly launch the test.
+	// The workaround is to only start the main activity first, and then start the test.
+	if err := activity.Start(ctx, tconn); err != nil {
+		s.Fatalf("Failed to start activity %q in package %q: %v", activityName, pkg, err)
+	}
+	defer activity.Stop(cleanupCtx, tconn)
+	// Ensure that the activity is in normal window state (not fullscreen)
+	if err := activity.SetWindowState(ctx, tconn, arc.WindowStateNormal); err != nil {
+		s.Fatal("Failed to set window state to normal: ", err)
+	}
+	if err := ash.WaitForARCAppWindowState(ctx, tconn, activity.PackageName(), ash.WindowStateNormal); err != nil {
+		s.Fatal("Failed to wait for window state to be normal: ", err)
+	}
+	// Call start activity again with launch params to start the test.
 	launchParams := param.options
 	launchParams = append(launchParams, arc.WithExtraString("test", "jitter"))
 	// num_seconds must be passed as float.
 	launchParams = append(launchParams, arc.WithExtraFloat("num_seconds", testDuration.Seconds()))
 	if err := activity.Start(ctx, tconn, launchParams...); err != nil {
-		s.Fatalf("Failed to start activity %q in package %q: %v", activityName, pkg, err)
+		s.Fatalf("Failed to start activity %q in package %q to launch the test: %v", activityName, pkg, err)
 	}
-	defer activity.Stop(cleanupCtx, tconn)
 
 	testing.ContextLogf(ctx, "Sleeping for %v to wait for the test to finish", testDuration)
 	// GoBigSleepLint: Run the test for `testDuration` as a part of measurement.
