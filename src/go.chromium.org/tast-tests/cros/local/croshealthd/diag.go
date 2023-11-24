@@ -119,20 +119,16 @@ func (result RoutineResult) VerifyFinished() error {
 // RoutineParams are different configuration options for running a diagnostic
 // routine.
 type RoutineParams struct {
-	Routine                       string // The name of the routine to run
-	Cancel                        bool   // Boolean flag to cancel the routine
-	DefaultNVMEWearLevelThreshold int    // Threshold for RoutineNVMEWearLevel. The param
-	// will only be used if the corresponding field in
-	// cros-config is missing.
+	Routine string // The name of the routine to run
+	Cancel  bool   // Boolean flag to cancel the routine
 }
 
 // NewRoutineParams creates and returns a diagnostic routine with default test
 // parameters.
 func NewRoutineParams(routine string) RoutineParams {
 	return RoutineParams{
-		Routine:                       routine,
-		Cancel:                        false,
-		DefaultNVMEWearLevelThreshold: 50,
+		Routine: routine,
+		Cancel:  false,
 	}
 }
 
@@ -145,7 +141,8 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 		diagParams = append(diagParams, "--force_cancel_at_percent=5")
 	}
 	if params.Routine == RoutineNVMEWearLevel {
-		threshold, err := getNVMEWearLevelThreshold(ctx, params.DefaultNVMEWearLevelThreshold)
+		const defaultNVMEWearLevelThreshold = 50
+		threshold, err := getNVMEWearLevelThreshold(ctx, defaultNVMEWearLevelThreshold)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to prepare NVME wear-level-threshold")
 		}
