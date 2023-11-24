@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/lacros/gpucuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -25,8 +26,10 @@ func init() {
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Timeout:      20 * time.Minute,
-		Data:         []string{"video.html", "continuous_scroll_60fps.html", "gradient_color_60fps.html", "webgl_small_60fps.html", "bbb_1080p60_yuv.vp9.webm"},
+		// cpu.WaitUntilStabilized is called multiple times (at least twice) on GpuCUJ,
+		// so it‘s safer to add twice the CPUStablizationTimeout to the test timeout.
+		Timeout: 20*time.Minute + cuj.CPUStablizationTimeout*2,
+		Data:    []string{"video.html", "continuous_scroll_60fps.html", "gradient_color_60fps.html", "webgl_small_60fps.html", "bbb_1080p60_yuv.vp9.webm"},
 		Params: []testing.Param{{
 			Name: "maximized",
 			Val: gpucuj.TestParams{
