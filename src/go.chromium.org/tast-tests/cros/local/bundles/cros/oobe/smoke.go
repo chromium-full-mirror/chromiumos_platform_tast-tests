@@ -26,7 +26,7 @@ func init() {
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "non_meets_device"},
 		Fixture:      fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		Params: []testing.Param{{
 			Name: "fieldtrial_testing_config_on",
