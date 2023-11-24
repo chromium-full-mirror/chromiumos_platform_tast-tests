@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -120,7 +119,6 @@ func DataCollection(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	ud := uidetection.NewDefault(tconn)
 	ui := uiauto.New(tconn)
 
 	conn, err := br.NewConn(ctx, param.url)
@@ -129,15 +127,14 @@ func DataCollection(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 
+	s.Log("Checking the case ID and email address on issue details page")
 	// Check the support case ID field.
-	if err := ud.WithTimeout(uiDetectionTimeout).WaitUntilExists(
-		uidetection.Word(param.caseID).First())(ctx); err != nil {
+	if err := ui.WaitUntilExists(nodewith.NameContaining(param.caseID).First())(ctx); err != nil {
 		s.Fatal("Failed to verify support case ID: ", err)
 	}
 
 	// Check the user's email field in UI.
-	if err := ud.WithTimeout(uiDetectionTimeout).WaitUntilExists(
-		uidetection.Word(defaultUser).First())(ctx); err != nil {
+	if err := ui.WaitUntilExists(nodewith.Attribute("value", defaultUser).NameContaining("Email Address").First())(ctx); err != nil {
 		s.Fatal("Failed to verify email: ", err)
 	}
 
