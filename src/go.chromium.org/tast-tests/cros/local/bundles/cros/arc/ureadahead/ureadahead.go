@@ -107,6 +107,10 @@ func CheckPackFileDump(ctx context.Context, logPath string, minPackSize int) err
 	}
 	defer logFile.Close()
 
+	// Example output:
+	// <text>
+	// 0 inode groups, 1638 files, 2350 blocks (805408 kB)
+	// <text>
 	re := regexp.MustCompile(`^(\d+) inode groups, (\d+) files, (\d+) blocks \((\d+) kB\)$`)
 	scanner := bufio.NewScanner(logFile)
 

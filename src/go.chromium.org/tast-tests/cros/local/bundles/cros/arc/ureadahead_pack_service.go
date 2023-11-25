@@ -319,12 +319,12 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 
 		testing.ContextLog(ctx, "Ureadahead pack was generated")
 
-		if err = ureadahead.DumpHostPack(ctx, packPath, logPath); err != nil {
+		if err := ureadahead.DumpHostPack(ctx, packPath, logPath); err != nil {
 			return nil, errors.Wrap(err, "failed to dump host ureadahead pack")
 		}
 
 		// Verify the host pack file dump for Container.
-		if err = ureadahead.CheckPackFileDump(ctx, logPath, ureadahead.MinHostPackSizeKB); err != nil {
+		if err := ureadahead.CheckPackFileDump(ctx, logPath, ureadahead.MinHostPackSizeKB); err != nil {
 			return nil, errors.Wrapf(err, "failed to verify host ureadahead pack file dump, please check %q", logName)
 		}
 
