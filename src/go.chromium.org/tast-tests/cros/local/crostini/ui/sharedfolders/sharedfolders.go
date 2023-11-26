@@ -95,7 +95,7 @@ func NewSharedFolders(tconn *chrome.TestConn) *SharedFolders {
 	return &SharedFolders{Folders: make(map[string]struct{}), ui: uiauto.New(tconn), tconn: tconn}
 }
 
-func (sf *SharedFolders) checkConfirmatioDialog(msg string) uiauto.Action {
+func (sf *SharedFolders) checkConfirmationDialog(msg string) uiauto.Action {
 	ShareConfirmDialog.Msg = ShareConfirmDialog.Msg.Name(msg)
 	return uiauto.Combine("check content of the confirmation dialog",
 		sf.ui.WaitUntilExists(ShareConfirmDialog.Dialog),
@@ -120,7 +120,7 @@ func (sf *SharedFolders) ShareMyFiles(ctx context.Context, filesApp *filesapp.Fi
 
 		return uiauto.Combine("confirm share",
 			filesApp.ClickDirectoryContextMenuItem(MyFiles, ShareWithLinux),
-			sf.checkConfirmatioDialog(MyFilesMsg))(ctx)
+			sf.checkConfirmationDialog(MyFilesMsg))(ctx)
 	}
 }
 
@@ -129,7 +129,7 @@ func (sf *SharedFolders) ShareMyFilesOK(ctx context.Context, filesApp *filesapp.
 	return uiauto.Combine("share My files",
 		sf.ShareMyFiles(ctx, filesApp),
 
-		// Click button Ok on the confirmation diaog.
+		// Click button Ok on the confirmation dialog.
 		sf.ui.LeftClick(ShareConfirmDialog.OkButton),
 
 		sf.checkToastNotification(),
@@ -146,10 +146,12 @@ func (sf *SharedFolders) ShareDriveOK(ctx context.Context, filesApp *filesapp.Fi
 		}
 
 		return uiauto.Combine("share Drive",
-			filesApp.ClickDirectoryContextMenuItem(filesapp.GoogleDrive, ShareWithLinux),
-			sf.checkConfirmatioDialog(DriveMsg),
+			// Before right clicking "My Drive", make sure its parent "Google Drive" is expanded by calling "OpenDrive()".
+			filesApp.OpenDrive(),
+			filesApp.ClickDirectoryContextMenuItem(filesapp.MyDrive, ShareWithLinux),
+			sf.checkConfirmationDialog(DriveMsg),
 
-			// Click button Ok on the confirmation diaog.
+			// Click button Ok on the confirmation dialog.
 			sf.ui.LeftClick(ShareConfirmDialog.OkButton),
 
 			sf.checkToastNotification(),
