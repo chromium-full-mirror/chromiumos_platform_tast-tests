@@ -6,7 +6,6 @@ package multivm
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -72,7 +71,6 @@ const (
 	postLoginCoolDownDuration     = 10 * time.Second
 	postDropCacheCoolDownDuration = 5 * time.Second
 	quietDuration                 = 55 * time.Second
-	dropCachesString              = "ArcMemoryService: dropCaches took"
 )
 
 func Login(ctx context.Context, s *testing.State) {
@@ -126,11 +124,6 @@ func Login(ctx context.Context, s *testing.State) {
 	}
 
 	if arcvmEnabled {
-		s.Log("Will wait for ARCVM dropCaches")
-		exp := regexp.MustCompile(dropCachesString)
-		if err := arc.WaitForLogcat(ctx, arcpackage.RegexpPred(exp)); err != nil {
-			s.Fatal("Unable to find dropCaches log: ", err)
-		}
 		if err := disk.DropCaches(ctx); err != nil {
 			s.Fatal("Failed to drop host caches: ", err)
 		}
