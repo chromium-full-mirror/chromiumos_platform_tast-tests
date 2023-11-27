@@ -69,7 +69,7 @@ const (
 	// defaultInterval is the default interval used in cyclictest.
 	defaultInterval = 10000 * time.Microsecond
 	// defaultLoops is the default number of loops tested in cyclictest.
-	defaultLoops = 6000
+	defaultLoops = 60000
 	// defaultMaxLatencyThreshold is the default max latency threshold allowed in cyclictest.
 	defaultMaxLatencyThreshold = 3000 * time.Microsecond
 	// defaultStressWorker is the number of workers spawned in the stress test per cpu thread.
@@ -86,7 +86,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{"perfetto_trace.txtpb"},
 		SoftwareDeps: []string{"cras", "chrome"},
-		Timeout:      5 * time.Minute,
+		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name: "rr12_1thread_10ms",
