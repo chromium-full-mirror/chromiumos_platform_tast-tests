@@ -130,7 +130,6 @@ func waitUntilGreenAppStarted(ctx context.Context, cr *chrome.Chrome, outDir str
 
 func verifyScreenIsAllGreen(ctx context.Context, screenshotPath string) error {
 	testing.ContextLog(ctx, "Verifying screen is all green")
-	// TODO(b/302098012): Lacros may briefly show the desktop. Poll until the condition passes.
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if err := screenshot.Capture(ctx, screenshotPath); err != nil {
 			return errors.Wrap(err, "failed to take screenshot")
