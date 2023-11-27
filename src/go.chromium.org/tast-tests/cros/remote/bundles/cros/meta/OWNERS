@@ -2,4 +2,6 @@ set noparent
 
 # Tast team
 include /OWNERS.tast
-per-file remotepower*, power_*.go=file:chromiumos/owners:v1:/power/OWNERS.tast
+
+# Power team owns power related meta code
+per-file remotepower/*,power_*.go=file:chromiumos/owners:v1:/power/OWNERS.tast
