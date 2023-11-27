@@ -220,6 +220,140 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 			},
 		},
 		TestTypeUDPTx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{72, 101},
+				ap.ChWidth40:      ExpectedTput{135, 195},
+				ap.ChWidth40Plus:  ExpectedTput{135, 195},
+				ap.ChWidth40Minus: ExpectedTput{135, 195},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{87, 121},
+				ap.ChWidth40: ExpectedTput{180, 260},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{347, 500},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20: ExpectedTput{87, 121},
+				ap.ChWidth40: ExpectedTput{180, 260},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80: ExpectedTput{347, 500},
+			},
+		},
+		TestTypeUDPRx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{72, 101},
+				ap.ChWidth40:      ExpectedTput{135, 195},
+				ap.ChWidth40Plus:  ExpectedTput{135, 195},
+				ap.ChWidth40Minus: ExpectedTput{135, 195},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{87, 121},
+				ap.ChWidth40: ExpectedTput{180, 260},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{347, 500},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20: ExpectedTput{87, 121},
+				ap.ChWidth40: ExpectedTput{180, 260},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80: ExpectedTput{347, 500},
+			},
+		},
+		TestTypeUDPBidirectional: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{0, 0},
+				ap.ChWidth40:      ExpectedTput{0, 0},
+				ap.ChWidth40Plus:  ExpectedTput{0, 0},
+				ap.ChWidth40Minus: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{0, 0},
+				ap.ChWidth40: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20: ExpectedTput{0, 0},
+				ap.ChWidth40: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80: ExpectedTput{0, 0},
+			},
+		},
+	},
+	routerSupport.UbuntuT: {
+		TestTypeTCPTx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{61, 86},
+				ap.ChWidth40:      ExpectedTput{115, 166},
+				ap.ChWidth40Plus:  ExpectedTput{115, 166},
+				ap.ChWidth40Minus: ExpectedTput{115, 166},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{74, 103},
+				ap.ChWidth40: ExpectedTput{153, 221},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{200, 400},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20: ExpectedTput{74, 103},
+				ap.ChWidth40: ExpectedTput{153, 221},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80: ExpectedTput{200, 400},
+			},
+		},
+		TestTypeTCPRx: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{61, 86},
+				ap.ChWidth40:      ExpectedTput{115, 166},
+				ap.ChWidth40Plus:  ExpectedTput{115, 166},
+				ap.ChWidth40Minus: ExpectedTput{115, 166},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{74, 103},
+				ap.ChWidth40: ExpectedTput{153, 221},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{200, 400},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20: ExpectedTput{74, 103},
+				ap.ChWidth40: ExpectedTput{153, 221},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80: ExpectedTput{200, 400},
+			},
+		},
+		TestTypeTCPBidirectional: {
+			ap.Mode80211nPure: {
+				ap.ChWidth20:      ExpectedTput{0, 0},
+				ap.ChWidth40:      ExpectedTput{0, 0},
+				ap.ChWidth40Plus:  ExpectedTput{0, 0},
+				ap.ChWidth40Minus: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acPure: {
+				ap.ChWidth20: ExpectedTput{0, 0},
+				ap.ChWidth40: ExpectedTput{0, 0},
+			},
+			ap.Mode80211acMixed: {
+				ap.ChWidth80: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axPure: {
+				ap.ChWidth20: ExpectedTput{0, 0},
+				ap.ChWidth40: ExpectedTput{0, 0},
+			},
+			ap.Mode80211axMixed: {
+				ap.ChWidth80: ExpectedTput{0, 0},
+			},
+		},
+		TestTypeUDPTx: {
 			// TODO(b/271490937): wifi_perf_openwrt: UDP TX perf numbers are low.
 			ap.Mode80211nPure: {
 				ap.ChWidth20:      ExpectedTput{72, 101},
