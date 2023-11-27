@@ -196,6 +196,18 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to bring up the interface at netns: ", err)
 	}
 
+	// Backup the interface MTU to be able to restore it at the end of the test
+	// to avoid disturbing subsequent tests (b/308713107).
+	clientIfaceMTU, err := getIfaceMTU(ctx, dsEnv, clientIface)
+	if err != nil {
+		s.Fatalf("Failed to obtain interface %s MTU: %v", clientIface, err)
+	}
+	defer func() {
+		if _, err := dsEnv.CreateCommandWithoutChroot(cleanupCtx, "ip", "link", "set", "dev", clientIface, "mtu", clientIfaceMTU).Output(testexec.DumpLogOnError); err != nil {
+			s.Errorf("Failed to restore MTU on interface %s: %v", clientIface, err)
+		}
+	}()
+
 	// Run wpa_supplicant and dhclient on the downstream interface.
 	supplicant := wpasupplicant.New(clientIface, ssid, passphrase)
 	if err := dsEnv.StartServer(ctx, "wpa_supplicant", supplicant); err != nil {
@@ -253,11 +265,11 @@ func ShillTethering(ctx context.Context, s *testing.State) {
 	s.Log("The client's hostname is verified")
 
 	// Verify whether the downstream device could get the custom MTU from upstream.
-	cmd := fmt.Sprintf(`ip -j addr show %s | jq .[0].mtu`, clientIface)
-	if resp, _, err := dsEnv.CreateCommandWithoutChroot(ctx, "sh", "-c", cmd).SeparatedOutput(); err != nil {
+	ifaceMTU, err := getIfaceMTU(ctx, dsEnv, clientIface)
+	if err != nil {
 		s.Fatal("Failed to get the MTU of downstream device: ", err)
-	} else if strings.TrimSpace(string(resp[:])) != strconv.Itoa(customMTU) {
-		s.Fatalf("The MTU of downstream (%s) is different from expected (%d)", resp[:], customMTU)
+	} else if ifaceMTU != strconv.Itoa(customMTU) {
+		s.Fatalf("The MTU of downstream (%s) is different from expected (%d)", ifaceMTU, customMTU)
 	}
 
 	// TODO(b/273749806): Verify if the upstream device could not reach the downstream device.
@@ -275,4 +287,13 @@ func getWiPhyIndex(ctx context.Context, iface string) (uint32, error) {
 		return 0, errors.Wrap(err, "failed to convert to integer")
 	}
 	return uint32(phyIdx), nil
+}
+
+func getIfaceMTU(ctx context.Context, env *virtualnet.Env, iface string) (string, error) {
+	cmd := fmt.Sprintf(`ip -j addr show %s | jq .[0].mtu`, iface)
+	resp, err := env.CreateCommandWithoutChroot(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to obtain %s MTU", iface)
+	}
+	return strings.TrimSpace(string(resp[:])), nil
 }
