@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture"
+	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"

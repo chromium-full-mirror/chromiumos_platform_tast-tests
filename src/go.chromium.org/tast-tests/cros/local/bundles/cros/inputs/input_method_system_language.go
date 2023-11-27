@@ -7,14 +7,14 @@ package inputs
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/inputactions"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
+	"go.chromium.org/tast-tests/cros/local/inputs/pre"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

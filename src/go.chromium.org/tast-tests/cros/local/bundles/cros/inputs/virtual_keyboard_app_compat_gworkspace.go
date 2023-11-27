@@ -9,9 +9,6 @@ import (
 	"strings"
 	"time"
 
-	fixture "go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture/appcompat"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -21,6 +18,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/touch"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	fixture "go.chromium.org/tast-tests/cros/local/inputs/fixture/appcompat"
+	"go.chromium.org/tast-tests/cros/local/inputs/pre"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/ctxutil"

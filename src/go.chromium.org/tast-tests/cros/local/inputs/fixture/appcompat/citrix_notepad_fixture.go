@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/inputactions"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"

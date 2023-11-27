@@ -8,17 +8,18 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/data"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testserver"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/imesettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	"go.chromium.org/tast-tests/cros/local/inputs/data"
+	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
+	"go.chromium.org/tast-tests/cros/local/inputs/pre"
+	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -243,18 +244,18 @@ func VirtualKeyboardGlideTyping(ctx context.Context, s *testing.State) {
 		)
 	}
 
-	util.RunSubTest(ctx, s, cr, "default", validateGlideTyping("Glide typing is enabled by default", testserver.TextAreaInputField, true))
-	util.RunSubTest(ctx, s, cr, "not_applicable", validateGlideTyping("Glide typing should not work on non-appliable fields", testserver.PasswordInputField, false))
+	testrunner.RunSubTest(ctx, s, cr, "default", validateGlideTyping("Glide typing is enabled by default", testserver.TextAreaInputField, true))
+	testrunner.RunSubTest(ctx, s, cr, "not_applicable", validateGlideTyping("Glide typing should not work on non-appliable fields", testserver.PasswordInputField, false))
 
 	if err := imesettings.SetGlideTyping(uc, inputMethod, false)(ctx); err != nil {
 		s.Fatal("Failed to disable glide typing: ", err)
 	}
 
-	util.RunSubTest(ctx, s, cr, "disable", validateGlideTyping("Glide typing can be disabled in IME setting", testserver.TextAreaInputField, false))
+	testrunner.RunSubTest(ctx, s, cr, "disable", validateGlideTyping("Glide typing can be disabled in IME setting", testserver.TextAreaInputField, false))
 
 	if err := imesettings.SetGlideTyping(uc, inputMethod, true)(ctx); err != nil {
 		s.Fatal("Failed to disable glide typing: ", err)
 	}
 
-	util.RunSubTest(ctx, s, cr, "re-enable", validateGlideTyping("Glide typing can be enabled in IME setting", testserver.TextAreaInputField, true))
+	testrunner.RunSubTest(ctx, s, cr, "re-enable", validateGlideTyping("Glide typing can be enabled in IME setting", testserver.TextAreaInputField, true))
 }

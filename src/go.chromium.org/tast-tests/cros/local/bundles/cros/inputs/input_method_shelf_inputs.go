@@ -9,11 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/data"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testserver"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -23,6 +19,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input/voice"
+	"go.chromium.org/tast-tests/cros/local/inputs/data"
+	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
+	"go.chromium.org/tast-tests/cros/local/inputs/pre"
+	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -244,6 +245,6 @@ func InputMethodShelfInputs(ctx context.Context, s *testing.State) {
 	}
 
 	for _, subtest := range subTests {
-		util.RunSubTest(ctx, s, cr, subtest.name, subtest.action)
+		testrunner.RunSubTest(ctx, s, cr, subtest.name, subtest.action)
 	}
 }

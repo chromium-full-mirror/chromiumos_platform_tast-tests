@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	fixture "go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture/appcompat"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	fixture "go.chromium.org/tast-tests/cros/local/inputs/fixture/appcompat"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 
 	"go.chromium.org/tast/core/ctxutil"

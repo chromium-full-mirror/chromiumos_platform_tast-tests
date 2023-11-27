@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testserver"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
+	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
+	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
 	"go.chromium.org/tast-tests/cros/local/uidetection"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"

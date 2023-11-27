@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime/emojipicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"

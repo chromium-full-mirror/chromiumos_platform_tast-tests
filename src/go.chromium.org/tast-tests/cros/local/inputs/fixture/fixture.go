@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/inputactions"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"

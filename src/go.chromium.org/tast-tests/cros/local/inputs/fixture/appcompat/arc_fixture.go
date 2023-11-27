@@ -11,7 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/inputactions"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"

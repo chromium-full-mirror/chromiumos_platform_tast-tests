@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testserver"
+	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
+	"go.chromium.org/tast-tests/cros/local/inputs/pre"
+	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
 	"go.chromium.org/tast/core/ctxutil"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"

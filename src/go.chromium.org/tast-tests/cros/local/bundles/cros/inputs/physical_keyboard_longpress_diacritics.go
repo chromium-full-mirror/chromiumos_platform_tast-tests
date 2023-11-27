@@ -8,10 +8,7 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/fixture"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/pre"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testserver"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/util"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/inputs/testrunner"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -19,6 +16,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/inputs/fixture"
+	"go.chromium.org/tast-tests/cros/local/inputs/pre"
+	"go.chromium.org/tast-tests/cros/local/inputs/testserver"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -135,7 +136,7 @@ func PhysicalKeyboardLongpressDiacritics(ctx context.Context, s *testing.State) 
 	}
 
 	for _, testcase := range testCases {
-		util.RunSubTest(ctx, s, cr, testcase.name, uiauto.UserAction(testcase.scenario,
+		testrunner.RunSubTest(ctx, s, cr, testcase.name, uiauto.UserAction(testcase.scenario,
 			uiauto.Combine(testcase.scenario,
 				its.Clear(inputField),
 				its.ClickFieldAndWaitForActive(inputField),
