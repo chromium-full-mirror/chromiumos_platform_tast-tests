@@ -180,6 +180,7 @@ func CCAUIRecordVideo(ctx context.Context, s *testing.State) {
 		{"testVideoSnapshot", testVideoSnapshot, cca.TimerOff, cca.MicOn},
 		{"testStopInPause", testStopInPause, cca.TimerOff, cca.MicOn},
 		{"testPauseResume", testPauseResume, cca.TimerOff, cca.MicOn},
+		{"testVideoSeekability", testVideoSeekability, cca.TimerOff, cca.MicOn},
 	} {
 		subTestCtx, cancel := context.WithTimeout(ctx, subTestTimeout)
 		s.Run(subTestCtx, tc.name, func(ctx context.Context, s *testing.State) {
@@ -397,6 +398,47 @@ func testPauseResume(ctx context.Context, app *cca.App) error {
 	}
 
 	return v.stop(ctx, app)
+}
+
+// testVideoSeekability tests whether the recorded video can be seeked by
+// checking the number of key frames in the recorded video. It is expected that
+// the video recorded for |recordTime| will have at least |minKeyFrames|.
+func testVideoSeekability(ctx context.Context, app *cca.App) error {
+	// TODO(b/311108293): Specifically set video resolution for external camera
+	// (Fake HAL), since it is not correctly set by default (1080p).
+	facing, err := app.GetFacing(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check camera facing")
+	}
+	if facing == cca.FacingExternal {
+		if err := app.ChooseVideoResolution(ctx, cca.FacingExternal, cca.Resolution{Width: 1920, Height: 1080}); err != nil {
+			return err
+		}
+	}
+
+	// By default, the video should have a key frame for every 100 frames, which
+	// is around every 4 seconds for 30 fps video. So, we expect at least 3 key
+	// frames for a video recorded for 10 seconds.
+	recordTime := 10 * time.Second
+	minKeyFrames := 3
+
+	fileInfo, err := app.RecordVideo(ctx, cca.TimerOff, recordTime)
+	if err != nil {
+		return errors.Wrap(err, "failed to record a video")
+	}
+	path, err := app.FilePathInSavedDir(ctx, fileInfo.Name())
+	if err != nil {
+		return errors.Wrap(err, "failed to get file path in saved path")
+	}
+	numKeyFrames, err := cca.NumberOfKeyFrames(ctx, path)
+	if err != nil {
+		return err
+	}
+
+	if numKeyFrames < minKeyFrames {
+		return errors.Errorf("failed to seek a video, the video has %d key frames, expected at least %d", numKeyFrames, minKeyFrames)
+	}
+	return nil
 }
 
 func testConfirmDialog(ctx context.Context, app *cca.App, cr *chrome.Chrome) error {

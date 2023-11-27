@@ -1581,3 +1581,14 @@ func (a *App) SwitchTo60FPS(ctx context.Context) error {
 	}
 	return nil
 }
+
+// ChooseVideoResolution switches to the specified video resolution for the
+// camera with the specified facing.
+func (a *App) ChooseVideoResolution(ctx context.Context, facing Facing, resolution Resolution) error {
+	return a.TriggerConfiguration(ctx, func() error {
+		if err := a.conn.Call(ctx, nil, "CCATest.chooseVideoResolution", facing, resolution); err != nil {
+			return errors.Wrapf(err, "failed to switch video resolution to %v on camera facing %v", resolution, facing)
+		}
+		return nil
+	})
+}

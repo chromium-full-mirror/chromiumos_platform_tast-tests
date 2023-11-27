@@ -198,18 +198,34 @@ func parseFraction(fraction string) (float64, error) {
 }
 
 // videoInfo returns information of a video by ffprobe. See https://ffmpeg.org/ffprobe.html#Main-options for the definition of entries.
-func videoInfo(ctx context.Context, entry, path string) (string, error) {
+func videoInfo(ctx context.Context, entry, path string, extraArgs ...string) (string, error) {
 	f, err := os.Open(path)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to open file %v", path)
 	}
 	defer f.Close()
-	args := []string{"-v", "error", "-select_streams", "v", "-show_entries", entry, "-of", "default=nw=1:nk=1", path}
+	args := []string{"-v", "error", "-select_streams", "v", "-show_entries", entry, "-of", "default=nw=1:nk=1"}
+	args = append(args, extraArgs...)
+	args = append(args, path)
 	output, err := testexec.CommandContext(ctx, "ffprobe", args...).Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to run ffprobe")
 	}
 	return strings.TrimSpace(string(output)), nil
+}
+
+// NumberOfKeyFrames returns a number of key frames in a video in the specified |path|.
+func NumberOfKeyFrames(ctx context.Context, path string) (int, error) {
+	// Skip printing information of non-key frames to ignore unnecessary information in the output.
+	skipNonKeyFrameArgs := []string{"-skip_frame", "nokey"}
+	output, err := videoInfo(ctx, "frame=key_frame", path, skipNonKeyFrameArgs...)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to get video info")
+	}
+	// The command output is a multi-line string where each line contains the
+	// digit 1. Number of key frames equal to the number of lines, or the
+	// number of "1".
+	return strings.Count(output, "1"), nil
 }
 
 // CheckVideoMuted returns error if the check fails or the video file in the given |path| is not muted.
