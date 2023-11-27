@@ -6,7 +6,6 @@ package wwcb
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -16,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
-	inputspb "go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wwcb"
 	"go.chromium.org/tast/core/ctxutil"
@@ -34,8 +32,13 @@ func init() {
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1", "ExtDispID2", "wwcbIPPowerIp"},
-		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.wwcb.DisplayService", "tast.cros.inputs.KeyboardService"},
-		Data:         []string{utils.VideoFile},
+		ServiceDeps: []string{
+			"tast.cros.browser.ChromeService",
+			"tast.cros.apps.AppsService",
+			"tast.cros.ui.AutomationService",
+			"tast.cros.wwcb.DisplayService",
+		},
+		Data: []string{utils.VideoFile},
 	})
 }
 
@@ -64,11 +67,16 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 
 	// Push file to remote.
 	dut := s.DUT()
-	remoteTXTPath, err := utils.PushFileToDUT(ctx, s, dut, utils.VideoFile, "/home/chronos/user/MyFiles/")
+	remoteTXTPath, err := utils.PushFileToDUT(ctx, s, dut, utils.VideoFile, utils.MyFilesPath)
 	if err != nil {
 		s.Fatal("Failed to initialize the push file to DUT's MyFiles directory: ", err)
 	}
 	defer dut.Conn().CommandContext(cleanupCtx, "rm", remoteTXTPath).Output()
+
+	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
+	appsSvc := pb.NewAppsServiceClient(cl.Conn)
+	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
+	fs := dutfs.NewClient(cl.Conn)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
@@ -76,20 +84,10 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
 
-	if err := utils.InitWebcam(ctx, s); err != nil {
-		s.Fatal("Failed to initialize webcam: ", err)
-	}
-
-	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
-	appsSvc := pb.NewAppsServiceClient(cl.Conn)
-	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
-	keyboardSvc := inputspb.NewKeyboardServiceClient(cl.Conn)
-	fs := dutfs.NewClient(cl.Conn)
-	extDispIDArray := []string{extDispID1, extDispID2}
-
 	if err := utils.ControlFixture(ctx, extDispID1, "on"); err != nil {
 		s.Fatal("Failed to connect to the first external display: ", err)
 	}
+
 	dockingID, hasDockingID := s.Var("DockingID")
 	if hasDockingID {
 		// Open IP power to supply docking power.
@@ -98,6 +96,7 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power on docking station: ", err)
 		}
 		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+
 		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 			s.Fatal("Failed to connect to the docking station: ", err)
 		}
@@ -133,34 +132,39 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 	if twoDisplays.DisplayIds[1] != threeDisplays.DisplayIds[1] {
 		extDispID1, extDispID2 = extDispID2, extDispID1
 	}
-	if err := utils.MappingWebcam(ctx, s, fs, keyboardSvc, displaySvc, appsSvc, uiautoSvc, extDispIDArray); err != nil {
-		s.Fatal("Failed to initialize the mapping: ", err)
-	}
-	s.Log("Wait for the monitor to turn on screen")
-	// GoBigSleepLint: Wait for the monitor to turn on screen.
-	testing.Sleep(ctx, 60*time.Second)
 
-	galleryWindowName := fmt.Sprintf("Gallery - %s", utils.VideoFile)
+	// GoBigSleepLint: Wait for external display screen to show up.
+	testing.Sleep(ctx, 30*time.Second)
+
+	if err := utils.OpenRGBImageOnDisplays(ctx, fs, appsSvc, uiautoSvc, displaySvc); err != nil {
+		s.Fatal("Failed to open RGB image on each display: ", err)
+	}
+	defer appsSvc.CloseApp(cleanupCtx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60})
+
+	if err := utils.InitWebcam(ctx, s); err != nil {
+		s.Fatal("Failed to initialize webcam: ", err)
+	}
+
+	if err := utils.PairWebcamToDisplay(ctx, s, threeDisplays.DisplayIds); err != nil {
+		s.Fatal("Failed to pair webcam to display: ", err)
+	}
 
 	for _, test := range []struct {
 		extDispIndex int
-		uid          string
+		extDispID    string
 	}{
 		{1, threeDisplays.DisplayIds[1]},
 		{2, threeDisplays.DisplayIds[2]},
 	} {
-		testing.ContextLogf(ctx, "Play and verify the video on the external display %d with ID %s", test.extDispIndex, test.uid)
+		testing.ContextLogf(ctx, "Play and verify the video on the external display %d with ID %s", test.extDispIndex, test.extDispID)
 
-		if _, err := appsSvc.LaunchApp(ctx, &pb.LaunchAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
-			s.Fatal("Failed to launch Filesapp: ", err)
-		}
-
-		if err := utils.OpenMediaFileOnFilesapp(ctx, uiautoSvc, utils.VideoFile); err != nil {
-			s.Fatal("Failed to open media file on Filesapp: ", err)
+		windowTitle, err := utils.OpenGalleryOnDisplay(ctx, appsSvc, uiautoSvc, displaySvc, test.extDispIndex, utils.VideoFile)
+		if err != nil {
+			s.Fatal("Failed to open gallery on display: ", err)
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			if _, err := displaySvc.SwitchWindowToDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: int32(test.extDispIndex), WindowTitle: galleryWindowName}); err != nil {
+			if _, err := displaySvc.SwitchWindowToDisplay(ctx, &wwcb.QueryRequest{DisplayIndex: int32(test.extDispIndex), WindowTitle: windowTitle}); err != nil {
 				return err
 			}
 			return nil
@@ -176,15 +180,12 @@ func DaisyChain(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to click on fullscreen on the Gallery: ", err)
 		}
 
-		if err := utils.VerifyVideo(ctx, s, test.uid, 30); err != nil {
+		if err := utils.VerifyVideo(ctx, s, test.extDispID, 30); err != nil {
 			s.Fatal("Failed to verify video on the external display: ", err)
 		}
 
 		if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Gallery", TimeoutSecs: 60}); err != nil {
 			s.Fatal("Failed to close Gallery: ", err)
-		}
-		if _, err := appsSvc.CloseApp(ctx, &pb.CloseAppRequest{AppName: "Files", TimeoutSecs: 60}); err != nil {
-			s.Fatal("Failed to close files app: ", err)
 		}
 	}
 }
