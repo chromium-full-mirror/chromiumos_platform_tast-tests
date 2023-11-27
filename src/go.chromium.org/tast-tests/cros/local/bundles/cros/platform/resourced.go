@@ -14,8 +14,10 @@ import (
 	"time"
 
 	rmpb "chromiumos/system_api/resource_manager_proto"
+
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"
+	"go.chromium.org/tast-tests/cros/local/sched"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -437,6 +439,27 @@ func checkReportBackgroundProcesses(ctx context.Context, rm *resourced.Client) (
 	return nil
 }
 
+func checkSchedQoS(ctx context.Context, rm *resourced.Client) error {
+	p, err := sched.CreateSampleProcessThreadPair(ctx, nil)
+	if err != nil {
+		return errors.Wrap(err, "failed to create process")
+	}
+	defer p.KillAndWait()
+
+	if err := rm.SetProcessState(ctx, p.Pid, resourced.QoSProcessNormal); err != nil {
+		return errors.Wrap(err, "failed to set process state")
+	}
+	for _, state := range []uint8{resourced.QoSThreadUrgentBursty, resourced.QoSThreadUrgent, resourced.QoSThreadBalanced, resourced.QoSThreadEco, resourced.QoSThreadUtility, resourced.QoSThreadBackground} {
+		if err := rm.SetThreadState(ctx, p.Pid, p.Tid, state); err != nil {
+			return errors.Wrap(err, "failed to set thread state")
+		}
+	}
+	if err := rm.SetProcessState(ctx, p.Pid, resourced.QoSProcessBackground); err != nil {
+		return errors.Wrap(err, "failed to set process state")
+	}
+	return nil
+}
+
 func Resourced(ctx context.Context, s *testing.State) {
 	rm, err := resourced.NewClient(ctx)
 	if err != nil {
@@ -471,6 +494,10 @@ func Resourced(ctx context.Context, s *testing.State) {
 
 		if err := checkPowerSupplyChange(ctx, rm); err != nil {
 			s.Fatal("Checking PowerSupplyChange failed: ", err)
+		}
+
+		if err := checkSchedQoS(ctx, rm); err != nil {
+			s.Fatal("Checking SchedQoS failed: ", err)
 		}
 
 		return
