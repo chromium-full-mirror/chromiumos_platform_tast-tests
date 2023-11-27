@@ -24,9 +24,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// Buffer time after resetting the EUICC before continuing.
+const resetEUICCMemoryTimeout = 30 * time.Second
+
+type installESIMProfilesOnManagedDeviceTestConfig struct {
+	useSMDS bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         InstallESimProfilesOnManagedDevice,
+		Func:         InstallESIMProfilesOnManagedDevice,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that managed eSIM profile can be installed from device policy via the esim_manager Mojo API",
 		Contacts: []string{
@@ -42,16 +49,41 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceOpenNetworkConfiguration{}, pci.VerifiedFunctionalityOS),
 		},
-		Timeout: 10 * time.Minute,
+		Timeout: 15 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name: "smdp",
+				Val: &installESIMProfilesOnManagedDeviceTestConfig{
+					useSMDS: false,
+				},
+			},
+			{
+				Name: "smds",
+				Val: &installESIMProfilesOnManagedDeviceTestConfig{
+					useSMDS: true,
+				},
+			},
+		},
 	})
 }
 
-// InstallESimProfilesOnManagedDevice ensures that eSIM operations work with a Stork server when accessed via Mojo.
-func InstallESimProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
+// InstallESIMProfilesOnManagedDevice ensures that eSIM operations work with a Stork server when accessed via Mojo.
+func InstallESIMProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
 	euicc, slot, err := hermes.GetEUICC(ctx, true)
 	if err != nil {
 		s.Fatal("Failed to get eUICC via hermes: ", err)
 	}
+
+	// Remove any existing profiles on test eUICC.
+	if err := resetEUICCMemory(ctx, euicc); err != nil {
+		testing.ContextLog(ctx, "Failed to reset eUICC memory")
+	}
+	s.Log("Reset eUICC completed")
+
+	if err := euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodUseTestCerts, true).Err; err != nil {
+		s.Fatal("Failed to set use_test_cert on eUICC: ", err)
+	}
+	s.Log("Set to use test cert on eUICC completed")
 
 	eid, err := euicc.Eid(ctx)
 	if err != nil {
@@ -61,7 +93,7 @@ func InstallESimProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 
 	ctxForCleanup := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, stork.CleanupProfileTime)
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	cr, err := startChromeWithFakeDMS(ctx, fdms, slot, true)
@@ -70,30 +102,19 @@ func InstallESimProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(ctxForCleanup)
 
-	// Remove any existing profiles on test euicc
-	if err := euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodResetMemory, 1).Err; err != nil {
-		s.Fatal("Failed to reset test euicc: ", err)
-	}
-	s.Log("Reset test euicc completed")
-
 	netConn, err := netconfig.CreateLoggedInCrosNetworkConfig(ctx, cr)
 	if err != nil {
 		s.Fatal("Failed to get network Mojo Object: ", err)
 	}
 	defer netConn.Close(ctxForCleanup)
 
-	if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
-		s.Fatal("Failed to get uninhibited cellular device: ", err)
-	}
-
-	if err := euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodUseTestCerts, true).Err; err != nil {
-		s.Fatal("Failed to set use test cert on eUICC: ", err)
-	}
-	s.Log("Set to use test cert on euicc completed")
+	ctxForCleanupStork := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, stork.CleanupProfileTime)
+	defer cancel()
 
 	activationCodes, cleanupFunc, err := stork.FetchStorkProfilesForEid(ctx, eid, 1)
 	if cleanupFunc != nil {
-		defer cleanupFunc(ctxForCleanup)
+		defer cleanupFunc(ctxForCleanupStork)
 	}
 	if err != nil {
 		s.Fatal("Failed to fetch the Stork profile: ", err)
@@ -103,7 +124,8 @@ func InstallESimProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
 		s.Fatalf("Unexpected number of Stork profiles fetched, got: %v, want: 1", len(activationCodes))
 	}
 
-	s.Log("Fetched Stork profile with activation code: ", activationCodes[0])
+	activationCode := activationCodes[0]
+	s.Log("Fetched Stork profile with activation code: ", activationCode)
 
 	manager, err := mojo.Manager(ctx, cr, slot)
 	if err != nil {
@@ -125,24 +147,51 @@ func InstallESimProfilesOnManagedDevice(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Using eUICC: ", euiccProperties.Eid)
 
+	if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
+		s.Fatal("Failed to get uninhibited cellular device: ", err)
+	}
+
 	// Save the profile ICCID for verification.
 	profileICCID, err := getProfileICCID(ctx, mojoEuicc)
 	if err != nil {
 		s.Fatal("Failed to get profile ICCID: ", err)
 	}
 
-	err = installESimProfileViaPolicy(ctx, euicc, fdms, cr, string(activationCodes[0]))
-	if err != nil {
-		s.Fatal("Failed to install eSIM profile: ", err)
-	}
-	s.Log("Applied device policy with managed cellular network configuration")
-	defer euicc.DBusObject.Call(ctxForCleanup, hermesconst.EuiccMethodResetMemory, 1)
-
 	if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
 		s.Fatal("Failed to get uninhibited cellular device: ", err)
 	}
 
-	if err := verifyTestESimProfileWasInstalled(ctx, mojoEuicc, profileICCID); err != nil {
+	ctxForCleanupResetEuicc := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, resetEUICCMemoryTimeout)
+	defer cancel()
+
+	// Defer an attempt to reset the eUICC memory before installing the eSIM profile in case the installation spuriously failed but still installed a profile.
+	defer func() {
+		if err := resetEUICCMemory(ctxForCleanupResetEuicc, euicc); err != nil {
+			testing.ContextLog(ctxForCleanupResetEuicc, "Failed to reset eUICC memory")
+		}
+	}()
+
+	if s.Param().(*installESIMProfilesOnManagedDeviceTestConfig).useSMDS {
+		err = installESIMProfileViaPolicyWithSMDS(ctx, euicc, fdms, cr)
+	} else {
+		err = installESIMProfileViaPolicyWithSMDP(ctx, euicc, fdms, cr, string(activationCode))
+	}
+	if err != nil {
+		s.Fatal("Failed to install eSIM profile: ", err)
+	}
+	s.Log("Applied device policy with managed cellular network configuration")
+
+	// Installing an eSIM profile should inhibit the device.
+	// Wait here until this happens to make sure that the policy was applied and the installation begins.
+	if err := netConn.WaitForCellularDeviceInhibited(ctx); err != nil {
+		s.Fatal("Failed to wait for cellular device to be inhibited before installation: ", err)
+	}
+
+	if err := netConn.WaitForCellularDeviceUninhibited(ctx); err != nil {
+		s.Fatal("Failed to wait for cellular device to finish installing and not be inhibited: ", err)
+	}
+	if err := verifyTestESIMProfileWasInstalled(ctx, mojoEuicc, profileICCID); err != nil {
 		s.Fatal("Failed to verify that eSIM profile was installed via device policy: ", err)
 	}
 }
@@ -162,11 +211,21 @@ func getProfileICCID(ctx context.Context, e *mojo.Euicc) (string, error) {
 	return availableProfiles[0].Iccid, nil
 }
 
-func installESimProfileViaPolicy(ctx context.Context, euicc *hermes.EUICC, fdms *fakedms.FakeDMS, cr *chrome.Chrome, activationCode string) error {
-	cellularONC := &policy.ONCCellular{
+func installESIMProfileViaPolicyWithSMDP(ctx context.Context, euicc *hermes.EUICC, fdms *fakedms.FakeDMS, cr *chrome.Chrome, activationCode string) error {
+	networkConfig := &policy.ONCCellular{
 		SMDPAddress: string(activationCode),
 	}
+	return installESIMProfileViaPolicy(ctx, euicc, fdms, cr, networkConfig)
+}
 
+func installESIMProfileViaPolicyWithSMDS(ctx context.Context, euicc *hermes.EUICC, fdms *fakedms.FakeDMS, cr *chrome.Chrome) error {
+	networkConfig := &policy.ONCCellular{
+		SMDSAddress: stork.SMDSActivationCodePrefix,
+	}
+	return installESIMProfileViaPolicy(ctx, euicc, fdms, cr, networkConfig)
+}
+
+func installESIMProfileViaPolicy(ctx context.Context, euicc *hermes.EUICC, fdms *fakedms.FakeDMS, cr *chrome.Chrome, networkConfig *policy.ONCCellular) error {
 	globalConfig := &policy.ONCGlobalNetworkConfiguration{
 		AllowOnlyPolicyCellularNetworks: false,
 	}
@@ -180,14 +239,10 @@ func installESimProfileViaPolicy(ctx context.Context, euicc *hermes.EUICC, fdms 
 					GUID:     deviceProfileServiceGUID,
 					Name:     "CellularDevicePolicyName",
 					Type:     "Cellular",
-					Cellular: cellularONC,
+					Cellular: networkConfig,
 				},
 			},
 		},
-	}
-
-	if err := euicc.DBusObject.Call(ctx, hermesconst.EuiccMethodUseTestCerts, true).Err; err != nil {
-		return errors.Wrap(err, "failed to set use test cert on test euicc")
 	}
 
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{deviceNetworkPolicy}); err != nil {
@@ -209,7 +264,7 @@ func startChromeWithFakeDMS(ctx context.Context, fdms *fakedms.FakeDMS, slot int
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CellularUseSecondEuicc"))
 	}
 	if smdsSupportRequired {
-		chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport", "SmdsSupportEuiccUpload", "SmdsDbusMigration"))
+		chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport"))
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
@@ -219,7 +274,7 @@ func startChromeWithFakeDMS(ctx context.Context, fdms *fakedms.FakeDMS, slot int
 	return cr, nil
 }
 
-func verifyTestESimProfileWasInstalled(ctx context.Context, e *mojo.Euicc, profileICCID string) error {
+func verifyTestESIMProfileWasInstalled(ctx context.Context, e *mojo.Euicc, profileICCID string) error {
 	availableProfiles, err := e.ProfileList(ctx)
 	if err != nil {
 		return errors.Wrap(err, "error requesting available profiles")
@@ -232,5 +287,30 @@ func verifyTestESimProfileWasInstalled(ctx context.Context, e *mojo.Euicc, profi
 		return errors.Errorf("profile ICCID mismatch, got=%s, want=%s", availableProfiles[0].Iccid, profileICCID)
 	}
 
+	return nil
+}
+
+func resetEUICCMemory(ctx context.Context, euicc *hermes.EUICC) error {
+	if err := euicc.ResetMemory(ctx); err != nil {
+		return err
+	}
+	testing.ContextLog(ctx, "eUICC memory is being reset")
+
+	// Poll until there are no installed profiles on the eUICC.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		profiles, err := euicc.InstalledProfiles(ctx, true /*shouldNotSwitchSlot*/)
+		if err != nil {
+			return err
+		}
+		if len(profiles) != 0 {
+			return errors.New("failed to remove installed eSIM profiles")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  resetEUICCMemoryTimeout,
+		Interval: 5 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed to remove installed eSIM profiles")
+	}
 	return nil
 }

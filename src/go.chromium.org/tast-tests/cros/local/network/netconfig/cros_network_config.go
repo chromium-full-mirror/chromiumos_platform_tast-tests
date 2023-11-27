@@ -164,27 +164,67 @@ func (c *CrosNetworkConfig) GetDeviceStateList(ctx context.Context) ([]types.Dev
 	return result.Result, nil
 }
 
+// CellularDeviceInhibitReason returns the current reason that the cellular device is inhibited, if any.
+func (c *CrosNetworkConfig) CellularDeviceInhibitReason(ctx context.Context) (types.InhibitReason, error) {
+	deviceStateList, err := c.GetDeviceStateList(ctx)
+	if err != nil {
+		return types.NotInhibited, errors.Wrap(err, "failed to get device state list")
+	}
+
+	cellularDevice := DeviceForNetworkType(deviceStateList, types.Cellular)
+	if cellularDevice == nil {
+		return types.NotInhibited, errors.New("failed to find cellular device")
+	}
+	return cellularDevice.InhibitReason, nil
+}
+
+func (c *CrosNetworkConfig) waitForCellularDeviceInhibitReason(ctx context.Context, condition func(types.InhibitReason) error) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		inhibitReason, err := c.CellularDeviceInhibitReason(ctx)
+		if err != nil {
+			return testing.PollBreak(err)
+		}
+
+		sampleInterval := 3
+		sampleTimeout := 15
+		nthToSuccess := sampleTimeout / sampleInterval
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err = condition(inhibitReason); err != nil {
+				return err
+			}
+			nthToSuccess--
+			if nthToSuccess > 0 {
+				return errors.Errorf("%d samples with stable inhibit reason", nthToSuccess)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: time.Second * time.Duration(sampleTimeout), Interval: time.Second * time.Duration(sampleInterval)}); err != nil {
+			return errors.Wrap(err, "failed to wait for a stable inhibit reason")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute * 8, Interval: time.Second * 15}); err != nil {
+		return errors.Wrap(err, "failed to wait for cellular device inhibit reason condition to be met")
+	}
+	return nil
+}
+
 // WaitForCellularDeviceUninhibited waits until the cellular device is no longer inhibited,
 // returning an error if the timeout has been reached.
 func (c *CrosNetworkConfig) WaitForCellularDeviceUninhibited(ctx context.Context) error {
-	// Ensure network is not inhibited.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		deviceStateList, err := c.GetDeviceStateList(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get device state list"))
-		}
-
-		cellularDevice := DeviceForNetworkType(deviceStateList, types.Cellular)
-		if cellularDevice == nil {
-			return testing.PollBreak(errors.New("failed to find cellular device"))
-		}
-
-		if cellularDevice.InhibitReason != types.NotInhibited {
-			return errors.Errorf("unexpected cellular network inhibit reason = got %v, want %v", cellularDevice.InhibitReason, types.NotInhibited)
+	return c.waitForCellularDeviceInhibitReason(ctx, func(inhibitReason types.InhibitReason) error {
+		if inhibitReason != types.NotInhibited {
+			return errors.Errorf("unexpected cellular network inhibit reason = got %v, want %v", inhibitReason, types.NotInhibited)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: time.Minute * 5, Interval: time.Second * 5}); err != nil {
-		return errors.Wrap(err, "failed to get uninhibited network ")
-	}
-	return nil
+	})
+}
+
+// WaitForCellularDeviceInhibited waits until the cellular device is inhibited,
+// returning an error if the timeout has been reached.
+func (c *CrosNetworkConfig) WaitForCellularDeviceInhibited(ctx context.Context) error {
+	return c.waitForCellularDeviceInhibitReason(ctx, func(inhibitReason types.InhibitReason) error {
+		if inhibitReason == types.NotInhibited {
+			return errors.New("cellular device is not inhibited")
+		}
+		return nil
+	})
 }

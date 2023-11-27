@@ -32,7 +32,7 @@ const (
 	maxDownloadAttemptsValue = 5
 	profileStatusValue       = "RELEASED"
 	profileClassValue        = "OPERATIONAL"
-	generateSmdsEventValue   = true
+	generateSMDSEventValue   = true
 
 	// Returned in Stork response.
 	sessionIDKey  = "sessionId"
@@ -54,11 +54,14 @@ const (
 
 // Stork URLs.
 const (
+	// SMDPActivationCodePrefix is the prefix of the Stork SM-DP+ activation code.
+	SMDPActivationCodePrefix = "1$prod.smdp-plus.rsp.goog$"
+
+	// SMDSActivationCodePrefix is the prefix of the Stork SM-DS activation code.
+	SMDSActivationCodePrefix = "1$prod.smds.rsp.goog$"
+
 	// URL for discarding a Stork profile, which needs to be provided a sessionId parameter.
 	endGtsSessionURLPrefix = "https://prod.smdp-plus.rsp.goog/gts/endGtsSession?sessionId="
-
-	// Prefix for the
-	activationCodePrefix = "1$prod.smdp-plus.rsp.goog$"
 )
 
 // ActivationCode to be used to install an eSIM profile.
@@ -76,7 +79,7 @@ type ProfileListData struct {
 	ProfileStatus               string `json:"profileStatus"`
 	ProfileClass                string `json:"profileClass"`
 	ServiceProviderName         string `json:"serviceProviderName"`
-	GenerateSmdsEvent           bool   `json:"generateSmdsEvent"`
+	GenerateSMDSEvent           bool   `json:"generateSmdsEvent"`
 	ProfilePolicyRules          []int  `json:"profilePolicyRules"`
 }
 
@@ -95,7 +98,7 @@ func generateStorkRequestData(eid string, numProfiles int, confirmationCode stri
 		ProfileStatus:               profileStatusValue,
 		ProfileClass:                profileClassValue,
 		ServiceProviderName:         ServiceProviderNameValue,
-		GenerateSmdsEvent:           generateSmdsEventValue,
+		GenerateSMDSEvent:           generateSMDSEventValue,
 		ProfilePolicyRules:          []int{},
 	}
 
@@ -140,7 +143,7 @@ func getActivationCodes(storkResponse map[string]json.RawMessage) ([]ActivationC
 			return nil, errors.New("Stork matchingId was missing")
 		}
 
-		activationCodes = append(activationCodes, ActivationCode(activationCodePrefix+matchingID))
+		activationCodes = append(activationCodes, ActivationCode(SMDPActivationCodePrefix+matchingID))
 	}
 
 	return activationCodes, nil
