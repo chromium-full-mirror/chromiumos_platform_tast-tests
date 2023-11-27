@@ -8,5 +8,14 @@ osamafathy@google.com
 rrsilva@google.com
 ziegltrum@google.com
 
+# ChromeOS Connectivity (Software)
+chadduffin@chromium.org
+gordonseto@google.com
+hsuregan@chromium.org
+jiajunz@google.com
+khorimoto@chromium.org
+nikhilcn@google.com
+tjohnsonkanu@google.com
+
 # Tast team for bulk/emergencies
 include /OWNERS.tast
