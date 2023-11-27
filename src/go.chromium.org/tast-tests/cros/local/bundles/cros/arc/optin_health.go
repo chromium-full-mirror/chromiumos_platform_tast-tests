@@ -90,10 +90,15 @@ func OptinHealth(ctx context.Context, s *testing.State) {
 			return rl.Retry("run logcat", err)
 		}
 
-		r := regexp.MustCompile("ArcCrashDumpStreamer:.*process name = org.chromium.arc.*")
-		m := r.FindStringSubmatch(string(out))
+		r := regexp.MustCompile("ArcCrashDumpStreamer: (.*) found [(]process name = (org.chromium.arc.*)[)]")
+		m := r.FindAllStringSubmatch(string(out), -1)
+
+		for _, match := range m {
+			s.Errorf("Found %s crash in %s", match[1], match[2])
+		}
+
 		if len(m) > 0 {
-			s.Fatalf("Found %d org.chromium.arc.* crashes", len(m))
+			s.Fatalf("Found total %d crashes", len(m))
 		}
 
 		return nil
