@@ -15,17 +15,19 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         CCAUIMultiCameraScreenRotate,
+		Func:         CCAUIScreenRotate,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Opens CCA, rotate the display using display APIs and take picture or record video in every orientation using multi-cameras",
+		Desc:         "Takes pictures in every screen orientation and checks the picture resolutions",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Attr:         []string{"group:mainline", "group:camera-libcamera", "informational", "group:intel-nda"},
 		SoftwareDeps: []string{"camera_app", "chrome"},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Params: []testing.Param{{
 			Name:    "fake",
 			Fixture: "ccaLaunchedWithFakeHALCamera",
@@ -57,9 +59,9 @@ func checkOrientation(facing cca.Facing, screen cca.Orientation, resolution *cca
 	return nil
 }
 
-// CCAUIMultiCameraScreenRotate Open CCA, rotate the display to either take
+// CCAUIScreenRotate Open CCA, rotate the display to either take
 // picture or record video using all available cameras.
-func CCAUIMultiCameraScreenRotate(ctx context.Context, s *testing.State) {
+func CCAUIScreenRotate(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
