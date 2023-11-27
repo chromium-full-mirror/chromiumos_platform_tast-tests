@@ -24,6 +24,8 @@ const (
 	VarLibDir string = "/var/lib"
 	// PtsDir is the directory of phoronix-test-suite under /var/lib.
 	PtsDir string = VarLibDir + "/phoronix-test-suite"
+	// PtsResultsDir is the directory of test results folder.
+	PtsResultsDir string = PtsDir + "/test-results"
 	// WorkDir is the working directory for crospts.
 	WorkDir string = "/usr/local/crospts"
 	// ResultsDir is the directory for test results.

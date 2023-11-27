@@ -90,6 +90,13 @@ func (c *CrosFixture) Prepare(ctx context.Context, s *testing.FixtState) error {
 		return err
 	}
 
+	if err := os.MkdirAll(crosResultsDir, fs.ModeDir); err != nil {
+		s.Fatalf("Failed to create directory in %v: %v", crosResultsDir, err)
+		return err
+	}
+
+	c.resultsDir = crosResultsDir
+
 	// TODO(darrenwu): check the checksum instead of file exist.
 	_, err := os.Stat(baseImage)
 	if os.IsNotExist(err) {
@@ -170,6 +177,10 @@ func (c *CrosFixture) Prepare(ctx context.Context, s *testing.FixtState) error {
 			fs:   "sysfs",
 			ro:   false,
 			bind: false,
+		}, {
+			src:  crosResultsDir,
+			dst:  crosChroot + PtsResultsDir,
+			bind: true,
 		},
 	}
 
