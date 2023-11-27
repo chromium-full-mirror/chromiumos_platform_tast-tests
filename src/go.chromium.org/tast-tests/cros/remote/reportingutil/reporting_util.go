@@ -10,6 +10,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"time"
@@ -31,6 +34,12 @@ const EventsAPIKeyPath = "policy.events_api_key"
 
 // ReportingServerURL is the URL to the autopush reporting server.
 const ReportingServerURL = "https://autopush-chromereporting-pa.sandbox.googleapis.com/v1"
+
+// ReportingDirectory is the directory on the device which contains directories in which records are stored.
+const ReportingDirectory = "/var/spool/reporting"
+
+// HeartbeatPriority is the priority with which heartbeat events are enqueued.
+const HeartbeatPriority = "FAST_BATCH"
 
 // UpdatePolicy is used to identify which policies need to updated for a test.
 type UpdatePolicy int
@@ -225,4 +234,33 @@ func SetTelemetryPolicies(ctx context.Context, client tapeClient, requestID stri
 		return errors.Wrap(err, "failed to set the policy")
 	}
 	return nil
+}
+
+// MissiveConfirmedAllRecords looks for all records in '/var/spool/reporting' with the given priority and returns an error if there are any unconfirmed records. Returns nil otherwise.
+func MissiveConfirmedAllRecords(ctx context.Context, priority string, timeout time.Duration) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		recordFilePatternMatcher := path.Join(ReportingDirectory, priority, "P_*")
+		// Find all record files.
+		// Record files have the format: /var/spool/reporting/<PRIORITY>/P_<PRIORITY>.<generation_id>.<sequencing_id>
+		recordFilePaths, err := filepath.Glob(recordFilePatternMatcher)
+		if err != nil {
+			return err
+		}
+		if recordFilePaths == nil {
+			// Missive creates empty record files to hold the next record. If no record files exist, then no records were sent.
+			return errors.New("no records were sent from this device")
+		}
+		// Verify all record files have size 0 bytes. Record files that have size > 0 bytes have not been confirmed by the server.
+		for _, filePath := range recordFilePaths {
+			file, err := os.Stat(filePath)
+			if err != nil {
+				return errors.Wrapf(err, "failed to get filesize of record file %s", filePath)
+			}
+			// Get file size and verify it's zero, i.e. doesn't contain any record data, and doesn't have negative size due to some error.
+			if file.Size() != 0 {
+				return errors.Wrapf(err, "record file %s contains unsent records", filePath)
+			}
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: timeout})
 }

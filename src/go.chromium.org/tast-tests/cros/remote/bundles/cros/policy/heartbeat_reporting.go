@@ -157,13 +157,22 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	testTimeout := 2 * time.Minute
+
+	// Verify on the device that missive has confirmed all records with a timeout.
+	if err = reportingutil.MissiveConfirmedAllRecords(ctx, reportingutil.HeartbeatPriority, testTimeout); err != nil {
+		s.Fatal("Failed to confirm records: ", err)
+	}
+
 	testStartTime := time.Now()
 
+	// Stop chrome when the test is finished.
 	defer policyClient.StopChrome(ctx, &empty.Empty{})
 
-	// Gather device info for device events
+	// Gather device info for device events.
 	var clientID string
 
+	// Verify that the server has received the events.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var events []reportingutil.InputEvent
 		var err error
@@ -188,7 +197,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  2 * time.Minute,
+		Timeout:  testTimeout,
 		Interval: 30 * time.Second,
 	}); err != nil {
 		s.Errorf("Failed to validate heartbeat event: %v:", err)
