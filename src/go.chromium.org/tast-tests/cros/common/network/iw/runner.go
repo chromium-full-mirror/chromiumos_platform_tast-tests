@@ -792,7 +792,9 @@ func (r *Runner) SetFreq(ctx context.Context, iface string, freq int, ops ...Set
 
 // GetAntennaBitmap gets the configured antenna chain mask on a given phy (radio).
 // The bitmap configuration consists of two hex values for Tx and Rx, such as:
-//     Configured Antennas: TX 0x3 RX 0x3
+//
+//	Configured Antennas: TX 0x3 RX 0x3
+//
 // The hex value 0x3 means that the device is using all four of its available
 // antennas for both transmitting and receiving data. This configuration can
 // provide the best possible performance in terms of range and data rate.
@@ -854,6 +856,24 @@ func (r *Runner) RemoveInterface(ctx context.Context, iface string) error {
 		return errors.Wrapf(err, "failed to remove interface %s", iface)
 	}
 	return nil
+}
+
+// WifiInterfaceSignalLevel gets the signal level for an interface.
+func (r *Runner) WifiInterfaceSignalLevel(ctx context.Context, iface string) (string, error) {
+	out, err := r.cmd.Output(ctx, "iw", "dev", iface, "link")
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get the link info for the interface %s", iface)
+	}
+	return parseWiFiSignalLevel(ctx, string(out))
+}
+
+func parseWiFiSignalLevel(ctx context.Context, iwOut string) (string, error) {
+	signalLevelRegexp := regexp.MustCompile(`signal:\s+([0-9\-]+)\s+d[b,B]m`)
+	signalLevelMatches := signalLevelRegexp.FindStringSubmatch(iwOut)
+	if signalLevelMatches == nil {
+		return "", errors.New("could not parse the singal level")
+	}
+	return signalLevelMatches[1], nil
 }
 
 // determineSecurity determines the security level of a connection based on the

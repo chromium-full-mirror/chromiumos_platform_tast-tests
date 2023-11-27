@@ -10,10 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil/perfmanager"
 	iperf "go.chromium.org/tast-tests/cros/remote/network/iperf"
 	remoteiw "go.chromium.org/tast-tests/cros/remote/network/iw"
@@ -307,6 +309,29 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 	// Builder path is used in selecting the update image.
 	board = lsbContent[lsbrelease.Board]
 
+	pv := perf.NewValues()
+	defer func() {
+		if err := pv.Save(s.OutDir()); err != nil {
+			s.Error("Failed to save perf data: ", err)
+		}
+	}()
+
+	logPerfValues := func(label string, values []float64, dir perf.Direction, multi bool) {
+		pv.Set(perf.Metric{
+			Name:      label,
+			Unit:      "Mbps",
+			Direction: dir,
+			Multiple:  multi,
+		}, values...)
+		s.Logf("%s: %v", label, values)
+	}
+
+	perfKeyVal, err := wifiutil.NewKeyValsFile(s.OutDir())
+	if err != nil {
+		s.Error("Failed to create keyval file, err: ", err)
+	}
+	defer perfKeyVal.Close()
+
 	// Verify that performance test result passes the must and should throughput requirements.
 	verifyResults := func(ctx context.Context, result, mustExpectedThroughput, shouldExpectedThroughput float64, testType perfmanager.TestType, powerSave, shouldTputRequired bool, channel int, board string) string {
 		mustTputFailed := false
@@ -410,6 +435,28 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to set the powersave mode %t: %v", powerSave, err)
 		}
 
+		// Create apConfigTag which is used in the keyval
+		var allTags []string
+		var apConfigTag string
+		psModeStr := "on"
+		if !powerSave {
+			psModeStr = "off"
+		}
+		psTag := fmt.Sprintf("PS%s", psModeStr)
+		allTags = append(allTags, psTag)
+		apConfigDesc := apIface.Config().PerfDesc()
+		allTags = append(allTags, apConfigDesc)
+		allTags = append(allTags, routerType.String())
+		apConfigTag = strings.Join(allTags, "_")
+
+		signalLevel, err := iwr.WifiInterfaceSignalLevel(ctx, clientIface)
+		if err != nil {
+			s.Error("Failed to get the singal level of the WiFi interface, err: ", err)
+		}
+		signalDesc := apConfigDesc + "_signal{perf}"
+		// Write perf keyval
+		perfKeyVal.WriteKeyVals(map[string]string{signalDesc: signalLevel})
+
 		doRun := func(ctx context.Context) error {
 			for _, testType := range perfTestTypes {
 				s.Logf("Performing [[ %s ]]", testType)
@@ -435,12 +482,20 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 				}
 				var values []iperf.BitRate
 				for _, sample := range results {
-					values = append(values, sample.Throughput)
+					values = append(values, sample.Throughput/iperf.Mbps)
 				}
-				failedResults := verifyResults(ctx, float64(finalResult.Throughput), expectedThrougput.Must, expectedThrougput.Should, testType, powerSave, shouldTputRequired, apIface.Config().Channel, boardName)
+				logPerfValues(fmt.Sprintf("%s.%s_dev", apConfigTag, testType), []float64{float64(finalResult.StdDeviation/iperf.Mbps)}, perf.SmallerIsBetter, false)
+				failedResults := verifyResults(ctx, float64(finalResult.Throughput/iperf.Mbps), expectedThrougput.Must, expectedThrougput.Should, testType, powerSave, shouldTputRequired, apIface.Config().Channel, boardName)
 				if failedResults != "" {
 					lowThroughputTests = append(lowThroughputTests, failedResults)
 				}
+				valuesFloat64 := make([]float64, len(values))
+				for i, v := range values {
+					valuesFloat64[i] = float64(v)
+				}
+				logPerfValues(fmt.Sprintf("%s.%s", apConfigTag, testType), valuesFloat64, perf.BiggerIsBetter, true)
+				perfKeyVal.WriteKeyVals(map[string]string{fmt.Sprintf("%s_%s__throughput{perf}", apConfigTag, testType): fmt.Sprintf("%0.2f+-%0.2f", finalResult.Throughput/iperf.Mbps, finalResult.StdDeviation/iperf.Mbps)})
+				perfKeyVal.WriteKeyVals(map[string]string{fmt.Sprintf("%s_%s__dev{perf}", apConfigTag, testType): fmt.Sprintf("%f", finalResult.StdDeviation/iperf.Mbps)})
 			}
 			return nil
 		}
