@@ -228,6 +228,8 @@ func temperatureThreshold(ctx context.Context, config CoolDownConfig) (int, erro
 // than the default threshold of 46 degrees, it is not listed in here.
 var modelTemperatureThresholds = map[string]int{
 	"galith":     54000,
+	"screebo4es": 54000, // based on b/308581508#comment1
+	"rex4es":     54000, // based on b/308581508#comment1
 	"jelboz":     53800,
 	"jelboz360":  53800,
 	"berknip":    53800,
