@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosperf"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
@@ -267,11 +268,32 @@ func runTest(ctx context.Context, tconn, ctconn *chrome.TestConn, tracer traceab
 }
 
 func runLacrosTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) error {
-	_, ltconn, l, cleanup, err := lacrosperf.SetupLacrosTestWithPage(ctx, cr, invoc.page.url, lacrosperf.StabilizeBeforeOpeningURL)
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to setup cros-chrome test page")
+		return errors.Wrap(err, "failed to connect to test API")
 	}
-	defer cleanup(ctx)
+
+	l, conn, err := lacros.LaunchWithURL(ctx, tconn, chrome.BlankURL)
+	if err != nil {
+		return errors.Wrap(err, "failed to launch lacros-chrome")
+	}
+	defer l.Close(ctx)
+	defer conn.Close()
+	defer conn.CloseTarget(ctx)
+
+	ltconn, err := l.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to test API")
+	}
+
+	cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+	if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
+		testing.ContextLog(ctx, "Failed to wait for CPU to stabilize: ", err)
+	}
+
+	if err := conn.Navigate(ctx, invoc.page.url); err != nil {
+		return errors.Wrapf(err, "failed to open %s", invoc.page.url)
+	}
 
 	// Setup extra window for multi-window tests.
 	if invoc.scenario == TestTypeMoveOcclusion {
