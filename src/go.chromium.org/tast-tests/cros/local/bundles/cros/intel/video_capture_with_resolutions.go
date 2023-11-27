@@ -74,7 +74,6 @@ func iterateResolutionAndRecord(ctx context.Context, app *cca.App) error {
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -103,15 +102,34 @@ func iterateResolutionAndRecord(ctx context.Context, app *cca.App) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to count the resolution options")
 	}
-
+	var isVisible bool
 	for index := 0; index < numOptions; index++ {
-		if err := app.ClickWithIndex(ctx, resolutionOptions, index); err != nil {
-			return errors.Wrap(err, "failed to click on resolution item")
-		}
-		// GoBigSleepLint: Need a sleep of 1 Second without sleep, we get nothing recorded popup.
-		testing.Sleep(ctx, 1*time.Second)
-		if err := recordVideoAndCheckProfile(ctx, app); err != nil {
-			return errors.Wrap(err, "failed to record video and verify profile")
+		if err := testing.Poll(ctx, func(context.Context) error {
+			if isVisible, err = app.Visible(ctx, resolutionOptions); err != nil {
+				return errors.Wrap(err, "failed to check visibility")
+			}
+			if !isVisible {
+				if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
+					return errors.Wrap(err, "failed to open main menu")
+				}
+				defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
+
+				if err := app.OpenSettingMenu(ctx, cca.VideoResolutionMenu); err != nil {
+					return errors.Wrap(err, "failed to open resolution main menu")
+				}
+				defer app.CloseSettingMenu(cleanupCtx, cca.VideoResolutionMenu)
+			}
+			if err := app.ClickWithIndex(ctx, resolutionOptions, index); err != nil {
+				return errors.Wrap(err, "failed to click on resolution item")
+			}
+			// GoBigSleepLint: Need a sleep of 1 Second without sleep, we get nothing recorded popup.
+			testing.Sleep(ctx, 1*time.Second)
+			if err := recordVideoAndCheckProfile(ctx, app); err != nil {
+				return errors.Wrap(err, "failed to record video and verify profile")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: 1 * time.Second}); err != nil {
+			return errors.Wrap(err, "failed to open settings menu and record video")
 		}
 	}
 	return nil
