@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 	"net"
+	"time"
 
 	cip "go.chromium.org/tast-tests/cros/common/network/ip"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -17,6 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -58,6 +61,35 @@ func init() {
 func ConnectRandomizeMAC(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
+	// First, turn on MAR for scans, so that MAC address used for calibration is also randomized, so it won't
+	// show up in capture.
+	resp, err := tf.WifiClient().SetMACRandomize(ctx, &wifi.SetMACRandomizeRequest{Enable: true})
+	if err != nil {
+		s.Fatalf("Failed to set MAC randomization to: %t, err %v", true, err)
+	}
+	if resp.OldSetting != true {
+		testing.ContextLog(ctx, "Switched MAC randomization for scans to: true")
+		// Restore the setting on leaving.
+		defer func(ctx context.Context) {
+			if _, err := tf.WifiClient().SetMACRandomize(ctx, &wifi.SetMACRandomizeRequest{Enable: false}); err != nil {
+				s.Fatal("Failed to restore MAC randomization setting back, err: ", err)
+			}
+		}(ctx)
+	}
+
+	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
 	// Use 2.4GHz channel 1 for AP1.
 	apOps := []hostapd.Option{
 		hostapd.Mode(hostapd.Mode80211nPure),
@@ -69,7 +101,7 @@ func ConnectRandomizeMAC(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure the AP: ", err)
 	}
 	cleanUpCtx := ctx
-	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap1)
+	ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap1)
 	defer cancel()
 	defer func(ctx context.Context) {
 		if err := tf.DeconfigAP(ctx, ap1); err != nil {

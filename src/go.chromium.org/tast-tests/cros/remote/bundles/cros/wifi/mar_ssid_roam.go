@@ -19,8 +19,11 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
+	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -34,6 +37,7 @@ func init() {
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:  []string{wificell.ShillServiceName},
+		HardwareDeps: hwdep.D(hwdep.WifiMACAddrRandomize()),
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Requirements: []string{tdreq.WiFiGenSupportMARConn},
 	})
@@ -54,6 +58,35 @@ func MARSSIDRoam(ctx context.Context, s *testing.State) {
 	// * Verify MAC-AP2 is no longer used while sending traffic.
 
 	tf := s.FixtValue().(*wificell.TestFixture)
+
+	// First, turn on MAR for scans, so that MAC address used for calibration is also randomized, so it won't
+	// show up in capture.
+	resp, err := tf.WifiClient().SetMACRandomize(ctx, &wifi.SetMACRandomizeRequest{Enable: true})
+	if err != nil {
+		s.Fatalf("Failed to set MAC randomization to: %t, err %v", true, err)
+	}
+	if resp.OldSetting != true {
+		testing.ContextLog(ctx, "Switched MAC randomization for scans to: true")
+		// Restore the setting on leaving.
+		defer func(ctx context.Context) {
+			if _, err := tf.WifiClient().SetMACRandomize(ctx, &wifi.SetMACRandomizeRequest{Enable: false}); err != nil {
+				s.Fatal("Failed to restore MAC randomization setting back, err: ", err)
+			}
+		}(ctx)
+	}
+
+	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
 
 	// Get the MAC address of WiFi interface.
 	iface, err := tf.ClientInterface(ctx)
@@ -116,7 +149,7 @@ func MARSSIDRoam(ctx context.Context, s *testing.State) {
 			s.Error("Failed to deconfig the AP: ", err)
 		}
 	}(ctx)
-	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap1)
+	ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap1)
 	defer cancel()
 
 	// Connect with PersistentRandom policy.
