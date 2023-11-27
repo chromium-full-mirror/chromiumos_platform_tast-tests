@@ -1,0 +1,20 @@
+{
+  "face_detection_1080p": {
+    "fps": 30,
+    "input_height": 1080,
+    "input_image_relative_path": "person_4032x3024.nv12",
+    "input_width": 1920
+  },
+  "face_detection_480p": {
+    "fps": 30,
+    "input_height": 480,
+    "input_image_relative_path": "person_4032x3024.nv12",
+    "input_width": 640
+  },
+  "face_detection_720p": {
+    "fps": 30,
+    "input_height": 720,
+    "input_image_relative_path": "person_4032x3024.nv12",
+    "input_width": 1280
+  }
+}

@@ -22,6 +22,8 @@ import (
 )
 
 const (
+	// StablePowerNoUI provide fixture with no UI
+	StablePowerNoUI = "stablePowerNoUI"
 	// StablePowerAsh provide fixture with ash chrome
 	StablePowerAsh = "stablePowerAsh"
 	// StablePowerAshGAIA provide fixture with ash chrome with GAIA login
@@ -40,7 +42,8 @@ const (
 
 	fakeHALImageInput = "generic-person-office.jpg"
 
-	pnpWarmUpTime = 15 * time.Second
+	// PNPWarmUpTime is the time of the warm up phase of the PNP routine.
+	PNPWarmUpTime = 15 * time.Second
 )
 
 // PNPTimeParams provide the probing frequency and total times.
@@ -65,6 +68,26 @@ var MinPowerTestOptions = powersetup.PowerTestOptions{
 	Multicast:          powersetup.DisableMulticast,
 }
 
+// When using powersetup.NewPowerNoUIFIxture, the night light and darktheme
+// should not be toggled or it will generate errors. We assume the night light
+// will be off and use light theme.
+var minPowerNoUITestOptions = powersetup.PowerTestOptions{
+	Wifi:               powersetup.DisableWifiInterfaces,
+	NightLight:         powersetup.DoNotDisableNightLight,
+	DarkTheme:          powersetup.DoNotChangeTheme,
+	UI:                 powersetup.DoNotChangeUI,
+	Ramfs:              powersetup.DoNotSetupRamfs,
+	Powerd:             powersetup.DisablePowerd,
+	UpdateEngine:       powersetup.DisableUpdateEngine,
+	VNC:                powersetup.DisableVNC,
+	Avahi:              powersetup.DisableAvahi,
+	DPTF:               powersetup.DisableDPTF,
+	KeyboardBrightness: powersetup.SetKbBrightnessToZero,
+	Audio:              powersetup.Mute,
+	Bluetooth:          powersetup.DisableBluetoothInterfaces,
+	Multicast:          powersetup.DisableMulticast,
+}
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            cameraService,
@@ -76,6 +99,20 @@ func init() {
 		TearDownTimeout: 1 * time.Second,
 		PreTestTimeout:  1 * time.Second,
 		PostTestTimeout: 1 * time.Second,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     StablePowerNoUI,
+		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible",
+		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Impl: powersetup.NewPowerNoUIFixture(
+			minPowerNoUITestOptions,
+		),
+		Parent:          cameraService,
+		SetUpTimeout:    powersetup.SetUpTimeout,
+		ResetTimeout:    powersetup.ResetTimeout,
+		TearDownTimeout: powersetup.TearDownTimeout,
+		PreTestTimeout:  powersetup.PreTestTimeout,
+		PostTestTimeout: powersetup.PostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     StablePowerAsh,
@@ -271,9 +308,9 @@ func Cooldown(ctx context.Context) error {
 
 // WarmUp should be run immediately after the work is loaded for warm up phase.
 func WarmUp(ctx context.Context) error {
-	testing.ContextLog(ctx, "[Warm Up Phase] Start warming up for ", pnpWarmUpTime)
+	testing.ContextLog(ctx, "[Warm Up Phase] Start warming up for ", PNPWarmUpTime)
 	// GoBigSleepLint: Warming up.
-	if err := testing.Sleep(ctx, pnpWarmUpTime); err != nil {
+	if err := testing.Sleep(ctx, PNPWarmUpTime); err != nil {
 		return errors.Wrap(err, "failed to sleep to warm up")
 	}
 	return nil
