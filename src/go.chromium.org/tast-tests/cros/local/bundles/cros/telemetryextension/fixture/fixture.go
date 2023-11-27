@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
@@ -300,7 +301,7 @@ func (f *telemetryExtensionFixture) setupChromeForConsumers(ctx context.Context,
 	}
 	f.cr = cr
 
-	return nil
+	return userutil.WaitForOwnership(ctx, f.cr)
 }
 
 func (f *telemetryExtensionFixture) setupConnectionToPWA(ctx context.Context) error {
