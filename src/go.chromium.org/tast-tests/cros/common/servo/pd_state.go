@@ -61,45 +61,45 @@ const (
 
 // Maps TCPMv1 state numbers to a friendly string name based on EC's `include/usb_pd.h`
 var peStateNameLookup = map[int]string{
-	0:  "PD_STATE_DISABLED",
-	1:  "PD_STATE_SUSPENDED",
-	2:  "PD_STATE_SNK_DISCONNECTED",
-	3:  "PD_STATE_SNK_DISCONNECTED_DEBOUNCE",
-	4:  "PD_STATE_SNK_HARD_RESET_RECOVER",
-	5:  "PD_STATE_SNK_DISCOVERY",
-	6:  "PD_STATE_SNK_REQUESTED",
-	7:  "PD_STATE_SNK_TRANSITION",
-	8:  "PD_STATE_SNK_READY",
-	9:  "PD_STATE_SNK_SWAP_INIT",
-	10: "PD_STATE_SNK_SWAP_SNK_DISABLE",
-	11: "PD_STATE_SNK_SWAP_SRC_DISABLE",
-	12: "PD_STATE_SNK_SWAP_STANDBY",
-	13: "PD_STATE_SNK_SWAP_COMPLETE",
-	14: "PD_STATE_SRC_DISCONNECTED",
-	15: "PD_STATE_SRC_DISCONNECTED_DEBOUNCE",
-	16: "PD_STATE_SRC_HARD_RESET_RECOVER",
-	17: "PD_STATE_SRC_STARTUP",
-	18: "PD_STATE_SRC_DISCOVERY",
-	19: "PD_STATE_SRC_NEGOCIATE",
-	20: "PD_STATE_SRC_ACCEPTED",
-	21: "PD_STATE_SRC_POWERED",
-	22: "PD_STATE_SRC_TRANSITION",
-	23: "PD_STATE_SRC_READY",
-	24: "PD_STATE_SRC_GET_SINK_CAP",
-	25: "PD_STATE_DR_SWAP",
-	26: "PD_STATE_SRC_SWAP_INIT",
-	27: "PD_STATE_SRC_SWAP_SNK_DISABLE",
-	28: "PD_STATE_SRC_SWAP_SRC_DISABLE",
-	29: "PD_STATE_SRC_SWAP_STANDBY",
-	30: "PD_STATE_VCONN_SWAP_SEND",
-	31: "PD_STATE_VCONN_SWAP_INIT",
-	32: "PD_STATE_VCONN_SWAP_READY",
-	33: "PD_STATE_SOFT_RESET",
-	34: "PD_STATE_HARD_RESET_SEND",
-	35: "PD_STATE_HARD_RESET_EXECUTE",
-	36: "PD_STATE_BIST_RX",
-	37: "PD_STATE_BIST_TX",
-	38: "PD_STATE_DRP_AUTO_TOGGLE",
+	0: "DISABLED",
+	1: "SUSPENDED",
+	2: "SNK_DISCONNECTED",
+	3: "SNK_DISCONNECTED_DEBOUNCE",
+	4: "SNK_HARD_RESET_RECOVER",
+	5: "SNK_DISCOVERY",
+	6: "SNK_REQUESTED",
+	7: "SNK_TRANSITION",
+	8: "SNK_READY",
+	9: "SNK_SWAP_INIT",
+	10: "SNK_SWAP_SNK_DISABLE",
+	11: "SNK_SWAP_SRC_DISABLE",
+	12: "SNK_SWAP_STANDBY",
+	13: "SNK_SWAP_COMPLETE",
+	14: "SRC_DISCONNECTED",
+	15: "SRC_DISCONNECTED_DEBOUNCE",
+	16: "SRC_HARD_RESET_RECOVER",
+	17: "SRC_STARTUP",
+	18: "SRC_DISCOVERY",
+	19: "SRC_NEGOCIATE",
+	20: "SRC_ACCEPTED",
+	21: "SRC_POWERED",
+	22: "SRC_TRANSITION",
+	23: "SRC_READY",
+	24: "SRC_GET_SNK_CAP",
+	25: "DR_SWAP",
+	26: "SRC_SWAP_INIT",
+	27: "SRC_SWAP_SNK_DISABLE",
+	28: "SRC_SWAP_SRC_DISABLE",
+	29: "SRC_SWAP_STANDBY",
+	30: "VCONN_SWAP_SEND",
+	31: "VCONN_SWAP_INIT",
+	32: "VCONN_SWAP_READY",
+	33: "SOFT_RESET",
+	34: "HARD_RESET_SEND",
+	35: "HARD_RESET_EXECUTE",
+	36: "BIST_RX",
+	37: "BIST_TX",
+	38: "DRP_AUTO_TOGGLE",
 }
 
 // pdStateFieldIndex maps field names to their position in the regex. Supports
@@ -228,10 +228,45 @@ type PDState struct {
 	PowerRole   powerRoleValue
 	DataRole    dataRoleValue
 	VConn       bool
+
+	// Warning: PEStateName and PEFlags have different values and meanings
+	// depending on TCPM version. Avoid accessing these members directly
+	// and create a method such as IsSourceReady() to obtain the desired
+	// info in a version-safe manner, referencing `.Version` if necessary.
 	PEStateName string
 	PEFlags     uint32
+
 	TCStateName string // TCPMv2 DUTs only
 	TCFlags     uint32 // TCPMv2 DUTs only
+}
+
+// IsSourceReady returns true if port is in a source-ready state
+func (pdState *PDState) IsSourceReady() bool {
+	switch(pdState.PEStateName) {
+	case "SRC_READY": // TCPMv1
+		return true
+	case "PE_SRC_Ready": // TCPMv2
+		return true
+	default:
+		return false
+	}
+}
+
+// IsSinkReady returns true if port is in a sink-ready state
+func (pdState *PDState) IsSinkReady() bool {
+	switch(pdState.PEStateName) {
+	case "SNK_READY": // TCPMv1
+		return true
+	case "PE_SNK_Ready": // TCPMv2
+		return true
+	default:
+		return false
+	}
+}
+
+// IsPDReady returns true if the port is in a source- or sink-ready state
+func (pdState *PDState) IsPDReady() bool {
+	return pdState.IsSourceReady() || pdState.IsSinkReady()
 }
 
 // getPDStateByTargetAndVersion queries state for a specific port on either a

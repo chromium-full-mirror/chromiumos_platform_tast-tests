@@ -25,7 +25,7 @@ func TestPDStateRegex(t *testing.T) {
 		PEFlags    string
 	}{
 		{version: TCPMv1, input: "Port C0 CC1, Ena - Role: SNK-DFP State: 8(), Flags: 0x16946\n",
-			PortNumber: "0", CCPolarity: "CC1", Connection: "Ena", PowerRole: "SNK", DataRole: "DFP", PEState: "PD_STATE_SNK_READY", PEFlags: "16946"},
+			PortNumber: "0", CCPolarity: "CC1", Connection: "Ena", PowerRole: "SNK", DataRole: "DFP", PEState: "SNK_READY", PEFlags: "16946"},
 		{version: TCPMv1, input: "Port C0 CC1, Ena - Role: SNK-DFP State: 8(A_STATE_NAME), Flags: 0x16946\n",
 			PortNumber: "0", CCPolarity: "CC1", Connection: "Ena", PowerRole: "SNK", DataRole: "DFP", PEState: "A_STATE_NAME", PEFlags: "16946"},
 		{version: TCPMv1, input: "Port C0 CC1, Ena - Role: SNK-DFP State: SNK_READY, Flags: 0x4946\n",

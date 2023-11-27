@@ -168,7 +168,7 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 			return testing.PollBreak(err)
 		}
 		testing.ContextLogf(ctx, "Servo DUT port PE State: %s", pdState.PEStateName)
-		if pdState.PEStateName != "PD_STATE_SRC_READY" {
+		if !pdState.IsSourceReady() {
 			return errors.New("Servo DUT port is not ready")
 		}
 		return nil
@@ -184,7 +184,7 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 	return nil
 }
 
-// shutdownDUT is a helper function for commanding the DUT to shutdown and waiting
+// ShutdownDUT is a helper function for commanding the DUT to shutdown and waiting
 // until it does so with a timeout.
 func ShutdownDUT(ctx context.Context, h *Helper) error {
 	// Run shutdown command via SSH

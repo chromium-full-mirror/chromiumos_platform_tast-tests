@@ -159,7 +159,7 @@ func cleanup(ctx context.Context, s *testing.State) {
 			return testing.PollBreak(err)
 		}
 		testing.ContextLogf(ctx, "Servo DUT port PE State: %s", pdState.PEStateName)
-		if pdState.PEStateName != "PD_STATE_SRC_READY" {
+		if !pdState.IsSourceReady() {
 			return errors.New("Servo DUT port is not ready")
 		}
 		return nil

@@ -61,8 +61,8 @@ func (s *Servo) RequireChargerAttached(ctx context.Context) error {
 
 		testing.ContextLogf(ctx, "C0 PE State is %s", pdState.PEStateName)
 
-		if pdState.PEStateName != "PD_STATE_SNK_READY" {
-			return errors.New("Servo charger port (C0) is not PD_STATE_SNK_READY")
+		if !pdState.IsSinkReady() {
+			return errors.New("Servo charger port (C0) is not sink-ready")
 		}
 
 		return nil

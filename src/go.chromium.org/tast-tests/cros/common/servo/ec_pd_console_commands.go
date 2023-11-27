@@ -78,14 +78,7 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 		if portInfo, err := s.getPDStateByTargetAndVersion(ctx, pdStateDUT, pdInfo.version, port); err == nil {
 			testing.ContextLogf(ctx, "DUT Port %d state: %#v", port, portInfo)
 
-			var activePEStates = map[string]bool{
-				"PD_STATE_SNK_READY": true,
-				"PD_STATE_SRC_READY": true,
-				"PE_SNK_Ready":       true,
-				"PE_SRC_Ready":       true,
-			}
-
-			if _, ok := activePEStates[portInfo.PEStateName]; ok {
+			if portInfo.IsPDReady() {
 				pdPort = port
 				enabledPorts++
 			}
@@ -303,15 +296,7 @@ func (s *Servo) TriggerPDHardReset(ctx context.Context) error {
 	// the SNK_READY or SRC_READY state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if pdState, err := s.GetDUTPDState(ctx); err == nil {
-
-			var activePEStates = map[string]bool{
-				"PD_STATE_SNK_READY": true,
-				"PD_STATE_SRC_READY": true,
-				"PE_SNK_Ready":       true,
-				"PE_SRC_Ready":       true,
-			}
-
-			if _, ok := activePEStates[pdState.PEStateName]; !ok {
+			if !pdState.IsPDReady() {
 				testing.ContextLogf(ctx, "PD State = %s", pdState.PEStateName)
 				return errors.Wrap(err, "Post hard reset, PE state does not match")
 			}
