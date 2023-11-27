@@ -297,47 +297,31 @@ func testPipTuck(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context
 	}
 	defer stw.Close()
 
+	// Attempt to tuck the window to the right.
 	window, err := getPIPWindow(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get PiP window")
 	}
-	initialBounds := window.BoundsInRoot
-
-	// Move the PiP window as much to the topleft as possible.
-	// We offset the center of the PiP window to avoid grabbing the area
-	// with buttons to circumvent a bug that makes it impossible for the
-	// window to move if the touch starts in a area with buttons
-	// (b/306537959).
-	// TODO(massan|takise): Remove this offset once this bug is fixed.
-	offset := coords.NewPoint(initialBounds.Width/4, initialBounds.Height/4)
-	initialCenterX, initialCenterY := tcc.ConvertLocation(initialBounds.CenterPoint().Sub(offset))
-	topLeftX, topLeftY := tcc.ConvertLocation(coords.NewPoint(0, 0))
-	if err := stw.Swipe(ctx, initialCenterX, initialCenterY, topLeftX, topLeftY, time.Second); err != nil {
-		return errors.Wrap(err, "failed to move the window to top left")
-	}
-	stw.End()
-
-	// Attempt to tuck the window to the left.
-	window, err = getPIPWindow(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get PiP window")
-	}
-	startBounds := window.BoundsInRoot
-	offset = coords.NewPoint(startBounds.Width/4, 0)
-	beforeX, beforeY := tcc.ConvertLocation(startBounds.CenterPoint().Add(offset))
-	if err := stw.Swipe(ctx, beforeX, beforeY, 0, beforeY, time.Second); err != nil {
-		return errors.Wrap(err, "failed to fling the window")
+	// Lacros PiP can't be drag resized by grabbing one of the buttons on the menu.
+	// Grab the left part of PiP, where no UI can be placed on PiP menu.
+	startPoint := window.BoundsInRoot.CenterPoint().Sub(coords.NewPoint(window.BoundsInRoot.Width/4, 0))
+	beforeX, beforeY := tcc.ConvertLocation(startPoint)
+	// Inputting an event to the exact right edge is considered invalid.
+	afterX, afterY := tcc.ConvertLocation(coords.NewPoint(dispInfo.Bounds.Width - 1, startPoint.Y))
+	if err := stw.Swipe(ctx, beforeX, beforeY, afterX, afterY, time.Second); err != nil {
+		return errors.Wrap(err, "failed to swipe the window to edge")
 	}
 	stw.End()
 
 	// Confirm that the window has been tucked.
+	// TODO(takise): Add the proper check once Tuck is fully implemented for ARC.
 	afterBounds, err := waitForNewBounds(ctx, tconn)
 	if err != nil {
 		return errors.Wrap(err, "failed to get bounds for the PiP window")
 	}
-	if afterBounds.TopLeft().X >= 0 {
-		return errors.Wrapf(err, "unexpected PiP window position; the origin's coordinate is %v",
-			afterBounds)
+	if afterBounds.Left <= startPoint.X {
+		return errors.Wrapf(err, "unexpected PiP window position; want: left position>%v, actual: left position=%v",
+		startPoint.X, afterBounds.Left )
 	}
 
 	return nil
@@ -384,7 +368,8 @@ func testPipMove(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context
 		}
 		afterBounds := window.BoundsInRoot
 		if beforeBounds.Left <= afterBounds.Left {
-			return errors.Wrapf(err, "unexpected PiP window position; want: left position=>%v, actual: left position=%v", beforeBounds.Left, afterBounds.Left)		}
+			return errors.Wrapf(err, "unexpected PiP window position; want: left position<%v, actual: left position=%v", beforeBounds.Left, afterBounds.Left)
+		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
