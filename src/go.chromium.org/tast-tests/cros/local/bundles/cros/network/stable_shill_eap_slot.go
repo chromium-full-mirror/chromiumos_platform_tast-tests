@@ -93,8 +93,6 @@ func StableShillEAPSlot(ctx context.Context, s *testing.State) {
 	// Start Chrome.
 	// This is needed for Chrome to know of the added keys and certificates
 	// as the cert and key installation is done outside of NSS.
-	// Without this, NetworkCertMigrator will delete the cert and key ID
-	// shill property.
 	// This also allows shill to get a configured user profile.
 	cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
 	cr, err := chrome.New(
@@ -179,26 +177,14 @@ func StableShillEAPSlot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get user hash: ", err)
 	}
 	userChapsPath := filepath.Join(userChapsPrefixPath, h)
-	// Re-start Chrome. Chrome will re-load the user token.
-	// This might result in the user token occupying slot 0.
-	// Unload the token at the end of the test such that system token can
-	// always occupy slot 0.
+	// On the off chance of the user token occupying slot 0, always unload
+	// the user token at the end of the test such that system token can
+	// always occupy slot 0 (default behavior).
 	defer func() {
 		if err := testexec.CommandContext(cleanupCtx, "chaps_client", "--unload", "--path="+userChapsPath).Run(testexec.DumpLogOnError); err != nil {
 			testing.ContextLog(ctx, "Failed to unload user token: ", err)
 		}
 	}()
-	// This is needed for Chrome to know of the changes of the slot IDs,
-	// avoiding any unwanted side-effect of NetworkCertMigrator.
-	cr, err = chrome.New(
-		ctx,
-		chrome.KeepState(),     // to avoid resetings TPM
-		chrome.FakeLogin(cred), // to use the same user as certs are installed for
-	)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
 
 	// Re-start shill now that the tokens are re-ordered.
 	// Shill's persistence logic should be able to fix mismatched slots.
