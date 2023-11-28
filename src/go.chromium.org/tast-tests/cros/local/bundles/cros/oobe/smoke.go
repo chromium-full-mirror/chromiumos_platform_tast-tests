@@ -41,8 +41,7 @@ func init() {
 func Smoke(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx,
 		chrome.FieldTrialConfig(s.Param().(chrome.FieldTrialConfigMode)),
-		chrome.NoLogin(),
-		chrome.SkipAutoEnrollmentCheck())
+		chrome.NoLogin())
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}

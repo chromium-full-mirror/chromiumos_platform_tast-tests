@@ -147,12 +147,10 @@ func getAshConfig(sessionState *rpb.SessionState) []chrome.Option {
 	case rpb.Ownership_OOBE:
 		return []chrome.Option{
 			chrome.DeferLogin(),
-			chrome.ExtraArgs("--enterprise-force-manual-enrollment"),
-			chrome.SkipAutoEnrollmentCheck()}
+			chrome.ExtraArgs("--enterprise-force-manual-enrollment")}
 	case rpb.Ownership_ENROLLED_LOGGED_IN:
 		return []chrome.Option{
 			chrome.DMSPolicy(sessionState.LoginData.DmserverUrl),
-			chrome.SkipAutoEnrollmentCheck(),
 			chrome.ExtraArgs("--enterprise-force-manual-enrollment"),
 			chrome.GAIAEnterpriseEnroll(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password}),
 			chrome.GAIALogin(chrome.Creds{User: sessionState.LoginData.Username, Pass: sessionState.LoginData.Password})}

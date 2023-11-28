@@ -341,14 +341,6 @@ func FakeEnterpriseEnroll(creds Creds) Option {
 	}
 }
 
-// SkipAutoEnrollmentCheck skips the auto enrollment check during OOBE, it skips both the screen and the background check.
-func SkipAutoEnrollmentCheck() Option {
-	return func(cfg *config.MutableConfig) error {
-		cfg.SkipAutoEnrollmentCheck = true
-		return nil
-	}
-}
-
 // ARCDisabled returns an Option that can be passed to New to disable ARC.
 func ARCDisabled() Option {
 	return func(cfg *config.MutableConfig) error {

@@ -250,9 +250,6 @@ func (c *Config) FieldTrialConfig() string { return c.m.FieldTrialConfig }
 // EnableHDR returns true if --force-color-profile should be disabled.
 func (c *Config) EnableHDR() bool { return c.m.EnableHDR }
 
-// SkipAutoEnrollmentCheck returns true if the auto enrollment check is skipped during OOBE.
-func (c *Config) SkipAutoEnrollmentCheck() bool { return c.m.SkipAutoEnrollmentCheck }
-
 // ForceManualEnrollment returns true if automatic (cert based) enrollment is disabled.
 func (c *Config) ForceManualEnrollment() bool { return c.m.ForceManualEnrollment }
 
@@ -318,7 +315,6 @@ type MutableConfig struct {
 	EnableLacrosStackSampledMetrics bool             `reuse_match:"true"`
 	FieldTrialConfig                string           `reuse_match:"true"`
 	EnableHDR                       bool             `reuse_match:"false"`
-	SkipAutoEnrollmentCheck         bool             `reuse_match:"true"`
 	ForceManualEnrollment           bool             `reuse_match:"true"`
 }
 

@@ -103,7 +103,6 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.DeferLogin(),
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
-		chrome.SkipAutoEnrollmentCheck(),
 	}
 
 	// Keep the user that was previously added for the 'AddPerson' flow.
