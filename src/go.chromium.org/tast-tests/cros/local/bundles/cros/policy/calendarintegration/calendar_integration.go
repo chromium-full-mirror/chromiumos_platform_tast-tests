@@ -85,9 +85,9 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 		return errors.Wrap(err, "failed to click the date tray")
 	}
 
-	calendarView := nodewith.HasClass("CalendarView")
+	calendarView := nodewith.HasClass("CalendarView").First()
 	mainHeaderTriView := nodewith.HasClass("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.HasClass("View").Ancestor(mainHeaderTriView).Nth(1)
+	mainHeaderContainer := nodewith.HasClass("RelayoutView").Ancestor(mainHeaderTriView).Nth(1)
 	mainHeader := nodewith.Name("Calendar").HasClass("Label").Ancestor(mainHeaderContainer)
 
 	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
@@ -116,8 +116,8 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 	// Clicks on a Monday's cell to show the event list view.
 	scrollView := nodewith.HasClass("ScrollView").Ancestor(calendarView).Nth(0)
 	scrollViewport := nodewith.HasClass("ScrollView::Viewport").Ancestor(scrollView).Nth(0)
-	contentView := nodewith.HasClass("View").Ancestor(scrollViewport).Nth(0)
-	currentMonthView := nodewith.HasClass("View").Ancestor(contentView).Nth(3)
+	contentView := nodewith.HasClass("CalendarView::ScrollContentsView").Ancestor(scrollViewport).Nth(0)
+	currentMonthView := nodewith.HasClass("CalendarMonthView").Ancestor(contentView).Nth(3)
 	firstMondayDateCell := nodewith.HasClass("CalendarDateCellView").Ancestor(currentMonthView).Nth(1)
 	scrollViewBounds, err := ui.Location(ctx, scrollView)
 	if err != nil {
@@ -158,7 +158,7 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 	}
 
 	didFindManagedIcon := false
-	rightHeaderContainer := nodewith.HasClass("View").Ancestor(mainHeaderTriView).Nth(2)
+	rightHeaderContainer := nodewith.HasClass("RelayoutView").Ancestor(mainHeaderTriView).Nth(2)
 	managedIcon := nodewith.Name("Disabled by admin").HasClass("IconButton").Ancestor(rightHeaderContainer)
 	if found, err := ui.IsNodeFound(ctx, managedIcon); err != nil {
 		return errors.Wrap(err, "failed to check for managed icon in calendar tray")
