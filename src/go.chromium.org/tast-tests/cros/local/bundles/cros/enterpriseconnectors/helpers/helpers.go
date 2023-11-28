@@ -123,6 +123,18 @@ func GetTestFileParamsWithWarn() []TestFileParams {
 	})
 }
 
+// WithoutMalwareFiles filters out malware files from the given TestFileParams array.
+func WithoutMalwareFiles(inputArray []TestFileParams) []TestFileParams {
+	var output []TestFileParams
+	for _, input := range inputArray {
+		if strings.Contains(input.TestName, "malware") {
+			continue
+		}
+		output = append(output, input)
+	}
+	return output
+}
+
 // WaitForFCMTokenRegistered waits until a valid fcm token exists.
 // This is done by downloading unknown_malware.zip from `download.html`.
 // This function fails if scanning is disabled.

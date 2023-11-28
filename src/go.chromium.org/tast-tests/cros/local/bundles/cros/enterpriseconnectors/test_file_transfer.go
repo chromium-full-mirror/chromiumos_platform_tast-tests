@@ -34,6 +34,18 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type fileSystemType string
+
+const (
+	fileSystemTypeUSB    fileSystemType = "usb"
+	fileSystemTypeGDrive fileSystemType = "gdrive"
+)
+
+type fileTransferTestParams struct {
+	testParams helpers.TestParams
+	fileSystem fileSystemType
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TestFileTransfer,
@@ -60,31 +72,66 @@ func init() {
 			{
 				Name:    "scan_enabled_allows_immediate_and_unscannable",
 				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
+				Val: fileTransferTestParams{
+					testParams: helpers.TestParams{
+						AllowsImmediateDelivery: true,
+						AllowsUnscannableFiles:  true,
+						ScansEnabled:            true,
+						BrowserType:             browser.TypeAsh,
+					},
+					fileSystem: fileSystemTypeUSB,
+				},
+			},
+			{
+				Name:    "scan_enabled_allows_immediate_and_unscannable_drive",
+				Fixture: "ashGaiaSignedInProdPolicyWPEnabledAllowExtra",
+				Val: fileTransferTestParams{
+					testParams: helpers.TestParams{
+						AllowsImmediateDelivery: true,
+						AllowsUnscannableFiles:  true,
+						ScansEnabled:            true,
+						BrowserType:             browser.TypeAsh,
+					},
+					fileSystem: fileSystemTypeGDrive,
 				},
 			},
 			{
 				Name:    "scan_enabled_blocks_immediate_and_unscannable",
 				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: false,
-					AllowsUnscannableFiles:  false,
-					ScansEnabled:            true,
-					BrowserType:             browser.TypeAsh,
+				Val: fileTransferTestParams{
+					testParams: helpers.TestParams{
+						AllowsImmediateDelivery: false,
+						AllowsUnscannableFiles:  false,
+						ScansEnabled:            true,
+						BrowserType:             browser.TypeAsh,
+					},
+					fileSystem: fileSystemTypeUSB,
+				},
+			},
+			{
+				Name:    "scan_enabled_blocks_immediate_and_unscannable_drive",
+				Fixture: "ashGaiaSignedInProdPolicyWPEnabledBlockExtra",
+				Val: fileTransferTestParams{
+					testParams: helpers.TestParams{
+						AllowsImmediateDelivery: false,
+						AllowsUnscannableFiles:  false,
+						ScansEnabled:            true,
+						BrowserType:             browser.TypeAsh,
+					},
+					fileSystem: fileSystemTypeGDrive,
 				},
 			},
 			{
 				Name:    "scan_disabled",
 				Fixture: "ashGaiaSignedInProdPolicyWPDisabled",
-				Val: helpers.TestParams{
-					AllowsImmediateDelivery: true,
-					AllowsUnscannableFiles:  true,
-					ScansEnabled:            false,
-					BrowserType:             browser.TypeAsh,
+				Val: fileTransferTestParams{
+					testParams: helpers.TestParams{
+						AllowsImmediateDelivery: true,
+						AllowsUnscannableFiles:  true,
+						ScansEnabled:            false,
+						BrowserType:             browser.TypeAsh,
+					},
+					fileSystem: fileSystemTypeUSB,
 				},
 			},
 		},
@@ -134,7 +181,7 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get device policies: ", err)
 	}
 	_, ok := devicePolicies.Chrome["OnFileTransferEnterpriseConnector"]
-	testParams := s.Param().(helpers.TestParams)
+	testParams := s.Param().(fileTransferTestParams).testParams
 	if !ok && testParams.ScansEnabled {
 		s.Fatal("Policy isn't set, but should be")
 	}
@@ -210,23 +257,39 @@ func TestFileTransfer(ctx context.Context, s *testing.State) {
 		if err := os.Mkdir(testDirPath, 0755); err != nil {
 			s.Fatal("Failed to create test folder: ", err)
 		}
+		// Chown is needed to allow writing to test_dir.
+		// uid 1000 (chronos) and gid 1001 (chronos-access) are the same values as directories created through the files app by a logged in user.
+		if err := os.Chown(testDirPath, 1000, 1001); err != nil {
+			s.Fatal("Failed to chown test folder: ", err)
+		}
 		defer os.Remove(testDirPath)
 	} else if err != nil {
 		s.Fatalf("Failed to stat testDirPath(%s): %s", testDirPath, err)
 	}
 
-	// Launch the files app with a formatted USB drive.
-	filesApp, closeFilesApp, err := launchFilesAppWithFormattedUsb(ctx, tconnAsh)
+	fileSystem := s.Param().(fileTransferTestParams).fileSystem
+
+	filesApp, openTestedFileSystem, closeFilesApp, err := launchFilesAppWithFileSystem(ctx, tconnAsh, fileSystem)
 	if err != nil {
 		s.Fatal("Failed to launch files app: ", err)
 	}
 	defer closeFilesApp(cleanupCtx)
 
-	for _, testFileParams := range helpers.GetTestFileParamsWithWarn() {
+	myFilesIsSource := true
+	testFileParams := helpers.GetTestFileParamsWithWarn()
+	if fileSystem == fileSystemTypeGDrive {
+		// Note: if myFilesIsSource == false, we expect files to already exist before the test.
+		// For gdrive, we use a shared drive that all test accounts can access.
+		myFilesIsSource = false
+		// For drive, malware files cannot be saved server-side (they are automatically deleted), so we don't test them.
+		testFileParams = helpers.WithoutMalwareFiles(testFileParams)
+	}
+
+	for _, testFileParams := range testFileParams {
 		if succeeded := s.Run(ctx, testFileParams.TestName, func(ctx context.Context, s *testing.State) {
 			subTestCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 			defer cancel()
-			testFileTransferForFile(subTestCtx, testFileParams, testParams, br, s, testDirPath, tconnAsh, filesApp)
+			testFileTransferForFile(subTestCtx, testFileParams, testParams, br, s, testDirPath, tconnAsh, filesApp, openTestedFileSystem, myFilesIsSource)
 		}); !succeeded {
 			// Stop, if the subtest fails as it might have left the state unusable.
 			// It also prevents showing wrong errors on tastboard.
@@ -244,6 +307,8 @@ func testFileTransferForFile(
 	testDirPath string,
 	tconnAsh *chrome.TestConn,
 	filesApp *filesapp.FilesApp,
+	openTestedFileSystem func(ctx context.Context) error,
+	myFilesIsSource bool,
 ) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -281,15 +346,17 @@ func testFileTransferForFile(
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error_safe_browsing_page")
 
-	// Create file at test directory of MyFiles.
-	testFileLocation := filepath.Join(testDirPath, fileName)
-	if _, err := os.Stat(testFileLocation); os.IsNotExist(err) {
-		if err := fsutil.CopyFile(s.DataPath(fileName), testFileLocation); err != nil {
-			s.Fatalf("Failed to copy the file to %s: %v", testFileLocation, err)
+	// Create file at test directory of MyFiles. (Note: Only if MyFiles is the source directory!)
+	if myFilesIsSource {
+		testFileLocation := filepath.Join(testDirPath, fileName)
+		if _, err := os.Stat(testFileLocation); os.IsNotExist(err) {
+			if err := fsutil.CopyFile(s.DataPath(fileName), testFileLocation); err != nil {
+				s.Fatalf("Failed to copy the file to %s: %v", testFileLocation, err)
+			}
+			defer os.Remove(testFileLocation)
+		} else if err != nil {
+			s.Fatalf("Failed to stat testFileLocation(%s): %s", testFileLocation, err)
 		}
-		defer os.Remove(testFileLocation)
-	} else if err != nil {
-		s.Fatalf("Failed to stat testFileLocation(%s): %s", testFileLocation, err)
 	}
 
 	ui := uiauto.New(tconnAsh)
@@ -299,14 +366,28 @@ func testFileTransferForFile(
 	}
 
 	// Act: Copy + paste file to the destination directory.
-	if err := filesApp.OpenDir("test_dir", filesapp.FilesTitlePrefix+"test_dir")(ctx); err != nil {
-		s.Fatal("Failed to open Downloads folder: ", err)
+	if myFilesIsSource {
+		if err := filesApp.OpenDir("test_dir", filesapp.FilesTitlePrefix+"test_dir")(ctx); err != nil {
+			s.Fatal("Failed to open Downloads folder: ", err)
+		}
+	} else {
+		if err := openTestedFileSystem(ctx); err != nil {
+			s.Fatal("Failed to open file system: ", err)
+		}
 	}
 	if err := filesApp.CopyFileToClipboard(fileName)(ctx); err != nil {
 		s.Fatal("Failed to copy downloaded file to the clipboard: ", err)
 	}
-	if err := filesApp.OpenUSBDriveWithName("UNTITLED")(ctx); err != nil {
-		s.Fatal("Failed to open formatted USB drive: ", err)
+
+	// Open tested file system.
+	if myFilesIsSource {
+		if err := openTestedFileSystem(ctx); err != nil {
+			s.Fatal("Failed to open file system: ", err)
+		}
+	} else {
+		if err := filesApp.OpenDir("test_dir", filesapp.FilesTitlePrefix+"test_dir")(ctx); err != nil {
+			s.Fatal("Failed to open Downloads folder: ", err)
+		}
 	}
 	if err := filesApp.FileExists(fileName)(ctx); err == nil {
 		if err := filesApp.DeleteFileOrFolder(keyboard, fileName)(ctx); err != nil {
@@ -438,7 +519,41 @@ func waitForFileTransferWarnedAndProceed(
 	return nil
 }
 
-func launchFilesAppWithFormattedUsb(ctx context.Context, tconnAsh *chrome.TestConn) (filesApp *filesapp.FilesApp, cancel func(ctx context.Context) error, err error) {
+func launchFilesAppWithFileSystem(ctx context.Context, tconnAsh *chrome.TestConn, fileSystem fileSystemType) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
+	if fileSystem == fileSystemTypeUSB {
+		return launchFilesAppWithFormattedUsb(ctx, tconnAsh)
+	}
+	if fileSystem == fileSystemTypeGDrive {
+		return launchFilesAppWithDrive(ctx, tconnAsh)
+	}
+	return nil, nil, nil, errors.Errorf("invalid fileSystemType: %s", fileSystem)
+}
+
+func launchFilesAppWithDrive(ctx context.Context, tconnAsh *chrome.TestConn) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
+	filesApp, err = filesapp.Launch(ctx, tconnAsh)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to launch the Files App")
+	}
+	cleanupFunc := func(ctx context.Context) error {
+		if err := filesApp.Close(ctx); err != nil {
+			return errors.Wrap(err, "failed to close files app")
+		}
+		return nil
+	}
+	openDriveFS := func(ctx context.Context) error {
+		if err := filesApp.OpenDrive()(ctx); err != nil {
+			return errors.Wrap(err, "failed to open drive")
+		}
+		if err := filesApp.OpenPath("Files - Shared drives", "Shared drives", "tast input data")(ctx); err != nil {
+			return errors.Wrap(err, "failed to open tast input data directory")
+		}
+		return nil
+	}
+
+	return filesApp, openDriveFS, cleanupFunc, nil
+}
+
+func launchFilesAppWithFormattedUsb(ctx context.Context, tconnAsh *chrome.TestConn) (filesApp *filesapp.FilesApp, openTestedFileSystem, cancel func(ctx context.Context) error, err error) {
 	cleanupCtx := ctx
 	ctx, ctxCancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer ctxCancel()
@@ -446,17 +561,17 @@ func launchFilesAppWithFormattedUsb(ctx context.Context, tconnAsh *chrome.TestCo
 	// Open the Files app to cleanup USB devices. Closed at relaunch or Chrome reset.
 	filesApp, err = filesapp.Launch(ctx, tconnAsh)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to launch the Files App")
+		return nil, nil, nil, errors.Wrap(err, "failed to launch the Files App")
 	}
 
 	// Eject all USB devices if some are still around.
 	if err := filesApp.EjectAll()(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to eject")
+		return nil, nil, nil, errors.Wrap(err, "failed to eject")
 	}
 
 	// Create the virtual USB device.
 	if err := setupVirtualUSBDevice(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to setup virtual USB device")
+		return nil, nil, nil, errors.Wrap(err, "failed to setup virtual USB device")
 	}
 
 	success := false
@@ -479,15 +594,23 @@ func launchFilesAppWithFormattedUsb(ctx context.Context, tconnAsh *chrome.TestCo
 	}(cleanupCtx)
 
 	if err := filesApp.WithTimeout(5 * time.Second).OpenUSBDrive()(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to open unformatted USB drive")
+		return nil, nil, nil, errors.Wrap(err, "failed to open unformatted USB drive")
 	}
 	if err := filesApp.FormatDevice()(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to format USB drive")
+		return nil, nil, nil, errors.Wrap(err, "failed to format USB drive")
 	}
 	testing.ContextLog(ctx, "USB drive is formatted")
 
 	success = true
-	return filesApp, cleanupFunc, nil
+
+	filesAppOpenUSB := func(ctx context.Context) error {
+		if err := filesApp.OpenUSBDriveWithName("UNTITLED")(ctx); err != nil {
+			return errors.Wrap(err, "failed to open formatted USB drive")
+		}
+		return nil
+	}
+
+	return filesApp, filesAppOpenUSB, cleanupFunc, nil
 }
 
 // Constants to create a virtual USB drive.
