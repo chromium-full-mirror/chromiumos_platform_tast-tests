@@ -92,13 +92,21 @@ func initUserPod(ctx context.Context, gaiaPoolDefault string) (chrome.Creds, err
 	if err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "chrome login failed")
 	}
-	defer cr.Close(ctx)
+	defer func() {
+		if cr != nil {
+			cr.Close(ctx)
+		}
+	}()
 	creds := cr.Creds()
 
 	// This is needed for reven tests, as login flow there relies on the existence of a device setting.
 	if err := userutil.WaitForOwnership(ctx, cr); err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "user did not become device owner")
 	}
+
+	// Close before restarting.
+	cr.Close(ctx)
+	cr = nil
 
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		return chrome.Creds{}, errors.Wrap(err, "failed to restart ui")
@@ -234,6 +242,10 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.EnableFeatures("LacrosLaunchAtLoginScreen"),
 		chrome.EnableFeatures("LacrosProfileMigrationForceOff"),
+		// Prelaunch Lacros regardless of whether there are users with Lacros enabled.
+		// We restart Chrome quickly after the first login, so the preference is
+		// sometimes not written to disk.
+		chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"),
 	}
 
 	// Setup Lacros configuration.
