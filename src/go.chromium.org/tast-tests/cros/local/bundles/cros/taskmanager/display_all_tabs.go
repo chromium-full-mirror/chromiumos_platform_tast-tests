@@ -145,7 +145,7 @@ func DisplayAllTabs(ctx context.Context, s *testing.State) {
 // Speedtest by Ookla is an extension which can be used to test internet performance.
 const (
 	cwsAppID   = "pgjjikdiikihdfpoppgaidccahalehjh"
-	cwsAppURL  = "https://chrome.google.com/webstore/detail/speedtest-by-ookla/" + cwsAppID
+	cwsAppURL  = "https://chromewebstore.google.com/detail/speedtest-by-ookla/" + cwsAppID
 	cwsAppName = "Speedtest by Ookla"
 )
 
