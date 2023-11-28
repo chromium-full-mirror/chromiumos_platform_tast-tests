@@ -32,7 +32,7 @@ func init() {
 		// TODO: when stable, move to firmware_ec
 		Attr: []string{"group:firmware", "firmware_unstable"},
 		// Based on known un-annotated platforms that might not be updated.
-		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform(unannotatedPlatforms...)),
+		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform(unannotatedPlatforms...), hwdep.X86()),
 	})
 }
 
