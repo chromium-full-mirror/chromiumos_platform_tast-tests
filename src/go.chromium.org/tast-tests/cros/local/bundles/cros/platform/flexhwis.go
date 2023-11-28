@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:998633", // ChromeOS > Platform > Enablement > ChromeOS Flex
 		SoftwareDeps: []string{"chrome", "flex_hwis"},
-		Attr:         []string{"group:criticalstaging", "group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ReportDeviceSystemInfo{}, pci.Served),
