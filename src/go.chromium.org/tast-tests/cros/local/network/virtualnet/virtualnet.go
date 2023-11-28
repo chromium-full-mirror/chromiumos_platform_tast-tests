@@ -291,7 +291,12 @@ func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, o
 
 func findEthernetServiceByIfName(ctx context.Context, m *shill.Manager, ifName string) (*shill.Service, error) {
 	testing.ContextLogf(ctx, "Waiting for device %s showing up", ifName)
-	device, err := m.WaitForDeviceByName(ctx, ifName, 5*time.Second)
+
+	// Shill needs to flush the profile to the disk to finish this step, and we
+	// observed that it can take a long time on some boards under some certain
+	// situation (e.g., ~7s on grunt), so use a large timeout value here. See
+	// b/303138488 for details.
+	device, err := m.WaitForDeviceByName(ctx, ifName, 15*time.Second)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to find the device with interface name %s", ifName)
 	}
