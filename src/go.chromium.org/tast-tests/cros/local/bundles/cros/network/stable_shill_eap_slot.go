@@ -196,16 +196,23 @@ func StableShillEAPSlot(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed creating shill manager proxy: ", err)
 	}
+
+	// Wait for shill services to be re-loaded.
+	for _, tc := range tcs {
+		props := map[string]interface{}{
+			shillconst.ServicePropertyType: shillconst.TypeWifi,
+			shillconst.ServicePropertyName: tc.ssid,
+		}
+		if _, err := m.WaitForServiceProperties(ctx, props, 5*time.Second); err != nil {
+			s.Fatal("Failed wait for shill service: ", err)
+		}
+	}
+
 	// Now that the slot IDs are re-ordered, shill storage will not have
 	// the correct values. These values are corrected on shill storage load.
 	// Expect shill to have the correct PKCS#11 ID related EAP properties.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if errs := comparePKCSIDs(ctx, tcs, c, m); len(errs) > 0 {
-			return errors.Errorf("mismatch of PKCS#11 IDs: %v", errs)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 3 * time.Second}); err != nil {
-		s.Fatal("Got incorrect PKCS#11 ID: ", err)
+	if errs := comparePKCSIDs(ctx, tcs, c, m); len(errs) > 0 {
+		s.Fatal("Mismatch between PKCS#11 ID of chaps and shill: ", errs)
 	}
 }
 
