@@ -73,9 +73,13 @@ const (
 	// TestFixture.
 	BluetoothServiceName = "tast.cros.bluetooth.BluetoothService"
 
-	// PowerServiceName is the name of the power measurement service needed by
-	// TestFixture.
-	PowerServiceName = "tast.cros.power.MetricsService"
+	// PowerSetupServiceName is the name of the power service that setup the
+	// device for power measurement.
+	PowerSetupServiceName = "tast.cros.power.DeviceSetupService"
+
+	// PowerRecorderServiceName is the name of the power service that records
+	// power measurement.
+	PowerRecorderServiceName = "tast.cros.power.RecorderService"
 
 	// CellularServiceName is the name of the cellular service needed by TestFixture.
 	CellularServiceName = "tast.cros.cellular.RemoteCellularService"
@@ -203,9 +207,10 @@ type TestFixture struct {
 	aps map[*APIface]struct{}
 
 	// Power test parameters.
-	idlePowerValues *perf.Values
-	powerClient     power.MetricsServiceClient
-	powerCleanup    func(context.Context) error
+	idlePowerValues     *perf.Values
+	powerSetupClient    power.DeviceSetupServiceClient
+	powerRecorderClient power.RecorderServiceClient
+	powerCleanup        func(context.Context) error
 }
 
 // NewTestFixture creates a TestFixture.

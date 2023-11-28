@@ -127,7 +127,8 @@ func init() {
 			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarAttenuator)
 		}
 		if f&TFFeaturesPower != 0 {
-			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, PowerServiceName)
+			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, PowerSetupServiceName)
+			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, PowerRecorderServiceName)
 		}
 		if f&TFFeaturesCellular != 0 {
 			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, CellularServiceName)
@@ -322,11 +323,11 @@ func (f *tastFixtureImpl) recoverUnhealthyDUT(ctx context.Context, d *dut.DUT, s
 // takeIdleWiFiMeasurement deactivates all WiFi interfaces on the DUT and takes
 // power measurements to be used as a baseline of comparison for WiFi scenarios.
 func (f *tastFixtureImpl) takeIdleWiFiMeasurement(ctx context.Context, s *testing.FixtState) error {
-	if f.tf.powerClient == nil {
-		return errors.New("no power client available")
+	if f.tf.powerRecorderClient == nil {
+		return errors.New("no power recorder client available")
 	}
 	ctx, restore, err := f.tf.RemoveWiFiInterfaces(ctx, DefaultDUT)
-	if _, err := f.tf.powerClient.Start(ctx, &empty.Empty{}); err != nil {
+	if _, err := f.tf.powerRecorderClient.Start(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to start metrics")
 	}
 
@@ -341,12 +342,11 @@ func (f *tastFixtureImpl) takeIdleWiFiMeasurement(ctx context.Context, s *testin
 		return errors.Wrap(err, "failed to sleep")
 	}
 
-	request := power.FinishRequest{Upload: false}
-	values, err := f.tf.powerClient.Finish(ctx, &request)
+	result, err := f.tf.powerRecorderClient.Stop(ctx, &empty.Empty{})
 	if err != nil {
 		return errors.Wrap(err, "failed to stop metrics")
 	}
-	f.tf.idlePowerValues = perf.NewValuesFromProto(values)
+	f.tf.idlePowerValues = perf.NewValuesFromProto(result.GetPerfMetrics())
 
 	return nil
 }
@@ -355,28 +355,63 @@ func (f *tastFixtureImpl) takeIdleWiFiMeasurement(ctx context.Context, s *testin
 // during the test. It also initiates an idle power measurement to be used as a baseline.
 func (f *tastFixtureImpl) setUpPower(ctx context.Context, s *testing.FixtState) error {
 	cl := f.tf.duts[DefaultDUT].rpc
-	f.tf.powerClient = power.NewMetricsServiceClient(cl.Conn)
-	setupRequest := power.SetupRequest{Fixture: power.SetupRequest_NO_UI_WIFI, IntervalSecond: 5}
-	var err error = nil
-	if _, err = f.tf.powerClient.Setup(ctx, &setupRequest); err != nil {
-		return errors.Wrap(err, "failed to setup metrics")
+
+	// Set up device for power test.
+	f.tf.powerSetupClient = power.NewDeviceSetupServiceClient(cl.Conn)
+	setupRequest := power.DeviceSetupRequest{
+		Ui:                 power.UIMode_DISABLE_UI,
+		ScreenBrightness:   power.ScreenMode_ZERO_SCREEN_BRIGHTNESS,
+		KeyboardBrightness: power.KeyboardMode_ZERO_KEYBOARD_BRIGHTNESS,
 	}
-	cleanup := func(ctx context.Context) error {
-		if _, err = f.tf.powerClient.Cleanup(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to cleanup metrics")
+	var err error
+	if _, err = f.tf.powerSetupClient.Setup(ctx, &setupRequest); err != nil {
+		return errors.Wrap(err, "failed to setup device for power test")
+	}
+	deviceCleanup := func(ctx context.Context) error {
+		if _, err = f.tf.powerSetupClient.Cleanup(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to restore device setup")
 		}
 		return nil
 	}
 	defer func() {
 		if err != nil || s.HasError() {
-			cleanup(ctx)
+			deviceCleanup(ctx)
 		}
 	}()
+
+	// Create recorder for power measurement.
+	f.tf.powerRecorderClient = power.NewRecorderServiceClient(cl.Conn)
+	recorderRequest := power.RecorderRequest{
+		IntervalSec: 5,
+	}
+	if _, err = f.tf.powerRecorderClient.Create(ctx, &recorderRequest); err != nil {
+		return errors.Wrap(err, "failed to create recorder for power test")
+	}
+	recorderCleanup := func(ctx context.Context) error {
+		if _, err = f.tf.powerRecorderClient.Close(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to close recorder")
+		}
+		return nil
+	}
+	defer func() {
+		if err != nil || s.HasError() {
+			recorderCleanup(ctx)
+		}
+	}()
+
 	if err := f.takeIdleWiFiMeasurement(ctx, s); err != nil {
 		return errors.Wrap(err, "failed to take idle WiFi measurement")
 	}
 
-	f.tf.powerCleanup = cleanup
+	f.tf.powerCleanup = func(ctx context.Context) error {
+		if err := recorderCleanup(ctx); err != nil {
+			return err
+		}
+		if err := deviceCleanup(ctx); err != nil {
+			return err
+		}
+		return nil
+	}
 	return nil
 }
 
@@ -622,7 +657,7 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	if f.features&TFFeaturesPower != 0 {
-		if _, err := f.tf.powerClient.Start(s.TestContext(), &empty.Empty{}); err != nil {
+		if _, err := f.tf.powerRecorderClient.Start(s.TestContext(), &empty.Empty{}); err != nil {
 			s.Fatal("Failed to start power metrics: ", err)
 		}
 	}
@@ -637,12 +672,11 @@ func (f *tastFixtureImpl) PostTest(ctx context.Context, s *testing.FixtTestState
 	}
 
 	if f.features&TFFeaturesPower != 0 {
-		request := power.FinishRequest{Upload: false}
-		values, err := f.tf.powerClient.Finish(s.TestContext(), &request)
+		response, err := f.tf.powerRecorderClient.Stop(s.TestContext(), &empty.Empty{})
 		if err != nil {
 			s.Fatal("Failed to stop power metrics: ", err)
 		}
-		powerResults := perf.NewValuesFromProto(values)
+		powerResults := perf.NewValuesFromProto(response.GetPerfMetrics())
 		if err = f.savePowerResults(ctx, s, powerResults); err != nil {
 			s.Fatal("Failed to save power results: ", err)
 		}
