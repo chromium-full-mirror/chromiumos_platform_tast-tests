@@ -22,8 +22,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-
-	"go.chromium.org/tast/core/shutil"
 )
 
 const (
@@ -316,8 +314,8 @@ func (c *Container) Stop(ctx context.Context) error {
 }
 
 // StartAndWait starts up an already created container and waits for that startup to complete
-// before returning. The directory dir may be used to store logs on failure.
-func (c *Container) StartAndWait(ctx context.Context, dir string) error {
+// before returning.
+func (c *Container) StartAndWait(ctx context.Context) error {
 	if err := c.SetUpUser(ctx); err != nil {
 		return err
 	}
@@ -607,17 +605,8 @@ func (c *Container) UninstallPackageOwningFile(ctx context.Context, desktopFileI
 	}
 }
 
-// CreateSnapshot creates a snapshot with the given name.
-func (c *Container) CreateSnapshot(ctx context.Context, snapshotName, logDir string) error {
-	if exist, err := c.CheckSnapshot(ctx, snapshotName); err != nil {
-		return errors.Wrap(err, "failed to check the existence of the snapshot")
-	} else if exist {
-		// Delete any existing snapshot with the same name.
-		if err := c.DeleteSnapshot(ctx, snapshotName); err != nil {
-			return err
-		}
-	}
-
+// CreateCopy makes a copy of the container as the given name.
+func (c *Container) CreateCopy(ctx context.Context, name string) error {
 	// Wait for background operations to complete before stopping the container.
 	if err := c.VM.WaitForLXDOperations(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for LXD background operations")
@@ -629,11 +618,11 @@ func (c *Container) CreateSnapshot(ctx context.Context, snapshotName, logDir str
 		return errors.Wrap(err, "failed to stop the container before taking snapshot")
 	}
 
-	if _, err := c.VM.LXCCommand(ctx, "snapshot", "penguin", snapshotName); err != nil {
-		return errors.Wrap(err, "failed to take snapshot")
+	if _, err := c.VM.LXCCommand(ctx, "copy", c.containerName, name); err != nil {
+		return errors.Wrap(err, "failed to copy container")
 	}
 
-	if err := c.StartAndWait(ctx, logDir); err != nil {
+	if err := c.StartAndWait(ctx); err != nil {
 		return errors.Wrap(err, "failed to start container after creating snapshot")
 	}
 
@@ -650,19 +639,8 @@ func (c *Container) CreateSnapshot(ctx context.Context, snapshotName, logDir str
 	return nil
 }
 
-// DeleteSnapshot deletes a snapshot with the given name.
-func (c *Container) DeleteSnapshot(ctx context.Context, snapshotName string) error {
-	if _, err := c.VM.LXCCommand(ctx, "delete", "penguin/"+snapshotName); err != nil {
-		// LXD v4 uses a differently formatted name.
-		if _, err := c.VM.LXCCommand(ctx, "delete", "penguin/snapshots/"+snapshotName); err != nil {
-			return errors.Wrap(err, "failed to delete snapshot")
-		}
-	}
-	return nil
-}
-
-// RestoreSnapshot restores the Linux container from a snapshot.
-func (c *Container) RestoreSnapshot(ctx context.Context, snapshotName, logDir string) error {
+// RestoreCopy restores the default container with a copy with the given name.
+func (c *Container) RestoreCopy(ctx context.Context, name string) error {
 	// Wait for background operations to complete before stopping the container.
 	if err := c.VM.WaitForLXDOperations(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for LXD background operations")
@@ -673,83 +651,53 @@ func (c *Container) RestoreSnapshot(ctx context.Context, snapshotName, logDir st
 		return errors.Wrap(err, "failed to stop the container")
 	}
 
-	// Restore the snapshot.
-	if _, err := c.VM.LXCCommand(ctx, "restore", "penguin", snapshotName); err != nil {
-		return errors.Wrap(err, "failed to restore snapshot")
+	if _, err := c.VM.LXCCommand(ctx, "delete", "-f", c.containerName); err != nil {
+		return errors.Wrap(err, "failed to delete container")
 	}
 
-	// If the LXD database is reset, the snapshot's "volatile.idmap.next"
-	// will contain the wrong value, which will be applied to the container
-	// upon resetore. Fix it to the same as "volatile.idmap.current" since
-	// it shouldn't changed.
-	idmap, err := c.VM.LXCCommand(ctx, "config", "get", "penguin", "volatile.idmap.current")
-	if err != nil {
-		return errors.Wrap(err, "failed to get volatile.idmap.current")
+	if _, err := c.VM.LXCCommand(ctx, "copy", name, c.containerName); err != nil {
+		return errors.Wrap(err, "failed to copy container")
 	}
 
-	if _, err := c.VM.LXCCommand(ctx, "config", "set", "penguin", "volatile.idmap.next", shutil.Escape(idmap)); err != nil {
-		return errors.Wrap(err, "failed to set volatile.idmap.next")
+	if err := c.StartAndWait(ctx); err != nil {
+		return errors.Wrap(err, "failed to start container after restoring copy")
 	}
 
-	if err := c.StartAndWait(ctx, logDir); err != nil {
-		return errors.Wrap(err, "failed to start container after restoring snapshot")
-	}
+	return nil
+}
 
-	// Wait until a basic command works. Running commands immediately after
-	// container restart may result in racing issues.
-	if err := testing.Poll(
-		ctx,
-		func(ctx context.Context) error {
-			return c.Command(ctx, "pwd").Run(testexec.DumpLogOnError)
-		},
-		&testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to run basic commands after restore")
+// DeleteCopy deletes a container copy with the given name.
+func (c *Container) DeleteCopy(ctx context.Context, name string) error {
+	if _, err := c.VM.LXCCommand(ctx, "delete", "-f", name); err != nil {
+		return errors.Wrap(err, "failed to delete container")
 	}
 	return nil
 }
 
-// CheckSnapshot checks whether there is a snapshot of the given name exists.
-func (c *Container) CheckSnapshot(ctx context.Context, snapshotName string) (bool, error) {
+// CheckCopy checks whether a container copy of the given name exists.
+func (c *Container) CheckCopy(ctx context.Context, name string) (bool, error) {
 	// List the snapshots.
-	result, err := c.VM.LXCCommand(ctx, "list", "penguin", "--format", "json")
+	result, err := c.VM.LXCCommand(ctx, "list", "--format", "json")
 	if err != nil {
-		return false, errors.Wrapf(err, "failed to list snapshot, stdout: %s", result)
+		return false, errors.Wrapf(err, "failed to list containers, stdout: %s", result)
 	}
 
 	// The first level of the list result is an array.
-	var sp []map[string]interface{}
-	if err := json.Unmarshal([]byte(result), &sp); err != nil {
+	var out []map[string]interface{}
+	if err := json.Unmarshal([]byte(result), &out); err != nil {
 		return false, errors.Wrap(err, "failed to parse output into map")
 	}
-	if len(sp) == 0 {
-		return false, errors.New("the output of lxc list penguin is empty")
+	if len(out) == 0 {
+		return false, errors.New("the output of lxc list is empty")
 	}
 
-	// There is only one item in the array.
-	// The type of sp[0]["snapshots"] is interface{},
-	// but actually it is []interface{} or a json null (in lxc v5).
-	// Need to convert it.
-	sn, ok := sp[0]["snapshots"]
-	if !ok {
-		return false, errors.New("the output of lxc list contains no snapshots")
-	}
-	if sn == nil {
-		return false, nil
-	}
-	snapshots, ok := sn.([]interface{})
-	if !ok {
-		return false, errors.New("the output of lxc list should contain snapshots array")
-	}
-	for _, i := range snapshots {
-		// Each slice of snapshots is a map[string]interface{}.
-		snpt, ok := i.(map[string]interface{})
+	for _, instance := range out {
+		val, ok := instance["name"]
 		if !ok {
-			return false, errors.New("the output of lxc list contains ill-formed snapshots")
+			continue
 		}
 
-		// Check the snapshot name.
-		// Since snapshot name is unique, return immediately if found.
-		if fmt.Sprintf("%s", snpt["name"]) == snapshotName {
+		if val.(string) == name {
 			return true, nil
 		}
 	}

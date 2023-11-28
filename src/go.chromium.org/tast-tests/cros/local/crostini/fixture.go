@@ -599,7 +599,7 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to get user's Downloads path: ", err)
 	}
 
-	if err := f.cont.CreateSnapshot(ctx, snapshotName, s.OutDir()); err != nil {
+	if err := f.cont.CreateCopy(ctx, snapshotName); err != nil {
 		s.Fatal("Failed to take snapshot before test: ", err)
 	}
 	// Launching Terminal after restart container by lxc is needed to
@@ -665,7 +665,7 @@ func (f *crostiniFixture) Reset(ctx context.Context) error {
 	// 1. stop the container.
 	// 2. restore the snapshot.
 	// 3. start the container.
-	if err := f.cont.RestoreSnapshot(ctx, snapshotName, f.logDir); err != nil {
+	if err := f.cont.RestoreCopy(ctx, snapshotName); err != nil {
 		return errors.Wrap(err, "failed to restore snapshot")
 	}
 	// Launching Terminal after storing snapshot by lxc is needed to ensure

@@ -159,7 +159,7 @@ func RestartDefaultVMContainer(ctx context.Context, dir string, container *Conta
 	if err := container.VM.Start(ctx); err != nil {
 		return err
 	}
-	if err := container.StartAndWait(ctx, dir); err != nil {
+	if err := container.StartAndWait(ctx); err != nil {
 		return err
 	}
 	return nil

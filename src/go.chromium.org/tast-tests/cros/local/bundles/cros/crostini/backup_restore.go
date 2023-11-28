@@ -83,33 +83,7 @@ func BackupRestore(ctx context.Context, s *testing.State) {
 	const (
 		testFileName    = "BackupRestore.txt"
 		testFileContent = "BackupRestore"
-		copyName        = "penguin-tast-crostini-BackupRestore"
 	)
-
-	// Restoring from settings UI does not restore snapshots. Copy the
-	// instance with its snapshots and restore it at the end.
-	lxc := func(ctx context.Context, args ...string) {
-		_, err := cont.VM.LXCCommand(ctx, args...)
-		if err != nil {
-			s.Fatal("LXC: ", err)
-		}
-	}
-	lxc(ctx, "copy", vm.DefaultContainerName, copyName)
-	defer func(ctx context.Context) {
-		if err := cont.Stop(ctx); err != nil {
-			s.Fatal("Error stopping container: ", err)
-		}
-		lxc(ctx, "delete", "-f", vm.DefaultContainerName)
-		lxc(ctx, "rename", copyName, vm.DefaultContainerName)
-
-		terminalApp, err := terminalapp.Launch(ctx, tconn)
-		if err != nil {
-			s.Fatal("Error restarting container: ", err)
-		}
-		if err := terminalApp.Exit(pre.KB)(ctx); err != nil {
-			s.Fatal("Failed to exit Terminal window: ", err)
-		}
-	}(cleanupCtx)
 
 	if err := cont.WriteFile(ctx, testFileName, testFileContent); err != nil {
 		s.Fatalf("Failed to write file %v in container: %v", testFileName, err)
