@@ -6,11 +6,13 @@ package firmware
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -41,8 +43,6 @@ func ECReboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get configs")
 	}
 
-	ec := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
-
 	type rebootTestCase struct {
 		rebootName    string
 		rebootCommand string
@@ -69,7 +69,7 @@ func ECReboot(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to sync before %s: %s", tc.rebootName, err)
 		}
 
-		previousUptime, err := ec.GetECUptime(ctx)
+		previousUptime, err := getECUptimeFromConsole(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to get ec uptime: ", err)
 		}
@@ -104,7 +104,7 @@ func ECReboot(ctx context.Context, s *testing.State) {
 
 		end := time.Since(start).Seconds()
 
-		newUptime, err := ec.GetECUptime(ctx)
+		newUptime, err := getECUptimeFromConsole(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to get ec uptime: ", err)
 		}
@@ -120,4 +120,18 @@ func ECReboot(ctx context.Context, s *testing.State) {
 			s.Fatalf("Failed to reboot via %s, old boot ID (%s) is the same as new boot ID (%s)", tc.rebootName, oldBootID, newBootID)
 		}
 	}
+}
+
+func getECUptimeFromConsole(ctx context.Context, h *firmware.Helper) (float64, error) {
+	out, err := h.Servo.RunECCommandGetOutput(ctx, "powerinfo", []string{`(\d+\.\d+) power state`})
+	if err != nil {
+		return -1.0, errors.Wrap(err, "failed to get output from EC command")
+	}
+
+	uptime, err := strconv.ParseFloat(out[0][1], 64)
+	if err != nil {
+		return -1.0, errors.Wrapf(err, "failed to parse ec uptime to float, got %s", out[0][1])
+	}
+
+	return uptime, nil
 }
