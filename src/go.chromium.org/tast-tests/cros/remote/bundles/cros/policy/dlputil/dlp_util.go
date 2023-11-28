@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/reportingutil"
+	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

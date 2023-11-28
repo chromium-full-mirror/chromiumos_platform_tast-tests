@@ -12,10 +12,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/policy/dlputil"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
-	"go.chromium.org/tast-tests/cros/remote/reportingutil"
 	dlp "go.chromium.org/tast-tests/cros/services/cros/dlp"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
