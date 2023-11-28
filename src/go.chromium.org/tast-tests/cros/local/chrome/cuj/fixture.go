@@ -1202,6 +1202,30 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithLauncherImageSearchWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and has launcher image search",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"xiyuan@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt: browser.TypeAsh,
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures(
+					"ProductivityLauncherImageSearch",
+					"LauncherImageSearch",
+					"LauncherImageSearchOcr",
+					"LauncherImageSearchIca"),
+			}},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	// TODO(b/292249282): Remove when Vulkan is launched on brya and volteer.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserVulkan",

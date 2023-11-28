@@ -140,23 +140,23 @@ func Run(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if testParam.ImageSearch {
-		// Get file base path.
-		user := cr.NormalizedUser()
-		testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
-		cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, imageCopyRepeatTimes)
-		if err != nil {
-			s.Fatal("Failed to prepare image search files: ", err)
-		}
-		defer cleanup()
-
-		// GoBigSleepLint: Wait to let the image indexing start.
-		if err := testing.Sleep(ctx, 2*time.Minute); err != nil {
-			s.Fatal("Failed to sleep: ", err)
-		}
-	}
-
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
+		if testParam.ImageSearch {
+			// Get file base path.
+			user := cr.NormalizedUser()
+			testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
+			cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, imageCopyRepeatTimes)
+			if err != nil {
+				s.Fatal("Failed to prepare image search files: ", err)
+			}
+			defer cleanup()
+
+			// GoBigSleepLint: Wait to let the image indexing start.
+			if err := testing.Sleep(ctx, 2*time.Minute); err != nil {
+				s.Fatal("Failed to sleep: ", err)
+			}
+		}
+
 		s.Logf("Running %s", benchmarkParam.name)
 		return benchmarkParam.benchmarkRun(ctx, benchmarkConn, ac, params)
 	}); err != nil {

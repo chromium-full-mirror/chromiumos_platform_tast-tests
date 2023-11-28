@@ -51,7 +51,7 @@ func init() {
 				ExtraAttr:         []string{"group:cuj"},
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 				Timeout:           defaultTimeout,
-				Fixture:           "loggedInToCUJUserWithLauncherImageSearch",
+				Fixture:           "loggedInToCUJUserWithLauncherImageSearchWithoutCooldown",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
