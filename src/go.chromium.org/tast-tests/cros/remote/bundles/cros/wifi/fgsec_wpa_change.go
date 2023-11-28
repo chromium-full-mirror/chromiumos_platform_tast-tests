@@ -422,11 +422,12 @@ func init() {
 // Each subtest is a loop over list of security configuration specified above. For each element:
 //  1. Configure AP according to security configuration (keeping SSID so all the time it is regarded
 //     as the same network by the shill).
-//  2. Test ability to connect.
-//  3. Check that:
+//  2. Flush the old BSSes and wait for the discovery of the new BSS.
+//  3. Test ability to connect.
+//  4. Check that:
 //     - the service path has not changed,
-//     - service has correct Security property.//
-//  4. Deconfigure AP.
+//     - service has correct security property.
+//  5. Disconnect and deconfigure AP.
 func FgsecWpaChange(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 	ssid := ap.RandomSSID("TAST_FGSEC_")
@@ -436,7 +437,7 @@ func FgsecWpaChange(ctx context.Context, s *testing.State) {
 	connectAP := func(ctx context.Context, sec *secConf) (retErr error) {
 		ap, err := tf.ConfigureAP(ctx, apOpts, sec.config)
 		if err != nil {
-			return errors.Wrap(err, "failed to configure the AP1")
+			return errors.Wrap(err, "failed to configure the AP")
 		}
 		defer func(ctx context.Context) {
 			if err := tf.DeconfigAP(ctx, ap); err != nil {
@@ -445,6 +446,22 @@ func FgsecWpaChange(ctx context.Context, s *testing.State) {
 		}(ctx)
 		ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap)
 		defer cancel()
+
+		clientIface, err := tf.ClientInterface(ctx)
+		if err != nil {
+			return errors.Wrap(err, "Unable to get DUT interface name")
+		}
+
+		// Flush BSSes to get rid of the old scan results.
+		if err := tf.WifiClient().FlushBSS(ctx, clientIface, 0); err != nil {
+			return errors.Wrap(err, "Failed to flush BSS list")
+		}
+
+		// Force the BSSID discovery to make sure the latest AP has been found in case previous scan result arrives
+		// after BSSes are flushed.
+		if err := tf.WifiClient().DiscoverBSSID(ctx, ap.Config().BSSID, clientIface, []byte(ssid)); err != nil {
+			return errors.Wrap(err, "Failed to discover AP")
+		}
 
 		connResp, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap)
 		if err != nil {
@@ -478,20 +495,9 @@ func FgsecWpaChange(ctx context.Context, s *testing.State) {
 
 	securityConfigs := s.Param().([]secConf)
 
-	// Get the name of the DUT WiFi interface to flush BSS from WPA
-	// supplicant after each connection to make sure it uses
-	// currently visible BSSes for reconnection.
-	clientIface, err := tf.ClientInterface(ctx)
-	if err != nil {
-		s.Fatal("Unable to get DUT interface name: ", err)
-	}
 	for _, c := range securityConfigs {
-		if err = connectAP(ctx, &c); err != nil {
+		if err := connectAP(ctx, &c); err != nil {
 			s.Fatal("Failure during AP connection: ", err)
-		}
-		s.Log("Flushing BSS cache")
-		if err := tf.WifiClient().FlushBSS(ctx, clientIface, 0); err != nil {
-			s.Fatal("Failed to flush BSS list: ", err)
 		}
 	}
 }
