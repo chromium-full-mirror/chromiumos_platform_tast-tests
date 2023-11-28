@@ -22,9 +22,14 @@ import (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            fixture.FakeDMS,
-		Desc:            "Fixture for a running FakeDMS",
-		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name: fixture.FakeDMS,
+		Desc: "Fixture for a running FakeDMS",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"mohamedaomar@google.com", // Author of fake_dmserver.
+			"vsavu@google.com",        // Original fixture author.
+
+		},
 		Impl:            &fakeDMSFixture{},
 		SetUpTimeout:    15 * time.Second,
 		ResetTimeout:    5 * time.Second,
@@ -34,9 +39,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.FakeDMSEnrolled,
-		Desc:     "Fixture for a running FakeDMS",
-		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name: fixture.FakeDMSEnrolled,
+		Desc: "Fixture for a running FakeDMS",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"mohamedaomar@google.com", // Author of fake_dmserver.
+			"vsavu@google.com",        // Original fixture author.
+
+		},
 		Impl: &fakeDMSFixture{
 			importState: true,
 		},
@@ -49,9 +59,12 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.FakeDMSEnrolledWithHighResTimerOff,
-		Desc:     "Fixture for a running FakeDMS with enrollment and high res timer turned off",
-		Contacts: []string{"cros-sw-perf@google.com", "hsinyi@google.com"},
+		Name: fixture.FakeDMSEnrolledWithHighResTimerOff,
+		Desc: "Fixture for a running FakeDMS with enrollment and high res timer turned off",
+		Contacts: []string{
+			"cros-sw-perf@google.com",
+			"hsinyi@google.com",
+		},
 		Impl: &fakeDMSFixture{
 			importState: true,
 		},
@@ -69,8 +82,8 @@ func init() {
 		Name: fixture.FakeDMSUpdateEngineEnrolled,
 		Desc: "Fixture for a running FakeDMS ensuring to reset update engine",
 		Contacts: []string{
-			"crisguerrero@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
+			"crisguerrero@chromium.org",
 		},
 		Impl: &fakeDMSFixture{
 			importState: true,
