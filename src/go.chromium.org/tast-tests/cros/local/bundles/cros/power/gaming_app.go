@@ -27,6 +27,8 @@ const (
 	gamingAppPrepareTimeout = 10 * time.Minute
 	gamingAppPlayTime       = 3 * time.Minute
 	gamingAppTimeout        = gamingAppPrepareTimeout + gamingAppPlayTime + power.RecorderTimeout
+
+	superTuxKartAPKURLVar = "power.super_tux_kart_apk_url"
 )
 
 func init() {
@@ -43,6 +45,7 @@ func init() {
 		// TODO(b/289855454): Add Attr after using uidetection.
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
+		Vars:         []string{superTuxKartAPKURLVar},
 		Fixture:      "powerAshARC",
 		Timeout:      gamingAppTimeout,
 		Params: []testing.Param{
@@ -91,6 +94,11 @@ func GamingApp(ctx context.Context, s *testing.State) {
 	defer kb.Close(cleanupCtx)
 
 	game := s.Param().(gamingAppParams).game(ctx, kb, tconn, a, d, s.DataPath)
+	if superTuxKart, isSuperTuxKart := game.(*gameapp.SuperTuxKart); isSuperTuxKart {
+		if url, ok := s.Var(superTuxKartAPKURLVar); ok {
+			superTuxKart.SetAPKURL(url)
+		}
+	}
 	// Run the app and collect the power data in the meantime.
 	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), gamingAppPlayTime); err != nil {
 		s.Fatal("Failed to run game app: ", err)

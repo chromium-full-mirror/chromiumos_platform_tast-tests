@@ -28,6 +28,9 @@ const (
 	SuperTuxKartIconGameScene = "gameapp/supertuxkart_game_scene.png"
 	superTuxKartPackageName   = "org.supertuxkart.stk"
 	superTuxKartIDPrefix      = superTuxKartPackageName + ":id/"
+
+	// Default to install the apk with version "1.4".
+	defaultSuperTuxKartAPKURL = "https://github.com/supertuxkart/stk-code/releases/download/1.4/SuperTuxKart-1.4.apk"
 )
 
 // SuperTuxKart holds the information for Game App testing.
@@ -38,6 +41,7 @@ type SuperTuxKart struct {
 	tconn    *chrome.TestConn
 	dataPath func(string) string
 	launched bool
+	apkURL   string
 }
 
 // NewSuperTuxKart creates SuperTuxKart instance which implements GameApp interface.
@@ -48,6 +52,7 @@ func NewSuperTuxKart(ctx context.Context, kb *input.KeyboardEventWriter, tconn *
 		kb:       kb,
 		tconn:    tconn,
 		dataPath: dataPath,
+		apkURL:   defaultSuperTuxKartAPKURL,
 	}
 }
 
@@ -55,7 +60,7 @@ var _ GameApp = (*SuperTuxKart)(nil)
 
 // Install installs the SuperTuxKart game app via play store.
 func (s *SuperTuxKart) Install(ctx context.Context) error {
-	return util.InstallApp(ctx, s.tconn, s.a, s.d, superTuxKartPackageName)
+	return util.InstallAppFromAPKURL(ctx, s.a, s.d, superTuxKartPackageName, s.apkURL)
 }
 
 // Uninstall uninstalls the SuperTuxKart game app if it has been installed.
@@ -141,4 +146,9 @@ func (s *SuperTuxKart) End(ctx context.Context) error {
 		return nil
 	}
 	return util.CloseApp(ctx, s.tconn, superTuxKartPackageName)
+}
+
+// SetAPKURL sets the APK URL of SuperTuxKart.
+func (s *SuperTuxKart) SetAPKURL(apkURL string) {
+	s.apkURL = apkURL
 }
