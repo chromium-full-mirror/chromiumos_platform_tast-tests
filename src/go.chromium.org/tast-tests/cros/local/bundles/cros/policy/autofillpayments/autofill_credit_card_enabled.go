@@ -82,7 +82,6 @@ func GetTestCases() map[networkrequestmonitor.PolicySetting]testCase {
 	}
 }
 
-// newLocalHTTPSTestServer (htmlFile, certFile, keyFile string) (*httptest.Server, error) {
 func newLocalHTTPSTestServer(htmlFile, certFile, keyFile string) (*httptest.Server, error) {
 	server := httptest.NewUnstartedServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -211,10 +210,10 @@ func TriggerAutofillCreditCardEnabled(ctx context.Context, params networkrequest
 
 		// Trigger the autofill on the credit card form page.
 		nameTextBox := nodewith.Role(role.TextField).Name("Name on card")
-		autofillPopup := nodewith.Role(role.ListBoxOption).ClassName("PopupCellView").First()
-		if err := uiauto.Combine("clicking the Name on card field and choosing the suggested credit card",
+		autofillPopup := nodewith.Role(role.ListBoxOption).ClassName("PopupRowContentView").First()
+		if err := uiauto.Combine("click the Name on card field and choosing the suggested credit card",
 			ui.DoDefaultUntil(nameTextBox, ui.Exists(autofillPopup)),
-			ui.DoDefaultUntil(autofillPopup, ui.Exists(nodewith.Role(role.InlineTextBox).Name(creditCardFields[0].fieldValue))),
+			ui.LeftClickUntil(autofillPopup, ui.Exists(nodewith.Role(role.InlineTextBox).Name(creditCardFields[0].fieldValue))),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to trigger and use credit card autofill")
 		}
