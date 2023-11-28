@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
@@ -21,9 +22,9 @@ type unknownMNOTestParam struct {
 	ExpectedLastAttachAPN string
 	ExpectedLastGoodAPN   string
 	// Configure an Attach APN before starting the test.
-	SetInitialAttachAPNValue map[string]interface{}
+	SetInitialAttachAPNValueInModemManager map[string]interface{}
 	// Connect to APN
-	ApnToConnect map[string]interface{}
+	ApnToConnect map[string]string
 }
 
 func init() {
@@ -35,8 +36,12 @@ func init() {
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Params: []testing.Param{{
-			Name:      "unknown_carrier",
-			Val:       unknownMNOTestParam{"callbox_unknown_carrier.pbf", "callbox-default-attach", "callbox-ipv4", map[string]interface{}{"apn": "wrong_attach", "ip-type": mmconst.BearerIPFamilyIPv4, "apn-type": mmconst.BearerAPNTypeInitial}, map[string]interface{}{"apn": "callbox-ipv4", "ip-type": mmconst.BearerIPFamilyIPv4, "apn-type": mmconst.BearerAPNTypeDefault}},
+			Name: "unknown_carrier",
+			Val: unknownMNOTestParam{
+				"callbox_unknown_carrier.pbf", "callbox-default-attach", "callbox-ipv4",
+				map[string]interface{}{mmconst.BearerPropertyApn: "wrong_attach", mmconst.BearerPropertyIPType: mmconst.BearerIPFamilyIPv4, mmconst.BearerPropertyApnType: mmconst.BearerAPNTypeInitial},
+				map[string]string{shillconst.DevicePropertyCellularAPNInfoApnName: "callbox-ipv4", shillconst.DevicePropertyCellularAPNInfoApnSource: "ui", shillconst.DevicePropertyCellularAPNInfoApnIPType: shillconst.DevicePropertyCellularAPNInfoApnIPTypeIPv4, shillconst.DevicePropertyCellularAPNInfoApnTypes: shillconst.DevicePropertyCellularAPNInfoApnTypeDefault},
+			},
 			ExtraData: []string{"callbox_unknown_carrier.pbf"},
 		}},
 		Fixture: "cellularResetShillProfileOnPostTest",
@@ -49,7 +54,7 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	modbOverrideProto := params.ModbOverrideProto
 	expectedLastGoodAPN := params.ExpectedLastGoodAPN
 	expectedLastAttachAPN := params.ExpectedLastAttachAPN
-	setInitialAttachAPNValue := params.SetInitialAttachAPNValue
+	setInitialAttachAPNValueInModemManager := params.SetInitialAttachAPNValueInModemManager
 	apnToConnect := params.ApnToConnect
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
@@ -63,8 +68,8 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not get modem3gpp object: ", err)
 	}
-	if setInitialAttachAPNValue != nil {
-		if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, setInitialAttachAPNValue); err != nil {
+	if setInitialAttachAPNValueInModemManager != nil {
+		if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, setInitialAttachAPNValueInModemManager); err != nil {
 			s.Fatal("Failed to set initial EPS bearer settings: ", err)
 		}
 	}
@@ -97,14 +102,14 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 		s.Fatal("Modem is not registered")
 	}
 
-	simpleModem, err := modem.GetSimpleModem(ctx)
-	if err != nil {
-		s.Fatal("Could not get simplemodem object: ", err)
-	}
-
 	testing.ContextLog(ctx, "Connecting")
-	if _, err := modemmanager.Connect(ctx, simpleModem, apnToConnect); err != nil {
-		s.Fatal("Modem connect failed with error: ", err)
+	apns := []map[string]string{apnToConnect}
+	if err = helper.SetCustomAPNList(ctx, apns); err != nil {
+		s.Fatal("Unable to set the custom APN: ", err)
+	}
+	_, err = helper.Connect(ctx)
+	if err != nil {
+		s.Fatal("Unable to connect to service: ", err)
 	}
 
 	modemAttachApn, err := modem.GetInitialEpsBearerSettings(ctx, modem)
