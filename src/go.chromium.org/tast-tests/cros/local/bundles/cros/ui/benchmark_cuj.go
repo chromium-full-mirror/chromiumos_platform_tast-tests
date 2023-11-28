@@ -48,7 +48,7 @@ func init() {
 			},
 			{
 				Name:              "speedometer_local_image_search",
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraAttr:         []string{"group:cuj"},
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 				Timeout:           defaultTimeout,
 				Fixture:           "loggedInToCUJUserWithLauncherImageSearch",

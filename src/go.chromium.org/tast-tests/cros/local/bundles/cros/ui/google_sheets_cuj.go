@@ -97,7 +97,6 @@ func init() {
 			},
 			{
 				Name:              "local_image_search",
-				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
 				Val: googleSheetsCUJTestParam{
 					browserType: browser.TypeAsh,
