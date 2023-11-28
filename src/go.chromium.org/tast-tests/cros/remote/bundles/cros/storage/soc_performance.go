@@ -27,6 +27,7 @@ func init() {
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.USBDevModeWithReinstall,
+		Attr:    []string{"group:storage-qual", "storage-qual_pdp_kpi", "storage-qual_pdp_stress"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "nvme_link_bw",

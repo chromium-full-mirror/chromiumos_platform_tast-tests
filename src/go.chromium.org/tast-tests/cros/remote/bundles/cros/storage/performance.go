@@ -28,6 +28,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.USBDevModeWithReinstall,
 		Timeout:      10 * time.Minute,
+		Attr:    []string{"group:storage-qual", "storage-qual_avl_v3"},
 		Params: []testing.Param{{
 			Name:              "16k_read_iops",
 			Val:               "16k_read",

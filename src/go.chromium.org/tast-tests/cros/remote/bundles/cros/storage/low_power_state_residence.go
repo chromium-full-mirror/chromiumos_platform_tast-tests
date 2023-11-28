@@ -35,7 +35,7 @@ func init() {
 		//TODO(dlunev): should it report percent high power time to crosbolt?
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:storage-qual", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 		Requirements: []string{
 			tdreq.StorageLPST,
 		},

@@ -29,8 +29,11 @@ func init() {
 			tdreq.StorageTrim,
 		},
 		Params: []testing.Param{
-			{}, {
+			{
+				ExtraAttr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+			}, {
 				Name: "iteration_2",
+				ExtraAttr:    []string{"group:storage-qual", "storage-qual_avl_v3"},
 			},
 		},
 	})

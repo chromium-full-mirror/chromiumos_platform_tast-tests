@@ -24,6 +24,7 @@ func init() {
 		},
 		BugComponent: "b:974567",
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Attr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 		Requirements: []string{
 			tdreq.InternalStorageInterface,
 			tdreq.StorageEmmcCapacity,
