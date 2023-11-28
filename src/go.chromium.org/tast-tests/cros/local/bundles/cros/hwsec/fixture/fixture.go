@@ -1293,6 +1293,11 @@ func (f *backupFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 	}
 	daemonController := helper.DaemonController()
 
+	// Soft clear the TPM before preparing the DUT.
+	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
+		s.Fatal("Failed to reset TPM or system states: ", err)
+	}
+
 	tmpDir, err := ioutil.TempDir("", "cross_version_login")
 	if err != nil {
 		s.Fatal("Failed to create temp directory: ", err)
