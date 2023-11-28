@@ -9,8 +9,11 @@ import (
 	"context"
 	"time"
 
+	ppb "chromiumos/system_api/printscanmgr_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/debugd"
+	"go.chromium.org/tast-tests/cros/local/printscanmgr"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 )
@@ -41,12 +44,49 @@ func checkDebugd(ctx context.Context) error {
 	return nil
 }
 
-// ResetCups removes the privileged directories for cupsd.
-// If cupsd is running, this stops it.
-func ResetCups(ctx context.Context) error {
-	// Make sure debugd is running - users will need this to add a printer after resetting CUPS.
-	if err := checkDebugd(ctx); err != nil {
-		return errors.Wrap(err, "debugd probe failed")
+// checkPrintscanmgr performs the same check as `checkDebugd` above, but for
+// printscanmgr instead of debugd.
+func checkPrintscanmgr(ctx context.Context) error {
+	// printscanmgr should be very quick when things are working, so use a much
+	// shorter timeout.
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	if err := upstart.EnsureJobRunning(ctx, "printscanmgr"); err != nil {
+		return errors.Wrap(err, "failed to ensure printscanmgr job is up")
+	}
+	p, err := printscanmgr.New(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to printscanmgr")
+	}
+	result, err := p.CupsAddManuallyConfiguredPrinter(ctx, &ppb.CupsAddManuallyConfiguredPrinterRequest{
+				Name:        "DebugdPrinterProbe",
+				Uri:         "",
+				PpdContents: []byte("")})
+	if err != nil {
+		return errors.Wrap(err, "failed to call printscanmgr.CupsAddManuallyConfiguredPrinter")
+	} else if result.Result != ppb.AddPrinterResult_ADD_PRINTER_RESULT_CUPS_INVALID_PPD {
+		return errors.Wrapf(err, "unexpected response from printscanmgr: got %s; want %s",
+			result.Result, ppb.AddPrinterResult_ADD_PRINTER_RESULT_CUPS_INVALID_PPD)
+	}
+
+	return nil
+}
+
+// ResetCups removes the privileged directories for cupsd. If cupsd is running,
+// this stops it. If `usePrintscanmgr` is true, this will ensure printscanmgr is
+// running. Otherwise, it will ensure debugd is running.
+func ResetCups(ctx context.Context, usePrintscanmgr bool) error {
+	// Make sure the appropriate daemon is running - users will need this to add a
+	// printer after resetting CUPS.
+	if (usePrintscanmgr) {
+		if err := checkPrintscanmgr(ctx); err != nil {
+			return errors.Wrap(err, "printscanmgr probe failed")
+		}
+	} else {
+		if err := checkDebugd(ctx); err != nil {
+			return errors.Wrap(err, "debugd probe failed")
+		}
 	}
 
 	if err := upstart.StopJob(ctx, "cupsd"); err != nil {

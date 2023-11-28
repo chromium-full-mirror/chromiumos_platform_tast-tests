@@ -33,7 +33,7 @@ func Run(ctx context.Context, chrome *chrome.Chrome, ppdFilePath, toPrintFilePat
 		return nil, errors.Wrap(err, "failed to read PPD file")
 	}
 
-	if err := printer.ResetCups(ctx); err != nil {
+	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
 		return nil, errors.Wrap(err, "failed to reset cupsd")
 	}
 

@@ -42,7 +42,7 @@ func usbPrinterURI(vid, pid string) string {
 }
 
 func USBPrinterTimeout(ctx context.Context, s *testing.State) {
-	if err := printer.ResetCups(ctx); err != nil {
+	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

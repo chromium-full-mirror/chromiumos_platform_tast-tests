@@ -78,7 +78,7 @@ func ParsePrinterUris(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to debugd: ", err)
 	}
 
-	if err := printer.ResetCups(ctx); err != nil {
+	if err := printer.ResetCups(ctx, /*usePrintscanmgr=*/false); err != nil {
 		s.Fatal("Failed to reset cupsd: ", err)
 	}
 

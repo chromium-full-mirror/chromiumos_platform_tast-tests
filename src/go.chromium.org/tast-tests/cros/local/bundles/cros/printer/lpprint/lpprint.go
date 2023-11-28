@@ -34,7 +34,7 @@ func Run(ctx context.Context, ppdFilePath, toPrintFilePath, options string, useP
 		return nil, errors.Wrap(err, "failed to read PPD file")
 	}
 
-	if err := printer.ResetCups(ctx); err != nil {
+	if err := printer.ResetCups(ctx, usePrintscanmgr); err != nil {
 		return nil, errors.Wrap(err, "failed to reset cupsd")
 	}
 
