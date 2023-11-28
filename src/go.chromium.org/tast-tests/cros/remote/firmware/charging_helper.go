@@ -26,7 +26,7 @@ import (
 // count and categories. This approach might look less elegant, but ii's
 // safer and provides a nice interface to extract data
 func GetChargingState(ctx context.Context, h *Helper) (map[string]string, error) {
-	chgstateOutput, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "chgstate", []string{`.*\ndebug output = .+\n`})
+	chgstateOutput, err := h.Servo.RunECCommandGetOutputNoConsoleLogsAllowRetries(ctx, "chgstate", []string{`.*\ndebug output = .+\n`})
 	if err != nil {
 		return nil, errors.Wrap(err, "EC chgstate command failed")
 	}

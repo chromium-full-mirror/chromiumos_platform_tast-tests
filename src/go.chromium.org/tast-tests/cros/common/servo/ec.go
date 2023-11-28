@@ -124,9 +124,7 @@ func (s *Servo) RunECCommandGetOutput(ctx context.Context, cmd string, patterns 
 	return ConvertToStringArrayArray(ctx, iList)
 }
 
-// RunECCommandGetOutputNoConsoleLogs works like RunECCommandGetOutput but automatically disables
-// all console logging, which could interfere with capturing command output.
-func (s *Servo) RunECCommandGetOutputNoConsoleLogs(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
+func (s *Servo) runECCommandGetOutputNoConsoleLogsHelper(ctx context.Context, cmd string, patterns []string, allowRetries bool) ([][]string, error) {
 	// EC console can be extremely chatty. Log messages are liable to interrupt
 	// the console output, breaking the regex pattern. Turn off all other channels
 	// and restore after.
@@ -149,8 +147,37 @@ func (s *Servo) RunECCommandGetOutputNoConsoleLogs(ctx context.Context, cmd stri
 
 	testing.ContextLog(ctx, "EC console logs off")
 
-	// Run command on the EC/DUT console
+	if allowRetries {
+		// Use a polling loop to retry the command if not successful.
+		var output [][]string
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			var errCmd error
+
+			output, errCmd = s.RunECCommandGetOutput(ctx, cmd, patterns)
+			if errCmd != nil {
+				testing.ContextLogf(ctx, "EC Command %q failed: %q", cmd, errCmd)
+			}
+			return errCmd
+		}, &testing.PollOptions{Timeout: 6 * time.Second, Interval: 2 * time.Second}); err != nil {
+			return nil, err
+		}
+		return output, nil
+	}
+
+	// If not allowing retries, just try command once and return
 	return s.RunECCommandGetOutput(ctx, cmd, patterns)
+}
+
+// RunECCommandGetOutputNoConsoleLogs works like RunECCommandGetOutput but automatically disables
+// all console logging, which could interfere with capturing command output.
+func (s *Servo) RunECCommandGetOutputNoConsoleLogs(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
+	return s.runECCommandGetOutputNoConsoleLogsHelper(ctx, cmd, patterns, false)
+}
+
+// RunECCommandGetOutputNoConsoleLogsAllowRetries works like RunECCommandGetOutputNoConsoleLogs but
+// allows the command to be retried up to twice if unsuccessful.
+func (s *Servo) RunECCommandGetOutputNoConsoleLogsAllowRetries(ctx context.Context, cmd string, patterns []string) ([][]string, error) {
+	return s.runECCommandGetOutputNoConsoleLogsHelper(ctx, cmd, patterns, true)
 }
 
 // GetECSystemPowerState returns the power state, like "S0" or "G3"
