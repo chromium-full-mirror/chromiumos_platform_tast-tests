@@ -40,9 +40,12 @@ const (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            fixture.Enrolled,
-		Desc:            "Fixture providing enrollment",
-		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Name: fixture.Enrolled,
+		Desc: "Fixture providing enrollment",
+		Contacts: []string{
+			"chromeos-commercial-remote-management@google.com",
+			"vsavu@google.com",
+		},
 		Impl:            &enrolledFixt{},
 		SetUpTimeout:    enrollmentSetupTimeout,
 		TearDownTimeout: 5 * time.Minute,
