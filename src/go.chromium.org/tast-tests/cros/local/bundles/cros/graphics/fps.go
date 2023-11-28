@@ -43,10 +43,8 @@ func init() {
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-			// TODO(b/277068246): Remove informational when it become stable.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
-			Val:       browser.TypeLacros,
-			Fixture:   "chromeGraphicsLacros",
+			Val:               browser.TypeLacros,
+			Fixture:           "chromeGraphicsLacros",
 		}},
 	})
 }
