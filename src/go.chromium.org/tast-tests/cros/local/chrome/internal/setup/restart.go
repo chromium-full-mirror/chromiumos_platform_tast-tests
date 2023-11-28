@@ -41,6 +41,17 @@ var fieldTrialConfig = testing.RegisterVarString(
 	"default",
 	"[enable|disable|default] Whether to force enable / disable fieldtrial_testing_config experiements, or use default.")
 
+// Calling chrome.New() causes chrome to restart twice in quick succession.
+// It restarts once when restarting the UI job to clear the existing session,
+// and again immediately after to start the desired Chrome session.
+// This can cause unexpected behavior for some platform components (i.e. bluetooth),
+// so this var can be used to insert a delay between restarting the UI job and starting the desired session.
+var pauseBetweenRestart = testing.RegisterVarString(
+	"setup.PauseBetweenRestart",
+	"0",
+	"Delay between Chrome restarts in seconds",
+)
+
 // stackProfilerArg returns the command line argument to enable or disable
 // the stack profiler. We always explicitly enable or disable the profiler to
 // avoid flakes.
@@ -66,6 +77,17 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 	if err := restartSession(ctx, cfg); err != nil {
 		return err
 	}
+
+	pause, err := strconv.Atoi(pauseBetweenRestart.Value())
+	if err != nil {
+		return errors.Wrapf(err, "unable to convert %v (value: %v) to int", pauseBetweenRestart.Name(), pauseBetweenRestart.Value())
+	}
+	if pause < 0 {
+		return errors.Errorf("%v (value: %v) cannot be a negative number", pauseBetweenRestart.Name(), pauseBetweenRestart.Value())
+	}
+	testing.ContextLogf(ctx, "Delaying Chrome start up by %v seconds", pause)
+	// GoBigSleepLint: Delay Chrome start up if specified by runtime var.
+	testing.Sleep(ctx, time.Duration(pause)*time.Second)
 
 	sm, err := session.NewSessionManager(ctx)
 	if err != nil {
