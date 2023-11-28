@@ -68,7 +68,7 @@ func InputOverlayReposition(ctx context.Context, s *testing.State) {
 		defer kb.Close(ctx)
 		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, params.TestConn)
 
-		menuEntry := nodewith.Name("Game controls").HasClass("ImageButton")
+		menuEntry := nodewith.Name("Game controls").HasClass("MenuEntryView")
 		editButton := nodewith.Name("Edit").HasClass("PillButton")
 		buttonGroup := nodewith.Name("Layout actions menu").Role(role.Group)
 		tapAction := nodewith.Name("Keymapping touch point").Role(role.Group).First()

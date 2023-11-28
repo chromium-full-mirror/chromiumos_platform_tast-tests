@@ -62,7 +62,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			// Close educational dialog.
 			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
 			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			// Tap bottom menu switch.
 			ui.LeftClick(nodewith.Name("Show key mapping").HasClass("ToggleButton")),
 			// Exit out of menu.
@@ -74,7 +74,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.Gone(upMoveKey),
 			gio.MoveOverlayButton(kb, gio.UpMoveKey, &params),
 			// Poll edits can still be done.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),
 			ui.WaitUntilExists(topTapKey),
 			ui.WaitUntilExists(upMoveKey),
@@ -92,7 +92,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 		s.Log("Display CUJ #2: disable game overlay")
 		if err := uiauto.Combine("disable game overlay",
 			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			// Tap top menu switch.
 			ui.LeftClick(nodewith.Name("Game controls").HasClass("ToggleButton")),
 			// Exit out of menu.
@@ -104,7 +104,7 @@ func InputOverlayDisplay(ctx context.Context, s *testing.State) {
 			ui.Gone(upMoveKey),
 			not(gio.MoveOverlayButton(kb, gio.UpMoveKey, &params)),
 			// Check "Customize" button disabled.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			ui.LeftClick(nodewith.Name("Edit").HasClass("LabelButtonLabel")),
 			not(ui.Gone(nodewith.Name("Edit").HasClass("LabelButtonLabel"))),
 		)(ctx); err != nil {

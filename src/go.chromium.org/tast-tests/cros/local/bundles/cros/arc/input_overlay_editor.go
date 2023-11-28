@@ -67,7 +67,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 			// Close educational dialog.
 			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
 			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			ui.LeftClick(editButton),
 			// Change mapping of "w" to "ESC" (NOTE: "w" key is used because, unlike the
 			// "n" key, the associated on-screen error messages have no overlapping text,
@@ -98,7 +98,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		s.Log("Editor CUJ #2: key mappings changes canceled")
 		if err := uiauto.Combine("cancel changed mapping",
 			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			ui.LeftClick(editButton),
 			// Change mapping of "n" to "l".
 			ui.LeftClick(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
@@ -118,7 +118,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		s.Log("Editor CUJ #3: key mapping changed to a non-existing key bind")
 		if err := uiauto.Combine("mapping unbound",
 			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			ui.LeftClick(editButton),
 			// Change mapping of "w" to "g"
 			ui.LeftClick(nodewith.Name(gio.UpMoveKey).HasClass("LabelButtonLabel")),
@@ -137,7 +137,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		s.Log("Editor CUJ #4: key mapping changed to another existing key bind")
 		if err := uiauto.Combine("mapping unbound",
 			// Open game controls.
-			ui.LeftClick(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.LeftClick(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			ui.LeftClick(editButton),
 			// Change mapping of "n" to " "
 			ui.LeftClick(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),

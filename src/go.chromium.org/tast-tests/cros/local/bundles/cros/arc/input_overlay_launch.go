@@ -48,7 +48,7 @@ func InputOverlayLaunch(ctx context.Context, s *testing.State) {
 			// Tap educational dialog.
 			ui.LeftClick(nodewith.Name("Got it").HasClass("LabelButtonLabel")),
 			// Find input overlay game control.
-			ui.WaitUntilExists(nodewith.Name("Game controls").HasClass("ImageButton")),
+			ui.WaitUntilExists(nodewith.Name("Game controls").HasClass("MenuEntryView")),
 			// Find input overlay tap buttons.
 			ui.WaitUntilExists(nodewith.Name(gio.TopTapKeyName).HasClass("LabelButtonLabel")),
 			ui.WaitUntilExists(nodewith.Name(gio.BotTapKey).HasClass("LabelButtonLabel")),
