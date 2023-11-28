@@ -1,0 +1,4 @@
+# Tast team for bulk/emergencies
+include /OWNERS.tast
+
+include chromiumos/platform/graphics:/OWNERS.video
