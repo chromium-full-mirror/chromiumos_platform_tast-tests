@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
-	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -21,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/chrome/useractions"
+	"go.chromium.org/tast-tests/cros/local/inputs/inputactions"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -45,6 +45,7 @@ const (
 	emojiPickerGifSupport
 	firstPartyVietnameseInput
 	altClickAndSixPackCustomization
+	orca
 )
 
 // List of fixture names for inputs.
@@ -62,6 +63,7 @@ const (
 	ClamshellNonVKInGuest                             = "clamshellNonVKInGuest"
 	ClamshellNonVKRestart                             = "clamshellNonVKRestart"
 	ClamshellNonVKWithMultiwordSuggest                = "clamshellNonVKWithMultiwordSuggest"
+	ClamshellNonVKWithOrca                            = "clamshellNonVKWithOrca"
 	ClamshellNonVKInGAIA                              = "clamshellNonVKInGAIA"
 	ClamshellVKWithHandWritingLegacyRecognitionOn     = "clamshellVKWithHandWritingLegacyRecognitionOn"
 	TabletVK                                          = "tabletVK"
@@ -82,6 +84,7 @@ const (
 	LacrosClamshellNonVKRestart                             = "lacrosClamshellNonVKRestart"
 	LacrosClamshellNonVKWithAltClickAndSixPackCustomization = "lacrosClamshellNonVKWithAltClickAndSixPackCustomization"
 	LacrosClamshellNonVKWithMultiwordSuggest                = "lacrosClamshellNonVKWithMultiwordSuggest"
+	LacrosClamshellNonVKWithOrca                            = "lacrosClamshellNonVKWithOrca"
 	LacrosClamshellNonVKWithDiacriticsOnPKLongpress         = "lacrosClamshellWithDiacriticsOnPKLongpress"
 	LacrosClamshellNonVKWithFirstPartyVietnamese            = "lacrosClamshellNonVKWithFirstPartyVietnamese"
 	LacrosTabletVK                                          = "lacrosTabletVK"
@@ -251,6 +254,21 @@ func init() {
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, assistMultiWord),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKWithOrca,
+		Desc: "Clamshell mode with VK disabled and Orca enabled",
+		Contacts: []string{
+			"alvinjia@google.com",
+			"shengjun@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, orca),
 		SetUpTimeout:    chrome.LoginTimeout,
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
@@ -513,6 +531,21 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: LacrosClamshellNonVKWithOrca,
+		Desc: "Lacros variant: clamshell mode with VK disabled and Orca enabled",
+		Contacts: []string{
+			"alvinjia@google.com",
+			"shengjun@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, orca),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: LacrosClamshellNonVKWithDiacriticsOnPKLongpress,
 		Desc: "Lacros variant: clamshell mode with VK disabled and diacritics on PK longpress",
 		Contacts: []string{
@@ -735,6 +768,9 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 			opts = append(opts, chrome.ExtraArgs(("--enable-features=SystemEmojiPickerGIFSupport")))
 		case altClickAndSixPackCustomization:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=AltClickAndSixPackCustomization"))
+		case orca:
+			opts = append(opts, chrome.ExtraArgs("--enable-features=OrcaDogfood,MantaService"))
+			opts = append(opts, chrome.LacrosEnableFeatures("OrcaDogfood"))
 		}
 	}
 
