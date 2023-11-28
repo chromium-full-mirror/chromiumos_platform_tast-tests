@@ -33,7 +33,11 @@ func init() {
 		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_1"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.power.MetricsService"},
+		ServiceDeps: []string{
+			"tast.cros.bluetooth.BluetoothService",
+			"tast.cros.power.DeviceSetupService",
+			"tast.cros.power.RecorderService",
+		},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{

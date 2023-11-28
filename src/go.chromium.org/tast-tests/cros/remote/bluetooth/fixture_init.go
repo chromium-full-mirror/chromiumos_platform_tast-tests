@@ -124,7 +124,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -153,7 +154,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 			serviceDepAudioService,
 		},
 	})
@@ -183,7 +185,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 			serviceDepAudioService,
 		},
 	})
@@ -212,7 +215,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -240,7 +244,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -268,7 +273,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -296,7 +302,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -324,7 +331,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -881,7 +889,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{
@@ -919,7 +928,8 @@ func init() {
 			serviceDepBluetoothService,
 			serviceDepChromeService,
 			serviceDepUpstartService,
-			serviceDepMetricsService,
+			serviceDepDeviceSetupService,
+			serviceDepRecorderService,
 		},
 	})
 	testing.AddFixture(&testing.Fixture{

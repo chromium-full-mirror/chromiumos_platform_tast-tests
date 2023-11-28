@@ -34,7 +34,8 @@ func init() {
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothService",
 			"tast.cros.bluetooth.BluetoothUIService",
-			"tast.cros.power.MetricsService",
+			"tast.cros.power.DeviceSetupService",
+			"tast.cros.power.RecorderService",
 		},
 		Timeout: 12 * time.Minute,
 		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},

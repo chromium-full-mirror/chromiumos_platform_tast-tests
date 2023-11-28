@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -25,12 +26,12 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
 
 	// for power measurement
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -102,7 +103,8 @@ const (
 	serviceDepAudioService         = "tast.cros.ui.AudioService"
 	serviceDepChromeService        = "tast.cros.browser.ChromeService"
 	serviceDepQuickSettingsService = "tast.cros.chrome.uiauto.quicksettings.QuickSettingsService"
-	serviceDepMetricsService       = "tast.cros.power.MetricsService"
+	serviceDepDeviceSetupService   = "tast.cros.power.DeviceSetupService"
+	serviceDepRecorderService      = "tast.cros.power.RecorderService"
 )
 
 // DUT D-Bus services.
@@ -236,9 +238,13 @@ type DUTConfig struct {
 	// UI related services in the quick settings.
 	QuickSettingsService qs.QuickSettingsServiceClient
 
-	// PowerMetricsService is a client of the MetricsService that measures the power
-	// consumption.
-	PowerMetricsService power.MetricsServiceClient
+	// PowerDeviceSetupService is a client of the DeviceSetupService that set-up
+	// the device for measuring power consumption.
+	PowerDeviceSetupService power.DeviceSetupServiceClient
+
+	// PowerRecorderService is a client of the RecorderService that measures the
+	// power consumption.
+	PowerRecorderService power.RecorderServiceClient
 }
 
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
@@ -247,15 +253,16 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		return nil, errors.Wrapf(err, "failed to Connect to the local gRPC service on DUT %s", dut.HostName())
 	}
 	return &DUTConfig{
-		DUT:                  dut,
-		DUTRPCClient:         rpcClient,
-		BluetoothService:     bts.NewBluetoothServiceClient(rpcClient.Conn),
-		BluetoothUIService:   bts.NewBluetoothUIServiceClient(rpcClient.Conn),
-		ChromeService:        ui.NewChromeServiceClient(rpcClient.Conn),
-		UpstartService:       platform.NewUpstartServiceClient(rpcClient.Conn),
-		AudioService:         ui.NewAudioServiceClient(rpcClient.Conn),
-		QuickSettingsService: qs.NewQuickSettingsServiceClient(rpcClient.Conn),
-		PowerMetricsService:  power.NewMetricsServiceClient(rpcClient.Conn),
+		DUT:                     dut,
+		DUTRPCClient:            rpcClient,
+		BluetoothService:        bts.NewBluetoothServiceClient(rpcClient.Conn),
+		BluetoothUIService:      bts.NewBluetoothUIServiceClient(rpcClient.Conn),
+		ChromeService:           ui.NewChromeServiceClient(rpcClient.Conn),
+		UpstartService:          platform.NewUpstartServiceClient(rpcClient.Conn),
+		AudioService:            ui.NewAudioServiceClient(rpcClient.Conn),
+		QuickSettingsService:    qs.NewQuickSettingsServiceClient(rpcClient.Conn),
+		PowerDeviceSetupService: power.NewDeviceSetupServiceClient(rpcClient.Conn),
+		PowerRecorderService:    power.NewRecorderServiceClient(rpcClient.Conn),
 	}, nil
 }
 
@@ -311,8 +318,16 @@ type FixtValue struct {
 	// UpstartService is a client of the UpstartService that manages system jobs.
 	UpstartService platform.UpstartServiceClient
 
-	// PowerMetricsService is a client of MetricsService to record the power consumption.
-	PowerMetricsService power.MetricsServiceClient
+	// PowerDeviceSetupService is a client of the DeviceSetupService that set-up
+	// the device for measuring power consumption.
+	PowerDeviceSetupService power.DeviceSetupServiceClient
+
+	// PowerRecorderService is a client of the RecorderService that measures the
+	// power consumption.
+	PowerRecorderService power.RecorderServiceClient
+
+	// PrimaryDutName is the host name of the primary DUT.
+	PrimaryDutName string
 }
 
 // PrimaryDUTConfig returns the DUTConfig for the primary DUT.
@@ -336,7 +351,7 @@ func (fv *FixtValue) CompanionDUTConfig(companionNum uint) *DUTConfig {
 // StartPowerRecording to start a recording for power metrics.
 func (fv *FixtValue) StartPowerRecording(ctx context.Context) error {
 	testing.ContextLog(ctx, "Start recording power metrics")
-	if _, err := fv.PowerMetricsService.Start(ctx, &empty.Empty{}); err != nil {
+	if _, err := fv.PowerRecorderService.Start(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to start recording power metrics")
 	}
 	return nil
@@ -344,35 +359,47 @@ func (fv *FixtValue) StartPowerRecording(ctx context.Context) error {
 
 // StopPowerRecording to stop the existing power recording.
 func (fv *FixtValue) StopPowerRecording(ctx context.Context, uploadTestName string) (*perf.Values, error) {
+	testing.ContextLog(ctx, "Stop recording power metrics")
 
-	path, ok := testing.ContextOutDir(ctx)
+	rRes, err := fv.PowerRecorderService.Stop(ctx, &empty.Empty{})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to stop recording metrics")
+	}
+	perfVals := perf.NewValuesFromProto(rRes.GetPerfMetrics())
+
+	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return nil, errors.New("failed to get OutDir")
 	}
-	remotePath := filepath.Join(path, "power_metrics")
 
-	testing.ContextLog(ctx, "Stop recording power metrics")
-	request := power.FinishRequest{Upload: true, OutDir: remotePath, TestName: uploadTestName}
-	values, err := fv.PowerMetricsService.Finish(ctx, &request)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to stop recording power metrics")
-	}
-
-	for i, dutConfig := range fv.DUTConfigs {
-		dut := dutConfig.DUT
-		powerDir := fmt.Sprintf("power_dut%d_%s", i, uploadTestName)
-		logPathDst := filepath.Join(path, powerDir)
-		if err := linuxssh.GetFile(ctx, dut.Conn(), remotePath, logPathDst, linuxssh.PreserveSymlinks); err != nil {
-			testing.ContextLogf(ctx, "Failed to copy %s from DUT to local path: %s. Error: %s", remotePath, logPathDst, err)
-		}
-		// Delete the log files from the DUT so that we have a clean run.
-		if err := dut.Conn().CommandContext(ctx, "rm", "-r", remotePath).Run(); err != nil {
-			testing.ContextLogf(ctx, "Failed to remove the log files from the DUT at the end of test: %s", err)
+	var logDir string
+	for i, c := range fv.DUTConfigs {
+		if c.DUT.HostName() == fv.PrimaryDutName {
+			logDir = filepath.Join(outDir, fmt.Sprintf("power_dut%d_%s", i, uploadTestName))
+			if err := os.MkdirAll(logDir, 0755); err != nil {
+				return nil, errors.Wrap(err, "failed to create log directory")
+			}
+			break
 		}
 	}
 
-	// Convert perfpb.Values to perf.Values
-	return perf.NewValuesFromProto(values), nil
+	if _, err := cp.CreateSaveUploadPowerLog(
+		ctx,
+		logDir,
+		uploadTestName,
+		"",
+		perfVals,
+		rRes.GetDeviceInfo(),
+		rRes.GetOneTimeMetrics(),
+	); err != nil {
+		return nil, errors.Wrap(err, "failed to save and upload power log")
+	}
+
+	if err := perfVals.Save(logDir); err != nil {
+		return nil, errors.Wrap(err, "failed to save perf data for crosbolt")
+	}
+
+	return perfVals, nil
 }
 
 // GetPowerMetrics calculates the mean value of requested power metrics.
@@ -470,6 +497,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	tf.fv.DUTConfigs = []*DUTConfig{primaryDUTConfig}
 
 	// Save shortcuts for primary DUT configs for ease of use in most tests.
+	tf.fv.PrimaryDutName = primaryDUTConfig.DUT.HostName()
 	tf.fv.DUTRPCClient = primaryDUTConfig.DUTRPCClient
 	tf.fv.BluetoothUIService = primaryDUTConfig.BluetoothUIService
 	tf.fv.BluetoothService = primaryDUTConfig.BluetoothService
@@ -477,7 +505,8 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	tf.fv.UpstartService = primaryDUTConfig.UpstartService
 	tf.fv.AudioService = primaryDUTConfig.AudioService
 	tf.fv.QuickSettingsService = primaryDUTConfig.QuickSettingsService
-	tf.fv.PowerMetricsService = primaryDUTConfig.PowerMetricsService
+	tf.fv.PowerRecorderService = primaryDUTConfig.PowerRecorderService
+	tf.fv.PowerDeviceSetupService = primaryDUTConfig.PowerDeviceSetupService
 
 	// Configure companion DUT.
 	if tf.features.RequireCompanionDUT {
@@ -633,25 +662,45 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		if tf.features.PowerEnabled {
 			// Create message SetupRequest
 			s.Log("=== Configure Power Measurement ===")
-			setupRequest := power.SetupRequest{Fixture: power.SetupRequest_NO_UI_NO_WIFI_BT,
-				IntervalSecond: DefaultBTPowerIntervalSecond}
+
+			setupRequest := power.DeviceSetupRequest{
+				Ui:                 power.UIMode_DISABLE_UI,
+				ScreenBrightness:   power.ScreenMode_ZERO_SCREEN_BRIGHTNESS,
+				KeyboardBrightness: power.KeyboardMode_ZERO_KEYBOARD_BRIGHTNESS,
+				Wifi:               power.WifiMode_DISABLE_WIFI,
+				Bluetooth:          power.BluetoothMode_DO_NOT_CHANGE_BLUETOOTH,
+			}
 
 			if tf.features.EnableChromeUI || tf.features.EnableAudioUI {
 				s.Log("Allow UI for power measurement")
-				setupRequest = power.SetupRequest{Fixture: power.SetupRequest_UI_NO_WIFI_BT,
-					IntervalSecond: DefaultBTPowerIntervalSecond}
+				setupRequest.Ui = power.UIMode_DO_NOT_CHANGE_UI
 			}
 
-			if _, err := dutConfig.PowerMetricsService.Setup(ctx, &setupRequest); err != nil {
-				s.Fatal("Failed to set up metrics service: ", err)
+			if _, err := dutConfig.PowerDeviceSetupService.Setup(ctx, &setupRequest); err != nil {
+				s.Fatal("Failed to set up device for power measurement: ", err)
 			}
-
 			defer func(ctx context.Context) {
 				if !s.HasError() {
 					return
 				}
-				if _, err := dutConfig.PowerMetricsService.Cleanup(ctx, &empty.Empty{}); err != nil {
-					s.Error("Clean up power metrics failed: ", err)
+				if _, err := dutConfig.PowerDeviceSetupService.Cleanup(ctx, &empty.Empty{}); err != nil {
+					s.Error("Restore device setup failed: ", err)
+				}
+			}(cleanupCtx)
+
+			recorderRequest := power.RecorderRequest{
+				IntervalSec: DefaultBTPowerIntervalSecond,
+			}
+
+			if _, err := dutConfig.PowerRecorderService.Create(ctx, &recorderRequest); err != nil {
+				s.Fatal("Failed to set up recorder for power measurement: ", err)
+			}
+			defer func(ctx context.Context) {
+				if !s.HasError() {
+					return
+				}
+				if _, err := dutConfig.PowerRecorderService.Close(ctx, &empty.Empty{}); err != nil {
+					s.Error("Closing power recorder failed: ", err)
 				}
 			}(cleanupCtx)
 		}
@@ -744,8 +793,11 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 
 		// Cleanup for power metrics service
 		if tf.features.PowerEnabled {
-			if _, err := dutConfig.PowerMetricsService.Cleanup(ctx, &empty.Empty{}); err != nil {
+			if _, err := dutConfig.PowerDeviceSetupService.Cleanup(ctx, &empty.Empty{}); err != nil {
 				s.Error("Clean up power metrics failed: ", err)
+			}
+			if _, err := dutConfig.PowerRecorderService.Close(ctx, &empty.Empty{}); err != nil {
+				s.Error("Closing power recorder failed: ", err)
 			}
 		}
 
