@@ -342,7 +342,7 @@ func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName, readTimeout t
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 	}
-	return common.NewBufferedConsole("", 2048, uartOpener)
+	return common.NewBufferedConsole("uart_"+string(name), 2048, uartOpener)
 }
 
 // CcdSerialInterface opens a handle for communication to/from a USB interface on the chip under
@@ -370,7 +370,7 @@ func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTim
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
 	}
-	return common.NewBufferedConsole("", 2048, uartOpener)
+	return common.NewBufferedConsole("ccd_"+string(name), 2048, uartOpener)
 }
 
 type andreiboardApFlash struct {
