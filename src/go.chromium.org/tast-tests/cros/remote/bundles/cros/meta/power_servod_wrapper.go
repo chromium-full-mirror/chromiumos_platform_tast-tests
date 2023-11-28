@@ -97,7 +97,15 @@ func init() {
 				Name: "cpd_browsing",
 				Val: testParams{
 					cpd:     true,
-					subtest: "power.Browsing.light_ash",
+					subtest: "power.Browsing.ash",
+				},
+				ExtraAttr: []string{"group:power", "power_cpd"},
+			},
+			{
+				Name: "cpd_browsing_heavy",
+				Val: testParams{
+					cpd:     true,
+					subtest: "power.Browsing.heavy_ash",
 				},
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
