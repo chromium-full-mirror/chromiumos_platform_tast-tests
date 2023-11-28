@@ -62,12 +62,20 @@ const CertificatesPageURL = "chrome://settings/certificates"
 // (while a real touch works). Send "enter" as a workaround.
 func PressOkButton(ctx context.Context, ui *uiauto.Context, parent *nodewith.Finder) (retErr error) {
 	okButton := nodewith.Name("OK").Role(role.Button).Ancestor(parent)
-	if err := uiauto.Combine("press OK",
-		ui.WaitUntilExists(okButton.Focusable()),
-		ui.DoDefault(okButton),
-		ui.WithTimeout(3*time.Second).WaitUntilGone(okButton),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to focus on OK button")
+	// On slower boards OK button is shown with delay, need to retry this step.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if buttonErr := uiauto.Combine("press OK",
+			ui.WaitUntilExists(okButton.Focusable()),
+			ui.DoDefault(okButton))(ctx); buttonErr != nil {
+			return errors.Wrap(buttonErr, "failed to focus on OK button")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 7 * time.Second}); err != nil {
+		return err
+	}
+
+	if err := ui.WithTimeout(7 * time.Second).WaitUntilGone(okButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for OK button has gone")
 	}
 	return nil
 }
