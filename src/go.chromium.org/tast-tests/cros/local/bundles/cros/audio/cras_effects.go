@@ -71,6 +71,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectEnabled,
 						DSPNC:   internal.EffectEnabled,
 						CrasAPM: internal.EffectEnabled, // For DSP AEC.
 						APNC:    internal.EffectDisabled,
@@ -89,6 +90,7 @@ func init() {
 						{flags: []string{"--effects=0x0"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
 						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
 						CrasAPM: internal.EffectEnabled,  // For AP NC.
 						APNC:    internal.EffectEnabled,  // NC fallback.
@@ -107,6 +109,7 @@ func init() {
 						{flags: []string{"--effects=0x10"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
 						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
 						CrasAPM: internal.EffectEnabled,  // For AP NC.
 						APNC:    internal.EffectEnabled,  // NC fallback.
@@ -126,6 +129,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
 						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
 						CrasAPM: internal.EffectEnabled,  // For AP NC.
 						APNC:    internal.EffectEnabled,  // NC fallback.
@@ -147,6 +151,7 @@ func init() {
 						}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled,
 						DSPNC:   internal.EffectEnabled, // NC enabled.
 						CrasAPM: internal.EffectDisabled,
 						APNC:    internal.EffectDisabled,
@@ -166,6 +171,7 @@ func init() {
 						{flags: []string{"--effects=0x0"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
 						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
 						CrasAPM: internal.EffectEnabled,  // For AP NC.
 						APNC:    internal.EffectEnabled,  // AP NC fallback.
@@ -188,6 +194,7 @@ func init() {
 						}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectEnabled,
 						DSPNC:   internal.EffectEnabled, // NC enabled.
 						CrasAPM: internal.EffectEnabled, // For DSP AEC.
 						APNC:    internal.EffectDisabled,
@@ -206,6 +213,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled, // Blocked by echo reference: user selection.
 						DSPNC:   internal.EffectDisabled, // Blocked by echo reference: user selection.
 						CrasAPM: internal.EffectEnabled,  // CRAS AEC fallback.
 						APNC:    internal.EffectEnabled,  // CRAS NC fallback.
@@ -225,6 +233,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled, // Blocked by echo reference: playback.
 						DSPNC:   internal.EffectDisabled, // Blocked by echo reference: playback.
 						CrasAPM: internal.EffectEnabled,  // CRAS AEC fallback.
 						APNC:    internal.EffectEnabled,  // CRAS NC fallback.
@@ -244,6 +253,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}},
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectEnabled,
 						DSPNC:   internal.EffectEnabled,
 						CrasAPM: internal.EffectEnabled, // CRAS APM required by DSP AEC.
 						APNC:    internal.EffectDisabled,
@@ -263,6 +273,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectEnabled,
 						DSPNC:   internal.EffectEnabled,
 						CrasAPM: internal.EffectEnabled,
 						APNC:    internal.EffectDisabled,
@@ -281,6 +292,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectEnabled,
 						DSPNC:   internal.EffectDisabled,
 						CrasAPM: internal.EffectEnabled,
 						APNC:    internal.EffectDisabled,
@@ -299,6 +311,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled,
 						DSPNC:   internal.EffectDisabled,
 						CrasAPM: internal.EffectEnabled,
 						APNC:    internal.EffectEnabled,
@@ -317,6 +330,7 @@ func init() {
 						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectDisabled,
 						DSPNC:   internal.EffectDisabled,
 						CrasAPM: internal.EffectEnabled,
 						APNC:    internal.EffectDisabled,
@@ -336,6 +350,7 @@ func init() {
 						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectUnavailable,
 						DSPNC:   internal.EffectEnabled,
 						CrasAPM: internal.EffectDisabled,
 						APNC:    internal.EffectDisabled,
@@ -354,6 +369,7 @@ func init() {
 						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectUnavailable,
 						DSPNC:   internal.EffectDisabled,
 						CrasAPM: internal.EffectDisabled,
 						APNC:    internal.EffectDisabled,
@@ -373,6 +389,7 @@ func init() {
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					expectEffects: effects{
+						DSPAEC:  internal.EffectUnavailable,
 						DSPNC:   internal.EffectDisabled,
 						CrasAPM: internal.EffectDisabled,
 						APNC:    internal.EffectDisabled,
@@ -391,6 +408,7 @@ func init() {
 						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectUnavailable,
 						DSPNC:   internal.EffectEnabled,
 						CrasAPM: internal.EffectEnabled,
 						APNC:    internal.EffectDisabled,
@@ -409,6 +427,7 @@ func init() {
 						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
 					},
 					expectEffects: effects{
+						DSPAEC:  internal.EffectUnavailable,
 						DSPNC:   internal.EffectDisabled,
 						CrasAPM: internal.EffectEnabled,
 						APNC:    internal.EffectDisabled,
@@ -428,6 +447,7 @@ func init() {
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					expectEffects: effects{
+						DSPAEC:  internal.EffectUnavailable,
 						DSPNC:   internal.EffectDisabled,
 						CrasAPM: internal.EffectEnabled,
 						APNC:    internal.EffectDisabled,
@@ -452,6 +472,7 @@ type crasEffectsParam struct {
 // effects observed and expected.
 // A effect is set to EffectEnabled if it is enabled for any stream.
 type effects struct {
+	DSPAEC  internal.EffectState
 	DSPNC   internal.EffectState
 	CrasAPM internal.EffectState
 	APNC    internal.EffectState
@@ -597,6 +618,10 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 	}
 
 	currentProcessingState := func(ctx context.Context) effects {
+		dspAEC, err := internal.DSPEchoCancellationState(ctx)
+		if err != nil {
+			s.Fatal("Cannot get DSPEchoCancellationState: ", err)
+		}
 		dspNC, err := internal.DSPNoiseCancellationState(ctx)
 		if err != nil {
 			s.Fatal("Cannot get DSPNoiseCancellationState: ", err)
@@ -606,6 +631,7 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 			s.Fatal("Cannot get CrasProcessingState: ", err)
 		}
 		return effects{
+			DSPAEC:  dspAEC,
 			DSPNC:   dspNC,
 			CrasAPM: snap.CrasAPM,
 			APNC:    snap.APNC,

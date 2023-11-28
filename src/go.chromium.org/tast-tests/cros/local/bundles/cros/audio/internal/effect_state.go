@@ -64,31 +64,57 @@ func amixerCget(ctx context.Context, cardID, arg string) (EffectState, error) {
 	return EffectUnavailable, errors.Errorf("cannot tell %q state from %q; stderr: %q", arg, stdout, stderr)
 }
 
-// DSPNoiseCancellationState tells whether DSP effects are active.
+func hasCardID(cards []audio.Card, id string) bool {
+	for _, card := range cards {
+		if card.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
+// DSPEchoCancellationState tells whether DSP echo cancellation is active.
+func DSPEchoCancellationState(ctx context.Context) (EffectState, error) {
+	cards, err := audio.GetSoundCards()
+	if err != nil {
+		return EffectUnavailable, errors.Wrap(err, "failed to GetSoundCards()")
+	}
+
+	// Redrix and friends.
+	if id := "sofrt5682"; hasCardID(cards, id) {
+		b, err := testexec.CommandContext(ctx, "sof-ctl", "-Dhw:"+id, "-c", "name='GOOGLE_RTC_AUDIO_PROCESSING10.0 Config'", "-r", "-b").CombinedOutput(testexec.DumpLogOnError)
+		if err != nil {
+			return EffectUnavailable, errors.Wrap(err, "error running sof-ctl")
+		}
+		s := string(b)
+		if strings.Contains(s, "00000000 040a 0232 0008") {
+			return EffectDisabled, nil
+		}
+		if strings.Contains(s, "00000000 040a 0232 0108") {
+			return EffectEnabled, nil
+		}
+		return EffectUnavailable, errors.Errorf("cannot tell DSP AEC status from %q", s)
+	}
+
+	return EffectUnavailable, nil
+}
+
+// DSPNoiseCancellationState tells whether DSP noise cancellation is active.
 func DSPNoiseCancellationState(ctx context.Context) (EffectState, error) {
 	cards, err := audio.GetSoundCards()
 	if err != nil {
 		return EffectUnavailable, errors.Wrap(err, "failed to GetSoundCards()")
 	}
 
-	hasCardID := func(id string) bool {
-		for _, card := range cards {
-			if card.ID == id {
-				return true
-			}
-		}
-		return false
-	}
-
 	// Control used by redrix and friends.
-	if id := "sofrt5682"; hasCardID(id) {
+	if id := "sofrt5682"; hasCardID(cards, id) {
 		return amixerCget(ctx, id, "name='RTNR10.0 rtnr_enable_10'")
 	}
 	// Control used by dojo.
-	if id := "sofm8195m983905"; hasCardID(id) {
+	if id := "sofm8195m983905"; hasCardID(cards, id) {
 		return amixerCget(ctx, id, "name='RTNR3.0 rtnr_enable_3'")
 	}
-	return EffectUnavailable, err
+	return EffectUnavailable, nil
 }
 
 // CrasProcessingMonitor monitors the state of audio processing in CRAS.
