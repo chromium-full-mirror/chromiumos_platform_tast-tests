@@ -175,7 +175,7 @@ func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
 		data.screenIds = []fwCommon.FwScreenID{
 			fwCommon.DeveloperMode,
 		}
-		data.logs = []string{`External boot is disabled`}
+		data.logs = []string{`(External boot is disabled|Dev mode external boot not allowed)`}
 	case firmware.TabletDetachableSwitcher:
 		data.screenIds = []fwCommon.FwScreenID{
 			fwCommon.LegacyDeveloperWarningMenu,
@@ -191,7 +191,7 @@ func identifyDisabledUSBBootFwLog(h *firmware.Helper) disabledUSBBootFwLog {
 			fwCommon.LegacyDeveloperWarning,
 			fwCommon.LegacyBlank,
 		}
-		data.logs = []string{`(USB booting is disabled|Dev mode external boot not allowed)`}
+		data.logs = []string{`USB booting is disabled`}
 	}
 	return data
 }
