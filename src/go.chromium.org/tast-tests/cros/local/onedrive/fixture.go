@@ -136,7 +136,6 @@ type fixture struct {
 	tconn         *chrome.TestConn
 	chromeOptions []chrome.Option
 	bt            browser.Type
-	cleanUpFiles  []TestFile
 	// Full path to the new folder created in Downloads to host the office files used by the test.
 	downloadSubFolder string
 	screenRecorder    *uiauto.ScreenRecorder
@@ -251,28 +250,6 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 }
 
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	// The deletion in the loop below often fails, here we delete files from previous runs.
-	if len(f.cleanUpFiles) > 0 {
-		DeleteOldRemoteFiles(ctx, f.cleanUpFiles[0].FileName)
-	}
-
-	// NOTE: The deletion below fails if the files are still open in the UI (Office 365 PWA).
-	for _, testFile := range f.cleanUpFiles {
-		name := testFile.FileName
-		files, err := filepath.Glob(filemanager.FuseboxDirPath + "/fsp.*/" + name)
-		if err != nil {
-			s.Logf("Failed cleaning up file: %s. %v", name, err)
-		} else {
-			for _, file := range files {
-				s.Log("Deleting: ", file)
-				if err := deleteFileRetrying(ctx, file); err != nil {
-					s.Logf("Failed deleting the remote file: %s. %v", file, err)
-				}
-			}
-		}
-	}
-
-	f.cleanUpFiles = []TestFile{}
 	// For DriveFS the parent fixture takes care of closing it.
 	if f.provider == filesconsts.OneDrive {
 		if err := f.cr.Close(ctx); err != nil {
@@ -320,7 +297,6 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		xlsx,
 	}
 	f.data.GeneratedFiles = generatedFiles
-	f.cleanUpFiles = append(f.cleanUpFiles, generatedFiles...)
 
 	// Open a new tab for Lacros to make sure Lacros process is alive during the entire test.
 	// Note:
@@ -374,6 +350,30 @@ func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 			if (err == nil) && info.Mode().IsRegular() {
 				if err := os.Remove(filepath.Join(f.downloadSubFolder, info.Name())); err != nil {
 					s.Logf("Failed to remove local file: %q - %v", info.Name(), err)
+				}
+			}
+		}
+	}
+
+	// Old remote files from previous runs. NOTE: This is done at the end of
+	// each test, because each test can be using a different Microsoft account.
+	if len(f.data.GeneratedFiles) > 0 {
+		DeleteOldRemoteFiles(ctx, f.data.GeneratedFiles[0].FileName)
+	}
+
+	// Remote files added during the fixture. NOTE: The deletion below fails if
+	// the files are still open in the UI (Office 365 PWA), or are still in a
+	// locked state in ODFS.
+	for _, testFile := range f.data.GeneratedFiles {
+		name := testFile.FileName
+		files, err := filepath.Glob(filemanager.FuseboxDirPath + "/fsp.*/" + name)
+		if err != nil {
+			s.Logf("Failed cleaning up file: %s. %v", name, err)
+		} else {
+			for _, file := range files {
+				s.Log("Deleting: ", file)
+				if err := deleteFileRetrying(ctx, file); err != nil {
+					s.Logf("Failed deleting the remote file: %s. %v", file, err)
 				}
 			}
 		}
