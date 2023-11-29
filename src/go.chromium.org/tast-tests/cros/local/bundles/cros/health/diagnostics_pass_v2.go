@@ -34,7 +34,7 @@ func init() {
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			Fixture: "crosHealthdRunningAndRebootDUT",
 			// TODO(b/295497926): Promote tast to critical
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: kerker@google.com
 			Name:    "audio_driver",
@@ -48,7 +48,7 @@ func init() {
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			Fixture: "crosHealthdRunningAndRebootDUT",
 			// TODO(b/281766836): Promote tast to critical
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "ufs_lifetime",

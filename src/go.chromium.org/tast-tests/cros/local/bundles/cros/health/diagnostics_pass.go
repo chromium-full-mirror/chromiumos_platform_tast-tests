@@ -58,13 +58,13 @@ func init() {
 			Name:      "cpu_cache",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
 			Fixture:   "crosHealthdRunningAndRebootDUT",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: yycheng@google.com
 			Name:      "cpu_stress",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 			Fixture:   "crosHealthdRunningAndRebootDUT",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "floating_point_accuracy",
@@ -120,7 +120,7 @@ func init() {
 			Name:      "memory",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
 			Fixture:   "crosHealthdRunningAndRebootDUT",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: byronlee@google.com
 			Name:      "sensitive_sensor",
