@@ -317,7 +317,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 			if p.ICMPv4 != nil && p.ICMPv4.TypeCode.Type() == layers.ICMPv4TypeEchoRequest {
 				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("ICMPv4 packet marked with DSCP %d", p.DSCP())
+					return errors.Errorf("ICMPv4 packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetICMPv4EchoRequest
 				continue
@@ -325,7 +325,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 			if isFromMAC(p, clientMac) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeEchoRequest {
 				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("ICMPv6 Echo Request marked with DSCP %d", p.DSCP())
+					return errors.Errorf("ICMPv6 Echo Request marked with wrong DSCP: %s", p)
 				}
 				seen |= packetICMPv6EchoRequest
 				continue
@@ -333,7 +333,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 			if isFromMAC(p, clientMac) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeRouterSolicitation {
 				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("ICMPv6 Router Solicitation marked with DSCP %d", p.DSCP())
+					return errors.Errorf("ICMPv6 Router Solicitation marked with wrong DSCP: %s", p)
 				}
 				seen |= packetICMPv6RouterSolicitation
 				continue
@@ -341,7 +341,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 			if isFromMAC(p, clientMac) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeNeighborSolicitation {
 				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("ICMPv6 Neighbor Solicitation marked with DSCP %d", p.DSCP())
+					return errors.Errorf("ICMPv6 Neighbor Solicitation marked with wrong DSCP: %s", p)
 				}
 				seen |= packetICMPv6NeighborSolicitation
 				continue
@@ -353,7 +353,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			// gateway.
 			if isFromMAC(p, clientMac) && p.DNS != nil {
 				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("DNS packet marked with DSCP %d", p.DSCP())
+					return errors.Errorf("DNS packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetDNS
 				continue
@@ -361,7 +361,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 			if isFromMAC(p, clientMac) && p.TCP != nil && p.TCP.DstPort == 443 {
 				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("DoH/HTTPS/TCP packet marked with DSCP %d", p.DSCP())
+					return errors.Errorf("DoH/HTTPS/TCP packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetDoH
 				continue
@@ -370,7 +370,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			// Check outgoing TCP SYN packet mark.
 			if isFromMAC(p, clientMac) && p.TCP != nil && p.TCP.SYN {
 				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("TCP SYN packet marked with DSCP %d", p.DSCP())
+					return errors.Errorf("TCP SYN packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetTCPSyn
 				continue
