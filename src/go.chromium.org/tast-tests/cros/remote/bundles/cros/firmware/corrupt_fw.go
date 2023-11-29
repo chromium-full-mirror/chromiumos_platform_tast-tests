@@ -28,6 +28,8 @@ import (
 type corruptSingleSectionVals struct {
 	sectionA bios.ImageSection
 	sectionB bios.ImageSection
+	bodyA bios.ImageSection
+	bodyB bios.ImageSection
 }
 
 func init() {
@@ -48,28 +50,28 @@ func init() {
 				Name:    "body_normal",
 				Fixture: fixture.NormalMode,
 				Val: &corruptSingleSectionVals{
-					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
+					bios.FWBodyAImageSection, bios.FWBodyBImageSection, bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 			{
 				Name:    "body_dev",
 				Fixture: fixture.DevModeGBB,
 				Val: &corruptSingleSectionVals{
-					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
+					bios.FWBodyAImageSection, bios.FWBodyBImageSection, bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 			{
 				Name:    "sig_normal",
 				Fixture: fixture.NormalMode,
 				Val: &corruptSingleSectionVals{
-					bios.FWSignAImageSection, bios.FWSignBImageSection,
+					bios.FWSignAImageSection, bios.FWSignBImageSection, bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 			{
 				Name:    "sig_dev",
 				Fixture: fixture.DevModeGBB,
 				Val: &corruptSingleSectionVals{
-					bios.FWSignAImageSection, bios.FWSignBImageSection,
+					bios.FWSignAImageSection, bios.FWSignBImageSection, bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 		},
@@ -171,7 +173,7 @@ func CorruptFW(ctx context.Context, s *testing.State) {
 
 	s.Log("Corrupting FW bodies")
 	// - Get the body sizes
-	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-p", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection)).Output(ssh.DumpLogOnError)
+	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-p", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), string(val.bodyA), string(val.bodyB)).Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed getting section sizes: ", err)
 	}
@@ -189,8 +191,8 @@ func CorruptFW(ctx context.Context, s *testing.State) {
 	}
 	// - Generate a new image that contains those bodies
 	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir), fmt.Sprintf("%s/bios_backup.bin", remoteTempDir),
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", string(bios.FWBodyAImageSection), remoteTempDir, string(bios.FWBodyAImageSection)),
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", string(bios.FWBodyBImageSection), remoteTempDir, string(bios.FWBodyBImageSection)),
+		fmt.Sprintf("%s:%s/%s_corrupt.bin", string(val.bodyA), remoteTempDir, string(val.bodyA)),
+		fmt.Sprintf("%s:%s/%s_corrupt.bin", string(val.bodyB), remoteTempDir, string(val.bodyB)),
 	).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed futility load_fmap: ", err)
