@@ -571,9 +571,9 @@ func (r *Runner) SetAndVerifyRegulatoryDomain(ctx context.Context, country strin
 		return errors.Wrap(err, "failed to read regulatory status")
 	}
 
-	// We've set AP to the US country code. However, some drivers may implement subset of that domain (99).
-	// So we should be happy with regdomain that is just different than `00`.
-	if domain == "00" {
+	// We've set the country code. However, some drivers may implement subset of that domain (99).
+	// So we should be happy with regdomain that is just different than `00` when the required is not `00`.
+	if country != "00" && domain == "00" {
 		return errors.New("wrong domain, required != 00, got 00")
 	}
 	return nil

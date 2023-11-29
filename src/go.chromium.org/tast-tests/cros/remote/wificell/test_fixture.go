@@ -2509,6 +2509,10 @@ func (tf *TestFixture) ResetRegdomain(ctx context.Context, regDomain string) err
 		testing.ContextLog(ctx, "The regulatory domain is self-managed, no need to reset")
 		return nil
 	}
+	if !(len(regDomain) == 2 && regDomain[0] >= 'A' && regDomain[0] <= 'Z' && regDomain[1] >= 'A' && regDomain[1] <= 'Z') {
+		testing.ContextLogf(ctx, "The regulatory domain %s is not a valid alpha2 code, resetting the regulatory domain to 00", regDomain)
+		regDomain = "00"
+	}
 	if err := iwr.SetAndVerifyRegulatoryDomain(ctx, regDomain); err != nil {
 		return errors.Wrapf(err, "failed to reset the non-self-managed regulatory domain to %s", regDomain)
 	}
