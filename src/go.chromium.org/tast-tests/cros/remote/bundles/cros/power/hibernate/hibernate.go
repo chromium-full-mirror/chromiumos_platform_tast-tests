@@ -120,7 +120,7 @@ func (t *Tester) HibernateAndResume(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to create %s", rebootAfterHibernatePath)
 	}
 	defer func() {
-	      _ = t.dut.Conn().CommandContext(ctx, "/bin/rm", rebootAfterHibernatePath).Run()
+		_ = t.dut.Conn().CommandContext(ctx, "/bin/rm", rebootAfterHibernatePath).Run()
 	}()
 
 	if err := t.hibernate(ctx, true); err != nil {
@@ -489,8 +489,8 @@ func (t *Tester) loginToResume(ctx context.Context) error {
 	}
 
 	if err != nil &&
-		!strings.Contains(err.Error(), "rpcc: the connection is closing") ||
-		!strings.Contains(err.Error(), "waiting for OOBE to be dismissed failed: OOBE not dismissed") {
+		(!strings.Contains(err.Error(), "rpcc: the connection is closing") ||
+			!strings.Contains(err.Error(), "waiting for OOBE to be dismissed failed: OOBE not dismissed")) {
 		return errors.Wrap(err, "unexpected error type from login")
 	}
 
