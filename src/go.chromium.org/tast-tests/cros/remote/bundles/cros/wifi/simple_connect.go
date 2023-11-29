@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/network/ping"
@@ -26,6 +27,7 @@ import (
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/wifiutil"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -180,7 +182,7 @@ func init() {
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11ac network on channel 157 with center channel of 155 and channel width of 80MHz.
-				// The router is forced to use 80 MHz wide rates only.
+				// The router is forced to use VHT WiFi standard.
 				Name:    "80211acvht80pure",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
@@ -231,7 +233,7 @@ func init() {
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz.
-				// The router is forced to use 80 MHz wide rates only.
+				// The router is forced to use HE WiFi standard.
 				Name:      "80211axhe80pure",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
@@ -243,6 +245,129 @@ func init() {
 				}},
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
+			}, {
+				// Verifies that DUT can connect to an OWE 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz.
+				Name:      "80211axeowe",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac:       owe.NewConfigFactory(owe.ModePureOWE),
+					expectedSecurity: shillconst.SecurityOWE,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01", "wifi-sec-0008-v02", "wifi-cert-0004-v02"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz.
+				Name:              "80211axe20",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz.
+				Name:              "80211axe40",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC),
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
+				Name:              "80211axe80mixed",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
+				// The router is forced to use HE WiFi standard.
+				Name:              "80211axe80pure",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0006-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
+				Name:              "80211axe160mixed",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0016-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
+				// The router is forced to use HE WiFi standard.
+				Name:              "80211axe160pure",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				ExtraRequirements: []string{"wifi-gen-0003-v01", "wifi-rf-0016-v01"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11be network on channel 40 with a channel width of 20MHz.
 				Name:      "80211beeht20",
@@ -281,7 +406,7 @@ func init() {
 				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11be network on channel 157 with center channel of 155 and channel width of 80MHz.
-				// The router is forced to use 80 MHz wide rates only.
+				// The router is forced to use EHT WiFi standard.
 				Name:      "80211beeht80pure",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
@@ -1682,6 +1807,22 @@ func SimpleConnect(ctx context.Context, s *testing.State) {
 		ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
 		defer cancel()
 		s.Log("AP setup done")
+
+		// For 6GHz tests, initialize the DUT regdomain to US so that the DUT is
+		// able to actively scan the 6GHz band.
+		if ap.Is6GHzOpClass(apIface.Config().OpClass) {
+			initialRegDomain, err := tf.InitializeRegdomainUS(ctx)
+			if err != nil {
+				s.Fatal("Failed to initialize the regulatory domain: ", err)
+			}
+			defer func(ctx context.Context) {
+				if err := tf.ResetRegdomain(ctx, initialRegDomain); err != nil {
+					s.Error("Failed to reset the regulatory domain: ", err)
+				}
+			}(ctx)
+			ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
+			defer cancel()
+		}
 
 		// Some tests may fail as expected at following ConnectWifiAP(). In that case entries should still be deleted properly.
 		defer func(ctx context.Context) {

@@ -186,7 +186,7 @@ func simpleConnect80211ac() []*simpleConnectParams {
 		Name:    "80211acvht80pure",
 		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an open 802.11ac network on channel 157 with center channel of 155 and channel width of 80MHz."),
-			"The router is forced to use 80 MHz wide rates only."),
+			"The router is forced to use VHT WiFi standard."),
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211acPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
@@ -234,13 +234,133 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Doc: append(simpleConnectDocPref("an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz."),
-			"The router is forced to use 80 MHz wide rates only."),
+			"The router is forced to use HE WiFi standard."),
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 		`}},
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
+	}}
+}
+
+func simpleConnect80211axe() []*simpleConnectParams {
+	return []*simpleConnectParams{{
+		Name:      "80211axeowe",
+		Fixture:   defaultFixture,
+		Doc:       simpleConnectDocPref("an OWE 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz."),
+		ExtraAttr: []string{"wificell_unstable"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+				ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+			SecConfFac:       "owe.NewConfigFactory(owe.ModePureOWE)",
+			ExpectedSecurity: "shillconst.SecurityOWE",
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
+		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax, tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
+	}, {
+		Name:              "80211axe20",
+		Fixture:           defaultFixture,
+		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz."),
+		ExtraAttr:         []string{"wificell_unstable"},
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+				ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+			SecConfFac: `wpa.NewConfigFactory("chromeos",
+				wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
+		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
+	}, {
+		Name:              "80211axe40",
+		Fixture:           defaultFixture,
+		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz."),
+		ExtraAttr:         []string{"wificell_unstable"},
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC),
+				ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+			SecConfFac: `wpa.NewConfigFactory("chromeos",
+				wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
+		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
+	}, {
+		Name:              "80211axe80mixed",
+		Fixture:           defaultFixture,
+		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
+		ExtraAttr:         []string{"wificell_unstable"},
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+				ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+				ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+				ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+			SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
+		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
+	}, {
+		Name:              "80211axe80pure",
+		Fixture:           defaultFixture,
+		ExtraAttr:         []string{"wificell_unstable"},
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
+			"The router is forced to use HE WiFi standard."),
+		Val: []simpleConnectParamsVal{{APOpts: `
+					ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+			SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
+		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
+	}, {
+		Name:              "80211axe160mixed",
+		Fixture:           defaultFixture,
+		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
+		ExtraAttr:         []string{"wificell_unstable"},
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+					ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+			SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
+		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRf6E160MHz},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
+	}, {
+		Name:      "80211axe160pure",
+		Fixture:   defaultFixture,
+		ExtraAttr: []string{"wificell_unstable"},
+		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
+			"The router is forced to use HE WiFi standard."),
+		ExtraSoftwareDeps: []string{"wpa3_sae"},
+		Val: []simpleConnectParamsVal{{APOpts: `
+					ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+			SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
+		}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
+		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRf6E160MHz},
+		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
 	}}
 }
 
@@ -280,7 +400,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 		Doc: append(simpleConnectDocPref("an open 802.11be network on channel 157 with center channel of 155 and channel width of 80MHz."),
-			"The router is forced to use 80 MHz wide rates only."),
+			"The router is forced to use EHT WiFi standard."),
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
@@ -976,6 +1096,7 @@ func TestSimpleConnect(t *testing.T) {
 	ps = append(ps, simpleConnect80211nsgi())
 	ps = append(ps, simpleConnect80211ac()...)
 	ps = append(ps, simpleConnect80211ax()...)
+	ps = append(ps, simpleConnect80211axe()...)
 	ps = append(ps, simpleConnect80211be()...)
 	ps = append(ps, simpleConnectOWE()...)
 	ps = append(ps, simpleConnectHidden()...)
