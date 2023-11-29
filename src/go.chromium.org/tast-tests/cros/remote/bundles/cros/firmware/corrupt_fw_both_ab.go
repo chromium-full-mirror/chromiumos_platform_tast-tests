@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"time"
 
@@ -160,50 +159,36 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 	}()
 
 	// futility won't flash an image that has an invalid signature blocks, so to corrupt the data we need to:
-	// - Get the body sizes
-	// - Create corrupt bodies for A & B
-	// - Generate a new image that contains those bodies
-	// - Sign it.
+	// - Create copy of image and modify body by removing (or modifying) CBFS file "fallback/payload" to make firmware fail verification.
+	// - Sign resulting image
 	// - Extract the sections we want to test
 	// - Create yet another image that contains those sections
 	// - Flash it.
 
 	s.Log("Corrupting FW bodies")
-	// - Get the body sizes
-	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-p", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), bodyA, bodyB).Output(ssh.DumpLogOnError)
+	// Copy BIOS image to corrupt it
+	corruptBiosRemoteImage := fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir)
+	out, err = h.DUT.Conn().CommandContext(ctx, "cp", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), corruptBiosRemoteImage).Output(ssh.DumpLogOnError)
 	if err != nil {
-		s.Fatal("Failed getting section sizes: ", err)
+		s.Fatal("Failed to copy image for corruption: ", out)
 	}
-	fmapRe := regexp.MustCompile(`(?m)^(\S+) \d+ (\d+)`)
-	matches := fmapRe.FindAllSubmatch(out, -1)
-	if matches == nil {
-		s.Fatal("Output doesn't match regex: ", string(out))
-	}
-	// - Create corrupt bodies for A & B
-	for _, m := range matches {
-		out, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, string(m[1])), "if=/dev/random", fmt.Sprintf("bs=%s", string(m[2])), "count=1").Output(ssh.DumpLogOnError)
+
+	for _, section := range []string{string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection)} {
+		out, err = h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "remove", "-r", section, "-n", "fallback/payload").Output(ssh.DumpLogOnError)
 		if err != nil {
-			s.Fatal("Failed creating corrupt file: ", err)
+			s.Fatal("Failed to corrupt ", section, " section: ", err)
 		}
-	}
-	// - Generate a new image that contains those bodies
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir), fmt.Sprintf("%s/bios_backup.bin", remoteTempDir),
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", bodyA, remoteTempDir, bodyA),
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", bodyB, remoteTempDir, bodyB),
-	).Run(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed futility load_fmap: ", err)
 	}
 
 	s.Log("Signing corrupt image")
 	// - Sign it.
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "sign", "--type", "bios", fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir)).Run(ssh.DumpLogOnError)
+	err = h.DUT.Conn().CommandContext(ctx, "futility", "sign", "--type", "bios", corruptBiosRemoteImage).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed futility sign: ", err)
 	}
 
 	// - Extract the sections we want to test
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir),
+	err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", corruptBiosRemoteImage,
 		fmt.Sprintf("%s:%s/%s.bin", sectionA, remoteTempDir, sectionA),
 		fmt.Sprintf("%s:%s/%s.bin", sectionB, remoteTempDir, sectionB),
 	).Run(ssh.DumpLogOnError)
