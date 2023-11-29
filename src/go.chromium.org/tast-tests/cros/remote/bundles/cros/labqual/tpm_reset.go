@@ -24,13 +24,13 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "rec_mode",
-				Val:     fixture.RecModeCopyServices,
-				Fixture: fixture.RecModeCopyServices,
+				Val:     fixture.RecModeNoServices,
+				Fixture: fixture.RecModeNoServices,
 			},
 		},
 		VarDeps:      []string{"servo"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		TestBedDeps:  []string{tbdep.ServoUSBState("NORMAL")},
+		TestBedDeps:  []string{tbdep.ServoUSBState("NORMAL"), tbdep.ServoState("WORKING")},
 	})
 }
 

@@ -11,6 +11,7 @@ import (
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
@@ -52,6 +53,7 @@ func init() {
 			Val:     fwCommon.BootModeRecovery,
 			Timeout: 60 * time.Minute,
 		}},
+		TestBedDeps: []string{tbdep.ServoUSBState("NORMAL"), tbdep.ServoState("WORKING")},
 	})
 }
 
