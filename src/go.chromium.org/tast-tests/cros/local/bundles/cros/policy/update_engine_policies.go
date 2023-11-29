@@ -195,6 +195,22 @@ func init() {
 					"fsi_version",
 				},
 			},
+		}, {
+			Name: "quick_fix_build",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.DeviceQuickFixBuildToken{Val: "testToken"},
+				},
+				expectedUpdateRequestSubstrings: []string{"cohorthint=\"testToken\""},
+			},
+			ExtraSearchFlags: []*testing.StringPair{{
+				Key: "feature_id",
+				// After DeviceQuickFixBuildToken has been configured using
+				// go/cros-qfb-release#using-engtoolservice, verify that the
+				// devices update to the corresponding ChromeOS version.
+				// COM_FOUND_CUJ21_TASK3_WF1
+				Value: "screenplay-50b385e7-4bd5-4ee3-bf3e-f49c6f679540",
+			}},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceReleaseLtsTag{}, pci.VerifiedFunctionalityOS),
@@ -203,6 +219,7 @@ func init() {
 			pci.SearchFlag(&policy.ChromeOsReleaseChannel{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceMetricsReportingEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DeviceQuickFixBuildToken{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
