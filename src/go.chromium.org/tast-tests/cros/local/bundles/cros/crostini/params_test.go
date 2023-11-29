@@ -25,11 +25,13 @@ import (
 // Struct used to specify extra test options for standard tests.  If the timeout
 // is not changed, we set it to the default value.
 type testOptions struct {
-	timeout     time.Duration
-	requiresARC bool
+	timeout         time.Duration
+	requiresARC     bool
+	criticalStaging bool
 }
 
 const DefaultStandardTimeout = 7 * time.Minute
+const DefaultAppTimeout = 15 * time.Minute
 
 // Map crostini tests by file and their extra test options (if any).
 var standardTests = map[string]testOptions{
@@ -193,31 +195,37 @@ func TestAppTestParams(t *testing.T) {
 	}
 }
 
-var appClamshellOnlyTests = []string{
-	"app_android_studio.go",
-	"app_audacity_window_operations.go",
-	"app_emacs_window_operations.go",
-	"app_firefox_window_operations.go",
-	"app_vscode_window_operations.go",
-	"app_firefox_emoji.go",
-	"app_gedit_emoji.go",
-	"app_vscode_emoji.go",
-	"app_firefox_nonalphanumeric_input.go",
-	"app_gedit_nonalphanumeric_input.go",
-	"app_vscode_nonalphanumeric_input.go",
-	"app_gedit_switch_ime.go",
+var appClamshellOnlyTests = map[string]testOptions{
+	"app_android_studio.go":                {},
+	"app_audacity_window_operations.go":    {criticalStaging: true},
+	"app_emacs_window_operations.go":       {criticalStaging: true},
+	"app_firefox_emoji.go":                 {},
+	"app_firefox_nonalphanumeric_input.go": {},
+	"app_firefox_window_operations.go":     {criticalStaging: true},
+	"app_gedit_emoji.go":                   {},
+	"app_gedit_nonalphanumeric_input.go":   {},
+	"app_gedit_switch_ime.go":              {},
+	"app_vscode_emoji.go":                  {},
+	"app_vscode_nonalphanumeric_input.go":  {},
+	"app_vscode_window_operations.go":      {criticalStaging: true},
 }
 
 func TestAppClamshellOnlyTestParams(t *testing.T) {
-	for _, filename := range appClamshellOnlyTests {
+	for filename, options := range appClamshellOnlyTests {
+		timeout := options.timeout
+		// Use the default timeout if we didn't specify a custom timeout
+		if timeout == 0 {
+			timeout = DefaultAppTimeout
+		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
-				Timeout:                 15 * time.Minute,
+				Timeout:                 timeout,
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
 				DeviceMode:              devicemode.ClamshellMode,
 				MinimumContainerVersion: vm.DebianBullseye,
+				CriticalStaging:         options.criticalStaging,
 			}})
 		genparams.Ensure(t, filename, params)
 	}

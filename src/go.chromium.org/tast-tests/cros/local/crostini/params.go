@@ -176,6 +176,10 @@ type Param struct {
 	// RequiresARC disables generation of "lowperf" variants of a test
 	// which depends on ARC.
 	RequiresARC bool
+
+	// CriticalStaging controls whether mainline test variants are added to
+	// group:criticalstaging.
+	CriticalStaging bool
 }
 
 type generatedParam struct {
@@ -317,11 +321,16 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			// Unstable test variants are informational.
 			// Tablet mode tests are informational.
 			// Low-perf test cases are NOT informational.
-			informational := (!i.stable && !testCase.LowPerfEligible) || testCase.DeviceMode == devicemode.TabletMode
+			// Critical staging stable tests are informational.
+			informational := (!i.stable && !testCase.LowPerfEligible) || testCase.DeviceMode == devicemode.TabletMode || (i.stable && testCase.CriticalStaging)
 			// Informational status is only applicable to mainline tests.
 			// Don't add informational status if the test is already informational.
 			if !testCase.IsNotMainline && !alreadyInformational && informational {
 				extraAttr = append(extraAttr, "informational")
+			}
+
+			if i.stable && testCase.CriticalStaging {
+				extraAttr = append(extraAttr, "group:criticalstaging")
 			}
 
 			var extraSoftwareDeps []string
