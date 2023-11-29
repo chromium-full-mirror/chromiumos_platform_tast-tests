@@ -216,7 +216,7 @@ func CrosToPhoneInContacts(ctx context.Context, s *testing.State) {
 	}
 
 	// Get the secure sharing token to confirm the share on Android.
-	token, err := sender.ConfirmationTokenWithTimeout(ctx, 30*time.Second)
+	token, err := sender.ConfirmationTokenWithTimeout(ctx, 20*time.Second)
 	if err != nil {
 		s.Log("No token found, proceeding without one")
 		token = ""
