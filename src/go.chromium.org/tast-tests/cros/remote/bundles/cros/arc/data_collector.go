@@ -320,9 +320,9 @@ func init() {
 			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// x86-64 ARC: eve(eve-Intel), gimble(brya-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
+			// x86-64 ARC: eve(eve-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
 			// arm64 ARC: kodama(kukui), katsu(kukui), pompom(trogdor), pazquel(trogdor)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("eve", "gimble", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("eve", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
@@ -338,11 +338,11 @@ func init() {
 			Name:              "vm_t_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
-			// x86-64 ARC: kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
+			// x86-64 ARC: gimble(brya-Intel), kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
 			// x64only ARC: screebo4es(rex-Intel)
 			// arm64 ARC: steelix(corsola), magneton(corsola)
 			// arm64only ARC: starmie(staryu)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kohaku", "jinlon", "screebo4es", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "kohaku", "jinlon", "screebo4es", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-tm",
