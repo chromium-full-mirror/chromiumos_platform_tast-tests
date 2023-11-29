@@ -76,6 +76,26 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name: "mountUnmountPtsWorldForCrOSx86",
+		Desc: "The fixture to mount and unmount PTSWorld for CrOS host on x86",
+		Contacts: []string{
+			"cros-core-systems-perf@google.com",
+			"darrenwu@google.com",
+		},
+		Data: []string{ptsWorldBaseImagex86, ptsWorldDataImagex86},
+		Impl: &PtsWorldFixture{
+			fixture: ptsworld.NewCrosFixture(ptsWorldBaseImagex86, ptsWorldDataImagex86),
+			mount:   true,
+			unmount: true,
+		},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: "mountPtsWorldForCrOSarm64",
 		Desc: "The fixture to mount PTSWorld for CrOS host on arm64",
 		Contacts: []string{

@@ -21,14 +21,14 @@ import (
 )
 
 const (
-	// crosChroot is the chroot directory for PTSWorld.
-	crosChroot string = WorkDir + "/chroot"
+	// CrosChroot is the chroot directory for PTSWorld.
+	CrosChroot string = WorkDir + "/chroot"
 	// crosData is the data directory for PTSWorld extracted data.
 	crosData string = WorkDir + "/data"
-	// crosResultsDir is the directory for test results of CrOS.
-	crosResultsDir string = ResultsDir + "/cros"
+	// CrosResultsDir is the directory for test results of CrOS.
+	CrosResultsDir string = ResultsDir + "/cros"
 	// chrootEtc is the directory of /etc in chroot.
-	chrootEtc string = crosChroot + "/etc"
+	chrootEtc string = CrosChroot + "/etc"
 )
 
 const (
@@ -90,12 +90,12 @@ func (c *CrosFixture) Prepare(ctx context.Context, s *testing.FixtState) error {
 		return err
 	}
 
-	if err := os.MkdirAll(crosResultsDir, fs.ModeDir); err != nil {
-		s.Fatalf("Failed to create directory in %v: %v", crosResultsDir, err)
+	if err := os.MkdirAll(CrosResultsDir, fs.ModeDir); err != nil {
+		s.Fatalf("Failed to create directory in %v: %v", CrosResultsDir, err)
 		return err
 	}
 
-	c.resultsDir = crosResultsDir
+	c.resultsDir = CrosResultsDir
 
 	// TODO(darrenwu): check the checksum instead of file exist.
 	_, err := os.Stat(baseImage)
@@ -110,76 +110,76 @@ func (c *CrosFixture) Prepare(ctx context.Context, s *testing.FixtState) error {
 	c.mountSequence = []MountAttrs{
 		{
 			src: baseImage,
-			dst: crosChroot,
+			dst: CrosChroot,
 			fs:  "ext4",
 			ro:  true,
 		}, {
 			src: "tmpfs",
-			dst: crosChroot + "/tmp",
+			dst: CrosChroot + "/tmp",
 			fs:  "tmpfs",
 		}, {
 			src: "tmpfs",
-			dst: crosChroot + "/tmp/var/lib",
+			dst: CrosChroot + "/tmp/var/lib",
 			fs:  "tmpfs",
 		}, {
 			// The base image is mounted as read-only, but the
 			// Phoronix-Test-Suite requires the var/lib as writable. Here we
 			// mount var/lib as writable in tmpfs.
-			src:  crosChroot + "/tmp/var/lib",
-			dst:  crosChroot + "/var/lib",
+			src:  CrosChroot + "/tmp/var/lib",
+			dst:  CrosChroot + "/var/lib",
 			bind: true,
 			copy: true,
 		}, {
 			src: "tmpfs",
-			dst: crosChroot + "/tmp/etc",
+			dst: CrosChroot + "/tmp/etc",
 			fs:  "tmpfs",
 		}, {
 			// Phoronix-Test-Suite requires /etc as writable. Here we mount /etc
 			// as writable in tmpfs.
-			src:  crosChroot + "/tmp/etc",
+			src:  CrosChroot + "/tmp/etc",
 			dst:  chrootEtc,
 			bind: true,
 			copy: true,
 		}, {
 			src: "tmpfs",
-			dst: crosChroot + "/tmp/var/cache",
+			dst: CrosChroot + "/tmp/var/cache",
 			fs:  "tmpfs",
 		}, {
 			// Phoronix-Test-Suite requires /var/cache as writable. Here we
 			// mount /var/cache as writable in tmpfs.
-			src:  crosChroot + "/tmp/var/cache",
-			dst:  crosChroot + "/var/cache",
+			src:  CrosChroot + "/tmp/var/cache",
+			dst:  CrosChroot + "/var/cache",
 			bind: true,
 			copy: true,
 		}, {
 			src: dataImage,
-			dst: crosChroot + PtsDir,
+			dst: CrosChroot + PtsDir,
 			fs:  "ext4",
 		}, {
 			src: "tmpfs",
-			dst: crosChroot + "/run",
+			dst: CrosChroot + "/run",
 			fs:  "tmpfs",
 		}, {
 			src: "devtmpfs",
-			dst: crosChroot + "/dev",
+			dst: CrosChroot + "/dev",
 			fs:  "devtmpfs",
 		}, {
 			src:  DevPTS,
-			dst:  crosChroot + "/dev/pts",
+			dst:  CrosChroot + "/dev/pts",
 			bind: true,
 		}, {
 			src: "proc",
-			dst: crosChroot + "/proc",
+			dst: CrosChroot + "/proc",
 			fs:  "proc",
 		}, {
 			src:  "sysfs",
-			dst:  crosChroot + "/sys",
+			dst:  CrosChroot + "/sys",
 			fs:   "sysfs",
 			ro:   false,
 			bind: false,
 		}, {
-			src:  crosResultsDir,
-			dst:  crosChroot + PtsResultsDir,
+			src:  CrosResultsDir,
+			dst:  CrosChroot + PtsResultsDir,
 			bind: true,
 		},
 	}
