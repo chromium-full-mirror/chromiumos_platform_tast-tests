@@ -154,60 +154,34 @@ func TestExpensiveParams(t *testing.T) {
 	}
 }
 
-var appTests = []string{
-	"app_audacity.go",
-	"app_audacity_terminal.go",
-	"app_eclipse.go",
-	"app_emacs.go",
-	"app_firefox.go",
-	"app_firefox_terminal.go",
-	"app_gedit_filesharing.go",
-	"app_gedit.go",
-	"app_gedit_unshare_folder.go",
-	"app_libre_office.go",
-	"app_vlc.go",
-	"app_vscode_from_file_manager.go",
-	"app_vscode.go",
-	"app_vscode_uninstall.go",
-	"restart_app.go",
+var appTests = map[string]testOptions{
+	"app_android_studio.go":                {},
+	"app_audacity.go":                      {},
+	"app_audacity_terminal.go":             {},
+	"app_eclipse.go":                       {},
+	"app_emacs.go":                         {},
+	"app_firefox_emoji.go":                 {},
+	"app_firefox.go":                       {},
+	"app_firefox_nonalphanumeric_input.go": {},
+	"app_firefox_terminal.go":              {},
+	"app_gedit_emoji.go":                   {},
+	"app_gedit_filesharing.go":             {},
+	"app_gedit.go":                         {},
+	"app_gedit_nonalphanumeric_input.go":   {},
+	"app_gedit_switch_ime.go":              {},
+	"app_gedit_unshare_folder.go":          {},
+	"app_libre_office.go":                  {},
+	"app_vlc.go":                           {},
+	"app_vscode_emoji.go":                  {},
+	"app_vscode_from_file_manager.go":      {},
+	"app_vscode.go":                        {},
+	"app_vscode_nonalphanumeric_input.go":  {},
+	"app_vscode_uninstall.go":              {},
+	"restart_app.go":                       {},
 }
 
 func TestAppTestParams(t *testing.T) {
-	for _, filename := range appTests {
-		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
-			{
-				Timeout:                 15 * time.Minute,
-				ExtraSoftwareDeps:       []string{"crostini_app"},
-				UseLargeContainer:       true,
-				UseFixture:              true,
-				DeviceMode:              devicemode.TabletMode,
-				MinimumContainerVersion: vm.DebianBullseye,
-			},
-			{
-				Timeout:                 15 * time.Minute,
-				ExtraSoftwareDeps:       []string{"crostini_app"},
-				UseLargeContainer:       true,
-				UseFixture:              true,
-				DeviceMode:              devicemode.ClamshellMode,
-				MinimumContainerVersion: vm.DebianBullseye,
-			}})
-		genparams.Ensure(t, filename, params)
-	}
-}
-
-var appClamshellOnlyTests = map[string]testOptions{
-	"app_android_studio.go":                {},
-	"app_firefox_emoji.go":                 {},
-	"app_firefox_nonalphanumeric_input.go": {},
-	"app_gedit_emoji.go":                   {},
-	"app_gedit_nonalphanumeric_input.go":   {},
-	"app_gedit_switch_ime.go":              {},
-	"app_vscode_emoji.go":                  {},
-	"app_vscode_nonalphanumeric_input.go":  {},
-}
-
-func TestAppClamshellOnlyTestParams(t *testing.T) {
-	for filename, options := range appClamshellOnlyTests {
+	for filename, options := range appTests {
 		timeout := options.timeout
 		// Use the default timeout if we didn't specify a custom timeout
 		if timeout == 0 {
