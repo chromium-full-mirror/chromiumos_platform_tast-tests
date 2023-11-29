@@ -173,8 +173,11 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 			expectedNumWindows: 1,
 		},
 	} {
+		openDeskCtx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+
 		totalOpenWindows += desk.expectedNumWindows
-		deskTabs, err := openDesk(setupCtx, tconn, cs, desk.urls, totalOpenWindows, i)
+		deskTabs, err := openDesk(openDeskCtx, tconn, cs, desk.urls, totalOpenWindows, i)
 		if err != nil {
 			return nil, totalOpenWindows, cleanup, errors.Wrapf(err, "failed to complete setup for desk %d", i)
 		}
