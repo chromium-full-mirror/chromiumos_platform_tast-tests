@@ -86,6 +86,14 @@ var (
 
 // InitFixture initializes fixtures.
 func InitFixture(ctx context.Context) error {
+	// Due to the hardware layout design. The fixtures are connected to the
+	// USB hub, and the USB hub's power is connected to the 4th port of IP
+	// power. Need to ensure it has been turned on when the test starts.
+	ippowerPorts := []int{USBHubPort}
+	if err := OpenIppower(ctx, ippowerPorts); err != nil {
+		return errors.Wrap(err, "open the 4th port of the IP power supply")
+	}
+
 	ports, err := serial.GetPortsList()
 	if err != nil {
 		return errors.Wrap(err, "failed to get port list")
