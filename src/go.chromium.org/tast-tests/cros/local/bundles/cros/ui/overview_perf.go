@@ -56,14 +56,6 @@ func init() {
 			Fixture: "chromeLoggedIn",
 			Timeout: cujrecorder.CooldownTimeout + 20*time.Minute,
 		}, {
-			// TODO (b/302045091): Remove the "no_jelly" variant after
-			// performance assessment is done.
-			Name:      "no_jelly",
-			Val:       browser.TypeAsh,
-			Fixture:   "chromeLoggedInDisableJelly",
-			ExtraAttr: []string{"cuj_experimental"},
-			Timeout:   cujrecorder.CooldownTimeout + 20*time.Minute,
-		}, {
 			Name:              "lacros",
 			Val:               browser.TypeLacros,
 			Fixture:           "lacros",

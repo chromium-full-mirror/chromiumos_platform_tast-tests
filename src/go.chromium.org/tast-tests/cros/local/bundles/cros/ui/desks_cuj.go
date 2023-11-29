@@ -29,27 +29,14 @@ func init() {
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Timeout:      30 * time.Minute,
 		Params: []testing.Param{
-			// TODO (b/302045091): Remove all "no_jelly" variants after
-			// performance assessment is done.
 			{
 				Val:     browser.TypeAsh,
 				Fixture: "loggedInToCUJUser",
-			}, {
-				Name:      "no_jelly",
-				Val:       browser.TypeAsh,
-				ExtraAttr: []string{"cuj_experimental"},
-				Fixture:   "loggedInToCUJUserDisableJelly",
 			}, {
 				Name:              "lacros",
 				Val:               browser.TypeLacros,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
-			}, {
-				Name:              "lacros_no_jelly",
-				Val:               browser.TypeLacros,
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "loggedInToCUJUserLacrosDisableJelly",
 			},
 
 			// Experimental variants.
@@ -96,10 +83,10 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			{
-				Name:              "partial_low_end_mode",
-				ExtraAttr:         []string{"cuj_experimental"},
-				Val:               browser.TypeAsh,
-				Fixture:           "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+				Name:      "partial_low_end_mode",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val:       browser.TypeAsh,
+				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 			},
 		},
 	})

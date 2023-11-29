@@ -1248,59 +1248,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
-
-	// TODO (b/302045091): Remove these "DisableJelly" fixtures when
-	// performance assessment is done in DesksCUJ and OverviewPerf.
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserDisableJelly",
-		Desc: "The main fixture used for UI CUJ tests with Jelly disabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{bt: browser.TypeAsh,
-			chromeExtraOpts: []chrome.Option{
-				chrome.DisableFeatures("Jelly"),
-			}},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserLacrosDisableJelly",
-		Desc: "Fixture used for lacros variation of UI CUJ tests with Jelly disabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{bt: browser.TypeLacros,
-			chromeExtraOpts: []chrome.Option{
-				chrome.DisableFeatures("Jelly"),
-			}},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInDisableJelly",
-		Desc:     "Logged into a user session with Jelly disabled",
-		Contacts: []string{"ramsaroop@google.com", "cros-sw-perf@google.com"},
-		Impl: chrome.NewLoggedInFixture(
-			func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-				return []chrome.Option{chrome.DisableFeatures("Jelly")}, nil
-			}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
