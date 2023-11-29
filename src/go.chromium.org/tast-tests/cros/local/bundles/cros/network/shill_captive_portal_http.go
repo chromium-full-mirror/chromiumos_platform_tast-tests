@@ -34,7 +34,8 @@ func init() {
 		Func:         ShillCaptivePortalHTTP,
 		Desc:         "Ensures that setting up a virtual ethernet pair with a DNS server that points portal detection queries to an http server that responds via the handler. This results in a service state of |ServiceState| via the params for the ethernet service",
 		Contacts: []string{
-			"cros-network-health-team@google.com", // Network Healh team
+			"cros-network-health-team@google.com", // Network Health team
+			"cros-networking@google.com",          // Platform networking team
 			"michaelrygiel@google.com",            // Test author
 		},
 		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},

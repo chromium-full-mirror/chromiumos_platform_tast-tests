@@ -29,6 +29,7 @@ func init() {
 		Desc:         "Ensure that shill sends portal detection probes to the IP address given by dnsmasq",
 		Contacts: []string{
 			"cros-network-health-team@google.com", // Network Health team
+			"cros-networking@google.com",          // Platform networking team
 			"michaelrygiel@google.com",            // Test maintainer
 		},
 		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},

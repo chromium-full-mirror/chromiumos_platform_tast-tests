@@ -23,8 +23,12 @@ func init() {
 		BugComponent: "b:1166446",
 		Func:         ShillCaptivePortalProperties,
 		Desc:         "Verifies that properties related to Captive portal are the expected values",
-		Contacts:     []string{"cros-network-health-team@google.com", "michaelrygiel@google.com"},
-		Attr:         []string{"group:mainline"},
+		Contacts: []string{
+			"cros-network-health-team@google.com", // Network Health team
+			"cros-networking@google.com",          // Platform networking team
+			"michaelrygiel@google.com",            // Test author
+		},
+		Attr: []string{"group:mainline"},
 		Params: []testing.Param{{
 			Name: "ethernet_online_with_no_captive_portal",
 			Val: &captivePortalProperties{
