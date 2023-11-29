@@ -40,5 +40,5 @@ func init() {
 }
 
 func CorruptBothFWBodyAB(ctx context.Context, s *testing.State) {
-	corruptFWSectionTest(ctx, s, string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection))
+	corruptFWSectionTest(ctx, s, string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection), string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection), "RW firmware unable to verify firmware body")
 }

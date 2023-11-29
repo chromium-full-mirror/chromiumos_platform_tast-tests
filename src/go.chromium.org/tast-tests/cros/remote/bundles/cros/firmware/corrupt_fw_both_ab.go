@@ -77,10 +77,10 @@ func init() {
 
 func CorruptFWBothAB(ctx context.Context, s *testing.State) {
 	val := s.Param().(*corruptTestVal)
-	corruptFWSectionTest(ctx, s, string(val.sectionA), string(val.sectionB))
+	corruptFWSectionTest(ctx, s, string(val.sectionA), string(val.sectionB), string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection), "RW firmware unable to verify firmware body")
 }
 
-func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, sectionB string) {
+func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, sectionB, bodyA, bodyB, failureReason string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -170,7 +170,7 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 
 	s.Log("Corrupting FW bodies")
 	// - Get the body sizes
-	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-p", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection)).Output(ssh.DumpLogOnError)
+	out, err = h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-p", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), bodyA, bodyB).Output(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed getting section sizes: ", err)
 	}
@@ -188,8 +188,8 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 	}
 	// - Generate a new image that contains those bodies
 	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir), fmt.Sprintf("%s/bios_backup.bin", remoteTempDir),
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", string(bios.FWBodyAImageSection), remoteTempDir, string(bios.FWBodyAImageSection)),
-		fmt.Sprintf("%s:%s/%s_corrupt.bin", string(bios.FWBodyBImageSection), remoteTempDir, string(bios.FWBodyBImageSection)),
+		fmt.Sprintf("%s:%s/%s_corrupt.bin", bodyA, remoteTempDir, bodyA),
+		fmt.Sprintf("%s:%s/%s_corrupt.bin", bodyB, remoteTempDir, bodyB),
 	).Run(ssh.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed futility load_fmap: ", err)
@@ -264,7 +264,7 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 	}
 	found := false
 	for _, event := range events {
-		if strings.Contains(event.Message, "RW firmware unable to verify firmware body") {
+		if strings.Contains(event.Message, failureReason) {
 			found = true
 			break
 		}
