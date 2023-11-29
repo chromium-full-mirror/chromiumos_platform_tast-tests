@@ -76,6 +76,7 @@ func init() {
 						crashAth10kLogFileName,
 						crashAth10kMetaName},
 				},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnWifiDevice(wlan.QualcommWCN6855)),
 			},
 			{
 				Name: "ath11k",
