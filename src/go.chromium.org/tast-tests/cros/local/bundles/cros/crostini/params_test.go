@@ -163,8 +163,7 @@ var appTests = []string{
 	"app_gedit.go",
 	"app_gedit_unshare_folder.go",
 	"app_libre_office.go",
-	// TODO(b/307441406): VLC is flaky on bookworm
-	// "app_vlc.go",
+	"app_vlc.go",
 	"app_vscode_from_file_manager.go",
 	"app_vscode.go",
 	"app_vscode_uninstall.go",
