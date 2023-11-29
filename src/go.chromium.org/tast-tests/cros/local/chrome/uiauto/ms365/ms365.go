@@ -8,6 +8,7 @@ package ms365
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
@@ -91,8 +92,9 @@ func (ms *Ms365) InputPassword(password string) uiauto.Action {
 
 // StaySignedIn waits for the Microsoft "Stayed Signed in?" screen and clicks YES.
 func (ms *Ms365) StaySignedIn() uiauto.Action {
-	msStaySignedInWindow := nodewith.Role(role.RootWebArea).Name("Microsoft account")
-	msStaySignedInButton := nodewith.Ancestor(msStaySignedInWindow).Role(role.Button).Name("Yes")
+	msStaySignedInWindowName := regexp.MustCompile("(Microsoft account|" + regexp.QuoteMeta("Stay signed in?") + ")")
+	msStaySignedInWindow := nodewith.Role(role.RootWebArea).NameRegex(msStaySignedInWindowName)
+	msStaySignedInButton := nodewith.Ancestor(msStaySignedInWindow).Role(role.StaticText).Name("Yes")
 
 	return uiauto.Combine("MS Stay Signed In",
 		ms.ui.WaitUntilExists(msStaySignedInButton),
