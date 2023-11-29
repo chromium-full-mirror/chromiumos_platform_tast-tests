@@ -45,6 +45,8 @@ const (
 	CarrierRakuten
 	CarrierEEUK
 	CarrierVodafoneUK
+	CarrierRoger
+	CarrierTelus
 )
 
 const (
@@ -73,6 +75,8 @@ var (
 		"99970":  CarrierSysmocom,
 		"23415":  CarrierVodafoneUK,
 		"23430":  CarrierEEUK,
+		"302220": CarrierTelus,
+		"302720": CarrierRoger,
 		"310260": CarrierTmobile,
 		"311882": CarrierTmobile,
 		"310280": CarrierAtt,
@@ -133,6 +137,15 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 		},
 		CarrierVodafoneUK: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "wap.vodafone.co.uk", ipType: ipv4v6, username: "wap", password: "wap"}, APNTypes: []string{typeDefault}},
+		},
+		// Canada
+		CarrierRoger: []KnownAPN{
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "mobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+		},
+		CarrierTelus: []KnownAPN{
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "isp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "sp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 	}
 }
