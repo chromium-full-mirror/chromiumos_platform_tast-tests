@@ -58,9 +58,8 @@ func init() {
 		Desc:         "Verify kernel Ath crashes are logged as expected",
 		Contacts:     []string{"cros-telemetry@google.com", "arowa@google.com"},
 		BugComponent: "b:1032705",
-		// TODO(b/306416371): Promote test to stable by replacing wificell_cross_device_unstable tag with
-		// "group:wificell", "wificell_func" tags.
-		Attr:         []string{"group:mainline", "informational"},
+		// TODO(b/306416371): Promote test to stable by removing the tag wificell_unstable.
+		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		SoftwareDeps: []string{"wifi"},
 		HardwareDeps: hwdep.D(hwdep.WifiQualcomm()),
 		Params: []testing.Param{
