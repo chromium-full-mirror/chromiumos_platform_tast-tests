@@ -78,6 +78,12 @@ type DevBoard interface {
 	PhysicalUart(name UartName, readTimeout time.Duration) SerialChannel
 	// CcdSerialInterface allows reading/writing data to a USB interface provided by the GSC under test, which implements the "serial" USB class.
 	CcdSerialInterface(name UartName, readTimeout time.Duration) SerialChannel
+	// CCDFlashromRead reads the SPI flash chip via CCD.
+	CCDFlashromRead(ctx context.Context) (contents []byte, durationMs uint32, err error)
+	// CCDFlashromWrite writes the SPI flash chip via CCD.
+	CCDFlashromWrite(ctx context.Context, contents []byte) (durationMs uint32, err error)
+	// CCDFlashromErase erases the SPI flash chip via CCD.
+	CCDFlashromErase(ctx context.Context) (durationMs uint32, err error)
 }
 
 // SerialChannel is a handle to communicate using a two-way byte stream.

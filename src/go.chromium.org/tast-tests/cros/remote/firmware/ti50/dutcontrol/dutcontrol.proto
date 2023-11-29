@@ -86,6 +86,8 @@ message CommandArg {
         string plain = 1;
         // Bytes to be written to a temp file then presented as its name.
         bytes file = 2;
+        // Temp file written by command and returned in CommandResponse.
+        string response_file = 3;
     }
 }
 
@@ -100,6 +102,10 @@ message CommandResponse {
     // Empty indicates no error (zero exit code).
     string err = 2;
     bytes err_output = 3;
+    // File contents for each CommandArg response_file.
+    repeated bytes files = 4;
+    // Duration of command execution in milliseconds.
+    uint32 duration_ms = 5;
 }
 
 // QueryRequest is a request for information about the testbed, such as what
@@ -274,6 +280,43 @@ message RunTcgTestsResponse {
     }
 }
 
+// Possible GSC USB interfaces.
+enum GscUsbInterface {
+    CONSOLE_USB_INTERFACE = 0;
+    AP_USB_INTERFACE = 1;
+    EC_USB_INTERFACE = 2;
+    UPDATE_USB_INTERFACE = 3;
+    SPI_USB_INTERFACE = 4;
+    I2C_USB_INTERFACE = 5;
+    FPMCU_USB_INTERFACE = 6;
+}
+
+message GscUsbTransactionRequest {
+    // USB interface to send a transaction to.
+    GscUsbInterface iface = 1;
+    // Data to send.
+    bytes request_data = 2;
+}
+
+message GscUsbTransactionResponse {
+    // Data received.
+    bytes response_data = 1;
+}
+
+// Possible GSC USB SPI request options.
+enum GscUsbSpiRequest {
+    RESERVED_GSC_USB_SPI = 0;
+    DISABLE_GSC_USB_SPI = 1;
+    ENABLE_AP_GSC_USB_SPI = 2;
+    ENABLE_EC_GSC_USB_SPI = 3;
+}
+
+message GscUsbApSpiBridgeRequest {
+    GscUsbSpiRequest operation = 1;
+}
+
+message GscUsbApSpiBridgeResponse {}
+
 /// One service for a DUT (which is a Suzy and hyperdebug pair)
 service DutControl {
     // Console allows stream access to a serial interface.
@@ -284,6 +327,9 @@ service DutControl {
 
     // Run a generic gsctool command.
     rpc GSCToolCommand(CommandRequest) returns (CommandResponse);
+
+    // Run a generic flashrom command.
+    rpc FlashromCommand(CommandRequest) returns (CommandResponse);
 
     // Query the nature and capabilities of this testbed.
     rpc Query(QueryRequest) returns (QueryResponse);
@@ -319,4 +365,12 @@ service DutControl {
         returns (EnableApWriteProtectResponse);
 
     rpc RunTcgTests(RunTcgTestsRequest) returns (stream RunTcgTestsResponse);
+
+    // Writes then reads to an USB interface on the connected GSC device
+    rpc GscUsbTransaction(GscUsbTransactionRequest)
+        returns (GscUsbTransactionResponse);
+
+    // Interact with the AP SPI bridge
+    rpc GscUsbApSpiBridge(GscUsbApSpiBridgeRequest)
+        returns (GscUsbApSpiBridgeResponse);
 }

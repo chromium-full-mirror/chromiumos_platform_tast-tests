@@ -233,7 +233,7 @@ func (i *devboardFixture) String() string {
 
 // dialGrpc connects to the devboardsvc host.
 func (i *devboardFixture) dialGrpc(ctx context.Context) error {
-	conn, err := grpc.DialContext(ctx, i.hostPort, grpc.WithInsecure())
+	conn, err := grpc.DialContext(ctx, i.hostPort, grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.MaxCallSendMsgSize(128*1024*1024), grpc.MaxCallRecvMsgSize(128*1024*1024)))
 	if err != nil {
 		return err
 	}

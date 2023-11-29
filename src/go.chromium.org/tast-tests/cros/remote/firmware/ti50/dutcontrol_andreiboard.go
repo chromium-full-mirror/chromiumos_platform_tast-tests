@@ -373,6 +373,54 @@ func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTim
 	return common.NewBufferedConsole("ccd_"+string(name), 2048, uartOpener)
 }
 
+// CCDFlashromRead reads the SPI flash chip via CCD.
+func (a *DUTControlAndreiboard) CCDFlashromRead(ctx context.Context) (contents []byte, durationMs uint32, err error) {
+	var cArgs []*dutcontrol.CommandArg
+	cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: "--read"}})
+	cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_ResponseFile{ResponseFile: "read.bin"}})
+	req := &dutcontrol.CommandRequest{Args: cArgs}
+	resp, err := a.client.FlashromCommand(ctx, req)
+	if err != nil {
+		return nil, 0, errors.Wrap(err, "CCDFlashromRead request")
+	}
+	if resp.Err != "" {
+		return nil, 0, errors.Errorf("CCDFlashromRead response: %s", resp.Err)
+	}
+	return resp.Files[0], resp.DurationMs, nil
+}
+
+// CCDFlashromWrite writes the SPI flash chip via CCD.
+func (a *DUTControlAndreiboard) CCDFlashromWrite(ctx context.Context, contents []byte) (durationMs uint32, err error) {
+	var cArgs []*dutcontrol.CommandArg
+	cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: "--noverify"}})
+	cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: "--write"}})
+	cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_File{File: contents}})
+	req := &dutcontrol.CommandRequest{Args: cArgs}
+	resp, err := a.client.FlashromCommand(ctx, req)
+	if err != nil {
+		return 0, errors.Wrap(err, "CCDFlashromWrite request")
+	}
+	if resp.Err != "" {
+		return 0, errors.Errorf("CCDFlashromWrite response: %s", resp.Err)
+	}
+	return resp.DurationMs, nil
+}
+
+// CCDFlashromErase erases the SPI flash chip via CCD.
+func (a *DUTControlAndreiboard) CCDFlashromErase(ctx context.Context) (durationMs uint32, err error) {
+	var cArgs []*dutcontrol.CommandArg
+	cArgs = append(cArgs, &dutcontrol.CommandArg{Type: &dutcontrol.CommandArg_Plain{Plain: "--erase"}})
+	req := &dutcontrol.CommandRequest{Args: cArgs}
+	resp, err := a.client.FlashromCommand(ctx, req)
+	if err != nil {
+		return 0, errors.Wrap(err, "CCDFlashromErase request")
+	}
+	if resp.Err != "" {
+		return 0, errors.Errorf("CCDFlashromErase response: %s", resp.Err)
+	}
+	return resp.DurationMs, nil
+}
+
 type andreiboardApFlash struct {
 	ab *DUTControlAndreiboard
 }
