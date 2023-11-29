@@ -32,9 +32,10 @@ import (
 )
 
 const (
-	arcPipTestPkgName  = "org.chromium.arc.testapp.pictureinpicture"
-	arcPipAppName      = "ArcPipTest"
-	shelfIconClassName = "ash/ShelfAppButton"
+	arcPipTestPkgName   = "org.chromium.arc.testapp.pictureinpicture"
+	arcPipAppName       = "ArcPipTest"
+	shelfIconClassName  = "ash/ShelfAppButton"
+	tuckHandleClassName = "TuckHandleWidget"
 )
 
 type pipTestFunc func(context.Context, *chrome.TestConn, *uiauto.Context, *display.Info, *input.TouchscreenEventWriter) error
@@ -307,26 +308,66 @@ func testPipTuck(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context
 	startPoint := window.BoundsInRoot.CenterPoint().Sub(coords.NewPoint(window.BoundsInRoot.Width/4, 0))
 	beforeX, beforeY := tcc.ConvertLocation(startPoint)
 	// Inputting an event to the exact right edge is considered invalid.
-	afterX, afterY := tcc.ConvertLocation(coords.NewPoint(dispInfo.Bounds.Width - 1, startPoint.Y))
+	afterX, afterY := tcc.ConvertLocation(coords.NewPoint(dispInfo.Bounds.Width-1, startPoint.Y))
 	if err := stw.Swipe(ctx, beforeX, beforeY, afterX, afterY, time.Second); err != nil {
 		return errors.Wrap(err, "failed to swipe the window to edge")
 	}
 	stw.End()
 
-	// Confirm that the window has been tucked.
-	// TODO(takise): Add the proper check once Tuck is fully implemented for ARC.
-	afterBounds, err := waitForNewBounds(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get bounds for the PiP window")
+	// Confirm that the window has been tucked by checking if tuck handle is shown first.
+	tuckHandle := nodewith.HasClass(tuckHandleClassName)
+	if err := ac.WaitUntilExists(tuckHandle)(ctx); err != nil {
+		return errors.Wrap(err, "failed to locate tuck handle")
 	}
-	if afterBounds.Left <= startPoint.X {
-		return errors.Wrapf(err, "unexpected PiP window position; want: left position>%v, actual: left position=%v",
-		startPoint.X, afterBounds.Left )
+
+	// Check other conditions that need to be held while PiP is tucked.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to Get PIP window"))
+		}
+		if window.IsAnimating {
+			return errors.New("PiP is still animating")
+		}
+		// Don't be too exact and verify less than on fourth of the area of PiP is visible.
+		tuckPositionThreshold := dispInfo.Bounds.Width - window.BoundsInRoot.Width/4
+		if window.BoundsInRoot.Left <= tuckPositionThreshold {
+			return errors.Wrapf(err, "unexpected PiP window position; want: left position>%v, actual: left position=%v",
+				tuckPositionThreshold, window.BoundsInRoot.Left)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to tuck PiP")
+	}
+
+	// Untuck PiP and confirm it by checking if tuck handle is gone first.
+	if err := ac.WithTimeout(10 * time.Second).LeftClick(tuckHandle)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on tuck handle")
+	}
+	if err := ac.WaitUntilGone(tuckHandle)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for tuck handle to be gone")
+	}
+
+	// Check other conditions that need to be held while PiP is not tucked.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		window, err := getPIPWindow(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to Get PIP window"))
+		}
+		if window.IsAnimating {
+			return errors.New("PiP is still animating")
+		}
+		if window.BoundsInRoot.Right() >= dispInfo.Bounds.Width {
+			return errors.Wrapf(err, "unexpected PiP window position; want: right position<%v, actual: right position=%v",
+				dispInfo.Bounds.Width, window.BoundsInRoot.Right())
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to untuck PiP")
 	}
 
 	return nil
 }
-
 
 // testPipMove verifies that drag-moving the PIP window works as expected.
 func testPipMove(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
@@ -537,24 +578,6 @@ func cleanUpArcTest(ctx context.Context, tconn *chrome.TestConn, pipAct *arc.Act
 		return errors.Wrap(err, "failed to close all windows")
 	}
 	return nil
-}
-
-// waitForNewBounds waits until Chrome animation completes and returns the bounds
-// of the PIP window in DP.
-func waitForNewBounds(ctx context.Context, tconn *chrome.TestConn) (coords.Rect, error) {
-	var rect coords.Rect
-	err := testing.Poll(ctx, func(ctx context.Context) error {
-		window, err := getPIPWindow(ctx, tconn)
-		if err != nil {
-			return errors.New("failed to Get PIP window")
-		}
-		if window.IsAnimating {
-			return errors.New("the window is still animating")
-		}
-		rect = window.BoundsInRoot
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second})
-	return rect, err
 }
 
 // waitUntilPipWindowIsGone keeps looking for a PiP window until it gets gone.
