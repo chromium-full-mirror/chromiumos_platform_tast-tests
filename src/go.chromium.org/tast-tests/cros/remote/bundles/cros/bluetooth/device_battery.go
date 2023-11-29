@@ -8,13 +8,16 @@ import (
 	"context"
 	"time"
 
+	"golang.org/x/exp/slices"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"google.golang.org/protobuf/types/known/emptypb"
 )
 
 func init() {
@@ -73,7 +76,7 @@ func DeviceBattery(ctx context.Context, s *testing.State) {
 		DeviceType: s.Param().(cbt.DeviceType),
 	})
 	if err != nil {
-		s.Fatalf("Failed to configure btpeer as a %s device: %s", s.Param().(cbt.DeviceType), err)
+		s.Fatalf("Failed to configure btpeer as a %s device: %v", s.Param().(cbt.DeviceType), err)
 	}
 
 	// Forgetting Bluetooth device requires series of UI operations which could take a while.
@@ -91,24 +94,21 @@ func DeviceBattery(ctx context.Context, s *testing.State) {
 	defer fv.BluetoothUIService.ForgetBluetoothDevice(cleanupCtx, &bts.ForgetBluetoothDeviceRequest{DeviceName: device.AdvertisedName()})
 
 	// The Bluetooth devices page should report the battery level of the target device.
-	resp, err := fv.BluetoothUIService.CollectDeviceList(ctx, &emptypb.Empty{})
+	targetDevice, err := findPairedDevice(ctx, fv.BluetoothUIService, func(d *bts.Device) bool { return d.GetName() == device.AdvertisedName() })
 	if err != nil {
-		s.Fatalf("Failed to verify the device %q information is displayed in Setting: %v", device.String(), err)
+		s.Fatal("Failed to found the expected Bluetooth Device from Bluetooth devices page: ", err)
 	}
-	for _, d := range resp.Devices {
-		// Expecting the emulated BT device has the battery level displayed.
-		if d.Name == device.AdvertisedName() && len(d.BatteryInformation) == 0 {
-			s.Fatal("Failed to verify Bluetooth devices page reports the battery info of the target BT device correctly: battery level does not available")
-		}
+	// Expecting the emulated BT device has the battery level displayed.
+	if targetDevice.GetBattery() == nil {
+		s.Fatal("Failed to verify Bluetooth devices page reports the battery info of the target BT device correctly: battery level does not available")
 	}
 
 	// The device detail page should report its battery level as well.
-	if resp, err := fv.BluetoothUIService.BluetoothDeviceDetail(ctx, &bts.BluetoothDeviceDetailRequest{
-		Name: device.AdvertisedName(),
+	if _, err := fv.BluetoothUIService.BluetoothDeviceDetail(ctx, &bts.BluetoothDeviceDetailRequest{
+		Name:        device.AdvertisedName(),
+		MatchOption: bts.BluetoothDeviceDetailRequest_MATCH_OPTION_REPORT_BATTERY.Enum(),
 	}); err != nil {
-		s.Fatal("Failed to verify Bluetooth device detail page reports the battery info correctly: ", err)
-	} else if len(resp.Device.BatteryInformation) == 0 {
-		s.Fatal("Failed to verify Bluetooth device detail page reports the battery info correctly: battery level does not available")
+		s.Fatal("Failed to verify Bluetooth device detail page reports the battery info correctly: battery level does not available: ", err)
 	}
 
 	// Disconnect from the BT device (by powering it off) to verify that the device
@@ -124,11 +124,39 @@ func DeviceBattery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the target BT device to be disconnected: ", err)
 	}
 
-	if resp, err := fv.BluetoothUIService.BluetoothDeviceDetail(ctx, &bts.BluetoothDeviceDetailRequest{
-		Name: device.AdvertisedName(),
+	if _, err := fv.BluetoothUIService.BluetoothDeviceDetail(ctx, &bts.BluetoothDeviceDetailRequest{
+		Name:        device.AdvertisedName(),
+		MatchOption: bts.BluetoothDeviceDetailRequest_MATCH_OPTION_NOT_REPORT_BATTERY.Enum(),
 	}); err != nil {
-		s.Fatal("Failed to verify Bluetooth device detail page reports the battery info correctly: ", err)
-	} else if len(resp.Device.BatteryInformation) != 0 {
-		s.Fatal("Failed to verify Bluetooth device detail page reports the battery info correctly: the battery info is still presented")
+		s.Fatal("Failed to verify Bluetooth device detail page reports the battery info correctly: the battery info is still presented: ", err)
 	}
+}
+
+func findPairedDevice(ctx context.Context, bluetoothUIService bts.BluetoothUIServiceClient, predicate func(device *bts.Device) bool) (*bts.Device, error) {
+	var device *bts.Device
+	// The OS-Settings may not ready immediately after the connection status of the
+	// Bluetooth device changes.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		resp, err := bluetoothUIService.CollectDeviceList(ctx, &emptypb.Empty{})
+		if err != nil {
+			return err
+		}
+		devices := resp.GetDevices()
+		index := slices.IndexFunc(devices, predicate)
+		if index == -1 {
+			return errors.New("Bluetooth device not found")
+		}
+		device = devices[index]
+
+		// The OS-Settings may display the incorrect connection status of the Bluetooth
+		// device for a while after the connection status changes.
+		if device.GetIsConnected() != true {
+			return errors.New("Bluetooth device is not connected")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: 3 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to found the expected Bluetooth Device from Bluetooth devices page")
+	}
+
+	return device, nil
 }

@@ -442,7 +442,7 @@ func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty)
 
 		// Battery level may not be presented, it's only available for connected BLE devices.
 		if ss[4] != "" {
-			device.BatteryInformation = []*pb.Battery{{Percentage: &ss[4]}}
+			device.Battery = &pb.Battery{ValueInPercentage: ss[4]}
 			if !device.IsConnected {
 				return nil, errors.Errorf("unexpected device info %+v, battery information should be available iff the BLE device is connected", device)
 			}
@@ -477,12 +477,25 @@ func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.Bluet
 	//
 	// This is an example of the target label:
 	// 	Connected to KEYBD_REF
-	deviceHeadingRegexp := regexp.MustCompile(fmt.Sprintf(`^(Connected to|Disconnected from) %s$`, req.Name))
-	deviceHeading := nodewith.NameRegex(deviceHeadingRegexp)
+	var deviceHeadingRegexp *regexp.Regexp
 
+	// Match the connection state if client specifies an option to match before this RPC can respond.
+	if req.MatchOption != nil {
+		switch req.GetMatchOption() {
+		case pb.BluetoothDeviceDetailRequest_MATCH_OPTION_CONNECTED:
+			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^Connected to %s$`, req.Name))
+		case pb.BluetoothDeviceDetailRequest_MATCH_OPTION_DISCONNECTED:
+			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^Disconnected from %s$`, req.Name))
+		default:
+			// Match both as other options are irrelevant regarding the connection state.
+			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^(Connected to|Disconnected from) %s$`, req.Name))
+		}
+	}
+
+	deviceHeading := nodewith.NameRegex(deviceHeadingRegexp)
 	// Waiting for the heading of the device detail page before proceed on extract device detail.
 	if err := settings.WaitUntilExists(deviceHeading)(ctx); err != nil {
-		return nil, errors.Wrapf(err, "failed to wait until the device %s detail page open", req.Name)
+		return nil, errors.Wrapf(err, "failed to wait until the connection status of device of Bluetooth device %s detail page as expected", req.Name)
 	}
 
 	// Extract device connected state from the heading.
@@ -509,25 +522,43 @@ func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.Bluet
 	batteryLevelRegexp := regexp.MustCompile(`^Battery level (\d+)%$`)
 	label := nodewith.NameRegex(batteryLevelRegexp)
 
+	// Match the battery info is reported or not if client specifies an option to match before this RPC can respond.
+	if req.MatchOption != nil {
+		switch req.GetMatchOption() {
+		case pb.BluetoothDeviceDetailRequest_MATCH_OPTION_NOT_REPORT_BATTERY:
+			if err := settings.EnsureGoneFor(label, 5*time.Second)(ctx); err != nil {
+				return nil, errors.Wrap(err, "failed to wait for the battery information to be gone")
+			}
+			return &pb.BluetoothDeviceDetailResponse{Device: device}, nil
+		case pb.BluetoothDeviceDetailRequest_MATCH_OPTION_REPORT_BATTERY:
+			if err := settings.WaitUntilExists(label)(ctx); err != nil {
+				return nil, errors.Wrap(err, "failed to wait for the battery information to be reported")
+			}
+		default:
+			// Report the battery info if it is present as other options are irrelevant
+			// regarding the battery info is reported or not.
+		}
+	}
+
 	// Extract battery level if it's present.
 	found, err := settings.IsNodeFound(ctx, label)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to find the battery level node")
 	}
 	if found {
-		info, err := settings.Info(ctx, label)
+		batteryInfo, err := settings.Info(ctx, label)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get node information")
 		}
-		ss := batteryLevelRegexp.FindStringSubmatch(info.Name)
+		ss := batteryLevelRegexp.FindStringSubmatch(batteryInfo.Name)
 		// Expecting 2 sub-matches which are
 		// 	0: entire match
 		// 	1: battery level value
 		if ss == nil || len(ss) != 2 {
-			return nil, errors.Errorf("failed to extract string sub match by %q from %q, sub matches: %d", batteryLevelRegexp.String(), info.Name, len(ss))
+			return nil, errors.Errorf("failed to extract string sub match by %q from %q, sub matches: %d", batteryLevelRegexp.String(), batteryInfo.Name, len(ss))
 		}
 		if ss[1] != "" {
-			device.BatteryInformation = []*pb.Battery{{Percentage: &ss[1]}}
+			device.Battery = &pb.Battery{ValueInPercentage: ss[1]}
 		}
 	}
 

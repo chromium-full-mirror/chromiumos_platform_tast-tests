@@ -81,17 +81,50 @@ message PairDeviceWithQuickSettingsRequest { string advertisedName = 1; }
 
 message ForgetBluetoothDeviceRequest { string device_name = 1; }
 
-message Battery { optional string percentage = 1; }
+message Battery {
+  optional string percentage = 1 [ deprecated = true ];
+
+  string value_in_percentage = 2;
+}
 
 message Device {
   string name = 1;
   bool is_connected = 2;
-  repeated Battery battery_information = 3;
+
+  repeated Battery battery_information = 3 [ deprecated = true ];
+
+  // Battery information is only provided if the Bluetooth device is connected
+  // with LE.
+  optional Battery battery = 4;
 }
 
 message CollectDeviceListResponse { repeated Device devices = 1; }
 
-message BluetoothDeviceDetailRequest { string name = 1; }
+message BluetoothDeviceDetailRequest {
+  enum MatchOption {
+    // MATCH_OPTION_CONNECTED specifies that the RPC should wait for the device
+    // to be connected before responding.
+    MATCH_OPTION_CONNECTED = 0;
+    // MATCH_OPTION_DISCONNECTED specifies that the RPC should wait for the
+    // device to be disconnected before responding.
+    MATCH_OPTION_DISCONNECTED = 1;
+    // MATCH_OPTION_REPORT_BATTERY specifies that the RPC should wait for the
+    // device battery information to be reported by the OS-Settings before
+    // responding.
+    MATCH_OPTION_REPORT_BATTERY = 2;
+    // MATCH_OPTION_NOT_REPORT_BATTERY specifies that the RPC should wait for
+    // the device battery information within the OS-Settings is no longer
+    // available before responding.
+    MATCH_OPTION_NOT_REPORT_BATTERY = 3;
+  }
+
+  string name = 1;
+
+  // Device detail may not be up to date on UI immediately,
+  // this option specifies a particular indicator that must match before this
+  // RPC can respond.
+  optional MatchOption match_option = 2;
+}
 
 message BluetoothDeviceDetailResponse { Device device = 1; }
 
