@@ -268,6 +268,21 @@ service ShillService {
   rpc WatchDarkResume(google.protobuf.Empty)
       returns (stream WatchDarkResumeResponse) {}
 
+  // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
+  rpc P2PGroupCreate(P2PGroupCreateRequest) returns (P2PGroupCreateResponse) {}
+
+  // P2PGroupDelete deletes the existing WiFi Direct Group.
+  rpc P2PGroupDelete(P2PGroupDeleteRequest) returns (P2PGroupDeleteResponse) {}
+
+  // P2PGroupConnect handles connection to the existing WiFi Direct Group.
+  rpc P2PGroupConnect(P2PGroupConnectRequest)
+      returns (P2PGroupConnectResponse) {}
+
+  // P2PGroupDisconnect handles disconnection from the existing WiFi Direct
+  // Group.
+  rpc P2PGroupDisconnect(P2PGroupDisconnectRequest)
+      returns (P2PGroupDisconnectResponse) {}
+
   // StartTethering attempts to start a tethering session.
   rpc StartTethering(TetheringRequest) returns (TetheringResponse) {}
 
@@ -278,7 +293,7 @@ service ShillService {
   rpc GetTetheringConfig(google.protobuf.Empty)
       returns (GetTetheringConfigResponse) {}
 
-  // SetPortalDetectionEnabled persistently enables/disables PortalDection via
+  // SetPortalDetectionEnabled persistently enables/disables PortalDetection via
   // shill.
   rpc SetPortalDetectionEnabled(SetPortalDetectionEnabledRequest)
       returns (google.protobuf.Empty) {}
@@ -624,6 +639,59 @@ message GetWakeOnWifiResponse { WakeOnWifiConfig config = 1; }
 message CheckLastWakeReasonRequest { string reason = 1; }
 
 message WatchDarkResumeResponse { uint32 count = 1; }
+
+// P2P-related definitions
+enum InvokeMethodEnum {
+  WPA_CLI = 0;
+  SHILL_API = 1;
+}
+
+// P2P Data is used universally, because the P2P implementation
+// will change dynamically.
+message P2PData {
+  string ssid = 1;
+  uint32 freq = 2;
+  string key = 3;
+}
+
+message P2PGroupCreateRequest {
+  InvokeMethodEnum method = 1;
+  P2PData data = 2;
+  uint32 priority = 3; // Actual type: uint8.
+}
+
+message P2PGroupCreateResponse {
+  string id = 1;
+  string if_name = 2;
+  P2PData data = 3;
+  google.protobuf.Duration execution_time = 4;
+}
+
+message P2PGroupDeleteRequest { string id = 1; }
+
+message P2PGroupDeleteResponse { google.protobuf.Duration execution_time = 1; }
+
+message P2PGroupConnectRequest {
+  InvokeMethodEnum method = 1;
+  P2PData data = 2;
+  uint32 priority = 3; // Actual type: uint8.
+}
+
+message P2PGroupConnectResponse {
+  string id = 1;
+  string if_name = 2;
+  int32 network_id = 3;
+  google.protobuf.Duration execution_time = 4;
+}
+
+message P2PGroupDisconnectRequest {
+  string id = 1;
+  int32 network_id = 2;
+}
+
+message P2PGroupDisconnectResponse {
+  google.protobuf.Duration execution_time = 1;
+}
 
 message TetheringRequest {
   bool no_uplink = 1;

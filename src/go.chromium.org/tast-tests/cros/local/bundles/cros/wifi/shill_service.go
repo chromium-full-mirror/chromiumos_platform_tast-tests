@@ -3087,6 +3087,26 @@ func (s *ShillService) WatchDarkResume(_ *empty.Empty, sender wifi.ShillService_
 	}
 }
 
+// P2PGroupCreate creates WiFi Direct Group and takes its ownership.
+func (s *ShillService) P2PGroupCreate(ctx context.Context, request *wifi.P2PGroupCreateRequest) (ret *wifi.P2PGroupCreateResponse, retErr error) {
+	return nil, errors.New("Not implemented yet")
+}
+
+// P2PGroupDelete deletes the existing WiFi Direct Group.
+func (s *ShillService) P2PGroupDelete(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (ret *wifi.P2PGroupDeleteResponse, retErr error) {
+	return nil, errors.New("Not implemented yet")
+}
+
+// P2PGroupConnect handles connection to the existing WiFi Direct Group.
+func (s *ShillService) P2PGroupConnect(ctx context.Context, request *wifi.P2PGroupConnectRequest) (ret *wifi.P2PGroupConnectResponse, retErr error) {
+	return nil, errors.New("Not implemented yet")
+}
+
+// P2PGroupDisconnect handles disconnection from the existing WiFi Direct Group.
+func (s *ShillService) P2PGroupDisconnect(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (ret *wifi.P2PGroupDisconnectResponse, retErr error) {
+	return nil, errors.New("Not implemented yet")
+}
+
 // StartTethering attempts to start a tethering session.
 // This is the implementation of wifi.ShillService/StartTethering gRPC.
 func (s *ShillService) StartTethering(ctx context.Context, request *wifi.TetheringRequest) (ret *wifi.TetheringResponse, retErr error) {
