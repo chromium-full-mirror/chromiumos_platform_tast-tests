@@ -153,7 +153,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 	checkAuthSkipped := func(ctx context.Context, s *testing.State, expectedAuthAlgo wpa.AuthAlgo, checkEap, expectSkipped bool, channel int, freqOps []iw.SetFreqOption, action func(context.Context)) {
 		var skippedRecver func() (bool, error)
 		// Do the prep work before invoking action.
-		capturer, err := pcapRouter.StartCapture(ctx, "monitor"+tf.UniqueAPName(), channel, freqOps)
+		capturer, err := pcapRouter.StartCapture(ctx, "monitor"+tf.UniqueAPName(), channel, 0 /*opClass*/, freqOps)
 		if err != nil {
 			s.Fatal("Failed to start capturer: ", err)
 		}

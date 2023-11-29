@@ -144,7 +144,7 @@ func ConnectRandomizeMAC(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}
-		pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapRouter, name, ap.Config().Channel, freqOps, action)
+		pcapPath, err = wifiutil.CollectPcapForAction(ctx, pcapRouter, name, ap.Config().Channel, 0 /*opClass*/, freqOps, action)
 		if err != nil {
 			s.Fatal("Failed to get packet capture path: ", err)
 		}

@@ -427,6 +427,20 @@ func Channel(ch int) Option {
 	}
 }
 
+// OpClass returns an Option which sets the operating class in hostapd config.
+// OpClass and Channel together uniquely identify channels across different
+// bands including the 6GHz band. For backwards compatibility, if the OpClass is
+// not specified, the channel is assumed to be in the 2.4GHz or 5GHz band.
+// If the operating class is in the range [131, 137], the channel will be mapped
+// to a frequency in the 6GHz band.
+// Refer to Table E-4 in IEEE Std 802.11ax-2021 for valid
+// channel-operating class pairs in the 6GHz band.
+func OpClass(opClass int) Option {
+	return func(c *Config) {
+		c.OpClass = opClass
+	}
+}
+
 // HTCaps returns an Option which sets HT capabilities in hostapd config.
 func HTCaps(caps ...HTCap) Option {
 	return func(c *Config) {
@@ -732,6 +746,7 @@ type Config struct {
 	SSID               string
 	Mode               ModeEnum
 	Channel            int
+	OpClass            int
 	HTCaps             HTCap
 	VHTCaps            []VHTCap
 	VHTCenterChannel   int
@@ -829,8 +844,9 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		if c.HECenterChannel != 0 {
 			configure("he_oper_centr_freq_seg0_idx", strconv.Itoa(c.HECenterChannel))
 		}
-		// No requirement for require_he=1 for Mode80211axPure because it's not a valid option
-		// in our tree.
+		if c.Mode == Mode80211axPure {
+			configure("require_he", "1")
+		}
 	}
 	if c.is80211be() {
 		configure("ieee80211be", "1")
@@ -876,6 +892,21 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 	}
 	for k, v := range securityConf {
 		configure(k, v)
+	}
+
+	if c.OpClass != 0 {
+		if Is6GHzOpClass(c.OpClass) {
+			// Only configure operating class in hostapd if it is needed to
+			// disambiguate a 6GHz channel from a 2.4/5GHz channel.
+			configure("op_class", strconv.Itoa(c.OpClass))
+			// Set country code to US to enable the DUT to actively scan for the
+			// AP on 6GHz.
+			configure("country_code", "US")
+			// Enable hash-to-element mechanism for 6GHz networks.
+			configure("sae_pwe", "1")
+		} else {
+			return "", errors.New("operating class outside of [131, 137] is not handled in testing hostapd config")
+		}
 	}
 
 	configure("ieee80211w", strconv.Itoa(int(c.PMF)))
@@ -1252,9 +1283,9 @@ func supportHT40Minus(ch int) bool {
 }
 
 func (c *Config) validateChannel() error {
-	f, err := ChannelToFrequency(c.Channel)
+	f, err := ChannelToFrequencyWithOpClass(c.Channel, c.OpClass)
 	if err != nil {
-		return errors.New("invalid channel")
+		return errors.Errorf("invalid channel: %d", err)
 	}
 
 	modeErr := errors.Errorf("mode %s does not support ch%d", c.Mode, c.Channel)
@@ -1271,6 +1302,9 @@ func (c *Config) validateChannel() error {
 
 	htPlus := supportHT40Plus(c.Channel)
 	htMinus := supportHT40Minus(c.Channel)
+	if Is6GHzOpClass(c.OpClass) && (c.HTCaps&HTCapHT40 > 0 || c.HTCaps&HTCapHT40Plus > 0 || c.HTCaps&HTCapHT40Minus > 0) {
+		return errors.New("6GHz channels do not support HTCap40+/-")
+	}
 	if c.HTCaps&HTCapHT40 > 0 && !htPlus && !htMinus {
 		return errors.Errorf("ch%d does not support HTCap40", c.Channel)
 	}
@@ -1306,7 +1340,7 @@ func (c *Config) hwMode() (string, error) {
 		return string(c.Mode), nil
 	}
 	if c.is80211n() || c.is80211ac() || c.is80211ax() || c.is80211be() {
-		f, err := ChannelToFrequency(c.Channel)
+		f, err := ChannelToFrequencyWithOpClass(c.Channel, c.OpClass)
 		if err != nil {
 			return "", err
 		}

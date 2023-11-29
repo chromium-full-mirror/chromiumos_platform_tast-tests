@@ -628,7 +628,7 @@ func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 }
 
 // StartCapture starts a packet capturer.
-func (r *Router) StartCapture(ctx context.Context, name string, ch int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (_ *pcap.Capturer, retErr error) {
+func (r *Router) StartCapture(ctx context.Context, name string, ch, opClass int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (_ *pcap.Capturer, retErr error) {
 	nd, err := r.netDev(ctx, ch, iw.IfTypeMonitor)
 	if err != nil {
 		return nil, err

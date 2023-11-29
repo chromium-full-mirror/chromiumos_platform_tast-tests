@@ -192,7 +192,7 @@ func NonPrefChan(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to get legacy router: ", err)
 	}
-	pcapPath, err := wifiutil.CollectPcapForAction(ctx, router, "connect", channel, freqOpts, connect)
+	pcapPath, err := wifiutil.CollectPcapForAction(ctx, router, "connect", channel, 0 /*opClass*/, freqOpts, connect)
 	if connectSuccessful {
 		defer func(ctx context.Context) {
 			if err := tf.CleanDisconnectWifi(ctx); err != nil {
@@ -311,7 +311,7 @@ func NonPrefChan(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Log("Running test case: ", tc)
-		pcapPath, err = wifiutil.CollectPcapForAction(ctx, router, fmt.Sprintf("setNonPrefChans%d", tc), channel, freqOpts, setNonPrefChans(chans...))
+		pcapPath, err = wifiutil.CollectPcapForAction(ctx, router, fmt.Sprintf("setNonPrefChans%d", tc), channel, 0 /*opClass*/, freqOpts, setNonPrefChans(chans...))
 		if err != nil {
 			s.Fatal("Failed to reset non-preferred channels: ", err)
 		}

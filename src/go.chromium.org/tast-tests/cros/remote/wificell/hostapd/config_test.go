@@ -576,6 +576,14 @@ func TestConfigFormat(t *testing.T) {
 	// Fixed input for Config.Format call.
 	const iface = "tiface0"
 	const ctrl = "t.ctrl"
+	wpa3Conf, err := wpa.NewConfigFactory(
+		"chromeos",
+		wpa.Mode(wpa.ModePureWPA3),
+		wpa.Ciphers(wpa.CipherCCMP),
+	).Gen()
+	if err != nil {
+		t.Fatal("failed to prepare test wpa config")
+	}
 
 	testcases := []struct {
 		conf   *Config
@@ -878,6 +886,39 @@ func TestConfigFormat(t *testing.T) {
 			},
 			verify: map[string]string{
 				"ssid2": `P"\xf2\xe3\x00\xd4\xc5\xb6"`,
+			},
+		},
+		// Check 6GHz channel.
+		{
+			conf: &Config{
+				SSID:             "ssid",
+				Mode:             Mode80211axPure,
+				Channel:          5,
+				OpClass:          131,
+				HTCaps:           HTCapHT40Plus,
+				VHTCaps:          []VHTCap{VHTCapSGI80},
+				VHTCenterChannel: 7,
+				VHTChWidth:       VHTChWidth80,
+				HECenterChannel:  7,
+				HEChWidth:        HEChWidth80,
+				SecurityConfig:   wpa3Conf,
+				PMF:              PMFRequired,
+			},
+			verify: map[string]string{
+				"hw_mode":                      "a",
+				"channel":                      "5",
+				"op_class":                     "131",
+				"ieee80211n":                   "1",
+				"ht_capab":                     "[HT40+]",
+				"ieee80211ac":                  "1",
+				"ieee80211ax":                  "1",
+				"vht_oper_chwidth":             "1",
+				"vht_oper_centr_freq_seg0_idx": "7",
+				"he_oper_chwidth":              "1",
+				"he_oper_centr_freq_seg0_idx":  "7",
+				"vht_capab":                    "[SHORT-GI-80]",
+				"sae_pwe":                      "1",
+				"ieee80211w":                   "2",
 			},
 		},
 		// Check PMF.

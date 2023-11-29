@@ -6,7 +6,7 @@ package hostapd
 
 import "go.chromium.org/tast/core/errors"
 
-// freqToChannelMap maps frequenty (MHz) to channel number.
+// freqToChannelMap maps a frequency (MHz) to channel number in the 2.4/5GHz band.
 var freqToChannelMap = map[int]int{
 	2412: 1,
 	2417: 2,
@@ -66,21 +66,111 @@ var freqToChannelMap = map[int]int{
 	5825: 165,
 }
 
+const (
+	base6GHzFreq   int = 5950
+	channel2       int = 2
+	min6GHzFreq    int = 5935
+	max6GHzFreq    int = 7115
+	min6GHzChannel int = 1
+	max6GHzChannel int = 233
+
+	// For verifying that operating class matches the channel number.
+	first6GHz20MHzChannel  int = 1
+	first6GHz40MHzChannel  int = 3
+	first6GHz80MHzChannel  int = 7
+	first6GHz160MHzChannel int = 15
+	opClass20MHz           int = 131
+	opClass40MHz           int = 132
+	opClass80MHz           int = 133
+	opClass160MHz          int = 134
+	opClass80Plus80MHz     int = 135
+	opClassCh2             int = 136
+	opClass320MHz          int = 137
+)
+
 // FrequencyToChannel maps center frequency (in MHz) to the corresponding channel.
 func FrequencyToChannel(freq int) (int, error) {
-	ch, ok := freqToChannelMap[freq]
-	if !ok {
-		return 0, errors.Errorf("cannot find channel with frequency=%d", freq)
+	var ch int
+	var ok bool
+	is6GHz := freq >= min6GHzFreq
+	if !is6GHz {
+		ch, ok = freqToChannelMap[freq]
+		if !ok {
+			return 0, errors.Errorf("cannot find channel with frequency=%d", freq)
+		}
+	} else if freq == min6GHzFreq {
+		ch = channel2
+	} else if (freq-min6GHzFreq)%10 != 0 || freq > max6GHzFreq || freq == 5945 {
+		return 0, errors.New("invalid 6GHz frequency")
+	} else {
+		ch = (freq - base6GHzFreq) / 5
 	}
 	return ch, nil
 }
 
-// ChannelToFrequency maps channel id to its center frequency (in MHz).
-func ChannelToFrequency(target int) (int, error) {
+// Is6GHzOpClass returns whether a given operating class is in the 6GHz band.
+func Is6GHzOpClass(opClass int) bool {
+	return opClass >= 131 && opClass <= 137
+}
+
+// Validate6GHzOpClass checks that the correct operating class is used for a
+// given channel in the 6GHz band.
+func Validate6GHzOpClass(ch, opClass int) error {
+	if ch < min6GHzChannel || ch > max6GHzChannel {
+		return errors.New("channel is out of range")
+	}
+	// In 6GHz band, all channels of the same channel width (except channel 2)
+	// are a constant multiple of two from each other.
+	if opClass == opClass20MHz && (ch-first6GHz20MHzChannel)%4 != 0 {
+		return errors.Errorf("channel %d does not match operating class which expects a 20MHz channel", ch)
+	} else if opClass == opClass40MHz && (ch-first6GHz40MHzChannel)%8 != 0 {
+		return errors.Errorf("channel %d does not match operating class which expects a 40MHZ channel", ch)
+	} else if opClass == opClass80MHz && (ch-first6GHz80MHzChannel)%16 != 0 {
+		return errors.Errorf("channel %d does not match operating class which expects an 80MHZ channel", ch)
+	} else if opClass == opClass160MHz && (ch-first6GHz160MHzChannel)%32 != 0 {
+		return errors.Errorf("channel %d does not match operating class which expects a 160 MHZ channel", ch)
+	} else if opClass == opClass80Plus80MHz {
+		// Non-contiguous channel widths are not yet supported by our routers.
+		return errors.New("operating class corresponds to unsupported 80+80 channel width")
+	} else if opClass == opClassCh2 && ch != 2 {
+		return errors.Errorf("channel %d does not match operating class 136", ch)
+	} else if opClass == opClass320MHz {
+		// TODO(b/314396114) Add 320 MHz channel width as an option for WiFi7 tests
+		return errors.New("operating class corresponds to unsupported 320MHz channel width for WiFi 6E")
+	}
+	return nil
+}
+
+// ChannelToFrequencyWithOpClass maps channel id and operating class to its
+// center frequency (in MHz). For the 2.4/5GHz band, the operating class will be
+// ignored. If the operating class is in the range [131, 137], the channel will
+// be mapped to a frequency in the 6GHz band.
+func ChannelToFrequencyWithOpClass(target, opClass int) (int, error) {
+	// If the operating class is specified and is in the range [131, 137], the
+	// channel id is mapped to a frequency in the 6GHz band.
+	if Is6GHzOpClass(opClass) {
+		if err := Validate6GHzOpClass(target, opClass); err != nil {
+			return 0, err
+		}
+		if opClass == opClassCh2 && target == channel2 {
+			return min6GHzFreq, nil
+		}
+		f := base6GHzFreq + target*5
+		return f, nil
+	}
+
+	// If the operating class is not specified or out of the range
+	// [131, 137], map to a frequency in the 2.4GHz/5GHz band.
 	for f, ch := range freqToChannelMap {
 		if ch == target {
 			return f, nil
 		}
 	}
 	return 0, errors.Errorf("cannnot find channel num=%d", target)
+}
+
+// ChannelToFrequency is kept for backwards compatibility with cases where
+// the operating class is not specified.
+func ChannelToFrequency(ch int) (int, error) {
+	return ChannelToFrequencyWithOpClass(ch, 0)
 }

@@ -104,7 +104,8 @@ type Logs interface {
 type Capture interface {
 	Router
 	// StartCapture starts a packet capturer.
-	StartCapture(ctx context.Context, name string, ch int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (*pcap.Capturer, error)
+	// For 2.4/5GHz channels, operating class is irrelevant and should be set to 0.
+	StartCapture(ctx context.Context, name string, ch, opClass int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (*pcap.Capturer, error)
 	// StartRawCapturer starts a capturer on an existing interface on the router instead of a
 	// monitor type interface.
 	StartRawCapturer(ctx context.Context, name, iface string, ops ...pcap.Option) (*pcap.Capturer, error)

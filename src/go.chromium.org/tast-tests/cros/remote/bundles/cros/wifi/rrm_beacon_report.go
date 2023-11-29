@@ -270,7 +270,7 @@ func RRMBeaconReport(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}
-		pcapPath, err := wifiutil.CollectPcapForAction(ctx, router, name, int(ap0Chan), freqOpts, SendBeaconRequest)
+		pcapPath, err := wifiutil.CollectPcapForAction(ctx, router, name, int(ap0Chan), 0 /*opClass*/, freqOpts, SendBeaconRequest)
 		if err != nil {
 			return err
 		}

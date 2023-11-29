@@ -892,7 +892,7 @@ func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx int, ops [
 		if err != nil {
 			return nil, err
 		}
-		capturer, err = tf.PcapRouter().StartCapture(ctx, name, config.Channel, freqOps)
+		capturer, err = tf.PcapRouter().StartCapture(ctx, name, config.Channel, config.OpClass, freqOps)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start capturer")
 		}
@@ -1361,7 +1361,7 @@ func (tf *TestFixture) VerifyConnectionFromDUT(ctx context.Context, dutIdx DutId
 		return errors.Wrap(err, "failed to query shill service information")
 	}
 	clientFreq := service.Wifi.Frequency
-	serverFreq, err := hostapd.ChannelToFrequency(ap.Config().Channel)
+	serverFreq, err := hostapd.ChannelToFrequencyWithOpClass(ap.Config().Channel, ap.Config().OpClass)
 	if err != nil {
 		return errors.Wrap(err, "failed to get server frequency")
 	}
@@ -2139,7 +2139,7 @@ func (tf *TestFixture) StartTethering(ctx context.Context, dutIdx DutIdx, ops []
 		if err != nil {
 			return nil, nil, err
 		}
-		capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, freqOps)
+		capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.OpClass, freqOps)
 		if err != nil {
 			return nil, nil, errors.Wrap(err, "failed to start capturer")
 		}

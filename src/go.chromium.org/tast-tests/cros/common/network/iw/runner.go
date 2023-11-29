@@ -696,7 +696,7 @@ func (c *setFreqConf) init() error {
 // centerFreq80 derives the center frequency (in MHz) for the channel with
 // 80MHz width and control frequency = ctrlFreq MHz.
 func (c *setFreqConf) centerFreq80(ctrlFreq int) (int, error) {
-	vht80 := []int{5180, 5260, 5500, 5580, 5660, 5745}
+	vht80 := []int{5180, 5260, 5500, 5580, 5660, 5745, 5955, 6035, 6115, 6195, 6275, 6355, 6435, 6515, 6595, 6675, 6755, 6835, 6915, 6995}
 	for _, f := range vht80 {
 		if ctrlFreq >= f && ctrlFreq < f+80 {
 			return f + 30, nil
@@ -708,7 +708,7 @@ func (c *setFreqConf) centerFreq80(ctrlFreq int) (int, error) {
 // centerFreq160 derives the center frequency (in MHz) for the channel with
 // 160MHz width and control frequency = ctrlFreq MHz.
 func (c *setFreqConf) centerFreq160(ctrlFreq int) (int, error) {
-	vht160 := []int{5180, 5500}
+	vht160 := []int{5180, 5500, 5955, 6115, 6275, 6435, 6595, 6755, 6915}
 	for _, f := range vht160 {
 		if ctrlFreq >= f && ctrlFreq < f+160 {
 			return f + 70, nil
