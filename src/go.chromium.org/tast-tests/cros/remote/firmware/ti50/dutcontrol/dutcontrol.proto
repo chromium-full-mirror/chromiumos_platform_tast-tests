@@ -142,7 +142,11 @@ message SetupResponse {
 // re-initalization of HyperDebug so that all signals are in their declared
 // initial condition.  For Host Emulation, it will cause an emulation
 // sub-process to be spawned (in initial condition).
-message StartSessionRequest {}
+message StartSessionRequest {
+    // Optional gpio strap to apply when starting session and initialization
+    // transport layer
+    string gpio_strap = 1;
+}
 
 message StartSessionResponse {
     // Empty indicates no error.
