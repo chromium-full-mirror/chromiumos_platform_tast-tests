@@ -59,8 +59,8 @@ until ectool echash | grep 'done' ; do : ; done
 echo -n "BEFORE "
 ectool echash | grep "hash:"
 set -x
-futility update -p ec -i "$1" --force
-echo "FUTILITY EXIT: $?"
+flashrom -p ec -w "$1"
+echo "FLASHROM EXIT: $?"
 set +x
 ectool echash start rw
 until ectool echash | grep 'done' ; do : ; done
@@ -69,7 +69,7 @@ ectool echash | grep "hash:"
 reboot
 `
 
-var futilityExitCodeRe = regexp.MustCompile(`FUTILITY EXIT: (-?\d+)`)
+var flashromExitCodeRe = regexp.MustCompile(`FLASHROM EXIT: (-?\d+)`)
 var hashBeforeRe = regexp.MustCompile(`BEFORE hash:\s*(\S+)`)
 var hashAfterRe = regexp.MustCompile(`AFTER hash:\s*(\S+)`)
 
@@ -101,7 +101,7 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		}
 	}()
 	s.Log("Backup EC firmware")
-	if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", "-p", "ec", fmt.Sprintf("%s/ec_backup.bin", remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "ec", "-r", fmt.Sprintf("%s/ec_backup.bin", remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed taking ec backup: ", err)
 	}
 	if err := linuxssh.WriteFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/flash.sh", remoteTempDir), []byte(shellScript), 0755); err != nil {
@@ -177,9 +177,9 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read corrupt.log: ", err)
 	}
-	m := futilityExitCodeRe.FindSubmatch(out)
+	m := flashromExitCodeRe.FindSubmatch(out)
 	if m == nil || string(m[1]) != "0" {
-		s.Error("futility failed: ", string(out))
+		s.Error("flashrom failed: ", string(out))
 	}
 	m = hashBeforeRe.FindSubmatch(out)
 	if m == nil {
@@ -288,9 +288,9 @@ func restoreFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 	if out, err := linuxssh.ReadFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/restore.log", remoteTempDir)); err != nil {
 		s.Error("Failed to read restore.log: ", err)
 	} else {
-		m := futilityExitCodeRe.FindSubmatch(out)
+		m := flashromExitCodeRe.FindSubmatch(out)
 		if m == nil || string(m[1]) != "0" {
-			s.Error("futility failed: ", string(out))
+			s.Error("flashrom failed: ", string(out))
 		}
 	}
 	*shouldRestoreFirmware = false
