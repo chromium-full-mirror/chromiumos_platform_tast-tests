@@ -27,12 +27,15 @@ const (
 	testRoomName = "Power test room"
 
 	// There are different APK urls according to the system architecture.
-	// The urls can be found under <target release> -> Assets
-	// in https://github.com/vector-im/element-android/tags.
 	elementArmAPKVarName    = "power.element_arm_apk_url"
 	elementArm64APKVarName  = "power.element_arm64_apk_url"
 	elementX86APKVarName    = "power.element_x86_apk_url"
 	elementX86_64APKVarName = "power.element_x86_64_apk_url"
+	// defaultApkURLBase is the URL base for the Element APKs with the
+	// default version 1.6.6 on the github.
+	// The full links can be found under the Assets
+	// on https://github.com/vector-im/element-android/releases/tag/v1.6.6.
+	defaultApkURLBase = "https://github.com/vector-im/element-android/releases/download/v1.6.6/vector-gplay-rustCrypto-"
 )
 
 var (
@@ -46,6 +49,14 @@ var (
 		elementArm64APKVarName,
 		elementX86APKVarName,
 		elementX86_64APKVarName,
+	}
+
+	// Default to install the apk with version "1.6.6".
+	defaultElementApkURLs = map[string]string{
+		elementArmAPKVarName:    defaultApkURLBase + "armeabi-v7a-release-signed.apk",
+		elementArm64APKVarName:  defaultApkURLBase + "arm64-v8a-release-signed.apk",
+		elementX86APKVarName:    defaultApkURLBase + "x86-release-signed.apk",
+		elementX86_64APKVarName: defaultApkURLBase + "x86_64-release-signed.apk",
 	}
 )
 
@@ -82,7 +93,10 @@ func ParseElementAPKURL(ctx context.Context, testCaseVar func(string) (string, b
 		testing.ContextLog(ctx, "Element APK URL parsed from runtime variable: ", url)
 		return url, nil
 	}
-	return "", errors.Errorf("runtime variable %s is not set", varName)
+	// Return default APK URL if the runtime variable is not set.
+	url := defaultElementApkURLs[varName]
+	testing.ContextLogf(ctx, "Runtime variable %q is not set, using default value: %s", varName, url)
+	return url, nil
 }
 
 // NewElement returns a new Element object.
