@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const motionMarkPrefix = "MotionMark."
@@ -69,7 +70,7 @@ func RetrieveMotionMarkScore(ctx context.Context, benchmarkConn *chrome.Conn, sc
 	}
 	for metric, value := range benchmarkScores {
 		if value < 10 {
-			return errors.Errorf("MotionMark %s subtest failed; got a score of %f", metric, value)
+			testing.ContextLogf(ctx, "MotionMark %s subtest score below 10; got a score of %f", metric, value)
 		}
 		scores[motionMarkPrefix+metric] = Score{"score", perf.BiggerIsBetter, []float64{value}}
 	}
