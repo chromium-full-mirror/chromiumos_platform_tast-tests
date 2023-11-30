@@ -51,12 +51,7 @@ var cujTests = []wmCUJTestParams{
 	// PageZoom disabled since it is not implemented in ARC. See: http://b/149790068
 	// {"Page Zoom", wmPageZoom},
 	{"Picture in Picture", wmPIP},
-}
-
-// Tests that are only for P should be placed here. Will be gone once all P devices are gone.
-var cujTestsP = []wmCUJTestParams{
 	{"Springboard N / Pre-N", wmSpringboardP},
-	// Density is handled differently in R, where bounds are calculated in a more complicated way based on display size, etc, so the operation frequently changes and is not very testable.
 	{"Display resolution", wmDisplayResolutionP},
 }
 
@@ -69,21 +64,9 @@ func init() {
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "android_p"},
 		Fixture:      "arcBooted",
 		Timeout:      10 * time.Minute,
-		Params: []testing.Param{{
-			Val:               append(cujTests, cujTestsP...),
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			Name:              "container_r",
-			Val:               cujTests,
-			ExtraSoftwareDeps: []string{"android_container_r"},
-		}, {
-			Name:              "vm",
-			Val:               cujTests,
-			ExtraSoftwareDeps: []string{"android_vm"},
-		}},
 	})
 }
 
@@ -119,11 +102,11 @@ func WindowManagerCUJ(ctx context.Context, s *testing.State) {
 	// TODO(ricardoq): Wait for "tablet mode animation is finished" in a reliable way.
 	// If an activity is launched while the tablet mode animation is active, the activity
 	// will be launched in un undefined state, making the test flaky.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+	if err := wm.WaitForDeviceModeChangeApplied(ctx); err != nil {
 		s.Fatal("Failed to wait until tablet-mode animation finished: ", err)
 	}
 
-	for idx, test := range s.Param().([]wmCUJTestParams) {
+	for idx, test := range cujTests {
 		s.Logf("Running test %q", test.name)
 
 		// Reset WM state to default values.
