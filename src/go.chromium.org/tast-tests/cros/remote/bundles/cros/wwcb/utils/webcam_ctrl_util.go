@@ -6,12 +6,19 @@
 package utils
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"image"
 	"image/color"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/blackjack/webcam"
+
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -139,8 +146,103 @@ func PairWebcamToDisplay(ctx context.Context, s *testing.State, displayIDs []str
 
 			screenToCamera[dispID] = mappingPort
 			alreadyMappingCamera[mappingPort] = true
-			testing.ContextLogf(ctx, "Mapping '%s' to 'Display %d, %s' within the score is %d", mappingPort, dispIndex, dispID, maxScore)
+			testing.ContextLogf(ctx, "Mapping %s to Display %d, %s within the score is %d", mappingPort, dispIndex, dispID, maxScore)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second})
+}
+
+// HostWebcams returns a list of host webcams.
+func HostWebcams(ctx context.Context) ([]string, error) {
+	var found []string
+	out, err := testexec.CommandContext(ctx, "ls", "/sys/class/video4linux").Output()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to ls video4linux")
+	}
+	videos := strings.Split(string(out), "\n")
+
+	for _, video := range videos {
+		if ctx.Err() != nil {
+			return nil, errors.Errorf("Context already expired: %s", ctx.Err())
+		}
+
+		device := fmt.Sprintf("/dev/%s", video)
+		cam, err := webcam.Open(device)
+		if err != nil {
+			continue
+		}
+
+		if err := cam.StartStreaming(); err == nil {
+			name, err := cam.GetName()
+			if err != nil {
+				name = err.Error()
+			}
+			testing.ContextLogf(ctx, "Found: device: %s, name: %s", device, name)
+
+			found = append(found, device)
+		}
+
+		if err := cam.Close(); err != nil {
+			continue
+		}
+	}
+
+	if len(found) == 0 {
+		return nil, errors.New("failed to find any device")
+	}
+
+	return found, nil
+}
+
+// WebcamFrames returns a list of images captured by the webcam in one second.
+func WebcamFrames(ctx context.Context, device string) ([]image.Image, error) {
+	cam, err := webcam.Open(device)
+	if err != nil {
+		return nil, errors.Wrap(err, "open webcam")
+	}
+	defer cam.Close()
+
+	fps, err := cam.GetFramerate()
+	if err != nil {
+		return nil, errors.Wrap(err, "get framerate")
+	}
+
+	if err := cam.SetAutoWhiteBalance(true); err != nil {
+		return nil, errors.Wrap(err, "set white balance")
+	}
+
+	if err := cam.StartStreaming(); err != nil {
+		return nil, errors.Wrap(err, "start streaming")
+	}
+
+	var frames []image.Image
+	for i := 0; i < int(fps); i++ {
+		// This is the timeout to wait for the frame to be read.
+		// By experience, setting 1 sec was sufficient.
+		timeout := uint32(1)
+
+		deadline, ok := ctx.Deadline()
+		if !ok || time.Until(deadline) < time.Duration(timeout*uint32(time.Second)) {
+			return nil, errors.New("Context timeout occurs before wait frame timeout")
+		}
+
+		if err := cam.WaitForFrame(timeout); err != nil {
+			return nil, errors.Wrap(err, "wait for frame")
+		}
+
+		frame, err := cam.ReadFrame()
+		if err != nil {
+			return nil, errors.Wrap(err, "read frame")
+		}
+
+		if len(frame) > 0 {
+			img, _, err := image.Decode(bytes.NewReader(addMotionDht(frame)))
+			if err != nil {
+				return nil, errors.Wrap(err, "decode image")
+			}
+			frames = append(frames, img)
+		}
+	}
+
+	return frames, nil
 }
