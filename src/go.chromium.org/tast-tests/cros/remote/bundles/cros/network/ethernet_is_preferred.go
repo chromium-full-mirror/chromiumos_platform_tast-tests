@@ -31,14 +31,13 @@ func init() {
 		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Verify connection preference is for Ethernet when both wired and wireless networks are available",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		// TODO(b/275127708): Move this test to network suite.
-		Attr: []string{"group:wificell", "wificell_e2e_unstable"},
+		Attr:         []string{"group:wificell", "wificell_e2e"},
 		ServiceDeps: []string{
 			wificell.WifiUIServiceName,
 			wificell.OsSettingsServiceName,
