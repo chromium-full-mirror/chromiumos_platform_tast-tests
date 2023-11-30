@@ -9,6 +9,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -31,7 +32,7 @@ const (
 	// SaveFilePicker is a link's name which can save file.
 	SaveFilePicker = "showSaveFilePicker"
 	// SaveFileDialog is save file dialog's name.
-	SaveFileDialog = "Save file as"
+	SaveFileDialog = "Warning: this site can see edits you make"
 	// OpenFilePicker is a link's name which can open file.
 	OpenFilePicker = "showOpenFilePicker"
 	// OpenFileDialog is open file dialog's name.
@@ -103,7 +104,7 @@ func triggerFilePicker(ctx context.Context, conn *chrome.Conn, ui *uiauto.Contex
 			return errors.Wrap(err, "failed to wait for the file picker to either open or fail to open")
 		}
 
-		if errorMessage == "User activation is required to show a file picker." {
+		if strings.HasSuffix(errorMessage, "User activation is required to show a file picker.") {
 			// Sometimes Chrome will not register the click as a user gesture, and thus not open the file picker.
 			// Return an error here so that we retry the click to open the file picker.
 			return errors.New("failed to open the file picker: The click action was not recognized as a user gesture")
