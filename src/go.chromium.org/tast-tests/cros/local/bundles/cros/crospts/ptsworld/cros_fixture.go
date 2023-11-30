@@ -194,7 +194,16 @@ func (c *CrosFixture) Mount(ctx context.Context, s *testing.FixtState) error {
 	shortCtx, cancel := ctxutil.Shorten(ctx, mountTimeout)
 	defer cancel()
 
+	mountPoints, err := GetMountPoints(ctx)
+	if err != nil {
+		s.Fatal("Failed to get mount points: ", err)
+	}
+
 	for _, mount := range c.mountSequence {
+		if _, exist := mountPoints[mount.dst]; exist {
+			s.Log("Destination has been mounted: ", mount.dst)
+			continue
+		}
 		if err := mountFS(shortCtx, s, mount.src, mount.dst, mount.fs, mount.ro, mount.bind, mount.copy); err != nil {
 			s.Fatalf("Failed to mount %v to %v (ro:%v bind:%v copy:%v): %v", mount.src, mount.dst, mount.ro, mount.bind, mount.copy, err)
 			return err
@@ -215,7 +224,16 @@ func (c *CrosFixture) Unmount(ctx context.Context, s *testing.FixtState) error {
 	shortCtx, cancel := ctxutil.Shorten(ctx, unMountTimeout)
 	defer cancel()
 
+	mountPoints, err := GetMountPoints(ctx)
+	if err != nil {
+		s.Fatal("Failed to get mount points: ", err)
+	}
+
 	for i := len(c.mountSequence) - 1; i >= 0; i-- {
+		if _, exist := mountPoints[c.mountSequence[i].dst]; !exist {
+			s.Log("Destination is not mounted: ", c.mountSequence[i].dst)
+			continue
+		}
 		if err := unmountFS(shortCtx, s, c.mountSequence[i].dst); err != nil {
 			s.Fatalf("Failed to unmount %v: %v", c.mountSequence[i].dst, err)
 			return err
@@ -229,8 +247,6 @@ func (c *CrosFixture) Unmount(ctx context.Context, s *testing.FixtState) error {
 func mountFS(ctx context.Context, s *testing.FixtState, src, dst, filesystem string, ro, bind, copy bool) error {
 	var arg []string
 
-	// TODO(darrenwu): Check the destination has been mounted and skip the
-	// mount.
 	if copy {
 		if err := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("cp -rf %s/* %s", dst, src)).Run(); err != nil {
 			s.Fatalf("Failed to copy files from %v to %v: %v", dst, src, err)
@@ -260,7 +276,5 @@ func mountFS(ctx context.Context, s *testing.FixtState, src, dst, filesystem str
 // unmountFS mounts a destination file system.
 func unmountFS(ctx context.Context, s *testing.FixtState, dst string) error {
 	s.Log("Unmounting ", dst)
-	// TODO(darrenwu): Check the destination is not mounted and skip the
-	// unmount.
 	return testexec.CommandContext(ctx, "umount", dst).Run()
 }
