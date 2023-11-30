@@ -98,7 +98,7 @@ func AppFirefox(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, "f", "Firefox ESR")(ctx); err != nil {
+	if err := launcher.SearchAndLaunchWithQuery(tconn, keyboard, "firefox", "Firefox ESR")(ctx); err != nil {
 		s.Fatal("Failed to launch Firefox from launcher: ", err)
 	}
 
