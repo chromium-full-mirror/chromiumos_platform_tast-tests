@@ -76,14 +76,6 @@ func init() {
 				Fixture: "loggedInToCUJUserARCSupportedWithFieldTrials",
 			},
 			{
-				Name:      "battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
-				Fixture:   "loggedInToCUJUserARCSupportedWithBatterySaver",
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-				},
-			},
-			{
 				Name:      "virtio_balloon",
 				ExtraAttr: []string{"cuj_experimental"},
 				Fixture:   "loggedInToCUJUserARCSupportedWithVirtioBalloon",

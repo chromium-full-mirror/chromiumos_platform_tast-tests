@@ -866,46 +866,6 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserLacrosWithoutARC",
-		Desc: "Variant of loggedInToCUJUser with ARC disabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			bt:         browser.TypeLacros,
-			disableARC: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    chrome.GAIALoginTimeout + 2*time.Minute,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithAppRescue",
-		Desc: "CUJ fixture with AppRescue enabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("ArcMglruReclaim:interval/30000/swappiness/60,ArcLmkPerceptibleMinStateUpdate"),
-			},
-			bt: browser.TypeAsh,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaverParent",
 		Desc: "CUJ test fixture with battery saver without Android",
 		Contacts: []string{
@@ -985,49 +945,6 @@ func init() {
 		SetUpTimeout:    batterySaverTimeout,
 		TearDownTimeout: batterySaverTimeout,
 		PreTestTimeout:  batterySaverTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserARCSupportedWithBatterySaver",
-		Desc: "CUJ test fixture with ARC supported and battery saver",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-vm-technology@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl:            &androidBatterySaverFixture{},
-		Parent:          "loggedInToCUJUserARCSupportedWithBatterySaverParent",
-		SetUpTimeout:    batterySaverTimeout,
-		TearDownTimeout: batterySaverTimeout,
-		PreTestTimeout:  batterySaverTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
-		Desc: "CUJ test fixture with WebRTC event logging and battery saver",
-		Contacts: []string{
-			"cwd@google.com",
-			"cros-vm-technology@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Data: docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-				chrome.EnableFeatures(
-					"CrosBatterySaver",
-					"CrosBatterySaverAlwaysOn",
-					"PreferConstantFrameRate",
-				),
-			},
-			bt:          browser.TypeAsh,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithChromeVox",

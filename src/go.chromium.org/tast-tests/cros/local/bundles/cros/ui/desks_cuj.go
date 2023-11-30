@@ -46,12 +46,6 @@ func init() {
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
 			},
-			{
-				Name:      "battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithBatterySaver",
-			},
 			// TODO(b/302748186): Remove rounded window tests once A/B testing
 			// for rounded windows is done.
 			{

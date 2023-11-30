@@ -571,24 +571,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
 			},
-			{
-				// Variant of 4p with presenting and notes split with battery saver
-				// enabled.
-				Name:      "4p_present_notes_split_battery_saver",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetTest{
-					bots:        []int{3},
-					layout:      googlemeet.TiledLayout,
-					present:     true,
-					docs:        true,
-					split:       true,
-					cam:         true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingAndBatterySaver",
-			},
-
 			// Inactive variants. No group should be specified for these tests.
 			{
 				Name:    "4p_enterprise",
