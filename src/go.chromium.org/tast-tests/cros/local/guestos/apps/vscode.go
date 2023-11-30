@@ -193,23 +193,12 @@ func TestCreateFileWithVSCode(ctx context.Context, cfg VSCodeConfig, terminalApp
 	}
 
 	saveAsWindow := nodewith.Name("Save As").HasClass("Widget").Role(role.Window)
-	saveButton := uidetection.TextBlock([]string{"Save"}, uidetection.SpecifiedWordsOnly(true)).WithinA11yNode(saveAsWindow)
-	// UI interaction to save file.
-	// File -> Save As -> Type file name -> Save.
-	// This corresponds to step 5 at https://testtracker.googleplex.com/testplans/testcase/detail/4163083?id=18920&revision=232.
 	saveFile := uiauto.Combine("save file from save as... dialogue",
-		uda.LeftClick(uidetection.Word("File").WithinA11yNode(cfg.WindowFinder)),
-		// "Save Workspace As...", "Save", and "Save As..." match the criteria, choose the third one.
-		uda.LeftClick(uidetection.Word("Save").Nth(2)),
+		keyboard.AccelAction("ctrl+shift+S"),
 		uda.WaitUntilExists(uidetection.Word("Desktop").WithinA11yNode(saveAsWindow)),
 		keyboard.AccelAction("ctrl+A"),
 		keyboard.TypeAction(VSCodeTestFile),
-		// TODO(b/297460896): Work around save button being underneath shelf.
-		uiauto.IfFailThen(
-			uda.Exists(saveButton),
-			Maximize(tconn, saveAsWindow),
-		),
-		uda.LeftClick(saveButton),
+		keyboard.AccelAction("enter"),
 	)
 
 	// Open the VSCode again, this time, it won't open the Get Started tab.
