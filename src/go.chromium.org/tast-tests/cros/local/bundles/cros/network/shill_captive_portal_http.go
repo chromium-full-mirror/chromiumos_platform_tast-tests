@@ -86,11 +86,10 @@ func init() {
 				checkPortal:          false,
 			},
 		}, {
-
 			Name: "portalsuspected",
 			Val: &params{
 				serviceState:         shillconst.ServiceStatePortalSuspected,
-				httpResponseHandler:  captiveportalconsts.RedirectWithNoLocationHandler,
+				httpResponseHandler:  captiveportalconsts.OkResponseHandler("portal login page"),
 				httpsResponseHandler: nil,
 				oncSource:            "",
 				checkPortal:          true,
@@ -119,6 +118,33 @@ func init() {
 				serviceState:         shillconst.ServiceStateRedirectFound,
 				httpResponseHandler:  captiveportalconsts.TempRedirectHandler(captiveportalconsts.RedirectURL),
 				httpsResponseHandler: nil,
+				oncSource:            "",
+				checkPortal:          true,
+			},
+		}, {
+			Name: "invalidredirect",
+			Val: &params{
+				serviceState:         shillconst.ServiceStateNoConnectivity,
+				httpResponseHandler:  captiveportalconsts.RedirectHandler(""),
+				httpsResponseHandler: nil,
+				oncSource:            "",
+				checkPortal:          true,
+			},
+		}, {
+			Name: "empty200asnwer",
+			Val: &params{
+				serviceState:         shillconst.ServiceStateOnline,
+				httpResponseHandler:  captiveportalconsts.OkResponseHandler(""),
+				httpsResponseHandler: captiveportalconsts.NoContentHandler,
+				oncSource:            "",
+				checkPortal:          true,
+			},
+		}, {
+			Name: "1byte200answer",
+			Val: &params{
+				serviceState:         shillconst.ServiceStateOnline,
+				httpResponseHandler:  captiveportalconsts.OkResponseHandler("\n"),
+				httpsResponseHandler: captiveportalconsts.NoContentHandler,
 				oncSource:            "",
 				checkPortal:          true,
 			},

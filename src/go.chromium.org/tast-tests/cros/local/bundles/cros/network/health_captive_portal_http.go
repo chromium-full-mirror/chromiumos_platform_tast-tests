@@ -106,7 +106,7 @@ func init() {
 			Name: "portalsuspected",
 			Val: &healthCaptivePortalHTTPParams{
 				serviceState:         shillconst.ServiceStatePortalSuspected,
-				httpResponseHandler:  captiveportalconsts.RedirectWithNoLocationHandler,
+				httpResponseHandler:  captiveportalconsts.OkResponseHandler("portal login page"),
 				httpsResponseHandler: nil,
 				oncSource:            "",
 				checkPortal:          true,
@@ -147,6 +147,39 @@ func init() {
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
 				portalState:          health.PortalStatePortal,
+			},
+		}, {
+			Name: "invalidredirect",
+			Val: &healthCaptivePortalHTTPParams{
+				serviceState:         shillconst.ServiceStateNoConnectivity,
+				httpResponseHandler:  captiveportalconsts.RedirectHandler(""),
+				httpsResponseHandler: nil,
+				oncSource:            "",
+				checkPortal:          true,
+				networkState:         health.NetworkStatePortal,
+				portalState:          health.PortalStateNoInternet,
+			},
+		}, {
+			Name: "empty200answer",
+			Val: &healthCaptivePortalHTTPParams{
+				serviceState:         shillconst.ServiceStateOnline,
+				httpResponseHandler:  captiveportalconsts.OkResponseHandler(""),
+				httpsResponseHandler: captiveportalconsts.NoContentHandler,
+				oncSource:            "",
+				checkPortal:          true,
+				networkState:         health.NetworkStateOnline,
+				portalState:          health.PortalStateOnline,
+			},
+		}, {
+			Name: "1byte200answer",
+			Val: &healthCaptivePortalHTTPParams{
+				serviceState:         shillconst.ServiceStateOnline,
+				httpResponseHandler:  captiveportalconsts.OkResponseHandler("\n"),
+				httpsResponseHandler: captiveportalconsts.NoContentHandler,
+				oncSource:            "",
+				checkPortal:          true,
+				networkState:         health.NetworkStateOnline,
+				portalState:          health.PortalStateOnline,
 			},
 		}},
 	})

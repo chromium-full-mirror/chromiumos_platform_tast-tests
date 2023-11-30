@@ -17,24 +17,27 @@ const (
 	HTTPSPortalURL = "https://www.example.com"
 )
 
-// RedirectHandler is the handler used to redirect when a redirect is found.
+// RedirectHandler returns 302 redirection responses with the given URL as the Location header.
 func RedirectHandler(url string) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		http.Redirect(rw, req, url, http.StatusFound)
 	}
 }
 
-// RedirectWithNoLocationHandler is the handler used when a portal is suspected.
-func RedirectWithNoLocationHandler(rw http.ResponseWriter, req *http.Request) {
-	rw.WriteHeader(http.StatusFound)
+// OkResponseHandler returns 200 responses with the given body as as the response body.
+func OkResponseHandler(body string) func(http.ResponseWriter, *http.Request) {
+	return func(rw http.ResponseWriter, req *http.Request) {
+		rw.WriteHeader(http.StatusOK)
+		rw.Write([]byte(body))
+	}
 }
 
-// NoContentHandler is the handler used when the service is online.
+// NoContentHandler returns 204 responses.
 func NoContentHandler(rw http.ResponseWriter, req *http.Request) {
 	rw.WriteHeader(http.StatusNoContent)
 }
 
-// TempRedirectHandler is the handler used when a temporary redirect is found.
+// TempRedirectHandler returns 307 redirection responses with the given URL as the Location header.
 func TempRedirectHandler(url string) func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		http.Redirect(rw, req, url, http.StatusTemporaryRedirect)
