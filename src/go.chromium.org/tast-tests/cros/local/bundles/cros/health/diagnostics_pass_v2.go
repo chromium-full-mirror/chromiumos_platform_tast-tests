@@ -66,14 +66,6 @@ func init() {
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineFloatingPointV2},
 			Fixture: "crosHealthdRunning",
 		}, {
-			// Contact: yycheng@google.com
-			Name:              "fan",
-			Val:               croshealthd.RoutineParamsV2{Routine: croshealthd.Fan},
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-			// TODO(b/306101885): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
 			// Contact: byronlee@google.com
 			Name: "bluetooth_power",
 			Val:  croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineBluetoothPowerV2},

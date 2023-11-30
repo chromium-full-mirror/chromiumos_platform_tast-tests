@@ -6,11 +6,13 @@ package croshealthd
 
 import (
 	"context"
+	"encoding/json"
 	"regexp"
 	"strconv"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -25,11 +27,20 @@ const (
 	RoutineUFSLifetime          string = "ufs_lifetime"
 	RoutinePrimeSearchV2        string = "prime_search_v2"
 	RoutineFloatingPointV2      string = "floating_point_v2"
-	Fan                         string = "fan"
 	RoutineBluetoothPowerV2     string = "bluetooth_power_v2"
 	RoutineBluetoothDiscoveryV2 string = "bluetooth_discovery_v2"
 	RoutineBluetoothScanningV2  string = "bluetooth_scanning_v2"
 )
+
+// The error code for creating an unsupported routine.
+//
+// Ref: https://chromium.googlesource.com/chromiumos/platform2/+/main/diagnostics/mojom/public/cros_healthd_exception.mojom
+const routineV2ErrorCodeUnsupported = 3
+
+type routineV2ErrorOutput struct {
+	ErrorCode jsontypes.Uint32 `json:"error"`
+	Message   string           `json:"message"`
+}
 
 // RoutineResultV2 contains the progress of the routine as a percentage and
 // the routine status.
@@ -39,8 +50,43 @@ type RoutineResultV2 struct {
 	Output   string
 }
 
-// VerifyRoutinePassedV2 returns nil if the routine status is passed and the progress is 100. Returns an error otherwise.
+// CheckRoutineV2IsUnsupported returns true if and only if when the result
+// indicates the routine is unsupported.
+func CheckRoutineV2IsUnsupported(result RoutineResultV2) (bool, error) {
+	// Unsupported routine will be reported as an error status.
+	if result.Status != StatusError {
+		return false, nil
+	}
+	decoder := json.NewDecoder(strings.NewReader(result.Output))
+	decoder.DisallowUnknownFields()
+	var errorOutput routineV2ErrorOutput
+	if err := decoder.Decode(&errorOutput); err != nil {
+		return false, errors.Wrapf(err, "unable to parse routine error output %s", result.Output)
+	}
+	return errorOutput.ErrorCode == routineV2ErrorCodeUnsupported, nil
+}
+
+// VerifyRoutinePassedV2 returns nil if the routine status is passed. Returns an
+// error otherwise.
 func VerifyRoutinePassedV2(result RoutineResultV2) error {
+	if result.Status != StatusPassed {
+		return errors.Errorf("unexpected status: got %q, want %q; output = %q", result.Status, StatusPassed, result.Output)
+	}
+	if result.Progress != 100 {
+		return errors.Errorf("unexpected progress: got %d, want 100; output = %q", result.Progress, result.Output)
+	}
+	return nil
+}
+
+// VerifyRoutineV2PassedOrUnsupported returns nil if the routine is passed or
+// unsupported. Returns an error otherwise.
+func VerifyRoutineV2PassedOrUnsupported(result RoutineResultV2) error {
+	if isUnsupported, err := CheckRoutineV2IsUnsupported(result); err != nil {
+		return err
+	} else if isUnsupported {
+		return nil
+	}
+
 	if result.Status != StatusPassed {
 		return errors.Errorf("unexpected status: got %q, want %q; output = %q", result.Status, StatusPassed, result.Output)
 	}
@@ -129,16 +175,16 @@ func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (RoutineResul
 		//   - RoutineAudioDriver
 		//   - RoutineUFSLifetime
 	}
-	output, err := runDiagV2(ctx, diagParams)
+	output, err := RunDiagV2(ctx, diagParams)
 	if err != nil {
 		return RoutineResultV2{}, err
 	}
 	return parseDiagOutputV2(ctx, output)
 }
 
-// runDiagV2 is a helper function that runs the cros_healthd diag command and
+// RunDiagV2 is a helper function that runs the cros_healthd diag command and
 // returns the raw stdout on success, or an error.
-func runDiagV2(ctx context.Context, args []string) (string, error) {
+func RunDiagV2(ctx context.Context, args []string) (string, error) {
 	args = append([]string{"diag"}, args...)
 	cmd := testexec.CommandContext(ctx, "cros-health-tool", args...)
 	testing.ContextLogf(ctx, "Running %q", shutil.EscapeSlice(cmd.Args))
