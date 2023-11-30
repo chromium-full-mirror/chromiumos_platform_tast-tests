@@ -123,13 +123,13 @@ type ApFlashInfo struct {
 type TestbedType string
 
 const (
-	// GscDauntlessAndreiboard is a traditional AndreiBoard with dozens of wires to a
+	// GscDTAndreiboard is a traditional AndreiBoard with dozens of wires to a
 	// HyperDebug according to:
 	// https://docs.google.com/spreadsheets/d/1youX_Yh2A6-Zd2T98ShjH_O8M9CZexDB9DCHpegNMvE
-	GscDauntlessAndreiboard TestbedType = "gsc_dt_ab"
+	GscDTAndreiboard TestbedType = "gsc_dt_ab"
 
-	// GscDauntlessShield is a small board on top of HyperDebug.
-	GscDauntlessShield TestbedType = "gsc_dt_shield"
+	// GscDTShield is a small board on top of HyperDebug.
+	GscDTShield TestbedType = "gsc_dt_shield"
 
 	// GscOpentitanCw310Fpga is a ChipWhisperer 310 FPGA board connected via ribbon cables to
 	// a "swizzle board" on top of HyperDebug.
@@ -138,11 +138,11 @@ const (
 	// GscHostEmulation is not a physical testbed, but an emulation on a Linux host computer.
 	GscHostEmulation TestbedType = "gsc_he"
 
-	// GscHavenShield is a small board on top of HyperDebug.
-	GscHavenShield TestbedType = "gsc_h1_shield"
+	// GscH1Shield is a small board on top of HyperDebug.
+	GscH1Shield TestbedType = "gsc_h1_shield"
 )
 
 // AllTestbedTypes returns all the possible testbed types.
 func AllTestbedTypes() []TestbedType {
-	return []TestbedType{GscDauntlessAndreiboard, GscOpentitanCw310Fpga, GscHostEmulation}
+	return []TestbedType{GscDTAndreiboard, GscOpentitanCw310Fpga, GscHostEmulation}
 }

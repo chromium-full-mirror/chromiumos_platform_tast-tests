@@ -212,7 +212,7 @@ func NewDevboardHelper(f *fixture.Value, state FirmwareTestingHelperDelegate) De
 // GscProperties returns an object that can be queried about varios aspects of the GSC currently
 // under test.
 func (h DevboardHelper) GscProperties() GscProperties {
-	if h.TestbedType == ti50.GscHavenShield {
+	if h.TestbedType == ti50.GscH1Shield {
 		return &gscCr50{}
 	}
 	return &gscTi50{}
@@ -413,7 +413,7 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	th.MustSucceed(h.Open(ctx), "Could not open GSC UART")
 	th.MustSucceed(h.Reset(ctx), "Reset board")
 	// TODO(b/305814102): check board properties on H1 to verify SPI vs I2C
-	if h.TestbedType != ti50.GscHavenShield {
+	if h.TestbedType != ti50.GscH1Shield {
 		// Ti50 prints "I2C" or "SPI" based on the TPM Bus type.
 		m, err := h.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
 		if err != nil {
