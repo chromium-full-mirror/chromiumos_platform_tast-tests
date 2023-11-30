@@ -23,7 +23,8 @@ import (
 type testArgsForSuspend struct {
 	suspendDurationSeconds          int
 	suspendDurationAllowanceSeconds float64
-	numTrials                       int
+	numTrialsPerLogin               int
+	numLoginTrials                  int
 }
 
 func init() {
@@ -47,21 +48,14 @@ func init() {
 		ServiceDeps: []string{"tast.cros.arc.SuspendService"},
 		Timeout:     60 * time.Minute,
 		Params: []testing.Param{{
-			ExtraAttr: []string{"group:mainline", "informational"},
-			Name:      "s10c100",
-			Val: testArgsForSuspend{
-				suspendDurationSeconds:          10,
-				suspendDurationAllowanceSeconds: 0.1,
-				numTrials:                       100,
-			},
-		}, {
 			// TODO(b/214861486): Re-enable the test once it is stabilized
 			// ExtraAttr: []string{"group:mainline", "informational"},
 			Name: "s120c5",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          120, /* Longer than CONFIG_RCU_CPU_STALL_TIMEOUT */
 				suspendDurationAllowanceSeconds: 0.1,
-				numTrials:                       5,
+				numTrialsPerLogin:               5,
+				numLoginTrials:                  2,
 			},
 		}, {
 			// TODO(b/214861486): Re-enable the test once it is stabilized
@@ -70,15 +64,21 @@ func init() {
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          600, /* Long enough to trigger watchdog timeouts */
 				suspendDurationAllowanceSeconds: 0.1,
-				numTrials:                       2,
+				numTrialsPerLogin:               2,
+				numLoginTrials:                  2,
 			},
 		}, {
-			// For local testing
-			Name: "s10c1",
+			// Simplest case
+			// Suspend twice to ensure that the suspend duration is not doubly counted.
+			// Also, re-login to ensure the suspend duration is correctly injected
+			// beyond the crosvm's lifetime.
+			ExtraAttr: []string{"group:mainline", "informational"},
+			Name:      "s10c2",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          10, /* Long enough to trigger watchdog timeouts */
 				suspendDurationAllowanceSeconds: 0.1,
-				numTrials:                       1,
+				numTrialsPerLogin:               2,
+				numLoginTrials:                  2,
 			},
 		}},
 	})
@@ -162,45 +162,51 @@ func suspendDUT(ctx context.Context, s *testing.State, seconds int) {
 // Suspend tests ARC clock behavior around host's suspend / resume cycles
 func Suspend(ctx context.Context, s *testing.State) {
 	args := s.Param().(testArgsForSuspend)
+	d := s.DUT()
 
-	// Connect to the gRPC server on the DUT.
-	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
-	if err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-	defer cl.Close(ctx)
-	service := arc.NewSuspendServiceClient(cl.Conn)
-	params, err := service.Prepare(ctx, &empty.Empty{})
-	if err != nil {
-		s.Fatal("SuspendService.Prepare returned an error: ", err)
-	}
-	defer func() {
-		// Finalize may fail if the service connection is lost.
-		// Resources used by the service will be freed up anyways, so ignoring the error here.
-		_, err = service.Finalize(ctx, &empty.Empty{})
+	// Reboot first to make the host's suspend time zero
+	d.Reboot(ctx)
+
+	for k := 0; k < args.numLoginTrials; k++ {
+		// Connect to the gRPC server on the DUT.
+		cl, err := rpc.Dial(ctx, d, s.RPCHint())
 		if err != nil {
-			s.Log("SuspendService.Finalize returned an error (ignorable): ", err)
+			s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 		}
-	}()
-
-	for i := 0; i < args.numTrials; i++ {
-		s.Logf("Trial %d/%d", i+1, args.numTrials)
-
-		t0 := readClocks(ctx, s, params)
-		suspendDUT(ctx, s, args.suspendDurationSeconds)
-		t1 := readClocks(ctx, s, params)
-
-		diff, err := calcDUTClockDiffs(t0, t1)
+		defer cl.Close(ctx)
+		service := arc.NewSuspendServiceClient(cl.Conn)
+		// Login to start ARC (re-login if it is logged in already)
+		params, err := service.Prepare(ctx, &empty.Empty{})
 		if err != nil {
-			s.Fatal("Failed to calc clock diffs: ", err)
+			s.Fatal("SuspendService.Prepare returned an error: ", err)
 		}
-		hostSuspendDuration := diff.host.bootDiff - diff.host.monoDiff
-		s.Log("Host suspended ", hostSuspendDuration)
-		arcSuspendDuration := diff.arc.bootDiff - diff.arc.monoDiff
-		if math.Abs((arcSuspendDuration - hostSuspendDuration).Seconds()) > args.suspendDurationAllowanceSeconds {
-			s.Fatalf("Suspend time was not injected to ARC properly, got %v, want %v", arcSuspendDuration, hostSuspendDuration)
+		defer func() {
+			// Finalize may fail if the service connection is lost.
+			// Resources used by the service will be freed up anyways, so ignoring the error here.
+			_, err = service.Finalize(ctx, &empty.Empty{})
+			if err != nil {
+				s.Log("SuspendService.Finalize returned an error (ignorable): ", err)
+			}
+		}()
+		for i := 0; i < args.numLoginTrials; i++ {
+			s.Logf("Session %d Trial %d/%d", k+1, i+1, args.numTrialsPerLogin)
+
+			t0 := readClocks(ctx, s, params)
+			suspendDUT(ctx, s, args.suspendDurationSeconds)
+			t1 := readClocks(ctx, s, params)
+
+			diff, err := calcDUTClockDiffs(t0, t1)
+			if err != nil {
+				s.Fatal("Failed to calc clock diffs: ", err)
+			}
+			hostSuspendDuration := diff.host.bootDiff - diff.host.monoDiff
+			s.Log("Host suspended ", hostSuspendDuration)
+			arcSuspendDuration := diff.arc.bootDiff - diff.arc.monoDiff
+			if math.Abs((arcSuspendDuration - hostSuspendDuration).Seconds()) > args.suspendDurationAllowanceSeconds {
+				s.Fatalf("Suspend time was not injected to ARC properly, got %v, want %v", arcSuspendDuration, hostSuspendDuration)
+			}
+			s.Logf("OK: %v of suspend time was injected to ARC", arcSuspendDuration)
 		}
-		s.Logf("OK: %v of suspend time was injected to ARC", arcSuspendDuration)
 	}
 
 }
