@@ -7,7 +7,6 @@ package storage
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/perf"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
@@ -22,7 +21,7 @@ func init() {
 			"dlunev@google.com", // Test author
 		},
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
-		Attr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+		Attr:         []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Requirements: []string{
 			tdreq.StorageFFU,
@@ -41,8 +40,7 @@ func FfuSupport(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
-	ffu := float64(0)
-	perfValues := perf.NewValues()
+	ffu := false
 
 	switch disk.Type {
 	case util.NvmeDisk:
@@ -51,17 +49,17 @@ func FfuSupport(ctx context.Context, s *testing.State) {
 			s.Fatal("Could not read controller identity: ", err)
 		}
 		if oacs, ok := util.FindSingleHexInt64NvmeRegs(ctx, identity, "oacs"); ok {
-			ffu = float64(oacs & 4) // Bit 2 of oacs
+			ffu = (oacs & 4) > 0 // Bit 2 of oacs
 		}
 	case util.EmmcOverNvmeDisk:
 		// BH799 supports FFU
-		ffu = float64(1)
+		ffu = true
 	case util.EmmcDisk:
 		ffuInt, err := disk.ReadSysfsInt64(ctx, "device/ffu_capable")
 		if err != nil {
 			s.Fatal("Failed to read FFU capability: ", err)
 		}
-		ffu = float64(ffuInt)
+		ffu = ffuInt > 0
 	case util.UfsDisk:
 		storageInfo, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "cat", storageInfoPath)
 		if err != nil {
@@ -69,19 +67,13 @@ func FfuSupport(ctx context.Context, s *testing.State) {
 		}
 
 		if feats, ok := util.FindSingleInt64ValueUfs(ctx, storageInfo, "bUFSFeaturesSupport"); ok {
-			ffu = float64(feats & 1) // bit 0 of the feature field
+			ffu = (feats & 1) > 0 // bit 0 of the feature field
 		}
 	default:
-		ffu = float64(0)
+		s.Fatalf("Unexpected storage type: %s", util.DiskTypeToString(disk.Type))
 	}
 
-	perfValues.Set(perf.Metric{
-		Name:      "_FFU",
-		Unit:      "value",
-		Direction: perf.BiggerIsBetter,
-	}, ffu)
-
-	if err := perfValues.Save(s.OutDir()); err != nil {
-		s.Fatal("Can't save keyval results: ", err)
+	if !ffu {
+		s.Fatal("Failed to detect FFU capability")
 	}
 }
