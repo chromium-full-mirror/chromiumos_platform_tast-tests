@@ -477,7 +477,7 @@ var preTestDataBookwormLC = &preTestData{
 
 // Differ returns an instance implementing the interface screenshot.Differ.
 func (f FixtureData) Differ() screenshot.Differ {
-	if f.Screendiffer != nil {
+	if f.Screendiffer != nil && f.Screendiffer.differ != nil {
 		return *f.Screendiffer.differ
 	}
 	return nil
