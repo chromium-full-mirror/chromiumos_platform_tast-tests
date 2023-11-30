@@ -537,3 +537,19 @@ func EnableDUTInTabletMode(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy, 
 	}
 	return resetCommand, nil
 }
+
+// CurrentTime returns the current time on the DUT.
+func CurrentTime(ctx context.Context, dut *dut.DUT) (time.Time, error) {
+	out, err := dut.Conn().CommandContext(ctx, "date", "+%Y-%m-%dT%T.%NZ", "--utc").Output()
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "retrieve time information from DUT")
+
+	}
+	str := strings.TrimSpace(string(out))
+
+	t, err := time.Parse(time.RFC3339Nano, str)
+	if err != nil {
+		return time.Time{}, errors.Wrapf(err, "parse time from %s", str)
+	}
+	return t, err
+}
