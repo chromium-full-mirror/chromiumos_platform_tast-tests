@@ -29,6 +29,10 @@ import (
 	"chromiumos/reporting"
 )
 
+// MissiveDefaultFeature is the feature that should be passed to Chrome when
+// creating a new instance for local testing.
+const MissiveDeaultFeature = "CrOSLateBootMissiveStorage:signature_verification_dev_enabled/true/compression_enabled/false"
+
 // SequenceInfo is a struct that maps to sequence info JSON in ERP upload requests and responses.
 type SequenceInfo struct {
 	GenerationID string `json:"generationId"`

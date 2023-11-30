@@ -116,8 +116,6 @@ func setUpUploadedCrash(ctx context.Context, s *testing.State) {
 }
 
 func ReportingUploadedCrashEvents(ctx context.Context, s *testing.State) {
-	missiveFeature := "CrOSLateBootMissiveStorage:signature_verification_dev_enabled/true/compression_enabled/false"
-
 	// Prepare fake ERP server.
 	publicKey := s.RequiredVar("erpserver.public_key")
 	privateKey := s.RequiredVar("erpserver.private_key")
@@ -181,7 +179,7 @@ func ReportingUploadedCrashEvents(ctx context.Context, s *testing.State) {
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EncryptedReportingAddr(server.URL()),
-		chrome.EnableFeatures(missiveFeature),
+		chrome.EnableFeatures(erpserver.MissiveDeaultFeature),
 		chrome.EnableFeatures("EnableFatalCrashEventsObserver"),
 		chrome.KeepEnrollment())
 	if err != nil {

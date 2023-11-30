@@ -116,8 +116,6 @@ func verifyNoRuntimeCounters(server *erpserver.ErpServer) error {
 }
 
 func ReportingRuntimeCountersTelemetry(ctx context.Context, s *testing.State) {
-	missiveFeature := "CrOSLateBootMissiveStorage:signature_verification_dev_enabled/true/compression_enabled/false"
-
 	// Need to enable PSR if the device is proto. Ignore any error because
 	// intel-psrtool would not exist in other environment and the command
 	// would fail if PSR is already enabled on a proto device.
@@ -176,7 +174,7 @@ func ReportingRuntimeCountersTelemetry(ctx context.Context, s *testing.State) {
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EncryptedReportingAddr(server.URL()),
-		chrome.EnableFeatures(missiveFeature),
+		chrome.EnableFeatures(erpserver.MissiveDeaultFeature),
 		chrome.EnableFeatures("EnableRuntimeCountersTelemetry"),
 		chrome.KeepEnrollment())
 	if err != nil {

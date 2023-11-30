@@ -39,7 +39,6 @@ func init() {
 }
 
 func ReportingHeartbeatLocal(ctx context.Context, s *testing.State) {
-	missiveFeature := "CrOSLateBootMissiveStorage:signature_verification_dev_enabled/true/compression_enabled/false"
 	fdms := s.FixtValue().(fakedms.HasFakeDMS).FakeDMS()
 	// Prepare fake ERP server.
 	publicKey := s.RequiredVar("erpserver.public_key")
@@ -72,7 +71,7 @@ func ReportingHeartbeatLocal(ctx context.Context, s *testing.State) {
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EncryptedReportingAddr(server.URL()),
-		chrome.EnableFeatures(missiveFeature, "EncryptedReportingManualTestHeartbeatEvent"),
+		chrome.EnableFeatures(erpserver.MissiveDeaultFeature, "EncryptedReportingManualTestHeartbeatEvent"),
 		chrome.KeepEnrollment())
 	if err != nil {
 		s.Fatal("Chrome start failed: ", err)
