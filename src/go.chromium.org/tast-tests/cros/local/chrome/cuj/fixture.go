@@ -1062,6 +1062,28 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupportedWithVirtioBalloon",
+		Desc: "CUJ fixture with ARC supported and Virtio Balloon enabled",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CrOSLateBootVmMemoryManagementService"),
+			},
+			bt:           browser.TypeAsh,
+			arcSupported: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpWithOptinTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaver",
 		Desc: "CUJ test fixture with battery saver",
 		Contacts: []string{

@@ -83,6 +83,14 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 			},
+			{
+				Name:      "virtio_balloon",
+				ExtraAttr: []string{"cuj_experimental"},
+				Fixture:   "loggedInToCUJUserARCSupportedWithVirtioBalloon",
+				Val: taskswitchcuj.TaskSwitchTest{
+					BrowserType: browser.TypeAsh,
+				},
+			},
 			// TODO(b/298151007): Remove when sufficient data is collected.
 			{
 				Name:      "hrtimer_off",
