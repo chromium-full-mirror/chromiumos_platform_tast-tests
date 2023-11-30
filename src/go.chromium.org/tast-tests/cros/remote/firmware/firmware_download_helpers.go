@@ -2,9 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package utils contains functionality shared by tests that
-// exercise firmware.
-package utils
+package firmware
 
 import (
 	"bufio"
@@ -14,7 +12,6 @@ import (
 	"os"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -23,20 +20,34 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// FirmwareType represents the type of firmware we are working on - AP or EC
-type FirmwareType string
+// FWType represents the type of firmware we are working on - AP or EC
+type FWType string
+
+var (
+	// FirmwarePath is the GCS location for the firmware to be downloaded
+	FirmwarePath = testing.RegisterVarString(
+		"firmware.firmwarePath",
+		"",
+		"A variable to store the path information for the fw download")
+
+	// LocalFirmwarePath is the local file location for the downloaded firmware
+	LocalFirmwarePath = testing.RegisterVarString(
+		"firmware.localFirmwarePath",
+		"",
+		"A variable to store the local path information for the download firmware")
+)
 
 const (
 	// FirmwareFileName contains the name of the file to be downloaded from chromeos-image-archive.
 	FirmwareFileName = "firmware_from_source.tar.bz2"
 	// ECFirmware indicates firmware for EC
-	ECFirmware FirmwareType = "EC"
+	ECFirmware FWType = "EC"
 	// APFirmware indicates firmware for AP
-	APFirmware FirmwareType = "AP"
+	APFirmware FWType = "AP"
 )
 
 // VerifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
-func VerifyFwIDs(ctx context.Context, h *firmware.Helper, exROVersion, exRWVersion string) error {
+func VerifyFwIDs(ctx context.Context, h *Helper, exROVersion, exRWVersion string) error {
 	currentROID, err := GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
 	if err != nil {
 		return err
@@ -56,7 +67,7 @@ func VerifyFwIDs(ctx context.Context, h *firmware.Helper, exROVersion, exRWVersi
 
 // GetFwVersion accepts 'crossystem' params (i.e., CrossystemParamFwid & CrossystemParamRoFwid),
 // splits the outputs from them and only returns the version numbers.
-func GetFwVersion(ctx context.Context, h *firmware.Helper, param reporters.CrossystemParam) (string, error) {
+func GetFwVersion(ctx context.Context, h *Helper, param reporters.CrossystemParam) (string, error) {
 	fwid, err := h.Reporter.CrossystemParam(ctx, param)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to get only the fw id from crossystem: %v", param)
@@ -71,11 +82,11 @@ func GetFwVersion(ctx context.Context, h *firmware.Helper, param reporters.Cross
 
 // DownloadFirmwareFile will download a tar file from cloud and save to a temporary directory,
 // based on the shipped firmware version passed in for test.
-func DownloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir, gcsFirmwareFilePath string) error {
+func DownloadFirmwareFile(ctx context.Context, cs *testing.CloudStorage, tmpDir, gcsFirmwareFilePath string) error {
 	testing.ContextLogf(ctx, "Downloading firmware image from the path: %s", gcsFirmwareFilePath)
 
 	// Stage the complete path.
-	r, err := s.CloudStorage().Open(ctx, fmt.Sprintf("gs://%s", gcsFirmwareFilePath))
+	r, err := cs.Open(ctx, fmt.Sprintf("gs://%s", gcsFirmwareFilePath))
 	if err != nil {
 		return errors.Wrapf(err, "failed to stage file for url %q", gcsFirmwareFilePath)
 	}
@@ -105,7 +116,7 @@ func DownloadFirmwareFile(ctx context.Context, s *testing.State, tmpDir, gcsFirm
 }
 
 // UntarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
-func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType FirmwareType) (string, string, error) {
+func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType FWType) (string, string, error) {
 	// List of possible formats for the binary file found in a downloaded tar file.
 	const ecMonitorFileName = "npcx_monitor.bin"
 	ecMonitorFile := ""

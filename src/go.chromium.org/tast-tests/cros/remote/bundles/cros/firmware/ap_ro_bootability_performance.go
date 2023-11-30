@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -281,7 +280,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	s.Logf("Setting RW ID = %s, from section = %s as the to-be-qualified RW_new firmware", rwNewID, sectionNames[testArgs.imageSectionRW])
 
 	// Get the RO firmware version ID available on the DUT.
-	roNewID, err = fwUtils.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
+	roNewID, err = firmware.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
 	if err != nil {
 		s.Fatal("Failed to get AP RO ID: ", err)
 	}
@@ -325,7 +324,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		if err = fwUtils.VerifyFwIDs(ctx, h, roNewID, initialRwFwid); err != nil {
+		if err = firmware.VerifyFwIDs(ctx, h, roNewID, initialRwFwid); err != nil {
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
 	}(cleanupCtx, roNewID, initialRwFwid, initialActSection, initialFwFromDUT, testArgs)
@@ -337,7 +336,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 	// Verify RO/RW firmware versions are the latest shipped firmware after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err = fwUtils.VerifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID); err != nil {
+	if err = firmware.VerifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], shippedFwVersions[len(shippedFwVersions)-1], err)
 	}
 
@@ -368,7 +367,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		// Verify that the RO firmware has not been modified and RW has the RW_new after the flashing process.
-		if err := fwUtils.VerifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID); err != nil {
+		if err := firmware.VerifyFwIDs(ctx, h, shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID); err != nil {
 			s.Fatalf("After flashing RO_old + RW_new ( %s + %s ): %v", shippedFwVersions[len(shippedFwVersions)-1], rwNewID, err)
 		}
 
@@ -398,7 +397,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Verifying the firmware versions after flash")
-		if err := fwUtils.VerifyFwIDs(ctx, h, shippedFwVersions[i].FwID, rwNewID); err != nil {
+		if err := firmware.VerifyFwIDs(ctx, h, shippedFwVersions[i].FwID, rwNewID); err != nil {
 			s.Fatalf("After flashing RO_old-%d + RW_new ( %s + %s): %v", len(shippedFwVersions)-i-1, shippedFwVersions[i], rwNewID, err)
 		}
 
@@ -424,7 +423,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Verifying the firmware versions are the to-be-qualified new RO/RW after flash")
-		if err := fwUtils.VerifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
+		if err := firmware.VerifyFwIDs(ctx, h, roNewID, rwNewID); err != nil {
 			s.Fatalf("After flashing RO_new + RW_new ( %s + %s): %v", roNewID, rwNewID, err)
 		}
 
@@ -490,7 +489,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, tmpDir, fwidM
 	// downloadFwFromURL stages and downloads the firmware file from the given URL.
 	downloadFwFromURL := func(url string) bool {
 		// Use the url without the prefix 'gs://'.
-		if err := fwUtils.DownloadFirmwareFile(ctx, s, tmpDir, url[5:]); err != nil {
+		if err := firmware.DownloadFirmwareFile(ctx, s.CloudStorage(), tmpDir, url[5:]); err != nil {
 			testing.ContextLog(ctx, "Failed to download the file: ", err)
 			return false
 		}
@@ -527,7 +526,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, tmpDir, fwidM
 
 		if url != "" {
 			if downloadFwFromURL(url) {
-				binToFlash, _, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, fwidModel, fwUtils.APFirmware)
+				binToFlash, _, err := firmware.UntarUnknownFileName(ctx, tmpDir, fwidModel, firmware.APFirmware)
 				if err != nil {
 					testing.ContextLogf(ctx, "Unable to untar the firmware file for board: %s, model: %s, firmware ID: %s", fwToTest.Board, fwToTest.Model, fwToTest.FwID)
 				} else {

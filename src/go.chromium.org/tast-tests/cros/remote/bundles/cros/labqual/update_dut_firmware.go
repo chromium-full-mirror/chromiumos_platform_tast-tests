@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package firmware
+package labqual
 
 import (
 	"context"
@@ -23,8 +23,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
-
-	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 )
 
 const (
@@ -33,20 +31,6 @@ const (
 	ecFirmwareFileToFlash = "ecFirmwareForTest.bin"
 	apFirmwareFileToFlash = "FirmwareForTest.bin"
 	monitorFileToFlash    = "npcx_monitor.bin"
-)
-
-var (
-	// GCS location for the firmware to be downloaded
-	firmwarePath = testing.RegisterVarString(
-		"firmware.firmwarePath",
-		"",
-		"A variable to store the path information for the fw download")
-
-	// Local location for the downloaded firmware
-	localFirmwarePath = testing.RegisterVarString(
-		"firmware.localFirmwarePath",
-		"",
-		"A variable to store the local path information for the download firmware")
 )
 
 func init() {
@@ -69,8 +53,8 @@ func init() {
 // UpdateDutFirmware reads the current AP firmware and flashes it back from the servo using futility
 func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	firmwarePathVal := string(firmwarePath.Value())
-	localFirmwarePathVal := string(localFirmwarePath.Value())
+	firmwarePathVal := string(firmware.FirmwarePath.Value())
+	localFirmwarePathVal := string(firmware.LocalFirmwarePath.Value())
 
 	if firmwarePathVal != "" && localFirmwarePathVal != "" {
 		s.Fatal("Only one of localFirmwarePath or firmwarePath can be specified")
@@ -183,7 +167,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	initialRwFwid = match[2]
 
 	// Get the RO firmware version ID available on the DUT.
-	initialROFwid, err := fwUtils.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
+	initialROFwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
 	if err != nil {
 		s.Fatal("Failed to get AP RO ID: ", err)
 	}
@@ -225,20 +209,20 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 // downloadFirmwareFromGCS reads a file from GCS based on the board, branch and firmware version specified
 func downloadFirmwareFromGCS(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string, flashEC bool) (ecBinToFlash, monitorBinToFlash, apBinToFlash string) {
 	// Download the latest shipped firmware.
-	if err := fwUtils.DownloadFirmwareFile(ctx, s, tmpDir, firmwareFilepath); err != nil {
+	if err := firmware.DownloadFirmwareFile(ctx, s.CloudStorage(), tmpDir, firmwareFilepath); err != nil {
 		s.Fatal("Failed while downloading file: ", err)
 	}
 	// Untar the binary file with respect to the model name found in 'crossystem fwid'.
-	apBinToFlash, _, err := fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwUtils.APFirmware)
+	apBinToFlash, _, err := firmware.UntarUnknownFileName(ctx, tmpDir, model, firmware.APFirmware)
 	if err != nil {
-		s.Fatalf("Failed to untar file for %s: %s", fwUtils.APFirmware, err)
+		s.Fatalf("Failed to untar file for %s: %s", firmware.APFirmware, err)
 	}
 	if !flashEC {
 		return "", "", apBinToFlash
 	}
-	ecBinToFlash, monitorBinToFlash, err = fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwUtils.ECFirmware)
+	ecBinToFlash, monitorBinToFlash, err = firmware.UntarUnknownFileName(ctx, tmpDir, model, firmware.ECFirmware)
 	if err != nil {
-		s.Fatalf("Failed to untar file for %s: %s", fwUtils.ECFirmware, err)
+		s.Fatalf("Failed to untar file for %s: %s", firmware.ECFirmware, err)
 	}
 	return ecBinToFlash, monitorBinToFlash, apBinToFlash
 }
@@ -246,14 +230,14 @@ func downloadFirmwareFromGCS(ctx context.Context, s *testing.State, tmpDir, firm
 // untarLocalFirmwareFile untars the provided local firmware file to extract AP and EC images
 func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmwareFilepath, model string, flashEC bool) (ecBinToFlash, monitorBinToFlash, apBinToFlash string) {
 	// Copy the fw file to tmp directory.
-	dst, err := os.Create(tmpDir + "/" + fwUtils.FirmwareFileName)
+	dst, err := os.Create(tmpDir + "/" + firmware.FirmwareFileName)
 	if err != nil {
-		s.Fatalf("Failed to open tmp file %q: %s", tmpDir+"/"+fwUtils.FirmwareFileName, err)
+		s.Fatalf("Failed to open tmp file %q: %s", tmpDir+"/"+firmware.FirmwareFileName, err)
 	}
 	// Close file on exit
 	defer func() error {
 		if err := dst.Close(); err != nil {
-			s.Fatalf("Failed to close tmp file %q: %s", tmpDir+"/"+fwUtils.FirmwareFileName, err)
+			s.Fatalf("Failed to close tmp file %q: %s", tmpDir+"/"+firmware.FirmwareFileName, err)
 		}
 		return nil
 	}()
@@ -267,16 +251,16 @@ func untarLocalFirmwareFile(ctx context.Context, s *testing.State, tmpDir, firmw
 	}
 
 	// Untar the binary file with respect to the model name.
-	apBinToFlash, _, err = fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwUtils.APFirmware)
+	apBinToFlash, _, err = firmware.UntarUnknownFileName(ctx, tmpDir, model, firmware.APFirmware)
 	if err != nil {
-		s.Fatalf("Failed to untar file for %s: %s", fwUtils.APFirmware, err)
+		s.Fatalf("Failed to untar file for %s: %s", firmware.APFirmware, err)
 	}
 	if !flashEC {
 		return "", "", apBinToFlash
 	}
-	ecBinToFlash, monitorBinToFlash, err = fwUtils.UntarUnknownFileName(ctx, tmpDir, model, fwUtils.ECFirmware)
+	ecBinToFlash, monitorBinToFlash, err = firmware.UntarUnknownFileName(ctx, tmpDir, model, firmware.ECFirmware)
 	if err != nil {
-		s.Fatalf("Failed to untar file for %s: %s", fwUtils.ECFirmware, err)
+		s.Fatalf("Failed to untar file for %s: %s", firmware.ECFirmware, err)
 	}
 	return ecBinToFlash, monitorBinToFlash, apBinToFlash
 }
@@ -320,7 +304,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 		// Verify RO/RW firmware versions are the prior ones after flashing.
 		// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-		if err := fwUtils.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+		if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
 	}()
@@ -339,7 +323,7 @@ func flashAPFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, 
 
 	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err := fwUtils.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
+	if err := firmware.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
 	}
 }
@@ -374,7 +358,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 
 		// Verify RO/RW firmware versions are the prior ones after flashing.
 		// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-		if err := fwUtils.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
+		if err := firmware.VerifyFwIDs(ctx, h, initialROFwid, initialRwFwid); err != nil {
 			s.Fatal("Failed while verifying firmware IDs after flashing at the end of test: ", err)
 		}
 	}()
@@ -396,7 +380,7 @@ func flashAPFirmwareFromDut(ctx context.Context, s *testing.State, h *firmware.H
 
 	// Verify RO/RW firmware versions are the downloaded firmware versions after flashing.
 	// This is when RO and RW have the same version ids (i.e., RO_old + RW_old).
-	if err := fwUtils.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
+	if err := firmware.VerifyFwIDs(ctx, h, firmwarePathVal, firmwarePathVal); err != nil {
 		s.Fatalf("After flashing RO_old + RW_old ( %s + %s ): %v", firmwarePathVal, firmwarePathVal, err)
 	}
 }
