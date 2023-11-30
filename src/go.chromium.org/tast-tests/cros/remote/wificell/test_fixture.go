@@ -14,6 +14,8 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/network/arping"
@@ -2527,4 +2529,76 @@ func (tf *TestFixture) ResetRegdomain(ctx context.Context, regDomain string) err
 	}
 	testing.ContextLog(ctx, "The regulatory domain is reset to ", regdomain)
 	return nil
+}
+
+// CheckFullAuthFlow check what authentication algorithm is used in pcap.
+// An authentication flow is considered full when the total number of auth frames
+// with valid sequences matches the expectation of successful authentication.
+// Since a successful auth flow only uses one of authentication algorithm, it is
+// an invalid flow if multiple auth algos found in the same pcap file.
+func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Capturer) (wpa.AuthAlgo, error) {
+	pcapPath, err := capturer.PacketPath(ctx)
+	if err != nil {
+		return wpa.AuthAlgoInvalid, errors.Wrap(err, "failed to get path of packet file")
+	}
+
+	// Filtering authentication frame.
+	filters := []pcap.Filter{
+		pcap.RejectLowSignal(),
+		pcap.Dot11FCSValid(),
+		pcap.TypeFilter(layers.LayerTypeDot11MgmtAuthentication,
+			func(layer gopacket.Layer) bool {
+				// Check fixed parameter:
+				//   contents[0:1]: Authentication Algorithm Number – 0 for Open System, 3 for SAE
+				//   contents[2:3]: Authentication Transaction Sequence Number
+				//   contents[4:5]: Status Code - 0 for Successful or Reserved
+				contents := layer.LayerContents()
+				if len(contents) < 6 || (contents[0] != 0 && contents[0] != 3) || contents[1] != 0 || contents[4] != 0 {
+					return false
+				}
+				return true
+			},
+		),
+	}
+	packets, err := pcap.ReadPackets(pcapPath, filters...)
+	if err != nil {
+		return wpa.AuthAlgoInvalid, errors.Wrap(err, "failed to read packets")
+	}
+	testing.ContextLog(ctx, "Total packets found: ", len(packets))
+
+	var openAuthCount uint16 = 0
+	var saeAuthCount uint16 = 0
+
+	for _, p := range packets {
+		for _, l := range p.Layers() {
+			auth, ok := l.(*layers.Dot11MgmtAuthentication)
+			if !ok {
+				continue
+			}
+
+			if auth.Sequence == 1 || auth.Sequence == 2 {
+				// Open System:
+				// Sequence == 1 for Open Authentication Request.
+				// Sequence == 2 for Open Authentication Response.
+				// SAE:
+				// Sequence == 1 for SAE Commit Request and Response.
+				// Sequence == 2 for SAE Confirm Request and Response.
+				if auth.Algorithm == 0 {
+					openAuthCount++
+				} else if auth.Algorithm == 3 {
+					saeAuthCount++
+				}
+			}
+		}
+	}
+
+	// Either one of auth algorithms but not both.
+	if openAuthCount == 2 && saeAuthCount == 0 {
+		return wpa.AuthAlgoOpen, nil
+	}
+	if openAuthCount == 0 && saeAuthCount == 4 {
+		return wpa.AuthAlgoSAE, nil
+	}
+
+	return wpa.AuthAlgoInvalid, nil
 }

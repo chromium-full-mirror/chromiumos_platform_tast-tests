@@ -1,4 +1,4 @@
-// Copyright 2020 The ChromiumOS Authors
+// Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -14,6 +14,19 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
 	"go.chromium.org/tast/core/errors"
+)
+
+// AuthAlgo is the type for specifying IEEE 802.11 authentication algorithms.
+type AuthAlgo int
+
+// IEEE 802.11 authentication algorithms.
+const (
+	AuthAlgoOpen   AuthAlgo = 0
+	AuthAlgoShared          = 1
+	AuthAlgoFT              = 2
+	AuthAlgoSAE             = 3
+
+	AuthAlgoInvalid = -1
 )
 
 // A PSK should be a string composed with 64 hex digits, or a ASCII passphrase whose length is between 8 and 63 (inclusive).
