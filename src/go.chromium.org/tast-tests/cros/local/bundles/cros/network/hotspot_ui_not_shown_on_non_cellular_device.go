@@ -40,7 +40,7 @@ func HotspotUINotShownOnNonCellularDevice(ctx context.Context, s *testing.State)
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("Hotspot"))
+	cr, err := chrome.New(ctx, chrome.EnableFeatures("Hotspot", "TetheringExperimentalFunctionality"))
 	if err != nil {
 		s.Fatal("Failed to create new chrome instance: ", err)
 	}

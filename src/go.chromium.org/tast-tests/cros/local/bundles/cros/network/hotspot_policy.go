@@ -83,7 +83,7 @@ func HotspotPolicy(ctx context.Context, s *testing.State) {
 	// Start a Chrome instance that will fetch policies from the FakeDMS.
 	cr, err := chrome.New(ctx,
 		chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}),
-		chrome.EnableFeatures("Hotspot"),
+		chrome.EnableFeatures("Hotspot", "TetheringExperimentalFunctionality"),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.KeepEnrollment())
 	if err != nil {
