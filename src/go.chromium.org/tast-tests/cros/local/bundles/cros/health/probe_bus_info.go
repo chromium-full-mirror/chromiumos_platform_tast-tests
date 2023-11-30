@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/health/pci"
@@ -273,7 +274,7 @@ func validateUSBDevices(ctx context.Context, devs []types.BusDevice) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to get expected devices")
 	}
-	if d := cmp.Diff(exp, got); d != "" {
+	if d := cmp.Diff(exp, got, cmpopts.IgnoreFields(usbutil.Device{}, "BusNumber", "DevNumber")); d != "" {
 		return errors.Errorf("unexpected USB device data, (-expected + got): %s", d)
 	}
 	return nil

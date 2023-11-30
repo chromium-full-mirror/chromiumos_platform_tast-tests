@@ -36,6 +36,8 @@ type Device struct {
 	Protocol                 string
 	Interfaces               []Interface
 	FwupdFirmwareVersionInfo *FwupdFirmwareVersionInfo
+	BusNumber                string
+	DevNumber                string
 }
 
 // Interface represents a USB interface.
@@ -302,7 +304,6 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 	for _, dev := range devs {
 		var r Device
 		var serial string
-		var busNumber, devNumber string
 		for _, line := range dev {
 			switch line[0] {
 			case 'T':
@@ -310,7 +311,7 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 				if m == nil {
 					return nil, errors.Errorf("cannot parse usb-devices T: %v", line)
 				}
-				busNumber, devNumber = m[1], m[2]
+				r.BusNumber, r.DevNumber = m[1], m[2]
 			case 'D':
 				m := reD.FindStringSubmatch(line)
 				if m == nil {
@@ -361,7 +362,7 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 			}
 		}
 		var err error
-		if r.VendorName, r.ProductName, err = deviceNames(ctx, r.VendorID, r.ProdID, busNumber, devNumber); err != nil {
+		if r.VendorName, r.ProductName, err = deviceNames(ctx, r.VendorID, r.ProdID, r.BusNumber, r.DevNumber); err != nil {
 			return nil, err
 		}
 		r.FwupdFirmwareVersionInfo = deviceFirmwareVersion(fwupdDevices, r.VendorID, r.ProdID, serial)
@@ -382,6 +383,8 @@ func (d *Device) key() string {
 		d.Class,
 		d.SubClass,
 		d.Protocol,
+		d.BusNumber,
+		d.DevNumber,
 	}
 	s := strings.Join(fields, splitter)
 	for _, ifc := range d.Interfaces {

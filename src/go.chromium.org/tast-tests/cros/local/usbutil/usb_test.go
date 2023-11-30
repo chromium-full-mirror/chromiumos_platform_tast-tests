@@ -164,25 +164,8 @@ Device Descriptor:
 `,
 	// Two devices with the same idVendor:idProduct can have different iProduct strings.
 	// Use busNumber:devNumber to tell them apart.
-	"lsusb -v -d0bda:8153 -s04:1": `Bus 004 Device 001: ID 0bda:8153 Realtek Semiconductor Corp. UNITEK Y-3470B
-Device Descriptor:
-  bLength                18
-  bDescriptorType         1
-  bcdUSB               3.00
-  bDeviceClass            0 
-  bDeviceSubClass         0 
-  bDeviceProtocol         0 
-  bMaxPacketSize0         9
-  idVendor           0x0bda Realtek Semiconductor Corp.
-  idProduct          0x8153 
-  bcdDevice           31.00
-  iManufacturer           1 UNITEK
-  iProduct                2 UNITEK Y-3470B
-  iSerial                 6 001000001
-  bNumConfigurations      2
-`,
-	"lsusb -v -d0bda:8153 -s05:2": `
-Bus 005 Device 002: ID 0bda:8153 Realtek Semiconductor Corp. USB 10/100/1000 LAN
+	"lsusb -v -d0bda:8153 -s04:1": `
+Bus 004 Device 001: ID 0bda:8153 Realtek Semiconductor Corp. USB 10/100/1000 LAN
 Device Descriptor:
   bLength                18
   bDescriptorType         1
@@ -196,6 +179,24 @@ Device Descriptor:
   bcdDevice           31.00
   iManufacturer           1 Realtek
   iProduct                2 USB 10/100/1000 LAN
+  iSerial                 6 001000001
+  bNumConfigurations      2
+`,
+	"lsusb -v -d0bda:8153 -s05:2": `
+Bus 005 Device 002: ID 0bda:8153 Realtek Semiconductor Corp. UNITEK Y-3470B
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               3.00
+  bDeviceClass            0 
+  bDeviceSubClass         0 
+  bDeviceProtocol         0 
+  bMaxPacketSize0         9
+  idVendor           0x0bda Realtek Semiconductor Corp.
+  idProduct          0x8153 
+  bcdDevice           31.00
+  iManufacturer           1 UNITEK
+  iProduct                2 UNITEK Y-3470B
   iSerial                 6 001000001
   bNumConfigurations      2
 `,
@@ -302,6 +303,8 @@ func TestAttachedDevices(t *testing.T) {
 					Driver:          ptr("r8152"),
 				},
 			},
+			BusNumber: "05",
+			DevNumber: "2",
 		},
 		Device{
 			VendorID:    "0bda",
@@ -320,6 +323,8 @@ func TestAttachedDevices(t *testing.T) {
 					Driver:          ptr("r8152"),
 				},
 			},
+			BusNumber: "04",
+			DevNumber: "1",
 		},
 		Device{
 			VendorID:    "1a2b",
@@ -338,6 +343,8 @@ func TestAttachedDevices(t *testing.T) {
 					Driver:          ptr("hub"),
 				},
 			},
+			BusNumber: "02",
+			DevNumber: "1",
 		},
 		Device{
 			VendorID:    "1a2b",
@@ -356,6 +363,8 @@ func TestAttachedDevices(t *testing.T) {
 					Driver:          ptr("hub"),
 				},
 			},
+			BusNumber: "02",
+			DevNumber: "1",
 		},
 		Device{
 			VendorID:    "1a2b",
@@ -388,6 +397,8 @@ func TestAttachedDevices(t *testing.T) {
 					Driver:          nil,
 				},
 			},
+			BusNumber: "01",
+			DevNumber: "2",
 		},
 		Device{
 			VendorID:    "1fc9",
@@ -410,6 +421,8 @@ func TestAttachedDevices(t *testing.T) {
 				Version:       "6.45",
 				VersionFormat: "bcd",
 			},
+			BusNumber: "03",
+			DevNumber: "4",
 		},
 		Device{
 			VendorID:    "2a2b",
@@ -432,6 +445,8 @@ func TestAttachedDevices(t *testing.T) {
 				Version:       "trailing_spaces_version",
 				VersionFormat: "plain",
 			},
+			BusNumber: "07",
+			DevNumber: "1",
 		},
 	}
 	if d := cmp.Diff(e, g); d != "" {
