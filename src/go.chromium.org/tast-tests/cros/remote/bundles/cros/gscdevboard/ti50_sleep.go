@@ -43,6 +43,7 @@ var (
 	reBoot       *regexp.Regexp = regexp.MustCompile(`Ravn4|([0-9a-fA-F]{8})`)
 	reResetType  *regexp.Regexp = regexp.MustCompile(`Reset Type: ([0-9a-zA-Z_]*)[\r\n]`)
 	reWakeSource *regexp.Regexp = regexp.MustCompile(`Wake source: 0x([0-9a-fA-F]{8})`)
+	reConsole    *regexp.Regexp = regexp.MustCompile(`Console is enabled`)
 )
 
 const (
@@ -56,10 +57,8 @@ const (
 	wakeSourceUart5 = "80000100"
 )
 
-func verifyStaysAsleep(ctx context.Context, s *testing.State, b utils.DevboardHelper) {
-	//waitCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	//defer cancel()
-	_, err := b.ReadSerialSubmatch(ctx, reBoot)
+func verifyStaysAsleep(ctx context.Context, s *testing.State, i *ti50.CrOSImage) {
+	err := i.WaitUntilMatch(ctx, reBoot, time.Second*3)
 	if err != nil {
 		// We expected to NOT see boot a message.
 		return
@@ -108,6 +107,11 @@ func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 	} else {
 		s.Errorf("Waking on %s: Unexpected reset type: %s", trigger, string(resetMatch[1]))
 	}
+	_, err = b.ReadSerialSubmatch(ctx, reConsole)
+	if err != nil {
+		s.Error("Console not enabled after wake up by ", trigger)
+		return
+	}
 	if err := i.WaitUntilBooted(ctx); err != nil {
 		s.Error("Ti50 did not wake up by ", trigger)
 	}
@@ -133,14 +137,14 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Log("Waiting for sleep with AP off")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
-	verifyStaysAsleep(ctx, s, b)
+	verifyStaysAsleep(ctx, s, i)
 	s.Log("Simulating power button press")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
 	verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceRbox, "Power Button")
 	s.Log("Waiting for sleep with AP off")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
-	verifyStaysAsleep(ctx, s, b)
+	verifyStaysAsleep(ctx, s, i)
 
 	s.Log("Simulating SuzyQ inserted, wait 3 minutes")
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
@@ -151,13 +155,13 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	s.Log("Waiting for sleep with AP off")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
-	verifyStaysAsleep(ctx, s, b)
+	verifyStaysAsleep(ctx, s, i)
 	s.Log("Simulating serial console input")
 	th.MustSucceed(b.WriteSerial(ctx, []byte("hello\r")), "Serial write")
 	verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "console input")
 	s.Log("Waiting for sleep with AP off")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
-	verifyStaysAsleep(ctx, s, b)
+	verifyStaysAsleep(ctx, s, i)
 
 	s.Log("Simulating EC_PACKET_MODE toggle")
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, true)
