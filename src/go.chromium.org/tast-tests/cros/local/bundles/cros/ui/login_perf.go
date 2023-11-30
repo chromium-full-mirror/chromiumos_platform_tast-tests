@@ -299,6 +299,7 @@ func loginPerfStartToLoginScreen(
 	}
 	if testConfig.param.preloadLacros {
 		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
+		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
 		s.Log("loginPerfStartToLoginScreen: Enabling LacrosLaunchAtLoginScreen feature")
 	} else {
 		options = append(options, chrome.DisableFeatures("LacrosLaunchAtLoginScreen"))
@@ -643,6 +644,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	}
 	if preloadLacros {
 		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
+		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
 		testing.ContextLog(ctx, "initializeLoginPerfTest: Enabling LacrosLaunchAtLoginScreen feature")
 	} else {
 		options = append(options, chrome.DisableFeatures("LacrosLaunchAtLoginScreen"))
