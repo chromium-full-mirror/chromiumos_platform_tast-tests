@@ -36,10 +36,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks video playback functionalities after reloading webpage",
 		Contacts: []string{
-			"croste-av@google.com",
 			"chromeos-gfx-video@google.com",
 			"chromeos-sw-engprod@google.com",
-			"cienet-development@googlegroups.com",
+			"crosep-intertech@google.com",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:mainline", "informational"},
@@ -127,6 +126,7 @@ func videoTest(ctx context.Context, player *videoPlayer) error {
 	const playDuration = 10 * time.Second
 
 	testing.ContextLogf(ctx, "Let the video play for at least %s", playDuration)
+	// GoBigSleepLint: Let the video play for a while.
 	if err := testing.Sleep(ctx, playDuration); err != nil {
 		return errors.Wrapf(err, "failed to let the video play for at least %s", playDuration)
 	}
