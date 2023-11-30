@@ -4,3 +4,4 @@
 per-file chrome_crash*.go=file:/src/go.chromium.org/tast-tests/cros/common/crash/OWNERS
 per-file webui_js_errors.go=file:/src/go.chromium.org/tast-tests/cros/common/crash/OWNERS
 per-file stack_sampled_metrics_v2.go=file:/src/go.chromium.org/tast-tests/cros/common/crash/OWNERS
+per-file chrometto_stack_profiling.go=file:/src/go.chromium.org/tast-tests/cros/common/crash/OWNERS
