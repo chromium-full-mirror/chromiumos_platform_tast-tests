@@ -10,6 +10,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -23,6 +24,7 @@ func init() {
 		BugComponent: "b:974567",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Attr:    []string{"group:storage-qual", "storage-qual_pdp_enabled", "storage-qual_pdp_kpi", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+		HardwareDeps: hwdep.D(hwdep.Ufs()),
 		Requirements: []string{tdreq.UfsInterface},
 	})
 }
