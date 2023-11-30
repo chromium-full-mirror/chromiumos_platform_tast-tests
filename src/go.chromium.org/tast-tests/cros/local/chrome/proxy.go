@@ -100,7 +100,7 @@ func (c *Chrome) removeRootCertificate(ctx context.Context) error {
 
 }
 
-// LaunchAndApplyProxy launches defined Martian proxy and apply to current Chrome.
+// LaunchAndApplyProxy launches defined proxy and apply to current Chrome.
 // It returns cleanup function and error if present.
 func (c *Chrome) LaunchAndApplyProxy(ctx context.Context, proxy proxy.Proxy) (func(context.Context) error, error) {
 	if !proxy.IsRunning() {
