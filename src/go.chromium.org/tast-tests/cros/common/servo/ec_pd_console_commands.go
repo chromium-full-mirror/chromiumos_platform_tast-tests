@@ -16,7 +16,7 @@ import (
 
 const (
 	reEcPdRecv  string = `RECV\s([\w]+)`
-	rePDVersion string = `\s+(\d+|Wrong.*)`
+	rePDVersion string = `[\r\n](\d|Wrong)`
 	// MaxPorts specifies the maximum number of ports on the EC.
 	MaxPorts int = 4
 	// PDPortUnderTest indicates command should be sent to the PD port connected to servo.
