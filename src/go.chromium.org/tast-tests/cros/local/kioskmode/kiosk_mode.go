@@ -400,9 +400,9 @@ func LaunchAppManually(ctx context.Context, tconn *chrome.TestConn, name string)
 
 	kioskAppBtn := nodewith.Name(name).HasClass("MenuItemView")
 	if err := uiauto.Combine("launch Kiosk app from menu",
-		ui.LeftClick(localAccountsBtn),
+		ui.DoDefault(localAccountsBtn),
 		ui.WithTimeout(30*time.Second).WaitUntilExists(kioskAppBtn),
-		ui.LeftClick(kioskAppBtn),
+		ui.DoDefault(kioskAppBtn),
 		// Wait until the launch screen appears, or until it's gone and the Kiosk app is launched.
 		ui.WaitUntilAnyExists(cancelLaunchText, chromeAppWindow, webAppWindow),
 	)(ctx); err != nil {
