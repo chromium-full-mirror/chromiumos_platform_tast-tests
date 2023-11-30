@@ -173,25 +173,31 @@ func UCMSequences(ctx context.Context, s *testing.State) {
 	}
 }
 
-func ucmSequencesTestCard(ctx context.Context, s *testing.State, c alsaucmCommander, ucmName string) {
-	const ucmBasePath = "/usr/share/alsa/ucm"
-
-	ucmConf := filepath.Join(ucmBasePath, ucmName, ucmName+".conf")
-	s.Logf("Testing %s UCM: %s", ucmName, ucmConf)
-
-	// Fail early if UCM does not exist.
-	if _, err := os.Stat(ucmConf); err != nil {
-		if os.IsNotExist(err) {
-			// err formats as "stat: /path/to/ucm/conf: no such file or directory".
-			// As this is the common case, craft the error message ourselves
-			// to avoid listing the file path twice.
-			s.Errorf("Missing %s", ucmConf)
-			return
+func searchUcmConf(ucmName string, s *testing.State) (path string) {
+	for _, base := range []string{
+		"/usr/share/alsa/ucm2/conf.d",
+		"/usr/share/alsa/ucm",
+	} {
+		ucmConf := filepath.Join(base, ucmName, ucmName+".conf")
+		if _, err := os.Stat(ucmConf); err != nil {
+			if os.IsNotExist(err) {
+				// to avoid listing the file path twice.
+				s.Logf("Missing %s", ucmConf)
+				continue
+			}
+			s.Logf("Cannot stat %s: %s", ucmConf, err)
+			continue
 		}
-		s.Errorf("Cannot stat %s: %s", ucmConf, err)
-		return
+		return ucmConf
 	}
+	s.Fatal("No UCM found for card in any candidate directory")
+	return ""
+}
 
+func ucmSequencesTestCard(ctx context.Context, s *testing.State, c alsaucmCommander, ucmName string) {
+
+	ucmConf := searchUcmConf(ucmName, s)
+	s.Logf("Using UCM file %s ", ucmConf)
 	ucmCmds, err := c.commands(ctx, ucmName)
 	if err != nil {
 		s.Error("Cannot get UCM commands: ", err)
