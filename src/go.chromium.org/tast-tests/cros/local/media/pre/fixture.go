@@ -893,7 +893,7 @@ func init() {
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.EnableFeatures("--enable-features=V4L2FlatStatefulVideoDecoder"),
+				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
