@@ -94,13 +94,6 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 	}
 	testing.ContextLog(ctx, "PD Tester found")
 
-	if err := h.Servo.RequireDUTPDInfo(ctx); err != nil {
-		return errors.Wrap(err, "RequireDUTPDInfo failed")
-	}
-	if requiredPort != nil && h.Servo.DUTPDPort() != *requiredPort {
-		return errors.Errorf("Incorrect PD port. Test wants port %d, got %d", *requiredPort, h.Servo.DUTPDPort())
-	}
-
 	// Make sure the Servo is a PD source from the DUT's perspective. This
 	// helps in case a previous test left the port in a strange state.
 	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
@@ -111,6 +104,13 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 	// Note: The above command succeeds even if no charger is present
 	if err := h.Servo.RequireChargerAttached(ctx); err != nil {
 		return errors.Wrap(err, "servo must have a charger attached that is sourcing")
+	}
+
+	if err := h.Servo.RequireDUTPDInfo(ctx); err != nil {
+		return errors.Wrap(err, "RequireDUTPDInfo failed")
+	}
+	if requiredPort != nil && h.Servo.DUTPDPort() != *requiredPort {
+		return errors.Errorf("Incorrect PD port. Test wants port %d, got %d", *requiredPort, h.Servo.DUTPDPort())
 	}
 
 	// If a battery is present, ensure it is charged to at least minBattLevel percent
