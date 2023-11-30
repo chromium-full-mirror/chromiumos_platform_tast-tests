@@ -35,7 +35,7 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_e2e"},
+		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			wificell.BrowserChromeServiceName,
