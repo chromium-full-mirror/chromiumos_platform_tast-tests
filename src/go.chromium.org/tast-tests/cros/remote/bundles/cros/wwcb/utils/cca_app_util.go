@@ -148,12 +148,16 @@ func WaitForFinderLocationStable(ctx context.Context, uiautoSvc ui.AutomationSer
 }
 
 // TakeSinglePhoto returns a file info using the Camera app to capture a photo.
-func TakeSinglePhoto(ctx context.Context, uiautoSvc ui.AutomationServiceClient, fs *dutfs.Client, dir string) (os.FileInfo, error) {
+func TakeSinglePhoto(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient, fs *dutfs.Client, dir string) (os.FileInfo, error) {
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: takePhotoFinder}); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for shutter button from context menu")
 	}
 
-	photoStartTime := time.Now()
+	photoStartTime, err := CurrentTime(ctx, dut)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current time on the Chromebook")
+	}
+
 	if _, err := uiautoSvc.LeftClick(ctx, &ui.LeftClickRequest{Finder: takePhotoFinder}); err != nil {
 		return nil, errors.Wrap(err, "failed to click shutter button from context menu")
 	}

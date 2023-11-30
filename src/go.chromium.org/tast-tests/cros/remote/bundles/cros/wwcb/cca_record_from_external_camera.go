@@ -152,7 +152,7 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 	}
 
 	// Take a photo and verify the image color.
-	photo, err := utils.TakeSinglePhoto(ctx, uiautoSvc, fs, utils.CameraPath)
+	photo, err := utils.TakeSinglePhoto(ctx, dut, uiautoSvc, fs, utils.CameraPath)
 	if err != nil {
 		s.Fatal("Failed to take single photo: ", err)
 	}
