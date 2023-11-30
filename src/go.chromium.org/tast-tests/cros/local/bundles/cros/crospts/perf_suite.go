@@ -36,6 +36,16 @@ func init() {
 			// TODO(darrenwu): The test time was tested on brya. Need to run the
 			// test on other low end DUT.
 			Timeout: 4 * time.Hour,
+		}, {
+			Name:    "all_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:    ptsworld.NewCrosRunner(),
+				suiteName: "cros-core-performance",
+			},
+			// TODO(darrenwu): The test time was tested on cherry. Need to run the
+			// test on other low end DUT.
+			Timeout: 4 * time.Hour,
 		}},
 	})
 }
