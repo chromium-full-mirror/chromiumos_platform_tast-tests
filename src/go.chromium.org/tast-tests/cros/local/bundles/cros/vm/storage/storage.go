@@ -116,11 +116,10 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt 
 
 	var storageOpt vm.Option
 
-	if opt.Kind == "block" || opt.Kind == "block_packed" || opt.Kind == "block_tpq" || opt.Kind == "block_packed_tpq" || opt.Kind == "block_lvm" {
-		isPacked := opt.Kind == "block_packed" || opt.Kind == "block_packed_tpq"
+	if opt.Kind == "block" || opt.Kind == "block_tpq" || opt.Kind == "block_lvm" {
 		isTpq := opt.Kind == "block_tpq" || opt.Kind == "block_packed_tpq"
 		isODIRECT := opt.Kind == "block_lvm"
-		blockOption := fmt.Sprintf("%s,packed-queue=%v,multiple-workers=%v,o_direct=%v", block, isPacked, isTpq, isODIRECT)
+		blockOption := fmt.Sprintf("%s,multiple-workers=%v,o_direct=%v", block, isTpq, isODIRECT)
 		storageOpt = vm.RWDisks(blockOption)
 	} else if opt.Kind == "virtiofs" || opt.Kind == "virtiofs_dax" {
 		storageOpt = vm.SharedDir(vm.SharedDirParam{

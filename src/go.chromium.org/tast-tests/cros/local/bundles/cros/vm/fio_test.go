@@ -24,7 +24,7 @@ func TestFio(t *testing.T) {
 	}
 
 	jobs := []string{"boot", "login", "surfing", "randread", "randwrite", "seqread", "seqwrite", "stress_rw"}
-	kinds := []string{"block", "block_packed", "block_tpq", "block_packed_tpq", "block_lvm", "virtiofs", "virtiofs_dax", "scsi", "pmem"}
+	kinds := []string{"block", "block_tpq", "block_lvm", "virtiofs", "virtiofs_dax", "scsi", "pmem"}
 
 	var params []paramData
 	for _, job := range jobs {
