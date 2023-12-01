@@ -162,6 +162,12 @@ func InitFixture(ctx context.Context) error {
 		usbPort.Close()
 	}
 
+	// Since all fixtures are considered off at the beginning of each test.
+	// Need to ensure all fixtures are switched off when the test starts.
+	if err := CloseAllFixture(ctx); err != nil {
+		return errors.Wrap(err, "failed to turn off all fixtures")
+	}
+
 	return nil
 }
 
