@@ -257,14 +257,19 @@ func signIn(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEvent
 		return err
 	}
 
-	testing.ContextLog(ctx, "Start signing in to user ", creds.User)
-	if err := ui.DoDefault(userButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to focus on the user")
+	passwordField, err := lockscreen.PasswordFieldFinder(creds.User)
+	if err != nil {
+		return errors.Wrap(err, "failed to determine the password field finder")
 	}
-	if err := lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, kb); err != nil {
+
+	testing.ContextLog(ctx, "Start signing in to user ", creds.User)
+	if err = ui.LeftClickUntil(userButton, ui.Exists(passwordField))(ctx); err != nil {
+		return errors.Wrap(err, "failed to select the user")
+	}
+	if err = lockscreen.EnterPassword(ctx, tconn, creds.User, creds.Pass, kb); err != nil {
 		return errors.Wrap(err, "failed to enter password")
 	}
-	if err := lockscreen.WaitForLoggedIn(ctx, tconn, 10*time.Second); err != nil {
+	if err = lockscreen.WaitForLoggedIn(ctx, tconn, 10*time.Second); err != nil {
 		return errors.Wrap(err, "failed to wait for logged in")
 	}
 
