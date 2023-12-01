@@ -72,7 +72,7 @@ func VerifyMACIsKept(ctx context.Context, macAddr net.HardwareAddr, pcapPath str
 		return errors.Wrap(err, "failed to read packets")
 	}
 	if len(packets) > 0 {
-		testing.ContextLogf(ctx, "Found %d packets with incorrect MAC", len(packets))
+		testing.ContextLogf(ctx, "Found %d packets with incorrect MAC: %v", len(packets), packets)
 		return errors.New("found packet using wrong MAC: " + wrongMACUsed.String())
 	}
 	return nil
@@ -103,7 +103,7 @@ func VerifyMACIsChanged(ctx context.Context, macAddr net.HardwareAddr, pcapPath 
 		return errors.Wrap(err, "failed to read packets")
 	}
 	if len(packets) > 0 {
-		testing.ContextLogf(ctx, "Found %d packets with incorrect MAC", len(packets))
+		testing.ContextLogf(ctx, "Found %d packets with incorrect MAC: %v", len(packets), packets)
 		return errors.New("found packet with previously used MAC: " + prevMACUsed.String())
 	}
 	return nil
