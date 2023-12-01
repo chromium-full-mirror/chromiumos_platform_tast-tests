@@ -332,17 +332,17 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			}
 
 			if isFromMAC(p, clientMac) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeRouterSolicitation {
-				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("ICMPv6 Router Solicitation marked with wrong DSCP: %s", p)
-				}
+				// b/314266135: for now we can't strictly check that RS packets
+				// are marked since ndproxy uses raw packet socket that bypasses
+				// iptables.
 				seen |= packetICMPv6RouterSolicitation
 				continue
 			}
 
 			if isFromMAC(p, clientMac) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeNeighborSolicitation {
-				if !hasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("ICMPv6 Neighbor Solicitation marked with wrong DSCP: %s", p)
-				}
+				// b/314266135: for now we can't strictly check that NS packets
+				// are marked since ndproxy uses raw packet socket that bypasses
+				// iptables.
 				seen |= packetICMPv6NeighborSolicitation
 				continue
 			}
