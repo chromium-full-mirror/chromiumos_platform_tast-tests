@@ -270,7 +270,7 @@ func (p *CrosvmParams) ToArgs() []string {
 	}
 
 	for _, sock := range p.vhostUserNet {
-		args = append(args, "--vhost-user-net", sock)
+		args = append(args, "--vhost-user", fmt.Sprintf("type=net,socket=%s", sock))
 	}
 
 	if p.useBiosFile {
