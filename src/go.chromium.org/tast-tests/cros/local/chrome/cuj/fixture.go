@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -173,32 +172,6 @@ func init() {
 		PreTestTimeout:  CPUStablizationTimeout,
 		PostTestTimeout: postTestTimeout,
 		Parent:          "gpuWatchHangs",
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "prepareForCUJHighResTimerOff",
-		Desc: "The fixture to prepare DUT for CUJ tests with high res timer off",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"joelaf@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl:            &prepareCUJFixture{},
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Parent:          fixture.HighResTimerOffGpuWatchHangs,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "prepareForCUJHighResTimerOffWithCharge",
-		Desc: "The fixture to prepare DUT for CUJ tests with high res timer off and charge",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"joelaf@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl:            &prepareCUJFixture{chargeBattery: true},
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Parent:          fixture.HighResTimerOffGpuWatchHangs,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "prepareForCUJWithCharge",
@@ -399,27 +372,6 @@ func init() {
 		SetUpTimeout:    batterySaverTimeout,
 		TearDownTimeout: batterySaverTimeout,
 		PreTestTimeout:  batterySaverTimeout,
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInAndKeepStateWithHighResTimerOff",
-		Desc: "The CUJ test fixture which keeps login state and high res timer off",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"joelaf@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			bt:        browser.TypeAsh,
-			keepState: true,
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs("--allow-insecure-localhost"),
-			},
-		},
-		Parent:          "prepareForCUJHighResTimerOffWithCharge",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInAndKeepStateWithFakeCamera",
@@ -846,30 +798,6 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithWebRTCEventLoggingAndHighResTimerOff",
-		Desc: "CUJ test fixture with WebRTC event logging and turn off high res timer",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"joelaf@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Data: docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
-			bt:          browser.TypeAsh,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJHighResTimerOff",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithFieldTrials",
 		Desc: "CUJ fixture with all field trials enabled",
 		Contacts: []string{
@@ -1000,25 +928,6 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithHighResTimerOff",
-		Desc: "CUJ test fixture with high res timer off",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"joelaf@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeAsh,
-		},
-		Parent:          "prepareForCUJHighResTimerOff",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserARCSupportedWithBatterySaverParent",
 		Desc: "CUJ test fixture with ARC supported and battery saver without Android",
 		Contacts: []string{
@@ -1034,26 +943,6 @@ func init() {
 			},
 		},
 		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpWithOptinTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserARCSupportedWithHighResTimerOff",
-		Desc: "CUJ test fixture with ARC supported and high res timer off",
-		Contacts: []string{
-			"hsinyi@google.com",
-			"joelaf@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			bt:           browser.TypeAsh,
-			arcSupported: true,
-		},
-		Parent:          "prepareForCUJHighResTimerOff",
 		SetUpTimeout:    setUpWithOptinTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,

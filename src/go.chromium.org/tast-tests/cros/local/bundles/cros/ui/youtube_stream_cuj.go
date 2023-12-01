@@ -83,24 +83,6 @@ func init() {
 				Title:   "Ultimate Wild Animals Collection in 8K ULTRA HD / 8K TV",
 				Quality: "1440p",
 			},
-		}, { // TODO(b/298151007): Remove when sufficient data is collected.
-			Name:    "1080p30_hrtimer_off",
-			Fixture: "loggedInAndKeepStateWithHighResTimerOff",
-			Val: youtube.VideoSrc{
-				URL:     "https://www.youtube.com/watch?v=Zv11L-ZfrSg",
-				Title:   "Ultimate Wild Animals Collection in 8K ULTRA HD / 8K TV",
-				Quality: "1080p",
-			},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
-		}, {
-			Name:    "1440p30_hrtimer_off",
-			Fixture: "loggedInAndKeepStateWithHighResTimerOff",
-			Val: youtube.VideoSrc{
-				URL:     "https://www.youtube.com/watch?v=Zv11L-ZfrSg",
-				Title:   "Ultimate Wild Animals Collection in 8K ULTRA HD / 8K TV",
-				Quality: "1440p",
-			},
-			ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 		}},
 	})
 }

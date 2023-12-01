@@ -58,24 +58,6 @@ func init() {
 		Parent:          fixture.Enrolled,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name: fixture.FakeDMSEnrolledWithHighResTimerOff,
-		Desc: "Fixture for a running FakeDMS with enrollment and high res timer turned off",
-		Contacts: []string{
-			"cros-sw-perf@google.com",
-			"hsinyi@google.com",
-		},
-		Impl: &fakeDMSFixture{
-			importState: true,
-		},
-		SetUpTimeout:    15 * time.Second,
-		ResetTimeout:    5 * time.Second,
-		TearDownTimeout: 5 * time.Second,
-		PreTestTimeout:  5 * time.Second,
-		PostTestTimeout: 5 * time.Second,
-		Parent:          fixture.HighResTimerOffEnrolled,
-	})
-
 	// FakeDMSUpdateEngineEnrolled is identical to FakeDMSEnrolled but inherits
 	// from UpdateEngineEnrolled fixture to ensure update engine is reset.
 	testing.AddFixture(&testing.Fixture{

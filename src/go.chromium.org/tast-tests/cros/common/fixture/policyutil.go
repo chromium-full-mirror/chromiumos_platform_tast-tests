@@ -23,8 +23,6 @@ const (
 	FakeDMSEnrolled = "fakeDMSEnrolled"
 	// FakeDMSUpdateEngineEnrolled is a fixture name.
 	FakeDMSUpdateEngineEnrolled = "fakeDMSUpdateEngineEnrolled"
-	// FakeDMSEnrolledWithHighResTimerOff is a fixture name.
-	FakeDMSEnrolledWithHighResTimerOff = "fakeDMSEnrolledWithHighResTimerOff"
 )
 
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/chrome.go.

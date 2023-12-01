@@ -12,14 +12,12 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type schedPolicy int
@@ -120,23 +118,6 @@ func init() {
 				},
 			},
 			{
-				Name: "rr10_1thread_10ms_hrtimer_off",
-				Val: cyclicTestParameters{
-					Config: schedConfig{
-						Policy:   rrSched,
-						Priority: crasClientPriority,
-					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: defaultMaxLatencyThreshold,
-					StressConfig:        nil,
-				},
-				Fixture:           fixture.HighResTimerOff,
-				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
-			},
-			{
 				Name: "rr12_4thread_10ms",
 				Val: cyclicTestParameters{
 					Config: schedConfig{
@@ -219,23 +200,6 @@ func init() {
 				},
 			},
 			{
-				Name: "nice_p0_1thread_10ms_hrtimer_off",
-				Val: cyclicTestParameters{
-					Config: schedConfig{
-						Policy:   otherSched,
-						Priority: 0,
-					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: 10000 * time.Microsecond,
-					StressConfig:        nil,
-				},
-				Fixture:           fixture.HighResTimerOff,
-				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
-			},
-			{
 				Name: "nice_n20_1thread_10ms",
 				Val: cyclicTestParameters{
 					Config: schedConfig{
@@ -249,23 +213,6 @@ func init() {
 					MaxLatencyThreshold: 5000 * time.Microsecond,
 					StressConfig:        nil,
 				},
-			},
-			{
-				Name: "nice_n20_1thread_10ms_hrtimer_off",
-				Val: cyclicTestParameters{
-					Config: schedConfig{
-						Policy:   otherSched,
-						Priority: -20,
-					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
-					Affinity:            defaultAff,
-					MaxLatencyThreshold: 5000 * time.Microsecond,
-					StressConfig:        nil,
-				},
-				Fixture:           fixture.HighResTimerOff,
-				ExtraHardwareDeps: hwdep.D(hwdep.HasDynamicHighResTimerControl()),
 			},
 			{
 				Name: "nice_p19_1thread_10ms",
