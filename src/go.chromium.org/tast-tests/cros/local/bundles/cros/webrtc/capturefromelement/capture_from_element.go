@@ -16,7 +16,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -37,15 +38,24 @@ const (
 	UseVideo
 )
 
+// TestParam is used to describe the config used to run CaptureFromElement and CaptureFromElementPerf.
+type TestParam struct {
+	// CanvasSource indicates what is fed to the <canvas> that we can capture from.
+	CanvasSource CanvasSource
+	// BrowserType indicates the type of Chrome browser to be used,
+	// Ash Chrome or Lacros Chrome.
+	BrowserType browser.Type
+}
+
 // RunCaptureStream drives the code verifying the captureStream() functionality.
 // measurementDuration, if != 0, specifies the time to collect performance
 // metrics; conversely if == 0 the test instructs JS code to verify the capture
 // correctness and finishes immediately.
-func RunCaptureStream(ctx context.Context, s *testing.State, cr *chrome.Chrome, source CanvasSource, measurementDuration time.Duration) error {
+func RunCaptureStream(ctx context.Context, s *testing.State, cs ash.ConnSource, source CanvasSource, measurementDuration time.Duration) error {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	conn, err := cr.NewConn(ctx, server.URL+"/"+htmlFile)
+	conn, err := cs.NewConn(ctx, server.URL+"/"+htmlFile)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %v", htmlFile)
 	}

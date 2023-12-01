@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/webrtc/capturefromelement"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,13 +29,33 @@ func init() {
 		Data:         capturefromelement.DataFiles(),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		Params: []testing.Param{{
-			Name:    "canvas",
-			Val:     capturefromelement.UseGlClearColor,
+			Name: "canvas",
+			Val: capturefromelement.TestParam{
+				CanvasSource: capturefromelement.UseGlClearColor,
+				BrowserType:  browser.TypeAsh,
+			},
 			Fixture: "chromeVideo",
 		}, {
-			Name:    "canvas_from_video",
-			Val:     capturefromelement.UseVideo,
+			Name: "canvas_from_video",
+			Val: capturefromelement.TestParam{
+				CanvasSource: capturefromelement.UseVideo,
+				BrowserType:  browser.TypeAsh,
+			},
 			Fixture: "chromeVideoWithFakeWebcam",
+		}, {
+			Name: "canvas_lacros",
+			Val: capturefromelement.TestParam{
+				CanvasSource: capturefromelement.UseGlClearColor,
+				BrowserType:  browser.TypeLacros,
+			},
+			Fixture: "chromeVideoLacros",
+		}, {
+			Name: "canvas_from_video_lacros",
+			Val: capturefromelement.TestParam{
+				CanvasSource: capturefromelement.UseVideo,
+				BrowserType:  browser.TypeLacros,
+			},
+			Fixture: "chromeVideoLacrosWithFakeWebcam",
 		}},
 		//TODO(b/199174572): add a test case for "video" capture.
 	})
@@ -42,8 +63,15 @@ func init() {
 
 // CaptureFromElementPerf collects perf metrics for the homonymous API.
 func CaptureFromElementPerf(ctx context.Context, s *testing.State) {
+	testParams := s.Param().(capturefromelement.TestParam)
+	_, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testParams.BrowserType)
+	if err != nil {
+		s.Fatal("Failed to initialize test: ", err)
+	}
+	defer lacros.CloseLacros(ctx, l)
+
 	const measurementDuration = 25 * time.Second
-	if err := capturefromelement.RunCaptureStream(ctx, s, s.FixtValue().(chrome.HasChrome).Chrome(), s.Param().(capturefromelement.CanvasSource), measurementDuration); err != nil {
+	if err := capturefromelement.RunCaptureStream(ctx, s, cs, testParams.CanvasSource, measurementDuration); err != nil {
 		s.Fatal("RunCaptureStream failed: ", err)
 	}
 }
