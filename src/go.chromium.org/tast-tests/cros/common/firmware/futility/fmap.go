@@ -7,6 +7,7 @@ package futility
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"strconv"
 	"strings"
 
@@ -70,4 +71,33 @@ func (i *Instance) DumpFmap(ctx context.Context, inFile string, regionNames []st
 	}
 
 	return fmapSections, fullOut, nil
+}
+
+// DumpFmapExtract extracts selected sections from the inFile to specified paths.
+//
+// inFile is path to the input firmware file.
+// sections is a map where keys are section names and values are their output paths.
+//
+// Returns futility output if available.
+func (i *Instance) DumpFmapExtract(ctx context.Context, inFile string, sections map[string]string) ([]byte, error) {
+	if inFile == "" {
+		return nil, errors.New("futility cannot extract FlashMap sections: inFile is empty")
+	}
+
+	if len(sections) == 0 {
+		return nil, errors.New("futility cannot extract FlashMap sections: no sections provided")
+	}
+
+	cmdArgs := append(i.futilityCmdArgs(), "dump_fmap", "-x", inFile)
+
+	for sec, outFile := range sections {
+		cmdArgs = append(cmdArgs, fmt.Sprintf("%s:%s", sec, outFile))
+	}
+
+	stdout, stderr, err := i.runCommandLine(ctx, cmdArgs)
+	fullOut := joinProgramOutputs(stdout, stderr)
+	if err != nil {
+		return fullOut, errors.Wrapf(err, "error while extracting FlashMap sections with arguments %v", cmdArgs)
+	}
+	return fullOut, nil
 }

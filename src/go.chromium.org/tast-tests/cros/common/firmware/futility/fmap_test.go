@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 var dumpFmapPositionalArgs = []string{testFutilityPath, "dump_fmap"}
@@ -154,6 +156,76 @@ func Test_DumpFmap_ParseDataSelective(t *testing.T) {
 
 	ti := i.commandRunner.(*testCommandRunner)
 	if err = ti.assertCalledWith(append(dumpFmapPositionalArgs, "input.bin", "area1", "area3"), nil, dumpFmapExtraArgs); err != nil {
+		t.Error(err)
+	}
+}
+
+func Test_DumpFmapExtract_ContextDeadlineExceeded(t *testing.T) {
+	i := newTestInstance(nil, nil, context.DeadlineExceeded)
+
+	out, err := i.DumpFmapExtract(context.Background(), "inFile", map[string]string{"SECTION": "path.bin"})
+	if len(strings.TrimSpace(string(out))) != 0 {
+		t.Errorf("unexpected command output: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_DumpFmapExtract_NoInputFile(t *testing.T) {
+	i := newTestInstance(nil, nil, nil)
+
+	out, err := i.DumpFmapExtract(context.Background(), "", map[string]string{"SECTION": "path.bin"})
+	if len(strings.TrimSpace(string(out))) > 0 {
+		t.Errorf("command output not expected, got: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_DumpFmapExtract_NoSectionsProvided(t *testing.T) {
+	i := newTestInstance(nil, nil, nil)
+
+	out, err := i.DumpFmapExtract(context.Background(), "inFile", nil)
+	if len(strings.TrimSpace(string(out))) != 0 {
+		t.Errorf("unexpected command output: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_DumpFmapExtract_CallError(t *testing.T) {
+	i := newTestInstance(nil, nil, errors.New("call failure"))
+
+	out, err := i.DumpFmapExtract(context.Background(), "inFile", map[string]string{"SECTION": "path.bin"})
+	if len(strings.TrimSpace(string(out))) != 0 {
+		t.Errorf("unexpected command output: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_DumpFmapExtract_Success(t *testing.T) {
+	expectedOutput := []byte("SUCCESS")
+	i := newTestInstance(expectedOutput, nil, nil)
+
+	out, err := i.DumpFmapExtract(context.Background(), "input.bin", map[string]string{"SECTION": "path.bin"})
+	if strings.TrimSpace(string(out)) != strings.TrimSpace(string(expectedOutput)) {
+		t.Errorf("unexpected command output: %q, expected: %q", string(out), string(expectedOutput))
+	}
+	if err != nil {
+		t.Error("unexpected error: ", err)
+	}
+
+	ti := i.commandRunner.(*testCommandRunner)
+	optionArgs := [][]string{
+		{"-x", "input.bin"},
+	}
+
+	if err = ti.assertCalledWith(append(dumpFmapPositionalArgs, "SECTION:path.bin"), optionArgs, dumpFmapExtraArgs); err != nil {
 		t.Error(err)
 	}
 }
