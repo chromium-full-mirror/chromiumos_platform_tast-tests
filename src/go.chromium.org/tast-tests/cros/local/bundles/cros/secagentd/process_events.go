@@ -181,6 +181,30 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
 	}
+	// Launch a primer command to definitely set the "first seen exec" time
+	// in secagentd. This will help avoid false positives for "meta_first_seen"
+	// in terminate events.
+	primeCmd := testexec.CommandContext(ctx, "/bin/yes")
+	if err := primeCmd.Start(); err != nil {
+		s.Fatalf("Error starting %q: %v ", primeCmd, err)
+	}
+	// Guarantee that "first seen exec" time is at least two seconds
+	// before we exec the command we want to monitor.
+	// Justification: If exec time is equal to first seen exec time
+	// then meta_first_seen will be true in the terminate. This is a false
+	// positive and while it is acceptable in practice, it will result in
+	// test failures.
+	// GoBigSleepLint: Using poll makes no sense here, we want to create a time
+	// separation so there is no condition to poll for.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
+	}
+	if err := primeCmd.Kill(); err != nil {
+		s.Fatalf("Failed to kill %q: %v", primeCmd, err)
+	}
+	// Don't check the error here because it will likely just say
+	// "signal: Killed"
+	primeCmd.Wait()
 
 	// Launch a long running process and scrape procfs.
 	cmd := testexec.CommandContext(ctx, "/bin/yes")
