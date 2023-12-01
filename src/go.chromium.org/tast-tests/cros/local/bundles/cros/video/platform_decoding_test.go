@@ -23,17 +23,45 @@ const ffmpegMD5Path = "/usr/local/graphics/ffmpeg_md5sum"
 // regenerate the test parameters by running the following in a chroot:
 // TAST_GENERATE_UPDATE=1 ~/chromiumos/src/platform/tast/tools/go.sh test -count=1 go.chromium.org/tast-tests/cros/local/bundles/cros/video
 
-var av1Files = []string{
-	"test_vectors/av1/8-bit/00000527.ivf",
-	"test_vectors/av1/8-bit/00000535.ivf",
-	"test_vectors/av1/8-bit/00000548.ivf",
-	"test_vectors/av1/8-bit/48_delayed.ivf",
-	"test_vectors/av1/8-bit/av1-1-b8-02-allintra.ivf",
-	"test_vectors/av1/8-bit/frames_refs_short_signaling.ivf",
-	"test_vectors/av1/8-bit/non_uniform_tiling.ivf",
-	"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-cols-is-power-of-2.ivf",
-	"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-rows-is-power-of-2.ivf",
-	"test_vectors/av1/8-bit/test-25fps-192x288-tile-rows-3-tile-cols-3.ivf",
+var av1Files = map[string][]string{
+	"8bit": {
+		"test_vectors/av1/8-bit/00000527.ivf",
+		"test_vectors/av1/8-bit/00000535.ivf",
+		"test_vectors/av1/8-bit/00000548.ivf",
+		"test_vectors/av1/8-bit/48_delayed.ivf",
+		"test_vectors/av1/8-bit/av1-1-b8-02-allintra.ivf",
+		"test_vectors/av1/8-bit/frames_refs_short_signaling.ivf",
+		"test_vectors/av1/8-bit/non_uniform_tiling.ivf",
+		"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-cols-is-power-of-2.ivf",
+		"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-rows-is-power-of-2.ivf",
+		"test_vectors/av1/8-bit/test-25fps-192x288-tile-rows-3-tile-cols-3.ivf",
+	},
+	"10bit": {
+		"test_vectors/av1/10-bit/00000671.ivf",
+		"test_vectors/av1/10-bit/00000672.ivf",
+		"test_vectors/av1/10-bit/00000673.ivf",
+		"test_vectors/av1/10-bit/00000674.ivf",
+		"test_vectors/av1/10-bit/00000675.ivf",
+		"test_vectors/av1/10-bit/00000716.ivf",
+		"test_vectors/av1/10-bit/00000717.ivf",
+		"test_vectors/av1/10-bit/00000718.ivf",
+		"test_vectors/av1/10-bit/00000719.ivf",
+		"test_vectors/av1/10-bit/00000720.ivf",
+		"test_vectors/av1/10-bit/00000761.ivf",
+		"test_vectors/av1/10-bit/00000762.ivf",
+		"test_vectors/av1/10-bit/00000763.ivf",
+		"test_vectors/av1/10-bit/00000764.ivf",
+		"test_vectors/av1/10-bit/00000765.ivf",
+	},
+	"10bit_quantizer": {
+		"test_vectors/av1/10-bit/av1-1-b10-00-quantizer-00.ivf",
+		"test_vectors/av1/10-bit/av1-1-b10-00-quantizer-10.ivf",
+		"test_vectors/av1/10-bit/av1-1-b10-00-quantizer-20.ivf",
+		"test_vectors/av1/10-bit/av1-1-b10-00-quantizer-30.ivf",
+		"test_vectors/av1/10-bit/av1-1-b10-00-quantizer-40.ivf",
+		"test_vectors/av1/10-bit/av1-1-b10-00-quantizer-50.ivf",
+		"test_vectors/av1/10-bit/av1-1-b10-00-quantizer-60.ivf",
+	},
 }
 
 var av1AomFiles = map[string]map[string][]string{
@@ -1247,11 +1275,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "vaapi_av1",
 		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
 		DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
-		Files:              av1Files,
+		Files:              av1Files["8bit"],
 		Timeout:            defaultTimeout,
 		// These SoftwareDeps do not include the 10 bit version of AV1.
 		SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-		Metadata:     genExtraData(av1Files),
+		Metadata:     genExtraData(av1Files["8bit"]),
 		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
@@ -1534,12 +1562,38 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "v4l2_stateless_av1",
 		Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
 		DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
-		Files:              av1Files,
+		Files:              av1Files["8bit"],
 		Timeout:            defaultTimeout,
 		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
 		// TODO(b/242075797): use HW capabilities.
 		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
-		Metadata:     genExtraData(av1Files),
+		Metadata:     genExtraData(av1Files["8bit"]),
+		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
+	})
+
+	params = append(params, paramData{
+		Name:               "v4l2_stateless_av1_10bit",
+		Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
+		DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
+		Files:              av1Files["10bit"],
+		Timeout:            defaultTimeout,
+		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
+		// TODO(b/242075797): use HW capabilities.
+		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
+		Metadata:     genExtraData(av1Files["10bit"]),
+		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
+	})
+
+	params = append(params, paramData{
+		Name:               "v4l2_stateless_av1_10bit_quantizer",
+		Decoder:            filepath.Join(chrome.BinTestDir, "v4l2_stateless_decoder"),
+		DecoderArgsBuilder: "platform.V4L2StatelessDecodeArgs",
+		Files:              av1Files["10bit_quantizer"],
+		Timeout:            defaultTimeout,
+		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeAV1},
+		// TODO(b/242075797): use HW capabilities.
+		HardwareDeps: "hwdep.SupportsV4L2StatelessVideoDecoding()",
+		Metadata:     genExtraData(av1Files["10bit_quantizer"]),
 		Attr:         []string{"graphics_video_av1", "graphics_perbuild"},
 	})
 
@@ -1609,11 +1663,11 @@ func TestPlatformDecodingParams(t *testing.T) {
 		Name:               "ffmpeg_vaapi_av1",
 		Decoder:            filepath.Join(chrome.BinTestDir, "decode_test"),
 		DecoderArgsBuilder: "platform.AV1DecodeVAAPIargs",
-		Files:              av1Files,
+		Files:              av1Files["8bit"],
 		Timeout:            defaultTimeout,
 		// These SoftwareDeps do not include the 10 bit version of AV1.
 		SoftwareDeps: []string{"vaapi", caps.HWDecodeAV1},
-		Metadata:     genExtraData(av1Files),
+		Metadata:     genExtraData(av1Files["8bit"]),
 		Attr:         []string{"graphics_video_av1"},
 	})
 
