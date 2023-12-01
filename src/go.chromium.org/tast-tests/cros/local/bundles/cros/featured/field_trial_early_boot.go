@@ -53,6 +53,20 @@ func isFieldTrialActive(ctx context.Context, tconn *chrome.TestConn, trialName, 
 	return trialActive, err
 }
 
+// logExistenceOfTrialFile logs whether or not a field trial file exists and if the field trial should be active or inactive.
+func logExistenceOfTrialFile(ctx context.Context, path string, active bool) {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			testing.ContextLogf(ctx, "%s does not exist and activeOnPlatform is %t", path, active)
+		} else {
+			testing.ContextLogf(ctx, "An error occurred when trying to stat %s: %s", path, err)
+		}
+	} else {
+		testing.ContextLogf(ctx, "%s exists and activeOnPlatform is %t", path, active)
+	}
+}
+
 func FieldTrialEarlyBoot(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
@@ -72,12 +86,18 @@ func FieldTrialEarlyBoot(ctx context.Context, s *testing.State) {
 		if err := os.Remove(activeTrialFileBeforeChromeStartupPath); err != nil && !os.IsNotExist(err) {
 			s.Fatalf("Failed to delete file %s: %s", activeTrialFileBeforeChromeStartupPath, err)
 		}
+		// TODO(b/313473373): Remove logs after bug is fixed.
+		s.Logf("Checking that %s does not exists after initial setup", activeTrialFileBeforeChromeStartupPath)
+		logExistenceOfTrialFile(ctx, activeTrialFileBeforeChromeStartupPath, activeOnPlatform)
 	}
 	// Delete file after test finishes.
 	defer func() {
 		if err := os.Remove(activeTrialFileBeforeChromeStartupPath); err != nil && !os.IsNotExist(err) {
 			s.Errorf("Failed to delete file %s: %s", activeTrialFileBeforeChromeStartupPath, err)
 		}
+		// TODO(b/313473373): Remove logs after bug is fixed.
+		s.Logf("Checking that %s does not exist after the defer cleanup. The file should be deleted", activeTrialFileBeforeChromeStartupPath)
+		logExistenceOfTrialFile(ctx, activeTrialFileBeforeChromeStartupPath, activeOnPlatform)
 	}()
 
 	// Setup for expected files after Chrome startup.
@@ -92,6 +112,10 @@ func FieldTrialEarlyBoot(ctx context.Context, s *testing.State) {
 			s.Errorf("Failed to delete file %s: %s", activeTrialFileAfterChromeStartupPath, err)
 		}
 	}()
+
+	// TODO(b/313473373): Remove logs after bug is fixed.
+	s.Logf("Checking if %s exists before Chrome startup", activeTrialFileBeforeChromeStartupPath)
+	logExistenceOfTrialFile(ctx, activeTrialFileBeforeChromeStartupPath, activeOnPlatform)
 
 	cr, err := chrome.New(ctx)
 	if err != nil {
