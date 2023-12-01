@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -116,7 +115,7 @@ func CellularCustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s 
 		s.Fatal("Failed to verify Attach APN added successfully: ", err)
 	}
 
-	if err := goConnectIfNotConnectedThenReturn(ctx, tconn); err != nil {
+	if err := ossettings.GoConnectIfNotConnectedThenReturnApnSubpage(ctx, tconn); err != nil {
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
@@ -218,7 +217,7 @@ func CellularCustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s 
 		s.Fatal("Failed to enable attach APN: ", err)
 	}
 
-	if err := goConnectIfNotConnectedThenReturn(ctx, tconn); err != nil {
+	if err := ossettings.GoConnectIfNotConnectedThenReturnApnSubpage(ctx, tconn); err != nil {
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
@@ -243,38 +242,4 @@ func CellularCustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s 
 	if err := ui.LeftClick(ossettings.RemoveBtn)(ctx); err != nil {
 		s.Fatal("Failed to click on disable button of default APN: ", err)
 	}
-}
-
-func goConnectIfNotConnectedThenReturn(ctx context.Context, tconn *chrome.TestConn) error {
-	ui := uiauto.New(tconn)
-
-	if err := ui.LeftClick(ossettings.BackArrowBtn)(ctx); err != nil {
-		return errors.Wrap(err, "failed to navigate back to mobile data subpage from APN subpage")
-	}
-
-	if err := ui.Exists(ossettings.ConnectButton)(ctx); err == nil {
-		if err := uiauto.Combine("Connect to network",
-			ui.LeftClick(ossettings.ConnectButton),
-			ui.WithTimeout(10*time.Second).WaitUntilExists(ossettings.ConnectedStatus),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect")
-		}
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.EnsureExistsFor(ossettings.ConnectedStatus, 2*time.Second)(ctx); err != nil {
-			return errors.Wrap(err, "failed to display connected status consistently")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  10 * time.Second,
-		Interval: time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "failed to stay connected")
-	}
-
-	if err := ossettings.GoToActiveNetworkApnSubpage(ctx, tconn, false /*isFromMobileDataSubpage*/); err != nil {
-		return errors.Wrap(err, "failed to go to apn subpage")
-	}
-	return nil
 }

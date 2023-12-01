@@ -614,6 +614,7 @@ func GetUIStringForAuthenticationType(devicePropertyCellularAPNInfoApnAuthentica
 
 	return "Automatic"
 }
+
 // VerifyErrorToastMessageIsShowing will verify that the "Can't disable or remove this APN..." toast is showing
 func (s *OSSettings) VerifyErrorToastMessageIsShowing(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) error {
 	expr := `var node = shadowPiercingQuery(
@@ -792,6 +793,41 @@ func VerifyAPNStabilized(ctx context.Context, tconn *chrome.TestConn, name strin
 		Interval: time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "failed polling for APN more actions button")
+	}
+	return nil
+}
+
+// GoConnectIfNotConnectedThenReturnApnSubpage navigates back from the APN subpage, connects if not connected, then returns to the APN subpage.
+func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+
+	if err := ui.LeftClick(BackArrowBtn)(ctx); err != nil {
+		return errors.Wrap(err, "failed to navigate back to mobile data subpage from APN subpage")
+	}
+
+	if err := ui.Exists(ConnectButton)(ctx); err == nil {
+		if err := uiauto.Combine("Connect to network",
+			ui.LeftClick(ConnectButton),
+			ui.WithTimeout(10*time.Second).WaitUntilExists(ConnectedStatus),
+		)(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect")
+		}
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := ui.EnsureExistsFor(ConnectedStatus, 2*time.Second)(ctx); err != nil {
+			return errors.Wrap(err, "failed to display connected status consistently")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Second,
+		Interval: time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed to stay connected")
+	}
+
+	if err := GoToActiveNetworkApnSubpage(ctx, tconn, false /*isFromMobileDataSubpage*/); err != nil {
+		return errors.Wrap(err, "failed to go to apn subpage")
 	}
 	return nil
 }
