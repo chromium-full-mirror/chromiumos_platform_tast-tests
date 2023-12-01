@@ -1162,6 +1162,11 @@ func (h *Helper) getCellularDeviceProperty(ctx context.Context, propertyName str
 	return info, nil
 }
 
+// GetFirmwareRevisionFromShill gets the current modem firmware revision from shill.
+func (h *Helper) GetFirmwareRevisionFromShill(ctx context.Context) (string, error) {
+	return h.getCellularDeviceProperty(ctx, shillconst.DevicePropertyCellularFirmwareRevision)
+}
+
 // GetIMEIFromShill gets the current modem IMEI from shill.
 func (h *Helper) GetIMEIFromShill(ctx context.Context) (string, error) {
 	return h.getCellularDeviceProperty(ctx, shillconst.DevicePropertyCellularIMEI)

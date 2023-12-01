@@ -6,6 +6,7 @@ package cellular
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"golang.org/x/exp/slices"
@@ -19,7 +20,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillHotspotVariantBlocklist,
-		Desc:         "Verifies that Hotspot is disabled on devices in which the Hardware or OEM doesn't allow hotspot",
+		Desc:         "Verifies that Hotspot is disabled on devices in which the Hardware, FW or OEM doesn't allow hotspot",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active"},
@@ -44,9 +45,31 @@ func ShillHotspotVariantBlocklist(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to get board: %s", err)
 	}
-	shouldSupportHotspot := !(board == "trogdor" || board == "strongbad")
 	cellularInUpstreamTechCrOS := slices.Contains(technologies, shill.TechnologyCellular)
-	if shouldSupportHotspot != cellularInUpstreamTechCrOS {
-		s.Fatalf("Hotspot variant support mismatch, got: %t want: %t", cellularInUpstreamTechCrOS, shouldSupportHotspot)
+	variantInBlocklist := (board == "trogdor" || board == "strongbad")
+	if variantInBlocklist && cellularInUpstreamTechCrOS {
+		s.Fatal("Hotspot should not be allowed on variant")
+	}
+
+	// Verify FW version blocklist
+	fw, err := helper.GetFirmwareRevisionFromShill(ctx)
+	if err != nil {
+		s.Fatal("Unable to get firmware revision from shill: ", err)
+	}
+	inFirmwareBlocklist := false
+	blocklistL850 := []string{"18500.5001.00.02.24.09", "18500.5001.00.03.25.18", "18500.5001.00.04.26.01", "18500.5001.00.04.26.06"}
+	blocklistFM350 := []string{"81600.0000.00.29.19.16"}
+	for _, prefix := range append(blocklistL850, blocklistFM350...) {
+		if strings.HasPrefix(fw, prefix) {
+			inFirmwareBlocklist = true
+			break
+		}
+	}
+	if inFirmwareBlocklist && cellularInUpstreamTechCrOS {
+		s.Fatalf("Hotspot should not be allowed on fw: %q", fw)
+	}
+
+	if !variantInBlocklist && !inFirmwareBlocklist && !cellularInUpstreamTechCrOS {
+		s.Fatalf("Hotspot not supported, but expected to be supported. board : %q firmware : %q", board, fw)
 	}
 }

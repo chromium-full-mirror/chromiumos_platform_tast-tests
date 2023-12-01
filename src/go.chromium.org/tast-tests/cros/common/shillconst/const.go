@@ -46,6 +46,7 @@ const (
 
 	// Cellular device property names.
 	DevicePropertyCellularAPNList                     = "Cellular.APNList"
+	DevicePropertyCellularFirmwareRevision            = "Cellular.FirmwareRevision"
 	DevicePropertyCellularHomeProvider                = "Cellular.HomeProvider"
 	DevicePropertyCellularICCID                       = "Cellular.ICCID"
 	DevicePropertyCellularIMEI                        = "Cellular.IMEI"
