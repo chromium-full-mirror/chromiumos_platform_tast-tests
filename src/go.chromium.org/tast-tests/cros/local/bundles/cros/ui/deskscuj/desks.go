@@ -29,10 +29,13 @@ import (
 // be 0.
 func openDesk(ctx context.Context, tconn *chrome.TestConn, cs ash.ConnSource, urls []string, expectedNumWindows, i int) ([]cuj.TabConn, error) {
 	if i != 0 {
-		if err := ash.CreateNewDesk(ctx, tconn); err != nil {
+		prepareDeskCtx, cancel := context.WithTimeout(ctx, time.Minute)
+		defer cancel()
+
+		if err := ash.CreateNewDesk(prepareDeskCtx, tconn); err != nil {
 			return nil, errors.Wrapf(err, "failed to create desk %d", i)
 		}
-		if err := ash.ActivateDeskAtIndex(ctx, tconn, i); err != nil {
+		if err := ash.ActivateDeskAtIndex(prepareDeskCtx, tconn, i); err != nil {
 			return nil, errors.Wrapf(err, "failed to activate desk %d", i)
 		}
 	}
@@ -173,11 +176,8 @@ func setUpDesks(ctx context.Context, tconn, bTconn *chrome.TestConn, cs ash.Conn
 			expectedNumWindows: 1,
 		},
 	} {
-		openDeskCtx, cancel := context.WithTimeout(ctx, time.Minute)
-		defer cancel()
-
 		totalOpenWindows += desk.expectedNumWindows
-		deskTabs, err := openDesk(openDeskCtx, tconn, cs, desk.urls, totalOpenWindows, i)
+		deskTabs, err := openDesk(ctx, tconn, cs, desk.urls, totalOpenWindows, i)
 		if err != nil {
 			return nil, totalOpenWindows, cleanup, errors.Wrapf(err, "failed to complete setup for desk %d", i)
 		}
