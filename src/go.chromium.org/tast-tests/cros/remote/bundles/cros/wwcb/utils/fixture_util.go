@@ -261,15 +261,22 @@ func OpenAllFixture(ctx context.Context) {
 	}
 }
 
-// CloseAllFixture is for close all fixture.
-func CloseAllFixture(ctx context.Context) {
-	for uid := range fixtureOnline {
-		ControlFixture(ctx, uid, "off")
+// CloseAllFixture turns off all fixtures connected to the host and powers cycle it according to the
+// input parameter.
+func CloseAllFixture(ctx context.Context) error {
+	for uid, port := range fixtureOnline {
+		if err := ControlFixture(ctx, uid, "off"); err != nil {
+			return errors.Wrapf(err, "failed to control %s to turn off on port %s", uid, port)
+		}
 	}
 
 	if wwcbPowerCycleFixture.Value() == "on" {
-		PowerCycleFixture(ctx)
+		if err := PowerCycleFixture(ctx); err != nil {
+			return errors.Wrap(err, "failed to power cycle fixture")
+		}
 	}
+
+	return nil
 }
 
 // PrintAllFixture is for print all fixture on context log.
