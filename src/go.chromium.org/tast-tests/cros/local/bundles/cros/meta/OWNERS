@@ -2,3 +2,7 @@ set noparent
 
 # Tast team
 include /OWNERS.tast
+
+# ChromeOS EngProd proxy test
+shengjun@chromium.org
+yanghenry@google.com
