@@ -60,7 +60,7 @@ func init() {
 					Capture:        false,
 					CaptureEffects: effectsNone,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
 			},
 			{
 				Name: "capture",
@@ -69,7 +69,7 @@ func init() {
 					Capture:        true,
 					CaptureEffects: effectsNone,
 				},
-				ExtraHardwareDeps: hwdep.D(hwdep.Microphone()),
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel(unstableModelsPlaybackCapture...)),
 			},
 			{
 				Name: "playback_capture",
