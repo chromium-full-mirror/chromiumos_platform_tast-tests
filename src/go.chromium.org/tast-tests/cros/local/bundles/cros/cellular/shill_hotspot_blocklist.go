@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         ShillHotspotVariantBlocklist,
+		Func:         ShillHotspotBlocklist,
 		Desc:         "Verifies that Hotspot is disabled on devices in which the Hardware, FW or OEM doesn't allow hotspot",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
@@ -29,7 +29,7 @@ func init() {
 	})
 }
 
-func ShillHotspotVariantBlocklist(ctx context.Context, s *testing.State) {
+func ShillHotspotBlocklist(ctx context.Context, s *testing.State) {
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	if err := helper.Manager.SetExperimentalTetheringFunctionality(ctx, false); err != nil {
