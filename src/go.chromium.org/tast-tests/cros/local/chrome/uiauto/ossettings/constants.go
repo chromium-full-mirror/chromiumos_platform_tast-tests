@@ -13,29 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
 
-// ApnState describes the status of the APN.
-type ApnState string
-
-// Different ApnState
-const (
-	ApnEnabled   ApnState = "Enabled"
-	ApnDisabled  ApnState = "Disabled"
-	ApnConnected ApnState = "Connected"
-)
-
-func (status ApnState) String() string {
-	switch status {
-	case ApnEnabled:
-		return "APN is enabled"
-	case ApnDisabled:
-		return "APN is disabled"
-	case ApnConnected:
-		return "APN is connected"
-	default:
-		return "Disabled"
-	}
-}
-
 // WindowFinder is the finder for the Settings window.
 var WindowFinder *nodewith.Finder = nodewith.MultilingualNameStartingWith("Settings", map[string]string{"de": "Einstellungen"}).
 	Role(role.Window).First()
@@ -319,9 +296,6 @@ var (
 var (
 	// DetailsBtn is the finder for the APN details menu item in more actions menu for an APN.
 	DetailsBtn = nodewith.Name("Details").Role(role.MenuItem)
-
-	// DetailsBtn is the finder for the APN edit menu item in more actions menu for an APN.
-	EditBtn = nodewith.Name("Edit").Role(role.MenuItem)
 
 	// DisableBtn is the finder for the disable APN menu item in more actions menu for an APN.
 	DisableBtn = nodewith.Name("Disable").Role(role.MenuItem)
