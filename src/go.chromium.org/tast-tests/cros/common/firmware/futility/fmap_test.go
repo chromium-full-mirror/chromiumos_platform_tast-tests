@@ -229,3 +229,75 @@ func Test_DumpFmapExtract_Success(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+var loadFmapPositionalArgs = []string{testFutilityPath, "load_fmap"}
+
+func Test_LoadFmap_ContextDeadlineExceeded(t *testing.T) {
+	i := newTestInstance(nil, nil, context.DeadlineExceeded)
+
+	out, err := i.LoadFmap(context.Background(), "inFile", "", map[string]string{"SECTION": "path.bin"})
+	if len(strings.TrimSpace(string(out))) != 0 {
+		t.Errorf("unexpected command output: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_LoadFmap_NoInputFile(t *testing.T) {
+	i := newTestInstance(nil, nil, nil)
+
+	out, err := i.LoadFmap(context.Background(), "", "", map[string]string{"SECTION": "path.bin"})
+	if len(strings.TrimSpace(string(out))) > 0 {
+		t.Errorf("command output not expected, got: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_LoadFmap_NoSectionsProvided(t *testing.T) {
+	i := newTestInstance(nil, nil, nil)
+
+	out, err := i.LoadFmap(context.Background(), "inFile", "", nil)
+	if len(strings.TrimSpace(string(out))) != 0 {
+		t.Errorf("unexpected command output: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_LoadFmap_CallError(t *testing.T) {
+	i := newTestInstance(nil, nil, errors.New("call failure"))
+
+	out, err := i.LoadFmap(context.Background(), "inFile", "", map[string]string{"SECTION": "path.bin"})
+	if len(strings.TrimSpace(string(out))) != 0 {
+		t.Errorf("unexpected command output: %q", string(out))
+	}
+	if err == nil {
+		t.Error("error expected, got nothing")
+	}
+}
+
+func Test_LoadFmap_Success(t *testing.T) {
+	expectedOutput := []byte("SUCCESS")
+	i := newTestInstance(expectedOutput, nil, nil)
+
+	out, err := i.LoadFmap(context.Background(), "input.bin", "output.bin", map[string]string{"SECTION": "path.bin"})
+	if strings.TrimSpace(string(out)) != strings.TrimSpace(string(expectedOutput)) {
+		t.Errorf("unexpected command output: %q, expected: %q", string(out), string(expectedOutput))
+	}
+	if err != nil {
+		t.Error("unexpected error: ", err)
+	}
+
+	ti := i.commandRunner.(*testCommandRunner)
+	optionArgs := [][]string{
+		{"-o", "output.bin"},
+	}
+
+	if err = ti.assertCalledWith(append(loadFmapPositionalArgs, "SECTION:path.bin"), optionArgs, nil); err != nil {
+		t.Error(err)
+	}
+}

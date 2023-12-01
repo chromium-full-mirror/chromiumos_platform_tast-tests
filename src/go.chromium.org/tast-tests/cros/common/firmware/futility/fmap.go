@@ -101,3 +101,37 @@ func (i *Instance) DumpFmapExtract(ctx context.Context, inFile string, sections 
 	}
 	return fullOut, nil
 }
+
+// LoadFmap loads selected sections from specified paths.
+//
+// inFile is path to the input firmware file.
+// outFile is optional path to output file.
+// sections is a map where keys are section names and values are their input paths.
+//
+// Returns futility output if available.
+func (i *Instance) LoadFmap(ctx context.Context, inFile, outFile string, sections map[string]string) ([]byte, error) {
+	if inFile == "" {
+		return nil, errors.New("futility cannot load FlashMap sections: inFile is empty")
+	}
+
+	if len(sections) == 0 {
+		return nil, errors.New("futility cannot load FlashMap sections: no sections provided")
+	}
+
+	cmdArgs := append(i.futilityCmdArgs(), "load_fmap")
+
+	if outFile != "" {
+		cmdArgs = append(cmdArgs, "-o", outFile)
+	}
+
+	for sec, outFile := range sections {
+		cmdArgs = append(cmdArgs, fmt.Sprintf("%s:%s", sec, outFile))
+	}
+
+	stdout, stderr, err := i.runCommandLine(ctx, cmdArgs)
+	fullOut := joinProgramOutputs(stdout, stderr)
+	if err != nil {
+		return fullOut, errors.Wrapf(err, "error while loading FlashMap sections with arguments %v", cmdArgs)
+	}
+	return fullOut, nil
+}
