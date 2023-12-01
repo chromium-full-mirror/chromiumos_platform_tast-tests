@@ -71,7 +71,6 @@ import (
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -576,7 +575,7 @@ func (p *Values) Save(outDir string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filepath.Join(outDir, fileName), json, 0644)
+	return os.WriteFile(filepath.Join(outDir, fileName), json, 0644)
 }
 
 // Proto converts this Values to something that can be passed in a gRPC call.
@@ -617,7 +616,7 @@ func (p *Values) SaveAs(ctx context.Context, outDir string, format Format) error
 		return err
 	}
 
-	return ioutil.WriteFile(filepath.Join(outDir, fileName), json, 0644)
+	return os.WriteFile(filepath.Join(outDir, fileName), json, 0644)
 }
 
 // SaveAsDebugCSV saves a CSV file of the value statistics to outDir. This is
@@ -637,7 +636,7 @@ func (p *Values) SaveAsDebugCSV(outDir string) error {
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
 	headers := []string{"name", "mean", "stddev", "min", "max", "# data"}
-	if err = writer.Write(headers); err != nil {
+	if err := writer.Write(headers); err != nil {
 		return errors.Wrapf(err, "Encountered error while writing %q", headers)
 	}
 

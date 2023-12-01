@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/csv"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -61,7 +60,7 @@ func saveAndCompare(t *testing.T, p *Values, goldenPath string) {
 
 	path := filepath.Join(td, "results-chart.json")
 	if err := jsonEquals(path, goldenPath); err != nil {
-		data, _ := ioutil.ReadFile(path)
+		data, _ := os.ReadFile(path)
 		t.Fatalf("%v; output:\n%s", err, string(data))
 	}
 }
@@ -426,7 +425,7 @@ func saveAsAndCompare(t *testing.T, p *Values, goldenPath string, format Format,
 
 	path := filepath.Join(td, expectedFileName)
 	if err := jsonEquals(path, goldenPath); err != nil {
-		data, _ := ioutil.ReadFile(path)
+		data, _ := os.ReadFile(path)
 		t.Fatalf("%v; output:\n%s", err, string(data))
 	}
 }
