@@ -53,6 +53,7 @@ func StartHighVisibilityMode(ctx context.Context, tconn *chrome.TestConn, device
 
 // AcceptIncomingShareNotification waits for the incoming share notification from an in-contacts device and then accepts the share.
 func AcceptIncomingShareNotification(ctx context.Context, tconn *chrome.TestConn, senderName string, timeout time.Duration) error {
+	// TODO(b/314352172): Change string after flag is enabled.
 	if _, err := ash.WaitForNotification(ctx, tconn, timeout,
 		ash.WaitTitleContains("Nearby Share"),
 		ash.WaitMessageContains(senderName),
@@ -69,6 +70,7 @@ func AcceptIncomingShareNotification(ctx context.Context, tconn *chrome.TestConn
 
 // AcceptFastInitiationNotification accepts an incoming fast initiation notification. Fast initiation notifications are shown when a nearby device is trying to discover a share target.
 func AcceptFastInitiationNotification(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration, isSetupComplete bool) error {
+	// TODO(b/314352172): Change string after flag is enabled.
 	message := "Set up Nearby Share to receive and send files with people around you"
 	btnName := "SET UP"
 	if isSetupComplete {

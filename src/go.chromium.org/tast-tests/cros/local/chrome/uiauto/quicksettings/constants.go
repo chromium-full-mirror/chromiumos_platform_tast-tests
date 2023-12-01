@@ -50,6 +50,7 @@ var FeatureTileDoNotDisturb = nodewith.Role(role.ToggleButton).HasClass("Feature
 var FeatureTileKeyboard = nodewith.HasClass("FeatureTile").NameContaining("keyboard")
 
 // FeatureTileNearbyShare is the finder for the "Nearby Share" feature tile.
+// TODO(b/314352172): Change string after flag is enabled.
 var FeatureTileNearbyShare = nodewith.HasClass("FeatureTile").NameContaining("Nearby Share")
 
 // FeatureTileNetwork is the finder for the network feature tile. Its name
