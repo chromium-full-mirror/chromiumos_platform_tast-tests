@@ -7,7 +7,6 @@ package apps
 import (
 	"context"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -28,7 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchHelpAppFromShortcut,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Help app can be launched using shortcut Ctrl+Shift+/",
+		Desc:         "Help app can be launched using shortcut Search+H",
 		Contacts: []string{
 			"showoff-eng@google.com",
 		},
@@ -63,7 +62,7 @@ func init() {
 	})
 }
 
-// LaunchHelpAppFromShortcut verifies launching Help app from Ctrl+Shift+/.
+// LaunchHelpAppFromShortcut verifies launching Help app from Search+H.
 func LaunchHelpAppFromShortcut(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(fixture.FixtData).Chrome
 	tconn := s.FixtValue().(fixture.FixtData).TestAPIConn
@@ -89,29 +88,26 @@ func LaunchHelpAppFromShortcut(ctx context.Context, s *testing.State) {
 
 	helpCtx := helpapp.NewContext(cr, tconn)
 
-	shortcuts := []string{"Ctrl+Shift+/", "Ctrl+/"}
-	for index, shortcut := range shortcuts {
-		// Using 'shortcut_{index} as test name.
-		testName := "shortcut_" + strconv.Itoa(index)
-		s.Run(ctx, testName, func(ctx context.Context, s *testing.State) {
-			defer func() {
-				outDir := filepath.Join(s.OutDir(), testName)
-				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, s.HasError, cr, "ui_tree_"+testName)
+	shortcut := "Search+H"
+	testName := "launch_help_app_shortcut"
+	s.Run(ctx, testName, func(ctx context.Context, s *testing.State) {
+		defer func() {
+			outDir := filepath.Join(s.OutDir(), testName)
+			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, s.HasError, cr, "ui_tree_"+testName)
 
-				if err := helpCtx.Close()(ctx); err != nil {
-					s.Log("Failed to close the app, may not have been opened: ", err)
-				}
-			}()
-
-			ui := uiauto.New(tconn).WithTimeout(time.Minute)
-			if err := ui.Retry(5, func(ctx context.Context) error {
-				if err := kw.Accel(ctx, shortcut); err != nil {
-					return errors.Wrapf(err, "failed to press %q keys", shortcut)
-				}
-				return helpapp.NewContext(cr, tconn).WaitForApp()(ctx)
-			})(ctx); err != nil {
-				s.Fatalf("Failed to launch or render Help app by shortcut %q: %v", shortcut, err)
+			if err := helpCtx.Close()(ctx); err != nil {
+				s.Log("Failed to close the app, may not have been opened: ", err)
 			}
-		})
-	}
+		}()
+
+		ui := uiauto.New(tconn).WithTimeout(time.Minute)
+		if err := ui.Retry(5, func(ctx context.Context) error {
+			if err := kw.Accel(ctx, shortcut); err != nil {
+				return errors.Wrapf(err, "failed to press %q keys", shortcut)
+			}
+			return helpapp.NewContext(cr, tconn).WaitForApp()(ctx)
+		})(ctx); err != nil {
+			s.Fatalf("Failed to launch or render Help app by shortcut %q: %v", shortcut, err)
+		}
+	})
 }
