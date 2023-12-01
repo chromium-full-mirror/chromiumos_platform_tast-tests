@@ -148,11 +148,19 @@ const (
 	// btpeerResetBuffer is added to fixture per btpeer expected to give
 	// additional time to reset each btpeer.
 	btpeerResetBuffer = 15 * time.Second
+
+	// enableChromeUISetUpBuffer should be added to the setUpTimeout when
+	// fixtureFeatures.EnableChromeUI is true to give it enough time to restart
+	// and log into chrome. See the ChromeService implementation for more details.
+	enableChromeUISetUpBuffer = 5 * time.Minute
 )
 
 type fixtureFeatures struct {
 	// EnableChromeUI will ensure that chrome UI is enabled during the test if
 	// true, or disabled if false.
+	//
+	// The enableChromeUISetUpBuffer must be added to the fixture SetUp when this is
+	// true to give it enough time.
 	EnableChromeUI bool
 
 	// EnableAudioUI will enable audio service through chrome UI. EnableChromeUI and
