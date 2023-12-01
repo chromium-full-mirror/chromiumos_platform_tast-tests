@@ -4208,37 +4208,6 @@ func (p *AllowScreenWakeLocks) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 207. AttestationEnabledForDevice
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type AttestationEnabledForDevice struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *AttestationEnabledForDevice) Name() string          { return "AttestationEnabledForDevice" }
-func (p *AttestationEnabledForDevice) Scope() Scope          { return ScopeDevice }
-func (p *AttestationEnabledForDevice) Status() Status        { return p.Stat }
-func (p *AttestationEnabledForDevice) UntypedV() interface{} { return p.Val }
-func (p *AttestationEnabledForDevice) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *AttestationEnabledForDevice) SetProto(m *protoreflect.Message) {
-	SetDeviceProto(m, "attestation_settings", "attestation_enabled", p.Val)
-}
-func (p *AttestationEnabledForDevice) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 208. AudioCaptureAllowedUrls
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -17460,36 +17429,6 @@ func (p *DataLeakPreventionRulesList) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 787. WebRtcAllowLegacyTLSProtocols
-// ****************************************************************************
-type WebRtcAllowLegacyTLSProtocols struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *WebRtcAllowLegacyTLSProtocols) Name() string          { return "WebRtcAllowLegacyTLSProtocols" }
-func (p *WebRtcAllowLegacyTLSProtocols) Scope() Scope          { return ScopeUser }
-func (p *WebRtcAllowLegacyTLSProtocols) Status() Status        { return p.Stat }
-func (p *WebRtcAllowLegacyTLSProtocols) UntypedV() interface{} { return p.Val }
-func (p *WebRtcAllowLegacyTLSProtocols) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *WebRtcAllowLegacyTLSProtocols) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *WebRtcAllowLegacyTLSProtocols) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 788. MediaRecommendationsEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -25580,7 +25519,7 @@ func (p *DeviceLoginScreenWebHidAllowDevicesForUrls) UnmarshalAs(m json.RawMessa
 	return v, nil
 }
 func (p *DeviceLoginScreenWebHidAllowDevicesForUrls) SetProto(m *protoreflect.Message) {
-	SetDeviceProto(m, "device_login_screen_webhid_allow_devices_for_urls", "device_login_screen_webhid_allow_devices_for_urls", p.Val)
+	SetDeviceProto(m, "device_login_screen_webhid_allow_devices_for_urls", "value", p.Val)
 }
 func (p *DeviceLoginScreenWebHidAllowDevicesForUrls) Equal(iface interface{}) bool {
 	v, ok := iface.([]*DeviceLoginScreenWebHidAllowDevicesForUrlsValue)
@@ -26684,7 +26623,6 @@ func (p *QuickOfficeForceFileDownloadEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1155. FullRestoreMode
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type FullRestoreMode struct {
 	Stat Status
@@ -26746,6 +26684,7 @@ func (p *SafeBrowsingDeepScanningEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1158. DriveFileSyncAvailable
+// This policy can be modified without rebooting.
 // ****************************************************************************
 type DriveFileSyncAvailable struct {
 	Stat Status
@@ -27276,6 +27215,7 @@ func (p *UserFeedbackWithLowLevelDebugDataAllowed) Equal(iface interface{}) bool
 
 // ****************************************************************************
 // 1174. MicrosoftOneDriveAccountRestrictions
+// This policy has a default value of ['organizations'].
 // This policy can be modified without rebooting.
 // This is a future policy, it is not present in stable builds.
 // ****************************************************************************
@@ -27469,6 +27409,37 @@ func (p *DeskAPIDeskSaveAndShareEnabled) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *DeskAPIDeskSaveAndShareEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1184. OopPrintDriversAllowed
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type OopPrintDriversAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *OopPrintDriversAllowed) Name() string          { return "OopPrintDriversAllowed" }
+func (p *OopPrintDriversAllowed) Scope() Scope          { return ScopeUser }
+func (p *OopPrintDriversAllowed) Status() Status        { return p.Stat }
+func (p *OopPrintDriversAllowed) UntypedV() interface{} { return p.Val }
+func (p *OopPrintDriversAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *OopPrintDriversAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *OopPrintDriversAllowed) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -27749,8 +27720,6 @@ func newByName(name string) (Policy, error) {
 		return &DeviceLocalAccountAutoLoginBailoutEnabled{}, nil
 	case "AllowScreenWakeLocks":
 		return &AllowScreenWakeLocks{}, nil
-	case "AttestationEnabledForDevice":
-		return &AttestationEnabledForDevice{}, nil
 	case "AudioCaptureAllowedUrls":
 		return &AudioCaptureAllowedUrls{}, nil
 	case "VideoCaptureAllowedUrls":
@@ -28555,8 +28524,6 @@ func newByName(name string) (Policy, error) {
 		return &AttestationExtensionAllowlist{}, nil
 	case "DataLeakPreventionRulesList":
 		return &DataLeakPreventionRulesList{}, nil
-	case "WebRtcAllowLegacyTLSProtocols":
-		return &WebRtcAllowLegacyTLSProtocols{}, nil
 	case "MediaRecommendationsEnabled":
 		return &MediaRecommendationsEnabled{}, nil
 	case "DeviceFamilyLinkAccountsAllowed":
@@ -29169,6 +29136,8 @@ func newByName(name string) (Policy, error) {
 		return &FeedbackSurveysEnabled{}, nil
 	case "DeskAPIDeskSaveAndShareEnabled":
 		return &DeskAPIDeskSaveAndShareEnabled{}, nil
+	case "OopPrintDriversAllowed":
+		return &OopPrintDriversAllowed{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -29178,31 +29147,42 @@ func newByName(name string) (Policy, error) {
 // Reference values (used via '$ref' in JSON Schema).
 // ****************************************************************************
 
-type RefTimeUsageLimitEntry struct {
-	LastUpdatedMillis string `json:"last_updated_millis"`
-	UsageQuotaMins    int    `json:"usage_quota_mins"`
+type RefDisallowedTimeInterval struct {
+	DayOfWeek string `json:"day_of_week"`
+	Hours     int    `json:"hours"`
+	Minutes   int    `json:"minutes"`
 }
 
-type RefTime struct {
-	Hour   int `json:"hour"`
-	Minute int `json:"minute"`
+type RefDayPercentagePair struct {
+	Days       int `json:"days"`
+	Percentage int `json:"percentage"`
 }
 
-type RefConfig struct {
-	AccessCodeTtl       int    `json:"access_code_ttl"`
-	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
-	SharedSecret        string `json:"shared_secret"`
+type RefWeeklyTimeIntervals struct {
+	End   *RefWeeklyTime               `json:"end"`
+	Start *RefWeeklyTimeIntervalsStart `json:"start"`
 }
 
-type RefDeviceLoginScreenPowerSettings struct {
-	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
-	IdleAction string                                   `json:"IdleAction"`
+type RefWeeklyTimeIntervalsStart struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
 }
 
-type RefDeviceLoginScreenPowerSettingsDelays struct {
-	Idle      int `json:"Idle"`
-	ScreenDim int `json:"ScreenDim"`
-	ScreenOff int `json:"ScreenOff"`
+type RefWeeklyTime struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+type RefDomainFiletypePair struct {
+	Domains       []string `json:"domains,omitempty"`
+	FileExtension string   `json:"file_extension"`
+}
+
+type RefBookmarkType struct {
+	Children     []*RefBookmarkType `json:"children,omitempty"`
+	Name         string             `json:"name"`
+	ToplevelName string             `json:"toplevel_name"`
+	Url          string             `json:"url"`
 }
 
 type Reffile_transfer_enable_disable_schema struct {
@@ -29228,36 +29208,36 @@ type RefUsbDeviceIdInclusive struct {
 	VendorId  int `json:"vendor_id"`
 }
 
-type RefBookmarkType struct {
-	Children     []*RefBookmarkType `json:"children,omitempty"`
-	Name         string             `json:"name"`
-	ToplevelName string             `json:"toplevel_name"`
-	Url          string             `json:"url"`
-}
-
-type RefDomainFiletypePair struct {
-	Domains       []string `json:"domains,omitempty"`
-	FileExtension string   `json:"file_extension"`
-}
-
-type RefWeeklyTimeIntervals struct {
-	End   *RefWeeklyTime               `json:"end"`
-	Start *RefWeeklyTimeIntervalsStart `json:"start"`
-}
-
-type RefWeeklyTimeIntervalsStart struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
-type RefWeeklyTime struct {
-	DayOfWeek string `json:"day_of_week"`
-	Time      int    `json:"time"`
-}
-
 type RefUsbDeviceId struct {
 	ProductId int `json:"product_id"`
 	VendorId  int `json:"vendor_id"`
+}
+
+type RefConfig struct {
+	AccessCodeTtl       int    `json:"access_code_ttl"`
+	ClockDriftTolerance int    `json:"clock_drift_tolerance"`
+	SharedSecret        string `json:"shared_secret"`
+}
+
+type RefTimeUsageLimitEntry struct {
+	LastUpdatedMillis string `json:"last_updated_millis"`
+	UsageQuotaMins    int    `json:"usage_quota_mins"`
+}
+
+type RefTime struct {
+	Hour   int `json:"hour"`
+	Minute int `json:"minute"`
+}
+
+type RefDeviceLoginScreenPowerSettings struct {
+	Delays     *RefDeviceLoginScreenPowerSettingsDelays `json:"Delays"`
+	IdleAction string                                   `json:"IdleAction"`
+}
+
+type RefDeviceLoginScreenPowerSettingsDelays struct {
+	Idle      int `json:"Idle"`
+	ScreenDim int `json:"ScreenDim"`
+	ScreenOff int `json:"ScreenOff"`
 }
 
 type RefPowerManagementDelays struct {
@@ -29270,17 +29250,6 @@ type RefPowerManagementDelaysDelays struct {
 	IdleWarning int `json:"IdleWarning"`
 	ScreenDim   int `json:"ScreenDim"`
 	ScreenOff   int `json:"ScreenOff"`
-}
-
-type RefDisallowedTimeInterval struct {
-	DayOfWeek string `json:"day_of_week"`
-	Hours     int    `json:"hours"`
-	Minutes   int    `json:"minutes"`
-}
-
-type RefDayPercentagePair struct {
-	Days       int `json:"days"`
-	Percentage int `json:"percentage"`
 }
 
 // ****************************************************************************
@@ -29326,7 +29295,8 @@ type ONCIPsec struct {
 
 type ONCCellular struct {
 	ICCID        string `json:"ICCID"`
-	SMDPAddress  string `json:"SMDPAddress"`
+	SMDPAddress  string `json:"SMDPAddress,omitempty"`
+	SMDSAddress  string `json:"SMDSAddress,omitempty"`
 	AllowRoaming bool   `json:"AllowRoaming"`
 }
 

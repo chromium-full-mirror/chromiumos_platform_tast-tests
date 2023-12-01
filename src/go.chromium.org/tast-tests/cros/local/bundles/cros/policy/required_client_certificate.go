@@ -70,7 +70,7 @@ func RequiredClientCertificate(ctx context.Context, s *testing.State) {
 	browserType := s.Param().(browser.Type)
 	fdms := s.FixtValue().(*fakedms.FakeDMS)
 
-	extraPolicies := []policy.Policy{&policy.AttestationEnabledForDevice{Val: true}}
+	var extraPolicies []policy.Policy
 	if browserType == browser.TypeLacros {
 		extraPolicies = append(extraPolicies, &policy.LacrosAvailability{Val: "lacros_only"})
 	}
