@@ -52,6 +52,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/firmwareupdate"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/fixture"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/floatingworkspace"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/font"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/gamepad"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/glanceables"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/graphics"
