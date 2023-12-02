@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"golang.org/x/exp/slices"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -36,6 +37,7 @@ func init() {
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			wificell.BrowserChromeServiceName,

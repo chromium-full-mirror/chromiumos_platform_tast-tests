@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	cip "go.chromium.org/tast-tests/cros/common/network/ip"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -33,6 +34,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Requirements: []string{tdreq.WiFiGenSupportMARConn},

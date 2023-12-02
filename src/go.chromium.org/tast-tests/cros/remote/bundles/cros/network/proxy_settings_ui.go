@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/google/go-cmp/cmp"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -35,6 +36,7 @@ func init() {
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ProxyFixtServiceDepsProxySetting,
 			wificell.ProxyFixtServiceDepsChromeBrowser,

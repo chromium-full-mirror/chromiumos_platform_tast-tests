@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/network/ping"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
@@ -34,6 +35,12 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// Removed wificell_func_ax Attr due to router stability issues (b/235887204)
 		Attr: []string{"group:wificell", "wificell_unstable"},
+		TestBedDeps: []string{
+			tbdep.Wificell,
+			tbdep.WifiStateNormal,
+			tbdep.PeripheralWifiStateWorking,
+			tbdep.WifiRouterModels("ASUSWRT[GT-AXE11000]")[0],
+		},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			wificell.BluetoothServiceName,

@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
@@ -39,6 +40,7 @@ func init() {
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:            []string{"group:wificell", "wificell_func"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesRouters),
 		Requirements:    []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportLegacy, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},

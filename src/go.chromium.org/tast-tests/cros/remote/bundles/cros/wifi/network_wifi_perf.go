@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
@@ -42,7 +43,8 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// TODO(b/310040283): Promote test to stable by removing wificell_unstable attribute.
-		Attr: []string{"group:wificell", "wificell_unstable"},
+		Attr:        []string{"group:wificell", "wificell_unstable"},
+		TestBedDeps: []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.autoupdate.UpdateService",

@@ -9,6 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
@@ -36,6 +37,7 @@ func init() {
 		},
 		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:            []string{"group:wificell", "wificell_func"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		SoftwareDeps:    []string{"wpa3_sae"},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
@@ -454,13 +456,13 @@ func FgsecWpaChange(ctx context.Context, s *testing.State) {
 
 		// Flush BSSes to get rid of the old scan results.
 		if err := tf.WifiClient().FlushBSS(ctx, clientIface, 0); err != nil {
-			return errors.Wrap(err, "Failed to flush BSS list")
+			return errors.Wrap(err, "failed to flush BSS list")
 		}
 
 		// Force the BSSID discovery to make sure the latest AP has been found in case previous scan result arrives
 		// after BSSes are flushed.
 		if err := tf.WifiClient().DiscoverBSSID(ctx, ap.Config().BSSID, clientIface, []byte(ssid)); err != nil {
-			return errors.Wrap(err, "Failed to discover AP")
+			return errors.Wrap(err, "failed to discover AP")
 		}
 
 		connResp, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap)

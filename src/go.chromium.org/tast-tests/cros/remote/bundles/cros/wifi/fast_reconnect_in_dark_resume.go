@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/network/ip"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -29,6 +30,7 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_suspend", "wificell_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		VarDeps:      []string{"servo"},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		// TODO(b/187362093): Extend the platforms when WoWLAN is known to be good on them.

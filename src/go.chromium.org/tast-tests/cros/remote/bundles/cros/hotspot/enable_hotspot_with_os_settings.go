@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hotspot/hotspotutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
@@ -41,6 +42,7 @@ func init() {
 		},
 		BugComponent: "b:1281224", // ChromeOS > Software > System Services > Connectivity > Hotspot
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.BrowserChromeServiceName,
 			wificell.OsSettingsServiceName,

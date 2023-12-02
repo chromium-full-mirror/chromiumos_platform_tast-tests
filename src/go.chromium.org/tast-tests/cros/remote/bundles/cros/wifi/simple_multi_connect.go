@@ -7,6 +7,7 @@ package wifi
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast/core/testing"
@@ -21,6 +22,7 @@ func init() {
 		},
 		//TODO(b/304830047): Promote test to stable by removing wificell_cross_device_unstable tag.
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_multidut", "wificell_cross_device_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT),

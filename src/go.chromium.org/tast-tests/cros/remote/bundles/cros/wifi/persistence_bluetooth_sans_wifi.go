@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
@@ -29,6 +30,13 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_reboot"},
+		TestBedDeps: []string{
+			tbdep.Wificell,
+			tbdep.WifiStateNormal,
+			tbdep.PeripheralWifiStateWorking,
+			tbdep.Bluetooth,
+			tbdep.BluetoothStateNormal,
+		},
 		// Jacuzzi devices are prone to becoming inaccessible over ethernet on reboot which impacts future tests in the test suite (b/178529170).
 		// We will disable the persistence tests on jacuzzi devices as these tests perform a reboot (b:181057823).
 		// We choose not to use hwdep.SkipOnPlatform as the filter relies on an identifier internal to mosys.

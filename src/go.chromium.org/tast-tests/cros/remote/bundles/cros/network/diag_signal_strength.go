@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/common/network/diag"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -32,6 +33,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters | wificell.TFFeaturesAttenuator),
 		Timeout:      time.Minute * 2,
 	})

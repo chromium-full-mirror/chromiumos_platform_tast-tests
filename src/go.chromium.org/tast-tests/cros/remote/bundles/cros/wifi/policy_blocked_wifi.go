@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -138,6 +139,7 @@ func init() {
 			},
 		},
 		Attr:         []string{"group:wificell", "wificell_commercial_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		SoftwareDeps: []string{"chrome"},
 		// SigninProfileTestExtensionID is an id of the test extension which is
 		// allowed for signin profile (see http://crrev.com/772709 for details).

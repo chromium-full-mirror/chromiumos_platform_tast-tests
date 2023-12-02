@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
@@ -56,6 +57,7 @@ func init() {
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_e2e"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",

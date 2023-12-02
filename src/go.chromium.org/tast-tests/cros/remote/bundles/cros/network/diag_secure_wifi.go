@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/network/diag"
@@ -66,6 +67,7 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName, "tast.cros.network.NetDiagService"},
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Params: []testing.Param{{
 			Name: "none",

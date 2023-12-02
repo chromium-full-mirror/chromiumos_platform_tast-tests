@@ -145,6 +145,14 @@ var (
 	// WORKING. If your test uses a router, it should depend on this as well.
 	// There is a PeripheralWifiStateWorking constant for ease of use.
 	PeripheralWifiStateWorking = PeripheralWifiState("WORKING")
+
+	// WifiStateNormal is a shortcut for calling WifiState
+	// with the NORMAL state.
+	WifiStateNormal = WifiState("NORMAL")
+
+	// BluetoothStateNormal is a shortcut for calling BluetoothState
+	// with the NORMAL state.
+	BluetoothStateNormal = BluetoothState("NORMAL")
 )
 
 // keyValueDep returns a formatted a dependency with key depKey and an optional
