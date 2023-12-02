@@ -38,7 +38,7 @@ func init() {
 		Contacts:       []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:           &ccdOpenImpl{},
 		PreTestTimeout: testLabOpenTimeout,
-		Parent:         Ti50Devboard,
+		Parent:         SystemDevboard,
 	})
 }
 

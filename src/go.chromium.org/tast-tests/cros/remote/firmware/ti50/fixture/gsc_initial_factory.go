@@ -46,7 +46,7 @@ func init() {
 		SetUpTimeout:    copyFromGSTimeout,
 		TearDownTimeout: removeFileTimeout,
 		PreTestTimeout:  rescueTwiceTimeout,
-		Parent:          Ti50Devboard,
+		Parent:          SystemDevboard,
 	})
 }
 

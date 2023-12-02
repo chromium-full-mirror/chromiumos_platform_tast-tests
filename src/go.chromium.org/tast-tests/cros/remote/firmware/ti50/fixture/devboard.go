@@ -7,7 +7,7 @@ package fixture
 
 import (
 	"context"
-	"os"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -22,8 +23,8 @@ const (
 	// DevBoardService arg name for the service's host:port pair and also the name of the fixture.
 	DevBoardService = "devboardsvc"
 
-	// Ti50Devboard fixture flashes a ti50 image and sets up a devboard connection
-	Ti50Devboard = "ti50Devboard"
+	// SystemDevboard fixture flashes a system (ti50, cr50, etc) image and sets up a devboard connection
+	SystemDevboard = "systemDevboard"
 
 	// SystemTestAutoDevboard fixture flashes a system_test_auto image and sets up a devboard
 	// connection
@@ -40,14 +41,19 @@ const (
 	postTestTimeout = 5 * time.Second
 )
 
+var (
+	reGsctoolUpdateSuccess  = regexp.MustCompile(`image updated`)
+	reGsctoolUpdateNotReady = regexp.MustCompile(`Can't find device`)
+)
+
 type extraPreTestMethod func(ctx context.Context, board ti50.DevBoard) error
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            Ti50Devboard,
-		Desc:            "Uses devboardsvc to flash a Ti50 image",
+		Name:            SystemDevboard,
+		Desc:            "Uses devboardsvc to flash a system image",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
-		Impl:            &devboardFixture{image: Ti50Image},
+		Impl:            &devboardFixture{image: SystemImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
@@ -138,7 +144,9 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	testing.ContextLog(ctx, "Setting up image: ", imagePath)
-	if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
+	if testbedProperties.TestbedType == "gsc_h1_shield" {
+		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons)
+	} else if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
 
@@ -146,6 +154,41 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	i.v.FwConfigJsons = fwConfigJsons
 
 	return i.v
+}
+
+// setupCr50Image uses gsctool to flash the cr50 image.
+// TODO(b/140534392): Support rollback and changing the board id.
+func setupCr50Image(ctx context.Context, s errorThrower, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string) {
+	if err := board.Setup(ctx, "", fwConfigJsons); err != nil {
+		s.Fatal("Setup: ", err)
+	}
+
+	if err := board.StartSession(ctx, ti50.StrapReset); err != nil {
+		s.Fatal("StartSession: ", err)
+	}
+	defer func() {
+		if err := board.EndSession(ctx); err != nil {
+			s.Fatal("EndSession: ", err)
+		}
+	}()
+
+	gpioApplyStrap(ctx, s, board, ti50.CcdSuzyQ)
+
+	if imagePath == "" {
+		return
+	}
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if out, _ := board.GSCToolCommand(ctx, imagePath); reGsctoolUpdateNotReady.Match(out) {
+			return errors.New("gsctool update not ready: " + string(out))
+		} else if reGsctoolUpdateSuccess.Match(out) {
+			return nil
+		} else {
+			return testing.PollBreak(errors.New("gsctool error: " + string(out)))
+		}
+	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: time.Second}); err != nil {
+		s.Fatal("GSCTool: ", err)
+	}
 }
 
 func (i *devboardFixture) Reset(ctx context.Context) error {
@@ -169,16 +212,6 @@ func (i *devboardFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 }
 
 func (i *devboardFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if i.imageValue.downloaded && i.imageValue.imagePath != "" {
-		if err := os.Remove(i.imageValue.imagePath); err != nil {
-			s.Errorf("Failed to remove downloaded image %q: %v", i.imageValue.imagePath, err)
-		}
-		for _, confPath := range i.imageValue.configPaths {
-			if err := os.Remove(confPath); err != nil {
-				s.Errorf("Failed to remove downloaded conf %q: %v", confPath, err)
-			}
-		}
-	}
 	if i.v.grpcConn != nil {
 		if err := i.v.grpcConn.Close(); err != nil {
 			s.Error("Failed to close grpc: ", err)
@@ -204,6 +237,7 @@ func (i *devboardFixture) dialGrpc(ctx context.Context) error {
 // Convenience functions copied from tpm_helper (since the helper isn't accessible at this layer)
 
 type errorThrower interface {
+	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
 }
 
