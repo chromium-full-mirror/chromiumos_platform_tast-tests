@@ -88,6 +88,15 @@ func init() {
 				browserType: browser.TypeAsh,
 			},
 			Timeout: upstart.UIRestartTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
+		}, {
+			Name: "loose_lacros",
+			Val: chromeCrashEarlyParams{
+				looseMode:   true,
+				browserType: browser.TypeLacros,
+			},
+			// Lacros test logs in so it needs more time.
+			Timeout:           chrome.MinLoginTimeout + chromeCrashEarlyCleanupTimeout + chromeCrashEarlyCrashFileTimeout + time.Minute,
+			ExtraSoftwareDeps: []string{"lacros"},
 		}}})
 }
 
