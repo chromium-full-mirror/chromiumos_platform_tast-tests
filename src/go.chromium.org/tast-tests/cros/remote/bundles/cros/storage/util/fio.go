@@ -198,6 +198,7 @@ func (t TestConfig) ParseFioResults(ctx context.Context, dut *dut.DUT) error {
 
 	res := &fioResult{}
 	if err := json.Unmarshal(out, res); err != nil {
+		testing.ContextLogf(ctx, "Failed to parse json: %q", out)
 		return errors.Wrap(err, "failed to parse fio result")
 	}
 
@@ -239,6 +240,7 @@ func runFIO(ctx context.Context, dut *dut.DUT, args []string) (*fioResult, error
 	}
 	result := &fioResult{}
 	if err := json.Unmarshal(out, result); err != nil {
+		testing.ContextLogf(ctx, "Failed to parse json: %q", out)
 		return nil, errors.Wrap(err, "failed to parse fio result")
 	}
 	return result, nil
