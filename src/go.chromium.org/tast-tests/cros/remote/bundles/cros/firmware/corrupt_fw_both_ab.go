@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -145,7 +146,11 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 
 		if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
 			"--mode=recovery", "--wp=1", "--host_only", "-i", fmt.Sprintf("%s/bios_backup.bin", servoTempDir)); err != nil {
-			s.Fatal("Failed restoring firmware via servo: ", err)
+			s.Error("Failed restoring firmware via servo: ", err)
+		}
+		// In b/314059450 it was discovered that some devices don't come back on after futility update. Explicitly reset to prevent this problem.
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+			s.Error("Failed to reset after restoring firmware: ", err)
 		}
 		if err := h.WaitConnect(ctx); err != nil {
 			s.Error("Failed to connect to DUT: ", err)
