@@ -123,24 +123,6 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	allocationManager := memoryuser.NewMemoryAllocationManager(ctx, memoryuser.Host, allocationMiB, allocatorComplessionRatio, a)
 	defer allocationManager.Cleanup(cleanupCtx)
 
-	appKills, err := memoryuser.NewArcMemoryKillObserver(ctx, a)
-	if err != nil {
-		return errors.Wrap(err, "failed to observe ARC kills")
-	}
-	defer appKills.Close()
-
-	tabDiscards, err := memoryuser.NewTabDiscardObserver(ctx, cr)
-	if err != nil {
-		return errors.Wrap(err, "failed to observe Chrome tab discards")
-	}
-	defer tabDiscards.Close()
-
-	vmmmsKills, err := memoryuser.NewVmmmmsKillObserver(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to observer VMMMS kills")
-	}
-	defer vmmmsKills.Close()
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create TestConn for opening canaries")
@@ -164,7 +146,7 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.Wrap(err, "failed to Start UMA metrics")
 	}
 
-	canaryCloser, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
+	canaryCloser, canaryStillAlive, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
 	if err != nil {
 		return err
 	}
@@ -175,11 +157,16 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 
 	testing.ContextLog(ctx, "Starting allocation")
 	start := time.Now()
+	logcatStart, err := a.LogcatDeviceTime(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get logcat timestamp for start of run")
+	}
+	throttleStart := start
 	lastLogTime := start.Add(-11 * time.Second)
 	allocationNum := 0
 	// Keep allocating until the highest priority app or tab has been seen by all
 	// observers.
-	for appKills.Foreground == nil || tabDiscards.ProtectedBackground == nil || vmmmsKills.FocusedApp == nil {
+	for canaryStillAlive(ctx) {
 		if err := allocationManager.AssertNoDeadAllocator(); err != nil {
 			return errors.Wrap(err, "an allocator is killed before the canary")
 		}
@@ -187,17 +174,6 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		availableKB, err := rm.AvailableMemoryKB(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get available memory")
-		}
-
-		// Check to see if any observer failed.
-		if appKills.Error != nil {
-			return errors.Wrap(appKills.Error, "failed while waiting for app kill")
-		}
-		if tabDiscards.Error != nil {
-			return errors.Wrap(tabDiscards.Error, "failed while waiting for tab discard")
-		}
-		if vmmmsKills.Error != nil {
-			return errors.Wrap(vmmmsKills.Error, "failed while waiting for VMMMS kill")
 		}
 
 		// Don't allocate unless after this allocation we would still be less than
@@ -210,9 +186,9 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 			if err := testing.Sleep(ctx, time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep to throttle allocations")
 			}
-			// Update start so that we throttle allocations as if this delay didn't
-			// happen.
-			start = time.Now().Add(-allocationPeriod * time.Duration(allocationNum))
+			// Update throttleStart so that we throttle allocations as if this delay
+			// didn't happen.
+			throttleStart = time.Now().Add(-allocationPeriod * time.Duration(allocationNum))
 			continue
 		}
 
@@ -244,7 +220,7 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		// the 5s threshold before we add a pause.
 		if allocationPeriod > 0 {
 			// Compute when the next allocation should happen.
-			allocationDelay := time.Until(start.Add(allocationPeriod * time.Duration(allocationNum)))
+			allocationDelay := time.Until(throttleStart.Add(allocationPeriod * time.Duration(allocationNum)))
 			// If the target allocation is in the past, we are behind schedule.
 			// If we're more than 5 seconds behind schedule, then pause for a second
 			// to let the system catch up.
@@ -252,7 +228,7 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 				testing.ContextLogf(ctx, "WARNING: %.2fs behind schedule after %d allocations", -allocationDelay.Seconds(), allocationNum)
 				allocationDelay = time.Second
 				// Reset start to pretend that we are on schedule after a 1s wait.
-				start = time.Now().Add(time.Second - allocationPeriod*time.Duration(allocationNum))
+				throttleStart = time.Now().Add(time.Second - allocationPeriod*time.Duration(allocationNum))
 			}
 			if allocationDelay > 0 {
 				// GoBigSleepLint: Sleep until the next allocation is ready
@@ -265,10 +241,30 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	totalAllocated := allocationManager.TotalAllocatedMiB()
 	testing.ContextLogf(ctx, "Canary died after %d MiB allocations", totalAllocated)
 
+	stop := time.Now()
 	allocationTimeline = append(allocationTimeline, allocationTimelineEntry{
 		totalAllocated,
-		time.Now(),
+		stop,
 	})
+
+	if err := allocationManager.RemoveAllAllocators(); err != nil {
+		return errors.Wrap(err, "failed to free all memory after test")
+	}
+
+	vmmmsLog, err := memoryuser.ParseVmmmsKills(ctx, start, stop)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse VMMMS logs")
+	}
+
+	lmkdLog, err := memoryuser.ParseLmkdKills(ctx, a, logcatStart, stop)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse lmkd kill logs from logcat")
+	}
+
+	discardLog, err := memoryuser.ParseTabDiscards(ctx, cr, start, stop)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse Chrome tab discard logs")
+	}
 
 	p.Append(perf.Metric{
 		Name:      "unthrottledSpeed",
@@ -277,49 +273,73 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		Multiple:  true,
 	}, float64(totalAllocated)/allocationTime.Seconds())
 
-	if !appKills.AllPrioritiesObserved() {
-		return errors.New("not all app kill priorities observed")
+	if !memoryuser.AllVmmmsPrioritiesLogged(vmmmsLog) {
+		memoryuser.DumpVmmmsKillLog(ctx, vmmmsLog)
+		return errors.New("not all VMMMS KillTrace priorities observed, see log above for full list of observed priorities")
 	}
 
-	if !tabDiscards.AllPrioritiesObserved() {
-		return errors.New("not all tab discard priorities observed")
+	// AllVmmmsPrioritiesLogged above ensures these are non-nil
+	vmmmsFocusedApp := memoryuser.FirstVmmmsKillOfPriority(vmmmsLog, memoryuser.VmmmsFocusedAppPriority)
+	vmmmsPerceptibleApp := memoryuser.FirstVmmmsKillOfPriority(vmmmsLog, memoryuser.VmmmsPerceptibleAppPriority)
+	vmmmsCachedApp := memoryuser.FirstVmmmsKillOfPriority(vmmmsLog, memoryuser.VmmmsCachedAppPriority)
+	vmmmsPerceptibleTab := memoryuser.FirstVmmmsKillOfPriority(vmmmsLog, memoryuser.VmmmsPerceptibleTabPriority)
+	vmmmsCachedTab := memoryuser.FirstVmmmsKillOfPriority(vmmmsLog, memoryuser.VmmmsCachedTabPriority)
+
+	appendAllocatedMetric(p, allocationTimeline, "arc_foreground", vmmmsFocusedApp.Time)
+	appendAllocatedMetric(p, allocationTimeline, "arc_perceptible", vmmmsPerceptibleApp.Time)
+	appendAllocatedMetric(p, allocationTimeline, "arc_cached", vmmmsCachedApp.Time)
+	appendAllocatedMetric(p, allocationTimeline, "tab_protected", vmmmsPerceptibleTab.Time)
+	appendAllocatedMetric(p, allocationTimeline, "tab_background", vmmmsCachedTab.Time)
+
+	lmkdFocusedApp := memoryuser.FirstLmkdKillOfPriority(lmkdLog, memoryuser.VmmmsFocusedAppPriority)
+	lmkdPerceptibleApp := memoryuser.FirstLmkdKillOfPriority(lmkdLog, memoryuser.VmmmsPerceptibleAppPriority)
+	lmkdCachedApp := memoryuser.FirstLmkdKillOfPriority(lmkdLog, memoryuser.VmmmsCachedAppPriority)
+	discardPerceptibleTab := memoryuser.FirstTabDiscardOfPriority(discardLog, memoryuser.VmmmsPerceptibleTabPriority)
+	discardCachedTab := memoryuser.FirstTabDiscardOfPriority(discardLog, memoryuser.VmmmsCachedTabPriority)
+
+	// // TODO(cwd): Figure out how to synchronize guest and host clocks so we don't
+	// // get negative latencies from Android.
+	if lmkdFocusedApp != nil {
+		appendKillLatencyMetric(p, "arc_foreground", lmkdFocusedApp.Time.Sub(vmmmsFocusedApp.Time))
+	} else {
+		return errors.New("no LMKD focused app kill in logcat")
 	}
-
-	if !vmmmsKills.AllPrioritiesObserved() {
-		return errors.New("not all VMMMS kill priorities observed")
+	if lmkdPerceptibleApp != nil {
+		appendKillLatencyMetric(p, "arc_perceptible", lmkdPerceptibleApp.Time.Sub(vmmmsPerceptibleApp.Time))
+	} else {
+		return errors.New("no LMKD perceptible app kill in logcat")
 	}
-
-	appendAllocatedMetric(p, allocationTimeline, "arc_foreground", appKills.Foreground.Time)
-	appendAllocatedMetric(p, allocationTimeline, "arc_perceptible", appKills.Perceptible.Time)
-	appendAllocatedMetric(p, allocationTimeline, "arc_cached", appKills.Cached.Time)
-	appendAllocatedMetric(p, allocationTimeline, "tab_protected", tabDiscards.ProtectedBackground.Time)
-	appendAllocatedMetric(p, allocationTimeline, "tab_background", tabDiscards.Background.Time)
-
-	// TODO(cwd): Figure out how to synchronize guest and host clocks so we don't
-	// get negative latencies from Android.
-	appendKillLatencyMetric(p, "arc_foreground", appKills.Foreground.Time.Sub(vmmmsKills.PerceptibleApp.Time))
-	appendKillLatencyMetric(p, "arc_perceptible", appKills.Perceptible.Time.Sub(vmmmsKills.PerceptibleApp.Time))
-	appendKillLatencyMetric(p, "arc_cached", appKills.Cached.Time.Sub(vmmmsKills.CachedApp.Time))
-	appendKillLatencyMetric(p, "tab_protected", tabDiscards.ProtectedBackground.Time.Sub(vmmmsKills.PerceptibleTab.Time))
-	appendKillLatencyMetric(p, "tab_background", tabDiscards.Background.Time.Sub(vmmmsKills.CachedTab.Time))
+	if lmkdCachedApp != nil {
+		appendKillLatencyMetric(p, "arc_cached", lmkdCachedApp.Time.Sub(vmmmsCachedApp.Time))
+	} else {
+		return errors.New("no LMKD cached app kill in logcat")
+	}
+	if discardPerceptibleTab != nil {
+		appendKillLatencyMetric(p, "tab_protected", discardPerceptibleTab.Time.Sub(vmmmsPerceptibleTab.Time))
+	} else {
+		return errors.New("no protected background tab discard in Chrome logs")
+	}
+	if discardCachedTab != nil {
+		appendKillLatencyMetric(p, "tab_background", discardCachedTab.Time.Sub(vmmmsCachedTab.Time))
+	} else {
+		return errors.New("no background tab discard in Chrome logs")
+	}
 
 	if err := metrics.WriteHistogramMetrics(ctx, tconn, p, umaMetrics); err != nil {
 		return err
 	}
 
 	// Check that app kills and tab discards happened in the right order.
-	// NB: We do this here after observing all tab discards and app killed because
-	// we don't want any races between the log parsing in the observers.
-	if vmmmsKills.CachedTab.Time.Before(vmmmsKills.CachedApp.Time) {
+	if vmmmsCachedTab.Time.Before(vmmmsCachedApp.Time) {
 		return errors.New("background tab discard before cached app kill")
 	}
-	if vmmmsKills.PerceptibleApp.Time.Before(vmmmsKills.CachedTab.Time) {
+	if vmmmsPerceptibleApp.Time.Before(vmmmsCachedTab.Time) {
 		return errors.New("perceptible app kill before background tab discard")
 	}
-	if vmmmsKills.PerceptibleTab.Time.Before(vmmmsKills.PerceptibleApp.Time) {
+	if vmmmsPerceptibleTab.Time.Before(vmmmsPerceptibleApp.Time) {
 		return errors.New("protected background tab discard before perceptible app kill")
 	}
-	if vmmmsKills.FocusedApp.Time.Before(vmmmsKills.PerceptibleTab.Time) {
+	if vmmmsFocusedApp.Time.Before(vmmmsPerceptibleTab.Time) {
 		return errors.New("focused app kill before protected background tab discard")
 	}
 

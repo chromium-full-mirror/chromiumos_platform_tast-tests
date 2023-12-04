@@ -85,6 +85,24 @@ func (m *MemoryAllocationManager) AddAllocator(ctx context.Context) error {
 	return nil
 }
 
+// removeAllocator removes the most recent allocator.
+func (m *MemoryAllocationManager) removeAllocator() error {
+	id := len(m.allocators) - 1
+	allocator := m.allocators[id]
+	m.allocators = m.allocators[:id]
+	return allocator.Close()
+}
+
+// RemoveAllAllocators removes all allocators, freeing all allocated memory.
+func (m *MemoryAllocationManager) RemoveAllAllocators() error {
+	for m.NumOfAllocators() > 0 {
+		if err := m.removeAllocator(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // AssertNoDeadAllocator returns an error containing the id of the dead allocator
 // if there is any.
 func (m *MemoryAllocationManager) AssertNoDeadAllocator() error {

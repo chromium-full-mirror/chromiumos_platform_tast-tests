@@ -19,7 +19,11 @@ import (
 // CanaryCloser is a function which closes opened canaries.
 type CanaryCloser func(ctx context.Context)
 
-func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, fs http.FileSystem) (CanaryCloser, error) {
+// IsCanaryStillAlive is a function that checks if the canary is still alive. If
+// there are any parts of a canary alive, it returns true.
+type IsCanaryStillAlive func(ctx context.Context) bool
+
+func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, fs http.FileSystem) (CanaryCloser, IsCanaryStillAlive, error) {
 	var bgTab *MemoryStressUnit
 	var protTab *MemoryStressUnit
 	closer := func(ctx context.Context) {
@@ -43,17 +47,20 @@ func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *brows
 	server := NewMemoryStressServer(fs)
 	bgTab = server.NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
 	if err := bgTab.Run(ctx, br); err != nil {
-		return nil, errors.Wrap(err, "failed to run background tab canary")
+		return nil, nil, errors.Wrap(err, "failed to run background tab canary")
 	}
 	protTab = server.NewMemoryStressUnit(allocMiB, ratio, 2*time.Second)
 	if err := protTab.Run(ctx, br); err != nil {
-		return nil, errors.Wrap(err, "failed to run protected background tab canary")
+		return nil, nil, errors.Wrap(err, "failed to run protected background tab canary")
 	}
 	failed = false
-	return closer, nil
+	stillAlive := func(ctx context.Context) bool {
+		return protTab.StillAlive(ctx, br) || bgTab.StillAlive(ctx, br)
+	}
+	return closer, stillAlive, nil
 }
 
-func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, error) {
+func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, IsCanaryStillAlive, error) {
 	var cacheApp *ArcLifecycleUnit
 	var previousApp *ArcLifecycleUnit
 	var percApp *ArcLifecycleUnit
@@ -80,12 +87,12 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 	}()
 
 	if err := InstallArcLifecycleTestApps(ctx, a, 4); err != nil {
-		return nil, errors.Wrap(err, "failed to install the test apps")
+		return nil, nil, errors.Wrap(err, "failed to install the test apps")
 	}
 
 	cacheApp = NewArcLifecycleUnit(0, int64(allocMiB), float64(ratio), nil, true)
 	if err := cacheApp.Run(ctx, a, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to run cached app canary")
+		return nil, nil, errors.Wrap(err, "failed to run cached app canary")
 	}
 
 	// The most recently minimized App will have a priority of PREVIOUS_APP_ADJ
@@ -93,20 +100,23 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 	// be >= CACHED_APP_MIN_ADJ.
 	previousApp = NewArcLifecycleUnit(1, 0, 1.0, nil, true)
 	if err := previousApp.Run(ctx, a, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to run previous app")
+		return nil, nil, errors.Wrap(err, "failed to run previous app")
 	}
 
 	percApp = NewArcLifecycleUnit(2, int64(allocMiB), float64(ratio), nil, false)
 	if err := percApp.Run(ctx, a, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to run perceptible app canary")
+		return nil, nil, errors.Wrap(err, "failed to run perceptible app canary")
 	}
 
 	fgApp = NewArcLifecycleUnit(3, int64(allocMiB), float64(ratio), nil, false)
 	if err := fgApp.Run(ctx, a, tconn); err != nil {
-		return nil, errors.Wrap(err, "failed to run foreground app canary")
+		return nil, nil, errors.Wrap(err, "failed to run foreground app canary")
 	}
 	failed = false
-	return closer, nil
+	stillAlive := func(ctx context.Context) bool {
+		return fgApp.StillAlive(ctx, a) || percApp.StillAlive(ctx, a) || cacheApp.StillAlive(ctx, a)
+	}
+	return closer, stillAlive, nil
 }
 
 // OpenAppTabCanaries opens app and tab canaries at various priorities.
@@ -117,7 +127,7 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 // fs        - FileSystem to initialize the memory stress server.
 // tconn     - Test connection to Chrome.
 // a         - ARC test object.
-func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, fs http.FileSystem, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, error) {
+func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *browser.Browser, fs http.FileSystem, tconn *chrome.TestConn, a *arc.ARC) (CanaryCloser, IsCanaryStillAlive, error) {
 	var tabCloser CanaryCloser
 	var appCloser CanaryCloser
 	closer := func(ctx context.Context) {
@@ -136,15 +146,19 @@ func OpenAppTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *br
 	}()
 
 	var err error
-	tabCloser, err = openTabCanaries(ctx, allocMiB, ratio, br, fs)
+	var tabStillAlive, appStillAlive IsCanaryStillAlive
+	tabCloser, tabStillAlive, err = openTabCanaries(ctx, allocMiB, ratio, br, fs)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	appCloser, err = openAppCanaries(ctx, allocMiB, ratio, tconn, a)
+	appCloser, appStillAlive, err = openAppCanaries(ctx, allocMiB, ratio, tconn, a)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	failed = false
-	return closer, nil
+	stillALive := func(ctx context.Context) bool {
+		return tabStillAlive(ctx) || appStillAlive(ctx)
+	}
+	return closer, stillALive, nil
 }
