@@ -6,6 +6,7 @@ package ossettings
 
 import (
 	"context"
+	"reflect"
 	"strings"
 	"time"
 
@@ -18,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
@@ -248,22 +248,29 @@ func (s *Service) KnownWifiNetworks(ctx context.Context, e *emptypb.Empty) (*pb.
 			return nil, errors.Wrapf(err, "failed to navigate to page %q", pageShortURL)
 		}
 
-		// Checking the node to ensure the page is loaded before retrieving the known networks.
-		if err := settings.WaitUntilExists(nodewith.Name("All networks").Role(role.StaticText))(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to wait until node exists")
+		var lastInfos, currentInfos []uiauto.NodeInfo
+		// Ensure the page is fully loaded before retrieving the nodes info.
+		// Wait until the results are the same for a two iterations of polling.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if currentInfos, err = settings.NodesInfo(ctx, MoreActionsButton); err != nil {
+				return errors.Wrap(err, "failed to retrieve the info of items in network list")
+			}
+
+			if !reflect.DeepEqual(lastInfos, currentInfos) {
+				lastInfos = currentInfos
+				return errors.New("the page is not stable yet")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: time.Minute, Interval: 3 * time.Second}); err != nil {
+			return nil, err
 		}
 
-		infos, err := settings.NodesInfo(ctx, MoreActionsButton)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to retrieve the info of items in network list")
+		nodesName := make([]string, 0, len(currentInfos))
+		for _, info := range currentInfos {
+			nodesName = append(nodesName, strings.TrimPrefix(info.Name, MoreActionsButtonNamePrefix))
 		}
-
-		res := &pb.KnownWifiNetworksResponse{
-			Ssids: make([]string, 0, len(infos)),
-		}
-		for _, info := range infos {
-			res.Ssids = append(res.Ssids, strings.TrimPrefix(info.Name, MoreActionsButtonNamePrefix))
-		}
-		return res, nil
+		return &pb.KnownWifiNetworksResponse{
+			Ssids: nodesName,
+		}, nil
 	})
 }

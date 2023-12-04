@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
+	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
@@ -66,15 +67,39 @@ func DisconnectFromNetwork(ctx context.Context, s *testing.State) {
 	}
 	defer crSvc.Close(cleanupCtx, &emptypb.Empty{})
 
+	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
 	var apForDisconnectBehavior, apForAutoConnectBehavior *wificell.APIface
+	var networkSSIDs []string
 	// To test the auto-connect behavior, the network to be auto-connected to should
 	// be connected first, and then attempt to connect to another network, making the
 	// second network become the currently connected network.
-	networksForTests := []**wificell.APIface{&apForAutoConnectBehavior, &apForDisconnectBehavior}
-	networkSSIDs := make([]string, 0, len(networksForTests))
 	defer tf.CleanDisconnectDUTFromWifi(cleanupCtx, wificell.DefaultDUT)
-	for _, networkAP := range networksForTests {
-		ap, err := tf.DefaultOpenNetworkAP(ctx)
+	for _, networkAP := range []struct {
+		ap          **wificell.APIface
+		apOptions   []hostapd.Option
+		autoConnect bool
+	}{
+		{
+			ap: &apForAutoConnectBehavior,
+			apOptions: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.Channel(1),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.SSID((hostapd.RandomSSID("auto_connect_network"))),
+			},
+			autoConnect: true,
+		}, {
+			ap: &apForDisconnectBehavior,
+			apOptions: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.Channel(48),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.SSID((hostapd.RandomSSID("disconnect_network"))),
+			},
+			autoConnect: false,
+		},
+	} {
+		ap, err := tf.ConfigureAP(ctx, networkAP.apOptions, nil)
 		if err != nil {
 			s.Fatal("Failed to configure the AP: ", err)
 		}
@@ -82,16 +107,24 @@ func DisconnectFromNetwork(ctx context.Context, s *testing.State) {
 		ctx, cancel = tf.ReserveForDeconfigAP(ctx, ap)
 		defer cancel()
 
-		var configProps = map[string]interface{}{}
-		// Disable auto-connect property if the network is not intended to be
-		// connected automatically.
-		if networkAP == &apForDisconnectBehavior {
-			configProps[shillconst.ServicePropertyAutoConnect] = false
-		}
-		if _, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap, dutcfg.ConnProperties(configProps)); err != nil {
+		var configProps = map[string]interface{}{shillconst.ServicePropertyAutoConnect: networkAP.autoConnect}
+		// Retry connecting to the network because connecting to a network might result in a failure
+		// when another auto-connect network is already connected before. (see b/320811867)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			expectProps := map[string]interface{}{
+				shillconst.ServicePropertyName:        ap.Config().SSID,
+				shillconst.ServicePropertyIsConnected: true,
+			}
+			if _, err := wifiClient.GetServicePath(ctx, expectProps); err != nil {
+				// Connect to the network if it is not already connected.
+				_, err = tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap, dutcfg.ConnProperties(configProps))
+				return err
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 5 * time.Second}); err != nil {
 			s.Fatal("Failed to connect to network: ", err)
 		}
-		*networkAP = ap
+		*networkAP.ap = ap
 		networkSSIDs = append(networkSSIDs, ap.Config().SSID)
 	}
 
@@ -124,7 +157,6 @@ func DisconnectFromNetwork(ctx context.Context, s *testing.State) {
 
 	// Verify the network will be auto-connected once the current connected
 	// network is disconnected.
-	wifiClient := tf.DUTWifiClient(wificell.DefaultDUT)
 	if err := wifiClient.WaitForConnected(ctx, apForAutoConnectBehavior.Config().SSID, true /* expectedValue */); err != nil {
 		s.Fatal("Failed to verify network is auto connected: ", err)
 	}
