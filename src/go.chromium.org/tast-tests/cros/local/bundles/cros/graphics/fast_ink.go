@@ -61,7 +61,6 @@ func init() {
 			"chromeos-wmp@google.com",
 			"zoraiznaeem@chromium.org",
 			"skau@chromium.org",
-			"amusbach@chromium.org",
 			"oshima@chromium.org",
 		},
 		BugComponent: "b:326525", // Research > Ink > Longform
