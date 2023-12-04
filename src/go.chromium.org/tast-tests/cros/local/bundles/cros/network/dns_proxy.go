@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -195,17 +193,6 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to setup DNS env: ", err)
 	}
 	defer env.Cleanup(cleanupCtx)
-
-	// TODO(b/309348359): Record the screen and save it on failure for debugging
-	// purposes. This can be removed after we understand the issue.
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to create screen recorder: ", err)
-	}
-	if err := screenRecorder.Start(ctx, tconn); err != nil {
-		s.Fatal("Failed to start create screen recorder: ", err)
-	}
-	defer uiauto.StopAndSaveOnError(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 	// Toggle plain-text DNS or secureDNS depending on test parameter.
 	cleanup, err := dns.SetDoHMode(ctx, cr, tconn, params.mode, dns.ExampleDoHProvider)
