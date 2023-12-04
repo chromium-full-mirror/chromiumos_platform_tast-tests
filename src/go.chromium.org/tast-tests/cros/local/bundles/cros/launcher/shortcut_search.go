@@ -40,6 +40,7 @@ func init() {
 			Key:   "feature_id",
 			Value: "screenplay-c7b23296-4a15-4460-afaf-c0203dc2c224",
 		}},
+		Timeout: 4 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "clamshell_mode",
 			Fixture: "chromeLoggedIn",
@@ -77,7 +78,7 @@ func ShortcutSearch(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find keyboard: ", err)
 	}
-	defer kb.Close(ctx)
+	defer kb.Close(cleanupCtx)
 
 	testCase := s.Param().(launcher.TestCase)
 	cleanup, err := launcher.SetUpLauncherTest(ctx, tconn, testCase.TabletMode, false /*stabilizeAppCount*/)
