@@ -188,9 +188,9 @@ func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string
 	// When switching between ChromeOS and Crostini, the device may not be available for some time. Therefore need to poll.
 	var mountPoint string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := cont.Command(ctx, "sudo", "blkid", "--label", label).Output(testexec.DumpLogOnError)
+		out, err := cont.Command(ctx, "sudo", "blkid", "--label", label).Output()
 		if err != nil {
-			return errors.Wrap(err, "failed to get mount point by label")
+			return errors.Wrapf(err, "failed to get mount point by label: %q", string(out))
 		}
 		if string(out) == "" {
 			return errors.Wrapf(err, "no mount points found for label %q", label)
@@ -205,6 +205,19 @@ func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string
 	}
 	if err := cont.Command(ctx, "fuse2fs", mountPoint, mountDir, "-o", "fakeroot").Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to mount mass storage device inside of the container")
+	}
+	// Mounting could take some time. Need to verify it is done before proceeding.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := cont.Command(ctx, "mount").Output()
+		if err != nil {
+			return errors.Wrapf(err, "failed to list mount points: %q", string(out))
+		}
+		if !strings.Contains(string(out), mountDir) {
+			return errors.Wrapf(err, "%s is not mounted on %s yet", mountPoint, mountDir)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
+		return nil, errors.Wrapf(err, "%s is not mounted on %s", mountPoint, mountDir)
 	}
 	isUnmounted := false
 	cleanup := func(ctx context.Context) error {
@@ -241,7 +254,10 @@ func setupMassStorage(ctx context.Context, label string) (string, action.Action,
 func mountOutside(ctx context.Context, mountPoint, dir string) (action.Action, error) {
 	// When switching between ChromeOS and Crostini, the device may not be available for some time. Therefore need to poll.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return testexec.CommandContext(ctx, "mount", mountPoint, dir).Run(testexec.DumpLogOnError)
+		if out, err := testexec.CommandContext(ctx, "mount", mountPoint, dir).Output(); err != nil {
+			return errors.Wrapf(err, "mount failed: %q", string(out))
+		}
+		return nil
 	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
 		return nil, errors.Wrap(err, "failed to mount the mass storage device")
 	}
@@ -262,7 +278,7 @@ func mountOutside(ctx context.Context, mountPoint, dir string) (action.Action, e
 func assertDeviceSharedState(ctx context.Context, cont *vm.Container, deviceID string, expectedSharedState bool) error {
 	// When switching between ChromeOS and Crostini, the device may not be available for some time. Therefore need to poll.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := cont.Command(ctx, "lsusb").CombinedOutput(testexec.DumpLogOnError)
+		out, err := cont.Command(ctx, "lsusb").Output()
 		if err != nil {
 			errors.Wrapf(err, "failed to run lsusb in the container: %q", string(out))
 		}
