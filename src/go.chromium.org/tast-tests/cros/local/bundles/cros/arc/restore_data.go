@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
@@ -22,22 +23,52 @@ import (
 )
 
 const (
-	androidDataDirPath = "/opt/google/containers/android/rootfs/android-data/data"
+	androidContainerDataDirPath = "/opt/google/containers/android/rootfs/android-data/data"
 )
 
-// rootDataDirPathSelector returns root Android data directory. Note, returned path is a host path.
-func rootDataDirPathSelector(ctx context.Context) (string, error) {
-	return androidDataDirPath, nil
+// rootContainerDataDirPathSelector returns root Android data directory. Note, returned path is a host path.
+func rootContainerDataDirPathSelector(ctx context.Context, user string) (string, error) {
+	return androidContainerDataDirPath, nil
 }
 
-// anyChildDataAppPathSelector returns any available child entry in Android /data/app directory.
+func rootVMDataDirPathSelector(ctx context.Context, user string) (string, error) {
+	androidDataDir, err := arc.AndroidDataDir(ctx, user)
+	if err != nil {
+		return "", err
+	}
+
+	return path.Join(androidDataDir, "data"), nil
+}
+
+func anyChildDataAppContainerPathSelector(ctx context.Context, user string) (string, error) {
+	appPath := path.Join(androidContainerDataDirPath, "app")
+	resultPath, err := getAnyChildDataAppPath(ctx, appPath)
+	if err != nil {
+		return "", err
+	}
+	return resultPath, nil
+}
+
+func anyChildDataAppVMPathSelector(ctx context.Context, user string) (string, error) {
+	rootDataDirPath, err := rootVMDataDirPathSelector(ctx, user)
+	if err != nil {
+		return "", err
+	}
+	appPath := path.Join(rootDataDirPath, "app")
+	resultPath, err := getAnyChildDataAppPath(ctx, appPath)
+	if err != nil {
+		return "", err
+	}
+	return resultPath, nil
+}
+
+// getAnyChildDataAppPath returns any available child entry in Android /data/app directory.
 // /data/app/ content is created when installing some app from external. For in-lab environmement
 // this might be any app from PlayAutoInstall list or PAI configuration apk itself. In addition
 // this test does not restrict app update, so GMS Core or Play Store app update may also be
 // installed in this folder.
 // Note, returned path is a host path.
-func anyChildDataAppPathSelector(ctx context.Context) (string, error) {
-	appPath := path.Join(androidDataDirPath, "app")
+func getAnyChildDataAppPath(ctx context.Context, appPath string) (string, error) {
 	resultPath := ""
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		entries, err := ioutil.ReadDir(appPath)
@@ -65,14 +96,24 @@ func init() {
 		BugComponent: "b:488493",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		// TODO(b/210155681) enable this for ARCVM once supported.
-		SoftwareDeps: []string{"chrome", "chrome_internal", "android_container"},
+		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
-			Name: "whole_data",
-			Val:  rootDataDirPathSelector,
+			Name:              "whole_data",
+			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               rootContainerDataDirPathSelector,
 		}, {
-			Name: "app_data",
-			Val:  anyChildDataAppPathSelector,
+			Name:              "app_data",
+			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               anyChildDataAppContainerPathSelector,
+		}, {
+			Name:              "whole_data_vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val:               rootVMDataDirPathSelector,
+		}, {
+			Name:              "app_data_vm",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val:               anyChildDataAppVMPathSelector,
 		}},
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",
@@ -85,12 +126,13 @@ func init() {
 // restore it. Second regular boot is done using recoverted /data and no restore data should
 // happen.
 func RestoreData(ctx context.Context, s *testing.State) {
-	creds, err := restoreDataInitialBoot(ctx, s.RequiredVar("ui.gaiaPoolDefault"))
+	cr, err := restoreDataInitialBoot(ctx, s.RequiredVar("ui.gaiaPoolDefault"))
 	if err != nil {
 		s.Fatal("Failed to do initial optin: ", err)
 	}
 
-	rootPath, err := s.Param().(func(context.Context) (string, error))(ctx)
+	creds := cr.Creds()
+	rootPath, err := s.Param().(func(context.Context, string) (string, error))(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to select root path: ", err)
 	}
@@ -104,19 +146,19 @@ func RestoreData(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Verify boot that requires data restore")
-	err = restoreDataRegularBoot(ctx, s.OutDir(), creds, true)
+	err = restoreDataRegularBoot(ctx, s.OutDir(), &creds, true)
 	if err != nil {
 		s.Fatal("Failed to do regular boot with data restore: ", err)
 	}
 
 	testing.ContextLog(ctx, "Verify boot that does not require data restore")
-	err = restoreDataRegularBoot(ctx, s.OutDir(), creds, false)
+	err = restoreDataRegularBoot(ctx, s.OutDir(), &creds, false)
 	if err != nil {
 		s.Fatal("Failed to do regular boot without data restore: ", err)
 	}
 }
 
-func restoreDataInitialBoot(ctx context.Context, credPool string) (*chrome.Creds, error) {
+func restoreDataInitialBoot(ctx context.Context, credPool string) (*chrome.Chrome, error) {
 	opts := []chrome.Option{
 		chrome.ARCSupported(),
 		chrome.GAIALoginPool(credPool),
@@ -143,8 +185,7 @@ func restoreDataInitialBoot(ctx context.Context, credPool string) (*chrome.Creds
 		testing.ContextLog(ctx, "Could not wait CPU is idle for the initial setup but continue")
 	}
 
-	creds := cr.Creds()
-	return &creds, nil
+	return cr, nil
 }
 
 // restoreDataRegularBoot performs ARC boot and waits data restore metrics are available.
