@@ -62,7 +62,8 @@ func CellularMigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	validAPNToMigrate := fmt.Sprintf("%v", knownAPNs[0].APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName])
+	apn := knownAPNs[0]
+	validAPNToMigrate := fmt.Sprintf("%v", apn.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName])
 	testing.ContextLog(ctx, "Custom APN to migrate: ", validAPNToMigrate)
 
 	func() {
@@ -90,7 +91,13 @@ func CellularMigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to select custom APN: ", err)
 		}
 
-		if err := ossettings.EnterPreRevampOtherAPNDetails(ctx, tconn, validAPNToMigrate, "", "", true); err != nil {
+		isAttach := false
+		for _, apnType := range apn.APNTypes {
+			if apnType == shillconst.DevicePropertyCellularAPNInfoApnTypeIA {
+				isAttach = true
+			}
+		}
+		if err := ossettings.EnterPreRevampOtherAPNDetails(ctx, tconn, validAPNToMigrate, "", "", isAttach); err != nil {
 			s.Fatal("Failed to enter custom APN: ", err)
 		}
 
