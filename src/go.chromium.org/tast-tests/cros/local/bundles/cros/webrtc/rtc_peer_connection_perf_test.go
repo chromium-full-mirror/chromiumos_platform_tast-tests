@@ -153,6 +153,11 @@ func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl)
 			// H264 temporal layer encoding is not supported for webrtc.
 			return true
 		}
+		if codec == "av1" && enc != swEnc {
+			// AV1 temporal layer encoding is not supported by a hardware encoder.
+			return true
+		}
+
 	case l2t3key, l3t3key:
 		if codec != "vp9" {
 			// Spatial layer encoding is supported only in vp9.
