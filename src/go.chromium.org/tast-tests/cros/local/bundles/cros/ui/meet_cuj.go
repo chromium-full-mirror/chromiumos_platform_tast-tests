@@ -436,39 +436,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 			},
-			// 4p Meet variants.
-			{
-				Name:      "4p_present_notes_split",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
-				// Skip devices without cameras to see which devices in lab can run this variant.
-				ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
-				Val: meetTest{
-					bots:        []int{3},
-					layout:      googlemeet.TiledLayout,
-					present:     true,
-					docs:        true,
-					split:       true,
-					cam:         true,
-					browserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
-				Name:      "lacros_4p_present_notes_split",
-				Timeout:   defaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
-				Val: meetTest{
-					bots:        []int{3},
-					layout:      googlemeet.TiledLayout,
-					present:     true,
-					docs:        true,
-					split:       true,
-					cam:         true,
-					browserType: browser.TypeLacros,
-				},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-			},
 			{
 				Name:      "16p_enterprise",
 				Timeout:   defaultTestTimeout,
@@ -571,6 +538,37 @@ func init() {
 				Fixture: "loggedInToCUJUserWithFieldTrialsAndWebRTCEventLogging",
 			},
 			// Inactive variants. No group should be specified for these tests.
+			// 4p Meet variants.
+			{
+				Name:      "4p_present_notes_split",
+				Timeout:   defaultTestTimeout,
+				// Skip devices without cameras to see which devices in lab can run this variant.
+				ExtraSoftwareDeps: []string{caps.BuiltinOrVividCamera},
+				Val: meetTest{
+					bots:        []int{3},
+					layout:      googlemeet.TiledLayout,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+			}, {
+				Name:      "lacros_4p_present_notes_split",
+				Timeout:   defaultTestTimeout,
+				Val: meetTest{
+					bots:        []int{3},
+					layout:      googlemeet.TiledLayout,
+					present:     true,
+					docs:        true,
+					split:       true,
+					cam:         true,
+					browserType: browser.TypeLacros,
+				},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
 			{
 				Name:    "4p_enterprise",
 				Timeout: defaultTestTimeout,
