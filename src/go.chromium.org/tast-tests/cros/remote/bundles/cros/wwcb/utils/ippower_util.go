@@ -15,16 +15,24 @@ import (
 )
 
 var (
-	user       = "admin"
-	password   = "12345678"
+	// user is the default login user name of the IP Power 9858MT.
+	user = "admin"
+
+	// password is the default login password of the IP Power 9858MT.
+	password = "12345678"
+
+	// minPortNum is the minimum number of 4 ports of IP Power 9858MT.
 	minPortNum = 1
+
+	// minPortNum is the maximum number of 4 ports of IP Power 9858MT.
 	maxPortNum = 4
 )
 
+// wwcbIPPowerIP is a variable to set IP address of IP Power 9858MT to send HTTP request in WWCB tests.
 var wwcbIPPowerIP = testing.RegisterVarString(
 	"utils.wwcbIPPowerIp",
 	"192.168.1.168",
-	"WWCB test ippower ip",
+	"A variable to set IP address of IP Power 9858MT to send HTTP request in WWCB tests.",
 )
 
 // OpenIppower is for open ip power.
