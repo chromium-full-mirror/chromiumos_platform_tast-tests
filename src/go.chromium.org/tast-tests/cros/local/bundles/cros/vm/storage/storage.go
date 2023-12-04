@@ -152,7 +152,7 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt 
 		vm.SharedDir(
 			vm.SharedDirParam{
 				Src:       "/",
-				Tag:       "root",
+				Tag:       "/dev/root",
 				FsType:    "fs",
 				Cache:     "always",
 				Timeout:   5,

@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/storage"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/tracing"
@@ -41,6 +42,7 @@ var enableTraceCmdVar = testing.RegisterVarString(
 
 type manyFilesParams struct {
 	kind     string
+	kernel   string
 	cache    string
 	caseFold bool
 }
@@ -54,7 +56,7 @@ func init() {
 		BugComponent: "b:1248538",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Data:         []string{runManyFiles},
-		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
+		SoftwareDeps: []string{"vm_host", "chrome"},
 		Vars: []string{
 			// Specify guest kernel (if not provided use termina dlc)
 			"vm.ManyFiles.kernelPath",
@@ -62,51 +64,128 @@ func init() {
 			"vm.ManyFiles.enableTraceCmd",
 		},
 		Timeout: 20 * time.Minute,
-		Fixture: "vmDLC",
 		Params: []testing.Param{
 			{
 				// TODO(b/275507715): Add variant with casefold enabled.
 				Name: "block",
 				Val: manyFilesParams{
-					kind: "block",
+					kind:   "block",
+					kernel: "arcvm",
 				},
+				Fixture:           "chromeLoggedIn",
+				ExtraSoftwareDeps: []string{"android_vm"},
 			},
 			{
 				Name: "block_lvm",
 				Val: manyFilesParams{
-					kind: "block_lvm",
+					kind:   "block_lvm",
+					kernel: "arcvm",
 				},
-				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+				Fixture:           "chromeLoggedIn",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			},
+			{
+				// TODO(b/275507715): Add variant with casefold enabled.
+				Name: "block_termina",
+				Val: manyFilesParams{
+					kind:   "block",
+					kernel: "termina",
+				},
+				Fixture:           "vmDLC",
+				ExtraSoftwareDeps: []string{"dlc"},
+			},
+			{
+				Name: "block_lvm_termina",
+				Val: manyFilesParams{
+					kind:   "block_lvm",
+					kernel: "termina",
+				},
+				Fixture:           "vmDLC",
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition", "dlc"},
 			},
 			{
 				Name: "virtiofs",
 				Val: manyFilesParams{
-					kind:  "virtiofs",
-					cache: "auto",
+					kind:   "virtiofs",
+					kernel: "arcvm",
+					cache:  "auto",
 				},
+				Fixture:           "chromeLoggedIn",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			},
+			{
+				Name: "virtiofs_termina",
+				Val: manyFilesParams{
+					kind:   "virtiofs",
+					kernel: "termina",
+					cache:  "auto",
+				},
+				Fixture:           "vmDLC",
+				ExtraSoftwareDeps: []string{"dlc"},
 			},
 			{
 				Name: "virtiofs_casefold",
 				Val: manyFilesParams{
 					kind:     "virtiofs",
+					kernel:   "arcvm",
 					cache:    "auto",
 					caseFold: true,
 				},
+				Fixture:           "chromeLoggedIn",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			},
+			{
+				Name: "virtiofs_casefold_termina",
+				Val: manyFilesParams{
+					kind:     "virtiofs",
+					kernel:   "termina",
+					cache:    "auto",
+					caseFold: true,
+				},
+				Fixture:           "vmDLC",
+				ExtraSoftwareDeps: []string{"dlc"},
 			},
 			{
 				Name: "virtiofs_cached",
 				Val: manyFilesParams{
-					kind:  "virtiofs",
-					cache: "always",
+					kind:   "virtiofs",
+					kernel: "arcvm",
+					cache:  "always",
 				},
+				Fixture:           "chromeLoggedIn",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			},
+			{
+				Name: "virtiofs_cached_termina",
+				Val: manyFilesParams{
+					kind:   "virtiofs",
+					kernel: "termina",
+					cache:  "always",
+				},
+				Fixture:           "vmDLC",
+				ExtraSoftwareDeps: []string{"dlc"},
 			},
 			{
 				Name: "virtiofs_cached_casefold",
 				Val: manyFilesParams{
 					kind:     "virtiofs",
+					kernel:   "arcvm",
 					cache:    "always",
 					caseFold: true,
 				},
+				Fixture:           "chromeLoggedIn",
+				ExtraSoftwareDeps: []string{"android_vm"},
+			},
+			{
+				Name: "virtiofs_cached_casefold_termina",
+				Val: manyFilesParams{
+					kind:     "virtiofs",
+					kernel:   "termina",
+					cache:    "always",
+					caseFold: true,
+				},
+				Fixture:           "vmDLC",
+				ExtraSoftwareDeps: []string{"dlc"},
 			},
 		},
 	})
@@ -168,12 +247,6 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
-	data := s.FixtValue().(dlc.FixtData)
-	kernelPath := data.Kernel
-	if kernelPathOverride, ok := s.Var("vm.ManyFiles.kernelPath"); ok {
-		kernelPath = kernelPathOverride
-	}
-
 	// Create a temporary directory that shared with the guest so the guest can put test logs.
 	td, err := ioutil.TempDir("/usr/local/tmp", "tast.vm.ManyFiles.")
 	if err != nil {
@@ -181,9 +254,28 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(td)
 
+	p := s.Param().(manyFilesParams)
+
+	kernelPath := ""
+	username := ""
+
+	if p.kernel == "termina" {
+		data := s.FixtValue().(dlc.FixtData)
+		username = data.Chrome.NormalizedUser()
+		kernelPath = data.Kernel
+	} else if p.kernel == "arcvm" {
+		username = s.FixtValue().(chrome.HasChrome).Chrome().NormalizedUser()
+		kernelPath = "/opt/google/vms/android/vmlinux"
+	} else {
+		s.Fatal("Failed to identify guest kernel: ", p.kernel)
+	}
+
+	if kernelPathOverride, ok := s.Var("vm.ManyFiles.kernelPath"); ok {
+		kernelPath = kernelPathOverride
+	}
+
 	// Create a temporary directory on the encrypted file system on `/home/root/${user hash}/`.
 	// This directory will be accessed by FIO.
-	username := data.Chrome.NormalizedUser()
 	rootCryptDir, err := cryptohome.SystemPath(ctx, username)
 	if err != nil {
 		s.Fatal("Failed to get the cryptohome directory: ", err)
@@ -191,7 +283,6 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	ud, err := ioutil.TempDir(rootCryptDir, "tast.vm.ManyFiles.")
 	defer os.RemoveAll(ud)
 
-	p := s.Param().(manyFilesParams)
 	opt, err := storage.NewOption(p.kind, p.cache, p.caseFold)
 	if err != nil {
 		s.Fatal("Failed to create storage option: ", err)
