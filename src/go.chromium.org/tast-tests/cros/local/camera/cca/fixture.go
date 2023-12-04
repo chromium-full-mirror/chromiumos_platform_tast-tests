@@ -115,36 +115,12 @@ func init() {
 		TearDownTimeout: tearDownTimeout,
 	})
 
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithFakeVCDCameraFieldTrialConfigOn",
-		Desc:            "Launched CCA with fake VCD camera input with field trial config enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: chrome.FieldTrialConfigEnable},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
 	// TODO(http://b/275895388): Remove after feature launch.
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaLaunchedWithHoldingSpaceIntegrationEnabled",
 		Desc:            "Launched CCA with holding space integration enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "cros-system-ui-eng@google.com", "dmblack@google.com"},
 		Impl:            &fixture{launchCCA: true, enableFeatures: []feature{"HoldingSpaceCameraAppIntegration"}},
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    testBridgeSetUpTimeout,
-		PreTestTimeout:  ccaSetUpTimeout,
-		PostTestTimeout: ccaTearDownTimeout,
-		TearDownTimeout: tearDownTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "ccaLaunchedWithFakeVCDCameraFieldTrialConfigOff",
-		Desc:            "Launched CCA with fake VCD camera input with field trial config disabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
-		Impl:            &fixture{useCameraType: testutil.UseFakeVCDCamera, launchCCA: true, fieldTrialConfig: chrome.FieldTrialConfigDisable},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		PreTestTimeout:  ccaSetUpTimeout,
@@ -225,7 +201,7 @@ func init() {
 		PostTestTimeout: ccaTearDownTimeout,
 		TearDownTimeout: tearDownTimeout,
 		// Add AloopLoaded as parent since we need to verify the sound using audio loopback.
-		Parent:          audioFixture.AloopLoaded{Channels: 2}.Instance(),
+		Parent: audioFixture.AloopLoaded{Channels: 2}.Instance(),
 	})
 
 	testing.AddFixture(&testing.Fixture{
@@ -361,7 +337,6 @@ type fixture struct {
 	enableFeatures         []feature
 	disableFeatures        []feature
 	screenRecorder         *uiauto.ScreenRecorder
-	fieldTrialConfig       chrome.FieldTrialConfigMode
 	tabletIP               string
 }
 
@@ -379,7 +354,6 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	for _, f := range f.disableFeatures {
 		chromeOpts = append(chromeOpts, chrome.DisableFeatures(string(f)))
 	}
-	chromeOpts = append(chromeOpts, chrome.FieldTrialConfig(f.fieldTrialConfig))
 
 	// Always enable doc scan DLC flag for testing.
 	// TODO(b/226262670): Remove this line once the doc scan DLC is completely enabled.

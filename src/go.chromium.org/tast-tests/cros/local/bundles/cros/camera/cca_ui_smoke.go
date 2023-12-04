@@ -49,16 +49,6 @@ func init() {
 			ExtraAttr: []string{"group:camera-postsubmit", "informational"},
 			Val:       none,
 		}, {
-			Name:      "fake_vcd_fieldtrial_testing_config_on",
-			Fixture:   "ccaLaunchedWithFakeVCDCameraFieldTrialConfigOn",
-			ExtraAttr: []string{"group:cq-medium"},
-			Val:       none,
-		}, {
-			Name:      "fake_vcd_fieldtrial_testing_config_off",
-			Fixture:   "ccaLaunchedWithFakeVCDCameraFieldTrialConfigOff",
-			ExtraAttr: []string{"group:cq-medium"},
-			Val:       none,
-		}, {
 			Name:    "photo_fake_vcd",
 			Fixture: "ccaLaunchedWithFakeVCDCamera",
 			Val:     photoTaking,
