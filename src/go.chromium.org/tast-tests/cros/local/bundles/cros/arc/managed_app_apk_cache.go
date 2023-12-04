@@ -64,7 +64,12 @@ func init() {
 			},
 			{
 				Name:              "vm",
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "x",
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
@@ -246,8 +251,8 @@ func waitForCacheSizeToIncrease(ctx context.Context, rl *retry.Loop) error {
 }
 
 func waitForCacheSessionsToClose(ctx context.Context, s *testing.State, a *arc.ARC) error {
-	createdSessionRegEx  := createdSessionPrefix + "[id=[0-9]+"
-	closedSessionRegEx   := closedSessionPrefix + "[0-9]+"
+	createdSessionRegEx := createdSessionPrefix + "[id=[0-9]+"
+	closedSessionRegEx := closedSessionPrefix + "[0-9]+"
 
 	grepArg := fmt.Sprintf("-E \"(%s)|(%s)\"", createdSessionRegEx, closedSessionRegEx)
 	logcat, err := a.OutputLogcatGrep(ctx, grepArg)
@@ -267,7 +272,7 @@ func waitForCacheSessionsToClose(ctx context.Context, s *testing.State, a *arc.A
 
 func getOpenSessionIds(s *testing.State, logcat []byte) []string {
 	createdSessionRegEx := createdSessionPrefix + "\\[id=([0-9]+)"
-	closedSessionRegEx  := closedSessionPrefix + "([0-9]+)"
+	closedSessionRegEx := closedSessionPrefix + "([0-9]+)"
 
 	createdSessionIds := getSessionIds(s, createdSessionRegEx, string(logcat))
 	closedSessionIds := getSessionIds(s, closedSessionRegEx, string(logcat))
@@ -294,9 +299,9 @@ func getDifference(a, b map[string]bool) []string {
 		if _, ok := b[key]; !ok {
 			// Add any keys in a that are not in b.
 			diff = append(diff, key)
-	   }
+		}
 	}
-    return diff
+	return diff
 }
 
 func dumpLogcatToOutDir(ctx context.Context, s *testing.State, a *arc.ARC, fileName string) {

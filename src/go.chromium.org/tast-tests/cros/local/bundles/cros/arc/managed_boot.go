@@ -57,7 +57,13 @@ func init() {
 			{
 				Name:              "disabled_vm",
 				Val:               arcDisabled,
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+			},
+			{
+				Name:              "disabled_x",
+				Val:               arcDisabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "disabled_betty_vm",
@@ -79,7 +85,13 @@ func init() {
 			{
 				Name:              "enabled_vm",
 				Val:               arcEnabled,
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name:              "enabled_x",
+				Val:               arcEnabled,
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{

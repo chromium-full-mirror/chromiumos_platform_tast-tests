@@ -59,7 +59,16 @@ func init() {
 					playStoreMode: arcent.PlayStoreModeAllowList,
 					shouldBeEmpty: true,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "allowlist_x",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeAllowList,
+					shouldBeEmpty: true,
+				},
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
@@ -94,7 +103,16 @@ func init() {
 					playStoreMode: arcent.PlayStoreModeBlockList,
 					shouldBeEmpty: false,
 				},
-				ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "blocklist_x",
+				Val: managedPlayStoreModeArgs{
+					playStoreMode: arcent.PlayStoreModeBlockList,
+					shouldBeEmpty: false,
+				},
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
 			},
 			{
