@@ -9,6 +9,7 @@ import (
 	"encoding/base64"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
@@ -36,10 +37,8 @@ func init() {
 			"dclasson@google.com",
 		},
 		BugComponent: "b:1133283",
-		Attr: []string{
-			"group:bluetooth",
-			"bluetooth_cross_device_fastpair_multidut",
-		},
+		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair_multidut"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep),
 		ServiceDeps: []string{

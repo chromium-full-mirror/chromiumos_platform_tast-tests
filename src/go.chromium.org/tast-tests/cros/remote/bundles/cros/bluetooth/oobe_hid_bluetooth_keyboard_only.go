@@ -37,10 +37,8 @@ func init() {
 		},
 		VarDeps:      []string{"servo"},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr: []string{
-			"group:bluetooth",
-			"bluetooth_btpeers_1",
-		},
+		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_1"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.ui.AutomationService",
@@ -48,7 +46,6 @@ func init() {
 			"tast.cros.bluetooth.BluetoothService",
 		},
 		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
-		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled_keyboard",

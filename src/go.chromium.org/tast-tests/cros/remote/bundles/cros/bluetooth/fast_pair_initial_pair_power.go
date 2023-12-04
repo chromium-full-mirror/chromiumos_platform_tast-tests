@@ -27,10 +27,8 @@ func init() {
 			"jiangzp@google.com",
 		},
 		BugComponent: "b:1133283", // ChromeOS > Software > System Services > Cross Device > Fast Pair
-		Attr: []string{
-			"group:bluetooth",
-			"bluetooth_cross_device_fastpair",
-		},
+		Attr:         []string{"group:bluetooth", "bluetooth_cross_device_fastpair"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(bluetooth.FastPairHardwareDep, hwdep.Battery()),
 		ServiceDeps: []string{
@@ -38,9 +36,8 @@ func init() {
 			"tast.cros.bluetooth.BluetoothUIService",
 			"tast.cros.power.MetricsService",
 		},
-		TestBedDeps: []string{tbdep.WorkingBluetoothPeers(1)},
-		Timeout:     12 * time.Minute,
-		Vars:        []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
+		Timeout: 12 * time.Minute,
+		Vars:    []string{bluetooth.TestVarFastPairAntispoofingKeyPem},
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled",

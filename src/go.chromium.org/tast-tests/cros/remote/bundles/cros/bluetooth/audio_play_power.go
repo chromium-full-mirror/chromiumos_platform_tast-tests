@@ -31,20 +31,17 @@ func init() {
 			"jiangzp@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr: []string{
-			"group:bluetooth",
-			"bluetooth_btpeers_1",
-		},
+		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_1"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService", "tast.cros.power.MetricsService", "tast.cros.ui.AudioService"},
-		TestBedDeps:  []string{tbdep.WorkingBluetoothPeers(1)},
 		HardwareDeps: hwdep.D(hwdep.Battery()),
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name:              "floss_disabled",
-				Fixture:           "audioUIEnabledWith1BTPeerPowerFlossDisabled",
-				ExtraAttr:         []string{"bluetooth_flaky"},
+				Name:      "floss_disabled",
+				Fixture:   "audioUIEnabledWith1BTPeerPowerFlossDisabled",
+				ExtraAttr: []string{"bluetooth_flaky"},
 			},
 			{
 				Name:              "floss_enabled",

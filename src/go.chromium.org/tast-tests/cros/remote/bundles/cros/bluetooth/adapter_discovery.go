@@ -26,13 +26,10 @@ func init() {
 			"cros-connectivity@google.com",
 		},
 		BugComponent: "b:167317", // ChromeOS > Platform > Connectivity > Bluetooth
-		Attr: []string{
-			"group:bluetooth",
-			"bluetooth_btpeers_1",
-		},
-		ServiceDeps: []string{"tast.cros.bluetooth.BluetoothService"},
-		TestBedDeps: []string{tbdep.WorkingBluetoothPeers(1)},
-		Timeout:     3 * time.Minute,
+		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_1"},
+		ServiceDeps:  []string{"tast.cros.bluetooth.BluetoothService"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
+		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
 			{
 				Name:      "floss_disabled_classic_mouse",
