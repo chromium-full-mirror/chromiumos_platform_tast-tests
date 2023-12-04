@@ -355,6 +355,26 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
 			},
+			{
+				Name:    "bmark",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.BmarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				Name:    "lacros_bmark",
+				Timeout: defaultTimeout,
+				Fixture: "loggedInToCUJUserLacrosWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.BmarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
 		},
 	})
 }
