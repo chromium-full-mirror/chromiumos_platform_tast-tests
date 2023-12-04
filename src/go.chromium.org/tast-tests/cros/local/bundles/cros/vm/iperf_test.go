@@ -18,23 +18,44 @@ func TestIperf(t *testing.T) {
 		Name     string
 		VqType   virtqueueType
 		Protocol netProtocol
+		Kernel   guestKernel
+		Dep      string
+		Fixture  string
 	}
 
 	vqTypes := []virtqueueType{split, packed}
 	protocols := []netProtocol{tcp, udp, udpReverse}
+	kernels := []guestKernel{arcvm, termina}
 
 	var params []paramData
 	for _, vt := range vqTypes {
 		for _, protocol := range protocols {
-			protocolName := fmt.Sprintf("%s", protocol)
-			if protocol == udpReverse {
-				protocolName = "udp_reverse"
+			for _, kernel := range kernels {
+				dep := ""
+				fixture := ""
+
+				protocolName := fmt.Sprintf("%s", protocol)
+				if protocol == udpReverse {
+					protocolName = "udp_reverse"
+				}
+
+				if kernel == termina {
+					dep = "dlc"
+					fixture = "vmDLC"
+				} else if kernel == arcvm {
+					dep = "android_vm"
+					fixture = "chromeLoggedIn"
+				}
+
+				params = append(params, paramData{
+					Name:     fmt.Sprintf("%s_%s_%s", protocolName, vt, kernel),
+					VqType:   vt,
+					Protocol: protocol,
+					Kernel:   kernel,
+					Dep:      dep,
+					Fixture:  fixture,
+				})
 			}
-			params = append(params, paramData{
-				Name:     fmt.Sprintf("%s_%s", protocolName, vt),
-				VqType:   vt,
-				Protocol: protocol,
-			})
 		}
 	}
 
@@ -44,7 +65,10 @@ func TestIperf(t *testing.T) {
 			Val: iperfParam{
 				vqType: {{ .VqType }},
 				protocol: {{ .Protocol }},
+				kernel: {{ .Kernel }},
 			},
+			Fixture: {{ .Fixture | fmt }} ,
+			ExtraSoftwareDeps: []string { {{ .Dep | fmt }} },
 		},
 		{{ end }}`,
 		params)
