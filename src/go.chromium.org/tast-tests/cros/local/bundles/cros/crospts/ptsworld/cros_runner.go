@@ -69,6 +69,4 @@ func (r *CrosRunner) RunTestSuite(ctx context.Context, s *testing.State, suiteNa
 		ptsBatchRun = "/phoronix-test-suite/phoronix-test-suite batch-benchmark"
 	)
 	r.PtsWorldShell(ctx, s, fmt.Sprintf("%s %s %s", ptsFlags, ptsBatchRun, suiteName))
-
-	// TODO(darrenwu): Add test results xml format convert to results-chart.json
 }

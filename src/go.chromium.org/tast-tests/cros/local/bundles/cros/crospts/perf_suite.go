@@ -9,12 +9,14 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crospts/ptsworld"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/crospts/ptsworld/metrics"
 	"go.chromium.org/tast/core/testing"
 )
 
 type perfSuite struct {
-	runner    ptsworld.Runner
-	suiteName string
+	runner        ptsworld.Runner
+	suiteName     string
+	resultsParser *metrics.ResultsParser
 }
 
 func init() {
@@ -30,8 +32,9 @@ func init() {
 			Name:    "all_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
 			Val: &perfSuite{
-				runner:    ptsworld.NewCrosRunner(),
-				suiteName: "cros-core-performance",
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "cros-core-performance",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
 			// TODO(darrenwu): The test time was tested on brya. Need to run the
 			// test on other low end DUT.
@@ -40,13 +43,37 @@ func init() {
 			Name:    "all_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
 			Val: &perfSuite{
-				runner:    ptsworld.NewCrosRunner(),
-				suiteName: "cros-core-performance",
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "cros-core-performance",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
 			// TODO(darrenwu): The test time was tested on cherry. Need to run the
 			// test on other low end DUT.
 			Timeout: 4 * time.Hour,
-		}},
+		}, {
+			Name:    "leveldb_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "leveldb-1.0.2",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			// TODO(darrenwu): The test time was tested on brya. Need to run the
+			// test on other low end DUT.
+			Timeout: 40 * time.Minute,
+		}, {
+			Name:    "leveldb_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "leveldb-1.0.2",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			// TODO(darrenwu): The test time was tested on cherry. Need to run the
+			// test on other low end DUT.
+			Timeout: 1 * time.Hour,
+		},
+		},
 	})
 }
 
@@ -55,4 +82,8 @@ func PerfSuite(ctx context.Context, s *testing.State) {
 	perfSuite := s.Param().(*perfSuite)
 	s.Logf("Running perf test suite: %s", perfSuite.suiteName)
 	perfSuite.runner.RunTestSuite(ctx, s, perfSuite.suiteName)
+	err := perfSuite.resultsParser.ConvertMetrics(s.OutDir())
+	if err != nil {
+		s.Error("Failed to convert metrics: ", err)
+	}
 }
