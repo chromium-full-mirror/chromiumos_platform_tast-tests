@@ -10,6 +10,8 @@ mno {
     mccmnc: "99970"  # Test network
     mccmnc: "23415"  # VodafoneUK
     mccmnc: "23430"  # EEUK
+    mccmnc: "302220" # Telus
+    mccmnc: "302720" # Rogers
     mccmnc: "310260" # Tmobile
     mccmnc: "311882" # Tmobile
     mccmnc: "310280" # ATT
