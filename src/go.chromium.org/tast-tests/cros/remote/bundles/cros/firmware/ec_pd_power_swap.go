@@ -58,6 +58,13 @@ func init() {
 				DTS:      firmware.DTSModeOff,
 				Shutdown: false,
 			},
+		}, {
+			Name: "shutdown",
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: true,
+			},
 		}}, []string{"group:firmware", "firmware_pd"}),
 	})
 }
@@ -78,6 +85,12 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}
 
 	testParams := s.Param().(firmware.PDTestParams)
+
+	if testParams.Shutdown {
+		if err := firmware.ShutdownDUT(ctx, h); err != nil {
+			s.Fatal("Could not shut down DUT: ", err)
+		}
+	}
 
 	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
