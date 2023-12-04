@@ -13,7 +13,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,11 +24,11 @@ const (
 )
 
 // RunGetDisplayMedia drives the code verifying the getDisplayMedia functionality.
-func RunGetDisplayMedia(ctx context.Context, s *testing.State, cr *chrome.Chrome, surfaceType string) error {
+func RunGetDisplayMedia(ctx context.Context, s *testing.State, cs ash.ConnSource, surfaceType string) error {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	conn, err := cr.NewConn(ctx, server.URL+"/"+htmlFile)
+	conn, err := cs.NewConn(ctx, server.URL+"/"+htmlFile)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %v", htmlFile)
 	}
