@@ -454,9 +454,12 @@ func (a *DUTControlAndreiboard) GscUsbI2cInterfaceTransaction(ctx context.Contex
 
 // GscUsbSpiInterfaceTransaction write the requested bytes to the GSC SPI USB
 // interface and returns the response. This method only supports small data
-// sizes for simple interactions.
+// sizes for simple interactions. An inner context is used with a 3 second
+// timeout since we expect responses quickly.
 func (a *DUTControlAndreiboard) GscUsbSpiInterfaceTransaction(ctx context.Context, request []byte) (response []byte, err error) {
 	req := &dutcontrol.GscUsbTransactionRequest{Iface: dutcontrol.GscUsbInterface_SPI_USB_INTERFACE, RequestData: request}
+	ctx, cancel := context.WithTimeout(ctx, time.Duration(time.Second*3))
+	defer cancel()
 	rsp, err := a.client.GscUsbTransaction(ctx, req)
 	if err != nil {
 		return nil, err
