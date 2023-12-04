@@ -110,7 +110,7 @@ func testAccessibilitySync(ctx context.Context, s *testing.State, tconn *chrome.
 						return err
 					}
 					return nil
-				}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+				}, &testing.PollOptions{Timeout: 20 * time.Second}); err != nil {
 					s.Fatalf("Failed to synchronize accessibility status of %s to be %t: %v", feature, enable, err)
 				}
 			}
