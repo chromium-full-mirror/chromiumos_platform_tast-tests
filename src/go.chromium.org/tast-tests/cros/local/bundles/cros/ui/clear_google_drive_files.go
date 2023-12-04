@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
@@ -84,7 +83,7 @@ func clearAccountFiles(ctx context.Context, s *testing.State, account, password 
 	}
 	defer kb.Close(ctx)
 
-	if err := selectYesterdayFilter(ctx, tconn, kb); err != nil {
+	if err := selectYesterdayFilter(ctx, tconn); err != nil {
 		s.Fatal("Failed to select filter: ", err)
 	}
 
@@ -101,7 +100,7 @@ func clearAccountFiles(ctx context.Context, s *testing.State, account, password 
 	row1 := nodewith.Role(role.Row).First()
 	signedOutText := nodewith.Name("You are not signed in").Role(role.StaticText)
 	hideDetailsButton := nodewith.Name("Hide Details").Role(role.Button)
-	reloadButton := nodewith.Name("Reload").Role(role.Button)
+	reloadButton := nodewith.Name("Reload").Role(role.Button).First()
 	closeDialogButton := nodewith.Name("Close").Role(role.Button).Ancestor(nodewith.Role(role.Dialog))
 	moveToTrashButton := nodewith.NameRegex(regexp.MustCompile(`(Move to trash|Remove)`)).Role(role.Button).First()
 
@@ -155,16 +154,16 @@ func clearAccountFiles(ctx context.Context, s *testing.State, account, password 
 	}
 }
 
-func selectYesterdayFilter(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+func selectYesterdayFilter(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 	modifiedButton := nodewith.Name("Modified").Role(role.Button)
 	customDateRangeCheckBox := nodewith.Name("Custom date range").Role(role.MenuItemCheckBox)
 	beforeButton := nodewith.Name("Before with no date selected").Role(role.Button)
 	calendarRegion := nodewith.Name("Calendar").Role(role.Region)
 	yesterday := time.Now().AddDate(0, 0, -1)
-	yesterdayStr := fmt.Sprintf("%d-%d-%d", yesterday.Year(), yesterday.Month(), yesterday.Day())
-	yesterdayButtonStr := strconv.FormatInt(int64(yesterday.Day()), 10)
-	yesterdayButton := nodewith.NameContaining(yesterdayButtonStr).Role(role.Button).Ancestor(calendarRegion)
+	yesterdayStr := fmt.Sprintf("%d-%d-%.2d", yesterday.Year(), yesterday.Month(), yesterday.Day())
+	yesterdayButtonStr := fmt.Sprintf("%s %.2d", yesterday.Month().String(), yesterday.Day())
+	yesterdayButton := nodewith.Name(yesterdayButtonStr).Role(role.Button).Ancestor(calendarRegion).First()
 	yesterdayText := nodewith.Name(yesterdayStr).Role(role.StaticText)
 	applyButton := nodewith.Name("Apply").Role(role.Button)
 
@@ -176,7 +175,7 @@ func selectYesterdayFilter(ctx context.Context, tconn *chrome.TestConn, kb *inpu
 		func(ctx context.Context) error {
 			previousMonth := nodewith.Name("previous month").Role(role.Button)
 			if time.Now().Day() == 1 {
-				return ui.DoDefault(previousMonth)(ctx)
+				return uiauto.NamedAction("select previous month", ui.DoDefault(previousMonth))(ctx)
 			}
 			return nil
 		},
