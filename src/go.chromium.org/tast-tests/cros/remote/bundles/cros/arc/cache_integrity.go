@@ -38,7 +38,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome"},
+		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "no_arc_userdebug"},
 		Data:         []string{erofsUtilsZip},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},

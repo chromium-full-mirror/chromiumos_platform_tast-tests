@@ -148,7 +148,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
-		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "chrome_internal"},
+		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "chrome_internal", "no_arc_userdebug"},
 		ServiceDeps: []string{"tast.cros.arc.UreadaheadPackService",
 			"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService", "tast.cros.arc.DexOptCacheService"},
 		Timeout: 50 * time.Minute,

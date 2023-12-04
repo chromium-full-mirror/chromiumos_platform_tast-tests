@@ -33,7 +33,7 @@ func init() {
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "no_arc_userdebug"},
 		Params: []testing.Param{{
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
