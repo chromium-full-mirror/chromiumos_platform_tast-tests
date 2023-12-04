@@ -232,22 +232,25 @@ func CreateSaveUploadPowerLog(ctx context.Context, outDir, testName, fileSuffix 
 
 // CreatePowerLogAndUpdatePerfValues updates perf values with additional power
 // metrics and converts perf values to power log.
-// Perf values must be unmodified from the recorder or upload (next step) may fail.
-// Avoid calling this function more than once as perf values are updated during this process.
+// Perf values must be unmodified from the recorder, coming from perf.Timeline,
+// or the upload (next step) may fail.
+// Avoid calling this function more than once as perf values are updated during
+// this process.
 func CreatePowerLogAndUpdatePerfValues(ctx context.Context, testName string, values *perf.Values, devInfo *pb.DeviceInfo, metrics *pb.OneTimeMetrics) (map[string]interface{}, error) {
 	// Conversion process also updates perf values in-place.
-	pwrDict, err := convertPerfValuesToPowerDict(ctx, values, metrics)
+	pwrDict, startTs, err := convertPerfValuesToPowerDict(ctx, values, metrics)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert power perf values to power dictionary")
+		return nil, errors.Wrap(err, "failed to convert power perf values to power dictionary and start ts")
 	}
-	return createPowerLogFromPowerDict(ctx, testName, pwrDict, devInfo), nil
+	return createPowerLogFromPowerDict(ctx, testName, pwrDict, startTs, devInfo), nil
 }
 
-// convertPerfValuesToPowerDict converts raw performance metric values to power dictionary.
-func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics) (map[string]interface{}, error) {
+// convertPerfValuesToPowerDict converts raw performance metric values to power
+// dictionary and start ts, and updates perf.Values.
+func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metrics *pb.OneTimeMetrics) (map[string]interface{}, time.Time, error) {
 	measurement := values.GetValues()
 	if measurement == nil || len(measurement) == 0 {
-		return nil, errors.New("invalid power measurement")
+		return nil, time.Time{}, errors.New("invalid power measurement")
 	}
 
 	powerDict := map[string]interface{}{
@@ -264,6 +267,7 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 		// unit is a map from metric to unit.
 		"unit": nil,
 	}
+	var start time.Time
 
 	innerDataMap := make(map[string][]float64)
 	innerAverageMap := make(map[string]float64)
@@ -305,6 +309,10 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 			metricType = "power"
 		} else if metricName == "t" {
 			innerDataMap[metricName] = value
+			if !metric.HasStartTs {
+				return nil, time.Time{}, errors.Errorf("metric %s does not have start ts", metric.Name)
+			}
+			start = metric.StartTs
 			continue
 		} else if size == 1 {
 			metricType = "other"
@@ -315,7 +323,7 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 
 		// Validate metricType.
 		if _, ok := validMetricTypeMap[metricType]; !ok {
-			return nil, errors.Errorf("unexpected metric type %q for %q", metricType, metricName)
+			return nil, time.Time{}, errors.Errorf("unexpected metric type %q for %q", metricType, metricName)
 		}
 
 		if len(metricType) != 0 {
@@ -360,6 +368,9 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 		noTimeline = true
 		powerDict["sample_count"] = 2
 		powerDict["sample_duration"] = totalDurationSec
+		// Since PowerQualV2 main test does not have perf.Timeline, it does not
+		// record test start time. Use an approximate.
+		start = time.Now()
 	}
 
 	minutesBatteryLife, batteryLifeOk := innerAverageMap[MinutesBatteryLifeKey]
@@ -398,7 +409,7 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 	powerDict["average"] = innerAverageMap
 	powerDict["type"] = typeMap
 	powerDict["unit"] = unitMap
-	return powerDict, nil
+	return powerDict, start, nil
 }
 
 // addPowerPerfValues adds perf scalar to power log map.
@@ -440,26 +451,20 @@ func getDataSamples(value float64, twoSamples bool) []float64 {
 	return []float64{value}
 }
 
-// createPowerLogFromPowerDict creates the power log dictionary from power dict.
-func createPowerLogFromPowerDict(ctx context.Context, testName string, powerDict map[string]interface{}, devInfo *pb.DeviceInfo) map[string]interface{} {
+// createPowerLogFromPowerDict creates the power log dictionary from power dict
+// and device info.
+func createPowerLogFromPowerDict(ctx context.Context, testName string, powerDict map[string]interface{}, start time.Time, devInfo *pb.DeviceInfo) map[string]interface{} {
+	// If perf.Timeline is used, timestamp will be the start ts of
+	// perf.Timeline. The exception is PowerQualV2.
+	// Since PowerQualV2 main test does not have perf.Timeline, it does not
+	// record test start time. Use the timestamp at time of power_log creation
+	// as an approximate.
 	powerLogDict := map[string]interface{}{
 		"format_version": 7,
-		// TODO: see b/271917877
-		// This is the start time of the test
-		// Unfortunately, not every tracker records time
-		// We can probably ignore this for now
-		// We also need to add the following entry to
-		// 'google3/experimental/chromeos_power/dashboard/bigquery_schema.json':
-		// {
-		// 	"description": "Unix timestamp when the test start running.",
-		// 	"mode": "NULLABLE",
-		// 	"name": "timestamp",
-		// 	"type": "TIMESTAMP"
-		// 	},
-		"timestamp": time.Now().Unix(),
-		"test":      testName,
-		"dut":       FormatDeviceInfoForPowerLog(devInfo),
-		"power":     powerDict,
+		"timestamp":      float64(start.UnixNano()) / 1000000000.0,
+		"test":           testName,
+		"dut":            FormatDeviceInfoForPowerLog(devInfo),
+		"power":          powerDict,
 	}
 
 	return powerLogDict
