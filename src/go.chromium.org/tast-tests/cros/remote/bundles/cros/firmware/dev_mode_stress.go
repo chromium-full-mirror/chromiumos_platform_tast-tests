@@ -27,11 +27,10 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_stress"},
 		Vars:         []string{"firmware.DevModeStressIters"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      45 * time.Minute,
+		Timeout:      60 * time.Minute,
 		Fixture:      fixture.DevMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
@@ -43,7 +42,7 @@ func DevModeStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	numIters := 10
+	numIters := 30
 	if numItersStr, ok := s.Var("firmware.DevModeStressIters"); ok {
 		numItersInt, err := strconv.Atoi(numItersStr)
 		if err != nil {
@@ -91,15 +90,14 @@ func DevModeStress(ctx context.Context, s *testing.State) {
 		if err := cmd.Start(); err != nil {
 			s.Fatal("Failed to suspend DUT: ", err)
 		}
-		s.Log("Sleeping for 5 seconds")
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to sleep waiting for suspend: ", err)
-		}
+
 		s.Log("Checking for S0ix or S3 powerstate")
-		if err := h.WaitForPowerStates(ctx, 1*time.Second, 60*time.Second, "S0ix", "S3"); err != nil {
+		if err := h.WaitForPowerStates(ctx, 1*time.Second, 90*time.Second, "S0ix", "S3"); err != nil {
 			s.Fatal("Failed to get S0ix or S3 powerstate: ", err)
 		}
+
 		s.Log("Sleeping for 5 seconds")
+		// GoBigSleepLint: Wait in suspend for some time suspend.
 		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 			s.Fatal("Failed to sleep waiting for suspend: ", err)
 		}
