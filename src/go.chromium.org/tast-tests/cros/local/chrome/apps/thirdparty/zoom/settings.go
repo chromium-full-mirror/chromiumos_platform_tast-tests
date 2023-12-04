@@ -83,10 +83,10 @@ func (zm *Zoom) SetJoinAudio(expectedValue bool) action.Action {
 	dismissJoinAudioDialog := ui.DoDefaultUntil(
 		closeButton,
 		ui.WithTimeout(shortUITimeout).WaitUntilGone(closeButton))
-	triggerJoinAudioDialog := uiauto.NamedAction("trigger 'Join Audio' dialog",
-		ui.DoDefaultUntil(
-			joinAudioButton,
-			ui.WithTimeout(shortUITimeout).WaitUntilExists(joinAudioByComputerButton)))
+	triggerJoinAudioDialog := uiauto.Retry(2,
+		uiauto.NamedCombine("trigger 'Join Audio' dialog",
+			ui.DoDefault(joinAudioButton),
+			ui.WaitUntilExists(joinAudioByComputerButton)))
 
 	return func(ctx context.Context) error {
 		audioButton, err := ui.FindAnyExists(ctx, unmuteButton, muteButton, joinAudioButton)
