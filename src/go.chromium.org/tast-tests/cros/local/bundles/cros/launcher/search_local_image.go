@@ -45,7 +45,7 @@ func init() {
 			"ypitsishin@google.org",
 		},
 		BugComponent: "b:280365665",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{localPictureName},
 		Timeout:      10 * time.Minute,
@@ -62,9 +62,10 @@ func init() {
 				},
 				Fixture:           fixture.LauncherImageSearchIca,
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name: "search_with_ocr",
+				Name: "search_with_ocr_critical",
 				Val: testParam{
 					Name:           "ocr",
 					TabletMode:     false,
@@ -73,7 +74,23 @@ func init() {
 					UseIca:         false,
 					UseOcr:         true,
 				},
-				Fixture: fixture.LauncherImageSearchOcr,
+				Fixture:           fixture.LauncherImageSearchOcr,
+				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "search_with_ocr_informational",
+				Val: testParam{
+					Name:           "ocr",
+					TabletMode:     false,
+					Query:          []string{"Thoughts"},
+					ExpectedResult: "About",
+					UseIca:         false,
+					UseOcr:         true,
+				},
+				Fixture:           fixture.LauncherImageSearchOcr,
+				ExtraSoftwareDeps: []string{"no_ondevice_image_content_annotation"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name: "search_with_ica_ocr",
@@ -87,6 +104,7 @@ func init() {
 				},
 				Fixture:           fixture.LauncherImageSearchIcaAndOcr,
 				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
+				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})
