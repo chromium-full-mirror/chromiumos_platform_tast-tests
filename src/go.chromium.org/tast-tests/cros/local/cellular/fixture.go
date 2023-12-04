@@ -617,7 +617,7 @@ func (f *cellularFixture) getCrashedDaemonName(ctx context.Context) (string, []s
 		}
 		filename := filepath.Base(file)
 		testing.ContextLog(ctx, "crash found: ", filename)
-		for _, prefix := range []string{"ModemManager", "shill", "qmi", "mbim", "hermes", "modemfwd"} {
+		for _, prefix := range []string{"ModemManager.", "shill.", "qmi_proxy.", "mbim_proxy.", "hermes.", "modemfwd."} {
 			if strings.HasPrefix(filename, prefix) {
 				return filename, crashFiles, nil
 			}
