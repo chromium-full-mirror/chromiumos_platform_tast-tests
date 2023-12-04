@@ -264,6 +264,11 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 	} else {
 		return errors.Errorf("got an invalid authentication type (%q) for this account", authType)
 	}
+	// TODO(b/314070066): Remove this when the bug is fixed.
+	// GoBigSleepLint: Temporary workaround until the Gaia bug is fixed.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep before pressing login")
+	}
 	if err := oobeConn.Call(ctx, nil, "Oobe.clickGaiaPrimaryButtonForTesting"); err != nil {
 		return errors.Wrap(err, "failed to click on the primary action button")
 	}
@@ -433,6 +438,11 @@ func performUnicornParentLogin(ctx context.Context, cfg *config.Config, sess *dr
 	testing.ContextLog(ctx, "Typing parent password")
 	if err := insertGAIAField(ctx, gaiaConn, GaiaPasswordFieldFinder, creds.ParentPass); err != nil {
 		return err
+	}
+	// TODO(b/314070066): Remove this when the bug is fixed.
+	// GoBigSleepLint: Temporary workaround until the Gaia bug is fixed.
+	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep before pressing login")
 	}
 	if err := oobeConn.Call(ctx, nil, "Oobe.clickGaiaPrimaryButtonForTesting"); err != nil {
 		return errors.Wrap(err, "failed to click on the primary action button")
