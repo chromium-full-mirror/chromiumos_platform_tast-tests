@@ -184,8 +184,8 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 
 func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, rl *retry.Loop, packages []string) error {
 	notCachedRegEx       := fmt.Sprintf(
-		"(no cachedApk found for %s)|(Package %s version [0-9]+ does not exist in cache)",
-		testPackage, testPackage)
+		"(no cachedApk found for %s)|(Package %s version [0-9]+ does not exist in cache)|(Missed *in cache.*%s)",
+		testPackage, testPackage, testPackage)
 	pushingInCacheRegEx  := "Pushing in cache " + testPackage
 
 	cleanupCtx := ctx
