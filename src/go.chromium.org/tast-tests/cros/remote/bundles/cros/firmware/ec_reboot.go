@@ -123,12 +123,28 @@ func ECReboot(ctx context.Context, s *testing.State) {
 }
 
 func getECUptimeFromConsole(ctx context.Context, h *firmware.Helper) (float64, error) {
-	out, err := h.Servo.RunECCommandGetOutput(ctx, "powerinfo", []string{`(\d+\.\d+) power state`})
+	testing.ContextLog(ctx, "Getting current ec uptime")
+	// Try using ectool uptimeinfo to get uptime.
+	uptime, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetECUptime(ctx)
+	if err == nil {
+		return uptime, nil
+	}
+	testing.ContextLog(ctx, "Failed to get uptime from ectool, falling back to ec console cmd 'gettime'")
+
+	var out [][]string
+	// If ectool uptimeinfo didn't work, try parsing from the ec console with gettime cmd.
+	out, err = h.Servo.RunECCommandGetOutput(ctx, "gettime", []string{`Time:\s*\S+\s*=\s*(\d+\.\d+)\s*s`})
 	if err != nil {
-		return -1.0, errors.Wrap(err, "failed to get output from EC command")
+		// Many commands in ec console don't log uptime, powerinfo seems to generally work and doesn't
+		// have very long output to that might get interrupted so it's a reasonable choice for teritary backup.
+		testing.ContextLog(ctx, "Failed to get uptime from 'gettime' cmd, falling back to ec console cmd 'powerinfo'")
+		out, err = h.Servo.RunECCommandGetOutput(ctx, "powerinfo", []string{`(\d+\.\d+) power state`})
+		if err != nil {
+			return -1.0, errors.Wrap(err, "failed to get uptime from ec")
+		}
 	}
 
-	uptime, err := strconv.ParseFloat(out[0][1], 64)
+	uptime, err = strconv.ParseFloat(out[0][1], 64)
 	if err != nil {
 		return -1.0, errors.Wrapf(err, "failed to parse ec uptime to float, got %s", out[0][1])
 	}
