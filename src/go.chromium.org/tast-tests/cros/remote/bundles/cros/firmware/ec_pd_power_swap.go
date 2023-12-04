@@ -27,13 +27,11 @@ func init() {
 			"asemjonovs@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Fixture:      fixture.NormalMode,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      20 * time.Minute,
-		Params: []testing.Param{{
+		Params: firmware.AddPDPorts([]testing.Param{{
 			Name: "normal",
 			Val: firmware.PDTestParams{
 				CC:       firmware.CCPolarityStandard,
@@ -81,7 +79,7 @@ func init() {
 				Shutdown: false,
 				Suspend:  true,
 			},
-		}},
+		}}, []string{"group:firmware", "firmware_pd"}),
 	})
 }
 
