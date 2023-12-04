@@ -167,6 +167,66 @@ func init() {
 				},
 			},
 			{
+				Name:      "block_randrw",
+				ExtraData: []string{"fio_randrw.job"},
+				Val: param{
+					kind: "block",
+					job:  "fio_randrw.job",
+				},
+			},
+			{
+				Name:      "block_tpq_randrw",
+				ExtraData: []string{"fio_randrw.job"},
+				Val: param{
+					kind: "block_tpq",
+					job:  "fio_randrw.job",
+				},
+			},
+			{
+				Name:      "block_lvm_randrw",
+				ExtraData: []string{"fio_randrw.job"},
+				Val: param{
+					kind: "block_lvm",
+					job:  "fio_randrw.job",
+				},
+				ExtraSoftwareDeps: []string{"lvm_stateful_partition"},
+			},
+			{
+				Name:      "virtiofs_randrw",
+				ExtraData: []string{"fio_randrw.job"},
+				Val: param{
+					kind: "virtiofs",
+					job:  "fio_randrw.job",
+				},
+			},
+			{
+				Name:      "virtiofs_dax_randrw",
+				ExtraData: []string{"fio_randrw.job"},
+				Val: param{
+					kind: "virtiofs_dax",
+					job:  "fio_randrw.job",
+				},
+				// TODO(b/176129399): Remove this line once virtiofs DAX is enabled
+				// on ARM.
+				ExtraSoftwareDeps: []string{"amd64"},
+			},
+			{
+				Name:      "scsi_randrw",
+				ExtraData: []string{"fio_randrw.job"},
+				Val: param{
+					kind: "scsi",
+					job:  "fio_randrw.job",
+				},
+			},
+			{
+				Name:      "pmem_randrw",
+				ExtraData: []string{"fio_randrw.job"},
+				Val: param{
+					kind: "pmem",
+					job:  "fio_randrw.job",
+				},
+			},
+			{
 				Name:      "block_seqread",
 				ExtraData: []string{"fio_seqread.job"},
 				Val: param{
