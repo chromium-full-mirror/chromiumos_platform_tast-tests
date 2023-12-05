@@ -45,7 +45,7 @@ func Ti50EFS2(ctx context.Context, s *testing.State) {
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work/
-	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
+	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
 
 	// Note if this goes last, it fails with a timeout reading EC console, but if even one of
 	// the preceding tests is commented out, then it doesn't. It does not seem to be flaky if
@@ -239,7 +239,7 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
 	if err := tpm2.NVDefineSpace(tpm,
 		ti50.RootPlatformHandle,
-		ti50.KernelFileID,
+		ti50.KernelNvIndex,
 		ti50.EmptyPassword,
 		ti50.EmptyPassword,
 		nil,
@@ -248,12 +248,12 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 	); err != nil {
 		s.Fatal("NVDefineSpace failed: ", err)
 	}
-	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
+	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
 
 	// Write the kernel file data to new space.
 	if err := tpm2.NVWrite(tpm,
 		ti50.RootPlatformHandle,
-		ti50.KernelFileID,
+		ti50.KernelNvIndex,
 		ti50.EmptyPassword,
 		kernelFile,
 		0,
@@ -365,7 +365,7 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
 	if err := tpm2.NVDefineSpace(tpm,
 		ti50.RootPlatformHandle,
-		ti50.KernelFileID,
+		ti50.KernelNvIndex,
 		ti50.EmptyPassword,
 		ti50.EmptyPassword,
 		nil,
@@ -374,12 +374,12 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	); err != nil {
 		s.Fatal("NVDefineSpace failed: ", err)
 	}
-	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
+	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
 
 	// Write the kernel file data to new space.
 	if err := tpm2.NVWrite(tpm,
 		ti50.RootPlatformHandle,
-		ti50.KernelFileID,
+		ti50.KernelNvIndex,
 		ti50.EmptyPassword,
 		kernelFile,
 		0,
@@ -547,7 +547,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
 	if err := tpm2.NVDefineSpace(tpm,
 		ti50.RootPlatformHandle,
-		ti50.KernelFileID,
+		ti50.KernelNvIndex,
 		ti50.EmptyPassword,
 		ti50.EmptyPassword,
 		nil,
@@ -556,12 +556,12 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	); err != nil {
 		s.Fatal("NVDefineSpace failed: ", err)
 	}
-	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelFileID)
+	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
 
 	// Write the kernel file data to new space.
 	if err := tpm2.NVWrite(tpm,
 		ti50.RootPlatformHandle,
-		ti50.KernelFileID,
+		ti50.KernelNvIndex,
 		ti50.EmptyPassword,
 		kernelFile,
 		0,
@@ -588,7 +588,7 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	kernelFile = makeKernelFile(hash)
 	if err := tpm2.NVWrite(tpm,
 		ti50.RootPlatformHandle,
-		ti50.KernelFileID,
+		ti50.KernelNvIndex,
 		ti50.EmptyPassword,
 		kernelFile,
 		0,

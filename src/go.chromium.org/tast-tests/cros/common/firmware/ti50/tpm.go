@@ -76,8 +76,8 @@ const (
 	EmptyPassword = ""
 	// RootPlatformHandle is the Platform Root TPM Handle
 	RootPlatformHandle tpmutil.Handle = 0x4000000c
-	// KernelFileID is the NVMem ID for the kernel file
-	KernelFileID tpmutil.Handle = 0x01001008
+	// KernelNvIndex is the NVMem ID for the kernel file
+	KernelNvIndex tpmutil.Handle = 0x01001008
 	// FwmpFileID is the NVMem ID for the Firmware Management Parameters file
 	FwmpFileID tpmutil.Handle = 0x100100a
 	// KernelFileAttr is the attribute set that AP firmware uses when creating kernel file
