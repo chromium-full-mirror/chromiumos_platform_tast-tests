@@ -226,6 +226,22 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithGuestLoginLacros",
+		Desc:     "Similar to chromeVideo fixture but forcing login as a guest (lacros)",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.LacrosExtraArgs(chromeVideoArgs...),
+				chrome.GuestLogin())).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
 	// TODO(crbug.com/958166): Use simply ChromeVideo() when HDR is launched.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithHDRScreen",
