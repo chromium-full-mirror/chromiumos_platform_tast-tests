@@ -44,6 +44,7 @@ type PDTestParams struct {
 	CC           CCPolarity
 	DTS          DTSMode
 	Shutdown     bool
+	Suspend      bool
 	RequiredPort *int
 }
 

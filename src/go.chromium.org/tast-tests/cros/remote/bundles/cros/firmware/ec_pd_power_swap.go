@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/suspend"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -38,6 +39,7 @@ func init() {
 				CC:       firmware.CCPolarityStandard,
 				DTS:      firmware.DTSModeOn,
 				Shutdown: false,
+				Suspend:  false,
 			},
 		}, {
 			Name: "flipcc",
@@ -45,6 +47,7 @@ func init() {
 				CC:       firmware.CCPolarityFlipped,
 				DTS:      firmware.DTSModeOn,
 				Shutdown: false,
+				Suspend:  false,
 			},
 		}, {
 			Name: "dtsoff",
@@ -52,6 +55,7 @@ func init() {
 				CC:       firmware.CCPolarityStandard,
 				DTS:      firmware.DTSModeOff,
 				Shutdown: false,
+				Suspend:  false,
 			},
 		}, {
 			Name: "flipcc_dtsoff",
@@ -59,6 +63,7 @@ func init() {
 				CC:       firmware.CCPolarityFlipped,
 				DTS:      firmware.DTSModeOff,
 				Shutdown: false,
+				Suspend:  false,
 			},
 		}, {
 			Name: "shutdown",
@@ -66,6 +71,15 @@ func init() {
 				CC:       firmware.CCPolarityStandard,
 				DTS:      firmware.DTSModeOn,
 				Shutdown: true,
+				Suspend:  false,
+			},
+		}, {
+			Name: "suspend",
+			Val: firmware.PDTestParams{
+				CC:       firmware.CCPolarityStandard,
+				DTS:      firmware.DTSModeOn,
+				Shutdown: false,
+				Suspend:  true,
 			},
 		}},
 	})
@@ -87,6 +101,18 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}
 
 	testParams := s.Param().(firmware.PDTestParams)
+
+	if testParams.Suspend {
+		if suspendContext, err := suspend.NewContext(ctx, h); err != nil {
+			s.Fatal("Failed to create suspend context: ", err)
+		} else {
+			defer suspendContext.Close()
+			s.Log("Suspending DUT")
+			if err := suspendContext.SuspendDUTAllTypes(suspend.DefaultSuspendArgs()); err != nil {
+				s.Fatal("Failed to suspend DUT: ", err)
+			}
+		}
+	}
 
 	if testParams.Shutdown {
 		if err := firmware.ShutdownDUT(ctx, h); err != nil {
