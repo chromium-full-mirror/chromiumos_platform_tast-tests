@@ -114,14 +114,17 @@ func RemoveUserOnLoginScreen(ctx context.Context, tLoginConn *chrome.TestConn, c
 	// Wait for user pods to be available.
 	// Remove user pod by clicking remove button twice.
 	// Check that user pod was deleted.
+	removeButton := nodewith.Name("Remove account").Role(role.Button)
+	confirmRemovalText := nodewith.NameContaining("All files and local data associated with this user will be permanently deleted").Role(role.StaticText)
 	if err := uiauto.Combine("Remove user from using their pod",
 		ui.WaitUntilExists(nodewith.Name(user).Role(role.Button)),
 		ui.LeftClick(nodewith.Name("Open remove dialog for "+user).Role(role.Button)),
-		ui.LeftClick(nodewith.Name("Remove account").Role(role.Button)),
-		ui.LeftClick(nodewith.Name("Remove account").Role(role.Button)),
+		ui.LeftClick(removeButton),
+		ui.WaitUntilExists(confirmRemovalText),
+		ui.LeftClick(removeButton),
 		ui.WaitUntilGone(nodewith.Name(user).Role(role.Button)),
 	)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click 'Back' and 'OK' to refresh the iframe")
+		return errors.Wrap(err, "failed to remove user from using their pod")
 	}
 	return nil
 }
