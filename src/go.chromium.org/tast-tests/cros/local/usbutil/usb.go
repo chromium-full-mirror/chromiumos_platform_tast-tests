@@ -61,6 +61,7 @@ type fwupdGetDevicesResponse struct {
 // fwupdDevice represents a device in fwupdGetDevicesResponse.
 type fwupdDevice struct {
 	GUID          []string `json:"Guid"`
+	InstanceIDs   []string `json:"InstanceIds"`
 	Serial        *string  `json:"Serial"`
 	VendorID      *string  `json:"VendorId"`
 	Version       *string  `json:"Version"`
@@ -178,9 +179,18 @@ func matchFwupdDevice(device fwupdDevice, vendorID, prodID, serial string) bool 
 	var matchProduct bool
 	// Example target instance id: USB\VID_1FC9&PID_5002.
 	targetInstanceID := fmt.Sprintf("USB\\VID_%s&PID_%s", strings.ToUpper(vendorID), strings.ToUpper(prodID))
+	// Other information (for example, revision number) might be appended to the
+	// instance ID so we only check the prefix.
+	for _, instanceID := range device.InstanceIDs {
+		if strings.HasPrefix(instanceID, targetInstanceID) {
+			matchProduct = true
+		}
+	}
+
 	// Example target GUID: a01d9cb7-dc1c-52dc-88ad-ba94f473681a.
 	// For the GUID generation rule in fwupd, see https://lvfs.readthedocs.io/en/latest/metainfo.html#using-guids
 	targetGUID := uuid.NewSHA1(uuid.NameSpaceDNS, []byte(targetInstanceID)).String()
+	// Use GUIDs as the fallback in case instanceIDs were not reported.
 	for _, guid := range device.GUID {
 		if guid == targetGUID {
 			matchProduct = true
