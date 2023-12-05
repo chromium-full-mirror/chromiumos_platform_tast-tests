@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/nethelper"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/memory/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/testing"
@@ -118,6 +119,9 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 		// tbfBurst is the size of the bucket used by rate option (int).
 		tbfBurstKbX86 = 10
 		tbfBurstKbArm = 8
+
+		fileTestName   = "FileTest"
+		memoryTestName = "MemoryTest"
 	)
 
 	// Start network helper to serve requests from the app.
@@ -166,25 +170,25 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 		subtest string
 		group   string
 	}{{
-		name:   "MemoryTest",
+		name:   memoryTestName,
 		prefix: "memory",
 	}, {
-		name:    "FileTest",
+		name:    fileTestName,
 		prefix:  "file_obb",
 		subtest: "runObbTest",
 		group:   "not_ext4_fs",
 	}, {
-		name:    "FileTest",
+		name:    fileTestName,
 		prefix:  "file_squashfs",
 		subtest: "runSquashFSTest",
 		group:   "not_ext4_fs",
 	}, {
-		name:    "FileTest",
+		name:    fileTestName,
 		prefix:  "file_esd",
 		subtest: "runEsdTest",
 		group:   "not_ext4_fs",
 	}, {
-		name:    "FileTest",
+		name:    fileTestName,
 		prefix:  "file_ext4",
 		subtest: "runExt4Test",
 		group:   "ext4_fs",
@@ -229,6 +233,16 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	groups := make(map[string][]float64)
 	cr := s.PreValue().(arc.PreData).Chrome
 	for _, test := range tests {
+		var basemem *metrics.BaseMemoryStats
+		if test.name == memoryTestName {
+			// For collecting metrics such as smaps_rollup per process, zram usage,
+			// adb dumpsys meminfo and PSI memory metrics.
+			basemem, err = metrics.NewBaseMemoryStats(ctx, a)
+			if err != nil {
+				s.Error("Failed to retrieve base memory stats: ", err)
+			}
+		}
+
 		config.ClassName = test.name
 		config.Prefix = test.prefix
 		config.Subtest = test.subtest
@@ -243,6 +257,12 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 			groups[test.group] = append(groups[test.group], score)
 		} else {
 			scores = append(scores, score)
+		}
+
+		if basemem != nil {
+			if err := metrics.LogMemoryStats(ctx, basemem, a, finalPerfValues, s.OutDir(), "."+test.prefix); err != nil {
+				s.Error("Failed to collect memory metrics: ", err)
+			}
 		}
 	}
 
