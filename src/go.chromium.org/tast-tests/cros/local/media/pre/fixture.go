@@ -958,6 +958,7 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
+				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
