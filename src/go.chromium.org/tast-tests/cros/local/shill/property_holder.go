@@ -71,12 +71,6 @@ func (h *PropertyHolder) GetAndSetProperty(ctx context.Context, prop string, val
 	return curValue, h.SetProperty(ctx, prop, value)
 }
 
-// GetShillProperties calls GetProperties method of shill and return properties of the object.
-// Deprecated: use GetProperties instead.
-func (h *PropertyHolder) GetShillProperties(ctx context.Context) (*dbusutil.Properties, error) {
-	return h.GetProperties(ctx)
-}
-
 // CreateWatcher returns a PropertiesWatcher to observe the object's "PropertyChanged" signal.
 func (h *PropertyHolder) CreateWatcher(ctx context.Context) (*PropertiesWatcher, error) {
 	return NewPropertiesWatcher(ctx, h.DBusObject)

@@ -194,7 +194,7 @@ func (s *Service) IsVisible(ctx context.Context) (bool, error) {
 // Any failure also returns an error.
 func (s *Service) WaitForConnectedOrError(ctx context.Context) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		props, err := s.GetShillProperties(ctx)
+		props, err := s.GetProperties(ctx)
 		if err != nil {
 			return err
 		}

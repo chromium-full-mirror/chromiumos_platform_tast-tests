@@ -99,7 +99,7 @@ func DualSimAreServicesUp(ctx context.Context, s *testing.State) {
 	}
 
 	// Gather Shill Device properties
-	deviceProps, err := helper.Device.GetShillProperties(ctx)
+	deviceProps, err := helper.Device.GetProperties(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Device properties: ", err)
 	}

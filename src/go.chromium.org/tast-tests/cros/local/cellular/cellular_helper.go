@@ -942,7 +942,7 @@ func (h *Helper) GetCellularSIMLockStatus(ctx context.Context) (map[string]inter
 		return nil, errors.Wrap(err, "expected scanning to become false, got true")
 	}
 	// Gather Shill Device properties.
-	deviceProps, err := h.Device.GetShillProperties(ctx)
+	deviceProps, err := h.Device.GetProperties(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get device properties")
 	}
@@ -1214,7 +1214,7 @@ func (h *Helper) getCellularServiceDictProperty(ctx context.Context, propertyNam
 	if err != nil {
 		return nil, errors.Wrap(err, "unable to find Cellular Service for Device")
 	}
-	props, err := service.GetShillProperties(ctx)
+	props, err := service.GetProperties(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "error getting Service properties")
 	}
@@ -1238,7 +1238,7 @@ func (h *Helper) getCellularServiceProperty(ctx context.Context, propertyName st
 	if err != nil {
 		return "", errors.Wrap(err, "unable to find Cellular Service for Device")
 	}
-	props, err := service.GetShillProperties(ctx)
+	props, err := service.GetProperties(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "error getting Service properties")
 	}

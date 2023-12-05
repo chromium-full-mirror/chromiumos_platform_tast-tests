@@ -62,7 +62,7 @@ func MojoCellularGetDeviceStateListSimInfos(ctx context.Context, s *testing.Stat
 		s.Fatal("Failed to create cellular.Helper: ", err)
 	}
 
-	deviceProps, err := cellularHelper.Device.GetShillProperties(ctx)
+	deviceProps, err := cellularHelper.Device.GetProperties(ctx)
 	if err != nil {
 		s.Fatal("Failed to get Device properties: ", err)
 	}
