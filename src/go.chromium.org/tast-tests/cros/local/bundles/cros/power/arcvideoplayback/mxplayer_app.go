@@ -85,7 +85,7 @@ func (m *MxPlayerApp) DismissPrompts(ctx context.Context) error {
 	// There might be two different arc dump hierarchies of granting storage permission that affect how nodes are captured.
 	openSettingsBtn := m.d.Object(androidui.ID(mxPlayerIDPrefix+"storage_permission_accept"), androidui.Text("OPEN SETTINGS"))
 	storageAllowBtn := m.d.Object(androidui.ID(permissionIDPrefix+"permission_allow_button"), androidui.TextMatches("(?i)Allow"))
-	foundObject, err := cuj.FindAnyExists(ctx, defaultUITimeout, otherOptionBtn, openSettingsBtn, storageAllowBtn)
+	foundObject, err := cuj.FindAnyExists(ctx, longUITimeout, otherOptionBtn, openSettingsBtn, storageAllowBtn)
 	if err != nil {
 		return errors.Wrap(err, "failed to find objects before granting storage permission")
 	}
@@ -135,7 +135,7 @@ func (m *MxPlayerApp) openVideoFromDownloadFolder(videoName string) uiauto.Actio
 			}
 		}
 		return uiauto.NamedCombine("click download folder",
-			cuj.FindAndClick(downloadFolder, defaultUITimeout),
+			cuj.FindAndClick(downloadFolder, longUITimeout),
 			cuj.WaitForExists(videoTitle, longUITimeout),
 		)(ctx)
 	}
