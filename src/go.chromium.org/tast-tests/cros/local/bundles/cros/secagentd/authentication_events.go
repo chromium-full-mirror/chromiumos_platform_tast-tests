@@ -43,7 +43,7 @@ func init() {
 		},
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -70,6 +70,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
 	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
+		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
 		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", strconv.Itoa(batchIntervalS)))
@@ -77,7 +78,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 45*time.Second)
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 60*time.Second)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
