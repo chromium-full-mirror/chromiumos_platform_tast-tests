@@ -23,10 +23,12 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// Experiment data from b/308846863#comment5
 const (
-	elementPrepareTimeout     = 10 * time.Minute
-	socialAppOperatingTimeout = 10 * time.Minute
-	socialAppTimeout          = elementPrepareTimeout + socialAppOperatingTimeout + power.RecorderTimeout
+	elementPrepareTimeout        = 10 * time.Minute
+	socialAppMeasurementInterval = 20 * time.Second
+	socialAppOperatingTimeout    = 30 * time.Minute
+	socialAppTimeout             = elementPrepareTimeout + socialAppOperatingTimeout + power.RecorderTimeout
 )
 
 func init() {
@@ -117,8 +119,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 	}
 	defer app.Uninstall(closeCtx)
 
-	const recordInterval = 5 * time.Second
-	recorder := power.NewRecorder(ctx, recordInterval, s.OutDir(), s.TestName())
+	recorder := power.NewRecorder(ctx, socialAppMeasurementInterval, s.OutDir(), s.TestName())
 	defer recorder.Close(closeCtx)
 
 	if err := recorder.Cooldown(ctx); err != nil {
