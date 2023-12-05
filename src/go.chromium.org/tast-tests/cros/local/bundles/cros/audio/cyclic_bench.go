@@ -154,9 +154,10 @@ func init() {
 						Policy:   rrSched,
 						Priority: crasPriority,
 					},
-					Threads:             1,
-					Interval:            defaultInterval,
-					Loops:               defaultLoops,
+					Threads:  1,
+					Interval: defaultInterval,
+					// Use 6000 loops to prevent crash. See b/314889993
+					Loops:               6000,
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig: &schedConfig{
