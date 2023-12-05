@@ -13,7 +13,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/lacros/gpucuj"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -151,8 +153,25 @@ func GpuCUJ(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
-	pv, cleanup, err := gpucuj.RunGpuCUJ(ctx, s.FixtValue().(chrome.HasChrome).Chrome(),
-		s.Param().(gpucuj.TestParams), server.URL, s.OutDir())
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create test API connection: ", err)
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to ensure clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
+
+	pv, cleanup, err := gpucuj.RunGpuCUJ(ctx, cr, s.Param().(gpucuj.TestParams),
+		server.URL, s.OutDir())
 	if err != nil {
 		s.Fatal("Could not run GpuCUJ test: ", err)
 	}
