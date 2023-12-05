@@ -302,6 +302,21 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
+			// This is a decoding test of 3 temporal layers test, via the (experimental) API.
+			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
+			Name: "av1_svc_l1t3_verify_hw_dec",
+			Val: peerconnection.RTCTestParams{
+				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
+				Profile:           "AV1",
+				StreamWidth:       defaultRTCStreamWidth,
+				StreamHeight:      defaultRTCStreamHeight,
+				Svc:               "L1T3",
+				BrowserType:       browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{caps.HWDecodeAV1},
+			Fixture:           "chromeVideoWithFakeWebcam",
+		}, {
 			Name: "h264_verify_hw_enc",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.NoVerifyDecoderMode,
