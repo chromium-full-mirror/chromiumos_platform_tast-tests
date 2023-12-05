@@ -196,13 +196,20 @@ func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chr
 		}
 	}
 
-	if err := verifyDecoderImplementation(ctx, conn, params.VerifyDecoderMode); err != nil {
-		return err
-	}
-	if err := verifyEncoderImplementation(ctx, conn, params.VerifyEncoderMode, params.SimulcastHWEncs); err != nil {
-		return err
-	}
+	return verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode,
+		params.VerifyEncoderMode, params.SimulcastHWEncs)
+}
 
+func verifyCodecImplementation(ctx context.Context,
+	conn *chrome.Conn, verifyDecoderMode VerifyDecoderMode,
+	verifyEncoderMode VerifyEncoderMode,
+	simulcastHWEncs []bool) error {
+	if err := verifyDecoderImplementation(ctx, conn, verifyDecoderMode); err != nil {
+		return err
+	}
+	if err := verifyEncoderImplementation(ctx, conn, verifyEncoderMode, simulcastHWEncs); err != nil {
+		return err
+	}
 	return nil
 }
 

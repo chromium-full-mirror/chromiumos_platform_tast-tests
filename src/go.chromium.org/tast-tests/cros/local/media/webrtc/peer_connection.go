@@ -103,7 +103,7 @@ func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
 }
 
 // GetCodecImplementation parses the RTCPeerConnection and returns the implementation name and whether it is
-// a hardware implementation. If decode is true, this returns decoder implementation and otherwise encoder implementation.
+// a hardware implementation (i.e. powerEfficient). If decode is true, this returns decoder implementation and otherwise encoder implementation.
 // This method uses the RTCPeerConnection getStats() API [1].
 // [1] https://w3c.github.io/webrtc-pc/#statistics-model
 func GetCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool, readRTCReport ReadRTCReportFunc) (string, bool, error) {
@@ -117,39 +117,51 @@ func GetCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool,
 	//
 	// [1] https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-decoderimplementation
 	// [2] https://w3c.github.io/webrtc-stats/#dom-rtcoutboundrtpstreamstats-encoderimplementation
-	hwImplName := "EncodeAccelerator"
-	readImpl := func(ctx context.Context) (string, error) {
+	readImplAndPowerEfficient := func(ctx context.Context) (string, bool, int, error) {
 		var out struct {
-			Encoder string `json:"encoderImplementation"`
+			Encoder          string `json:"encoderImplementation"`
+			PowerEfficient   bool   `json:"powerEfficientEncoder"`
+			NumEncodedFrames int    `json:"framesEncoded"`
 		}
 		if err := readRTCReport(ctx, conn, false, &out); err != nil {
-			return "", err
+			return "", false, 0, err
 		}
-		return out.Encoder, nil
+		return out.Encoder, out.PowerEfficient, out.NumEncodedFrames, nil
 	}
 
 	if decode {
-		hwImplName = "ExternalDecoder"
-		readImpl = func(ctx context.Context) (string, error) {
+		readImplAndPowerEfficient = func(ctx context.Context) (string, bool, int, error) {
 			var out struct {
-				Decoder string `json:"decoderImplementation"`
+				Decoder          string `json:"decoderImplementation"`
+				PowerEfficient   bool   `json:"powerEfficientDecoder"`
+				NumDecodedFrames int    `json:"framesDecoded"`
 			}
 			if err := readRTCReport(ctx, conn, true, &out); err != nil {
-				return "", err
+				return "", false, 0, err
 			}
-			return out.Decoder, nil
+			return out.Decoder, out.PowerEfficient, out.NumDecodedFrames, nil
 		}
 	}
 
-	// Poll getStats() to wait until {decoder,encoder}Implementation gets filled in:
-	// RTCPeerConnection needs a few frames to start up encoding/decoding; in the
-	// meantime it returns "unknown".
-	const pollInterval = 100 * time.Millisecond
+	processedStr := "encoded"
+	if decode {
+		processedStr = "decoded"
+	}
+	// Poll getStats() to wait until {decoder,encoder}Implementation gets filled in
+	// and the {decoder,encode} {decodes,encodes} minNumFrames: RTCPeerConnection needs
+	// a few frames to start up encoding/decoding; in the meantime it returns "unknown".
+	// Wait until |minNumFrames| are decoded/encoded so that the hardware codecs
+	// have the chance to possibly fall back to software codecs.
+	const pollInterval = 200 * time.Millisecond
 	const pollTimeout = 200 * pollInterval
+	const minNumFrames = 30
 	var impl string
+	numFrames := 0
+	powerEfficient := false
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var err error
-		impl, err = readImpl(ctx)
+
+		impl, powerEfficient, numFrames, err = readImplAndPowerEfficient(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to retrieve and/or parse RTCStatsReport")
 		}
@@ -163,14 +175,19 @@ func GetCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool,
 		if strings.Contains(impl, "ExternalEncoder") {
 			return errors.New("getStats() didn't fill in the encoder implementation (yet)")
 		}
+		// Waiting until minNumFrames are decoded/encoded.
+		if numFrames < minNumFrames {
+			return errors.Errorf("still waiting for %d frames to be %s; got %d frames so far", minNumFrames, processedStr, numFrames)
+		}
 		return nil
 	}, &testing.PollOptions{Interval: pollInterval, Timeout: pollTimeout}); err != nil {
 		return "", false, err
 	}
 	testing.ContextLog(ctx, "Implementation: ", impl)
+	testing.ContextLog(ctx, "PowerEfficient: ", powerEfficient)
+	testing.ContextLogf(ctx, "Number of %s frames: %d", processedStr, numFrames)
 
-	isHWImpl := strings.Contains(impl, hwImplName)
-	return impl, isHWImpl, nil
+	return impl, powerEfficient, nil
 }
 
 // MeasureRTCEncodeStats parses the WebRTC Tx stats, and stores them into p.

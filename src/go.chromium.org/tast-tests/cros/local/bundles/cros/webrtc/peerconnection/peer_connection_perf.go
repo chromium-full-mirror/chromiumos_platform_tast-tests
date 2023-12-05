@@ -117,13 +117,6 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return errors.Wrap(err, "establishing connection")
 	}
 
-	if err := verifyDecoderImplementation(ctx, conn, params.VerifyDecoderMode); err != nil {
-		return err
-	}
-	if err := verifyEncoderImplementation(ctx, conn, params.VerifyEncoderMode, params.SimulcastHWEncs); err != nil {
-		return err
-	}
-
 	if params.VideoGridDimension > 1 {
 		if err := conn.Call(ctx, nil, "makeVideoGrid", params.VideoGridDimension, videoURL); err != nil {
 			return errors.Wrap(err, "javascript error")
@@ -132,6 +125,10 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 
 	if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport, validateFrame, p); err != nil {
 		return errors.Wrap(err, "failed to measure")
+	}
+
+	if err := verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.SimulcastHWEncs); err != nil {
+		return err
 	}
 
 	var gpuErr, cStateErr, cpuErr, batErr error
