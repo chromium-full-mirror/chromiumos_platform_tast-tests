@@ -294,9 +294,8 @@ func init() {
 				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
 				// Verifies that DUT can connect to an OWE network on 2.4GHz.
-				Name:      "owe",
-				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_unstable"},
+				Name:    "owe",
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
 					secConfFac:       owe.NewConfigFactory(owe.ModePureOWE),

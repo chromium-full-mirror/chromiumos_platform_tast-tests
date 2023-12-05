@@ -291,10 +291,9 @@ func simpleConnect80211be() []*simpleConnectParams {
 
 func simpleConnectOWE() []*simpleConnectParams {
 	return []*simpleConnectParams{{
-		Name:      "owe",
-		Fixture:   defaultFixture,
-		Doc:       simpleConnectDocPref("an OWE network on 2.4GHz."),
-		ExtraAttr: []string{"wificell_unstable"},
+		Name:    "owe",
+		Fixture: defaultFixture,
+		Doc:     simpleConnectDocPref("an OWE network on 2.4GHz."),
 		Val: []simpleConnectParamsVal{{
 			APOpts:           simpleConnectCommonSecApOpts,
 			SecConfFac:       "owe.NewConfigFactory(owe.ModePureOWE)",
