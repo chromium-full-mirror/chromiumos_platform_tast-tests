@@ -357,6 +357,9 @@ func (f *baseSetupFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		opts = append(opts, fOpts...)
 	}
 
+	// Keep kVcStopAllScreenShare enabled for screen share test.
+	opts = append(opts, chrome.EnableFeatures("VcStopAllScreenShare"))
+
 	// Apply feature overrides from command-line
 	extraFeatures := extraFeaturesVar.Value()
 	if extraFeatures != "" {
