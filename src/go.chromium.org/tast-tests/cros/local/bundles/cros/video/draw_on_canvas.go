@@ -19,19 +19,21 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast/core/testing"
 )
 
 type drawOnCanvasParams struct {
 	fileName    string
 	refFileName string
+	browserType browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DrawOnCanvas,
-		LacrosStatus: testing.LacrosVariantUnknown,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that a video can be drawn once onto a 2D canvas",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
@@ -44,6 +46,7 @@ func init() {
 			Val: drawOnCanvasParams{
 				fileName:    "still-colors-360p.h264.mp4",
 				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeAsh,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
@@ -54,6 +57,7 @@ func init() {
 			Val: drawOnCanvasParams{
 				fileName:    "still-colors-360p.h264.mp4",
 				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeAsh,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
@@ -65,6 +69,7 @@ func init() {
 			Val: drawOnCanvasParams{
 				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
 				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeAsh,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
@@ -75,6 +80,7 @@ func init() {
 			Val: drawOnCanvasParams{
 				fileName:    "still-colors-480p.h264.mp4",
 				refFileName: "still-colors-480p.ref.png",
+				browserType: browser.TypeAsh,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-480p.h264.mp4", "still-colors-480p.ref.png"},
@@ -85,6 +91,7 @@ func init() {
 			Val: drawOnCanvasParams{
 				fileName:    "still-colors-720p.h264.mp4",
 				refFileName: "still-colors-720p.ref.png",
+				browserType: browser.TypeAsh,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-720p.h264.mp4", "still-colors-720p.ref.png"},
@@ -95,11 +102,67 @@ func init() {
 			Val: drawOnCanvasParams{
 				fileName:    "still-colors-1080p.h264.mp4",
 				refFileName: "still-colors-1080p.ref.png",
+				browserType: browser.TypeAsh,
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"video-on-canvas.html", "still-colors-1080p.h264.mp4", "still-colors-1080p.ref.png"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
+		}, {
+			Name: "h264_360p_hw_lacros",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-360p.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacros",
+		}, {
+			Name: "h264_360p_exotic_crop_hw_lacros",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-720x480-cropped-to-640x360.h264.mp4",
+				refFileName: "still-colors-360p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-720x480-cropped-to-640x360.h264.mp4", "still-colors-360p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacros",
+		}, {
+			Name: "h264_480p_hw_lacros",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-480p.h264.mp4",
+				refFileName: "still-colors-480p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-480p.h264.mp4", "still-colors-480p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacros",
+		}, {
+			Name: "h264_720p_hw_lacros",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-720p.h264.mp4",
+				refFileName: "still-colors-720p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-720p.h264.mp4", "still-colors-720p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacros",
+		}, {
+			Name: "h264_1080p_hw_lacros",
+			Val: drawOnCanvasParams{
+				fileName:    "still-colors-1080p.h264.mp4",
+				refFileName: "still-colors-1080p.ref.png",
+				browserType: browser.TypeLacros,
+			},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+			ExtraData:         []string{"video-on-canvas.html", "still-colors-1080p.h264.mp4", "still-colors-1080p.ref.png"},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacros",
 		}},
 		// TODO(andrescj): add tests for VP8 and VP9.
 	})
@@ -109,9 +172,16 @@ func init() {
 func DrawOnCanvas(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	params := s.Param().(drawOnCanvasParams)
+	_, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.browserType)
+	if err != nil {
+		s.Fatal("Failed to initialize test: ", err)
+	}
+	defer lacros.CloseLacros(ctx, l)
+
 	url := path.Join(server.URL, "video-on-canvas.html")
-	conn, err := cr.NewConn(ctx, url)
+	conn, err := cs.NewConn(ctx, url)
 	if err != nil {
 		s.Fatalf("Failed to open %v: %v", url, err)
 	}
@@ -120,7 +190,6 @@ func DrawOnCanvas(ctx context.Context, s *testing.State) {
 	// Open the reference file to set the canvas size equal to the expected size of the rendered video.
 	// This is done in order to prevent scaling filtering artifacts from interfering with our color
 	// checks later.
-	params := s.Param().(drawOnCanvasParams)
 	refPath := s.DataPath(params.refFileName)
 	f, err := os.Open(refPath)
 	if err != nil {
