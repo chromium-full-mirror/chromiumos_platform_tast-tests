@@ -1,0 +1,24 @@
+# Copyright 2023 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+android_apk("ArcQosMonitorTest") {
+  manifest = "AndroidManifest_productivity.xml"
+  source_dirs = ["src"]
+  resource_dirs = ["res"]
+  target_sdk_version = "26"
+}
+
+android_apk("ArcQosMonitorTest_game") {
+  manifest = "AndroidManifest_game.xml"
+  source_dirs = ["src"]
+  resource_dirs = ["res"]
+  target_sdk_version = "26"
+}
+
+android_apk("ArcQosMonitorTest_news") {
+  manifest = "AndroidManifest_news.xml"
+  source_dirs = ["src"]
+  resource_dirs = ["res"]
+  target_sdk_version = "26"
+}
