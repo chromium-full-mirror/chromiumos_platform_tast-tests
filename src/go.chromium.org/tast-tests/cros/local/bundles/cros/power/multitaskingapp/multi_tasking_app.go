@@ -219,6 +219,12 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to start collecting power metrics")
 	}
 
+	conn, err := uiHandler.NewChromeTab(ctx, br, chrome.BlankURL, true)
+	if err != nil {
+		return errors.Wrap(err, "failed to create new chrome tab")
+	}
+	defer conn.Close()
+
 	// Run at least 2 rounds as required, take 2 rounds to avoid test case taking too long.
 	const loopCount = 2
 	for i := 0; i < loopCount; i++ {
@@ -230,7 +236,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 			return errors.Wrap(err, "failed to run video app procedure")
 		}
 
-		if err := browserActivity(ctx, br, tconn, uiHandler, browserApp, browserTime); err != nil {
+		if err := browserActivity(ctx, br, tconn, conn, uiHandler, browserApp, browserTime); err != nil {
 			return errors.Wrap(err, "failed to run browser procedure")
 		}
 	}
@@ -262,7 +268,7 @@ func arrangeWindow(ctx context.Context, tconn *chrome.TestConn, appID string, wi
 // browserActivity defines test scenario of browser.
 // Open a website, browse the page and wait 12 seconds.
 // The total execution time is 2 minutes (5 rounds).
-func browserActivity(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, uiHandler cuj.UIActionHandler, browserApp apps.App, browserTime time.Duration) error {
+func browserActivity(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, conn *chrome.Conn, uiHandler cuj.UIActionHandler, browserApp apps.App, browserTime time.Duration) error {
 	const (
 		// chromeTabQuiescenceTimeout defines the maximum time duration to wait for a Chrome tab to achieve quiescence.
 		chromeTabQuiescenceTimeout = time.Minute
@@ -287,33 +293,43 @@ func browserActivity(ctx context.Context, br *browser.Browser, tconn *chrome.Tes
 		return errors.Wrap(err, "failed to switch to browser window")
 	}
 
+	const secsPerPage = 12 * time.Second
 	siteList := config.URLData.Pages
 	endTime := time.Now().Add(browserTime)
-	for _, site := range siteList {
-		url := fmt.Sprintf("%s%s?ver=%s&dest=%s", urlPrefix, redirectFile, config.URLData.Version, site)
-		conn, err := uiHandler.NewChromeTab(ctx, br, url, false)
-		if err != nil {
-			return errors.Wrapf(err, "failed to open %s", url)
-		}
-		// We don't need to keep the connection, so close it before leaving this function.
-		defer conn.Close()
+	for time.Now().Before(endTime) {
+		for _, site := range siteList {
+			startTime := time.Now()
 
-		// If the webpage's loading time times out, skip it and try the next one.
-		if err := webutil.WaitForQuiescence(ctx, conn, chromeTabQuiescenceTimeout); err != nil {
-			continue
-		}
+			url := fmt.Sprintf("%s%s?ver=%s&dest=%s", urlPrefix, redirectFile, config.URLData.Version, site)
+			if err := conn.Navigate(ctx, url); err != nil {
+				return errors.Wrapf(err, "failed to navigate to %s: %v", url, err)
+			}
 
-		if err := uiauto.NamedCombine("swipe on webpage and wait",
-			uiHandler.SwipeDown(),
-			// Sleep for 2 second in case there is lazy loading.
-			uiauto.Sleep(2*time.Second),
-			uiHandler.SwipeUp(),
-		)(ctx); err != nil {
-			return errors.Wrap(err, "failed to browse webpages")
-		}
+			// If the webpage's loading time times out, skip it and try the next one.
+			if err := webutil.WaitForQuiescence(ctx, conn, chromeTabQuiescenceTimeout); err != nil {
+				continue
+			}
 
-		if time.Now().After(endTime) {
-			break
+			if err := uiauto.NamedCombine("swipe on webpage and wait",
+				uiHandler.SwipeDown(),
+				// Sleep for 2 second in case there is lazy loading.
+				uiauto.Sleep(2*time.Second),
+				uiHandler.SwipeUp(),
+			)(ctx); err != nil {
+				return errors.Wrap(err, "failed to browse webpages")
+			}
+
+			browsingTime := startTime.Add(secsPerPage)
+			// GoBigSleepLint: Sleep to measure power.
+			if err := testing.Sleep(ctx, time.Until(browsingTime)); err != nil {
+				return errors.Wrap(err, "failed to sleep")
+			}
+
+			// Since the number of sites may change, the total duration is uncertain.
+			// Break the loop if the browsing timeout has exceeded.
+			if time.Now().After(endTime) {
+				break
+			}
 		}
 	}
 
