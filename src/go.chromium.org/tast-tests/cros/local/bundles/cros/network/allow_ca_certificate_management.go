@@ -72,7 +72,7 @@ func init() {
 			"olsa@google.com", // Test author
 		},
 		BugComponent: "b:1000044",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		Timeout:      5 * time.Minute,
