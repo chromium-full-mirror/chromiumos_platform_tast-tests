@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -59,6 +60,7 @@ var ashPipTests = pipTestParams{
 	pipType: ashPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
+		testPipDoubleTapToResize,
 		testPipTuck,
 		testPipMove,
 		testPipExpandViaMenu,
@@ -72,6 +74,7 @@ var lacrosPipTests = pipTestParams{
 	pipType: lacrosPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
+		testPipDoubleTapToResize,
 		testPipTuck,
 		testPipMove,
 		testPipExpandViaMenu,
@@ -85,6 +88,7 @@ var arcPipTests = pipTestParams{
 	pipType: arcPip,
 	tests: []pipTestFunc{
 		testPipPinchResize,
+		testPipDoubleTapToResize,
 		testPipTuck,
 		testPipMove,
 		testPipExpandViaMenu,
@@ -129,8 +133,8 @@ func init() {
 func Pip(ctx context.Context, s *testing.State) {
 	testParams := s.Param().(pipTestParams)
 
-	// Enable feature flag for PiP Pinch-to-Resize feature and PiP Tuck feature.
-	opts := []chrome.Option{chrome.EnableFeatures("PipPinchToResize"),
+	// Enable feature flag for PiP Double-Tap-to-Resize feature and PiP Tuck feature.
+	opts := []chrome.Option{chrome.EnableFeatures("PipDoubleTapToResize"),
 		chrome.EnableFeatures("PipTuck"), chrome.ExtraArgs("--show-taps")}
 
 	switch testParams.pipType {
@@ -287,6 +291,37 @@ func testPipPinchResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.
 	}
 
 	return nil
+}
+
+// testPipDoubleTapToResize verifies that PiP gets enlarged as expected via the double-tap-to-resize feature.
+// TODO(b/314875724): Add more test cases for this feature.
+func testPipDoubleTapToResize(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
+	window, err := getPIPWindow(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get PiP window")
+	}
+	beforeBounds := window.BoundsInRoot
+	// Target the upper part of the PiP window so we don't click on any button accidentally.
+	clickPoint := beforeBounds.CenterPoint().Sub(coords.NewPoint(0, beforeBounds.Height/4))
+	if err := mouse.DoubleClick(tconn, clickPoint, 100 * time.Millisecond)(ctx); err != nil {
+		return errors.Wrap(err, "failed to double-click PiP")
+	}
+
+	// Confirm that the window has been enlarged via the double-tap-to-resize feature.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		window, err = getPIPWindow(ctx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed to get PiP window")
+		}
+		afterBounds := window.BoundsInRoot
+		if beforeBounds.Width >= afterBounds.Width {
+			return errors.Wrapf(err, "unexpected PiP window width; want: width>%v, actual: width=%v", beforeBounds.Width, afterBounds.Width)
+		}
+		if beforeBounds.Height >= afterBounds.Height {
+			return errors.Wrapf(err, "unexpected PiP window height; want: height>%v, actual: height=%v", beforeBounds.Height, afterBounds.Height)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second})
 }
 
 func testPipTuck(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context, dispInfo *display.Info, tsw *input.TouchscreenEventWriter) error {
