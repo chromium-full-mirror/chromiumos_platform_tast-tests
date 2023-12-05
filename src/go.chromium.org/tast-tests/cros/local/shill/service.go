@@ -11,7 +11,9 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -188,6 +190,42 @@ func (s *Service) IsVisible(ctx context.Context) (bool, error) {
 	return visible, nil
 }
 
+// getModemState is a helper which gets the underlying state of the MM modem object for
+// a service. This allows us to see if a modem is registered.
+func (s *Service) getModemState(ctx context.Context) (mmconst.ModemState, error) {
+	device, err := s.GetDevice(ctx)
+	if err != nil {
+		return mmconst.ModemStateUnknown, errors.Wrap(err, "unable to get device for service")
+	}
+
+	props, err := device.GetProperties(ctx)
+	if err != nil {
+		return mmconst.ModemStateUnknown, err
+	}
+
+	modemPath, err := props.GetString(shillconst.DevicePropertyDBusObject)
+	if err != nil {
+		return mmconst.ModemStateUnknown, errors.Wrap(err, "unable to get MM modem for device")
+	}
+
+	modem, err := modemmanager.NewModemFromPath(ctx, dbus.ObjectPath(modemPath))
+	if err != nil {
+		return mmconst.ModemStateUnknown, err
+	}
+
+	modemProps, err := modem.GetProperties(ctx)
+	if err != nil {
+		return mmconst.ModemStateUnknown, err
+	}
+
+	state, err := modemProps.GetInt32(mmconst.ModemPropertyState)
+	if err != nil {
+		return mmconst.ModemStateUnknown, err
+	}
+
+	return mmconst.ModemState(state), nil
+}
+
 // WaitForConnectedOrError polls for either:
 // * Service.IsConnected to be true, in which case nil is returned.
 // * Service.Error to be set to an error value, in which case that is returned as an error.
@@ -214,7 +252,36 @@ func (s *Service) WaitForConnectedOrError(ctx context.Context) error {
 		if errorStr != shillconst.ServiceErrorNoFailure {
 			return testing.PollBreak(errors.New(errorStr))
 		}
-		return errors.New("not connected and no error")
+
+		// There is no error on the shill service. Our connection attempt
+		// might still be pending, so we should make sure we know whether
+		// the modem is at least registered.
+		modemState, err := s.getModemState(ctx)
+		if err != nil {
+			return err
+		}
+
+		modemStateStrs := map[mmconst.ModemState]string{
+			mmconst.ModemStateFailed:        "failed",
+			mmconst.ModemStateUnknown:       "unknown",
+			mmconst.ModemStateInitializing:  "initializing",
+			mmconst.ModemStateLocked:        "locked",
+			mmconst.ModemStateDisabled:      "disabled",
+			mmconst.ModemStateDisabling:     "disabling",
+			mmconst.ModemStateEnabling:      "enabling",
+			mmconst.ModemStateEnabled:       "enabled",
+			mmconst.ModemStateSearching:     "searching",
+			mmconst.ModemStateRegistered:    "registered",
+			mmconst.ModemStateDisconnecting: "disconnecting",
+			mmconst.ModemStateConnecting:    "connecting",
+			mmconst.ModemStateConnected:     "connected",
+		}
+		modemStateStr, ok := modemStateStrs[modemState]
+		if !ok {
+			modemStateStr = "invalid"
+		}
+
+		return errors.Errorf("not connected and no error. MM modem state: %v", modemStateStr)
 	}, &testing.PollOptions{
 		Timeout:  shillconst.DefaultTimeout,
 		Interval: 100 * time.Millisecond,

@@ -24,6 +24,16 @@ type Modem struct {
 	*dbusutil.PropertyHolder
 }
 
+// NewModemFromPath creates a new PropertyHolder instance for the Modem object at the
+// given D-Bus object path.
+func NewModemFromPath(ctx context.Context, path dbus.ObjectPath) (*Modem, error) {
+	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerModemInterface, path)
+	if err != nil {
+		return nil, err
+	}
+	return &Modem{ph}, nil
+}
+
 // NewModem creates a new PropertyHolder instance for the Modem object.
 func NewModem(ctx context.Context) (*Modem, error) {
 	_, obj, err := dbusutil.ConnectNoTiming(ctx, DBusModemmanagerService, DBusModemmanagerPath)
@@ -54,11 +64,7 @@ func NewModem(ctx context.Context) (*Modem, error) {
 	}, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
 		return nil, err
 	}
-	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerModemInterface, modemPath)
-	if err != nil {
-		return nil, err
-	}
-	return &Modem{ph}, nil
+	return NewModemFromPath(ctx, modemPath)
 }
 
 // GetSimpleModem creates a PropertyHolder for the SimpleModem object.
