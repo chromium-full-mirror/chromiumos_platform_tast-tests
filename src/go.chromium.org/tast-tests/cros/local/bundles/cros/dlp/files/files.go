@@ -18,6 +18,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -184,20 +185,18 @@ func CancelWarningAndVerify(ctx context.Context, ui *uiauto.Context, tconn *chro
 
 // LaunchFilesAppFullscreen launches Files App in fullscreen to avoid being partially covered by the taskbar.
 func LaunchFilesAppFullscreen(ctx context.Context, tconn *chrome.TestConn) (*filesapp.FilesApp, error) {
-	keyboard, err := input.VirtualKeyboard(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer keyboard.Close(ctx)
-
 	filesApp, err := filesapp.Launch(ctx, tconn)
 	if err != nil {
 		return filesApp, err
 	}
 
-	if err := keyboard.AccelAction("Alt+=")(ctx); err != nil {
+	window, err := ash.GetActiveWindow(ctx, tconn)
+	if err != nil {
 		return filesApp, err
 	}
 
+	if err := ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateMaximized); err != nil {
+		return filesApp, err
+	}
 	return filesApp, nil
 }

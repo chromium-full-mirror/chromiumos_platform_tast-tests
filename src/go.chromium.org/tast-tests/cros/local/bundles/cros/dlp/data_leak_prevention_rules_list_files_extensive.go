@@ -65,6 +65,7 @@ func init() {
 				ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 				Fixture:           fixture.ChromePolicyLoggedInARCFilesUXEnabled,
 				ExtraSoftwareDeps: []string{"android_p"},
+				Val:               "/run/arc/sdcard/write/emulated/0",
 			}, {
 				Name: "arc_vm",
 				ExtraAttr: []string{
@@ -75,6 +76,7 @@ func init() {
 				},
 				Fixture:           fixture.ChromePolicyLoggedInARCFilesUXEnabled,
 				ExtraSoftwareDeps: []string{"android_vm"},
+				Val:               "/media/fuse/android_files",
 			},
 		},
 		Data: []string{
@@ -97,6 +99,8 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	playfilesPath := s.Param().(string)
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
@@ -234,7 +238,7 @@ func DataLeakPreventionRulesListFilesExtensive(ctx context.Context, s *testing.S
 		s.Fatal("Local file is managed when it shouldn't be: ", err)
 	}
 
-	if err := testCopyingToPlayfiles(ctx, ui, tconn, filesApp, keyboard); err != nil {
+	if err := testCopyingToPlayfiles(ctx, ui, tconn, filesApp, playfilesPath); err != nil {
 		s.Fatal("Failed to testCopyingToPlayfiles: ", err)
 	}
 
@@ -318,12 +322,9 @@ func buttonDisabled(ctx context.Context, f *filesapp.FilesApp, button *nodewith.
 	return info.Restriction == restriction.Disabled, nil
 }
 
-func testCopyingToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, f *filesapp.FilesApp, kb *input.KeyboardEventWriter) error {
+func testCopyingToPlayfiles(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, f *filesapp.FilesApp, playFilesPath string) error {
 	// Silently removing stale file in case it's present from other tests.
-	uiauto.Combine("Removing stale file",
-		f.OpenPlayfiles(),
-		f.OpenFile("Pictures"),
-		f.DeleteFileOrFolder(kb, restrictedFile))(ctx)
+	os.Remove(playFilesPath + "/Pictures/" + restrictedFile)
 
 	// The folder which contains a restricted file and a non-restricted file.
 	if err := uiauto.Combine("copy the folder to Play files/Pictures",
