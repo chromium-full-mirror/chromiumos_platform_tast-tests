@@ -23,5 +23,16 @@ chromeos {
         }
       }
     }
+    source_test_plans {
+      test_plan_starlark_files {
+        host: "chrome-internal.googlesource.com"
+        project: "chromeos/config-internal"
+        path: "test/plans/v2/ctpv1_compatible/crostini_app_cq.star"
+      }
+      # All Crostini App tests.
+      path_regexps: "src/go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/app_.*"
+      # Subfolders like data.
+      path_regexps: "src/go.chromium.org/tast-tests/cros/local/bundles/cros/crostini/.*/.*"
+    }
   }
 }
