@@ -133,7 +133,7 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 	}
 
 	if count != expectedCount {
-		return nil, errors.Wrapf(allErrors, "missing data: got %v lines, want %v", count, expectedCount)
+		return nil, errors.Wrapf(allErrors, "missing data: got %v lines, want %v; iperf client command output: %s", count, expectedCount, output)
 	}
 
 	if totalDuration == 0.0 {
