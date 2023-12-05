@@ -13,8 +13,8 @@ import (
 )
 
 // Class names.
-const buttonClassName = "Button"
 const downloadsSectionClassName = "DownloadsSection"
+const filesAppChipClassName = "FilesAppChip"
 const holdingSpaceItemChipViewClassName = "HoldingSpaceItemChipView"
 const holdingSpaceItemScreenCaptureViewClassName = "HoldingSpaceItemScreenCaptureView"
 const holdingSpaceTrayClassName = "HoldingSpaceTray"
@@ -57,7 +57,7 @@ func FindPinnedFilesBubble() *nodewith.Finder {
 // FindPinnedFilesSectionFilesAppChip returns a finder which locates the holding
 // space pinned files section Files app chip node.
 func FindPinnedFilesSectionFilesAppChip() *nodewith.Finder {
-	return nodewith.Ancestor(nodewith.HasClass(buttonClassName).Ancestor(
+	return nodewith.Ancestor(nodewith.HasClass(filesAppChipClassName).Ancestor(
 		nodewith.HasClass(pinnedFilesSectionClassName))).Name("Open Files")
 }
 
