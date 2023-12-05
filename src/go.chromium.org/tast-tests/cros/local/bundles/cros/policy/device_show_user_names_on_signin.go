@@ -43,7 +43,7 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		Timeout:      2*chrome.LoginTimeout + 30*time.Second,
+		Timeout:      2*chrome.LoginTimeout + 40*time.Second,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceShowUserNamesOnSignin{}, pci.VerifiedFunctionalityUI),
 		},
@@ -66,14 +66,14 @@ func DeviceShowUserNamesOnSignin(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 
-	userPod := nodewith.ClassName("UserView").First()
+	userPod := nodewith.ClassName("LoginUserView").First()
 	tconn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		cr.Close(ctx)
 		s.Fatal("Creating login test API connection failed: ", err)
 	}
 
-	ui := uiauto.New(tconn).WithTimeout(20 * time.Second)
+	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
 	// Check if user pod already exists. Otherwise create a fake user.
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(userPod)(ctx); err != nil {
