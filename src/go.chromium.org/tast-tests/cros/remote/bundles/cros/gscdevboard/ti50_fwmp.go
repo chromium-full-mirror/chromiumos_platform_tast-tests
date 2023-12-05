@@ -44,10 +44,10 @@ func Ti50Fwmp(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
-
-	// Need to wait more than 3 seconds for ti50's delay to commit to NvMem after AP turns on
-	s.Log("Wait 5 second for NvWrites to actually commit to flash")
-	testing.Sleep(ctx, 5*time.Second) // GoBigSleepLint: No way to poll for this state
+	err := tpm.TpmvCommitNvmem()
+	if err != nil {
+		s.Fatal("Failed to enable Nvmem writes: ", err)
+	}
 
 	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work
 	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.FwmpFileID)

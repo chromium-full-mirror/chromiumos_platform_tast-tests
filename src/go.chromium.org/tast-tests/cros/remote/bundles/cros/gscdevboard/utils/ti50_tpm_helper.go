@@ -39,3 +39,17 @@ func (t *TpmHelper) TpmvGetBootMode() (byte, error) {
 	mode := response[12]
 	return mode, nil
 }
+
+// TpmvCommitNvmem sned the CommitNvmem vendor command.
+func (t *TpmHelper) TpmvCommitNvmem() error {
+	tpmvCommitNvmem, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" + // size
+		"20000000" + // ordinal: vendor
+		"0015") // subcommand: CommitNvmem
+	if err != nil {
+		return err
+	}
+
+	_, err = t.Execute(tpmvCommitNvmem)
+	return err
+}
