@@ -86,6 +86,18 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromeNotLoggedIn,
+		Desc:     "Start Chrome without logging in",
+		Contacts: []string{"xuhong@chromium.org", "cros-tdm-tpe-eng@google.com"},
+		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
+			return []Option{NoLogin()}, nil
+		}),
+		SetUpTimeout:    FixtureSetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedInWith100FakeApps,
 		Desc:     "Logged into a user session with 100 fake apps",
 		Contacts: []string{"mukai@chromium.org"},

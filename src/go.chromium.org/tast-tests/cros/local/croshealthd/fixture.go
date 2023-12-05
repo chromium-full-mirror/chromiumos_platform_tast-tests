@@ -102,6 +102,21 @@ func init() {
 		Impl:            newCrosHealthdFixture(),
 		Parent:          "chromeLoggedIn",
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "crosHealthdRunningWithChromeNotLoggedIn",
+		Desc: "The croshealthd daemon is running and with no user logged in",
+		Contacts: []string{
+			"cros-tdm-tpe-eng@google.com", // Team mailing list
+			"xuhong@chromium.org",         // Fixture maintainer
+		},
+		SetUpTimeout:    30 * time.Second,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  5 * time.Second,
+		PostTestTimeout: 5 * time.Second,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCrosHealthdFixture(),
+		Parent:          "chromeNotLoggedIn",
+	})
 }
 
 // checkNewCrashes checks if there are new healthd related crash files.

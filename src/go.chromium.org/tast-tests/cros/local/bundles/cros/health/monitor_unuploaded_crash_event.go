@@ -53,14 +53,21 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"diagnostics"},
-		// The crash sender doesn't upload crashes in guest mode.
-		Fixture: "crosHealthdRunningWithChromeLoggedIn",
 		// crash_sender (invoked by cros_healthd) needs more time to run
 		// because crash_sender would hold off for 30 seconds if the
 		// crash meta file is too new. See the comments above
 		// |SenderBase::Options::hold_off_time| in
 		// platform2/crash-reporter/crash_sender_base.h.
 		Timeout: 4 * time.Minute,
+		Params: []testing.Param{{
+			Name: "user_logged_in",
+			Fixture: "crosHealthdRunningWithChromeLoggedIn",
+		}, {
+			Name:    "user_not_logged_in",
+			// Ensure that the test does not run in guest mode.
+			Fixture: "crosHealthdRunningWithChromeNotLoggedIn",
+			ExtraAttr: []string{"informational"},
+		}},
 	})
 }
 

@@ -18,6 +18,8 @@ const (
 	ChromeLoggedInDisableSyncNoFwUpdate = "chromeLoggedInDisableSyncNoFwUpdate"
 	// Logged into a guest user session
 	ChromeLoggedInGuest = "chromeLoggedInGuest"
+	// Start Chrome without logging in.
+	ChromeNotLoggedIn = "chromeNotLoggedIn"
 	// Logged into a user session with 100 fake apps.
 	ChromeLoggedInWith100FakeApps = "chromeLoggedInWith100FakeApps"
 	// Logged into a user session with 100 fake apps and battery saver enabled.
