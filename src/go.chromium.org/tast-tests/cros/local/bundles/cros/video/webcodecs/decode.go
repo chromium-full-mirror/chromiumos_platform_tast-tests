@@ -15,6 +15,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast-tests/cros/local/media/encoding"
 	"go.chromium.org/tast/core/errors"
@@ -27,6 +29,9 @@ type TestDecodeArgs struct {
 	VideoFile string
 	// Acceleration denotes which decoder is used, hardware or software.
 	Acceleration HardwareAcceleration
+	// BrowserType indicates the type of Chrome browser to be used,
+	// Ash Chrome or Lacros Chrome.
+	BrowserType browser.Type
 }
 
 const decodeHTML = "webcodecs_decode.html"
@@ -153,8 +158,8 @@ func validateMD5s(ctx context.Context, gotMD5s []string, jsonFilePath, outDir st
 
 // RunDecodeTest tests encoding in WebCodecs API. It verifies a specified encoder is used and
 // the decoded frames with md5 checksums in jsonFilePath.
-func RunDecodeTest(ctx context.Context, cr *chrome.Chrome, fileSystem http.FileSystem, testArgs TestDecodeArgs, jsonFilePath, outDir string) error {
-	cleanupCtx, server, conn, observer, deferFunc, err := prepareWebCodecsTest(ctx, cr, fileSystem, decodeHTML)
+func RunDecodeTest(ctx context.Context, cs ash.ConnSource, fileSystem http.FileSystem, testArgs TestDecodeArgs, jsonFilePath, outDir string) error {
+	cleanupCtx, server, conn, observer, deferFunc, err := prepareWebCodecsTest(ctx, cs, fileSystem, decodeHTML)
 	if err != nil {
 		return err
 	}
