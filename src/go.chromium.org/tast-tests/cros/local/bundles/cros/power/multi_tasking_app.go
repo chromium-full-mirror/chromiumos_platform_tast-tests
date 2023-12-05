@@ -53,8 +53,9 @@ func init() {
 		Timeout:      multiTaskingAppTimeout,
 		Params: []testing.Param{
 			{
-				Name:    "ash",
-				Fixture: "powerAshARC",
+				Name:      "ash",
+				Fixture:   "powerAshARC",
+				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 			{
 				Name:    "lacros",

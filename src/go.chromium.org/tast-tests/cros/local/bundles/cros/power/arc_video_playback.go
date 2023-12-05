@@ -61,6 +61,7 @@ func init() {
 				Val:       arcVideoTestParam{VideoName: "h264_1080_30fps", TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
 				Timeout:   time.Hour + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4"},
+				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
 				Name:      "h264_1080_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_1080_60fps"},
@@ -126,6 +127,7 @@ func init() {
 				Val:       arcVideoTestParam{VideoName: "vp9_1080_30fps", TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
 				Timeout:   time.Hour + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm"},
+				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
 				Name:      "vp9_1080_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_1080_60fps"},
