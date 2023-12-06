@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cienet-firmware@cienet.corp-partner.google.com",
+			"asemjonovs@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Fixture:      fixture.NormalMode,
@@ -120,6 +120,6 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}
 
 	if err := h.Servo.RestorePDPort(ctx); err != nil {
-		s.Fatal("Failed to restore PD")
+		s.Fatal("Failed to restore PD: ", err)
 	}
 }
