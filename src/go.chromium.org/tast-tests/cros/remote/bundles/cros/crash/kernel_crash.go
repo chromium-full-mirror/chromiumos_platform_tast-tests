@@ -54,6 +54,15 @@ func init() {
 				earlyCrash: false,
 			},
 		}, {
+			Name: "hung_task",
+			Val: testParams{
+				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
+				panicCmd:   kernelHungTaskCmd,
+				goodSig:    kernelHungTaskSig,
+				execName:   "kernel",
+				earlyCrash: false,
+			},
+		}, {
 			Name:      "early_crash",
 			ExtraAttr: []string{"informational"},
 			Val: testParams{
@@ -105,6 +114,29 @@ func restoreLsbRelease(ctx context.Context, d *dut.DUT) error {
 
 const kernelPanicCmd = "echo PANIC > /sys/kernel/debug/provoke-crash/DIRECT"
 const kernelPanicSig = "kernel-dumptest-[[:xdigit:]]{8}"
+
+// Shorten the hung task timeout both to make the test run faster and to avoid
+// hitting a tast timeout. NOTE: it can take up to 2x the timeout for the
+// reboot to happen since we have `kernel.hung_task_check_interval_secs = 0`
+// and that means we check for hung tasks very infrequently.
+//
+// NOTE: we only shorten the timeout if it's the expected value of 120 to avoid
+// accidentally masking a bug elsewhere in the system that causes
+// the hung_task_timeout_secs to fail to set set properly.
+//
+// ALSO NOTE: we don't want to make this timeout _too_ short since it could
+// potentially trigger a false hung task that's not the one we want. There are
+// some legitimate reasons why we might block in the kernel for a long time
+// (like if we call `sync` to wait for everything to be written to disk).
+// Potentially we could go lower than 30 seconds here, but if we went down to
+// 1 second that would likely be extreme.
+const kernelHungTaskCmd = `
+if [ "$(sysctl -b kernel.hung_task_timeout_secs)" = "120" ]; then
+  sysctl -w kernel.hung_task_timeout_secs=30;
+fi
+echo HUNG_TASK > /sys/kernel/debug/provoke-crash/DIRECT
+`
+const kernelHungTaskSig = "kernel-\\(HANG\\)-lkdtm_HUNG_TASK-[[:xdigit:]]{8}"
 
 func KernelCrash(ctx context.Context, s *testing.State) {
 	const systemCrashDir = "/var/spool/crash"
