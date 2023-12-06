@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -263,4 +264,28 @@ func MissiveConfirmedAllRecords(ctx context.Context, priority string, timeout ti
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: timeout})
+}
+
+// ReplaceCrashType replaces the crash type in a meta file with kernel. Only
+// used by crash events tests.
+func ReplaceCrashType(metaPath string) error {
+	input, err := os.ReadFile(metaPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to read file")
+	}
+
+	lines := strings.Split(string(input), "\n")
+
+	for i, line := range lines {
+		if strings.HasPrefix(line, "upload_var_collector=") {
+			lines[i] = "upload_var_collector=kernel"
+		}
+	}
+	output := strings.Join(lines, "\n")
+	err = os.WriteFile(metaPath, []byte(output), 0000 /* perm, ignored */)
+	if err != nil {
+		return errors.Wrapf(err, "failed to write back to meta file %s", metaPath)
+	}
+
+	return nil
 }

@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
@@ -105,6 +106,10 @@ func setUpUnuploadedCrash(ctx context.Context, s *testing.State) {
 		for _, files := range crashFiles {
 			for _, file := range files {
 				testing.ContextLog(ctx, "Crash meta file corresponding to the test unuploaded crash: ", file)
+				testing.ContextLog(ctx, "Replacing its crash type with kernel")
+				if err := reportingutil.ReplaceCrashType(file); err != nil {
+					s.Fatal("Failed to replace crash type in ", file, err)
+				}
 			}
 		}
 	}
