@@ -154,8 +154,9 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 		if err := browser.ActivateTabByTitle(ctx, tconn, textTitle); err != nil {
 			return errors.Wrap(err, "failed activating video conference window")
 		}
-		// TODO(b/281974156): Register histogram metrics of EventLatency.KeyPressed.TotalLatency,
-		// once b/307593118 is fixed.
+		pr.RegisterMetrics(
+			power.NewHistogramMetrics(tconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
+		)
 		// typeCtx is shorter than kbdCtx because a keyboard needs to be closed
 		// after typeCtx is expired.
 		kbdCtx := ctx
