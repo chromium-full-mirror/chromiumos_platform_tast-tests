@@ -23,10 +23,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// operation indicates a specific operation that can be performed in the Play Store.
 type operation string
 
 const (
+	// Install an app from the Play Store, wait for it to complete and verify the installation.
 	installApp       operation = "install"
+	// Begin installing an app from the Play Store. Does not wait for, or verify, the installation.
+	beginAppInstall  operation = "beginAppInstall"
+	// Update an app from the Play Store and wait for it to complete.
 	updateApp        operation = "update"
 	playStorePackage           = "com.android.vending"
 )
@@ -246,7 +251,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 	var btnText string // Action button text - install or update.
 	switch op {
-	case installApp:
+	case installApp, beginAppInstall:
 		// Look for install button.
 		btnText = installButtonText
 	case updateApp:
@@ -346,6 +351,11 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 			return testing.PollBreak(err)
 		}
 
+		// Do not wait for the install to complete in a beginAppInstall operation.
+		if op == beginAppInstall {
+			return nil
+		}
+
 		testing.ContextLog(ctx, "Checking existence of installation")
 		// There are two possible of descriptions on the Play Store installation page.
 		// One is "Download in progress", the other is "Install in progress".
@@ -406,6 +416,13 @@ func InstallApp(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string, o
 		return errors.Errorf("failed to install %s", pkgName)
 	}
 	return nil
+}
+
+// BeginAppInstall uses the Play Store to trigger installation of an application.
+// It will NOT wait for the app to finish installing before returning.
+// Play Store should be open to the homepage before running this function.
+func BeginAppInstall(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string, opt *Options) error {
+	return installOrUpdate(ctx, a, d, pkgName, opt, beginAppInstall)
 }
 
 // InstallOrUpdateAppAndClose installs or updates an application via Play Store, closes Play Store after installation.
