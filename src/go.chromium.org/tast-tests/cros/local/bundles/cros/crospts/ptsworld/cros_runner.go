@@ -64,7 +64,22 @@ func (r *CrosRunner) RunTestSuite(ctx context.Context, s *testing.State, suiteNa
 	const (
 		// NO_DOWNLOAD_CACHE, NO_EXTERNAL_DEPENDENCIES and NO_FILE_HASH_CHECKS are
 		// set for running the test by local installed tests.
-		ptsFlags = "NO_DOWNLOAD_CACHE=TRUE NO_EXTERNAL_DEPENDENCIES=TRUE NO_FILE_HASH_CHECKS=TRUE"
+
+		// The benchmark tool may be reinstalled which caused by PTS to check
+		// the system_id_string. The system_id_string is composed by cpu model,
+		// operating-system and compiler. See
+		// https://github.com/phoronix-test-suite/phoronix-test-suite/blob/v10.8.4/pts-core/objects/phodevi/phodevi.php#L461
+		// The reinstallation frequently failed due the permission denied error
+		// which caused by PTS compiler mask.
+		// NO_COMPILER_MASK is to disable PTS compiler mask and workaround the
+		// installation error. The PTS compiler mask is used to log the compiler
+		// logs. It finds the system compiler, i.e. CC, CXX...etc, and creates a
+		// wrapper script file in /tmp/<benchmark_compiler_mask_temp_dir>/cc,
+		// but the wrapper file sometime not set to right permission or did not
+		// find the CC path causes the installation error.
+		// Added the flag will use the benchmark tool installer without PTS
+		// compiler mask.
+		ptsFlags = "NO_DOWNLOAD_CACHE=TRUE NO_EXTERNAL_DEPENDENCIES=TRUE NO_FILE_HASH_CHECKS=TRUE NO_COMPILER_MASK=TRUE"
 		// ptsBatchRun is the batch mode test command which has no user interaction.
 		ptsBatchRun = "/phoronix-test-suite/phoronix-test-suite batch-benchmark"
 	)
