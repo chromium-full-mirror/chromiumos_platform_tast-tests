@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -32,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_shield"},
-		Fixture:      fixture.Ti50CcdOpen,
+		Fixture:      fixture.GSCInitialFactory,
 		Data:         []string{"valid-32M_20231101.bin"},
 	})
 }
@@ -53,22 +54,31 @@ func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	// First, provision the GSC and AP flash so it can run AP RO verification correctly.
+	s.Log("(Re)starting GSC")
+	b.Reset(ctx)
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
-	s.Log("Best-effort provisioning AP SPI settings")
-	// This causes any board ID in the GSCVD to be accepted.
-	// This is a write-once field, so this is a best-effort provisioning.
-	// If this fails, then the test will fail since the GSCVD won't be accepted.
-
-	_, err := i.Command(ctx, "bid ZZCR 0x7fffffff")
+	s.Log("Provisioning AP SPI settings")
+	bidSet, err := i.Command(ctx, "bid ZZCR 0x7fffffff")
 	th.MustSucceed(err, "Set BID")
+	if strings.Contains(bidSet, "failed") {
+		s.Fatal("Could not set BID: ", bidSet)
+	}
 
 	// Use 4 byte addressing since this is a 32 MiB chip.
-	_, err = i.Command(ctx, "ap_ro_verify addrmode 4byte")
+	modeSet, err := i.Command(ctx, "ap_ro_verify addrmode 4byte")
 	th.MustSucceed(err, "Set addrmode")
+	if strings.Contains(modeSet, "failed") {
+		s.Fatal("Could not set address mode: ", modeSet)
+	}
+
 	// Found with the `src/third_party/ap_wpsr` tool with
 	// `./ap_wpsr --name W25Q256JV_M --start 0 --length 0x00100000`
-	_, err = i.Command(ctx, "ap_ro_verify wpsr d4 fc 0 41")
+	wpsrSet, err := i.Command(ctx, "ap_ro_verify wpsr d4 fc 0 41")
 	th.MustSucceed(err, "Set wpsr")
+	if strings.Contains(wpsrSet, "failed") {
+		s.Fatal("Could not set wpsr: ", wpsrSet)
+	}
 
 	b.WithApFlashAccess(ctx, i, ti50.DoNotHoldInReset, func(flash ti50.ApFlash) {
 		// Enable SW WP on the AP SPI chip so the status registers are as expected.

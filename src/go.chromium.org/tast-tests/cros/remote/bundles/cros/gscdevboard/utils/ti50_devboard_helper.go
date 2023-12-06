@@ -482,7 +482,8 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 // WithApFlashAccess runs `f` with the proper setup and teardown to access the SPI flash chip.
 // This function asserts the SuzyQ strapping and leaves it in that state, so `gsctool` should work immediately.
 func (h DevboardHelper) WithApFlashAccess(ctx context.Context, i *ti50.CrOSImage, holdReset ti50.HoldReset, f func(ti50.ApFlash)) {
-	h.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	// Reset GSC with SuzyQ strap so we know we will get the USB connect message
+	h.ResetWithStraps(ctx, ti50.CcdSuzyQ)
 
 	if err := i.WaitUntilMatch(ctx, regexp.MustCompile(`USB:\s+Connected`), 20*time.Second); err != nil {
 		h.Fatalf("Expected to see Ti50 connect CCD USB: %s", err)
