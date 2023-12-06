@@ -57,7 +57,7 @@ func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser
 	// Register new account if required.
 	// Sometimes it takes a long time to display the next page.
 	continueButton := nodewith.Name("Continue").Role(role.Button)
-	nodeFound, err = ui.WithTimeout(2*time.Minute).FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea, continueButton)
+	nodeFound, err = ui.WithTimeout(3*time.Minute).FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea, continueButton)
 	if err != nil {
 		return errors.Wrap(err, "failed to reach either my account or registration flow")
 	}
