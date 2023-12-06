@@ -18,9 +18,9 @@ import (
 )
 
 const (
-	// Ti50CcdOpen fixture ensures the testlab is enabled at startup and that tpm is reset between
+	// GSCOpenCCD fixture ensures the testlab is enabled at startup and that tpm is reset between
 	// each tests
-	Ti50CcdOpen = "ti50CcdOpen"
+	GSCOpenCCD = "gscOpenCCD"
 
 	testLabOpenTimeout = 30 * time.Second
 )
@@ -33,7 +33,7 @@ var (
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:           Ti50CcdOpen,
+		Name:           GSCOpenCCD,
 		Desc:           "Ensures that CCD is open and TPM is cleared before every test",
 		Contacts:       []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:           &ccdOpenImpl{},

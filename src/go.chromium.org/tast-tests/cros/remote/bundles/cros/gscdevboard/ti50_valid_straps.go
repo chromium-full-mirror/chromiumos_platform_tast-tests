@@ -33,7 +33,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.Ti50CcdOpen,
+		Fixture:      fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "spi_tablet",
 			Val: ti50ValidStrapsParam{

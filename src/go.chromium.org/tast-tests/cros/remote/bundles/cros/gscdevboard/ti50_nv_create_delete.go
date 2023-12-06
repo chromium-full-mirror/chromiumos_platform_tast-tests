@@ -17,7 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
 
-        "go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,14 +34,14 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.Ti50CcdOpen,
+		Fixture:      fixture.GSCOpenCCD,
 	})
 }
 
 func Ti50NvCreateDelete(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
-        defer i.Close(ctx)
+	defer i.Close(ctx)
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
 	err := tpm.TpmvCommitNvmem()
