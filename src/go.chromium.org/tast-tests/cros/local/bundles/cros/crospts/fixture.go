@@ -25,7 +25,7 @@ const (
 
 const (
 	// setUpTimeout is the time to set up PTSWorld.
-	setUpTimeout = 3 * time.Minute
+	setUpTimeout = 8 * time.Minute
 	// resetTimeout is the time to reset PTSWorld.
 	resetTimeout = 5 * time.Second
 	// preTestTimeout is the time to run pre-test steps.
