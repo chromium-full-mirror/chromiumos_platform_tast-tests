@@ -63,6 +63,15 @@ func init() {
 				earlyCrash: false,
 			},
 		}, {
+			Name: "soft_lockup",
+			Val: testParams{
+				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
+				panicCmd:   kernelSoftLockupCmd,
+				goodSig:    kernelSoftLockupSig,
+				execName:   "kernel",
+				earlyCrash: false,
+			},
+		}, {
 			Name:      "early_crash",
 			ExtraAttr: []string{"informational"},
 			Val: testParams{
@@ -137,6 +146,9 @@ fi
 echo HUNG_TASK > /sys/kernel/debug/provoke-crash/DIRECT
 `
 const kernelHungTaskSig = "kernel-\\(HANG\\)-lkdtm_HUNG_TASK-[[:xdigit:]]{8}"
+
+const kernelSoftLockupCmd = "echo SOFTLOCKUP > /sys/kernel/debug/provoke-crash/DIRECT"
+const kernelSoftLockupSig = "kernel-\\(SOFTLOCKUP\\)-lkdtm_SOFTLOCKUP-[[:xdigit:]]{8}"
 
 func KernelCrash(ctx context.Context, s *testing.State) {
 	const systemCrashDir = "/var/spool/crash"
