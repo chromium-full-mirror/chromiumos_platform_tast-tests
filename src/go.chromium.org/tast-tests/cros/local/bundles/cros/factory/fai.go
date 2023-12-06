@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -28,6 +29,7 @@ func init() {
 		Contacts: []string{"chromeos-factory-fai@google.com", "wyuang@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"factory_flow", "gsc"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      3 * time.Minute,
@@ -107,7 +109,7 @@ func FAI(ctx context.Context, s *testing.State) {
 	re := regexp.MustCompile(`Error: Failed to collect "(?P<component>\w+)".`)
 	matches := re.FindAllStringSubmatch(string(stderr), -1)
 	if matches != nil {
-		var components []string;
+		var components []string
 		for _, match := range matches {
 			components = append(components, match[1])
 		}
