@@ -40,7 +40,7 @@ func GscSysinfo(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("(Re)starting GSC")
-	b.ResetWithStraps(ctx)
+	b.Reset(ctx)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Simulate the typing of "sysinfo" command on GSC console.

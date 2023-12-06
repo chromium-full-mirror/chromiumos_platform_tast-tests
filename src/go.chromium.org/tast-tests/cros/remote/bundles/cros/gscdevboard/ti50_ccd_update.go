@@ -48,25 +48,20 @@ func init() {
 // Ti50CCDUpdate requires HW setup with SuzyQ cable from Andreib to drone/workstation.
 func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 	f := s.FixtValue().(*fixture.Value)
-	b := utils.NewDevboardHelper(s)
-
-	s.Log("Simulating insertion of SuzyQ")
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 
 	ccdImage, err := prepareCcdImageFile(ctx, s, f.ImagePath)
 	if err != nil {
 		s.Fatal("Prepare file '", f.ImagePath, "': ", err)
 	}
 
-	if err = b.Reset(ctx); err != nil {
-		s.Fatal("Failed to reset: ", err)
-	}
-
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
 	// Wait for reboot output to finish before reading version.
+	s.Log("Simulating insertion of SuzyQ and resetting")
+	b.ResetWithStraps(ctx, ti50.CcdSuzyQ)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	outStr, err := i.Command(ctx, "version")

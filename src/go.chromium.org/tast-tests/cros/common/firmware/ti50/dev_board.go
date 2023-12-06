@@ -69,8 +69,6 @@ type DevBoard interface {
 	OpenTitanToolCommand(ctx context.Context, cmd string, args ...string) (output map[string]interface{}, err error)
 	// PlainCommand executes a opentitantool subcommand that uses no file arguments.
 	PlainCommand(ctx context.Context, cmd string, args ...string) (output []byte, err error)
-	// Reset the DevBoard.
-	Reset(ctx context.Context) error
 	// GSCToolCommand executes gsctool.
 	GSCToolCommand(ctx context.Context, image string, args ...string) (output []byte, err error)
 	// Executes TCG tests.

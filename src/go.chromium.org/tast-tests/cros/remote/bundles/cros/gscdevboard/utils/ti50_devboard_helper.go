@@ -288,6 +288,11 @@ func (h DevboardHelper) ResetWithStraps(ctx context.Context, straps ...ti50.Gpio
 	h.GpioRemoveStrap(ctx, ti50.StrapReset)
 }
 
+// Reset resets the chip
+func (h DevboardHelper) Reset(ctx context.Context) {
+	h.ResetWithStraps(ctx)
+}
+
 type initialLevels struct {
 	Name  ti50.GpioName `json:"signal_name"`
 	Value bool          `json:"value"`

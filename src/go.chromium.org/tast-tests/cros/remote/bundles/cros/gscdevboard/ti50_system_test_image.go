@@ -51,7 +51,7 @@ func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 	th.MustSucceed(b.Open(ctx), "Open gsc UART")
 	defer b.Close(ctx)
 
-	b.ResetWithStraps(ctx)
+	b.Reset(ctx)
 
 	// Deassert PLT_RST_L to prevent deep sleep while tests are running.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)

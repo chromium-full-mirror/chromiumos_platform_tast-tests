@@ -46,7 +46,7 @@ func Ti50EcReset(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	b.ResetWithStraps(ctx)
+	b.Reset(ctx)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	subTest(ctx, s, b, i, th)

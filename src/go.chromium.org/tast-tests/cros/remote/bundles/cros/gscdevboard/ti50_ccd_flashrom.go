@@ -50,7 +50,7 @@ func Ti50CCDFlashrom(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	// Enable CCD.
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	b.ResetWithStraps(ctx, ti50.CcdSuzyQ)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	pv := perf.NewValues()
