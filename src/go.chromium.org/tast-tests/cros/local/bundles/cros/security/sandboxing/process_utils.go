@@ -35,6 +35,7 @@ var Exclusions = []string{
 	"chrome",
 	"cras_test_client",
 	"crash_reporter",
+	"crossystem", // Transient process used for reading sys config
 	"endpoint",
 	"evemu-device",
 	"flock",
