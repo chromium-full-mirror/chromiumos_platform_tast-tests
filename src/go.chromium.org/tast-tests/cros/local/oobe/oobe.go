@@ -146,6 +146,7 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 		termTimeout            = 60 * time.Second
 		anyDialogTimeout       = 10 * time.Second
 		anyActionButtonTimeout = 1 * time.Minute
+		acceptTimeout          = 3 * time.Second
 	)
 	consolidatedConsentHeader := nodewith.Name("Review these terms and control your data").Role(role.Dialog)
 	if err := ui.WithTimeout(termTimeout).WaitUntilExists(consolidatedConsentHeader)(ctx); err != nil {
@@ -153,12 +154,21 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 	}
 
 	// In lower resolution screens, a `see more` button is shown and the accept button is hidden until the `see more` button is clicked.
+	// Note, focusedButton may be acceptAndContinue.
 	acceptAndContinue := nodewith.Name("Accept and continue").Role(role.Button)
 	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
 
-	if err := uiauto.IfSuccessThen(
-		ui.WaitUntilExists(focusedButton),
-		ui.LeftClickUntil(focusedButton, ui.WaitUntilExists(acceptAndContinue)))(ctx); err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := ui.WithTimeout(acceptTimeout).WaitUntilExists(acceptAndContinue)(ctx); err == nil {
+			return nil
+		}
+
+		if err := ui.WithTimeout(acceptTimeout).LeftClick(focusedButton)(ctx); err != nil {
+			return testing.PollBreak(err)
+		}
+
+		return errors.New("Accept button not yet available")
+	}, &testing.PollOptions{Timeout: termTimeout, Interval: time.Second}); err != nil {
 		return err
 	}
 
