@@ -361,49 +361,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeLoggedInForCrostiniLxdNext",
-		Desc:     "Logged into a session (with LXD 5.0)",
-		Contacts: []string{"clumptini+oncall@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			opts := generateChromeOpts(s)
-			opts = append(opts, chrome.EnableFeatures("CrostiniUseLxd5"))
-			return opts, nil
-		}),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-		Vars:            []string{"keepState"},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBullseyeWithLxdNext",
-		Desc:            "Install Crostini with Bullseye and LXD 5.0",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBullseye},
-		SetUpTimeout:    installationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniLxdNext",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
-		Name:            "crostiniBookwormWithLxdNext",
-		Desc:            "Install Crostini with Bookworm and LXD 5.0",
-		Contacts:        []string{"clumptini+oncall@google.com"},
-		Impl:            &crostiniFixture{preData: preTestDataBookworm},
-		SetUpTimeout:    installationTimeout,
-		ResetTimeout:    checkContainerTimeout,
-		PostTestTimeout: postTestTimeout,
-		TearDownTimeout: uninstallationTimeout,
-		Parent:          "chromeLoggedInForCrostiniLxdNext",
-		Vars:            []string{"keepState"},
-		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     "crostiniBullseyePolicy",
 		Desc:     "Install Crostini with Bullseye, with Chrome logged in with policy",
 		Contacts: []string{"clumptini+oncall@google.com", "aidazolic@google.com"},
