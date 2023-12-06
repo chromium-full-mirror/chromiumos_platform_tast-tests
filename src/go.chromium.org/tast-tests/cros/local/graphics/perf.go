@@ -32,6 +32,21 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// errorOnNonDischarging returns a proper error when the battery is not discharging.
+// If no discharging is expected, then returns nil.
+func errorOnNonDischarging(ctx context.Context) error {
+	if _, err := power.SysfsBatteryPath(ctx); err != nil {
+		testing.ContextLog(ctx, "This device doesn't have a battery, skip collecting power consumption")
+		return nil
+	}
+
+	if !util.SupportChromeEC() {
+		testing.ContextLog(ctx, "This device doesn't support chrome EC, skip collecting power consumption")
+		return nil
+	}
+	return errors.New("the battery is not set to discharge")
+}
+
 // collectGPUPerformanceCounters gathers the use time for each of a given set of
 // Performance Monitoring Units (PMUs), if available, providing them in a map
 // indexed by the name of the associated Command Streamer (CS): RCS for Renderer/3D,
@@ -635,12 +650,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 		return errors.Wrap(err, "failed to get the battery status")
 	}
 	if status.IsLinePowerConnected() {
-		if util.SupportChromeEC() {
-			return errors.New("the battery is not set to discharge")
-		}
-
-		testing.ContextLog(ctx, "This device doesn't support chrome EC, skip collecting power consumption")
-		return nil
+		return errorOnNonDischarging(ctx)
 	}
 
 	// We don't use power.SysfsBatteryMetrics because we want to reject zero
@@ -715,12 +725,7 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 		return errors.Wrap(err, "failed to get the battery status")
 	}
 	if !status.BatteryDischarging {
-		if util.SupportChromeEC() {
-			return errors.New("the battery is not set to discharge")
-		}
-
-		testing.ContextLog(ctx, "This device doesn't support chrome EC, skip collecting power consumption")
-		return nil
+		return errorOnNonDischarging(ctx)
 	}
 
 	// We don't use power.SysfsBatteryMetrics because we want to reject zero
