@@ -324,15 +324,16 @@ func TestPlaybackPerfParams(t *testing.T) {
 
 		}
 	}
+
 	for _, codec := range []string{"h264", "vp9", "av1"} {
-		resolution, fps, dec := 1080, 30, "hw"
-		file := playbackPerfLongFile[codec]
-		param := genPlaybackParam(codec, file, resolution, fps, dec,
-			"intel_mc", "chromeVideoWithIntelMediaCompression",
-			[]string{})
-		param.HardwareDeps = "hwdep.GPUFamily(\"meteorlake\", \"alderlake\", \"raptorlake\")"
-		param.MeasureRoughness = true
-		params = append(params, param)
+		fps, dec := 30, "hw"
+		for _, resolution := range []int{1080, 2160} {
+			param := genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps), resolution, fps, dec,
+				"intel_mc", "chromeVideoWithIntelMediaCompression",
+				[]string{})
+			param.HardwareDeps = "hwdep.GPUFamily(\"meteorlake\", \"alderlake\", \"raptorlake\")"
+			params = append(params, param)
+		}
 	}
 
 	// V4L2 Flat stateful decoder
