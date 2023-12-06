@@ -290,14 +290,15 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 
 // TriggerPDHardReset triggers a USB-PD Hard Reset from the EC/DUT-side
 func (s *Servo) TriggerPDHardReset(ctx context.Context) error {
-
+	var pdStateBefore *PDState
 	// Because the pass criteria expects the PE state to be the same after
 	// the hard reset as before, make sure the PE/PD state is in either
 	// the SNK_READY or SRC_READY state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if pdState, err := s.GetDUTPDState(ctx); err == nil {
-			if !pdState.IsPDReady() {
-				testing.ContextLogf(ctx, "PD State = %s", pdState.PEStateName)
+		var err error
+		if pdStateBefore, err = s.GetDUTPDState(ctx); err == nil {
+			if !pdStateBefore.IsPDReady() {
+				testing.ContextLogf(ctx, "PD State = %s", pdStateBefore.PEStateName)
 				return errors.Wrap(err, "Post hard reset, PE state does not match")
 			}
 		} else {
@@ -308,11 +309,6 @@ func (s *Servo) TriggerPDHardReset(ctx context.Context) error {
 		return errors.Wrap(err, "DUT port is not in Ready state")
 	}
 
-	// Get port status
-	pdStateBefore, err := s.GetDUTPDState(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get pre-test EC/DUT-side PD port status")
-	}
 	testing.ContextLogf(ctx, "Before status: %s/%s %s", pdStateBefore.PowerRole, pdStateBefore.DataRole, pdStateBefore.PEStateName)
 
 	if err := s.EnablePDConsoleDebug(ctx); err != nil {
@@ -320,7 +316,7 @@ func (s *Servo) TriggerPDHardReset(ctx context.Context) error {
 	}
 
 	// Initiate hard reset from DUT
-	err = s.RunECCommand(
+	err := s.RunECCommand(
 		ctx,
 		fmt.Sprintf("pd %d hard", s.dutPDInfo.activePort),
 	)
