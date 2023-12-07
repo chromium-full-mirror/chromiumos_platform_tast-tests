@@ -94,6 +94,48 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "familyLinkUnicornWebAllowlistLogin",
+		Desc:     "This fixture logs in Unicorn account with 'Only allow approved sites' website filtering setting",
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"agawronska@chromium.org",
+		},
+		Impl:     NewFamilyLinkFixture("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
+		Vars: []string{
+			"family.parentEmail",
+			"family.parentPassword",
+			"family.unicornAllowlistEmail",
+			"family.unicornAllowlistPassword",
+		},
+		SetUpTimeout:    chrome.GAIALoginChildTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "familyLinkUnicornWebAllowlistLoginWithLacros",
+		Desc:     "This fixture enables LaCrOS and logs in Unicorn account with 'Only allow approved sites' website filtering setting",
+		Contacts: []string{
+			"cros-families-eng+test@google.com",
+			"agawronska@chromium.org",
+		},
+		Impl:     NewFamilyLinkFixtureLacros("family.parentEmail", "family.parentPassword", "family.unicornAllowlistEmail", "family.unicornAllowlistPassword", true),
+		Vars: []string{
+			"family.parentEmail",
+			"family.parentPassword",
+			"family.unicornAllowlistEmail",
+			"family.unicornAllowlistPassword",
+		},
+		SetUpTimeout:    chrome.GAIALoginChildTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "familyLinkUnicornLoginNonOwner",
 		Desc:     "Supervised Family Link user login with Unicorn account as second user on device",
 		Contacts: []string{
