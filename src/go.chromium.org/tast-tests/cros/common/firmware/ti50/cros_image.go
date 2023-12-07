@@ -39,27 +39,28 @@ type CCDCap string
 
 // CCD capabilities.
 const (
-	UartGscRxAPTx   CCDCap = "UartGscRxAPTx"
-	UartGscTxAPRx   CCDCap = "UartGscTxAPRx"
-	UartGscRxECTx   CCDCap = "UartGscRxECTx"
-	UartGscTxECRx   CCDCap = "UartGscTxECRx"
-	FlashAP         CCDCap = "FlashAP"
-	FlashEC         CCDCap = "FlashEC"
-	OverrideWP      CCDCap = "OverrideWP"
-	RebootECAP      CCDCap = "RebootECAP"
-	GscFullConsole  CCDCap = "GscFullConsole"
-	UnlockNoReboot  CCDCap = "UnlockNoReboot"
-	UnlockNoShortPP CCDCap = "UnlockNoShortPP"
-	OpenNoTPMWipe   CCDCap = "OpenNoTPMWipe"
-	OpenNoLongPP    CCDCap = "OpenNoLongPP"
-	BatteryBypassPP CCDCap = "BatteryBypassPP"
-	Unused          CCDCap = "Unused"
-	I2C             CCDCap = "I2C"
-	FlashRead       CCDCap = "FlashRead"
-	OpenNoDevMode   CCDCap = "OpenNoDevMode"
-	OpenFromUSB     CCDCap = "OpenFromUSB"
-	OverrideBatt    CCDCap = "OverrideBatt"
-	APROCheckVC     CCDCap = "APROCheckVC"
+	UartGscRxAPTx     CCDCap = "UartGscRxAPTx"
+	UartGscTxAPRx     CCDCap = "UartGscTxAPRx"
+	UartGscRxECTx     CCDCap = "UartGscRxECTx"
+	UartGscTxECRx     CCDCap = "UartGscTxECRx"
+	FlashAP           CCDCap = "FlashAP"
+	FlashEC           CCDCap = "FlashEC"
+	OverrideWP        CCDCap = "OverrideWP"
+	RebootECAP        CCDCap = "RebootECAP"
+	GscFullConsole    CCDCap = "GscFullConsole"
+	UnlockNoReboot    CCDCap = "UnlockNoReboot"
+	UnlockNoShortPP   CCDCap = "UnlockNoShortPP"
+	OpenNoTPMWipe     CCDCap = "OpenNoTPMWipe"
+	OpenNoLongPP      CCDCap = "OpenNoLongPP"
+	BatteryBypassPP   CCDCap = "BatteryBypassPP"
+	Unused            CCDCap = "Unused"
+	I2C               CCDCap = "I2C"
+	FlashRead         CCDCap = "FlashRead"
+	OpenNoDevMode     CCDCap = "OpenNoDevMode"
+	OpenFromUSB       CCDCap = "OpenFromUSB"
+	OverrideBatt      CCDCap = "OverrideBatt"
+	APROCheckVC       CCDCap = "APROCheckVC"
+	AllowUnverifiedRO CCDCap = "AllowUnverifiedRo"
 )
 
 // CCDCapState contains possible states for a CCD capability.
@@ -216,6 +217,11 @@ func (i *CrOSImage) CCDOpen(ctx context.Context) error {
 // CCDReset uses the `ccd` GSC console command set the CCD states to defaults.
 func (i *CrOSImage) CCDReset(ctx context.Context) error {
 	return i.runCommand(ctx, "ccd reset")
+}
+
+// CCDResetFactory uses the `ccd` GSC console command set the CCD states to factory.
+func (i *CrOSImage) CCDResetFactory(ctx context.Context) error {
+	return i.runCommand(ctx, "ccd reset factory")
 }
 
 // GetCCDCapabilities uses the `ccd` GSC console command to return a map of all

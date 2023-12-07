@@ -8,6 +8,7 @@ import (
 	"context"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,15 +18,26 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type spiImage string
+
+const (
+	validSPIImage  spiImage = "valid-32M_20231101.bin"
+	badGBBSPIImage spiImage = "bad-gbb-32MB_20231101.bin"
+
+	verificationResultSuccess = 0xfffff000
+	verificationResultBadGBB  = 0x11000000
+)
+
 var (
-	gsctoolApRoPassed = regexp.MustCompile(`apro result\s*\(20\)\s*:\s*pass`)
+	gsctoolApRoPassed  = regexp.MustCompile(`apro result\s*\(20\)\s*:\s*pass`)
+	verificationResult = regexp.MustCompile(`AP RO verification result: [^(]+ \(0x(\w+)\)`)
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50ApRoVerification,
-		Desc:    "Verify Ti50 verifies a valid AP RO with valid settings",
-		Timeout: 5 * time.Minute,
+		Desc:    "Verify AP RO verification feature with valid and invalid settings",
+		Timeout: 15 * time.Minute,
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"ti50-core@google.com",
@@ -34,14 +46,14 @@ func init() {
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_shield"},
 		Fixture:      fixture.GSCInitialFactory,
-		Data:         []string{"valid-32M_20231101.bin"},
+		Data:         []string{string(validSPIImage), string(badGBBSPIImage)},
 	})
 }
 
-func flashImageContents(s *testing.State) []byte {
-	contents, err := os.ReadFile(s.DataPath("valid-32M_20231101.bin"))
+func getSPIImageContents(s *testing.State, image spiImage) []byte {
+	contents, err := os.ReadFile(s.DataPath(string(image)))
 	if err != nil {
-		s.Fatalf("Could not read test image %q", err)
+		s.Fatalf("Could not read image %q: %s", string(image), err)
 	}
 	return contents
 }
@@ -80,7 +92,61 @@ func Ti50ApRoVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not set wpsr: ", wpsrSet)
 	}
 
-	b.WithApFlashAccess(ctx, i, ti50.DoNotHoldInReset, func(flash ti50.ApFlash) {
+	s.Log("Reset ccd to clear initial factory mode")
+	th.MustSucceed(i.CCDOpen(ctx), "CCD Open")
+	th.MustSucceed(i.CCDReset(ctx), "CCD Reset")
+	th.MustSucceed(i.CCDResetFactory(ctx), "CCD Factory Reset")
+
+	// Validate success case first to ensure that latch flips
+	verifyValidImage(ctx, s, b, i)
+
+	// Now all failed verification should hold system in reset when AllowUnverifiedRO is false
+	verifyBadImage(ctx, s, b, i, badGBBSPIImage, verificationResultBadGBB)
+}
+
+func verifyValidImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) {
+	flashSPIImage(ctx, s, b, i, validSPIImage)
+	verifyVerificationResultOnReboot(ctx, s, b, i, verificationResultSuccess)
+
+	ecResetL := b.GpioGet(ctx, ti50.GpioTi50EcRstL)
+	if ecResetL != true {
+		s.Error("EC not released for successful AP RO verifcation")
+	}
+}
+
+func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi spiImage, wantVerificationResult uint32) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+
+	// Ensure that AllowUnverifiedRo is set to never so EC is held in reset
+	s.Log("Set AllowUnverifiedRo to never")
+	th.MustSucceed(i.CCDOpen(ctx), "CCD Open failed")
+	th.MustSucceed(i.SetCCDCapability(ctx, ti50.AllowUnverifiedRO, ti50.CapDefault), "Set AllowUnverifiedRo to never")
+
+	flashSPIImage(ctx, s, b, i, spi)
+	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+
+	ecResetL := b.GpioGet(ctx, ti50.GpioTi50EcRstL)
+	if ecResetL != false {
+		s.Error("EC released when AP RO verification failed and AllowUnverifiedRo set to never")
+	}
+
+	s.Log("Set AllowUnverifiedRo to always")
+	th.MustSucceed(i.CCDOpen(ctx), "CCD Open failed")
+	th.MustSucceed(i.SetCCDCapability(ctx, ti50.AllowUnverifiedRO, ti50.CapAlways), "Set AllowUnverifiedRo to always")
+
+	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+
+	// GoBigSleepLint: It is a true failure if EC isn't released within 0.5 sec
+	testing.Sleep(ctx, 500*time.Millisecond)
+
+	ecResetL = b.GpioGet(ctx, ti50.GpioTi50EcRstL)
+	if ecResetL != true {
+		s.Error("EC held in reset when AP RO verification failed and AllowUnverifiedRo set to always")
+	}
+}
+
+func flashSPIImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi spiImage) {
+	b.WithApFlashAccess(ctx, i, ti50.HoldInReset, func(flash ti50.ApFlash) {
 		// Enable SW WP on the AP SPI chip so the status registers are as expected.
 		// This range represents the RO section of the AP flash.
 		// We are able to modify SW WP because HW WP is disabled due to some previous "ccd reset factory".
@@ -88,18 +154,28 @@ func Ti50ApRoVerification(ctx context.Context, s *testing.State) {
 
 		// Write the fresh AP flash image. We only care about the RO section for verification but
 		// this will write the whole 32M image. The SW WP is ignored because HW WP is disabled.
-		s.Log("Flashing new AP image")
-		flash.WriteApFlash(ctx, flashImageContents(s))
+		s.Log("Flashing new AP image: ", string(spi))
+		flash.WriteApFlash(ctx, getSPIImageContents(s, spi))
 	})
+}
 
-	// `WithApFlashAccess` has reset the GSC, and we've waited until boot.
-	// AP RO verification has thus been run again.
-	// Does `gsctool` say it's passed?
-	stdout, err := b.GSCToolCommand(ctx, "", "-D", "-B")
-	th.MustSucceed(err, "Get AP RO verification status")
-
-	// HW WP is still disabled, but that doesn't prevent a verification pass.
-	if !gsctoolApRoPassed.Match(stdout) {
-		s.Errorf("AP RO verification did not pass, got %s", string(stdout))
+func verifyVerificationResultOnReboot(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, wantVerificationResult uint32) {
+	b.Reset(ctx)
+	m, err := i.WaitUntilMatch(ctx, verificationResult, 5*time.Second)
+	if err != nil {
+		s.Fatal("Expected to see Ti50 verification result: ", err)
 	}
+
+	verificationResult := mustParseVerificationResult(s, m)
+	if verificationResult != wantVerificationResult {
+		s.Errorf("Unexpected verification result: got 0x%x, wanted 0x%x", verificationResult, wantVerificationResult)
+	}
+}
+
+func mustParseVerificationResult(s *testing.State, m [][]byte) uint32 {
+	result, err := strconv.ParseUint(string(m[1]), 16, 32)
+	if err != nil {
+		s.Fatalf("Could not parse verification result of %v: %s", m[1], err)
+	}
+	return uint32(result)
 }
