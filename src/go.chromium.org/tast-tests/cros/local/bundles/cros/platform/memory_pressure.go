@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Create memory pressure and collect various measurements from Chrome and from the kernel",
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
-		Attr:         []string{"group:crosbolt", "crosbolt_arc_perf_memory_nightly"},
+		Attr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
 		Timeout:      180 * time.Minute,
 		Data: []string{
 			mempressure.CompressibleData,
