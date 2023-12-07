@@ -9,7 +9,6 @@ import (
 	"io"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -26,32 +25,47 @@ type DUTControlPort struct {
 
 // Read bytes into buffer and return number of bytes read.
 // Bytes already written to the port shall be moved into buf, up to its size.
-// The operation will return serial.ErrReadTimeout, "read timeout", if the
-//
-//	configured ReadTimeout on the port (during port open) is exceeded before
-//	any data is read, whereas if the ctx's timeout is exceeded, the error will
-//	be context.DeadlineExceeded, "context deadline exceeded".
 func (p *DUTControlPort) Read(ctx context.Context, buf []byte) (n int, err error) {
-	if len(p.unreadBuf) > 0 {
+	err = nil
+	// Consume all waiting ConsoleSerialData without blocking.
+nonblock:
+	for {
+		select {
+		case d, more := <-p.data:
+			p.unreadBuf = append(p.unreadBuf, d.Data...)
+			if !more {
+				err = io.EOF
+			}
+			if err == nil && d.Err != "" {
+				err = errors.New(d.Err)
+			}
+		default:
+			break nonblock
+		}
+	}
+
+	// If we have at least 1 byte unread, return without blocking.
+	if len(p.unreadBuf) > 0 || err != nil {
 		n := copy(buf, p.unreadBuf)
 		p.unreadBuf = p.unreadBuf[n:]
-		return n, nil
+		return n, err
 	}
-	timer := time.NewTimer(p.readTimeout)
+
+	// Nothing unread, so wait up to readTimeout to get at least 1 byte.
+	ctx, cancel := context.WithTimeout(ctx, p.readTimeout)
+	defer cancel()
+
 	select {
 	case d, more := <-p.data:
-		if !more {
-			return 0, io.EOF
-		}
 		p.unreadBuf = append(p.unreadBuf, d.Data...)
+		if !more {
+			err = io.EOF
+		} else if d.Err != "" {
+			err = errors.New(d.Err)
+		}
 		n := copy(buf, p.unreadBuf)
 		p.unreadBuf = p.unreadBuf[n:]
-		if d.Err != "" {
-			return n, errors.New(d.Err)
-		}
-		return n, nil
-	case <-timer.C:
-		return 0, serial.ErrReadTimeout
+		return n, err
 	case <-ctx.Done():
 		return 0, ctx.Err()
 	}

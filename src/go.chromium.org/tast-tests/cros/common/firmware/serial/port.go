@@ -6,12 +6,7 @@ package serial
 
 import (
 	"context"
-	"go.chromium.org/tast/core/errors"
 )
-
-// ErrReadTimeout indicates that a read operation exceeded the readTimeout configured on the port.
-// Subsequent reads may still succeed depending on the state of the port.
-var ErrReadTimeout = errors.New("read timeout")
 
 // Port represends a serial port and its basic operations.
 type Port interface {

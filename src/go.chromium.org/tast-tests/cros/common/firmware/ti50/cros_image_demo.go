@@ -63,7 +63,7 @@ func Demo(ctx context.Context, console SerialChannel) error {
 
 // DemoHelp demos the Help method.
 func DemoHelp(ctx context.Context, i *CrOSImage) error {
-	if err := i.GetPrompt(ctx); err != nil {
+	if err := i.getPrompt(ctx); err != nil {
 		return err
 	}
 	h, err := i.Help(ctx)
@@ -78,7 +78,7 @@ func DemoHelp(ctx context.Context, i *CrOSImage) error {
 
 // DemoCommand demos the Command method.
 func DemoCommand(ctx context.Context, i *CrOSImage, cmd string) error {
-	if err := i.GetPrompt(ctx); err != nil {
+	if err := i.getPrompt(ctx); err != nil {
 		return errors.Wrap(err, "get prompt")
 	}
 	out, err := i.Command(ctx, cmd)
@@ -92,7 +92,7 @@ func DemoCommand(ctx context.Context, i *CrOSImage, cmd string) error {
 
 // DemoRawCommand demos the RawCommand method.
 func DemoRawCommand(ctx context.Context, i *CrOSImage, cmd string, re *regexp.Regexp) error {
-	if err := i.GetPrompt(ctx); err != nil {
+	if err := i.getPrompt(ctx); err != nil {
 		return err
 	}
 	m, err := i.RawCommand(ctx, cmd+"\r", re)

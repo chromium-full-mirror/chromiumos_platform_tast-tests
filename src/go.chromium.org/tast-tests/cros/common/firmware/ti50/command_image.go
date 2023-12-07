@@ -80,26 +80,19 @@ func (i *CommandImage) Command(ctx context.Context, cmd string) (string, error) 
 
 // WaitUntilBooted by checking that prompts are consistently displayed.
 func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Duration) error {
+	ctx, cancel := context.WithTimeout(ctx, interval)
+	defer cancel()
+	j := 0
 	for {
-		ctxInt, cancel := context.WithTimeout(ctx, interval)
-		defer cancel()
-		j := 0
-		for {
-			if err := ctx.Err(); err != nil {
-				return err
-			}
-			if err := i.GetPrompt(ctx); err != nil {
-				break
-			}
-			j++
-			if j == promptSuccesses {
-				return nil
-			}
+		if err := ctx.Err(); err != nil {
+			return err
 		}
-		select {
-		case <-ctxInt.Done():
-		case <-ctx.Done():
-			return ctx.Err()
+		if err := i.getPrompt(ctx); err != nil {
+			continue
+		}
+		j++
+		if j == promptSuccesses {
+			return nil
 		}
 	}
 }
@@ -113,11 +106,13 @@ func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, in
 	}, &pOpts)
 }
 
-// GetPrompt gets a fresh prompt from the image by  the prompt.
-func (i *CommandImage) GetPrompt(ctx context.Context) error {
+// getPrompt gets a fresh prompt from the image by  the prompt.
+func (i *CommandImage) getPrompt(ctx context.Context) error {
 	if err := i.ClearInput(ctx); err != nil {
 		return err
 	}
+	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+	defer cancel()
 	_, err := i.Command(ctx, "")
 	return err
 }

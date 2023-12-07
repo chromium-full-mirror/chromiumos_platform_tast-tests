@@ -158,16 +158,15 @@ func (c *BufferedConsole) ReadSerialBytes(ctx context.Context, size int) (output
 
 // ClearInput clears any pending input that hasn't been read yet.
 func (c *BufferedConsole) ClearInput(ctx context.Context) error {
+	ctx2, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+	defer cancel()
+	err := c.readSerial(ctx2)
 	c.readBufLen = 0
-	for {
-		err := c.readSerial(ctx)
-		c.readBufLen = 0
-		if errors.Is(err, serial.ErrReadTimeout) {
-			return nil
-		} else if err != nil {
-			return err
-		}
+	if errors.Is(err, context.DeadlineExceeded) {
+		// Return nil if it was our ctx2 that timed out.
+		return ctx.Err()
 	}
+	return err
 }
 
 // WriteSerial writes to the serial port.
