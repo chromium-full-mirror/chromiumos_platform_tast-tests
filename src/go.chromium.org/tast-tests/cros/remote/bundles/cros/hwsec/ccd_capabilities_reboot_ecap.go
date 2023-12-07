@@ -27,7 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func: CCDCapabilitiesRebootECAP,
 		Desc: "Test to verify RebootECAP CCD capability by using `ecrst` and `sysrst` GSC commands",
-		Attr: []string{"group:firmware", "group:hwsec", "firmware_cr50"},
+		Attr: []string{"group:firmware", "group:hwsec", "firmware_experimental"},
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"cros-hwsec@google.com",
