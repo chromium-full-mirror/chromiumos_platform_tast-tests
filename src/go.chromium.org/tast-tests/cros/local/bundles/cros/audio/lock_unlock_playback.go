@@ -74,7 +74,7 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 		Rate:          48000,
 		Frequencies:   []int{440, 440},
 		Volume:        0.8,
-		Duration:      60,
+		Duration:      70,
 	}
 	if err := audio.GenerateTestWavData(ctx, wavData); err != nil {
 		s.Fatal("Failed to generate sine wav file: ", err)
@@ -107,7 +107,7 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 		BitsPerSample: 16,
 		Rate:          48000,
 		Channels:      2,
-		Duration:      40,
+		Duration:      50,
 	}
 	captureDone := make(chan struct{})
 	defer func() {
@@ -129,7 +129,7 @@ func LockUnlockPlayback(ctx context.Context, s *testing.State) {
 
 	// GoBigSleepLint: Make sure the test capture enough audio samples before lock
 	// And add some time to make sure the segment fully contains audio.
-	testing.Sleep(ctx, segmentLength+2*time.Second)
+	testing.Sleep(ctx, segmentLength+7*time.Second)
 	lockTime := time.Now().Sub(captureTimestamp)
 	if err := lockscreen.Lock(ctx, tconn); err != nil {
 		s.Fatal("Failed to lock the screen: ", err)
