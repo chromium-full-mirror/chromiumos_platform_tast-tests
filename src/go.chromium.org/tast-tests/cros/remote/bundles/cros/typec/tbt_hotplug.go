@@ -6,17 +6,13 @@ package typec
 
 import (
 	"context"
-	"path/filepath"
 	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
-	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -68,28 +64,8 @@ func TbtHotplug(ctx context.Context, s *testing.State) {
 	}
 	defer sw.Close()
 
-	// Connect to gRPC server
-	cl, err := rpc.Dial(ctx, d, s.RPCHint())
-	if err != nil {
-		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-
-	// Send key file to DUT.
-	keyPath := filepath.Join("/tmp", "testcert.p12")
-	defer d.Conn().CommandContext(ctx, "rm", "-r", keyPath).Output()
-	if _, err := linuxssh.PutFiles(
-		ctx, d.Conn(), map[string]string{
-			s.DataPath("testcert.p12"): keyPath,
-		},
-		linuxssh.DereferenceSymlinks); err != nil {
-		s.Fatalf("Failed to send data to remote data path %v: %v", keyPath, err)
-	}
-
-	// Log in to Chrome.
-	client := typec.NewServiceClient(cl.Conn)
-	_, err = client.NewChromeLoginWithPeripheralDataAccess(ctx, &typec.KeyPath{Path: keyPath})
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+	if err := typecutils.LoginChrome(ctx, d, s, "testcert.p12"); err != nil {
+		s.Fatal("Failed to log in to Chrome: ", err)
 	}
 
 	for i := 1; i <= numIterations; i++ {

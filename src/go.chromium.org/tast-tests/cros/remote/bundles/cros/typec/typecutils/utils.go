@@ -16,8 +16,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/services/cros/typec"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -257,6 +259,35 @@ func CheckTBTDevice(ctx context.Context, d *dut.DUT, expected bool, gen int) err
 		} else if genFound != gen {
 			return errors.Errorf("incorrect Thunderbolt generation; found: %d expected: %d", genFound, gen)
 		}
+	}
+
+	return nil
+}
+
+// LoginChrome is a helper which performs a Chrome Login with the Peripheral Data Access setting disabled.
+func LoginChrome(ctx context.Context, d *dut.DUT, s *testing.State, keyFile string) error {
+	// Connect to gRPC server.
+	cl, err := rpc.Dial(ctx, d, s.RPCHint())
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+	}
+
+	// Send key file to DUT.
+	keyPath := filepath.Join("/tmp", keyFile)
+	defer d.Conn().CommandContext(ctx, "rm", "-r", keyPath).Output()
+	if _, err := linuxssh.PutFiles(
+		ctx, d.Conn(), map[string]string{
+			s.DataPath(keyFile): keyPath,
+		},
+		linuxssh.DereferenceSymlinks); err != nil {
+		return errors.Wrapf(err, "failed to send data to remote data path %v", keyPath)
+	}
+
+	// Log in to Chrome.
+	client := typec.NewServiceClient(cl.Conn)
+	_, err = client.NewChromeLoginWithPeripheralDataAccess(ctx, &typec.KeyPath{Path: keyPath})
+	if err != nil {
+		return errors.Wrap(err, "failed to start Chrome")
 	}
 
 	return nil
