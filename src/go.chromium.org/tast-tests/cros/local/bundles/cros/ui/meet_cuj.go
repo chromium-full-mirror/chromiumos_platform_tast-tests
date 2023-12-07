@@ -1386,6 +1386,25 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				s.Log("Failed to wait for Google Docs to quiesce: ", err)
 			}
 
+			if docsURL == defaultDocsURL {
+				var docsHref string
+				// Shorten the context to cleanup document.
+				// Some low-end devices take a long time to delete docs, so extend
+				// timeout to one minute.
+				cleanUpDocCtx := ctx
+				ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+				defer cancel()
+
+				if err := collaborationConn.Eval(ctx, "window.location.href", &docsHref); err != nil {
+					return errors.Wrap(err, "failed to get Docs URL")
+				}
+				defer func(ctx context.Context) {
+					if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
+						s.Log("Failed to delete doc: ", err)
+					}
+				}(cleanUpDocCtx)
+			}
+
 			collaborationRE = regexp.MustCompile(`\bDocs\b`)
 
 			// Enable docs blocker extension to force Docs in offline mode after docs
