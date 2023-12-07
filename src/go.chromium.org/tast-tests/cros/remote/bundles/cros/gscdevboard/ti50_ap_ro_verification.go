@@ -23,7 +23,7 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50ApRoVerificationSuccess,
+		Func:    Ti50ApRoVerification,
 		Desc:    "Verify Ti50 verifies a valid AP RO with valid settings",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
@@ -46,8 +46,8 @@ func flashImageContents(s *testing.State) []byte {
 	return contents
 }
 
-// Ti50ApRoVerificationSuccess tests AP RO verification succeeds against a production image.
-func Ti50ApRoVerificationSuccess(ctx context.Context, s *testing.State) {
+// Ti50ApRoVerification tests AP RO verification succeeds against a production image.
+func Ti50ApRoVerification(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
