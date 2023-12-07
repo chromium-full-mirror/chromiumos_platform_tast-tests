@@ -4,7 +4,7 @@
 set noparent
 
 # ChromeOS Connectivity (Platform Networking)
-include chromiumos/platform2:/patchpanel/OWNERS
+include chromiumos/owners:v1:/platform/OWNERS.networking
 
 # ChromeOS Connectivity (Software)
 chadduffin@chromium.org
