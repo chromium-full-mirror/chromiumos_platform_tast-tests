@@ -70,7 +70,7 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
 	devInfo := GetDeviceInfo(ctx, args...)
 	metrics := CollectOneTimeMetrics(ctx)
-	pwrLog, err := cp.CreatePowerLogAndUpdatePerfValues(ctx, testName, values, devInfo, metrics)
+	pwrLog, err := cp.CreatePowerLogAndUpdatePerfValues(ctx, testName, values, nil, devInfo, metrics)
 	if err != nil {
 		return errors.Wrap(err, "failed to create power log and update perf")
 	}
@@ -84,11 +84,11 @@ func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf
 // and uploads power_log to dashboard.
 // It will merge custom perf values passed as OptionalRecorderArg
 // and saves perf results to Crosbolt.
-func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
+func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values, checkpoints *perf.Checkpoints, args ...OptionalRecorderArg) error {
 	devInfo := GetDeviceInfo(ctx, args...)
 
 	metrics := CollectOneTimeMetrics(ctx)
-	if _, err := cp.CreateSaveUploadPowerLog(ctx, outDir, testName, "", values, devInfo, metrics); err != nil {
+	if _, err := cp.CreateSaveUploadPowerLog(ctx, outDir, testName, "", values, checkpoints, devInfo, metrics); err != nil {
 		return errors.Wrap(err, "failed to save and upload power log and perf")
 	}
 

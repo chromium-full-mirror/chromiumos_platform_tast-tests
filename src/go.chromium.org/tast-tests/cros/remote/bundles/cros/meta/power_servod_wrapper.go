@@ -246,7 +246,9 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get local DUT info: ", err)
 	}
 
-	if _, err := cp.CreateSaveUploadPowerLog(ctx, s.OutDir(), subtest, "", servoResult, devInfo, oneTimeMetrics); err != nil {
+	// TODO(b/317462603): servod data from the remote side can interact with
+	// checkpoints from either the local or the remote side.
+	if _, err := cp.CreateSaveUploadPowerLog(ctx, s.OutDir(), subtest, "", servoResult, nil, devInfo, oneTimeMetrics); err != nil {
 		s.Fatal("Failed to save and upload power log and perf: ", err)
 	}
 

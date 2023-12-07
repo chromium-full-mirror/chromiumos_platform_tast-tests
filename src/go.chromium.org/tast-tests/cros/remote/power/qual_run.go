@@ -241,7 +241,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 				}, value)
 			}
 		}
-		powerLog, err := power.CreateSaveUploadPowerLog(ctx, outputDir, testName+"."+p.Name, "_"+p.Name, pvLocal, r.deviceInfo, nil)
+		powerLog, err := power.CreateSaveUploadPowerLog(ctx, outputDir, testName+"."+p.Name, "_"+p.Name, pvLocal, nil, r.deviceInfo, nil)
 		if err != nil {
 			return errors.Wrap(err, "failed to create power log")
 		}

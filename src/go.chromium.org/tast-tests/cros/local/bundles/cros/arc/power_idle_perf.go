@@ -327,7 +327,7 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "ARC not running, skipping memory metrics")
 	}
 
-	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p); err != nil {
+	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p, nil); err != nil {
 		s.Error("Failed to save and upload power metrics: ", err)
 	}
 }

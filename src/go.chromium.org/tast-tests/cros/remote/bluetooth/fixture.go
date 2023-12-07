@@ -466,6 +466,7 @@ func (fv *FixtValue) StopPowerRecording(ctx context.Context, uploadTestName stri
 		uploadTestName,
 		"",
 		perfVals,
+		nil,
 		rRes.GetDeviceInfo(),
 		rRes.GetOneTimeMetrics(),
 	); err != nil {

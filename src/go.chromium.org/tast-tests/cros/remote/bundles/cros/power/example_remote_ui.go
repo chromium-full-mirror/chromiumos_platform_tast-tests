@@ -120,6 +120,7 @@ func ExampleRemoteUI(ctx context.Context, s *testing.State) {
 		s.TestName(),
 		"",
 		perfVals,
+		nil,
 		rRes.GetDeviceInfo(),
 		rRes.GetOneTimeMetrics(),
 	); err != nil {

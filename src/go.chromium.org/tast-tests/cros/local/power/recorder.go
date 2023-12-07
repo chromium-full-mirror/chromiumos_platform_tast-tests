@@ -57,6 +57,7 @@ type Recorder struct {
 	// Fields used internally by the recorder.
 	dataSources []perf.TimelineDatasource
 	metrics     *perf.Timeline
+	checkpoints *perf.Checkpoints
 	isRecording bool
 	perfValues  *perf.Values
 }
@@ -113,6 +114,7 @@ func (r *Recorder) Start(ctx context.Context) error {
 	}
 
 	r.metrics = metrics
+	r.checkpoints = perf.NewCheckpoints()
 	r.isRecording = true
 	r.perfValues = nil
 
@@ -152,6 +154,8 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		}
 	}
 
+	r.checkpoints.Save(r.outDir)
+
 	if len(strings.TrimSpace(pdashNoteVar.Value())) != 0 {
 		r.AddOptionalRecorderArg("pdash_note", strings.TrimSpace(pdashNoteVar.Value()))
 	}
@@ -162,7 +166,7 @@ func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 		}
 	}
 
-	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, r.perfValues, r.optionalArgs...); err != nil {
+	if err := GeneratePowerLogAndSaveToCrosbolt(ctx, r.outDir, r.testName, r.perfValues, r.checkpoints, r.optionalArgs...); err != nil {
 		return errors.Wrap(err, "failed to generate power_log.json and/or save perf data for crosbolt")
 	}
 
@@ -230,6 +234,24 @@ func (r *Recorder) Close(ctx context.Context) error {
 // None.
 func (r *Recorder) RegisterMetrics(metrics ...perf.TimelineDatasource) {
 	r.dataSources = append(r.dataSources, metrics...)
+}
+
+// StartCheckpoint starts tracking a Checkpoint under a name.
+// In:
+// name: name of the Checkpoint.
+// Out:
+// perf.Section: a Checkpoint Section to be ended later.
+func (r *Recorder) StartCheckpoint(name string) *perf.Section {
+	return r.checkpoints.NewSection(name)
+}
+
+// EndCheckpoint ends tracking a Checkpoint Section.
+// In:
+// perf.Section: an ongoing Checkpoint Section.
+// Out:
+// None.
+func (r *Recorder) EndCheckpoint(section *perf.Section) {
+	r.checkpoints.EndSection(section)
 }
 
 // NewRecorder creates and returns a new Recorder.

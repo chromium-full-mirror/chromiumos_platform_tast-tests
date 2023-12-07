@@ -98,6 +98,8 @@ func ExampleRemoteNoUI(ctx context.Context, s *testing.State) {
 	}
 	perfVals := perf.NewValuesFromProto(rRes.GetPerfMetrics())
 
+	// TODO(b/317461515): set checkpoints on the remote side, and interact with
+	// data from the local side.
 	// Save recorded metrics in remote and upload to dashboard.
 	if _, err := cp.CreateSaveUploadPowerLog(
 		ctx,
@@ -105,6 +107,7 @@ func ExampleRemoteNoUI(ctx context.Context, s *testing.State) {
 		s.TestName(),
 		"",
 		perfVals,
+		nil,
 		rRes.GetDeviceInfo(),
 		rRes.GetOneTimeMetrics(),
 	); err != nil {

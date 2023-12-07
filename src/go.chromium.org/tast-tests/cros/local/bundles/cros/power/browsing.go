@@ -342,6 +342,10 @@ func Browsing(ctx context.Context, s *testing.State) {
 	// Start of main test body.
 	tabDataIndex := 0
 	for loop := 0; loop < loopCount; loop++ {
+
+		loopName := fmt.Sprintf("loop%02d", loop)
+		loopCheckpoint := r.StartCheckpoint(loopName)
+
 		for _, site := range config.URLData.Pages {
 			tabData := tabDataList[tabDataIndex]
 			tabDataIndex = (tabDataIndex + 1) % len(tabDataList)
@@ -363,6 +367,8 @@ func Browsing(ctx context.Context, s *testing.State) {
 			if err := tabData.Conn.Navigate(ctx, url); err != nil {
 				s.Fatal("Failed to navigate: ", err)
 			}
+
+			siteCheckpoint := r.StartCheckpoint(site)
 
 			scrollAmount := 600
 			if secsPerScroll > 0 {
@@ -386,7 +392,12 @@ func Browsing(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to sleep: ", err)
 			}
 
+			r.EndCheckpoint(siteCheckpoint)
+
 		}
+
+		r.EndCheckpoint(loopCheckpoint)
+
 	}
 	// End of main test body.
 
