@@ -57,7 +57,7 @@ const (
 )
 
 func verifyStaysAsleep(ctx context.Context, s *testing.State, i *ti50.CrOSImage) {
-	err := i.WaitUntilMatch(ctx, reBoot, time.Second*3)
+	_, err := i.WaitUntilMatch(ctx, reBoot, time.Second*3)
 	if err != nil {
 		// We expected to NOT see boot a message.
 		return

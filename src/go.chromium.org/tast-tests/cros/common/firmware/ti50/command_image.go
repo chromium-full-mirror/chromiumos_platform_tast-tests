@@ -98,12 +98,13 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 }
 
 // WaitUntilMatch waits until specified match is present
-func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, timeout time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: timeout}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.ReadSerialSubmatch(ctx, re)
+func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, interval time.Duration) (output [][]byte, err error) {
+	pOpts := testing.PollOptions{Timeout: interval}
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		output, err = i.ReadSerialSubmatch(ctx, re)
 		return err
 	}, &pOpts)
+	return output, err
 }
 
 // getPrompt gets a fresh prompt from the image by  the prompt.
