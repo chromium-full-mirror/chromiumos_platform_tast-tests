@@ -27448,6 +27448,38 @@ func (p *OopPrintDriversAllowed) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
+// 1185. DeviceHardwareVideoDecodingEnabled
+// ****************************************************************************
+type DeviceHardwareVideoDecodingEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceHardwareVideoDecodingEnabled) Name() string {
+	return "DeviceHardwareVideoDecodingEnabled"
+}
+func (p *DeviceHardwareVideoDecodingEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceHardwareVideoDecodingEnabled) Status() Status        { return p.Stat }
+func (p *DeviceHardwareVideoDecodingEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceHardwareVideoDecodingEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceHardwareVideoDecodingEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceHardwareVideoDecodingEnabled", "value", p.Val)
+}
+func (p *DeviceHardwareVideoDecodingEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
 // JSON deserialization logic (used by policy.Unmarshal).
 // ****************************************************************************
 
@@ -29138,6 +29170,8 @@ func newByName(name string) (Policy, error) {
 		return &DeskAPIDeskSaveAndShareEnabled{}, nil
 	case "OopPrintDriversAllowed":
 		return &OopPrintDriversAllowed{}, nil
+	case "DeviceHardwareVideoDecodingEnabled":
+		return &DeviceHardwareVideoDecodingEnabled{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
