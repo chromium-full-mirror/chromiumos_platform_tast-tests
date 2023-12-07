@@ -75,8 +75,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Before 1st update, should be running RW_A")
 	}
 
-	// Wait one more second to ensure that USB is connected before running gsctool.
-	testing.Sleep(ctx, 1*time.Second) // GoBigSleepLint: TODO(b/278113474) fix this
+	b.WaitUntilCCDConnected(ctx)
 
 	out, err := b.GSCToolCommand(ctx, "", "--fwver")
 	if err != nil {

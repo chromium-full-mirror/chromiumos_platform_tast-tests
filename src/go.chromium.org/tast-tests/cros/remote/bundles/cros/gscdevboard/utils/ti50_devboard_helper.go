@@ -482,13 +482,9 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 // WithApFlashAccess runs `f` with the proper setup and teardown to access the SPI flash chip.
 // This function asserts the SuzyQ strapping and leaves it in that state, so `gsctool` should work immediately.
 func (h DevboardHelper) WithApFlashAccess(ctx context.Context, i *ti50.CrOSImage, holdReset ti50.HoldReset, f func(ti50.ApFlash)) {
-	// Reset GSC with SuzyQ strap so we know we will get the USB connect message
-	h.ResetWithStraps(ctx, ti50.CcdSuzyQ)
+	h.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
+	h.WaitUntilCCDConnected(ctx)
 
-	if err := i.WaitUntilMatch(ctx, regexp.MustCompile(`USB:\s+Connected`), 20*time.Second); err != nil {
-		h.Fatalf("Expected to see Ti50 connect CCD USB: %s", err)
-	}
-	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: flashrom doesn't detect the device immediately.
 	flash := remoteTi50.NewApFlash(h.DUTControlAndreiboard)
 	if _, err := flash.FetchApFlashInfo(ctx); err != nil {
 		h.Fatalf("Could not get ap flash info: %s", err)
@@ -503,5 +499,17 @@ func (h DevboardHelper) WithApFlashAccess(ctx context.Context, i *ti50.CrOSImage
 		if err := i.WaitUntilBooted(ctx); err != nil {
 			h.Fatalf("GSC did not restart: %s", err)
 		}
+	}
+}
+
+// WaitUntilCCDConnected waits until CCD is connected, using gsctool to check.
+func (h DevboardHelper) WaitUntilCCDConnected(ctx context.Context) {
+	pOpts := testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := h.GSCToolCommand(ctx, "", "--fwver")
+		return err
+	}, &pOpts)
+	if err != nil {
+		h.Fatalf("CCD did not connect: %s", err)
 	}
 }

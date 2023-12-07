@@ -52,6 +52,7 @@ func Ti50CCDFlashrom(ctx context.Context, s *testing.State) {
 	// Enable CCD.
 	b.ResetWithStraps(ctx, ti50.CcdSuzyQ)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	b.WaitUntilCCDConnected(ctx)
 
 	pv := perf.NewValues()
 	logDuration := func(label string, duration uint32) {
