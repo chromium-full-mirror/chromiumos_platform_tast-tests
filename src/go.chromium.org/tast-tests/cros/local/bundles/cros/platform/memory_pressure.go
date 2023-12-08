@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Create memory pressure and collect various measurements from Chrome and from the kernel",
 		Contacts:     []string{"chromeos-memory@google.com"},
 		BugComponent: "b:167286",
-		Attr:         []string{"group:crosbolt", "crosbolt_memory_nightly"},
+		Attr:         []string{"group:crosbolt"},
 		Timeout:      180 * time.Minute,
 		Data: []string{
 			mempressure.CompressibleData,
@@ -35,23 +35,26 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Val: memoryPressureParams{enableARC: false, useHugePages: false, bt: browser.TypeAsh},
+			ExtraAttr: []string{"crosbolt_memory_nightly"},
 		}, {
 			Name:              "vm",
 			Val:               memoryPressureParams{enableARC: true, useHugePages: false, bt: browser.TypeAsh},
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual", "crosbolt_arc_perf_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "huge_pages_vm",
 			Val:               memoryPressureParams{enableARC: true, useHugePages: true, bt: browser.TypeAsh},
+			ExtraAttr: []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}, {
 			Name:              "container",
 			Val:               memoryPressureParams{enableARC: true, useHugePages: false, bt: browser.TypeAsh},
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual", "crosbolt_arc_perf_memory_nightly"},
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "lacros",
 			Val:               memoryPressureParams{enableARC: false, useHugePages: false, bt: browser.TypeLacros},
+			ExtraAttr: []string{"crosbolt_memory_nightly"},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
