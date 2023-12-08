@@ -62,8 +62,13 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 	}
 	if cmds.SetECLaptopModeCmd != "" {
 		s.Logf("Running ec command %s to set DUT in laptop mode", cmds.SetECLaptopModeCmd)
+		// On some convertible machines, for example, kasumi360, robo360,
+		// shyvana, and treeya360, the ec command for setting tablet or laptop
+		// mode is unsupported. Only attempt the switch if it is available.
 		if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, cmds.SetECLaptopModeCmd); err != nil {
-			s.Fatal("Failed to set DUT in laptop mode: ", err)
+			if _, ok := err.(*servo.TabletModeCmdUnsupportedErr); !ok {
+				s.Fatal("Failed to set DUT in laptop mode: ", err)
+			}
 		}
 	}
 

@@ -377,6 +377,12 @@ func (s *Servo) CheckUnresponsiveEC(ctx context.Context) error {
 	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 1 * time.Minute})
 }
 
+// TabletModeCmdUnsupportedErr is the error returned by
+// RunTabletModeCommandGetOutput when the ec command is found unsupported.
+type TabletModeCmdUnsupportedErr struct {
+	*errors.E
+}
+
 // RunTabletModeCommandGetOutput runs EC commands to set tablet mode and
 // returns the output matching pattern for the resulting tablet mode state.
 // Before calling RunTabletModeCommand(), a test can call
@@ -395,7 +401,7 @@ func (s *Servo) RunTabletModeCommandGetOutput(ctx context.Context, command strin
 		regexp.MustCompile(reBasestateNotFound)}
 	for _, v := range tabletModeUnavailable {
 		if match := v.FindStringSubmatch(out[0][0]); match != nil {
-			return "", errors.Errorf("device does not support tablet mode: %q", match)
+			return "", &TabletModeCmdUnsupportedErr{E: errors.Errorf("device does not support tablet mode: %q", match)}
 		}
 	}
 	return string(out[0][1]), nil
