@@ -612,8 +612,8 @@ func matchVersionInfo(s string) (VersionCommandInfo, error) {
 }
 
 // WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement.
-func (i *CrOSImage) WaitUntilNormalSleep(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
+func (i *CrOSImage) WaitUntilNormalSleep(ctx context.Context, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: timeout}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := i.ReadSerialSubmatch(ctx, normalSleep)
 		return err
@@ -621,8 +621,8 @@ func (i *CrOSImage) WaitUntilNormalSleep(ctx context.Context, interval time.Dura
 }
 
 // WaitUntilDeepSleep waits until gsc goes into deep sleep via monitoring print statement.
-func (i *CrOSImage) WaitUntilDeepSleep(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
+func (i *CrOSImage) WaitUntilDeepSleep(ctx context.Context, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: timeout}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := i.ReadSerialSubmatch(ctx, deepSleep)
 		return err
@@ -630,8 +630,8 @@ func (i *CrOSImage) WaitUntilDeepSleep(ctx context.Context, interval time.Durati
 }
 
 // WaitUntilAnySleep waits until gsc goes into deep or normal sleep via monitoring print statement.
-func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
+func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: timeout}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := i.ReadSerialSubmatch(ctx, anySleep)
 		return err
@@ -640,8 +640,8 @@ func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, interval time.Duratio
 
 // WaitUntilRoBoot waits until initial RO console messages are printed which happens right after
 // reboot or deep sleep resume.
-func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
+func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: timeout}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := i.ReadSerialSubmatch(ctx, roBoot)
 		return err

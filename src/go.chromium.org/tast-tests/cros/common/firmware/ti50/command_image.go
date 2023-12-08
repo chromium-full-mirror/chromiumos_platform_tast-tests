@@ -98,8 +98,8 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 }
 
 // WaitUntilMatch waits until specified match is present
-func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, interval time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: interval}
+func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Timeout: timeout}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := i.ReadSerialSubmatch(ctx, re)
 		return err
