@@ -153,22 +153,23 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 		crashDirs = append(crashDirs, crash.SystemCrashDir)
 	}
 	files, err := crash.WaitForCrashFiles(ctx, crashDirs, expectedRegexes)
-	if err != nil && consentType != crash.RealConsentPerUserOff {
-		s.Fatal("Couldn't find expected files: ", err)
-	}
 	defer func() {
 		if err := crash.RemoveAllFiles(cleanupCtx, files); err != nil {
 			s.Log("Couldn't clean up files: ", err)
 		}
 	}()
-	// In the "RealConsentPerUserOff" case, we expect a non-nil `err` value, and we expect
-	// there to be *no* meta files returned, so we should not move to checking the meta files
-	// below. If there are any, it's an error.
 	if consentType == crash.RealConsentPerUserOff {
+		// In the "RealConsentPerUserOff" case, we expect a non-nil `err` value, and we expect
+		// there to be *no* meta files returned, so we should not move to checking the meta files
+		// below. If there are any, it's an error.
 		if err == nil {
 			s.Fatal("Found crash files but didn't expect to")
 		}
 		return
+	}
+	// For the other consentTypes, expect to find files.
+	if err != nil {
+		s.Fatal("Couldn't find expected files: ", err)
 	}
 
 	if len(files[metaName]) == 1 {
