@@ -779,12 +779,12 @@ func (uiHelper *UIHelper) connectBatteryByCr50() action.Action {
 
 func (uiHelper *UIHelper) flattenDutWithFakeSensorData(ctx context.Context) error {
 	// The following data is provided by ShimlessRMA team (genechang@).
-	return uiHelper.Dut.Conn().CommandContext(ctx, "ectool", "motionsense", "spoof", "--", "0", "1", "0", "0", "16373").Run()
+	return uiHelper.Dut.Conn().CommandContext(ctx, "ectool", "motionsense", "spoof", "0", "1", "0", "0", "16373").Run()
 }
 
 func (uiHelper *UIHelper) resetToUseRealSensorData(ctx context.Context) error {
 	testing.ContextLog(ctx, "Reset Accel to use real data")
-	if err := uiHelper.Dut.Conn().CommandContext(ctx, "ectool", "motionsense", "spoof", "--", "0", "0").Run(); err != nil {
+	if err := uiHelper.Dut.Conn().CommandContext(ctx, "ectool", "motionsense", "spoof", "0", "0").Run(); err != nil {
 		return err
 	}
 
