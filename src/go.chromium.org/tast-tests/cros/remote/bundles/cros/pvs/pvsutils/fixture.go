@@ -131,13 +131,14 @@ func (f *pvsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	}
 
 	// Log shop version
-	_, _, err := RunAsChronos(ctx, pvsHost, "shop --version")
+	envArgs := shopEnvArgs(s)
+	_, _, err := RunAsChronos(ctx, pvsHost, shopCmd(envArgs, []string{"--version"}))
 	if err != nil {
 		s.Fatal("Error occured when running 'shop --version': ", err)
 	}
 
 	// Run shop unpack
-	shopUnpack := shopUnpackCmd(s)
+	shopUnpack := shopCmd(envArgs, shopUnpackArgs(s))
 	shopOutput, _, err := RunAsChronos(ctx, pvsHost, shopUnpack)
 	if err != nil {
 		s.Fatal("Error occured when running shop unpack: ", err)
@@ -210,15 +211,18 @@ func (f *pvsFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func shopUnpackCmd(s *testing.FixtState) string {
+func shopEnvArgs(s *testing.FixtState) []string {
 	env := shopEnv(s).generateEnvMap()
 	var envArgs []string
 	for key, val := range env {
 		envArgs = append(envArgs, fmt.Sprintf("%v=%v", key, val))
 	}
-	args := shopArgs(s)
+	return envArgs
+}
+
+func shopCmd(envArgs, args []string) string {
 	cmd := fmt.Sprintf(
-		"%v shop unpack %v",
+		"%v shop %v",
 		strings.Join(envArgs, " "),
 		strings.Join(args, " "),
 	)
@@ -251,8 +255,8 @@ func shopEnv(s *testing.FixtState) RuntimeEnv {
 	return env
 }
 
-func shopArgs(s *testing.FixtState) []string {
-	args := make([]string, 0)
+func shopUnpackArgs(s *testing.FixtState) []string {
+	args := []string{"unpack"}
 	if _, ok := s.Var("pvs.simulated_mode"); !ok {
 		dutHostname := s.CompanionDUT("dut").HostName()
 		args = append(args, "--dut", dutHostname)
