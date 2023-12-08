@@ -124,9 +124,23 @@ func TestCheckpointTagsEmpty(t *testing.T) {
 	if err != nil {
 		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
 	}
-	example := [][]string{{}, {}, {}, {}, {}}
 
-	compareTags(t, tags, example)
+	if tags != nil {
+		t.Fatal("Checkpoints should generate nil but instead generated tags: ", tags)
+	}
+}
+
+func TestCheckpointTagsNil(t *testing.T) {
+	p := initializeValues()
+
+	tags, err := tagTimelineWithCheckpoints(p, nil)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
+
+	if tags != nil {
+		t.Fatal("Checkpoints should generate nil but instead generated tags: ", tags)
+	}
 }
 
 func TestCheckpointTagsFrontBack(t *testing.T) {
@@ -144,9 +158,10 @@ func TestCheckpointTagsFrontBack(t *testing.T) {
 	if err != nil {
 		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
 	}
-	example := [][]string{{}, {}, {}, {}, {}}
 
-	compareTags(t, tags, example)
+	if tags != nil {
+		t.Fatal("Checkpoints should generate nil but instead generated tags: ", tags)
+	}
 }
 
 // TestCheckpointTagsOnTimestamp tests the tagging behavior when the start and
@@ -190,7 +205,41 @@ func TestCheckpointTagsOnSameTimestamp(t *testing.T) {
 	if err != nil {
 		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
 	}
-	example := [][]string{{}, {}, {}, {}, {}}
 
-	compareTags(t, tags, example)
+	if tags != nil {
+		t.Fatal("Checkpoints should generate nil but instead generated tags: ", tags)
+	}
+}
+
+func TestValuesWithNoData(t *testing.T) {
+	// p has metrics but no data.
+	data := perf.Metric{
+		Name:     "data",
+		Unit:     "count",
+		Multiple: true,
+		Interval: "t",
+	}
+	ts := perf.Metric{
+		Name:       "t",
+		Unit:       "s",
+		Multiple:   true,
+		HasStartTs: true,
+		StartTs:    time.Unix(3, 0),
+	}
+	p := perf.NewValues()
+	p.Append(data)
+	p.Append(ts)
+
+	c := perf.NewCheckpoints()
+	work1 := perf.NewSection(time.UnixMilli(work1StartMs))
+	work1.SetEnd(time.UnixMilli(work1EndMs))
+
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
+
+	if tags != nil {
+		t.Fatal("Checkpoints should generate nil but instead generated tags: ", tags)
+	}
 }

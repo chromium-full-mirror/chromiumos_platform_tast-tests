@@ -8,9 +8,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"regexp"
 	"sort"
@@ -599,7 +599,7 @@ func savePowerLogHTML(ctx context.Context, outDir string, powerLogDict map[strin
 
 	filePath := path.Join(outDir, powerLogFileName+fileSuffix+".html")
 
-	if err := ioutil.WriteFile(filePath, []byte(htmlStr), 0644); err != nil {
+	if err := os.WriteFile(filePath, []byte(htmlStr), 0644); err != nil {
 		return errors.Wrapf(err, "failed to write %s html file", powerLogFileName)
 	}
 
@@ -613,7 +613,7 @@ func savePowerLogJSON(ctx context.Context, outDir string, powerLogDict map[strin
 	if err != nil {
 		return errors.Wrapf(err, "failed to marshall data for %s json file", powerLogFileName)
 	}
-	if err := ioutil.WriteFile(filePath, j, 0644); err != nil {
+	if err := os.WriteFile(filePath, j, 0644); err != nil {
 		return errors.Wrapf(err, "failed to write %s json file", powerLogFileName)
 	}
 
@@ -657,16 +657,30 @@ func uploadToDashboard(ctx context.Context, powerLogDict map[string]interface{},
 // tagTimelineWithCheckpoints assumes that values come from perf.Timeline. For
 // every data point, it generates a list of Checkpoint names that describe this
 // data point.
+// TODO(b/315282941): while the data are tagged correctly here, power dashboard
+// UI shows that checkpoint bar does not perfectly align with data points. This
+// may be due to the fact that some data points do not have any tags. Need to
+// fix the UI later.
 func tagTimelineWithCheckpoints(values *perf.Values, checkpoints *perf.Checkpoints) ([][]string, error) {
+	// Return nil if there is no checkpoints.
+	if checkpoints == nil || checkpoints.IsEmpty() {
+		return nil, nil
+	}
+
 	btoi := map[bool]int{true: 1, false: -1}
 
 	// Look for the 1 timestampSource Metric.
 	var tsMetric perf.Metric
+	foundTsMetric := false
 	for metric := range values.GetValues() {
 		if metric.HasStartTs {
 			tsMetric = metric
+			foundTsMetric = true
 			break
 		}
+	}
+	if !foundTsMetric {
+		return nil, errors.New("values does not contain timeline timestamps")
 	}
 
 	// Calculate Unix timestamps from relative timestamps in perf.Timeline.
@@ -675,12 +689,14 @@ func tagTimelineWithCheckpoints(values *perf.Values, checkpoints *perf.Checkpoin
 		return nil, err
 	}
 
+	checkpointTags := make([][]string, len(values.GetValueByMetric(tsMetric)))
+
 	// Compare Unix timestamps with Checkpoints. If a Unix timestamp is within
 	// some Checkpoints coverage, tag it with the Checkpoint names.
-	checkpointTags := make([][]string, len(values.GetValues()[tsMetric]))
-	events := checkpoints.Flatten()
 	j := 0
+	events := checkpoints.Flatten()
 	started := make(map[string]int)
+	tagsEmpty := true
 
 	for i, unixTs := range unixTss {
 		for ; j < len(events) && !events[j].Ts.After(unixTs); j++ {
@@ -692,7 +708,16 @@ func tagTimelineWithCheckpoints(values *perf.Values, checkpoints *perf.Checkpoin
 			}
 		}
 		// Tag each Unix timestamp with the Checkpoint names.
+		if len(started) > 0 {
+			tagsEmpty = false
+		}
 		checkpointTags[i] = maps.Keys(started)
+	}
+
+	// If there is no valid checkpoint for the entire test, return nil to save
+	// upload file size.
+	if tagsEmpty {
+		return nil, nil
 	}
 
 	return checkpointTags, nil

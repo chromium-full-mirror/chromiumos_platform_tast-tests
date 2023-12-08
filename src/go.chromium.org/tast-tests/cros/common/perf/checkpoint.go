@@ -6,7 +6,7 @@ package perf
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"sort"
 	"time"
@@ -52,6 +52,11 @@ type Checkpoints struct {
 	clock       Clock
 }
 
+// IsEmpty returns true if checkpoints map is empty; false otherwise.
+func (c *Checkpoints) IsEmpty() bool {
+	return len(c.checkpoints) == 0
+}
+
 // NewSection initialize a new Section with the current timestamp.
 func (c *Checkpoints) NewSection(checkpointName string) *Section {
 	section := NewSection(c.clock.Now())
@@ -83,7 +88,7 @@ func (c *Checkpoints) Save(outDir string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(filepath.Join(outDir, fileName), json, 0644)
+	return os.WriteFile(filepath.Join(outDir, fileName), json, 0644)
 }
 
 // MarshalJSON formats Checkpoints for printing in json.

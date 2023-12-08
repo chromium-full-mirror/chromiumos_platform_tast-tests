@@ -66,6 +66,26 @@ func TestCheckpointsNoEnd(t *testing.T) {
 	saveCheckpointsAndCompare(t, c, "testdata/TestCheckpointsNoEnd.json")
 }
 
+func TestCheckpointsIsEmpty(t *testing.T) {
+	clock := NewFakeClock()
+	c := NewCheckpoints(SetClock(clock))
+
+	if !c.IsEmpty() {
+		json, err := c.MarshalJSON()
+		if err != nil {
+			t.Fatal("Unable to marshal checkpoints: ", err)
+		}
+		t.Fatalf("Checkpoints should be empty but is: %s", string(json))
+	}
+
+	clock.Advance(time.UnixMilli(work1StartMs).Sub(time.UnixMilli(idle1EndMs)))
+	c.NewSection("work")
+
+	if c.IsEmpty() {
+		t.Fatal("Checkpoints should not be empty")
+	}
+}
+
 func TestFlatten(t *testing.T) {
 	clock := NewFakeClock()
 	c := NewCheckpoints(SetClock(clock))
