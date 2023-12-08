@@ -445,6 +445,14 @@ func (e *Env) makeChroot(ctx context.Context) error {
 		}
 	}
 
+	// Fully isolate the mount namespace for running the commands. This is mainly
+	// for letting a daemon started with chroot in the virtualnet can survive when
+	// Chrome logs out, but it also requires that the daemon is started when
+	// Chrome is not logged in (to make sure there is no left-over Chrome session,
+	// the test should run `upstart.RestartJob(ctx, "ui")` at first). See
+	// http://b/300208832#comment4 for more details.
+	e.netJailArgs = append(e.netJailArgs, "-v", "-Kprivate")
+
 	return nil
 }
 
