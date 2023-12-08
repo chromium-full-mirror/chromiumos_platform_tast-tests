@@ -7,7 +7,6 @@ package crash
 import (
 	"context"
 	"io/ioutil"
-	"os"
 	"strings"
 	"time"
 
@@ -111,7 +110,7 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create per-user consent: ", err)
 		}
 		defer func() {
-			if err := crash.RemovePerUserConsent(ctx); err != nil {
+			if err := crash.RemovePerUserConsent(cleanupCtx); err != nil {
 				s.Error("Failed to clean up per-user consent: ", err)
 			}
 		}()
@@ -124,20 +123,14 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 	defer crash.RestartAnomalyDetector(cleanupCtx)
 
 	s.Log("Inducing artificial warning")
-	lkdtm := "/sys/kernel/debug/provoke-crash/DIRECT"
-	if _, err := os.Stat(lkdtm); err == nil {
-		if err := ioutil.WriteFile(lkdtm, []byte("WARNING"), 0); err != nil {
-			s.Fatal("Failed to induce warning in lkdtm: ", err)
-		}
-	} else {
-		if err := ioutil.WriteFile("/proc/breakme", []byte("warning"), 0); err != nil {
-			s.Fatal("Failed to induce warning in breakme: ", err)
-		}
+	const lkdtm = "/sys/kernel/debug/provoke-crash/DIRECT"
+	if err := ioutil.WriteFile(lkdtm, []byte("WARNING"), 0); err != nil {
+		s.Fatal("Failed to induce warning in lkdtm: ", err)
 	}
 
 	s.Log("Waiting for files")
 	const (
-		funcName = `[a-zA-Z0-9_]*(?:lkdtm|breakme|direct_entry)[a-zA-Z0-9_]*`
+		funcName = `[a-zA-Z0-9_]*(?:lkdtm|direct_entry)[a-zA-Z0-9_]*`
 		baseName = `kernel_warning_` + funcName + `\.\d{8}\.\d{6}\.\d+\.0`
 		metaName = baseName + `\.meta`
 	)
@@ -186,12 +179,16 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 		if contents, err := ioutil.ReadFile(metaFile); err != nil {
 			s.Errorf("Couldn't read meta file %s contents: %v", metaFile, err)
 		} else {
+			missing := false
 			for key, value := range metaFileParametersToTest {
 				if !strings.Contains(string(contents), ("upload_var_" + key + "=" + value)) {
 					s.Error(".meta file did not contain expected " + key)
-					if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFile); err != nil {
-						s.Error("Failed to save the meta file: ", err)
-					}
+					missing = true
+				}
+			}
+			if missing {
+				if err := crash.MoveFilesToOut(ctx, s.OutDir(), metaFile); err != nil {
+					s.Error("Failed to save the meta file: ", err)
 				}
 			}
 		}
