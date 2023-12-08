@@ -61,6 +61,7 @@ type dataMigrationTestParams struct {
 	poolID       string
 	dataFileName string
 	managed      bool
+	bootTimeout  time.Duration
 }
 
 func init() {
@@ -108,6 +109,9 @@ func init() {
 				poolID:       arcDataMigrationUnmanagedPool,
 				dataFileName: homeDataNamePiArm,
 				managed:      false,
+				// Use a longer timeout as ARCVM will boot with virtio-fs /data,
+				// which is much slower than virtio-blk /data on ARM.
+				bootTimeout: 4 * time.Minute,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 			ExtraData: []string{homeDataNamePiArm},
@@ -255,7 +259,11 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 	}
 	defer cr.Close(cleanupCtx)
 
-	a, err := arc.New(ctx, outDir, cr.NormalizedUser())
+	// Use the default boot timeout if not specified already.
+	if params.bootTimeout == 0 {
+		params.bootTimeout = arc.BootTimeout
+	}
+	a, err := arc.NewWithTimeout(ctx, outDir, params.bootTimeout, cr.NormalizedUser())
 	if err != nil {
 		return rl.Retry("start ARC", err)
 	}
