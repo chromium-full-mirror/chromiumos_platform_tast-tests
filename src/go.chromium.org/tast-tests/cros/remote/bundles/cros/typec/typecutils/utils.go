@@ -208,6 +208,35 @@ func builtInTBTDevice(name string) bool {
 	return false
 }
 
+// FindConnectedDp returns a list of all connected DP connectors.
+func FindConnectedDp(ctx context.Context, d *dut.DUT) ([]string, error) {
+	var ret []string
+
+	out, err := d.Conn().CommandContext(ctx, "modetest", "-c").Output()
+	if err != nil {
+		return ret, errors.Wrap(err, "could not run modetest command on DUT")
+	}
+
+	for _, line := range strings.Split(string(out), "\n") {
+		// Look for patterns in the following lines:
+		//
+		// 273     0       disconnected    DP-3            0x0             0       272
+		// 254     253     connected       DP-1            0x0             24      253
+		// We need to match for both "connected" *and* "disconnected" since one is a subset of the other.
+		connectorRe := regexp.MustCompile(`.+\s+(disconnected|connected)\s+(DP-\d)`)
+		connector := connectorRe.FindStringSubmatch(line)
+		if len(connector) != 3 {
+			continue
+		}
+
+		if connector[1] == "connected" {
+			ret = append(ret, connector[2])
+		}
+	}
+
+	return ret, nil
+}
+
 // CheckTBTDevice is a helper function which checks for TBT device connection to a DUT.
 // |expected| specifies whether we want to check for the presence of a TBT device (true) or the
 // absence of one (false).
