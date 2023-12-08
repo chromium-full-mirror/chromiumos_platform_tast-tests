@@ -6,6 +6,8 @@ package arc
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"time"
 
@@ -32,6 +34,7 @@ func init() {
 		BugComponent: "b:488493",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		Data:         []string{"open_with_menu_test.html"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
@@ -105,31 +108,35 @@ func OpenWithMenuChrome(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// Setup test HTTP server.
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
 	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 	if err != nil {
 		s.Fatal("Failed to open the browser: ", err)
 	}
 	defer closeBrowser(cleanupCtx)
 
-	// Open search result page
-	conn, err := br.NewConn(ctx, "https://google.com/search?q=Google")
+	// Open a test page with a link.
+	conn, err := br.NewConn(ctx, server.URL + "/open_with_menu_test.html")
 	if err != nil {
 		s.Fatal("Failed to create new Chrome connection: ", err)
 	}
 	defer conn.Close()
 
-	// Wait for Google Logo to appear
-	googleLogo := nodewith.Name("Google").Role(role.Link).First()
-	if err := ui.WaitUntilExists(googleLogo)(ctx); err != nil {
-		s.Fatal("Failed to wait for Google Logo to load: ", err)
+	// Wait for the link to Google to appear
+	googleLink := nodewith.Name("Google").Role(role.Link).First()
+	if err := ui.WaitUntilExists(googleLink)(ctx); err != nil {
+		s.Fatal("Failed to wait for Google link to load: ", err)
 	}
 
-	// Get the Google Logo next to search bar.
-	googleLogoOption := nodewith.Name("Open with Intent Picker Test App").Role(role.MenuItem)
+	// Show the context menu for the link element.
+	googleLinkOption := nodewith.Name("Open with Intent Picker Test App").Role(role.MenuItem)
 	if err := uiauto.Combine("Show context menu",
-		ui.RightClick(googleLogo),
-		ui.WaitUntilExists(googleLogoOption))(ctx); err != nil {
-		s.Log("Failed to show context menu of Google Logo: ", err)
+		ui.RightClick(googleLink),
+		ui.WaitUntilExists(googleLinkOption))(ctx); err != nil {
+		s.Log("Failed to show context menu of Google link: ", err)
 		// After timeout, dump all the menuItems if possible, this should provide a clear
 		// idea whether items are missing in the menu or the menu not being there at all.
 		menu := nodewith.ClassName("MenuItemView")
