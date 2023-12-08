@@ -56,6 +56,7 @@ const (
 	ashTastBootTimeLogin2                                 = "Ash.Tast.BootTime.Login2"
 	ashTastArcUIAvailableAfterLoginDuration               = "Ash.Tast.ArcUiAvailableAfterLogin.Duration"
 	arcTastUIAvailableTimeDelta                           = "Arc.Tast.UiAvailable.TimeDelta"
+	bootTimeLogin3                                        = "BootTime.Login3"
 	uptimeLogoutToUIStopAfterLogout                       = "Uptime.LogoutToUIStopAfterLogout"
 	uptimeUIStopToProcessesTerminatedAfterLogout          = "Uptime.UIStopToProcessesTerminatedAfterLogout"
 	uptimeOtherProcessesTerminatedToChromeExecAfterLogout = "Uptime.OtherProcessesTerminatedToChromeExecAfterLogout"
@@ -947,6 +948,7 @@ func storeHistograms(
 			allBrowserWindowsShown,
 			allShelfIconsLoaded,
 			ashTastBootTimeLogin2,
+			bootTimeLogin3,
 			ensureWorkVisibleLowResHistogram,
 			shelfLoginAnimationEnd,
 			ashTastArcUIAvailableAfterLoginDuration,
@@ -1128,6 +1130,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					allBrowserWindowsShown,
 					allShelfIconsLoaded,
 					ashTastBootTimeLogin2,
+					bootTimeLogin3,
 					uptimeLogoutToUIStopAfterLogout,
 					uptimeUIStopToProcessesTerminatedAfterLogout,
 					uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
