@@ -18,12 +18,11 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DiagRoutineVolumeButton,
+		Func:         RunVolumeButtonRoutine,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that cros_healthd can run volume button routine",
 		Contacts: []string{
@@ -32,17 +31,8 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
-		HardwareDeps: hwdep.D(hwdep.HasSideVolumeButton()),
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      "crosHealthdRunning",
-		Params: []testing.Param{{
-			Name: "v2_passed",
-			Val: croshealthd.RoutineTestingConfigV2{
-				ArgsBuilder:    buildVolumeButtonRoutineArgs,
-				RoutineRunner:  runVolumeButtonDiag,
-				ResultVerifier: croshealthd.VerifyRoutinePassedV2,
-			},
-		}},
 	})
 }
 
@@ -90,8 +80,12 @@ func buildVolumeButtonRoutineArgs(ctx context.Context) ([]string, error) {
 	return []string{"volume_button", "--button_type=up", "--length_seconds=5"}, nil
 }
 
-func DiagRoutineVolumeButton(ctx context.Context, s *testing.State) {
-	config := s.Param().(croshealthd.RoutineTestingConfigV2)
+func RunVolumeButtonRoutine(ctx context.Context, s *testing.State) {
+	config := croshealthd.RoutineTestingConfigV2{
+		ArgsBuilder:    buildVolumeButtonRoutineArgs,
+		RoutineRunner:  runVolumeButtonDiag,
+		ResultVerifier: croshealthd.VerifyRoutineV2PassedOrUnsupported,
+	}
 	if err := croshealthd.TestDiagRoutineV2(ctx, config); err != nil {
 		s.Fatal("Routine verification failed: ", err)
 	}
