@@ -973,7 +973,14 @@ func init() {
 		Contacts: []string{"chromeos-rtc@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.ExtraArgs(chromeSuppressNotificationsArgs...),
+				chrome.ExtraArgs([]string{
+					// Do not show message center notifications.
+					"--suppress-message-center-popups",
+					// Disable ARC++.
+					"--arc-availability=none",
+					// Disable firmware update to stop chrome from executing fwupd that restarts powerd.
+					"--disable-features=FirmwareUpdaterApp",
+				}...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				// Avoid the need to grant camera/microphone permissions.
 				chrome.ExtraArgs("--auto-accept-camera-and-microphone-capture"),
