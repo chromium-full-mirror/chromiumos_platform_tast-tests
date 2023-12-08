@@ -68,7 +68,7 @@ type AudioPeripheral interface {
 
 	// SetAudioConfig calls the Chameleond RPC method of the same name.
 	// Sets the audio configuration.
-	SetAudioConfig(ctx context.Context, audioProfile AudioProfile) error
+	SetAudioConfig(ctx context.Context, audioConfig map[string]string) error
 
 	// StartPulseaudio calls the Chameleond RPC method of the same name.
 	// Starts the pulseaudio process.
@@ -256,8 +256,8 @@ func (c *CommonAudioPeripheral) StopAudioServer(ctx context.Context) error {
 
 // SetAudioConfig calls the Chameleond RPC method of the same name.
 // This implements AudioPeripheral.SetAudioConfig, see that for more details.
-func (c *CommonAudioPeripheral) SetAudioConfig(ctx context.Context, audioProfile AudioProfile) error {
-	return c.RPC("SetAudioConfig").Args(audioProfile.String()).Call(ctx)
+func (c *CommonAudioPeripheral) SetAudioConfig(ctx context.Context, audioConfig map[string]string) error {
+	return c.RPC("SetAudioConfig").Args(audioConfig).Call(ctx)
 }
 
 // StartPulseaudio calls the Chameleond RPC method of the same name.
