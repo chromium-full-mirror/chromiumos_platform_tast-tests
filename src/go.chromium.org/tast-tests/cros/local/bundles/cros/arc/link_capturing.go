@@ -155,6 +155,7 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get ARC version: ", err)
 	}
 
+	openInBrowserFromAndroidExpectation := linkOpensInBrowser
 	if version >= arc.SDKT {
 		if err := arcDevice.Command(ctx, "pm", "set-app-links", "--package", testPackageName, "2", "all").Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to set Android link capturing setting: ", err)
@@ -163,6 +164,11 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 		if err := arcDevice.Command(ctx, "pm", "set-app-link", testPackageName, "always").Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to set Android link capturing setting: ", err)
 		}
+
+		// On Android R or before, disambiguation dialog was the defined behavior
+		// as in https://developer.android.com/training/app-links#web-links,
+		// which was different from the latest behavior
+		openInBrowserFromAndroidExpectation = linkOpensInAndroidPicker
 	}
 
 	// Start local server.
@@ -208,7 +214,7 @@ func LinkCapturing(ctx context.Context, s *testing.State) {
 			name:    "browser_setting_link_in_android_opens_picker",
 			setting: openInBrowser,
 			link:    clickInAndroid,
-			opensIn: linkOpensInAndroidPicker,
+			opensIn: openInBrowserFromAndroidExpectation,
 		},
 	} {
 		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
