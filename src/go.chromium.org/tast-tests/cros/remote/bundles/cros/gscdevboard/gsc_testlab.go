@@ -28,7 +28,7 @@ func init() {
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
 			"chromeos-faft@google.com", // CrOS Firmware Developers
-			"mruthven@chromium.org",         // Test Author
+			"mruthven@chromium.org",    // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
@@ -37,10 +37,9 @@ func init() {
 }
 
 func runPowerButtonPresses(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, numPress int) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	for press := 1; press <= numPress; press++ {
-		if _, err := i.WaitForPowerButtonPrompt(ctx, time.Second*2); err != nil {
-			s.Fatalf("Power button prompt %d did not happen: %s", press, err)
-		}
+		th.MustSucceed(i.WaitForPowerButtonPrompt(ctx, time.Second*2), "Power button prompt %d did not happen: %s", press)
 		// Ti50 requires 100ms delay between short presses.
 		testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating button press
 		b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
@@ -49,6 +48,7 @@ func runPowerButtonPresses(ctx context.Context, s *testing.State, b utils.Devboa
 }
 
 var accessDeniedRE = regexp.MustCompile(`(?i)access denied`)
+
 func verifyTestlabBlocked(ctx context.Context, s *testing.State, i *ti50.CrOSImage, cmd string) {
 	// Verify Testlab mode can't be changed while ccd is locked
 	output, err := i.Command(ctx, cmd)
@@ -59,7 +59,6 @@ func verifyTestlabBlocked(ctx context.Context, s *testing.State, i *ti50.CrOSIma
 		s.Errorf("Did not get access denied running %s", cmd)
 	}
 }
-
 
 func GSCTestlab(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
@@ -85,9 +84,7 @@ func GSCTestlab(ctx context.Context, s *testing.State) {
 	runPowerButtonPresses(ctx, s, b, i, testlabPresses)
 	th.MustSucceed(i.WaitForTestlabDisable(ctx, time.Second*2), "Testlab disabled")
 
-	// Use WriteSerial here so we can WaitUntilMatch(pushButton) below. i.Command doesn't work
-	// because the pushButton message comes before the console prompt.
-	th.MustSucceed(i.WriteSerial(ctx, []byte("ccd testlab enable\r")), "Testlab enable")
+	th.MustSucceed(i.StartTestlabEnable(ctx), "Testlab enable")
 	runPowerButtonPresses(ctx, s, b, i, testlabPresses)
 	th.MustSucceed(i.WaitForTestlabEnable(ctx, time.Second*2), "Testlab enabled")
 }

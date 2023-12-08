@@ -44,8 +44,7 @@ var (
 	// GSC version strings
 	verRWCr50StrRE = `cr50_([a-z1-9]+)\S*-([[:xdigit:]]+)`
 	verRWTi50StrRE = `ti50_common_([a-z]+)\S*:(\S+)`
-	verRWGSCStrRE = verRWCr50StrRE + `|` + verRWTi50StrRE
-
+	verRWGSCStrRE  = verRWCr50StrRE + `|` + verRWTi50StrRE
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -391,6 +390,12 @@ func (i *CrOSImage) SysrstPulse(ctx context.Context) error {
 	return i.runCommand(ctx, "sysrst pulse")
 }
 
+// TestlabOpen uses the `ccd testlab open` GSC console command to open CCD. Testlab mode
+// must have been previously enabled
+func (i *CrOSImage) TestlabOpen(ctx context.Context) error {
+	return i.runCommand(ctx, "ccd testlab open")
+}
+
 // GetCCDLevel uses the `ccd` GSC console command to get the current CCD level
 // state.
 func (i *CrOSImage) GetCCDLevel(ctx context.Context) (CCDLevel, error) {
@@ -664,18 +669,27 @@ func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, timeout time.Duration) 
 	}, &pOpts)
 }
 
-// WaitForPowerButtonPrompt waits for a power button prompt
-func (i *CrOSImage) WaitForPowerButtonPrompt(ctx context.Context, timeout time.Duration) (output [][]byte, err error) {
-	return i.WaitUntilMatch(ctx, pwrbPromptRE, timeout)
+// StartTestlabEnable starts the testlab enable process that will require power button pushes.
+func (i *CrOSImage) StartTestlabEnable(ctx context.Context) error {
+	// Use WriteSerial instead of Command so we do not consume the the power button prompt message
+	// that happens before the next command prompt ( >). This allows WaitForPowerButtonPrompt to
+	// work right after StartTestlabEnable
+	return i.WriteSerial(ctx, []byte("ccd testlab enable\r"))
 }
 
-// WaitForTestlabEnable waits until a testlab enable message is printed
+// WaitForPowerButtonPrompt waits for a power button prompt.
+func (i *CrOSImage) WaitForPowerButtonPrompt(ctx context.Context, timeout time.Duration) error {
+	_, err := i.WaitUntilMatch(ctx, pwrbPromptRE, timeout)
+	return err
+}
+
+// WaitForTestlabEnable waits until a testlab enable message is printed.
 func (i *CrOSImage) WaitForTestlabEnable(ctx context.Context, timeout time.Duration) error {
 	_, err := i.WaitUntilMatch(ctx, testlabEnabledRE, timeout)
 	return err
 }
 
-// WaitForTestlabDisable waits until a testlab disable message is printed
+// WaitForTestlabDisable waits until a testlab disable message is printed.
 func (i *CrOSImage) WaitForTestlabDisable(ctx context.Context, timeout time.Duration) error {
 	_, err := i.WaitUntilMatch(ctx, testlabDisabledRE, timeout)
 	return err

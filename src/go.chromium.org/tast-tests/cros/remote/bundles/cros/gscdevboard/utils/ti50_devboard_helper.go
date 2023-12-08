@@ -513,3 +513,15 @@ func (h DevboardHelper) WaitUntilCCDConnected(ctx context.Context) {
 		h.Fatalf("CCD did not connect: %s", err)
 	}
 }
+
+// CCDMustNotBeConnected verifies there is no CCD connection for the specified duration
+func (h DevboardHelper) CCDMustNotBeConnected(ctx context.Context, duration time.Duration) {
+	pOpts := testing.PollOptions{Interval: time.Second, Timeout: duration}
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := h.GSCToolCommand(ctx, "", "--fwver")
+		return err
+	}, &pOpts)
+	if err == nil {
+		h.Fatalf("CCD connect unexpectedly")
+	}
+}

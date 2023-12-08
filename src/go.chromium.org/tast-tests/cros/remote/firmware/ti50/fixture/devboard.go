@@ -161,7 +161,7 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 // setupCr50Image uses gsctool to flash the cr50 image.
 // TODO(b/140534392): Support rollback and changing the board id.
-func setupCr50Image(ctx context.Context, s errorThrower, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string) {
+func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string) {
 	if err := board.Setup(ctx, "", fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
@@ -239,18 +239,21 @@ func (i *devboardFixture) dialGrpc(ctx context.Context) error {
 
 // Convenience functions copied from tpm_helper (since the helper isn't accessible at this layer)
 
-type errorThrower interface {
+// TestingState provides methods that can log context messages or fail test execution.
+type TestingState interface {
 	Fatal(args ...interface{})
 	Fatalf(format string, args ...interface{})
+	Log(args ...interface{})
+	Logf(format string, args ...interface{})
 }
 
-func gpioSet(ctx context.Context, s errorThrower, b ti50.DevBoard, g ti50.GpioName, val bool) {
+func gpioSet(ctx context.Context, s TestingState, b ti50.DevBoard, g ti50.GpioName, val bool) {
 	if _, err := b.PlainCommand(ctx, "gpio", "write", string(g), strconv.FormatBool(val)); err != nil {
 		s.Fatalf("Failed to set gpio %s: %s", g, err)
 	}
 }
 
-func gpioApplyStrap(ctx context.Context, s errorThrower, b ti50.DevBoard, straps ...ti50.GpioStrap) {
+func gpioApplyStrap(ctx context.Context, s TestingState, b ti50.DevBoard, straps ...ti50.GpioStrap) {
 	for _, strap := range straps {
 		if _, err := b.PlainCommand(ctx, "gpio", "apply", string(strap)); err != nil {
 			s.Fatalf("Failed to apply gpio strap %s: %s", strap, err)
@@ -258,13 +261,13 @@ func gpioApplyStrap(ctx context.Context, s errorThrower, b ti50.DevBoard, straps
 	}
 }
 
-func mustSucceed(s errorThrower, err error, format string, args ...interface{}) {
+func mustSucceed(s TestingState, err error, format string, args ...interface{}) {
 	if err != nil {
 		s.Fatalf(format+": %s", append(args, err))
 	}
 }
 
-func runCommand(ctx context.Context, s errorThrower, image *ti50.CrOSImage, command string) string {
+func runCommand(ctx context.Context, s TestingState, image *ti50.CrOSImage, command string) string {
 	out, err := image.Command(ctx, command)
 	if err != nil {
 		s.Fatalf("Running Command `%s` failed: %s", command, err)

@@ -14,6 +14,7 @@ import (
 	"github.com/google/go-tpm/legacy/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
+	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -26,7 +27,7 @@ const (
 )
 
 var (
-	ccdOpened      = regexp.MustCompile("CCD [Oo]pened")
+	ccdOpened = regexp.MustCompile("CCD [Oo]pened")
 )
 
 func init() {
@@ -55,9 +56,8 @@ func (c *ccdOpenImpl) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, i *ti50.CrOSImage, s *testing.FixtTestState) {
-	b := c.v.devboard
-
+// EnsureTestLabEnabled ensures that testlab mode is open
+func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUTControlAndreiboard, i *ti50.CrOSImage) {
 	out := runCommand(ctx, s, i, "ccd testlab")
 
 	if strings.Contains(out, "CCD test lab mode enabled") {
@@ -88,14 +88,11 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, i *ti50.CrOSImage, 
 	s.Log("Setting testlab to enabled")
 	// Reset to clear chip factory mode to allow testlab enable.
 	runCommand(ctx, s, i, "ccd reset")
-	// Use WriteSerial here so we can WaitUntilMatch(pushButton) below. runCommand doesn't work
-	// because the pushButton message comes before the console prompt.
-	mustSucceed(s, i.WriteSerial(ctx, []byte("ccd testlab enable\r")), "Testlab enable")
+	mustSucceed(s, i.StartTestlabEnable(ctx), "Testlab enable")
 
 	for powerPush := 1; powerPush <= 5; powerPush++ {
 		// Wait for prompt before pushing
-		_, err := i.WaitForPowerButtonPrompt(ctx, time.Second*2)
-		mustSucceed(s, err, "Power button prompt %d did not happen", powerPush)
+		mustSucceed(s, i.WaitForPowerButtonPrompt(ctx, time.Second*2), "Power button prompt %d did not happen", powerPush)
 		// Ti50 requires 100ms delay between short presses.
 		testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating button press
 		gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, false)
@@ -106,7 +103,8 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, i *ti50.CrOSImage, 
 	s.Log("Testlab mode is now enabled")
 }
 
-func (c *ccdOpenImpl) wipeTpmAndOpenCcd(ctx context.Context, i *ti50.CrOSImage, s *testing.FixtTestState) {
+// WipeTpmAndOpenCcd clears the TPM data. Testlab mode must be enabled first.
+func WipeTpmAndOpenCcd(ctx context.Context, s TestingState, b *remoteTi50.DUTControlAndreiboard, i *ti50.CrOSImage) {
 	testing.ContextLog(ctx, "Erasing TPM data and opening CCD")
 	runCommand(ctx, s, i, "ccd testlab open")
 	runCommand(ctx, s, i, "ccd reset factory")
@@ -141,8 +139,8 @@ func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Ensure that test lab is open before we try to open ccd
-	c.ensureTestLabOpen(ctx, i, s)
-	c.wipeTpmAndOpenCcd(ctx, i, s)
+	EnsureTestLabEnabled(ctx, s, b, i)
+	WipeTpmAndOpenCcd(ctx, s, b, i)
 
 	// Hold GSC in reset until test can take is out of reset after first opening a new UART connection
 	gpioApplyStrap(ctx, s, b, ti50.StrapReset)

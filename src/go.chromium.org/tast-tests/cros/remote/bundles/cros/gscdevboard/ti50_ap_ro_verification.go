@@ -12,9 +12,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-tpm/legacy/tpm2"
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -65,9 +67,8 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	// First, provision the GSC and AP flash so it can run AP RO verification correctly.
-	s.Log("(Re)starting GSC")
-	b.Reset(ctx)
+	s.Log("(Re)starting GSC with clamshell straps and no CCD")
+	b.ResetWithStraps(ctx, ti50.FfClamshell, ti50.CcdDisconnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	s.Log("Provisioning AP SPI settings")
@@ -92,10 +93,11 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not set wpsr: ", wpsrSet)
 	}
 
-	s.Log("Reset ccd to clear initial factory mode")
-	th.MustSucceed(i.CCDOpen(ctx), "CCD Open")
-	th.MustSucceed(i.CCDReset(ctx), "CCD Reset")
-	th.MustSucceed(i.CCDResetFactory(ctx), "CCD Factory Reset")
+	// Ensure testlab mode is enabled before testing, otherwise we can get locked out of ccd open
+	// when we verify that FWMP prevents bypass key sequence.
+	fixture.EnsureTestLabEnabled(ctx, s, b.DUTControlAndreiboard, i)
+	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
+	th.MustSucceed(i.CCDResetFactory(ctx), "reset factory")
 
 	// Validate success case first to ensure that latch flips
 	verifyValidImage(ctx, s, b, i)
@@ -107,42 +109,175 @@ func Ti50APROVerification(ctx context.Context, s *testing.State) {
 func verifyValidImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) {
 	flashSPIImage(ctx, s, b, i, validSPIImage)
 	verifyVerificationResultOnReboot(ctx, s, b, i, verificationResultSuccess)
-
-	ecResetL := b.GpioGet(ctx, ti50.GpioTi50EcRstL)
-	if ecResetL != true {
-		s.Error("EC not released for successful AP RO verifcation")
-	}
+	verifySystemInReset(ctx, s, b, i, false, "AP RO verification passes")
 }
 
 func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi spiImage, wantVerificationResult uint32) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
-	// Ensure that AllowUnverifiedRo is set to never so EC is held in reset
-	s.Log("Set AllowUnverifiedRo to never")
-	th.MustSucceed(i.CCDOpen(ctx), "CCD Open failed")
-	th.MustSucceed(i.SetCCDCapability(ctx, ti50.AllowUnverifiedRO, ti50.CapDefault), "Set AllowUnverifiedRo to never")
-
-	flashSPIImage(ctx, s, b, i, spi)
-	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
-
-	ecResetL := b.GpioGet(ctx, ti50.GpioTi50EcRstL)
-	if ecResetL != false {
-		s.Error("EC released when AP RO verification failed and AllowUnverifiedRo set to never")
-	}
-
 	s.Log("Set AllowUnverifiedRo to always")
-	th.MustSucceed(i.CCDOpen(ctx), "CCD Open failed")
+	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
 	th.MustSucceed(i.SetCCDCapability(ctx, ti50.AllowUnverifiedRO, ti50.CapAlways), "Set AllowUnverifiedRo to always")
 
+	// Ensure there is no FWMP file
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi)
+	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.FwmpFileID)
+	th.MustSucceed(tpm.TpmvCommitNvmem(), "NVCommit")
+
+	// Flash bad image on AP SPI chip. GSC held in reset after done
+	flashSPIImage(ctx, s, b, i, spi)
+
+	// Verify system not held in reset
+	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+	verifySystemInReset(ctx, s, b, i, false, "AP RO verification failed with AllowUnverifiedRO as always")
+
+	// Ensure that AllowUnverifiedRo is set to never so EC is held in reset
+	s.Log("Set AllowUnverifiedRo to never")
+	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
+	th.MustSucceed(i.SetCCDCapability(ctx, ti50.AllowUnverifiedRO, ti50.CapDefault), "Set AllowUnverifiedRo to never")
+
+	// Verify system held in reset
+	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+	verifySystemInReset(ctx, s, b, i, true, "AP RO verification failed and AllowUnverifiedRo as never")
+
+	// Verify that the reboot is still in the failed verification state before continuing
 	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
 
-	// GoBigSleepLint: It is a true failure if EC isn't released within 0.5 sec
-	testing.Sleep(ctx, 500*time.Millisecond)
+	s.Log("Perform AP RO bypass key sequence (for clamshell)")
+	performAPROBypassKeySequence(ctx, b)
 
-	ecResetL = b.GpioGet(ctx, ti50.GpioTi50EcRstL)
-	if ecResetL != true {
-		s.Error("EC held in reset when AP RO verification failed and AllowUnverifiedRo set to always")
+	// Verify that system has been released from reset
+	verifySystemInReset(ctx, s, b, i, false, "AP RO verification failed after bypass")
+
+	s.Log("Create FWMP file that blocks CCD open (and bypass keycombo)")
+	tpm = b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi)
+	writeBlockingFWMPFile(ctx, s, b, tpm)
+	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.FwmpFileID)
+
+	// Restart GSC and ensure system held in reset
+	verifyVerificationResultOnReboot(ctx, s, b, i, wantVerificationResult)
+	verifySystemInReset(ctx, s, b, i, true, "Verification failed with FWMP before bypass")
+
+	s.Log("Perform AP RO bypass key sequence (for clamshell) -- Should be blocked by FWMP")
+	performAPROBypassKeySequence(ctx, b)
+
+	// Verify that system is still in reset because key sequence should be block
+	verifySystemInReset(ctx, s, b, i, true, "Verification failed, bypassed but blocked by FWMP")
+}
+
+func verifySystemInReset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, inReset bool, scenario string) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+
+	expectedEcResetL := !inReset
+	expectedEcState := ""
+	if !inReset {
+		expectedEcState = "not "
 	}
+
+	// GoBigSleepLint: It is a true failure if EC isn't in correct state after 0.5 sec
+	testing.Sleep(ctx, 500*time.Millisecond)
+	ecResetL := b.GpioGet(ctx, ti50.GpioTi50EcRstL)
+	if ecResetL != expectedEcResetL {
+		s.Errorf("EC %sreleased when %s", expectedEcState, scenario)
+	}
+
+	// Ensure CCD is open before calling console commands
+	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
+
+	s.Log("Verify ecrst console commands when ", scenario)
+	th.MustSucceed(i.EcrstOff(ctx), "Ecrst off")
+	ecResetL = b.GpioGet(ctx, ti50.GpioTi50EcRstL)
+	if ecResetL != expectedEcResetL {
+		s.Errorf("EC %sreleased when %s after ecrst off", expectedEcState, scenario)
+	}
+
+	th.MustSucceed(i.EcrstPulse(ctx), "Ecrst pulse")
+	ecResetL = b.GpioGet(ctx, ti50.GpioTi50EcRstL)
+	if ecResetL != expectedEcResetL {
+		s.Errorf("EC %sreleased when %s after ecrst pulse", expectedEcState, scenario)
+	}
+
+	s.Log("Verify EC reset clamshell combo when ", scenario)
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
+	tapActiveLowKey(ctx, b, ti50.GpioTi50KsiRefresh)
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+	ecResetL = b.GpioGet(ctx, ti50.GpioTi50EcRstL)
+	if ecResetL != expectedEcResetL {
+		s.Errorf("EC %sreleased when %s after ec reset key combo", expectedEcState, scenario)
+	}
+
+	s.Log("Verify that CCD state when ", scenario)
+	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+	// GoBigSleepLint: Allow USB to settle after reboot, then poll
+	testing.Sleep(ctx, 5*time.Second)
+	if inReset {
+		b.WaitUntilCCDConnected(ctx)
+	} else {
+		b.CCDMustNotBeConnected(ctx, 2*time.Second)
+	}
+
+	s.Log("Ensure that GSC didn't reset from previous interactions")
+	if err := i.WaitUntilRoBoot(ctx, time.Second); !errors.Is(err, context.DeadlineExceeded) {
+		s.Errorf("GSC reset unexpectedly reset when %s: %s", scenario, err)
+	}
+
+	s.Log("Verify that power button and GSC reset when ", scenario)
+	tapActiveLowKey(ctx, b, ti50.GpioTi50PowerBtnL)
+	err := i.WaitUntilRoBoot(ctx, time.Second)
+	if errors.Is(err, context.DeadlineExceeded) == inReset {
+		expectedGscState := ""
+		if inReset {
+			expectedGscState = "did not "
+		}
+		s.Errorf("Power button %sreset GSC when %s: %s", expectedGscState, scenario, err)
+	}
+}
+
+func writeBlockingFWMPFile(ctx context.Context, s *testing.State, b utils.DevboardHelper, tpm *utils.TpmHelper) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+
+	s.Log("Write FWMP file with unlock disabled")
+	fwmpFile := utils.MakeFWMPFile(utils.FWMPDisableUnlock)
+	// Define space in NV storage and clean up afterwards
+	err := tpm2.NVDefineSpace(tpm,
+		ti50.RootPlatformHandle,
+		ti50.FwmpFileID,
+		ti50.EmptyPassword,
+		ti50.EmptyPassword,
+		nil,
+		ti50.FwmpFileAttr,
+		uint16(len(fwmpFile)),
+	)
+	th.MustSucceed(err, "NVDefineSpace")
+
+	// Write the fwmp file data to new space and immediate commit to nvmem.
+	err = tpm2.NVWrite(tpm,
+		ti50.RootPlatformHandle,
+		ti50.FwmpFileID,
+		ti50.EmptyPassword,
+		fwmpFile,
+		0,
+	)
+	th.MustSucceed(err, "NVWrite")
+	th.MustSucceed(tpm.TpmvCommitNvmem(), "NVCommit")
+}
+
+func performAPROBypassKeySequence(ctx context.Context, b utils.DevboardHelper) {
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
+	tapActiveLowKey(ctx, b, ti50.GpioTi50KsiRefresh)
+	tapActiveLowKey(ctx, b, ti50.GpioTi50KsiRefresh)
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
+	tapActiveLowKey(ctx, b, ti50.GpioTi50KsiRefresh)
+	tapActiveLowKey(ctx, b, ti50.GpioTi50KsiRefresh)
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+}
+
+func tapActiveLowKey(ctx context.Context, b utils.DevboardHelper, gpio ti50.GpioName) {
+	b.GpioSet(ctx, gpio, false)
+	testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating 100ms button press
+	b.GpioSet(ctx, gpio, true)
 }
 
 func flashSPIImage(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, spi spiImage) {
