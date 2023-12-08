@@ -141,7 +141,9 @@ func (c *UreadaheadPackService) Generate(ctx context.Context, request *arcpb.Ure
 		// If VM, only generate guest OS pack file.
 		chromeArgs = append(chromeArgs, "--arcvm-ureadahead-mode=generate")
 	} else {
+		// TODO (b/315507371): Remove deprecated flag after changes land.
 		chromeArgs = append(chromeArgs, "--arc-host-ureadahead-generation")
+		chromeArgs = append(chromeArgs, "--arc-host-ureadahead-mode=generate")
 		if request.UseDevCaches {
 			chromeArgs = append(chromeArgs, "--arc-use-dev-caches")
 		}

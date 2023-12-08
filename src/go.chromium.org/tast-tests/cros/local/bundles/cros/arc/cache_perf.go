@@ -212,7 +212,10 @@ func bootARCCachePerf(ctx context.Context, s *testing.State, mode cacheMode) (ti
 	case cacheNormal:
 	case cacheSkipDisk:
 		// Disabling ureadahead caches.
+		// TODO (b/315507371): Remove deprecated flag after changes land.
 		args = append(args, "--arc-disable-ureadahead")
+		args = append(args, "--arc-host-ureadahead-mode=disabled")
+		args = append(args, "--arcvm-ureadahead-mode=disabled")
 	case cacheSkipApps:
 		// Disabling package manager cache disables GMS Core cache as well.
 		args = append(args, "--arc-packages-cache-mode=skip-copy")
