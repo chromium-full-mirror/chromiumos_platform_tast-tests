@@ -12,6 +12,7 @@ import (
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	btr "go.chromium.org/tast-tests/cros/remote/bluetooth"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -57,6 +58,47 @@ func DiscoverAndPairDevice(ctx context.Context, bluetoothService bts.BluetoothSe
 		Pin:           devicePin,
 	}); err != nil {
 		return errors.Wrapf(err, "failed to pair device with address %q after successful discovery", deviceAddress)
+	}
+	return nil
+}
+
+// ConfigureAudioDevice configures the peer as an audio device.
+func ConfigureAudioDevice(ctx context.Context, device *btr.EmulatedBTPeerDevice, audioProfile cbt.AudioProfile, audioServer, a2dpCodec string) error {
+	audioConfig := map[string]string {cbt.AudioConfigAudioServer: string(cbt.AudioServerPulseaudio)}
+	if audioServer != "" {
+		audioConfig[cbt.AudioConfigAudioServer] = audioServer
+	}
+	if a2dpCodec != "" {
+		audioConfig[cbt.AudioConfigA2DPCodec] = a2dpCodec
+	}
+
+	if err := device.RPCAudio().SetAudioConfig(ctx, audioConfig); err != nil {
+		return errors.Wrap(err, "failed to set audio config")
+        }
+        if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := device.RPCAudio().StartAudioServer(ctx, audioProfile); err != nil {
+                	return errors.New("failed to start audio server")
+                }
+                return nil
+        }, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 4 * time.Second}); err != nil {
+                return errors.Wrap(err, "failed to start audio server")
+        }
+
+	useOfono := false
+	for _, p := range cbt.GetOfonoSupportedProfiles() {
+		if audioProfile == p {
+			useOfono = true
+			break
+		}
+	}
+	if useOfono {
+	        if err := device.RPCAudio().StartOfono(ctx); err != nil {
+                        return errors.New("start Ofono failed")
+        	}
+	} else {
+        	if err := device.RPCAudio().StopOfono(ctx); err != nil {
+                        return errors.New("stop Ofono failed")
+        	}
 	}
 	return nil
 }

@@ -161,6 +161,14 @@ func (pac PairingAgentCapability) String() string {
 	return string(pac)
 }
 
+const (
+	// AudioConfigAudioServer is the key of the configure map for audio server name.
+	AudioConfigAudioServer string = "audio_server"
+
+	// AudioConfigA2DPCodec is the key of the configure map for A2DP codec.
+	AudioConfigA2DPCodec string = "a2dp_codec"
+)
+
 // AudioServer refers to audio server names, as they would be returned by
 // AudioPeripheral.GetAudioServerName.
 type AudioServer string
@@ -210,6 +218,11 @@ const (
 	// AudioProfileHFPWPSMedium is the "hfp_wbs_medium" AudioProfile
 	AudioProfileHFPWPSMedium AudioProfile = "hfp_wbs_medium"
 )
+
+// GetOfonoSupportedProfiles return profiles that support Ofono.
+func GetOfonoSupportedProfiles() []AudioProfile {
+	return []AudioProfile {AudioProfileHFPWPS, AudioProfileHFPNBS, AudioProfileHFPWPSMedium, AudioProfileHFPNBSMedium}
+}
 
 // String returns AudioProfile as a string.
 func (p AudioProfile) String() string {
