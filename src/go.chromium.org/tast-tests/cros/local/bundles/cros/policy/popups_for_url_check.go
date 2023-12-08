@@ -48,7 +48,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Data:         []string{"popups_for_url_check_index.html", "popups_for_url_check_popup.html"},
 		Params: []testing.Param{
 			{

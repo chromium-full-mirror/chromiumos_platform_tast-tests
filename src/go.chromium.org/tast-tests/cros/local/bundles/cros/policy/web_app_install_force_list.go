@@ -41,7 +41,7 @@ func init() {
 			"phweiss@google.com",        // Test author of customization test cases
 		},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		Data: []string{"web_app_install_force_list_index.html",
 			"web_app_install_force_list_manifest.json",

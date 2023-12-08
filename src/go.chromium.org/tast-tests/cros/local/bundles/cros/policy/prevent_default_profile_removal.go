@@ -34,6 +34,7 @@ func init() {
 		// Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      fixture.LacrosPolicyLoggedIn,
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

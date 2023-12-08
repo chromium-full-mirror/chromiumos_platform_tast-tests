@@ -31,7 +31,7 @@ func init() {
 			"vsavu@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},

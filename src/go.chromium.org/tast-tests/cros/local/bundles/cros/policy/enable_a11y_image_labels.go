@@ -41,7 +41,7 @@ func init() {
 			"eariassoto@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Data: []string{
 			"enable_a11y_image_labels_index.html",

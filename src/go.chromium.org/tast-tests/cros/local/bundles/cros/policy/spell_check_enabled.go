@@ -39,7 +39,7 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.LacrosPolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.SpellcheckEnabled{}, pci.VerifiedFunctionalityUI),
