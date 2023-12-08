@@ -21,6 +21,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
+	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/media/webrtc"
@@ -36,6 +39,10 @@ type VCTestParams struct {
 	// If Step is true, then performance values in each step (e.g. idle, only open camera) are collected.
 	// If it is false, then performance values only in a video conference with |numPeople| persons.
 	Step bool
+	// If Mouse is true, then opens a mouse tab in a new window and there clicks,
+	// moves the cursor, click and scroll. If Present and Mouse are both true,
+	// then only the mouse tab opens and the tab is presented.
+	Mouse bool
 	// Numpeope is the number of persons in a video conference.
 	// This can be set only if Step is false and it must be more than two.
 	NumPeople int
@@ -66,12 +73,17 @@ const (
 	textHTML = "webrtc/text.html"
 	// textTitle is the html title of presentHTML.
 	textTitle = "text test"
+	// mouseHTML is the HTML that has letters.
+	mouseHTML = "webrtc/mouse.html"
+	// mouseTitle is the html title of mouseHTML.
+	mouseTitle = "mouse test"
 
 	// Peretto configuration file.
 	traceConfigFile = "webrtc/perfetto_trace.txtpb"
 
-	powerInterval  = 5 * time.Second // Power library metrics collection interval.
-	typingInterval = 5 * time.Second // Interval of typing in text area
+	powerInterval          = 5 * time.Second // Power library metrics collection interval.
+	typingInterval         = 5 * time.Second // Interval of typing in text area
+	mouseOperatingInterval = 3 * time.Second // Interval of operating a mouse.
 )
 
 // TestFiles returns the files required running the test.
@@ -80,11 +92,25 @@ func TestFiles() []string {
 		vcHTML,
 		presentHTML,
 		textHTML,
+		mouseHTML,
 		"webrtc/canvas_animation.js",
 		"webrtc/video_conference.js",
 		"webrtc/third_party/munge_sdp.js",
 		traceConfigFile,
 	}
+}
+
+var mouseHistograms = []string{
+	"EventLatency.MouseDragged.TotalLatency",
+	// MouseMoved.TotalLatency is not recorded probably due to blink issue.
+	// Collect the event once the root cause is fixed.
+	// "EventLatency.MouseMoved.TotalLatency",
+	"EventLatency.MousePressed.TotalLatency",
+	"EventLatency.GestureScrollUpdate.TotalLatency",
+}
+
+var keyInputHistograms = []string{
+	"EventLatency.KeyPressed.TotalLatency",
 }
 
 // runStep performs the following steps in order.
@@ -149,14 +175,38 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 		return errors.Wrapf(err, "failed holding %dp call", params.NumPeople)
 	}
 
-	if params.Text {
+	var histNames []string
+	if params.Mouse {
+		histNames = mouseHistograms
+	} else if params.Text {
+		histNames = keyInputHistograms
+	}
+	var err error
+	var startHists []*metrics.Histogram
+	if len(histNames) > 0 {
+		startHists, err = metrics.GetHistograms(ctx, tconn, histNames)
+		if err != nil {
+			return errors.Wrap(err, "failed to get histograms")
+		}
+	}
+
+	if params.Mouse {
+		// Active the text input window so that keyboard inputs the text area.
+		if err := browser.ActivateTabByTitle(ctx, tconn, mouseTitle); err != nil {
+			return errors.Wrap(err, "failed activating video conference window")
+		}
+		mouseCtx := ctx
+		mouseOpCtx, stopMouseOperating := ctxutil.Shorten(mouseCtx, 1*time.Second)
+		err := startMouseOperating(mouseCtx, mouseOpCtx, tconn)
+		if err != nil {
+			return errors.Wrap(err, "failed starting operating mouse")
+		}
+		defer stopMouseOperating()
+	} else if params.Text {
 		// Active the text input window so that keyboard inputs the text area.
 		if err := browser.ActivateTabByTitle(ctx, tconn, textTitle); err != nil {
 			return errors.Wrap(err, "failed activating video conference window")
 		}
-		pr.RegisterMetrics(
-			power.NewHistogramMetrics(tconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
-		)
 		// typeCtx is shorter than kbdCtx because a keyboard needs to be closed
 		// after typeCtx is expired.
 		kbdCtx := ctx
@@ -173,8 +223,8 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 		}
 	}
 
-	rtcPerf := perf.NewValues()
-	if err := measureWebRTCStats(ctx, conn, rtcPerf, params); err != nil {
+	ownPerfs := perf.NewValues()
+	if err := measureWebRTCStats(ctx, conn, ownPerfs, params); err != nil {
 		return errors.Wrap(err, "failed collecting webrtc stats")
 	}
 
@@ -187,15 +237,67 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 		return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
 	}
 
-	if err := pr.Finish(ctx, rtcPerf); err != nil {
+	if _, err := pr.Stop(ctx); err != nil {
+		return errors.Wrap(err, "cannot stop collecting power metrics")
+	}
+
+	if len(histNames) > 0 {
+		endHists, err := metrics.GetHistograms(ctx, tconn, histNames)
+		if err != nil {
+			return errors.Wrap(err, "failed to get histograms")
+		}
+		diffHists, err := metrics.DiffHistograms(startHists, endHists)
+		if err != nil {
+			return errors.Wrap(err, "get histograms")
+		}
+		histPerfs, err := chromeLatencyMetrics(diffHists)
+		if err != nil {
+			return errors.Wrap(err, "compute histogram metrics")
+		}
+		ownPerfs.Merge(histPerfs)
+	}
+
+	if err := pr.Finish(ctx, ownPerfs); err != nil {
 		return errors.Wrap(err, "cannot finish collecting power metrics")
 	}
+
 	if params.Trace {
 		if err := recordTracing(ctx, s.OutDir(), s.DataPath(traceConfigFile)); err != nil {
 			return errors.Wrap(err, "failed in tracing")
 		}
 	}
 	return nil
+}
+
+func chromeLatencyMetrics(hists []*metrics.Histogram) (*perf.Values, error) {
+	// Check histograms is not empty.
+	for _, hist := range hists {
+		if hist.TotalCount() == 0 {
+			return nil, errors.Errorf("empty histogram: %s", hist.Name)
+		}
+	}
+	p := perf.NewValues()
+	for _, hist := range hists {
+		mean, err := hist.Mean()
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to compute mean: %s", hist.Name)
+		}
+		p.Set(perf.Metric{
+			Name:      hist.Name + "_mean",
+			Unit:      "us",
+			Direction: perf.SmallerIsBetter,
+		}, mean)
+		percentile99, err := hist.Percentile(99)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to compute mean: %s", hist.Name)
+		}
+		p.Set(perf.Metric{
+			Name:      hist.Name + "_percentile_99",
+			Unit:      "us",
+			Direction: perf.SmallerIsBetter,
+		}, percentile99)
+	}
+	return p, nil
 }
 
 // prepareWindowView maximizes the video conference window if only the window exists, or
@@ -262,7 +364,7 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	}
 
 	var newWinTitle string
-	if params.Present || params.Text {
+	if params.Present || params.Text || params.Mouse {
 		// Opens a new window for presentation or text input.
 		newWinConn, err := cr.NewConn(ctx, newWinURL, browser.WithNewWindow())
 		if err != nil {
@@ -274,11 +376,12 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 		newWinTitle = presentTitle
 		if params.Text {
 			newWinTitle = textTitle
+		} else if params.Mouse {
+			newWinTitle = mouseTitle
 		}
 		if err := newWinConn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 			return errors.Wrap(err, "timed out waiting for page loading")
 		}
-
 	}
 
 	if err := prepareWindowView(ctx, tconn, newWinTitle); err != nil {
@@ -302,6 +405,8 @@ func RunVideoConference(ctx context.Context, cr *chrome.Chrome, s *testing.State
 	newWinURL := server.URL + "/" + presentHTML
 	if params.Text {
 		newWinURL = server.URL + "/" + textHTML
+	} else if params.Mouse {
+		newWinURL = server.URL + "/" + mouseHTML
 	}
 
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
@@ -517,6 +622,101 @@ func startTyping(kbdCtx, typeCtx context.Context) error {
 			if err := testing.Sleep(typeCtx, typingInterval); err != nil {
 				testing.ContextLog(kbdCtx, "Failed in sleep")
 				break
+			}
+
+			i++
+		}
+	}()
+
+	return nil
+}
+
+func startMouseOperating(mouseCtx, mouseOpCtx context.Context, tconn *chrome.TestConn) error {
+	type mouseOpType int
+	const (
+		drag mouseOpType = iota
+		move
+		click
+		scroll
+		mouseOpTypeMax
+	)
+
+	mouseWin, err := ash.WaitForAnyWindowWithTitle(mouseCtx, tconn, mouseTitle)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the mouse page window")
+	}
+	centerWinCoord := mouseWin.BoundsInRoot.CenterPoint()
+	// The operations except scrolling are executed with uiaout.mouse that invokes
+	// a mouse event by autotest private API.
+	// First move to the center of "mouse test" window.
+	if err := mouse.Move(tconn, centerWinCoord, 0*time.Second)(mouseOpCtx); err != nil {
+		return errors.Wrap(err, "failed to move a mouse to center of mouse page")
+	}
+	// Creates input.Mouse for scrolling operations.
+	mw, err := input.Mouse(mouseCtx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get a virtual mouse")
+	}
+
+	go func() {
+		i := 0
+		for {
+			select {
+			case <-mouseOpCtx.Done():
+				mw.Close(mouseCtx)
+				return
+			default:
+				switch mouseOpType(i % int(mouseOpTypeMax)) {
+				case drag:
+					const pixelsX, pixelsY = 100, 100
+					if err := mouse.Drag(tconn, centerWinCoord, centerWinCoord.Add(coords.NewPoint(pixelsX, pixelsY)), 1*time.Second)(mouseOpCtx); err != nil {
+						testing.ContextLog(mouseCtx, "Failed to drag: ", err)
+						return
+					}
+				case move:
+					// First move to the center of "mouse test" window.
+					if err := mouse.Move(tconn, centerWinCoord, 1*time.Second)(mouseOpCtx); err != nil {
+						testing.ContextLog(mouseCtx, "Failed to move: ", err)
+						return
+					}
+				case click:
+					if err := mouse.Press(tconn, mouse.LeftButton)(mouseOpCtx); err != nil {
+						testing.ContextLog(mouseCtx, "Failed to press: ", err)
+						return
+					}
+					// GoBigSleepLint: Sleep between mouse press and release.
+					if err := testing.Sleep(mouseOpCtx, 50*time.Millisecond); err != nil {
+						testing.ContextLog(mouseCtx, "Failed in sleep")
+						return
+					}
+					if err := mouse.Release(tconn, mouse.LeftButton)(mouseOpCtx); err != nil {
+						testing.ContextLog(mouseCtx, "Failed to press: ", err)
+						return
+					}
+				case scroll:
+					for _, scroll := range [](func() error){
+						mw.ScrollDown,
+						mw.ScrollUp,
+					} {
+						for i := 0; i < 20; i++ {
+							if err := scroll(); err != nil {
+								testing.ContextLog(mouseCtx, "Failed to scroll: ", err)
+								return
+							}
+							// GoBigSleepLint: Sleep during scrolling operation
+							if err := testing.Sleep(mouseOpCtx, 50*time.Millisecond); err != nil {
+								testing.ContextLog(mouseCtx, "Failed in sleep")
+								return
+							}
+						}
+					}
+				}
+			}
+
+			// GoBigSleepLint: Sleep between operating mouse to not operate mouse so much
+			if err := testing.Sleep(mouseOpCtx, mouseOperatingInterval); err != nil {
+				testing.ContextLog(mouseCtx, "Failed in sleep")
+				return
 			}
 
 			i++

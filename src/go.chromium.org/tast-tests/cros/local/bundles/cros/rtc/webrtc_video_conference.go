@@ -25,6 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
 		Vars: []string{
+			"rtc.WebRTCVideoConference.Mouse",
 			"rtc.WebRTCVideoConference.NumPeople",
 			"rtc.WebRTCVideoConference.Present",
 			"rtc.WebRTCVideoConference.Text",
@@ -111,6 +112,27 @@ func init() {
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
+			{
+				Name: "4p_mouse",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+					Mouse:     true,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_present_mouse",
+				Val: webrtc.VCTestParams{
+					NumPeople: 4,
+					Mouse:     true,
+					Present:   true,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
 		},
 	})
 }
@@ -125,14 +147,21 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		}
 		params.NumPeople = int(numPeople)
 	}
-	if val, ok := s.Var("rtc.WebRTCVideoConference.Present"); ok {
-		params.Present = (strings.ToLower(val) == "true")
+
+	type ParamMap struct {
+		args  string
+		param *bool
 	}
-	if val, ok := s.Var("rtc.WebRTCVideoConference.Text"); ok {
-		params.Text = (strings.ToLower(val) == "true")
-	}
-	if val, ok := s.Var("rtc.WebRTCVideoConference.Trace"); ok {
-		params.Trace = (strings.ToLower(val) == "true")
+	for _, m := range []ParamMap{
+		{"rtc.WebRTCVideoConference.Mouse", &params.Mouse},
+		{"rtc.WebRTCVideoConference.Present", &params.Present},
+		{"rtc.WebRTCVideoConference.Text", &params.Text},
+		{"rtc.WebRTCVideoConference.Trace", &params.Trace},
+	} {
+		if val, ok := s.Var(m.args); ok {
+			testing.ContextLog(ctx, (strings.ToLower(val) == "true"))
+			*m.param = (strings.ToLower(val) == "true")
+		}
 	}
 
 	if params.Step {
@@ -143,6 +172,10 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		if params.NumPeople <= 1 {
 			s.Fatal("Invalid parameters. The number of people cannot be less than 2 if Step is false")
 		}
+	}
+
+	if params.Mouse && params.Text {
+		s.Fatal("Invalid parameters: Cannot run both Mouse and Text in a single run")
 	}
 
 	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
