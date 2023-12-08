@@ -504,6 +504,12 @@ func SetScreenSaverHelper(ctx context.Context, cr *chrome.Chrome, testParams Tes
 	// time to wait for nodes to load.
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
 
+	// Some expectations below test the default ambient settings in the hub, so
+	// the pref must be cleared to simulate a user just completing OOBE.
+	if err := tconn.Call(ctx, nil, `tast.promisify(chrome.autotestPrivate.clearAllowedPref)`, "ash.ambient.ui_settings"); err != nil {
+		return errors.Wrap(err, "failed to reset ambient prefs to default values")
+	}
+
 	if err := uiauto.Combine("Open ambient subpage and enable screen saver",
 		OpenAmbientSubpage(ui),
 		EnableAmbientMode(ui),
