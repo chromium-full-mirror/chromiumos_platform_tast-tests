@@ -163,6 +163,9 @@ func KernelWarning(ctx context.Context, s *testing.State) {
 		// there to be *no* meta files returned, so we should not move to checking the meta files
 		// below. If there are any, it's an error.
 		if err == nil {
+			if err := crash.MoveFilesToOut(ctx, s.OutDir(), files[metaName]...); err != nil {
+				s.Error("Failed to save unexpected crash files: ", err)
+			}
 			s.Fatal("Found crash files but didn't expect to")
 		}
 		return
