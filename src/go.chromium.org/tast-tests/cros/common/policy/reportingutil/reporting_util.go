@@ -40,7 +40,7 @@ const ReportingServerURL = "https://autopush-chromereporting-pa.sandbox.googleap
 const ReportingDirectory = "/var/spool/reporting"
 
 // HeartbeatPriority is the priority with which heartbeat events are enqueued.
-const HeartbeatPriority = "FAST_BATCH"
+const HeartbeatPriority = "FastBatch"
 
 // UpdatePolicy is used to identify which policies need to updated for a test.
 type UpdatePolicy int
@@ -130,6 +130,8 @@ func LookupEventsByRequestPath(ctx context.Context, requestPath string, testStar
 		}
 		if time.UnixMicro(us).After(testStartTime) {
 			filteredEvents = append(filteredEvents, event)
+		} else {
+			testing.ContextLogf(ctx, "Found event with timestamp before test start time. event timestamp = %s. test start time=%s", time.UnixMicro(us), testStartTime)
 		}
 	}
 	testing.ContextLogf(ctx, "Reporting: Found %d events after querying the reporting server", len(filteredEvents))
@@ -238,11 +240,12 @@ func SetTelemetryPolicies(ctx context.Context, client tapeClient, requestID stri
 }
 
 // MissiveConfirmedAllRecords looks for all records in '/var/spool/reporting' with the given priority and returns an error if there are any unconfirmed records. Returns nil otherwise.
+// TODO(b/315535216): This function requires the test to run as root user in order to work. Do not use until this is fixed.
 func MissiveConfirmedAllRecords(ctx context.Context, priority string, timeout time.Duration) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
+		// Record files have the format: /var/spool/reporting/<Priority>/P_<PRIORITY>.<generation_id>.<sequencing_id>
 		recordFilePatternMatcher := path.Join(ReportingDirectory, priority, "P_*")
 		// Find all record files.
-		// Record files have the format: /var/spool/reporting/<PRIORITY>/P_<PRIORITY>.<generation_id>.<sequencing_id>
 		recordFilePaths, err := filepath.Glob(recordFilePatternMatcher)
 		if err != nil {
 			return err

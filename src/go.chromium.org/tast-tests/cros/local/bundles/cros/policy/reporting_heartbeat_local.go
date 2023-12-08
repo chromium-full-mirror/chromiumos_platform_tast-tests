@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
-	"go.chromium.org/tast-tests/cros/common/policy/reportingutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/erpserver"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
@@ -103,11 +102,5 @@ func ReportingHeartbeatLocal(ctx context.Context, s *testing.State) {
 		if time.UnixMicro(ts).Before(testStartTime) {
 			s.Errorf("Invalid timestamp, test start time: %s , record  %d timestamp: %d", testStartTime.String(), i, ts)
 		}
-	}
-
-	// Verify on the device that missive has confirmed all records with a timeout.
-	testTimeout := 2 * time.Minute
-	if err = reportingutil.MissiveConfirmedAllRecords(ctx, reportingutil.HeartbeatPriority, testTimeout); err != nil {
-		s.Fatal("Failed to confirm records: ", err)
 	}
 }

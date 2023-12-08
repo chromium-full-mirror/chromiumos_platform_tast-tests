@@ -131,6 +131,7 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the asset policy: ", err)
 	}
 
+	testStartTime := time.Now()
 	if params.IsUserEvent {
 		// This is a user event. Login with managed user, but don't enroll the device.
 		if _, err := policyClient.GAIALoginForReporting(ctx, &ps.GAIALoginForReportingRequest{
@@ -158,13 +159,6 @@ func HeartbeatReporting(ctx context.Context, s *testing.State) {
 	}
 
 	testTimeout := 2 * time.Minute
-
-	// Verify on the device that missive has confirmed all records with a timeout.
-	if err = reportingutil.MissiveConfirmedAllRecords(ctx, reportingutil.HeartbeatPriority, testTimeout); err != nil {
-		s.Fatal("Failed to confirm records: ", err)
-	}
-
-	testStartTime := time.Now()
 
 	// Stop chrome when the test is finished.
 	defer policyClient.StopChrome(ctx, &empty.Empty{})
