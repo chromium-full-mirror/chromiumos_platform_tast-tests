@@ -25,7 +25,7 @@ var MediaControlsDialog = nodewith.Role(role.Dialog).Name("Media controls").HasC
 
 // MediaControlsPod returns the 'Media controls' pod in Quick Settings.
 func MediaControlsPod() *nodewith.Finder {
-	return nodewith.NameStartingWith("Media controls").HasClass("Button").Ancestor(QsRootFinder)
+	return nodewith.NameStartingWith("Media controls").HasClass("UnifiedMediaControlsView").Ancestor(QsRootFinder)
 }
 
 // PinMediaControlsPod pins the Media controls pod from the detail page.
