@@ -31,7 +31,7 @@ func init() {
 }
 
 func buildUrandomRoutineArgs(ctx context.Context) ([]string, error) {
-	return []string{"urandom_v2"}, nil
+	return []string{"urandom_v2", "--length_seconds=1"}, nil
 }
 
 func RunUrandomRoutine(ctx context.Context, s *testing.State) {
