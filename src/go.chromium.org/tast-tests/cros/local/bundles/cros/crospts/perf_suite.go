@@ -72,6 +72,27 @@ func init() {
 			// TODO(darrenwu): The test time was tested on cherry. Need to run the
 			// test on other low end DUT.
 			Timeout: 1 * time.Hour,
+		}, {
+			// TODO(b/315897893): The mbw test cannot finish in 4 hours on octopus.
+			Name:    "mbw_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "mbw-1.0.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 4 * time.Hour,
+		}, {
+			Name:    "mbw_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "mbw-1.0.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			// TODO(darrenwu): The test time was tested on cherry. Need to run the
+			// test on other low end DUT.
+			Timeout: 4 * time.Hour,
 		},
 		},
 	})

@@ -49,6 +49,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 		},
 	},
 	{
+		"MiB/s": {
+			unit:       "MiB",
+			nameSuffix: "MiB_Per_Sec",
+		},
+	},
+	{
 		"Microseconds Per Op": {
 			unit:       "ms",
 			nameSuffix: "MS_Per_Op",
@@ -206,6 +212,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			leveldbTitle: {
 				crosboltNameTable: leveldbCrosboltNameTable,
 				metricType:        systemMetric,
+			},
+			mbwTitle: {
+				crosboltNameTable: mbwCrosboltNameTable,
+				metricType:        memoryMetric,
 			},
 		},
 	}
