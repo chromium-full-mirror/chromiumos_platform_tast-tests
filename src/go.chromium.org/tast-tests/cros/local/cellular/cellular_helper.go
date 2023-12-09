@@ -30,7 +30,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -1626,7 +1625,7 @@ func (h *Helper) CreateCarrierLockCsvFile(ctx context.Context, profile string) (
 // CreateAndUploadCarrierLockCsv is a helper API to build and upload the CSV file to the
 // simlock portal.
 func (h *Helper) CreateAndUploadCarrierLockCsv(ctx context.Context, gaiaCreds chrome.Creds, profile string) error {
-	uiHelper, err := NewUIHelper(ctx, gaiaCreds.User, gaiaCreds.Pass)
+	uiHelper, err := NewUIHelperWithFeatures(ctx, gaiaCreds.User, gaiaCreds.Pass, "CellularCarrierLock")
 	if err != nil {
 		return errors.Wrap(err, "failed to create cellular.NewUiHelper")
 	}

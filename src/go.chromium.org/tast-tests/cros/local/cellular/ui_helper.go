@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -73,13 +72,17 @@ func NewUIHelper(ctx context.Context, username, password string) (*UIHelper, err
 		chrome.ProdPolicy())
 }
 
+// NewUIHelperWithFeatures creates a Helper object logged into a GAIA user,
+// with specified features enabled and ensures that a UI is loaded.
+func NewUIHelperWithFeatures(ctx context.Context, username, password, features string) (*UIHelper, error) {
+	return NewUIHelperWithOpts(ctx, chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
+		chrome.EnableFeatures(features),
+		chrome.ProdPolicy())
+}
+
 // LaunchChromeWithCarrierLock launches chrome with carrier lock service enabled.
 func (h *UIHelper) LaunchChromeWithCarrierLock(ctx context.Context, username, password string) error {
-	_, err := chrome.New(ctx,
-		chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
-		chrome.EnableFeatures("CellularCarrierLock:LastConfigDateDelta/-1"),
-		chrome.ProdPolicy(),
-	)
+	_, err := NewUIHelperWithFeatures(ctx, username, password, "CellularCarrierLock:LastConfigDateDelta/-1")
 	if err != nil {
 		return errors.Wrap(err, "failed to launch chrome with carrier lock enabled")
 	}
@@ -276,7 +279,7 @@ func (h *UIHelper) UploadCsvSimLockPortal(ctx context.Context, simlockConfigCsvF
 	}
 
 	testing.ContextLog(ctx, "click on uplaod button")
-	uploadButton := nodewith.Name(" UPLOAD").Role(role.Button)
+	uploadButton := nodewith.Name("UPLOAD").Role(role.Button)
 	if err := uiauto.Combine("Click on upload button",
 		h.UI.WithTimeout(30*time.Second).WaitUntilExists(uploadButton),
 		h.UI.LeftClick(uploadButton),
