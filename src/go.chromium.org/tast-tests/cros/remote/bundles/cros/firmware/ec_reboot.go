@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/dut"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/errors"
@@ -43,11 +44,17 @@ func ECReboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get configs")
 	}
 
+	oldBootID, err := dut.ReadBootID(ctx, h.DUT.Conn())
+	if err != nil {
+		s.Fatal("Failed to fetch current boot ID: ", err)
+	}
+
 	type rebootTestCase struct {
 		rebootName    string
 		rebootCommand string
 		shouldBeOn    bool
 	}
+
 	for _, tc := range []rebootTestCase{
 		{"EC reboot", "reboot", true},
 		{"EC hard reboot", "reboot hard", true},
@@ -57,14 +64,6 @@ func ECReboot(ctx context.Context, s *testing.State) {
 		// and returning from AP-off (or any other) state no matter what.
 		{"EC reboot to power-up", "reboot", true},
 	} {
-		var (
-			oldBootID string
-			newBootID string
-			err       error
-		)
-		if oldBootID, err = h.Reporter.BootID(ctx); err != nil {
-			s.Fatal("Failed to fetch current boot ID: ", err)
-		}
 		if err := h.DUT.Conn().CommandContext(ctx, "sync").Run(); err != nil {
 			s.Fatalf("Failed to sync before %s: %s", tc.rebootName, err)
 		}
@@ -74,6 +73,7 @@ func ECReboot(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get ec uptime: ", err)
 		}
 
+		h.DisconnectDUT(ctx)
 		s.Logf("Rebooting via %s", tc.rebootName)
 		if err := h.Servo.RunECCommand(ctx, tc.rebootCommand); err != nil {
 			s.Fatalf("Failed to reboot via %s: %s", tc.rebootName, err)
@@ -89,36 +89,43 @@ func ECReboot(ctx context.Context, s *testing.State) {
 			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
 				s.Fatal("Failed to press power key on DUT: ", err)
 			}
-			testing.ContextLog(ctx, "Waiting for S0 powerstate")
-			if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
-				s.Fatal("Failed to get S0 powerstate: ", err)
-			}
+		}
+
+		testing.ContextLog(ctx, "Waiting for S0 powerstate")
+		if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "S0"); err != nil {
+			s.Fatal("Failed to get S0 powerstate: ", err)
 		}
 
 		s.Log("Reestablishing connection to DUT")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-		defer cancelWaitConnect()
-		if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
-			s.Fatalf("Failed to reconnect to DUT after rebooting via %s: %s", tc.rebootName, err)
-		}
-
-		end := time.Since(start).Seconds()
+		// Instanty run defer to cancel temporary context after it connects to ssh.
+		func() {
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+			defer cancelWaitConnect()
+			if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
+				s.Fatalf("Failed to reconnect to DUT after rebooting via %s: %s", tc.rebootName, err)
+			}
+		}()
 
 		newUptime, err := getECUptimeFromConsole(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to get ec uptime: ", err)
 		}
+		end := time.Since(start).Seconds()
 
 		if (newUptime - end) > previousUptime {
 			s.Fatalf("Expected uptime to reset, but did not previous %.3f, new %.3f, duration of reset: %.3f", previousUptime, newUptime, end)
 		}
 
-		if newBootID, err = h.Reporter.BootID(ctx); err != nil {
+		newBootID, err := dut.ReadBootID(ctx, h.DUT.Conn())
+		if err != nil {
 			s.Fatal("Failed to fetch current boot ID: ", err)
 		}
+
 		if newBootID == oldBootID {
 			s.Fatalf("Failed to reboot via %s, old boot ID (%s) is the same as new boot ID (%s)", tc.rebootName, oldBootID, newBootID)
 		}
+
+		oldBootID = newBootID
 	}
 }
 
