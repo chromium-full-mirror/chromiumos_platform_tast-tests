@@ -86,7 +86,16 @@ const (
 	SystemTestAuto2Image ImageType = "system_test_auto_2"
 )
 
-var reQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):0x(.*)`)
+var (
+	// defaultFwConfigs are fw config files packaged in the data directory.
+	defaultFwConfigs = []string{"cr50_h1.json", "ti50_dt.json", "ti50_he.json", "ti50_ot.json"}
+
+	// reQualVersion extracts relevant contents of qual files.
+	reQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):0x(.*)`)
+
+	// reTestbedTypeParts extracts relevant parts of the testbed type string.
+	reTestbedTypeParts = regexp.MustCompile(`gsc_([[:alnum:]]*)`)
+)
 
 // AllTi50ImageTypes returns all the ti50 image types.
 func AllTi50ImageTypes() []ImageType {
@@ -132,11 +141,8 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		iv.imagePath = ""
 
 		if !hasManualConf {
-			testing.ContextLogf(ctx, "-var=%s= not provided, using default from ti50/common", FwConfigJSON)
-			config, err := defaultConfigPath(testbedProperties.TestbedType, imageType)
-			if err != nil {
-				return nil, err
-			}
+			config := defaultConfigPath(s, testbedProperties.TestbedType, imageType)
+			testing.ContextLogf(ctx, "-var=%s= not provided, using default at %s", FwConfigJSON, config)
 			configPaths = append(configPaths, config)
 		}
 		iv.configPaths = configPaths
@@ -163,11 +169,8 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			}
 
 			if !hasManualConf {
-				testing.ContextLogf(ctx, "-var=%s= not provided, using default from ti50/common", FwConfigJSON)
-				config, err := defaultConfigPath(testbedProperties.TestbedType, imageType)
-				if err != nil {
-					return nil, err
-				}
+				config := defaultConfigPath(s, testbedProperties.TestbedType, imageType)
+				testing.ContextLogf(ctx, "-var=%s= not provided, using default at %s", FwConfigJSON, config)
 				configPaths = append(configPaths, config)
 			}
 			inputURL = latestURL
@@ -465,35 +468,29 @@ func ti50ImageTypeToProject(i ImageType) string {
 	return string(i)
 }
 
+
 // defaultConfigPath determines the chroot path of fw config json files base on testbed and image types.
-func defaultConfigPath(testbedType ti50.TestbedType, imageType ImageType) (string, error) {
-	var fw string
+func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, imageType ImageType) string {
+	var fw, c string
+
+        m := reTestbedTypeParts.FindStringSubmatch(string(testbedType))
+        if m == nil {
+		s.Fatal("Unable to determine chip from testbedType: ", testbedType)
+        }
+	c = m[1]
 
 	switch imageType {
-	case SystemTestAutoImage, SystemTestAuto2Image:
-		fw = string(imageType)
-	case SystemImage:
-		if testbedType == "gsc_h1_shield" {
+	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image:
+		if c == "h1" {
 			fw = "cr50"
 		} else {
 			fw = "ti50"
 		}
 	default:
-		return "", errors.New("unknown image type: " + string(imageType))
+		s.Fatal("Unknown image type: ", string(imageType))
 	}
 
-	switch testbedType {
-	case "gsc_dt_ab":
-		fallthrough
-	case "gsc_dt_shield":
-		return "/mnt/host/source/src/platform/ti50/common/ports/dauntless/software/tools/" + fw + "_dauntless.json", nil
-	case "gsc_ot_fpga_cw310":
-		return "/mnt/host/source/src/platform/ti50/common/ports/opentitan/software/tools/" + fw + "_opentitan.json", nil
-	case "gsc_he":
-		return "/mnt/host/source/src/platform/ti50/common/ports/host_emulation/software/tools/" + fw + "_host_emulation.json", nil
-	case "gsc_h1_shield":
-		return "/mnt/host/source/src/platform/ti50/common/ports/haven/software/tools/" + fw + "_haven.json", nil
-	default:
-		return "", errors.New("unknown testbed type: " + string(testbedType))
-	}
+	dataFile := fw + "_" + c + ".json"
+
+	return s.DataPath(dataFile)
 }

@@ -1,0 +1,390 @@
+{
+  /* This list of pins is incomplete, as we work out the equivalence of
+   * OpenTitan and Dauntless pins, adjustments will likely have to be made. */
+  "pins": [
+    {
+      "name": "EC_KSO_02_INV",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "IOR3"
+    },
+    {
+      "name": "AC_PRESENT",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "IOR2"
+    },
+    {
+      "name": "SW_STRAP1",
+    },
+    {
+      "name": "SW_STRAP2",
+    },
+    {
+      "name": "SW_STRAP3",
+    },
+    {
+      "name": "PWR_BTN_L",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR0"
+    },
+    {
+      "name": "DEVICE_I2C_SCL",
+      "mode": "Alternate",
+      "alias_of": "IOA8"
+    },
+    {
+      "name": "DEVICE_I2C_SDA",
+      "mode": "Alternate",
+      "alias_of": "IOA7"
+    },
+    {
+      "name": "KSI_02",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR4"
+    },
+    {
+      "name": "GSC_AP_SPI_SEL",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOA3"
+    },
+    {
+      "name": "GSC_AP_INT_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOA6"
+    },
+    {
+      "name": "GSC_EC_SPI_SEL",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOB7"
+    },
+    {
+      "name": "UART_AP_TX_DBG_RX",
+      "mode": "Alternate",
+      "alias_of": "IOA1"
+    },
+    {
+      "name": "UART_DBG_TX_AP_RX",
+      "mode": "Alternate",
+      "alias_of": "IOA0"
+    },
+    {
+      "name": "UART_FPMCU_TX_DBG_RX",
+      "mode": "Alternate",
+      "alias_of": "IOA5"
+    },
+    {
+      "name": "UART_DBG_TX_FPMCU_RX",
+      "mode": "Alternate",
+      "alias_of": "IOA4"
+    },
+    {
+      "name": "TAP_STRAP0",
+      "level": false,
+      "mode": "PushPull"
+    },
+    /*
+     * IOC5 is also used as TAP_STRAP1 by OpenTitan chip, need to be kept low, or JTAG
+     * will take over IOR0-4.
+     */
+    {
+      "name": "CHASSIS_OPEN",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "IOC5"
+    },
+    {
+      "name": "EC_GSC_PACKET_MODE",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOB6"
+    },
+    {
+      "name": "GSC_UART_TX",
+      "mode": "Alternate",
+      "alias_of": "IOC4"
+    },
+    {
+      "name": "GSC_UART_RX",
+      "mode": "Alternate",
+      "alias_of": "IOC3"
+    },
+    {
+      "name": "KSI_00",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR5"
+    },
+    {
+      "name": "EC_KSI_02",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR6"
+    },
+    {
+      "name": "EC_KSI_00",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR7"
+    },
+    {
+      "name": "EC_RST_ODL",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR8"
+    },
+    {
+      "name": "WP_L",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR9"
+    },
+    {
+      "name": "EC_PWR_BTN_L",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR10"
+    },
+    {
+      "name": "LID_OPEN",
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "IOR11"
+    },
+    {
+      "name": "BATT_DISABLE_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR12"
+    },
+    {
+      "name": "KSO_02",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOR13"
+    },
+    {
+      "name": "PWM3",
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "IOC6"
+    },
+    {
+      "name": "PLT_RST_L",
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "IOC10"
+    },
+    {
+      "name": "SYS_RST_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "IOC11"
+    },
+    {
+      "name": "CCD_MODE_ODL",
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "IOC12"
+    },
+    {
+      "name": "UART_EC_TX_DBG_RX",
+      "mode": "Alternate",
+      "alias_of": "IOB5"
+    },
+    {
+      "name": "UART_DBG_TX_EC_RX",
+      "mode": "Alternate",
+      "pull_mode": "None",
+      "alias_of": "IOB4"
+    },
+  ],
+  "strappings": [
+    /*
+     * Assert PLT_RST_L to enable the SPI/I2C tpm.
+     */
+    {
+      "name": "AP_ON_I2C",
+      "pins": [
+	{
+	  "name": "PLT_RST_L",
+	  "level": true
+	}
+      ]
+    },
+    {
+      "name": "AP_ON_SPI",
+      "pins": [
+	{
+	  "name": "PLT_RST_L",
+	  "level": true
+	}
+      ]
+    },
+    /*
+     * Deassert PLT_RST_L to disable the SPI/I2C tpm.
+     */
+    {
+      "name": "AP_OFF",
+      "pins": [
+	{
+	  "name": "PLT_RST_L",
+	  "level": false
+	}
+      ]
+    },
+    {
+      "name": "CCD_DISCONNECTED",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.0
+        },
+        {
+          "name": "CC2",
+          "volts": 0.0
+        }
+      ]
+    },
+    {
+      "name": "CCD_SUZYQ",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.920
+        },
+        {
+          "name": "CC2",
+          "volts": 0.490
+        }
+      ]
+    },
+    {
+      "name": "CCD_SUZYQ_FLIPPED",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.490
+        },
+        {
+          "name": "CC2",
+          "volts": 0.920
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 1.690
+        },
+        {
+          "name": "CC2",
+          "volts": 0.920
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_FLIPPED",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.920
+        },
+        {
+          "name": "CC2",
+          "volts": 1.690
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_SNK1",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.530
+        },
+        {
+          "name": "CC2",
+          "volts": 0.530
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_SNK2",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 1.000
+        },
+        {
+          "name": "CC2",
+          "volts": 1.000
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_SNK3",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 1.810
+        },
+        {
+          "name": "CC2",
+          "volts": 1.810
+        }
+      ]
+    },
+    {
+      "name": "SERVO_MICRO_DISCONNECTED", // Default
+      "pins": [
+        {
+          "name": "UART_DBG_TX_EC_RX",
+          "mode": "Alternate",
+        }
+      ]
+    },
+    {
+      "name": "SERVO_MICRO_CONNECTED",
+      "pins": [
+        {
+          "name": "UART_DBG_TX_EC_RX",
+          "mode": "PushPull",
+          "level": true,
+        }
+      ]
+    }
+  ],
+  "uarts": [
+    {
+      "name": "AP",
+      "alias_of": "UART4"
+    },
+    {
+      "name": "EC",
+      "alias_of": "UART3"
+    },
+    {
+      "name": "FPMCU",
+      "alias_of": "UART5"
+    }
+  ]
+}

@@ -55,6 +55,7 @@ func init() {
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
+		Data:		 defaultFwConfigs,
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -67,6 +68,7 @@ func init() {
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemTestAutoImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
+		Data:		 defaultFwConfigs,
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -79,6 +81,7 @@ func init() {
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemTestAuto2Image},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
+		Data:		 defaultFwConfigs,
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -186,7 +189,7 @@ func setupCr50Image(ctx context.Context, s errorThrower, board *remoteTi50.DUTCo
 		} else {
 			return testing.PollBreak(errors.New("gsctool error: " + string(out)))
 		}
-	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
 		s.Fatal("GSCTool: ", err)
 	}
 }

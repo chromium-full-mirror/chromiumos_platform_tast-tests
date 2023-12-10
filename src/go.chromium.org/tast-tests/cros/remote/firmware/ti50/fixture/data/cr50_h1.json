@@ -1,0 +1,451 @@
+{
+  "pins": [
+    {
+      "name": "DEVICE_I2C_SDA",
+      "mode": "Input", /* By default, avoid interfering with straps */
+      "alias_of": "A1"
+    },
+    {
+      "name": "DEVICE_I2C_SCL",
+      "mode": "Input", /* By default, avoid interfering with straps */
+      "alias_of": "A9"
+    },
+    {
+      "name": "USER_PRESENT_L",
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "M4"
+    },
+    {
+      "name": "GSC_AP_SPI_SEL",
+      "mode": "Input",
+      "alias_of": "B4"
+    },
+    {
+      "name": "UART_DBG_TX_AP_RX",
+      "mode": "Alternate",
+      "pull_mode": "PullUp",
+      "alias_of": "A7"
+    },
+    {
+      "name": "UART_AP_TX_DBG_RX",
+      "mode": "Alternate",
+      "alias_of": "A3"
+    },
+    {
+      "name": "GSC_AP_INT_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "A5"
+    },
+    {
+      "name": "SYS_RST_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "M0"
+    },
+    {
+      "name": "PLT_RST_L",
+      "mode": "OpenDrain",
+      "level": false,
+      "pull_mode": "PullUp",
+      "alias_of": "M3"
+    },
+    {
+      "name": "GSC_EC_SPI_SEL",
+      "mode": "Input",
+      "alias_of": "B2"
+    },
+    {
+      "name": "UART_DBG_TX_EC_RX",
+      "mode": "Alternate",
+      "pull_mode": "None",
+      "alias_of": "B5"
+    },
+    {
+      "name": "UART_EC_TX_DBG_RX",
+      "mode": "Alternate",
+      "alias_of": "B6"
+    },
+    {
+      "name": "CHASSIS_OPEN",
+      "mode": "PushPull",
+      "level": true,
+      "alias_of": "M2"
+    },
+    {
+      "name": "I2C_DBG_SDA",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "B1"
+    },
+    {
+      "name": "I2C_DBG_SCL",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "B0"
+    },
+    {
+      "name": "EN_I2C_DBG_PWR_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "B7"
+    },
+    {
+      "name": "EC_GSC_PACKET_MODE",
+      "mode": "PushPull",
+      "level": false,
+      "pull_mode": "None",
+      "alias_of": "B3"
+    },
+    {
+      "name": "WP_L",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "R6"
+    },
+    {
+      "name": "EC_RST_ODL",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "R0"
+    },
+    {
+      "name": "PWR_BTN_L",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "R1"
+    },
+    {
+      "name": "EC_PWR_BTN_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "R7"
+    },
+    /* DIOR2 - KEY0_IN */
+    {
+      "name": "KSI_03",
+      "mode": "PushPull",
+      "level": true,
+      "alias_of": "R2"
+    },
+    /* DIOR8 - KEY0_OUT */
+    {
+      "name": "EC_KSI_03",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "R8"
+    },
+    /* DIOR3 - KEY1_IN */
+    {
+      "name": "EC_KSO_02_INV",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "R3"
+    },
+    /* DIOR9 - KEY1_OUT */
+    {
+      "name": "KSO_02",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "R9"
+    },
+    {
+      "name": "BATT_DISABLE_L",
+      "mode": "Input",
+      "pull_mode": "PullUp",
+      "alias_of": "R11"
+    },
+    {
+      "name": "AC_PRESENT",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "R5"
+    },
+    {
+      "name": "H1D2C_UART_RX",
+      "mode": "Alternate",
+      "alias_of": "A13"
+    },
+    {
+      "name": "H1D2C_UART_TX",
+      "mode": "Alternate",
+      "alias_of": "A0"
+    },
+    {
+      "name": "CCD_MODE_ODL",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "M1"
+    },
+    {
+      "name": "EC_IN_RW_OD",
+      "mode": "OpenDrain",
+      "level": true,
+      "pull_mode": "PullUp",
+      "alias_of": "R10"
+    },
+    {
+      "name": "EC_ENTERING_RW",
+      "mode": "PushPull",
+      "level": false,
+      "alias_of": "R4"
+    },
+    {
+      "name": "CC1",
+      "mode": "AnalogOutput",
+      "volts": 0.0
+    },
+    {
+      "name": "CC2",
+      "mode": "AnalogOutput",
+      "volts": 0.0
+    }
+  ],
+  "strappings": [
+    /*
+     * Emulate AP turning on, and wired for SPI TPM communication.  (SPI chip
+     * select and clock will get pulled high.)
+     */
+    {
+      "name": "AP_ON_SPI",
+      "pins": [
+	{
+	  "name": "PLT_RST_L",
+	  "level": true
+	},
+	{
+	  "name": "A12",
+	  "mode": "PushPull",
+	  "level": true
+	},
+	{
+	  "name": "A6",
+	  "mode": "Alternate"
+	},
+	{
+	  "name": "A2",
+	  "mode": "Alternate"
+	},
+	{
+	  "name": "A10",
+	  "mode": "Alternate"
+	}
+      ]
+    },
+    /*
+     * Emulate AP turning on, and wired for I2C TPM communication.  (I2C clock
+     * and data will get pulled high.)
+     */
+    {
+      "name": "AP_ON_I2C",
+      "pins": [
+	{
+	  "name": "PLT_RST_L",
+	  "level": true
+	},
+	{
+	  /* Controls I2C pullup resistors on A1/A9 */
+	  "name": "EN_I2C_PU",
+	  "level": false /* active */
+	},
+	{
+	  "name": "DEVICE_I2C_SDA",
+	  "mode": "Alternate"
+	},
+	{
+	  "name": "DEVICE_I2C_SCL",
+	  "mode": "Alternate"
+	}
+      ]
+    },
+    /*
+     * Emulate AP turning off, disconnect SPI and I2C.
+     */
+    {
+      "name": "AP_OFF",
+      "pins": [
+	{
+	  "name": "PLT_RST_L",
+	  "level": false
+	},
+	{
+	  "name": "A12",
+	  "mode": "Input"
+	},
+	{
+	  "name": "A6",
+	  "mode": "Input"
+	},
+	{
+	  "name": "A2",
+	  "mode": "Input"
+	},
+	{
+	  "name": "A10",
+	  "mode": "Input"
+	},
+	{
+	  /* Controls I2C pullup resistors on A1/A9 */
+	  "name": "EN_I2C_PU",
+	  "level": true /* inactive */
+	},
+	{
+	  "name": "DEVICE_I2C_SDA",
+	  "mode": "Input"
+	},
+	{
+	  "name": "DEVICE_I2C_SCL",
+	  "mode": "Input"
+	}
+      ]
+    },
+    /*
+     * Emulate various CCD cables being connected.
+     */
+    {
+      "name": "CCD_DISCONNECTED",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.0
+        },
+        {
+          "name": "CC2",
+          "volts": 0.0
+        }
+      ]
+    },
+    {
+      "name": "CCD_SUZYQ",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.920
+        },
+        {
+          "name": "CC2",
+          "volts": 0.490
+        }
+      ]
+    },
+    {
+      "name": "CCD_SUZYQ_FLIPPED",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.490
+        },
+        {
+          "name": "CC2",
+          "volts": 0.920
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 1.690
+        },
+        {
+          "name": "CC2",
+          "volts": 0.920
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_FLIPPED",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.920
+        },
+        {
+          "name": "CC2",
+          "volts": 1.690
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_SNK1",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 0.530
+        },
+        {
+          "name": "CC2",
+          "volts": 0.530
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_SNK2",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 1.000
+        },
+        {
+          "name": "CC2",
+          "volts": 1.000
+        }
+      ]
+    },
+    {
+      "name": "CCD_SERVO_SNK3",
+      "pins": [
+        {
+          "name": "CC1",
+          "volts": 1.810
+        },
+        {
+          "name": "CC2",
+          "volts": 1.810
+        }
+      ]
+    },
+    /*
+     * Emulate a uServo being connected or not.
+     */
+    {
+      "name": "SERVO_MICRO_DISCONNECTED", // Default
+      "pins": [
+	{
+	  "name": "SERVO_MICRO_TX",
+	  "mode": "Input",
+	  "pull_mode": "PullDown",
+	}
+      ]
+    },
+    {
+      "name": "SERVO_MICRO_CONNECTED",
+      "pins": [
+	{
+	  "name": "SERVO_MICRO_TX",
+	  "mode": "Alternate",
+	  "pull_mode": "None",
+	}
+      ]
+    }
+  ],
+  "uarts": [
+    {
+      "name": "EC",
+      "alias_of": "UART3"
+    },
+    {
+      "name": "AP",
+      "alias_of": "UART4"
+    }
+  ]
+}
