@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Check if the privacy indicators view show up when entering Google Meet",
 		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org"},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			"ui.PrivacyIndicators.meet_code",

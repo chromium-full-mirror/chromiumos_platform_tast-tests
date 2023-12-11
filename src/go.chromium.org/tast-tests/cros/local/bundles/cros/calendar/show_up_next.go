@@ -26,7 +26,7 @@ func init() {
 			"samcackett@google.com",
 		},
 		BugComponent: "b:1246126", // ChromeOS > Software > System UI Surfaces > Status Area > Calendar
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{{
 			Key:   "feature_id",
