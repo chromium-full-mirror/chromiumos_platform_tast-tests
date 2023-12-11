@@ -34,7 +34,7 @@ func init() {
 			"afakhry@google.com",
 		},
 		BugComponent: "crbug:UI>TaskManager",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
 			{

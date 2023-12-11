@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Check basic functionality of LacrosService",
 		BugComponent: "crbug:OS>LaCrOS",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "ythjkt@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 	})
 }

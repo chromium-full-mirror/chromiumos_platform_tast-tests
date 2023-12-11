@@ -27,7 +27,7 @@ func init() {
 			"afakhry@google.com",
 		},
 		BugComponent: "crbug:UI>TaskManager",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      "chromeLoggedIn",
 	})
 }

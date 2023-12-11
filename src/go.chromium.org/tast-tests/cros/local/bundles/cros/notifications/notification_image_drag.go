@@ -34,7 +34,7 @@ func init() {
 			"cros-system-ui-eng@google.com",
 		},
 		BugComponent: "b:1246021", // Chrome OS > Software > System UI Surfaces > Notifications
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Val: browser.TypeAsh,
