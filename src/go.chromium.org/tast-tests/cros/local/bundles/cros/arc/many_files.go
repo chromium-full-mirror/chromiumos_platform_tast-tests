@@ -37,7 +37,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
 		Timeout:      5 * time.Minute,
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Name:      "downloads",
 			ExtraAttr: []string{"informational"},

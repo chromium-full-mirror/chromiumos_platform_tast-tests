@@ -54,6 +54,7 @@ func init() {
 			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
 			},
 		},
 	})
