@@ -8,6 +8,7 @@ package testenv
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"fmt"
 	"net"
 	"os"
@@ -15,6 +16,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // HostsUpdater manages to add or remove host entries in /etc/hosts on a DUT for testing, so
@@ -84,8 +86,8 @@ func (r defaultResolver) LookupHost(hostname string) ([]string, error) {
 
 // newHostsUpdater creates a HostsUpdater. Callers should defer call Cleanup to reset any override entries after use.
 // Callers should defer call a returned function to reset any override entries after use.
-func newHostsUpdater() (*HostsUpdater, func() error, error) {
-	return newHostsUpdaterInternal("/etc/hosts", true, true, defaultResolver{resolved: make(map[string]string)})
+func newHostsUpdater(ctx context.Context) (*HostsUpdater, func(context.Context) error, error) {
+	return newHostsUpdaterInternal(ctx, "/etc/hosts", true, true, defaultResolver{resolved: make(map[string]string)})
 }
 
 // newHostsUpdaterInternal is an internal version of NewHostsUpdater() with useful params for testing:
@@ -94,7 +96,7 @@ func newHostsUpdater() (*HostsUpdater, func() error, error) {
 //	reset - true (default) to clear any override entries before update
 //	failIfNotDUT - true (default) to ensure that it runs on a DUT
 //	resolver - defaultResolver (default) or a local IP resolver that implements the Resolver interface
-func newHostsUpdaterInternal(hostsfile string, reset, failIfNotDUT bool, resolver Resolver) (*HostsUpdater, func() error, error) {
+func newHostsUpdaterInternal(ctx context.Context, hostsfile string, reset, failIfNotDUT bool, resolver Resolver) (*HostsUpdater, func(context.Context) error, error) {
 	// Safeguard: This should only be run on a DUT, not a host machine.
 	if failIfNotDUT && !isDUT() {
 		return nil, nil, errors.New("testenv should be run locally only on a DUT")
@@ -104,7 +106,7 @@ func newHostsUpdaterInternal(hostsfile string, reset, failIfNotDUT bool, resolve
 	if !reset {
 		return h, h.Reset, nil
 	}
-	if err := h.Reset(); err != nil {
+	if err := h.Reset(ctx); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to clean up host overrides before update")
 	}
 	return h, h.Reset, nil
@@ -113,7 +115,7 @@ func newHostsUpdaterInternal(hostsfile string, reset, failIfNotDUT bool, resolve
 // Override updates /etc/hosts to add a route rule for the given pairs of
 // "from" and "to" hosts. It allows tests to point to target hosts in the local
 // test environments.
-func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
+func (h *HostsUpdater) Override(ctx context.Context, rules ...fromTo) (entries, error) {
 	modified, base, err := h.readHosts()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read the hosts for override")
@@ -142,6 +144,7 @@ func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
 		return nil, errors.New("None to override")
 	}
 
+	testing.ContextLogf(ctx, "HostsUpdater: Override %v hosts", len(modified))
 	if err := h.writeHosts(modified, base); err != nil {
 		return nil, errors.Wrap(err, "failed to override hosts")
 	}
@@ -157,9 +160,9 @@ func (h *HostsUpdater) Override(rules ...fromTo) (entries, error) {
 }
 
 // Reset clears all the host overrides.
-func (h *HostsUpdater) Reset() (retErr error) {
+func (h *HostsUpdater) Reset(ctx context.Context) (retErr error) {
 	// Safeguard: Delete the marker files when the cleanup succeeded.
-	defer func() {
+	defer func(ctx context.Context) {
 		if !isDUT() || retErr != nil {
 			return
 		}
@@ -172,7 +175,8 @@ func (h *HostsUpdater) Reset() (retErr error) {
 				return
 			}
 		}
-	}()
+		testing.ContextLog(ctx, "HostsUpdater: Reset deleted provision marker files")
+	}(ctx)
 
 	modified, base, err := h.readHosts()
 	if err != nil {
@@ -181,6 +185,7 @@ func (h *HostsUpdater) Reset() (retErr error) {
 	if len(modified) == 0 {
 		return nil
 	}
+	testing.ContextLogf(ctx, "HostsUpdater: Reset removing %v modifled entries", len(modified))
 	// Write only the base lines for reset.
 	err = h.writeHosts(entries{}, base)
 	if err != nil {

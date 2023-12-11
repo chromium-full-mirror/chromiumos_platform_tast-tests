@@ -28,7 +28,7 @@ var (
 // PreprodEnv is the preprod environment.
 type PreprodEnv struct {
 	*baseEnv
-	cleanup func() error
+	cleanup func(context.Context) error
 }
 
 // NewPreprodEnv creates a PreprodEnv instance.
@@ -52,13 +52,13 @@ func (p *PreprodEnv) SetUp(ctx context.Context) error {
 	}
 
 	// Update the hosts file to redirect traffic to the preprod destinations.
-	hostsUpdater, cleanup, err := newHostsUpdater()
+	hostsUpdater, cleanup, err := newHostsUpdater(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to init the hosts updater")
 	}
 	p.cleanup = cleanup
-	if _, err := hostsUpdater.Override(dests...); err != nil {
-		cleanup()
+	if _, err := hostsUpdater.Override(ctx, dests...); err != nil {
+		cleanup(ctx)
 		return errors.Wrap(err, "failed to set up the preprod env")
 	}
 	return nil
@@ -72,7 +72,7 @@ func (p *PreprodEnv) TearDown(ctx context.Context) error {
 		return nil
 	}
 	// Reset any overridden hosts in /etc/hosts after use.
-	if err := p.cleanup(); err != nil {
+	if err := p.cleanup(ctx); err != nil {
 		return errors.Wrap(err, "failed to reset the hosts file")
 	}
 	return nil

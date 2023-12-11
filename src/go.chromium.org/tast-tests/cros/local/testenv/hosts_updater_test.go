@@ -5,6 +5,7 @@
 package testenv
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -67,6 +68,7 @@ func createMockHostFile(path string, data []byte) (string, error) {
 }
 
 func TestHostsUpdater(t *testing.T) {
+	ctx := context.Background()
 	// Given a new host file with no override
 	d := t.TempDir()
 	hostsfile, err := createMockHostFile(filepath.Join(d, "hosts"), mockHostsBase)
@@ -75,11 +77,11 @@ func TestHostsUpdater(t *testing.T) {
 	}
 
 	// Initialize HostsUpdater using new() for unit testing
-	mockHosts, cleanup, err := newHostsUpdaterInternal(hostsfile, true, false, mockResolver{})
+	mockHosts, cleanup, err := newHostsUpdaterInternal(ctx, hostsfile, true, false, mockResolver{})
 	if err != nil {
 		t.Fatalf("Failed to instantiate a HostsUpdater: %v", err)
 	}
-	defer cleanup()
+	defer cleanup(ctx)
 
 	// Override a new host to an alternate host.
 	rule := fromTo{
@@ -87,7 +89,7 @@ func TestHostsUpdater(t *testing.T) {
 		to:   hostInfo{hostname: "preprod-foo.bar.baz", label: "foobarbaz-preprod"},
 	}
 	expectedAddr := "10.0.0.10"
-	entities, err := mockHosts.Override(rule)
+	entities, err := mockHosts.Override(ctx, rule)
 	actualAddr := entities[string(rule.from.hostname)].ip
 	if err != nil {
 		t.Fatalf("Failed to override, from: %v, to:%v, %v", rule.from.label, rule.to.label, err)
@@ -107,6 +109,7 @@ func TestHostsUpdater(t *testing.T) {
 }
 
 func TestHostsUpdater_Reset(t *testing.T) {
+	ctx := context.Background()
 	// Given the stale host file with the overridden entities
 	d := t.TempDir()
 	hostsfile, err := createMockHostFile(filepath.Join(d, "hosts"), mockHostsStale)
@@ -114,11 +117,11 @@ func TestHostsUpdater_Reset(t *testing.T) {
 		t.Fatalf("Failed to set up a mock host file: %v", err)
 	}
 	// HostsUpdater should reset any stale entities when reset = true is passed to new().
-	_, cleanup, err := newHostsUpdaterInternal(hostsfile, true, false, mockResolver{})
+	_, cleanup, err := newHostsUpdaterInternal(ctx, hostsfile, true, false, mockResolver{})
 	if err != nil {
 		t.Fatalf("Failed to instantiate a HostsUpdater: %v", err)
 	}
-	defer cleanup()
+	defer cleanup(ctx)
 
 	// Verify that the overrides that had existed before are removed.
 	got, err := os.ReadFile(hostsfile)
@@ -131,6 +134,7 @@ func TestHostsUpdater_Reset(t *testing.T) {
 }
 
 func TestHostsUpdater_DuplicateOverrideFailure(t *testing.T) {
+	ctx := context.Background()
 	// Given the stale host file with the overridden entities
 	d := t.TempDir()
 	hostsfile, err := createMockHostFile(filepath.Join(d, "hosts"), mockHostsBase)
@@ -138,21 +142,21 @@ func TestHostsUpdater_DuplicateOverrideFailure(t *testing.T) {
 		t.Fatalf("Failed to set up a mock host file: %v", err)
 	}
 	// HostsUpdater should reset any stale entities.
-	mockHosts, cleanup, err := newHostsUpdaterInternal(hostsfile, true, false, mockResolver{})
+	mockHosts, cleanup, err := newHostsUpdaterInternal(ctx, hostsfile, true, false, mockResolver{})
 	if err != nil {
 		t.Fatalf("Failed to instantiate a HostsUpdater: %v", err)
 	}
-	defer cleanup()
+	defer cleanup(ctx)
 
 	// Override a new host to an alternate host twice. The second try should fail.
 	rule := fromTo{
 		from: hostInfo{hostname: "foo.bar.baz", label: "foobarbaz-prod"},
 		to:   hostInfo{hostname: "preprod-foo.bar.baz", label: "foobarbaz-preprod"},
 	}
-	if _, err = mockHosts.Override(rule); err != nil {
+	if _, err = mockHosts.Override(ctx, rule); err != nil {
 		t.Fatalf("Failed to override, from: %v, to:%v, %v", rule.from.label, rule.to.label, err)
 	}
-	if _, err = mockHosts.Override(rule); err == nil {
+	if _, err = mockHosts.Override(ctx, rule); err == nil {
 		t.Fatal("Override the same host and target just once to avoid any conflicts in /etc/hosts")
 	}
 }
