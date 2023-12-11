@@ -158,28 +158,27 @@ type RoutineParamsV2 struct {
 	Routine string // The name of the routine to run.
 }
 
-// RunDiagRoutineV2 runs the specified routine based on `params`. Returns a
-// RoutineResult on success or an error.
-func RunDiagRoutineV2(ctx context.Context, params RoutineParamsV2) (RoutineResultV2, error) {
-	testing.ContextLogf(ctx, "Running routine: %s", params.Routine)
-	diagParams := []string{params.Routine, "--single_line_json"}
-	switch params.Routine {
-	case RoutineMemoryV2:
-		// 15000 KiB runs for about 3 seconds on a volteer machine.
-		diagParams = append(diagParams, "--max_testing_mem_kib=15000")
-	case RoutineCPUStressV2, RoutineCPUCacheV2, RoutinePrimeSearchV2, RoutineFloatingPointV2:
-		// Runs the CPU routine for 1 second.
-		diagParams = append(diagParams, "--length_seconds=1")
-	default:
-		// No extra parameters required for the following routines:
-		//   - RoutineAudioDriver
-		//   - RoutineUFSLifetime
+// CreateLegacyRoutineV2ArgsBuilder returns a function that returns the
+// arguments to run the routine specified by `params`.
+//
+// Do not put arguments for new routines in this shared function. Newer routines
+// should define their own argument builders in individual tests.
+func CreateLegacyRoutineV2ArgsBuilder(params RoutineParamsV2) func(context.Context) ([]string, error) {
+	return func(context.Context) ([]string, error) {
+		switch params.Routine {
+		case RoutineMemoryV2:
+			// 15000 KiB runs for about 3 seconds on a volteer machine.
+			return []string{params.Routine, "--max_testing_mem_kib=15000"}, nil
+		case RoutineCPUStressV2, RoutineCPUCacheV2, RoutinePrimeSearchV2, RoutineFloatingPointV2:
+			// Runs the CPU routine for 1 second.
+			return []string{params.Routine, "--length_seconds=1"}, nil
+		case RoutineAudioDriver, RoutineUFSLifetime, RoutineBluetoothPowerV2, RoutineBluetoothDiscoveryV2, RoutineBluetoothScanningV2:
+			// No extra parameters required for these routines.
+			return []string{params.Routine}, nil
+		default:
+			return []string{}, errors.New("New routines should define argument builders in individual tests")
+		}
 	}
-	output, err := RunDiagV2(ctx, diagParams)
-	if err != nil {
-		return RoutineResultV2{}, err
-	}
-	return parseDiagOutputV2(ctx, output)
 }
 
 // RunDiagV2 is a helper function that runs the cros_healthd diag command and

@@ -99,11 +99,12 @@ func init() {
 // DiagnosticsRunV2.* test.
 func DiagnosticsPassV2(ctx context.Context, s *testing.State) {
 	params := s.Param().(croshealthd.RoutineParamsV2)
-	result, err := croshealthd.RunDiagRoutineV2(ctx, params)
-	if err != nil {
-		s.Fatalf("Unable to run routine: %s", err)
+	config := croshealthd.RoutineTestingConfigV2{
+		ArgsBuilder:    croshealthd.CreateLegacyRoutineV2ArgsBuilder(params),
+		RoutineRunner:  croshealthd.RunDiagV2,
+		ResultVerifier: croshealthd.VerifyRoutinePassedV2,
 	}
-	if err := croshealthd.VerifyRoutinePassedV2(result); err != nil {
-		s.Fatalf("Routine is not passed: %s", err)
+	if err := croshealthd.TestDiagRoutineV2(ctx, config); err != nil {
+		s.Fatal("Routine verification failed: ", err)
 	}
 }
