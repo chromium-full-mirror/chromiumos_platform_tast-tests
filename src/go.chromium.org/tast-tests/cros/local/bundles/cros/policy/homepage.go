@@ -40,7 +40,7 @@ func init() {
 		},
 		BugComponent: "b:373898",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{
 			{
 				Name:    "location",
