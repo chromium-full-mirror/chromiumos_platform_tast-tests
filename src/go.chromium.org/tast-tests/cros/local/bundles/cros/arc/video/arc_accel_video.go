@@ -303,8 +303,11 @@ func runARCVideoPerfTest(ctx context.Context, s *testing.State, cfg arcTestConfi
 	}
 
 	// Send a second start to trigger onNewIntent and stop the test
+	// We avoid using existing methods like act.Start that checks the existence
+	// of an launched activity, because here the activity immediately finishes.
 	s.Log("Stopping target")
-	if err := act.Start(ctx, tconn); err != nil {
+	activityName := fmt.Sprintf("%s/%s", act.PackageName(), act.ActivityName())
+	if _, err := a.Command(ctx, "am", "start", "-a", "android.intent.action.MAIN", "-n", activityName).Output(); err != nil {
 		s.Fatal("Failed stopping loop: ", err)
 	}
 
