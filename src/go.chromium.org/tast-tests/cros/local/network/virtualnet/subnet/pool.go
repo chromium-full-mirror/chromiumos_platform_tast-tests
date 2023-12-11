@@ -7,6 +7,7 @@
 package subnet
 
 import (
+	"fmt"
 	"net"
 
 	"go.chromium.org/tast/core/errors"
@@ -79,4 +80,35 @@ func (p *Pool) AllocNextIPv6Subnet() (*IPv6Subnet, error) {
 			Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0},
 		},
 	}, nil
+}
+
+// GetAddrEndWith returns a net.IP object which is in this subnet and with idx as its
+// last byte.
+func (n *IPv4Subnet) GetAddrEndWith(idx uint8) net.IP {
+	if addr := n.IP.To4(); addr != nil {
+		prefixLen, _ := n.Mask.Size()
+		if prefixLen == 0 || prefixLen > 24 {
+			// This won't happen for a subnet created by this package.
+			panic(fmt.Sprintf("Invalid prefix length %d", prefixLen))
+		}
+		ip := n.IP.To4()
+		return net.IPv4(ip[0], ip[1], ip[2], idx)
+	}
+	panic("Invalid subnet")
+}
+
+// GetAddrEndWith returns a net.IP object which is in this subnet and with idx as its
+// last byte.
+func (n *IPv6Subnet) GetAddrEndWith(idx uint8) net.IP {
+	if addr := n.IP.To16(); addr != nil {
+		prefixLen, _ := n.Mask.Size()
+		if prefixLen == 0 || prefixLen > 64 {
+			// This won't happen for a subnet created by this package.
+			panic(fmt.Sprintf("Invalid prefix length %d", prefixLen))
+		}
+		ip := append([]byte{}, n.IP.To16()...)
+		ip[15] = idx
+		return ip
+	}
+	panic("Invalid subnet")
 }

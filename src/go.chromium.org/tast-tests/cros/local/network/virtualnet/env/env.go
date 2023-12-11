@@ -576,12 +576,8 @@ func (e *Env) ConnectToRouter(ctx context.Context, router *Env, ipv4Subnet *subn
 	}
 
 	// Install IPv4 addresses and routes.
-	ipv4Addr := ipv4Subnet.IP.To4()
-	if ipv4Addr == nil {
-		return errors.Errorf("invalid IPv4 subnet for connecting Envs: %v", ipv4Subnet)
-	}
-	selfIPv4Addr := net.IPv4(ipv4Addr[0], ipv4Addr[1], ipv4Addr[2], 2)
-	routerIPv4Addr := net.IPv4(ipv4Addr[0], ipv4Addr[1], ipv4Addr[2], 1)
+	selfIPv4Addr := ipv4Subnet.GetAddrEndWith(2)
+	routerIPv4Addr := ipv4Subnet.GetAddrEndWith(1)
 	if err := e.ConfigureInterface(ctx, e.VethInName, selfIPv4Addr, ipv4Subnet); err != nil {
 		return errors.Wrapf(err, "failed to configure IPv4 on %s", e.VethInName)
 	}
@@ -593,15 +589,8 @@ func (e *Env) ConnectToRouter(ctx context.Context, router *Env, ipv4Subnet *subn
 	}
 
 	// Install IPv6 addresses and routes.
-	ipv6Addr := ipv6Subnet.IP.To16()
-	if ipv6Addr == nil {
-		return errors.Errorf("invalid IPv6 subnet for connecting Envs: %v", ipv6Subnet)
-	}
-	var selfIPv6Addr, routerIPv6Addr net.IP
-	selfIPv6Addr = append([]byte{}, ipv6Addr...)
-	selfIPv6Addr[15] = 2
-	routerIPv6Addr = append([]byte{}, ipv6Addr...)
-	routerIPv6Addr[15] = 1
+	selfIPv6Addr := ipv6Subnet.GetAddrEndWith(2)
+	routerIPv6Addr := ipv6Subnet.GetAddrEndWith(1)
 	if err := e.ConfigureInterface(ctx, e.VethInName, selfIPv6Addr, ipv6Subnet); err != nil {
 		return errors.Wrapf(err, "failed to configure IPv6 on %s", e.VethInName)
 	}

@@ -125,14 +125,12 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get addrs: ", err)
 		}
 
-		dhcpSubnetIP := dhcpSubnet.IP.To4()
-
 		success = true
 		return &server{
 			IP: addr.IPv4Addr,
 			Route: dnsmasq.Route{
 				Prefix:  &net.IPNet{IP: addr.IPv4Addr, Mask: net.IPv4Mask(255, 255, 255, 255)},
-				Gateway: net.IPv4(dhcpSubnetIP[0], dhcpSubnetIP[1], dhcpSubnetIP[2], 1),
+				Gateway: dhcpSubnet.GetAddrEndWith(1),
 			},
 			Cleanup: cleanupEnv(env),
 		}, nil
@@ -190,8 +188,7 @@ func RoutingDHCPClasslessStatic(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		dhcpSubnetIP := dhcpSubnet.IP.To4()
-		gateway := net.IPv4(dhcpSubnetIP[0], dhcpSubnetIP[1], dhcpSubnetIP[2], 2)
+		gateway := dhcpSubnet.GetAddrEndWith(2)
 		if err := gatewayEnv.ConfigureInterface(ctx, gatewayEnv.VethInName, gateway, dhcpSubnet); err != nil {
 			return nil, errors.Wrap(err, "failed to configure static IP on the second gateway")
 		}

@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
@@ -167,9 +166,8 @@ func QosWebRTC(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create IPv4 subnet for the WebRTC peer: ", err)
 		}
-		ip := v4Subnet.IP.To4()
-		rtcRemoteIP := net.IPv4(ip[0], ip[1], ip[2], 2).String()
-		rtcRemoteIPInNetns := net.IPv4(ip[0], ip[1], ip[2], 1).String()
+		rtcRemoteIP := v4Subnet.GetAddrEndWith(2).String()
+		rtcRemoteIPInNetns := v4Subnet.GetAddrEndWith(1).String()
 
 		if err := testexec.CommandContext(ctx, "ip", "addr", "add", rtcRemoteIP+"/24", "dev", rtcRemoteIfname).Run(testexec.DumpLogOnError); err != nil {
 			s.Fatal("Failed to add ip address to interface: ", err)

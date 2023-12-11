@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/network/routing"
@@ -61,8 +60,7 @@ func DHCPWebProxy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to allocate subnet for DHCP: ", err)
 	}
 
-	subnetIP := subnet.IP.To4()
-	gateway := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 1)
+	gateway := subnet.GetAddrEndWith(1)
 	wpad := "http://" + gateway.String() + "/wpad.dat"
 
 	dnsmasqServer := dnsmasq.New(

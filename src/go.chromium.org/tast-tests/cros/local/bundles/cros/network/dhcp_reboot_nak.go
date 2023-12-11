@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -84,10 +83,9 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to allocate subnet for DHCP: ", err)
 	}
 
-	subnetIP := subnet.IP.To4()
-	gatewayIP := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 1)
-	intendedIP := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 2)
-	intendedIPAfterNAK := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 3)
+	gatewayIP := subnet.GetAddrEndWith(1)
+	intendedIP := subnet.GetAddrEndWith(2)
+	intendedIPAfterNAK := subnet.GetAddrEndWith(3)
 
 	// Install gateway address and routes.
 	if err := wifi.Router.ConfigureInterface(ctx, wifi.Router.VethInName, gatewayIP, subnet); err != nil {

@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/network/dhcp"
@@ -62,9 +61,8 @@ func DHCPTwoServersConflict(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to allocate subnet for DHCP: ", err)
 	}
 
-	subnetIP := subnet.IP.To4()
-	gatewayIP := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 1)
-	intendedIP := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 2)
+	gatewayIP := subnet.GetAddrEndWith(1)
+	intendedIP := subnet.GetAddrEndWith(2)
 
 	// Install gateway address and routes.
 	if err := rt.ConfigureInterface(ctx, rt.VethInName, gatewayIP, subnet); err != nil {

@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"net"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
@@ -75,9 +74,8 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to allocate IPv4 subnet for test network: ", err)
 	}
-	ipv4Addr := ipv4Subnet.IP.To4()
-	localIPv4Addr := net.IPv4(ipv4Addr[0], ipv4Addr[1], ipv4Addr[2], 2)
-	routerIPv4Addr := net.IPv4(ipv4Addr[0], ipv4Addr[1], ipv4Addr[2], 1)
+	localIPv4Addr := ipv4Subnet.GetAddrEndWith(2)
+	routerIPv4Addr := ipv4Subnet.GetAddrEndWith(1)
 	if err := testEnv.TestRouter.ConfigureInterface(ctx, testEnv.TestRouter.VethInName, routerIPv4Addr, ipv4Subnet); err != nil {
 		s.Fatal("Failed to configure IPv4 inside test router: ", err)
 	}

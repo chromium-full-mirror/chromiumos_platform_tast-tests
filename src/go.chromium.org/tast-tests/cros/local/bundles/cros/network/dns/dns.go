@@ -534,9 +534,8 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to allocate v6 subnet")
 	}
-	serverSubnetAddr := serverIPv4Subnet.IP.To4()
 	// This assumes that the server will use the IPv4 address xx.xx.xx.2 from env's ConnectToRouter internal implementation.
-	serverAddr := net.IPv4(serverSubnetAddr[0], serverSubnetAddr[1], serverSubnetAddr[2], 2)
+	serverAddr := serverIPv4Subnet.GetAddrEndWith(2)
 
 	var svc *shill.Service
 	svc, e.Router, err = virtualnet.CreateRouterEnv(ctx, e.manager, pool, virtualnet.EnvOptions{

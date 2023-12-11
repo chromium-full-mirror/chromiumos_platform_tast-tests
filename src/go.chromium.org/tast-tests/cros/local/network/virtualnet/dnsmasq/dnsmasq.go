@@ -200,14 +200,9 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 
 	var gateway net.IP
 	if d.subnet != nil {
-		ip := d.subnet.IP.To4()
-		if ip == nil {
-			return errors.Errorf("given subnet %s is not invalid", d.subnet.String())
-		}
-
-		gateway = net.IPv4(ip[0], ip[1], ip[2], 1)
-		poolStart := net.IPv4(ip[0], ip[1], ip[2], 50)
-		poolEnd := net.IPv4(ip[0], ip[1], ip[2], 150)
+		gateway = d.subnet.GetAddrEndWith(1)
+		poolStart := d.subnet.GetAddrEndWith(50)
+		poolEnd := d.subnet.GetAddrEndWith(150)
 
 		// d.subnet.Mask is of type Mask and thus cannot be stringified as an IP.
 		mask := net.IPv4(255, 255, 255, 255).Mask(d.subnet.Mask)

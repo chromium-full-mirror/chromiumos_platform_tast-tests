@@ -6,7 +6,6 @@ package network
 
 import (
 	"context"
-	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/network/dhcp"
@@ -65,9 +64,8 @@ func RoutingDualStackLoseDHCP(ctx context.Context, s *testing.State) {
 	// Set up a DHCP server with our dhcp package. Do not use dnsmasq because the
 	// dnsmasq will force the lease time no shorter than 2 minutes, while we can
 	// do 20 seconds with our own server.
-	subnetIP := subnet.IP.To4()
-	gatewayIP := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 1)
-	intendedIP := net.IPv4(subnetIP[0], subnetIP[1], subnetIP[2], 2)
+	gatewayIP := subnet.GetAddrEndWith(1)
+	intendedIP := subnet.GetAddrEndWith(2)
 
 	if err := testEnv.TestRouter.ConfigureInterface(ctx, testEnv.TestRouter.VethInName, gatewayIP, subnet); err != nil {
 		s.Fatal("Failed to install address on router: ", err)
