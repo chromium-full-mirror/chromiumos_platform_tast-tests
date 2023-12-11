@@ -39,7 +39,7 @@ func init() {
 		},
 		BugComponent: "crbug:UI>Browser>Language>Spellcheck",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
