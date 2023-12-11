@@ -58,6 +58,7 @@ func init() {
 					category:       "Answer Card",
 					provider:       "omnibox",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			// See details in: https://bugs.chromium.org/p/chromium/issues/detail?id=1432692.
 			{
@@ -70,6 +71,7 @@ func init() {
 					category:       "Answer Card",
 					provider:       "omnibox",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "answer_card_caps_lock",
@@ -80,6 +82,7 @@ func init() {
 					expectedResult: "Turn Caps Lock on and off, Shortcuts",
 					category:       "Answer Card",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "answer_card_screen_rotate",
@@ -90,6 +93,7 @@ func init() {
 					expectedResult: "Rotate screen 90 degrees, Shortcuts",
 					category:       "Answer Card",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "answer_card_weather",
@@ -101,6 +105,7 @@ func init() {
 					category:       "Answer Card",
 					provider:       "omnibox",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 
 			// --- Best match test cases. ---
@@ -113,6 +118,7 @@ func init() {
 					expectedResult: "Chrome, Installed App",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_apps_files",
@@ -123,6 +129,7 @@ func init() {
 					expectedResult: "Files, Installed App",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_apps_settings",
@@ -133,6 +140,7 @@ func init() {
 					expectedResult: "Settings, Installed App",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_apps_chrome",
@@ -153,6 +161,7 @@ func init() {
 					expectedResult: "Downloads, MyFiles",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_help_manage_account",
@@ -163,6 +172,7 @@ func init() {
 					expectedResult: "Manage Google Accounts on your Chromebook, Help",
 					category:       "Help",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_settings_bluetooth",
@@ -173,6 +183,7 @@ func init() {
 					expectedResult: "Bluetooth, Bluetooth, Settings",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_settings_display_size",
@@ -183,6 +194,7 @@ func init() {
 					expectedResult: "Display size, Displays, Settings",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_settings_language",
@@ -193,6 +205,7 @@ func init() {
 					expectedResult: "Languages, Languages and inputs, Settings",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 			{
 				Name:    "best_match_settings_reverse_scroll",
@@ -203,6 +216,7 @@ func init() {
 					expectedResult: "Touchpad reverse scrolling, Mouse and touchpad, Settings",
 					category:       "Best Match",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 
 			// --- Apps test cases. ---
@@ -215,6 +229,7 @@ func init() {
 					expectedResult: "Shortcuts",
 					category:       "Apps",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 
 			// --- Help app test cases. ---
@@ -227,6 +242,7 @@ func init() {
 					expectedResult: "Open the link in a new tab, Shortcuts, Drag the link to a blank area on the tab strip",
 					category:       "Help",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 
 			// --- Play store test cases. ---
@@ -239,6 +255,7 @@ func init() {
 					expectedResult: "Snapchat, Play Store",
 					category:       "Play Store",
 				},
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 		},
 	})
