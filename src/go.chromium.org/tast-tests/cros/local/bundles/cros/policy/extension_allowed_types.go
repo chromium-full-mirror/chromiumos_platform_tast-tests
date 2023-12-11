@@ -36,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:1253865", // ChromeOS > Software > Commercial (Enterprise) > Chrome Apps and Extensions
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedIn,
 			Val:     browser.TypeAsh,

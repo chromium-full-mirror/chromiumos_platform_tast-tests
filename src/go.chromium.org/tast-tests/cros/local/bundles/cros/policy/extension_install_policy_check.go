@@ -38,6 +38,7 @@ func init() {
 			"group:golden_tier",
 			"group:mainline",
 			"informational",
+			"group:hw_agnostic",
 		},
 		Fixture: fixture.ChromePolicyLoggedInDevToolsAvailable,
 		Timeout: 4 * time.Minute, // There is a longer wait when installing the extension.
