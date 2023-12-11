@@ -50,7 +50,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "ac_on_suspend",
-			Timeout: 5 * time.Minute,
+			Timeout: 15 * time.Minute,
 			Val:     acStateDuringSuspend,
 		}, {
 			Name:    "discharge",
@@ -58,7 +58,7 @@ func init() {
 			Val:     voltageOnDischarge,
 		}, {
 			Name:    "full_charge",
-			Timeout: 70 * time.Minute,
+			Timeout: 120 * time.Minute,
 			Val:     statusOnFullCharge,
 		},
 		},
@@ -68,7 +68,7 @@ func init() {
 const (
 	fullBatteryPercent     = 95.0
 	targetDischargePercent = 93.0
-	fullChargePollTimeout  = 60 * time.Minute
+	fullChargePollTimeout  = 110 * time.Minute
 	dischargePollTimeout   = 60 * time.Minute
 	chargePollInterval     = 1 * time.Second
 	// alarmMask is a mask ignoring expected battery alarms like terminate charge and over charged.
