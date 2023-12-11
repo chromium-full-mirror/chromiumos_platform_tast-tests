@@ -30,7 +30,7 @@ func init() {
 		Contacts:     []string{"cros-projector+tast@google.com", "llin@chromium.org"},
 		// ChromeOS > Software > Family > Projector
 		BugComponent: "b:1080013",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		VarDeps: []string{
