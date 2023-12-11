@@ -69,6 +69,7 @@ func init() {
 			"iteration",     // Optional. If given, it overrides the default value.
 			"retry",         // Optional. If given, it overrides the default value.
 		},
+		Attr: []string{"group:hw_agnostic"},
 		Params: []testing.Param{{
 			Name: "tabswitchcuj2_basic_noproxy",
 			Val: runCUJParam{
