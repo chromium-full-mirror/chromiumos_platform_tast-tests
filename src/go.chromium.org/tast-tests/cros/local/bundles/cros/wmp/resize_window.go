@@ -73,7 +73,7 @@ func init() {
 			"awendy@google.com",
 		},
 		BugComponent: "b:1238037", // ChromeOS > Software > Window Management
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.gaiaPoolDefault"}, // GAIA is required to install an app from Chrome Webstore.
 		Params: []testing.Param{

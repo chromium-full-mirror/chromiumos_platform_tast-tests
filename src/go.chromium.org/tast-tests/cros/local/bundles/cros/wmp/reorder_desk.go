@@ -50,7 +50,7 @@ func init() {
 		},
 		// ChromeOS > Software > Window Management > Virtual Desks
 		BugComponent: "b:1238200",
-		Attr:         []string{"group:mainline", "informational", "group:cq-medium"},
+		Attr:         []string{"group:mainline", "informational", "group:cq-medium", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		SearchFlags: []*testing.StringPair{
 			{
