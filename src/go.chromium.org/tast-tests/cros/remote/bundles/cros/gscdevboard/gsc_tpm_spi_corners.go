@@ -17,7 +17,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50TPMSPICorners,
+		Func:    GSCTPMSPICorners,
 		Desc:    "Test TPM SPI corner cases",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
@@ -25,12 +25,12 @@ func init() {
 			"jbk@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 	})
 }
 
-func Ti50TPMSPICorners(ctx context.Context, s *testing.State) {
+func GSCTPMSPICorners(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
@@ -64,7 +64,7 @@ func Ti50TPMSPICorners(ctx context.Context, s *testing.State) {
 		s.Fatal("spi error: ", err)
 	}
 
-	// Check one final time that that Ti50 still respondes to DIDVID register, to make sure it
+	// Check one final time that that GSC still respondes to DIDVID register, to make sure it
 	// has not crashed or got the SPI driver into a funny state.
 	didVid = tpmHandle.ReadRegister(ti50.TpmRegDidVid)
 	if !bytes.Equal(didVid, expectedDidVidValue) {
