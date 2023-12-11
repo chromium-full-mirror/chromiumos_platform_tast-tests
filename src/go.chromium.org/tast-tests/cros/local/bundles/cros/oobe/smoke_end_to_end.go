@@ -111,8 +111,6 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	}
 
 	options = append(options, chrome.ExtraArgs("--skip-multidevice-screen"))
-	// TODO(b/287862720): Update the test to go through CHOOBE flow and stop disabling the features.
-	options = append(options, chrome.ExtraArgs("--disable-features=OobeChoobe,OobeDisplaySize,OobeTouchpadScrollDirection"))
 
 	cr, err := chrome.New(ctx, options...)
 	if err != nil {
@@ -382,15 +380,118 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Log("Waiting for the theme selection screen")
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ThemeSelectionScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the theme selection screen to be visible: ", err)
+	shouldSkipChoobe := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.shouldSkip()", &shouldSkipChoobe); err != nil {
+		s.Fatal("Failed to evaluate whether to skip CHOOBE screen: ", err)
 	}
-	if err := uiauto.Combine("click next on the theme selection screen",
-		ui.WaitUntilExists(focusedButton),
-		ui.LeftClick(focusedButton),
-	)(ctx); err != nil {
-		s.Fatal("Failed to continue on the theme selection screen: ", err)
+
+	isTouchpadScrollButtonVisible := false
+	isDisplaySizeButtonVisible := false
+	isThemeSelectionButtonVisible := false
+	if !shouldSkipChoobe {
+		s.Log("Waiting for CHOOBE screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ChoobeScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for CHOOBE screen screen to be visible: ", err)
+		}
+
+		// Get the visibility of screen buttons on the CHOOBE screen and click visible screens.
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.isTouchpadScrollScreenVisible()", &isTouchpadScrollButtonVisible); err != nil {
+			s.Fatal("Failed to evaluate whether the touchpad scroll button on CHOOBE screen is visible: ", err)
+		}
+		if isTouchpadScrollButtonVisible {
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.clickTouchpadScrollScreen()", nil); err != nil {
+				s.Fatal("Failed to click the touchpad scroll button on CHOOBE screen: ", err)
+			}
+		}
+
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.isDisplaySizeScreenVisible()", &isDisplaySizeButtonVisible); err != nil {
+			s.Fatal("Failed to evaluate whether the display size button on CHOOBE screen is visible: ", err)
+		}
+		if isDisplaySizeButtonVisible {
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.clickDisplaySizeScreen()", nil); err != nil {
+				s.Fatal("Failed to click the touchpad scroll button on CHOOBE screen: ", err)
+			}
+		}
+
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.isThemeSelectionScreenVisible()", &isThemeSelectionButtonVisible); err != nil {
+			s.Fatal("Failed to evaluate whether the theme selection button on CHOOBE screen is visible: ", err)
+		}
+		if isThemeSelectionButtonVisible {
+			if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.clickThemeSelectionScreen()", nil); err != nil {
+				s.Fatal("Failed to click the touchpad scroll button on CHOOBE screen: ", err)
+			}
+		}
+
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.clickNext()", nil); err != nil {
+			s.Fatal("Failed to click next on the CHOOBE screen: ", err)
+		}
+	} else {
+		s.Log("CHOOBE screen skipped")
+	}
+
+	var shouldSkipTouchpadScroll bool
+	if !shouldSkipChoobe {
+		shouldSkipTouchpadScroll = !isTouchpadScrollButtonVisible
+	} else {
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.shouldSkip()", &shouldSkipTouchpadScroll); err != nil {
+			s.Fatal("Failed to evaluate whether to skip touchpad scroll screen: ", err)
+		}
+	}
+	if shouldSkipTouchpadScroll {
+		s.Log("Skipping the touchpad scroll screen")
+	} else {
+		s.Log("Waiting for the touchpad scroll screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the touchpad scroll screen to be visible: ", err)
+		}
+		if err := uiauto.Combine("click next on the touchpad scroll screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to continue on the touchpad scroll screen: ", err)
+		}
+	}
+
+	var shouldSkipDisplaySize bool
+	if !shouldSkipChoobe {
+		shouldSkipDisplaySize = !isDisplaySizeButtonVisible
+	} else {
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeDisplaySizeScreen.shouldSkip()", &shouldSkipDisplaySize); err != nil {
+			s.Fatal("Failed to evaluate whether to skip display size screen: ", err)
+		}
+	}
+	if shouldSkipDisplaySize {
+		s.Log("Skipping the display size screen")
+	} else {
+		s.Log("Waiting for the display size screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ChoobeDisplaySizeScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the  display size screen to be visible: ", err)
+		}
+		if err := uiauto.Combine("click next on the display size screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to continue on the display size screen: ", err)
+		}
+	}
+
+	shouldSkipThemeSelection := false
+	if !shouldSkipChoobe {
+		shouldSkipThemeSelection = !isThemeSelectionButtonVisible
+	}
+	if shouldSkipThemeSelection {
+		s.Log("Skipping the theme selection screen")
+	} else {
+		s.Log("Waiting for the theme selection screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ThemeSelectionScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the theme selection screen to be visible: ", err)
+		}
+		if err := uiauto.Combine("click next on the theme selection screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to continue on the theme selection screen: ", err)
+		}
 	}
 
 	shouldSkipMarketingOptIn := false
