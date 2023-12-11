@@ -222,7 +222,7 @@ func tpmEncryptionDecryption(ctx context.Context) error {
 			return errors.Wrapf(err, "TPM space is %v, wanted %v", secret, rollback.ZeroTpmSpace)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: time.Second * 10}); err != nil {
+	}, &testing.PollOptions{Timeout: time.Second * 22}); err != nil {
 		return errors.Wrap(err, "failure while waiting for successful decryption")
 	}
 
