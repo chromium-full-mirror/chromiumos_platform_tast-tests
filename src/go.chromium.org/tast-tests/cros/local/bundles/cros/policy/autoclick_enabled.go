@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1272890",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(crbug.com/1186655): Enable test when the policy can be disabled.
-		Attr:    []string{},
+		Attr:    []string{"group:hw_agnostic"},
 		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AutoclickEnabled{}, pci.VerifiedFunctionalityUI),

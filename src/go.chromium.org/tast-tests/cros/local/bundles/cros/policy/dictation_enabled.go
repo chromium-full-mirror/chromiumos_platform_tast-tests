@@ -39,6 +39,7 @@ func init() {
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DictationEnabled{}, pci.VerifiedFunctionalityUI),
 		},
+		Attr: []string{"group:hw_agnostic"},
 	})
 }
 
