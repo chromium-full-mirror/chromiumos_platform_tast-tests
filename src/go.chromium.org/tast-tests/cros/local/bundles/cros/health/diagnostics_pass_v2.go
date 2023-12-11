@@ -33,8 +33,6 @@ func init() {
 			Name:    "cpu_stress_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
 			Fixture: "crosHealthdRunningAndRebootDUT",
-			// TODO(b/295497926): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: kerker@google.com
 			Name:    "audio_driver",

@@ -23,13 +23,6 @@ func init() {
 		SoftwareDeps: []string{"diagnostics"},
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			// Contact: yycheng@google.com
-			Name:    "cpu_stress_v2",
-			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUStressV2},
-			Fixture: "crosHealthdRunningAndRebootDUT",
-			// TODO(b/295497926): Promote tast to critical
-			ExtraAttr: []string{"informational"},
-		}, {
 			// Contact: kerker@google.com
 			Name:    "audio_driver",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineAudioDriver},
