@@ -16,13 +16,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	// fwmpDisableDevMode disabled developer mode
-	fwmpDisableDevMode = 1 << 0
-	// fwmpDisableUnlock disabled ccd unlock and other functionality on GSC
-	fwmpDisableUnlock = 1 << 6
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:    Ti50Fwmp,
@@ -68,7 +61,7 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 	}
 
 	s.Log("Write FWMP file with unlock disabled")
-	fwmpFile := makeFWMPFile(fwmpDisableUnlock)
+	fwmpFile := utils.MakeFWMPFile(utils.FWMPDisableUnlock)
 	// Define space in NV storage and clean up afterwards
 	if err := tpm2.NVDefineSpace(tpm,
 		ti50.RootPlatformHandle,
@@ -109,19 +102,4 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 	if b.GpioGet(ctx, ti50.GpioTi50WriteProtectL) != false {
 		s.Fatal("WP signal not enabled after `wp disable` command, but should be blocked")
 	}
-}
-
-// makeFWMPFile create the 40 bytes FWMP file with the specified flags
-func makeFWMPFile(flags uint32) []byte {
-	out := make([]byte, 40)
-	out[0] = 0                   // crc -- filled in later
-	out[1] = 40                  // size
-	out[2] = 0x10                // version 1.0
-	out[3] = 0x00                // reserved
-	out[4] = byte(flags >> 0)    // flags (1 of 4)
-	out[5] = byte(flags >> 8)    // flags (2 of 4)
-	out[6] = byte(flags >> 16)   // flags (3 of 4)
-	out[7] = byte(flags >> 24)   // flags (4 of 4)
-	out[0] = utils.Crc8(out[2:]) // crc
-	return out
 }

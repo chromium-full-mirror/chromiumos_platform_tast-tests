@@ -10,6 +10,13 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 )
 
+const (
+	// FWMPDisableDevMode flag disables developer mode
+	FWMPDisableDevMode = 1 << 0
+	// FWMPDisableUnlock flag disables ccd unlock and other functionality on GSC
+	FWMPDisableUnlock = 1 << 6
+)
+
 // TpmHelper allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib
 type TpmHelper struct {
 	*ti50.TpmHandle
@@ -52,4 +59,19 @@ func (t *TpmHelper) TpmvCommitNvmem() error {
 
 	_, err = t.Execute(tpmvCommitNvmem)
 	return err
+}
+
+// MakeFWMPFile creates the 40 bytes FWMP file with the specified flags
+func MakeFWMPFile(flags uint32) []byte {
+	out := make([]byte, 40)
+	out[0] = 0                 // crc -- filled in later
+	out[1] = 40                // size
+	out[2] = 0x10              // version 1.0
+	out[3] = 0x00              // reserved
+	out[4] = byte(flags >> 0)  // flags (1 of 4)
+	out[5] = byte(flags >> 8)  // flags (2 of 4)
+	out[6] = byte(flags >> 16) // flags (3 of 4)
+	out[7] = byte(flags >> 24) // flags (4 of 4)
+	out[0] = Crc8(out[2:])     // crc
+	return out
 }
