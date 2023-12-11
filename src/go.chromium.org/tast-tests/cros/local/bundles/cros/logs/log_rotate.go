@@ -29,6 +29,7 @@ func init() {
 		// b/267781987: Disable unclaimed Tast tests
 		// Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 
