@@ -63,6 +63,7 @@ func IgtExecuteTests(ctx context.Context, testOpt IgtTest, f *os.File) (bool, *e
 }
 
 func igtSummarizeLog(f *os.File) (r igtResultSummary, failedSubtests []string) {
+	// Regex handle results like `Subtest plane-properties-atomic: SUCCESS (4.580s)` and `FAIL (0.491s)`
 	var igtSubtestResultRegex = regexp.MustCompile("^(?:Subtest (.*): )?([A-Z]+)")
 
 	scanner := bufio.NewScanner(f)
@@ -74,9 +75,12 @@ func igtSummarizeLog(f *os.File) (r igtResultSummary, failedSubtests []string) {
 				r.skipped++
 			case "FAIL":
 				r.failed++
-				if subtestName := m[1]; subtestName != "" {
-					failedSubtests = append(failedSubtests, subtestName)
+				subtestName := m[1]
+				// Important for tests that don't have subtests.
+				if subtestName == "" {
+					subtestName = "unknown"
 				}
+				failedSubtests = append(failedSubtests, subtestName)
 			case "SUCCESS":
 				r.passed++
 			}
