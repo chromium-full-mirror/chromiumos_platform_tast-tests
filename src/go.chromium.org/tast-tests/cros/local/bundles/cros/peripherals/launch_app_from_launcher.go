@@ -38,9 +38,9 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Peripherals
 		BugComponent: "b:1150827",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Pre: chrome.LoggedIn(),
+		Pre:          chrome.LoggedIn(),
 		Params: []testing.Param{
 			{
 				Name: "diagnostics",

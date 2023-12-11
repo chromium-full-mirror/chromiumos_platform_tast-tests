@@ -33,7 +33,7 @@ func init() {
 		},
 		// ChromeOS > Software > System Services > Peripherals > Keyboard
 		BugComponent: "b:1131926",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 	})

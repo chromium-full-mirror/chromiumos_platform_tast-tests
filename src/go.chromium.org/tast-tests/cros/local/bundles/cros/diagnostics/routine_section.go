@@ -29,7 +29,7 @@ func init() {
 			"zentaro@google.com",
 			"menghuan@google.com",
 		},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "diagnosticsPrep",
 		Timeout:      10 * time.Minute,
