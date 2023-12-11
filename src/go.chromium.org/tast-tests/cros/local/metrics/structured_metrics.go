@@ -67,11 +67,13 @@ func HasStructuredEventBeenReported(ctx context.Context, eventName string) (bool
 		}
 
 		// Each file in structuredEventsDir contains an encoded StructuredDataProto.
-		// There is only one event in each file, so we only need to check the
+		// There is at most one event in each file, so we only need to check the
 		// content of the first element of the Events array.
-		eventNameHash := structuredData.Events[0].GetEventNameHash()
-		if strconv.FormatUint(eventNameHash, 16) == getNameHash(ctx, eventName) {
-			return true, nil
+		if len(structuredData.Events) > 0 {
+			eventNameHash := structuredData.Events[0].GetEventNameHash()
+			if strconv.FormatUint(eventNameHash, 16) == getNameHash(ctx, eventName) {
+				return true, nil
+			}
 		}
 	}
 
