@@ -44,7 +44,7 @@ func init() {
 		},
 		// ChromeOS > Software > System UI Surfaces > Launcher
 		BugComponent: "b:1288350",
-		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
+		Attr:         []string{"group:crosbolt", "crosbolt_nightly", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Data:         []string{"animation.html", "animation.js"},
