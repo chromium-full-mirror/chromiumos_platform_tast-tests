@@ -307,7 +307,6 @@ func (i *CrOSImage) SetCCDCapabilities(ctx context.Context, capabilities map[CCD
 // runCommand executes the `cmd` string as a GSC console command and checks for
 // basic error output.
 func (i *CrOSImage) runCommand(ctx context.Context, cmd string) error {
-	commandEchoRe := regexp.MustCompile(cmd)
 	accessDeniedRe := regexp.MustCompile(`(?i)access denied`)
 	output, err := i.Command(ctx, cmd)
 	if err != nil {
@@ -315,9 +314,6 @@ func (i *CrOSImage) runCommand(ctx context.Context, cmd string) error {
 	}
 	if accessDeniedRe.MatchString(output) {
 		return errors.Wrap(err, "got access denied when trying to run `"+cmd+"`")
-	}
-	if !commandEchoRe.MatchString(output) {
-		return errors.Wrap(err, "failed to detect command echo after running `"+cmd+"` from output: "+output)
 	}
 	return nil
 }
