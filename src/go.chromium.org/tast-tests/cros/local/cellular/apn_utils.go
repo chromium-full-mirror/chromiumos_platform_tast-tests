@@ -142,6 +142,7 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 		CarrierRoger: []KnownAPN{
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "mobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 		CarrierTelus: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "isp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
