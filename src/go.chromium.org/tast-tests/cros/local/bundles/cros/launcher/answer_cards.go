@@ -42,7 +42,7 @@ func init() {
 		},
 		BugComponent: "b:1288350",
 		Fixture:      "chromeLoggedIn",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "definition_card_clamshell",

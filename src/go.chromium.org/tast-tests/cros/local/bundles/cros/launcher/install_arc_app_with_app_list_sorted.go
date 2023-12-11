@@ -62,6 +62,7 @@ func init() {
 					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNames,
 					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNamesAfterAppInstall},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
 			},
 			{
 				Name: "tablet_alphabetical_android_container",
@@ -76,6 +77,7 @@ func init() {
 					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNames,
 					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.AlphabeticalNamesAfterAppInstall},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
 			},
 			{
 				Name: "clamshell_color_android_container",
@@ -90,6 +92,7 @@ func init() {
 					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNames,
 					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNamesAfterAppInstall},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
 			},
 			{
 				Name: "tablet_color_android_container",
@@ -104,6 +107,7 @@ func init() {
 					OrderedAppNames:             fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNames,
 					OrderedAppNamesAfterInstall: fakeAppInfoForAppInstallWithAppListSortedTest.ColorOrderNamesAfterAppInstall},
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
 			},
 		},
 		Timeout: chrome.GAIALoginTimeout + arc.BootTimeout + 120*time.Second,
