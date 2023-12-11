@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50UartForward,
+		Func:    GSCUARTForward,
 		Desc:    "Tests forwarding between GSC UARTs and USB",
 		Timeout: 90 * time.Second,
 		Contacts: []string{
@@ -27,12 +27,12 @@ func init() {
 			"jbk@chromium.org",         // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_ot_fpga_cw310", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_fpga_cw310", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 	})
 }
 
-func Ti50UartForward(ctx context.Context, s *testing.State) {
+func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	gscProps := b.GscProperties()
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
@@ -44,14 +44,14 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	r := rand.New(rand.NewSource(seed))
 
 	//
-	// Fixture has already done "ccd open", now boot Ti50 simulating CCD without uServo,
+	// Fixture has already done "ccd open", now boot GSC simulating CCD without uServo,
 	// verify that forwarding works both ways.
 	//
 	// Simulate the AP processor being off initially.
 	s.Log("(Re)starting ti50")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.ResetWithStraps(ctx, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, no uServo")
@@ -73,14 +73,14 @@ func Ti50UartForward(ctx context.Context, s *testing.State) {
 	}
 
 	//
-	// Boot Ti50 simulating a uServo being connected simultaneously with CCD.  Verify that
+	// Boot GSC simulating a uServo being connected simultaneously with CCD.  Verify that
 	// data goes from UART to USB, but that USB data is not forwarded to UART (would conflict
 	// with uServo).
 	//
 	// Simulate the AP processor being off initially.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.ResetWithStraps(ctx, ti50.ServoMicroConnected)
-	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, with uServo")
