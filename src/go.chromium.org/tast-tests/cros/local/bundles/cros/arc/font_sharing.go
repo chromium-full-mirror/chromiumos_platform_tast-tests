@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"arcvm-eng@google.com", "hashimoto@chromium.org"},
 		// ChromeOS > Software > ARC++ > ARCVM
 		BugComponent: "b:883059",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "android_vm_r"},
 		Fixture:      "arcBooted",
 		Timeout:      10 * time.Minute,
