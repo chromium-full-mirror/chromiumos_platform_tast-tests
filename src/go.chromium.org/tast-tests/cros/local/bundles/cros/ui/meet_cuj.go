@@ -48,7 +48,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/webrtcinternals"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -1443,6 +1442,27 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to click the new jam button")
 			}
 			collaborationRE = regexp.MustCompile(`\bJamboard\b`)
+
+			if err := webutil.WaitForQuiescence(ctx, collaborationConn, 30*time.Second); err != nil {
+				return errors.Wrap(err, "failed to wait for the page to load")
+			}
+
+			var jamboardHref string
+			if err := collaborationConn.Eval(ctx, "window.location.href", &jamboardHref); err != nil {
+				return errors.Wrap(err, "failed to get Jamboard URL")
+			}
+
+			// Shorten the context to cleanup jamboard.
+			// Some low-end devices take a long time to delete jamboard, so extend
+			// timeout to one minute.
+			cleanUpJamboardCtx := ctx
+			ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+			defer cancel()
+			defer func(ctx context.Context) {
+				if err := googledocs.DeleteJamboardWithURL(tconn, cr, jamboardHref)(ctx); err != nil {
+					s.Log("Failed to delete jamboard: ", err)
+				}
+			}(cleanUpJamboardCtx)
 		}
 
 		var collaborationWindow *ash.Window
