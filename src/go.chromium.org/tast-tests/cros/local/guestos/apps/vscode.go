@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -130,7 +131,7 @@ func InitialiseVSCode(ctx context.Context, cfg VSCodeConfig, guest vm.Guest, key
 			// Left click the app window header to focus.
 			// Do not click the center of the app window, which may unexpectedly.
 			// set the theme, see http://b/264336806.
-			ui.LeftClick(nodewith.HasClass("HeaderView").Ancestor(cfg.WindowFinder)),
+			ui.LeftClick(nodewith.ClassNameRegex(regexp.MustCompile("^HeaderView$")).Ancestor(cfg.WindowFinder)),
 			// Press ctrl+W to close the welcome screen.
 			keyboard.AccelAction("ctrl+W"),
 			// Wait for welcome screen to close.
@@ -162,7 +163,7 @@ func LaunchVSCodeForFile(cfg VSCodeConfig, uda *uidetection.Context, ui *uiauto.
 		// Also wait for the editor tab to load before further input.
 		uda.WaitUntilExists(uidetection.Word(testFile).WithinA11yNode(cfg.WindowFinder).First()),
 		// Left click the app window to wait for input.
-		ui.LeftClick(nodewith.HasClass("HeaderView").Ancestor(vscodeUnsavedWindow)))
+		ui.LeftClick(nodewith.ClassNameRegex(regexp.MustCompile("^HeaderView$")).Ancestor(vscodeUnsavedWindow)))
 }
 
 // SaveFileAndCloseVSCode will save the test file and close VS code app.
