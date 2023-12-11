@@ -123,6 +123,7 @@ func init() {
 			// Use the android_p dep for running on android P of the container.
 			ExtraSoftwareDeps: []string{"android_p"},
 			Val:               append(generalTests, arcPOnlyTests...),
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name:              "container_r",
 			ExtraSoftwareDeps: []string{"android_container_r"},
@@ -131,10 +132,12 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               generalTests,
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name:              "vm_unstable",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val:               unstableTests,
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
 }

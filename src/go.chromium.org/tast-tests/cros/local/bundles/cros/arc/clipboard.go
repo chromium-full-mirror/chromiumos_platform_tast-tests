@@ -46,7 +46,7 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 		}},
 	})
 }
@@ -474,7 +474,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 				// take a long time even for a single iteration (e.g. around 1
 				// second), so we are forced to give a relatively high upper bound
 				// for the overall timeout.
-				Timeout: 22 * time.Second,
+				Timeout:  22 * time.Second,
 				Interval: 3 * time.Second,
 			})
 			if err != nil {

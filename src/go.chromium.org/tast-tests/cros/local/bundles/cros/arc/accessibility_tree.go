@@ -107,6 +107,7 @@ func init() {
 				SeekBarAttributes:  map[string]interface{}{},
 			},
 			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name: "container_r",
 			Val: expectedNode{
@@ -121,6 +122,7 @@ func init() {
 				SeekBarAttributes:  map[string]interface{}{"value": "state description 25"},
 			},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
 }

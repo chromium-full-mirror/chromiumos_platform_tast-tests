@@ -29,7 +29,7 @@ func init() {
 		Contacts:     []string{"arc-framework+tast@google.com", "takise@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Window Management
 		BugComponent: "b:537272",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"android_vm", "chrome"},
 		Fixture:      "arcBooted",
 		Timeout:      8 * time.Minute,

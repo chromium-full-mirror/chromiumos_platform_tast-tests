@@ -33,7 +33,7 @@ func init() {
 		BugComponent: "b:537221",
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Data:         []string{"capybara.jpg"},
 		Timeout:      4 * time.Minute,
 	})

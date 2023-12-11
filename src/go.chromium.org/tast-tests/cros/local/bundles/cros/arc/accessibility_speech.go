@@ -63,6 +63,7 @@ func init() {
 				},
 			},
 			ExtraSoftwareDeps: []string{"android_p"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name: "container_r",
 			Val: expectedSpeechLog{
@@ -123,6 +124,7 @@ func init() {
 				},
 			},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
 }

@@ -82,7 +82,7 @@ func init() {
 			Val:  generalLaunchGwTests,
 			// Temporarily restrict it only for ARC R, not T or above version.
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		}, {
 			// Not in mainline since optin is flaky. b/243451887
 			Name:              "fullrestore",
@@ -94,6 +94,7 @@ func init() {
 			Val:  fullrestoreGwTests,
 			// Temporarily restrict it only for ARC R, not T or above version.
 			ExtraSoftwareDeps: []string{"android_vm_r"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name: "fixup_r",
 			Val:  fixupGwTests,

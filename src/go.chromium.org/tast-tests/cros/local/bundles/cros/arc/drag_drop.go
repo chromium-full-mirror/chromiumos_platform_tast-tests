@@ -70,7 +70,7 @@ func init() {
 			},
 		}, {
 			Name:              "chrome_to_android_vm",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_source_",
@@ -80,7 +80,7 @@ func init() {
 			},
 		}, {
 			Name:              "chrome_to_android_vm_lacros",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_source_",
@@ -99,7 +99,7 @@ func init() {
 			},
 		}, {
 			Name:              "android_to_android_vm",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: &dragDropTestArgs{
 				androidSource: true,
@@ -128,7 +128,7 @@ func init() {
 			},
 		}, {
 			Name:              "android_to_chrome_vm",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_target_",
@@ -138,7 +138,7 @@ func init() {
 			},
 		}, {
 			Name:              "android_to_chrome_vm_lacros",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val: &dragDropTestArgs{
 				extensionPrefix: "drag_target_",

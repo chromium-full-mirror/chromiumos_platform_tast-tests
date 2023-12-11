@@ -76,6 +76,7 @@ func init() {
 			Name:              "vm",
 			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 	})
 }
