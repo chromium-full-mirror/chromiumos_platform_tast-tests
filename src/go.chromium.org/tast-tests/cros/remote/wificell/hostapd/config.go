@@ -1043,8 +1043,9 @@ func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
 		default:
 			if c.HTCaps == HTCapHT20 {
 				width = ChWidth20
+			} else {
+				width = ChWidth40
 			}
-			width = ChWidth40
 		}
 	} else if c.is80211n() {
 		mode = ModeHT
