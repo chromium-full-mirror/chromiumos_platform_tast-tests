@@ -34,7 +34,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      fixture.UpdateEngineCleanOwnership,
 		Params: []testing.Param{
 			{
