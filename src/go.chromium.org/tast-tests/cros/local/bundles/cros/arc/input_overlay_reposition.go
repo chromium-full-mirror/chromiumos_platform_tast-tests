@@ -33,7 +33,7 @@ func init() {
 		Contacts:     []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
 		// ChromeOS > Software > ARC++ > Framework > Gaming
 		BugComponent: "b:767470",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithInputOverlayAlphaV2",
 		Params: []testing.Param{

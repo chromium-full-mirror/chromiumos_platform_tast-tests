@@ -39,6 +39,7 @@ func init() {
 			}, {
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraAttr:         []string{"group:hw_agnostic"},
 			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 	})

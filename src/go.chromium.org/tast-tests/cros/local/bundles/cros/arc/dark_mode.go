@@ -28,7 +28,7 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
 		Timeout:      chrome.GAIALoginTimeout + arcpkg.BootTimeout + 120*time.Second,
