@@ -25,7 +25,7 @@ const fileID tpmutil.Handle = 0x100100F
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50NvCreateDelete,
+		Func:    Ti50NVCreateDelete,
 		Desc:    "Creates, deletes, and recreates NVs on the GSC",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -38,7 +38,7 @@ func init() {
 	})
 }
 
-func Ti50NvCreateDelete(ctx context.Context, s *testing.State) {
+func Ti50NVCreateDelete(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)

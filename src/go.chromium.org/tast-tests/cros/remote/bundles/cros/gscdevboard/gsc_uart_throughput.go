@@ -19,7 +19,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    GscUartThroughput,
+		Func:    GSCUARTThroughput,
 		Desc:    "Tests forwarding between GSC UARTs and USB at sustained maximum throughput",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
@@ -62,7 +62,7 @@ type consoleChannel struct {
 	uart ti50.SerialChannel
 }
 
-func GscUartThroughput(ctx context.Context, s *testing.State) {
+func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 	const crLf = "\r\n"
 	const ecMagic byte = 0xEC
 	const apMagic byte = 0xA5

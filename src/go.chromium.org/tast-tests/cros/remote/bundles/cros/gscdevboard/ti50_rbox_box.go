@@ -23,7 +23,7 @@ const (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50RboxBox,
+		Func:    Ti50RBOXBox,
 		Desc:    "Verify keyboard combination for box form factor",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
@@ -37,7 +37,7 @@ func init() {
 	})
 }
 
-func Ti50RboxBox(ctx context.Context, s *testing.State) {
+func Ti50RBOXBox(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	i := ti50.MustOpenCrOSImage(ctx, b, s)

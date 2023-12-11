@@ -61,7 +61,7 @@ func bootModeToString(mode byte) string {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50Efs2,
+		Func:    Ti50EFS2,
 		Desc:    "Verifies EFS2 communication with EC and AP",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
@@ -74,7 +74,7 @@ func init() {
 	})
 }
 
-func Ti50Efs2(ctx context.Context, s *testing.State) {
+func Ti50EFS2(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
 	ecUart := b.PhysicalUart(ti50.UartEC, time.Second)

@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50EcReset,
+		Func:    Ti50ECReset,
 		Desc:    "Test workaround for EC double reset",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -39,7 +39,7 @@ func init() {
 	})
 }
 
-func Ti50EcReset(ctx context.Context, s *testing.State) {
+func Ti50ECReset(ctx context.Context, s *testing.State) {
 	subTest := s.Param().(func(context.Context, *testing.State, utils.DevboardHelper, *ti50.CrOSImage, utils.FirmwareTestingHelper))
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}

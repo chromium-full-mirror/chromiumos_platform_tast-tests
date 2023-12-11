@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50Fwmp,
+		Func:    Ti50FWMP,
 		Desc:    "Verifies various FWMP enforcement for GSC",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -31,7 +31,7 @@ func init() {
 	})
 }
 
-func Ti50Fwmp(ctx context.Context, s *testing.State) {
+func Ti50FWMP(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)

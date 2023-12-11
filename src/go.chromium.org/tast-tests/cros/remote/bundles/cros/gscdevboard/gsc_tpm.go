@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    GscTpm,
+		Func:    GSCTPM,
 		Desc:    "Test TPM functionality of ti50 in remote environment(Andreiboard connected to devboardsvc host)",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -37,7 +37,7 @@ func init() {
 	})
 }
 
-func GscTpm(ctx context.Context, s *testing.State) {
+func GSCTPM(ctx context.Context, s *testing.State) {
 	bus := s.Param().(ti50.TpmBus)
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)

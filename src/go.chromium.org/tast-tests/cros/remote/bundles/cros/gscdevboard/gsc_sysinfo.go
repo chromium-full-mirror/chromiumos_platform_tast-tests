@@ -17,7 +17,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    GscSysinfo,
+		Func:    GSCSysinfo,
 		Desc:    "Most basic test of the gsc sysinfo command",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -32,7 +32,7 @@ func init() {
 
 var devIDRegexp = regexp.MustCompile(`DEV_ID: *0x([0-9a-fA-F]+) +0x([0-9a-fA-F]+)`)
 
-func GscSysinfo(ctx context.Context, s *testing.State) {
+func GSCSysinfo(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)

@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    GscTpmI2cCorners,
+		Func:    GSCTPMI2CCorners,
 		Desc:    "Test TPM I2C corner cases",
 		Timeout: 5 * time.Minute,
 		Contacts: []string{
@@ -31,7 +31,7 @@ func init() {
 	})
 }
 
-func GscTpmI2cCorners(ctx context.Context, s *testing.State) {
+func GSCTPMI2CCorners(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
