@@ -37,6 +37,7 @@ func init() {
 			"hidehiko@chromium.org",
 		},
 		Data: []string{"testcert.p12"},
+		Attr: []string{"group:hw_agnostic"},
 		// b:238260020 - disable aged (>1y) unpromoted informational tests
 		// Attr: []string{"group:mainline", "informational"},
 	})
