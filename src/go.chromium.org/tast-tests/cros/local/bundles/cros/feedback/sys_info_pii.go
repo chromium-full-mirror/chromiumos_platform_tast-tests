@@ -46,7 +46,7 @@ func init() {
 		},
 		// ChromeOS > Data > Engineering > Feedback
 		BugComponent: "b:1033360",
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		SearchFlags: []*testing.StringPair{
