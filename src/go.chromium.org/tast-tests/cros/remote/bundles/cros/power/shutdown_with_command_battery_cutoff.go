@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
@@ -23,7 +24,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ShutdownWithCommandBatteryCutoff, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Verifies that system comes back after executing shutdown command with battery cutoff",
+		Func:         ShutdownWithCommandBatteryCutoff,
+		Desc:         "Verifies that system comes back after executing shutdown command with battery cutoff",
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"timvp@google.com",
@@ -34,7 +37,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:firmware", "firmware_ec"},
 		Fixture:      fixture.NormalMode,
 		Vars:         []string{"servo"},
-		Timeout:      5 * time.Minute,
+		Timeout:      10 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.NoBatteryBootSupported()),
 		Requirements: []string{"sys-fw-0022-v02"},
 	})
@@ -61,42 +64,30 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
-	// Verify AC is attached so the DUT is powered after the battery is cut off.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		chargerAttached, err := h.Servo.GetChargerAttached(ctx)
-		if err != nil {
-			s.Fatal("Error checking whether charger is attached: ", err)
-		}
-		if !chargerAttached {
-			s.Fatal("Charger not attached")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
-		s.Fatal(err, "Failed to check for charger")
+	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
+		s.Fatal("Failed to remove watchdog for ccd: ", err)
 	}
-	s.Log("Charger is present")
+
+	// Make sure AC is attached so the DUT is powered after the battery is cut off.
+	if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
+		s.Fatal("Failed to set charger status to connected: ", err)
+	}
 
 	defer func(ctx context.Context) {
 		testing.ContextLog(ctx, "Performing cleanup")
 		testing.ContextLog(ctx, "Rebooting EC to restore battery connection")
-		if err := pxy.Servo().RunECCommand(ctx, "reboot"); err != nil {
+		// Running ec command reboot from a powered off state (eg powerstate G3) still brings up DUT without additional powerkey press.
+		if err := h.Servo.RunECCommand(ctx, "reboot"); err != nil {
 			s.Fatal("Failed to reboot EC: ", err)
 		}
-		// Wait a little at the end of the test to make sure the EC finishes booting before the next test runs.
-		testing.ContextLog(ctx, "Waiting for EC to boot")
-		defer func() {
-			s.Log("Waiting for boot to finish")
-			// GoBigSleepLint: Sleep to wait for boot.
-			if err := testing.Sleep(ctx, 20*time.Second); err != nil {
-				s.Fatal("Failed to sleep: ", err)
-			}
-		}()
+
 		testing.ContextLog(ctx, "Attempting to connect to DUT")
-		if !dut.Connected(ctx) {
-			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
-				s.Fatal("Failed to wake up DUT at cleanup: ", err)
-			}
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancelWaitConnect()
+		if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT after ec rebooot: ", err)
 		}
+
 	}(cleanupCtx)
 
 	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
@@ -130,21 +121,22 @@ func ShutdownWithCommandBatteryCutoff(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Waiting for AP to shutdown")
-	sdCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-	if err := dut.WaitUnreachable(sdCtx); err != nil {
-		s.Fatal("Failed to shutdown DUT: ", err)
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S5"); err != nil {
+		s.Fatal("Failed to wait for G3/S5 powerstate: ", err)
 	}
 
-	testing.ContextLog(ctx, "Validating G3 power state")
-	if err := powercontrol.ValidateG3PowerState(ctx, pxy); err != nil {
-		s.Fatal("Failed to enter G3 after shutdown: ", err)
+	testing.ContextLog(ctx, "Pressing power key to turn on DUT")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOn)); err != nil {
+		s.Fatal("Failed to press power key on DUT: ", err)
 	}
-
-	testing.ContextLog(ctx, "Powering on DUT")
-	if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
-		s.Fatal("Failed to wake up DUT: ", err)
-	}
+	func() {
+		testing.ContextLog(ctx, "Attempting to connect to DUT")
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancelWaitConnect()
+		if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT after ec rebooot: ", err)
+		}
+	}()
 
 	testing.ContextLog(ctx, "Logging into ChromeOS")
 	if err := powercontrol.ChromeOSLogin(ctx, dut, s.RPCHint()); err != nil {
