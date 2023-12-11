@@ -148,10 +148,9 @@ func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebia
 	installButton := nodewith.Name("Install").Role(role.Button)
 	installingMsg := nodewith.NameStartingWith("Installing Linux").Role(role.StaticText)
 
-	// TODO(b/283027529): Buster is being deprecated, so the upgrade modal
-	// could be shown. This happens during the container start step, so
-	// find and dismiss it in a goroutine. This is a temporary workaround
-	// before buster tests are removed.
+	// When old linux version is being deprecated, the upgrade modal could be
+	// shown. This happens during the container start step, so find and dismiss
+	// it in a goroutine. E.g., b/283027529.
 	if debianVersion == vm.DebianBuster {
 		modalCtx, cancel := context.WithCancel(ctx)
 		defer cancel()
@@ -173,7 +172,7 @@ func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebia
 	}
 
 	if err := uiauto.Combine("click install and wait it to finish",
-		ui.LeftClickUntil(installButton, ui.WithTimeout(3*time.Second).WaitUntilExists(installingMsg)),
+		ui.WithInterval(time.Second).DoDefaultUntil(installButton, ui.WithTimeout(3*time.Second).WaitUntilExists(installingMsg)),
 		// The installation message seems unstable, thus using WaitUntilGoneFor
 		// instead of WaitUntilGone.
 		ui.WithTimeout(installationTimeout).WaitUntilGoneFor(installingMsg, 2*time.Second),
