@@ -37,7 +37,7 @@ func init() {
 		// ChromeOS > Software > Personalization
 		BugComponent: "b:1006527",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		Data:         []string{"user_avatar_image.jpeg"},
 		SearchFlags: []*testing.StringPair{

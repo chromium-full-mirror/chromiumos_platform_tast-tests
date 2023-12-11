@@ -36,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:1006527", // ChromeOS > Software > Personalization
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
 		Data:         []string{"wallpaper_image.jpeg"},
 		SearchFlags: []*testing.StringPair{
