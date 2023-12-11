@@ -64,7 +64,7 @@ func init() {
 			},
 			// TODO(b/313704138): Use the internal TouchpadType hardware dependency when available.
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Detachable), hwdep.Touchpad()),
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "",
 			Val: touchpadInfoTestParams{
