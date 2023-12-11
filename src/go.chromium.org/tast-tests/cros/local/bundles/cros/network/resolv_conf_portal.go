@@ -24,7 +24,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name:    "proxy_disabled",

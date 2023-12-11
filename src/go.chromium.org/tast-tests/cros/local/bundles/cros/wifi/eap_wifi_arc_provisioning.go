@@ -43,7 +43,7 @@ func init() {
 		Func:         EAPWifiARCProvisioning,
 		Desc:         "EAP WiFi network ARC provisioning tests",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
