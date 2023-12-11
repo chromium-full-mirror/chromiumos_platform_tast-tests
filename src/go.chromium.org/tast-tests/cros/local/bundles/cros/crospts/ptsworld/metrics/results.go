@@ -175,7 +175,23 @@ func (r *ResultsParser) getLatestResultDir() (string, error) {
 	if latestDir == "" {
 		return "", errors.Errorf("no results found in %s", r.resultsDir)
 	}
-	return filepath.Join(r.resultsDir, latestDir), nil
+	latestDir = filepath.Join(r.resultsDir, latestDir)
+
+	// Update the symlink of latest result directory to "latest" folder
+	symLatestDir := filepath.Join(r.resultsDir, "latest")
+	if _, err = os.Lstat(symLatestDir); err == nil {
+		err = os.Remove(symLatestDir)
+		if err != nil {
+			return "", errors.Wrapf(err, "error removing existing symlink: %s", symLatestDir)
+		}
+	}
+	if err = os.Symlink(latestDir, symLatestDir); err != nil {
+		if !os.IsExist(err) {
+			return "", errors.Wrapf(err, "error creating symlink: %s", symLatestDir)
+		}
+	}
+
+	return latestDir, nil
 }
 
 // NewResultsParser creates a new ResultsParser.
