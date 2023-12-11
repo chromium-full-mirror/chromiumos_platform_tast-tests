@@ -41,6 +41,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "chrome"},
 			Fixture:           "arcBootedWithPlayStore",
 			Val:               browser.TypeAsh,
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"android_container", "chrome", "lacros"},
@@ -51,6 +52,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm", "chrome", "lacros"},
 			Fixture:           "lacrosWithArcBootedAndPlayStore",
 			Val:               browser.TypeLacros,
+			ExtraAttr:         []string{"group:hw_agnostic"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 2*time.Minute,
 	})
