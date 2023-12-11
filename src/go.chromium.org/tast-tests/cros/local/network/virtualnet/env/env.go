@@ -566,7 +566,7 @@ func (e *Env) ReadAndWriteLogIfExists(path string, f *os.File) error {
 // static IP addresses on both in and out interface, and installing routes for
 // the subnet in both of the two netns. An additional default route will be
 // added from this Env to |router|.
-func (e *Env) ConnectToRouter(ctx context.Context, router *Env, ipv4Subnet, ipv6Subnet *net.IPNet) error {
+func (e *Env) ConnectToRouter(ctx context.Context, router *Env, ipv4Subnet *subnet.IPv4Subnet, ipv6Subnet *subnet.IPv6Subnet) error {
 	// Move the out interface into |router| and bring it up.
 	if err := testexec.CommandContext(ctx, "ip", "link", "set", e.VethOutName, "netns", router.NetNSName).Run(); err != nil {
 		return errors.Wrapf(err, "failed to move the out interface of %s into %s", e.NetNSName, router.NetNSName)
@@ -632,7 +632,7 @@ func (e *Env) ConnectToRouterWithPool(ctx context.Context, router *Env, pool *su
 
 // ConfigureInterface configures |addr| on |ifname|, and adds a route to point
 // |subnet| to this interface.
-func (e *Env) ConfigureInterface(ctx context.Context, ifname string, addr net.IP, subnet *net.IPNet) error {
+func (e *Env) ConfigureInterface(ctx context.Context, ifname string, addr net.IP, subnet subnet.IPSubnet) error {
 	if err := e.RunWithoutChroot(ctx, "ip", "addr", "add", addr.String(), "dev", ifname); err != nil {
 		return errors.Wrapf(err, "failed to install address %s on %s", addr.String(), ifname)
 	}

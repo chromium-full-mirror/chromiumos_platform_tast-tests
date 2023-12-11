@@ -18,6 +18,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -78,7 +79,7 @@ type ResolvedHost struct {
 type dnsmasq struct {
 	env *env.Env
 
-	subnet                *net.IPNet
+	subnet                *subnet.IPv4Subnet
 	classlessStaticRoutes []Route
 	resolvedHosts         []ResolvedHost
 	dns                   []string
@@ -98,7 +99,7 @@ type Option = func(*dnsmasq)
 // WithDHCPServer enables DHCPv4 server function in dnsmasq. subnet specifies
 // the DHCP range, and the first address in subnet will be used as the gateway
 // address. This option will be mapped to dhcp-range option in dnsmasq.
-func WithDHCPServer(subnet *net.IPNet) Option {
+func WithDHCPServer(subnet *subnet.IPv4Subnet) Option {
 	return func(d *dnsmasq) {
 		d.subnet = subnet
 	}

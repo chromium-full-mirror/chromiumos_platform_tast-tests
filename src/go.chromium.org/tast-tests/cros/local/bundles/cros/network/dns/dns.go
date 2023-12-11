@@ -565,7 +565,7 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 }
 
 // NewServer creates a server that responds to DNS and DoH queries.
-func NewServer(ctx context.Context, envName string, ipv4Subnet, ipv6Subnet *net.IPNet, routerEnv *env.Env, httpsCerts *certs.Certs) (*env.Env, error) {
+func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subnet, ipv6Subnet *subnet.IPv6Subnet, routerEnv *env.Env, httpsCerts *certs.Certs) (*env.Env, error) {
 	success := false
 
 	server, err := virtualnet.CreateEnv(ctx, envName)

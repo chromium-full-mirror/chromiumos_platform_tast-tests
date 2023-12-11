@@ -11,13 +11,13 @@ import (
 	"bytes"
 	"context"
 	"io/ioutil"
-	"net"
 	"os"
 	"strings"
 	"text/template"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -43,14 +43,14 @@ const (
 
 type radvd struct {
 	env    *env.Env
-	prefix *net.IPNet
+	prefix *subnet.IPv6Subnet
 	dns    []string
 	cmd    *testexec.Cmd
 }
 
 // New creates a new radvd object. The returned object can be passed to
 // Env.StartServer(), its lifetime will be managed by the Env object.
-func New(prefix *net.IPNet, dns []string) *radvd {
+func New(prefix *subnet.IPv6Subnet, dns []string) *radvd {
 	return &radvd{prefix: prefix, dns: dns}
 }
 

@@ -20,6 +20,24 @@ type Pool struct {
 	ipv6Next int
 }
 
+// IPSubnet defines the functions on IPv4Subnet and IPv6Subnet.
+type IPSubnet interface {
+	// String returns the CIDR-notation of the prefix, e.g., "192.168.1.0/24".
+	String() string
+}
+
+// IPv4Subnet represents an IPv4 subnet. This is a wrapper of the net.IPNet
+// struct and provides helpful utils in the test.
+type IPv4Subnet struct {
+	net.IPNet
+}
+
+// IPv6Subnet represents an IPv6 subnet. This is a wrapper of the net.IPNet
+// struct and provides helpful utils in the test.
+type IPv6Subnet struct {
+	net.IPNet
+}
+
 // The range of available subnet ids. Each pool can allocate 100 subnets for
 // IPv4 and IPv6 separately, which should be enough for most of the tests.
 const (
@@ -34,27 +52,31 @@ func NewPool() *Pool {
 }
 
 // AllocNextIPv4Subnet allocates the next IPv4 subnet.
-func (p *Pool) AllocNextIPv4Subnet() (*net.IPNet, error) {
+func (p *Pool) AllocNextIPv4Subnet() (*IPv4Subnet, error) {
 	if p.ipv4Next > subnetEnd {
 		return nil, errors.New("no available subnet")
 	}
 	id := p.ipv4Next
 	p.ipv4Next++
-	return &net.IPNet{
-		IP:   net.IPv4(192, 168, byte(id), 0),
-		Mask: net.IPv4Mask(255, 255, 255, 0),
+	return &IPv4Subnet{
+		IPNet: net.IPNet{
+			IP:   net.IPv4(192, 168, byte(id), 0),
+			Mask: net.IPv4Mask(255, 255, 255, 0),
+		},
 	}, nil
 }
 
 // AllocNextIPv6Subnet allocates the next IPv6 subnet.
-func (p *Pool) AllocNextIPv6Subnet() (*net.IPNet, error) {
+func (p *Pool) AllocNextIPv6Subnet() (*IPv6Subnet, error) {
 	if p.ipv4Next > subnetEnd {
 		return nil, errors.New("no available subnet")
 	}
 	id := p.ipv6Next
 	p.ipv6Next++
-	return &net.IPNet{
-		IP:   []byte{0xfd, 0, 0, 0, 0, 0, 0, byte(id), 0, 0, 0, 0, 0, 0, 0, 0},
-		Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0},
+	return &IPv6Subnet{
+		IPNet: net.IPNet{
+			IP:   []byte{0xfd, 0, 0, 0, 0, 0, 0, byte(id), 0, 0, 0, 0, 0, 0, 0, 0},
+			Mask: []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0, 0, 0, 0, 0, 0, 0, 0},
+		},
 	}, nil
 }
