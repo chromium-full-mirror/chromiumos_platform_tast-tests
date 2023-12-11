@@ -32,11 +32,7 @@ func init() {
 			"chrome",
 			"chrome_internal",
 		},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary"},
+		Attr: []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
 		VarDeps: []string{
 			"ui.gaiaPoolDefault",
 			"ui.signinProfileTestExtensionManifestKey",

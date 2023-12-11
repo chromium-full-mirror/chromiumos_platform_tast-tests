@@ -37,7 +37,7 @@ func init() {
 		},
 		BugComponent: "b:1277523",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedInLockscreen,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.AllowScreenLock{}, pci.VerifiedFunctionalityUI),

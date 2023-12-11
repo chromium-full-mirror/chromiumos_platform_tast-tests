@@ -30,7 +30,7 @@ func init() {
 		},
 		BugComponent: "b:1277523",
 		SoftwareDeps: []string{"reboot", "chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SearchFlags: []*testing.StringPair{

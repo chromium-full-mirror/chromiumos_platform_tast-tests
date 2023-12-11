@@ -38,12 +38,7 @@ func init() {
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-			"group:cq-medium"},
+		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:cq-medium", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Val: testParameters{false, false},
 		}, {

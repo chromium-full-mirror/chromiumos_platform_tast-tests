@@ -41,11 +41,12 @@ func init() {
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome"},
+		Attr:         []string{"group:hw_agnostic"},
 		Params: []testing.Param{{
 			Val: chromeTestParams{
 				numTrial: 1,
 				bt:       browser.TypeAsh},
-			ExtraAttr: []string{"group:mainline", "group:hw_agnostic"},
+			ExtraAttr: []string{"group:mainline"},
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name:              "lacros",
@@ -53,14 +54,14 @@ func init() {
 			Val: chromeTestParams{
 				numTrial: 1,
 				bt:       browser.TypeLacros},
-			ExtraAttr: []string{"group:mainline", "group:hw_agnostic"},
+			ExtraAttr: []string{"group:mainline"},
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
 			Name: "enrolled",
 			Val: chromeTestParams{
 				numTrial: 1,
 				bt:       browser.TypeAsh},
-			ExtraAttr: []string{"group:mainline", "informational", "group:hw_agnostic"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 			Fixture:   fixture.FakeDMSEnrolled,
 			Timeout:   chrome.LoginTimeout + 45*time.Second,
 		}, {
