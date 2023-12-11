@@ -45,8 +45,6 @@ func init() {
 			Name:    "cpu_cache_v2",
 			Val:     croshealthd.RoutineParamsV2{Routine: croshealthd.RoutineCPUCacheV2},
 			Fixture: "crosHealthdRunningAndRebootDUT",
-			// TODO(b/281766836): Promote tast to critical
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: dennyh@google.com
 			Name:              "ufs_lifetime",
