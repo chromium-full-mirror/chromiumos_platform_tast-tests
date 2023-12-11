@@ -29,7 +29,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
+		Attr:         []string{"group:mainline", "informational", "group:intel-nda", "group:hw_agnostic"},
 		Fixture:      "chromeLoggedIn",
 		Timeout:      5 * time.Minute,
 	})
