@@ -36,7 +36,7 @@ func init() {
 		},
 		// ChromeOS > Software > Performance > TPS
 		BugComponent: "b:1045832",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{{
