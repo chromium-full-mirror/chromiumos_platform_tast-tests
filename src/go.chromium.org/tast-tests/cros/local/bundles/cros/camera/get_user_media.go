@@ -63,7 +63,7 @@ func init() {
 				Name:    "lacros_fake_vcd",
 				Fixture: "chromeVideoLacrosWithFakeWebcam",
 				// TODO(b/283215565): Promote to critical.
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Timeout:           7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 				Val:               browser.TypeLacros,
