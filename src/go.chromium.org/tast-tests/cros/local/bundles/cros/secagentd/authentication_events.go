@@ -91,6 +91,13 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
+	// Create expected login.
+	expLogin := xdr.AuthenticateEvent{
+		Authentication: &xdr.Authentication{
+			AuthFactor: []xdr.Authentication_AuthenticationType{xdr.Authentication_AUTH_NEW_USER},
+		},
+	}
+
 	// Create expected unlock.
 	expUnlock := xdr.AuthenticateEvent{
 		Authentication: &xdr.Authentication{
@@ -159,9 +166,8 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 				// The auth factor will sometimes report password and sometimes nothing.
 				// Just check that it is filled because the most important part is verifying that the login event was sent.
 				if len(event.GetLogon().Authentication.AuthFactor) == 0 ||
-					(event.GetLogon().Authentication.AuthFactor[0] != xdr.Authentication_AUTH_PASSWORD &&
-						event.GetLogon().Authentication.AuthFactor[0] != xdr.Authentication_AUTH_TYPE_UNKNOWN) {
-					s.Errorf("Logon event auth factor not PASSWORD or UNKNOWN, Actual: %s", event.String())
+					(event.GetLogon().Authentication.AuthFactor[0] != xdr.Authentication_AUTH_NEW_USER) {
+					s.Errorf("Logon event failed to match. Expected: %s, Actual: %s", expLogin.String(), event.String())
 				}
 			} else if event.GetLock() != nil {
 				lock = true
