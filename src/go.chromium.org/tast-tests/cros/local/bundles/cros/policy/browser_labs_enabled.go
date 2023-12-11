@@ -37,7 +37,7 @@ func init() {
 		},
 		BugComponent: "crbug:UI>Browser",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
 			Fixture: fixture.ChromePolicyLoggedInFeatureChromeLabs,
 			Val:     browser.TypeAsh,
