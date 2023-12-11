@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Change device language and validate new langauge after restart",
 		Contacts:     []string{"cros-borders-eng@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1282854",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Timeout:      5 * time.Minute,
