@@ -217,6 +217,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 				crosboltNameTable: mbwCrosboltNameTable,
 				metricType:        memoryMetric,
 			},
+			cachebenchTitle: {
+				crosboltNameTable: cachebenchCrosboltNameTable,
+				metricType:        cpuMetric,
+			},
 		},
 	}
 }
