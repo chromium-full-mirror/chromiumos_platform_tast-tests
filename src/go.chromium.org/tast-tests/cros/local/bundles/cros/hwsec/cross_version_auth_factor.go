@@ -71,6 +71,11 @@ func init() {
 			}, {
 				Name:              "ti50_r118",
 				Fixture:           "crossVersionTi50R118",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
+			}, {
+				Name:              "ti50_r119",
+				Fixture:           "crossVersionTi50R119",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
 			}, {
@@ -221,6 +226,11 @@ func init() {
 			}, {
 				Name:              "tpm2_r118",
 				Fixture:           "crossVersionTpm2R118",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm2_r119",
+				Fixture:           "crossVersionTpm2R119",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			}, {
@@ -336,6 +346,11 @@ func init() {
 			}, {
 				Name:              "tpm_dynamic_r118",
 				Fixture:           "crossVersionTpmDynamicR118",
+				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
+			}, {
+				Name:              "tpm_dynamic_r119",
+				Fixture:           "crossVersionTpmDynamicR119",
 				ExtraAttr:         []string{"group:mainline"},
 				ExtraSoftwareDeps: []string{"tpm_dynamic", "no_gsc"},
 			},

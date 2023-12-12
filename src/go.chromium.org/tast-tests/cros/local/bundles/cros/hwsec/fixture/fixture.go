@@ -207,6 +207,26 @@ func init() {
 			"cross_version_login/R118-15604.60.0_betty_20231123_data.tar.gz",
 		},
 	})
+  testing.AddFixture(&testing.Fixture{
+    Name: "crossVersionTi50R119",
+    Desc: "Loads the data of milestone R119 from the Ti50 simulator device",
+    Contacts: []string{
+      "cros-hwsec@google.com",
+      "chingkang@google.com",
+    },
+    SetUpTimeout:    crossVersionSetUpTimeout,
+    ResetTimeout:    crossVersionResetTimeout,
+    TearDownTimeout: crossVersionTearDownTimeout,
+    Parent:          "crossVersionBackup",
+    Impl: &crossVersionFixtImpl{
+      dataPrefix: "R119-15633.69.0_betty_20231212",
+      useCurrent: false,
+    },
+    Data: []string{
+      "cross_version_login/R119-15633.69.0_betty_20231212_config.json",
+      "cross_version_login/R119-15633.69.0_betty_20231212_data.tar.gz",
+    },
+  })
 
 	// Fixtures of cross version with TPM2.0
 	testing.AddFixture(&testing.Fixture{
@@ -809,6 +829,26 @@ func init() {
 			"cross_version_login/R118-15604.33.0_novato_20231123_data.tar.gz",
 		},
 	})
+  testing.AddFixture(&testing.Fixture{
+    Name: "crossVersionTpm2R119",
+    Desc: "Loads the data of milestone R119 from the tpm2 device",
+    Contacts: []string{
+      "cros-hwsec@google.com",
+      "chingkang@google.com",
+    },
+    SetUpTimeout:    crossVersionSetUpTimeout,
+    ResetTimeout:    crossVersionResetTimeout,
+    TearDownTimeout: crossVersionTearDownTimeout,
+    Parent:          "crossVersionBackup",
+    Impl: &crossVersionFixtImpl{
+      dataPrefix: "R119-15633.69.0_amd64-generic_20231212",
+      useCurrent: false,
+    },
+    Data: []string{
+      "cross_version_login/R119-15633.69.0_amd64-generic_20231212_config.json",
+      "cross_version_login/R119-15633.69.0_amd64-generic_20231212_data.tar.gz",
+    },
+  })
 
 	// Fixtures of cross version with TPM dynamic
 	testing.AddFixture(&testing.Fixture{
@@ -1271,6 +1311,26 @@ func init() {
 			"cross_version_login/R118-15604.60.0_reven-vmtest_20231123_data.tar.gz",
 		},
 	})
+  testing.AddFixture(&testing.Fixture{
+    Name: "crossVersionTpmDynamicR119",
+    Desc: "Loads the data of milestone R119 from the tpm dynamic device",
+    Contacts: []string{
+      "cros-hwsec@google.com",
+      "chingkang@google.com",
+    },
+    SetUpTimeout:    crossVersionSetUpTimeout,
+    ResetTimeout:    crossVersionResetTimeout,
+    TearDownTimeout: crossVersionTearDownTimeout,
+    Parent:          "crossVersionBackup",
+    Impl: &crossVersionFixtImpl{
+      dataPrefix: "R119-15633.69.0_reven-vmtest_20231212",
+      useCurrent: false,
+    },
+    Data: []string{
+      "cross_version_login/R119-15633.69.0_reven-vmtest_20231212_config.json",
+      "cross_version_login/R119-15633.69.0_reven-vmtest_20231212_data.tar.gz",
+    },
+  })
 }
 
 type cleanupFunc func(context.Context) error
