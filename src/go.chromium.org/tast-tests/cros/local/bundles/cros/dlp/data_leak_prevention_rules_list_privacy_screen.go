@@ -49,8 +49,13 @@ func init() {
 			Fixture:   fixture.ChromePolicyLoggedIn,
 			Val:       browser.TypeAsh,
 		}, {
-			Name:              "lacros_blocked",
-			ExtraAttr:         []string{"group:golden_tier"},
+			Name: "lacros_blocked",
+			ExtraAttr: []string{
+				"group:golden_tier",
+				"group:medium_low_tier",
+				"group:hardware",
+				"group:complementary",
+			},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Fixture:           fixture.LacrosPolicyLoggedIn,
 			Val:               browser.TypeLacros,
