@@ -130,11 +130,11 @@ func (r *Recorder) Stop(ctx context.Context) (*perf.Values, error) {
 	if !r.isRecording {
 		return nil, errors.New("recorder is not recording")
 	}
+	r.isRecording = false
 	p, err := r.metrics.StopRecording(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed while recording metrics or stopping recorder")
 	}
-	r.isRecording = false
 	r.perfValues = p
 	return p, nil
 }
