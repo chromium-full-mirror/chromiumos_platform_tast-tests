@@ -36,11 +36,6 @@ const (
 
 	// minDurationSeconds is the minimum running duration.
 	minDurationSeconds = 60
-	// runFrequency is the number of times per second that inferences
-	// should be performed. The purpose here is to throttle models that
-	// are small so that improved performance doesn't result in higher
-	// power draw.
-	runFrequency = 30
 )
 
 // TFLiteBenchmarkParams is used to define a specific TFLite benchmark test.
@@ -189,7 +184,6 @@ func buildBenchmarkArgs(graphFileName string, backend TFLiteBackendType) map[str
 
 	m["--graph"] = DataPath(graphFileName)
 	m["--min_secs"] = strconv.FormatInt(minDurationSeconds, 10)
-	m["--run_frequency"] = strconv.FormatInt(runFrequency, 10)
 	m["--report_peak_memory_footprint"] = "true"
 
 	if backend == KGpuOpenGl {
