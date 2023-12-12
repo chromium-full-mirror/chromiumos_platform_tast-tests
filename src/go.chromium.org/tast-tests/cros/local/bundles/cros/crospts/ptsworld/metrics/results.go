@@ -251,6 +251,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 				crosboltNameTable: tjbenchCrosboltNameTable,
 				metricType:        systemMetric,
 			},
+			compresslz4Title: {
+				crosboltNameTable: compresslz4CrosboltNameTable,
+				metricType:        cpuMetric,
+			},
 		},
 	}
 }

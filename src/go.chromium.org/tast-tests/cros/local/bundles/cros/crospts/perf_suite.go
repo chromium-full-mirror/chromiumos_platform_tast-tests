@@ -167,6 +167,25 @@ func init() {
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
 			Timeout: 10 * time.Minute,
+		}, {
+			// TODO(b/316035777): The compress lz4 benchmark cannot finish test in 1 hour on octopus
+			Name:    "compresslz4_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "compress-lz4-1.0.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 30 * time.Minute,
+		}, {
+			Name:    "compresslz4_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "compress-lz4-1.0.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 30 * time.Minute,
 		},
 		},
 	})
