@@ -66,6 +66,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "Mil_Inst_Per_Sec",
 		},
 	},
+	{
+		"byte/s": {
+			unit:       "Byte",
+			nameSuffix: "Byte_Per_Sec",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -229,6 +235,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			},
 			compress7zipTitle: {
 				crosboltNameTable: compress7zipCrosboltNameTable,
+				metricType:        cpuMetric,
+			},
+			opensslTitle: {
+				crosboltNameTable: opensslCrosboltNameTable,
 				metricType:        cpuMetric,
 			},
 		},
