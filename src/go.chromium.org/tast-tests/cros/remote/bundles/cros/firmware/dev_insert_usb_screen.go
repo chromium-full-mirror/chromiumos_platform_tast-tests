@@ -132,8 +132,8 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Rebooting DUT to developer screen")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to warm reset dut: ", err)
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		s.Fatal("Failed to cold reset dut: ", err)
 	}
 	s.Logf("Sleeping for %s (FirmwareScreen)", h.Config.FirmwareScreen)
 	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
