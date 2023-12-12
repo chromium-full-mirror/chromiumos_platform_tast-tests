@@ -403,9 +403,9 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 
 	switch config.Type {
 	case TypeIKEv2:
-		return startIKEv2Server(ctx, env, config.IPsecAuthType, config.IPType)
+		return startIKEv2Server(ctx, env, config)
 	case TypeL2TPIPsec:
-		return startL2TPIPsecServer(ctx, env, config.IPsecAuthType, config.IPsecUseXauth, config.UnderlayIPIsOverlayIP)
+		return startL2TPIPsecServer(ctx, env, config)
 	case TypeOpenVPN:
 		return startOpenVPNServer(ctx, env, config)
 	case TypeWireGuard:
@@ -416,7 +416,7 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 }
 
 // startL2TPIPsecServer starts a L2TP/IPsec server.
-func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthType, ipsecUseXauth, underlayIPIsOverlayIP bool) (*Server, error) {
+func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		OverlayIfname: "ppp0",
@@ -442,21 +442,21 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthT
 		"chap_secret":              chapSecret,
 		"charon_logfile":           charonLogFile,
 		"xl2tpd_server_ip_address": xl2tpdServerIPAddress,
-		"use_underlay_ip":          underlayIPIsOverlayIP,
+		"use_underlay_ip":          config.UnderlayIPIsOverlayIP,
 		"dns_server":               envAddrs.IPv4Addr,
 	}
 
-	switch authType {
+	switch config.IPsecAuthType {
 	case AuthTypePSK:
 		configValues["preshared_key"] = ipsecPresharedKey
 	case AuthTypeCert:
 		configValues["server_cert_id"] = ikeServerIdentity
 		configValues["ca_cert_file"] = caCertFile
 	default:
-		return nil, errors.Errorf("L2TP/IPsec type %s is not defined", authType)
+		return nil, errors.Errorf("L2TP/IPsec type %s is not defined", config.IPsecAuthType)
 	}
 
-	if ipsecUseXauth {
+	if config.IPsecUseXauth {
 		configValues["xauth_user"] = xauthUser
 		configValues["xauth_password"] = xauthPassword
 	}
@@ -490,7 +490,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthT
 	}
 
 	server.UnderlayIP = underlayIP
-	if underlayIPIsOverlayIP {
+	if config.UnderlayIPIsOverlayIP {
 		server.OverlayIPv4 = underlayIP
 	} else {
 		server.OverlayIPv4 = xl2tpdServerIPAddress
@@ -499,7 +499,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, authType IPsecAuthT
 }
 
 // startIKEv2Server starts an IKEv2 server.
-func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType, ipType IPType) (*Server, error) {
+func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
 	runner := newServerRunner(env)
 	server := &Server{
 		OverlayIfname: "xfrm1",
@@ -520,7 +520,7 @@ func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType,
 		"push_dns":       true,
 	}
 
-	switch authType {
+	switch config.IPsecAuthType {
 	case AuthTypePSK:
 		configValues["client_id"] = ikeClientIdentity
 		configValues["preshared_key"] = ipsecPresharedKey
@@ -533,17 +533,17 @@ func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType,
 		configValues["eap_password"] = xauthPassword
 		configValues["server_cert_id"] = ikeServerIdentity
 	default:
-		return nil, errors.Errorf("IKEv2 type %s is not defined", authType)
+		return nil, errors.Errorf("IKEv2 type %s is not defined", config.IPsecAuthType)
 	}
 
 	var poolsArray []string
 	var remoteTsArray []string
-	if ipType == IPTypeIPv4 || ipType == IPTypeIPv4AndIPv6 {
+	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
 		configValues["client_vip_ipv4"] = ikev2ClientIPv4
 		poolsArray = append(poolsArray, poolIPv4)
 		remoteTsArray = append(remoteTsArray, ikev2ClientIPv4+"/32")
 	}
-	if ipType == IPTypeIPv6 || ipType == IPTypeIPv4AndIPv6 {
+	if config.IPType == IPTypeIPv6 || config.IPType == IPTypeIPv4AndIPv6 {
 		configValues["client_vip_ipv6"] = ikev2ClientIPv6
 		poolsArray = append(poolsArray, poolIPv6)
 		remoteTsArray = append(remoteTsArray, ikev2ClientIPv6+"/128")
@@ -578,10 +578,10 @@ func startIKEv2Server(ctx context.Context, env *env.Env, authType IPsecAuthType,
 	}
 
 	server.UnderlayIP = underlayIP
-	if ipType == IPTypeIPv4 || ipType == IPTypeIPv4AndIPv6 {
+	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
 		server.OverlayIPv4 = ikev2ServerIPv4
 	}
-	if ipType == IPTypeIPv6 || ipType == IPTypeIPv4AndIPv6 {
+	if config.IPType == IPTypeIPv6 || config.IPType == IPTypeIPv4AndIPv6 {
 		server.OverlayIPv6 = ikev2ServerIPv6
 	}
 
