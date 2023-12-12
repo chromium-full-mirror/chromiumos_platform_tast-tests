@@ -114,3 +114,16 @@ const (
 	// PersistentProjectorChild is a fixture name.
 	PersistentProjectorChild = "persistentProjectorChild"
 )
+
+// Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/tape_enrolled.go.
+const (
+	// TAPEEnrolled is a fixture name.
+	TAPEEnrolled = "tapeEnrolled"
+)
+
+// TAPEEnrolledFixtData is used by the TAPEEnrolled to pass data to tests.
+type TAPEEnrolledFixtData struct {
+	Username  string
+	Password  string
+	RequestID string
+}
