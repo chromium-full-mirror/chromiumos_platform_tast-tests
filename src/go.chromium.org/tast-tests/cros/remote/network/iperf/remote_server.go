@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/network/cmd"
@@ -92,6 +93,21 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 	cmd.Stderr = stderr
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to start Iperf server")
+	}
+
+	// Try to verify that server has been started and that port is in use (b/313675621).
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		cmd := fmt.Sprintf("netstat -l | grep :%d", config.Port)
+		if out, err := c.conn.CommandContext(ctx, "sh", "-c", cmd).Output(); err != nil {
+			return errors.Wrap(err, "failed to find port")
+		} else if string(out) == "" {
+			return errors.Errorf("port %d is not in use", config.Port)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout: 3 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed to verify that iperf server is started")
 	}
 
 	go func() {
