@@ -124,7 +124,7 @@ func init() {
 		}, {
 			Name: "invalidredirect",
 			Val: &params{
-				serviceState:         shillconst.ServiceStateNoConnectivity,
+				serviceState:         shillconst.ServiceStatePortalSuspected,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(""),
 				httpsResponseHandler: nil,
 				oncSource:            "",
