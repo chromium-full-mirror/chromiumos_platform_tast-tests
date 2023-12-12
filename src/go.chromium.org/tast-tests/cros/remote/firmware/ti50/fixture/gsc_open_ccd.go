@@ -26,8 +26,6 @@ const (
 )
 
 var (
-	pushButton     = regexp.MustCompile("Press the physical button now")
-	testLabEnabled = regexp.MustCompile("Updating testlab to true|CCD test lab mode enabled")
 	ccdOpened      = regexp.MustCompile("CCD [Oo]pened")
 )
 
@@ -96,15 +94,14 @@ func (c *ccdOpenImpl) ensureTestLabOpen(ctx context.Context, i *ti50.CrOSImage, 
 
 	for powerPush := 1; powerPush <= 5; powerPush++ {
 		// Wait for prompt before pushing
-		_, err := i.WaitUntilMatch(ctx, pushButton, time.Second*2)
+		_, err := i.WaitForPowerButtonPrompt(ctx, time.Second*2)
 		mustSucceed(s, err, "Power button prompt %d did not happen", powerPush)
 		// Ti50 requires 100ms delay between short presses.
 		testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating button press
 		gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, false)
 		gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, true)
 	}
-	_, err := i.WaitUntilMatch(ctx, testLabEnabled, time.Second*2)
-	mustSucceed(s, err, "Testlab was not enabled")
+	mustSucceed(s, i.WaitForTestlabEnable(ctx, time.Second*2), "Testlab was not enabled")
 
 	s.Log("Testlab mode is now enabled")
 }

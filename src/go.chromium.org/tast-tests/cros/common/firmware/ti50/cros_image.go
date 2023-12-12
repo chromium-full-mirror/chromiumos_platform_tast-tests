@@ -25,6 +25,13 @@ const (
 	Unlock CCDLevel = "unlock"
 )
 
+// Console Regular expressions.
+var (
+	pwrbPromptRE = regexp.MustCompile("Press the physical button now")
+	testlabDisabledRE = regexp.MustCompile("Updating testlab to false|CCD test lab mode disabled")
+	testlabEnabledRE = regexp.MustCompile("Updating testlab to true|CCD test lab mode enabled")
+)
+
 // TestlabState contains possible CCD testlab states.
 type TestlabState string
 
@@ -648,4 +655,21 @@ func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, timeout time.Duration) 
 		_, err := i.ReadSerialSubmatch(ctx, roBoot)
 		return err
 	}, &pOpts)
+}
+
+// WaitForPowerButtonPrompt waits for a power button prompt
+func (i *CrOSImage) WaitForPowerButtonPrompt(ctx context.Context, timeout time.Duration) (output [][]byte, err error) {
+	return i.WaitUntilMatch(ctx, pwrbPromptRE, timeout)
+}
+
+// WaitForTestlabEnable waits until a testlab enable message is printed
+func (i *CrOSImage) WaitForTestlabEnable(ctx context.Context, timeout time.Duration) error {
+	_, err := i.WaitUntilMatch(ctx, testlabEnabledRE, timeout)
+	return err
+}
+
+// WaitForTestlabDisable waits until a testlab disable message is printed
+func (i *CrOSImage) WaitForTestlabDisable(ctx context.Context, timeout time.Duration) error {
+	_, err := i.WaitUntilMatch(ctx, testlabDisabledRE, timeout)
+	return err
 }
