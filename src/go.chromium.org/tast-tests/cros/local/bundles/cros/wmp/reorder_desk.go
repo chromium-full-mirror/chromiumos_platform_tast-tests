@@ -125,7 +125,7 @@ func ReorderDesk(ctx context.Context, s *testing.State) {
 
 	if len(deskMiniViewsInfo) == 0 {
 		// Change the first desk'name.
-		zeroStateDefaultDeskButton := nodewith.ClassName("CrOSNextDefaultDeskButton")
+		zeroStateDefaultDeskButton := nodewith.ClassName("DefaultDeskButton")
 		firstDeskNameView := nodewith.ClassName("DeskNameView")
 		if err := uiauto.Combine(
 			"change the first desk's name",
@@ -139,7 +139,7 @@ func ReorderDesk(ctx context.Context, s *testing.State) {
 		}
 
 		// Creates a new desks with user defined name.
-		addDeskButton := nodewith.ClassName("CrOSNextDeskIconButton")
+		addDeskButton := nodewith.ClassName("DeskIconButton")
 		newDeskNameView := nodewith.ClassName("DeskNameView").Name("Desk 2")
 		if err := uiauto.Combine(
 			"create a new desk",

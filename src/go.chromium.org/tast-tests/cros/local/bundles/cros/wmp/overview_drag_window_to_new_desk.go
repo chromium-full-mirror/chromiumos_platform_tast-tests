@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	deskIconButton                   = "CrOSNextDeskIconButton"
+	deskIconButton                   = "DeskIconButton"
 	deskIconButtonExpandedStateWidth = 36
 	deskBarZeroHeight                = 40
 	deskBarName                      = "LegacyDeskBarView"

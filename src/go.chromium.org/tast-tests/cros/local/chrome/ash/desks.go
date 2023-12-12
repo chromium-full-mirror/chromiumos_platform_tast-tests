@@ -50,7 +50,7 @@ type DesksInfo struct {
 }
 
 func deskButton(ctx context.Context, ac *uiauto.Context) *nodewith.Finder {
-	return nodewith.HasClass("CrOSNextDeskIconButton")
+	return nodewith.HasClass("DeskIconButton")
 }
 
 // NewDeskButton returns a `Finder` for the new desk button.
