@@ -25,11 +25,8 @@ const (
 	// Time reserved for cleanup.
 	cleanupTime = 10 * time.Second
 
-	// Duration to wait for CPU to stabalize.
+	// Duration to wait for CPU to be stabalized.
 	stabilizationDuration time.Duration = 5 * time.Second
-
-	// Duration of the interval during which CPU usage will be measured for streaming.
-	measureDuration = 20 * time.Second
 )
 
 type metricValuePair struct {
@@ -92,19 +89,19 @@ func (p *PerfData) Save(outDir string) error {
 }
 
 // measureStabilizedUsage measures the CPU and power usage after it's cooled down for stabilizationDuration.
-func measureStabilizedUsage(ctx context.Context) (map[string]float64, error) {
+func measureStabilizedUsage(ctx context.Context, measureDuration time.Duration) (map[string]float64, error) {
 	testing.ContextLog(ctx, "Sleeping to wait for CPU usage to stabilize for ", stabilizationDuration)
 	// GoBigSleepLint: Sleep to stabilize CPU before measuring the CPU usage.
 	if err := testing.Sleep(ctx, stabilizationDuration); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for CPU usage to stabilize")
 	}
 
-	testing.ContextLog(ctx, "Measuring CPU usage for ", measureDuration)
+	testing.ContextLog(ctx, "Measuring CPU and Power usage for each for ", measureDuration)
 	return mediacpu.MeasureUsage(ctx, measureDuration)
 }
 
 // MeasurePreviewPerformance measures the performance of preview with QR code detection on and off.
-func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing) error {
+func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, measureDuration time.Duration) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -128,7 +125,7 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	}
 	defer fpsObserver.Stop(cleanupCtx)
 
-	usage, err := measureStabilizedUsage(ctx)
+	usage, err := measureStabilizedUsage(ctx, measureDuration)
 	if err != nil {
 		return errors.Wrap(err, "failed to measure CPU and power usage")
 	}
@@ -181,7 +178,7 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 	}
 	defer fpsObserverQR.Stop(cleanupCtx)
 
-	usageQR, err := measureStabilizedUsage(ctx)
+	usageQR, err := measureStabilizedUsage(ctx, measureDuration)
 	if err != nil {
 		return errors.Wrap(err, "failed to measure CPU and power usage with QR code detection")
 	}
@@ -242,25 +239,25 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 }
 
 // MeasureRecordingPerformance measures the performance of normal video recording.
-func MeasureRecordingPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing) error {
+func MeasureRecordingPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, measureDuration time.Duration) error {
 	testing.ContextLog(ctx, "Switching to video mode")
 	if err := app.SwitchMode(ctx, Video); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
 	}
-	return MeasureVideoRecordingPerformance(ctx, app, perfData, facing, "recording")
+	return MeasureVideoRecordingPerformance(ctx, app, perfData, facing, "recording", measureDuration)
 }
 
 // MeasureTimeLapsePerformance measures the performance of time-lapse video recording.
-func MeasureTimeLapsePerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing) error {
+func MeasureTimeLapsePerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, measureDuration time.Duration) error {
 	testing.ContextLog(ctx, "Switch to time-lapse mode")
 	if err := app.SwitchToTimeLapseMode(ctx); err != nil {
 		return errors.Wrap(err, "failed to switch to time-lapse mode")
 	}
-	return MeasureVideoRecordingPerformance(ctx, app, perfData, facing, "time-lapse")
+	return MeasureVideoRecordingPerformance(ctx, app, perfData, facing, "time-lapse", measureDuration)
 }
 
 // MeasureVideoRecordingPerformance measures the performance of video recording.
-func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, mode string) error {
+func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, mode string, measureDuration time.Duration) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -276,7 +273,7 @@ func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *P
 	}
 	defer fpsObserver.Stop(cleanupCtx)
 
-	usage, err := measureStabilizedUsage(ctx)
+	usage, err := measureStabilizedUsage(ctx, measureDuration)
 	if err != nil {
 		return errors.Wrap(err, "failed to measure CPU and power usage")
 	}
@@ -323,7 +320,7 @@ func MeasureVideoRecordingPerformance(ctx context.Context, app *App, perfData *P
 }
 
 // MeasureTakingPicturePerformance takes a picture and measure the performance of UI operations.
-func MeasureTakingPicturePerformance(ctx context.Context, app *App) error {
+func MeasureTakingPicturePerformance(ctx context.Context, app *App, measureDuration time.Duration) error {
 	if err := app.WaitForVideoActive(ctx); err != nil {
 		return err
 	}
@@ -341,7 +338,7 @@ func MeasureTakingPicturePerformance(ctx context.Context, app *App) error {
 }
 
 // MeasureGifRecordingPerformance records a gif and measure the performance of UI operations.
-func MeasureGifRecordingPerformance(ctx context.Context, app *App) error {
+func MeasureGifRecordingPerformance(ctx context.Context, app *App, measureDuration time.Duration) error {
 	if err := app.WaitForVideoActive(ctx); err != nil {
 		return err
 	}

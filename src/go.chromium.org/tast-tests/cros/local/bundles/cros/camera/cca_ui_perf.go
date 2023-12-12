@@ -18,6 +18,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type param struct {
+	subtestTimeout  time.Duration
+	measureDuration time.Duration
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CCAUIPerf,
@@ -25,26 +30,41 @@ func init() {
 		Desc:         "Opens CCA and measures the UI performance including CPU and power usage",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "wtlee@chromium.org"},
 		BugComponent: "b:978428", // ChromeOS > Platform > Technologies > Camera > App & Framework
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Attr:         []string{"group:crosbolt"},
 		SoftwareDeps: []string{"camera_app", "chrome", caps.BuiltinOrVividCamera},
-		// Three subtests each have 200s timeout and one subtest have 300s timeout.
-		// 200s * 4 + 300s = 19 minutes (rounded up)
-		Timeout: 19 * time.Minute,
-		Fixture: "ccaTestBridgeReady",
+		Fixture:      "ccaTestBridgeReady",
+		Params: []testing.Param{{
+			ExtraAttr: []string{"crosbolt_perbuild"},
+			// Five subtests each have 5 mins timeout. 5mins * 5 = 25 minutes.
+			Timeout: 25 * time.Minute,
+			Val: param{
+				subtestTimeout:  5 * time.Minute,
+				measureDuration: 20 * time.Second,
+			},
+		}, {
+			Name:      "long",
+			ExtraAttr: []string{"crosbolt_nightly"},
+			// Five subtests each have 20 mins timeout. 20mins * 5 = 100 minutes.
+			Timeout: 100 * time.Minute,
+			Val: param{
+				subtestTimeout:  20 * time.Minute,
+				measureDuration: 5 * time.Minute,
+			},
+		}},
 	})
 }
 
 // CCAUIPerf measure cold/warm start time of CCA and also measure its
 // performance through some UI operations.
 func CCAUIPerf(ctx context.Context, s *testing.State) {
-	const defaultTimeout = 200 * time.Second
+	p := s.Param().(param)
 	perfData := cca.NewPerfData()
 	resetChrome := s.FixtValue().(cca.FixtureData).ResetChrome
 
 	// App launch tests.
 	startApp := s.FixtValue().(cca.FixtureData).StartApp
 	stopApp := s.FixtValue().(cca.FixtureData).StopApp
-	appLaunchTestCtx, cancel := context.WithTimeout(ctx, defaultTimeout)
+	appLaunchTestCtx, cancel := context.WithTimeout(ctx, p.subtestTimeout)
 	s.Run(appLaunchTestCtx, "testAppLaunch", func(ctx context.Context, s *testing.State) {
 		if err := testAppLaunch(ctx, resetChrome, startApp, stopApp, perfData); err != nil {
 			s.Error("Failed to pass testAppLaunch subtest: ", err)
@@ -52,36 +72,28 @@ func CCAUIPerf(ctx context.Context, s *testing.State) {
 	})
 	cancel()
 
-	// UI tests.
-	const previewTestTimeout = 5 * time.Minute
 	runTestWithApp := s.FixtValue().(cca.FixtureData).RunTestWithApp
 
 	for _, tst := range []struct {
 		name     string
-		testFunc func(context.Context, *cca.App, *cca.PerfData) error
-		timeout  time.Duration
+		testFunc func(context.Context, *cca.App, *cca.PerfData, time.Duration) error
 	}{{
 		"testPreviewPerformance",
 		testPreviewPerformance,
-		previewTestTimeout,
 	}, {
 		"testRecordingPerformance",
 		testRecordingPerformance,
-		defaultTimeout,
 	}, {
 		"testTakingPicturePerformance",
 		testTakingPicturePerformance,
-		defaultTimeout,
 	}, {
 		"testGifRecordingPerformance",
 		testGifRecordingPerformance,
-		defaultTimeout,
 	}, {
 		"testTimeLapseRecordingPerformance",
 		testTimeLapseRecordingPerformance,
-		defaultTimeout,
 	}} {
-		subTestCtx, cancel := context.WithTimeout(ctx, tst.timeout)
+		subTestCtx, cancel := context.WithTimeout(ctx, p.subtestTimeout)
 		s.Run(subTestCtx, tst.name, func(ctx context.Context, s *testing.State) {
 			if err := preparePerfTest(ctx, resetChrome, func(ctx context.Context) error {
 				return runTestWithApp(ctx, func(ctx context.Context, app *cca.App) error {
@@ -92,8 +104,7 @@ func CCAUIPerf(ctx context.Context, s *testing.State) {
 					if err := app.WaitForVideoActive(ctx); err != nil {
 						return errors.Wrap(err, "preview is inactive after fullscreening window")
 					}
-
-					if err := tst.testFunc(ctx, app, perfData); err != nil {
+					if err := tst.testFunc(ctx, app, perfData, p.measureDuration); err != nil {
 						return err
 					}
 					if err := app.CollectPerfEvents(ctx, perfData); err != nil {
@@ -156,32 +167,32 @@ func preparePerfTest(ctx context.Context, resetChrome cca.ResetChromeFunc, testB
 	return testBody(ctx)
 }
 
-func testPreviewPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData) error {
+func testPreviewPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData, measureDuration time.Duration) error {
 	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
-		return cca.MeasurePreviewPerformance(ctx, app, perfData, facing)
+		return cca.MeasurePreviewPerformance(ctx, app, perfData, facing, measureDuration)
 	})
 }
 
-func testRecordingPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData) error {
+func testRecordingPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData, measureDuration time.Duration) error {
 	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
-		return cca.MeasureRecordingPerformance(ctx, app, perfData, facing)
+		return cca.MeasureRecordingPerformance(ctx, app, perfData, facing, measureDuration)
 	})
 }
 
-func testTakingPicturePerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData) error {
+func testTakingPicturePerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData, measureDuration time.Duration) error {
 	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
-		return cca.MeasureTakingPicturePerformance(ctx, app)
+		return cca.MeasureTakingPicturePerformance(ctx, app, measureDuration)
 	})
 }
 
-func testGifRecordingPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData) error {
+func testGifRecordingPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData, measureDuration time.Duration) error {
 	// TODO(b/201335131): Measure performance of per camera facing test
 	// without cached web assembly result.
-	return cca.MeasureGifRecordingPerformance(ctx, app)
+	return cca.MeasureGifRecordingPerformance(ctx, app, measureDuration)
 }
 
-func testTimeLapseRecordingPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData) error {
+func testTimeLapseRecordingPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData, measureDuration time.Duration) error {
 	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
-		return cca.MeasureTimeLapsePerformance(ctx, app, perfData, facing)
+		return cca.MeasureTimeLapsePerformance(ctx, app, perfData, facing, measureDuration)
 	})
 }
