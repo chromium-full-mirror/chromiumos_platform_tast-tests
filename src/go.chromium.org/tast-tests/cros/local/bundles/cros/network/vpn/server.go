@@ -26,31 +26,26 @@ const (
 	caCertFile = "etc/swanctl/x509ca/ca.cert"
 	// OPENSSL_CONF=/etc/ssl/openssl.cnf.compat is set so charon can use MD4 for
 	// MSCHAPV2.
-	charonCommand         = "sh -c 'OPENSSL_CONF=/etc/ssl/openssl.cnf.compat exec /usr/libexec/ipsec/charon'"
-	charonLogFile         = "var/log/charon.log"
-	charonPidFile         = "run/ipsec/charon.pid"
-	chapUser              = "chapuser"
-	chapSecret            = "chapsecret"
-	ikeClientIdentity     = "client-id"
-	ikeServerIdentity     = "C=US, ST=California, L=Mountain View, CN=chromelab-wifi-testbed-server.mtv.google.com"
-	ikev2ClientIPv4       = "192.168.1.128"
-	ikev2ClientIPv6       = "fd00::1"
-	ikev2ServerIPv4       = "192.168.1.99"
-	ikev2ServerIPv6       = "fd00::2"
-	ikev2InterfaceID      = "2"
-	ipsecPresharedKey     = "preshared-key"
-	makeIPsecDir          = "mkdir -p /run/ipsec"
-	poolIPv4              = "ikev2-vip-ipv4-pools"
-	poolIPv6              = "ikev2-vip-ipv6-pools"
-	pppdPidFile           = "run/ppp0.pid"
-	swanctlCommand        = "/usr/sbin/swanctl"
-	viciSocketFile        = "run/ipsec/charon.vici"
-	xauthUser             = "xauth_user"
-	xauthPassword         = "xauth_password"
-	xl2tpdCommand         = "/usr/sbin/xl2tpd"
-	xl2tpdConfigFile      = "etc/xl2tpd/xl2tpd.conf"
-	xl2tpdPidFile         = "run/xl2tpd.pid"
-	xl2tpdServerIPAddress = "192.168.1.99"
+	charonCommand     = "sh -c 'OPENSSL_CONF=/etc/ssl/openssl.cnf.compat exec /usr/libexec/ipsec/charon'"
+	charonLogFile     = "var/log/charon.log"
+	charonPidFile     = "run/ipsec/charon.pid"
+	chapUser          = "chapuser"
+	chapSecret        = "chapsecret"
+	ikeClientIdentity = "client-id"
+	ikeServerIdentity = "C=US, ST=California, L=Mountain View, CN=chromelab-wifi-testbed-server.mtv.google.com"
+	ikev2InterfaceID  = "2"
+	ipsecPresharedKey = "preshared-key"
+	makeIPsecDir      = "mkdir -p /run/ipsec"
+	poolIPv4          = "ikev2-vip-ipv4-pools"
+	poolIPv6          = "ikev2-vip-ipv6-pools"
+	pppdPidFile       = "run/ppp0.pid"
+	swanctlCommand    = "/usr/sbin/swanctl"
+	viciSocketFile    = "run/ipsec/charon.vici"
+	xauthUser         = "xauth_user"
+	xauthPassword     = "xauth_password"
+	xl2tpdCommand     = "/usr/sbin/xl2tpd"
+	xl2tpdConfigFile  = "etc/xl2tpd/xl2tpd.conf"
+	xl2tpdPidFile     = "run/xl2tpd.pid"
 )
 
 var (
@@ -81,7 +76,7 @@ var (
 			"{{if .push_dns}}\n" +
 			"  plugins {\n" +
 			"    attr {\n" +
-			"      dns = 192.168.1.99\n" +
+			"      dns = {{.server_ipv4}}\n" +
 			"    }\n" +
 			"  }\n" +
 			"{{end}}\n" +
@@ -191,16 +186,12 @@ var (
 			"  {{end}}" +
 			"}\n" +
 			"pools {\n" +
-			"  {{if .client_vip_ipv4}}" +
 			"  ikev2-vip-ipv4-pools {\n" +
-			"    addrs = {{.client_vip_ipv4}}/32\n" +
+			"    addrs = {{.client_ipv4_pool_start}}-{{.client_ipv4_pool_end}}\n" +
 			"  }\n" +
-			"  {{end}}" +
-			"  {{if .client_vip_ipv6}}" +
 			"  ikev2-vip-ipv6-pools {\n" +
-			"    addrs = {{.client_vip_ipv6}}/128\n" +
+			"    addrs = {{.client_ipv6_pool_start}}-{{.client_ipv6_pool_end}}\n" +
 			"  }\n" +
-			"  {{end}}" +
 			"}\n",
 
 		"etc/passwd": "root:x:0:0:root:/root:/bin/bash\n" +
@@ -217,8 +208,8 @@ var (
 		xl2tpdConfigFile: "[global]\n" +
 			"\n" +
 			"[lns default]\n" +
-			"  ip range = 192.168.1.128-192.168.1.254\n" +
-			"  local ip = {{if .use_underlay_ip}}{{.netns_ip}}{{else}}{{.xl2tpd_server_ip_address}}{{end}}\n" +
+			"  ip range = {{.client_ipv4_pool_start}}-{{.client_ipv4_pool_end}}\n" +
+			"  local ip = {{if .use_underlay_ip}}{{.netns_ip}}{{else}}{{.server_ipv4}}{{end}}\n" +
 			"  require chap = yes\n" +
 			"  refuse pap = yes\n" +
 			"  require authentication = yes\n" +
@@ -431,19 +422,22 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 	runner.AddConfigTemplates(strongSwanConfigs)
 	runner.AddConfigTemplates(l2tpConfigs)
 
-	// Defaults to use the environment address as the DNS server.
-	envAddrs, err := env.GetVethInAddrs(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get env addresses")
-	}
-
+	serverIPv4 := config.ipv4Subnet.GetAddrEndWith(1).String()
 	configValues := map[string]interface{}{
-		"chap_user":                chapUser,
-		"chap_secret":              chapSecret,
-		"charon_logfile":           charonLogFile,
-		"xl2tpd_server_ip_address": xl2tpdServerIPAddress,
-		"use_underlay_ip":          config.UnderlayIPIsOverlayIP,
-		"dns_server":               envAddrs.IPv4Addr,
+		"chap_user":              chapUser,
+		"chap_secret":            chapSecret,
+		"charon_logfile":         charonLogFile,
+		"server_ipv4":            serverIPv4,
+		"use_underlay_ip":        config.UnderlayIPIsOverlayIP,
+		"dns_server":             serverIPv4,
+		"client_ipv4_pool_start": config.ipv4Subnet.GetAddrEndWith(2).String(),
+		"client_ipv4_pool_end":   config.ipv4Subnet.GetAddrEndWith(254).String(),
+
+		// The following values do not have effect for L2TP/IPsec VPNs. Just to
+		// avoid empty values.
+		"remote_ts":              config.ipv4Subnet.String(),
+		"client_ipv6_pool_start": config.ipv6Subnet.GetAddrEndWith(2).String(),
+		"client_ipv6_pool_end":   config.ipv6Subnet.GetAddrEndWith(254).String(),
 	}
 
 	switch config.IPsecAuthType {
@@ -460,9 +454,6 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 		configValues["xauth_user"] = xauthUser
 		configValues["xauth_password"] = xauthPassword
 	}
-
-	configValues["pools"] = poolIPv4
-	configValues["remote_ts"] = ikev2ClientIPv4 + "/32"
 
 	// For running strongSwan VPN with flag --with-piddir=/run/ipsec. We
 	// want to use /run/ipsec for strongSwan runtime data dir instead of
@@ -493,7 +484,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 	if config.UnderlayIPIsOverlayIP {
 		server.OverlayIPv4 = underlayIP
 	} else {
-		server.OverlayIPv4 = xl2tpdServerIPAddress
+		server.OverlayIPv4 = serverIPv4
 	}
 	return server, nil
 }
@@ -512,12 +503,20 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 	runner.AddRootDirectories(strongSwanDirectories)
 	runner.AddConfigTemplates(strongSwanConfigs)
 
+	serverIPv4 := config.ipv4Subnet.GetAddrEndWith(1).String()
+	serverIPv6 := config.ipv6Subnet.GetAddrEndWith(1).String()
 	configValues := map[string]interface{}{
 		"chap_user":      chapUser,
 		"chap_secret":    chapSecret,
 		"charon_logfile": charonLogFile,
 		"if_id":          ikev2InterfaceID,
 		"push_dns":       true,
+
+		"server_ipv4":            serverIPv4,
+		"client_ipv4_pool_start": config.ipv4Subnet.GetAddrEndWith(2).String(),
+		"client_ipv4_pool_end":   config.ipv4Subnet.GetAddrEndWith(254).String(),
+		"client_ipv6_pool_start": config.ipv6Subnet.GetAddrEndWith(2).String(),
+		"client_ipv6_pool_end":   config.ipv6Subnet.GetAddrEndWith(254).String(),
 	}
 
 	switch config.IPsecAuthType {
@@ -539,14 +538,12 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 	var poolsArray []string
 	var remoteTsArray []string
 	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
-		configValues["client_vip_ipv4"] = ikev2ClientIPv4
 		poolsArray = append(poolsArray, poolIPv4)
-		remoteTsArray = append(remoteTsArray, ikev2ClientIPv4+"/32")
+		remoteTsArray = append(remoteTsArray, config.ipv4Subnet.String())
 	}
 	if config.IPType == IPTypeIPv6 || config.IPType == IPTypeIPv4AndIPv6 {
-		configValues["client_vip_ipv6"] = ikev2ClientIPv6
 		poolsArray = append(poolsArray, poolIPv6)
-		remoteTsArray = append(remoteTsArray, ikev2ClientIPv6+"/128")
+		remoteTsArray = append(remoteTsArray, config.ipv6Subnet.String())
 	}
 	configValues["pools"] = strings.Join(poolsArray, ",")
 	configValues["remote_ts"] = strings.Join(remoteTsArray, ",")
@@ -559,8 +556,8 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 	runner.AddStartupCommand(makeIPsecDir)
 	runner.AddStartupCommand(fmt.Sprintf("%s &", charonCommand))
 	runner.AddStartupCommand("ip link add xfrm1 type xfrm dev lo if_id " + ikev2InterfaceID)
-	runner.AddStartupCommand("ip addr add dev xfrm1 " + ikev2ServerIPv4 + "/24")
-	runner.AddStartupCommand("ip addr add dev xfrm1 " + ikev2ServerIPv6 + "/64")
+	runner.AddStartupCommand(fmt.Sprintf("ip addr add dev xfrm1 %s/%d", serverIPv4, config.ipv4Subnet.PrefixLen()))
+	runner.AddStartupCommand(fmt.Sprintf("ip addr add dev xfrm1 %s/%d", serverIPv6, config.ipv6Subnet.PrefixLen()))
 	runner.AddStartupCommand("ip link set dev xfrm1 up")
 
 	underlayIP, err := runner.Startup(ctx)
@@ -579,10 +576,10 @@ func startIKEv2Server(ctx context.Context, env *env.Env, config *Config) (*Serve
 
 	server.UnderlayIP = underlayIP
 	if config.IPType == IPTypeIPv4 || config.IPType == IPTypeIPv4AndIPv6 {
-		server.OverlayIPv4 = ikev2ServerIPv4
+		server.OverlayIPv4 = serverIPv4
 	}
 	if config.IPType == IPTypeIPv6 || config.IPType == IPTypeIPv4AndIPv6 {
-		server.OverlayIPv6 = ikev2ServerIPv6
+		server.OverlayIPv6 = serverIPv6
 	}
 
 	return server, nil

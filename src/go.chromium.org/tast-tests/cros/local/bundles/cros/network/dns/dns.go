@@ -591,7 +591,10 @@ func NewServer(ctx context.Context, envName string, ipv4Subnet *subnet.IPv4Subne
 	}
 
 	// Start a DNS server.
-	if err := server.StartServer(ctx, "dnsmasq", dnsmasq.New(dnsmasq.WithResolveHost("", addr.IPv4Addr))); err != nil {
+	if err := server.StartServer(ctx, "dnsmasq", dnsmasq.New(
+		dnsmasq.WithResolveHost("", addr.IPv4Addr),
+		dnsmasq.WithAllInterfaces(),
+	)); err != nil {
 		return nil, errors.Wrap(err, "failed to start dnsmasq")
 	}
 
