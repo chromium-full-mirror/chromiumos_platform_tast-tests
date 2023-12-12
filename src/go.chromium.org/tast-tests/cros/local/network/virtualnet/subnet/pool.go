@@ -25,6 +25,10 @@ type Pool struct {
 type IPSubnet interface {
 	// String returns the CIDR-notation of the prefix, e.g., "192.168.1.0/24".
 	String() string
+
+	// PrefixLen returns the prefix length for the subnet, e.g., 24 for
+	// 192.168.1.0/24.
+	PrefixLen() int
 }
 
 // IPv4Subnet represents an IPv4 subnet. This is a wrapper of the net.IPNet
@@ -86,7 +90,7 @@ func (p *Pool) AllocNextIPv6Subnet() (*IPv6Subnet, error) {
 // last byte.
 func (n *IPv4Subnet) GetAddrEndWith(idx uint8) net.IP {
 	if addr := n.IP.To4(); addr != nil {
-		prefixLen, _ := n.Mask.Size()
+		prefixLen := n.PrefixLen()
 		if prefixLen == 0 || prefixLen > 24 {
 			// This won't happen for a subnet created by this package.
 			panic(fmt.Sprintf("Invalid prefix length %d", prefixLen))
@@ -97,11 +101,18 @@ func (n *IPv4Subnet) GetAddrEndWith(idx uint8) net.IP {
 	panic("Invalid subnet")
 }
 
+// PrefixLen returns the prefix length for the subnet, e.g., 24 for
+// 192.168.1.0/24.
+func (n *IPv4Subnet) PrefixLen() int {
+	l, _ := n.Mask.Size()
+	return l
+}
+
 // GetAddrEndWith returns a net.IP object which is in this subnet and with idx as its
 // last byte.
 func (n *IPv6Subnet) GetAddrEndWith(idx uint8) net.IP {
 	if addr := n.IP.To16(); addr != nil {
-		prefixLen, _ := n.Mask.Size()
+		prefixLen := n.PrefixLen()
 		if prefixLen == 0 || prefixLen > 64 {
 			// This won't happen for a subnet created by this package.
 			panic(fmt.Sprintf("Invalid prefix length %d", prefixLen))
@@ -111,4 +122,11 @@ func (n *IPv6Subnet) GetAddrEndWith(idx uint8) net.IP {
 		return ip
 	}
 	panic("Invalid subnet")
+}
+
+// PrefixLen returns the prefix length for the subnet, e.g., 64 for
+// fd00::/64.
+func (n *IPv6Subnet) PrefixLen() int {
+	l, _ := n.Mask.Size()
+	return l
 }

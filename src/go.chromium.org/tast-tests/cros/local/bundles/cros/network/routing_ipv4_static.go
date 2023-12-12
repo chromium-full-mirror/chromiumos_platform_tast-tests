@@ -91,7 +91,7 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 	}
 
 	// Configure static IP config on shill service.
-	prefixLen, _ := ipv4Subnet.Mask.Size()
+	prefixLen := ipv4Subnet.PrefixLen()
 	svcStaticIPConfig := map[string]interface{}{
 		shillconst.IPConfigPropertyAddress:   localIPv4Addr.String(),
 		shillconst.IPConfigPropertyGateway:   routerIPv4Addr.String(),
