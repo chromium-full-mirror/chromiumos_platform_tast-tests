@@ -293,15 +293,24 @@ func LoginLogoutPolicyReporting(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to look up user added/removed events")
 		}
+		if err := reportingutil.SaveCrosboltEventCountMetric("added_removed_events", len(addedRemovedEvents), s.OutDir()); err != nil {
+			s.Log("Failed to save added/removed perf metric: ", err)
+		}
 
 		loginLogoutEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "LOGIN_LOGOUT_EVENTS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up device login/logout events")
 		}
+		if err := reportingutil.SaveCrosboltEventCountMetric("login_logout_events", len(loginLogoutEvents), s.OutDir()); err != nil {
+			s.Log("Failed to save login/logout perf metric: ", err)
+		}
 
 		lockUnlockEvents, err := reportingutil.LookupEvents(ctx, reportingutil.ReportingServerURL, acc.CustomerID, c.ClientId, APIKey, "LOCK_UNLOCK_EVENTS", testStartTime)
 		if err != nil {
 			return errors.Wrap(err, "failed to look up device lock/unlock events")
+		}
+		if err := reportingutil.SaveCrosboltEventCountMetric("lock_unlock_events", len(lockUnlockEvents), s.OutDir()); err != nil {
+			s.Log("Failed to save lock/unlock perf metric: ", err)
 		}
 
 		// Verify user added/removed events.

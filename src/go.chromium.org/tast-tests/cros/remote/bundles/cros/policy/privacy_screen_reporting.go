@@ -233,12 +233,18 @@ func PrivacyScreenReporting(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to look up events"))
 		}
+		if err := reportingutil.SaveCrosboltEventCountMetric("info_events", len(events), s.OutDir()); err != nil {
+			s.Log("Failed to save perf metric: ", err)
+		}
 
 		prunedEvents, err := reportingutil.PruneEvents(ctx, events, func(e reportingutil.InputEvent) bool {
 			return privacyScreenInfo(e) != nil
 		})
 		if err != nil {
 			testing.PollBreak(errors.Wrap(err, "failed to prune events"))
+		}
+		if err := reportingutil.SaveCrosboltEventCountMetric("privacy_events", len(prunedEvents), s.OutDir()); err != nil {
+			s.Log("Failed to save pruned perf metric: ", err)
 		}
 
 		// Validate info.

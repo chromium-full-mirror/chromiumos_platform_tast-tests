@@ -21,6 +21,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	ts "go.chromium.org/tast-tests/cros/services/cros/tape"
 	"go.chromium.org/tast/core/errors"
@@ -60,6 +61,18 @@ type VerifyEventTypeCallback func(InputEvent) bool
 // Interface for calling methods in tape.client.
 type tapeClient interface {
 	SetPolicy(context.Context, tape.PolicySchema, []string, interface{}, string) error
+}
+
+// SaveCrosboltEventCountMetric reports the number of events that were queried on a test.
+func SaveCrosboltEventCountMetric(metricName string, count int, outDir string) error {
+	pv := perf.NewValues()
+	pv.Set(perf.Metric{
+		Name:      metricName,
+		Unit:      "events",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  false,
+	}, float64(count))
+	return pv.Save(outDir)
 }
 
 // PruneEvents reduces the events response to only memory events after test began.
