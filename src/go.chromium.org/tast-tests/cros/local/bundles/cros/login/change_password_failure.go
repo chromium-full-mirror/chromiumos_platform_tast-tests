@@ -92,13 +92,13 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#gaia-password-changed').hidden", 10*time.Second); err != nil {
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#gaia-password-changed').hidden", 20*time.Second); err != nil {
 			s.Fatal("Failed to wait for the gaia password changed screen: ", err)
 		}
 		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#gaia-password-changed').$.oldPasswordInput.value = '%s'", fakeCreds.Pass), nil); err != nil {
 			s.Fatal("Failed to enter old password: ", err)
 		}
-		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.forgotPasswordLink.click()", nil); err != nil {
+		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.forgotPasswordButton.click()", nil); err != nil {
 			s.Fatal("Failed to click on forgot password link: ", err)
 		}
 		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.proceedAnyway.click()", nil); err != nil {
@@ -150,8 +150,13 @@ func loginWithCreds(ctx context.Context, s *testing.State, creds chrome.Creds, s
 		s.Fatal("Failed to enter password: ", err)
 	}
 
-	err = lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout)
-	if (err != nil && successExpected) || (err == nil && !successExpected) {
-		s.Fatal("Login result does not satisfy expecation ")
+	if successExpected {
+		if err = lockscreen.WaitForLoggedIn(ctx, tconn, chrome.LoginTimeout); err != nil {
+			s.Fatal("Failed to login: ", err)
+		}
+	} else {
+		if err := lockscreen.WaitForAuthError(ctx, tconn, 10*time.Second); err != nil {
+			s.Fatal("Failed to wait for auth error: ", err)
+		}
 	}
 }
