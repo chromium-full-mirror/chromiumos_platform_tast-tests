@@ -13,25 +13,69 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
-// SubtestResult is the mapping to the results.json object.
-type SubtestResult struct {
+// powerLogJSON is the mapping to the power_log.json object.
+type powerLogJSON struct {
+	Timestamp string `json:"timestamp"`
+}
+
+// findSubtestStartTime gets the start timestamp (seconds since January 1, 1970).
+// It first reads from power_log.json if available, and compares it to the timestamp from result.json.
+// If power_log.json is not available, it will only return the timestamp from result.json.
+func findSubtestStartTime(ctx context.Context, resultsDir string) (time.Time, error) {
+	powerLogTs, logErr := findSubtestStartTimeFromPowerLog(resultsDir)
+	if logErr != nil {
+		testing.ContextLog(ctx, "Couldn't find start timestamp from power log")
+	}
+	resultsTs, resultsErr := findSubtestStartTimeFromResultsJSON(resultsDir)
+	if resultsErr != nil {
+		return time.Time{}, errors.Wrap(resultsErr, "couldn't find subtest start time in tast results.json")
+	}
+	if logErr != nil {
+		if !resultsTs.Before(powerLogTs) {
+			return time.Time{}, errors.New("inconsistent timestamps; start time in power log should be after results.json")
+		}
+		return powerLogTs, nil
+	}
+
+	return resultsTs, nil
+}
+
+// findSubtestStartTimeFromPowerLog gets the start timestamp (seconds since January 1, 1970)
+// of a test from the power_log.json file.
+func findSubtestStartTimeFromPowerLog(resultsDir string) (time.Time, error) {
+	subtestDir := filepath.Join(resultsDir, "subtest_results")
+	rf, err := os.Open(filepath.Join(subtestDir, "power_log.json"))
+	if err != nil {
+		return time.Time{}, errors.Wrap(err, "couldn't open power log file")
+	}
+	defer rf.Close()
+
+	var powerLog powerLogJSON
+	if err = json.NewDecoder(rf).Decode(&powerLog); err != nil {
+		return time.Time{}, errors.Wrap(err, "couldn't decode results from power log")
+	}
+	return time.Parse(time.RFC3339Nano, powerLog.Timestamp)
+}
+
+// subtestResult is the mapping to the results.json object.
+type subtestResult struct {
 	Name  string `json:"name"`
 	Start string `json:"start"`
 }
 
-// findSubtestStartTime gets the start timestamp (seconds since January 1, 1970)
+// findSubtestStartTimeFromResultsJSON gets the start timestamp (seconds since January 1, 1970)
 // of a test from the perf results.json file.
-func findSubtestStartTime(subtestDir string) (time.Time, error) {
-	// TODO: b/314232534 - Use start timestamp in power_log.json
-	var results []SubtestResult
-	rf, err := os.Open(filepath.Join(subtestDir, "results.json"))
+func findSubtestStartTimeFromResultsJSON(resultsDir string) (time.Time, error) {
+	rf, err := os.Open(filepath.Join(resultsDir, "results.json"))
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "couldn't open results file")
 	}
 	defer rf.Close()
 
+	var results []subtestResult
 	if err = json.NewDecoder(rf).Decode(&results); err != nil {
 		return time.Time{}, errors.Wrapf(err, "couldn't decode results from %v", rf.Name())
 	}
@@ -99,7 +143,7 @@ func GetOverlapIndices(measureStarted, measureEnded time.Time, tsData []time.Tim
 // of the subtest, and trims remote side perf values to the duration of the subtest.
 func TrimSubtestResults(ctx context.Context, resultsDir, subtest string, values *perf.Values) (*perf.Values, error) {
 	subtestDir := filepath.Join(resultsDir, "tests", subtest)
-	measureStarted, err := findSubtestStartTime(resultsDir)
+	measureStarted, err := findSubtestStartTime(ctx, resultsDir)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get subtest start time")
 	}
