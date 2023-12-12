@@ -49,7 +49,7 @@ func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser
 
 	if nodeFound == signInLink {
 		testing.ContextLog(ctx, "Sign in Zoom")
-		if err := signIn(ctx, conn, tconn); err != nil {
+		if err := uiauto.Retry(3, signIn(conn, tconn))(ctx); err != nil {
 			return errors.Wrap(err, "failed to sign-in")
 		}
 	}
@@ -76,41 +76,50 @@ func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser
 	return nil
 }
 
-func signIn(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn) error {
-	if err := conn.Navigate(ctx, "https://zoom.us/google_oauth_signin"); err != nil {
-		return err
-	}
-
-	ui := uiauto.New(tconn)
-
-	signInArea := nodewith.NameContaining("Google").Role(role.RootWebArea)
-	// Use First() to select the first account in the account list.
-	accountSelectLink := nodewith.NameRegex(regexp.MustCompile("@.*.com")).Role(role.Link).Ancestor(signInArea).First()
-
-	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		return errors.Wrap(err, "failed to wait for page loading complete")
-	}
-
-	// Two situations need to handle here:
-	// 1. Sometimes clicking account link does not work.
-	//    The page should start to load if click works. Using this expectation to confirm.
-	// 2. Login timeout and the page does not return. Should re-click the account to retry login.
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := ui.LeftClick(accountSelectLink)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click account")
+func signIn(conn *chrome.Conn, tconn *chrome.TestConn) action.Action {
+	return func(ctx context.Context) error {
+		if err := conn.Navigate(ctx, "https://zoom.us/google_oauth_signin"); err != nil {
+			return err
 		}
-		if err := conn.WaitForExprWithTimeout(ctx, "document.readyState === 'loading'", 10*time.Second); err != nil {
-			if accountLinkStillExist, err := ui.IsNodeFound(ctx, accountSelectLink); err != nil {
-				return testing.PollBreak(errors.Wrap(err, "failed to check account link"))
-			} else if !accountLinkStillExist {
-				// Assume sometimes the login is super fast and bypass the page status transition.
-				return nil
+
+		ui := uiauto.New(tconn)
+
+		signInArea := nodewith.NameContaining("Google").Role(role.RootWebArea)
+		// Use First() to select the first account in the account list.
+		accountSelectLink := nodewith.NameRegex(regexp.MustCompile("@.*.com")).Role(role.Link).Ancestor(signInArea).First()
+
+		if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+			return errors.Wrap(err, "failed to wait for page loading complete")
+		}
+
+		// Two situations need to handle here:
+		// 1. Sometimes clicking account link does not work.
+		//    The page should start to load if click works. Using this expectation to confirm.
+		// 2. Login timeout and the page does not return. Should re-click the account to retry login.
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := ui.LeftClick(accountSelectLink)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click account")
 			}
-			return errors.Wrap(err, "failed to wait for page starting to load")
+			if err := conn.WaitForExprWithTimeout(ctx, "document.readyState === 'loading'", 10*time.Second); err != nil {
+				if accountLinkStillExist, err := ui.IsNodeFound(ctx, accountSelectLink); err != nil {
+					return testing.PollBreak(errors.Wrap(err, "failed to check account link"))
+				} else if !accountLinkStillExist {
+					// Assume sometimes the login is super fast and bypass the page status transition.
+					return nil
+				}
+				return errors.Wrap(err, "failed to wait for page starting to load")
+			}
+			// Login Google can take quite long sometimes, so using mediumUITimeout.
+			return ui.WithTimeout(mediumUITimeout).WaitUntilGone(accountSelectLink)(ctx)
+		}, &testing.PollOptions{Timeout: 2 * time.Minute}); err != nil {
+			return errors.Wrap(err, "failed select account")
 		}
-		// Login Google can take quite long sometimes, so using mediumUITimeout.
-		return ui.WithTimeout(mediumUITimeout).WaitUntilGone(accountSelectLink)(ctx)
-	}, &testing.PollOptions{Timeout: 2 * time.Minute})
+
+		if err := ui.WaitUntilAnyExists(myAccountLink, myProfileImg)(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for MY ACCOUNT or My Profile")
+		}
+		return nil
+	}
 }
 
 func createAccount(ctx context.Context, tconn *chrome.TestConn) error {

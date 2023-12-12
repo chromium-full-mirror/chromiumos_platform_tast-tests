@@ -238,7 +238,7 @@ func StartNewMeetingUsingPWA(ctx context.Context, cr *chrome.Chrome, br *browser
 		return nil, errors.Wrap(err, "failed to connect to Zoom PWA")
 	}
 
-	if err := signIn(ctx, zm.conn, tconn); err != nil {
+	if err := signIn(zm.conn, tconn)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to sign in on Zoom PWA")
 	}
 
