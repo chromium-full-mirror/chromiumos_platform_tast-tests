@@ -236,6 +236,7 @@ func AddAccount(ctx context.Context, tconn *chrome.TestConn, email, password str
 		// as it returns wrong coordinates when button is offscreen.
 		ui.FocusAndWait(iAgreeButton),
 		ui.DoDefault(iAgreeButton),
+		ui.WaitUntilGone(root),
 	)(ctx); err != nil {
 		somethingWentWrong := nodewith.NameContaining("Something went wrong").Role(role.Heading)
 		if existsErr := ui.Exists(somethingWentWrong); existsErr == nil {
@@ -282,6 +283,7 @@ func AddAccountSAML(ctx context.Context, tconn *chrome.TestConn, email, password
 		// On "Stay signed in?" screen select "No".
 		ui.WaitUntilExists(noButton),
 		ui.DoDefault(noButton),
+		ui.WaitUntilGone(root),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to enter SAML email and password")
 	}
