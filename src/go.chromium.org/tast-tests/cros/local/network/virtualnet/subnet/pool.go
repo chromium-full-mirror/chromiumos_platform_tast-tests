@@ -130,3 +130,37 @@ func (n *IPv6Subnet) PrefixLen() int {
 	l, _ := n.Mask.Size()
 	return l
 }
+
+// FromIPv4CIDR parses cidr and returns the IPv4 subnet represented by cidr.
+// Note that this package requires the prefix length is no longer than 24.
+func FromIPv4CIDR(cidr string) (*IPv4Subnet, error) {
+	_, subnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+	if subnet.IP.To4() == nil {
+		return nil, errors.Errorf("%s is not a valid IPv4 CIDR string", cidr)
+	}
+	n := &IPv4Subnet{IPNet: *subnet}
+	if l := n.PrefixLen(); l > 24 {
+		return nil, errors.Errorf("%s does not have a valid prefix length: got %d, want 24", cidr, l)
+	}
+	return n, nil
+}
+
+// FromIPv6CIDR parses cidr and returns the IPv6 subnet represented by cidr.
+// Note that this package requires the prefix length is no longer than 64.
+func FromIPv6CIDR(cidr string) (*IPv6Subnet, error) {
+	_, subnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return nil, err
+	}
+	if subnet.IP.To16() == nil {
+		return nil, errors.Errorf("%s is not a valid IPv6 CIDR string", cidr)
+	}
+	n := &IPv6Subnet{IPNet: *subnet}
+	if l := n.PrefixLen(); l > 64 {
+		return nil, errors.Errorf("%s does not have a valid prefix length: got %d, want 64", cidr, l)
+	}
+	return n, nil
+}

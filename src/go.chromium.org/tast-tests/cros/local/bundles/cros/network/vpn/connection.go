@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -64,6 +65,9 @@ type Config struct {
 	// is only used by cert-based VPNs (e.g., L2TP/IPsec-cert, OpenVPN, etc.).
 	CertVals CertVals
 
+	ipv4Subnet *subnet.IPv4Subnet
+	ipv6Subnet *subnet.IPv6Subnet
+
 	includedRoutesV4 []net.IPNet
 
 	autoConnect bool
@@ -104,9 +108,22 @@ type Option = func(*Config)
 
 // NewConfig creates a config object for a given VPN type
 func NewConfig(vpnType Type, opts ...Option) *Config {
+	v4Subnet, err := subnet.FromIPv4CIDR("10.11.12.0/24")
+	if err != nil {
+		// Construction from a const should never fail.
+		panic(fmt.Sprintf("Invalid default IPv4 subnet: %v", err))
+	}
+	v6Subnet, err := subnet.FromIPv6CIDR("fdfd::/64")
+	if err != nil {
+		// Construction from a const should never fail.
+		panic(fmt.Sprintf("Invalid default IPv6 subnet: %v", err))
+	}
+
 	c := &Config{
 		Type:          vpnType,
 		IPsecAuthType: AuthTypePSK,
+		ipv4Subnet:    v4Subnet,
+		ipv6Subnet:    v6Subnet,
 		autoConnect:   true,
 	}
 	for _, opt := range opts {
@@ -279,6 +296,27 @@ func WithOpenVPNTopology(val OpenVPNTopology) Option {
 func WithIPType(val IPType) Option {
 	return func(c *Config) {
 		c.IPType = val
+	}
+}
+
+// WithIPv4Subnet configures the IPv4 overlay used in the VPN. `.1` in the
+// subnet will be used as the server address, `.2`-`.254` will be used as the
+// pool for the client address (except for WireGuard, where `.2` will be used
+// directly as the client address). Note that these two options are independent
+// from the included routes option. The subnet will only affect the overlay IPs
+// and the server-side routing setup, while the included routes option will
+// affect the client-side routing setup.
+func WithIPv4Subnet(n *subnet.IPv4Subnet) Option {
+	return func(c *Config) {
+		c.ipv4Subnet = n
+	}
+}
+
+// WithIPv6Subnet configures the IPv4 overlay used in the VPN. See the comment
+// above for WithIPv4Subnet for more details.
+func WithIPv6Subnet(n *subnet.IPv6Subnet) Option {
+	return func(c *Config) {
+		c.ipv6Subnet = n
 	}
 }
 
