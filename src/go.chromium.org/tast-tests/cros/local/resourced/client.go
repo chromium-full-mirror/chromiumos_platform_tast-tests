@@ -11,7 +11,6 @@ import (
 	"github.com/godbus/dbus/v5"
 
 	rmpb "chromiumos/system_api/resource_manager_proto"
-
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -49,24 +48,6 @@ const (
 	FullscreenVideoInactive uint8 = 0
 	// FullscreenVideoActive means full screen video is active.
 	FullscreenVideoActive uint8 = 1
-
-	// QoSProcessNormal means Normal qos state for processes.
-	QoSProcessNormal uint8 = 0
-	// QoSProcessBackground means Background qos state for processes.
-	QoSProcessBackground uint8 = 1
-
-	// QoSThreadUrgentBursty means UrgentBursty qos state for threads.
-	QoSThreadUrgentBursty uint8 = 0
-	// QoSThreadUrgent means Urgent qos state for threads.
-	QoSThreadUrgent uint8 = 1
-	// QoSThreadBalanced means Balanced qos state for threads.
-	QoSThreadBalanced uint8 = 2
-	// QoSThreadEco means Eco qos state for threads.
-	QoSThreadEco uint8 = 3
-	// QoSThreadUtility means Utility qos state for threads.
-	QoSThreadUtility uint8 = 4
-	// QoSThreadBackground means Background qos state for threads.
-	QoSThreadBackground uint8 = 5
 )
 
 // Client wraps D-Bus calls to make requests to the Resource Manager (resourced).
@@ -279,22 +260,6 @@ func (c *Client) PowerSupplyChange(ctx context.Context) error {
 func (c *Client) SetMemoryMarginsBps(ctx context.Context, critical, moderate uint32) error {
 	if err := c.obj.Call(ctx, "SetMemoryMarginsBps", critical, moderate).Err; err != nil {
 		return errors.Wrap(err, "failed to call method SetMemoryMarginsBps")
-	}
-	return nil
-}
-
-// SetProcessState sets the qos state for a process.
-func (c *Client) SetProcessState(ctx context.Context, pid uint32, state uint8) error {
-	if err := c.obj.Call(ctx, "SetProcessState", pid, state).Err; err != nil {
-		return errors.Wrap(err, "failed to call method SetProcessState")
-	}
-	return nil
-}
-
-// SetThreadState sets the qos state for a thread.
-func (c *Client) SetThreadState(ctx context.Context, pid, tid uint32, state uint8) error {
-	if err := c.obj.Call(ctx, "SetThreadState", pid, tid, state).Err; err != nil {
-		return errors.Wrap(err, "failed to call method SetThreadState")
 	}
 	return nil
 }
