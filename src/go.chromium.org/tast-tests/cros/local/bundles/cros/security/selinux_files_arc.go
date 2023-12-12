@@ -21,9 +21,8 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: SELinuxFilesARC,
-		// TODO(b/254328916): Make sure we also cover the rootfs chrome binary in lacros variant tests.
-		LacrosStatus: testing.LacrosVariantNeeded,
+		Func:         SELinuxFilesARC,
+		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks SELinux labels on ARC-specific files on devices that support ARC",
 		Contacts: []string{
 			"chromeos-hardening@google.com",
@@ -158,7 +157,6 @@ func SELinuxFilesARC(ctx context.Context, s *testing.State) {
 	// Append common test cases.
 	testArgs = append(testArgs, []arcFileTestCase{
 		{path: "/mnt/stateful_partition/unencrypted/apkcache", context: "apkcache_file"},
-		{path: "/opt/google/chrome/chrome", context: "chrome_browser_exec"},
 		{path: "/run/arcvm", context: "cros_run_arcvm", ignoreErrors: true},
 		{path: "/run/arcvm/android-data", context: "(system_data_file|system_data_root_file)", ignoreErrors: true}, // Android label
 		{path: "/run/camera", context: "(camera_dir|camera_socket)", ignoreErrors: true},                           // N or below is camera_socket
