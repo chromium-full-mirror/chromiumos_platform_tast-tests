@@ -53,8 +53,14 @@ type audioStreamsConformanceReport struct {
 	MismatchedFrameCount int `json:"mismatched_frame_count"`
 }
 
-// TODO(b/269065601): Relex the ColdStartLatencyCriteriaMs for the following devices to prevent test flakiness.
-var relexedCriteriaModels = []string{"atlas", "nocturne", "beetley"}
+// Relax the ColdStartLatencyCriteriaMs for the following devices to prevent test flakiness.
+var relaxedCriteriaModels = []string{
+	// TODO(b/269065601)
+	"atlas", "nocturne",
+
+	// b/269065601#comment8: Devices with RT1015p amp have an additional 300ms delay on the power on sequence, so we relax the criteria for them.
+	"beetley", "blipper", "galith360", "galnat", "galnat360", "galtic", "galtic360", "sasukette", "storo", "storo360",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -79,7 +85,7 @@ func init() {
 			},
 			{
 				Name:              "cras",
-				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(relexedCriteriaModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(relaxedCriteriaModels...)),
 				Val: audioStreamTestParameters{
 					StreamSource:               cras,
 					RateCriteria:               0.001,
@@ -90,7 +96,7 @@ func init() {
 			{
 				// Compare to cras subtest, it prolongs ColdStartLatencyCriteriaMs from 500 to 700 ms.
 				Name:              "cras_relaxed",
-				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(relexedCriteriaModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(relaxedCriteriaModels...)),
 				Val: audioStreamTestParameters{
 					StreamSource:               cras,
 					RateCriteria:               0.001,
