@@ -27,9 +27,25 @@ const (
 
 // Console Regular expressions.
 var (
+	// Regex to check if access denied shows up in the command output
+	accessDeniedRE = regexp.MustCompile(`(?i)access denied`)
+	// Regex to extract CCD states and resolve `Default` states to their true states.
+	capDefaultRE = regexp.MustCompile(`(?:\s\s([A-Za-z1-9]+)\s+[Y-]\s0=Default\s\(([A-Za-z]+)\)|\s\s([A-Za-z1-9]+)\s+[Y-]\s[01]=([A-Za-z]+))`)
+	// Regex to extract CCD State flags
+	consoleCCDStateRE = regexp.MustCompile("State: ([A-Za-z]+)")
+	// Regex to extract commands from help output
+	knownCommandRE = regexp.MustCompile(`(?s)Known commands:\s*(.*)HELP LIST`)
+	// Regex to wait for a power button prompt
 	pwrbPromptRE = regexp.MustCompile("Press the physical button now")
+	// Regex to wait until ccd testlab mode is enabled
 	testlabDisabledRE = regexp.MustCompile("Updating testlab to false|CCD test lab mode disabled")
+	// Regex to wait until ccd testlab mode is disabled
 	testlabEnabledRE = regexp.MustCompile("Updating testlab to true|CCD test lab mode enabled")
+	// GSC version strings
+	verRWCr50StrRE = `cr50_([a-z1-9]+)\S*-([[:xdigit:]]+)`
+	verRWTi50StrRE = `ti50_common_([a-z]+)\S*:(\S+)`
+	verRWGSCStrRE = verRWCr50StrRE + `|` + verRWTi50StrRE
+
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -186,8 +202,7 @@ func (i *CrOSImage) Help(ctx context.Context) (CrOSImageHelpOutput, error) {
 	if err != nil {
 		return CrOSImageHelpOutput{}, errors.Wrap(err, "failed to execute help command")
 	}
-	re := regexp.MustCompile(`(?s)Known commands:\s*(.*)HELP LIST`)
-	m := re.FindStringSubmatch(out)
+	m := knownCommandRE.FindStringSubmatch(out)
 	if m == nil {
 		return CrOSImageHelpOutput{}, errors.New("failed to parse help output")
 	}
@@ -235,8 +250,6 @@ func (i *CrOSImage) CCDResetFactory(ctx context.Context) error {
 // CCD capability states. Capabilities that are in their default states will be
 // reported as their true states.
 func (i *CrOSImage) GetCCDCapabilities(ctx context.Context) (map[CCDCap]CCDCapState, error) {
-	// Regex to extract CCD states and resolve `Default` states to their true states.
-	re := regexp.MustCompile(`(?:\s\s([A-Za-z1-9]+)\s+[Y-]\s0=Default\s\(([A-Za-z]+)\)|\s\s([A-Za-z1-9]+)\s+[Y-]\s[01]=([A-Za-z]+))`)
 	var out map[CCDCap]CCDCapState
 
 	output, err := i.safeCommand(ctx, "ccd")
@@ -244,7 +257,7 @@ func (i *CrOSImage) GetCCDCapabilities(ctx context.Context) (map[CCDCap]CCDCapSt
 		return nil, errors.Wrap(err, "failed to execute ccd open")
 	}
 
-	matches := re.FindAllStringSubmatch(output, -1)
+	matches := capDefaultRE.FindAllStringSubmatch(output, -1)
 	if matches == nil {
 		return nil, errors.New("failed to parse ccd output")
 	}
@@ -314,12 +327,11 @@ func (i *CrOSImage) SetCCDCapabilities(ctx context.Context, capabilities map[CCD
 // runCommand executes the `cmd` string as a GSC console command and checks for
 // basic error output.
 func (i *CrOSImage) runCommand(ctx context.Context, cmd string) error {
-	accessDeniedRe := regexp.MustCompile(`(?i)access denied`)
 	output, err := i.Command(ctx, cmd)
 	if err != nil {
 		return errors.Wrap(err, "failed to execute `"+cmd+"`")
 	}
-	if accessDeniedRe.MatchString(output) {
+	if accessDeniedRE.MatchString(output) {
 		return errors.Wrap(err, "got access denied when trying to run `"+cmd+"`")
 	}
 	return nil
@@ -387,8 +399,7 @@ func (i *CrOSImage) GetCCDLevel(ctx context.Context) (CCDLevel, error) {
 		return Lock, errors.Wrap(err, "failed get CCD command output")
 	}
 
-	consoleCcdStateRegex := regexp.MustCompile("State: ([A-Za-z]+)")
-	matches := consoleCcdStateRegex.FindStringSubmatch(output)
+	matches := consoleCCDStateRE.FindStringSubmatch(output)
 	if len(matches) != 2 {
 		return Lock, errors.Wrap(err, "regex failed to extract CCD state from: "+output)
 	}
@@ -433,8 +444,8 @@ func matchRoInfo(s string, slot GscSlot) (RoInfo, error) {
 	}
 
 	ret := RoInfo{}
-	regexp := regexp.MustCompile(`RO_` + slotStr + `:\s+([\s|*])\s([0-9.]+)\/([[:xdigit:]]+)`)
-	matches := regexp.FindStringSubmatch(s)
+	verRE := regexp.MustCompile(`RO_` + slotStr + `:\s+([\s|*])\s([0-9.]+)\/([[:xdigit:]]+)`)
+	matches := verRE.FindStringSubmatch(s)
 	if len(matches) != 4 {
 		return ret, errors.New("regex failed to extract ro info from: " + s)
 	}
@@ -448,18 +459,14 @@ func matchRoInfo(s string, slot GscSlot) (RoInfo, error) {
 	return ret, nil
 }
 
-var cr50RwVerStrRe = `cr50_([a-z1-9]+)\S*-([[:xdigit:]]+)`
-var ti50RwVerStrRe = `ti50_common_([a-z]+)\S*:(\S+)`
-var gscRwVerStrRe = cr50RwVerStrRe + `|` + ti50RwVerStrRe
-
 func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
 	slotStr := "A"
 	if slot == SlotB {
 		slotStr = "B"
 	}
 
-	regexp := regexp.MustCompile(`RW_` + slotStr + `:\s+([\s|*])\s(([0-9.]+)/(` + gscRwVerStrRe + `)|Empty)`)
-	matches := regexp.FindStringSubmatch(s)
+	verRE := regexp.MustCompile(`RW_` + slotStr + `:\s+([\s|*])\s(([0-9.]+)/(` + verRWGSCStrRE + `)|Empty)`)
+	matches := verRE.FindStringSubmatch(s)
 
 	// Manually figure out how many matches we got since `regexp` only returns
 	// the maximum number of matches that can be returned.
@@ -505,8 +512,8 @@ func matchBidInfo(s string, slot GscSlot) (BidInfo, error) {
 	}
 
 	ret := BidInfo{}
-	regexp := regexp.MustCompile(`BID ` + slotStr + `:\s+` + bidRe)
-	matches := regexp.FindStringSubmatch(s)
+	bidRE := regexp.MustCompile(`BID ` + slotStr + `:\s+` + bidRe)
+	matches := bidRE.FindStringSubmatch(s)
 	if len(matches) == 0 {
 		ret.Empty = true
 		return ret, nil
@@ -545,8 +552,8 @@ func matchBidInfo(s string, slot GscSlot) (BidInfo, error) {
 func matchBuildInfo(s string) (BuildInfo, error) {
 	ret := BuildInfo{}
 
-	regexp := regexp.MustCompile(`Build:\s+([0-9.]+/` + cr50RwVerStrRe + `|` + ti50RwVerStrRe + `)`)
-	matches := regexp.FindStringSubmatch(s)
+	buildRE := regexp.MustCompile(`Build:\s+([0-9.]+/` + verRWCr50StrRE + `|` + verRWTi50StrRE + `)`)
+	matches := buildRE.FindStringSubmatch(s)
 	if len(matches) != 6 {
 		return ret, errors.New("regex failed to extract build info from: " + s)
 	}
