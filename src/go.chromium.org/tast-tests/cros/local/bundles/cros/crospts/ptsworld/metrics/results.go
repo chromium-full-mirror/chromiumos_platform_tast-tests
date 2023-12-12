@@ -84,6 +84,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "Sec",
 		},
 	},
+	{
+		"Frames Per Second": {
+			unit:       "FPS",
+			nameSuffix: "Frame_Per_Sec",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -264,6 +270,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			encodeMp3Title: {
 				crosboltNameTable: encodeMp3CrosboltNameTable,
 				metricType:        systemMetric,
+			},
+			vpxencTitle: {
+				crosboltNameTable: vpxencCrosboltNameTable,
+				metricType:        cpuMetric,
 			},
 		},
 	}
