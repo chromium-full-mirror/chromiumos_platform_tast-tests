@@ -149,6 +149,24 @@ func init() {
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
 			Timeout: 90 * time.Minute,
+		}, {
+			Name:    "tjbench_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "tjbench-1.2.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 10 * time.Minute,
+		}, {
+			Name:    "tjbench_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "tjbench-1.2.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 10 * time.Minute,
 		},
 		},
 	})

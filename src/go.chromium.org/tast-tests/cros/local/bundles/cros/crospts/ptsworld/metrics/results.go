@@ -72,6 +72,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "Byte_Per_Sec",
 		},
 	},
+	{
+		"Megapixels/sec": {
+			unit:       "MegaPixels",
+			nameSuffix: "MegaPixels_Per_Sec",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -240,6 +246,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			opensslTitle: {
 				crosboltNameTable: opensslCrosboltNameTable,
 				metricType:        cpuMetric,
+			},
+			tjbenchTitle: {
+				crosboltNameTable: tjbenchCrosboltNameTable,
+				metricType:        systemMetric,
 			},
 		},
 	}
