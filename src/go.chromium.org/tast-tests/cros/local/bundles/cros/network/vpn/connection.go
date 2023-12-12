@@ -46,7 +46,7 @@ type Config struct {
 	OpenVPNUseUserPassword        bool
 	OpenVPNCertVerify             bool
 	OpenVPNCertVerifyWrongHash    bool
-	OpenVPNCertVeirfyWrongSubject bool
+	OpenVPNCertVerifyWrongSubject bool
 	OpenVPNCertVerifyWrongCN      bool
 	OpenVPNCertVerifyCNOnly       bool
 	OpenVPNTLSAuth                bool
@@ -223,7 +223,7 @@ func WithOpenVPNCertVerify(val OpenVPNCertVerifyType) Option {
 		case OpenVPNCertVerifyWrongHash:
 			c.OpenVPNCertVerifyWrongHash = true
 		case OpenVPNCertVerifyWrongSubject:
-			c.OpenVPNCertVeirfyWrongSubject = true
+			c.OpenVPNCertVerifyWrongSubject = true
 		case OpenVPNCertVerifyWrongCN:
 			c.OpenVPNCertVerifyWrongCN = true
 		case OpenVPNCertVerifyCNOnly:
@@ -708,7 +708,7 @@ func createOpenVPNProperties(server *Server, config *Config) (map[string]interfa
 			properties["OpenVPN.VerifyHash"] = strings.ReplaceAll(fmt.Sprintf("% 02x", sha1.Sum(caCert.Raw)), " ", ":")
 		}
 
-		if config.OpenVPNCertVeirfyWrongSubject {
+		if config.OpenVPNCertVerifyWrongSubject {
 			properties["OpenVPN.VerifyX509Name"] = "bogus subject name"
 		} else if config.OpenVPNCertVerifyWrongCN {
 			properties["OpenVPN.VerifyX509Name"] = "bogus cn"

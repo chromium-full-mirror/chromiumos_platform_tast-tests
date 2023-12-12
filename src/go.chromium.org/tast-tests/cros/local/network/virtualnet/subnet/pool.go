@@ -108,6 +108,12 @@ func (n *IPv4Subnet) PrefixLen() int {
 	return l
 }
 
+// MaskString returns the string format for the network mask, e.g.,
+// "255.255.255.0" for 192.168.1.0/24.
+func (n *IPv4Subnet) MaskString() string {
+	return net.IPv4(255, 255, 255, 255).Mask(n.Mask).String()
+}
+
 // GetAddrEndWith returns a net.IP object which is in this subnet and with idx as its
 // last byte.
 func (n *IPv6Subnet) GetAddrEndWith(idx uint8) net.IP {

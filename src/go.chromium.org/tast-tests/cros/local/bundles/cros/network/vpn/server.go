@@ -254,8 +254,6 @@ const (
 	openvpnStatusFile        = "tmp/openvpn.status"
 	openvpnUsername          = "username"
 	openvpnPassword          = "password"
-	openvpnServerIPv4Address = "10.11.12.1"
-	openvpnServerIPv6Address = "fdfd::1"
 )
 
 // dh1024PemKey is the Diffie–Hellman parameter which will be used by OpenVPN
@@ -312,8 +310,8 @@ var (
 			"persist-tun\n" +
 			"port 1194\n" +
 			"proto udp\n" +
-			"server 10.11.12.0 255.255.255.0\n" +
-			"{{if .ipv6}} server-ipv6 fdfd::/64 {{end}}\n" +
+			"server {{.ipv4_subnet}}\n" +
+			"{{if .ipv6}} server-ipv6 {{.ipv6_subnet}} {{end}}\n" +
 			"status /{{.status_file}}\n" +
 			"{{if .tls_auth_file}} tls-auth /{{.tls_auth_file}}\n {{end}}" +
 			"{{if .topology}}topology {{.topology}}{{end}}\n" +
@@ -322,7 +320,7 @@ var (
 			"tmp-dir /tmp\n" +
 			"{{if .default_route}}push \"redirect-gateway {{.flags}}\"\n {{end}}" +
 			"{{range .push_route}}push \"route {{.addr}} {{.mask}}\"\n{{end}}" +
-			"{{if .push_dns}}push \"dhcp-option DNS 10.11.12.1\"\n {{end}}" +
+			"{{if .ipv4_dns}}push \"dhcp-option DNS {{.ipv4_dns}}\"\n {{end}}" +
 			"{{.optional_user_verification}}\n",
 	}
 )
@@ -598,6 +596,8 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 
 	runner.AddRootDirectories(openvpnRootDirectories)
 	runner.AddConfigTemplates(openvpnConfigs)
+	v4Subnet := config.ipv4Subnet
+	v6Subnet := config.ipv6Subnet
 	configValues := map[string]interface{}{
 		"ca_cert":                      openvpnCaCertFile,
 		"diffie_hellman_params_file":   openvpnDiffieHellmanFile,
@@ -610,7 +610,9 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 		"status_file":                  openvpnStatusFile,
 		"username":                     openvpnUsername,
 		"log_file":                     openvpnLogFile,
-		"push_dns":                     true,
+		"ipv4_dns":                     v4Subnet.GetAddrEndWith(1),
+		"ipv4_subnet":                  fmt.Sprintf("%s %s", v4Subnet.IP.String(), v4Subnet.MaskString()),
+		"ipv6_subnet":                  v6Subnet.String(),
 	}
 	switch config.IPType {
 	case IPTypeIPv4:
@@ -662,8 +664,8 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 		return nil, errors.Wrap(err, "failed to start OpenVPN server")
 	}
 	server.UnderlayIP = underlayIP
-	server.OverlayIPv4 = openvpnServerIPv4Address
-	server.OverlayIPv6 = openvpnServerIPv6Address
+	server.OverlayIPv4 = v4Subnet.GetAddrEndWith(1).String()
+	server.OverlayIPv6 = v6Subnet.GetAddrEndWith(1).String()
 	return server, nil
 }
 

@@ -204,13 +204,10 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 		poolStart := d.subnet.GetAddrEndWith(50)
 		poolEnd := d.subnet.GetAddrEndWith(150)
 
-		// d.subnet.Mask is of type Mask and thus cannot be stringified as an IP.
-		mask := net.IPv4(255, 255, 255, 255).Mask(d.subnet.Mask)
-
 		confVals["subnet"] = d.subnet.String()
 		confVals["pool_start"] = poolStart.String()
 		confVals["pool_end"] = poolEnd.String()
-		confVals["netmask"] = mask.String()
+		confVals["netmask"] = d.subnet.MaskString()
 		confVals["gateway"] = gateway.String()
 
 		// Install gateway address and routes.
