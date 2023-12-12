@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -222,8 +223,10 @@ func convertToCrosbolt(crosboltNameTable map[string]string, metricType metricTyp
 		if err != nil {
 			return err
 		}
+		// Remove the space in title to conform the name format
+		title := strings.Replace(result.Title, " ", "", -1)
 		pv.Set(perf.Metric{
-			Name:      fmt.Sprintf("%v.%v.%v_%v", ptsType, metricType, name, crosboltUnit.nameSuffix),
+			Name:      fmt.Sprintf("%v.%v.%v.%v_%v", ptsType, metricType, title, name, crosboltUnit.nameSuffix),
 			Unit:      crosboltUnit.unit,
 			Direction: direction,
 		}, result.Data.Entry.Value)
