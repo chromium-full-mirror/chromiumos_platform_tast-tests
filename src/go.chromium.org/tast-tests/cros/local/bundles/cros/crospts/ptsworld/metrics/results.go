@@ -78,6 +78,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "MegaPixels_Per_Sec",
 		},
 	},
+	{
+		"Seconds": {
+			unit:       "s",
+			nameSuffix: "Sec",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -254,6 +260,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			compresslz4Title: {
 				crosboltNameTable: compresslz4CrosboltNameTable,
 				metricType:        cpuMetric,
+			},
+			encodeMp3Title: {
+				crosboltNameTable: encodeMp3CrosboltNameTable,
+				metricType:        systemMetric,
 			},
 		},
 	}

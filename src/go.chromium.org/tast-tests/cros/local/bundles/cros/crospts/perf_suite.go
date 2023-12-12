@@ -186,6 +186,24 @@ func init() {
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
 			Timeout: 30 * time.Minute,
+		}, {
+			Name:    "encodemp3_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "encode-mp3-1.7.4",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 10 * time.Minute,
+		}, {
+			Name:    "encodemp3_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "encode-mp3-1.7.4",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 10 * time.Minute,
 		},
 		},
 	})
