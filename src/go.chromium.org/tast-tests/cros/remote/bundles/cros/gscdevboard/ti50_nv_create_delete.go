@@ -7,11 +7,9 @@ package gscdevboard
 import (
 	"bytes"
 	"context"
-	"strings"
 	"time"
 
-	"github.com/google/go-tpm/legacy/tpm2"
-	"github.com/google/go-tpm/tpmutil"
+	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
@@ -21,7 +19,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const fileID tpmutil.Handle = 0x100100F
+const fileID tpm2.TPMHandle = 0x100100F
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -68,67 +66,77 @@ func Ti50NVCreateDelete(ctx context.Context, s *testing.State) {
 // testNvSpace creates an NV space with the given size, fills it with fill, checks that it can be
 // read, and checks that it can be deleted.
 func testNvSpace(b utils.DevboardHelper, i *ti50.CrOSImage, tpm *utils.TpmHelper, size uint16, fill byte) error {
-	// Clear NV space if it exists to start from a clean place. Ignore the error in case it was
-	// already clean.
-	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, fileID)
+	attr := tpm2.TPMSNVPublic{
+		NVIndex: fileID,
+		NameAlg: tpm2.TPMAlgSHA1,
+		Attributes: tpm2.TPMANV{
+			PlatformCreate: true,
+			AuthRead:       true,
+			PPRead:         true,
+			WriteSTClear:   true,
+			PPWrite:        true,
+			NT:             tpm2.TPMNTOrdinary,
+		},
+		DataSize: size,
+	}
 
-	if err := tpm2.NVDefineSpace(tpm,
-		ti50.RootPlatformHandle,
-		fileID,
-		ti50.EmptyPassword,
-		ti50.EmptyPassword,
-		nil,
-		ti50.KernelFileAttr,
-		size,
-	); err != nil {
+	// Attempt to clean up state in case the NV was already defined.
+	tpm.NvUndefineSpace(attr)
+
+	def := tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
+	}
+	if _, err := def.Execute(tpm); err != nil {
 		return errors.Join(errors.New("NVDefineSpace failed: "), err)
 	}
 
-	resp, err := tpm2.NVReadEx(tpm,
-		fileID,
-		ti50.RootPlatformHandle,
-		ti50.EmptyPassword,
-		0,
-	)
-	// tpm2/legacy doesn't wrap errors, so errors.Is() does not work. We'll have to use this
-	// workaround until migrating to the new tpm2.
-	if !strings.Contains(err.Error(), "NV Index is used before being initialized") {
-		return errors.Join(errors.New("NVRead returned unexpected error: "), err)
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		return errors.Join(errors.New("failed to get NV name: "), err)
+	}
+	nvHandle := tpm2.NamedHandle{
+		Handle: fileID,
+		Name:   *nvName,
+	}
+
+	read := tpm2.NVRead{
+		AuthHandle: ti50.RootPlatformHandle,
+		NVIndex:    nvHandle,
+		Size:       size,
+	}
+	_, err = read.Execute(tpm)
+	if err != tpm2.TPMRCNVUninitialized {
+		return errors.Join(errors.New("unexpected NVRead response: "), err)
 	}
 
 	data := make([]byte, size)
 	for i := range data {
 		data[i] = fill
 	}
-	if err := tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		fileID,
-		ti50.EmptyPassword,
-		data,
-		0,
-	); err != nil {
+	write := tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: data,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
 		return errors.Join(errors.New("NVWrite failed: "), err)
 	}
 
-	resp, err = tpm2.NVReadEx(tpm,
-		fileID,
-		ti50.RootPlatformHandle,
-		ti50.EmptyPassword,
-		0,
-	)
+	resp, err := read.Execute(tpm)
 	if err != nil {
 		return errors.Join(errors.New("NVRead failed: "), err)
 	}
-	if !bytes.Equal(resp, data) {
-		return errors.Errorf("Read mismatch: %v", resp)
+	if !bytes.Equal(resp.Data.Buffer, data) {
+		return errors.Errorf("Read mismatch: %v", resp.Data.Buffer)
 	}
 
-	if err := tpm2.NVUndefineSpace(tpm,
-		ti50.EmptyPassword,
-		ti50.RootPlatformHandle,
-		fileID,
-	); err != nil {
-		return errors.Join(errors.New("Undefine failed: "), err)
+	if err := tpm.NvUndefineSpace(attr); err != nil {
+		return errors.Join(errors.New("NVUndefineSpace failed: "), err)
 	}
 
 	return nil

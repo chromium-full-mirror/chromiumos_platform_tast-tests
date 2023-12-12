@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-tpm/legacy/tpm2"
+	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
@@ -483,7 +483,10 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 		h.Fatalf("Unexpected TPM DID_VID: %v", didVid)
 	}
 
-	if err := tpm2.Startup(tpmHandle, tpm2.StartupClear); err != nil {
+	startup := tpm2.Startup{
+		StartupType: tpm2.TPMSUClear,
+	}
+	if _, err := startup.Execute(tpmHandle); err != nil {
 		h.Fatalf("TPM startup error: %v", err)
 	}
 

@@ -11,8 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-tpm/legacy/tpm2"
-
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
 	"go.chromium.org/tast/core/testing"
@@ -74,7 +72,8 @@ func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUT
 
 	s.Log("Removing FWMP space if present (which can block ccd open)")
 	tpm := ti50.NewTpmHandle(ctx, b, ti50.TpmBusSpi)
-	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.FwmpFileID)
+	attr := ti50.FwmpAttr()
+	tpm.NvUndefineSpace(attr)
 
 	s.Logf("Setting %s to high", ti50.GpioTi50ChassisOpen)
 	gpioSet(ctx, s, b, ti50.GpioTi50ChassisOpen, true)

@@ -9,7 +9,7 @@ import (
 	"crypto/rand"
 	"time"
 
-	"github.com/google/go-tpm/legacy/tpm2"
+	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
@@ -44,8 +44,9 @@ func Ti50EFS2(ctx context.Context, s *testing.State) {
 
 	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
 
-	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work/
-	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
+	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work.
+	attr := ti50.KernelAttr()
+	tpm.NvUndefineSpace(attr)
 
 	// Note if this goes last, it fails with a timeout reading EC console, but if even one of
 	// the preceding tests is commented out, then it doesn't. It does not seem to be flaky if
@@ -234,30 +235,39 @@ func testVerifiedMode(ctx context.Context, s *testing.State, b utils.DevboardHel
 		s.Fatal("Error getting random hash: ", err)
 	}
 
+	attr := ti50.KernelAttr()
+
 	s.Log("Setting up kernel file with random ec hash: ", hash)
 	kernelFile := makeKernelFile(hash)
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
-	if err := tpm2.NVDefineSpace(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		ti50.EmptyPassword,
-		nil,
-		ti50.KernelFileAttr,
-		uint16(len(kernelFile)),
-	); err != nil {
-		s.Fatal("NVDefineSpace failed: ", err)
+	def := tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
 	}
-	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
+	if _, err := def.Execute(tpm); err != nil {
+		s.Fatal("NVDefineSpace failed: ")
+	}
+	defer tpm.NvUndefineSpace(attr)
+
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		s.Fatal("Failed to get NV name: ", err)
+	}
 
 	// Write the kernel file data to new space.
-	if err := tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		kernelFile,
-		0,
-	); err != nil {
+	write := tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex: tpm2.NamedHandle{
+			Handle: attr.NVIndex,
+			Name:   *nvName,
+		},
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: kernelFile,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
 		s.Fatal("NVWrite failed: ", err)
 	}
 
@@ -360,30 +370,41 @@ func testErrorCases(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 		s.Fatal("Error getting random hash: ", err)
 	}
 
+	attr := ti50.KernelAttr()
+	tpm.NvUndefineSpace(attr)
+
 	s.Log("Setting up kernel file with random ec hash: ", hash)
 	kernelFile := makeKernelFile(hash)
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
-	if err := tpm2.NVDefineSpace(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		ti50.EmptyPassword,
-		nil,
-		ti50.KernelFileAttr,
-		uint16(len(kernelFile)),
-	); err != nil {
-		s.Fatal("NVDefineSpace failed: ", err)
+	def := tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
 	}
-	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
+	if _, err := def.Execute(tpm); err != nil {
+		s.Fatal("NVDefineSpace failed: ")
+	}
+	defer tpm.NvUndefineSpace(attr)
+
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		s.Fatal("Failed to get NV name: ", err)
+	}
+	nvHandle := tpm2.NamedHandle{
+		Handle: attr.NVIndex,
+		Name:   *nvName,
+	}
 
 	// Write the kernel file data to new space.
-	if err := tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		kernelFile,
-		0,
-	); err != nil {
+	write := tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: kernelFile,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
 		s.Fatal("NVWrite failed: ", err)
 	}
 
@@ -542,30 +563,41 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 		s.Fatal("Error getting random hash: ", err)
 	}
 
+	attr := ti50.KernelAttr()
+	tpm.NvUndefineSpace(attr)
+
 	s.Log("Setting up kernel file with random ec hash: ", hash)
 	kernelFile := makeKernelFile(hash)
 	// Define space in NV storage and clean up afterwards or subsequent runs will fail.
-	if err := tpm2.NVDefineSpace(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		ti50.EmptyPassword,
-		nil,
-		ti50.KernelFileAttr,
-		uint16(len(kernelFile)),
-	); err != nil {
-		s.Fatal("NVDefineSpace failed: ", err)
+	def := tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
 	}
-	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
+	if _, err := def.Execute(tpm); err != nil {
+		s.Fatal("NVDefineSpace failed: ")
+	}
+	defer tpm.NvUndefineSpace(attr)
+
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		s.Fatal("Failed to get NV name: ", err)
+	}
+	nvHandle := tpm2.NamedHandle{
+		Handle: attr.NVIndex,
+		Name:   *nvName,
+	}
 
 	// Write the kernel file data to new space.
-	if err := tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		kernelFile,
-		0,
-	); err != nil {
+	write := tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: kernelFile,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
 		s.Fatal("NVWrite failed: ", err)
 	}
 
@@ -586,13 +618,15 @@ func testKernelFileOverwritten(ctx context.Context, s *testing.State, b utils.De
 	// Change first byte of hash and re-write file.
 	hash[0] ^= 0xFF
 	kernelFile = makeKernelFile(hash)
-	if err := tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		kernelFile,
-		0,
-	); err != nil {
+	write = tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: kernelFile,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
 		s.Fatal("NVWrite failed: ", err)
 	}
 

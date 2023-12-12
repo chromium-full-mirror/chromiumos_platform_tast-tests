@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/go-tpm/legacy/tpm2"
+	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
@@ -43,7 +43,8 @@ func Ti50FWMP(ctx context.Context, s *testing.State) {
 	}
 
 	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work
-	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.FwmpFileID)
+	attr := ti50.FwmpAttr()
+	tpm.NvUndefineSpace(attr)
 
 	verifyWpDisabledWithFwmp(ctx, s, b, i, tpm)
 }
@@ -60,30 +61,39 @@ func verifyWpDisabledWithFwmp(ctx context.Context, s *testing.State, b utils.Dev
 		s.Fatal("WP signal not disable after `wp disable` console command")
 	}
 
+	attr := ti50.FwmpAttr()
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		s.Fatal("Failed to get NV name: ", err)
+	}
+	nvHandle := tpm2.NamedHandle{
+		Handle: attr.NVIndex,
+		Name:   *nvName,
+	}
+
 	s.Log("Write FWMP file with unlock disabled")
 	fwmpFile := utils.MakeFWMPFile(utils.FWMPDisableUnlock)
 	// Define space in NV storage and clean up afterwards
-	if err := tpm2.NVDefineSpace(tpm,
-		ti50.RootPlatformHandle,
-		ti50.FwmpFileID,
-		ti50.EmptyPassword,
-		ti50.EmptyPassword,
-		nil,
-		ti50.FwmpFileAttr,
-		uint16(len(fwmpFile)),
-	); err != nil {
-		s.Fatal("NVDefineSpace failed: ", err)
+	def := tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
 	}
-	defer tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.FwmpFileID)
+	if _, err := def.Execute(tpm); err != nil {
+		s.Fatal("NVDefineSpace failed: ")
+	}
+	defer tpm.NvUndefineSpace(attr)
 
 	// Write the fwmp file data to new space.
-	if err := tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		ti50.FwmpFileID,
-		ti50.EmptyPassword,
-		fwmpFile,
-		0,
-	); err != nil {
+	write := tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: fwmpFile,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
 		s.Fatal("NVWrite failed: ", err)
 	}
 

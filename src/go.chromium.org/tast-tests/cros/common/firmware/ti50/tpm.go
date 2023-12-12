@@ -8,8 +8,9 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/google/go-tpm/legacy/tpm2"
-	"github.com/google/go-tpm/tpmutil"
+	"github.com/google/go-tpm/tpm2"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 // TpmRegister represents the name of a TPM register
@@ -72,26 +73,12 @@ var TpmTi50DidVidValue = []byte{0x66, 0x66, 0x4a, 0x50}
 var TpmCr50DidVidValue = []byte{0xe0, 0x1a, 0x28, 0x00}
 
 const (
-	// EmptyPassword is blank password used for authentication
-	EmptyPassword = ""
 	// RootPlatformHandle is the Platform Root TPM Handle
-	RootPlatformHandle tpmutil.Handle = 0x4000000c
+	RootPlatformHandle tpm2.TPMHandle = 0x4000000c
 	// KernelNvIndex is the NVMem ID for the kernel file
-	KernelNvIndex tpmutil.Handle = 0x01001008
-	// FwmpFileID is the NVMem ID for the Firmware Management Parameters file
-	FwmpFileID tpmutil.Handle = 0x100100a
-	// KernelFileAttr is the attribute set that AP firmware uses when creating kernel file
-	KernelFileAttr = tpm2.AttrPlatformCreate |
-		tpm2.AttrAuthRead |
-		tpm2.AttrPPRead |
-		tpm2.AttrWriteSTClear |
-		tpm2.AttrPPWrite
-	// FwmpFileAttr is the attribute set that AP firmware uses when creating FWMP file
-	FwmpFileAttr = tpm2.AttrPlatformCreate |
-		tpm2.AttrOwnerWrite |
-		tpm2.AttrAuthRead |
-		tpm2.AttrPPRead |
-		tpm2.AttrPPWrite
+	KernelNvIndex tpm2.TPMHandle = 0x01001008
+	// FwmpNvIndex is the NVMem ID for the Firmware Management Parameters file
+	FwmpNvIndex tpm2.TPMHandle = 0x100100a
 )
 
 // TpmHandle allows interacting with GSC's TPM bus with higher level tpm commands until tpm2 lib
@@ -126,10 +113,10 @@ func (t *TpmHandle) OpenTitanToolTpmCommand(subcmd string, subargs ...string) ([
 	return b, nil
 }
 
-// Execute sends a TPM request using possibly multiple writes to the FIFO and status
+// Send sends a TPM request using possibly multiple writes to the FIFO and status
 // registers, and waits for the execution to complete before retrieving the reply. Only use this
 // if the Tpm interface does not provided access, e.g. VendorCommands
-func (t *TpmHandle) Execute(request []byte) ([]byte, error) {
+func (t *TpmHandle) Send(request []byte) ([]byte, error) {
 	response, err := t.OpenTitanToolTpmCommand("execute-command", "--hexdata", string(hex.EncodeToString(request)))
 	if err != nil {
 		return nil, err
@@ -137,28 +124,62 @@ func (t *TpmHandle) Execute(request []byte) ([]byte, error) {
 	return response, nil
 }
 
-// Write will be called by the go-tpm library to send a command to the TPM.
-func (t *TpmHandle) Write(data []byte) (int, error) {
-	response, err := t.Execute(data)
+// NvUndefineSpace undefines the NV space indicated by the passed public area.
+func (t *TpmHandle) NvUndefineSpace(p tpm2.TPMSNVPublic) error {
+	nvName, err := tpm2.NVName(&p)
 	if err != nil {
-		return 0, err
+		return errors.Join(errors.New("failed to get NV name: "), err)
 	}
-	t.response = response
-	return len(data), nil
+	nvHandle := tpm2.NamedHandle{
+		Handle: p.NVIndex,
+		Name:   *nvName,
+	}
+
+	undef := tpm2.NVUndefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+	}
+	_, err = undef.Execute(t)
+	return err
 }
 
-// Read will be called by the go-tpm library to retrieve the response of a prior a command.
-func (t *TpmHandle) Read(data []byte) (int, error) {
-	if t.response == nil {
-		return 0, nil
+// KernelAttr generates the public area for the kernel NV index.
+func KernelAttr() tpm2.TPMSNVPublic {
+	return tpm2.TPMSNVPublic{
+		NVIndex: KernelNvIndex,
+		NameAlg: tpm2.TPMAlgSHA1,
+		Attributes: tpm2.TPMANV{
+			PlatformCreate: true,
+			AuthRead:       true,
+			PPRead:         true,
+			WriteSTClear:   true,
+			PPWrite:        true,
+			NT:             tpm2.TPMNTOrdinary,
+		},
+		DataSize: 40,
 	}
-	var respLen int
-	if len(data) < len(t.response) {
-		respLen = len(data)
-	} else {
-		respLen = len(t.response)
+}
+
+// FwmpAttr generates the public area for the FWMP NV index.
+func FwmpAttr() tpm2.TPMSNVPublic {
+	return tpm2.TPMSNVPublic{
+		NVIndex: FwmpNvIndex,
+		NameAlg: tpm2.TPMAlgSHA1,
+		Attributes: tpm2.TPMANV{
+			PlatformCreate: true,
+			OwnerWrite:     true,
+			AuthRead:       true,
+			PPRead:         true,
+			PPWrite:        true,
+			NT:             tpm2.TPMNTOrdinary,
+		},
+		DataSize: 40,
 	}
-	copy(data[:respLen], t.response[:respLen])
-	t.response = nil
-	return respLen, nil
+}
+
+// EmptyPassword generats an empty TPM2BAuth.
+func EmptyPassword() tpm2.TPM2BAuth {
+	return tpm2.TPM2BAuth{
+		Buffer: nil,
+	}
 }

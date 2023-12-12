@@ -39,7 +39,7 @@ func (t *TpmHelper) TpmvGetBootMode() (byte, error) {
 		"20000000" + // ordinal: vendor
 		"0034") // subcommand: GetBootMode
 
-	response, err := t.Execute(tpmvGetBootMode)
+	response, err := t.Send(tpmvGetBootMode)
 	if err != nil {
 		return 0, err
 	}
@@ -57,7 +57,7 @@ func (t *TpmHelper) TpmvCommitNvmem() error {
 		return err
 	}
 
-	_, err = t.Execute(tpmvCommitNvmem)
+	_, err = t.Send(tpmvCommitNvmem)
 	return err
 }
 

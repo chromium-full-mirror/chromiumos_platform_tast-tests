@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/go-tpm/legacy/tpm2"
+	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
@@ -222,20 +222,39 @@ func sendIteration(ctx context.Context, s *testing.State, th utils.FirmwareTesti
 }
 
 func endlessCrypto(tpm *utils.TpmHelper, s *testing.State, stop, done chan bool) {
-	defaultKeyParams := tpm2.Public{
-		Type:       tpm2.AlgRSA,
-		NameAlg:    tpm2.AlgSHA1,
-		Attributes: tpm2.FlagStorageDefault,
-		RSAParameters: &tpm2.RSAParams{
-			Symmetric: &tpm2.SymScheme{
-				Alg:     tpm2.AlgAES,
-				KeyBits: 128,
-				Mode:    tpm2.AlgCFB,
-			},
-			KeyBits:     2048,
-			ExponentRaw: 1<<16 + 1,
-		},
+	cp := tpm2.CreatePrimary{
+		PrimaryHandle: tpm2.TPMRHOwner,
+		InPublic: tpm2.New2B(
+			tpm2.TPMTPublic{
+				Type:    tpm2.TPMAlgRSA,
+				NameAlg: tpm2.TPMAlgSHA1,
+				ObjectAttributes: tpm2.TPMAObject{
+					Decrypt:             true,
+					Restricted:          true,
+					FixedTPM:            true,
+					FixedParent:         true,
+					SensitiveDataOrigin: true,
+					UserWithAuth:        true,
+				},
+				Parameters: tpm2.NewTPMUPublicParms(tpm2.TPMAlgRSA,
+					&tpm2.TPMSRSAParms{
+						Symmetric: tpm2.TPMTSymDefObject{
+							Algorithm: tpm2.TPMAlgAES,
+							KeyBits: tpm2.NewTPMUSymKeyBits(
+								tpm2.TPMAlgAES,
+								tpm2.TPMKeyBits(128),
+							),
+							Mode: tpm2.NewTPMUSymMode(
+								tpm2.TPMAlgAES,
+								tpm2.TPMAlgCFB,
+							),
+						},
+						KeyBits:  2048,
+						Exponent: 1<<16 + 1,
+					}),
+			}),
 	}
+
 	for {
 		select {
 		case <-stop:
@@ -243,13 +262,16 @@ func endlessCrypto(tpm *utils.TpmHelper, s *testing.State, stop, done chan bool)
 			return
 		default:
 			// Generate RSA key pair.
-			rootHandle, _, err := tpm2.CreatePrimary(tpm, tpm2.HandleOwner, tpm2.PCRSelection{}, "", "", defaultKeyParams)
+			resp, err := cp.Execute(tpm)
 			if err != nil {
 				s.Fatalf("Error creating RSA key: %s", err)
 			}
 
 			// Delete newly generated key, in order to not overflow TPM storage.
-			tpm2.FlushContext(tpm, rootHandle)
+			flush := tpm2.FlushContext{
+				FlushHandle: resp.ObjectHandle,
+			}
+			flush.Execute(tpm)
 		}
 	}
 }

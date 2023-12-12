@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/google/go-tpm/legacy/tpm2"
+	"github.com/google/go-tpm/tpm2"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
@@ -53,36 +53,47 @@ func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
 	th.MustSucceed(tpm.TpmvCommitNvmem(), "Failed to enable Nvmem writes.")
 
 	// Undefine to ensure we're starting clean.
-	tpm2.NVUndefineSpace(tpm, ti50.EmptyPassword, ti50.RootPlatformHandle, ti50.KernelNvIndex)
+	attr := ti50.KernelAttr()
+	tpm.NvUndefineSpace(attr)
 	// Make sure we clean up if the test fails.
-	defer tpm2.NVUndefineSpace(tpm,
-		ti50.EmptyPassword,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-	)
+	defer tpm.NvUndefineSpace(attr)
 
 	v0Data := []byte{0x02, 0x4c, 0x57, 0x52, 0x47, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
 		0x55}
+	attr.DataSize = uint16(len(v0Data))
 
 	s.Log("Define NV space")
-	th.MustSucceed(tpm2.NVDefineSpace(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		ti50.EmptyPassword,
-		nil,
-		ti50.KernelFileAttr,
-		uint16(len(v0Data)),
-	), "NVDefineSpace failed.")
+	def := tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
+	}
+	if _, err := def.Execute(tpm); err != nil {
+		s.Fatal("NVDefineSpace failed: ")
+	}
+	defer tpm.NvUndefineSpace(attr)
+
+	nvName, err := tpm2.NVName(&attr)
+	if err != nil {
+		s.Fatal("Failed to get NV name: ", err)
+	}
+	nvHandle := tpm2.NamedHandle{
+		Handle: attr.NVIndex,
+		Name:   *nvName,
+	}
 
 	s.Log("Write NV space")
-	th.MustSucceed(tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		v0Data,
-		0,
-	), "NVWrite failed.")
+	write := tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: v0Data,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
+		s.Fatal("NVWrite failed: ", err)
+	}
 
 	// Test against a zero hash.
 	hash := make([]byte, 32)
@@ -97,36 +108,38 @@ func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
 	), "CheckSendEcPacket failed.")
 
 	s.Log("Undefine NV space")
-	th.MustSucceed(tpm2.NVUndefineSpace(tpm,
-		ti50.EmptyPassword,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-	), "Undefine failed.")
+	if err := tpm.NvUndefineSpace(attr); err != nil {
+		s.Fatal("Undefine failed: ")
+	}
 
 	// Kernel file with 0 hash.
 	v1Data := []byte{0x10, 0x28, 0x0c, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}
+	attr.DataSize = uint16(len(v1Data))
 
 	s.Log("Redefine NV space")
-	th.MustSucceed(tpm2.NVDefineSpace(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		ti50.EmptyPassword,
-		nil,
-		ti50.KernelFileAttr,
-		uint16(len(v1Data)),
-	), "NVDefineSpace failed.")
+	def = tpm2.NVDefineSpace{
+		AuthHandle: tpm2.TPMRHPlatform,
+		Auth:       ti50.EmptyPassword(),
+		PublicInfo: tpm2.New2B(attr),
+	}
+	if _, err := def.Execute(tpm); err != nil {
+		s.Fatal("NVDefineSpace failed: ")
+	}
 
 	s.Log("Write NV space")
-	th.MustSucceed(tpm2.NVWrite(tpm,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-		ti50.EmptyPassword,
-		v1Data,
-		0,
-	), "NVWrite failed.")
+	write = tpm2.NVWrite{
+		AuthHandle: tpm2.TPMRHPlatform,
+		NVIndex:    nvHandle,
+		Data: tpm2.TPM2BMaxNVBuffer{
+			Buffer: v1Data,
+		},
+		Offset: 0,
+	}
+	if _, err := write.Execute(tpm); err != nil {
+		s.Fatal("NVWrite failed: ", err)
+	}
 
 	s.Log("Check kernel hash (should succeed)")
 	th.MustSucceed(utils.CheckSendEcPacket(ctx,
@@ -137,11 +150,9 @@ func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
 	), "CheckSendEcPacket failed.")
 
 	s.Log("Undefine NV space")
-	th.MustSucceed(tpm2.NVUndefineSpace(tpm,
-		ti50.EmptyPassword,
-		ti50.RootPlatformHandle,
-		ti50.KernelNvIndex,
-	), "Undefine failed.")
+	if err := tpm.NvUndefineSpace(attr); err != nil {
+		s.Fatal("Undefine failed: ")
+	}
 
 	s.Log("Check kernel hash (should fail)")
 	th.MustSucceed(utils.CheckSendEcPacket(ctx,
