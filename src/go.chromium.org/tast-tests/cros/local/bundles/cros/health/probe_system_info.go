@@ -49,8 +49,6 @@ func init() {
 			},
 		}, {
 			Name: "platform_service_record",
-			// TODO(b/277667306): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 			Val: psrInfoTestParams{
 				checkPsr: true,
 			},
