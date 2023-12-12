@@ -97,8 +97,8 @@ func DHCPTwoServersNAK(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to wait for service connected")
 				}
 
-				// Sleep for a while and verify again to make sure the received NAK does
-				// not have any effect.
+				// GoBigSleepLint: Sleep for a while and verify again to make sure the
+				// received NAK does not have any effect.
 				testing.Sleep(ctx, 3*time.Second)
 				if connected, err := svc.IsConnected(ctx); err != nil {
 					return errors.Wrap(err, "failed to get connected status")
