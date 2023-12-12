@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -41,7 +42,11 @@ func init() {
 			//"group:cq-medium",
 		},
 		Fixture: "chromeEnrolledLoggedIn",
+		Timeout: 5 * time.Minute,
 		SearchFlags: []*testing.StringPair{
+			pci.SearchFlag(&policy.ProxyMode{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.ProxyServer{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.SystemProxySettings{}, pci.VerifiedFunctionalityOS),
 			{
 				Key: "feature_id",
 				// Verify that traffic from the device goes through the managed proxy (COM_FOUND_CUJ6_TASK3_WF1).
