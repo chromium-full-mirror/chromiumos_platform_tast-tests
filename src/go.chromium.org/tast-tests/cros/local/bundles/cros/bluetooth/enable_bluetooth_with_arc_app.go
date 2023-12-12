@@ -20,8 +20,15 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 )
 
+const (
+	androidP   string = "android_p"
+	androidR   string = "android_r"
+	androidVMT string = "android_vm_t"
+)
+
 type testParam struct {
-	stackType common.BluetoothStackType
+	stackType  common.BluetoothStackType
+	androidDep string
 }
 
 func init() {
@@ -39,21 +46,60 @@ func init() {
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
 		BugComponent: "b:1131776",
 		Attr:         []string{"group:bluetooth"},
-		SoftwareDeps: []string{"chrome", "arc", "android_vm_t"},
+		SoftwareDeps: []string{"chrome", "arc"},
 		Params: []testing.Param{{
-			Name:      "bluez",
-			Fixture:   "arcBootedWithPlayStoreAndBluetoothBlueZ",
-			ExtraAttr: []string{"bluetooth_flaky"},
-			Val: testParam{
-				stackType: common.BluetoothStackTypeBluez,
+			Name:              "android_p_bluez",
+			Fixture:           "arcBootedWithPlayStoreAndBluetoothBlueZ",
+			ExtraAttr:         []string{"bluetooth_flaky"},
+			ExtraSoftwareDeps: []string{androidP},
+			Val: &testParam{
+				stackType:  common.BluetoothStackTypeBluez,
+				androidDep: androidP,
 			},
 		}, {
-			Name:              "floss",
+			Name:              "android_p_floss",
 			Fixture:           "arcBootedWithPlayStoreAndBluetoothFloss",
 			ExtraAttr:         []string{"bluetooth_floss_flaky"},
-			ExtraSoftwareDeps: []string{"bluetooth_floss"},
-			Val: testParam{
-				stackType: common.BluetoothStackTypeFloss,
+			ExtraSoftwareDeps: []string{"bluetooth_floss", androidP},
+			Val: &testParam{
+				stackType:  common.BluetoothStackTypeFloss,
+				androidDep: androidP,
+			},
+		}, {
+			Name:              "android_r_bluez",
+			Fixture:           "arcBootedWithPlayStoreAndBluetoothBlueZ",
+			ExtraAttr:         []string{"bluetooth_flaky"},
+			ExtraSoftwareDeps: []string{androidR},
+			Val: &testParam{
+				stackType:  common.BluetoothStackTypeBluez,
+				androidDep: androidR,
+			},
+		}, {
+			Name:              "android_r_floss",
+			Fixture:           "arcBootedWithPlayStoreAndBluetoothFloss",
+			ExtraAttr:         []string{"bluetooth_floss_flaky"},
+			ExtraSoftwareDeps: []string{"bluetooth_floss", androidR},
+			Val: &testParam{
+				stackType:  common.BluetoothStackTypeFloss,
+				androidDep: androidR,
+			},
+		}, {
+			Name:              "android_vm_t_bluez",
+			Fixture:           "arcBootedWithPlayStoreAndBluetoothBlueZ",
+			ExtraAttr:         []string{"bluetooth_flaky"},
+			ExtraSoftwareDeps: []string{androidVMT},
+			Val: &testParam{
+				stackType:  common.BluetoothStackTypeBluez,
+				androidDep: androidVMT,
+			},
+		}, {
+			Name:              "android_vm_t_floss",
+			Fixture:           "arcBootedWithPlayStoreAndBluetoothFloss",
+			ExtraAttr:         []string{"bluetooth_floss_flaky"},
+			ExtraSoftwareDeps: []string{"bluetooth_floss", androidVMT},
+			Val: &testParam{
+				stackType:  common.BluetoothStackTypeFloss,
+				androidDep: androidVMT,
 			},
 		}},
 		Timeout: 3*time.Minute + apputil.InstallationTimeout,
@@ -64,7 +110,8 @@ func init() {
 func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 
-	stackType := s.Param().(testParam).stackType
+	androidDep := s.Param().(*testParam).androidDep
+	stackType := s.Param().(*testParam).stackType
 	btFacade, err := facade.NewBluetoothFacade(ctx, stackType)
 	if err != nil {
 		s.Fatalf("Failed to initialize %s bluetooth facade: %v", stackType, err)
@@ -126,10 +173,25 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	turnOnBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(false))
 	turnOffBluetoothObj := d.Object(ui.ResourceID(bluetoothSwitchID), ui.Checked(true))
 	denyNotificationObj := d.Object(ui.TextMatches("Don’t allow"))
-	// This text is different across architectures, "ALLOW" in ARC and "Allow" in ARCVM.
-	allowBluetoothObj := d.Object(ui.TextMatches("(?i)Allow"))
-	// This text is different across architectures, "DENY" in ARC, "Deny" in ARCVM or "Don’t allow".
-	denyLocationObj := d.Object(ui.TextMatches("(?i)Deny|Don’t allow"))
+
+	var (
+		allowBluetoothObj *ui.Object
+		denyLocationObj   *ui.Object
+	)
+	// The texts are different across Android versions.
+	switch androidDep {
+	case androidP:
+		allowBluetoothObj = d.Object(ui.Text("ALLOW"))
+		denyLocationObj = d.Object(ui.Text("DENY"))
+	case androidR:
+		allowBluetoothObj = d.Object(ui.Text("Allow"))
+		denyLocationObj = d.Object(ui.Text("Deny"))
+	case androidVMT:
+		allowBluetoothObj = d.Object(ui.Text("Allow"))
+		denyLocationObj = d.Object(ui.Text("Don’t allow"))
+	default:
+		s.Fatal("Unsupported ARC type: ", androidDep)
+	}
 
 	// Turning Bluetooth on from ARC++ app.
 	if err := uiauto.Combine("turn Bluetooth on",
