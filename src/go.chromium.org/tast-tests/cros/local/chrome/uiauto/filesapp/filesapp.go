@@ -786,7 +786,7 @@ func (f *FilesApp) GetVolumeID(ctx context.Context, cr *chrome.Chrome, volumeLab
 	}
 
 	getVolumeID := `(label) => {
-		const volume = fileManager.volumeManager.list_.array_.find(v => v.label === label)
+		const volume = fileManager.volumeManager.volumeInfoList.array_.find(v => v.label === label)
 		return volume ? volume.volumeId : "";
 	}	`
 	var id string
