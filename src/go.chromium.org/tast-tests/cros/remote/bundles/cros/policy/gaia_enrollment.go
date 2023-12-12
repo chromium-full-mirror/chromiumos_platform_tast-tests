@@ -55,14 +55,14 @@ func init() {
 			{
 				Name: "autopush",
 				Val: gaiaenrollment.TestParams{
-					DMServer: policy.DMServerAlphaURL,
+					DMServer: policy.DMServerStagingURL,
 					PoolID:   tape.Enrollment,
 				},
 			},
 			{
 				Name: "autopush_new_saml",
 				Val: gaiaenrollment.TestParams{
-					DMServer: policy.DMServerAlphaURL,
+					DMServer: policy.DMServerStagingURL,
 					PoolID:   tape.Crosprqa4Com,
 				},
 			},
