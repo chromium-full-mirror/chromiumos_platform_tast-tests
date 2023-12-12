@@ -113,6 +113,24 @@ func init() {
 			// TODO(darrenwu): The test time was tested on cherry. Need to run the
 			// test on other low end DUT.
 			Timeout: 1 * time.Hour,
+		}, {
+			Name:    "compress7zip_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "compress-7zip-1.10.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 10 * time.Minute,
+		}, {
+			Name:    "compress7zip_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "compress-7zip-1.10.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 10 * time.Minute,
 		},
 		},
 	})

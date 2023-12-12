@@ -60,6 +60,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "MS_Per_Op",
 		},
 	},
+	{
+		"MIPS": {
+			unit:       "MIPS",
+			nameSuffix: "Mil_Inst_Per_Sec",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -219,6 +225,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			},
 			cachebenchTitle: {
 				crosboltNameTable: cachebenchCrosboltNameTable,
+				metricType:        cpuMetric,
+			},
+			compress7zipTitle: {
+				crosboltNameTable: compress7zipCrosboltNameTable,
 				metricType:        cpuMetric,
 			},
 		},
