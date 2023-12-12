@@ -7,7 +7,6 @@ package fixture
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -123,63 +122,42 @@ func (v *ImageValue) FwConfigPaths() []string {
 func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, imageType ImageType, s *testing.FixtState) (*ImageValue, error) {
 	inputURL, _ := s.Var(BuildURL)
 	iv := &ImageValue{}
-	iv.imagePath = inputURL
 
-	var hasManualConf bool
-	if conf, ok := s.Var(FwConfigJSON); ok {
-		iv.configPaths = []string{conf}
-		hasManualConf = true
-	}
-
-	if inputURL == "" {
-		// Absence of BuildURL argument.  This instructs tast to not flash any image to
-		// the devboard, but run the test against the code already running.  This works
-		// only if the image on the board is of the same type (system_test_auto / ti50) as
-		// the test case expects.  A json configuration file will be selected from
-		// ti50/common based on the information from devboardservice and the type of image
-		// declared on the test case.
-		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, imageType)
-
-		if !hasManualConf {
-			config := defaultConfigPath(s, testbedProperties.TestbedType, imageType)
-			testing.ContextLogf(ctx, "-var=%s= not provided, using default at %s", FwConfigJSON, config)
-			iv.configPaths = []string{config}
-		}
-
-		return iv, nil
-	}
-
+	// For inputURL that is in the form of latest-*, convert it to the corresponding GS path.
 	if strings.HasPrefix(inputURL, LatestPrefix) {
+		var latestURL string
+		var err error
 		branch := inputURL[len(LatestPrefix):]
 		switch branch {
 		case ToTBranch:
 			// Special value "latests-tot" finds the most recent complete set of artifacts,
 			// and then goes into the case below.
-			latestURL, err := findLatestCompletedTi50PostsubmitBuildURL(ctx)
+			latestURL, err = findLatestCompletedTi50PostsubmitBuildURL(ctx)
 			if err != nil {
 				return nil, err
 			}
 			testing.ContextLogf(ctx, "Found %s for %s", latestURL, inputURL)
-			iv.imagePath = latestURL
 		case Cr50QualBranch:
-			latestURL, err := downloadLatestCr50QualImage(ctx)
+			latestURL, err = lookupLatestCr50QualTbz2(ctx)
 			if err != nil {
 				return nil, err
-			}
-			iv.imagePath = latestURL
-
-			if !hasManualConf {
-				config := defaultConfigPath(s, testbedProperties.TestbedType, imageType)
-				testing.ContextLogf(ctx, "-var=%s= not provided, using default at %s", FwConfigJSON, config)
-				iv.configPaths = []string{config}
 			}
 		default:
 			return nil, errors.New("unrecognized branch " + branch)
 		}
-
-		return iv, nil
+		inputURL = latestURL
 	}
 
+	// For inputURL that is in the form of gs://*.tbz2, convert it to a local file by downloading.
+	if strings.HasPrefix(inputURL, gsPrefix) && strings.HasSuffix(inputURL, ".tbz2") {
+		downloadedFile, err := downloadToTempFile(ctx, "tbz2", inputURL)
+		if err != nil {
+			return nil, err
+		}
+		inputURL = downloadedFile
+	}
+
+	// For inputURL that is still in gs://, it should now be either a build folder or .bin file
 	if strings.HasPrefix(inputURL, gsPrefix) {
 		// BuildURL pointing to artifacts via a Google Storage URL.  The logic below
 		// selects an image and corresponding json file depending on the type needed by
@@ -189,11 +167,9 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		// Assume URL is a build folder if it doesn't end in .bin.
 		if !strings.HasSuffix(inputURL, ".bin") {
 			tastURL := gsPrefix + filepath.Join(inputURL[len(gsPrefix):], "tast")
-			args := []string{"ls", tastURL}
-			testing.ContextLogf(ctx, "Looking for tast directory: gsutil %s", strings.Join(args, " "))
-			cmd := exec.CommandContext(ctx, "gsutil", args...)
-			if err := cmd.Run(); err == nil {
 
+			testing.ContextLogf(ctx, "Looking for tast directory %s", tastURL)
+			if gsURLExists(ctx, tastURL) {
 				imageDir, err := ti50ImageDirectory(testbedProperties.TestbedType, imageType)
 				if err != nil {
 					return nil, err
@@ -217,72 +193,66 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 				fullURL = gsPrefix + filepath.Join(inputURL[len(gsPrefix):], subDir, bin)
 			}
 		}
-		f, err := ioutil.TempFile("", "*.bin")
+
+		downloadedBin, err := downloadToTempFile(ctx, "image bin", fullURL)
 		if err != nil {
-			return nil, errors.Wrap(err, "create temp image file")
+			return nil, err
 		}
-		f.Close()
+		iv.imagePath = downloadedBin
 
-		{
-			args := []string{"cp", fullURL, f.Name()}
-			testing.ContextLogf(ctx, "Download image: gsutil %s", strings.Join(args, " "))
-			cmd := exec.CommandContext(ctx, "gsutil", args...)
-			if err := cmd.Run(); err != nil {
-				return nil, errors.Wrapf(err, "download %q", fullURL)
-			}
-			iv.imagePath = f.Name()
-		}
-
-		if !hasManualConf && jsonURL != "" {
-			jsonf, err := ioutil.TempFile("", "*.json")
+		if jsonURL != "" {
+			downloadedJSON, err := downloadToTempFile(ctx, "fw conf json", jsonURL)
 			if err != nil {
-				return nil, errors.Wrap(err, "create temp json file")
+				return nil, err
 			}
-			jsonf.Close()
-			iv.configPaths = []string{jsonf.Name()}
-
-			args := []string{"cp", jsonURL, jsonf.Name()}
-			testing.ContextLogf(ctx, "Download conf: gsutil %s", strings.Join(args, " "))
-			cmd := exec.CommandContext(ctx, "gsutil", args...)
-			if err := cmd.Run(); err != nil {
-				return nil, errors.Wrapf(err, "download %q", jsonURL)
-			}
+			iv.configPaths = []string{downloadedJSON}
 		}
-		return iv, nil
+	// For inputURL that is empty, use existing image
+	} else if inputURL == "" {
+		// Absence of BuildURL argument.  This instructs tast to not flash any image to
+		// the devboard, but run the test against the code already running.  This works
+		// only if the image on the board is of the same type (system_test_auto / ti50) as
+		// the test case expects.  A json configuration file will be selected from
+		// ti50/common based on the information from devboardservice and the type of image
+		// declared on the test case.
+		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, imageType)
+	// For inputURL that is a local path, may need to extract compressed archive
+	} else {
+		img, err := os.Stat(inputURL)
+		if err != nil {
+			return nil, err
+		}
+		// Disallow directories
+		if img.IsDir() {
+			return nil , errors.New("-var=" + BuildURL + " must be a file: " + inputURL)
+		// Extract tbz2 archive
+		} else if strings.HasSuffix(inputURL, ".tbz2") {
+			chip := testbedTypeToChip(testbedProperties.TestbedType)
+			if chip != "h1" {
+				return nil, errors.New("testbedType must be h1 for .tbz2 url: " + chip)
+			}
+			extractedFile, err := extractCr50QualImageFromTbz2(ctx, inputURL)
+			if err != nil {
+				return nil, err
+			}
+			inputURL = extractedFile
+		}
+		iv.imagePath = inputURL
 	}
 
-	img, err := os.Stat(inputURL)
-	if err != nil {
-		return nil, err
-	}
-	if img.IsDir() {
-		// BuildURL is a local directory, which must be a ti50/common checkout.  Code
-		// below will select an image file within the build/ directory and json file
-		// within the ports/ directory, based on the type of image required by the test
-		// case and chip/variant.
-		var name string
-		slot, _ := s.Var(Slot)
-		chip, _ := s.Var(Chip)
-		variant, _ := s.Var(Variant)
-		if slot != "" {
-			name = "full_image." + slot + ".signed.bin"
-		} else {
-			name = "full_image.signed.bin"
+	conf, hasManualConf := s.Var(FwConfigJSON)
+	if hasManualConf {
+		// Manual Configuration overrides everything.
+		_, err := os.Stat(conf)
+		if err != nil {
+			return nil, err
 		}
-		if testbedProperties.TestbedType == "gsc_he" {
-			chip = "host_emulation"
-			variant = "host_emulation"
-			name = "image.A.bin"
-		}
-
-		p := ti50ImageTypeToProject(imageType)
-
-		iv.imagePath = filepath.Join(inputURL, "build", p, chip, variant, name)
-		if !hasManualConf {
-			testing.ContextLogf(ctx, "-var=%s= not provided, using directory default", FwConfigJSON)
-			iv.configPaths = []string{filepath.Join(inputURL, "ports", chip, "software", "tools", p+"_"+chip+".json")}
-		}
-		return iv, nil
+		iv.configPaths = []string{conf}
+	} else if len(iv.configPaths) == 0 {
+		// No configPaths found yet, use default configs.
+		conf = defaultConfigPath(s, testbedProperties.TestbedType, imageType)
+		testing.ContextLogf(ctx, "-var=%s= not provided, and non found in tast artifacts, using default at %s", FwConfigJSON, conf)
+		iv.configPaths = []string{conf}
 	}
 
 	return iv, nil
@@ -290,16 +260,11 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 
 // findLatestCompletedTi50PostsubmitBuildURL finds the most recent build with the full set of image artifacts.
 func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context) (string, error) {
-	branchGsPrefix := gsPrefix + postSubmitArtifactsBuilder
-
-	args := []string{"ls", branchGsPrefix}
-	testing.ContextLogf(ctx, "Listing builds for tot: gsutil %s", strings.Join(args, " "))
-	cmd := exec.CommandContext(ctx, "gsutil", args...)
-	output, err := cmd.Output()
+	builds, err := gsLs(ctx, "builds for tot", gsPrefix + postSubmitArtifactsBuilder)
 	if err != nil {
 		return "", err
 	}
-	builds := strings.Split(string(output), "\n")
+
 	sort.Slice(builds, func(i, j int) bool {
 		// buildRe extracts the build number, YYYYY, in .*/Rxxx-xxxxx.x.x-YYYYY-xxxx...
 		var buildRe = regexp.MustCompile(`.*/R\d+-[0-9.]*-(\d+)-\d*/?`)
@@ -368,8 +333,8 @@ func qualVersionToGsGlob(qualVersion, prefix string) (string, error) {
 	return prefix + ".*.w" + m[1] + "_" + m[2] + "_" + m[3] + "_" + m[4] + ".tbz2", nil
 }
 
-// downloadLatestCr50QualImage downloads the image binary indicated in the qual file.
-func downloadLatestCr50QualImage(ctx context.Context) (string, error) {
+// lookupLatestCr50QualTbz2 downloads the image binary indicated in the qual file.
+func lookupLatestCr50QualTbz2(ctx context.Context) (string, error) {
 	v, err := cmd(ctx, "read qual file", "gsutil", "cat", gsPrefix+cr50LatestQualFile)
 	if err != nil {
 		return "", err
@@ -389,13 +354,11 @@ func downloadLatestCr50QualImage(ctx context.Context) (string, error) {
 		return "", errors.Errorf("non-unique qual image: %v", urls)
 	}
 
-	// download qual image tbz2
-	tbz2, err := downloadToTempFile(ctx, "cr50 qual tbz2", urls[0])
-	if err != nil {
-		return "", err
-	}
-	defer os.Remove(tbz2)
+	return urls[0], nil
+}
 
+// extractCr50QualImageFromTbz2 extracts the image binary from bz2 archive.
+func extractCr50QualImageFromTbz2(ctx context.Context, tbz2 string) (string, error) {
 	// extract qual image tbz2
 	d, err := os.MkdirTemp("", "cr50qual")
 	if err != nil {
@@ -427,17 +390,13 @@ func cmd(ctx context.Context, desc, cmd string, args ...string) (string, error) 
 
 // gsURLExists retruns whether a gs URL is valid.
 func gsURLExists(ctx context.Context, url string) bool {
-	args := []string{"ls", url}
-	cmd := exec.CommandContext(ctx, "gsutil", args...)
-	return cmd.Run() == nil
+	_, err := cmd(ctx, url + " exists?", "gsutil", "ls", url)
+	return err == nil
 }
 
 // gsLs finds urls matching expr and returns them as a list
 func gsLs(ctx context.Context, desc, expr string) ([]string, error) {
-	args := []string{"ls", expr}
-	testing.ContextLogf(ctx, "Listing %s: gsutil %s", desc, strings.Join(args, " "))
-	cmd := exec.CommandContext(ctx, "gsutil", args...)
-	output, err := cmd.Output()
+	output, err := cmd(ctx, "Listing " + desc, "gsutil", "ls", expr)
 	if err != nil {
 		return nil, errors.Wrap(err, "listing "+desc)
 	}
@@ -470,15 +429,22 @@ func ti50ImageTypeToProject(i ImageType) string {
 	return string(i)
 }
 
+func testbedTypeToChip(testbedType ti50.TestbedType) string {
+        m := reTestbedTypeParts.FindStringSubmatch(string(testbedType))
+        if m == nil {
+		return ""
+        }
+	return m[1]
+}
+
 // defaultConfigPath determines the chroot path of fw config json files base on testbed and image types.
 func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, imageType ImageType) string {
 	var fw, c string
 
-	m := reTestbedTypeParts.FindStringSubmatch(string(testbedType))
-	if m == nil {
+	c = testbedTypeToChip(testbedType)
+        if c == "" {
 		s.Fatal("Unable to determine chip from testbedType: ", testbedType)
-	}
-	c = m[1]
+        }
 
 	switch imageType {
 	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image:
