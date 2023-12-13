@@ -242,11 +242,6 @@ func TestPlatformInteropParamParams(t *testing.T) {
 					// Skip a test that will never runs on any device.
 					continue
 				}
-				// TODO(b/251256531): Enable this once H.264 v4l2_stateless_decoder
-				// can produce MD5SUM values, see b/234752983.
-				if decoder == v4l2Stateless && codec == "h264" {
-					continue
-				}
 
 				for _, sourceFile := range sourceFiles {
 					encoderBinary, encoderParamsGenerator := getEncoderBinaryAndParams(encoder, codec)
