@@ -1262,6 +1262,18 @@ func init() {
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
 			{
+				Name: "h264_1080p_60fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/1080p_60fps_600frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
+				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
 				Name: "h264_2160p_30fps_hw_intel_mc",
 				Val: playbackPerfParams{
 					fileName:    "perf/h264/2160p_30fps_300frames.h264.mp4",
@@ -1271,6 +1283,18 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_30"},
 				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264.mp4"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
+				Name: "h264_2160p_60fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/2160p_60fps_600frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_60"},
+				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
 			{
@@ -1286,6 +1310,18 @@ func init() {
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
 			{
+				Name: "vp9_1080p_60fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:    "perf/vp9/1080p_60fps_600frames.vp9.webm",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60"},
+				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
 				Name: "vp9_2160p_30fps_hw_intel_mc",
 				Val: playbackPerfParams{
 					fileName:    "perf/vp9/2160p_30fps_300frames.vp9.webm",
@@ -1295,6 +1331,18 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_30"},
 				ExtraData:         []string{"perf/vp9/2160p_30fps_300frames.vp9.webm"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
+				Name: "vp9_2160p_60fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:    "perf/vp9/2160p_60fps_600frames.vp9.webm",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60"},
+				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.webm"},
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
 			{
@@ -1310,6 +1358,18 @@ func init() {
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
 			{
+				Name: "av1_1080p_60fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:    "perf/av1/1080p_60fps_600frames.av1.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_60"},
+				ExtraData:         []string{"perf/av1/1080p_60fps_600frames.av1.mp4"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
 				Name: "av1_2160p_30fps_hw_intel_mc",
 				Val: playbackPerfParams{
 					fileName:    "perf/av1/2160p_30fps_300frames.av1.mp4",
@@ -1319,6 +1379,18 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_30"},
 				ExtraData:         []string{"perf/av1/2160p_30fps_300frames.av1.mp4"},
+				Fixture:           "chromeVideoWithIntelMediaCompression",
+			},
+			{
+				Name: "av1_2160p_60fps_hw_intel_mc",
+				Val: playbackPerfParams{
+					fileName:    "perf/av1/2160p_60fps_600frames.av1.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.GPUFamily("meteorlake", "alderlake", "raptorlake")),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_2160_60"},
+				ExtraData:         []string{"perf/av1/2160p_60fps_600frames.av1.mp4"},
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
 			{
