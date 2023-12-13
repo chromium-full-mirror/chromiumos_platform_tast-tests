@@ -2889,7 +2889,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 	return &empty.Empty{}, nil
 }
 
-// HealthCheck checks if the DUT has a WiFi device. If not, we may need to reboot the DUT.
+// If the DUT does not have a WiFi device or if non-STA interface exist, return error to reboot the DUT.
 func (s *ShillService) HealthCheck(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
@@ -2898,6 +2898,12 @@ func (s *ShillService) HealthCheck(ctx context.Context, _ *empty.Empty) (*empty.
 	_, err = shill.WifiInterface(ctx, manager, 5*time.Second)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not get a WiFi interface")
+	}
+	ifs, err := local_iw.NewLocalRunner().ListInterfaces(ctx)
+	for _, val := range ifs {
+		if val.IfType != iw.IfTypeManaged {
+			return nil, errors.Wrap(err, "non-STA WiFi interface exists")
+		}
 	}
 
 	return &empty.Empty{}, nil
