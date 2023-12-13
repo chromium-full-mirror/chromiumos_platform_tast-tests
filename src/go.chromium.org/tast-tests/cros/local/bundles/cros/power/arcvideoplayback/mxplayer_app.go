@@ -84,7 +84,7 @@ func (m *MxPlayerApp) DismissPrompts(ctx context.Context) error {
 	otherOptionBtn := m.d.Object(androidui.ID(mxPlayerIDPrefix+"other_layout"), androidui.ClassName(layoutClassName))
 	// There might be two different arc dump hierarchies of granting storage permission that affect how nodes are captured.
 	openSettingsBtn := m.d.Object(androidui.ID(mxPlayerIDPrefix+"storage_permission_accept"), androidui.Text("OPEN SETTINGS"))
-	storageAllowBtn := m.d.Object(androidui.ID(permissionIDPrefix+"permission_allow_button"), androidui.TextMatches("(?i)Allow"))
+	storageAllowBtn := m.d.Object(androidui.ResourceIDMatches(".*permission_allow_button$"), androidui.TextMatches("(?i)Allow"))
 	foundObject, err := cuj.FindAnyExists(ctx, longUITimeout, otherOptionBtn, openSettingsBtn, storageAllowBtn)
 	if err != nil {
 		return errors.Wrap(err, "failed to find objects before granting storage permission")
@@ -341,9 +341,10 @@ func (m *MxPlayerApp) grantStoragePermission(ctx context.Context) error {
 		cuj.WaitUntilGone(openSettingsBtn, longUITimeout),
 		cuj.FindAndClick(allowToggle, defaultUITimeout),
 		cuj.FindAndClick(navigateUp, defaultUITimeout),
+		cuj.WaitUntilGone(allowToggle, defaultUITimeout),
 	)
 
-	allowBtn := m.d.Object(androidui.ID(permissionIDPrefix+"permission_allow_button"), androidui.TextMatches("(?i)Allow"))
+	allowBtn := m.d.Object(androidui.ResourceIDMatches(".*permission_allow_button$"), androidui.TextMatches("(?i)Allow"))
 	return uiauto.NamedCombine("grant storage permission",
 		uiauto.IfSucceedThenElse(cuj.WaitForExists(openSettingsBtn, defaultUITimeout),
 			allowAccessToFiles,
