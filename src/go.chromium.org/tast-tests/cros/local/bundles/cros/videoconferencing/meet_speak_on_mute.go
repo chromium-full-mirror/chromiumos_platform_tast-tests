@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/audio/wav"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/videoconferencing/data"
@@ -109,6 +110,13 @@ func MeetSpeakOnMute(ctx context.Context, s *testing.State) {
 	}
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui")
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			if err := crastestclient.DumpAudioDiagnostics(ctx, s.OutDir()); err != nil {
+				s.Error("Failed to dump audio diagnostics: ", err)
+			}
+		}
+	}(cleanupCtx)
 
 	browserType := s.FixtValue().(fixture.FixtData).BrowserType()
 
