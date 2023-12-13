@@ -285,6 +285,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 				crosboltNameTable: tensorflowLiteCrosboltNameTable,
 				metricType:        systemMetric,
 			},
+			rnNoiseTitle: {
+				crosboltNameTable: rnNoiseCrosboltNameTable,
+				metricType:        cpuMetric,
+			},
 		},
 	}
 }
