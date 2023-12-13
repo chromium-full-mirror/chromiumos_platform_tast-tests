@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -15,6 +16,7 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -61,6 +63,21 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
+	VerityHashHostBackup, err := os.CreateTemp("", "VerityHashBackup")
+	if err != nil {
+		s.Fatal("Failed to create temporary dir for rootfs verity hash backup")
+	}
+
+	cleanupContext := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		VerityHashHostBackup.Close()
+		if err := os.Remove(VerityHashHostBackup.Name()); err != nil {
+			s.Log("Failed to delete rootfs verity hash back up dir from host")
+		}
+	}(cleanupContext)
+
 	initialCopy, err := h.KernelServiceClient.GetCurrentCopy(ctx, &pb.Partition{})
 	if err != nil {
 		s.Fatal("Failed to get label of initial part")
@@ -71,13 +88,11 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to back up KERN-A and KERN-B: ", err)
 	}
 
-	needsRestore := true
+	kernelNeedsRestore := true
+	hashNeedsRestore := true
 
-	cleanupContext := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Minute)
-	defer cancel()
 	defer func(ctx context.Context) {
-		if needsRestore {
+		if kernelNeedsRestore {
 			if err := h.RequireKernelServiceClient(ctx); err != nil {
 				s.Fatal("Failed to connect to kernel service: ", err)
 			}
@@ -123,19 +138,33 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 
 	s.Log("Verify DUT in KERN-A or ROOT-A")
 	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_A,
 	}); err != nil {
 		s.Fatal("Failed to verify DUT currently is in copy A: ", err)
 	}
 
 	// Backup verity hash after ensuring copy A is bootable as it may have changed after making it bootable.
-	verityBackup, err := h.KernelServiceClient.BackupRootfsVerityHash(ctx, kernelBackup.KernA)
+	verityBackup, err := h.KernelServiceClient.BackupRootfsVerityHash(ctx, &pb.PartitionInfo{
+		Copy: pb.PartitionCopy_A,
+	})
 	if err != nil {
 		s.Fatal("Failed to back up ROOT-A verity hash: ", err)
 	}
+
+	s.Log("Copying verity hash back up to host")
+	if err := linuxssh.GetFile(ctx, h.DUT.Conn(), verityBackup.BackupPath, VerityHashHostBackup.Name(), linuxssh.PreserveSymlinks); err != nil {
+		s.Fatal("Failed to copy a KERN-A backup to the host")
+	}
+
 	defer func(ctx context.Context) {
-		if needsRestore {
+		if hashNeedsRestore {
+			s.Log("Sync backups from host to DUT")
+			if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{
+				VerityHashHostBackup.Name(): verityBackup.BackupPath,
+			}, linuxssh.DereferenceSymlinks); err != nil {
+				s.Fatal("Failed to get backup files to DUT from host")
+			}
+
 			if err := h.RequireKernelServiceClient(ctx); err != nil {
 				s.Fatal("Failed to connect to kernel service: ", err)
 			}
@@ -143,6 +172,11 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 			s.Log("Restoring ROOT-A verity hash from backup")
 			if _, err := h.KernelServiceClient.RestoreRootfsVerityHash(ctx, verityBackup); err != nil {
 				s.Fatal("Failed to restore rootfs verity hash from backup: ", err)
+			}
+
+			s.Log("Performing mode aware reboot")
+			if err := ms.ModeAwareReboot(ctx, firmware.ColdReset); err != nil {
+				s.Fatal("Failed to reboot: ", err)
 			}
 		}
 		s.Log("Delete verity backup file from DUT")
@@ -167,15 +201,23 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 
 	s.Log("Verify DUT in KERN-B or ROOT-B now")
 	if _, err := h.KernelServiceClient.VerifyKernelCopy(ctx, &pb.Partition{
-		Name: pb.PartitionName_KERNEL,
 		Copy: pb.PartitionCopy_B,
 	}); err != nil {
 		s.Fatal("Failed to verify DUT currently is in copy B: ", err)
 	}
 
+	s.Log("Sync backups from host to DUT")
+	if _, err := linuxssh.PutFiles(ctx, h.DUT.Conn(), map[string]string{
+		VerityHashHostBackup.Name(): verityBackup.BackupPath,
+	}, linuxssh.DereferenceSymlinks); err != nil {
+		s.Fatal("Failed to get backup files to DUT from host")
+	}
+
 	if _, err := h.KernelServiceClient.RestoreRootfsVerityHash(ctx, verityBackup); err != nil {
 		s.Fatal("Failed to restore rootfs verity hash from backup: ", err)
 	}
+
+	kernelNeedsRestore = false
 
 	if _, err := h.KernelServiceClient.RestoreKernel(ctx, kernelBackup); err != nil {
 		s.Fatal("Failed to restore kernel from backup: ", err)
@@ -198,5 +240,5 @@ func VerityCorruptRootfs(ctx context.Context, s *testing.State) {
 
 	// Since we already restored verity hash and kernel from backup, and restored the
 	// cgpt attributes successfully (set priority for A higher again), no need to restore again.
-	needsRestore = false
+	hashNeedsRestore = false
 }

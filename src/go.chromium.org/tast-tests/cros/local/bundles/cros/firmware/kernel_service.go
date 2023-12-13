@@ -139,7 +139,7 @@ func (ks *KernelService) RestorePartition(ctx context.Context, req *pb.Partition
 	return &empty.Empty{}, nil
 }
 
-// BackupKernel backs up both kernel A and B copies, and corresponding ROOTFS verity hashes and saves them to a file.
+// BackupKernel backs up both kernel A and B copies, and corresponding ROOTFS and saves them to a file.
 func (ks *KernelService) BackupKernel(ctx context.Context, req *pb.KernelBackup) (*pb.KernelBackup, error) {
 	var rootDevWithPart string
 	if req.RootDev != "" {
@@ -331,7 +331,6 @@ func (ks *KernelService) BackupRootfsVerityHash(ctx context.Context, req *pb.Par
 	}
 
 	return &pb.RootfsVerityHashBackup{
-		Name:       req.Name,
 		Copy:       req.Copy,
 		RootDev:    rootDevWithPart,
 		Offset:     offset,

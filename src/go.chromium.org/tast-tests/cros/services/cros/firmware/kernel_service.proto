@@ -108,7 +108,7 @@ message CgptPartition {
 }
 
 message GetCgptTableRequest {
-    string BlockDevice = 1; // Ensure BlockDevice includes a partition number. 
+    string BlockDevice = 1; // Ensure BlockDevice includes a partition number.
 }
 
 message GetCgptTableResponse {
@@ -172,7 +172,7 @@ message RootfsVerityHashBackup {
     int64 Offset = 3;
     int64 HashSize = 4;
     string BackupPath = 5;
-    PartitionName Name = 6;
+    reserved 6;
     PartitionCopy Copy = 7;
 }
 
