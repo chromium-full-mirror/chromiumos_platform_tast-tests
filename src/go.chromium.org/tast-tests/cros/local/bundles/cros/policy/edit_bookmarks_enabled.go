@@ -38,8 +38,15 @@ func init() {
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
-		Fixture:      fixture.ChromePolicyLoggedIn,
+		Attr: []string{
+		// Disabled by TORA.  See: b/298852783
+		// 	"group:golden_tier",
+		// 	"group:medium_low_tier",
+		// 	"group:hardware",
+		// 	"group:complementary",
+		// 	"group:hw_agnostic"
+		},
+		Fixture: fixture.ChromePolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.EditBookmarksEnabled{}, pci.VerifiedFunctionalityUI),
 		},
