@@ -53,11 +53,11 @@ type Config struct {
 	openvpnTopology               OpenVPNTopology
 
 	// Parameters for a WireGuard connection.
-	// WGUsePSK indicates whether the connection uses PSK in authentication.
-	WGUsePSK bool
-	// WGAutoGenKey indicates whether letting shill generate the private key for
-	// the client side.
-	WGAutoGenKey bool
+	wgUsePSK                 bool
+	wgAutoGenKey             bool
+	wgClientPublicKey        string
+	wgUseServerSecondKeyPair bool
+
 	// IPType specifies the overlay IP type of the VPN service.
 	// Currently VPNs except for WireGuard only supports IPv4.
 	IPType IPType
@@ -120,11 +120,12 @@ func NewConfig(vpnType Type, opts ...Option) *Config {
 	}
 
 	c := &Config{
-		Type:          vpnType,
-		IPsecAuthType: AuthTypePSK,
-		ipv4Subnet:    v4Subnet,
-		ipv6Subnet:    v6Subnet,
-		autoConnect:   true,
+		Type:              vpnType,
+		IPsecAuthType:     AuthTypePSK,
+		wgClientPublicKey: wgClientPublicKey,
+		ipv4Subnet:        v4Subnet,
+		ipv6Subnet:        v6Subnet,
+		autoConnect:       true,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -232,10 +233,11 @@ func WithOpenVPNCertVerify(val OpenVPNCertVerifyType) Option {
 	}
 }
 
-// WithWGUsePSK enables PSK for WireGuard authentication.
-func WithWGUsePSK() Option {
+// WithWGUsePSK enables (or disables) PSK for WireGuard authentication. Default
+// value is false.
+func WithWGUsePSK(val bool) Option {
 	return func(c *Config) {
-		c.WGUsePSK = true
+		c.wgUsePSK = val
 	}
 }
 
@@ -245,7 +247,25 @@ func WithWGUsePSK() Option {
 // VPNConnect.
 func WithWGAutoGenKey() Option {
 	return func(c *Config) {
-		c.WGAutoGenKey = true
+		c.wgAutoGenKey = true
+	}
+}
+
+// WithWGClientPublicKey lets the server use k as the client public key. This is
+// a server-only option. If not set, a default client key will be used, which
+// matches the default private key used in Connection.
+func WithWGClientPublicKey(key string) Option {
+	return func(c *Config) {
+		c.wgClientPublicKey = key
+	}
+}
+
+// WithWGServerSecondKeyPair lets the server use the alternative key pair. This
+// is a server-only option. It will only be useful the test need to start the
+// second WireGuard server. Default value is false.
+func WithWGServerSecondKeyPair(val bool) Option {
+	return func(c *Config) {
+		c.wgUseServerSecondKeyPair = val
 	}
 }
 
@@ -493,13 +513,13 @@ func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error
 		return err
 	}
 
-	clientKey := wgClientPublicKey
-	if c.config.WGAutoGenKey {
-		if clientKey, err = c.generateWireGuardKey(ctx); err != nil {
+	if c.config.wgAutoGenKey {
+		c.config.wgClientPublicKey, err = c.generateWireGuardKey(ctx)
+		if err != nil {
 			return errors.Wrap(err, "failed to get public key")
 		}
 	}
-	c.Server, err = StartWireGuardServer(ctx, env, clientKey, c.config.WGUsePSK, false /*isSecondServer*/)
+	c.Server, err = startWireGuardServer(ctx, env, &c.config)
 	return err
 }
 
@@ -753,7 +773,7 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 			"Endpoint":   server.UnderlayIP + ":" + wgServerListenPort,
 			"AllowedIPs": genAllowedIPs("0.0.0.0/0", "::/0"),
 		}
-		if config.WGUsePSK {
+		if config.wgUsePSK {
 			peer["PresharedKey"] = wgPresharedKey
 		}
 		if secondServer != nil {
@@ -791,7 +811,7 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 		"StaticIPConfig":  staticIPConfig,
 		"SaveCredentials": true, // Not required, just to avoid a WARNING log in shill
 	}
-	if !config.WGAutoGenKey {
+	if !config.wgAutoGenKey {
 		properties["WireGuard.PrivateKey"] = wgClientPrivateKey
 	}
 	switch config.IPType {

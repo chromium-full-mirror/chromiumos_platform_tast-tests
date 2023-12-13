@@ -398,7 +398,7 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 	case TypeOpenVPN:
 		return startOpenVPNServer(ctx, env, config)
 	case TypeWireGuard:
-		return StartWireGuardServer(ctx, env, wgClientPublicKey, config.WGUsePSK, false /*isSecondServer*/)
+		return startWireGuardServer(ctx, env, config)
 	default:
 		return nil, errors.Errorf("unexpected VPN type %s", config.Type)
 	}
@@ -669,8 +669,13 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 	return server, nil
 }
 
-// StartWireGuardServer starts a WireGuard server.
-func StartWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey string, usePSK, isSecondServer bool) (*Server, error) {
+// startWireGuardServer starts a WireGuard server.
+func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*Server, error) {
+	// TODO(b/257379393): Currently we still hardcode a few other fields for the
+	// second server (overlay IP and listen port). We can remove the
+	// isSecondServer variable after finish the migration.
+	isSecondServer := config.wgUseServerSecondKeyPair
+
 	runner := newServerRunner(env)
 	server := &Server{
 		OverlayIfname: "wg1",
@@ -681,13 +686,13 @@ func StartWireGuardServer(ctx context.Context, env *env.Env, clientPublicKey str
 	}
 
 	configValues := map[string]interface{}{
-		"client_public_key":  clientPublicKey,
+		"client_public_key":  config.wgClientPublicKey,
 		"client_ipv4":        wgClientOverlayIPv4,
 		"client_ipv4_prefix": wgClientOverlayIPv4Prefix,
 		"client_ipv6":        wgClientOverlayIPv6,
 		"client_ipv6_prefix": wgClientOverlayIPv6Prefix,
 	}
-	if usePSK {
+	if config.wgUsePSK {
 		configValues["preshared_key"] = wgPresharedKey
 	}
 	if isSecondServer {

@@ -141,7 +141,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		tc.vpnType,
 		vpn.WithIPsecAuthType(tc.ipsecAuthType),
 		vpn.WithOpenVPNUseUserPassword(),
-		vpn.WithWGUsePSK(),
+		vpn.WithWGUsePSK(true),
 		// Enable dual-stack VPN so that 1) we can verify Chrome does not crash with
 		// a dual-stack VPN connection; 2) for WireGuard, both IPv4 and IPv6 config
 		// can be input properly. Note that not all VPN supports IPv6, IPv4-only VPN

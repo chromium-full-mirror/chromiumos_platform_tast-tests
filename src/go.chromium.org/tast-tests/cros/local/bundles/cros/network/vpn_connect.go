@@ -199,7 +199,7 @@ func init() {
 			Val: vpnConnectTestParams{
 				vpnType: vpn.TypeWireGuard,
 				opts: []vpn.Option{
-					vpn.WithWGUsePSK(),
+					vpn.WithWGUsePSK(true),
 				},
 			},
 			Fixture:           "vpnEnv",

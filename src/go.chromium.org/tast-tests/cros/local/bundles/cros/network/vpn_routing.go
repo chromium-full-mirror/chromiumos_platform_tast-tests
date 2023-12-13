@@ -186,7 +186,12 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 	// The second server is only for WireGuard.
 	var secondServer *vpn.Server
 	if tc.wgTwoPeers {
-		secondServer, err = vpn.StartServerWithConfig(ctx, networkEnv.Router, config)
+		secondServerOpts := []vpn.Option{
+			vpn.WithIPType(tc.ipType),
+			vpn.WithWGServerSecondKeyPair(true),
+			vpn.WithWGUsePSK(true),
+		}
+		secondServer, err = vpn.StartServer(ctx, networkEnv.Router, vpn.TypeWireGuard, secondServerOpts...)
 		if err != nil {
 			s.Fatal("Failed to create second WireGuard server: ", err)
 		}
