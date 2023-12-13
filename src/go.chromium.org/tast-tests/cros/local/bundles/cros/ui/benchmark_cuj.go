@@ -10,10 +10,12 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/benchmarkcuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const defaultTimeout = 15*time.Minute + cujrecorder.CooldownTimeout
@@ -269,6 +271,151 @@ func init() {
 					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
+			},
+			// Experimental variants.
+			{
+				Name:    "speedometer_blt_1gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+			},
+			{
+				Name:    "speedometer_blt_2gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+			},
+			{
+				Name:    "speedometer_blt_3gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+			},
+			{
+				Name:    "speedometer_blt_4gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+			},
+			{
+				Name:    "motionmark_blt_1gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+			},
+			{
+				Name:    "motionmark_blt_2gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+			},
+			{
+				Name:    "motionmark_blt_3gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+			},
+			{
+				Name:    "motionmark_blt_4gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+			},
+			{
+				Name:    "kraken_blt_1gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+			},
+			{
+				Name:    "kraken_blt_2gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+			},
+			{
+				Name:    "kraken_blt_3gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+			},
+			{
+				Name:    "kraken_blt_4gb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
 			},
 		},
 	})

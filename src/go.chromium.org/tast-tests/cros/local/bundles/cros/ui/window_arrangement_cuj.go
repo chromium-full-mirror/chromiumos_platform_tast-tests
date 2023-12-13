@@ -94,6 +94,47 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
+			// Experimental variants.
+			{
+				Name: "blt_1gb",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+					Tablet:      true,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(append(cuj.Experimental8GBModelConditions(), hwdep.TouchScreen())...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+			},
+			{
+				Name: "blt_2gb",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+					Tablet:      true,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(append(cuj.Experimental8GBModelConditions(), hwdep.TouchScreen())...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+			},
+			{
+				Name: "blt_3gb",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+					Tablet:      true,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(append(cuj.Experimental8GBModelConditions(), hwdep.TouchScreen())...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+			},
+			{
+				Name: "blt_4gb",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+					Tablet:      true,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(append(cuj.Experimental8GBModelConditions(), hwdep.TouchScreen())...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+			},
 			// TODO(b/302748186): Remove rounded window tests once A/B testing
 			// for rounded windows is done.
 			{

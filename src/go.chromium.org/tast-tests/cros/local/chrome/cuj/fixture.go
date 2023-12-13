@@ -6,6 +6,7 @@ package cuj
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -1081,6 +1082,86 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad1GB",
+		Desc: "CUJ fixture that adds 1GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 1,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad2GB",
+		Desc: "CUJ fixture that adds 2GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 2,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad3GB",
+		Desc: "CUJ fixture that adds 3GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 3,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad4GB",
+		Desc: "CUJ fixture that adds 4GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 4,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 }
 
 func prepareDocsBlockerExtension(s *testing.FixtState) (string, error) {
@@ -1303,6 +1384,10 @@ type loggedInToCUJUserFixture struct {
 	arcSupported       bool // Use ARCSupported flag instead of ARCEnabled.
 	enableChromeVox    bool
 	cleanupTheme       func(ctx context.Context) error
+	// backgroundLoad describes whether to add background load.
+	backgroundLoad bool
+	// memoryLoadSize specifies the size of additional memory load in gigabytes.
+	memoryLoadSize int
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -1601,6 +1686,51 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			windowNames = append(windowNames, w.Name)
 		}
 		s.Logf("Failed to wait for window(s) to close: %s", strings.Join(windowNames, ", "))
+	}
+
+	if f.backgroundLoad {
+		testMountDir := "/tmp/test/"
+		if _, err := os.Stat(testMountDir); os.IsNotExist(err) {
+			if err := os.Mkdir(testMountDir, 0755); err != nil {
+				s.Fatalf("Failed to create %v directory: %v", testMountDir, err)
+			}
+			testing.ContextLog(ctx, "Successfully created directory ", testMountDir)
+		}
+
+		// Create a mount point and mount Ramfs.
+		mountArgs := []string{"-t", "ramfs", "-o", fmt.Sprintf("size=%vg", f.memoryLoadSize), "ramfs", testMountDir}
+		mountCmd := testexec.CommandContext(ctx, "mount", mountArgs...)
+		if err := mountCmd.Run(testexec.DumpLogOnError); err != nil {
+			s.Fatalf("Failed to run mount %v: %v", mountArgs, err)
+		}
+		testing.ContextLog(ctx, "Successfully completed mount ", mountArgs)
+
+		// Write `f.memoryLoadSize` gigabytes data to the mounted Ramfs.
+		ddArgs := []string{"if=/dev/zero", fmt.Sprintf("of=%szero", testMountDir), "bs=1G", fmt.Sprintf("count=%v", f.memoryLoadSize)}
+		ddCmd := testexec.CommandContext(ctx, "dd", ddArgs...)
+		if err := ddCmd.Run(testexec.DumpLogOnError); err != nil {
+			s.Fatalf("Failed to run dd %v: %v", ddArgs, err)
+		}
+		testing.ContextLog(ctx, "Successfully completed dd ", ddArgs)
+
+		go func() {
+			select {
+			case <-s.FixtContext().Done():
+				// Clean-up and un-mount.
+				backgroundCtx := context.Background()
+				umountCmd := testexec.CommandContext(backgroundCtx, "umount", testMountDir)
+				if err := umountCmd.Run(); err != nil {
+					testing.ContextLog(backgroundCtx, "Failed to umount ", testMountDir)
+				} else {
+					testing.ContextLog(backgroundCtx, "Successfully completed umount ", testMountDir)
+				}
+				if err := os.RemoveAll(testMountDir); err != nil {
+					testing.ContextLog(backgroundCtx, "Failed to remove ", testMountDir)
+				} else {
+					testing.ContextLog(backgroundCtx, "Successfully removed ", testMountDir)
+				}
+			}
+		}()
 	}
 
 	f.cr = cr

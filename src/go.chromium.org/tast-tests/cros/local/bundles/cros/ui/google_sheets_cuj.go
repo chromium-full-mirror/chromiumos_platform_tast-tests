@@ -105,6 +105,42 @@ func init() {
 				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
 				Fixture:   "loggedInToCUJUserWithLauncherImageSearch",
 			},
+			{
+				Name: "blt_1gb",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+			},
+			{
+				Name: "blt_2gb",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+			},
+			{
+				Name: "blt_3gb",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+			},
+			{
+				Name: "blt_4gb",
+				Val: googleSheetsCUJTestParam{
+					browserType: browser.TypeAsh,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+			},
 		},
 	})
 }
