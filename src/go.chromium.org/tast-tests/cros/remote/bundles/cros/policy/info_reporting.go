@@ -60,6 +60,11 @@ func init() {
 				Val: infoReportingParameters{
 					reportingEnabled: false,
 				},
+				ExtraSearchFlags: []*testing.StringPair{{
+					Key: "feature_id",
+					// COM_DEVMAN_CUJ4_TASK3_WF3: Device pulls updated policy
+					Value: "screenplay-10156bd7-1b85-4ea0-9e70-0788b3c62a01",
+				}},
 			},
 		},
 		VarDeps: []string{
