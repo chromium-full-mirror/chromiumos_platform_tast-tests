@@ -618,7 +618,12 @@ func (p *Proxy) PutFiles(ctx context.Context, asRoot bool, fileMap map[string]st
 }
 
 // GetPort returns the port where servod is running on the server.
-func (p *Proxy) GetPort() int { return p.port }
+func (p *Proxy) GetPort() int {
+	if p.isDockerized() {
+		return 9999
+	}
+	return p.port
+}
 
 // dockerExec execs a command with Docker SDK.
 func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, args ...string) ([]byte, []byte, error) {
