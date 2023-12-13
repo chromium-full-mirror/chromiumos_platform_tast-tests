@@ -182,16 +182,17 @@ func ValidateResourceInfo(ctx context.Context, ri1, ri2 ResourceInfo, thr Resour
 				testing.ContextLogf(ctx, "counter %s not found in %s2", counter, process)
 				continue
 			}
+			cmd := ri2[process].command
 			if threshold == 0 {
 				// Threshold == 0 means there should be no change.
 				if val2 != val1 {
-					return errors.Errorf("Expecting %s of %s value: %d, got %d",
-						counter, process, val1, val2)
+					return errors.Errorf("Expecting %s of %s(%s) value: %d, got %d",
+						counter, process, cmd, val1, val2)
 				}
 			} else {
 				if (val2-val1)*100/val1 > threshold {
-					return errors.Errorf("unexpected value increase in %s of %s from value: %d to %d, exceeds %d%% threshold",
-						counter, process, val1, val2, threshold)
+					return errors.Errorf("unexpected value increase in %s of %s(%s) from value: %d to %d, exceeds %d%% threshold",
+						counter, process, cmd, val1, val2, threshold)
 				}
 			}
 		}

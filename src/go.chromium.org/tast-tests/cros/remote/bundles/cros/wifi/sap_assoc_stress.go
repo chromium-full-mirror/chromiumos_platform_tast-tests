@@ -179,7 +179,7 @@ func SAPAssocStress(ctx context.Context, s *testing.State) {
 
 		// We're running in a simple loop instead of s.Run() on purpose, we want to bail out on the first error.
 		for i := 0; i < sapAssocRounds; i++ {
-			testing.ContextLogf(ctx, "Connection round #%v", i+1)
+			testing.ContextLogf(ctx, "Connection round #%v starts", i+1)
 			err = wifiutil.SAPAssocStressRound(ctx, tf, tetheringConf)
 			if err != nil {
 				s.Fatal("Failure during stress round: ", err)
@@ -192,6 +192,7 @@ func SAPAssocStress(ctx context.Context, s *testing.State) {
 			if err := wifiutil.ValidatePids(resInfos[0], resInfo); err != nil {
 				s.Error("Error while validating PIDs, err: ", err)
 			}
+			testing.ContextLogf(ctx, "Connection round #%d finished: %s", i+1, resInfo.String())
 			resInfos = append(resInfos, resInfo)
 		}
 		testing.ContextLog(ctx, "Start: ", resInfos[0].String())
@@ -218,6 +219,8 @@ func SAPAssocStress(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get resource info: ", err)
 	}
+	testing.ContextLog(ctx, "Total resource validation, start value: ", resStart.String())
+	testing.ContextLog(ctx, "Total resource validation, end value: ", resEnd.String())
 	if err := wifiutil.ValidateResourceInfo(ctx, resStart, resEnd, thresholds); err != nil {
 		s.Fatal("Total resource validation failed, err: ", err)
 	}
