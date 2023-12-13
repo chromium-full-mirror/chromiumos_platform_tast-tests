@@ -177,28 +177,29 @@ func LaunchImageInPhotosFromGallery(ctx context.Context, s *testing.State) {
 
 	// Wait for image to appear in Photos app
 	ud := uidetection.NewDefault(tconn).WithTimeout(time.Minute).WithScreenshotStrategy(uidetection.ImmediateScreenshot)
-	allowButton := uidetection.Word("ALLOW")
-	gotItButton := uidetection.TextBlock([]string{"Got", "it"})
 
-	// Only clear the prompt if it shows up within certain time.
-	// ARC++ might not be ready to receive CLICK during launch.
-	// Using retry to mitigate UI flakiness.
-	closeIfShown := func(finder *uidetection.Finder) uiauto.Action {
-		return uiauto.IfSuccessThen(
-			// It can take a long time to identify a word in Photos.
-			ud.WithTimeout(40*time.Second).WaitUntilExists(finder),
-			uiauto.Retry(3, uiauto.NamedCombine("click button and wait for it to disappear",
-				ud.WithTimeout(10*time.Second).LeftClick(finder),
-				ud.WithTimeout(40*time.Second).WaitUntilGone(finder),
-			)),
-		)
+	// Photos app may request access for photos and media on the device or display
+	// some other prompt. Dismiss these to reveal the loaded image.
+	closeIfShown := func(buttonText string) {
+		// `playstore.FindActionButton` works in any ARC app.
+		button, err := playstore.FindActionButton(ctx, d, buttonText, 10*time.Second)
+		if err != nil {
+			// The button is not guaranteed to exist. If it was not discovered within
+			// the timeout, assume this dialog was never shown and does not need to be
+			// dismissed.
+			return
+		}
+
+		s.Log("Found " + buttonText + " button, click it to close")
+		if err := button.Click(ctx); err != nil {
+			s.Fatal("Failed to click button: ", err)
+		}
 	}
 
-	if err := uiauto.NamedCombine("reach main page of Photos app",
-		closeIfShown(allowButton),
-		closeIfShown(gotItButton),
-		ud.WaitUntilExists(uidetection.Word("HALLOWEEN")),
-	)(ctx); err != nil {
+	closeIfShown("(?i)allow")
+	closeIfShown("(?i)got it")
+
+	if err := ud.WaitUntilExists(uidetection.Word("HALLOWEEN"))(ctx); err != nil {
 		s.Fatal("Failed to verify the test image opened in Photos: ", err)
 	}
 }
