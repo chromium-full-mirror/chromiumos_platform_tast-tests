@@ -17,7 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/process"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -112,6 +114,10 @@ func (mp *MitmProxy) IsRunning() bool {
 
 // Start launches the mitmproxy.
 func (mp *MitmProxy) Start(ctx context.Context) error {
+	if err := killProcessesIfFound(ctx); err != nil {
+		return errors.Wrap(err, "fail to cleanup existing mitmproxy process")
+	}
+
 	nowStr := time.Now().Format("20060102-150405")
 
 	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
@@ -272,6 +278,36 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 func (mp *MitmProxy) cleanupCert() error {
 	if err := os.RemoveAll(mp.confDir); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func processes(ctx context.Context) ([]*process.Process, error) {
+	return procutil.FindAll(func(p *process.Process) bool {
+		exe, err := p.Exe()
+		// Both mitmdump and mitmproxy are process of mitmproxy.
+		// mitmdump is often used in automation test.
+		// mitmproxy is often used in manual test.
+		// Besides, we only try best but not guarantee to kill any proxy process.
+		// because I believe the error is highly likely from other unrelated processes.
+		return err == nil && (strings.HasSuffix(exe, "mitmdump") || strings.HasSuffix(exe, "mitmproxy"))
+	})
+}
+
+func killProcessesIfFound(ctx context.Context) error {
+	procs, err := processes(ctx)
+	if err != nil {
+		return errors.Wrap(err, "fail to get mitmproxy processes")
+	}
+
+	for _, proc := range procs {
+		if err := proc.Kill(); err != nil {
+			return errors.Wrapf(err, "fail to send kill signal %s", proc.String())
+		}
+		if err := procutil.WaitForTerminated(ctx, proc, 10*time.Second); err != nil {
+			return errors.Wrapf(err, "fail to kill mitmproxy process %s", proc.String())
+		}
 	}
 
 	return nil
