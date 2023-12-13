@@ -289,6 +289,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 				crosboltNameTable: rnNoiseCrosboltNameTable,
 				metricType:        cpuMetric,
 			},
+			cythonBenchTitle: {
+				crosboltNameTable: cythonBenchCrosboltNameTable,
+				metricType:        cpuMetric,
+			},
 		},
 	}
 }
