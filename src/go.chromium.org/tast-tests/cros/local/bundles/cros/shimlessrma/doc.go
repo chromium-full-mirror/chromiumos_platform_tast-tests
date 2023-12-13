@@ -4,3 +4,11 @@
 
 // Package shimlessrma contains local Tast tests that exercise shimlessrma.
 package shimlessrma
+
+// json state data as created by rmad service
+
+// WelcomeCancel, WelcomeNextCancel
+// Empty State
+
+// SelectComponentsNoneNextCancel
+// {"state_history":[1,2]}
