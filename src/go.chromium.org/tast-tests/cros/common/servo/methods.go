@@ -41,6 +41,7 @@ const (
 	PDCommunication       StringControl = "servo_pd_comm"
 	PowerState            StringControl = "power_state"
 	PwrButtonCtrl         StringControl = "pwr_button"
+	SecondUSBKeyDirection StringControl = "second_usbkey_direction"
 	ServoDUTSBU1MV        StringControl = "servo_dut_sbu1_mv"
 	ServoDUTSBU2MV        StringControl = "servo_dut_sbu2_mv"
 	SupportCrosECComm     StringControl = "supports_cros_ec_communication"

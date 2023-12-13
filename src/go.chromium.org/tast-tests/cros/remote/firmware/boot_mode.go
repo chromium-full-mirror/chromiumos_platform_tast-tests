@@ -747,6 +747,20 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 		return errors.Wrap(err, "requiring servo")
 	}
 
+	// There are two usb type-a ports on servo_v4p1. By default, the bottom
+	// one is set to 'dut_sees_usbkey'. If there's a usb device connected to it
+	// with a valid ChromeOS image, the DUT can attempt booting into recovery
+	// mode. As a safety measure, always disable the second port.
+	if ok, err := h.Servo.HasControl(ctx, string(servo.SecondUSBKeyDirection)); err != nil {
+		return errors.Wrapf(err, "failed to check control %s", servo.SecondUSBKeyDirection)
+	} else if ok {
+		// Set second_usbkey_direction to servo_sees_usbkey to disable
+		// the port because it doesn't accept USBMuxOff.
+		if err := h.Servo.SetString(ctx, servo.SecondUSBKeyDirection, string(servo.USBMuxHost)); err != nil {
+			return errors.Wrapf(err, "failed to set servo control %s to %s", servo.SecondUSBKeyDirection, servo.USBMuxHost)
+		}
+	}
+
 	// TODO(b/265193946): Remove this when dedede RO is fixed.
 	if h.DUT.Connected(ctx) && h.Board == "dedede" {
 		// Stainless reported thermal shutdown on some dedede duts while they
