@@ -80,10 +80,10 @@ import (
 
 	"github.com/google/uuid"
 
-	"golang.org/x/exp/maps"
-
 	"go.chromium.org/tast-tests/cros/common/perf/perfpb"
 	"go.chromium.org/tast/core/errors"
+	"golang.org/x/exp/maps"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 var (
@@ -249,11 +249,13 @@ func NewValuesFromProto(vs ...*perfpb.Values) *Values {
 	for _, val := range vs {
 		for _, v := range val.Values {
 			m := Metric{
-				Name:      v.Name,
-				Variant:   v.Variant,
-				Unit:      v.Unit,
-				Direction: Direction(v.Direction),
-				Multiple:  v.Multiple,
+				Name:       v.Name,
+				Variant:    v.Variant,
+				Unit:       v.Unit,
+				Direction:  Direction(v.Direction),
+				Multiple:   v.Multiple,
+				HasStartTs: v.HasStartTs,
+				StartTs:    v.StartTs.AsTime(),
 			}
 			if v.Multiple {
 				p.Append(m, v.Value...)
@@ -583,13 +585,15 @@ func (p *Values) Proto() *perfpb.Values {
 	result := &perfpb.Values{}
 	for k, v := range p.values {
 		result.Values = append(result.Values, &perfpb.Value{
-			Name:      k.Name,
-			Variant:   k.Variant,
-			Unit:      k.Unit,
-			Direction: perfpb.Direction(k.Direction),
-			Multiple:  k.Multiple,
-			Interval:  k.Interval,
-			Value:     v,
+			Name:       k.Name,
+			Variant:    k.Variant,
+			Unit:       k.Unit,
+			Direction:  perfpb.Direction(k.Direction),
+			Multiple:   k.Multiple,
+			Interval:   k.Interval,
+			Value:      v,
+			HasStartTs: k.HasStartTs,
+			StartTs:    timestamppb.New(k.StartTs),
 		})
 	}
 	return result

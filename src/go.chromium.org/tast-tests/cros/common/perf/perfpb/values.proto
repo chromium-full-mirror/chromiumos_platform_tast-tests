@@ -5,6 +5,7 @@
 syntax = "proto3";
 
 package tast.common.perf.perfpb;
+import "google/protobuf/timestamp.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/common/perf/perfpb";
 
@@ -21,6 +22,8 @@ message Value {
   bool multiple = 5;
   repeated double value = 6;
   string interval = 7;
+  bool has_start_ts = 8;
+  google.protobuf.Timestamp start_ts = 9;
 }
 
 message Values {
