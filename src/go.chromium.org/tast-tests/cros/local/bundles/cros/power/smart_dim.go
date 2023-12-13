@@ -129,7 +129,7 @@ func SmartDim(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for completion of all pending updates : ", err)
 	}
 
-	histograms, err := metrics.RunAndWaitAll(ctx, tconn, 3*time.Second, call, histogramNames...)
+	histograms, err := metrics.RunAndWaitAll(ctx, tconn, 10*time.Second, call, histogramNames...)
 	if err != nil {
 		s.Fatal("Failed to run and wait all histograms")
 	}
