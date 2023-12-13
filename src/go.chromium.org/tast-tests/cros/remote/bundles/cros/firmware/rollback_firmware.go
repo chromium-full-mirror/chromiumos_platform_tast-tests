@@ -8,19 +8,16 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"regexp"
 	"strings"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
-	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/common/servo"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
-	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
 	"go.chromium.org/tast-tests/cros/common/firmware/futility"
@@ -43,8 +40,8 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		SoftwareDeps: []string{"flashrom"},
-		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Timeout:      25 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "normal",
 			Fixture: fixture.NormalMode,
@@ -80,36 +77,18 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		servoTempDir := strings.TrimSuffix(string(servoTmpFile), "\n")
 
 		cleanupContext := ctx
-		ctx, closeFunc := ctxutil.Shorten(ctx, 1*time.Minute)
+		ctx, closeFunc := ctxutil.Shorten(ctx, 10*time.Minute)
 		defer closeFunc()
 		defer func(ctx context.Context) {
-			s.Log("Cleaning up")
 			if err := h.RequireServo(ctx); err != nil {
 				s.Fatal("Failed to require servo: ", err)
 			}
 			if shouldRestoreFirmware {
-				func() {
-					var flashromConfig flashrom.Config
-					flashromInstance, ctx, shutdown, _, err := flashromConfig.
-						FlashromInit("").
-						SetServoProxy(h.ServoProxy).
-						Probe(ctx)
-					defer func() {
-						if err := shutdown(); err != nil {
-							s.Error("Failed to shutdown flashromInstance: ", err)
-						}
-					}()
-					if err != nil {
-						s.Error("Failed to create flashrom instance: ", err)
-						return
-					}
-					if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
-						fmt.Sprintf("%s:%s/%s.bin", bios.FWSignAImageSection, servoTempDir, bios.FWSignAImageSection),
-						fmt.Sprintf("%s:%s/%s.bin", bios.FWSignBImageSection, servoTempDir, bios.FWSignBImageSection),
-					}); err != nil {
-						s.Errorf("Failed to restore A/B signatures: %v output = %s", err, string(out))
-					}
-				}()
+				s.Log("Restoring AP firmware via servo")
+				if err := h.ServoProxy.RunCommand(ctx, true, "futility", "update", "--servo", fmt.Sprintf("--servo_port=%d", h.ServoProxy.GetPort()),
+					"--mode=recovery", "--wp=1", "--host_only", "-i", fmt.Sprintf("%s/backup.bin", servoTempDir)); err != nil {
+					s.Error("Failed restoring firmware via servo: ", err)
+				}
 				if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 					s.Error("Hard reset failed: ", err)
 				}
@@ -149,13 +128,20 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to set FW tries to A: ", err)
 			}
 		}
+		oldEvents, err := h.Reporter.EventlogList(ctx)
+		if err != nil {
+			s.Fatal("Finding last event: ", err)
+		}
+		if len(oldEvents) > 0 {
+			cutoffEvent = oldEvents[len(oldEvents)-1]
+		}
 
 		ms, err := firmware.NewModeSwitcher(ctx, h)
 		if err != nil {
 			s.Fatal("Creating mode switcher: ", err)
 		}
 
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.AllowGBBForce); err != nil {
 			s.Fatal("Failed to reboot on alternate firmware: ", err)
 		}
 		newFW, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
@@ -164,25 +150,37 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Current FW is ", newFW)
 		if activeFW == newFW {
-			s.Fatalf("Failed to boot to alternate firmware. Only %s is working. Run chromeos-firmwareupdate --mode=recovery", activeFW)
+			var events []reporters.Event
+			if err := testing.Poll(ctx, func(context.Context) error {
+				var err error
+				events, err = h.Reporter.EventlogListAfter(ctx, cutoffEvent)
+				if err != nil {
+					return testing.PollBreak(err)
+				}
+				if len(events) == 0 {
+					return errors.New("no new events found")
+				}
+				return nil
+			}, &testing.PollOptions{
+				Timeout: 1 * time.Minute, Interval: 5 * time.Second,
+			}); err != nil {
+				s.Error("Gathering events: ", err)
+			}
+			s.Fatalf("Failed to boot to alternate firmware. Only %s is working. Run chromeos-firmwareupdate --mode=recovery --force: %+v", activeFW, events)
 		}
 		// Since we switched, the active is now different.
 		activeFW = newFW
 
 		s.Log("Backing up AP firmware")
+		remoteBackupFile := fmt.Sprintf("%s/bios_backup.bin", remoteTempDir)
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", remoteBackupFile).Run(ssh.DumpLogOnError); err != nil {
+			s.Fatal("Failed taking bios backup: ", err)
+		}
 		if err := h.RequireBiosServiceClient(ctx); err != nil {
 			s.Fatal("Failed to require BiosServiceClient: ", err)
 		}
 
-		backupInfo, err := h.BiosServiceClient.BackupImageSection(ctx, &fwpb.FWSectionInfo{
-			Section:    fwpb.ImageSection_EmptyImageSection,
-			Programmer: fwpb.Programmer_BIOSProgrammer,
-			Path:       remoteTempDir,
-		})
-		if err != nil {
-			s.Fatal("Failed to backup current AP firmware: ", err)
-		}
-		s.Log("Backup on DUT written to ", backupInfo.Path)
+		s.Log("Backup on DUT written to ", remoteBackupFile)
 
 		// Extract the signature blocks (FWSign?ImageSection).
 		activeSignSection := bios.FWSignAImageSection
@@ -194,41 +192,21 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		activeSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, activeSignSection)
 		inactiveSignFile := fmt.Sprintf("%s/%s.bin", remoteTempDir, inactiveSignSection)
 		// TODO(b/276861597): Use futility library.
-		if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", backupInfo.Path, "-x",
+		if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", remoteBackupFile, "-x",
 			fmt.Sprintf("%s:%s", activeSignSection, activeSignFile),
 			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveSignFile),
 		).Run(ssh.DumpLogOnError); err != nil {
 			s.Fatal("Failed to extract sections: ", err)
 		}
 
-		var flashromConfig flashrom.Config
-		flashromInstance, ctx, shutdown, _, err := flashromConfig.
-			FlashromInit("").
-			SetDut(h.DUT).
-			ProgrammerInit(flashrom.ProgrammerHost, "").
-			Probe(ctx)
-		defer func() {
-			if err := shutdown(); err != nil {
-				s.Error("Failed to shutdown flashromInstance: ", err)
-			}
-		}()
-		if err != nil {
-			s.Fatal("Flashrom probe failed, unable to build flashrom instance: ", err)
-		}
-
 		s.Log("Downloading files to ", localTempDir)
-		localActiveSignFile := fmt.Sprintf("%s/%s", localTempDir, path.Base(activeSignFile))
-		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), activeSignFile, localActiveSignFile, linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to download active signature: ", err)
-		}
-		localInactiveSignFile := fmt.Sprintf("%s/%s", localTempDir, path.Base(inactiveSignFile))
-		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), inactiveSignFile, localInactiveSignFile, linuxssh.DereferenceSymlinks); err != nil {
-			s.Fatal("Failed to download inactive signature: ", err)
+		localBackupFile := fmt.Sprintf("%s/backup.bin", localTempDir)
+		if err := linuxssh.GetFile(ctx, h.DUT.Conn(), remoteBackupFile, localBackupFile, linuxssh.DereferenceSymlinks); err != nil {
+			s.Fatal("Failed to download backup: ", err)
 		}
 		s.Log("Copying files to ", servoTempDir)
 		if err := h.ServoProxy.PutFiles(ctx, false, map[string]string{
-			localActiveSignFile:   fmt.Sprintf("%s/%s", servoTempDir, path.Base(activeSignFile)),
-			localInactiveSignFile: fmt.Sprintf("%s/%s", servoTempDir, path.Base(inactiveSignFile)),
+			localBackupFile: fmt.Sprintf("%s/backup.bin", servoTempDir),
 		}); err != nil {
 			s.Fatal("Failed to copy files to servo host: ", err)
 		}
@@ -239,8 +217,8 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		}
 
 		// Change the firmware version to 0 and resign. The normal firmware version is 1 or more, so 0 will be a rollback.
-		rollbackOutputFile := backupInfo.Path + ".ver0.bin"
-		signOptions := futility.NewSignBIOSOptions(backupInfo.Path).WithVersion(0).WithOutputFile(rollbackOutputFile)
+		rollbackOutputFile := remoteBackupFile + ".ver0.bin"
+		signOptions := futility.NewSignBIOSOptions(remoteBackupFile).WithVersion(0).WithOutputFile(rollbackOutputFile)
 		if _, err = futilityInstance.SignBIOS(ctx, signOptions); err != nil {
 			s.Fatal("Failed to re-sign firmware: ", err)
 		}
@@ -257,16 +235,21 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 
 		shouldRestoreFirmware = true
 		s.Log("Rolling back ", activeSignSection)
-		if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
+		err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt.bin", remoteTempDir), remoteBackupFile,
 			fmt.Sprintf("%s:%s", activeSignSection, activeRollbackSignFile),
-		}); err != nil {
-			s.Errorf("Failed to flash: %v output = %s", err, string(out))
+		).Run(ssh.DumpLogOnError)
+		if err != nil {
+			s.Fatal("Failed futility load_fmap: ", err)
+		}
+		err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--force", "--mode=recovery", "--wp=1", "--host_only", "-i", fmt.Sprintf("%s/corrupt.bin", remoteTempDir)).Run(ssh.DumpLogOnError)
+		if err != nil {
+			s.Fatal("Failed flashing corrupt fw: ", err)
 		}
 		ms, err = firmware.NewModeSwitcher(ctx, h)
 		if err != nil {
 			s.Fatal("Creating mode switcher: ", err)
 		}
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.AllowGBBForce); err != nil {
 			s.Fatal("Failed to reboot after rolling back 1 firmware: ", err)
 		}
 		newFW, err = h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwAct)
@@ -277,7 +260,7 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 			s.Errorf("Booted to wrong FW, got %q, want !%q", newFW, activeFW)
 		}
 
-		oldEvents, err := h.Reporter.EventlogList(ctx)
+		oldEvents, err = h.Reporter.EventlogList(ctx)
 		if err != nil {
 			s.Fatal("Finding last event: ", err)
 		}
@@ -286,12 +269,19 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Rolling back ", inactiveSignSection)
-		if out, err := flashromInstance.Write(ctx, "", true /*noVerifyAll=*/, false /*noverify=*/, "", []string{
+		err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt.bin", remoteTempDir), remoteBackupFile,
+			fmt.Sprintf("%s:%s", activeSignSection, activeRollbackSignFile),
 			fmt.Sprintf("%s:%s", inactiveSignSection, inactiveRollbackSignFile),
-		}); err != nil {
-			s.Errorf("Failed to flash: %v output = %s", err, string(out))
+		).Run(ssh.DumpLogOnError)
+		if err != nil {
+			s.Fatal("Failed futility load_fmap: ", err)
 		}
-		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.SkipWaitConnect); err != nil {
+		err = h.DUT.Conn().CommandContext(ctx, "futility", "update", "--force", "--mode=recovery", "--wp=1", "--host_only", "-i", fmt.Sprintf("%s/corrupt.bin", remoteTempDir)).Run(ssh.DumpLogOnError)
+		if err != nil {
+			s.Fatal("Failed flashing corrupt fw: ", err)
+		}
+
+		if err := ms.ModeAwareReboot(ctx, firmware.WarmReset, firmware.SkipWaitConnect, firmware.AllowGBBForce); err != nil {
 			s.Fatal("Failed to reboot after rolling back both firmwares: ", err)
 		}
 		waitContext, cancel := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
