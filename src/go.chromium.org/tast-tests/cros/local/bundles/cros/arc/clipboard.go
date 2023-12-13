@@ -387,16 +387,18 @@ func Clipboard(ctx context.Context, s *testing.State) {
 
 		// Copy in Chrome, so the registered observer should paste the clipboard content in Android.
 		const content = "<b>observer</b> should paste this"
+		const new_content = "<html><head></head><body><b>observer</b> should paste this</body></html>"
 		chromeCopy := prepareCopyInChrome(browser, uia, keyboard, "text/html", content, server.URL)
 		if err := chromeCopy(ctx); err != nil {
 			s.Fatal("Failed to copy in Chrome: ", err)
 		}
 
 		// Paste and Verify the result.
+		// TODO(crbug.com/1510998): Remove new_content once Chromium changes are submitted.
 		pasteAndroid := preparePasteInAndroid(d, textViewID)
 		if html, err := pasteAndroid(ctx); err != nil {
 			s.Fatal("Failed to obtain pasted text: ", err)
-		} else if html != content {
+		} else if html != content && html != new_content {
 			s.Errorf("Failed to copy HTML from Chrome to Android: got %q; want %q", html, content)
 		}
 	})
