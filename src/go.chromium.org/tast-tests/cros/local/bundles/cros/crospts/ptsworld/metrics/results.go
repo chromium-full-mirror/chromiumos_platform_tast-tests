@@ -90,6 +90,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "Frame_Per_Sec",
 		},
 	},
+	{
+		"Microseconds": {
+			unit:       "us",
+			nameSuffix: "Micro_Sec",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -274,6 +280,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			vpxencTitle: {
 				crosboltNameTable: vpxencCrosboltNameTable,
 				metricType:        cpuMetric,
+			},
+			tensorflowLiteTitle: {
+				crosboltNameTable: tensorflowLiteCrosboltNameTable,
+				metricType:        systemMetric,
 			},
 		},
 	}
