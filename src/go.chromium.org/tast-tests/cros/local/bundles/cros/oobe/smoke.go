@@ -96,7 +96,14 @@ func Smoke(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click gaia info screen next button: ", err)
 	}
 
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaScreen.isVisible()"); err != nil {
-		s.Fatal("Failed to wait for the login screen to be visible: ", err)
+	shouldSkipGaiaInfoScreen := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.GaiaInfoScreen.shouldSkip()", &shouldSkipGaiaInfoScreen); err != nil {
+		s.Fatal("Failed to evaluate whether to skip Gaia Info screen: ", err)
+	}
+
+	if !shouldSkipGaiaInfoScreen {
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.GaiaScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the login screen to be visible: ", err)
+		}
 	}
 }
