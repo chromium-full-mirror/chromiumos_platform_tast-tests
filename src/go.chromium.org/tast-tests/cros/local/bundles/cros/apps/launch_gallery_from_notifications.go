@@ -89,6 +89,14 @@ func LaunchGalleryFromNotifications(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
+	// SWA installation is not guaranteed during startup.
+	// Using this wait to check installation finished before starting test.
+	s.Log("Wait for Gallery to be installed")
+	err = ash.WaitForChromeAppInstalled(ctx, tconn, apps.Gallery.ID, 2*time.Minute)
+	if err != nil {
+		s.Fatal("Failed to wait for installed app: ", err)
+	}
+
 	conn, err := cr.NewConn(ctx, filepath.Join(server.URL, "download_link.html"))
 	if err != nil {
 		s.Fatal("Failed navigating to image on local server: ", err)
