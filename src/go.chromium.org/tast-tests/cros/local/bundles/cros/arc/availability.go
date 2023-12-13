@@ -1,5 +1,4 @@
-// Copyright 2020 The ChromiumOS Authors
-// Use of this source code is governed by a BSD-style license that can be
+// Copyright 2020 The ChromiumOS Authors// Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
 package arc
@@ -48,7 +47,7 @@ func isPlayStoreOpen(ctx context.Context, s *testing.State, d *ui.Device, tconn 
 		s.Fatal("Play Store failed to open: ", err)
 	}
 	noThanksButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches("(?i)No thanks"))
-	searchBar := d.Object(ui.TextStartsWith("Search for apps"))
+	searchBar := d.Object(ui.TextStartsWith("Search apps"))
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Click no thanks to close the pop-up if it exists.
 		if err := noThanksButton.Exists(ctx); err == nil {
@@ -103,15 +102,8 @@ func updateApp(ctx context.Context, s *testing.State, a *arc.ARC, d *ui.Device, 
 		return
 	}
 
-	// Below logic to check the button based on ARC version.
-	isARCVMEnabled, err := arc.VMEnabled()
-	if err != nil {
-		s.Fatal("Failed to check whether ARCVM is enabled: ", err)
-	}
-	deactivateBtn := d.Object(ui.Text("Deactivate"), ui.ClassName("android.widget.Button"))
-	if isARCVMEnabled {
-		deactivateBtn = d.Object(ui.Text("Uninstall"), ui.ClassName("android.widget.Button"))
-	}
+	// "Uninstall" is shown on R or above, and "Deactivate" on P or before.
+	deactivateBtn := d.Object(ui.DescriptionMatches("Uninstall|Deactivate"), ui.ClassName("android.view.View"))
 	if err := deactivateBtn.WaitForExists(ctx, 10*time.Second); err != nil {
 		s.Fatal("Timed out updating app: ", err)
 	}
