@@ -54,11 +54,6 @@ func (ta *TestApp) OpenBillingDialog(ctx context.Context, sku string) error {
 	return ClickElementByCDP(ta.pbconn, jsExpr)(ctx)
 }
 
-// BuySku clicks the buy button on a Play Billing overlay.
-func (ta *TestApp) BuySku(ctx context.Context) error {
-	return ClickButtonOnArcPaymentOverlay(ta.uiAutomator, "Button", "Buy")(ctx)
-}
-
 // RequiredAuthConfirm clicks "Yes, always" button in required auth window.
 func (ta *TestApp) RequiredAuthConfirm(ctx context.Context) error {
 	return RequiredAuthConfirm(ta.uiAutomator)(ctx)

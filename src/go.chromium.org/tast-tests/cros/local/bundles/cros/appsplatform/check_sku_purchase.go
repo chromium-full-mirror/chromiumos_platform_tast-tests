@@ -47,10 +47,6 @@ func CheckSkuPurchase(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find and click the \"Buy Test SKU\" button: ", err)
 	}
 
-	if err := testApp.BuySku(ctx); err != nil {
-		s.Fatal("Failed to click the buy button on the billing dialog: ", err)
-	}
-
 	// Successful payment and required auth(if rendered) screens are rendered together.
 	// Successful payment will disappear soon after being rendered.
 	// Need to check for successful payment presence first, because if required auth is
