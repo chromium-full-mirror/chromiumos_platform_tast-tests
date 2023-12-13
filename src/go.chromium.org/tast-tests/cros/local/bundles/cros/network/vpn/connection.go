@@ -57,6 +57,8 @@ type Config struct {
 	wgAutoGenKey             bool
 	wgClientPublicKey        string
 	wgUseServerSecondKeyPair bool
+	wgClientIPv4             string
+	wgClientIPv6             string
 
 	// IPType specifies the overlay IP type of the VPN service.
 	// Currently VPNs except for WireGuard only supports IPv4.
@@ -103,32 +105,52 @@ func (t IPsecAuthType) String() string {
 	return []string{"PSK", "cert", "EAP"}[t]
 }
 
+const (
+	defaultIPv4SubnetCIDR     = "10.11.12.0/24"
+	defaultIPv6SubnetCIDR     = "fdfd::/64"
+	alternativeIPv4SubnetCIDR = "10.20.30.0/24"
+	alternativeIPv6SubnetCIDR = "fdab::/64"
+)
+
+func getDefaultIPv4Subnet(cidr string) *subnet.IPv4Subnet {
+	n, err := subnet.FromIPv4CIDR(cidr)
+	if err != nil {
+		// Construction from a const should never fail.
+		panic(fmt.Sprintf("Invalid default IPv4 subnet: %v", err))
+	}
+	return n
+}
+
+func getDefaultIPv6Subnet(cidr string) *subnet.IPv6Subnet {
+	n, err := subnet.FromIPv6CIDR(cidr)
+	if err != nil {
+		// Construction from a const should never fail.
+		panic(fmt.Sprintf("Invalid default IPv6 subnet: %v", err))
+	}
+	return n
+}
+
 // Option is used in NewConfig() function to generate a VPN Config object
 type Option = func(*Config)
 
 // NewConfig creates a config object for a given VPN type
 func NewConfig(vpnType Type, opts ...Option) *Config {
-	v4Subnet, err := subnet.FromIPv4CIDR("10.11.12.0/24")
-	if err != nil {
-		// Construction from a const should never fail.
-		panic(fmt.Sprintf("Invalid default IPv4 subnet: %v", err))
-	}
-	v6Subnet, err := subnet.FromIPv6CIDR("fdfd::/64")
-	if err != nil {
-		// Construction from a const should never fail.
-		panic(fmt.Sprintf("Invalid default IPv6 subnet: %v", err))
-	}
-
 	c := &Config{
 		Type:              vpnType,
 		IPsecAuthType:     AuthTypePSK,
 		wgClientPublicKey: wgClientPublicKey,
-		ipv4Subnet:        v4Subnet,
-		ipv6Subnet:        v6Subnet,
+		ipv4Subnet:        getDefaultIPv4Subnet(defaultIPv4SubnetCIDR),
+		ipv6Subnet:        getDefaultIPv6Subnet(defaultIPv6SubnetCIDR),
 		autoConnect:       true,
 	}
 	for _, opt := range opts {
 		opt(c)
+	}
+	if c.wgClientIPv4 == "" {
+		c.wgClientIPv4 = c.ipv4Subnet.GetAddrEndWith(2).String()
+	}
+	if c.wgClientIPv6 == "" {
+		c.wgClientIPv6 = c.ipv6Subnet.GetAddrEndWith(2).String()
 	}
 	return c
 }
@@ -269,6 +291,22 @@ func WithWGServerSecondKeyPair(val bool) Option {
 	}
 }
 
+// WithWGClientIPv4 configures the connection to use ip as the client IPv4
+// address. By default the address end with .2 in ipv4Subnet will be used.
+func WithWGClientIPv4(ip string) Option {
+	return func(c *Config) {
+		c.wgClientIPv4 = ip
+	}
+}
+
+// WithWGClientIPv6 configures the connection to use ip as the client IPv6
+// address. By default the address end with ::2 in ipv6Subnet will be used.
+func WithWGClientIPv6(ip string) Option {
+	return func(c *Config) {
+		c.wgClientIPv6 = ip
+	}
+}
+
 // WithCertVals sets up the certificate value used by client.
 // This is mandatory by connections using certificates for authentication.
 func WithCertVals(val CertVals) Option {
@@ -361,6 +399,20 @@ func WithoutAutoConnect() Option {
 	return func(c *Config) {
 		c.autoConnect = false
 	}
+}
+
+// WGSecondServerDefaultOptions provides a set of default options can be used to
+// create the second WireGuard server, if the test doesn't care about the
+// specific routing setup.
+var WGSecondServerDefaultOptions = []Option{
+	WithWGServerSecondKeyPair(true),
+	WithIPv4Subnet(getDefaultIPv4Subnet(alternativeIPv4SubnetCIDR)),
+	WithIPv6Subnet(getDefaultIPv6Subnet(alternativeIPv6SubnetCIDR)),
+
+	// We need to reset the client IPs to make sure that the two servers use the
+	// same client IP.
+	WithWGClientIPv4(getDefaultIPv4Subnet(defaultIPv4SubnetCIDR).GetAddrEndWith(2).String()),
+	WithWGClientIPv6(getDefaultIPv6Subnet(defaultIPv6SubnetCIDR).GetAddrEndWith(2).String()),
 }
 
 // IPType defines IP address type of overlay IP address.
@@ -519,7 +571,7 @@ func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error
 			return errors.Wrap(err, "failed to get public key")
 		}
 	}
-	c.Server, err = startWireGuardServer(ctx, env, &c.config)
+	c.Server, err = StartServerWithConfig(ctx, env, &c.config)
 	return err
 }
 
@@ -766,6 +818,7 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 		return ""
 	}
 
+	// TODO(b/257379393): Generate the props from server.Config instead of config.
 	var nameServers []string
 	if server != nil {
 		peer := map[string]string{
@@ -778,7 +831,10 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 		}
 		if secondServer != nil {
 			// Do not set "default route" if we have two peers.
-			peer["AllowedIPs"] = genAllowedIPs(wgServerAllowedIPsIPv4, wgServerAllowedIPsIPv6)
+			peer["AllowedIPs"] = genAllowedIPs(
+				server.Config.ipv4Subnet.String(),
+				server.Config.ipv6Subnet.String(),
+			)
 		}
 		peers = append(peers, peer)
 
@@ -792,9 +848,12 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 
 	if secondServer != nil {
 		peers = append(peers, map[string]string{
-			"PublicKey":    wgSecondServerPublicKey,
-			"Endpoint":     secondServer.UnderlayIP + ":" + wgSecondServerListenPort,
-			"AllowedIPs":   genAllowedIPs(wgSecondServerAllowedIPsIPv4, wgSecondServerAllowedIPsIPv6),
+			"PublicKey": wgSecondServerPublicKey,
+			"Endpoint":  secondServer.UnderlayIP + ":" + wgSecondServerListenPort,
+			"AllowedIPs": genAllowedIPs(
+				secondServer.Config.ipv4Subnet.String(),
+				secondServer.Config.ipv6Subnet.String(),
+			),
 			"PresharedKey": wgPresharedKey,
 		})
 	}
@@ -814,16 +873,24 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 	if !config.wgAutoGenKey {
 		properties["WireGuard.PrivateKey"] = wgClientPrivateKey
 	}
+
+	// Note that server can be nil in this function (for letting shill generate the key pair
+	// before the server starts). We can just pass in some default values in this case.
+	clientIPv4 := "0.0.0.0"
+	clientIPv6 := "::"
+	if server != nil {
+		// TODO(b/257379393): Check if the configs from the two server provides the
+		// same client IP.
+		clientIPv4 = server.Config.wgClientIPv4
+		clientIPv6 = server.Config.wgClientIPv6
+	}
 	switch config.IPType {
 	case IPTypeIPv4:
-		wgClientOverlayIPv4List := []string{wgClientOverlayIPv4}
-		properties["WireGuard.IPAddress"] = wgClientOverlayIPv4List
+		properties["WireGuard.IPAddress"] = []string{clientIPv4}
 	case IPTypeIPv6:
-		wgClientOverlayIPv6List := []string{wgClientOverlayIPv6}
-		properties["WireGuard.IPAddress"] = wgClientOverlayIPv6List
+		properties["WireGuard.IPAddress"] = []string{clientIPv6}
 	case IPTypeIPv4AndIPv6:
-		wgClientOverlayIPv4AndIPv6List := []string{wgClientOverlayIPv4, wgClientOverlayIPv6}
-		properties["WireGuard.IPAddress"] = wgClientOverlayIPv4AndIPv6List
+		properties["WireGuard.IPAddress"] = []string{clientIPv4, clientIPv6}
 	}
 	return properties
 }
