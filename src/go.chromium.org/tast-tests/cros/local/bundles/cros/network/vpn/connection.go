@@ -650,7 +650,7 @@ func CreateProperties(server, secondServer *Server, config *Config) (map[string]
 		case TypeOpenVPN:
 			return createOpenVPNProperties(server, config)
 		case TypeWireGuard:
-			return createWireGuardProperties(server, secondServer, config)
+			return createWireGuardProperties(server, secondServer)
 		default:
 			return nil, errors.Errorf("unexpected server type: got %s", config.Type)
 		}
@@ -803,12 +803,41 @@ func createOpenVPNProperties(server *Server, config *Config) (map[string]interfa
 	return properties, nil
 }
 
-func createWireGuardProperties(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
-	var peers []map[string]string
+func createWireGuardProperties(server, secondServer *Server) (map[string]interface{}, error) {
+	// Check if the two servers have the compatible configs.
+	if server != nil && secondServer != nil {
+		c1 := &server.Config
+		c2 := &secondServer.Config
+		if c1.wgClientKeyPair != c2.wgClientKeyPair {
+			return nil, errors.Errorf("different client key in the configs: %s and %s", c1.wgClientKeyPair, c2.wgClientKeyPair)
+		}
+		// Note that the server setup is always dual-stack, and thus the IPType only
+		// affects the client setup here. This means that currently we cannot
+		// configure the two peer connections with different IP family.
+		if c1.IPType != c2.IPType {
+			return nil, errors.Errorf("different IPType in the configs: %d and %d", c1.IPType, c1.IPType)
+		}
+		if c1.wgClientIPv4 != c2.wgClientIPv4 {
+			return nil, errors.Errorf("different client IPv4 in the configs: %s and %s", c1.wgClientIPv4, c2.wgClientIPv4)
+		}
+		if c1.wgClientIPv6 != c2.wgClientIPv6 {
+			return nil, errors.Errorf("different client IPv6 in the configs: %s and %s", c1.wgClientIPv6, c2.wgClientIPv6)
+		}
+	}
+
+	var clientIPs []string
+	if server != nil {
+		if server.Config.IPType != IPTypeIPv6 {
+			clientIPs = append(clientIPs, server.Config.wgClientIPv4)
+		}
+		if server.Config.IPType != IPTypeIPv4 {
+			clientIPs = append(clientIPs, server.Config.wgClientIPv6)
+		}
+	}
 
 	// Helper function to generate AllowedIPs string according to IPType.
-	genAllowedIPs := func(v4, v6 string) string {
-		switch config.IPType {
+	genAllowedIPs := func(ipType IPType, v4, v6 string) string {
+		switch ipType {
 		case IPTypeIPv4:
 			return v4
 		case IPTypeIPv6:
@@ -819,84 +848,59 @@ func createWireGuardProperties(server, secondServer *Server, config *Config) (ma
 		return ""
 	}
 
-	getEndpoint := func(ip string, port int) string {
-		return fmt.Sprintf("%s:%d", ip, port)
-	}
-
-	// TODO(b/257379393): Generate the props from server.Config instead of config.
-	var nameServers []string
-	if server != nil {
+	genPeerDict := func(svr *Server) map[string]string {
 		peer := map[string]string{
-			"PublicKey":  server.Config.wgServerKeyPair.public,
-			"Endpoint":   getEndpoint(server.UnderlayIP, server.Config.wgServerListenPort),
-			"AllowedIPs": genAllowedIPs("0.0.0.0/0", "::/0"),
+			"PublicKey":  svr.Config.wgServerKeyPair.public,
+			"Endpoint":   fmt.Sprintf("%s:%d", svr.UnderlayIP, svr.Config.wgServerListenPort),
+			"AllowedIPs": genAllowedIPs(svr.Config.IPType, svr.OverlayIPv4, svr.OverlayIPv6),
 		}
-		if config.wgUsePSK {
+		if svr.Config.wgUsePSK {
 			peer["PresharedKey"] = wgPresharedKey
 		}
-		if secondServer != nil {
-			// Do not set "default route" if we have two peers.
-			peer["AllowedIPs"] = genAllowedIPs(
-				server.Config.ipv4Subnet.String(),
-				server.Config.ipv6Subnet.String(),
-			)
+		return peer
+	}
+
+	var peers []map[string]string
+	if server != nil {
+		peer := genPeerDict(server)
+		if secondServer == nil {
+			// Set "default route" there is only one peer.
+			peer["AllowedIPs"] = genAllowedIPs(server.Config.IPType, "0.0.0.0/0", "::/0")
 		}
 		peers = append(peers, peer)
+	}
+	if secondServer != nil {
+		peers = append(peers, genPeerDict(secondServer))
+	}
 
-		if config.IPType != IPTypeIPv6 {
+	// Assumes the DNS server is on the first peer.
+	var nameServers []string
+	if server != nil {
+		if server.Config.IPType != IPTypeIPv6 {
 			nameServers = append(nameServers, server.OverlayIPv4)
 		}
-		if config.IPType != IPTypeIPv4 {
+		if server.Config.IPType != IPTypeIPv4 {
 			nameServers = append(nameServers, server.OverlayIPv6)
 		}
 	}
 
-	if secondServer != nil {
-		peers = append(peers, map[string]string{
-			"PublicKey": secondServer.Config.wgServerKeyPair.public,
-			"Endpoint":  getEndpoint(secondServer.UnderlayIP, secondServer.Config.wgServerListenPort),
-			"AllowedIPs": genAllowedIPs(
-				secondServer.Config.ipv4Subnet.String(),
-				secondServer.Config.ipv6Subnet.String(),
-			),
-			"PresharedKey": wgPresharedKey,
-		})
-	}
-
-	staticIPConfig := map[string]interface{}{
-		"NameServers": nameServers,
-	}
 	properties := map[string]interface{}{
-		"Name":            "test-vpn-wg",
-		"Provider.Host":   "wireguard",
-		"Provider.Type":   "wireguard",
-		"Type":            "vpn",
-		"WireGuard.Peers": peers,
-		"StaticIPConfig":  staticIPConfig,
+		"Name":                "test-vpn-wg",
+		"Provider.Host":       "wireguard",
+		"Provider.Type":       "wireguard",
+		"Type":                "vpn",
+		"WireGuard.IPAddress": clientIPs,
+		"WireGuard.Peers":     peers,
+		"StaticIPConfig": map[string]interface{}{
+			"NameServers": nameServers,
+		},
 		"SaveCredentials": true, // Not required, just to avoid a WARNING log in shill
 	}
-	if config.wgClientKeyPair.private != "" {
-		properties["WireGuard.PrivateKey"] = config.wgClientKeyPair.private
+
+	if server != nil && server.Config.wgClientKeyPair.private != "" {
+		properties["WireGuard.PrivateKey"] = server.Config.wgClientKeyPair.private
 	}
 
-	// Note that server can be nil in this function (for letting shill generate the key pair
-	// before the server starts). We can just pass in some default values in this case.
-	clientIPv4 := "0.0.0.0"
-	clientIPv6 := "::"
-	if server != nil {
-		// TODO(b/257379393): Check if the configs from the two server provides the
-		// same client IP.
-		clientIPv4 = server.Config.wgClientIPv4
-		clientIPv6 = server.Config.wgClientIPv6
-	}
-	switch config.IPType {
-	case IPTypeIPv4:
-		properties["WireGuard.IPAddress"] = []string{clientIPv4}
-	case IPTypeIPv6:
-		properties["WireGuard.IPAddress"] = []string{clientIPv6}
-	case IPTypeIPv4AndIPv6:
-		properties["WireGuard.IPAddress"] = []string{clientIPv4, clientIPv6}
-	}
 	return properties, nil
 }
 
