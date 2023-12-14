@@ -586,7 +586,7 @@ func ConfigureService(ctx context.Context, server, secondServer *Server, config 
 		return nil, errors.Wrap(err, "failed creating shill manager proxy")
 	}
 
-	props, err := createPropertiesInternal(server, secondServer, config)
+	props, err := CreateProperties(server, secondServer, config)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create shill properties for VPN")
 	}
@@ -632,28 +632,26 @@ func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
 }
 
 // CreateProperties returns a dict which contains the D-Bus property values of a
-// VPN service for the given config.
-func CreateProperties(server *Server, config *Config) (map[string]interface{}, error) {
-	return createPropertiesInternal(server, nil, config)
-}
-
-func createPropertiesInternal(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
-	var properties map[string]interface{}
-	var err error
-
-	switch config.Type {
-	case TypeIKEv2:
-		properties, err = createIKEv2Properties(server, config)
-	case TypeL2TPIPsec:
-		properties, err = createL2TPIPsecProperties(server, config)
-	case TypeOpenVPN:
-		properties, err = createOpenVPNProperties(server, config)
-	case TypeWireGuard:
-		properties = CreateWireGuardProperties(server, secondServer, config)
-	default:
-		return nil, errors.Errorf("unexpected server type: got %s", config.Type)
+// VPN service for the given config. secondServer is only for WireGuard.
+func CreateProperties(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
+	if config.Type != TypeWireGuard && secondServer != nil {
+		return nil, errors.New("second server should only be set for wireguard")
 	}
 
+	properties, err := func() (map[string]interface{}, error) {
+		switch config.Type {
+		case TypeIKEv2:
+			return createIKEv2Properties(server, config)
+		case TypeL2TPIPsec:
+			return createL2TPIPsecProperties(server, config)
+		case TypeOpenVPN:
+			return createOpenVPNProperties(server, config)
+		case TypeWireGuard:
+			return createWireGuardProperties(server, secondServer, config)
+		default:
+			return nil, errors.Errorf("unexpected server type: got %s", config.Type)
+		}
+	}()
 	if err != nil {
 		return nil, err
 	}
@@ -802,9 +800,7 @@ func createOpenVPNProperties(server *Server, config *Config) (map[string]interfa
 	return properties, nil
 }
 
-// CreateWireGuardProperties returns a dict which contains the D-Bus property
-// values of a WireGuard VPN service for the given config.
-func CreateWireGuardProperties(server, secondServer *Server, config *Config) map[string]interface{} {
+func createWireGuardProperties(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
 	var peers []map[string]string
 
 	// Helper function to generate AllowedIPs string according to IPType.
@@ -898,7 +894,7 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 	case IPTypeIPv4AndIPv6:
 		properties["WireGuard.IPAddress"] = []string{clientIPv4, clientIPv6}
 	}
-	return properties
+	return properties, nil
 }
 
 // Service gets service of this connection.
