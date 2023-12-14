@@ -56,8 +56,8 @@ var crosboltUnitTable = []crosboltUnitMap{
 	},
 	{
 		"Microseconds Per Op": {
-			unit:       "ms",
-			nameSuffix: "MS_Per_Op",
+			unit:       "us",
+			nameSuffix: "Micro_Sec_Per_Op",
 		},
 	},
 	{
