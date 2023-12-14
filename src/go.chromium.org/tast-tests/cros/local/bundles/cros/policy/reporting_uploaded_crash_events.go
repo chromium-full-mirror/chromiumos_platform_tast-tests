@@ -137,7 +137,7 @@ func ReportingUploadedCrashEvents(ctx context.Context, s *testing.State) {
 	}
 	currentTimestampUs := time.Now().UnixNano() / 1000
 	server.SetFilter(func(wr *reporting.WrappedRecord) bool {
-		if *wr.Record.Destination != reporting.Destination_EVENT_METRIC {
+		if *wr.Record.Destination != reporting.Destination_CRASH_EVENTS {
 			return false
 		}
 		var m reporting.MetricData
