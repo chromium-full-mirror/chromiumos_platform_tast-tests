@@ -160,14 +160,14 @@ func getSessionID(storkResponse map[string]json.RawMessage) (string, error) {
 }
 
 func performFetchStorkProfiles(ctx context.Context, data string) ([]ActivationCode, CleanupSession, error) {
-	command := testexec.CommandContext(ctx, curlCommandName,
+	command := []string{
 		cacertArgName, cacertArgValue,
 		hArgName, hArgValue,
 		xArgName, xArgValue,
 		dataArgName, data,
-		startGtsSessionURL)
+		startGtsSessionURL}
 
-	output, err := tryCommand(ctx, command)
+	output, err := tryCurlCommand(ctx, command)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed sending Stork request")
 	}
@@ -183,10 +183,10 @@ func performFetchStorkProfiles(ctx context.Context, data string) ([]ActivationCo
 	}
 
 	cleanupSession := CleanupSession(func(ctx context.Context) error {
-		command := testexec.CommandContext(ctx, curlCommandName,
+		command = []string{
 			cacertArgName, cacertArgValue,
-			endGtsSessionURLPrefix+sessionID)
-		if _, err := tryCommand(ctx, command); err != nil {
+			endGtsSessionURLPrefix + sessionID}
+		if _, err := tryCurlCommand(ctx, command); err != nil {
 			return errors.Wrap(err, "failed Stork cleanup request")
 		}
 		return nil
@@ -194,19 +194,20 @@ func performFetchStorkProfiles(ctx context.Context, data string) ([]ActivationCo
 
 	activationCodes, err := getActivationCodes(jsonOutput)
 	if err != nil {
-		return nil, cleanupSession, errors.Wrap(err, "could not find an activation code")
+		return nil, cleanupSession, errors.Wrap(err, "could not fetch activation codes")
 	}
 
 	return activationCodes, cleanupSession, nil
 }
 
-func tryCommand(ctx context.Context, command *testexec.Cmd) ([]byte, error) {
-	testing.ContextLog(ctx, "STORK COMMAND: ", command.String())
+func tryCurlCommand(ctx context.Context, args []string) ([]byte, error) {
 	var output []byte
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		var outErr error
-		if output, outErr = command.Output(); outErr != nil {
-			return outErr
+		command := testexec.CommandContext(ctx, curlCommandName, args...)
+		testing.ContextLog(ctx, "STORK COMMAND: ", command.String())
+		var err error
+		if output, err = command.Output(); err != nil {
+			return err
 		}
 		return nil
 	}, &testing.PollOptions{
@@ -221,7 +222,13 @@ func tryCommand(ctx context.Context, command *testexec.Cmd) ([]byte, error) {
 // FetchStorkProfile fetches a test eSIM profile that does not require a confirmation code from Stork.
 func FetchStorkProfile(ctx context.Context) (ActivationCode, CleanupSession, error) {
 	activationCodes, cleanupSession, err := FetchStorkProfilesForEid(ctx, "", 1)
-	return activationCodes[0], cleanupSession, err
+	if err != nil {
+		return ActivationCode(""), cleanupSession, err
+	}
+	if len(activationCodes) == 0 {
+		return ActivationCode(""), cleanupSession, errors.New("no activation code found")
+	}
+	return activationCodes[0], cleanupSession, nil
 }
 
 // FetchStorkProfilesForEid fetches a test eSIM profile without a confirmation code for a specific eID.
@@ -239,6 +246,13 @@ func FetchStorkProfileWithCustomConfirmationCode(ctx context.Context, confirmati
 	if err != nil {
 		return ActivationCode(""), nil, err
 	}
+
 	activationCodes, cleanupSession, err := performFetchStorkProfiles(ctx, data)
-	return activationCodes[0], cleanupSession, err
+	if err != nil {
+		return ActivationCode(""), cleanupSession, err
+	}
+	if len(activationCodes) == 0 {
+		return ActivationCode(""), cleanupSession, errors.New("no activation code found")
+	}
+	return activationCodes[0], cleanupSession, nil
 }
