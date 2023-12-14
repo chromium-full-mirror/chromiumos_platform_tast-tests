@@ -35,12 +35,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"audio_stable"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasRecordQualityUnstableModels...)),
-		}, {
-			Name:              "unstable_platform",
-			ExtraSoftwareDeps: []string{"audio_unstable"},
-			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "unstable_model",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(crasRecordQualityUnstableModels...)),

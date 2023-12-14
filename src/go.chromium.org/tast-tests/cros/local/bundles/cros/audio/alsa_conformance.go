@@ -50,13 +50,8 @@ func init() {
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
-				ExtraSoftwareDeps: []string{"audio_stable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(alsaConformanceUnstableModels...)),
 				ExtraAttr:         []string{"group:cq-medium", "group:cq-minimal"},
-			}, {
-				Name:              "unstable_platform",
-				ExtraSoftwareDeps: []string{"audio_unstable"},
-				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name:              "unstable",

@@ -35,7 +35,6 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:audio_audiobox"},
-		SoftwareDeps: []string{"audio_stable"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SmartAmp()),
 		Timeout:      20 * time.Minute,
 		Params: []testing.Param{
@@ -131,7 +130,7 @@ func EchoRefDevice(ctx context.Context, s *testing.State) {
 		s.Fatal(err, "failed to playback within timeout")
 	}
 
-	// Start the recording after playback has been started for 1 second.
+	// GoBigSleepLint: Start the recording after playback has been started for 1 second.
 	testing.Sleep(ctx, 1*time.Second)
 
 	filename := fmt.Sprintf("echo_ref_device_%d.raw", param.frequency)

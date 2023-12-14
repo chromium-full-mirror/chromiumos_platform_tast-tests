@@ -33,20 +33,10 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		Data:         []string{"audio.flac", "audio.m4a", "audio.ogg", "audio.wav", "audio.mp3", "audio.5.1.mp3"},
 		Fixture:      "chromeLoggedIn",
-		Params: []testing.Param{
-			{
-				ExtraSoftwareDeps: []string{"audio_stable"},
-				ExtraAttr:         []string{"group:intel-nda"},
-			}, {
-				Name:              "unstable_platform",
-				ExtraSoftwareDeps: []string{"audio_unstable"},
-				ExtraAttr:         []string{"informational"},
-			},
-		},
 	})
 }
 

@@ -30,7 +30,6 @@ func init() {
 		},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
-		SoftwareDeps: []string{"audio_stable"},
 		// TODO(b:268542791): Skip hoglin until the issue is fixed.
 		// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
 		HardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel("hoglin", "brya")),

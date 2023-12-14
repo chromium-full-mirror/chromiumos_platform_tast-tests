@@ -30,13 +30,8 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"audio_stable"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasRecordUnstableModels...)),
 			ExtraAttr:         []string{"group:cq-medium", "group:cq-minimal"},
-		}, {
-			Name:              "unstable_platform",
-			ExtraSoftwareDeps: []string{"audio_unstable"},
-			ExtraAttr:         []string{"informational"},
 		}, {
 			Name:              "unstable_model",
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(crasRecordUnstableModels...)),
