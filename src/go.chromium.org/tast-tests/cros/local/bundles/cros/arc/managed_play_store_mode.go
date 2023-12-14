@@ -81,7 +81,7 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name: "allowlist_vm_betty",
+				Name: "allowlist_betty_vm",
 				Val: managedPlayStoreModeArgs{
 					playStoreMode: arcent.PlayStoreModeAllowList,
 					shouldBeEmpty: true,
@@ -125,7 +125,7 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name: "blocklist_vm_betty",
+				Name: "blocklist_betty_vm",
 				Val: managedPlayStoreModeArgs{
 					playStoreMode: arcent.PlayStoreModeBlockList,
 					shouldBeEmpty: false,

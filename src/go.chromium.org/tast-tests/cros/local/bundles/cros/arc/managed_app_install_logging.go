@@ -68,7 +68,7 @@ func init() {
 				ExtraAttr:         []string{"informational"},
 			},
 			{
-				Name:              "vm_betty",
+				Name:              "betty_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			}},
