@@ -71,25 +71,29 @@ func Ti50CCDFlashrom(ctx context.Context, s *testing.State) {
 
 	// Measure read time.
 	s.Log("Reading")
-	content, d, err := b.CCDFlashromRead(ctx)
+	content, r, err := b.CCDFlashromRead(ctx)
 	th.MustSucceed(err, "read")
-	logDuration("read", d)
+	logDuration("read", r)
 	// Check erase and read worked.
 	checkContent(s, content, 0xff)
 
 	// Measure write time from erased (all 0xff) to all zero.
 	s.Log("Writing")
-	d, err = b.CCDFlashromWrite(ctx, genContent(0))
+	w, err := b.CCDFlashromWrite(ctx, genContent(0))
 	th.MustSucceed(err, "write")
 	// Flashrom does an internal read before writing.
-	logDuration("write_with_read", d)
+	logDuration("write_with_read", w)
 
 	// Measure erase time from all zero.
 	s.Log("Erasing")
-	d, err = b.CCDFlashromErase(ctx)
+	e, err := b.CCDFlashromErase(ctx)
 	th.MustSucceed(err, "erase")
+	// To keep all results in one place print earlier collected values one
+	// more time.
+	s.Logf("read: %d ms", r)
+	s.Logf("write_with_read: %d ms", w)
 	// Flashrom does an internal read before erasing.
-	logDuration("erase_with_read", d)
+	logDuration("erase_with_read", e)
 
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save perf data: ", err)
