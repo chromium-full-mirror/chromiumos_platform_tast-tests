@@ -8,6 +8,7 @@ package graphics
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
@@ -21,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/crash"
+	"go.chromium.org/tast-tests/cros/local/debugd"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
@@ -276,6 +278,35 @@ func modifyDrmLogVerbosity(ctx context.Context) (func(context.Context) error, er
 	}, nil
 }
 
+func modifyDrmTraceVerbosity(ctx context.Context) (func(context.Context) error, error) {
+	d, err := debugd.New(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to debugd service")
+	}
+	const testCategories debugd.DRMTraceCategories = debugd.DRMTraceCategoryCore | debugd.DRMTraceCategoryKMS
+	if err := d.DRMTraceSetCategories(ctx, testCategories); err != nil {
+		return nil, errors.Wrap(err, "failed to set to default categories")
+	}
+	// Set for debug.
+	if err := d.DRMTraceSetSize(ctx, debugd.DRMTraceSizeDebug); err != nil {
+		return nil, errors.Wrap(err, "failed to set to default size")
+	}
+
+	return func(ctx context.Context) error {
+		d, err := debugd.New(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to debugd service")
+		}
+		if err := d.DRMTraceSetCategories(ctx, 0); err != nil {
+			return errors.Wrap(err, "failed to set to default categories")
+		}
+		if err := d.DRMTraceSetSize(ctx, debugd.DRMTraceSizeDefault); err != nil {
+			return errors.Wrap(err, "failed to set to default size")
+		}
+		return nil
+	}, nil
+}
+
 func (f *gpuWatchHangsFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	hangCheckCleanup, err := modifyHangCheckTimer(ctx)
 	if err != nil {
@@ -284,11 +315,11 @@ func (f *gpuWatchHangsFixture) SetUp(ctx context.Context, s *testing.FixtState) 
 		f.tearDownFunc = append(f.tearDownFunc, hangCheckCleanup)
 	}
 
-	drmLogCleanup, err := modifyDrmLogVerbosity(ctx)
+	drmTraceCleanup, err := modifyDrmTraceVerbosity(ctx)
 	if err != nil {
-		s.Log("Failed to modify drm log verbosity: ", err)
+		s.Log("Failed to set verbose logging in drm-trace")
 	} else {
-		f.tearDownFunc = append(f.tearDownFunc, drmLogCleanup)
+		f.tearDownFunc = append(f.tearDownFunc, drmTraceCleanup)
 	}
 	return nil
 }
@@ -303,6 +334,83 @@ func (f *gpuWatchHangsFixture) TearDown(ctx context.Context, s *testing.FixtStat
 
 func (f *gpuWatchHangsFixture) Reset(ctx context.Context) error {
 	return nil
+}
+
+func parseDrmTrace(ctx context.Context, startMsg, stopMsg string) (string, error) {
+	matches, err := filepath.Glob("/var/log/display_debug/drm_trace_verbose.*")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to glob drm_trace snapshot directory")
+	} else if len(matches) != 1 {
+		return "", errors.Errorf("unexpected number of snapshot found: got %v, want 1", len(matches))
+	}
+	bytes, err := os.ReadFile(matches[0])
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read snapshot")
+	}
+	const replacementCharacter = '\uFFFD'
+	lines := strings.Split(strings.TrimSpace(strings.ToValidUTF8(string(bytes), string(replacementCharacter))), "\n")
+	startIdx := -1
+	stopIdx := -1
+	for idx, line := range lines {
+		if strings.Contains(line, startMsg) {
+			startIdx = idx
+		}
+		if strings.Contains(line, stopMsg) {
+			stopIdx = idx
+		}
+	}
+	if startIdx < 0 || stopIdx < 0 || stopIdx < startIdx {
+		testing.ContextLog(ctx, "Failed to identify the start/stop test marker in drm-trace logs, outputing the entire logs instead")
+		return strings.Join(lines, "\n"), nil
+	}
+	return strings.Join(lines[startIdx:stopIdx+1], "\n"), nil
+}
+
+func drmTracePreTest(ctx context.Context, testName string) (func(context.Context) error, error) {
+	d, err := debugd.New(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to debugd service")
+	}
+	startTracingMsg := fmt.Sprintf("Test %v start tracing", testName)
+	stopTracingMsg := fmt.Sprintf("Test %v stop tracing", testName)
+	if err := d.DRMTraceAnnotateLog(ctx, startTracingMsg); err != nil {
+		return nil, errors.Wrap(err, "failed to annotate the start of tracing")
+	}
+	return func(ctx context.Context) error {
+		d, err := debugd.New(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to debugd service")
+		}
+		if err := d.DRMTraceAnnotateLog(ctx, stopTracingMsg); err != nil {
+			return errors.Wrap(err, "failed to annotate the end of tracing")
+		}
+		// Remove existing snapshots.
+		snapshotDir := "/var/log/display_debug/*"
+		files, err := filepath.Glob(snapshotDir)
+		if err != nil {
+			return errors.Wrap(err, "failed to glob drm_trace snapshot directory")
+		}
+		for _, file := range files {
+			if err = os.RemoveAll(file); err != nil {
+				return errors.Wrapf(err, "failed to remove %v", file)
+			}
+		}
+		if err := d.DRMTraceSnapshot(ctx, debugd.DRMTraceSnapshotTypeTrace); err != nil {
+			return errors.Wrap(err, "failed to dump DRMTraceSnapshot")
+		}
+		log, err := parseDrmTrace(ctx, startTracingMsg, stopTracingMsg)
+		if err != nil {
+			return errors.Wrap(err, "failed to parse drm-trace")
+		}
+		out, ok := testing.ContextOutDir(ctx)
+		if !ok {
+			return errors.New("failed to get test output directory")
+		}
+		if err := os.WriteFile(filepath.Join(out, "drm_trace"), []byte(log), 0644); err != nil {
+			return errors.Wrap(err, "failed to write drm-trace to tast output folder")
+		}
+		return nil
+	}, nil
 }
 
 func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
@@ -338,6 +446,13 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 			}
 			return nil
 		})
+	}
+
+	drmTracePostTest, err := drmTracePreTest(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Failed to setup drm_trace settings: ", err)
+	} else {
+		f.postFunc = append(f.postFunc, drmTracePostTest)
 	}
 }
 
