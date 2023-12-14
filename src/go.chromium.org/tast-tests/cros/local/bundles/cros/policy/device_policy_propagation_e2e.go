@@ -14,16 +14,15 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         UserPolicyPropagationE2E,
+		Func:         DevicePolicyPropagationE2E,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "E2E test for user policy propagation",
+		Desc:         "E2E test for device policy propagation",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",      // Test author
@@ -38,33 +37,29 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
-		VarDeps: []string{tape.ServiceAccountVar},
+		VarDeps: []string{tape.ServiceAccountVar, "ui.signinProfileTestExtensionManifestKey"},
 		Timeout: 20 * time.Minute,
 		SearchFlags: []*testing.StringPair{
-			pci.SearchFlag(&policy.AllowDinosaurEasterEgg{}, pci.Served),
+			pci.SearchFlag(&policy.DeviceAutoUpdateDisabled{}, pci.Served),
 			{
 				Key: "feature_id",
 				// As an admin, I want to ensure that right policies are
-				// propagated to my managed users, so I verify that
-				// the user has received updated policies
-				// in under 10 minutes.
+				// propagated to my managed devices, so I verify that
+				// the device has received updated policies in
+				// under 10 minutes.
 				// TODO(b/308932300): Integrate crosbolt.
-				Value: "screenplay-8283d4fd-bb4f-42fb-a805-ae309cee77a5",
+				Value: "screenplay-b0bb6119-2d9c-4e04-810e-bb4b83b96889",
 			},
 		},
-		Params: []testing.Param{{
-			Name:    "consumer",
-			Fixture: fixture.ChromeTAPELoggedIn,
-		}, {
-			Name:    "enrolled",
-			Fixture: fixture.ChromeTAPEEnrolledLoggedIn,
-		}},
+		Fixture: fixture.TAPEEnrolled,
 	})
 }
 
-func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	fixtData := s.FixtValue().(*fixtures.TAPEChromeFixtData)
+func DevicePolicyPropagationE2E(ctx context.Context, s *testing.State) {
+	fixtData := fixture.TAPEEnrolledFixtData{}
+	if err := s.FixtFillValue(&fixtData); err != nil {
+		s.Fatal("Failed to deserialize remote fixture data: ", err)
+	}
 
 	const policyPropagationTimeout = 10 * time.Minute
 
@@ -72,9 +67,19 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
 	defer cancel()
 
-	tconn, err := cr.TestAPIConn(ctx)
+	cr, err := chrome.New(ctx,
+		chrome.NoLogin(),
+		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		chrome.KeepEnrollment(),
+	)
 	if err != nil {
-		s.Fatal("Failed to create a TestAPIConn: ", err)
+		s.Fatal("Failed to start chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
+	tconn, err := cr.SigninProfileTestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to create a TestConn: ", err)
 	}
 
 	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
@@ -84,24 +89,26 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 
 	// TODO(b/316326530): Replace with generic cleanup in the fixture.
 	defer func(ctx context.Context) {
-		tapePolicies := &tape.AllowDinosaurEasterEggUsers{
-			AllowDinosaurEasterEgg: tape.NULLABLEBOOLEAN_UNSET,
+		// Can't unset all update policy values.
+		// Disabled updates is the default on test images anyway.
+		tapePolicies := &tape.AutoUpdateSettingsDevices{
+			UpdateDisabled: true,
 		}
-		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
+		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{"updateDisabled"} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
 			s.Fatal("Failed to clean up policies: ", err)
 		}
 	}(cleanupCtx)
 
 	s.Run(ctx, "initial", func(context.Context, *testing.State) {
-		tapePolicies := &tape.AllowDinosaurEasterEggUsers{
-			AllowDinosaurEasterEgg: tape.NULLABLEBOOLEAN_FALSE,
+		tapePolicies := &tape.AutoUpdateSettingsDevices{
+			UpdateDisabled: true,
 		}
-		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
+		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{"updateDisabled"} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
 			s.Fatal("Failed to set initial policy: ", err)
 		}
 
 		expectedPolicies := []policy.Policy{
-			&policy.AllowDinosaurEasterEgg{Stat: policy.StatusSet, Val: false},
+			&policy.DeviceAutoUpdateDisabled{Stat: policy.StatusSet, Val: true},
 		}
 
 		ctx, cancel := context.WithTimeout(ctx, policyPropagationTimeout)
@@ -112,15 +119,28 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 	})
 
 	s.Run(ctx, "update", func(context.Context, *testing.State) {
-		tapePolicies := &tape.AllowDinosaurEasterEggUsers{
-			AllowDinosaurEasterEgg: tape.NULLABLEBOOLEAN_TRUE,
+		tapePolicies := &tape.AutoUpdateSettingsDevices{
+			UpdateDisabled: false,
+			// Set required fields for API.
+			AutoUpdateAllowedConnectionType: tape.AUTOUPDATECONNECTIONTYPEENUM_AUTO_UPDATE_CONNECTION_TYPE_ENUM_ALL_CONNECTIONS,
+			DeviceRollbackToTargetVersion:   1, // Roll back OS disabled.
+			AutoUpdateRolloutPlan: tape.AutoUpdateRolloutPlan{
+				Plan:    tape.ROLLOUTPLAN_SCATTER_UPDATES,
+				Scatter: tape.SCATTERFACTOR_ONE_DAY,
+			},
+			ReleaseChannelWithLts: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_STABLE_CHANNEL,
+			AutoUpdateTargetVersionLts: tape.AutoUpdateTargetVersionLts{
+				SelectedVersion: tape.SelectedVersion{
+					DisplayName: "No restriction",
+				},
+			},
 		}
 		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
 			s.Fatal("Failed to set updated policy: ", err)
 		}
 
 		expectedPolicies := []policy.Policy{
-			&policy.AllowDinosaurEasterEgg{Stat: policy.StatusSet, Val: true},
+			&policy.DeviceAutoUpdateDisabled{Stat: policy.StatusSet, Val: false},
 		}
 
 		ctx, cancel := context.WithTimeout(ctx, policyPropagationTimeout)

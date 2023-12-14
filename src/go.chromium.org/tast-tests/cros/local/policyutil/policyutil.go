@@ -256,3 +256,15 @@ func SetUpFakePolicyServer(ctx context.Context, outdir, policyUser string, polic
 	}
 	return fdms, nil
 }
+
+// WaitForPolicies waits until the expected policies can be verified.
+// The function does not refresh policies, invalidations are responsible for that.
+func WaitForPolicies(ctx context.Context, tconn *chrome.TestConn, expectedPolicies []policy.Policy) error {
+	testing.ContextLog(ctx, "Waiting for policies to have the right values")
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		return Verify(ctx, tconn, expectedPolicies)
+	}, &testing.PollOptions{
+		Timeout:  10 * time.Minute, // CUJs dictate 10 minutes for policy propagation.
+		Interval: 1 * time.Second,  // Policy refresh takes time.
+	})
+}
