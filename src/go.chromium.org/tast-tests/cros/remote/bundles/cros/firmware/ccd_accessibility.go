@@ -36,11 +36,6 @@ func init() {
 	})
 }
 
-type capSetup struct {
-	capability servo.CCDCap
-	state      servo.CCDCapState
-}
-
 func CCDAccessibility(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 

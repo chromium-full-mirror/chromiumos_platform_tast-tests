@@ -6,7 +6,7 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -50,7 +50,7 @@ func USBAnnotations(ctx context.Context, s *testing.State) {
 		// We don't care about errors here, as long as we are able to find at
 		// least one correctly annotated port that means we've gotten
 		// information from fw.
-		contents, _ := ioutil.ReadFile(file + "/removable")
+		contents, _ := os.ReadFile(file + "/removable")
 		text := strings.TrimRight(string(contents), "\r\n")
 
 		s.Log(file + "/removable = " + text)

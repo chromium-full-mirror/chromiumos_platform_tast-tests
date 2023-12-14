@@ -111,7 +111,7 @@ func restoreBiosImage(ctx context.Context, s *testing.State, flashromInstance *f
 		true,  // --noverify-all
 		false, // --noverify
 		"",    // -flash-contents
-		[]string{fmt.Sprintf("%s", biosImagePath)})
+		[]string{biosImagePath})
 	if err != nil {
 		s.Fatal("restoring failed - flashromInstance.Write Failed: ", err)
 	}
@@ -235,6 +235,9 @@ func LockedME(ctx context.Context, s *testing.State) {
 	// have a dedicated ME region in the boot media.
 	fmapStr, err := h.DUT.Conn().CommandContext(
 		ctx, "dump_fmap", "-p", biosImagePath).Output(ssh.DumpLogOnError)
+	if err != nil {
+		s.Fatalf("dump_fmap failed: %s, %s", err, fmapStr)
+	}
 
 	var isIfwiPlatform = strings.Contains(string(fmapStr), "IFWI")
 

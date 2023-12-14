@@ -192,7 +192,7 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 		{servo.LidOpenNo},
 	} {
 		// Only repeat the test in lid closed when device has a lid.
-		if tc.lidOpen == servo.LidOpenNo && args.hasLid == false {
+		if tc.lidOpen == servo.LidOpenNo && !args.hasLid {
 			break
 		}
 

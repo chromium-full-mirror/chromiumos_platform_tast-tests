@@ -12,7 +12,6 @@ import (
 	"time"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
-	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
@@ -190,7 +189,7 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Rebooting into recovery mode to rebuild RECOVERY_MRC_CACHE")
-	if err := ms.RebootToMode(ctx, fwCommon.BootModeRecovery); err != nil {
+	if err := ms.RebootToMode(ctx, common.BootModeRecovery); err != nil {
 		s.Fatal("Failed to reboot into recovery mode: ", err)
 	}
 	h.DisconnectDUT(ctx)

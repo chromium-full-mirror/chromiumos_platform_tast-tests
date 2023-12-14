@@ -43,42 +43,6 @@ func init() {
 	})
 }
 
-func dutControl(ctx context.Context, s *testing.State, svo *servo.Servo, commands [][]string, prefix string) {
-	for _, section := range commands {
-		for _, cmd := range section {
-			parts := strings.SplitN(cmd, ":", 2)
-			control := parts[0]
-			if prefix != "" {
-				if ok, err := svo.HasControl(ctx, prefix+control); err != nil {
-					s.Errorf("Failed to check control %q: %v", prefix+control, err)
-				} else if ok {
-					control = prefix + control
-				} else {
-					s.Logf("No such control %s%s", prefix, control)
-				}
-			}
-			if len(parts) == 1 {
-				s.Logf("dut-control %q", control)
-				if _, err := svo.GetString(ctx, servo.StringControl(control)); err != nil {
-					s.Errorf("Could not read servo string %s: %v", control, err)
-				}
-			} else {
-				s.Logf("dut-control \"%s:%s\"", control, parts[1])
-				if err := svo.SetString(ctx, servo.StringControl(control), parts[1]); err != nil {
-					s.Errorf("Could not set servo string %s:%s: %v", control, parts[1], err)
-				}
-			}
-		}
-	}
-}
-
-type fwConfig struct {
-	DUTControlOff           [][]string `json:"dut_control_off"`
-	DUTControlOn            [][]string `json:"dut_control_on"`
-	FlashExtraFlagsFlashrom []string   `json:"flash_extra_flags_flashrom"`
-	Programmer              string     `json:"programmer"`
-}
-
 // TODO(b/297577280): Add a CCD variant to ServoGBBFlagsFutility and remove this test.
 
 // ServoGBBFlags has been tested to pass with Suzy-Q, Servo V4, Servo V4 + ServoMicro in dual V4 mode.

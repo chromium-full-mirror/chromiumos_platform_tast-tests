@@ -200,7 +200,7 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 
 	corruptBiosRemoteImage := fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir)
 	if err := corruptFMAPSection(ctx, s, h, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir); err != nil {
-		s.Fatal("Failed to corrupt FMAP sections", err)
+		s.Fatal("Failed to corrupt FMAP sections: ", err)
 	}
 
 	s.Log("Signing corrupt image")

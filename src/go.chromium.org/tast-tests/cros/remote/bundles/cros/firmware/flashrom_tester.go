@@ -68,6 +68,9 @@ func FlashromTester(ctx context.Context, s *testing.State) {
 		ProgrammerInit(flashrom.ProgrammerHost, "").
 		SetDut(h.DUT).
 		Probe(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Flashrom instance: ", err)
+	}
 	defer func() {
 		if err := shutdown(); err != nil {
 			s.Error("Failed to shutdown flashromInstance: ", err)
@@ -95,7 +98,7 @@ func FlashromTester(ctx context.Context, s *testing.State) {
 	// duplicate cmd stdout to a log file and a scanner
 	stdoutFile, err := os.Create(filepath.Join(s.OutDir(), "flashrom_tester_stdout.txt"))
 	if err != nil {
-		s.Fatal("os.Open failed: ", err)
+		s.Fatal("os.Create failed: ", err)
 	}
 	defer func() {
 		if err := stdoutFile.Close(); err != nil {
@@ -107,7 +110,7 @@ func FlashromTester(ctx context.Context, s *testing.State) {
 
 	stderrFile, err := os.Create(filepath.Join(s.OutDir(), "flashrom_tester_stderr.txt"))
 	if err != nil {
-		s.Fatal("os.Open failed: ", err)
+		s.Fatal("os.Create failed: ", err)
 	}
 	defer func() {
 		if err := stderrFile.Close(); err != nil {

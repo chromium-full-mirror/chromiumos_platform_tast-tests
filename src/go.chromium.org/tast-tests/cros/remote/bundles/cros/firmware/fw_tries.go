@@ -91,7 +91,8 @@ func FWTries(ctx context.Context, s *testing.State) {
 		if err := firmware.CheckFWTries(ctx, h.Reporter, fwCommon.RWSectionB, fwCommon.RWSectionUnspecified, 0); err != nil {
 			s.Fatal("After rebooting from B/B/1: ", err)
 		}
-		currentFW, nextFW, tryCount, err = h.Reporter.FWTries(ctx)
+		// Ignore error, CheckFWTries uses FWTries() before.
+		currentFW, nextFW, tryCount, _ = h.Reporter.FWTries(ctx)
 		s.Logf("DUT rebooted. currentFW/nextFW/tryCount:%s/%s/%d", currentFW, nextFW, tryCount)
 	} else if tryCount == 0 {
 		s.Logf("DUT rebooted twice. currentFW/nextFW/tryCount: B/%s/0", nextFW)

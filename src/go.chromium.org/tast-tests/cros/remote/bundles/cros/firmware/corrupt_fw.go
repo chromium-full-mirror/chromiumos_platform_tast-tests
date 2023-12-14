@@ -28,8 +28,8 @@ import (
 type corruptSingleSectionVals struct {
 	sectionA bios.ImageSection
 	sectionB bios.ImageSection
-	bodyA bios.ImageSection
-	bodyB bios.ImageSection
+	bodyA    bios.ImageSection
+	bodyB    bios.ImageSection
 }
 
 func init() {
@@ -184,7 +184,7 @@ func CorruptFW(ctx context.Context, s *testing.State) {
 	}
 	// - Create corrupt bodies for A & B
 	for _, m := range matches {
-		out, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, string(m[1])), "if=/dev/random", fmt.Sprintf("bs=%s", string(m[2])), "count=1").Output(ssh.DumpLogOnError)
+		_, err = h.DUT.Conn().CommandContext(ctx, "dd", fmt.Sprintf("of=%s/%s_corrupt.bin", remoteTempDir, string(m[1])), "if=/dev/random", fmt.Sprintf("bs=%s", string(m[2])), "count=1").Output(ssh.DumpLogOnError)
 		if err != nil {
 			s.Fatal("Failed creating corrupt file: ", err)
 		}

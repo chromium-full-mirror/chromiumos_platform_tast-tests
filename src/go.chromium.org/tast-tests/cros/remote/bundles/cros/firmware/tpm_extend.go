@@ -39,7 +39,7 @@ type bootModeArgs struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TPMExtend,
-		Desc:         "Test to ensure TPM PCRs are extended correctly.",
+		Desc:         "Test to ensure TPM PCRs are extended correctly",
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
 		BugComponent: "b:194910917", // ChromeOS > Platform > System > Firmware > FAFT > Infra
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
@@ -99,25 +99,25 @@ func init() {
 func tpm1CheckPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	s.Logf("Reading PCR%d from the device", num)
-	pcrs_file := "/sys/class/*/tpm0/device/pcrs"
-	pcr_bytes, err := h.DUT.Conn().CommandContext(ctx, "cat", pcrs_file).Output()
+	pcrsFile := "/sys/class/*/tpm0/device/pcrs"
+	pcrBytes, err := h.DUT.Conn().CommandContext(ctx, "cat", pcrsFile).Output()
 	if err != nil {
 		s.Fatal("Failed to read TPM1 PCR: ", err)
 	}
-	var pcr = string(pcr_bytes)
+	var pcr = string(pcrBytes)
 
 	padded := append(make([]byte, 20), hashObj.Sum(nil)[:20]...)
 	extended := sha256.Sum256((padded)[:])
-	extended_string := fmt.Sprintf("%X", extended)
+	extendedString := fmt.Sprintf("%X", extended)
 	spaced := ""
-	for i := 0; i < len(extended_string); i += 2 {
-		spaced += extended_string[i:i+2] + " "
+	for i := 0; i < len(extendedString); i += 2 {
+		spaced += extendedString[i:i+2] + " "
 	}
 
-	extended_string = fmt.Sprintf("PCR-%.2d: %s", num, spaced)
+	extendedString = fmt.Sprintf("PCR-%.2d: %s", num, spaced)
 
-	if !strings.Contains(pcr, extended_string) {
-		s.Fatalf("PCR%d was not extended with SHA256 of HWID!", num)
+	if !strings.Contains(pcr, extendedString) {
+		s.Fatalf("PCR%d was not extended with SHA256 of HWID", num)
 	}
 }
 
@@ -126,18 +126,18 @@ func tpm2CheckPCR(ctx context.Context, s *testing.State, num int, hashObj hash.H
 	s.Logf("Reading PCR%d from the device", num)
 
 	pcrIndex := fmt.Sprintf("--index=%d", num)
-	pcr_bytes, err := h.DUT.Conn().CommandContext(ctx, "trunks_client", "--read_pcr", pcrIndex).Output()
+	pcrBytes, err := h.DUT.Conn().CommandContext(ctx, "trunks_client", "--read_pcr", pcrIndex).Output()
 	if err != nil {
 		s.Fatal("Failed to read TPM2 PCR: ", err)
 	}
-	var pcr = string(pcr_bytes)
+	var pcr = string(pcrBytes)
 
 	padded := append(hashObj.Sum(nil), make([]byte, 12)...)[:32]
 	extended := sha256.Sum256((append(make([]byte, 32), padded...))[:])
-	extended_string := fmt.Sprintf("%X", extended)
+	extendedString := fmt.Sprintf("%X", extended)
 
-	if !strings.Contains(pcr, extended_string) {
-		s.Fatalf("PCR%d was not extended with SHA256 of HWID!", num)
+	if !strings.Contains(pcr, extendedString) {
+		s.Fatalf("PCR%d was not extended with SHA256 of HWID", num)
 	}
 }
 
@@ -149,7 +149,7 @@ func checkPCR(ctx context.Context, s *testing.State, num int, hashObj hash.Hash)
 	}
 }
 
-func hwIdCheck(ctx context.Context, s *testing.State) {
+func hwIDCheck(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	// Get the hardware version using 'crossystem hwid'
@@ -166,7 +166,7 @@ func hwIdCheck(ctx context.Context, s *testing.State) {
 	checkPCR(ctx, s, 1, hashObj)
 }
 
-func bootModeVerify(ctx context.Context, s *testing.State, devsw string, mainfw string) {
+func bootModeVerify(ctx context.Context, s *testing.State, devsw, mainfw string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	s.Logf("Verifying bootmode digest in PCR0 in (devsw=%s, mainfw=%s) mode", devsw, mainfw)
 	if csMap, err := h.Reporter.Crossystem(ctx, reporters.CrossystemParamDevswBoot,
@@ -187,12 +187,12 @@ func TPMExtend(ctx context.Context, s *testing.State) {
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 	tpmVersion, err := hwsec.NewCmdHelper(cmdRunner).GetTPMVersion(ctx)
 	if err != nil {
-		s.Fatal("Failed to get TPM version ", err)
+		s.Fatal("Failed to get TPM version: ", err)
 	}
 	s.Log("TPM version is:", tpmVersion)
 
 	// Verify hardware id digest
-	hwIdCheck(ctx, s)
+	hwIDCheck(ctx, s)
 
 	// Verify bootmode
 	bootModeVerify(ctx, s, arguments.devsw, arguments.mainfw)

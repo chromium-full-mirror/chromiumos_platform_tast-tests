@@ -225,8 +225,7 @@ func S3SuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to execute suspend_stress_test command: ", err)
 	}
 
-	var errorCodes []*regexp.Regexp
-	errorCodes = []*regexp.Regexp{PrematureWake, SuspndFailure, FrmwreLogError}
+	errorCodes := []*regexp.Regexp{PrematureWake, SuspndFailure, FrmwreLogError}
 	for _, errMsg := range errorCodes {
 		if !(errMsg).MatchString(string(stressOut)) {
 			s.Fatalf("Failed for failures; expected %q but got non-zero %s", errMsg, string(stressOut))

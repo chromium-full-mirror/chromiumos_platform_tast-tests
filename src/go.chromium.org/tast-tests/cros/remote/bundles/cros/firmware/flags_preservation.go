@@ -122,12 +122,10 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 	// information from needFwUpdate for debugging purposes.
 	needFwUpdate := func() string {
 		for _, programmer := range []string{"ec", "host"} {
-			val, err := compareForFwUpdate(ctx, h, programmer)
-			if err != nil {
+			if val, err := compareForFwUpdate(ctx, h, programmer); err != nil {
 				s.Log("Failed to determine if fw update is required: ", err)
 				return "unknown"
-			}
-			if val == true {
+			} else if val {
 				return "need to run firmware update mode recovery"
 			}
 		}
@@ -262,9 +260,9 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 				s.Logf("Battery Status: %s", status)
 			}
 
-			// Between removing charger, and sending battery cutoff,
-			// waiting for some delay seems to help prevent servo exit.
 			s.Log("Sleeping for 30 seconds")
+			// GoBigSleepLint: Between removing charger, and sending battery cutoff,
+			// waiting for some delay seems to help prevent servo exit.
 			if err := testing.Sleep(ctx, 30*time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}
@@ -285,10 +283,9 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 						if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 							s.Fatal("Failed to remove watchdog for ccd: ", err)
 						}
-						// To-do: depending on how the results turn out, we could
-						// extend the sleep in WatchdogRemove(), instead of adding
-						// another sleep here.
 						s.Log("Sleeping for 5 seconds")
+						// GoBigSleepLint: To-do: depending on how the results turn out, we could
+						// extend the sleep in WatchdogRemove(), instead of adding another sleep here.
 						if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 							s.Fatal("Failed to sleep: ", err)
 						}
@@ -297,6 +294,7 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 							s.Fatal("Failed to set pd role: ", err)
 						}
 						s.Log("Sleeping for 60 seconds")
+						// GoBigSleepLint: Wait for DUT to go online.
 						if err := testing.Sleep(ctx, 60*time.Second); err != nil {
 							s.Fatal("Failed to sleep: ", err)
 						}
@@ -324,9 +322,9 @@ func FlagsPreservation(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to send the battery cutoff command: ", err)
 			}
 
-			// 60 seconds of sleep may be necessary in order for some batteries to
-			// be fully cut off, and for reducing complications in waking DUTs.
 			s.Log("Sleeping for 60 seconds")
+			// GoBigSleepLint: 60 seconds of sleep may be necessary in order for some batteries to
+			// be fully cut off, and for reducing complications in waking DUTs.
 			if err := testing.Sleep(ctx, 60*time.Second); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}

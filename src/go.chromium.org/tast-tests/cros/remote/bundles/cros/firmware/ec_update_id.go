@@ -278,10 +278,11 @@ func corruptSection(ctx context.Context, h *firmware.Helper, section string) (re
 	if sectionMatch == nil {
 		return errors.Errorf("didn't find %q section in fmap: %v", section, string(out))
 	}
-	sectionSize, err := strconv.Atoi(string(sectionMatch[2]))
+	// Ignore error as regexp above will match correct integer.
+	sectionSize, _ := strconv.Atoi(string(sectionMatch[2]))
 	testing.ContextLogf(ctx, "Section %q size: %d", section, sectionSize)
 
-	if out, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
+	if _, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to delete temp file")
 	}
 
@@ -290,7 +291,7 @@ func corruptSection(ctx context.Context, h *firmware.Helper, section string) (re
 		"bs=1", fmt.Sprintf("count=%d", sectionSize),
 	}
 	testing.ContextLogf(ctx, "Generate random file of size: %d to path %v", sectionSize, sectionPath)
-	if out, err = h.DUT.Conn().CommandContext(ctx, "dd", ddArgs...).Output(ssh.DumpLogOnError); err != nil {
+	if _, err = h.DUT.Conn().CommandContext(ctx, "dd", ddArgs...).Output(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to create random file with dd cmd")
 	}
 
@@ -301,7 +302,7 @@ func corruptSection(ctx context.Context, h *firmware.Helper, section string) (re
 	}
 
 	testing.ContextLog(ctx, "Delete temp file at path ", sectionPath)
-	if out, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
+	if _, err = h.DUT.Conn().CommandContext(ctx, "rm", sectionPath).Output(ssh.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to delete temp file")
 	}
 	return nil

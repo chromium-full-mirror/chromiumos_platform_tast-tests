@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"time"
 
@@ -216,7 +215,7 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	s.Log("Copy backup files to the Host")
-	fwBackupHost, err := ioutil.TempFile("", "fwBackup")
+	fwBackupHost, err := os.CreateTemp("", "fwBackup")
 	if err != nil {
 		s.Fatal("Failed to create temporary file for firmware sign A backup")
 	}

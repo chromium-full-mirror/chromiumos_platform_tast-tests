@@ -6,7 +6,7 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -357,7 +357,7 @@ func recordUSBDevices(ctx context.Context, h *firmware.Helper, destPath string) 
 	if err != nil {
 		return errors.Wrap(err, "running lsusb")
 	}
-	if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+	if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
 		return errors.Wrap(err, "failed to write")
 	}
 	return nil

@@ -39,8 +39,6 @@ func init() {
 func DeepSleep(ctx context.Context, s *testing.State) {
 	// requiredBatteryLife is the number of days the battery must last when in hibernate mode.
 	const requiredBatteryLife = 100 * 24 * time.Hour
-	// hibernateDelay is the time after the EC hibernate command where it still writes output.
-	const hibernateDelay = 1 * time.Second
 	// g3PollOptions is the time to wait for the DUT to reach G3 after power off.
 	g3PollOptions := testing.PollOptions{
 		Timeout:  30 * time.Second,
@@ -164,6 +162,7 @@ func DeepSleep(ctx context.Context, s *testing.State) {
 			if sleepDuration > time.Minute {
 				sleepDuration = time.Minute
 			}
+			// GoBigSleepLint: let DUT stay in deep sleep
 			if err = testing.Sleep(ctx, sleepDuration); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}

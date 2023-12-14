@@ -7,7 +7,7 @@ package firmware
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"time"
@@ -115,7 +115,7 @@ func WilcoNormalToDev(ctx context.Context, s *testing.State) {
 	}
 	// Save the firmware log for debugging purposes.
 	firmwareLogDestPath := filepath.Join(s.OutDir(), "firmware.log")
-	if err := ioutil.WriteFile(firmwareLogDestPath, []byte(firmwareLogOutput), 0666); err != nil {
+	if err := os.WriteFile(firmwareLogDestPath, []byte(firmwareLogOutput), 0666); err != nil {
 		s.Fatal("Failed to write firmware log: ", err)
 	}
 

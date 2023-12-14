@@ -6,7 +6,7 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -56,6 +56,10 @@ func APBmpblk(ctx context.Context, s *testing.State) {
 	s.Log("A portion of the firmware ROM containing Coreboot is stored at: ", coreboot.Path)
 
 	layout, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", coreboot.Path, "layout").Output()
+	if err != nil {
+		s.Log(layout)
+		s.Fatal("Failed to execute cbfstool: ", err)
+	}
 	layouts := string(layout)
 
 	region := bios.COREBOOTImageSection
@@ -71,7 +75,7 @@ func APBmpblk(ctx context.Context, s *testing.State) {
 	}
 	outs := string(out)
 	path := filepath.Join(s.OutDir(), "cbfs.txt")
-	if err := ioutil.WriteFile(path, out, 0644); err != nil {
+	if err := os.WriteFile(path, out, 0644); err != nil {
 		s.Error("Failed to save cbfstool output: ", err)
 	}
 

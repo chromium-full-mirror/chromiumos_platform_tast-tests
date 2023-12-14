@@ -10,7 +10,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -131,7 +130,7 @@ func BaseECUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get hammer config: ", err)
 	}
 
-	tempDir, err := ioutil.TempDir("", "BaseECUpdate")
+	tempDir, err := os.MkdirTemp("", "BaseECUpdate")
 	if err != nil {
 		s.Fatal("Failed to create a temp dir")
 	}
@@ -343,7 +342,7 @@ func triggerAndFindNotification(ctx context.Context, ecTool *firmware.ECTool, ut
 
 	testing.ContextLog(ctx, "Finding notification window")
 	if _, err := utilSvcClient.FindSingleNode(ctx, &fwpb.NodeElement{Name: "Your detachable keyboard needs a critical update"}); err != nil {
-		if roProtected == true && strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
+		if roProtected && strings.Contains(err.Error(), context.DeadlineExceeded.Error()) {
 			// When RO locked, broken RW would get restored by hammerd silently.
 			testing.ContextLog(ctx, "Found RO locked, skip verifying pop-up window")
 			return nil

@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
-	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -132,7 +131,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Setting GBB flag DISABLE_EC_SOFTWARE_SYNC")
-	set := pb.GBBFlagsState{Set: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
+	set := fwpb.GBBFlagsState{Set: []fwpb.GBBFlag{fwpb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
 	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &set); err != nil {
 		s.Fatal("Failed to set GBB flag: ", err)
 	}
@@ -172,7 +171,7 @@ func DisableEnableECSWSync(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
-	clear := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
+	clear := fwpb.GBBFlagsState{Clear: []fwpb.GBBFlag{fwpb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
 	if _, err := fwCommon.ClearAndSetGBBFlags(ctx, s.DUT(), &clear); err != nil {
 		s.Fatal("Failed to clear GBB flag: ", err)
 	}

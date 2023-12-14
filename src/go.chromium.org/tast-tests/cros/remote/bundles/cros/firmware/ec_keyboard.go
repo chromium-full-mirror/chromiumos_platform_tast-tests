@@ -166,7 +166,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 
 	s.Log("Device path: ", device)
 	cmd := h.DUT.Conn().CommandContext(ctx, "evtest", device)
-	stdout, err := cmd.StdoutPipe()
+	stdout, _ := cmd.StdoutPipe()
 	scanner := bufio.NewScanner(stdout)
 	cmd.Start()
 
@@ -185,7 +185,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 				// Time out after 1 second so it doesn't get stuck here.
 				s.Log("Finshed reading preamble")
 				return
-			case _ = <-text:
+			case <-text:
 				continue
 			}
 		}
@@ -193,11 +193,11 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 
 	for key, keyCode := range testKeyMap {
 		s.Logf("Pressing key %q, expecting to read keycode %q", key, keyCode)
-		if err = readKeyPress(ctx, h, scanner, key, keyCode, keyPressFunc); err != nil {
+		if err := readKeyPress(ctx, h, scanner, key, keyCode, keyPressFunc); err != nil {
 			s.Fatal("Failed to read key: ", err)
 		}
-		// Wait for reading to complete before entering next key to prevent failing previous read.
-		if err = testing.Sleep(ctx, typeTimeout); err != nil {
+		// GoBigSleepLint: Wait for reading to complete before entering next key to prevent failing previous read.
+		if err := testing.Sleep(ctx, typeTimeout); err != nil {
 			s.Fatalf("Failed to sleep for %s waiting to type next key", typeTimeout)
 		}
 	}

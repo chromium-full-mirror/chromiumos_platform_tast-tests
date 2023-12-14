@@ -582,7 +582,7 @@ func scanPowerPress(ctx context.Context, h *firmware.Helper, devName string) (*b
 	if foundMatch != nil {
 		testing.ContextLogf(ctx, "Found device path for power button: %s", string(foundMatch[0]))
 	}
-	devPath := strings.TrimLeft(string(foundMatch[0]), "DEVNAME=")
+	devPath := strings.TrimPrefix(string(foundMatch[0]), "DEVNAME=")
 	// Start evtest to scan for power presses.
 	cmd := h.DUT.Conn().CommandContext(ctx, "evtest", devPath)
 	stdout, err := cmd.StdoutPipe()

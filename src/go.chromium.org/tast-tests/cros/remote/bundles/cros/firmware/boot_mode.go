@@ -7,7 +7,7 @@ package firmware
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -288,7 +288,7 @@ func BootMode(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to read firmware log: ", err)
 			}
 			destPath := filepath.Join(s.OutDir(), "firmware.log")
-			if err := ioutil.WriteFile(destPath, []byte(output), 0666); err != nil {
+			if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
 				s.Fatal("Failed to write firmware log: ", err)
 			}
 		}()
