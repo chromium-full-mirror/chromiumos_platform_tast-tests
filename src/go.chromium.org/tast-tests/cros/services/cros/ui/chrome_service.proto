@@ -34,6 +34,9 @@ service ChromeService {
   // the devtools port may change.
   rpc Reconnect(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
+  // ResetState attempts to reset Chrome's state (e.g. by closing all pages).
+  rpc ResetState(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
   // UserHash retrieves the user hash of the current logged in user.
   rpc UserHash(google.protobuf.Empty) returns (UserHashResponse) {}
 }

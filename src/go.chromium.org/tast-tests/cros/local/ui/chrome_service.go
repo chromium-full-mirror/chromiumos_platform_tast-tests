@@ -162,6 +162,22 @@ func (svc *ChromeService) Reconnect(ctx context.Context, _ *empty.Empty) (*empty
 	return &empty.Empty{}, nil
 }
 
+// ResetState attempts to reset Chrome's state (e.g. by closing all pages).
+func (svc *ChromeService) ResetState(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
+	svc.sharedObject.ChromeMutex.Lock()
+	defer svc.sharedObject.ChromeMutex.Unlock()
+
+	if svc.sharedObject.Chrome == nil {
+		return nil, errors.New("Chrome not available")
+	}
+
+	if err := svc.sharedObject.Chrome.ResetState(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to reset chrome state")
+	}
+
+	return &empty.Empty{}, nil
+}
+
 // UserHash retrieves the user hash of the current logged in user.
 func (svc *ChromeService) UserHash(ctx context.Context, _ *empty.Empty) (*ui.UserHashResponse, error) {
 	svc.sharedObject.ChromeMutex.Lock()
