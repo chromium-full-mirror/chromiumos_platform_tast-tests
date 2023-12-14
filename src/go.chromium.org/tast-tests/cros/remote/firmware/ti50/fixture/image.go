@@ -123,11 +123,12 @@ func (v *ImageValue) FwConfigPaths() []string {
 func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, imageType ImageType, s *testing.FixtState) (*ImageValue, error) {
 	inputURL, _ := s.Var(BuildURL)
 	iv := &ImageValue{}
+	iv.imagePath = inputURL
 
-	var configPaths []string
-	conf, hasManualConf := s.Var(FwConfigJSON)
-	if hasManualConf {
-		configPaths = append(configPaths, conf)
+	var hasManualConf bool
+	if conf, ok := s.Var(FwConfigJSON); ok {
+		iv.configPaths = []string{conf}
+		hasManualConf = true
 	}
 
 	if inputURL == "" {
@@ -138,14 +139,12 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		// ti50/common based on the information from devboardservice and the type of image
 		// declared on the test case.
 		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, imageType)
-		iv.imagePath = ""
 
 		if !hasManualConf {
 			config := defaultConfigPath(s, testbedProperties.TestbedType, imageType)
 			testing.ContextLogf(ctx, "-var=%s= not provided, using default at %s", FwConfigJSON, config)
-			configPaths = append(configPaths, config)
+			iv.configPaths = []string{config}
 		}
-		iv.configPaths = configPaths
 
 		return iv, nil
 	}
@@ -161,22 +160,24 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 				return nil, err
 			}
 			testing.ContextLogf(ctx, "Found %s for %s", latestURL, inputURL)
-			inputURL = latestURL
+			iv.imagePath = latestURL
 		case Cr50QualBranch:
 			latestURL, err := downloadLatestCr50QualImage(ctx)
 			if err != nil {
 				return nil, err
 			}
+			iv.imagePath = latestURL
 
 			if !hasManualConf {
 				config := defaultConfigPath(s, testbedProperties.TestbedType, imageType)
 				testing.ContextLogf(ctx, "-var=%s= not provided, using default at %s", FwConfigJSON, config)
-				configPaths = append(configPaths, config)
+				iv.configPaths = []string{config}
 			}
-			inputURL = latestURL
 		default:
-			return nil, errors.New("unrecognied branch " + branch)
+			return nil, errors.New("unrecognized branch " + branch)
 		}
+
+		return iv, nil
 	}
 
 	if strings.HasPrefix(inputURL, gsPrefix) {
@@ -232,7 +233,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			iv.imagePath = f.Name()
 		}
 
-		if jsonURL != "" {
+		if !hasManualConf && jsonURL != "" {
 			jsonf, err := ioutil.TempFile("", "*.json")
 			if err != nil {
 				return nil, errors.Wrap(err, "create temp json file")
@@ -257,7 +258,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 	if img.IsDir() {
 		// BuildURL is a local directory, which must be a ti50/common checkout.  Code
 		// below will select an image file within the build/ directory and json file
-		// within the oports/ directory, based on the type of image required by the test
+		// within the ports/ directory, based on the type of image required by the test
 		// case and chip/variant.
 		var name string
 		slot, _ := s.Var(Slot)
@@ -277,12 +278,13 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		p := ti50ImageTypeToProject(imageType)
 
 		iv.imagePath = filepath.Join(inputURL, "build", p, chip, variant, name)
-		iv.configPaths = []string{filepath.Join(inputURL, "ports", chip, "software", "tools", p+"_"+chip+".json")}
+		if !hasManualConf {
+			testing.ContextLogf(ctx, "-var=%s= not provided, using directory default", FwConfigJSON)
+			iv.configPaths = []string{filepath.Join(inputURL, "ports", chip, "software", "tools", p+"_"+chip+".json")}
+		}
 		return iv, nil
 	}
 
-	iv.imagePath = inputURL
-	iv.configPaths = configPaths
 	return iv, nil
 }
 
@@ -437,7 +439,7 @@ func gsLs(ctx context.Context, desc, expr string) ([]string, error) {
 	cmd := exec.CommandContext(ctx, "gsutil", args...)
 	output, err := cmd.Output()
 	if err != nil {
-		return nil, errors.Wrap(err, "listing "+ desc)
+		return nil, errors.Wrap(err, "listing "+desc)
 	}
 	return strings.Split(strings.TrimSpace(string(output)), "\n"), nil
 }
@@ -468,15 +470,14 @@ func ti50ImageTypeToProject(i ImageType) string {
 	return string(i)
 }
 
-
 // defaultConfigPath determines the chroot path of fw config json files base on testbed and image types.
 func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, imageType ImageType) string {
 	var fw, c string
 
-        m := reTestbedTypeParts.FindStringSubmatch(string(testbedType))
-        if m == nil {
+	m := reTestbedTypeParts.FindStringSubmatch(string(testbedType))
+	if m == nil {
 		s.Fatal("Unable to determine chip from testbedType: ", testbedType)
-        }
+	}
 	c = m[1]
 
 	switch imageType {
