@@ -57,6 +57,10 @@ const (
 	// have the TFFeaturesRouters feature.
 	//
 	// Expects comma-separated hostnames.
+	//
+	// If this is left unset but fixtureVarRouter and fixtureVarPcap are set,
+	// they will be treated as if they were entries of this var in that order
+	// when this var is needed.
 	fixtureVarRoutersMultiple = "routers"
 
 	// fixtureVarPcap is the fixture var for setting TFOptions.PcapRouterTarget
@@ -112,6 +116,7 @@ func init() {
 			TearDownTimeout: tearDownTimeout,
 			ServiceDeps:     []string{ShillServiceName, BluetoothServiceName},
 			Vars: []string{
+				fixtureVarRouter,
 				fixtureVarPcap,
 				fixtureVarEnableRouterReboot,
 			},
@@ -120,8 +125,6 @@ func init() {
 		// Typical fixture extensions.
 		if f&TFFeaturesRouters != 0 {
 			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarRoutersMultiple)
-		} else {
-			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarRouter)
 		}
 		if f&TFFeaturesAttenuator != 0 {
 			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarAttenuator)
@@ -459,20 +462,25 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	// Read fixture vars for router host(s) identification.
 	if f.features&TFFeaturesRouters != 0 {
+		var routers []string
 		if routersStr, ok := s.Var(fixtureVarRoutersMultiple); ok && routersStr != "" {
 			testing.ContextLog(ctx, "routers: ", routersStr)
-			routers := strings.Split(routersStr, ",")
+			routers = strings.Split(routersStr, ",")
 			if len(routers) < 2 {
 				s.Fatal("Must provide at least two router names when Routers feature is enabled")
 			}
-			ops.PrimaryRouterTargets(routers...)
 		} else {
-			var routers []string
-			for _, suffix := range []string{utils.CompanionSuffixRouter, utils.CompanionSuffixPcap} {
-				routers = append(routers, f.companionName(s, suffix))
+			router, routerOk := s.Var(fixtureVarRouter)
+			pcap, pcapOk := s.Var(fixtureVarPcap)
+			if routerOk && pcapOk && router != "" && pcap != "" {
+				routers = []string{router, pcap}
+			} else {
+				for _, suffix := range []string{utils.CompanionSuffixRouter, utils.CompanionSuffixPcap} {
+					routers = append(routers, f.companionName(s, suffix))
+				}
 			}
-			ops.PrimaryRouterTargets(routers...)
 		}
+		ops.PrimaryRouterTargets(routers...)
 	} else {
 		router, ok := s.Var(fixtureVarRouter)
 		if ok && router != "" {
