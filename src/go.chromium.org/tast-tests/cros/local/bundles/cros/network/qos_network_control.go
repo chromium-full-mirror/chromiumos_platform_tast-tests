@@ -14,6 +14,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/qos"
 	"go.chromium.org/tast-tests/cros/local/network/capture"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -303,7 +304,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			// destination address is a broadcast one.
 			if p.DHCPv4 != nil && p.IPv4.DstIP.Equal(net.IPv4bcast) {
 				// All DHCP emitted by the DUT are expected to be marked with DSCP 48.
-				if !hasDSCP(p, dscpNetworkControl) {
+				if !qos.HasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("DHCPv4 packet marked with DSCP %d", p.DSCP())
 				}
 				switch getDHCPMsgType(p) {
@@ -316,7 +317,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			}
 
 			if p.ICMPv4 != nil && p.ICMPv4.TypeCode.Type() == layers.ICMPv4TypeEchoRequest {
-				if !hasDSCP(p, dscpNetworkControl) {
+				if !qos.HasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("ICMPv4 packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetICMPv4EchoRequest
@@ -324,7 +325,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			}
 
 			if isFromMAC(p, clientMac) && p.ICMPv6 != nil && p.ICMPv6.TypeCode.Type() == layers.ICMPv6TypeEchoRequest {
-				if !hasDSCP(p, dscpNetworkControl) {
+				if !qos.HasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("ICMPv6 Echo Request marked with wrong DSCP: %s", p)
 				}
 				seen |= packetICMPv6EchoRequest
@@ -352,7 +353,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			// test environment, network control packets are only sent to the
 			// gateway.
 			if isFromMAC(p, clientMac) && p.DNS != nil {
-				if !hasDSCP(p, dscpNetworkControl) {
+				if !qos.HasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("DNS packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetDNS
@@ -360,7 +361,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			}
 
 			if isFromMAC(p, clientMac) && p.TCP != nil && p.TCP.DstPort == 443 {
-				if !hasDSCP(p, dscpNetworkControl) {
+				if !qos.HasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("DoH/HTTPS/TCP packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetDoH
@@ -369,7 +370,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 
 			// Check outgoing TCP SYN packet mark.
 			if isFromMAC(p, clientMac) && p.TCP != nil && p.TCP.SYN {
-				if !hasDSCP(p, dscpNetworkControl) {
+				if !qos.HasDSCP(p, dscpNetworkControl) {
 					return errors.Errorf("TCP SYN packet marked with wrong DSCP: %s", p)
 				}
 				seen |= packetTCPSyn
@@ -390,10 +391,6 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 // isFromMAC returns true when the packets comes from the client interface.
 func isFromMAC(p *capture.Packet, src net.HardwareAddr) bool {
 	return p.Ethernet != nil && p.Ethernet.SrcMAC.String() == src.String()
-}
-
-func hasDSCP(p *capture.Packet, dscp uint8) bool {
-	return p.DSCP() == dscp
 }
 
 func getDHCPMsgType(p *capture.Packet) layers.DHCPMsgType {
