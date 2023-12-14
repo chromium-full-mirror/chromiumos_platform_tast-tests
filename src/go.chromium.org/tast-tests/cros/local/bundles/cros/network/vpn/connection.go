@@ -59,6 +59,7 @@ type Config struct {
 	wgUseServerSecondKeyPair bool
 	wgClientIPv4             string
 	wgClientIPv6             string
+	wgServerListenPort       int
 
 	// IPType specifies the overlay IP type of the VPN service.
 	// Currently VPNs except for WireGuard only supports IPv4.
@@ -136,12 +137,13 @@ type Option = func(*Config)
 // NewConfig creates a config object for a given VPN type
 func NewConfig(vpnType Type, opts ...Option) *Config {
 	c := &Config{
-		Type:              vpnType,
-		IPsecAuthType:     AuthTypePSK,
-		wgClientPublicKey: wgClientPublicKey,
-		ipv4Subnet:        getDefaultIPv4Subnet(defaultIPv4SubnetCIDR),
-		ipv6Subnet:        getDefaultIPv6Subnet(defaultIPv6SubnetCIDR),
-		autoConnect:       true,
+		Type:               vpnType,
+		IPsecAuthType:      AuthTypePSK,
+		wgClientPublicKey:  wgClientPublicKey,
+		wgServerListenPort: 12345,
+		ipv4Subnet:         getDefaultIPv4Subnet(defaultIPv4SubnetCIDR),
+		ipv6Subnet:         getDefaultIPv6Subnet(defaultIPv6SubnetCIDR),
+		autoConnect:        true,
 	}
 	for _, opt := range opts {
 		opt(c)
@@ -818,12 +820,16 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 		return ""
 	}
 
+	getEndpoint := func(ip string, port int) string {
+		return fmt.Sprintf("%s:%d", ip, port)
+	}
+
 	// TODO(b/257379393): Generate the props from server.Config instead of config.
 	var nameServers []string
 	if server != nil {
 		peer := map[string]string{
 			"PublicKey":  wgServerPublicKey,
-			"Endpoint":   server.UnderlayIP + ":" + wgServerListenPort,
+			"Endpoint":   getEndpoint(server.UnderlayIP, server.Config.wgServerListenPort),
 			"AllowedIPs": genAllowedIPs("0.0.0.0/0", "::/0"),
 		}
 		if config.wgUsePSK {
@@ -849,7 +855,7 @@ func CreateWireGuardProperties(server, secondServer *Server, config *Config) map
 	if secondServer != nil {
 		peers = append(peers, map[string]string{
 			"PublicKey": wgSecondServerPublicKey,
-			"Endpoint":  secondServer.UnderlayIP + ":" + wgSecondServerListenPort,
+			"Endpoint":  getEndpoint(secondServer.UnderlayIP, secondServer.Config.wgServerListenPort),
 			"AllowedIPs": genAllowedIPs(
 				secondServer.Config.ipv4Subnet.String(),
 				secondServer.Config.ipv6Subnet.String(),

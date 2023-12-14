@@ -332,10 +332,8 @@ const (
 	wgClientPublicKey        = "dN8f5XplOXpNDP1m9b1V3/AVuOogbw+HckGisfEAphA="
 	wgServerPrivateKey       = "kKhUZZYELpnWFXZmHKvze5kMJ4UfViHo0aacwx9VSXo="
 	wgServerPublicKey        = "VL4pfwqKV4pWX1xJRmvceOZLTftNKi2PrFoBbJWNKXw="
-	wgServerListenPort       = "12345"
 	wgSecondServerPrivateKey = "MKLi0UPHP09PwZDH0EPVd2mMTeGi98NDR8dfkzPuQHs="
 	wgSecondServerPublicKey  = "wJXMGS2jhLPy4x75yev7oh92OwjHFcSWio4U/pWLYzg="
-	wgSecondServerListenPort = "54321"
 	wgPresharedKey           = "LqgZ5/qyT8J8nr25n9IEcUi+vOBkd3sphGn1ClhkHw0="
 	wgConfigFile             = "tmp/wg.conf"
 )
@@ -677,11 +675,6 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 		return nil, errors.Errorf("config.wgClientIPv6 is not valid, got %s", config.wgClientIPv6)
 	}
 
-	// TODO(b/257379393): Currently we still hardcode a few other fields for the
-	// second server (overlay IP and listen port). We can remove the
-	// isSecondServer variable after finish the migration.
-	isSecondServer := config.wgUseServerSecondKeyPair
-
 	runner := newServerRunner(env)
 	server := &Server{
 		OverlayIfname: "wg1",
@@ -696,18 +689,17 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 	clientIPv4 := config.wgClientIPv4
 	clientIPv6 := config.wgClientIPv6
 	configValues := map[string]interface{}{
-		"client_public_key": config.wgClientPublicKey,
-		"allowed_ips":       fmt.Sprintf("%s/32,%s/128", clientIPv4, clientIPv6),
+		"client_public_key":  config.wgClientPublicKey,
+		"allowed_ips":        fmt.Sprintf("%s/32,%s/128", clientIPv4, clientIPv6),
+		"server_listen_port": config.wgServerListenPort,
 	}
 	if config.wgUsePSK {
 		configValues["preshared_key"] = wgPresharedKey
 	}
-	if isSecondServer {
+	if config.wgUseServerSecondKeyPair {
 		configValues["server_private_key"] = wgSecondServerPrivateKey
-		configValues["server_listen_port"] = wgSecondServerListenPort
 	} else {
 		configValues["server_private_key"] = wgServerPrivateKey
-		configValues["server_listen_port"] = wgServerListenPort
 	}
 
 	runner.AddConfigTemplates(wgConfigs)
