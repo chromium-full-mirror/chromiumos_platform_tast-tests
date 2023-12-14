@@ -102,6 +102,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "MS",
 		},
 	},
+	{
+		"Clocks": {
+			unit:       "clocks",
+			nameSuffix: "Clocks",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -301,6 +307,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			},
 			pyPerformanceTitle: {
 				crosboltNameTable: pyPerformanceCrosboltNameTable,
+				metricType:        systemMetric,
+			},
+			ctxClockTitle: {
+				crosboltNameTable: ctxClockCrosboltNameTable,
 				metricType:        systemMetric,
 			},
 		},

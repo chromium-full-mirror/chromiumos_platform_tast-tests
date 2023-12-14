@@ -294,6 +294,15 @@ func init() {
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
 			Timeout: 90 * time.Minute,
+		}, {
+			Name:    "ctxclock_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "ctx-clock-1.0.0",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 15 * time.Minute,
 		},
 		},
 	})
