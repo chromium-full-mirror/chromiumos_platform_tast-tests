@@ -96,6 +96,12 @@ var crosboltUnitTable = []crosboltUnitMap{
 			nameSuffix: "Micro_Sec",
 		},
 	},
+	{
+		"Milliseconds": {
+			unit:       "ms",
+			nameSuffix: "MS",
+		},
+	},
 }
 
 func toCrosboltUnit(scale string) (crosboltUnit, error) {
@@ -292,6 +298,10 @@ func NewResultsParser(resultsDir string, ptsType ptsworld.PtsType) *ResultsParse
 			cythonBenchTitle: {
 				crosboltNameTable: cythonBenchCrosboltNameTable,
 				metricType:        cpuMetric,
+			},
+			pyPerformanceTitle: {
+				crosboltNameTable: pyPerformanceCrosboltNameTable,
+				metricType:        systemMetric,
 			},
 		},
 	}

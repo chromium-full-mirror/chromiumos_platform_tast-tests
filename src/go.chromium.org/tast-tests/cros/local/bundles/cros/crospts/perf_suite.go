@@ -276,6 +276,24 @@ func init() {
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
 			Timeout: 30 * time.Minute,
+		}, {
+			Name:    "pyperf_cros_x86",
+			Fixture: "mountUnmountPtsWorldForCrOSx86",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "pyperformance-1.0.2",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 90 * time.Minute,
+		}, {
+			Name:    "pyperf_cros_arm64",
+			Fixture: "mountUnmountPtsWorldForCrOSarm64",
+			Val: &perfSuite{
+				runner:        ptsworld.NewCrosRunner(),
+				suiteName:     "pyperformance-1.0.2",
+				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+			},
+			Timeout: 90 * time.Minute,
 		},
 		},
 	})
