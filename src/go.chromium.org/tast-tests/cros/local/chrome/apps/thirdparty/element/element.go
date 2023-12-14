@@ -441,7 +441,8 @@ func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
 func (e *Element) SearchPublicRoom(roomID, roomName string) uiauto.Action {
 	createRoomButton := e.d.Object(ui.Description("Create a new conversation or room"), ui.ResourceID(createChatButtonID))
 	exploreRoomsText := e.d.Object(ui.Text("Explore Rooms"), ui.ResourceID(elementIDPrefix+"explore_rooms"))
-	publicRoom := e.d.Object(ui.Text(roomName), ui.ClassName(textClass))
+	publicRoomText := fmt.Sprintf("(%s|%s)", roomID, roomName)
+	publicRoom := e.d.Object(ui.TextMatches(publicRoomText), ui.ClassName(textClass))
 	return uiauto.NamedCombine("explore public room with ID "+roomID,
 		e.navigateUpToObject(createRoomButton),
 		apputil.FindAndClick(createRoomButton, defaultUITimeout),
