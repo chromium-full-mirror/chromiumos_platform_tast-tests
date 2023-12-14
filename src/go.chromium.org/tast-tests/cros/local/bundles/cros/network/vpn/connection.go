@@ -53,13 +53,12 @@ type Config struct {
 	openvpnTopology               OpenVPNTopology
 
 	// Parameters for a WireGuard connection.
-	wgUsePSK                 bool
-	wgAutoGenKey             bool
-	wgClientPublicKey        string
-	wgUseServerSecondKeyPair bool
-	wgClientIPv4             string
-	wgClientIPv6             string
-	wgServerListenPort       int
+	wgUsePSK           bool
+	wgClientKeyPair    wgKeyPair
+	wgServerKeyPair    wgKeyPair
+	wgClientIPv4       string
+	wgClientIPv6       string
+	wgServerListenPort int
 
 	// IPType specifies the overlay IP type of the VPN service.
 	// Currently VPNs except for WireGuard only supports IPv4.
@@ -139,7 +138,8 @@ func NewConfig(vpnType Type, opts ...Option) *Config {
 	c := &Config{
 		Type:               vpnType,
 		IPsecAuthType:      AuthTypePSK,
-		wgClientPublicKey:  wgClientPublicKey,
+		wgClientKeyPair:    wgDefaultClientKeyPair,
+		wgServerKeyPair:    wgDefaultServerKeyPair,
 		wgServerListenPort: 12345,
 		ipv4Subnet:         getDefaultIPv4Subnet(defaultIPv4SubnetCIDR),
 		ipv6Subnet:         getDefaultIPv6Subnet(defaultIPv6SubnetCIDR),
@@ -271,7 +271,7 @@ func WithWGUsePSK(val bool) Option {
 // VPNConnect.
 func WithWGAutoGenKey() Option {
 	return func(c *Config) {
-		c.wgAutoGenKey = true
+		c.wgClientKeyPair = wgKeyPair{}
 	}
 }
 
@@ -280,7 +280,10 @@ func WithWGAutoGenKey() Option {
 // matches the default private key used in Connection.
 func WithWGClientPublicKey(key string) Option {
 	return func(c *Config) {
-		c.wgClientPublicKey = key
+		c.wgClientKeyPair = wgKeyPair{
+			private: "",
+			public:  key,
+		}
 	}
 }
 
@@ -289,7 +292,7 @@ func WithWGClientPublicKey(key string) Option {
 // second WireGuard server. Default value is false.
 func WithWGServerSecondKeyPair(val bool) Option {
 	return func(c *Config) {
-		c.wgUseServerSecondKeyPair = val
+		c.wgServerKeyPair = wgSecondServerKeyPair
 	}
 }
 
@@ -567,8 +570,8 @@ func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error
 		return err
 	}
 
-	if c.config.wgAutoGenKey {
-		c.config.wgClientPublicKey, err = c.generateWireGuardKey(ctx)
+	if c.config.wgClientKeyPair.public == "" {
+		c.config.wgClientKeyPair.public, err = c.generateWireGuardKey(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get public key")
 		}
@@ -625,7 +628,7 @@ func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
 	if !ok {
 		return "", errors.New("failed to read WireGuard.PublicKey property as string")
 	}
-	if len(publicKey) != len(wgClientPublicKey) {
+	if len(publicKey) != len(wgDefaultClientKeyPair.public) {
 		return "", errors.Errorf("generated key is not valid: %s", publicKey)
 	}
 	return publicKey, nil
@@ -824,7 +827,7 @@ func createWireGuardProperties(server, secondServer *Server, config *Config) (ma
 	var nameServers []string
 	if server != nil {
 		peer := map[string]string{
-			"PublicKey":  wgServerPublicKey,
+			"PublicKey":  server.Config.wgServerKeyPair.public,
 			"Endpoint":   getEndpoint(server.UnderlayIP, server.Config.wgServerListenPort),
 			"AllowedIPs": genAllowedIPs("0.0.0.0/0", "::/0"),
 		}
@@ -850,7 +853,7 @@ func createWireGuardProperties(server, secondServer *Server, config *Config) (ma
 
 	if secondServer != nil {
 		peers = append(peers, map[string]string{
-			"PublicKey": wgSecondServerPublicKey,
+			"PublicKey": secondServer.Config.wgServerKeyPair.public,
 			"Endpoint":  getEndpoint(secondServer.UnderlayIP, secondServer.Config.wgServerListenPort),
 			"AllowedIPs": genAllowedIPs(
 				secondServer.Config.ipv4Subnet.String(),
@@ -872,8 +875,8 @@ func createWireGuardProperties(server, secondServer *Server, config *Config) (ma
 		"StaticIPConfig":  staticIPConfig,
 		"SaveCredentials": true, // Not required, just to avoid a WARNING log in shill
 	}
-	if !config.wgAutoGenKey {
-		properties["WireGuard.PrivateKey"] = wgClientPrivateKey
+	if config.wgClientKeyPair.private != "" {
+		properties["WireGuard.PrivateKey"] = config.wgClientKeyPair.private
 	}
 
 	// Note that server can be nil in this function (for letting shill generate the key pair

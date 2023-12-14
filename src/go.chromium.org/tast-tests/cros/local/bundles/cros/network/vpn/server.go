@@ -325,17 +325,31 @@ var (
 	}
 )
 
-// Constants that used by WireGuard server. Keys are generated randomly using
-// wireguard-tools, only for test usages.
+// Constants that used by WireGuard server.
 const (
-	wgClientPrivateKey       = "8Ez9VkVl2JL+OhrLZvV2FXsRJTqtBpykhErNef5dzns="
-	wgClientPublicKey        = "dN8f5XplOXpNDP1m9b1V3/AVuOogbw+HckGisfEAphA="
-	wgServerPrivateKey       = "kKhUZZYELpnWFXZmHKvze5kMJ4UfViHo0aacwx9VSXo="
-	wgServerPublicKey        = "VL4pfwqKV4pWX1xJRmvceOZLTftNKi2PrFoBbJWNKXw="
-	wgSecondServerPrivateKey = "MKLi0UPHP09PwZDH0EPVd2mMTeGi98NDR8dfkzPuQHs="
-	wgSecondServerPublicKey  = "wJXMGS2jhLPy4x75yev7oh92OwjHFcSWio4U/pWLYzg="
-	wgPresharedKey           = "LqgZ5/qyT8J8nr25n9IEcUi+vOBkd3sphGn1ClhkHw0="
-	wgConfigFile             = "tmp/wg.conf"
+	wgPresharedKey = "LqgZ5/qyT8J8nr25n9IEcUi+vOBkd3sphGn1ClhkHw0="
+	wgConfigFile   = "tmp/wg.conf"
+)
+
+type wgKeyPair struct {
+	private string
+	public  string
+}
+
+// Keys are generated randomly using wireguard-tools, only for test usages.
+var (
+	wgDefaultClientKeyPair = wgKeyPair{
+		private: "8Ez9VkVl2JL+OhrLZvV2FXsRJTqtBpykhErNef5dzns=",
+		public:  "dN8f5XplOXpNDP1m9b1V3/AVuOogbw+HckGisfEAphA=",
+	}
+	wgDefaultServerKeyPair = wgKeyPair{
+		private: "kKhUZZYELpnWFXZmHKvze5kMJ4UfViHo0aacwx9VSXo=",
+		public:  "VL4pfwqKV4pWX1xJRmvceOZLTftNKi2PrFoBbJWNKXw=",
+	}
+	wgSecondServerKeyPair = wgKeyPair{
+		private: "MKLi0UPHP09PwZDH0EPVd2mMTeGi98NDR8dfkzPuQHs=",
+		public:  "wJXMGS2jhLPy4x75yev7oh92OwjHFcSWio4U/pWLYzg=",
+	}
 )
 
 var (
@@ -689,17 +703,13 @@ func startWireGuardServer(ctx context.Context, env *env.Env, config *Config) (*S
 	clientIPv4 := config.wgClientIPv4
 	clientIPv6 := config.wgClientIPv6
 	configValues := map[string]interface{}{
-		"client_public_key":  config.wgClientPublicKey,
+		"client_public_key":  config.wgClientKeyPair.public,
+		"server_private_key": config.wgServerKeyPair.private,
 		"allowed_ips":        fmt.Sprintf("%s/32,%s/128", clientIPv4, clientIPv6),
 		"server_listen_port": config.wgServerListenPort,
 	}
 	if config.wgUsePSK {
 		configValues["preshared_key"] = wgPresharedKey
-	}
-	if config.wgUseServerSecondKeyPair {
-		configValues["server_private_key"] = wgSecondServerPrivateKey
-	} else {
-		configValues["server_private_key"] = wgServerPrivateKey
 	}
 
 	runner.AddConfigTemplates(wgConfigs)
