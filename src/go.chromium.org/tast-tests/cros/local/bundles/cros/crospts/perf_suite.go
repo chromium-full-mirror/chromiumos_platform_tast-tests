@@ -22,35 +22,13 @@ type perfSuite struct {
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PerfSuite,
-		Desc: "Run the full test of cros-core-performance suite",
+		Desc: "Run the crospts microbenchmark suites",
 		Contacts: []string{
 			"cros-core-systems-perf@google.com",
 			"darrenwu@google.com",
 		},
 		BugComponent: "b:167279", // ChromeOS > Software > baseOS > Performance
 		Params: []testing.Param{{
-			Name:    "all_cros_x86",
-			Fixture: "mountUnmountPtsWorldForCrOSx86",
-			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "cros-core-performance",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
-			},
-			// TODO(darrenwu): The test time was tested on brya. Need to run the
-			// test on other low end DUT.
-			Timeout: 4 * time.Hour,
-		}, {
-			Name:    "all_cros_arm64",
-			Fixture: "mountUnmountPtsWorldForCrOSarm64",
-			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "cros-core-performance",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
-			},
-			// TODO(darrenwu): The test time was tested on cherry. Need to run the
-			// test on other low end DUT.
-			Timeout: 4 * time.Hour,
-		}, {
 			Name:    "leveldb_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
 			Val: &perfSuite{
