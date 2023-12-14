@@ -61,6 +61,14 @@ const (
 	ChromePolicyLoggedInAdvancedProtection = "chromePolicyLoggedInAdvancedProtection"
 )
 
+// Fixtures defined in go.chromium.org/tast-tests/cros/local/policyutil/fixtures/tape.go.
+const (
+	// ChromeTAPELoggedIn is a fixture name.
+	ChromeTAPELoggedIn = "chromeTAPELoggedIn"
+	// ChromeTAPEEnrolledLoggedIn is a fixture name.
+	ChromeTAPEEnrolledLoggedIn = "chromeTAPEEnrolledLoggedIn"
+)
+
 // Fixtures defined in go.chromium.org/tast-tests/cros/local/mgs/fixture.go.
 const (
 	ManagedGuestSessionWithPWA       = "managedGuestSessionWithPWA"
