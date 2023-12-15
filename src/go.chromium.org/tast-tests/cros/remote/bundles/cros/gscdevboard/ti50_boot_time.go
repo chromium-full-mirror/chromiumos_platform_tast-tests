@@ -49,25 +49,32 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 
 	// Cold reboot with AP on.
+	prefix := "ColdReset_"
+	b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50ResetL, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	b.Reset(ctx)
+	b.GpioSet(ctx, ti50.GpioTi50ResetL, true)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	checkGpioMonitor(ctx, s, b, pv, prefix, gpioMonitor, ti50.GpioTi50ResetL)
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	b.WaitUntilCCDConnected(ctx)
+	checkBootTrace(ctx, s, b, pv, prefix, coldResetStagesRe)
 
-	checkBootTrace(ctx, s, b, pv, "ColdReset_", coldResetStagesRe)
-
-	// Wake from deep sleep by AP on.
+	// Wake from deep sleep by AP on. Assert EC reset before sleep so we can
+	// see a rising edge after wake.
+	prefix = "DeepSleep_"
+	th.MustSucceed(i.EcrstOn(ctx), "ecrst")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 	s.Log("Waiting for deep sleep")
 	th.MustSucceed(i.WaitUntilDeepSleep(ctx, 70*time.Second), "deep sleep")
+	gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50PltRstL, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	checkGpioMonitor(ctx, s, b, pv, prefix, gpioMonitor, ti50.GpioTi50PltRstL)
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	b.WaitUntilCCDConnected(ctx)
-
-	checkBootTrace(ctx, s, b, pv, "DeepSleep_", deepSleepStagesRe)
+	checkBootTrace(ctx, s, b, pv, prefix, deepSleepStagesRe)
 
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save perf data: ", err)
@@ -75,17 +82,36 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 
 }
 
+func logTime(s *testing.State, pv *perf.Values, label string, t uint32) {
+	pv.Set(perf.Metric{
+		Name:      label,
+		Unit:      "milliseconds",
+		Direction: perf.SmallerIsBetter,
+	}, float64(t))
+	s.Logf("%s: %d ms", label, t)
+}
+
+func checkGpioMonitor(ctx context.Context, s *testing.State, b utils.DevboardHelper, pv *perf.Values, prefix string, gpioMonitor utils.GpioMonitorSession, triggerGpio ti50.GpioName) {
+	events := b.GpioMonitorFinish(ctx, gpioMonitor)
+	s.VLog(events)
+	// Measure time from the rising edge of the triggerGpio.
+	start := events.FindFirst(triggerGpio, utils.GpioEdgeRising)
+	// The EC may be released by EcRstL multiple times (due to DT bug), so we want the last edge.
+	// We also want the later of EcRstL rising and EcRstFet falling since both are necessary to
+	// release the EC from reset.
+	ecRstReleased := events.FindLast(ti50.GpioTi50EcRstL, utils.GpioEdgeRising)
+	ecFetReleased := events.FindLast(ti50.GpioTi50EcRstFet, utils.GpioEdgeFalling)
+	end := ecRstReleased.TimestampUS
+	// When waking from deep sleep, EcRstFet remains low so there is no falling edge.
+	if ecFetReleased != nil && ecFetReleased.TimestampUS > end {
+		end = ecFetReleased.TimestampUS
+	}
+	ecReleaseTime := (end - start.TimestampUS) / 1000
+	logTime(s, pv, prefix+"EcRstGpioDeasserted", uint32(ecReleaseTime))
+}
+
 func checkBootTrace(ctx context.Context, s *testing.State, b utils.DevboardHelper, pv *perf.Values, prefix string, expected *regexp.Regexp) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
-	logTime := func(label string, t uint32) {
-		pv.Set(perf.Metric{
-			Name:      label,
-			Unit:      "milliseconds",
-			Direction: perf.SmallerIsBetter,
-		}, float64(t))
-		s.Logf("%s: %d ms", label, t)
-	}
-
 	out, err := b.GSCToolCommand(ctx, "", "--boot_trace")
 	th.MustSucceed(err, "read boot trace")
 	s.VLogf(string(out))
@@ -98,7 +124,7 @@ func checkBootTrace(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 		th.MustSucceed(err, "parse int")
 		totalTime += v
 		if t[1] == "ProjectStart" || t[1] == "EcRstDeasserted" || t[1] == "TpmAppReady" {
-			logTime(prefix+t[1], uint32(totalTime))
+			logTime(s, pv, prefix+t[1], uint32(totalTime))
 		}
 	}
 	allstages := strings.Join(stages, ",")

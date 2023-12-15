@@ -117,6 +117,16 @@ func (e GpioEvents) FindFirst(name ti50.GpioName, edge GpioEdge) *GpioEvent {
 	return nil
 }
 
+// FindLast returns the last gpio event that matches the specified args
+func (e GpioEvents) FindLast(name ti50.GpioName, edge GpioEdge) (match *GpioEvent) {
+	for _, event := range e.Events[name] {
+		if event.Edge == edge {
+			match = &event
+		}
+	}
+	return match
+}
+
 // FindLastBefore returns the last gpio event that matches the specified args that happens before
 // the passed in event
 func (e GpioEvents) FindLastBefore(target GpioEvent, name ti50.GpioName) (match *GpioEvent) {
