@@ -6,6 +6,7 @@ package arc
 
 import (
 	"context"
+	"path/filepath"
 	"strconv"
 	"time"
 
@@ -20,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -113,14 +115,13 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 		s.Fatalf("Invalid %v value: %v", maxFailureCountVarName, maxFailureCountVar.Value())
 	}
 
+	successCount := 0
 	failureCount := 0
-	iteration := 0
 	perfValues := perf.NewValues()
-	for iteration < iterationCount {
+	for successCount < iterationCount {
 		s.Logf("Running ARC regular boot iteration #%d out of %d",
-			iteration+1, iterationCount)
-		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs)
-
+			successCount+1, iterationCount)
+		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs, successCount, failureCount)
 		if err != nil {
 			failureCount++
 			if failureCount > maxFailureCount {
@@ -130,7 +131,7 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 			continue
 		}
 
-		iteration++
+		successCount++
 		perfValues.Append(perf.Metric{
 			Name:      "app_launch_time",
 			Unit:      "seconds",
@@ -211,7 +212,7 @@ func performArcInitialBoot(ctx context.Context, credPool string, chromeArgs []st
 // represents here the overhead from tast Chrome login implementation.
 // This also resets system caches before login to simulate scenario when user uses Chromebook after
 // reboot.
-func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds, chromeArgs []string) (*bootMetrics, error) {
+func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds, chromeArgs []string, successCount, failureCount int) (retResult *bootMetrics, retErr error) {
 	// Use custom cooling config that is bit relaxed from default implementation
 	// in order to reduce failure rate especially on AMD low-end devices.
 	coolDownConfig := cpu.CoolDownConfig{
@@ -222,6 +223,10 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 	}
 
 	var result bootMetrics
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
 
 	if _, err := cpu.WaitUntilCoolDown(ctx, coolDownConfig); err != nil {
 		return &result, errors.Wrap(err, "failed to wait until CPU is cooled down")
@@ -247,7 +252,7 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 	if err != nil {
 		return &result, errors.Wrap(err, "failed to connect to Chrome")
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -270,6 +275,24 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		return &result, errors.Wrap(err, "failed to read disk stats")
 	}
 
+	a, err := arc.New(ctx, testDir, cr.NormalizedUser())
+	if err != nil {
+		return &result, errors.Wrap(err, "failed to connect to ARC")
+	}
+	defer a.Close(cleanupCtx)
+
+	defer func() {
+		var logcatFilePath string
+		if retErr == nil {
+			logcatFilePath = filepath.Join(testDir, "logcat_success_"+strconv.Itoa(successCount+1)+".txt")
+		} else {
+			logcatFilePath = filepath.Join(testDir, "logcat_failure_"+strconv.Itoa(failureCount+1)+".txt")
+		}
+		if err := a.DumpLogcat(ctx, logcatFilePath); err != nil {
+			testing.ContextLogf(ctx, "Failed to save logcat output to %v: %v", logcatFilePath, err)
+		}
+	}()
+
 	delay, err := readFirstAppLaunchHistogram(ctx, tconn, "Arc.FirstAppLaunchDelay.TimeDelta")
 	if err != nil {
 		return &result, err
@@ -285,10 +308,6 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		return &result, err
 	}
 
-	a, err := arc.New(ctx, testDir, cr.NormalizedUser())
-	if err != nil {
-		return &result, errors.Wrap(err, "failed to connect to ARC")
-	}
 	p, err := perfboot.GetPerfValues(ctx, tconn, a)
 	if err != nil {
 		return &result, errors.Wrap(err, "failed to extract ARC boot metrics")
