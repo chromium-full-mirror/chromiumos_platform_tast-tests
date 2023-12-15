@@ -52,6 +52,7 @@ func init() {
 		}, {
 			Name:    "lacros",
 			Fixture: "lacrosWithStackSampledMetrics",
+			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 			Val:     browser.TypeLacros,
 		}},
 	})
