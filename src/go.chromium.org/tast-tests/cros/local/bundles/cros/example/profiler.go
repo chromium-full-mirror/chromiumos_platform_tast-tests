@@ -21,7 +21,7 @@ func init() {
 			"chinglinyu@chromium.org",
 		},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 	})
 }
 
