@@ -228,10 +228,10 @@ func TestAppClamshellOnlyTestParams(t *testing.T) {
 }
 
 var appWindowOperationsTests = map[string]testOptions{
-	"app_firefox_window_operations.go":  {criticalStaging: true},
-	"app_audacity_window_operations.go": {criticalStaging: true},
-	"app_emacs_window_operations.go":    {criticalStaging: true},
-	"app_vscode_window_operations.go":   {criticalStaging: true},
+	"app_firefox_window_operations.go":  {},
+	"app_audacity_window_operations.go": {},
+	"app_emacs_window_operations.go":    {},
+	"app_vscode_window_operations.go":   {},
 }
 
 func TestAppWindowOperationsTestParams(t *testing.T) {
