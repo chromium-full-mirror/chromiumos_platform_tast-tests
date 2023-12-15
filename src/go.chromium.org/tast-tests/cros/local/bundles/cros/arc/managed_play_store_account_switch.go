@@ -53,7 +53,7 @@ func init() {
 					accountSwitchEnabled: true,
 				},
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 			},
 			{
 				Name: "blocklist_betty",
