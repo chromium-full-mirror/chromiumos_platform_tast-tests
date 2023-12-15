@@ -80,15 +80,21 @@ func CCAUIVideoOptionPerf(ctx context.Context, s *testing.State) {
 	if err := app.OpenSettingMenu(ctx, cca.MainMenu); err != nil {
 		s.Fatal("Failed to open setting menu: ", err)
 	}
-	defer app.CloseSettingMenu(cleanupCtx, cca.MainMenu)
 
 	if err := app.OpenSettingMenu(ctx, cca.ExpertMenu); err != nil {
 		s.Fatal("Failed to open expert setting menu: ", err)
 	}
-	defer app.CloseSettingMenu(cleanupCtx, cca.ExpertMenu)
 
 	if err := app.SetOptionChecked(ctx, cca.CustomVideoParametersOption, true); err != nil {
 		s.Fatal("Failed to toggle custom video parameters: ", err)
+	}
+
+	if err := app.CloseSettingMenu(ctx, cca.ExpertMenu); err != nil {
+		s.Fatal("Failed to close expert setting menu: ", err)
+	}
+
+	if err := app.CloseSettingMenu(ctx, cca.MainMenu); err != nil {
+		s.Fatal("Failed to close setting menu: ", err)
 	}
 
 	perfValues := perf.NewValues()
