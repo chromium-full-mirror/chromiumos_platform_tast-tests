@@ -96,7 +96,7 @@ func queryP2PServices(ctx context.Context, timeout time.Duration) ([]*mdns.Servi
 func waitP2PService(ctx context.Context) (*mdns.ServiceEntry, error) {
 	var srvs []*mdns.ServiceEntry
 
-	const maxWait = 5 * time.Second
+	const maxWait = 20 * time.Second
 	wait := 500 * time.Millisecond
 	for len(srvs) == 0 {
 		var err error
