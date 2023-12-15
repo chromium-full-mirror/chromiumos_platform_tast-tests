@@ -40,7 +40,6 @@ type Config struct {
 	IPsecUseXauth         bool
 	IPsecXauthMissingUser bool
 	IPsecXauthWrongUser   bool
-	UnderlayIPIsOverlayIP bool
 
 	// Parameters for an OpenVPN connection.
 	OpenVPNUseUserPassword        bool
@@ -383,14 +382,6 @@ func WithIPv6Subnet(n *subnet.IPv6Subnet) Option {
 	}
 }
 
-// WithUnderlayIPIsOverlayIP makes the VPN connection use the same IP address for
-// overlay network and underlay network.
-func WithUnderlayIPIsOverlayIP() Option {
-	return func(c *Config) {
-		c.UnderlayIPIsOverlayIP = true
-	}
-}
-
 // WithIPv4IncludedRoute sets up the VPN as split-routed. This option can be used multiple times to set up multiple included routes.
 func WithIPv4IncludedRoute(route *net.IPNet) Option {
 	return func(c *Config) {
@@ -672,15 +663,8 @@ func CreateProperties(server, secondServer *Server, config *Config) (map[string]
 }
 
 func createL2TPIPsecProperties(server *Server, config *Config) (map[string]interface{}, error) {
-	var serverAddress string
-	if config.UnderlayIPIsOverlayIP {
-		serverAddress = server.OverlayIPv4
-	} else {
-		serverAddress = server.UnderlayIP
-	}
-
 	properties := map[string]interface{}{
-		"Provider.Host":      serverAddress,
+		"Provider.Host":      server.UnderlayIP,
 		"Provider.Type":      "l2tpipsec",
 		"Type":               "vpn",
 		"L2TPIPsec.User":     chapUser,

@@ -209,7 +209,7 @@ var (
 			"\n" +
 			"[lns default]\n" +
 			"  ip range = {{.client_ipv4_pool_start}}-{{.client_ipv4_pool_end}}\n" +
-			"  local ip = {{if .use_underlay_ip}}{{.netns_ip}}{{else}}{{.server_ipv4}}{{end}}\n" +
+			"  local ip = {{.server_ipv4}}\n" +
 			"  require chap = yes\n" +
 			"  refuse pap = yes\n" +
 			"  require authentication = yes\n" +
@@ -437,7 +437,6 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 		"chap_secret":            chapSecret,
 		"charon_logfile":         charonLogFile,
 		"server_ipv4":            serverIPv4,
-		"use_underlay_ip":        config.UnderlayIPIsOverlayIP,
 		"dns_server":             serverIPv4,
 		"client_ipv4_pool_start": config.ipv4Subnet.GetAddrEndWith(2).String(),
 		"client_ipv4_pool_end":   config.ipv4Subnet.GetAddrEndWith(254).String(),
@@ -490,11 +489,7 @@ func startL2TPIPsecServer(ctx context.Context, env *env.Env, config *Config) (*S
 	}
 
 	server.UnderlayIP = underlayIP
-	if config.UnderlayIPIsOverlayIP {
-		server.OverlayIPv4 = underlayIP
-	} else {
-		server.OverlayIPv4 = serverIPv4
-	}
+	server.OverlayIPv4 = serverIPv4
 	return server, nil
 }
 

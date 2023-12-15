@@ -6,11 +6,13 @@ package network
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -18,10 +20,14 @@ import (
 )
 
 type vpnRoutingTestCase struct {
-	vpnType               vpn.Type
-	ipType                vpn.IPType // v4, v6, or dual-stack
-	underlayIPIsOverlayIP bool       // use the same IP for overlay and underlay to simulate a weird setup
-	wgTwoPeers            bool       // use two peers for WireGuard tests
+	vpnType vpn.Type
+	// Overlay connection is v4, v6, or dual-stack.
+	ipType vpn.IPType
+	// Whether use the same subnet for the VPN network and the physical network,
+	// to simulate a weird setup
+	sameSubnetForOverlayUnderlay bool
+	// Whether use two peers for WireGuard tests.
+	wgTwoPeers bool
 }
 
 func init() {
@@ -66,8 +72,8 @@ func init() {
 		}, {
 			Name: "l2tp_ipsec_evil",
 			Val: vpnRoutingTestCase{
-				vpnType:               vpn.TypeL2TPIPsec,
-				underlayIPIsOverlayIP: true,
+				vpnType:                      vpn.TypeL2TPIPsec,
+				sameSubnetForOverlayUnderlay: true,
 			},
 			Fixture: "vpnEnv",
 		}, {
@@ -168,8 +174,24 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
 		vpn.WithIPType(tc.ipType),
 	}
-	if tc.underlayIPIsOverlayIP {
-		opts = append(opts, vpn.WithUnderlayIPIsOverlayIP())
+	if tc.sameSubnetForOverlayUnderlay {
+		ipv4Subnet := func() *subnet.IPv4Subnet {
+			addrs, err := networkEnv.Router.GetVethInAddrs(ctx)
+			if err != nil {
+				s.Fatal("Failed to get addrs in router env: ", err)
+			}
+			// Assume that the IPv4 subnet is /24 for simplicity. This is very
+			// unlikely to change in the future (controlled by virtualnet/subnet
+			// package).
+			cidr := fmt.Sprintf("%s/24", addrs.IPv4Addr.String())
+			subnet, err := subnet.FromIPv4CIDR(cidr)
+			if err != nil {
+				s.Fatal("Failed to get subnet in router env: ", err)
+			}
+			return subnet
+		}()
+
+		opts = append(opts, vpn.WithIPv4Subnet(ipv4Subnet))
 	}
 	config := vpn.NewConfig(tc.vpnType, opts...)
 
