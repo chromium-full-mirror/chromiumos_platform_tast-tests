@@ -151,8 +151,7 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "Verifying service configuration via `wireguard set`")
 	func() {
-		config := vpn.NewConfig(vpn.TypeWireGuard, vpn.WithIPType(vpn.IPTypeIPv4AndIPv6))
-		properties, err := vpn.CreateProperties(peer1, peer2, config)
+		properties, err := vpn.CreateProperties(peer1, peer2)
 		if err != nil {
 			s.Fatal("Failed to generate properties dict: ", err)
 		}

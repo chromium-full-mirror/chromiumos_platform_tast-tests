@@ -134,7 +134,7 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	service, err := vpn.ConfigureService(ctx, server, nil, config)
+	service, err := vpn.ConfigureService(ctx, server, nil)
 	if err != nil {
 		s.Fatal("Failed to create VPN service: ", err)
 	}

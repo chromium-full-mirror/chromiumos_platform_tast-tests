@@ -459,7 +459,7 @@ func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opt
 		return nil, errors.Wrap(err, "failed to start VPN server")
 	}
 
-	svc, err := ConfigureService(ctx, conn.Server, nil, &conn.config)
+	svc, err := ConfigureService(ctx, conn.Server, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to configure shill service")
 	}
@@ -571,18 +571,13 @@ func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error
 	return err
 }
 
-// ConfigureService create a VPN service to server profile in shill based on
-// config. It's caller's responsibility to remove the service from the profile
-// after test is done.
-func ConfigureService(ctx context.Context, server, secondServer *Server, config *Config) (*shill.Service, error) {
+// ConfigureServiceWithProps calls ConfigureService on shill Manager to create
+// (or update) a service with props, and return a shill.Service object for this
+// service.
+func ConfigureServiceWithProps(ctx context.Context, props map[string]interface{}) (*shill.Service, error) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed creating shill manager proxy")
-	}
-
-	props, err := CreateProperties(server, secondServer, config)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create shill properties for VPN")
 	}
 
 	servicePath, err := m.ConfigureService(ctx, props)
@@ -593,21 +588,39 @@ func ConfigureService(ctx context.Context, server, secondServer *Server, config 
 	return shill.NewService(ctx, servicePath)
 }
 
+// ConfigureService creates a VPN service to server in shill. It's caller's
+// responsibility to remove the service from the profile after test is done.
+func ConfigureService(ctx context.Context, server, secondServer *Server) (*shill.Service, error) {
+	if server == nil {
+		return nil, errors.New("server must not be nil")
+	}
+
+	props, err := CreateProperties(server, secondServer)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill properties for VPN")
+	}
+
+	return ConfigureServiceWithProps(ctx, props)
+}
+
 // generateWireGuardKey calls configureService() to create an "empty" WireGuard
 // service in shill, and then reads and returns the generated public key from
 // the service properties. The service created in the profile in this step will
 // be overwritten with the full properties after the server is created.
 func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
-	var err error
-	c.service, err = ConfigureService(ctx, c.Server, c.SecondServer, &c.config)
+	propsMap, err := createWireGuardProperties(nil, nil)
 	if err != nil {
 		return "", err
 	}
-	properties, err := c.service.GetProperties(ctx)
+	c.service, err = ConfigureServiceWithProps(ctx, propsMap)
 	if err != nil {
 		return "", err
 	}
-	provider, err := properties.Get(shillconst.ServicePropertyProvider)
+	svcProps, err := c.service.GetProperties(ctx)
+	if err != nil {
+		return "", err
+	}
+	provider, err := svcProps.Get(shillconst.ServicePropertyProvider)
 	if err != nil {
 		return "", err
 	}
@@ -626,43 +639,53 @@ func (c *Connection) generateWireGuardKey(ctx context.Context) (string, error) {
 }
 
 // CreateProperties returns a dict which contains the D-Bus property values of a
-// VPN service for the given config. secondServer is only for WireGuard.
-func CreateProperties(server, secondServer *Server, config *Config) (map[string]interface{}, error) {
-	if config.Type != TypeWireGuard && secondServer != nil {
+// VPN service to connect to the given server. secondServer is only for
+// WireGuard.
+func CreateProperties(server, secondServer *Server) (map[string]interface{}, error) {
+	if server == nil {
+		return nil, errors.New("server must not be nil")
+	}
+
+	vpnType := server.Config.Type
+	if vpnType != TypeWireGuard && secondServer != nil {
 		return nil, errors.New("second server should only be set for wireguard")
 	}
 
 	properties, err := func() (map[string]interface{}, error) {
-		switch config.Type {
+		switch vpnType {
 		case TypeIKEv2:
-			return createIKEv2Properties(server, config)
+			return createIKEv2Properties(server)
 		case TypeL2TPIPsec:
-			return createL2TPIPsecProperties(server, config)
+			return createL2TPIPsecProperties(server)
 		case TypeOpenVPN:
-			return createOpenVPNProperties(server, config)
+			return createOpenVPNProperties(server)
 		case TypeWireGuard:
 			return createWireGuardProperties(server, secondServer)
 		default:
-			return nil, errors.Errorf("unexpected server type: got %s", config.Type)
+			return nil, errors.Errorf("unexpected server type: got %s", vpnType)
 		}
 	}()
 	if err != nil {
 		return nil, err
 	}
 
-	properties["Metered"] = config.Metered
-	staticIPConfig, ok := properties["StaticIPConfig"].(map[string]interface{})
-	if !ok {
-		staticIPConfig = make(map[string]interface{})
-		properties["StaticIPConfig"] = staticIPConfig
+	if server != nil {
+		config := server.Config
+		properties["Metered"] = config.Metered
+		staticIPConfig, ok := properties["StaticIPConfig"].(map[string]interface{})
+		if !ok {
+			staticIPConfig = make(map[string]interface{})
+			properties["StaticIPConfig"] = staticIPConfig
+		}
+		staticIPConfig["Mtu"] = config.MTU
+		staticIPConfig["SearchDomains"] = config.SearchDomains
 	}
-	staticIPConfig["Mtu"] = config.MTU
-	staticIPConfig["SearchDomains"] = config.SearchDomains
 
 	return properties, nil
 }
 
-func createL2TPIPsecProperties(server *Server, config *Config) (map[string]interface{}, error) {
+func createL2TPIPsecProperties(server *Server) (map[string]interface{}, error) {
+	config := &server.Config
 	properties := map[string]interface{}{
 		"Provider.Host":      server.UnderlayIP,
 		"Provider.Type":      "l2tpipsec",
@@ -698,7 +721,8 @@ func createL2TPIPsecProperties(server *Server, config *Config) (map[string]inter
 	return properties, nil
 }
 
-func createIKEv2Properties(server *Server, config *Config) (map[string]interface{}, error) {
+func createIKEv2Properties(server *Server) (map[string]interface{}, error) {
+	config := &server.Config
 	properties := map[string]interface{}{
 		"Name":          "test-ikev2-vpn",
 		"Provider.Host": server.UnderlayIP,
@@ -731,7 +755,8 @@ func createIKEv2Properties(server *Server, config *Config) (map[string]interface
 	return properties, nil
 }
 
-func createOpenVPNProperties(server *Server, config *Config) (map[string]interface{}, error) {
+func createOpenVPNProperties(server *Server) (map[string]interface{}, error) {
+	config := &server.Config
 	properties := map[string]interface{}{
 		"Name":                  "test-vpn-openvpn",
 		"Provider.Host":         server.UnderlayIP,

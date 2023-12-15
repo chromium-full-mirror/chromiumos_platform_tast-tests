@@ -155,7 +155,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	defer vpnServer.Exit(cleanupCtx)
 
 	// Get property values for this VPN connection so that we can fill them in UI.
-	vpnProps, err := vpn.CreateProperties(vpnServer, nil /*secondServer*/, config)
+	vpnProps, err := vpn.CreateProperties(vpnServer, nil /*secondServer*/)
 	if err != nil {
 		s.Fatal("Failed to generate D-Bus properties: ", err)
 	}

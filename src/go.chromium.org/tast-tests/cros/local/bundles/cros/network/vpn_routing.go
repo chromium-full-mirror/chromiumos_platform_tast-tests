@@ -224,7 +224,7 @@ func VPNRouting(ctx context.Context, s *testing.State) {
 		}()
 	}
 
-	service, err := vpn.ConfigureService(ctx, server, secondServer, config)
+	service, err := vpn.ConfigureService(ctx, server, secondServer)
 	if err != nil {
 		s.Fatal("Failed to configure VPN service: ", err)
 	}
