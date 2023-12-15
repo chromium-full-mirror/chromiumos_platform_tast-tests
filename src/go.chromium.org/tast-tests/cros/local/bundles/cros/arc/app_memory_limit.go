@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -35,6 +36,9 @@ func init() {
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
+		// We want to test only 4GB devices where user expirence is affected
+		// due to low memory condition.
+		HardwareDeps: hwdep.D(hwdep.MaxMemory(4500)),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name:              "vm",
