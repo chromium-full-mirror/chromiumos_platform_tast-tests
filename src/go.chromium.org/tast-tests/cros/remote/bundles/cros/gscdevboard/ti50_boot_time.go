@@ -35,9 +35,10 @@ func init() {
 }
 
 var (
-	bootTraceRe       = regexp.MustCompile(`([^ ]+):\s*(\d+) ms`)
+	bootTraceRe       = regexp.MustCompile(`(\S+):\s*(\d+) ms`)
 	coldResetStagesRe = regexp.MustCompile(`ProjectStart,EcRstAsserted,(EcRstAsserted,)?Tp?mRstDeasserted,EcRstDeasserted,TpmAppReady`)
 	deepSleepStagesRe = regexp.MustCompile(`ProjectStart,Tp?mRstDeasserted,EcRstDeasserted,TpmAppReady`)
+	metricsRe         = regexp.MustCompile(`(\S+)_time:\s*(\d+)`)
 )
 
 // Ti50BootTime measures boot time.
@@ -59,6 +60,7 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	b.WaitUntilCCDConnected(ctx)
 	checkBootTrace(ctx, s, b, pv, prefix, coldResetStagesRe)
+	checkMetrics(ctx, s, b, pv, prefix)
 
 	// Wake from deep sleep by AP on. Assert EC reset before sleep so we can
 	// see a rising edge after wake.
@@ -75,6 +77,7 @@ func Ti50BootTime(ctx context.Context, s *testing.State) {
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	b.WaitUntilCCDConnected(ctx)
 	checkBootTrace(ctx, s, b, pv, prefix, deepSleepStagesRe)
+	checkMetrics(ctx, s, b, pv, prefix)
 
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save perf data: ", err)
@@ -130,5 +133,18 @@ func checkBootTrace(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	allstages := strings.Join(stages, ",")
 	if !expected.MatchString(allstages) {
 		s.Errorf("Expected %q, got %q", expected, allstages)
+	}
+}
+
+func checkMetrics(ctx context.Context, s *testing.State, b utils.DevboardHelper, pv *perf.Values, prefix string) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	out, err := b.GSCToolCommand(ctx, "", "--metrics", "--dauntless")
+	th.MustSucceed(err, "read metrics")
+	s.VLogf(string(out))
+	times := metricsRe.FindAllStringSubmatch(string(out), -1)
+	for _, t := range times {
+		v, err := strconv.Atoi(t[2])
+		th.MustSucceed(err, "parse int")
+		logTime(s, pv, prefix+t[1]+"_duration", uint32(v))
 	}
 }
