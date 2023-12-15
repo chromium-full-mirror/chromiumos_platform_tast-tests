@@ -22,10 +22,10 @@ import (
 
 // settingsTestParams contains all the data needed to run a single test iteration.
 type settingsTestParams struct {
-	appID        string
-	menuLabel    string
-	featureFlag  string
-	settingsPage string
+	appID                 string
+	menuLabel             string
+	settingsRevampEnabled bool
+	settingsPage          string
 }
 
 func init() {
@@ -47,27 +47,57 @@ func init() {
 			{
 				Name: "diagnostics",
 				Val: settingsTestParams{
-					appID:        apps.Diagnostics.ID,
-					menuLabel:    apps.Diagnostics.Name,
-					featureFlag:  "DiagnosticsApp",
-					settingsPage: "help", // URL for About ChromeOS page
+					appID:                 apps.Diagnostics.ID,
+					menuLabel:             apps.Diagnostics.Name,
+					settingsRevampEnabled: false,
+					settingsPage:          "help", // URL for About ChromeOS page
+				},
+			},
+			{
+				Name: "diagnostics_revamp_enabled",
+				Val: settingsTestParams{
+					appID:                 apps.Diagnostics.ID,
+					menuLabel:             apps.Diagnostics.Name + " Test your battery, CPU, memory, connectivity, and more",
+					settingsRevampEnabled: true,
+					settingsPage:          "help", // URL for About ChromeOS page
 				},
 			},
 			{
 				Name: "scan",
 				Val: settingsTestParams{
-					appID:        apps.Scan.ID,
-					menuLabel:    apps.Scan.Name + " Scan documents and images",
-					settingsPage: "osPrinting", // URL for Print and scan page
+					appID:                 apps.Scan.ID,
+					menuLabel:             apps.Scan.Name + " Scan documents and images",
+					settingsRevampEnabled: false,
+					settingsPage:          "osPrinting", // URL for Print and scan page
+				},
+				ExtraAttr: []string{"group:paper-io", "paper-io_scanning"},
+			},
+			{
+				Name: "scan_revamp_enabled",
+				Val: settingsTestParams{
+					appID:                 apps.Scan.ID,
+					menuLabel:             apps.Scan.Name + " Scan documents and images",
+					settingsRevampEnabled: true,
+					settingsPage:          "device", // URL for Print and scan page
 				},
 				ExtraAttr: []string{"group:paper-io", "paper-io_scanning"},
 			},
 			{
 				Name: "print_management",
 				Val: settingsTestParams{
-					appID:        apps.PrintManagement.ID,
-					menuLabel:    apps.PrintManagement.Name + " View and manage print jobs",
-					settingsPage: "osPrinting", // URL for Print and scan page
+					appID:                 apps.PrintManagement.ID,
+					menuLabel:             apps.PrintManagement.Name + " View and manage print jobs",
+					settingsRevampEnabled: false,
+					settingsPage:          "osPrinting", // URL for Print and scan page
+				},
+			},
+			{
+				Name: "print_management_revamp_enabled",
+				Val: settingsTestParams{
+					appID:                 apps.PrintManagement.ID,
+					menuLabel:             apps.PrintManagement.Name + " View and manage print jobs",
+					settingsRevampEnabled: true,
+					settingsPage:          "cupsPrinters", // URL for Print and scan page
 				},
 			},
 		},
@@ -82,7 +112,16 @@ func LaunchAppFromSettings(ctx context.Context, s *testing.State) {
 
 	params := s.Param().(settingsTestParams)
 
-	cr, err := chrome.New(ctx, chrome.EnableFeatures(params.featureFlag))
+	const settingsRevampFeature = "OsSettingsRevampWayfinding"
+
+	var arg chrome.Option
+	if params.settingsRevampEnabled {
+		arg = chrome.EnableFeatures(settingsRevampFeature)
+	} else {
+		arg = chrome.DisableFeatures(settingsRevampFeature)
+	}
+	cr, err := chrome.New(ctx, arg)
+
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
