@@ -78,7 +78,7 @@ func (app *TestApp) TearDown(ctx context.Context) error {
 		return nil
 	}
 	testing.ContextLog(ctx, "Uninstalling QoS test app")
-	if err := app.a.Uninstall(ctx, string(app.apk)); err != nil {
+	if err := app.a.Uninstall(ctx, pkg); err != nil {
 		return errors.Wrap(err, "failed to uninstall QoS test app")
 	}
 	return nil

@@ -14,18 +14,19 @@ import (
 )
 
 // Packet contains the different layers of a packet captured. Only the detected
-// layers are set and multiple fields can be set at the same time.
+// layers and payload are set and multiple fields can be set at the same time.
 type Packet struct {
-	Timestamp time.Time
-	Ethernet  *layers.Ethernet
-	IPv4      *layers.IPv4
-	IPv6      *layers.IPv6
-	ICMPv4    *layers.ICMPv4
-	ICMPv6    *layers.ICMPv6
-	DHCPv4    *layers.DHCPv4
-	TCP       *layers.TCP
-	UDP       *layers.UDP
-	DNS       *layers.DNS
+	Timestamp   time.Time
+	Ethernet    *layers.Ethernet
+	IPv4        *layers.IPv4
+	IPv6        *layers.IPv6
+	ICMPv4      *layers.ICMPv4
+	ICMPv6      *layers.ICMPv6
+	DHCPv4      *layers.DHCPv4
+	TCP         *layers.TCP
+	UDP         *layers.UDP
+	DNS         *layers.DNS
+	Application gopacket.ApplicationLayer
 }
 
 // DSCP returns the DSCP value present in the packet, 0 if no applicable.
@@ -98,6 +99,9 @@ func parsePacket(p gopacket.Packet) *Packet {
 	}
 	if dns := p.Layer(layers.LayerTypeDNS); dns != nil {
 		packet.DNS = dns.(*layers.DNS)
+	}
+	if app := p.ApplicationLayer(); app != nil {
+		packet.Application = app
 	}
 
 	return packet
