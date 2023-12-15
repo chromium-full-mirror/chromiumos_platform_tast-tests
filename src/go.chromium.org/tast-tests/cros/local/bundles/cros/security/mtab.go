@@ -22,6 +22,7 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -33,11 +34,30 @@ func init() {
 		},
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
-		Attr:         []string{"group:mainline"},
+		Params: []testing.Param{{
+			Name:              "non_flex",
+			ExtraAttr:         []string{"group:mainline"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
+			Val:               nonFlex,
+		}, {
+			Name:              "flex",
+			ExtraAttr:         []string{"group:mainline"},
+			ExtraSoftwareDeps: []string{"uefi_firmware"},
+			Val:               flex,
+		}},
 	})
 }
 
+type crosFlavor string
+
+const (
+	flex     crosFlavor = "flex"
+	nonFlex crosFlavor = "nonFlex"
+)
+
 func Mtab(ctx context.Context, s *testing.State) {
+	flavor := s.Param().(crosFlavor)
+
 	// Give up if the root partition has been remounted read/write (since other mount
 	// options are also likely to be incorrect).
 	if ro, err := filesetup.ReadOnlyRootPartition(); err != nil {
@@ -138,6 +158,11 @@ func Mtab(ctx context.Context, s *testing.State) {
 		expMounts["/mnt/moblab"] = mountSpec{nil, "ext4", "rw"}
 		expMounts["/mnt/moblab-settings"] = mountSpec{nil, "ext4", "rw,nosuid"}
 		expMounts["/mnt/moblab/containers/docker"] = mountSpec{nil, "ext4", "rw"}
+	}
+
+	// UEFI devices like ChromeOS Flex have additional EFI related mounts.
+	if flavor == flex {
+		expMounts["/sys/firmware/efi/efivars"] = mountSpec{nil, "efivarfs", "rw,nosuid,nodev,noexec,relatime,uid=20130,gid=20130"}
 	}
 
 	// Regular expression matching mounts under /run/daemon-store, and corresponding spec.
