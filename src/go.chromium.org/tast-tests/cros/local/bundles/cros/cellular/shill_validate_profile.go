@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 func init() {
@@ -50,6 +51,11 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 	// Should able to connect default.profile
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
+	// Fail early on NL668, otherwise the modem will keep returning WriteFailure on SetInitialEPSBearerSettings.
+	nl668Err := cellular.TagKnownBugOnModemType(ctx, nil, "b/217563991", []cellularconst.ModemType{cellularconst.ModemTypeNL668})
+	if nl668Err != nil {
+		s.Fatalf("Fail early to avoid wasting DUT time: %s", nl668Err)
+	}
 
 	// Check cellular connection for default profile.
 	if connected, err := checkCellularConnection(ctx, helper, true); err != nil || !connected {
@@ -107,7 +113,7 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 	newProfile = strings.Replace(string(newProfile), "imsinumber", imsi, -1)
 
 	s.Log("After update: ", newProfile)
-	if err := ioutil.WriteFile(tempFilePath, []byte(newProfile), 0); err != nil {
+	if err := os.WriteFile(tempFilePath, []byte(newProfile), 0600); err != nil {
 		s.Fatal("Could not write updated test profile to path: ", err)
 	}
 	cleanupCtx := ctx
@@ -146,30 +152,11 @@ func checkCellularConnection(ctx context.Context, helper *cellular.Helper, conne
 	if err != nil {
 		return false, errors.Wrap(err, "unable to find cellular service for device")
 	}
-
-	if err := helper.WaitForEnabledState(ctx, true); err != nil {
-		return false, errors.Wrap(err, "cellular service did not reach enabled state")
-	}
-
-	testing.ContextLog(ctx, "Connecting")
-
-	modem, err := modemmanager.NewModemWithSim(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "could not find mm dbus object with a valid sim")
-	}
-	simpleModem, err := modem.GetSimpleModem(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "could not get simplemodem object")
-	}
-
-	if err := modemmanager.EnsureRegistered(ctx, modem, simpleModem); err != nil {
-		return false, errors.Wrap(err, "modem not registered")
-	}
-
 	isConnected, err := service.IsConnected(ctx)
 	if err != nil {
 		return false, errors.Wrap(err, "unable to get isConnected for service")
 	}
+	testing.ContextLog(ctx, "Connecting")
 	if !isConnected && connect {
 		if _, err := helper.ConnectToDefault(ctx); err != nil {
 			return false, errors.Wrap(err, "unable to connect to service")
