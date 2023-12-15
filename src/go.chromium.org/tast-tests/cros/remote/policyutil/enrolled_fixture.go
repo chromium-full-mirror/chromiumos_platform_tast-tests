@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/remote/sysutil"
-	"go.chromium.org/tast-tests/cros/services/cros/baserpc"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
@@ -59,9 +58,6 @@ func init() {
 		},
 	})
 }
-
-const installAttributesPath = "/run/lockbox/install_attributes.pb"
-const ownerKeyPath = "/var/lib/devicesettings/owner.key"
 
 type enrolledFixt struct {
 	fdmsDir   string
@@ -255,47 +251,15 @@ func (e *enrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 
 // Check if device state has been lost.
 func (e *enrolledFixt) Reset(ctx context.Context) error {
-	pc := baserpc.NewFileSystemClient(e.rpcClient.Conn)
-
-	if res, err := pc.Stat(ctx, &baserpc.StatRequest{
-		Name: installAttributesPath,
-	}); err != nil {
-		return errors.Wrap(err, "failed to get status of install_attributes.pb")
-	} else if res.Error != nil {
-		return errors.Errorf("install_attributes.pb missing, enrollment lost: %v", res.Error)
-	}
-
-	if res, err := pc.Stat(ctx, &baserpc.StatRequest{
-		Name: ownerKeyPath,
-	}); err != nil {
-		return errors.Wrap(err, "failed to get status of owner.key")
-	} else if res.Error != nil {
-		return errors.Errorf("owner.key missing, enrollment lost: %v", res.Error)
-	}
-
-	return nil
+	return checkEnrollment(ctx, e.rpcClient)
 }
 
 func (*enrolledFixt) PreTest(ctx context.Context, s *testing.FixtTestState) {}
 
 // Tests need to make sure not to clear enrollment. Report a test error if it happens.
 func (e *enrolledFixt) PostTest(ctx context.Context, s *testing.FixtTestState) {
-	pc := baserpc.NewFileSystemClient(e.rpcClient.Conn)
-
-	if res, err := pc.Stat(ctx, &baserpc.StatRequest{
-		Name: installAttributesPath,
-	}); err != nil {
-		s.Error("Failed to get status of install_attributes.pb")
-	} else if res.Error != nil {
-		s.Error("install_attributes.pb missing, enrollment likely lost, check if chrome.KeepEnrollment() was passed: ", res.Error)
-	}
-
-	if res, err := pc.Stat(ctx, &baserpc.StatRequest{
-		Name: ownerKeyPath,
-	}); err != nil {
-		s.Error("Failed to get status of owner.key")
-	} else if res.Error != nil {
-		s.Error("owner.key missing, enrollment likely lost, check if chrome.KeepEnrollment() was passed: ", res.Error)
+	if err := checkEnrollment(ctx, e.rpcClient); err != nil {
+		s.Error("Enrollement lost: ", err)
 	}
 }
 
