@@ -35,7 +35,6 @@ func init() {
 				Val:               "llvmpipe",
 			}, {
 				Name:              "sw_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crosvm_no_gpu", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
@@ -66,7 +65,6 @@ func init() {
 				Val:               "virgl",
 			}, {
 				Name:              "gpu_bullseye_lowperf",
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 				ExtraSoftwareDeps: []string{"crosvm_gpu", "dlc"},
 				ExtraHardwareDeps: crostini.CrostiniLowPerf,
 				Fixture:           "crostiniBullseyeWithoutArc",
