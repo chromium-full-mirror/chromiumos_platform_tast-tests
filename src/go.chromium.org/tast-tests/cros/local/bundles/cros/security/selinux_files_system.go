@@ -90,6 +90,7 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 			"/sys/class/drm",
 			"/sys/devices/system/cpu",
 			"/sys/firmware/efi/efivars",
+			"/sys/fs/bpf",
 			"/sys/fs/cgroup",
 			"/sys/fs/pstore",
 			"/sys/fs/selinux",
@@ -102,6 +103,7 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		// efivars: This dir won't be found when running in "legacy"/bios mode, necessitating IgnoreErrors (this is what the CQ appears to test);
 		// plus on boards running efi that don't set kernel CONFIG_EFIVAR_FS an empty efivars dir will exist labeled sysfs, so we ignore that path but not its contents.
 		{Path: "/sys/firmware/efi/efivars", Context: "efivarfs", Recursive: true, Filter: selinux.IgnorePathButNotContents("/sys/firmware/efi/efivars"), IgnoreErrors: true},
+		{Path: "/sys/fs/bpf", Context: "fs_bpf"},
 		{Path: "/sys/fs/cgroup", Context: "cgroup", Recursive: true, Filter: selinux.IgnorePathButNotContents("/sys/fs/cgroup")},
 		{Path: "/sys/fs/cgroup", Context: "tmpfs"},
 		{Path: "/sys/fs/pstore", Context: "pstorefs"},

@@ -14,6 +14,8 @@ import (
 	"strings"
 	"syscall"
 
+	"golang.org/x/exp/slices"
+
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/security/filesetup"
 	"go.chromium.org/tast-tests/cros/local/moblab"
@@ -51,7 +53,7 @@ func init() {
 type crosFlavor string
 
 const (
-	flex     crosFlavor = "flex"
+	flex    crosFlavor = "flex"
 	nonFlex crosFlavor = "nonFlex"
 )
 
@@ -134,7 +136,6 @@ func Mtab(ctx context.Context, s *testing.State) {
 		"/run/imageloader":         {nil, "tmpfs", defaultRW + ",mode=755"},
 		"/run/namespaces":          {nil, "tmpfs", defaultRW + ",mode=755"}, // This is a bind mount
 		"/run/netns":               {nil, "tmpfs", defaultRW + ",mode=755"},
-		"/run/patchpanel/bpf":      {nil, "bpf", defaultRW + ",mode=755"},
 		"/run/lacros":              {loopDev, "squashfs", "ro,seclabel,relatime,nodev,nosuid"},
 		"/run/lock":                {nil, "tmpfs", defaultRW + ",mode=755"},
 
@@ -163,6 +164,13 @@ func Mtab(ctx context.Context, s *testing.State) {
 	// UEFI devices like ChromeOS Flex have additional EFI related mounts.
 	if flavor == flex {
 		expMounts["/sys/firmware/efi/efivars"] = mountSpec{nil, "efivarfs", "rw,nosuid,nodev,noexec,relatime,uid=20130,gid=20130"}
+	}
+
+	// bpffs is only mounted with gid=430 on bpf-enabled kernels (5.10+).
+	if slices.Contains(s.Features("").Software.Available, "bpf") {
+		expMounts["/sys/fs/bpf"] = mountSpec{nil, "bpf", defaultRW + ",gid=430,mode=770"}
+	} else {
+		expMounts["/sys/fs/bpf"] = mountSpec{nil, "bpf", defaultRW + ",mode=770"}
 	}
 
 	// Regular expression matching mounts under /run/daemon-store, and corresponding spec.
