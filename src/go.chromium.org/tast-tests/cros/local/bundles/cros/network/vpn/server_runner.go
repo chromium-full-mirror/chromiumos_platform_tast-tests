@@ -49,7 +49,8 @@ func newServerRunner(virtualNetEnv *env.Env) *serverRunner {
 	}
 }
 
-// Startup starts the VPN server in virtualNetEnv.
+// Startup starts the VPN server in virtualNetEnv. Returns the IPv4 address
+// inside NetEnv, which can be used to reach the VPN server.
 func (n *serverRunner) Startup(ctx context.Context) (string, error) {
 	success := false
 	defer func() {
@@ -74,7 +75,6 @@ func (n *serverRunner) Startup(ctx context.Context) (string, error) {
 		}
 	}
 
-	n.netConfigFileValues["netns_ip"] = netnsIP
 	if err := n.writeConfigs(); err != nil {
 		return "", errors.Wrap(err, "failed writing the configs")
 	}

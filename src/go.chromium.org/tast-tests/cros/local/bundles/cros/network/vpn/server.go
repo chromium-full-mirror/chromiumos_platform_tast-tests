@@ -302,7 +302,6 @@ var (
 			"dev tun\n" +
 			"dh /{{.diffie_hellman_params_file}}\n" +
 			"keepalive 10 120\n" +
-			"local {{.netns_ip}}\n" +
 			"log /{{.log_file}}\n" +
 			"ifconfig-pool-persist /tmp/ipp.txt\n" +
 			"key /{{.server_key}}\n" +
