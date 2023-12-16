@@ -29,6 +29,7 @@ func init() {
 		BugComponent: "b:1087262", // ChromeOS > Data > Engineering > Metrics
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		Timeout:      chrome.MinLoginTimeout + time.Minute + 7*waitHistogramTimeout,
 	})
 }
 
