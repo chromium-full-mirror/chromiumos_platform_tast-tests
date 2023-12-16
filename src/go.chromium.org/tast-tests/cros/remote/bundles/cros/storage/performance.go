@@ -29,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.USBDevModeWithReinstall,
 		Timeout:      10 * time.Minute,
-		Attr:    []string{"group:storage-qual", "storage-qual_avl_v3"},
+		Attr:         []string{"group:storage-qual", "storage-qual_avl_v3"},
 		Params: []testing.Param{{
 			Name:              "16k_read_iops",
 			Val:               "16k_read",
@@ -51,12 +51,12 @@ func init() {
 		}, {
 			Name:              "emmc_16k_read",
 			Val:               "16k_read",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage16kReadLatency},
 		}, {
 			Name:              "emmc_16k_write",
 			Val:               "16k_write",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage16kWriteLatency},
 		}, {
 			Name:              "ufs_16k_read",
@@ -81,12 +81,12 @@ func init() {
 		}, {
 			Name:              "emmc_4k_read",
 			Val:               "4k_read",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kReadLatency},
 		}, {
 			Name:              "emmc_4k_write",
 			Val:               "4k_write",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kWriteLatency},
 		}, {
 			Name:              "ufs_4k_read",
@@ -111,12 +111,12 @@ func init() {
 		}, {
 			Name:              "emmc_4k_read_qd4",
 			Val:               "4k_read_qd4",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kQD4ReadLatency},
 		}, {
 			Name:              "emmc_4k_write_qd4",
 			Val:               "4k_write_qd4",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorage4kQD4WriteLatency},
 		}, {
 			Name:              "ufs_4k_read_qd4",
@@ -141,12 +141,12 @@ func init() {
 		}, {
 			Name:              "emmc_seq_read",
 			Val:               "seq_read",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorageSeqReadTp, tdreq.EmmcStorageSeqReadLatency},
 		}, {
 			Name:              "emmc_seq_write",
 			Val:               "seq_write",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorageSeqWriteTp, tdreq.EmmcStorageSeqWriteLatency},
 		}, {
 			Name:              "ufs_seq_read",
@@ -166,7 +166,7 @@ func init() {
 		}, {
 			Name:              "emmc_surfing",
 			Val:               "surfing",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.EmmcOrBridge()),
 			ExtraRequirements: []string{tdreq.EmmcStorageUserSimReadLatency, tdreq.EmmcStorageUserSimWriteLatency},
 		}, {
 			Name:              "ufs_surfing",
