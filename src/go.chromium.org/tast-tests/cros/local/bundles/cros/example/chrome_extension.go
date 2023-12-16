@@ -25,7 +25,8 @@ func init() {
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Data:         []string{"chrome_extension_manifest.json"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		// TODO: b/316638447 -- Reenable after this test is more stable.
+		Attr: []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
 }
 

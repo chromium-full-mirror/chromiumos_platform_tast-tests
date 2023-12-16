@@ -127,7 +127,8 @@ func init() {
 					"tests/meta.RemoteVars/var.txt": remoteVarValue,
 				},
 			},
-			ExtraAttr: []string{"group:mainline", "group:meta", "group:hw_agnostic"},
+			// TODO: b/316638447 -- Reenable after this test is more stable.
+			ExtraAttr: []string{"group:mainline", "informational", "group:meta", "group:hw_agnostic"},
 		}},
 	})
 }

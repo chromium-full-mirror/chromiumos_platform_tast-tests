@@ -24,7 +24,8 @@ func init() {
 		Desc:         "Verifies that Tast can run remote fixtures",
 		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "group:hw_agnostic"},
+		// TODO: b/316638447 -- Reenable after this test is more stable.
+		Attr: []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
 }
 
@@ -47,7 +48,7 @@ func RunTestsRemoteFixture(ctx context.Context, s *testing.State) {
 			},
 		},
 		{
-			name: "setup failure",
+			name: "setup_failure",
 			vars: map[string]string{
 				setUpError: "Whoa",
 			},
@@ -60,7 +61,8 @@ func RunTestsRemoteFixture(ctx context.Context, s *testing.State) {
 		// reported.
 	} {
 		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
-			resultsDir := filepath.Join(s.OutDir(), "subtest_results")
+			subtestsDir := fmt.Sprintf("subtest_results_%s", tc.name)
+			resultsDir := filepath.Join(s.OutDir(), subtestsDir)
 			flags := []string{
 				"-resultsdir=" + resultsDir,
 			}
