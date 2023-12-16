@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
@@ -19,9 +20,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type testParams struct {
@@ -37,14 +37,22 @@ type bootMetrics struct {
 }
 
 const (
-	// bootAttemptCountVarName is the name of the variable to specify the number of iterations.
+	// bootAttemptCountVarName is the name of the variable to specify the number of success iterations.
 	bootAttemptCountVarName = "arc.RegularBoot.bootAttemptCount"
+	// maxDailureCountVarName is the name of the variable to specify the number of allowed failed iterations.
+	maxFailureCountVarName = "arc.RegularBoot.maxFailureCount"
 )
 
-var bootAttemptCount = testing.RegisterVarString(
+var bootAttemptCountVar = testing.RegisterVarString(
 	bootAttemptCountVarName,
 	"5",
 	"The number of iterations to try regular ARCVM boot.",
+)
+
+var maxFailureCountVar = testing.RegisterVarString(
+	maxFailureCountVarName,
+	"2",
+	"The number of failed iterations allowed.",
 )
 
 func init() {
@@ -58,7 +66,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      25 * time.Minute,
-		Vars:         []string{bootAttemptCountVarName},
+		Vars:         []string{bootAttemptCountVarName, maxFailureCountVarName},
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
@@ -96,21 +104,33 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to do initial optin: ", err)
 	}
 
-	iterationCount, err := strconv.Atoi(bootAttemptCount.Value())
+	iterationCount, err := strconv.Atoi(bootAttemptCountVar.Value())
 	if err != nil {
-		s.Fatalf("Invalid %v value: %v", bootAttemptCountVarName, bootAttemptCount.Value())
+		s.Fatalf("Invalid %v value: %v", bootAttemptCountVarName, bootAttemptCountVar.Value())
+	}
+	maxFailureCount, err := strconv.Atoi(maxFailureCountVar.Value())
+	if err != nil {
+		s.Fatalf("Invalid %v value: %v", maxFailureCountVarName, maxFailureCountVar.Value())
 	}
 
+	failureCount := 0
+	iteration := 0
 	perfValues := perf.NewValues()
-	for i := 0; i < iterationCount; i++ {
-		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs)
+	for iteration < iterationCount {
 		s.Logf("Running ARC regular boot iteration #%d out of %d",
-			i+1, iterationCount)
+			iteration+1, iterationCount)
+		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs)
 
 		if err != nil {
-			s.Fatal("Failed to do regular boot: ", err)
+			failureCount++
+			if failureCount > maxFailureCount {
+				s.Fatal("Too many failures for regular boot. Last one: ", err)
+			}
+			testing.ContextLogf(ctx, "Reguar boot failed: %q. will retry", err)
+			continue
 		}
 
+		iteration++
 		perfValues.Append(perf.Metric{
 			Name:      "app_launch_time",
 			Unit:      "seconds",
@@ -280,6 +300,16 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 	result.appKills, err = arc.GetAppKills(ctx, tconn)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to collect ARC app kill counts: ", err)
+	}
+
+	out, err := a.Command(ctx, "getprop", "dev.arc.accountsignin.result").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return &result, errors.Wrap(err, "failed to check signin status")
+	}
+
+	outStr := string(out)
+	if outStr != "OK,0\n" {
+		return &result, errors.Errorf("Detected re-signin (b/297139280) with result %s", outStr)
 	}
 
 	return &result, nil
