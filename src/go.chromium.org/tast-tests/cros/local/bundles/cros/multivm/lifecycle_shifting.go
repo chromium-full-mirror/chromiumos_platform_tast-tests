@@ -61,6 +61,24 @@ func init() {
 				memoryuser.JavascriptFilename,
 			},
 		}, {
+			Name:              "arc_host_vmmms",
+			Pre:               multivm.ArcStartedVMMMS(),
+			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraData: []string{
+				memoryuser.AllocPageFilename,
+				memoryuser.JavascriptFilename,
+			},
+		}, {
+			Name:              "arc_host_lacros_vmmms",
+			Pre:               multivm.ArcLacrosStartedVMMMS(),
+			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
+			ExtraData: []string{
+				memoryuser.AllocPageFilename,
+				memoryuser.JavascriptFilename,
+			},
+		}, {
 			Name:              "crostini_host",
 			Pre:               multivm.CrostiniStarted(),
 			Val:               &lifecycleShiftingParam{inCrostini: true, inHost: true, browserType: browser.TypeAsh},
