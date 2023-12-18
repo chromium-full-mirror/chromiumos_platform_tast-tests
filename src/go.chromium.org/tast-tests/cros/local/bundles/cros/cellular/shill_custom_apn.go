@@ -253,6 +253,8 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		apn = serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 		// Tmobile and EE allow any Default APN, so the test should not fail if the APN matches the wrong one inserted by the test.
 		ignoreDefaultMismatch := testNewAPNUIRevamp && (carrier == cellular.CarrierTmobile || carrier == cellular.CarrierEEUK) && strings.HasPrefix(apn, "wrong-apn")
+		// Rogers allows the NULL APN, so ignore that case.
+		ignoreDefaultMismatch = ignoreDefaultMismatch || (!testNewAPNUIRevamp && (carrier == cellular.CarrierRoger) && apn == "")
 		if apn != expectedAPN && !ignoreDefaultMismatch {
 			// We reach this point when shill connected to cellular, but with a different APN.
 			// This is considered a failure to connect, unless the APN is optional.
