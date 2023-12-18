@@ -151,17 +151,11 @@ func fetchTwoSidedDuplexModesDropdown(ctx context.Context, tconn *chrome.TestCon
 	}
 	defer kb.Close(ctx)
 
-	// Click on the previous dropdown and then focus on the dropdown we need.
-	scaleDropdownNode := nodewith.Role(role.ComboBoxSelect).Name("Scale")
+	// First focus on the previous checkbox and then move focus to the dropdown we need.
+	twoSidedCheckboxNode := nodewith.Role(role.CheckBox).Name("Print on both sides")
 	focusTwoSidedDuplexModesDropdownActions := []uiauto.Action{
-		ui.DoDefault(scaleDropdownNode),
+		ui.EnsureFocused(twoSidedCheckboxNode),
 		kb.AccelAction("Tab"),
-		kb.AccelAction("Tab"),
-	}
-	if duplexCheckboxInfo.Restriction == restriction.None {
-		// If the checkbox is clickable we need to "tab" once more.
-		focusTwoSidedDuplexModesDropdownActions = append(
-			focusTwoSidedDuplexModesDropdownActions, kb.AccelAction("Tab"))
 	}
 	if err := uiauto.Combine("focus two sided duplex modes dropdown",
 		focusTwoSidedDuplexModesDropdownActions...)(ctx); err != nil {
