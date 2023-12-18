@@ -128,7 +128,7 @@ func DeviceAutoUpdateTimeRestrictions(ctx context.Context, s *testing.State) {
 
 		// Set the pref test-update-check-interval-timeout
 		// which makes update engine process events on startup even on a test image.
-		if err := ioutil.WriteFile(prefsFileIntervalTimeout, []byte("10"), 0666); err != nil {
+		if err := os.WriteFile(prefsFileIntervalTimeout, []byte("10"), 0666); err != nil {
 			s.Fatal("Failed to set the prefs file for interval timeout: ", err)
 		}
 

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -208,7 +208,7 @@ func Verify(ctx context.Context, tconn *chrome.TestConn, ps []policy.Policy) err
 	for _, m := range ms {
 		logs += m.Dump()
 	}
-	if err := ioutil.WriteFile(logPath, []byte(logs), 0644); err != nil {
+	if err := os.WriteFile(logPath, []byte(logs), 0644); err != nil {
 		return errors.Wrapf(ms[0],
 			"found policy errors but could not write to logs (%v) - first error", err)
 	}

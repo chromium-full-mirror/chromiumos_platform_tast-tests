@@ -7,7 +7,7 @@ package fixtures
 import (
 	"context"
 	"encoding/json"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -592,7 +592,7 @@ func (p *policyChromeFixture) PostTest(ctx context.Context, s *testing.FixtTestS
 	// or the test has insufficient cleanup.
 
 	// Dump all policies as seen by Chrome to the tests OutDir.
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), PolicyFileDump), b, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), PolicyFileDump), b, 0644); err != nil {
 		s.Error("Failed to dump policies to file: ", err)
 	}
 

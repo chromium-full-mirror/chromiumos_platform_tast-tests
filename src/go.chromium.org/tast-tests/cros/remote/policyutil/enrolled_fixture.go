@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path"
 	"path/filepath"
@@ -88,7 +87,7 @@ func checkVPDState(ctx context.Context, d *dut.DUT) error {
 		// VPD is not running well, returning an error. Second run will confirm
 		// whether the error is transitory.
 
-		if err := ioutil.WriteFile(filepath.Join(outDir, "vpd-dump.txt"), out, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(outDir, "vpd-dump.txt"), out, 0644); err != nil {
 			return errors.New("failed to dump VPD content")
 		}
 
@@ -96,7 +95,7 @@ func checkVPDState(ctx context.Context, d *dut.DUT) error {
 		if err != nil {
 			return errors.Wrap(err, "failed the second dump of the VPD")
 		}
-		if err := ioutil.WriteFile(filepath.Join(outDir, "vpd-dump-2.txt"), out, 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(outDir, "vpd-dump-2.txt"), out, 0644); err != nil {
 			return errors.New("failed to dump VPD content")
 		}
 		if strings.Contains(string(out), requiredField) {

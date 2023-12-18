@@ -331,7 +331,7 @@ func (c *PolicyService) EnrollUsingChrome(ctx context.Context, req *ppb.EnrollUs
 		c.extensionDirs = append(c.extensionDirs, extDir)
 
 		for _, file := range extension.Files {
-			if err := ioutil.WriteFile(filepath.Join(extDir, file.Name), file.Contents, 0644); err != nil {
+			if err := os.WriteFile(filepath.Join(extDir, file.Name), file.Contents, 0644); err != nil {
 				return nil, errors.Wrapf(err, "failed to write %s for %s", file.Name, extension.Id)
 			}
 		}

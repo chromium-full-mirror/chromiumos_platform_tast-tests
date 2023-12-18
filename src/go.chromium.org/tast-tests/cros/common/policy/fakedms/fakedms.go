@@ -10,7 +10,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -228,7 +227,7 @@ func (fdms *FakeDMS) WritePolicyBlob(pb *policy.Blob) error {
 		return errors.Wrap(err, "could not convert policies to JSON")
 	}
 
-	if err := ioutil.WriteFile(fdms.policyPath, pJSON, 0644); err != nil {
+	if err := os.WriteFile(fdms.policyPath, pJSON, 0644); err != nil {
 		return errors.Wrap(err, "could not write JSON to file")
 	}
 
