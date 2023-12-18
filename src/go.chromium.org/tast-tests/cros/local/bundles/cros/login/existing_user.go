@@ -153,6 +153,7 @@ func logInWithLocalPassword(ctx context.Context, s *testing.State) (c *chrome.Ch
 		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.EnableFeatures("LocalPasswordForConsumers"),
+		chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
 	)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
@@ -182,10 +183,10 @@ func logInWithLocalPassword(ctx context.Context, s *testing.State) (c *chrome.Ch
 	if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPassword(pw); }`, localPassword); err != nil {
 		s.Fatal("Failed to enter local password: ", err)
 	}
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.isDone()"); err != nil {
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isDone()"); err != nil {
 		s.Fatal("Failed to wait for the done step to be visible: ", err)
 	}
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.clickDone()", nil); err != nil {
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
 		s.Fatal("Failed to click on done button: ", err)
 	}
 	if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
