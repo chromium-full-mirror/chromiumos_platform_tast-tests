@@ -547,14 +547,20 @@ func (cli *WifiClient) WatchDarkResume(ctx context.Context) (func() (*wifi.Watch
 }
 
 // GetNetworksForGeolocation returns geolocation cache
+// Deprecated: use GetWiFiNetworksForGeolocation instead.
 func (cli *WifiClient) GetNetworksForGeolocation(ctx context.Context) (*wifi.NetworksForGeolocation, error) {
-	res, err := cli.ShillServiceClient.GetNetworksForGeolocation(ctx, &empty.Empty{})
+	return nil, errors.New("GetNetworksForGeolocation is deprecated, use GetWiFiNetworksForGeolocation instead")
+}
+
+// GetWiFiNetworksForGeolocation returns WiFi geolocation cache
+func (cli *WifiClient) GetWiFiNetworksForGeolocation(ctx context.Context) (*wifi.NetworksForGeolocation, error) {
+	res, err := cli.ShillServiceClient.GetWiFiNetworksForGeolocation(ctx, &empty.Empty{})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get geolocation information")
+		return nil, errors.Wrap(err, "failed to get WiFi geolocation information")
 	}
 	wifiNetworks, ok := res.Networks[shillconst.GeoWifiAccessPointsProperty]
 	if !ok {
-		return nil, errors.Errorf("GetNetworksForGeolocation has no %s", shillconst.GeoWifiAccessPointsProperty)
+		return nil, errors.Errorf("GetWiFiNetworksForGeolocation has no %s", shillconst.GeoWifiAccessPointsProperty)
 	}
 	return wifiNetworks, err
 }

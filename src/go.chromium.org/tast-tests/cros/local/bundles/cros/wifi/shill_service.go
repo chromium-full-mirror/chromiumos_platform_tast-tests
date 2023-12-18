@@ -2889,7 +2889,7 @@ func (s *ShillService) ResetTest(ctx context.Context, req *wifi.ResetTestRequest
 	return &empty.Empty{}, nil
 }
 
-// If the DUT does not have a WiFi device or if non-STA interface exist, return error to reboot the DUT.
+// HealthCheck checks if the DUT has a WiFi device and no non-STA interface exists. If not, return error to reboot the DUT.
 func (s *ShillService) HealthCheck(ctx context.Context, _ *empty.Empty) (*empty.Empty, error) {
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
@@ -3581,35 +3581,41 @@ func (s *ShillService) EnsureTestProfileAvailable(ctx context.Context, _ *empty.
 }
 
 // GetNetworksForGeolocation returns geolocation cache
+// Deprecated: use GetWiFiNetworksForGeolocation instead.
 func (s *ShillService) GetNetworksForGeolocation(ctx context.Context, _ *empty.Empty) (*wifi.GetNetworksForGeolocationResponse, error) {
+	return nil, errors.New("GetNetworksForGeolocation is deprecated, use GetWiFiNetworksForGeolocation instead")
+}
+
+// GetWiFiNetworksForGeolocation returns WiFi geolocation cache
+func (s *ShillService) GetWiFiNetworksForGeolocation(ctx context.Context, _ *empty.Empty) (*wifi.GetWiFiNetworksForGeolocationResponse, error) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a manager object")
 	}
-	p, err := m.GetNetworksForGeolocation(ctx)
-	response := wifi.GetNetworksForGeolocationResponse{Networks: map[string]*wifi.NetworksForGeolocation{}}
-	for _, technology := range []string{shillconst.GeoCellTowersProperty, shillconst.GeoWifiAccessPointsProperty} {
-		pt, err := p.Get(technology)
-		if err != nil {
-			continue
-		}
-		geoInfos, ok := pt.([]map[string]string)
-		if !ok {
-			return nil, errors.Wrapf(err, "%T is not []map[string]string", pt)
-		}
-		var networks wifi.NetworksForGeolocation
-		for _, geoInfo := range geoInfos {
-			geolocationInfo := wifi.GeolocationInfo{Info: map[string]*wifi.ShillVal{}}
-			for prop, value := range geoInfo {
-				geolocationInfo.Info[prop], err = protoutil.ToShillVal(value)
-				if err != nil {
-					return nil, errors.Wrapf(err, "failed to convert %v to ShillVal", value)
-				}
-			}
-			networks.GeolocationInfoList = append(networks.GeolocationInfoList, &geolocationInfo)
-		}
-		response.Networks[technology] = &networks
+	p, err := m.GetWiFiNetworksForGeolocation(ctx)
+	response := wifi.GetWiFiNetworksForGeolocationResponse{Networks: map[string]*wifi.NetworksForGeolocation{}}
+
+	pt, err := p.Get(shillconst.GeoWifiAccessPointsProperty)
+	if err != nil {
+		return &response, err
 	}
+	geoInfos, ok := pt.([]map[string]string)
+	if !ok {
+		return nil, errors.Wrapf(err, "%T is not []map[string]string", pt)
+	}
+	var networks wifi.NetworksForGeolocation
+	for _, geoInfo := range geoInfos {
+		geolocationInfo := wifi.GeolocationInfo{Info: map[string]*wifi.ShillVal{}}
+		for prop, value := range geoInfo {
+			geolocationInfo.Info[prop], err = protoutil.ToShillVal(value)
+			if err != nil {
+				return nil, errors.Wrapf(err, "failed to convert %v to ShillVal", value)
+			}
+		}
+		networks.GeolocationInfoList = append(networks.GeolocationInfoList, &geolocationInfo)
+	}
+	response.Networks[shillconst.GeoWifiAccessPointsProperty] = &networks
+
 	return &response, nil
 }
 

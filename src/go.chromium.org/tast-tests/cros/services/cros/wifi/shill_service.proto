@@ -16,7 +16,8 @@ service ShillService {
   // InitDUT initialize the DUT for WiFi testing.
   rpc InitDUT(InitDUTRequest) returns (google.protobuf.Empty) {}
 
-  // ReinitTestState cleans and sets up the environment for a single WiFi testcase.
+  // ReinitTestState cleans and sets up the environment for a single WiFi
+  // testcase.
   rpc ReinitTestState(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // TearDown reverts the settings made in InitDUT (and also ReinitTestState).
@@ -29,7 +30,8 @@ service ShillService {
   rpc Disconnect(DisconnectRequest) returns (google.protobuf.Empty) {}
 
   // DeleteEntriesForSSID deletes all WiFi profile entries for a given ssid.
-  rpc DeleteEntriesForSSID(DeleteEntriesForSSIDRequest) returns (google.protobuf.Empty) {}
+  rpc DeleteEntriesForSSID(DeleteEntriesForSSIDRequest)
+      returns (google.protobuf.Empty) {}
 
   // QueryService queries shill service information.
   rpc QueryService(QueryServiceRequest) returns (QueryServiceResponse) {}
@@ -37,36 +39,48 @@ service ShillService {
   // GetInterface returns the WiFi device interface name (e.g., wlan0).
   rpc GetInterface(google.protobuf.Empty) returns (GetInterfaceResponse) {}
 
-  // GetDeviceInfo returns the WLAN device names defined in tast/testing/wlan. e.g. "Intel AX 211".
+  // GetDeviceInfo returns the WLAN device names defined in tast/testing/wlan.
+  // e.g. "Intel AX 211".
   rpc GetDeviceInfo(google.protobuf.Empty) returns (GetDeviceInfoResponse) {}
 
   // GetIPv4Addrs returns the IPv4 addresses for the network interface.
   rpc GetIPv4Addrs(GetIPv4AddrsRequest) returns (GetIPv4AddrsResponse) {}
 
   // GetHardwareAddr returns the HardwareAddr for the network interface.
-  rpc GetHardwareAddr(GetHardwareAddrRequest) returns (GetHardwareAddrResponse) {}
+  rpc GetHardwareAddr(GetHardwareAddrRequest)
+      returns (GetHardwareAddrResponse) {}
 
-  // ExpectWifiFrequencies checks if the device discovers the given SSID on the specific frequencies.
-  rpc ExpectWifiFrequencies(ExpectWifiFrequenciesRequest) returns (google.protobuf.Empty) {}
+  // ExpectWifiFrequencies checks if the device discovers the given SSID on the
+  // specific frequencies.
+  rpc ExpectWifiFrequencies(ExpectWifiFrequenciesRequest)
+      returns (google.protobuf.Empty) {}
 
-  // GetBgscanConfig returns the bgscan configuration the device's WiFi module currently uses.
-  rpc GetBgscanConfig(google.protobuf.Empty) returns (GetBgscanConfigResponse) {}
+  // GetBgscanConfig returns the bgscan configuration the device's WiFi module
+  // currently uses.
+  rpc GetBgscanConfig(google.protobuf.Empty) returns (GetBgscanConfigResponse) {
+  }
 
   // SetBgscanConfig sets the device's WiFi module's bgscan configuration.
   rpc SetBgscanConfig(SetBgscanConfigRequest) returns (google.protobuf.Empty) {}
 
-  // AssureDisconnect assures that the WiFi service has disconnected within timeout (nanoseconds).
-  rpc AssureDisconnect(AssureDisconnectRequest) returns (google.protobuf.Empty) {}
+  // AssureDisconnect assures that the WiFi service has disconnected within
+  // timeout (nanoseconds).
+  rpc AssureDisconnect(AssureDisconnectRequest)
+      returns (google.protobuf.Empty) {}
 
   // DisableEnableTest disables and then enables the WiFi interface.
   // This is the main body of the DisableEnable test.
-  rpc DisableEnableTest(DisableEnableTestRequest) returns (google.protobuf.Empty) {}
+  rpc DisableEnableTest(DisableEnableTestRequest)
+      returns (google.protobuf.Empty) {}
 
-  // EthernetFailoverToWifiTest disables the ethernet and test if the network is transitioned to WiFi.
-  // This is the main body of the EthernetFailoverToWifi test.
-  rpc EthernetFailoverToWifiTest(EthernetFailoverToWifiTestRequest) returns (google.protobuf.Empty) {}
+  // EthernetFailoverToWifiTest disables the ethernet and test if the network is
+  // transitioned to WiFi. This is the main body of the EthernetFailoverToWifi
+  // test.
+  rpc EthernetFailoverToWifiTest(EthernetFailoverToWifiTestRequest)
+      returns (google.protobuf.Empty) {}
 
-  // RequestScan requests shill to trigger a wpa_supplicant scan on WiFi devices.
+  // RequestScan requests shill to trigger a wpa_supplicant scan on WiFi
+  // devices.
   rpc RequestScan(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // RequestScans requests shill to trigger active scans on WiFi devices.
@@ -74,63 +88,74 @@ service ShillService {
 
   // SetMACRandomize sets the MAC randomization setting on the WiFi device.
   // The original setting is returned for ease of restoring.
-  rpc SetMACRandomize(SetMACRandomizeRequest) returns (SetMACRandomizeResponse) {}
+  rpc SetMACRandomize(SetMACRandomizeRequest)
+      returns (SetMACRandomizeResponse) {}
 
-  // WaitScanIdle waits for not scanning state. If there's a running scan, it can
-  // wait for it to be done with timeout 10 seconds.
-  // This is useful when the test sets some parameters regarding scans and wants
-  // to avoid noices due to not yet ended scans.
+  // WaitScanIdle waits for not scanning state. If there's a running scan, it
+  // can wait for it to be done with timeout 10 seconds. This is useful when the
+  // test sets some parameters regarding scans and wants to avoid noices due to
+  // not yet ended scans.
   rpc WaitScanIdle(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // ConfigureAndAssertAutoConnect configures the matched shill service and then
   // waits for the IsConnected property becomes true.
   // Note that this function does not attempt to connect; it waits for auto
   // connect instead.
-  rpc ConfigureAndAssertAutoConnect(ConfigureAndAssertAutoConnectRequest) returns (ConfigureAndAssertAutoConnectResponse) {}
+  rpc ConfigureAndAssertAutoConnect(ConfigureAndAssertAutoConnectRequest)
+      returns (ConfigureAndAssertAutoConnectResponse) {}
 
   // GetCurrentTime returns the current local time in the given format.
   rpc GetCurrentTime(google.protobuf.Empty) returns (GetCurrentTimeResponse) {}
 
-  // SelectedService returns the object path of selected service of WiFi service.
-  rpc SelectedService(google.protobuf.Empty) returns (SelectedServiceResponse) {}
+  // SelectedService returns the object path of selected service of WiFi
+  // service.
+  rpc SelectedService(google.protobuf.Empty) returns (SelectedServiceResponse) {
+  }
 
-  // GetServicePath returns the object path of the service matching the properties in request.
+  // GetServicePath returns the object path of the service matching the
+  // properties in request.
   rpc GetServicePath(ServicePathRequest) returns (ServicePathResponse) {}
 
-  // ExpectShillProperty is a streaming gRPC, takes a shill service path, expects a list of property
-  // criteria in order, and takes a list of shill properties to monitor. When a property's value is
-  // expected, it responds the property's (key, value) pair. The method sends an empty response as the
-  // property watcher is set. A property matching criterion consists of a property name, a list of
-  // expected values, a list of excluded values, and a "CheckType". We say a criterion is met iff the
-  // property value is in one of the expected values and not in any of the excluded values. If the
-  // property value is one of the excluded values, the method fails immediately. The call monitors the
-  // specified shill properties and returns the monitor results as a chronological list of pairs
-  // (changed property, changed value) at the end.
+  // ExpectShillProperty is a streaming gRPC, takes a shill service path,
+  // expects a list of property criteria in order, and takes a list of shill
+  // properties to monitor. When a property's value is expected, it responds the
+  // property's (key, value) pair. The method sends an empty response as the
+  // property watcher is set. A property matching criterion consists of a
+  // property name, a list of expected values, a list of excluded values, and a
+  // "CheckType". We say a criterion is met iff the property value is in one of
+  // the expected values and not in any of the excluded values. If the property
+  // value is one of the excluded values, the method fails immediately. The call
+  // monitors the specified shill properties and returns the monitor results as
+  // a chronological list of pairs (changed property, changed value) at the end.
   // For CheckMethod, it has three methods:
   // 1. CHECK_ONLY: checks if the criterion is met.
   // 2. ON_CHANGE: waits for the property changes to the expected values.
-  // 3. CHECK_WAIT: checks if the criterion is met; if not, waits until the property's value is met.
-  rpc ExpectShillProperty(ExpectShillPropertyRequest) returns (stream ExpectShillPropertyResponse) {}
+  // 3. CHECK_WAIT: checks if the criterion is met; if not, waits until the
+  // property's value is met.
+  rpc ExpectShillProperty(ExpectShillPropertyRequest)
+      returns (stream ExpectShillPropertyResponse) {}
 
   // ProfileBasicTest is the main body of the ProfileBasic test, which creates,
   // pushes, and pops the profiles and asserts the connection states between
   // those operations.
-  rpc ProfileBasicTest(ProfileBasicTestRequest) returns (google.protobuf.Empty) {}
+  rpc ProfileBasicTest(ProfileBasicTestRequest)
+      returns (google.protobuf.Empty) {}
 
   // DiscoverBSSID discovers the specified BSSID by running a scan.
-  rpc DiscoverBSSID (DiscoverBSSIDRequest) returns (DiscoverBSSIDResponse) {}
+  rpc DiscoverBSSID(DiscoverBSSIDRequest) returns (DiscoverBSSIDResponse) {}
 
   // RequestRoam requests DUT to roam to the specified BSSID and waits until
   // the DUT has roamed.
-  rpc RequestRoam (RequestRoamRequest) returns (google.protobuf.Empty) {}
+  rpc RequestRoam(RequestRoamRequest) returns (google.protobuf.Empty) {}
 
-  // SetDHCPProperties sets the DHCP properties in shill and returns the original
-  // values.
-  rpc SetDHCPProperties(SetDHCPPropertiesRequest) returns (SetDHCPPropertiesResponse) {}
+  // SetDHCPProperties sets the DHCP properties in shill and returns the
+  // original values.
+  rpc SetDHCPProperties(SetDHCPPropertiesRequest)
+      returns (SetDHCPPropertiesResponse) {}
 
   // Reassociate triggers reassociation with the current AP and waits until it
   // has reconnected or the timeout (in nanoseconds) expires.
-  rpc Reassociate (ReassociateRequest) returns (google.protobuf.Empty) {}
+  rpc Reassociate(ReassociateRequest) returns (google.protobuf.Empty) {}
 
   // GetWifiEnabled checks to see if Wifi is an enabled technology on shill.
   // This call will wait for WiFi to appear in available technologies so we
@@ -141,53 +166,73 @@ service ShillService {
   rpc SetWifiEnabled(SetWifiEnabledRequest) returns (google.protobuf.Empty) {}
 
   // WaitForBSSID waits for a specific BSSID to be found.
-  rpc WaitForBSSID (WaitForBSSIDRequest) returns (google.protobuf.Empty) {}
+  rpc WaitForBSSID(WaitForBSSIDRequest) returns (google.protobuf.Empty) {}
 
-  // MACRandomizeSupport tells if MAC randomization is supported for the WiFi device.
-  rpc MACRandomizeSupport(google.protobuf.Empty) returns (MACRandomizeSupportResponse) {}
+  // MACRandomizeSupport tells if MAC randomization is supported for the WiFi
+  // device.
+  rpc MACRandomizeSupport(google.protobuf.Empty)
+      returns (MACRandomizeSupportResponse) {}
 
   // GetMACRandomize tells if MAC randomization is enabled for the WiFi device.
-  rpc GetMACRandomize(google.protobuf.Empty) returns (GetMACRandomizeResponse) {}
+  rpc GetMACRandomize(google.protobuf.Empty) returns (GetMACRandomizeResponse) {
+  }
 
-  // EAPAuthSkipped is a streaming gRPC, who watches wpa_supplicant's D-Bus signals until the next connection
-  // completes, and tells that the EAP authentication is skipped (i.e., PMKSA is cached and used) or not.
-  // Note that the method sends an empty response as the signal watcher is set.
-  rpc EAPAuthSkipped(google.protobuf.Empty) returns (stream EAPAuthSkippedResponse) {}
+  // EAPAuthSkipped is a streaming gRPC, who watches wpa_supplicant's D-Bus
+  // signals until the next connection completes, and tells that the EAP
+  // authentication is skipped (i.e., PMKSA is cached and used) or not. Note
+  // that the method sends an empty response as the signal watcher is set.
+  rpc EAPAuthSkipped(google.protobuf.Empty)
+      returns (stream EAPAuthSkippedResponse) {}
 
-  // SuspendAssertConnect suspends the DUT and waits for connection after resuming.
-  rpc SuspendAssertConnect(SuspendAssertConnectRequest) returns (SuspendAssertConnectResponse) {}
+  // SuspendAssertConnect suspends the DUT and waits for connection after
+  // resuming.
+  rpc SuspendAssertConnect(SuspendAssertConnectRequest)
+      returns (SuspendAssertConnectResponse) {}
 
   // Suspend suspends the DUT.
   rpc Suspend(SuspendRequest) returns (SuspendResponse) {}
 
-  // GetGlobalFTProperty returns the WiFi.GlobalFTEnabled manager property value.
-  rpc GetGlobalFTProperty(google.protobuf.Empty) returns (GetGlobalFTPropertyResponse) {}
+  // GetGlobalFTProperty returns the WiFi.GlobalFTEnabled manager property
+  // value.
+  rpc GetGlobalFTProperty(google.protobuf.Empty)
+      returns (GetGlobalFTPropertyResponse) {}
 
   // SetGlobalFTProperty set the WiFi.GlobalFTEnabled manager property value.
-  rpc SetGlobalFTProperty(SetGlobalFTPropertyRequest) returns (google.protobuf.Empty) {}
+  rpc SetGlobalFTProperty(SetGlobalFTPropertyRequest)
+      returns (google.protobuf.Empty) {}
 
-  // GetRequestScanTypeProperty returns the WiFi.RequestScanType manager property value.
-  rpc GetRequestScanTypeProperty(google.protobuf.Empty) returns (GetRequestScanTypePropertyResponse) {}
+  // GetRequestScanTypeProperty returns the WiFi.RequestScanType manager
+  // property value.
+  rpc GetRequestScanTypeProperty(google.protobuf.Empty)
+      returns (GetRequestScanTypePropertyResponse) {}
 
-  // SetRequestScanTypeProperty sets the WiFi.RequestScanType manager property value.
-  rpc SetRequestScanTypeProperty(SetRequestScanTypePropertyRequest) returns (google.protobuf.Empty) {}
+  // SetRequestScanTypeProperty sets the WiFi.RequestScanType manager property
+  // value.
+  rpc SetRequestScanTypeProperty(SetRequestScanTypePropertyRequest)
+      returns (google.protobuf.Empty) {}
 
-  // GetScanAllowRoamProperty returns the WiFi.ScanAllowRoam manager property value.
-  rpc GetScanAllowRoamProperty(google.protobuf.Empty) returns (GetScanAllowRoamPropertyResponse) {}
+  // GetScanAllowRoamProperty returns the WiFi.ScanAllowRoam manager property
+  // value.
+  rpc GetScanAllowRoamProperty(google.protobuf.Empty)
+      returns (GetScanAllowRoamPropertyResponse) {}
 
   // SetScanAllowRoamProperty set the WiFi.ScanAllowRoam manager property value.
-  rpc SetScanAllowRoamProperty(SetScanAllowRoamPropertyRequest) returns (google.protobuf.Empty) {}
+  rpc SetScanAllowRoamProperty(SetScanAllowRoamPropertyRequest)
+      returns (google.protobuf.Empty) {}
 
   // DisconnectReason is a streaming gRPC, who waits for the wpa_supplicant's
   // DisconnectReason property change, and returns the code to the client.
   // To notify the caller that it is ready, it sends an empty response after
   // the signal watcher is initialized.
-  rpc DisconnectReason(google.protobuf.Empty) returns (stream DisconnectReasonResponse) {}
+  rpc DisconnectReason(google.protobuf.Empty)
+      returns (stream DisconnectReasonResponse) {}
 
-  // FlushBSS flushes BSS entries over the specified age from wpa_supplicant's cache.
+  // FlushBSS flushes BSS entries over the specified age from wpa_supplicant's
+  // cache.
   rpc FlushBSS(FlushBSSRequest) returns (google.protobuf.Empty) {}
 
-  // ResetTest is the main body of the Reset test, which resets/suspends and verifies the connection for several times.
+  // ResetTest is the main body of the Reset test, which resets/suspends and
+  // verifies the connection for several times.
   rpc ResetTest(ResetTestRequest) returns (google.protobuf.Empty) {}
 
   // HealthCheck examines if the DUT is healthy. If some tests fail to bring
@@ -195,11 +240,14 @@ service ShillService {
   // to reboot the DUT to refrain it from affecting the following tests.
   rpc HealthCheck(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  // GetLoggingConfig returns the logging configuration the device currently uses.
-  rpc GetLoggingConfig(google.protobuf.Empty) returns (GetLoggingConfigResponse) {}
+  // GetLoggingConfig returns the logging configuration the device currently
+  // uses.
+  rpc GetLoggingConfig(google.protobuf.Empty)
+      returns (GetLoggingConfigResponse) {}
 
   // SetLoggingConfig sets the device logging configuration.
-  rpc SetLoggingConfig(SetLoggingConfigRequest) returns (google.protobuf.Empty) {}
+  rpc SetLoggingConfig(SetLoggingConfigRequest)
+      returns (google.protobuf.Empty) {}
 
   // GetWakeOnWifi gets WakeOnWiFi related properties of WiFi device.
   rpc GetWakeOnWifi(google.protobuf.Empty) returns (GetWakeOnWifiResponse) {}
@@ -207,15 +255,18 @@ service ShillService {
   // SetWakeOnWifi sets WakeOnWiFi related properties of WiFi device.
   rpc SetWakeOnWifi(SetWakeOnWifiRequest) returns (google.protobuf.Empty) {}
 
-  // CheckLastWakeReason checks if the last wake reason of WiFi device is as expected.
-  rpc CheckLastWakeReason(CheckLastWakeReasonRequest) returns (google.protobuf.Empty) {}
+  // CheckLastWakeReason checks if the last wake reason of WiFi device is as
+  // expected.
+  rpc CheckLastWakeReason(CheckLastWakeReasonRequest)
+      returns (google.protobuf.Empty) {}
 
   // WatchDarkResume is a streaming gRPC which watchers power manager's D-Bus
   // signals until next resume (SuspendDone), and returns the count of dark
   // resumes.
   // Note that it sends back an empty response first to notify the caller that
   // the D-Bus watcher is ready.
-  rpc WatchDarkResume(google.protobuf.Empty) returns (stream WatchDarkResumeResponse) {}
+  rpc WatchDarkResume(google.protobuf.Empty)
+      returns (stream WatchDarkResumeResponse) {}
 
   // StartTethering attempts to start a tethering session.
   rpc StartTethering(TetheringRequest) returns (TetheringResponse) {}
@@ -224,33 +275,51 @@ service ShillService {
   rpc StopTethering(StopTetheringRequest) returns (TetheringResponse) {}
 
   // GetTetheringConfig returns tethering configuration.
-  rpc GetTetheringConfig(google.protobuf.Empty) returns (GetTetheringConfigResponse) {}
+  rpc GetTetheringConfig(google.protobuf.Empty)
+      returns (GetTetheringConfigResponse) {}
 
-  // SetPortalDetectionEnabled persistently enables/disables PortalDection via shill.
-  rpc SetPortalDetectionEnabled(SetPortalDetectionEnabledRequest) returns (google.protobuf.Empty) {}
+  // SetPortalDetectionEnabled persistently enables/disables PortalDection via
+  // shill.
+  rpc SetPortalDetectionEnabled(SetPortalDetectionEnabledRequest)
+      returns (google.protobuf.Empty) {}
 
   // SetCaptivePortalList sets the CheckPortalList property value.
-  rpc SetCaptivePortalList(SetCaptivePortalListRequest) returns (google.protobuf.Empty) {}
+  rpc SetCaptivePortalList(SetCaptivePortalListRequest)
+      returns (google.protobuf.Empty) {}
 
   // GetCaptivePortalList returns the CheckPortalList manager property value.
-  rpc GetCaptivePortalList(google.protobuf.Empty) returns (GetCaptivePortalListResponse) {}
+  rpc GetCaptivePortalList(google.protobuf.Empty)
+      returns (GetCaptivePortalListResponse) {}
 
   // EnsureTestProfileAvailable ensures the test profile is available.
-  // The test profile will not be on stack once shill restarts and the DUT is not logged in,
-  // it can be used to restore the wifi settings for a DUT that is rebooted from log in screen.
-  rpc EnsureTestProfileAvailable(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  // The test profile will not be on stack once shill restarts and the DUT is
+  // not logged in, it can be used to restore the wifi settings for a DUT that
+  // is rebooted from log in screen.
+  rpc EnsureTestProfileAvailable(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 
-  // GetNetworksForGeolocation returns the GetNetworksForGeolocation manager property value.
-  rpc GetNetworksForGeolocation(google.protobuf.Empty) returns (GetNetworksForGeolocationResponse) {}
+  // Deprecated: use GetWiFiNetworksForGeolocation instead.
+  // GetNetworksForGeolocation returns the GetNetworksForGeolocation manager
+  // property value.
+  rpc GetNetworksForGeolocation(google.protobuf.Empty)
+      returns (GetNetworksForGeolocationResponse) {
+    option deprecated = true;
+  }
+
+  // GetWiFiNetworksForGeolocation returns the WiFi geolocation cache.
+  rpc GetWiFiNetworksForGeolocation(google.protobuf.Empty)
+      returns (GetWiFiNetworksForGeolocationResponse) {}
 
   // SetBSSIDRequested sets the BSSIDRequested service property value.
-  rpc SetBSSIDRequested(SetBSSIDRequestedRequest) returns (google.protobuf.Empty) {}
+  rpc SetBSSIDRequested(SetBSSIDRequestedRequest)
+      returns (google.protobuf.Empty) {}
 
   // GetProperties returns the specified shill properties.
   rpc GetProperties(GetPropertiesRequest) returns (GetPropertiesResponse) {}
 
   // ScanAndFetchRegion scans and checks if the region is initialized.
-  rpc ScanAndFetchRegion(ScanAndFetchRegionRequest) returns (google.protobuf.Empty) {}
+  rpc ScanAndFetchRegion(ScanAndFetchRegionRequest)
+      returns (google.protobuf.Empty) {}
 }
 
 message ConnectRequest {
@@ -276,13 +345,9 @@ message ShillVal {
   }
 }
 
-message StrArray {
-  repeated string vals = 1;
-}
+message StrArray { repeated string vals = 1; }
 
-message Uint32Array {
-  repeated uint32 vals = 1;
-}
+message Uint32Array { repeated uint32 vals = 1; }
 
 // ConnectResponse is the response of Connect call which includes the
 // object path of connected service and timing data of the connection
@@ -300,22 +365,16 @@ message DiscoverBSSIDRequest {
   bytes ssid = 3;
 }
 
-message DiscoverBSSIDResponse {
-  int64 discovery_time = 1;
-}
+message DiscoverBSSIDResponse { int64 discovery_time = 1; }
 
 message DisconnectRequest {
   string service_path = 1;
   bool remove_profile = 2;
 }
 
-message DeleteEntriesForSSIDRequest {
-  bytes ssid = 1;
-}
+message DeleteEntriesForSSIDRequest { bytes ssid = 1; }
 
-message QueryServiceRequest {
-  string path = 1;
-}
+message QueryServiceRequest { string path = 1; }
 
 message QueryServiceResponse {
   message Wifi {
@@ -338,34 +397,24 @@ message QueryServiceResponse {
   string guid = 9;
 }
 
-message GetInterfaceResponse {
-  string name = 1;
-}
+message GetInterfaceResponse { string name = 1; }
 
 message GetDeviceInfoResponse {
-    string vendor = 1;
-    string device = 2;
-    string compatible = 3;
-    string subsystem = 4;
-    int32 id = 5;
-    string name = 6;
+  string vendor = 1;
+  string device = 2;
+  string compatible = 3;
+  string subsystem = 4;
+  int32 id = 5;
+  string name = 6;
 }
 
-message GetIPv4AddrsRequest {
-  string interface_name = 1;
-}
+message GetIPv4AddrsRequest { string interface_name = 1; }
 
-message GetIPv4AddrsResponse {
-  repeated string ipv4 = 1;
-}
+message GetIPv4AddrsResponse { repeated string ipv4 = 1; }
 
-message GetHardwareAddrRequest {
-  string interfaceName = 1;
-}
+message GetHardwareAddrRequest { string interfaceName = 1; }
 
-message GetHardwareAddrResponse {
-  string hw_addr = 1;
-}
+message GetHardwareAddrResponse { string hw_addr = 1; }
 
 message ExpectWifiFrequenciesRequest {
   // SSID to look up. Required.
@@ -376,19 +425,17 @@ message ExpectWifiFrequenciesRequest {
 
 message BgscanConfig {
   string method = 1;
-  // ShortInterval time in seconds, only value in uint16 range is valid as dbus property type is uint16.
+  // ShortInterval time in seconds, only value in uint16 range is valid as dbus
+  // property type is uint16.
   uint32 short_interval = 2;
-  // LongInterval time in seconds, only value in uint16 range is valid as dbus property type is uint16.
+  // LongInterval time in seconds, only value in uint16 range is valid as dbus
+  // property type is uint16.
   uint32 long_interval = 3;
 }
 
-message GetBgscanConfigResponse {
-  BgscanConfig config = 1;
-}
+message GetBgscanConfigResponse { BgscanConfig config = 1; }
 
-message SetBgscanConfigRequest {
-  BgscanConfig config = 1;
-}
+message SetBgscanConfigRequest { BgscanConfig config = 1; }
 
 message AssureDisconnectRequest {
   string service_path = 1;
@@ -405,39 +452,30 @@ message EthernetFailoverToWifiTestRequest {
   string ssid = 1;
 }
 
-message RequestScansRequest {
-  int32 count = 1;
-}
+message RequestScansRequest { int32 count = 1; }
 
-message SetMACRandomizeRequest {
-  bool enable = 1;
-}
+message SetMACRandomizeRequest { bool enable = 1; }
 
-message SetMACRandomizeResponse {
-  bool old_setting = 1;
-}
+message SetMACRandomizeResponse { bool old_setting = 1; }
 
 message ConfigureAndAssertAutoConnectRequest {
   map<string, ShillVal> props = 1;
 }
 
-message ConfigureAndAssertAutoConnectResponse {
-  string path = 1;
-}
+message ConfigureAndAssertAutoConnectResponse { string path = 1; }
 
 message GetCurrentTimeResponse {
   int64 now_second = 1;
   int64 now_nanosecond = 2;
 }
 
-message SelectedServiceResponse {
-  string service_path = 1;
-}
+message SelectedServiceResponse { string service_path = 1; }
 
 message ExpectShillPropertyRequest {
   // Criterion checking methods.
   enum CheckMethod {
-    // Check if the property value is expected; if not, wait until it is expected.
+    // Check if the property value is expected; if not, wait until it is
+    // expected.
     CHECK_WAIT = 0;
     // Check on property change.
     ON_CHANGE = 1;
@@ -491,109 +529,67 @@ message RequestRoamRequest {
   int64 timeout = 3;
 }
 
-message DHCPProperties {
-  string hostname = 1;
-}
+message DHCPProperties { string hostname = 1; }
 
-message SetDHCPPropertiesRequest {
-  DHCPProperties props = 1;
-}
+message SetDHCPPropertiesRequest { DHCPProperties props = 1; }
 
-message SetDHCPPropertiesResponse {
-  DHCPProperties props = 1;
-}
+message SetDHCPPropertiesResponse { DHCPProperties props = 1; }
 
 message ReassociateRequest {
   string interface_name = 1;
   int64 timeout = 2;
 }
 
-message GetWifiEnabledResponse{
-    bool enabled = 1;
-}
+message GetWifiEnabledResponse { bool enabled = 1; }
 
-message SetWifiEnabledRequest{
-    bool enabled = 1;
-}
+message SetWifiEnabledRequest { bool enabled = 1; }
 
-message SetPortalDetectionEnabledRequest{
-    bool enabled = 1;
-}
+message SetPortalDetectionEnabledRequest { bool enabled = 1; }
 
-message SetCaptivePortalListRequest{
-    string captivePortalList = 1;
-}
+message SetCaptivePortalListRequest { string captivePortalList = 1; }
 
-message GetCaptivePortalListResponse{
-    string captivePortalList = 1;
-}
+message GetCaptivePortalListResponse { string captivePortalList = 1; }
 
 message WaitForBSSIDRequest {
   bytes ssid = 1;
   string bssid = 2;
 }
 
-message MACRandomizeSupportResponse {
-  bool supported = 1;
-}
+message MACRandomizeSupportResponse { bool supported = 1; }
 
-message GetMACRandomizeResponse {
-  bool enabled = 1;
-}
+message GetMACRandomizeResponse { bool enabled = 1; }
 
-message EAPAuthSkippedResponse {
-  bool skipped = 1;
-}
+message EAPAuthSkippedResponse { bool skipped = 1; }
 
-message DisconnectReasonResponse {
-  int32 reason = 1;
-}
+message DisconnectReasonResponse { int32 reason = 1; }
 
 message SuspendAssertConnectRequest {
   int64 wake_up_timeout = 1;
   string service_path = 2;
 }
 
-message SuspendAssertConnectResponse {
-  int64 reconnect_time = 1;
-}
+message SuspendAssertConnectResponse { int64 reconnect_time = 1; }
 
 message SuspendRequest {
   int64 wake_up_timeout = 1;
   bool check_early_wake = 2;
 }
 
-message SuspendResponse {
-  int64 suspend_time = 1;
-}
+message SuspendResponse { int64 suspend_time = 1; }
 
-message GetGlobalFTPropertyResponse {
-  bool enabled = 1;
-}
+message GetGlobalFTPropertyResponse { bool enabled = 1; }
 
-message SetGlobalFTPropertyRequest {
-  bool enabled = 1;
-}
+message SetGlobalFTPropertyRequest { bool enabled = 1; }
 
-message GetRequestScanTypePropertyResponse {
-  string scan_type = 1;
-}
+message GetRequestScanTypePropertyResponse { string scan_type = 1; }
 
-message SetRequestScanTypePropertyRequest {
-  string scan_type = 1;
-}
+message SetRequestScanTypePropertyRequest { string scan_type = 1; }
 
-message GetScanAllowRoamPropertyResponse {
-  bool allow = 1;
-}
+message GetScanAllowRoamPropertyResponse { bool allow = 1; }
 
-message SetScanAllowRoamPropertyRequest {
-  bool allow = 1;
-}
+message SetScanAllowRoamPropertyRequest { bool allow = 1; }
 
-message InitDUTRequest {
-  bool with_ui = 1;
-}
+message InitDUTRequest { bool with_ui = 1; }
 
 message FlushBSSRequest {
   string interface_name = 1;
@@ -621,21 +617,13 @@ message WakeOnWifiConfig {
   uint32 net_detect_scan_period = 3;
 }
 
-message SetWakeOnWifiRequest {
-  WakeOnWifiConfig config = 1;
-}
+message SetWakeOnWifiRequest { WakeOnWifiConfig config = 1; }
 
-message GetWakeOnWifiResponse {
-  WakeOnWifiConfig config = 1;
-}
+message GetWakeOnWifiResponse { WakeOnWifiConfig config = 1; }
 
-message CheckLastWakeReasonRequest {
-  string reason = 1;
-}
+message CheckLastWakeReasonRequest { string reason = 1; }
 
-message WatchDarkResumeResponse {
-  uint32 count = 1;
-}
+message WatchDarkResumeResponse { uint32 count = 1; }
 
 message TetheringRequest {
   bool no_uplink = 1;
@@ -662,24 +650,24 @@ message TetheringResponse {
   google.protobuf.Duration execution_time = 5;
 }
 
-message ServicePathRequest {
-  map<string, ShillVal> props = 1;
-}
+message ServicePathRequest { map<string, ShillVal> props = 1; }
 
-message ServicePathResponse {
-  string service_path = 1;
-}
+message ServicePathResponse { string service_path = 1; }
 
-message GeolocationInfo {
-  map<string, ShillVal> info = 1;
-}
+message GeolocationInfo { map<string, ShillVal> info = 1; }
 
 message NetworksForGeolocation {
   repeated GeolocationInfo geolocation_info_list = 1;
 }
 
+// Deprecated: use GetWiFiNetworksForGeolocationResponse instead.
 message GetNetworksForGeolocationResponse {
-  map<string, NetworksForGeolocation>  networks = 1;
+  option deprecated = true;
+  map<string, NetworksForGeolocation> networks = 1;
+}
+
+message GetWiFiNetworksForGeolocationResponse {
+  map<string, NetworksForGeolocation> networks = 1;
 }
 
 message GetTetheringConfigResponse {
@@ -702,10 +690,6 @@ message GetPropertiesRequest {
   repeated string property_names = 2;
 }
 
-message GetPropertiesResponse {
-  map<string, ShillVal> props = 1;
-}
+message GetPropertiesResponse { map<string, ShillVal> props = 1; }
 
-message ScanAndFetchRegionRequest {
-  string if_name = 1;
-}
+message ScanAndFetchRegionRequest { string if_name = 1; }

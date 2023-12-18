@@ -1036,9 +1036,15 @@ func (m *Manager) SetExperimentalTetheringFunctionality(ctx context.Context, val
 }
 
 // GetNetworksForGeolocation returns geolocation cache
+// Deprecated: use GetWiFiNetworksForGeolocation instead.
 func (m *Manager) GetNetworksForGeolocation(ctx context.Context) (*dbusutil.Properties, error) {
+	return nil, errors.New("GetNetworksForGeolocation is deprecated, use GetWiFiNetworksForGeolocation instead")
+}
+
+// GetWiFiNetworksForGeolocation returns the WiFi geolocation cache.
+func (m *Manager) GetWiFiNetworksForGeolocation(ctx context.Context) (*dbusutil.Properties, error) {
 	var geolocationInfoTechnology map[string]interface{}
-	if err := m.Call(ctx, "GetNetworksForGeolocation").Store(&geolocationInfoTechnology); err != nil {
+	if err := m.Call(ctx, "GetWiFiNetworksForGeolocation").Store(&geolocationInfoTechnology); err != nil {
 		return nil, err
 	}
 	return dbusutil.NewProperties(geolocationInfoTechnology), nil

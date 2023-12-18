@@ -101,9 +101,9 @@ func GeolocationUpdate(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to generate BSSID for AP 1")
 	}
 
-	geolocationInfos, err := tf.WifiClient().GetNetworksForGeolocation(ctx)
+	geolocationInfos, err := tf.WifiClient().GetWiFiNetworksForGeolocation(ctx)
 	if err != nil {
-		s.Fatal("Failed to request GetNetworksForGeolocation: ", err)
+		s.Fatal("Failed to request GetWiFiNetworksForGeolocation: ", err)
 	}
 	if !findBSS(geolocationInfos, ap0.Config().BSSID) {
 		s.Fatal("Failed to discover AP 0 in geolocation cache")
@@ -128,9 +128,9 @@ func GeolocationUpdate(ctx context.Context, s *testing.State) {
 	defer cancel()
 	s.Log("AP 1 setup done")
 
-	geolocationInfos, err = tf.WifiClient().GetNetworksForGeolocation(ctx)
+	geolocationInfos, err = tf.WifiClient().GetWiFiNetworksForGeolocation(ctx)
 	if err != nil {
-		s.Fatal("Failed to request GetNetworksForGeolocation: ", err)
+		s.Fatal("Failed to request GetWiFiNetworksForGeolocation: ", err)
 	}
 	if !findBSS(geolocationInfos, ap0.Config().BSSID) {
 		s.Fatal("Failed to discover AP 0 in geolocation cache")
@@ -147,9 +147,9 @@ func GeolocationUpdate(ctx context.Context, s *testing.State) {
 	} else {
 		s.Log("WiFi connected after suspend-resume")
 	}
-	geolocationInfos, err = tf.WifiClient().GetNetworksForGeolocation(ctx)
+	geolocationInfos, err = tf.WifiClient().GetWiFiNetworksForGeolocation(ctx)
 	if err != nil {
-		s.Fatal("Failed to request GetNetworksForGeolocation: ", err)
+		s.Fatal("Failed to request GetWiFiNetworksForGeolocation: ", err)
 	}
 	if !findBSS(geolocationInfos, ap0.Config().BSSID) {
 		s.Fatal("Failed to discover AP 0 in geolocation cache")
