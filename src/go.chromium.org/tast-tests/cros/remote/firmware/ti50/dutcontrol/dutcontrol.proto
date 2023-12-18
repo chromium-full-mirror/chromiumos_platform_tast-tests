@@ -141,6 +141,8 @@ message SetupRequest {
 message SetupResponse {
     // Empty indicates no error.
     string err = 1;
+    // Logs captured since end of last session.
+    string server_logs = 2;
 }
 
 // StartSessionRequest is sent after SetupRequest, but before other requests.
@@ -149,7 +151,7 @@ message SetupResponse {
 // initial condition.  For Host Emulation, it will cause an emulation
 // sub-process to be spawned (in initial condition).
 message StartSessionRequest {
-    // Optional gpio strap to apply when starting session and initialization
+    // Optional gpio strap to apply when starting session and initializing
     // transport layer
     string gpio_strap = 1;
 }
@@ -166,6 +168,8 @@ message EndSessionRequest {}
 message EndSessionResponse {
     // Empty indicates no error.
     string err = 1;
+    // Logs captured since end of last session.
+    string server_logs = 2;
 }
 
 // Request info about the AP flash. This is intended to bypass GSC and only
@@ -317,6 +321,32 @@ message GscUsbApSpiBridgeRequest {
 
 message GscUsbApSpiBridgeResponse {}
 
+message GscVersionRequest {}
+
+message GscVersionResponse {
+    // Empty indicates no error.
+    string err = 1;
+
+    // Image name running on GSC, e.g. ti50, cr50, system_test_auto.
+    string image = 2;
+
+    // The RO version running if available, e.g. 0.0.52
+    string ro_version = 3;
+
+    // The RW version running, e.g. 0.24.61, 0.5.201
+    string rw_version = 4;
+
+    // Branch name of image running on GSC, e.g. tot, mp-15224.B.
+    string branch = 5;
+
+    // The commit revision count since branch tag.
+    uint32 rev = 6;
+
+    // The specific SHA for this commit. Includes a [-+] prefix indicating
+    // if there were any local changes when building (+).
+    string sha = 7;
+}
+
 /// One service for a DUT (which is a Suzy and hyperdebug pair)
 service DutControl {
     // Console allows stream access to a serial interface.
@@ -373,4 +403,7 @@ service DutControl {
     // Interact with the AP SPI bridge
     rpc GscUsbApSpiBridge(GscUsbApSpiBridgeRequest)
         returns (GscUsbApSpiBridgeResponse);
+
+    // Returns the GSC version infomation of the currently running image
+    rpc GscVersion(GscVersionRequest) returns (GscVersionResponse);
 }

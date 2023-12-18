@@ -22,6 +22,7 @@ import (
 	common "go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/dutcontrol"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -57,6 +58,21 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn) *DUTControlAndreiboard 
 // such as what kind of board/chip it has.
 type TestbedProperties struct {
 	TestbedType common.TestbedType
+}
+
+func writeServerLogs(ctx context.Context, logs string) {
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		testing.ContextLog(ctx, "Could not write devboardsvc_logs.txt, no context out dir")
+		return
+	}
+	f, err := os.OpenFile(filepath.Join(dir, "devboardsvc_logs.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		testing.ContextLog(ctx, "Could not write devboardsvc_logs.txt: ", err)
+		return
+	}
+	defer f.Close()
+	f.WriteString(logs)
 }
 
 // Query will return an instance of TestbedProperties, stating aspects of the testbed controlled
@@ -98,6 +114,7 @@ func (a *DUTControlAndreiboard) Setup(ctx context.Context, image string, fwConfs
 	if err != nil {
 		return errors.Wrap(err, "Setup request")
 	}
+	defer writeServerLogs(ctx, resp.ServerLogs)
 	if resp.Err != "" {
 		return errors.Errorf("Setup operation failed: %s", resp.Err)
 	}
@@ -128,6 +145,7 @@ func (a *DUTControlAndreiboard) EndSession(ctx context.Context) (err error) {
 	if err != nil {
 		return errors.Wrap(err, "EndSession request")
 	}
+	defer writeServerLogs(ctx, resp.ServerLogs)
 	if resp.Err != "" {
 		return errors.Errorf("EndSession operation failed: %s", resp.Err)
 	}
