@@ -25,6 +25,18 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// WindowOperation is a test for window operations on an app.
+type WindowOperation string
+
+const (
+	// WindowOperationMaximize tests maximize and restore.
+	WindowOperationMaximize WindowOperation = "maximize"
+	// WindowOperationMinimize tests minimize and restore.
+	WindowOperationMinimize WindowOperation = "minimize"
+	// WindowOperationSwitchTablet tests switching to tablet mode and back.
+	WindowOperationSwitchTablet WindowOperation = "switch_tablet"
+)
+
 // Maximize returns an action that clicks the maximize button in the window
 // title and waits until the restore button exists.
 func Maximize(tconn *chrome.TestConn, windowFinder *nodewith.Finder) uiauto.Action {
@@ -100,14 +112,11 @@ func diffWindowInTabletMode(ctx context.Context, tconn *chrome.TestConn, d scree
 	}
 }
 
-// TestMaximizeRestoreMinimizeClose tests the nominal window operations for the
-// specified application.
+// TestWindowOperation tests the specified window operations for an application.
 // TODO(b/298575662): HACK: Bruschetta windows are missing from the autotest
 // APIs. Set skipReset to true to work around this if running on Bruschetta.
-func TestMaximizeRestoreMinimizeClose(ctx context.Context, appName, appWindowName, appDetect string, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, d screenshot.Differ, skipReset bool) []error {
-	var errs []error
-
-	uda := uidetection.NewDefault(tconn).WithTimeout(time.Minute)
+func TestWindowOperation(ctx context.Context, op WindowOperation, appName, appWindowName, appDetect string, keyboard *input.KeyboardEventWriter, tconn *chrome.TestConn, d screenshot.Differ, skipReset bool) error {
+	uda := uidetection.NewDefault(tconn).WithPollOpts(testing.PollOptions{Interval: time.Second, Timeout: 2 * time.Minute})
 	ui := uiauto.New(tconn)
 	appWindow := nodewith.NameRegex(regexp.MustCompile(appWindowName)).Role(role.Window).First()
 	shelf := nodewith.Name("Shelf").Role(role.Toolbar).HasClass("ShelfView")
@@ -123,11 +132,8 @@ func TestMaximizeRestoreMinimizeClose(ctx context.Context, appName, appWindowNam
 		return ash.SetWindowStateAndWait(ctx, tconn, window.ID, ash.WindowStateNormal)
 	}
 
-	windowControlActions := []struct {
-		name    string
-		actions uiauto.Action
-	}{
-		{"maximize", uiauto.Combine("launch app and perform maximize/restore/close actions",
+	windowControlActions := map[WindowOperation]uiauto.Action{
+		WindowOperationMaximize: uiauto.Combine("launch app and perform maximize/restore/close actions",
 			launcher.SearchAndLaunchWithQuery(tconn, keyboard, appName, appName),
 			// Wait until the window is stable.
 			uda.WaitUntilExists(uidetection.Word(appDetect).First().WithinA11yNode(appWindow)),
@@ -140,8 +146,8 @@ func TestMaximizeRestoreMinimizeClose(ctx context.Context, appName, appWindowNam
 			Close(tconn, appWindow),
 			// Check the app disappears from the shelf.
 			ui.WithTimeout(5*time.Second).WaitUntilGone(nodewith.NameContaining(appName).Role(role.Button).Visible().Ancestor(shelf)),
-		)},
-		{"minimize", uiauto.Combine("launch app and perform minimize/restore/close actions",
+		),
+		WindowOperationMinimize: uiauto.Combine("launch app and perform minimize/restore/close actions",
 			launcher.SearchAndLaunchWithQuery(tconn, keyboard, appName, appName),
 			// Wait until the window is stable.
 			uda.WaitUntilExists(uidetection.Word(appDetect).First().WithinA11yNode(appWindow)),
@@ -152,8 +158,8 @@ func TestMaximizeRestoreMinimizeClose(ctx context.Context, appName, appWindowNam
 			Close(tconn, appWindow),
 			// Check the app disappears from the shelf.
 			ui.WithTimeout(5*time.Second).WaitUntilGone(nodewith.NameContaining(appName).Role(role.Button).Visible().Ancestor(shelf)),
-		)},
-		{"switch_tablet", uiauto.Combine("launch app and switch to tablet mode and back",
+		),
+		WindowOperationSwitchTablet: uiauto.Combine("launch app and switch to tablet mode and back",
 			launcher.SearchAndLaunchWithQuery(tconn, keyboard, appName, appName),
 			// Wait until the window is stable.
 			uda.WaitUntilExists(uidetection.Word(appDetect).First().WithinA11yNode(appWindow)),
@@ -164,15 +170,18 @@ func TestMaximizeRestoreMinimizeClose(ctx context.Context, appName, appWindowNam
 			Close(tconn, appWindow),
 			// Check the app disappears from the shelf.
 			ui.WithTimeout(5*time.Second).WaitUntilGone(nodewith.NameContaining(appName).Role(role.Button).Visible().Ancestor(shelf)),
-		)},
+		),
 	}
 
-	for _, windowControlAction := range windowControlActions {
-		testing.ContextLogf(ctx, "Running %s on app %q", windowControlAction.name, appName)
-		if err := windowControlAction.actions(ctx); err != nil {
-			errs = append(errs, errors.Wrapf(err, "failed to %s the app %s", windowControlAction.name, appName))
-		}
+	action, ok := windowControlActions[op]
+	if !ok {
+		return errors.Errorf("no such window operation: %s", op)
 	}
 
-	return errs
+	testing.ContextLogf(ctx, "Running %s on app %q", op, appName)
+	if err := action(ctx); err != nil {
+		return errors.Wrapf(err, "failed to %s the app %s", op, appName)
+	}
+
+	return nil
 }

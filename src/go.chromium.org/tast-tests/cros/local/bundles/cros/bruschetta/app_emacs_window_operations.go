@@ -30,6 +30,20 @@ func init() {
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
 		Fixture:      bruschetta.BruschettaFixtureClamshell,
 		Timeout:      15 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name: "maximize",
+				Val:  apps.WindowOperationMaximize,
+			},
+			{
+				Name: "minimize",
+				Val:  apps.WindowOperationMinimize,
+			},
+			{
+				Name: "switch_tablet",
+				Val:  apps.WindowOperationSwitchTablet,
+			},
+		},
 	})
 }
 
@@ -37,6 +51,7 @@ func AppEmacsWindowOperations(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(bruschetta.FixtureData).Tconn
 	keyboard := s.FixtValue().(bruschetta.FixtureData).KB
 	bru := s.FixtValue().(bruschetta.FixtureData).BruschettaVM
+	op := s.Param().(apps.WindowOperation)
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -48,7 +63,7 @@ func AppEmacsWindowOperations(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Emacs: ", err)
 	}
 
-	for _, err := range apps.TestMaximizeRestoreMinimizeClose(ctx, "Emacs (GUI)", "GNU Emacs", "File", keyboard, tconn, nil, true) {
-		s.Error("Window operation failed: ", err)
+	if err := apps.TestWindowOperation(ctx, op, "Emacs (GUI)", "GNU Emacs", "File", keyboard, tconn, nil, true); err != nil {
+		s.Fatal("Window operation failed: ", err)
 	}
 }
