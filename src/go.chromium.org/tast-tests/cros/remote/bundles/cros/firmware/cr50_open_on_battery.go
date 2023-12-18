@@ -31,7 +31,8 @@ func init() {
 		Contacts:     []string{"chromeos-faft@google.com", "tj@semihalf.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		// TODO(b/194908238): This test never passes, when it does add firmware_unstable for stability testing.
+		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.GSCUART(), hwdep.Battery()),
 		SoftwareDeps: []string{"gsc"},
 		Fixture:      fixture.DevMode,
