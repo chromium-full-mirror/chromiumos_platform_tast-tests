@@ -93,9 +93,6 @@ const (
 	// RecoveryTest is the "recovery_test" dependency.
 	RecoveryTest = "recovery_test"
 
-	// Router80211ax is the "router_802_11ax" dependency.
-	Router80211ax = "router_802_11ax"
-
 	// Servo is the "servo" dependency.
 	Servo = "servo"
 
