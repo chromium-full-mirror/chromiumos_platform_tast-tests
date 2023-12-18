@@ -629,10 +629,10 @@ func startOpenVPNServer(ctx context.Context, env *env.Env, config *Config) (*Ser
 		configValues["ipv6"] = true
 		configValues["flags"] = "def1 ipv6"
 	}
-	if config.OpenVPNUseUserPassword {
+	if config.openVPNUseUserPassword {
 		configValues["optional_user_verification"] = fmt.Sprintf("auth-user-pass-verify /%s via-file\nscript-security 2", openvpnAuthScript)
 	}
-	if config.OpenVPNTLSAuth {
+	if config.openVPNTLSAuth {
 		configValues["tls_auth_file"] = openvpnTLSAuthFile
 	}
 

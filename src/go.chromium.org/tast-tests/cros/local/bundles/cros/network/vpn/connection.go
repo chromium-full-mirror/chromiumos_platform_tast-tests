@@ -40,14 +40,11 @@ type Config struct {
 	IPsecUseXauth bool
 
 	// Parameters for an OpenVPN connection.
-	OpenVPNUseUserPassword        bool
-	OpenVPNCertVerify             bool
-	OpenVPNCertVerifyWrongHash    bool
-	OpenVPNCertVerifyWrongSubject bool
-	OpenVPNCertVerifyWrongCN      bool
-	OpenVPNCertVerifyCNOnly       bool
-	OpenVPNTLSAuth                bool
-	openvpnTopology               OpenVPNTopology
+	openVPNUseUserPassword  bool
+	openVPNCertVerify       bool
+	openVPNCertVerifyCNOnly bool
+	openVPNTLSAuth          bool
+	openvpnTopology         OpenVPNTopology
 
 	// Parameters for a WireGuard connection.
 	wgUsePSK           bool
@@ -195,41 +192,26 @@ func WithL2TPIPsecXAuth() Option {
 // password.
 func WithOpenVPNUseUserPassword() Option {
 	return func(c *Config) {
-		c.OpenVPNUseUserPassword = true
+		c.openVPNUseUserPassword = true
 	}
 }
 
-// OpenVPNCertVerifyType represents how cert verify is configured for OpenVPN.
-// TODO(b/257379393): Remove this type after we move the related code into
-// VPNConnect.
+// OpenVPNCertVerifyType represents how server certificate will be verified at
+// the client side.
 type OpenVPNCertVerifyType int
 
 // Cert verify types.
 const (
-	OpenVPNCertVerifyNone OpenVPNCertVerifyType = iota
-	OpenVPNCertVerifyCorrect
-	OpenVPNCertVerifyWrongHash
-	OpenVPNCertVerifyWrongSubject
-	OpenVPNCertVerifyWrongCN
-	OpenVPNCertVerifyCNOnly
+	OpenVPNCertVerifyNone    OpenVPNCertVerifyType = iota // no verification
+	OpenVPNCertVerifySubject                              // verify the full subject
+	OpenVPNCertVerifyCNOnly                               // verify only the common name
 )
 
 // WithOpenVPNCertVerify configures cert verify for OpenVPN.
 func WithOpenVPNCertVerify(val OpenVPNCertVerifyType) Option {
 	return func(c *Config) {
-		c.OpenVPNCertVerify = (val != OpenVPNCertVerifyNone)
-		switch val {
-		case OpenVPNCertVerifyNone, OpenVPNCertVerifyCorrect:
-			break
-		case OpenVPNCertVerifyWrongHash:
-			c.OpenVPNCertVerifyWrongHash = true
-		case OpenVPNCertVerifyWrongSubject:
-			c.OpenVPNCertVerifyWrongSubject = true
-		case OpenVPNCertVerifyWrongCN:
-			c.OpenVPNCertVerifyWrongCN = true
-		case OpenVPNCertVerifyCNOnly:
-			c.OpenVPNCertVerifyCNOnly = true
-		}
+		c.openVPNCertVerify = (val != OpenVPNCertVerifyNone)
+		c.openVPNCertVerifyCNOnly = (val == OpenVPNCertVerifyCNOnly)
 	}
 }
 
@@ -289,7 +271,7 @@ func WithCertVals(val CertVals) Option {
 // WithOpenVPNTLSAuth enables TLSAuth for OpenVPN.
 func WithOpenVPNTLSAuth() Option {
 	return func(c *Config) {
-		c.OpenVPNTLSAuth = true
+		c.openVPNTLSAuth = true
 	}
 }
 
@@ -722,34 +704,25 @@ func createOpenVPNProperties(server *Server) (map[string]interface{}, error) {
 		"SaveCredentials":       true,
 	}
 
-	if config.OpenVPNUseUserPassword {
+	if config.openVPNUseUserPassword {
 		properties["OpenVPN.User"] = openvpnUsername
 		properties["OpenVPN.Password"] = openvpnPassword
 	}
 
-	if config.OpenVPNTLSAuth {
+	if config.openVPNTLSAuth {
 		properties["OpenVPN.TLSAuthContents"] = openvpnTLSAuthKey
 	}
 
-	if config.OpenVPNCertVerify {
-		if config.OpenVPNCertVerifyWrongHash {
-			properties["OpenVPN.VerifyHash"] = "00" + strings.Repeat(":00", 19)
-		} else {
-			certBlock, _ := pem.Decode([]byte(certificate.TestCert1().CACred.Cert))
-			caCert, err := x509.ParseCertificate(certBlock.Bytes)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to parse CA cert")
-			}
-			// Translates the form of SHA-1 hash from []byte to "xx:xx:...:xx".
-			properties["OpenVPN.VerifyHash"] = strings.ReplaceAll(fmt.Sprintf("% 02x", sha1.Sum(caCert.Raw)), " ", ":")
+	if config.openVPNCertVerify {
+		certBlock, _ := pem.Decode([]byte(certificate.TestCert1().CACred.Cert))
+		caCert, err := x509.ParseCertificate(certBlock.Bytes)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse CA cert")
 		}
+		// Translates the form of SHA-1 hash from []byte to "xx:xx:...:xx".
+		properties["OpenVPN.VerifyHash"] = strings.ReplaceAll(fmt.Sprintf("% 02x", sha1.Sum(caCert.Raw)), " ", ":")
 
-		if config.OpenVPNCertVerifyWrongSubject {
-			properties["OpenVPN.VerifyX509Name"] = "bogus subject name"
-		} else if config.OpenVPNCertVerifyWrongCN {
-			properties["OpenVPN.VerifyX509Name"] = "bogus cn"
-			properties["OpenVPN.VerifyX509Type"] = "name"
-		} else if config.OpenVPNCertVerifyCNOnly {
+		if config.openVPNCertVerifyCNOnly {
 			// This can be parsed from certificate.TestCert1().ServerCred.Cert .
 			properties["OpenVPN.VerifyX509Name"] = "chromelab-wifi-testbed-server.mtv.google.com"
 			properties["OpenVPN.VerifyX509Type"] = "name"

@@ -6,6 +6,7 @@ package network
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
@@ -26,6 +27,15 @@ type vpnConnectTestParams struct {
 	ipsecXauthMissingUser bool
 	// Xauth is required in an L2TP/IPsec connection, but password is wrong.
 	ipsecXauthWrongUser bool
+	// Cert verify is required in an OpenVPN connection, but the configured hash
+	// is wrong.
+	openVPNCertVerifyWrongHash bool
+	// Cert verify is required in an OpenVPN connection, but the configured
+	// subject is wrong.
+	openVPNCertVerifyWrongSubject bool
+	// Cert verify is required in an OpenVPN connection, but the configured CN is
+	// wrong.
+	openVPNCertVerifyWrongCN bool
 	// Let shill generate the key pair in an WireGuard VPN.
 	wgGenKey bool
 }
@@ -146,7 +156,7 @@ func init() {
 				vpnType: vpn.TypeOpenVPN,
 				opts: []vpn.Option{
 					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
-					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyCorrect),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifySubject),
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
@@ -158,9 +168,10 @@ func init() {
 				vpnType: vpn.TypeOpenVPN,
 				opts: []vpn.Option{
 					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
-					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyWrongHash),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifySubject),
 				},
-				shouldFail: true,
+				openVPNCertVerifyWrongHash: true,
+				shouldFail:                 true,
 			},
 			Fixture:           "vpnEnvWithCerts",
 			ExtraAttr:         []string{"group:network", "network_platform_unstable"},
@@ -171,9 +182,10 @@ func init() {
 				vpnType: vpn.TypeOpenVPN,
 				opts: []vpn.Option{
 					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
-					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyWrongSubject),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifySubject),
 				},
-				shouldFail: true,
+				openVPNCertVerifyWrongSubject: true,
+				shouldFail:                    true,
 			},
 			Fixture:           "vpnEnvWithCerts",
 			ExtraAttr:         []string{"group:network", "network_platform_unstable"},
@@ -184,9 +196,10 @@ func init() {
 				vpnType: vpn.TypeOpenVPN,
 				opts: []vpn.Option{
 					vpn.WithIPsecAuthType(vpn.AuthTypeCert),
-					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyWrongCN),
+					vpn.WithOpenVPNCertVerify(vpn.OpenVPNCertVerifyCNOnly),
 				},
-				shouldFail: true,
+				openVPNCertVerifyWrongCN: true,
+				shouldFail:               true,
 			},
 			Fixture:           "vpnEnvWithCerts",
 			ExtraAttr:         []string{"group:network", "network_platform_unstable"},
@@ -287,6 +300,16 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	if tc.ipsecXauthWrongUser {
 		props["L2TPIPsec.XauthUser"] = "wrong-user"
 		props["L2TPIPsec.XauthPassword"] = "wrong-password"
+	}
+	if tc.openVPNCertVerifyWrongHash {
+		props["OpenVPN.VerifyHash"] = "00" + strings.Repeat(":00", 19)
+	}
+	if tc.openVPNCertVerifyWrongSubject {
+		props["OpenVPN.VerifyX509Name"] = "bogus subject name"
+	}
+	if tc.openVPNCertVerifyWrongCN {
+		props["OpenVPN.VerifyX509Name"] = "bogus cn"
+		props["OpenVPN.VerifyX509Type"] = "name"
 	}
 
 	// Configure the service.
