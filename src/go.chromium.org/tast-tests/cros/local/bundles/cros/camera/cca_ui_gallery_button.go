@@ -36,14 +36,7 @@ func CCAUIGalleryButton(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 
 	// 1. Take a photo and the gallery button should be updated.
-	coverURL := func() (string, error) {
-		url, err := app.AttributeWithIndex(ctx, cca.GalleryButtonCover, 0, "src")
-		if err != nil {
-			return "", err
-		}
-		return url, nil
-	}
-	url, err := coverURL()
+	url, err := app.GalleryButtonCoverURL(ctx)
 	if err != nil {
 		s.Error("Failed to get the url of the gallery button: ", err)
 	}
@@ -55,7 +48,7 @@ func CCAUIGalleryButton(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("Failed to get captured photo path: ", err)
 	}
-	newURL, err := coverURL()
+	newURL, err := app.GalleryButtonCoverURL(ctx)
 	if err != nil {
 		s.Error("Failed to get url of the gallery button after capture: ", err)
 	}
@@ -99,7 +92,7 @@ func CCAUIGalleryButton(ctx context.Context, s *testing.State) {
 	}
 	url = newURL
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		newURL, err = coverURL()
+		newURL, err = app.GalleryButtonCoverURL(ctx)
 		if err != nil {
 			return testing.PollBreak(err)
 		}

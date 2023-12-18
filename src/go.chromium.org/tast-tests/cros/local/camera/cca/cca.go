@@ -1592,3 +1592,20 @@ func (a *App) ChooseVideoResolution(ctx context.Context, facing Facing, resoluti
 		return nil
 	})
 }
+
+// GalleryButtonCoverURL gets the cover URL of the gallery button.
+func (a *App) GalleryButtonCoverURL(ctx context.Context) (string, error) {
+  var supportGetGalleryButtonCoverURL bool
+  if err := a.conn.Eval(ctx, "CCATest.getGalleryButtonCoverURL !== undefined", &supportGetGalleryButtonCoverURL); err != nil {
+    return "", err
+  }
+  // TODO(pihsun): Remove this once Chrome is uprev to the newer version.
+  if !supportGetGalleryButtonCoverURL {
+    return a.AttributeWithIndex(ctx, GalleryButtonCover, 0, "src")
+  }
+  var url string
+  if err := a.conn.Call(ctx, &url, "CCATest.getGalleryButtonCoverURL"); err != nil {
+    return "", err
+  }
+  return url, nil
+}
