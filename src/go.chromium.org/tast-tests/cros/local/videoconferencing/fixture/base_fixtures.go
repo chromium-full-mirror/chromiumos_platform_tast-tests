@@ -59,6 +59,8 @@ var vcOpts = []chrome.Option{
 	chrome.ExtraArgs("--disable-sync"),
 	// Disable VK should avoid VK randomly shows up.
 	chrome.ExtraArgs("--disable-virtual-keyboard"),
+	// Disable MemoryUsageInHovercards for lacros tests.
+	chrome.LacrosDisableFeatures("MemoryUsageInHovercards"),
 }
 
 // Register variables for overriding a list of enabled features
