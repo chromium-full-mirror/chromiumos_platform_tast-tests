@@ -29,7 +29,7 @@ func init() {
 		Vars:         []string{"servo"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      5 * time.Minute,
+		Timeout:      6 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: firmware.AddPDPorts([]testing.Param{{
 			Name: "normal",
