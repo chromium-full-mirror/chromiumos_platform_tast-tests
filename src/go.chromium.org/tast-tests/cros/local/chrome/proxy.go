@@ -1,4 +1,4 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -12,13 +12,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
+	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/errors"
 )
 
-// SetProxy sets the network proxy by calling tconn API.
+// setProxy sets the network proxy by calling tconn API.
 // It is hardcoded to use fixed_servers mode for now.
-func (c *Chrome) SetProxy(ctx context.Context, proxyAddress string) error {
+func (c *Chrome) setProxy(ctx context.Context, proxyAddress string) error {
 	tconn, err := c.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test API connection")
@@ -46,8 +47,8 @@ func (c *Chrome) SetProxy(ctx context.Context, proxyAddress string) error {
 	return tconn.Eval(ctx, settingsAPICall, nil)
 }
 
-// UnsetProxy unsets network proxy by calling tconn API.
-func (c *Chrome) UnsetProxy(ctx context.Context) error {
+// unsetProxy unsets network proxy by calling tconn API.
+func (c *Chrome) unsetProxy(ctx context.Context) error {
 	tconn, err := c.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get test API connection")
@@ -59,17 +60,13 @@ func (c *Chrome) UnsetProxy(ctx context.Context) error {
 }
 
 // importRootCertificate imports the proxy root certificate to current Chrome user.
-func (c *Chrome) importRootCertificate(ctx context.Context, proxy proxy.Proxy) error {
-	if !proxy.IsRunning() {
-		return errors.New("proxy is not started")
-	}
-
+func (c *Chrome) importRootCertificate(ctx context.Context) error {
 	userHome, err := cryptohome.UserPath(ctx, c.NormalizedUser())
 	if err != nil {
 		return errors.Wrap(err, "failed to get user path")
 	}
 
-	certFile, err := proxy.RootCertificate(ctx)
+	certFile, err := c.proxy.RootCertificate(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to download root certificate")
 	}
@@ -100,31 +97,47 @@ func (c *Chrome) removeRootCertificate(ctx context.Context) error {
 
 }
 
-// LaunchAndApplyProxy launches defined proxy and apply to current Chrome.
-// It returns cleanup function and error if present.
-func (c *Chrome) LaunchAndApplyProxy(ctx context.Context, proxy proxy.Proxy) (func(context.Context) error, error) {
+// LaunchAndApplyProxy launches proxy and apply to current Chrome.
+// If the test calls chrome.Close() in the end, then we don't need to cleanup proxy separately.
+func (c *Chrome) LaunchAndApplyProxy(ctx context.Context, proxy proxy.Proxy) error {
+	if proxy == nil {
+		return errors.New("Proxy cannot be nil")
+	}
+
+	c.proxy = proxy
+
 	if !proxy.IsRunning() {
 		if err := proxy.Start(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to start proxy")
+			return errors.Wrap(err, "failed to start proxy")
 		}
 	}
 
-	if err := c.importRootCertificate(ctx, proxy); err != nil {
-		return nil, errors.Wrap(err, "failed to import CA certificate")
+	if err := c.importRootCertificate(ctx); err != nil {
+		return errors.Wrap(err, "failed to import CA certificate")
 	}
 
-	cleanup := func(ctx context.Context) error {
-		err1 := c.UnsetProxy(ctx)
-		err2 := proxy.Close(ctx)
+	if err := c.setProxy(ctx, proxy.ProxyAddress()); err != nil {
+		return errors.Wrap(err, "fail to setup proxy address")
+	}
+
+	return nil
+}
+
+// CleanupProxy will cleanup proxy.
+// It will be called in chrome.Close().
+// Therefore, user doesn't need to call it in most scenario.
+func (c *Chrome) CleanupProxy(ctx context.Context) error {
+	if c.proxy != nil {
+		err1 := c.unsetProxy(ctx)
+		err2 := c.proxy.Close(ctx)
 		err3 := c.removeRootCertificate(ctx)
+		c.proxy = nil
 		returnErr := errors.Join(err1, err2, err3)
 		if returnErr != nil {
 			return errors.Wrap(returnErr, "failed to cleanup proxy")
 		}
-		return nil
 	}
-
-	return cleanup, c.SetProxy(ctx, proxy.ProxyAddress())
+	return nil
 }
 
 // parseProxyAddress parses a host:port string and returns the components.
@@ -139,6 +152,19 @@ func parseProxyAddress(proxyAddress string) (host string, port int, err error) {
 		return "", 0, errors.Errorf("got invalid port int in %q", proxyAddress)
 	}
 	return parts[0], port, nil
+}
+
+// CreateLaunchAndApplyProxy creates and apply a new proxy when proxy.enable is true.
+func (c *Chrome) CreateLaunchAndApplyProxy(ctx context.Context) proxy.Proxy {
+	if proxy.IsProxyEnabled() {
+		p := mitmproxy.New()
+		if err := c.LaunchAndApplyProxy(ctx, p); err != nil {
+			panic(fmt.Sprintf("Failed to launch and apply proxy: %v", err))
+		}
+		return p
+	}
+
+	return nil
 }
 
 // NewChromeWithProxy new Chrome with proxy.

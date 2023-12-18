@@ -19,6 +19,7 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -55,7 +56,7 @@ type MitmProxy struct {
 
 // New creates a new MitmDump instance with default configuration.
 func New() *MitmProxy {
-	return &MitmProxy{
+	mp := &MitmProxy{
 		binaryPath:   DefaultBinaryPath,
 		port:         DefaultListenPort,
 		confDir:      defaultConfDir,
@@ -63,6 +64,12 @@ func New() *MitmProxy {
 		compressDump: true,
 		removeCert:   true,
 	}
+
+	if proxy.ScriptPath() != "" {
+		mp.scriptPath = proxy.ScriptPath()
+	}
+
+	return mp
 }
 
 // SetRemoveCert sets whether to remove cert.

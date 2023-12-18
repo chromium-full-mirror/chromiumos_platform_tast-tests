@@ -7,6 +7,7 @@ package proxy
 
 import (
 	"context"
+	"strings"
 
 	"go.chromium.org/tast/core/testing"
 )
@@ -29,58 +30,24 @@ type Proxy interface {
 	ProxyAddress() string
 }
 
-// EnabledVar indicates whether to enable the proxy.
-var EnabledVar = testing.RegisterVarString(
+var enabledVar = testing.RegisterVarString(
 	"proxy.enable",
 	"false",
 	"proxy.enable indicates whether to enable the proxy",
 )
 
-// BinaryPathVar indicates the path of proxy binary.
-var BinaryPathVar = testing.RegisterVarString(
-	"proxy.binaryPath",
-	"",
-	"proxy.binaryPath indicates the path of proxy binary",
-)
-
-// PortVar indicates the port of proxy.
-var PortVar = testing.RegisterVarString(
-	"proxy.port",
-	"",
-	"proxy.port indicates the port of proxy",
-)
-
-// OutDirVar indicates the outcome directory of proxy testing.
-var OutDirVar = testing.RegisterVarString(
-	"proxy.outDir",
-	"",
-	"proxy.outDir indicates the outcome directory of proxy testing",
-)
-
-// ConfDirVar indicates the configuration directory of proxy testing.
-var ConfDirVar = testing.RegisterVarString(
-	"proxy.confDir",
-	"",
-	"proxy.confDir indicates the configuration directory of proxy testing",
-)
-
-// CompressDumpVar indicates whether to compress traffic dump file.
-var CompressDumpVar = testing.RegisterVarString(
-	"proxy.compressDump",
-	"true",
-	"proxy.compressDump indicates whether to compress traffic dump file",
-)
-
-// RemoveCertVar indicates whether to remove cert after testing is completed.
-var RemoveCertVar = testing.RegisterVarString(
-	"proxy.removeCert",
-	"true",
-	"proxy.removeCert indicates whether to remove cert after testing is completed",
-)
-
-// ScriptPathVar indicates the path of addon script.
-var ScriptPathVar = testing.RegisterVarString(
+var scriptPathVar = testing.RegisterVarString(
 	"proxy.scriptPath",
 	"",
 	"proxy.scriptPath indicates the path of addon script",
 )
+
+// IsProxyEnabled indicates whether to enable the proxy.
+func IsProxyEnabled() bool {
+	return strings.ToLower(enabledVar.Value()) == "true"
+}
+
+// ScriptPath indicates the path of addon script.
+func ScriptPath() string {
+	return scriptPathVar.Value()
+}

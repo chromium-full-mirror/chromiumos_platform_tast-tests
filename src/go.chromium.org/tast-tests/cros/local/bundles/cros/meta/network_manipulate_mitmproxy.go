@@ -71,11 +71,10 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 		proxy.SetScriptPath(s.DataPath(httpErrorInject))
 	}
 
-	cleanup, err := cr.LaunchAndApplyProxy(ctx, proxy)
-	if err != nil {
+	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
 		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
-	defer cleanup(cleanupCtx)
+	defer cr.CleanupProxy(cleanupCtx)
 
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.example.com")
 	if err != nil {

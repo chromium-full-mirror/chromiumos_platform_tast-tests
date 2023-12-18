@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/login"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/setup"
 	"go.chromium.org/tast-tests/cros/local/chrome/jslog"
+	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/minidump"
@@ -197,6 +198,8 @@ type Chrome struct {
 	logsStartTime time.Time
 
 	loginPending bool // true if login is pending until ContinueLogin is called
+
+	proxy proxy.Proxy // Proxy applied on chrome.
 }
 
 // HasChrome is an interface for fixture values that contain a Chrome instance. It allows
@@ -349,6 +352,11 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		if retErr == nil || ctx.Err() == nil || origCtx.Err() != nil {
 			return
 		}
+
+		if err := c.CleanupProxy(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to cleanup proxy: ", err)
+		}
+
 		ctx, st := timing.Start(ctx, "save_minidumps")
 		defer st.End()
 		testing.ContextLog(ctx, "Taking minidump snapshots to diagnose possible browser hang")
@@ -372,7 +380,9 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 			reuseSession = forceReuseSession
 		}
 		cr, err := reuseSession(reuseCtx, cfg)
+
 		if err == nil {
+			cr.CreateLaunchAndApplyProxy(ctx)
 			return cr, nil
 		}
 		testing.ContextLogf(ctx, "Current session is not reusable: %v; restarting a new session", err)
@@ -459,7 +469,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		}
 	}
 
-	return &Chrome{
+	c = &Chrome{
 		cfg:               *cfg,
 		deprecatedExtDirs: exts.DeprecatedDirs(),
 		agg:               agg,
@@ -468,13 +478,21 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		logMarker:         logsaver.NewMarkerNoOffset(logFilename),
 		logsStartTime:     logsStartTime,
 		loginPending:      loginPending,
-	}, nil
+	}
+
+	c.CreateLaunchAndApplyProxy(ctx)
+
+	return c, nil
 }
 
 // Close disconnects from Chrome and cleans up standard extensions.
 // To avoid delays between tests, the ui job (and by extension, Chrome) is not restarted,
 // so the current user (if any) remains logged in.
 func (c *Chrome) Close(ctx context.Context) error {
+	if err := c.CleanupProxy(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to clean proxy: ", err)
+	}
+
 	if locked {
 		panic("Do not call Close while precondition is being used")
 	}
