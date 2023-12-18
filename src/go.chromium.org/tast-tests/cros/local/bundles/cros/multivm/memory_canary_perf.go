@@ -44,7 +44,7 @@ func init() {
 		},
 		BugComponent: "b:930563",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
-		SoftwareDeps: []string{"chrome", "arc"},
+		SoftwareDeps: []string{"chrome", "android_vm"},
 		Params: []testing.Param{{
 			Pre: multivm.ArcStartedVMMMSTabManagerDelegate(),
 			Val: &canaryHealthPerfParam{browser.TypeAsh},
@@ -107,8 +107,15 @@ func appendKillLatencyMetric(p *perf.Values, label string, latency time.Duration
 
 func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPerfParam, allocationMiB int64, allocationPeriod time.Duration, cr *chrome.Chrome, br *browser.Browser, a *arc.ARC, p *perf.Values) error {
 	allocationKiB := allocationMiB * 1024
+	// Context used by cleanup actions that are deferred.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	// Context used by measurement code after the main test completes, but before
+	// we return. Separate so we can get more detailed logs even if the test times
+	// out.
+	measureCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
 	rm, err := resourced.NewClient(ctx)
@@ -251,17 +258,17 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.Wrap(err, "failed to free all memory after test")
 	}
 
-	vmmmsLog, err := memoryuser.ParseVmmmsKills(ctx, start, stop)
+	vmmmsLog, err := memoryuser.ParseVmmmsKills(measureCtx, start, stop)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse VMMMS logs")
 	}
 
-	lmkdLog, err := memoryuser.ParseLmkdKills(ctx, a, logcatStart, stop)
+	lmkdLog, err := memoryuser.ParseLmkdKills(measureCtx, a, logcatStart, stop)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse lmkd kill logs from logcat")
 	}
 
-	discardLog, err := memoryuser.ParseTabDiscards(ctx, cr, start, stop)
+	discardLog, err := memoryuser.ParseTabDiscards(measureCtx, cr, start, stop)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse Chrome tab discard logs")
 	}
@@ -274,7 +281,7 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 	}, float64(totalAllocated)/allocationTime.Seconds())
 
 	if !memoryuser.AllVmmmsPrioritiesLogged(vmmmsLog) {
-		memoryuser.DumpVmmmsKillLog(ctx, vmmmsLog)
+		memoryuser.DumpVmmmsKillLog(measureCtx, vmmmsLog)
 		return errors.New("not all VMMMS KillTrace priorities observed, see log above for full list of observed priorities")
 	}
 
@@ -325,21 +332,25 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.New("no background tab discard in Chrome logs")
 	}
 
-	if err := metrics.WriteHistogramMetrics(ctx, tconn, p, umaMetrics); err != nil {
+	if err := metrics.WriteHistogramMetrics(measureCtx, tconn, p, umaMetrics); err != nil {
 		return err
 	}
 
 	// Check that app kills and tab discards happened in the right order.
 	if vmmmsCachedTab.Time.Before(vmmmsCachedApp.Time) {
+		memoryuser.DumpVmmmsKillLog(measureCtx, vmmmsLog)
 		return errors.New("background tab discard before cached app kill")
 	}
 	if vmmmsPerceptibleApp.Time.Before(vmmmsCachedTab.Time) {
+		memoryuser.DumpVmmmsKillLog(measureCtx, vmmmsLog)
 		return errors.New("perceptible app kill before background tab discard")
 	}
 	if vmmmsPerceptibleTab.Time.Before(vmmmsPerceptibleApp.Time) {
+		memoryuser.DumpVmmmsKillLog(measureCtx, vmmmsLog)
 		return errors.New("protected background tab discard before perceptible app kill")
 	}
 	if vmmmsFocusedApp.Time.Before(vmmmsPerceptibleTab.Time) {
+		memoryuser.DumpVmmmsKillLog(measureCtx, vmmmsLog)
 		return errors.New("focused app kill before protected background tab discard")
 	}
 
