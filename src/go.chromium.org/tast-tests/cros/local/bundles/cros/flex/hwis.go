@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package platform
+package flex
 
 import (
 	"bytes"
@@ -21,7 +21,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         FlexHWIS,
+		Func:         HWIS,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests that the ChromeOS Flex HWIS can run and exit successfully",
 		Contacts: []string{
@@ -48,7 +48,7 @@ const (
 	hwisSuccessResponse = "flex_hwis_tool ran successfully"
 )
 
-func FlexHWIS(ctx context.Context, s *testing.State) {
+func HWIS(ctx context.Context, s *testing.State) {
 	// For all environment settings, refer to the test of the device
 	// policy report, such as /cros/policy/display_reporting_dbus.go
 	s.Log("Set up the environment to enable the relevant policies")
