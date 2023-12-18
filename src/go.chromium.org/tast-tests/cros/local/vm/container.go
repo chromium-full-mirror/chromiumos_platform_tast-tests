@@ -279,13 +279,13 @@ func (c *Container) Stop(ctx context.Context) error {
 		// The container has already stopped, just return.
 		return nil
 	case cpb.StopLxdContainerResponse_STOPPING:
-		// In this case, the code moves on to the next part - LxdContainerStoppingSignal.
+		// In this case, the code moves on to the next part - ContainerShutdownSignal.
 		// It does not go to default.
 	default:
 		return errors.Errorf("failed to stop container: %v and failure reason: %v", resp.GetStatus(), resp.GetFailureReason())
 	}
 
-	sigResult := &cpb.LxdContainerStoppingSignal{}
+	sigResult := &cpb.ContainerShutdownSignal{}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		for sigResult.VmName != c.VM.name ||
 			sigResult.ContainerName != c.containerName ||
@@ -295,12 +295,9 @@ func (c *Container) Stop(ctx context.Context) error {
 			}
 		}
 
-		if sigResult.Status != cpb.LxdContainerStoppingSignal_STOPPED {
-			return errors.Errorf("the current status %v is not STOPPED", resp.GetStatus())
-		}
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
-		testing.ContextLog(ctx, "Failed to wait for D-Bus LxdContainerStoppingSignal_STOPPED signal: ", err)
+		testing.ContextLog(ctx, "Failed to wait for D-Bus ContainerShutdownSignal: ", err)
 
 		// The container didn't stop, try to stop it with more force.
 		// This can fail if the container stopped already.
@@ -647,7 +644,7 @@ func (c *Container) RestoreCopy(ctx context.Context, name string) error {
 	}
 
 	// Stop the container.
-	if err := c.Stop(ctx); err != nil {
+	if _, err := c.VM.LXCCommand(ctx, "stop", "-f", c.containerName); err != nil {
 		return errors.Wrap(err, "failed to stop the container")
 	}
 
