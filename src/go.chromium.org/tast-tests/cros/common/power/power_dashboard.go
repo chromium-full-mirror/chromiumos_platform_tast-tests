@@ -353,6 +353,7 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 
 	// noTimeline indicates if the timeline is given in the collected metrics.
 	noTimeline := false
+	// TODO: b/316820383 - power dashboard should support multiple timelines.
 	if value, ok := innerDataMap["t"]; ok {
 		var sampleCount = len(value)
 		powerDict["sample_count"] = sampleCount

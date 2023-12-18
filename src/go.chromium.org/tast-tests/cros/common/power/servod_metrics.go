@@ -34,7 +34,10 @@ const (
 var _ perf.TimelineDatasource = &ServodMetrics{}
 
 // NewServodMetrics creates a timeline metric to store servod readings.
-func NewServodMetrics(ctx context.Context, svo *servo.Servo, cpd bool, filters []*regexp.Regexp) (*ServodMetrics, error) {
+func NewServodMetrics(ctx context.Context, svo *servo.Servo, cpd bool, filters ...*regexp.Regexp) (*ServodMetrics, error) {
+	if cpd {
+		filters = append(filters, regexp.MustCompile(CpdPrefix))
+	}
 	// Query for available accumulator rails.
 	rails, clearRails, err := servo.FindAccumRailsWithFilter(ctx, svo, filters)
 	if err != nil {

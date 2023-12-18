@@ -172,9 +172,6 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	// Handle filters.
 	var filters []*regexp.Regexp
 	filters = make([]*regexp.Regexp, 0)
-	if param.cpd {
-		filters = append(filters, regexp.MustCompile(cp.CpdPrefix))
-	}
 	if param.filter != "" {
 		filters = append(filters, regexp.MustCompile(param.filter))
 	}
@@ -194,7 +191,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	sm, err := cp.NewServodMetrics(servoCtx, pxy.Servo(), param.cpd, filters)
+	sm, err := cp.NewServodMetrics(servoCtx, pxy.Servo(), param.cpd, filters...)
 	if err != nil {
 		s.Fatal("Failed to setup servod metrics: ", err)
 	}
