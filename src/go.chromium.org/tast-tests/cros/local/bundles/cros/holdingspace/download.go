@@ -72,77 +72,77 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadCancel,
 				browserType: browser.TypeAsh,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 		}, {
 			Name: "cancel_multiple",
 			Val: downloadParams{
 				testfunc:    testDownloadCancel,
 				browserType: browser.TypeAsh,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "launch",
 			Val: downloadParams{
 				testfunc:    testDownloadLaunch,
 				browserType: browser.TypeAsh,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 		}, {
 			Name: "launch_multiple",
 			Val: downloadParams{
 				testfunc:    testDownloadLaunch,
 				browserType: browser.TypeAsh,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "pause_and_resume",
 			Val: downloadParams{
 				testfunc:    testDownloadPauseAndResume,
 				browserType: browser.TypeAsh,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 		}, {
 			Name: "pause_and_resume_multiple",
 			Val: downloadParams{
 				testfunc:    testDownloadPauseAndResume,
 				browserType: browser.TypeAsh,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "pin_and_unpin",
 			Val: downloadParams{
 				testfunc:    testDownloadPinAndUnpin,
 				browserType: browser.TypeAsh,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 		}, {
 			Name: "pin_unpin_multiple",
 			Val: downloadParams{
 				testfunc:    testDownloadPinAndUnpin,
 				browserType: browser.TypeAsh,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "remove",
 			Val: downloadParams{
 				testfunc:    testDownloadRemove,
 				browserType: browser.TypeAsh,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 		}, {
 			Name: "remove_multiple",
 			Val: downloadParams{
 				testfunc:    testDownloadRemove,
 				browserType: browser.TypeAsh,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "lacros_cancel",
 			Val: downloadParams{
 				testfunc:    testDownloadCancel,
 				browserType: browser.TypeLacros,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
@@ -150,14 +150,14 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadCancel,
 				browserType: browser.TypeLacros,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "lacros_launch",
 			Val: downloadParams{
 				testfunc:    testDownloadLaunch,
 				browserType: browser.TypeLacros,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
@@ -165,7 +165,7 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadLaunch,
 				browserType: browser.TypeLacros,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
@@ -173,7 +173,7 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadPauseAndResume,
 				browserType: browser.TypeLacros,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
@@ -181,14 +181,14 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadPauseAndResume,
 				browserType: browser.TypeLacros,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}, {
 			Name: "lacros_pin_and_unpin",
 			Val: downloadParams{
 				testfunc:    testDownloadPinAndUnpin,
 				browserType: browser.TypeLacros,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 		}, {
@@ -196,7 +196,7 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadPinAndUnpin,
 				browserType: browser.TypeLacros,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
 		}, {
@@ -204,7 +204,7 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadPinAndUnpin,
 				browserType: browser.TypeLacros,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 		}, {
@@ -212,7 +212,7 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadPinAndUnpin,
 				browserType: browser.TypeLacros,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros", "lacros_unstable"},
 		}, {
@@ -220,7 +220,7 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadRemove,
 				browserType: browser.TypeLacros,
-				files:       []string{"download.txt"},
+				files:       []string{"download.html"},
 			},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
@@ -228,7 +228,7 @@ func init() {
 			Val: downloadParams{
 				testfunc:    testDownloadRemove,
 				browserType: browser.TypeLacros,
-				files:       []string{"download1.txt", "download2.txt"},
+				files:       []string{"download1.html", "download2.html"},
 			},
 		}},
 	})
@@ -574,34 +574,6 @@ func selectAllDownloadChips(arg *downloadArguments, chipType holdingspace.ChipTy
 
 // waitAllFilesLaunch waits for all specify files are launched.
 func waitAllFilesLaunch(arg *downloadArguments) uiauto.Action {
-	if arg.browserType == browser.TypeLacros {
-		// A text file will be launched with Text App under lacros.
-		return verifyTextFilesLaunchInTextApp(arg)
-	}
-	// A text file will be launched with browser otherwise.
-	return verifyTextFilesLaunchInBrowser(arg)
-}
-
-func verifyTextFilesLaunchInTextApp(arg *downloadArguments) uiauto.Action {
-	var (
-		textAppRoot = nodewith.Name("Text").Role(role.RootWebArea)
-		menuButton  = nodewith.Name("menu").Role(role.Button).Ancestor(textAppRoot)
-		tabFinder   = nodewith.Role(role.StaticText).Ancestor(textAppRoot).First()
-	)
-	return func(ctx context.Context) error {
-		if err := arg.ui.LeftClick(menuButton)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click menu button in Text App")
-		}
-		for _, file := range arg.files {
-			if err := arg.ui.WaitUntilExists(tabFinder.Name(file))(ctx); err != nil {
-				return errors.Wrapf(err, "failed to find file %q", file)
-			}
-		}
-		return nil
-	}
-}
-
-func verifyTextFilesLaunchInBrowser(arg *downloadArguments) uiauto.Action {
 	browserNodeFinder := nodewith.Ancestor(nodewith.Role(role.Window).HasClass("BrowserFrame"))
 	return func(ctx context.Context) error {
 		for _, file := range arg.files {
