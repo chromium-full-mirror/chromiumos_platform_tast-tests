@@ -37,7 +37,8 @@ func init() {
 		// requires a real TPM.
 		// We require "arc" and "chrome_internal" because the ARC TOS screen
 		// is only shown for chrome-branded builds when the device is ARC-capable.
-		SoftwareDeps: []string{"chrome", "arc", "tpm", "play_store"},
+		// Demo Mode doesn't support VMs, use "crossystem" to exclude VMs.
+		SoftwareDeps: []string{"chrome", "chrome_internal", "arc", "tpm", "play_store", "crossystem"},
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -47,15 +48,17 @@ func init() {
 			{
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+				ExtraAttr:         []string{"informational"},
 			}},
 	})
 }
 
 func DemoMode(ctx context.Context, s *testing.State) {
 	const (
-		installButtonText = "Install"
-		testPackage       = "com.google.android.calculator"
+		installButtonText  = "Install"
+		inDemoModeText     = "In demo mode. Content and features may be limited."
+		policyNotReadyText = "Your administrator has not given you access to this item."
+		testPackage        = "com.google.android.calculator"
 	)
 
 	cr, err := chrome.New(ctx,
@@ -101,15 +104,23 @@ func DemoMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to see Play Store window: ", err)
 	}
 
-	playstore.OpenAppPage(ctx, arc, testPackage)
-
 	d, err := arc.NewUIDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
 	defer d.Close(clearupCtx)
 
-	// Ensure that the "Install" button is disabled.
+	// Wait until Play Store received proper policy and shows "In demo mode...". Otherwise, the
+	// (calculator) app page would not show a grayed out Install button, but rather a text "Your
+	// administrator has not given you access to this item.".
+	demoModeTextView := d.Object(ui.ClassName("android.widget.TextView"), ui.TextMatches(inDemoModeText))
+	if err := demoModeTextView.WaitForExists(ctx, 15*time.Second); err != nil {
+		s.Fatal("Failed to find \"In demo mode...\" in Play Store: ", err)
+	}
+
+	playstore.OpenAppPage(ctx, arc, testPackage)
+
+	// Ensure that the "Install" button appears and is disabled.
 	opButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches(installButtonText), ui.Enabled(false))
 	if err := opButton.WaitForExists(ctx, 20*time.Second); err != nil {
 		s.Fatal("Failed to find greyed Install button in Play Store: ", err)
