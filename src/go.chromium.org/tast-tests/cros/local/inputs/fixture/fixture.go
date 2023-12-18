@@ -46,6 +46,7 @@ const (
 	firstPartyVietnameseInput
 	altClickAndSixPackCustomization
 	orca
+	picker
 )
 
 // List of fixture names for inputs.
@@ -64,6 +65,7 @@ const (
 	ClamshellNonVKRestart                             = "clamshellNonVKRestart"
 	ClamshellNonVKWithMultiwordSuggest                = "clamshellNonVKWithMultiwordSuggest"
 	ClamshellNonVKWithOrca                            = "clamshellNonVKWithOrca"
+	ClamshellNonVKWithPicker                          = "clamshellNonVKWithPicker"
 	ClamshellNonVKInGAIA                              = "clamshellNonVKInGAIA"
 	ClamshellVKWithHandWritingLegacyRecognitionOn     = "clamshellVKWithHandWritingLegacyRecognitionOn"
 	TabletVK                                          = "tabletVK"
@@ -274,6 +276,21 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: ClamshellNonVKWithPicker,
+		Desc: "Clamshell mode with VK disabled and Picker enabled",
+		Contacts: []string{
+			"shend@chromium.org",
+			"essential-inputs-team@google.com",
+		},
+		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, picker),
+		SetUpTimeout:    chrome.LoginTimeout,
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"inputs.Picker.pickerFeatureTestKey"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: ClamshellNonVKWithDiacriticsOnPKLongpress,
@@ -771,6 +788,9 @@ func (f *inputsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) int
 		case orca:
 			opts = append(opts, chrome.ExtraArgs("--enable-features=OrcaDogfood,MantaService"))
 			opts = append(opts, chrome.LacrosEnableFeatures("OrcaDogfood"))
+		case picker:
+			opts = append(opts, chrome.ExtraArgs("--enable-features=Picker"))
+			opts = append(opts, chrome.ExtraArgs("--picker-feature-key="+s.RequiredVar("inputs.Picker.pickerFeatureTestKey")))
 		}
 	}
 
