@@ -21,6 +21,9 @@ type vpnConnectTestParams struct {
 	vpnType    vpn.Type
 	opts       []vpn.Option
 	shouldFail bool
+
+	// Let shill generate the key pair in an WireGuard VPN.
+	wgGenKey bool
 }
 
 func init() {
@@ -208,10 +211,8 @@ func init() {
 		}, {
 			Name: "wireguard_generate_key",
 			Val: vpnConnectTestParams{
-				vpnType: vpn.TypeWireGuard,
-				opts: []vpn.Option{
-					vpn.WithWGAutoGenKey(),
-				},
+				vpnType:  vpn.TypeWireGuard,
+				wgGenKey: true,
 			},
 			Fixture:           "vpnEnv",
 			ExtraAttr:         []string{"group:mainline"},
@@ -239,22 +240,52 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	}()
 
 	tc := s.Param().(vpnConnectTestParams)
+
+	// Start VPN server.
 	opts := append([]vpn.Option{
 		vpn.WithCertVals(s.FixtValue().(vpn.FixtureEnv).CertVals),
 		vpn.WithoutAutoConnect(),
 	}, tc.opts...)
-	conn, err := vpn.StartConnection(ctx, networkEnv.Server1, tc.vpnType, opts...)
+
+	// WG server will need the public key of the client, so generate the key pair
+	// before that.
+	if tc.wgGenKey {
+		pubKey, err := vpn.GenerateWireGuardKey(ctx)
+		if err != nil {
+			s.Fatal("Failed to generate wireguard key: ", err)
+		}
+		opts = append(opts, vpn.WithWGClientPublicKey(pubKey))
+	}
+
+	server, err := vpn.StartServer(ctx, networkEnv.Server1, tc.vpnType, opts...)
 	if err != nil {
-		s.Fatal("Failed to create VPN connection: ", err)
+		s.Fatal("Failed to start VPN server: ", err)
 	}
 	defer func() {
-		if err := conn.Cleanup(cleanupCtx); err != nil {
-			s.Error("Failed to clean up VPN connection: ", err)
+		if err := server.Exit(cleanupCtx); err != nil {
+			s.Error("Failed to exit VPN server: ", err)
 		}
 	}()
 
-	testing.ContextLog(ctx, "Connecting to the service: ", conn.Service())
-	if err := conn.Service().Connect(ctx); err != nil {
+	// Create shill property dict to connect to server.
+	props, err := vpn.CreateProperties(server, nil /*secondServer*/)
+	if err != nil {
+		s.Fatal("Failed to create VPN properties: ", err)
+	}
+
+	// Configure the service.
+	service, err := vpn.ConfigureServiceWithProps(ctx, props)
+	if err != nil {
+		s.Fatal("Failed to configure VPN service: ", err)
+	}
+	defer func() {
+		if err := service.Remove(cleanupCtx); err != nil {
+			s.Error("Failed to remove VPN service: ", err)
+		}
+	}()
+
+	testing.ContextLog(ctx, "Connecting to the service: ", service)
+	if err := service.Connect(ctx); err != nil {
 		s.Fatal("Failed to call Connect on the service: ", err)
 	}
 
@@ -266,7 +297,7 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	if tc.shouldFail {
 		connectTimeout = 35 * time.Second
 	}
-	if err := conn.Service().WaitForPropertyInSetWithOptions(ctx,
+	if err := service.WaitForPropertyInSetWithOptions(ctx,
 		shillconst.ServicePropertyState,
 		append(shillconst.ServiceConnectedStates, shillconst.ServiceStateFailure),
 		&testing.PollOptions{Timeout: connectTimeout},
@@ -278,7 +309,7 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 		testing.ContextLog(ctx, "Failed to dump network info after VPN connect")
 	}
 
-	connected, err := conn.Service().IsConnected(ctx)
+	connected, err := service.IsConnected(ctx)
 	if err != nil {
 		s.Fatal("Failed to get connected state of the service")
 	}
@@ -294,7 +325,7 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("VPN service state changed to failure")
 	}
 	// Do a simple ping check to make sure we are really connected.
-	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
-		s.Fatalf("Failed to ping %s: %v", conn.Server.OverlayIPv4, err)
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
+		s.Fatalf("Failed to ping %s: %v", server.OverlayIPv4, err)
 	}
 }
