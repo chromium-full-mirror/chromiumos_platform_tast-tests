@@ -110,6 +110,8 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 		CarrierAtt: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "broadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "broadband"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "nrbroadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "nrbroadband"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierVerizon: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},

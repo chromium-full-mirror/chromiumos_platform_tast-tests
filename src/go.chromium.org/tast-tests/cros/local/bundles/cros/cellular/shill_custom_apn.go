@@ -263,6 +263,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 			if !testNewAPNUIRevamp && knownAPN.Optional && lastMatchingGoodAPN != "" && apn == lastMatchingGoodAPN {
 				continue
 			}
+			// TODO(316958428): Tag bug on FM350 MR1 when tagging supports FW versions.
 			s.Fatalf("Last good APN doesn't match: got %q, want %q", apn, expectedAPN)
 		}
 		lastMatchingGoodAPN = apn
