@@ -22,6 +22,10 @@ type vpnConnectTestParams struct {
 	opts       []vpn.Option
 	shouldFail bool
 
+	// Xauth is required in an L2TP/IPsec connection, but user is not configured.
+	ipsecXauthMissingUser bool
+	// Xauth is required in an L2TP/IPsec connection, but password is wrong.
+	ipsecXauthWrongUser bool
 	// Let shill generate the key pair in an WireGuard VPN.
 	wgGenKey bool
 }
@@ -70,7 +74,7 @@ func init() {
 				vpnType: vpn.TypeL2TPIPsec,
 				opts: []vpn.Option{
 					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
-					vpn.WithL2TPIPsecXAuth(vpn.L2TPIPsecXauthCorrect),
+					vpn.WithL2TPIPsecXAuth(),
 				},
 			},
 			Fixture:   "vpnEnv",
@@ -81,9 +85,10 @@ func init() {
 				vpnType: vpn.TypeL2TPIPsec,
 				opts: []vpn.Option{
 					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
-					vpn.WithL2TPIPsecXAuth(vpn.L2TPIPsecXauthMissingUser),
+					vpn.WithL2TPIPsecXAuth(),
 				},
-				shouldFail: true,
+				ipsecXauthMissingUser: true,
+				shouldFail:            true,
 			},
 			Fixture:   "vpnEnv",
 			ExtraAttr: []string{"group:network", "network_platform_unstable"},
@@ -93,9 +98,10 @@ func init() {
 				vpnType: vpn.TypeL2TPIPsec,
 				opts: []vpn.Option{
 					vpn.WithIPsecAuthType(vpn.AuthTypePSK),
-					vpn.WithL2TPIPsecXAuth(vpn.L2TPIPsecXauthWrongUser),
+					vpn.WithL2TPIPsecXAuth(),
 				},
-				shouldFail: true,
+				ipsecXauthWrongUser: true,
+				shouldFail:          true,
 			},
 			Fixture:   "vpnEnv",
 			ExtraAttr: []string{"group:network", "network_platform_unstable"},
@@ -271,6 +277,16 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	props, err := vpn.CreateProperties(server, nil /*secondServer*/)
 	if err != nil {
 		s.Fatal("Failed to create VPN properties: ", err)
+	}
+
+	// Modify the dict according to the test case.
+	if tc.ipsecXauthMissingUser {
+		delete(props, "L2TPIPsec.XauthUser")
+		delete(props, "L2TPIPsec.XauthPassword")
+	}
+	if tc.ipsecXauthWrongUser {
+		props["L2TPIPsec.XauthUser"] = "wrong-user"
+		props["L2TPIPsec.XauthPassword"] = "wrong-password"
 	}
 
 	// Configure the service.

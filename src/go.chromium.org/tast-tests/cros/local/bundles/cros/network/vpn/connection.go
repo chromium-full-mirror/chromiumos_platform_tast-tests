@@ -37,9 +37,7 @@ type Config struct {
 	IPsecAuthType IPsecAuthType
 
 	// Parameters for an L2TP/IPsec VPN connection.
-	IPsecUseXauth         bool
-	IPsecXauthMissingUser bool
-	IPsecXauthWrongUser   bool
+	IPsecUseXauth bool
 
 	// Parameters for an OpenVPN connection.
 	OpenVPNUseUserPassword        bool
@@ -186,31 +184,10 @@ func WithIPsecAuthType(val IPsecAuthType) Option {
 	}
 }
 
-// L2TPIPSecXauthType represents how Xauth is configured for L2TP/IPsec.
-// TODO(b/257379393): Remove this type after we move the related code into
-// VPNConnect.
-type L2TPIPSecXauthType int
-
-// Xauth types.
-const (
-	L2TPIPsecXauthNone L2TPIPSecXauthType = iota
-	L2TPIPsecXauthCorrect
-	L2TPIPsecXauthWrongUser
-	L2TPIPsecXauthMissingUser
-)
-
-// WithL2TPIPsecXAuth configures Xauth for L2TP/IPsec.
-func WithL2TPIPsecXAuth(val L2TPIPSecXauthType) Option {
+// WithL2TPIPsecXAuth enables Xauth for L2TP/IPsec.
+func WithL2TPIPsecXAuth() Option {
 	return func(c *Config) {
-		c.IPsecUseXauth = (val != L2TPIPsecXauthNone)
-		switch val {
-		case L2TPIPsecXauthNone, L2TPIPsecXauthCorrect:
-			break
-		case L2TPIPsecXauthWrongUser:
-			c.IPsecXauthWrongUser = true
-		case L2TPIPsecXauthMissingUser:
-			c.IPsecXauthMissingUser = true
-		}
+		c.IPsecUseXauth = true
 	}
 }
 
@@ -688,14 +665,9 @@ func createL2TPIPsecProperties(server *Server) (map[string]interface{}, error) {
 		return nil, errors.Errorf("unexpected auth type %s for L2TP/IPsec", config.IPsecAuthType)
 	}
 
-	if config.IPsecUseXauth && !config.IPsecXauthMissingUser {
-		if config.IPsecXauthWrongUser {
-			properties["L2TPIPsec.XauthUser"] = "wrong-user"
-			properties["L2TPIPsec.XauthPassword"] = "wrong-password"
-		} else {
-			properties["L2TPIPsec.XauthUser"] = xauthUser
-			properties["L2TPIPsec.XauthPassword"] = xauthPassword
-		}
+	if config.IPsecUseXauth {
+		properties["L2TPIPsec.XauthUser"] = xauthUser
+		properties["L2TPIPsec.XauthPassword"] = xauthPassword
 	}
 
 	return properties, nil
