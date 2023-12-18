@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -42,7 +43,7 @@ func init() {
 			},
 		},
 		Fixture: "arcBootedWithPlayStore",
-		Timeout: 10 * time.Minute,
+		Timeout: chrome.LoginTimeout + arc.BootTimeout + 4*time.Minute,
 	})
 }
 
@@ -67,7 +68,8 @@ func PromiseIcons(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
+	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "chrome_ui_tree")
+	s.AttachErrorHandlers(handler, handler)
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)

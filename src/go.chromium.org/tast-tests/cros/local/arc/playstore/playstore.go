@@ -315,7 +315,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 		// Handle "Want to link your PayPal account" if necessary.
 		testing.ContextLogf(ctx, "Checking existence of : %s", linkPaypalAccountText)
-		if err := d.Object(ui.TextMatches("(?i)"+linkPaypalAccountText), ui.Enabled(true)).Exists(ctx); err == nil {
+		if err := d.Object(ui.TextMatches("(?i)"+linkPaypalAccountText), ui.Enabled(true)).WaitForExists(ctx, 10*time.Second); err == nil {
 			testing.ContextLog(ctx, "Want to link your paypal account does exist")
 			if noThanksButton, err := FindActionButton(ctx, d, noThanksButtonText, defaultUITimeout); err != nil {
 				return testing.PollBreak(err)
@@ -331,7 +331,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 		// Complete account setup if necessary.
 		testing.ContextLogf(ctx, "Checking existence of : %s", accountSetupText)
-		if err := d.Object(ui.Text(accountSetupText), ui.Enabled(true)).Exists(ctx); err == nil {
+		if err := d.Object(ui.Text(accountSetupText), ui.Enabled(true)).WaitForExists(ctx, 10*time.Second); err == nil {
 			testing.ContextLog(ctx, "Completing account setup")
 			if continueButton, err := FindActionButton(ctx, d, continueButtonText, defaultUITimeout); err != nil {
 				return testing.PollBreak(err)
