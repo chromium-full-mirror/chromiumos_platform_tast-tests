@@ -24,7 +24,7 @@ func init() {
 		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec", "typec_tbt4_bringup"},
+		Attr:         []string{"group:typec", "typec_tbt4_bringup", "typec_tbt3_bringup"},
 		SoftwareDeps: []string{"tpm2", "chrome"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"testcert.p12"},
