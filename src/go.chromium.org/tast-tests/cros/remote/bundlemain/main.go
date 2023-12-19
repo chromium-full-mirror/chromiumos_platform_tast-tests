@@ -273,14 +273,21 @@ func downloadVarLogMessages(ctx context.Context, outputDir string, dut *dut.DUT,
 	// By default, get everything.
 	startLine := int64(1)
 
+	// Set previous word count information
+	var prevWcInfoLines, prevWcInfoBytes int64
+	if prevWcInfo != nil {
+		prevWcInfoLines = prevWcInfo.Lines
+		prevWcInfoBytes = prevWcInfo.Bytes
+	}
+
 	// Check if the current line count and file size bigger than before. If so, simply get the delta.
 	if newWcInfo, err := linuxssh.WordCount(ctx, dut.Conn(), varLogMsgPath); err == nil {
 		// No change in the line number and the file size means that the file has no new content, we can
 		// just download the delta.
-		if newWcInfo.Lines == prevWcInfo.Lines && newWcInfo.Bytes == prevWcInfo.Bytes {
+		if newWcInfo.Lines == prevWcInfoLines && newWcInfo.Bytes == prevWcInfoBytes {
 			return nil
 		}
-		if newWcInfo.Lines > prevWcInfo.Lines && newWcInfo.Bytes > prevWcInfo.Bytes {
+		if newWcInfo.Lines > prevWcInfoLines && newWcInfo.Bytes > prevWcInfoBytes {
 			startLine = prevWcInfo.Lines + 1
 		}
 	}
