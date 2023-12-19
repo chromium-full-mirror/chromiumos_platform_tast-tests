@@ -297,7 +297,10 @@ func processes(ctx context.Context) ([]*process.Process, error) {
 
 func killProcessesIfFound(ctx context.Context) error {
 	procs, err := processes(ctx)
-	if err != nil {
+	// ErrNotFound is returned when no proc is found.
+	if err == procutil.ErrNotFound {
+		return nil
+	} else if err != nil {
 		return errors.Wrap(err, "fail to get mitmproxy processes")
 	}
 
