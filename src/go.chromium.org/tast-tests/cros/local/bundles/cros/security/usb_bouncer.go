@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/security/seccomp"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -31,22 +31,47 @@ func init() {
 			"jorgelo@chromium.org",
 		},
 		Params: []testing.Param{{
-			Name:      "check_seccomp",
+			Name:      "check_seccomp_with_chrome",
 			ExtraAttr: []string{"group:mainline", "informational"},
-			Val:       enforcing,
+			Fixture:   fixture.ChromeLoggedIn,
+			Val:       checkSeccompWithChrome,
 		}, {
-			Name: "generate_seccomp",
-			Val:  permissive,
+			Name:      "check_seccomp_without_chrome",
+			ExtraAttr: []string{"group:mainline", "informational"},
+			Val:       checkSeccompWithoutChrome,
+		}, {
+			Name:    "generate_seccomp_with_chrome",
+			Fixture: fixture.ChromeLoggedIn,
+			Val:     generateSeccompWithChrome,
+		}, {
+			Name: "generate_seccomp_without_chrome",
+			Val:  generateSeccompWithoutChrome,
 		}},
 	})
 }
 
-type seccompEnforcement bool
+type testType string
 
 const (
-	enforcing  seccompEnforcement = true
-	permissive seccompEnforcement = false
+	checkSeccompWithChrome       testType = "check_seccomp_with_chrome"
+	checkSeccompWithoutChrome    testType = "check_seccomp_without_chrome"
+	generateSeccompWithChrome    testType = "generate_seccomp_with_chrome"
+	generateSeccompWithoutChrome testType = "generate_seccomp_without_chrome"
 )
+
+func enforceSeccomp(tt testType) bool {
+	if tt == generateSeccompWithChrome || tt == generateSeccompWithoutChrome {
+		return false
+	}
+	return true
+}
+
+func withChrome(tt testType) bool {
+	if tt == checkSeccompWithChrome || tt == generateSeccompWithChrome {
+		return true
+	}
+	return false
+}
 
 // pathOfTestDevice finds a path to a USB device in /sys/devices. It returns an empty string on
 // failure.
@@ -69,7 +94,7 @@ func pathOfTestDevice() (string, error) {
 }
 
 func testUsbBouncer(ctx context.Context, s *testing.State, m *seccomp.PolicyGenerator,
-	devPath string, withChrome bool, sec seccompEnforcement) {
+	devPath string, withChrome, enforceSeccomp bool) {
 	cases := [][]string{
 		{"udev", "add", devPath},
 		{"cleanup"},
@@ -93,7 +118,7 @@ func testUsbBouncer(ctx context.Context, s *testing.State, m *seccomp.PolicyGene
 		}
 		logFile := f.Name()
 
-		if sec == permissive {
+		if !enforceSeccomp {
 			c = append(c, "--seccomp=false")
 		}
 
@@ -145,31 +170,18 @@ func USBBouncer(ctx context.Context, s *testing.State) {
 		if !info.IsDir() {
 			return os.Remove(path)
 		} else if info.Name() == "device-db" {
-			// Chmod to 755 to trigger brillo::SafeFD::Rmdir at least once for seccomp coverage.
-			os.Chmod(path, 755)
+			// Chmod to 770 to trigger brillo::SafeFD::Rmdir at least once for seccomp coverage.
+			os.Chmod(path, 770)
 		}
 		return nil
 	}); err != nil {
 		s.Fatalf("Failed to cleanup %q: %v", userStateDir, err)
 	}
 
-	enforceSeccomp := s.Param().(seccompEnforcement)
+	tt := s.Param().(testType)
 
 	m := seccomp.NewPolicyGenerator()
-	testUsbBouncer(ctx, s, m, d, false /*withChrome*/, enforceSeccomp /*withSeccomp*/)
-
-	cr, err := chrome.New(ctx, chrome.FakeLogin(chrome.Creds{User: defaultUser, Pass: defaultPass}))
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer func() {
-		if err := cr.Close(ctx); err != nil {
-			s.Error("Failed to close Chrome: ", err)
-		}
-	}()
-
-	// Reuse policy generator to accumulate syscalls across both test cases.
-	testUsbBouncer(ctx, s, m, d, true /*withChrome*/, enforceSeccomp /*withSeccomp*/)
+	testUsbBouncer(ctx, s, m, d, withChrome(tt) /*withChrome*/, enforceSeccomp(tt) /*withSeccomp*/)
 
 	policyFile := filepath.Join(s.OutDir(), "usb_bouncer.policy")
 	if err := ioutil.WriteFile(policyFile, []byte(m.GeneratePolicy()), 0644); err != nil {
