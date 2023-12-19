@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio/audionode"
 	"go.chromium.org/tast/core/testing"
@@ -64,7 +65,7 @@ func init() {
 		SoftwareDeps: []string{"vm_host"},
 		Fixture:      "uiStopped",
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -153,6 +154,19 @@ func AudioStreamsConformance(ctx context.Context, s *testing.State) {
 	}
 
 	coldStartLatencyMS := stats.ColdStartLatency.Secs*100 + int(stats.ColdStartLatency.Nanos/1000000)
+
+	if param.StreamSource == cras {
+		p := perf.NewValues()
+		minLatency := perf.Metric{
+			Name:      "coldStartLatency",
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter}
+		p.Set(minLatency, float64(coldStartLatencyMS))
+		if err := p.Save(s.OutDir()); err != nil {
+			s.Error("Failed saving perf data: ", err)
+		}
+	}
+
 	if coldStartLatencyMS > param.ColdStartLatencyCriteriaMs {
 		s.Fatalf("Expect ColdStartLatency less than: %d ms, got: %d ms", param.ColdStartLatencyCriteriaMs, coldStartLatencyMS)
 	}
