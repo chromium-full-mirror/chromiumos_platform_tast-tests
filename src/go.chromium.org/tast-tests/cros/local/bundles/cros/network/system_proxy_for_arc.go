@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -98,6 +99,11 @@ func SystemProxyForArc(ctx context.Context, s *testing.State) {
 	// Update policies.
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, []policy.Policy{proxyModePolicy, proxyServerPolicy, systemProxySettingsPolicy, arcEnabledPolicy}); err != nil {
 		s.Fatal("Failed to update policies: ", err)
+	}
+
+	// Make sure that system-proxy is running.
+	if err := upstart.EnsureJobRunning(ctx, "system-proxy"); err != nil {
+		s.Fatal("The system-proxy is not running: ", err)
 	}
 
 	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
