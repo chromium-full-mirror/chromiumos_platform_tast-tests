@@ -7,8 +7,9 @@ package fixture
 
 import (
 	"context"
-	"regexp"
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"google.golang.org/grpc"
@@ -39,11 +40,8 @@ const (
 	tearDownTimeout = 5 * time.Second
 	preTestTimeout  = 15 * time.Second
 	postTestTimeout = 5 * time.Second
-)
 
-var (
-	reGsctoolUpdateSuccess  = regexp.MustCompile(`image updated`)
-	reGsctoolUpdateNotReady = regexp.MustCompile(`Can't find device`)
+	cr50DebugImageTemplate = "gs://chromeos-localmirror-private/distfiles/chromeos-cr50-debug-0.0.11/h1_shield/cr50.dbg.0x%s_0x%s.bin.*"
 )
 
 type extraPreTestMethod func(ctx context.Context, board ti50.DevBoard) error
@@ -148,7 +146,7 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 
 	testing.ContextLog(ctx, "Setting up image: ", imagePath)
 	if testbedProperties.TestbedType == "gsc_h1_shield" {
-		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons)
+		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons, testbedProperties)
 	} else if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
@@ -160,8 +158,9 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 }
 
 // setupCr50Image uses gsctool to flash the cr50 image.
-// TODO(b/140534392): Support rollback and changing the board id.
-func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string) {
+// TODO(b/140534392): Support changing the board id.
+func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string,
+	testbedProperties remoteTi50.TestbedProperties) {
 	if err := board.Setup(ctx, "", fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}
@@ -176,7 +175,6 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	}()
 
 	gpioApplyStrap(ctx, s, board, ti50.CcdSuzyQ)
-
 	if imagePath == "" {
 		return
 	}
@@ -185,17 +183,46 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, false)
 	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, true)
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if out, _ := board.GSCToolCommand(ctx, imagePath); reGsctoolUpdateNotReady.Match(out) {
-			return errors.New("gsctool update not ready: " + string(out))
-		} else if reGsctoolUpdateSuccess.Match(out) {
-			return nil
-		} else {
-			return testing.PollBreak(errors.New("gsctool error: " + string(out)))
+	mustSucceed(s, board.GSCToolWaitUntilReady(ctx), "wait until gsc ready")
+
+	_, rw, err := board.GSCToolCurrentFwVersion(ctx)
+	mustSucceed(s, err, "get current fwver")
+
+	_, imageVer, _, _, err := board.GSCToolBinVersion(ctx, imagePath)
+	mustSucceed(s, err, "parse bin version")
+
+	if imageVer.Less(rw) {
+		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
+
+		debugImageURL, err := findCr50DebugImage(ctx, testbedProperties)
+		if err != nil {
+			s.Fatal("find cr50 debug image failed: ", err)
 		}
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-		s.Fatal("GSCTool: ", err)
+
+		debugImage, err := downloadToTempFile(ctx, "debug image", debugImageURL)
+		mustSucceed(s, err, "download debug image")
+
+		mustSucceed(s, board.RollbackUpdate(ctx, imagePath, debugImage), "rollback update to image")
+	} else {
+		testing.ContextLogf(ctx, "Direct gsctool update for %s to %s", rw, imageVer)
+		mustSucceed(s, board.DirectUpdate(ctx, imagePath), "direct updateto image")
 	}
+}
+
+// findCr50DebugImage finds the debug image for cr50 board.
+func findCr50DebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
+	devIds := strings.Split(testbedProperties.UsbSerial, "-")
+	if len(devIds) != 2 {
+		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
+	}
+
+	debugImageGlob := fmt.Sprintf(cr50DebugImageTemplate, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
+	debugImageURL, err := gsLs(ctx, "list debug image", debugImageGlob)
+	if err != nil || len(debugImageURL) != 1 {
+		return "", errors.New("find debug image")
+	}
+
+	return debugImageURL[0], nil
 }
 
 func (i *devboardFixture) Reset(ctx context.Context) error {

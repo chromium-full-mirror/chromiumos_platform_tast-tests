@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -39,6 +40,10 @@ var (
 	// after we started passing in --format=json flag. The ? for the quotes could be dropped once
 	// the newer docker images are used everywhere
 	gpioOutput = regexp.MustCompile("\"?value\"?: (true|false)")
+
+	reGsctoolUpdateSuccess  = regexp.MustCompile(`image updated`)
+	reGsctoolUpdateNotReady = regexp.MustCompile(`Can't find device`)
+	reGsctoolFoundDevice    = regexp.MustCompile(`Found device\.`)
 )
 
 // DUTControlAndreiboard controls an Andreiboard through dutcontrol grpc..
@@ -58,6 +63,7 @@ func NewDUTControlAndreiboard(grpcConn *grpc.ClientConn) *DUTControlAndreiboard 
 // such as what kind of board/chip it has.
 type TestbedProperties struct {
 	TestbedType common.TestbedType
+	UsbSerial   string
 }
 
 func writeServerLogs(ctx context.Context, logs string) {
@@ -87,6 +93,7 @@ func (a *DUTControlAndreiboard) Query(ctx context.Context) (props TestbedPropert
 	}
 	return TestbedProperties{
 		TestbedType: common.TestbedType(resp.TestbedType),
+		UsbSerial:   resp.UsbSerial,
 	}, nil
 }
 
@@ -214,9 +221,135 @@ func (a *DUTControlAndreiboard) GSCToolCommand(ctx context.Context, image string
 	}
 	output = append(resp.Output, resp.ErrOutput...)
 	if resp.Err != "" {
-		return output, errors.Errorf("operation %s: %s", strings.Join(args, " "), resp.Err)
+		return output, errors.Errorf("operation %s: %s: %s", strings.Join(args, " "), resp.Err, output)
 	}
 	return output, nil
+}
+
+// GSCToolWaitUntilReady waits until board is ready to be read by gsctool.
+func (a *DUTControlAndreiboard) GSCToolWaitUntilReady(ctx context.Context, timeoutInterval ...time.Duration) error {
+	timeout := 10 * time.Second
+	interval := time.Second
+	if len(timeoutInterval) > 2 {
+		return errors.New("can only specify timeout and interval")
+	}
+	if len(timeoutInterval) > 0 {
+		timeout = timeoutInterval[0]
+	}
+	if len(timeoutInterval) > 1 {
+		interval = timeoutInterval[1]
+	}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		if out, _ := a.GSCToolCommand(ctx, "", "--board_id"); reGsctoolUpdateNotReady.Match(out) {
+			return errors.New("gsctool update not ready: " + string(out))
+		} else if reGsctoolFoundDevice.Match(out) {
+			return nil
+		} else {
+			return testing.PollBreak(errors.New("gsctool error: " + string(out)))
+		}
+	}, &testing.PollOptions{Timeout: timeout, Interval: interval})
+}
+
+// GSCToolUpdate uses gsctool to update the image.
+func (a *DUTControlAndreiboard) GSCToolUpdate(ctx context.Context, imagePath string) error {
+	out, err := a.GSCToolCommand(ctx, imagePath)
+	if reGsctoolUpdateSuccess.Match(out) {
+		return nil
+	}
+	return errors.Wrap(err, "gsctool update")
+}
+
+// GSCVersion represents the epic.major.minor version tuple of GSC fw.
+type GSCVersion [3]int
+
+// Less returns true if version is lower than other version.
+func (v GSCVersion) Less(other GSCVersion) bool {
+	for i := 0; i < 3; i++ {
+		if v[i] < other[i] {
+			return true
+		} else if v[i] > other[i] {
+			return false
+		}
+	}
+	return false
+}
+
+func (v GSCVersion) String() string {
+	var vs []string
+	for _, i := range v {
+		vs = append(vs, strconv.Itoa(i))
+	}
+	return strings.Join(vs, ".")
+}
+
+var (
+	reBoardFwVersion = regexp.MustCompile(`(?s)Current versions:.*RO ((\d+)\.(\d+)\.(\d+)).*RW ((\d+)\.(\d+)\.(\d+))`)
+	reBinVersion     = regexp.MustCompile(`(?s)RO_A:((-?\d+)\.(-?\d+)\.(-?\d+)) RW_A:((-?\d+)\.(-?\d+)\.(-?\d+)).*RO_B:((-?\d+)\.(-?\d+)\.(-?\d+)) RW_B:((-?\d+)\.(-?\d+)\.(-?\d+))`)
+)
+
+// GSCToolCurrentFwVersion uses gsctool --fwver to get the RO and RW versions.
+func (a *DUTControlAndreiboard) GSCToolCurrentFwVersion(ctx context.Context) (ro, rw GSCVersion, err error) {
+	out, err := a.GSCToolCommand(ctx, "", "--fwver")
+	if err != nil {
+		return
+	}
+
+	defer func() {
+		if err != nil {
+			err = errors.New("unable to parse version: " + string(out))
+		}
+	}()
+
+	m := reBoardFwVersion.FindSubmatch(out)
+
+	if m == nil {
+		err = errors.New("unable to parse version: " + string(out))
+		return
+	}
+
+	for i := 0; i < 3; i++ {
+		ro[i], err = strconv.Atoi(string(m[i+2]))
+		if err != nil {
+			return
+		}
+	}
+
+	for i := 0; i < 3; i++ {
+		rw[i], err = strconv.Atoi(string(m[i+6]))
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+// GSCToolBinVersion uses gsctool --binvers to get the RO and RW versions for both slots.
+func (a *DUTControlAndreiboard) GSCToolBinVersion(ctx context.Context, imagePath string) (roa, rwa, rob, rwb GSCVersion, err error) {
+	out, err := a.GSCToolCommand(ctx, imagePath, "--binvers")
+	if err != nil {
+		return
+	}
+
+	m := reBinVersion.FindSubmatch(out)
+
+	if m == nil {
+		err = errors.New("unable to parse version: " + string(out))
+		return
+	}
+
+	// extract epoch, major, and minor versions from matched fields using
+	// starting offsets and corresponding image regions.
+	for offset, v := range map[int]*GSCVersion{2: &roa, 6: &rwa, 10: &rob, 14: &rwb} {
+		for i := 0; i < 3; i++ {
+			v[i], err = strconv.Atoi(string(m[i+offset]))
+			if err != nil {
+				err = errors.Wrap(err, "unable to parse version: "+string(out))
+				return
+			}
+		}
+	}
+
+	return
 }
 
 // RunTcgTests executes TCG tests via the DutControl service.

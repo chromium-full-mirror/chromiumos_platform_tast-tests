@@ -10,102 +10,98 @@ option go_package = "devboardservice/dutcontrol";
 
 // CCD serial-like end points.
 enum CCDSerialEndPoint {
-    UNKNOWN_SERIAL = 0;
-    EC = 1;
-    AP = 2;
-    FPMCU = 3;
-    GSC = 4;
+  UNKNOWN_SERIAL = 0;
+  EC = 1;
+  AP = 2;
+  FPMCU = 3;
+  GSC = 4;
 };
 
 message ConsoleOpenCCDSerial {
-    CCDSerialEndPoint ep = 1;
-    int32 baud = 2;
-    // Max length of data for each Recv.
-    int32 data_len = 3;
+  CCDSerialEndPoint ep = 1;
+  int32 baud = 2;
+  // Max length of data for each Recv.
+  int32 data_len = 3;
 }
 
 // Through the OpenTitanTool.
 message ConsoleOpenRawUART {
-    string uart = 1;
-    int32 baud = 2;
-    // Max length of data for each Recv.
-    int32 data_len = 3;
+  string uart = 1;
+  int32 baud = 2;
+  // Max length of data for each Recv.
+  int32 data_len = 3;
 }
 
 message ConsoleOpen {
-    oneof type {
-        ConsoleOpenCCDSerial ccd_serial = 1;
-        ConsoleOpenRawUART raw_uart = 2;
-    }
+  oneof type {
+    ConsoleOpenCCDSerial ccd_serial = 1;
+    ConsoleOpenRawUART raw_uart = 2;
+  }
 }
 
-message ConsoleSerialWrite {
-    bytes data = 1;
-}
+message ConsoleSerialWrite { bytes data = 1; }
 
 message ConsoleRequest {
-    oneof operation {
-        ConsoleOpen open = 1;
-        ConsoleSerialWrite serial_write = 2;
-    }
+  oneof operation {
+    ConsoleOpen open = 1;
+    ConsoleSerialWrite serial_write = 2;
+  }
 }
 
-message ConsoleOpenResult {
-    string err = 1;
-}
+message ConsoleOpenResult { string err = 1; }
 
 // ConsoleSerialWriteResult will be sent in the same order as ConsoleSerialWrite
 // was received.
 message ConsoleSerialWriteResult {
-    // Number of bytes successfully written.
-    int32 n = 1;
-    // Empty indicates no error and n == len(data).  Non-empty does not imply n
-    // == 0.
-    string err = 2;
+  // Number of bytes successfully written.
+  int32 n = 1;
+  // Empty indicates no error and n == len(data).  Non-empty does not imply n
+  // == 0.
+  string err = 2;
 }
 
 // ConsoleSerialData messages will be stream from server to client.
 message ConsoleSerialData {
-    // Limited to data_len size in Open.
-    bytes data = 1;
-    // Empty indicates no error.  Non-empty does not imply zero data bytes.
-    string err = 2;
+  // Limited to data_len size in Open.
+  bytes data = 1;
+  // Empty indicates no error.  Non-empty does not imply zero data bytes.
+  string err = 2;
 }
 
 message ConsoleResponse {
-    oneof type {
-        ConsoleOpenResult open = 1;
-        ConsoleSerialWriteResult serial_write = 2;
-        ConsoleSerialData serial_data = 3;
-    }
+  oneof type {
+    ConsoleOpenResult open = 1;
+    ConsoleSerialWriteResult serial_write = 2;
+    ConsoleSerialData serial_data = 3;
+  }
 }
 
 message CommandArg {
-    oneof type {
-        // A literal such as "--flag" or "value".
-        string plain = 1;
-        // Bytes to be written to a temp file then presented as its name.
-        bytes file = 2;
-        // Temp file written by command and returned in CommandResponse.
-        string response_file = 3;
-    }
+  oneof type {
+    // A literal such as "--flag" or "value".
+    string plain = 1;
+    // Bytes to be written to a temp file then presented as its name.
+    bytes file = 2;
+    // Temp file written by command and returned in CommandResponse.
+    string response_file = 3;
+  }
 }
 
 // CommandRequest runs an OpenTitanTool or gsctool command.
 message CommandRequest {
-    string command = 1;
-    repeated CommandArg args = 2;
+  string command = 1;
+  repeated CommandArg args = 2;
 }
 
 message CommandResponse {
-    bytes output = 1;
-    // Empty indicates no error (zero exit code).
-    string err = 2;
-    bytes err_output = 3;
-    // File contents for each CommandArg response_file.
-    repeated bytes files = 4;
-    // Duration of command execution in milliseconds.
-    uint32 duration_ms = 5;
+  bytes output = 1;
+  // Empty indicates no error (zero exit code).
+  string err = 2;
+  bytes err_output = 3;
+  // File contents for each CommandArg response_file.
+  repeated bytes files = 4;
+  // Duration of command execution in milliseconds.
+  uint32 duration_ms = 5;
 }
 
 // QueryRequest is a request for information about the testbed, such as what
@@ -115,34 +111,38 @@ message QueryRequest {}
 // QueryResponse contains information about the testbed, such as what kind of
 // chip it has, what kind of images it accepts, etc.
 message QueryResponse {
-    // Empty indicates no error.
-    string err = 1;
+  // Empty indicates no error.
+  string err = 1;
 
-    // "gsc_dt_ab", "gsc_ot_fpga_cw310" or "gsc_he" to be used for filtering
-    // tast test cases.
-    string testbed_type = 2;
+  // "gsc_dt_ab", "gsc_ot_fpga_cw310" or "gsc_he" to be used for filtering
+  // tast test cases.
+  string testbed_type = 2;
+
+  // The usb serial string. For Cr50 and Ti50, this is in the form
+  // "12345678-9abcdef0".
+  string usb_serial = 3;
 }
 
 message File {
-    // This is a file name without path, mostly for informational purposes, such
-    // that e.g. error messages can refer to the file by name.
-    string file_name = 1;
-    // The full binary contents of the file.
-    bytes contents = 2;
+  // This is a file name without path, mostly for informational purposes, such
+  // that e.g. error messages can refer to the file by name.
+  string file_name = 1;
+  // The full binary contents of the file.
+  bytes contents = 2;
 }
 
 // SetupRequest is the first to be sent.  It instructs the service which binary
 // executable image to put on the devboard.
 message SetupRequest {
-    File flash_image = 1;
-    repeated File conf_files = 2;
+  File flash_image = 1;
+  repeated File conf_files = 2;
 }
 
 message SetupResponse {
-    // Empty indicates no error.
-    string err = 1;
-    // Logs captured since end of last session.
-    string server_logs = 2;
+  // Empty indicates no error.
+  string err = 1;
+  // Logs captured since end of last session.
+  string server_logs = 2;
 }
 
 // StartSessionRequest is sent after SetupRequest, but before other requests.
@@ -151,14 +151,14 @@ message SetupResponse {
 // initial condition.  For Host Emulation, it will cause an emulation
 // sub-process to be spawned (in initial condition).
 message StartSessionRequest {
-    // Optional gpio strap to apply when starting session and initializing
-    // transport layer
-    string gpio_strap = 1;
+  // Optional gpio strap to apply when starting session and initializing
+  // transport layer
+  string gpio_strap = 1;
 }
 
 message StartSessionResponse {
-    // Empty indicates no error.
-    string err = 1;
+  // Empty indicates no error.
+  string err = 1;
 }
 
 // EndSessionRequest stops a host emulation sub-process.  (For physical
@@ -166,10 +166,10 @@ message StartSessionResponse {
 message EndSessionRequest {}
 
 message EndSessionResponse {
-    // Empty indicates no error.
-    string err = 1;
-    // Logs captured since end of last session.
-    string server_logs = 2;
+  // Empty indicates no error.
+  string err = 1;
+  // Logs captured since end of last session.
+  string server_logs = 2;
 }
 
 // Request info about the AP flash. This is intended to bypass GSC and only
@@ -177,233 +177,231 @@ message EndSessionResponse {
 message GetApFlashInfoRequest {}
 
 message GetApFlashInfoResponse {
-    // The name of the flash chip, e.g. "GD25Q256D/GD25Q256E".
-    string chip_name = 1;
+  // The name of the flash chip, e.g. "GD25Q256D/GD25Q256E".
+  string chip_name = 1;
 
-    // The vendor of the flash chip, e.g. "GigaDevice"
-    string chip_vendor = 3;
+  // The vendor of the flash chip, e.g. "GigaDevice"
+  string chip_vendor = 3;
 
-    // Empty indicates no error.
-    string err = 2;
+  // Empty indicates no error.
+  string err = 2;
 }
 
 // An identifier for a region in AP flash.
 message ApFlashRegion {
-    // Identifies this string by the name of the firmware section.
-    // Known section names include "GBB", "FMAP", and "RO_GSCVD".
-    string section_name = 1;
+  // Identifies this string by the name of the firmware section.
+  // Known section names include "GBB", "FMAP", and "RO_GSCVD".
+  string section_name = 1;
 }
 
 // The contents of a given AP flash region. This is intended to bypass GSC and
 // only use debug device (e.g. hyperdebug) to communication with SPI chip.
 message ApFlashRegionContents {
-    // Which region is this for? If empty, this is for the entire flash image.
-    ApFlashRegion region = 1;
+  // Which region is this for? If empty, this is for the entire flash image.
+  ApFlashRegion region = 1;
 
-    // The contents for this region.
-    bytes contents = 2;
+  // The contents for this region.
+  bytes contents = 2;
 }
 
 // Request to read contents of AP flash. This is intended to bypass GSC and
 // only use debug device (e.g. hyperdebug) to communication with SPI chip.
 message ReadApFlashRequest {
-    // Which regions of AP flash to read.
-    // If none are specified, the response contains a single section
-    // with no `region` containing the full image.
-    repeated ApFlashRegion regions = 1;
+  // Which regions of AP flash to read.
+  // If none are specified, the response contains a single section
+  // with no `region` containing the full image.
+  repeated ApFlashRegion regions = 1;
 }
 
 // The contents of AP flash requested by `ReadApFlashRequest`.
 message ReadApFlashResponse {
-    // The contents inside of the requested AP flash regions.
-    repeated ApFlashRegionContents region_contents = 1;
+  // The contents inside of the requested AP flash regions.
+  repeated ApFlashRegionContents region_contents = 1;
 
-    // Empty indicates no error.
-    string err = 2;
+  // Empty indicates no error.
+  string err = 2;
 }
 
 // Request to write the contents of AP flash.
 message WriteApFlashRequest {
-    // The flash contents to write.
-    repeated ApFlashRegionContents region_contents = 1;
+  // The flash contents to write.
+  repeated ApFlashRegionContents region_contents = 1;
 }
 
 message WriteApFlashResponse {
-    // Empty indicates no error.
-    string err = 1;
+  // Empty indicates no error.
+  string err = 1;
 }
 
 // Request to enable SW WP on the SPI chip connected to the devboard.
 message EnableApWriteProtectRequest {
-    // The byte offset of the start of the protected region.
-    uint32 start = 1;
+  // The byte offset of the start of the protected region.
+  uint32 start = 1;
 
-    // The length of the protected region in bytes.
-    uint32 len = 2;
+  // The length of the protected region in bytes.
+  uint32 len = 2;
 }
 
 message EnableApWriteProtectResponse {
-    // Empty indicates no error.
-    string err = 1;
+  // Empty indicates no error.
+  string err = 1;
 }
 
 // Interface to connect to the TPM with.
 enum TpmInterface {
-    UNKNOWN = 0;
-    SPI = 1;
-    I2C = 2;
+  UNKNOWN = 0;
+  SPI = 1;
+  I2C = 2;
 }
 
 // Request to begin executing TCG Conformance tests.
 message RunTcgTestsRequest {
-    TpmInterface bus = 1;
-    string test_suite = 2;
+  TpmInterface bus = 1;
+  string test_suite = 2;
 }
 
 // Console output from TPM server and TCG tests.
 message TcgTestsLogOutput {
-    string tpm_server_stdout = 1;
-    string tpm_server_stderr = 2;
-    string test_stdout = 3;
-    string test_stderr = 4;
+  string tpm_server_stdout = 1;
+  string tpm_server_stderr = 2;
+  string test_stdout = 3;
+  string test_stderr = 4;
 }
 
 message TcgTestsResults {
-    // Empty indicates no infrastructure error.
-    string err = 1;
-    // Result files generated by the tests. May be empty in the event of an
-    // infrastructure error.
-    repeated File results = 2;
+  // Empty indicates no infrastructure error.
+  string err = 1;
+  // Result files generated by the tests. May be empty in the event of an
+  // infrastructure error.
+  repeated File results = 2;
 }
 
 // TCG Conformance tests results.
 message RunTcgTestsResponse {
-    oneof response {
-        TcgTestsLogOutput logs = 1;
-        TcgTestsResults results = 2;
-    }
+  oneof response {
+    TcgTestsLogOutput logs = 1;
+    TcgTestsResults results = 2;
+  }
 }
 
 // Possible GSC USB interfaces.
 enum GscUsbInterface {
-    CONSOLE_USB_INTERFACE = 0;
-    AP_USB_INTERFACE = 1;
-    EC_USB_INTERFACE = 2;
-    UPDATE_USB_INTERFACE = 3;
-    SPI_USB_INTERFACE = 4;
-    I2C_USB_INTERFACE = 5;
-    FPMCU_USB_INTERFACE = 6;
+  CONSOLE_USB_INTERFACE = 0;
+  AP_USB_INTERFACE = 1;
+  EC_USB_INTERFACE = 2;
+  UPDATE_USB_INTERFACE = 3;
+  SPI_USB_INTERFACE = 4;
+  I2C_USB_INTERFACE = 5;
+  FPMCU_USB_INTERFACE = 6;
 }
 
 message GscUsbTransactionRequest {
-    // USB interface to send a transaction to.
-    GscUsbInterface iface = 1;
-    // Data to send.
-    bytes request_data = 2;
+  // USB interface to send a transaction to.
+  GscUsbInterface iface = 1;
+  // Data to send.
+  bytes request_data = 2;
 }
 
 message GscUsbTransactionResponse {
-    // Data received.
-    bytes response_data = 1;
+  // Data received.
+  bytes response_data = 1;
 }
 
 // Possible GSC USB SPI request options.
 enum GscUsbSpiRequest {
-    RESERVED_GSC_USB_SPI = 0;
-    DISABLE_GSC_USB_SPI = 1;
-    ENABLE_AP_GSC_USB_SPI = 2;
-    ENABLE_EC_GSC_USB_SPI = 3;
+  RESERVED_GSC_USB_SPI = 0;
+  DISABLE_GSC_USB_SPI = 1;
+  ENABLE_AP_GSC_USB_SPI = 2;
+  ENABLE_EC_GSC_USB_SPI = 3;
 }
 
-message GscUsbApSpiBridgeRequest {
-    GscUsbSpiRequest operation = 1;
-}
+message GscUsbApSpiBridgeRequest { GscUsbSpiRequest operation = 1; }
 
 message GscUsbApSpiBridgeResponse {}
 
 message GscVersionRequest {}
 
 message GscVersionResponse {
-    // Empty indicates no error.
-    string err = 1;
+  // Empty indicates no error.
+  string err = 1;
 
-    // Image name running on GSC, e.g. ti50, cr50, system_test_auto.
-    string image = 2;
+  // Image name running on GSC, e.g. ti50, cr50, system_test_auto.
+  string image = 2;
 
-    // The RO version running if available, e.g. 0.0.52
-    string ro_version = 3;
+  // The RO version running if available, e.g. 0.0.52
+  string ro_version = 3;
 
-    // The RW version running, e.g. 0.24.61, 0.5.201
-    string rw_version = 4;
+  // The RW version running, e.g. 0.24.61, 0.5.201
+  string rw_version = 4;
 
-    // Branch name of image running on GSC, e.g. tot, mp-15224.B.
-    string branch = 5;
+  // Branch name of image running on GSC, e.g. tot, mp-15224.B.
+  string branch = 5;
 
-    // The commit revision count since branch tag.
-    uint32 rev = 6;
+  // The commit revision count since branch tag.
+  uint32 rev = 6;
 
-    // The specific SHA for this commit. Includes a [-+] prefix indicating
-    // if there were any local changes when building (+).
-    string sha = 7;
+  // The specific SHA for this commit. Includes a [-+] prefix indicating
+  // if there were any local changes when building (+).
+  string sha = 7;
 }
 
 /// One service for a DUT (which is a Suzy and hyperdebug pair)
 service DutControl {
-    // Console allows stream access to a serial interface.
-    rpc Console(stream ConsoleRequest) returns (stream ConsoleResponse);
+  // Console allows stream access to a serial interface.
+  rpc Console(stream ConsoleRequest) returns (stream ConsoleResponse);
 
-    // Run a generic OpenTitanTool command.
-    rpc Command(CommandRequest) returns (CommandResponse);
+  // Run a generic OpenTitanTool command.
+  rpc Command(CommandRequest) returns (CommandResponse);
 
-    // Run a generic gsctool command.
-    rpc GSCToolCommand(CommandRequest) returns (CommandResponse);
+  // Run a generic gsctool command.
+  rpc GSCToolCommand(CommandRequest) returns (CommandResponse);
 
-    // Run a generic flashrom command.
-    rpc FlashromCommand(CommandRequest) returns (CommandResponse);
+  // Run a generic flashrom command.
+  rpc FlashromCommand(CommandRequest) returns (CommandResponse);
 
-    // Query the nature and capabilities of this testbed.
-    rpc Query(QueryRequest) returns (QueryResponse);
+  // Query the nature and capabilities of this testbed.
+  rpc Query(QueryRequest) returns (QueryResponse);
 
-    // Transfers binary image and OTT configuration files to use going forward.
-    // For devboards, the image will be flashed immediately, for host emulation,
-    // it will be kept for when an emulation session starts.
-    rpc Setup(SetupRequest) returns (SetupResponse);
+  // Transfers binary image and OTT configuration files to use going forward.
+  // For devboards, the image will be flashed immediately, for host emulation,
+  // it will be kept for when an emulation session starts.
+  rpc Setup(SetupRequest) returns (SetupResponse);
 
-    // Start a debugging "session", that is, initialize debugger and reset
-    // devboard to known state.  For host emulation, an emulation process is
-    // started at this point.
-    rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
+  // Start a debugging "session", that is, initialize debugger and reset
+  // devboard to known state.  For host emulation, an emulation process is
+  // started at this point.
+  rpc StartSession(StartSessionRequest) returns (StartSessionResponse);
 
-    // End a debugging "session".  No-op for devboards, for host emulation, the
-    // emulation process is terminated.
-    rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
+  // End a debugging "session".  No-op for devboards, for host emulation, the
+  // emulation process is terminated.
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse);
 
-    // Reads info about the AP flash. This is intended to bypass GSC and
-    // only use debug device (e.g. hyperdebug) to communication with SPI chip.
-    rpc GetApFlashInfo(GetApFlashInfoRequest) returns (GetApFlashInfoResponse);
+  // Reads info about the AP flash. This is intended to bypass GSC and
+  // only use debug device (e.g. hyperdebug) to communication with SPI chip.
+  rpc GetApFlashInfo(GetApFlashInfoRequest) returns (GetApFlashInfoResponse);
 
-    // Reads the contents of AP flash. This is intended to bypass GSC and
-    // only use debug device (e.g. hyperdebug) to communication with SPI chip.
-    rpc ReadApFlash(ReadApFlashRequest) returns (ReadApFlashResponse);
+  // Reads the contents of AP flash. This is intended to bypass GSC and
+  // only use debug device (e.g. hyperdebug) to communication with SPI chip.
+  rpc ReadApFlash(ReadApFlashRequest) returns (ReadApFlashResponse);
 
-    // Writes to AP flash. This is intended to bypass GSC and
-    // only use debug device (e.g. hyperdebug) to communication with SPI chip.
-    rpc WriteApFlash(WriteApFlashRequest) returns (WriteApFlashResponse);
+  // Writes to AP flash. This is intended to bypass GSC and
+  // only use debug device (e.g. hyperdebug) to communication with SPI chip.
+  rpc WriteApFlash(WriteApFlashRequest) returns (WriteApFlashResponse);
 
-    // Enable SW WP on the AP flash chip with the given protected region.
-    rpc EnableApWriteProtect(EnableApWriteProtectRequest)
-        returns (EnableApWriteProtectResponse);
+  // Enable SW WP on the AP flash chip with the given protected region.
+  rpc EnableApWriteProtect(EnableApWriteProtectRequest)
+      returns (EnableApWriteProtectResponse);
 
-    rpc RunTcgTests(RunTcgTestsRequest) returns (stream RunTcgTestsResponse);
+  rpc RunTcgTests(RunTcgTestsRequest) returns (stream RunTcgTestsResponse);
 
-    // Writes then reads to an USB interface on the connected GSC device
-    rpc GscUsbTransaction(GscUsbTransactionRequest)
-        returns (GscUsbTransactionResponse);
+  // Writes then reads to an USB interface on the connected GSC device
+  rpc GscUsbTransaction(GscUsbTransactionRequest)
+      returns (GscUsbTransactionResponse);
 
-    // Interact with the AP SPI bridge
-    rpc GscUsbApSpiBridge(GscUsbApSpiBridgeRequest)
-        returns (GscUsbApSpiBridgeResponse);
+  // Interact with the AP SPI bridge
+  rpc GscUsbApSpiBridge(GscUsbApSpiBridgeRequest)
+      returns (GscUsbApSpiBridgeResponse);
 
-    // Returns the GSC version infomation of the currently running image
-    rpc GscVersion(GscVersionRequest) returns (GscVersionResponse);
+  // Returns the GSC version infomation of the currently running image
+  rpc GscVersion(GscVersionRequest) returns (GscVersionResponse);
 }
