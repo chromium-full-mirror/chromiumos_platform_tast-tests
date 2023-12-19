@@ -30,12 +30,12 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"testcert.p12"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort"},
-		Timeout:      6 * time.Minute,
+		Timeout:      8 * time.Minute,
 	})
 }
 
 // The time to remain in suspend, in seconds.
-const suspendDurationS = 10
+const suspendDurationS = 15
 
 // TbtSuspend does the following:
 //
