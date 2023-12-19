@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -36,7 +37,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.firmware.UtilsService"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
-		Timeout:      8 * time.Minute,
+		Timeout:      10 * time.Minute,
 	})
 }
 
@@ -51,25 +52,6 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireRPCClient(ctx); err != nil {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
-	}
-
-	// If switching between tablet and laptop mode is supported, for example, on
-	// detachables and convertibles, set DUT in laptop mode in order for a key
-	// press to be effective later in waking DUT from suspend.
-	cmds, err := h.GetECTabletLaptopModeCommand(ctx)
-	if err != nil {
-		s.Fatal("Failed to determine the commands for switching to tablet or laptop mode: ", err)
-	}
-	if cmds.SetECLaptopModeCmd != "" {
-		s.Logf("Running ec command %s to set DUT in laptop mode", cmds.SetECLaptopModeCmd)
-		// On some convertible machines, for example, kasumi360, robo360,
-		// shyvana, and treeya360, the ec command for setting tablet or laptop
-		// mode is unsupported. Only attempt the switch if it is available.
-		if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, cmds.SetECLaptopModeCmd); err != nil {
-			if _, ok := err.(*servo.TabletModeCmdUnsupportedErr); !ok {
-				s.Fatal("Failed to set DUT in laptop mode: ", err)
-			}
-		}
 	}
 
 	s.Log("Starting a new Chrome")
@@ -110,18 +92,8 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get power state at S0ix or S3, but found dut disconnected: ", err)
 	}
 
-	wakeupKey := servo.Enter
-	if h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher {
-		wakeupKey = servo.PowerKey
-	}
-	s.Logf("Waking DUT from suspend by %s", wakeupKey)
-	if err := h.Servo.KeypressWithDuration(ctx, wakeupKey, servo.DurPress); err != nil {
-		s.Fatalf("Failed to wake from suspend by %s: %v", wakeupKey, err)
-	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
-	defer cancelWaitConnect()
-	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		s.Fatal("Failed to reconnect to DUT: ", err)
+	if err := wakeFromSuspend(ctx, h); err != nil {
+		s.Fatal("Failed to wake the DUT from suspend: ", err)
 	}
 
 	out, err := h.Reporter.CatFile(ctx, logPath)
@@ -142,4 +114,40 @@ func USBResumeFromSuspend(ctx context.Context, s *testing.State) {
 			s.Fatalf("While checking for usb bus %d: %v", idx, err)
 		}
 	}
+}
+
+// wakeFromSuspend attempts to wake the DUT from suspend with servo.Enter
+// first, and retry with servo.PowerKey if the DUT doesn't wake.
+func wakeFromSuspend(ctx context.Context, h *firmware.Helper) (retErr error) {
+	defer func() {
+		if retErr != nil {
+			powerState, err := h.Servo.GetECSystemPowerState(ctx)
+			if err != nil {
+				testing.ContextLog(ctx, "Failed to get current power state: ", err)
+			} else {
+				testing.ContextLog(ctx, "Current power state: ", powerState)
+			}
+		}
+	}()
+	attempts := []servo.KeypressControl{servo.Enter, servo.PowerKey}
+	for count, keypress := range attempts {
+		testing.ContextLogf(ctx, "Pressing %s", keypress)
+		if err := h.Servo.KeypressWithDuration(ctx, keypress, servo.DurPress); err != nil {
+			return errors.Wrapf(err, "failed to press %s", keypress)
+		}
+
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		defer cancelWaitConnect()
+		err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle)
+		switch err.(type) {
+		case nil:
+			return nil
+		default:
+			if errors.As(err, &context.DeadlineExceeded) && count != len(attempts)-1 {
+				continue
+			}
+			return errors.Wrap(err, "failed to reconnect to DUT")
+		}
+	}
+	return nil
 }
