@@ -157,7 +157,7 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 				// Pressing space leads DUT to the confirmation page
 				// for booting to normal mode, which helps bypass the
 				// fw screen timeout, and ensures an extended stay.
-				s.Log(ctx, "Pressing space key to bypass fw screen timeout")
+				s.Log("Pressing space key to bypass fw screen timeout")
 				if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
 					s.Fatal("Failed to press space: ", err)
 				}
@@ -167,7 +167,7 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 				s.Fatalf("Failed to sleep for %v second: %v", h.Config.KeypressDelay, err)
 			}
 
-			s.Log(ctx, "Pressing esc to return to the developer screen")
+			s.Log("Pressing esc to return to the developer screen")
 			if err := h.Servo.PressKey(ctx, "<esc>", servo.DurTab); err != nil {
 				s.Fatal("Failed to press esc key: ", err)
 			}
