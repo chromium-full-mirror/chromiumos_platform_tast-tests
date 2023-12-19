@@ -66,6 +66,11 @@ type key struct {
 	val  string
 }
 
+const (
+	customizeKeyboardRowLabel        string = "Customize keyboard keys No keys customized"
+	customizeKeyboardSettingsPageURL string = "per-device-keyboard"
+)
+
 // KeyboardBinding verifies keyboard key bindings can be changed properly.
 func KeyboardBinding(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
@@ -132,7 +137,17 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 		res.settings.Close(ctx)
 	}(cleanupCtx)
 
-	// The key name and function name of "Search"/"Launcher" will display differently across different models,
+	// Go to the "Customize keyboard keys" subpage.
+	entryFinder := nodewith.Name(customizeKeyboardRowLabel).Role(role.Link).Ancestor(ossettings.WindowFinder)
+	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, customizeKeyboardSettingsPageURL, res.ui.Exists(entryFinder)); err != nil {
+		s.Fatal("Failed to launch Keyboard Settings page: ", err)
+	}
+
+	if err := res.ui.DoDefault(entryFinder)(ctx); err != nil {
+		s.Fatal("Failed to click entry: ", err)
+	}
+
+	// The key name and function name of "search"/"launcher" will display differently across different models,
 	// need to obtain them in advance.
 	searchKey, searchFunctionVerifier, err := obtainSearchKeyAndFunction(ctx, res.ui)
 	if err != nil {
@@ -195,8 +210,8 @@ func KeyboardBinding(ctx context.Context, s *testing.State) {
 	}
 }
 
-// obtainSearchKeyAndFunction obtains the corresponding key name and function name of "Search"/"Launcher".
-// The key name and function name of "Search"/"Launcher" will display differently across different models.
+// obtainSearchKeyAndFunction obtains the corresponding key name and function name of "search"/"launcher".
+// The key name and function name of "search"/"launcher" will display differently across different models.
 func obtainSearchKeyAndFunction(ctx context.Context, ui *uiauto.Context) (*key, func(*keyboardBindingTestResources, string) *searchFunctionVerifier, error) {
 	nameRegex := regexp.MustCompile(fmt.Sprintf(`^(%s|%s)$`, searchKey, launcherKey))
 	option := nodewith.NameRegex(nameRegex).HasClass("md-select").Role(role.ComboBoxSelect)
@@ -239,16 +254,16 @@ func resetBinding(res *keyboardBindingTestResources, k *key) uiauto.Action {
 type keyName string
 
 const (
-	searchKey    keyName = "Search"
-	launcherKey  keyName = "Launcher"
-	ctrlKey      keyName = "Ctrl"
-	altKey       keyName = "Alt"
-	escapeKey    keyName = "Escape"
-	backspaceKey keyName = "Backspace"
+	searchKey    keyName = "search"
+	launcherKey  keyName = "launcher"
+	ctrlKey      keyName = "ctrl"
+	altKey       keyName = "alt"
+	escapeKey    keyName = "escape"
+	backspaceKey keyName = "backspace"
 )
 
 func newSearchKey() *key    { return &key{searchKey, "search"} }
-func newLauncherKey() *key  { return &key{launcherKey, "search"} } // "Launcher" uses same key code as "Search" does.
+func newLauncherKey() *key  { return &key{launcherKey, "search"} } // "launcher" uses same key code as "search" does.
 func newCtrlKey() *key      { return &key{ctrlKey, "ctrl"} }
 func newAltKey() *key       { return &key{altKey, "alt"} }
 func newEscapeKey() *key    { return &key{escapeKey, "esc"} }
@@ -269,21 +284,21 @@ type searchFunctionVerifier struct {
 	function    string
 }
 
-// newSearchFunctionVerifier returns a functionVerifier for "Search"/"Launcher".
+// newSearchFunctionVerifier returns a functionVerifier for "search"/"launcher".
 func newSearchFunctionVerifier(res *keyboardBindingTestResources, boundKeyVal string) *searchFunctionVerifier {
 	return &searchFunctionVerifier{
 		keyboardBindingTestResources: res,
 		boundKeyVal:                  boundKeyVal,
-		function:                     "Search",
+		function:                     "search",
 	}
 }
 
-// setup sets up the test environment for "Search"/"Launcher".
+// setup sets up the test environment for "search"/"launcher".
 func (v *searchFunctionVerifier) setup(ctx context.Context) error {
 	return nil
 }
 
-// cleanup cleans up the test environment for "Search"/"Launcher".
+// cleanup cleans up the test environment for "search"/"launcher".
 func (v *searchFunctionVerifier) cleanup(ctx context.Context) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if err := v.accel(ctx); err != nil {
@@ -303,13 +318,13 @@ func (v *searchFunctionVerifier) verify(ctx context.Context) error {
 	return launcher.WaitForClamshellLauncherSearchExit(v.tconn)(ctx)
 }
 
-// functionName returns the function name of "Search"/"Launcher".
+// functionName returns the function name of "search"/"launcher".
 func (v *searchFunctionVerifier) functionName() string { return v.function }
 
-// newLauncherFunctionVerifier is a functionVerifier for "Launcher".
+// newLauncherFunctionVerifier is a functionVerifier for "launcher".
 func newLauncherFunctionVerifier(res *keyboardBindingTestResources, boundKeyVal string) *searchFunctionVerifier {
 	v := newSearchFunctionVerifier(res, boundKeyVal)
-	v.function = "Launcher"
+	v.function = "launcher"
 	return v
 }
 
@@ -319,16 +334,16 @@ type ctrlFunctionVerifier struct {
 	function    string
 }
 
-// newCtrlFunctionVerifier returns a functionVerifier for "Ctrl".
+// newCtrlFunctionVerifier returns a functionVerifier for "ctrl".
 func newCtrlFunctionVerifier(res *keyboardBindingTestResources, boundKeyVal string) *ctrlFunctionVerifier {
 	return &ctrlFunctionVerifier{
 		keyboardBindingTestResources: res,
 		boundKeyVal:                  boundKeyVal,
-		function:                     "Ctrl",
+		function:                     "ctrl",
 	}
 }
 
-// setup sets up the test environment for "Ctrl".
+// setup sets up the test environment for "ctrl".
 func (v *ctrlFunctionVerifier) setup(ctx context.Context) error {
 	_, err := filesapp.Launch(ctx, v.tconn)
 	if err != nil {
@@ -337,7 +352,7 @@ func (v *ctrlFunctionVerifier) setup(ctx context.Context) error {
 	return nil
 }
 
-// cleanup cleans up the test environment for "Ctrl".
+// cleanup cleans up the test environment for "ctrl".
 func (v *ctrlFunctionVerifier) cleanup(ctx context.Context) error {
 	return apps.Close(ctx, v.tconn, apps.FilesSWA.ID)
 }
@@ -352,7 +367,7 @@ func (v *ctrlFunctionVerifier) verify(ctx context.Context) error {
 	return v.ui.WaitUntilGone(filesapp.WindowFinder(apps.FilesSWA.ID))(ctx)
 }
 
-// functionName returns the function name of "Ctrl".
+// functionName returns the function name of "ctrl".
 func (v *ctrlFunctionVerifier) functionName() string { return v.function }
 
 type altFunctionVerifier struct {
@@ -361,16 +376,16 @@ type altFunctionVerifier struct {
 	function    string
 }
 
-// newAltFunctionVerifier returns a functionVerifier for "Alt".
+// newAltFunctionVerifier returns a functionVerifier for "alt".
 func newAltFunctionVerifier(res *keyboardBindingTestResources, boundKeyVal string) *altFunctionVerifier {
 	return &altFunctionVerifier{
 		keyboardBindingTestResources: res,
 		boundKeyVal:                  boundKeyVal,
-		function:                     "Alt",
+		function:                     "alt",
 	}
 }
 
-// setup sets up the test environment for "Alt".
+// setup sets up the test environment for "alt".
 func (v *altFunctionVerifier) setup(ctx context.Context) error {
 	_, err := filesapp.Launch(ctx, v.tconn)
 	if err != nil {
@@ -379,7 +394,7 @@ func (v *altFunctionVerifier) setup(ctx context.Context) error {
 	return nil
 }
 
-// cleanup cleans up the test environment for "Alt".
+// cleanup cleans up the test environment for "alt".
 func (v *altFunctionVerifier) cleanup(ctx context.Context) error {
 	// Ignore error to ensure filesapp can be closed.
 	v.kb.AccelReleaseAction(v.boundKeyVal)(ctx)
@@ -396,11 +411,11 @@ func (v *altFunctionVerifier) accel(ctx context.Context) error {
 
 // verify verifies if the key is triggered.
 func (v *altFunctionVerifier) verify(ctx context.Context) error {
-	windowCycleListNode := nodewith.HasClass("WindowCycleItemView").Name("Settings - Keyboard").Role(role.Window)
+	windowCycleListNode := nodewith.HasClass("WindowCycleItemView").Name("Settings - Customize keyboard keys").Role(role.Window)
 	return v.ui.WaitUntilExists(windowCycleListNode)(ctx)
 }
 
-// functionName returns the function name of "Alt".
+// functionName returns the function name of "alt".
 func (v *altFunctionVerifier) functionName() string { return v.function }
 
 type capslockFunctionVerifier struct {
@@ -410,22 +425,22 @@ type capslockFunctionVerifier struct {
 	capsLockIndicator *nodewith.Finder
 }
 
-// newCapslockFunctionVerifier returns a functionVerifier for "Caps Lock".
+// newCapslockFunctionVerifier returns a functionVerifier for "caps lock".
 func newCapslockFunctionVerifier(res *keyboardBindingTestResources, boundKeyVal string) *capslockFunctionVerifier {
 	return &capslockFunctionVerifier{
 		keyboardBindingTestResources: res,
 		boundKeyVal:                  boundKeyVal,
-		function:                     "Caps Lock",
+		function:                     "caps lock",
 		capsLockIndicator:            nodewith.HasClass("aura::Window").Name("caps lock on").Role(role.Alert),
 	}
 }
 
-// setup sets up the test environment for "Caps Lock".
+// setup sets up the test environment for "caps lock".
 func (v *capslockFunctionVerifier) setup(ctx context.Context) error {
 	return nil
 }
 
-// cleanup cleans up the test environment for "Caps Lock".
+// cleanup cleans up the test environment for "caps lock".
 func (v *capslockFunctionVerifier) cleanup(ctx context.Context) error {
 	return v.ui.WithInterval(5*time.Second).RetryUntil(
 		v.kb.AccelAction(v.boundKeyVal),
@@ -443,7 +458,7 @@ func (v *capslockFunctionVerifier) verify(ctx context.Context) error {
 	return v.ui.WaitUntilExists(v.capsLockIndicator)(ctx)
 }
 
-// functionName returns the function name of "Caps Lock".
+// functionName returns the function name of "caps lock".
 func (v *capslockFunctionVerifier) functionName() string { return v.function }
 
 type escapeFunctionVerifier struct {
@@ -452,16 +467,16 @@ type escapeFunctionVerifier struct {
 	function    string
 }
 
-// newEscapeFunctionVerifier returns a functionVerifier for "Escape".
+// newEscapeFunctionVerifier returns a functionVerifier for "escape".
 func newEscapeFunctionVerifier(res *keyboardBindingTestResources, boundKeyVal string) *escapeFunctionVerifier {
 	return &escapeFunctionVerifier{
 		keyboardBindingTestResources: res,
 		boundKeyVal:                  boundKeyVal,
-		function:                     "Escape",
+		function:                     "escape",
 	}
 }
 
-// setup sets up the test environment for "Escape".
+// setup sets up the test environment for "escape".
 func (v *escapeFunctionVerifier) setup(ctx context.Context) error {
 	return v.ui.WithTimeout(time.Minute).LeftClickUntil(
 		ossettings.SearchBoxFinder,
@@ -469,7 +484,7 @@ func (v *escapeFunctionVerifier) setup(ctx context.Context) error {
 	)(ctx)
 }
 
-// cleanup cleans up the test environment for "Escape".
+// cleanup cleans up the test environment for "escape".
 func (v *escapeFunctionVerifier) cleanup(ctx context.Context) error {
 	return nil
 }
@@ -487,7 +502,7 @@ func (v *escapeFunctionVerifier) verify(ctx context.Context) error {
 	)(ctx)
 }
 
-// functionName returns the function name of "Escape".
+// functionName returns the function name of "escape".
 func (v *escapeFunctionVerifier) functionName() string { return v.function }
 
 type backspaceFunctionVerifier struct {
@@ -497,17 +512,17 @@ type backspaceFunctionVerifier struct {
 	typeWord    string
 }
 
-// newBackspaceFunctionVerifier returns a functionVerifier for "Backspace".
+// newBackspaceFunctionVerifier returns a functionVerifier for "backspace".
 func newBackspaceFunctionVerifier(res *keyboardBindingTestResources, boundKeyVal string) *backspaceFunctionVerifier {
 	return &backspaceFunctionVerifier{
 		keyboardBindingTestResources: res,
 		boundKeyVal:                  boundKeyVal,
-		function:                     "Backspace",
+		function:                     "backspace",
 		typeWord:                     "OS version?",
 	}
 }
 
-// setup sets up the test environment for "Backspace".
+// setup sets up the test environment for "backspace".
 func (v *backspaceFunctionVerifier) setup(ctx context.Context) error {
 	return uiauto.Combine("setup for verify backspace function",
 		v.ui.EnsureFocused(ossettings.SearchBoxFinder),
@@ -515,7 +530,7 @@ func (v *backspaceFunctionVerifier) setup(ctx context.Context) error {
 	)(ctx)
 }
 
-// cleanup cleans up the test environment for "Backspace".
+// cleanup cleans up the test environment for "backspace".
 func (v *backspaceFunctionVerifier) cleanup(ctx context.Context) error {
 	settings := ossettings.New(v.tconn)
 	return settings.ClearSearch()(ctx)
@@ -533,7 +548,7 @@ func (v *backspaceFunctionVerifier) verify(ctx context.Context) error {
 	return v.ui.WaitUntilExists(expectedNode)(ctx)
 }
 
-// functionName returns the function name of "Backspace".
+// functionName returns the function name of "backspace".
 func (v *backspaceFunctionVerifier) functionName() string { return v.function }
 
 type disableFunctionVerifier struct {
