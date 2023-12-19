@@ -127,6 +127,7 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 
 	startWGServer := func(env *virtualnet.Env, usePSK, isSecondServer bool) (*vpn.Server, func()) {
 		opts := []vpn.Option{
+			vpn.WithIPType(vpn.IPTypeIPv4AndIPv6),
 			vpn.WithWGClientPublicKey(clientPublicKey),
 			vpn.WithWGUsePSK(usePSK),
 		}
