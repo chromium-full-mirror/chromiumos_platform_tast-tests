@@ -298,12 +298,17 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// arcBootedWithVideoLogging is a fixture similar to arcBooted, but with
-	// additional Chrome video logging enabled.
+	// arcBootedWithVideoLogging is a fixture similar to arcBootedWithDisableExternalStorage,
+    // but with additional Chrome video logging enabled.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
-			"--vmodule=" + strings.Join([]string{
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+			chrome.ExtraArgs(
+				"--vmodule=" + strings.Join([]string{
 				"*/media/gpu/chromeos/*=2",
 				"*/media/gpu/vaapi/*=2",
 				"*/media/gpu/v4l2/*=2",
@@ -352,9 +357,14 @@ func init() {
 	// video decoding.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
-			"--enable-features=OutOfProcessVideoDecoding",
-			"--vmodule="+strings.Join([]string{
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+			chrome.ExtraArgs(
+				"--enable-features=OutOfProcessVideoDecoding",
+				"--vmodule="+strings.Join([]string{
 				"*/media/gpu/chromeos/*=2",
 				"*/media/gpu/vaapi/*=2",
 				"*/media/gpu/v4l2/*=2",
@@ -379,8 +389,13 @@ func init() {
 	// enabled and the mojo::VideoDecoder stack enabled.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{chrome.ARCEnabled(), chrome.UnRestrictARCCPU(), chrome.ExtraArgs(
-			"--vmodule=" + strings.Join([]string{
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+			chrome.ExtraArgs(
+				"--vmodule=" + strings.Join([]string{
 				"*/media/gpu/chromeos/*=2",
 				"*/media/gpu/vaapi/*=2",
 				"*/media/gpu/v4l2/*=2",
