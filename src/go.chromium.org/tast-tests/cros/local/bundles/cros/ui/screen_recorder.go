@@ -29,7 +29,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		Timeout:      2 * time.Minute,
+		Timeout:      chrome.LoginTimeout + 2 * time.Minute,
 	})
 }
 
