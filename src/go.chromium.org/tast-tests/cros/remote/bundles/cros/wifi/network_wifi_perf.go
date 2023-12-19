@@ -340,6 +340,18 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 	}
 	defer perfKeyVal.Close()
 
+	// Disable background scan which causes severe udp_rx throughput drops that can cause
+	// a disconnection during perf tests. Refer to b/315880821.
+	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
 	// Verify that performance test result passes the must and should throughput requirements.
 	verifyResults := func(ctx context.Context, result, mustExpectedThroughput, shouldExpectedThroughput float64, testType perfmanager.TestType, powerSave, shouldTputRequired bool, channel int, board string) string {
 		mustTputFailed := false
@@ -359,11 +371,9 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 		}
 
 		if result < shouldExpectedThroughput {
+			s.Logf("Throughput is too low for %s. Expected (should) %0.2f Mbps, got %0.2f", testType, shouldExpectedThroughput, result)
 			if shouldTputRequired {
-				s.Logf("Throughput is too low for %s. Expected (should) %0.2f Mbps, got %0.2f", testType, mustExpectedThroughput, result)
 				shouldTputFailed = true
-			} else {
-				s.Logf("Throughput is too low for %s. Expected (should) %0.2f Mbps, got %0.2f", testType, mustExpectedThroughput, result)
 			}
 		}
 
@@ -508,7 +518,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 			return nil
 		}
 		if err := tf.AssertNoDisconnect(ctx, wificell.DefaultDUT, doRun); err != nil {
-			s.Fatal("Failed run performance test, err: ", err)
+			s.Error("Failed run performance test, err: ", err)
 		}
 		s.Log("Deconfiguring")
 	}
