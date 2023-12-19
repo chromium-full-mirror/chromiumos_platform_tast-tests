@@ -34,6 +34,9 @@ func init() {
 	})
 }
 
+// The time to remain in suspend, in seconds.
+const suspendDurationS = 10
+
 // TbtSuspend does the following:
 //
 // - Disconnect the dock via MCCI switch.
@@ -108,7 +111,7 @@ func performTbtSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch
 	done := make(chan error, 1)
 	go func(ctx context.Context) {
 		defer close(done)
-		out, err := d.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--timeout=120", "--suspend_for_sec=10").CombinedOutput()
+		out, err := d.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--timeout=120", "--suspend_for_sec="+strconv.Itoa(suspendDurationS)).CombinedOutput()
 		testing.ContextLog(ctx, "powerd_dbus_suspend output: ", string(out))
 		done <- err
 	}(ctx)
