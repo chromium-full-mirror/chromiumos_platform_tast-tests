@@ -1,5 +1,5 @@
 {
-  "url": "gs://chromiumos-test-assets-public/tast/cros/inputs/handwriting_en_hello_20210129.svg",
-  "size": 2514,
-  "sha256sum": "ec3f9be2a8cd043e98fabb3799e88233c0c411b25762a9818d11d7107a0fb487"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/inputs/handwriting_en_hello_20231219.svg",
+  "size": 2608,
+  "sha256sum": "04cbd276b6e443ba9ed0ae3ff3f584e8eaeef83ad92a3444a76738c046e1de2a"
 }
