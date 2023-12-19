@@ -8,11 +8,20 @@ package certificate
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -191,34 +200,55 @@ func (m *Manager) ImportCACert(fileName string, org Organization, trustSettings 
 }
 
 // CreateCertAndImport create and import the CA certificate and the client certificate contained in the CertStore.
-func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) (retErr error) {
+func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, bt browser.Type, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) (retErr error) {
 	// Reserve a longer time in case the certificate needs to be deleted.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
-	if err != nil {
-		return errors.Wrap(err, "failed to retrieve user's downloads path")
-	}
-
-	// Write client certificate file to Downloads path.
 	clientCertFileName := "test_client_cert.p12"
-	clientCertDest := certificate.NewLocalDestination(downloadsPath, clientCertFileName)
+	// Write client certificate file to temp path.
+	clientCertDest := certificate.NewLocalDestination(os.TempDir(), clientCertFileName)
 	cleanUpClientCert, err := certificate.WriteClientCertWithPassword(ctx, clientCertDest, certs, password)
 	if err != nil {
 		return errors.Wrap(err, "failed to create the client certificate file")
 	}
 	defer cleanUpClientCert(cleanupCtx)
 
-	// Write CA certificate file to Downloads path.
 	serverCAFileName := "test_server_CA.pem"
-	caCertDest := certificate.NewLocalDestination(downloadsPath, serverCAFileName)
+	// Write CA certificate file to temp path.
+	caCertDest := certificate.NewLocalDestination(os.TempDir(), serverCAFileName)
 	cleanUpCaCert, err := certificate.WriteCACert(ctx, caCertDest, certs)
 	if err != nil {
 		return errors.Wrap(err, "failed to create the CA certificate file")
 	}
 	defer cleanUpCaCert(cleanupCtx)
+
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve user's downloads path")
+	}
+
+	for filename, certDest := range map[string]*certificate.Destination{
+		serverCAFileName:   caCertDest,
+		clientCertFileName: clientCertDest,
+	} {
+		if cr.LoginMode() == "Guest" {
+			// Leveraging the browser and file system accessing UI to store the certificate under guest user's encrypted
+			// home directory as the mounted path for a guest user session is not available (crrev.com/c/3412613).
+			removeCertFromFilesApp, err := downloadFromLocalHTTPServer(ctx, cr, bt, filename, certDest.FullPath())
+			if err != nil {
+				return err
+			}
+			defer removeCertFromFilesApp(cleanupCtx)
+		} else {
+			fileUnderDownloadsPath := filepath.Join(downloadsPath, filename)
+			if err := testexec.CommandContext(ctx, "mv", certDest.FullPath(), fileUnderDownloadsPath).Run(testexec.DumpLogOnError); err != nil {
+				return err
+			}
+			defer testexec.CommandContext(ctx, "rm", fileUnderDownloadsPath).Run(testexec.DumpLogOnError)
+		}
+	}
 
 	// Import the CA certificate and the client certificate.
 	for _, cert := range []*CertData{
@@ -244,6 +274,87 @@ func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, ce
 		}(cleanupCtx)
 	}
 	return nil
+}
+
+// downloadFromLocalHTTPServer starts a local HTTP server during the function call, then download the file from the browser.
+// TODO(crrev.com/c/3412613): Remove this workaround once the download folder of the guest user can be utilized.
+func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, bt browser.Type, fileName, filePath string) (func(ctx context.Context) error, error) {
+	fileContent, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read the file")
+	}
+
+	const linkName string = "Download File"
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		const route = "download"
+
+		// Browsing the page directly with the download link will result in the CDP connection no longer available
+		// after the download is completed, therefore here serves a page that serves the download link instead.
+		if path.Base(r.URL.String()) == route {
+			w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName))
+			w.Header().Set("Content-Type", "application/octet-stream")
+			w.Write(fileContent)
+		} else {
+			w.Header().Set("Content-Type", "text/html")
+			io.WriteString(w, fmt.Sprintf(`<a href="/%s">%s</a>`, route, linkName))
+		}
+	}))
+	defer server.Close()
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to launch a browser")
+	}
+	defer closeBrowser(cleanupCtx)
+
+	conn, err := br.NewConn(ctx, server.URL)
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
+
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create test API connection")
+	}
+
+	downloadLink := nodewith.Name(linkName).Role(role.Link)
+
+	regex := regexp.MustCompile(fmt.Sprintf(`^Download\scomplete\n%s$`, fileName))
+	downloadMessage := nodewith.NameRegex(regex).Role(role.AlertDialog)
+
+	ui := uiauto.New(tconn)
+	if err := uiauto.Combine(fmt.Sprintf("download %q from %s", fileName, server.URL),
+		ui.DoDefault(downloadLink),
+		ui.WaitUntilExists(downloadMessage),
+	)(ctx); err != nil {
+		return nil, err
+	}
+
+	return func(ctx context.Context) error {
+		app, err := filesapp.Launch(ctx, tconn)
+		if err != nil {
+			return err
+		}
+		defer app.Close(ctx)
+
+		kb, err := input.Keyboard(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get keyboard")
+		}
+		defer kb.Close(ctx)
+
+		return uiauto.Combine(fmt.Sprintf("delete %q file from files app", fileName),
+			app.OpenDownloads(),
+			app.DeleteFileOrFolder(kb, fileName),
+		)(ctx)
+	}, nil
 }
 
 // DeleteCert deletes the certificate from the Certificates Manager.

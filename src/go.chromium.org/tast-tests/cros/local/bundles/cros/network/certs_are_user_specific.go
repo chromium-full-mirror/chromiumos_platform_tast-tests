@@ -32,6 +32,15 @@ type certsAreUserSpecificTestParams struct {
 	browserType      browser.Type
 }
 
+const (
+	// In each test scenario, login and import certificates take 1 minute and up to 1 time,
+	// login and verify the surface take 2 minutes each and up to 2 times.
+	// Therefore, each scenario requires a 5 minute execution time.
+	testScenarioTimeout = 5 * time.Minute
+	// The clean up action requires a longer time due to it involves chrome login and series of UI operations.
+	cleanUpReserveTimeout = 2 * time.Minute
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: CertsAreUserSpecific,
@@ -43,13 +52,16 @@ func init() {
 		Contacts: []string{
 			// "cros-connectivity@google.com",
 			// "chromeos-connectivity-engprod@google.com",
+			"edgar.chang@cienet.com",
 			"cj.tsai@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
 		Attr:         []string{"group:network", "network_e2e_unstable"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      8 * time.Minute,
+		// Import binding and non-binding certs from regular user.
+		// Import non-binding certs from guest user.
+		Timeout: 3 * (testScenarioTimeout + cleanUpReserveTimeout),
 		Params: []testing.Param{
 			{
 				Name: "certificate_manager",
@@ -80,21 +92,39 @@ func CertsAreUserSpecific(ctx context.Context, s *testing.State) {
 		params            = s.Param().(*certsAreUserSpecificTestParams)
 		primaryTestUser   = &certsAreUserSpecificTestUser{loginOption: chrome.FakeLogin(chrome.Creds{User: "testuser1@gmail.com", Pass: "testpass"})}
 		secondaryTestUser = &certsAreUserSpecificTestUser{loginOption: chrome.FakeLogin(chrome.Creds{User: "testuser2@gmail.com", Pass: "testpass"})}
-		testGuestUser     = &certsAreUserSpecificTestUser{loginOption: chrome.GuestLogin()}
+		testGuestUser     = &certsAreUserSpecificTestUser{loginOption: chrome.GuestLogin(), isGuest: true}
 	)
 
-	for _, importType := range []certManager.ImportType{certManager.TypeImport, certManager.TypeImportAndBind} {
-		s.Run(ctx, string(importType), func(ctx context.Context, s *testing.State) {
+	for _, test := range []struct {
+		name       string
+		importType certManager.ImportType
+		user       *certsAreUserSpecificTestUser
+	}{
+		{
+			name:       "Import from regular user",
+			importType: certManager.TypeImport,
+			user:       primaryTestUser,
+		}, {
+			name:       "Import and Bind from regular user",
+			importType: certManager.TypeImportAndBind,
+			user:       primaryTestUser,
+		}, {
+			name:       "Import from guest user",
+			importType: certManager.TypeImport,
+			user:       testGuestUser,
+		},
+	} {
+		s.Run(ctx, test.name, func(ctx context.Context, s *testing.State) {
 			cleanupCtx := ctx
 			// The clean up action requires a longer time due to it involves chrome login and series of UI operations.
 			ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
 			defer cancel()
 
-			certs, err := primaryTestUser.loginAndImportCerts(ctx, certificate.TestCert1(), params.browserType, importType)
+			certs, err := test.user.loginAndImportCerts(ctx, certificate.TestCert1(), params.browserType, test.importType)
 			if err != nil {
 				s.Fatal("Failed to import certs: ", err)
 			}
-			defer primaryTestUser.loginAndDeleteCerts(cleanupCtx, certs, params.browserType)
+			defer test.user.loginAndDeleteCerts(cleanupCtx, certs, params.browserType)
 
 			res := &certsAreUserSpecificTestResource{
 				testCerts:   certs,
@@ -198,8 +228,9 @@ func (n *uiJoinVPN) launchUI(ctx context.Context, resource *certsAreUserSpecific
 	}(cleanupCtx)
 
 	return uiauto.Combine("open VPN dialog",
-		n.LeftClick(nodewith.Name("Add network connection").Role(role.Button)),
-		n.LeftClick(nodewith.NameContaining("Add built-in VPN").Role(role.Button)),
+		// Using DoDefault to avoid inaccurate location issue.
+		n.DoDefault(nodewith.Name("Add network connection").Role(role.Button)),
+		n.DoDefault(nodewith.NameContaining("Add built-in VPN").Role(role.Button)),
 		n.WaitForLocation(n.uiRoot()),
 	)(ctx)
 }
@@ -308,7 +339,10 @@ func (n *uiCertManager) closeUI(ctx context.Context) error {
 	return n.Close(ctx)
 }
 
-type certsAreUserSpecificTestUser struct{ loginOption chrome.Option }
+type certsAreUserSpecificTestUser struct {
+	loginOption chrome.Option
+	isGuest     bool
+}
 
 func (u *certsAreUserSpecificTestUser) loginAndImportCerts(ctx context.Context, certs certificate.CertStore, browserType browser.Type, importType certManager.ImportType) (_ []*certManager.CertData, retErr error) {
 	// Reserve a longer time in case the certificate needs to be deleted.
@@ -334,7 +368,7 @@ func (u *certsAreUserSpecificTestUser) loginAndImportCerts(ctx context.Context, 
 	}
 	defer manager.Close(cleanupCtx)
 
-	if err := manager.CreateCertAndImport(ctx, cr, certs, importType, "" /* password */, 0 /* trustSettings */); err != nil {
+	if err := manager.CreateCertAndImport(ctx, cr, browserType, certs, importType, "" /* password */, 0 /* trustSettings */); err != nil {
 		return nil, errors.Wrap(err, "failed to import certificates")
 	}
 
@@ -345,6 +379,11 @@ func (u *certsAreUserSpecificTestUser) loginAndImportCerts(ctx context.Context, 
 }
 
 func (u *certsAreUserSpecificTestUser) loginAndDeleteCerts(ctx context.Context, certs []*certManager.CertData, browserType browser.Type) error {
+	if u.isGuest {
+		// No further action is required as the certificates will become invalid upon exiting guest mode.
+		return nil
+	}
+
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()

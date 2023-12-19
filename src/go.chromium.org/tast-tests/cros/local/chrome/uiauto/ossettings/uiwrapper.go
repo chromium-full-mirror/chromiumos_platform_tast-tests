@@ -128,3 +128,8 @@ func (s *OSSettings) IsNodeFound(ctx context.Context, finder *nodewith.Finder) (
 func (s *OSSettings) WaitUntilCheckedState(finder *nodewith.Finder, expectedState bool) uiauto.Action {
 	return s.ui.WaitUntilCheckedState(finder.FinalAncestor(WindowFinder), expectedState)
 }
+
+// DoDefault calls ui.DoDefault scoping the finder to the Settings app.
+func (s *OSSettings) DoDefault(finder *nodewith.Finder) uiauto.Action {
+	return s.ui.DoDefault(finder.FinalAncestor(WindowFinder))
+}
