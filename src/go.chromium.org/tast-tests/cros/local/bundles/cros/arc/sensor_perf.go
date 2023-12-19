@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -28,6 +29,8 @@ func init() {
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
+		// The device must have some sensor with continuous reporting mode to be measured.
+		HardwareDeps: hwdep.D(hwdep.BaseAccelerometer()),
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
