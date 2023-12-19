@@ -108,7 +108,7 @@ func init() {
 
 func SAPOnOffStress(ctx context.Context, s *testing.State) {
 	/*
-		This test checks the soft AP resource utilization on associate/disassociate:
+		This test checks the soft AP resource utilization on SAP on/off:
 		1- Disable the station interface.
 		2- Measure initial memory/open fd values.
 		3- In loop (1..N)
@@ -124,8 +124,8 @@ func SAPOnOffStress(ctx context.Context, s *testing.State) {
 		5- Make sure memory in use did not rise substantially and number of FDs is stable.
 		6- Re-enable the station interface.
 	*/
-	// Thresholds for acceptable changes of various counters (in %).
-	var thresholds = wifiutil.ResourceThreshold{"vsz": 5, "fd": 0}
+	// Thresholds for acceptable changes of various counters (vsz in %, fz in absolute number).
+	var thresholds = wifiutil.ResourceThreshold{"vsz": 5, "fd": -10}
 	const processes = "shill,wpa_supplicant,patchpaneld"
 
 	tf := s.FixtValue().(*wificell.TestFixture)

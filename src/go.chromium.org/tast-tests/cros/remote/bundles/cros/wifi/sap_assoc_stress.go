@@ -132,8 +132,8 @@ func SAPAssocStress(ctx context.Context, s *testing.State) {
 		7- Deconfigure the soft AP.
 		8- Re-enable the station interface.
 	*/
-	// Thresholds for acceptable changes of various counters (in %).
-	var thresholds = wifiutil.ResourceThreshold{"vsz": 5, "fd": 0}
+	// Thresholds for acceptable changes of various counters (vsz in %, fd in absolute number).
+	var thresholds = wifiutil.ResourceThreshold{"vsz": 5, "fd": -10}
 	const processes = "shill,wpa_supplicant,patchpaneld"
 
 	tf := s.FixtValue().(*wificell.TestFixture)

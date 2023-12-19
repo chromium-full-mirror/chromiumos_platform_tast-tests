@@ -36,7 +36,7 @@ import (
 // ResourceInfoCounter is a collection of a single process-related data, in the [counter]value format.
 type ResourceInfoCounter map[string]int
 
-// ResourceThreshold defines maximum acceptable change thresholds (in %).
+// ResourceThreshold defines maximum acceptable change thresholds.
 type ResourceThreshold ResourceInfoCounter
 
 func (ric ResourceInfoCounter) keysSorted() []string {
@@ -165,7 +165,8 @@ func ValidatePids(ri1, ri2 ResourceInfo) error {
 	return nil
 }
 
-// ValidateResourceInfo checks if a diff between two set of counters is kept within certain percentage thresholds.
+// ValidateResourceInfo checks if a diff between two set of counters is kept within certain thresholds.
+// Positive threshold means percentage difference. Negative threshold means absolute difference. 0 threshold means no difference.
 func ValidateResourceInfo(ctx context.Context, ri1, ri2 ResourceInfo, thr ResourceThreshold) error {
 	if err := ValidatePids(ri1, ri2); err != nil {
 		return err
@@ -189,7 +190,14 @@ func ValidateResourceInfo(ctx context.Context, ri1, ri2 ResourceInfo, thr Resour
 					return errors.Errorf("Expecting %s of %s(%s) value: %d, got %d",
 						counter, process, cmd, val1, val2)
 				}
+			} else if threshold < 0 {
+				// Threshold < 0 means compare the absolute difference.
+				if math.Abs(float64(val2-val1)) > math.Abs(float64(threshold)) {
+					return errors.Errorf("unexpected value increase in %s of %s(%s) from value: %d to %d, exceeds %f threshold",
+						counter, process, cmd, val1, val2, math.Abs(float64(threshold)))
+				}
 			} else {
+				// Threshold > 0 means compare the percentage difference.
 				if (val2-val1)*100/val1 > threshold {
 					return errors.Errorf("unexpected value increase in %s of %s(%s) from value: %d to %d, exceeds %d%% threshold",
 						counter, process, cmd, val1, val2, threshold)
