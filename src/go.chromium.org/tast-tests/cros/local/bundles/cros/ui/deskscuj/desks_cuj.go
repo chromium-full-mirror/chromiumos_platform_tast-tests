@@ -261,6 +261,10 @@ func Run(ctx context.Context, s *testing.State) {
 			s.Logf("Switched desk by %s %d times", deskSwitcher.name, cycles)
 		}
 
+		// Activate the desk where Google Slides is at.
+		if err := ash.ActivateDeskAtIndex(ctx, tconn, 0); err != nil {
+			return errors.Wrap(err, "failed to activate leftmost desk with the autotest API")
+		}
 		const chromeVersionURL = chrome.VersionURL
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		if err := slidesConn.Navigate(ctx, chromeVersionURL); err != nil {
