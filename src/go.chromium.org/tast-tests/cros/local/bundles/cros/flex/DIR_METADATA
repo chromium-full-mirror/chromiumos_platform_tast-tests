@@ -1,0 +1,4 @@
+buganizer {
+  component_id: 998633  # ChromeOS > Platform > Enablement > ChromeOS Flex
+}
+team_email: "chromeos-flex-team@google.com"
