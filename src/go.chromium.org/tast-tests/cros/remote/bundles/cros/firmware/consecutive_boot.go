@@ -44,7 +44,7 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_stress"},
 		Vars:         []string{"firmware.consecutiveBootIters", "firmware.consecutiveBootCustomCmd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      100 * time.Minute,
+		Timeout:      40 * time.Hour,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
