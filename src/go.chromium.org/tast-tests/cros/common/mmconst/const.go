@@ -19,6 +19,7 @@ const (
 	ModemPropertyOwnNumbers                  = "OwnNumbers"
 	ModemPropertyPowered                     = "PowerState"
 	ModemPropertyPrimarySimSlot              = "PrimarySimSlot"
+	ModemPropertyRevision                    = "Revision"
 	ModemPropertySim                         = "Sim"
 	ModemPropertySimSlots                    = "SimSlots"
 	ModemPropertyState                       = "State"

@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type apnTestParam struct {
@@ -99,12 +98,13 @@ func ShillApn(ctx context.Context, s *testing.State) {
 	expectedLastAttachAPN := params.ExpectedLastAttachAPN
 
 	// Fail immediately if there is a known bug that will cause the test to run until it times out.
-	isL850, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeL850)
-	isFM350, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeFM350)
-	isFM101, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeFM101)
-	if (isL850 || isFM350 || isFM101) && strings.HasSuffix(s.TestName(), "round_robin_connect_all_invalid_apn_errors") {
-		err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellularconst.ModemType{cellularconst.ModemTypeFM350, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101})
-		s.Fatalf("Fail early to avoid wasting DUT time: %s", err)
+	if strings.HasSuffix(s.TestName(), "round_robin_connect_all_invalid_apn_errors") {
+		err := cellular.TagKnownBugOnModem(ctx, nil, "b/263815534", cellular.ModemFwFilterL850MR7AndLower)
+		err = cellular.TagKnownBugOnModem(ctx, err, "b/290110554", cellular.ModemFwFilterFM350MR3AndLower)
+		err = cellular.TagKnownBugOnModem(ctx, err, "b/289519883", cellular.ModemFwFilterFM101MR1)
+		if err != nil {
+			s.Fatalf("Fail early to avoid wasting DUT time: %s", err)
+		}
 	}
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
@@ -142,7 +142,7 @@ func ShillApn(ctx context.Context, s *testing.State) {
 
 	apnName := serviceLastAttachAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
 	if apnName != expectedLastAttachAPN {
-		err := cellular.TagKnownBugOnModemType(ctx, nil, "b/287791293", []cellularconst.ModemType{cellularconst.ModemTypeFM101})
+		err := cellular.TagKnownBugOnModem(ctx, nil, "b/287791293", cellular.ModemFwFilterFM101MR1)
 		s.Fatalf("Last Attach APN doesn't match: got %q, want %q. %s", apnName, expectedLastAttachAPN, cellular.ErrorToCleanString(err))
 	}
 

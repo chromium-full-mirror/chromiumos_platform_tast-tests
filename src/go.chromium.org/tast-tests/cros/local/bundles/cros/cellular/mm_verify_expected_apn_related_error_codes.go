@@ -149,19 +149,21 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 
 	case ipErrors:
 		// Fail quickly on FM101 variants with old FW, since running this test puts the modem into a bad state(b/302697538#comment5)
-		errVariant := cellular.TagKnownBugOnVariant(ctx, nil, "b/263815534", []string{"crota_fm101", "krabby_fm101", "kracko_fm101_cat6", "kracko_fm101_cat12", "nivviks_fm101", "pujjo_fm101", "rusty_fm101", "skyrim_fm101", "steelix_fm101"})
-		if errVariant != nil {
-			s.Fatalf("Fail early to avoid putting the DUT in a bad state: %s", errVariant)
+		errOldFw := cellular.TagKnownBugOnModem(ctx, nil, "b/302697538", cellular.ModemFwFilterFM101MR1)
+		if errOldFw != nil {
+			s.Fatalf("Fail early to avoid putting the DUT in a bad state: %s", errOldFw)
 		}
 		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4", ipType: mmconst.BearerIPFamilyIPv6, apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.MobileEquipment.Ipv4OnlyAllowed" {
-			err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellularconst.ModemType{cellularconst.ModemTypeFM350, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101})
+			err := cellular.TagKnownBugOnModem(ctx, nil, "b/263815534", cellular.ModemFwFilterL850MR7AndLower)
+			err = cellular.TagKnownBugOnModem(ctx, err, "b/290110554", cellular.ModemFwFilterFM350MR3AndLower)
 			s.Fatalf("Expected error for Ipv4OnlyAllowed doesn't match:%s: %s", errorCode, err)
 		}
 
 		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv6", ipType: mmconst.BearerIPFamilyIPv4, apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.MobileEquipment.Ipv6OnlyAllowed" {
-			err := cellular.TagKnownBugOnModemType(ctx, nil, "b/263815534", []cellularconst.ModemType{cellularconst.ModemTypeFM350, cellularconst.ModemTypeL850, cellularconst.ModemTypeFM101})
+			err := cellular.TagKnownBugOnModem(ctx, nil, "b/263815534", cellular.ModemFwFilterL850MR7AndLower)
+			err = cellular.TagKnownBugOnModem(ctx, err, "b/290110554", cellular.ModemFwFilterFM350MR3AndLower)
 			s.Fatalf("Expected error for Ipv6OnlyAllowed doesn't match:%s: %s", errorCode, err)
 		}
 

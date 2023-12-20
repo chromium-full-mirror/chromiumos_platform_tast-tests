@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type mtuTestParams struct {
@@ -91,7 +90,7 @@ func MTU(ctx context.Context, s *testing.State) {
 	}
 
 	if ipProps.MTU != mtuExpected {
-		err := cellular.TagKnownBugOnModemType(ctx, nil, "b/292770737", []cellularconst.ModemType{cellularconst.ModemTypeL850})
+		err := cellular.TagKnownBugOnModem(ctx, nil, "b/292770737", cellular.ModemFwFilterL850MR7AndLower)
 		s.Fatalf("Unexpected MTU value for service: got %v, want %v. %s", ipProps.MTU, mtuExpected, cellular.ErrorToCleanString(err))
 	}
 

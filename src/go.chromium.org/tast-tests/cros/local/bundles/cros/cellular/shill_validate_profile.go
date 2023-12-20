@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 func init() {
@@ -52,7 +51,7 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	// Fail early on NL668, otherwise the modem will keep returning WriteFailure on SetInitialEPSBearerSettings.
-	nl668Err := cellular.TagKnownBugOnModemType(ctx, nil, "b/217563991", []cellularconst.ModemType{cellularconst.ModemTypeNL668})
+	nl668Err := cellular.TagKnownBugOnModem(ctx, nil, "b/217563991", cellular.ModemFwFilterNL668A01)
 	if nl668Err != nil {
 		s.Fatalf("Fail early to avoid wasting DUT time: %s", nl668Err)
 	}

@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 func init() {
@@ -48,7 +47,7 @@ func Identifiers(ctx context.Context, s *testing.State) {
 	if err := validateIdentifiers("IMEI", shillImei, modemImei, 14, 16); err != nil {
 		// Some NL668 engineering samples used in DVT/PVT devices may lose their IMEI number after an update or recovery.
 		// Ref b/277647418, b/241292924, b/201554938 for details.
-		err = cellular.TagKnownBugOnModemType(ctx, err, "b/277647418", []cellularconst.ModemType{cellularconst.ModemTypeNL668})
+		err = cellular.TagKnownBugOnModem(ctx, err, "b/277647418", cellular.ModemFwFilterNL668A01)
 		s.Fatal("IMEI validation failed: ", err)
 
 	}

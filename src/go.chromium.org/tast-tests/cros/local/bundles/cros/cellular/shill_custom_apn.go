@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type shillCellularCustomAPNTestParam struct {
@@ -245,7 +244,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 			}
 			var err error = nil
 			if apn == "" {
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/245968064", []cellularconst.ModemType{cellularconst.ModemTypeL850})
+				err = cellular.TagKnownBugOnModem(ctx, err, "b/245968064", cellular.ModemFwFilterL850MR7AndLower)
 			}
 			s.Fatalf("Last Attach APN doesn't match: got %q, want %q. %s", apn, expectedAPN, cellular.ErrorToCleanString(err))
 		}

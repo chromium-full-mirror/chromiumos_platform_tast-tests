@@ -394,6 +394,82 @@ func TagKnownBugOnBoard(ctx context.Context, errIn error, bugNumber string, boar
 	return errIn
 }
 
+// ModemFwFilter is a filter for FW versions on a specific modem.
+type ModemFwFilter uint32
+
+// Supported modem fw filters.
+const (
+	ModemFwFilterL850MR7AndLower ModemFwFilter = iota
+	ModemFwFilterNL668A01
+	ModemFwFilterFM350MR3AndLower
+	ModemFwFilterFM101MR1
+)
+
+// IsMatch returns true the modem type and modem FW match the filter
+func (filter ModemFwFilter) IsMatch(modemType cellularconst.ModemType, fwVersion string) bool {
+	switch filter {
+	case ModemFwFilterL850MR7AndLower:
+		if modemType != cellularconst.ModemTypeL850 {
+			return false
+		}
+		commonPrefix := "18500.5001.00."
+		for _, subversion := range []string{"02.", "03.", "04.", "05.", "06."} {
+			if strings.HasPrefix(fwVersion, commonPrefix+subversion) {
+				return true
+			}
+		}
+		return false
+	case ModemFwFilterNL668A01:
+		if modemType == cellularconst.ModemTypeNL668 && strings.HasSuffix(fwVersion, "A01") {
+			return true
+		}
+		return false
+	case ModemFwFilterFM350MR3AndLower:
+		if modemType != cellularconst.ModemTypeFM350 {
+			return false
+		}
+		commonPrefix := "81600.0000.00.29."
+		for _, subversion := range []string{"19.16", "21.21", "21.24"} {
+			if strings.HasPrefix(fwVersion, commonPrefix+subversion) {
+				return true
+			}
+		}
+		return false
+	case ModemFwFilterFM101MR1:
+		if modemType != cellularconst.ModemTypeFM101 {
+			return false
+		}
+		commonMiddle := ".0000.00.01.01."
+		for _, prefix := range []string{"19500", "19501"} {
+			if strings.HasPrefix(fwVersion, prefix+commonMiddle) {
+				return true
+			}
+		}
+		return false
+	}
+	panic("unhandled switch case")
+}
+
+// TagKnownBugOnModem adds a tag to the error code if any of the |filters| match the DUT's Modem type and FW version.
+func TagKnownBugOnModem(ctx context.Context, errIn error, bugNumber string, filter ModemFwFilter) error {
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil {
+		return errIn
+	}
+	fwVersion, err := modem.GetFwVersion(ctx, modem)
+	if err != nil {
+		return errIn
+	}
+	device, err := getDevice(ctx)
+	if err != nil {
+		return errIn
+	}
+	if filter.IsMatch(device.Modem, fwVersion) {
+		return errors.Wrapf(errIn, "known bug on modem: %q and fw: %q bug: %q", device.Modem, fwVersion, bugNumber)
+	}
+	return errIn
+}
+
 // ErrorToCleanString returns the string value of |errIn| if not nil, otherwise returns an empty string.
 func ErrorToCleanString(errIn error) string {
 	if errIn == nil {
@@ -451,18 +527,4 @@ func RestartModemManager(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// TagKnownBugOnModemType adds a tag to the error code if any of the |modems| matches the DUT's Modem type.
-func TagKnownBugOnModemType(ctx context.Context, errIn error, bugNumber string, modems []cellularconst.ModemType) error {
-	dutVariant, err := GetDeviceVariant(ctx)
-	device, ok := cellularconst.KnownVariants[dutVariant]
-	if err == nil && ok {
-		for _, modem := range modems {
-			if device.Modem == modem {
-				return errors.Wrapf(errIn, "known bug on modem: %q bug: %q", modem, bugNumber)
-			}
-		}
-	}
-	return errIn
 }

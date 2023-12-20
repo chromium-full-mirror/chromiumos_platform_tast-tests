@@ -893,6 +893,19 @@ func (m *Modem) GetMaxActiveMultiplexedBearers(ctx context.Context, modem *Modem
 	return value.iface.(uint32), nil
 }
 
+// GetFwVersion gets the FW version on the modem. This is known in ModemManager as the Revision.
+func (m *Modem) GetFwVersion(ctx context.Context, modem *Modem) (string, error) {
+	modemPath := ObjectPath{dbus.ObjectPath(m.String()), nil}
+	value := modemPath.GetPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerModemInterface).
+		GetProperties(ctx).
+		Get(mmconst.ModemPropertyRevision)
+
+	if value.err != nil {
+		return "", errors.Wrap(value.err, "failed to read Revision")
+	}
+	return value.iface.(string), nil
+}
+
 // SetInitialEpsBearerSettings sets the Attach APN.
 func SetInitialEpsBearerSettings(ctx context.Context, modem3gpp *Modem, props map[string]interface{}) error {
 	// Validate the apn settings for consistency.
