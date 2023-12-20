@@ -450,7 +450,7 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 
 	drmTracePostTest, err := drmTracePreTest(ctx, s.TestName())
 	if err != nil {
-		s.Fatal("Failed to setup drm_trace settings: ", err)
+		s.Log("Failed to setup drm_trace settings, it is normal for kernel < 5.4: ", err)
 	} else {
 		f.postFunc = append(f.postFunc, drmTracePostTest)
 	}
