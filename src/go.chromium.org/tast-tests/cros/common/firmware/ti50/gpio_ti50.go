@@ -120,6 +120,14 @@ const (
 	GpioTi50LidOpen GpioName = "LID_OPEN"
 	// GpioTi50CcdModeL is the in/out low-active signal for when CCD cable is detected.
 	GpioTi50CcdModeL GpioName = "CCD_MODE_ODL"
+	// GpioTi50I2cDbgSda is the SDA signal for I2C communication where the GSC is host
+	GpioTi50I2cDbgSda GpioName = "I2C_DBG_SDA"
+	// GpioTi50I2cDbgScl is the SCL signal for I2C communication where the GSC is host
+	GpioTi50I2cDbgScl GpioName = "I2C_DBG_SCL"
+	// GpioTi50SmbusSda is the SDA signal for I2C/SM Bus communication where the GSC is host
+	GpioTi50SmbusSda GpioName = "SMBUS_SDA"
+	// GpioTi50SmbusScl is the SCL signal for I2C/SM Bus communication where the GSC is host
+	GpioTi50SmbusScl GpioName = "SMBUS_SCL"
 )
 
 const (

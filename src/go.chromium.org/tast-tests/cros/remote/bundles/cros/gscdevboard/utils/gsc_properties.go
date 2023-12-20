@@ -14,5 +14,13 @@ type GscProperties interface {
 	ExpectedDidVidValue() []byte
 	// GscHostI2cBusses returns the set of I2C busses on which the GSC can act as host, the
 	// map key is the port value to be used when tunneling requests through CCD.
-	GscHostI2cBusses() map[byte]ti50.I2cBusName
+	GscHostI2cBusses() map[byte]I2CBus
+}
+
+// I2CBus represents an I2C bus, naming the two signal pins in case the tests want to reconfigure
+// for GPIO for corner cases.
+type I2CBus struct {
+	BusName  ti50.I2cBusName
+	DataPin  ti50.GpioName
+	ClockPin ti50.GpioName
 }

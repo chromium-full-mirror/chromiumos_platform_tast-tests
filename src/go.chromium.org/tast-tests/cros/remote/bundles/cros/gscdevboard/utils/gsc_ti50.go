@@ -17,9 +17,17 @@ func (g *gscTi50) ExpectedDidVidValue() []byte {
 	return ti50.TpmTi50DidVidValue
 }
 
-func (g *gscTi50) GscHostI2cBusses() map[byte]ti50.I2cBusName {
-	return map[byte]ti50.I2cBusName{
-		0: ti50.I2cTi50Debug,
-		1: ti50.I2cTi50Smbus,
+func (g *gscTi50) GscHostI2cBusses() map[byte]I2CBus {
+	return map[byte]I2CBus{
+		0: I2CBus{
+			BusName:  ti50.I2cTi50Debug,
+			DataPin:  ti50.GpioTi50I2cDbgSda,
+			ClockPin: ti50.GpioTi50I2cDbgScl,
+		},
+		1: I2CBus{
+			BusName:  ti50.I2cTi50Smbus,
+			DataPin:  ti50.GpioTi50SmbusSda,
+			ClockPin: ti50.GpioTi50SmbusScl,
+		},
 	}
 }

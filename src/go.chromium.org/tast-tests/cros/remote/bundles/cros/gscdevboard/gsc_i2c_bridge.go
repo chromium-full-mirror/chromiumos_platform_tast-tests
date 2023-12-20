@@ -1,4 +1,4 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -32,7 +32,7 @@ func init() {
 			"jbk@google.com",
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_h1_shield", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "cap_default",
@@ -57,7 +57,7 @@ func init() {
 	})
 }
 
-func runI2CTransaction(ctx context.Context, ccdIndex byte, bus ti50.I2cBusName, address byte, expectInterfaceOpen bool, r *rand.Rand, b utils.DevboardHelper, s *testing.State) {
+func runI2CTransaction(ctx context.Context, ccdIndex byte, bus ti50.I2cBusName, address byte, expectInterfaceOpen, expectJammedBus bool, r *rand.Rand, b utils.DevboardHelper, s *testing.State) {
 	// I2C write of between 1 and 32 random bytes
 	writeData := make([]byte, 1+r.Intn(32))
 	if _, err := r.Read(writeData); err != nil {
@@ -71,9 +71,11 @@ func runI2CTransaction(ctx context.Context, ccdIndex byte, bus ti50.I2cBusName, 
 
 	s.Logf("Writing %d bytes, reading %d bytes", len(writeData), len(readData))
 
-	// Set up HyperDebug to be ready to repond to I2C transactions.
-	b.I2CDeviceMode(ctx, bus, address)
-	b.I2CDevicePrepareRead(ctx, bus, readData)
+	// Set up HyperDebug to be ready to respond to I2C transactions.
+	if !expectJammedBus {
+		b.I2CDeviceMode(ctx, bus, address)
+		b.I2CDevicePrepareRead(ctx, bus, readData)
+	}
 
 	// Instruct GSC to perform a write-then-read transaction on I2C bus.
 	requestHeader := []byte{ccdIndex, address, byte(len(writeData)), byte(len(readData))}
@@ -83,15 +85,22 @@ func runI2CTransaction(ctx context.Context, ccdIndex byte, bus ti50.I2cBusName, 
 	}
 	// Read response from GSC: two byte status, two byte fill, followed by data.
 	var expectedResponse []byte
-	if expectInterfaceOpen {
+	if !expectInterfaceOpen {
+		// Expect permission error, with all zero data.
+		expectedResponse = append([]byte{6, 0, 0, 0}, make([]byte, len(readData))...)
+	} else if expectJammedBus {
+		// Expect timeout error, with all zero data.
+		expectedResponse = append([]byte{0, 128, 0, 0}, make([]byte, len(readData))...)
+	} else {
 		// Expect success, with data.
 		expectedResponse = append([]byte{0, 0, 0, 0}, readData...)
-	} else {
-		// Expect permission error.
-		expectedResponse = []byte{6, 0, 0, 0}
 	}
 	if !bytes.Equal(expectedResponse, response) {
 		s.Errorf("Expected I2C interface response %v, but got %v", expectedResponse, response)
+	}
+
+	if expectJammedBus {
+		return
 	}
 
 	transcript := b.I2CDeviceGetStatus(ctx, bus)
@@ -136,17 +145,51 @@ func GSCI2CBridge(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.SetCCDCapabilities(ctx, ccdStates), "Failed to set CCD open related capabilities")
 
 	// With CCD open, I2C tunneling should always be allowed.
-	for index, name := range i2cBusses {
+	for index, i2cBus := range i2cBusses {
 		for addr := 8; addr < 112; addr++ {
-			runI2CTransaction(ctx, index, name, byte(addr), true, r, b, s)
+			runI2CTransaction(ctx, index, i2cBus.BusName, byte(addr), true, false, r, b, s)
 		}
 	}
 
+	addr := 8 + r.Intn(112)
+
+	// It seems that Cr50 suffers from a flaw, that if asked to perform a I2C operation while
+	// the bus is unpowered, it gets stuck in a state of pulling SCL low indefinitely, even
+	// after power to the pullup resistors is restored.  For now, skip this part of testing on
+	// Cr50.
+	if b.TestbedType != ti50.GscH1Shield {
+		s.Log("Simulating unpowered bus")
+		// Simulate unpowered bus.  The devboard has hardwired pullup resistors that
+		// cannot be turned off, so instead instruct HyperDebug to strongly pull down, in
+		// order to get both bus signals to ground.
+		for index, i2cBus := range i2cBusses {
+			b.GpioMultiSet(ctx, i2cBus.ClockPin, false, utils.GpioModeOpenDrain, utils.GpioPullUp)
+			b.GpioMultiSet(ctx, i2cBus.DataPin, false, utils.GpioModeOpenDrain, utils.GpioPullUp)
+			runI2CTransaction(ctx, index, i2cBus.BusName, byte(addr), true, true, r, b, s)
+			b.GpioMultiSet(ctx, i2cBus.DataPin, true, utils.GpioModeOpenDrain, utils.GpioPullUp)
+			b.GpioMultiSet(ctx, i2cBus.ClockPin, true, utils.GpioModeOpenDrain, utils.GpioPullUp)
+			if b.GpioGet(ctx, i2cBus.DataPin) != true {
+				s.Fatalf("GSC keeps SDA low on bus %s", i2cBus.BusName)
+			}
+			if b.GpioGet(ctx, i2cBus.ClockPin) != true {
+				s.Fatalf("GSC keeps SCL low on bus %s", i2cBus.BusName)
+			}
+
+			b.GpioMultiSet(ctx, i2cBus.DataPin, true, utils.GpioModeAlternate, utils.GpioPullUp)
+			b.GpioMultiSet(ctx, i2cBus.ClockPin, true, utils.GpioModeAlternate, utils.GpioPullUp)
+		}
+
+		s.Log("Testing again with power restored")
+		for index, i2cBus := range i2cBusses {
+			runI2CTransaction(ctx, index, i2cBus.BusName, byte(addr), true, false, r, b, s)
+		}
+	}
+
+	s.Log("Testing with CCD locked")
 	th.MustSucceed(i.CCDLock(ctx), "Failed to lock CCD")
 
 	// With CCD closed, I2C tunneling should be allowed only according to capabilities.
-	addr := 8 + r.Intn(112)
-	for index, name := range i2cBusses {
-		runI2CTransaction(ctx, index, name, byte(addr), userParams.expectInterfaceOpenWhenCCDLocked, r, b, s)
+	for index, i2cBus := range i2cBusses {
+		runI2CTransaction(ctx, index, i2cBus.BusName, byte(addr), userParams.expectInterfaceOpenWhenCCDLocked, false, r, b, s)
 	}
 }
