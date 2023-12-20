@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -72,6 +73,18 @@ func init() {
 				earlyCrash: false,
 			},
 		}, {
+			Name:              "hard_lockup",
+			ExtraSoftwareDeps: []string{"nmi_backtrace"},
+			ExtraHardwareDeps: hwdep.D(hwdep.NmiSupport()),
+			Val: testParams{
+				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
+				panicCmd:   kernelHardLockupCmd,
+				goodSig:    kernelHardLockupSig,
+				goodKcrash: kernelHardLockupKcrash,
+				execName:   "kernel",
+				earlyCrash: false,
+			},
+		}, {
 			Name:      "early_crash",
 			ExtraAttr: []string{"informational"},
 			Val: testParams{
@@ -89,6 +102,7 @@ type testParams struct {
 	consent    crash_service.SetUpCrashTestRequest_ConsentType
 	panicCmd   string
 	goodSig    string
+	goodKcrash string // OK if this is blank since that matches everything
 	execName   string
 	earlyCrash bool
 }
@@ -149,6 +163,16 @@ const kernelHungTaskSig = "kernel-\\(HANG\\)-lkdtm_HUNG_TASK-[[:xdigit:]]{8}"
 
 const kernelSoftLockupCmd = "echo SOFTLOCKUP > /sys/kernel/debug/provoke-crash/DIRECT"
 const kernelSoftLockupSig = "kernel-\\(SOFTLOCKUP\\)-lkdtm_SOFTLOCKUP-[[:xdigit:]]{8}"
+
+// Although we expect lkdtm_HARDLOCKUP to be in the signature, we don't require
+// it. We just require it to be in the kcrash file somewhere. The problem is
+// that when we hardlockup one CPU it has a chance of causing a hardlockup on
+// another CPU too. The lockup detector could detect either of the two first.
+// Since we have options to trace all CPUs we'll still see "lkdtm_HARDLOCKUP"
+// traced but it just might not be in the signature.
+const kernelHardLockupCmd = "echo HARDLOCKUP > /sys/kernel/debug/provoke-crash/DIRECT"
+const kernelHardLockupSig = "kernel-\\(HARDLOCKUP\\)-.*-[[:xdigit:]]{8}"
+const kernelHardLockupKcrash = "lkdtm_HARDLOCKUP"
 
 func KernelCrash(ctx context.Context, s *testing.State) {
 	const systemCrashDir = "/var/spool/crash"
@@ -269,6 +293,7 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 	if crash.goodSig != "" {
 		goodSigRegexp = regexp.MustCompile(crash.goodSig)
 	}
+	goodKcrashRegexp := regexp.MustCompile(crash.goodKcrash)
 	savedVersionRegexp := regexp.MustCompile(`ver=99999\.`)
 	savedLsbRegexp := regexp.MustCompile(`upload_var_lsb-release=99999\.`)
 	for _, match := range res.Matches {
@@ -318,6 +343,26 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 			if !savedLsbRegexp.Match(f) {
 				s.Error("Found wrong lsb-release in meta file ", match.Files[0])
 			}
+		}
+	}
+
+	for _, match := range res.Matches {
+		if !strings.HasSuffix(match.Regex, ".kcrash") {
+			continue
+		}
+		if err := d.GetFile(ctx, match.Files[0],
+			filepath.Join(s.OutDir(), path.Base(match.Files[0]))); err != nil {
+			s.Error("Failed to save kcrash file")
+			continue
+		}
+		f, err := ioutil.ReadFile(filepath.Join(s.OutDir(), path.Base(match.Files[0])))
+		if err != nil {
+			s.Error("Failed to read kcrash file", match.Files[0])
+			continue
+		}
+		s.Log("Checking kcrash")
+		if !goodKcrashRegexp.Match(f) {
+			s.Errorf("kcrash didn't match %s", goodKcrashRegexp)
 		}
 	}
 
