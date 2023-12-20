@@ -8,10 +8,13 @@ package wpasupplicant
 
 import (
 	"context"
+	"crypto/rand"
+	"net"
 
 	"github.com/godbus/dbus/v5"
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -55,6 +58,34 @@ func (s *Supplicant) CreateInterface(ctx context.Context, name, driver, cfg stri
 	ifaceCfg := map[string]dbus.Variant{"Ifname": dbus.MakeVariant(name),
 		"Driver":     dbus.MakeVariant(driver),
 		"ConfigFile": dbus.MakeVariant(cfg)}
+
+	// We don't need to return path, just check if it's correct. We can always get it via GetInterface() if needed.
+	return s.dbus.Call(ctx, dbusCreateInterfaceMethod, ifaceCfg).Store(&empty)
+}
+
+func (s *Supplicant) GenerateRandMAC(ctx context.Context) net.HardwareAddr {
+	const macBitLocal = 0x2
+	const macBitMulticast = 0x1
+
+	mac := make(net.HardwareAddr, 6)
+	if _, err := rand.Read(mac); err != nil {
+		testing.ContextLog(ctx, "failed to generate a random MAC address")
+	}
+	mac[0] = (mac[0] &^ macBitMulticast) | macBitLocal
+	return mac
+}
+
+// CreateNewInterface calls fi.w1.wpa_supplicant1.CreateInterface to create a new interface
+// and include it under supplicant control.
+func (s *Supplicant) CreateNewInterface(ctx context.Context, name, driver, cfg, ifaceType string) error {
+	var empty dbus.ObjectPath
+
+	ifaceCfg := map[string]dbus.Variant{"Ifname": dbus.MakeVariant(name),
+		"Driver":     dbus.MakeVariant(driver),
+		"ConfigFile": dbus.MakeVariant(cfg),
+		"Create":     dbus.MakeVariant(true),
+		"Type":       dbus.MakeVariant(ifaceType),
+		"Address":    dbus.MakeVariant(s.GenerateRandMAC(ctx).String())}
 
 	// We don't need to return path, just check if it's correct. We can always get it via GetInterface() if needed.
 	return s.dbus.Call(ctx, dbusCreateInterfaceMethod, ifaceCfg).Store(&empty)

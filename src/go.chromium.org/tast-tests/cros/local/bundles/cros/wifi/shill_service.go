@@ -7,7 +7,6 @@ package wifi
 import (
 	"bytes"
 	"context"
-	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"io/ioutil"
@@ -3165,49 +3164,37 @@ func (s *ShillService) startSupplicantTethering(ctx context.Context, request *wi
 	}
 
 	// Add primary interface under wpa_supplicant's control.
-	err = s.AddInterface(ctx, request.PriIface, "nl80211", path)
+	supplicant, err := wpasupplicant.NewSupplicant(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to add primary interface to supplicant")
+		return errors.Wrap(err, "failed to connect to wpa_supplicant")
+	}
+	err = supplicant.CreateInterface(ctx, request.PriIface, "nl80211", path)
+	if err != nil {
+		_, err := supplicant.GetInterface(ctx, request.PriIface)
+		if err != nil {
+			return errors.Wrap(err, "failed to add primary interface to supplicant")
+		}
 	}
 	defer func(ctx context.Context) {
 		if retErr == nil {
 			return
 		}
-		s.RemoveInterface(ctx, request.PriIface)
+		supplicant.RemoveInterface(ctx, request.PriIface)
 	}(ctx)
 
-	const macBitLocal = 0x2
-	const macBitMulticast = 0x1
-
-	// Prepare random MAC, not all drivers are capable of creating new MAC address when adding interface.
-	mac := make(net.HardwareAddr, 6)
-	if _, err := rand.Read(mac); err != nil {
-		return errors.Wrap(err, "failed to generate a random MAC address")
-	}
-	mac[0] = (mac[0] &^ macBitMulticast) | macBitLocal
-
-	// Add interface to the system.
-	err = local_iw.NewLocalRunner().AddInterface(ctx, "phy0", apIfName, iw.IfSetTypeAP, &mac)
+	// Create a new AP interface and add it under wpa_supplicant's control.
+	err = supplicant.CreateNewInterface(ctx, apIfName, "nl80211", path, "ap")
 	if err != nil {
-		return errors.Wrap(err, "failed to add interface to system")
+		_, err := supplicant.GetInterface(ctx, apIfName)
+		if err != nil {
+			return errors.Wrap(err, "failed to add AP interface to supplicant")
+		}
 	}
 	defer func(ctx context.Context) {
 		if retErr == nil {
 			return
 		}
-		local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
-	}(ctx)
-
-	// Add new interface under wpa_supplicant's control.
-	err = s.AddInterface(ctx, apIfName, "nl80211", path)
-	if err != nil {
-		return errors.Wrap(err, "failed to add interface to supplicant")
-	}
-	defer func(ctx context.Context) {
-		if retErr == nil {
-			return
-		}
-		s.RemoveInterface(ctx, apIfName)
+		supplicant.RemoveInterface(ctx, apIfName)
 	}(ctx)
 
 	// Do a scan to fetch region domain for self-managed solution.
@@ -3353,7 +3340,6 @@ func (s *ShillService) stopSupplicantTethering(ctx context.Context, request *wif
 	}
 
 	s.RemoveInterface(ctx, apIfName)
-	local_iw.NewLocalRunner().RemoveInterface(ctx, apIfName)
 	s.RemoveInterface(ctx, request.PriIface)
 	return firstErr
 }
