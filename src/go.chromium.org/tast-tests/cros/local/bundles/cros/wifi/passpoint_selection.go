@@ -66,7 +66,7 @@ func init() {
 		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"wifi", "shill-wifi"},
+		SoftwareDeps: []string{"wifi"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      5 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},

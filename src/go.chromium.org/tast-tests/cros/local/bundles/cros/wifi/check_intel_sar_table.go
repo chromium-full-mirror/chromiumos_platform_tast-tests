@@ -31,7 +31,7 @@ func init() {
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 			"chromeos-faft@google.com",
 		},
-		SoftwareDeps: []string{"wifi", "shill-wifi"},
+		SoftwareDeps: []string{"wifi"},
 		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual",
 			// Updating the SAR tables in CBFS can break this test.
 			"group:firmware", "firmware_bios",

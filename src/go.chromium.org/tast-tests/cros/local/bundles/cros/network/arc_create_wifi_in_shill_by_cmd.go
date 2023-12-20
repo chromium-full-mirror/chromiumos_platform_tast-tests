@@ -46,7 +46,7 @@ func init() {
 		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome", "arc"},
+		SoftwareDeps: []string{"wifi", "chrome", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{

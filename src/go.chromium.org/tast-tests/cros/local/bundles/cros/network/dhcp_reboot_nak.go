@@ -27,7 +27,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"wifi", "shill-wifi"},
+		SoftwareDeps: []string{"wifi"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Fixture:      "shillSimulatedWiFi",
 	})

@@ -27,7 +27,7 @@ func init() {
 			"stevenjb@chromium.org",
 		},
 		Attr:         []string{"group:mainline", "group:network", "network_cq"},
-		SoftwareDeps: []string{"chrome", "shill-wifi"},
+		SoftwareDeps: []string{"chrome"},
 
 		Params: []testing.Param{
 			{

@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		SoftwareDeps: []string{"bpf", "wifi", "shill-wifi", "chrome", caps.BuiltinCamera},
+		SoftwareDeps: []string{"bpf", "wifi", "chrome", caps.BuiltinCamera},
 		Data:         webrtc.TestFiles(),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      5 * time.Minute, // need to start Chrome in the test

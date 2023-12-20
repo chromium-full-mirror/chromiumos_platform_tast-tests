@@ -32,7 +32,7 @@ func init() {
 		// This test doesn't technically require the wificell fixture, but it's best if non-default regulatory settings are used
 		// only in RF chambers.
 		Attr:         []string{"group:wificell", "wificell_func"},
-		SoftwareDeps: []string{"wifi", "shill-wifi"},
+		SoftwareDeps: []string{"wifi"},
 		// TODO(b/192693354, b/155410645): StP2 + 3.18 doesn't have self-managed regdomain, skip the remaining board before uprev is finished.
 		HardwareDeps:    hwdep.D(hwdep.SkipOnPlatform("asuka", "sentry")),
 		Requirements:    []string{tdreq.WiFiRegSupportNL80211CMD, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},

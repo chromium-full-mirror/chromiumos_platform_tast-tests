@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFiWithChromeLoggedInWithPasspoint",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome"},
+		SoftwareDeps: []string{"wifi", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,
 		Requirements: []string{tdreq.WiFiGenSupportPasspoint},

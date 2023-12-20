@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:156085",
 		Fixture:      "arcBootedWithPasspoint",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"wifi", "shill-wifi", "chrome", "arc"},
+		SoftwareDeps: []string{"wifi", "chrome", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      7 * time.Minute,
 	})

@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// Run on both Tast CQ and suite:wifi_matfunc.
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
-		SoftwareDeps: []string{"wifi", "shill-wifi", "no_kernel_upstream"},
+		SoftwareDeps: []string{"wifi", "no_kernel_upstream"},
 		// List of requirements this test satisfies.
 		Requirements:    []string{tdreq.WiFiDrvSupportCrOS, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
