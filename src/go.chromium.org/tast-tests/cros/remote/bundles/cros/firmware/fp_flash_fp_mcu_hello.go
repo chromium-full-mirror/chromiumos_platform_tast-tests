@@ -62,9 +62,9 @@ func FpFlashFpMcuHello(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	// Reduce overall ctx time for servo and flash_fp_mcu by a minute to
-	// reserve the remaining minute for the above cleanup.
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	// Reduce overall ctx time for servo and flash_fp_mcu to reserve some
+	// time for the above cleanup.
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
 	servoSpec, ok := s.Var("servo")
