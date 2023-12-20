@@ -26,10 +26,19 @@ func init() {
 		Desc:         "A regression test for crbug.com/1442990 that checks for potential dma buffer leak",
 		Contacts:     []string{"lacros-team@google.com", "diwux@chromium.org", "petermcneeley@chromium.org"},
 		BugComponent: "crbug:OS>LaCrOS",
-		Attr:         []string{"group:mainline", "informational"},
-		HardwareDeps: hwdep.D(hwdep.Model("barla", "fleex", "hana", "redrix", "eve", "atlas", "esche")),
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacros",
+		Params: []testing.Param{{
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			// Kaisa is a Puff and is currently used in Lacros Green Release
+			// Voxel is a Volteer and is currently used in Browser CQ and OS CQ chrome uprev
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("kaisa", "voxel")),
+		}, {
+			Name:              "unstable",
+			ExtraSoftwareDeps: []string{"lacros_unstable"},
+			ExtraAttr:         []string{"group:mainline", "informational"},
+		}},
 	})
 }
 
