@@ -285,9 +285,23 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		if err := i.WaitUntilAnySleep(ctx, 3*time.Minute); err == nil {
 			s.Error("Ti50 went to sleep while in EC packet mode")
 		}
+
+		// Having at this point seen that Ti50 stays awake for as long as EC keeps packet
+		// mode asserted, we are ready to deassert the signal.  However, doing so seems to
+		// currently cause Ti50 to immediately attempt to go to sleep, while still
+		// printing a message about the packet mode signal having just changed, and that
+		// confuses the test.  The line below triggers trivial activity, such that Ti50
+		// will wait a number of seconds before going to sleep, sidestepping the issue.
+		// TODO(b/317269418): We might want to have the GPIO edge count as "activity" for
+		// the purposes of delaying sleep until a set number of seconds after last
+		// activity.
+		if _, err := i.Command(ctx, ""); err != nil {
+			s.Error("Error poking Ti50")
+		}
+
 		b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, false)
 		s.Log("Waiting for sleep with AP on")
-		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
+		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
 	} else {
 		// Error already reported by `verifyNormalWakeup`, move on to testing other wake
 		// sources.
@@ -333,7 +347,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Log("Simulating AP powering off")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "PltRstL") {
+	if !verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "PltRstL") {
 		s.Fatal("Could not get Ti50 out of 'AP on' mode, preventing further testing")
 	}
 	s.Log("Waiting for sleep with AP off")
