@@ -1,0 +1,78 @@
+{
+  "atlas": {
+    "bus_info": "PCI:0000:00:14.3",
+    "out_entity": "ipu3-cio2 0"
+  },
+  "aviko-KC4eb5": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "craask-TC0002": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "craaskbowl-TC0003": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "drawcia-LV0001": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "kano-CH0001": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
+  "kano-CH3c6d": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
+  "maglia-TC0003": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "magolor-TC0003": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "nautilus": {
+    "bus_info": "PCI:0000:00:14.3",
+    "out_entity": "ipu3-cio2 0"
+  },
+  "nocturne": {
+    "bus_info": "PCI:0000:00:14.3",
+    "out_entity": "ipu3-cio2 0"
+  },
+  "redrix-PLcf06": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
+  "screebo-ST0d2c": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 4"
+  },
+  "skolas-KC4eb5": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "soraka": {
+    "bus_info": "PCI:0000:00:14.3",
+    "out_entity": "ipu3-cio2 1"
+  },
+  "storo360-KC0001": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "vell-TCf939": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
+  "voema-CH0001": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
+  "xivu360-KC0001": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  }
+}

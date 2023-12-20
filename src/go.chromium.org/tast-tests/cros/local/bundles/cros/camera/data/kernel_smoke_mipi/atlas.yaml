@@ -1,0 +1,609 @@
+remap_entity_by_name:
+- id: 1
+  name: ipu3-csi2 0
+- id: 4
+  name: ipu3-cio2 0
+- id: 10
+  name: ipu3-csi2 1
+- id: 13
+  name: ipu3-cio2 1
+- id: 19
+  name: ipu3-csi2 2
+- id: 22
+  name: ipu3-cio2 2
+- id: 28
+  name: ipu3-csi2 3
+- id: 31
+  name: ipu3-cio2 3
+- id: 37
+  name: imx208 2-0010
+media_ctl:
+  info:
+    driver: ipu3-cio2
+    model: Intel IPU3 CIO2
+    serial:
+    bus_info: PCI:0000:00:14.3
+    media_version: 330444
+    hw_revision: 0
+    driver_version: 330444
+  entities:
+  - desc:
+      id: 1
+      name: ipu3-csi2 0
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 1
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12303
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12303
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 4
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 4
+      name: ipu3-cio2 0
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1936
+        height: 1096
+        pixelformat: 1915973737
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 2735616
+          bytesperline: 2496
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 4
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 10
+      name: ipu3-csi2 1
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 10
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 10
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 13
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 13
+      name: ipu3-cio2 1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1936
+        height: 1096
+        pixelformat: 1194553449
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 2735616
+          bytesperline: 2496
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 13
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 19
+      name: ipu3-csi2 2
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 19
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 19
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 22
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 22
+      name: ipu3-cio2 2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1936
+        height: 1096
+        pixelformat: 1194553449
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 2735616
+          bytesperline: 2496
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 22
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 28
+      name: ipu3-csi2 3
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 28
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 28
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 31
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 3
+        reserved: [0, 0]
+  - desc:
+      id: 31
+      name: ipu3-cio2 3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1936
+        height: 1096
+        pixelformat: 1194553449
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 2735616
+          bytesperline: 2496
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 31
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties: {}
+      links: []
+  - desc:
+      id: 37
+      name: imx208 2-0010
+      type: 131073
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9963793
+        type: 1
+        name: Exposure
+        minimum: 4
+        maximum: 2270
+        step: 1
+        default_value: 2270
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 2268
+    - desc:
+        id: 9963796
+        type: 2
+        name: Horizontal Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 9963797
+        type: 2
+        name: Vertical Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 16
+        maximum: 64439
+        step: 1
+        default_value: 42
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1182
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 312
+        maximum: 312
+        step: 1
+        default_value: 312
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 312
+    - desc:
+        id: 10356995
+        type: 1
+        name: Analogue Gain
+        minimum: 0
+        maximum: 224
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 216
+    - desc:
+        id: 10422529
+        type: 9
+        name: Link Frequency
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422530
+        type: 5
+        name: Pixel Rate
+        minimum: 38400000
+        maximum: 153600000
+        step: 1
+        default_value: 153600000
+        flags: 4
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 153600000
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 10
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422533
+        type: 9
+        name: Digital Gain
+        minimum: 0
+        maximum: 4
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 2
+    pads:
+    - desc:
+        entity: 37
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 1936
+          height: 1096
+          code: 12303
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 1
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]

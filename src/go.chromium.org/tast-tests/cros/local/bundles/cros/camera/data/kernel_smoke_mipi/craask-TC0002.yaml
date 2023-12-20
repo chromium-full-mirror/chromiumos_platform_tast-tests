@@ -1,0 +1,3863 @@
+remap_entity_by_name:
+- id: 1
+  name: Intel IPU6 CSI-2 0
+- id: 4
+  name: Intel IPU6 CSI-2 0 capture
+- id: 10
+  name: Intel IPU6 CSI-2 1
+- id: 13
+  name: Intel IPU6 CSI-2 1 capture
+- id: 19
+  name: Intel IPU6 CSI-2 2
+- id: 22
+  name: Intel IPU6 CSI-2 2 capture
+- id: 28
+  name: Intel IPU6 CSI-2 3
+- id: 31
+  name: Intel IPU6 CSI-2 3 capture
+- id: 37
+  name: Intel IPU6 CSI-2 4
+- id: 40
+  name: Intel IPU6 CSI-2 4 capture
+- id: 46
+  name: Intel IPU6 CSI-2 5
+- id: 49
+  name: Intel IPU6 CSI-2 5 capture
+- id: 55
+  name: Intel IPU6 CSI-2 6
+- id: 58
+  name: Intel IPU6 CSI-2 6 capture
+- id: 64
+  name: Intel IPU6 CSI-2 7
+- id: 67
+  name: Intel IPU6 CSI-2 7 capture
+- id: 73
+  name: Intel IPU6 CSI2 BE SOC 0
+- id: 76
+  name: Intel IPU6 BE SOC capture 0
+- id: 82
+  name: Intel IPU6 CSI2 BE SOC 1
+- id: 85
+  name: Intel IPU6 BE SOC capture 1
+- id: 91
+  name: Intel IPU6 CSI2 BE SOC 2
+- id: 94
+  name: Intel IPU6 BE SOC capture 2
+- id: 100
+  name: Intel IPU6 CSI2 BE SOC 3
+- id: 103
+  name: Intel IPU6 BE SOC capture 3
+- id: 109
+  name: Intel IPU6 CSI2 BE SOC 4
+- id: 112
+  name: Intel IPU6 BE SOC capture 4
+- id: 118
+  name: Intel IPU6 CSI2 BE SOC 5
+- id: 121
+  name: Intel IPU6 BE SOC capture 5
+- id: 127
+  name: Intel IPU6 CSI2 BE SOC 6
+- id: 130
+  name: Intel IPU6 BE SOC capture 6
+- id: 136
+  name: Intel IPU6 CSI2 BE SOC 7
+- id: 139
+  name: Intel IPU6 BE SOC capture 7
+- id: 145
+  name: Intel IPU6 CSI2 BE
+- id: 148
+  name: Intel IPU6 CSI2 BE capture
+- id: 298
+  name: ov8856 11-0010
+- id: 338
+  name: dw9714 11-000c
+media_ctl:
+  info:
+    driver: intel-ipu6-isys
+    model: ipu6
+    serial:
+    bus_info: pci:pci0000:00
+    media_version: 331662
+    hw_revision: 0
+    driver_version: 331662
+  entities:
+  - desc:
+      id: 1
+      name: Intel IPU6 CSI-2 0
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 1
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 1
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 4
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 4
+      name: Intel IPU6 CSI-2 0 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 4
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 10
+      name: Intel IPU6 CSI-2 1
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 10
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 3280
+          height: 2464
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 10
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 3280
+          height: 2464
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 13
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 13
+      name: Intel IPU6 CSI-2 1 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 13
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 19
+      name: Intel IPU6 CSI-2 2
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 19
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 19
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 22
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 22
+      name: Intel IPU6 CSI-2 2 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 22
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 28
+      name: Intel IPU6 CSI-2 3
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 28
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 28
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 31
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 31
+      name: Intel IPU6 CSI-2 3 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 31
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 37
+      name: Intel IPU6 CSI-2 4
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 37
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 37
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 40
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 40
+      name: Intel IPU6 CSI-2 4 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 40
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 46
+      name: Intel IPU6 CSI-2 5
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 46
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 46
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 49
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 49
+      name: Intel IPU6 CSI-2 5 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 49
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 55
+      name: Intel IPU6 CSI-2 6
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 55
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 55
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 58
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 58
+      name: Intel IPU6 CSI-2 6 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 58
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 64
+      name: Intel IPU6 CSI-2 7
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 10
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9968002
+        type: 2
+        name: Store CSI-2 Headers
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 1
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 64
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 64
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 67
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 145
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 73
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 82
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 91
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 100
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 109
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 118
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 127
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+      - sink:
+          entity: 136
+          index: 0
+          flags: 1
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 67
+      name: Intel IPU6 CSI-2 7 capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    pads:
+    - desc:
+        entity: 67
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 73
+      name: Intel IPU6 CSI2 BE SOC 0
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 73
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 3280
+          height: 2464
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 73
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 3296
+          height: 2464
+        fmt:
+          width: 3296
+          height: 2464
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 3296
+            height: 2464
+      links:
+      - sink:
+          entity: 76
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 5
+        reserved: [0, 0]
+  - desc:
+      id: 76
+      name: Intel IPU6 BE SOC capture 0
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 3296
+        height: 2464
+        pixelformat: 808534338
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 16416768
+          bytesperline: 6656
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    pads:
+    - desc:
+        entity: 76
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 82
+      name: Intel IPU6 CSI2 BE SOC 1
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 82
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 82
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 85
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+  - desc:
+      id: 85
+      name: Intel IPU6 BE SOC capture 1
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 85
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 91
+      name: Intel IPU6 CSI2 BE SOC 2
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 91
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 91
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 94
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+  - desc:
+      id: 94
+      name: Intel IPU6 BE SOC capture 2
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 94
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 100
+      name: Intel IPU6 CSI2 BE SOC 3
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 100
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 100
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 103
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+  - desc:
+      id: 103
+      name: Intel IPU6 BE SOC capture 3
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 103
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 109
+      name: Intel IPU6 CSI2 BE SOC 4
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 109
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 109
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 112
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+  - desc:
+      id: 112
+      name: Intel IPU6 BE SOC capture 4
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 112
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 118
+      name: Intel IPU6 CSI2 BE SOC 5
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 118
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 118
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 121
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+  - desc:
+      id: 121
+      name: Intel IPU6 BE SOC capture 5
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 121
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 127
+      name: Intel IPU6 CSI2 BE SOC 6
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 127
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 127
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 130
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+  - desc:
+      id: 130
+      name: Intel IPU6 BE SOC capture 6
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 130
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 136
+      name: Intel IPU6 CSI2 BE SOC 7
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 136
+        index: 0
+        flags: 1
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 136
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 8202
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 139
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 4
+        reserved: [0, 0]
+  - desc:
+      id: 139
+      name: Intel IPU6 BE SOC capture 7
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 540029273
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS BE-SOC compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 139
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 145
+      name: Intel IPU6 CSI2 BE
+      type: 131072
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 2
+      links: 1
+    v4l_properties: {}
+    pads:
+    - desc:
+        entity: 145
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12296
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links: []
+    - desc:
+        entity: 145
+        index: 1
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 4096
+          height: 3072
+        fmt:
+          width: 4096
+          height: 3072
+          code: 12296
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 4096
+            height: 3072
+      links:
+      - sink:
+          entity: 148
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 0
+        reserved: [0, 0]
+  - desc:
+      id: 148
+      name: Intel IPU6 CSI2 BE capture
+      type: 65537
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 0
+    v4l_properties:
+      fmt_video_capture_mplane:
+        width: 1
+        height: 1
+        pixelformat: 842090306
+        field: 1
+        colorspace: 11
+        plane_fmt:
+        - sizeimage: 1088
+          bytesperline: 64
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        - sizeimage: 0
+          bytesperline: 0
+        num_planes: 1
+        flags: 0
+        ycbcr_enc: 0
+        quantization: 0
+        xfer_func: 0
+        reserved: [0, 0, 0, 0, 0, 0, 0]
+      input: 0
+      priority: 2
+    controls:
+    - desc:
+        id: 9968003
+        type: 2
+        name: ISYS CSI-BE compression
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    pads:
+    - desc:
+        entity: 148
+        index: 0
+        flags: 5
+        reserved: [0, 0]
+      subdev_properties:
+        crop:
+          left: 0
+          top: 0
+          width: 0
+          height: 0
+        fmt:
+          width: 0
+          height: 0
+          code: 0
+          field: 0
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        frame_interval:
+          numerator: 0
+          denominator: 0
+        selection:
+          crop:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          crop_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          native_size:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_default:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_bounds:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+          compose_padded:
+            left: 0
+            top: 0
+            width: 0
+            height: 0
+      links: []
+  - desc:
+      id: 298
+      name: ov8856 11-0010
+      type: 131073
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 1
+      links: 1
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 9963793
+        type: 1
+        name: Exposure
+        minimum: 6
+        maximum: 2484
+        step: 1
+        default_value: 2484
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 2484
+    - desc:
+        id: 9963796
+        type: 2
+        name: Horizontal Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 9963797
+        type: 2
+        name: Vertical Flip
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1
+    - desc:
+        id: 10356993
+        type: 1
+        name: Vertical Blanking
+        minimum: 24
+        maximum: 30303
+        step: 1
+        default_value: 24
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 26
+    - desc:
+        id: 10356994
+        type: 1
+        name: Horizontal Blanking
+        minimum: 576
+        maximum: 576
+        step: 1
+        default_value: 576
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 576
+    - desc:
+        id: 10356995
+        type: 1
+        name: Analogue Gain
+        minimum: 128
+        maximum: 2047
+        step: 1
+        default_value: 128
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 1984
+    - desc:
+        id: 10422529
+        type: 9
+        name: Link Frequency
+        minimum: 0
+        maximum: 1
+        step: 1
+        default_value: 0
+        flags: 4
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422530
+        type: 5
+        name: Pixel Rate
+        minimum: 0
+        maximum: 288000000
+        step: 1
+        default_value: 288000000
+        flags: 4
+        elem_size: 8
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 288000000
+    - desc:
+        id: 10422531
+        type: 3
+        name: Test Pattern
+        minimum: 0
+        maximum: 4
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 0
+    - desc:
+        id: 10422533
+        type: 1
+        name: Digital Gain
+        minimum: 0
+        maximum: 4095
+        step: 1
+        default_value: 1024
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 3072
+    pads:
+    - desc:
+        entity: 298
+        index: 0
+        flags: 2
+        reserved: [0, 0]
+      subdev_properties:
+        fmt:
+          width: 3280
+          height: 2464
+          code: 12298
+          field: 1
+          colorspace: 0
+          ycbcr_enc: 0
+          quantization: 0
+          xfer_func: 0
+          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      links:
+      - sink:
+          entity: 10
+          index: 0
+          flags: 5
+          reserved: [0, 0]
+        flags: 1
+        reserved: [0, 0]
+  - desc:
+      id: 338
+      name: dw9714 11-000c
+      type: 131075
+      revision: 0
+      flags: 0
+      group_id: 0
+      pads: 0
+      links: 0
+    v4l_properties: {}
+    controls:
+    - desc:
+        id: 10094858
+        type: 1
+        name: Focus, Absolute
+        minimum: 0
+        maximum: 1023
+        step: 1
+        default_value: 0
+        flags: 0
+        elem_size: 4
+        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+      values:
+      - 223
+    pads: []
