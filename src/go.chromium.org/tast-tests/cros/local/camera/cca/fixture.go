@@ -44,6 +44,10 @@ const (
 
 type feature string
 
+const (
+	autoQR feature = "CameraAppAutoQRDetection"
+)
+
 var (
 	recordScreen = testing.RegisterVarString(
 		"cca.record_screen",
@@ -249,6 +253,28 @@ func init() {
 		Desc:            "Set up test bridge for CCA with Auto Framing force enabled",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
 		Impl:            &fixture{forceEnableAutoFraming: true},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	// TODO(b/298581154): Remove this fixture once the feature flag is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithAutoQROnFakeHALCamera",
+		Desc:            "Set up test bridge for CCA with fake camera HAL input with auto-qr flag enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org", "chromeos-camera-eng@google.com"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{autoQR}},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
+
+	// TODO(b/298581154): Remove this fixture once the feature flag is enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaTestBridgeReadyWithAutoQROnFakeHALCameraLacros",
+		Desc:            "Set up test bridge for CCA with fake camera HAL input and lacros with auto-qr flag enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org", "chromeos-camera-eng@google.com"},
+		Impl:            &fixture{useCameraType: testutil.UseFakeHALCamera, lacros: true, enableFeatures: []feature{autoQR}},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,

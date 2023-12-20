@@ -48,6 +48,8 @@ const (
 	BarcodeChipText UIComponentName = "barcodeChipText"
 	// BarcodeChipURL is chip for url detected from barcode.
 	BarcodeChipURL UIComponentName = "barcodeChipURL"
+	// BarcodeChipURL is chip for url detected from barcode.
+	BarcodeChipWifi UIComponentName = "barcodeChipWifi"
 	// BarcodeCopyTextButton is button to copy text detected from barcode.
 	BarcodeCopyTextButton UIComponentName = "barcodeCopyTextButton"
 	// BarcodeCopyURLButton is button to copy url detected from barcode.
