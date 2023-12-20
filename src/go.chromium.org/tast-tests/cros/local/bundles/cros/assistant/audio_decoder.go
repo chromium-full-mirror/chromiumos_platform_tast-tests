@@ -120,9 +120,9 @@ func AudioDecoder(ctx context.Context, s *testing.State) {
 	}
 
 	// assistant.SendTextQuery waits a response (e.g. text response) from Assistant.
-	// Play News query does not provide those type of responses and the API call gets timed out.
+	// Play Podcast query does not provide those type of responses and the API call gets timed out.
 	// Use SendTextQueryViaUI as it does not wait a response.
-	if err := assistant.SendTextQueryViaUI(ctx, tconn, "Play News", accel); err != nil {
+	if err := assistant.SendTextQueryViaUI(ctx, tconn, "Play Podcast", accel); err != nil {
 		s.Fatal("Failed to send text query via UI: ", err)
 	}
 
@@ -133,9 +133,9 @@ func AudioDecoder(ctx context.Context, s *testing.State) {
 		s.Fatal("Expect audio decoder process is running: ", err)
 	}
 
-	_, err = assistant.SendTextQuery(ctx, tconn, "Stop News")
+	_, err = assistant.SendTextQuery(ctx, tconn, "Stop Podcast")
 	if err != nil {
-		s.Fatal("Failed to send Stop News query: ", err)
+		s.Fatal("Failed to send Stop Podcast query: ", err)
 	}
 
 	if err := testing.Poll(ctx,
