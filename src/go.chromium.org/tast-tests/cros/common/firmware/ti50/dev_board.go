@@ -10,6 +10,9 @@ import (
 	"time"
 )
 
+// I2cBusName represents a I2C bus that Open Titan Tool can act as either host or device on
+type I2cBusName string
+
 // GpioStrap represents a certain preset gpio configuration
 type GpioStrap string
 

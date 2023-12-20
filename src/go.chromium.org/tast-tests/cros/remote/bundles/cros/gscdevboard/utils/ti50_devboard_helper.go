@@ -7,6 +7,7 @@ package utils
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -534,4 +535,145 @@ func (h DevboardHelper) CCDMustNotBeConnected(ctx context.Context, duration time
 	if err == nil {
 		h.Fatalf("CCD connect unexpectedly")
 	}
+}
+
+// I2CHostMode switches an I2C port of the debugger to act as host (this is the default).
+func (h DevboardHelper) I2CHostMode(ctx context.Context, bus ti50.I2cBusName) {
+	_, err := h.PlainCommand(ctx, "i2c", "--bus", string(bus), "set-mode", "host")
+	if err != nil {
+		h.Fatalf("failed to switch to I2C device mode: %s", err)
+	}
+}
+
+// I2CDeviceMode switches an I2C port of the debugger to act as device with the given address.
+func (h DevboardHelper) I2CDeviceMode(ctx context.Context, bus ti50.I2cBusName, addr byte) {
+	_, err := h.PlainCommand(ctx, "i2c", "--bus", string(bus), "set-mode", "device", "--addr", "0x"+strconv.FormatInt(int64(addr), 16))
+	if err != nil {
+		h.Fatalf("failed to switch to I2C device mode: %s", err)
+	}
+}
+
+// I2CDevicePrepareRead instructs the debugger what data to respond with, should the I2C host
+// initiate a read transfer in the future (or in case the host has already initiated one, which is
+// currently being stalled by the debugger through "clock stretching").
+func (h DevboardHelper) I2CDevicePrepareRead(ctx context.Context, bus ti50.I2cBusName, data []byte) {
+	_, err := h.PlainCommand(ctx, "i2c", "--bus", string(bus), "prepare-read", "--hexdata", hex.EncodeToString(data), "--sticky")
+	if err != nil {
+		h.Fatalf("failed to prepare I2C data: %s", err)
+	}
+}
+
+// I2CDeviceReadStatus represents the current state of I2C bus, with respect to a host attempting
+// to read data from the debugger, acting as I2C device.
+type I2CDeviceReadStatus string
+
+const (
+	// I2CDeviceWaitingForData means that the debugger is currently stretching the clock, as
+	// the I2C host is attempting to read data.  `I2CDevicePrepareRead()` needs to be urgently
+	// called with data to respond with.  It is uncertain how many milliseconds the I2C host
+	// is willing to wait.
+	I2CDeviceWaitingForData I2CDeviceReadStatus = "WaitingForData"
+
+	// I2CDeviceIdle means that the I2C host is not currently attempting to read data, but
+	// also that the debugger does not have a prepared response, should the host device
+	// initiate a read transfer.
+	I2CDeviceIdle I2CDeviceReadStatus = "Idle"
+
+	// I2CDeviceDataPrepared means that the debugger has one or more bytes prepared, for when
+	// the I2C initiates a read transfer.
+	I2CDeviceDataPrepared I2CDeviceReadStatus = "DataPrepared"
+)
+
+type i2cDeviceStatusJSON struct {
+	Transfers []struct {
+		Write struct {
+			Addr    byte   `json:"addr"`
+			Hexdata string `json:"hexdata"`
+		} `json:"Write,omitempty"`
+		Read struct {
+			Addr    byte `json:"addr"`
+			Timeout bool `json:"timeout"`
+			Len     int  `json:"len"`
+		} `json:"Read,omitempty"`
+	} `json:"transfers"`
+	ReadStatus I2CDeviceReadStatus `json:"read_status"`
+}
+
+// I2CDirection represents the direction of an I2C transfer (read or write), from the perspective
+// of the I2C host.
+type I2CDirection string
+
+const (
+	// I2CRead represents the I2C host receiving data from the I2C device.
+	I2CRead I2CDirection = "read"
+	// I2CWrite represents the I2C host sending data to the I2C device.
+	I2CWrite I2CDirection = "write"
+)
+
+// I2CDeviceTransfer is a record of a I2C transfer as it happened on a debugger bus.
+type I2CDeviceTransfer struct {
+	// Addr is the I2C address to which the debugger responded.
+	Addr byte
+	// Direction is the direction of an I2C transfer (read or write), from the perspective of
+	// the I2C host.
+	Direction I2CDirection
+	// Len is the number of bytes transferred.
+	Len int
+	// Data is populated only for `I2CWrite` direction, with `Len` bytes from the I2C host.
+	Data []byte
+	// Timeout is true if the debugger did not have data, and the I2C host gave up waiting
+	// (make sense only for `I2CRead`, for writes Timeout is always false.)
+	Timeout bool
+}
+
+// I2CDeviceStatus contains a transcript of transactions having happened since last time, as well
+// as an indication whether the I2C host is waiting to read data, or whether the debugger has
+// prepared data ready, should the host want to read later.
+type I2CDeviceStatus struct {
+	Transfers  []I2CDeviceTransfer
+	ReadStatus I2CDeviceReadStatus
+}
+
+// I2CDeviceGetStatus returns a transcript of transactions having happened since last time, as
+// well as an indication whether the I2C host is waiting to read data, or whether the debugger has
+// prepared data ready, should the host want to read later.
+func (h DevboardHelper) I2CDeviceGetStatus(ctx context.Context, bus ti50.I2cBusName) I2CDeviceStatus {
+	args := []string{"--bus", string(bus), "get-device-status"}
+	outputText, err := h.PlainCommand(ctx, "i2c", args...)
+	if err != nil {
+		h.Fatalf("failed to retrieve I2C device data: %s", err)
+	}
+	outputJSON := i2cDeviceStatusJSON{}
+	if err := json.Unmarshal(outputText, &outputJSON); err != nil {
+		h.Fatalf("failed to parse I2C device data: %q: %s", string(outputText), err)
+	}
+	output := I2CDeviceStatus{}
+
+	// Convert JSON structs into slightly more convenient structs
+	for _, transfer := range outputJSON.Transfers {
+		if transfer.Write.Addr != 0 {
+			data, err := hex.DecodeString(transfer.Write.Hexdata)
+			if err != nil {
+				h.Fatalf("failed to parse I2C device hex data: %q: %s", transfer.Write.Hexdata, err)
+			}
+			output.Transfers = append(output.Transfers, I2CDeviceTransfer{
+				Addr:      transfer.Write.Addr,
+				Direction: I2CWrite,
+				Data:      data,
+				Len:       len(data),
+				Timeout:   false,
+			})
+		} else if transfer.Read.Addr != 0 {
+			output.Transfers = append(output.Transfers, I2CDeviceTransfer{
+				Addr:      transfer.Read.Addr,
+				Direction: I2CRead,
+				Len:       transfer.Read.Len,
+				Timeout:   transfer.Read.Timeout,
+			})
+		} else {
+			h.Fatalf("unrecognized I2C JSON data")
+		}
+	}
+	output.ReadStatus = outputJSON.ReadStatus
+	return output
 }

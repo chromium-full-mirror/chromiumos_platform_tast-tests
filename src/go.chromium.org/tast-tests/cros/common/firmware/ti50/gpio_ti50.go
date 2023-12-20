@@ -121,3 +121,14 @@ const (
 	// GpioTi50CcdModeL is the in/out low-active signal for when CCD cable is detected.
 	GpioTi50CcdModeL GpioName = "CCD_MODE_ODL"
 )
+
+const (
+	// I2cTi50Tpm is the I2C bus on which Ti50 is TPM device.
+	I2cTi50Tpm I2cBusName = "TPM"
+	// I2cTi50Debug is one of the I2C busses on which Ti50 is host, (should use alias, waiting
+	// for OpenTitanTool support).
+	I2cTi50Debug I2cBusName = "I2C2"
+	// I2cTi50Smbus is one of the I2C busses on which Ti50 is host, (should use alias, waiting
+	// for OpenTitanTool support).
+	I2cTi50Smbus I2cBusName = "I2C3"
+)
