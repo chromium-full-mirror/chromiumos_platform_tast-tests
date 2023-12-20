@@ -45,7 +45,7 @@ func dumpRollbackFiles(ctx context.Context, dut *dut.DUT) error {
 
 	// Use a timestamp to avoid overwriting any existing directories.
 	timeStr := time.Now().UTC().Format(time.RFC3339Nano)
-	dir := filepath.Join(outDir, "rollback_before_powerwash", timeStr)
+	dir := filepath.Join(outDir, "rollback_relevant_data", timeStr)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return errors.Wrapf(err, "failed to create directory %q to store rollback data", dir)
 	}
@@ -72,7 +72,7 @@ func dumpRollbackFiles(ctx context.Context, dut *dut.DUT) error {
 	for _, fileInfo := range rollbackFiles {
 		pathDst := filepath.Join(dir, fileInfo.SaveName)
 		if err := linuxssh.GetFile(ctx, dut.Conn(), fileInfo.Path, pathDst, linuxssh.DereferenceSymlinks); err != nil {
-			testing.ContextLog(ctx, "Not possible to download ", fileInfo.Path)
+			testing.ContextLogf(ctx, "Did not download %v: %v", fileInfo.Path, err)
 		}
 	}
 
@@ -290,6 +290,11 @@ var ErrPowerwashFailed = errors.New("failed to simulate powerwash")
 func ClearRollbackAndSystemData(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint) error {
 	dut.Conn().CommandContext(ctx, "stop", "oobe_config_save").Run()
 
+	if err := SimulatePowerwash(ctx, dut, rpcHint); err != nil {
+		testing.ContextLog(ctx, "Failed to powerwash, this may happen on previous images: ", err)
+		return ErrPowerwashFailed
+	}
+
 	if err := dut.Conn().CommandContext(ctx, "rm", "-f", "/mnt/stateful_partition/.save_rollback_data").Run(); err != nil {
 		return errors.Wrap(err, "failed to remove data save flag")
 	}
@@ -300,11 +305,6 @@ func ClearRollbackAndSystemData(ctx context.Context, dut *dut.DUT, rpcHint *test
 
 	if err := dut.Conn().CommandContext(ctx, "rm", "-f", "/mnt/stateful_partition/unencrypted/preserve/rollback_data_tpm").Run(); err != nil {
 		return errors.Wrap(err, "failed to remove TPM encrypted rollback data")
-	}
-
-	if err := SimulatePowerwash(ctx, dut, rpcHint); err != nil {
-		testing.ContextLog(ctx, "Failed to powerwash, this may happen on previous images: ", err)
-		return ErrPowerwashFailed
 	}
 
 	return nil
