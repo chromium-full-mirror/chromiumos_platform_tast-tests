@@ -32,7 +32,13 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_func", "wificell_reboot"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		TestBedDeps: []string{
+			tbdep.Wificell,
+			tbdep.WifiStateNormal,
+			tbdep.PeripheralWifiStateWorking,
+			tbdep.Bluetooth,
+			tbdep.BluetoothStateNormal,
+		},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
