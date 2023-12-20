@@ -139,6 +139,35 @@ func (cw ChWidthEnum) String() string {
 	return typeStr
 }
 
+// BandEnum is the type for the WiFi band.
+type BandEnum int
+
+// Band enums.
+const (
+	Band2Ghz BandEnum = iota
+	Band5Ghz
+	Band6Ghz
+	BandUnknown
+)
+
+// String returns BandEnum as a string.
+func (b BandEnum) String() string {
+	var typeStr string
+	switch b {
+	case Band2Ghz:
+		typeStr = "2.4Ghz"
+	case Band5Ghz:
+		typeStr = "5Ghz"
+	case Band6Ghz:
+		typeStr = "6Ghz"
+	case BandUnknown:
+		typeStr = ""
+	default:
+		typeStr = string(rune(b))
+	}
+	return typeStr
+}
+
 // OpModeEnum is the type for specifying operating mode in hostapd config.
 type OpModeEnum int
 
@@ -1120,6 +1149,25 @@ func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
 		return ChWidthUnknown, "11" + string(c.Mode)
 	}
 	return width, mode.String()
+}
+
+// OperatingBandAndFreq returns the operating band and frequency.
+func (c *Config) OperatingBandAndFreq() (BandEnum, int, error) {
+	var band BandEnum
+	freq, err := ChannelToFrequencyWithOpClass(c.Channel, c.OpClass)
+	if err != nil {
+		return BandUnknown, 0, err
+	}
+	if freq >= 2412 && freq <= 2484 {
+		band = Band2Ghz
+	} else if freq >= 5160 && freq <= 5885 {
+		band = Band5Ghz
+	} else if freq >= 5935 && freq <= 7115 {
+		band = Band6Ghz
+	} else {
+		return BandUnknown, freq, errors.New("unknown band")
+	}
+	return band, freq, nil
 }
 
 // validate validates the Config, c.
