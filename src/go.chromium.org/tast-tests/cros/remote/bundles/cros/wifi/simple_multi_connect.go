@@ -20,8 +20,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		//TODO(b/304830047): Promote test to stable by removing wificell_cross_device_unstable tag.
-		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_multidut", "wificell_cross_device_unstable"},
+		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_multidut"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		ServiceDeps:  []string{wificell.ShillServiceName},
