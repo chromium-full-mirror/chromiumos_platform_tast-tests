@@ -38,9 +38,8 @@ func init() {
 			"mcasas@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
-		// Don't run these tests on "vaapi" since the legacy decoder is not used on
-		// those platforms and it's on its way to deprecation, see b/275623115.
-		SoftwareDeps: []string{"chrome", "video_decoder_legacy_supported", "v4l2_codec"},
+		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.GPUFamily("rogue")), // MT8173, e.g. Hana.
 		Timeout:      4 * time.Minute,
 		Fixture:      "graphicsNoChrome",
 		Params: []testing.Param{{

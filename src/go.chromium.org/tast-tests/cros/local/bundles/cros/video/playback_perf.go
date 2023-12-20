@@ -714,48 +714,52 @@ func init() {
 				Fixture:           "chromeVideo",
 			},
 			{
-				Name: "h264_1080p_60fps_hw_alt",
+				Name: "h264_1080p_60fps_hw_v4l2_flat_stateful",
 				Val: playbackPerfParams{
 					fileName:    "perf/h264/1080p_60fps_600frames.h264.mp4",
 					decoderType: 0,
 					browserType: browser.TypeAsh,
 				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60", "video_decoder_legacy_supported", "v4l2_codec"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
-				Fixture:           "chromeAlternateVideoDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 			},
 			{
-				Name: "vp8_1080p_60fps_hw_alt",
+				Name: "vp8_1080p_60fps_hw_v4l2_flat_stateful",
 				Val: playbackPerfParams{
 					fileName:    "perf/vp8/1080p_60fps_600frames.vp8.webm",
 					decoderType: 0,
 					browserType: browser.TypeAsh,
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "video_decoder_legacy_supported", "v4l2_codec"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.webm"},
-				Fixture:           "chromeAlternateVideoDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 			},
 			{
-				Name: "vp9_1080p_60fps_hw_alt",
+				Name: "vp9_1080p_60fps_hw_v4l2_flat_stateful",
 				Val: playbackPerfParams{
 					fileName:    "perf/vp9/1080p_60fps_600frames.vp9.webm",
 					decoderType: 0,
 					browserType: browser.TypeAsh,
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "video_decoder_legacy_supported", "v4l2_codec"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
-				Fixture:           "chromeAlternateVideoDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 			},
 			{
-				Name: "vp9_2160p_60fps_hw_alt",
+				Name: "vp9_2160p_60fps_hw_v4l2_flat_stateful",
 				Val: playbackPerfParams{
 					fileName:    "perf/vp9/2160p_60fps_600frames.vp9.webm",
 					decoderType: 0,
 					browserType: browser.TypeAsh,
 				},
-				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60", "video_decoder_legacy_supported", "v4l2_codec"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.webm"},
-				Fixture:           "chromeAlternateVideoDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 			},
 			{
 				Name: "h264_1080p_30fps_hw_long",
@@ -1394,7 +1398,7 @@ func init() {
 				Fixture:           "chromeVideoWithIntelMediaCompression",
 			},
 			{
-				Name: "h264_1080p_30fps_hw_v4l2_flat_stateful_decoder",
+				Name: "h264_1080p_30fps_hw_v4l2_flat_stateful_long",
 				Val: playbackPerfParams{
 					fileName:         "crosvideo/1080.mp4",
 					decoderType:      0,
@@ -1407,7 +1411,7 @@ func init() {
 				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 			},
 			{
-				Name: "vp8_1080p_30fps_hw_v4l2_flat_stateful_decoder",
+				Name: "vp8_1080p_30fps_hw_v4l2_flat_stateful_long",
 				Val: playbackPerfParams{
 					fileName:         "crosvideo/1080_vp8.webm",
 					decoderType:      0,
@@ -1420,7 +1424,7 @@ func init() {
 				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 			},
 			{
-				Name: "vp9_1080p_30fps_hw_v4l2_flat_stateful_decoder",
+				Name: "vp9_1080p_30fps_hw_v4l2_flat_stateful_long",
 				Val: playbackPerfParams{
 					fileName:         "crosvideo/1080.webm",
 					decoderType:      0,

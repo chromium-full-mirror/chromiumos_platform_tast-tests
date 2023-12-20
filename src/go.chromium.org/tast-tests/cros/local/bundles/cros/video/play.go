@@ -476,7 +476,7 @@ func init() {
 			ExtraData: []string{"bear-320x240.vp9.webm"},
 			Fixture:   "chromeVideo",
 		}, {
-			Name: "h264_hw_alt",
+			Name: "h264_hw_v4l2_flat_stateful",
 			Val: playParams{
 				fileName:    "bear-320x240.h264.mp4",
 				videoType:   play.NormalVideo,
@@ -485,10 +485,11 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.h264.mp4"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs", "v4l2_codec"},
-			Fixture:           "chromeAlternateVideoDecoder",
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
+			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 		}, {
-			Name: "vp8_hw_alt",
+			Name: "vp8_hw_v4l2_flat_stateful",
 			Val: playParams{
 				fileName:    "bear-320x240.vp8.webm",
 				videoType:   play.NormalVideo,
@@ -497,10 +498,11 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.vp8.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported", "v4l2_codec"},
-			Fixture:           "chromeAlternateVideoDecoder",
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
+			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 		}, {
-			Name: "vp9_hw_alt",
+			Name: "vp9_hw_v4l2_flat_stateful",
 			Val: playParams{
 				fileName:    "bear-320x240.vp9.webm",
 				videoType:   play.NormalVideo,
@@ -509,23 +511,9 @@ func init() {
 			},
 			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
 			ExtraData:         []string{"bear-320x240.vp9.webm"},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported", "v4l2_codec"},
-			Fixture:           "chromeAlternateVideoDecoder",
-		}, {
-			Name: "vp9_2_hw_alt",
-			Val: playParams{
-				fileName:    "bear-320x240.vp9.2.webm",
-				videoType:   play.NormalVideo,
-				verifyMode:  play.VerifyHWAcceleratorUsed,
-				browserType: browser.TypeAsh,
-			},
-			ExtraAttr: []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-			ExtraData: []string{"bear-320x240.vp9.2.webm"},
-			// VP9 Profile 2 is only supported by the direct Video Decoder so we only
-			// want to run this case if that is not enabled by default, i.e. if the
-			// platform is configured to use the legacy video decoder by default.
-			ExtraSoftwareDeps: []string{"video_decoder_legacy", "video_decoder_legacy_supported", "v4l2_codec", caps.HWDecodeVP9_2},
-			Fixture:           "chromeAlternateVideoDecoder",
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
+			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 		}},
 	})
 }

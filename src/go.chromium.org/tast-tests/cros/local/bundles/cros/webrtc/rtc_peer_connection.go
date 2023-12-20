@@ -106,7 +106,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "h264_verify_hw_dec_alt",
+			Name: "h264_verify_hw_dec_v4l2_flat_stateful",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -115,8 +115,9 @@ func init() {
 				StreamHeight:      defaultRTCStreamHeight,
 				BrowserType:       browser.TypeAsh,
 			},
-			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "video_decoder_legacy_supported", "proprietary_codecs"},
-			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
+			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
 			Name: "h264_verify_hw_dec_oopvd",
 			Val: peerconnection.RTCTestParams{
@@ -142,7 +143,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp8_verify_hw_dec_alt",
+			Name: "vp8_verify_hw_dec_v4l2_flat_stateful",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -151,8 +152,9 @@ func init() {
 				StreamHeight:      defaultRTCStreamHeight,
 				BrowserType:       browser.TypeAsh,
 			},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
-			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
+			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
 			Name: "vp8_verify_hw_dec_oopvd",
 			Val: peerconnection.RTCTestParams{
@@ -208,7 +210,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 			Fixture:           "chromeVideoWithFakeWebcam",
 		}, {
-			Name: "vp9_verify_hw_dec_alt",
+			Name: "vp9_verify_hw_dec_v4l2_flat_stateful",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -217,8 +219,9 @@ func init() {
 				StreamHeight:      defaultRTCStreamHeight,
 				BrowserType:       browser.TypeAsh,
 			},
-			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
-			Fixture:           "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
+			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
 			Name: "vp9_verify_hw_dec_oopvd",
 			Val: peerconnection.RTCTestParams{

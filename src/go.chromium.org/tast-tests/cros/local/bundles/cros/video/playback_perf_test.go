@@ -191,7 +191,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 			params = append(params, param)
 		}
 	}
-	// Alt
+	// V4L2 Flat Stateful.
 	for _, codec := range []string{"h264", "vp8", "vp9"} {
 		resolutions := []int{1080}
 		if codec == "vp9" {
@@ -199,10 +199,12 @@ func TestPlaybackPerfParams(t *testing.T) {
 		}
 		for _, resolution := range resolutions {
 			fps, dec := 60, "hw"
-			params = append(params,
-				genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
-					resolution, fps, dec, "alt", "chromeAlternateVideoDecoder",
-					[]string{"video_decoder_legacy_supported", "v4l2_codec"}))
+			param := genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
+				resolution, fps, dec, "v4l2_flat_stateful", "chromeVideoWithV4L2FlatStatefulDecoder",
+				[]string{"v4l2_codec"})
+			// E.g. MT8173 Hana and QC SC7180 Trogdor.
+			param.HardwareDeps = "hwdep.SupportsV4L2StatefulVideoDecoding()"
+			params = append(params, param)
 		}
 	}
 	// long
@@ -344,7 +346,7 @@ func TestPlaybackPerfParams(t *testing.T) {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackParam(codec, file, resolution, fps, dec,
-			"v4l2_flat_stateful_decoder", "chromeVideoWithV4L2FlatStatefulDecoder",
+			"v4l2_flat_stateful_long", "chromeVideoWithV4L2FlatStatefulDecoder",
 			[]string{"v4l2_codec"})
 		param.HardwareDeps = "hwdep.SupportsV4L2FlatStatefulVideoDecoding()"
 		param.MeasureRoughness = true

@@ -176,23 +176,6 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// Chrome has two said implementations: a "legacy" one and a Direct, VD-based on. Selecting one ore the other depends on the hardware and is ultimately determined by the overlays/ flags. Tests should be centered on what the users see, hence most of the testing should use chromeVideo, with a few test cases using this fixture.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeAlternateVideoDecoder",
-		Desc:     "Logged into a user session with alternate hardware accelerated video decoder",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.EnableFeatures("UseAlternateVideoDecoderImplementation"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithGuestLogin",
 		Desc:     "Similar to chromeVideo fixture but forcing login as a guest",
@@ -393,14 +376,15 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndAlternateVideoDecoder",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the alternative video decoder",
+		Name:     "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
+		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the V4L2 Flat stateful VD",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.EnableFeatures("UseAlternateVideoDecoderImplementation"),
+				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
+				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
