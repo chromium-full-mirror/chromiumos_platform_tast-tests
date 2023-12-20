@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -298,9 +297,10 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 				initialPwm, finalPwm, hwdepResults, kbLightPowerd)}
 		}
 		testing.ContextLogf(ctx, "Attempting to match, current: %d, expected: %d", kbLight, extremeValue)
-		if err := pressShortcut(ctx, h, actionKey); err != nil {
-			return errors.Wrap(err, "failed to adjust kb backlight brightness")
+		if err := h.Servo.PressKeys(ctx, []string{"<alt_l>", actionKey}, servo.DurTab); err != nil {
+			return errors.Wrapf(err, "failed to press alt_l and %v", actionKey)
 		}
+
 		// GoBigSleepLint: key presses delay to adjust the keyboard backlight.
 		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 			return errors.Wrap(err, "failed to sleep")
@@ -309,42 +309,6 @@ func adjustKBBacklight(ctx context.Context, h *firmware.Helper, d *dut.DUT, extr
 		if err != nil {
 			return errors.Wrap(err, "failed to get kb backlight")
 		}
-	}
-	return nil
-}
-
-// pressShortcut presses, then releases keys to adjust keyboard backlight.
-func pressShortcut(ctx context.Context, h *firmware.Helper, actionKey string) error {
-	// ShortCuts for decreasing keyboard backlight: Alt+F6 (Alt+BrightnessDown).
-	// ShortCuts for increasing keyboard backlight: Alt+F7 (Alt+BrightnessUp).
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
-	defer cancel()
-
-	if err := func(ctx context.Context) error {
-		keyNames := []string{"<alt_l>", actionKey}
-		for _, key := range keyNames {
-			row, col, err := h.Servo.GetKeyRowCol(ctx, key, h.Model)
-			if err != nil {
-				return errors.Wrapf(err, "failed to get key column and row for %s", key)
-			}
-			holdKey := fmt.Sprintf("kbpress %d %d 1", col, row)
-			releaseKey := fmt.Sprintf("kbpress %d %d 0", col, row)
-			// Press key.
-			if err := h.Servo.RunECCommand(ctx, holdKey); err != nil {
-				return errors.Wrapf(err, "failed to press and hold %s", key)
-			}
-			// Release key.
-			defer func(ctx context.Context, releaseKey, name string) error {
-				if err := h.Servo.RunECCommand(ctx, releaseKey); err != nil {
-					return errors.Wrapf(err, "failed to release %s", releaseKey)
-				}
-				return nil
-			}(cleanupCtx, releaseKey, key)
-		}
-		return nil
-	}(ctx); err != nil {
-		return err
 	}
 	return nil
 }

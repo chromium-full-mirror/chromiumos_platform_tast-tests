@@ -26,6 +26,7 @@ const (
 	ActiveDUTController   StringControl = "active_dut_controller"
 	ArbKey                StringControl = "arb_key"
 	ArbKeyConfig          StringControl = "arb_key_config"
+	ArbKeysConfig         StringControl = "arb_keys_config"
 	BottomUSBKeyMux       StringControl = "bottom_usbkey_mux"
 	ColdResetSelect       StringControl = "cold_reset_select"
 	DUTUSB3EnV4p1         StringControl = "servo_v4p1_dut_usb3_en"
@@ -897,17 +898,25 @@ func (s *Servo) SetStringAndCheck(ctx context.Context, control StringControl, va
 	return nil
 }
 
-// KeypressWithDuration sets a KeypressControl to a KeypressDuration value.
-func (s *Servo) KeypressWithDuration(ctx context.Context, control KeypressControl, value KeypressDuration) error {
+func parseKeypressDuration(value KeypressDuration) (time.Duration, error) {
 	// The default duration with SetString is 10s.
 	timeout := 10 * time.Second
 	// If duration is string (e.g. press, tab, long_press) don't parse as duration string.
 	if match := regexp.MustCompile(`\d+(.|\.\d+)?`).FindStringSubmatch(string(value)); match != nil {
 		out, err := time.ParseDuration(fmt.Sprintf("%ss", string(value)))
 		if err != nil {
-			return errors.Wrap(err, "parsing duration")
+			return timeout, errors.Wrap(err, "parsing duration")
 		}
 		timeout = out + 1*time.Second
+	}
+	return timeout, nil
+}
+
+// KeypressWithDuration sets a KeypressControl to a KeypressDuration value.
+func (s *Servo) KeypressWithDuration(ctx context.Context, control KeypressControl, value KeypressDuration) error {
+	timeout, err := parseKeypressDuration(value)
+	if err != nil {
+		return err
 	}
 	// Set timeout of keypress to make it doesn't timeout before keypress is complete.
 	return s.SetStringTimeout(ctx, StringControl(control), string(value), timeout)
@@ -916,34 +925,37 @@ func (s *Servo) KeypressWithDuration(ctx context.Context, control KeypressContro
 // PressKey presses an arbitrary key for a KeypressDuration.
 // This either uses EC keyboard emulation or the servo's emulated USB keyboard depending on the setting of USBKeyboard.
 func (s *Servo) PressKey(ctx context.Context, key string, value KeypressDuration) error {
-	// The default duration with SetString is 10s.
-	timeout := 10 * time.Second
-	// If duration is string (e.g. press, tab, long_press) don't parse as duration string.
-	if match := regexp.MustCompile(`\d+(.|\.\d+)?`).FindStringSubmatch(string(value)); match != nil {
-		out, err := time.ParseDuration(fmt.Sprintf("%ss", string(value)))
-		if err != nil {
-			return errors.Wrap(err, "parsing duration")
-		}
-		timeout = out + 1*time.Second
+	timeout, err := parseKeypressDuration(value)
+	if err != nil {
+		return err
 	}
 	if err := s.SetString(ctx, ArbKeyConfig, key); err != nil {
 		return errors.Wrapf(err, "failed to press key %q", key)
 	}
-	// Set timeout of keypress to make it doesn't timeout before keypress is complete.
+	// Set timeout of keypress so that it doesn't timeout before keypress is complete.
+	return s.SetStringTimeout(ctx, ArbKey, string(value), timeout)
+}
+
+// PressKeys presses mutiple arbitrary keys for a KeypressDuration.
+// This either uses EC keyboard emulation or the servo's emulated USB keyboard depending on the setting of USBKeyboard.
+func (s *Servo) PressKeys(ctx context.Context, keys []string, value KeypressDuration) error {
+	timeout, err := parseKeypressDuration(value)
+	if err != nil {
+		return err
+	}
+	arbKeys := "[\"" + strings.Join(keys, "\",\"") + "\"]"
+	if err := s.SetString(ctx, ArbKeysConfig, arbKeys); err != nil {
+		return errors.Wrapf(err, "failed to press keys %q", keys)
+	}
+	// Set timeout of keypress so that it doesn't timeout before keypress is complete.
 	return s.SetStringTimeout(ctx, ArbKey, string(value), timeout)
 }
 
 // PressUSBKey sends an arbitrary USB KB key for a KeypressDuration.
 func (s *Servo) PressUSBKey(ctx context.Context, key string, value KeypressDuration) error {
-	// The default duration with SetString is 10s.
-	timeout := 10 * time.Second
-	// If duration is string (e.g. press, tab, long_press) don't parse as duration string.
-	if match := regexp.MustCompile(`\d+(.|\.\d+)?`).FindStringSubmatch(string(value)); match != nil {
-		out, err := time.ParseDuration(fmt.Sprintf("%ss", string(value)))
-		if err != nil {
-			return errors.Wrap(err, "parsing duration")
-		}
-		timeout = out + 1*time.Second
+	timeout, err := parseKeypressDuration(value)
+	if err != nil {
+		return err
 	}
 	if err := s.SetString(ctx, USBArbKeyConfig, key); err != nil {
 		return errors.Wrapf(err, "failed to press key %q", key)
