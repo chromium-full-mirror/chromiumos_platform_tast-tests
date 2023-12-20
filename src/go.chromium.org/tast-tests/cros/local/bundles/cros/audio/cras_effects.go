@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
+	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -538,6 +539,10 @@ func resetNCState(ctx context.Context) error {
 
 func CrasEffects(ctx context.Context, s *testing.State) {
 	param := s.Param().(crasEffectsParam)
+
+	if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
+		s.Fatal("Cannot install nc-ap-dlc: ", err)
+	}
 
 	cras, err := audio.RestartCras(ctx)
 	if err != nil {
