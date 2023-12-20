@@ -87,7 +87,6 @@ func SetCurrentInputMethodAndWaitWarmUp(ctx context.Context, tconn *chrome.TestC
 }
 
 // WaitForInputMethodActivatedWithSleep waits for expected input method and warming up.
-// TODO(b/237955724): Deprecate this old function once all IMEs use new WaitForInputMethodActivated.
 func WaitForInputMethodActivatedWithSleep(ctx context.Context, tconn *chrome.TestConn, imeID string, warmUpTime time.Duration) error {
 	if err := WaitForInputMethodMatches(ctx, tconn, imeID, 20*time.Second); err != nil {
 		return errors.Wrapf(err, "failed to wait for IME to be %q", imeID)
@@ -97,16 +96,6 @@ func WaitForInputMethodActivatedWithSleep(ctx context.Context, tconn *chrome.Tes
 	// This problem will be solved once decoder moved from Nacl to IME service.
 	// TODO(b/157686038): Use API to identify completion of changing language
 	return testing.Sleep(ctx, warmUpTime)
-}
-
-// WaitForInputMethodActivated waits for expected input method and warming up
-// using test api: `chrome.autotestPrivate.isInputMethodReadyForTesting`.
-// Note: This API only works for Physical keyboard at the moment.
-func WaitForInputMethodActivated(ctx context.Context, tconn *chrome.TestConn, imeID string) error {
-	if err := WaitForInputMethodMatches(ctx, tconn, imeID, 20*time.Second); err != nil {
-		return errors.Wrapf(err, "failed to wait for IME to be %q", imeID)
-	}
-	return tconn.WaitForExpr(ctx, `chrome.autotestPrivate.isInputMethodReadyForTesting`)
 }
 
 // CurrentInputMethod returns the ID of current IME obtained
