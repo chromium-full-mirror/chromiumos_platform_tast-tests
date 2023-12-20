@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package arc
+package network
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MultiNetworking,
+		Func:         ARCMultiNetworking,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies guest network setup upon physical interface change",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
@@ -41,7 +41,7 @@ func init() {
 	})
 }
 
-func MultiNetworking(ctx context.Context, s *testing.State) {
+func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	const (
 		testNetnsName                    = "test"
 		ifName                           = "eth99"

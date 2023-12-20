@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package arc
+package network
 
 import (
 	"context"
@@ -29,7 +29,7 @@ type ipv6TestParams struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         IPv6Connectivity,
+		Func:         ARCIPv6Connectivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks IPv6 connectivity inside ARC",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
@@ -50,7 +50,7 @@ func init() {
 	})
 }
 
-func IPv6Connectivity(ctx context.Context, s *testing.State) {
+func ARCIPv6Connectivity(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 	v6only := s.Param().(ipv6TestParams).v6Only
 	arcVersion, err := arc.SDKVersion()

@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package arc
+package network
 
 import (
 	"context"
@@ -39,7 +39,7 @@ func init() {
 	// from ARC. It is expected for shill to successfully create WiFi network with
 	// given arguments.
 	testing.AddTest(&testing.Test{
-		Func:     CreateWifiInShillByCmd,
+		Func:     ARCCreateWifiInShillByCmd,
 		Desc:     "Test if wifi network can be correctly created in shill",
 		Contacts: []string{"cros-networking@google.com", "chuweih@google.com"},
 		// ChromeOS > Platform > System > Networking
@@ -98,8 +98,8 @@ func init() {
 	})
 }
 
-// CreateWifiInShillByCmd expects a wifi with given configs are created correctly through shell cmd.
-func CreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
+// ARCCreateWifiInShillByCmd expects a wifi with given configs are created correctly through shell cmd.
+func ARCCreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to shill Manager: ", err)

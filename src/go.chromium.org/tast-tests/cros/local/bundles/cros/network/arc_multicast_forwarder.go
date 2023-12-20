@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package arc
+package network
 
 import (
 	"context"
@@ -38,7 +38,7 @@ type multicastForwarderTestCase struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MulticastForwarder,
+		Func:         ARCMulticastForwarder,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if multicast forwarder works correctly with Android multicast lock and Android interactive state on ARC",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
@@ -118,10 +118,11 @@ func init() {
 	})
 }
 
-// MulticastForwarder tests that multicast traffic on WiFi is only allowed when Android
-// multicast lock is held and Android power state is interactive, and multicast traffic
-// on ethernet is only allowed when Android power state is interactive.
-func MulticastForwarder(ctx context.Context, s *testing.State) {
+// ARCMulticastForwarder tests that multicast traffic on WiFi is only allowed
+// when Android multicast lock is held and Android power state is interactive,
+// and multicast traffic on ethernet is only allowed when Android power state is
+// interactive.
+func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

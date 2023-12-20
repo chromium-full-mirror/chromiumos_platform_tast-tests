@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package arc
+package network
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	pp "chromiumos/system_api/patchpanel_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/network"
@@ -22,7 +23,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         MultiNetworkingConnectivity,
+		Func:         ARCMultiNetworkingConnectivity,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks connectivity while multi-networking is enabled",
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
@@ -35,7 +36,7 @@ func init() {
 	})
 }
 
-func MultiNetworkingConnectivity(ctx context.Context, s *testing.State) {
+func ARCMultiNetworkingConnectivity(ctx context.Context, s *testing.State) {
 	const (
 		// timeout defines the maximum allowed time for connectivity check.
 		timeout = 10 * time.Second
