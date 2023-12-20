@@ -93,16 +93,43 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 	}
 	testing.ContextLog(ctx, "PD Tester found")
 
-	// Make sure the Servo is a PD source from the DUT's perspective. This
-	// helps in case a previous test left the port in a strange state.
-	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
-		return errors.Wrap(err, "servo must be sourcing power to the DUT")
+	// Turn off CC / PD communication on the Servo to help reset any bad state from a
+	// previous test. The subsequent SetPDRole call will restore PD comms for both
+	// Servo ports.
+	if err := h.Servo.ServoCcOff(ctx); err != nil {
+		return errors.Wrap(err, "cannot force CC off on Servo")
 	}
 
 	// Ensure that the Servo has a USB charger attached.
 	// Note: The above command succeeds even if no charger is present
 	if err := h.Servo.RequireChargerAttached(ctx); err != nil {
 		return errors.Wrap(err, "servo must have a charger attached that is sourcing")
+	}
+
+	// Make sure the Servo is a PD source from the DUT's perspective. This
+	// helps in case a previous test left the port in a strange state.
+	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
+		return errors.Wrap(err, "servo must be sourcing power to the DUT")
+	}
+
+	// Poll on the Servo C1 (DUT-facing) port until it is source-ready
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pdState, err := h.Servo.GetServoPDState(ctx)
+		if err != nil {
+			return testing.PollBreak(
+				errors.Wrap(err, "cannot access servo DUT port (C1) PD status"),
+			)
+		}
+
+		testing.ContextLogf(ctx, "Servo DUT port (C1) PE State is %s", pdState.PEStateName)
+
+		if !pdState.IsSourceReady() {
+			return errors.New("Servo DUT port (C1) is not src-ready")
+		}
+
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+		return errors.Wrap(err, "timed out waiting for servo DUT port to source power")
 	}
 
 	if err := h.Servo.RequireDUTPDInfo(ctx); err != nil {

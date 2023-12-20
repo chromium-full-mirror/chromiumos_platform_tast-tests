@@ -240,3 +240,14 @@ func (s *Servo) TriggerServoPDHardReset(ctx context.Context) error {
 
 	return nil
 }
+
+// ServoCcOff runs the `cc off` console command on the Servo.
+func (s *Servo) ServoCcOff(ctx context.Context) error {
+	output, err := s.RunServoCommandGetOutput(ctx, "cc off", []string{`cc: (\w+)[\r\n]`})
+
+	if err == nil && output[0][1] != "off" {
+		return errors.New("CC state did not change to 'off'")
+	}
+
+	return err
+}
