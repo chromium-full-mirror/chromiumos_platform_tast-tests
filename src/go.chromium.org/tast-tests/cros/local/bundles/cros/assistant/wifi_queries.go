@@ -33,7 +33,7 @@ func init() {
 			"informational",
 			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"chrome", "shill-wifi"},
+		SoftwareDeps: []string{"chrome"},
 		Fixture:      "assistantWithGaia",
 	})
 }
