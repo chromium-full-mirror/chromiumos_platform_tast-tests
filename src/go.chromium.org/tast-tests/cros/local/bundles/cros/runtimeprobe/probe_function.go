@@ -23,17 +23,21 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-// Component represents runtime_probe component interface.
-type Component interface {
+// componentConstraint constraints allowed runtime_probe component categories.
+type componentConstraint interface {
+	*rppb.Battery | *rppb.Camera | *rppb.Edid | *rppb.InputDevice | *rppb.Memory | *rppb.Network | *rppb.Storage
 	GetName() string
 	GetInformation() *rppb.Information
 }
 
-// GetComponentsFunc represents the function to get specific category of
-// components from rppb.ProbeResult.
-type GetComponentsFunc func(result *rppb.ProbeResult, category string) ([]Component, error)
+// componentType represents runtime_probe component interface.
+type componentType interface {
+	GetName() string
+	GetInformation() *rppb.Information
+}
 
 // Skip the known concurrent D-Bus call at boot.
 const defaultTryCount = 2
@@ -205,11 +209,50 @@ func countComponents(labels []string, category, model string) map[string]int {
 	return count
 }
 
+// messagesToComponents convert components from protobuf message type for
+// runtime_probe to the general type "componentType" for Tast test.
+func messagesToComponents[T componentConstraint](rppbComps []T) []componentType {
+	var comps []componentType
+	for _, rppbComp := range rppbComps {
+		comps = append(comps, rppbComp)
+	}
+	return comps
+}
+
+func getComponentsByCategory(x *rppb.ProbeResult, category string) ([]componentType, error) {
+	switch category {
+	case "battery":
+		return messagesToComponents(x.GetBattery()), nil
+	case "camera":
+		return messagesToComponents(x.GetCamera()), nil
+	case "display_panel":
+		return messagesToComponents(x.GetDisplayPanel()), nil
+	case "stylus":
+		return messagesToComponents(x.GetStylus()), nil
+	case "touchpad":
+		return messagesToComponents(x.GetTouchpad()), nil
+	case "touchscreen":
+		return messagesToComponents(x.GetTouchscreen()), nil
+	case "dram":
+		return messagesToComponents(x.GetDram()), nil
+	case "cellular":
+		return messagesToComponents(x.GetCellular()), nil
+	case "ethernet":
+		return messagesToComponents(x.GetEthernet()), nil
+	case "wireless":
+		return messagesToComponents(x.GetWireless()), nil
+	case "storage":
+		return messagesToComponents(x.GetStorage()), nil
+	default:
+		return nil, errors.Errorf("unknown category %s", category)
+	}
+}
+
 // decreaseComponentCount decreases the count of given component by 1.  If the
 // count of given component is decreased to 0, it will be removed from |count|.
 // The first returned value will be false on failure.  The second returned
 // value is the display name of |component|.
-func decreaseComponentCount(count map[string]int, model, category string, component Component) (bool, string) {
+func decreaseComponentCount(count map[string]int, model, category string, component componentType) (bool, string) {
 	name := component.GetName()
 	info := component.GetInformation()
 	if info != nil {
@@ -231,14 +274,80 @@ func decreaseComponentCount(count map[string]int, model, category string, compon
 	return true, name
 }
 
-// GenericTest probes components with category |categories| on a device using
-// Runtime Probe D-Bus call and checks if the result matches the host info
-// labels.
+type probeFunctionTestParam struct {
+	categories           []string
+	allowExtraComponents bool
+}
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func: ProbeFunction,
+		Desc: "Checks that probe results are expected",
+		Contacts: []string{
+			"chromeos-runtime-probe@google.com",
+			"clarkchung@google.com",
+		},
+		BugComponent: "b:606088",
+		Attr:         []string{"group:racc", "racc_config_installed"},
+		SoftwareDeps: []string{"racc"},
+		HardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
+		Vars:         []string{"autotest_host_info_labels"},
+		Params: []testing.Param{{
+			Name: "battery",
+			Val: probeFunctionTestParam{
+				categories:           []string{"battery"},
+				allowExtraComponents: false,
+			},
+		}, {
+			Name: "camera",
+			Val: probeFunctionTestParam{
+				categories:           []string{"camera"},
+				allowExtraComponents: false,
+			},
+		}, {
+			Name: "edid",
+			Val: probeFunctionTestParam{
+				categories:           []string{"display_panel"},
+				allowExtraComponents: false,
+			},
+		}, {
+			Name: "input_device",
+			Val: probeFunctionTestParam{
+				categories:           []string{"stylus", "touchpad", "touchscreen"},
+				allowExtraComponents: true,
+			},
+		}, {
+			Name: "memory",
+			Val: probeFunctionTestParam{
+				categories:           []string{"dram"},
+				allowExtraComponents: false,
+			},
+		}, {
+			Name: "network",
+			Val: probeFunctionTestParam{
+				categories:           []string{"cellular", "ethernet", "wireless"},
+				allowExtraComponents: true,
+			},
+		}, {
+			Name: "storage",
+			Val: probeFunctionTestParam{
+				categories:           []string{"storage"},
+				allowExtraComponents: false,
+			},
+		}},
+	})
+}
+
+// ProbeFunction probes components with the param |categories| on a device
+// using Runtime Probe D-Bus call and checks if the result matches the host
+// info labels.
 // If there is not a valid component label, the test will be skipped (pass).
 // If a valid component in the host info labels is not probed, the test will
 // fail.  If a probed component is not in the host info labels, the test will
-// fail if |allowExtraComponents| is false.  Otherwise, the test will pass.
-func GenericTest(ctx context.Context, s *testing.State, categories []string, getComponents GetComponentsFunc, allowExtraComponents bool) {
+// fail if the param |allowExtraComponents| is false.  Otherwise, the test
+// will pass.
+func ProbeFunction(ctx context.Context, s *testing.State) {
+	param := s.Param().(probeFunctionTestParam)
 	hostInfoLabels, err := hostInfoLabels(s)
 	if err != nil {
 		s.Fatal("hostInfoLabels failed: ", err)
@@ -257,7 +366,7 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 	categoryToExpectedComponentCounts := make(map[string]map[string]int)
 	var requestCategories []rppb.ProbeRequest_SupportCategory
 	allKnownComponents := make(map[string]struct{})
-	for _, category := range categories {
+	for _, category := range param.categories {
 		categoryValue, found := rppb.ProbeRequest_SupportCategory_value[category]
 		if !found {
 			s.Fatalf("Invalid category %q", category)
@@ -300,10 +409,10 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 	}
 
 	for category, expectedCompCounts := range categoryToExpectedComponentCounts {
-		probedComponents, err := getComponents(result, category)
+		probedComponents, err := getComponentsByCategory(result, category)
 		var extraComponents []string
 		if err != nil {
-			s.Error("getComponents failed: ", err)
+			s.Errorf("getComponentsByCategory %s failed: %v", category, err)
 			continue
 		}
 		for _, component := range probedComponents {
@@ -333,7 +442,7 @@ func GenericTest(ctx context.Context, s *testing.State, categories []string, get
 
 		if len(extraComponents) > 0 {
 			sort.Strings(extraComponents)
-			if allowExtraComponents {
+			if param.allowExtraComponents {
 				s.Logf("Some extra %s components are probed: %v", category, extraComponents)
 			} else {
 				s.Fatalf("Some extra %s components are probed: %v", category, extraComponents)

@@ -56,9 +56,9 @@ func init() {
 	})
 }
 
-// probe uses factory_runtime_probe to get the kernel names of audio codec
-// components in DUT.
-func probe(ctx context.Context) ([]string, error) {
+// probeAudioCodec uses factory_runtime_probe to get the kernel names of audio
+// codec components in DUT.
+func probeAudioCodec(ctx context.Context) ([]string, error) {
 	probeConfig := `{
   "audio_codec": {
     "generic": {
@@ -101,7 +101,7 @@ func AudioCodecCoverage(ctx context.Context, s *testing.State) {
 	for _, kernelName := range blocklist {
 		knownKernelNames.Add(kernelName)
 	}
-	probedKernelNames, err := probe(ctx)
+	probedKernelNames, err := probeAudioCodec(ctx)
 	if err != nil {
 		s.Fatal("Cannot probe audio codec kernel names: ", err)
 	}
