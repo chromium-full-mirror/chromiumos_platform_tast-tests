@@ -14,9 +14,10 @@ import (
 )
 
 type perfSuite struct {
-	runner        ptsworld.Runner
-	suiteName     string
-	resultsParser *metrics.ResultsParser
+	runner         ptsworld.Runner
+	suiteName      string
+	resultsParser  *metrics.ResultsParser
+	blockReinstall bool
 }
 
 func init() {
@@ -109,18 +110,20 @@ func init() {
 			Name:    "openssl_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "openssl-3.1.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "openssl-3.1.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 90 * time.Minute,
 		}, {
 			Name:    "openssl_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "openssl-3.1.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "openssl-3.1.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 90 * time.Minute,
 		}, {
@@ -146,18 +149,20 @@ func init() {
 			Name:    "compresslz4_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "compress-lz4-1.0.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "compress-lz4-1.0.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 30 * time.Minute,
 		}, {
 			Name:    "compresslz4_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "compress-lz4-1.0.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "compress-lz4-1.0.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 30 * time.Minute,
 		}, {
@@ -182,36 +187,40 @@ func init() {
 			Name:    "vpxenc_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "vpxenc-3.2.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "vpxenc-3.2.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 60 * time.Minute,
 		}, {
 			Name:    "vpxenc_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "vpxenc-3.2.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "vpxenc-3.2.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 60 * time.Minute,
 		}, {
 			Name:    "tensorflowlite_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "tensorflow-lite-1.1.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "tensorflow-lite-1.1.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 120 * time.Minute,
 		}, {
 			Name:    "tensorflowlite_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
 			Val: &perfSuite{
-				runner:        ptsworld.NewCrosRunner(),
-				suiteName:     "tensorflow-lite-1.1.0",
-				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				runner:         ptsworld.NewCrosRunner(),
+				suiteName:      "tensorflow-lite-1.1.0",
+				resultsParser:  metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
+				blockReinstall: true,
 			},
 			Timeout: 120 * time.Minute,
 		}, {
@@ -295,7 +304,7 @@ func init() {
 func PerfSuite(ctx context.Context, s *testing.State) {
 	perfSuite := s.Param().(*perfSuite)
 	s.Logf("Running perf test suite: %s", perfSuite.suiteName)
-	perfSuite.runner.RunTestSuite(ctx, s, perfSuite.suiteName)
+	perfSuite.runner.RunTestSuite(ctx, s, perfSuite.suiteName, perfSuite.blockReinstall)
 	err := perfSuite.resultsParser.ConvertMetrics(perfSuite.suiteName, s.OutDir())
 	if err != nil {
 		s.Error("Failed to convert metrics: ", err)
