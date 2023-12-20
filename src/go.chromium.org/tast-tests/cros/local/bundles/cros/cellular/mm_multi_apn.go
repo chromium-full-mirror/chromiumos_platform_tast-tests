@@ -17,7 +17,6 @@ import (
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 func init() {
@@ -98,10 +97,6 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 		mmApnInfo[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
 		path, err := modemmanager.Connect(ctx, simpleModem, mmApnInfo)
 		if err != nil {
-			if len(bearerPaths) == 1 {
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/249388479", []cellularconst.ModemType{cellularconst.ModemTypeNL668})
-				err = cellular.TagKnownBugOnModemType(ctx, err, "b/236295106", []cellularconst.ModemType{cellularconst.ModemTypeFM350})
-			}
 			s.Fatal("Modem connect failed with error: ", err)
 		}
 		testing.ContextLogf(ctx, "Created connection #%d with APN: %q on bearer: %q", len(bearerPaths)+1, apnName, path)
