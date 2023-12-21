@@ -10,9 +10,15 @@ import "google/protobuf/empty.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/usb";
 
-// SysfsService provides functionality to check the USB state from a DUT's file system.
+// SysfsService provides functionality to check the USB state from a DUT's file
+// system.
 service SysfsService {
-  rpc GetDevices (google.protobuf.Empty) returns (DeviceMap) {}
+  rpc GetDevices(google.protobuf.Empty) returns (DeviceMap) {}
+}
+
+message Interface {
+  // USB interface class based on class codes defined by the USB-IF.
+  uint64 interfaceClass = 1;
 }
 
 // Message used to define a USB device.
@@ -23,12 +29,15 @@ message Device {
   uint64 speed = 2;
   // Sysfs device removability. Can be fixed, removable or unknown.
   RemovableAttribute removable = 3;
+  // USB device class based on class codes defined by the USB-IF.
+  uint64 deviceClass = 4;
+  // Device Interfaces
+  map<string, Interface> interfaces = 5;
 }
 
-// Message used to pass a map of USB devices with the device's properties included.
-message DeviceMap {
-  map<string, Device> devices = 1;
-}
+// Message used to pass a map of USB devices with the device's properties
+// included.
+message DeviceMap { map<string, Device> devices = 1; }
 
 // Enum based on the possible content of the "removable" file for sysfs devices.
 enum RemovableAttribute {
