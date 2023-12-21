@@ -119,9 +119,9 @@ func init() {
 		}, {
 			Name:      "ash_chrome_delay_login",
 			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
-			Timeout:   30 * time.Minute,
+			Timeout:   50 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{8},                    // windows
+				[]int{2, 8},                 // windows
 				[]string{noarc, arcenabled}, // arcmodes
 				false,                       // checkTabletMode
 				browser.TypeAsh,
@@ -178,9 +178,9 @@ func init() {
 			Name:              "lacros_chrome_root_fs_only_delay_login",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           30 * time.Minute,
+			Timeout:           50 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{8},
+				[]int{2, 8},
 				[]string{noarc, arcenabled},
 				false, // checkTabletMode
 				browser.TypeLacros,
@@ -193,9 +193,9 @@ func init() {
 			Name:              "lacros_chrome_root_fs_only_cold_boot_delay_login",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           30 * time.Minute,
+			Timeout:           50 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{8},
+				[]int{2, 8},
 				[]string{noarc, arcenabled},
 				false, // checkTabletMode
 				browser.TypeLacros,
