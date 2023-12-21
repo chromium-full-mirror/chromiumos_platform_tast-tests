@@ -444,12 +444,11 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
-			framesEncoded := 0
 			readRTCReportFunc := readRTCReport(i, false)
 			if i == params.NumPeople-2 {
 				p := perf.NewValues()
 				var err error
-				framesEncoded, err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReportFunc, p)
+				err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReportFunc, p)
 				if err != nil {
 					statErrs[i] = err
 					return
@@ -457,7 +456,7 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 				rtcPerf.MergeWithSuffix("_camera", p)
 			}
 			p := perf.NewValues()
-			if err := webrtc.MeasureRTCDecodeStats(ctx, conn, framesEncoded, videoWidth, videoHeight, readRTCReportFunc, placeHolderValidateFrame, p); err != nil {
+			if err := webrtc.MeasureRTCDecodeStats(ctx, conn, videoWidth, videoHeight, readRTCReportFunc, placeHolderValidateFrame, p); err != nil {
 				statErrs[i] = err
 				return
 			}
@@ -470,7 +469,7 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 			defer wg.Done()
 			var err error
 			p := perf.NewValues()
-			if _, err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReport(0, true), p); err != nil {
+			if err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReport(0, true), p); err != nil {
 				presentStatErr = err
 				return
 			}

@@ -45,6 +45,7 @@ type rxMeas struct {
 	// dividing this value with framesDecoded."
 	TotalDecodeTime float64 `json:"totalDecodeTime"`
 	FramesDecoded   float64 `json:"framesDecoded"`
+	FramesDropped   float64 `json:"framesDropped"`
 }
 
 // ReadRTCReportFunc is the type of a function that reads WebRTC stats and fills out in rxMeas if decode is true, or txMeas.
@@ -192,7 +193,7 @@ func GetCodecImplementation(ctx context.Context, conn *chrome.Conn, decode bool,
 
 // MeasureRTCEncodeStats parses the WebRTC Tx stats, and stores them into p.
 // See https://www.w3.org/TR/webrtc-stats/#stats-dictionaries for more info.
-func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport ReadRTCReportFunc, p *perf.Values) (int, error) {
+func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport ReadRTCReportFunc, p *perf.Values) error {
 	const (
 		// timeSamples specifies number of frame decode time samples to get.
 		timeSamples = 10
@@ -202,11 +203,11 @@ func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport
 	for i := 0; i < timeSamples; i++ {
 		// GoBigSleepLint: sleep 1 second so that getStats() is not called too many times in a short term.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
-			return -1, err
+			return err
 		}
 		var txm txMeas
 		if err := readRTCReport(ctx, conn, false, &txm); err != nil {
-			return -1, errors.Wrap(err, "failed to retrieve and/or parse getStats()")
+			return errors.Wrap(err, "failed to retrieve and/or parse getStats()")
 		}
 		testing.ContextLogf(ctx, "Measurement: %+v", txm)
 		txMeasurements = append(txMeasurements, txm)
@@ -234,12 +235,12 @@ func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport
 		averageEncodeTime := (txMeasurements[i].TotalEncodeTime - txMeasurements[i-1].TotalEncodeTime) / (txMeasurements[i].FramesEncoded - txMeasurements[i-1].FramesEncoded) * 1000
 		p.Append(encodeTime, averageEncodeTime)
 	}
-	return int(txMeasurements[len(txMeasurements)-1].FramesEncoded), nil
+	return nil
 }
 
 // MeasureRTCDecodeStats parses the WebRTC Rx stats, and stores them into p.
 // See https://www.w3.org/TR/webrtc-stats/#stats-dictionaries for more info.
-func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, framesEncoded, streamWidth, streamHeight int,
+func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, streamWidth, streamHeight int,
 	readRTCReport ReadRTCReportFunc, validateFrame validateFrameFunc, p *perf.Values) error {
 	const (
 		// timeSamples specifies number of frame decode time samples to get.
@@ -280,15 +281,13 @@ func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, framesEncoded
 		averageDecodeTime := (rxMeasurements[i].TotalDecodeTime - rxMeasurements[i-1].TotalDecodeTime) / (rxMeasurements[i].FramesDecoded - rxMeasurements[i-1].FramesDecoded) * 1000
 		p.Append(decodeTime, averageDecodeTime)
 	}
-	if framesEncoded > 0 {
-		droppedFrames := 100 * (float64(framesEncoded) - rxMeasurements[len(rxMeasurements)-1].FramesDecoded) / float64(framesEncoded)
-		testing.ContextLogf(ctx, "Dropped frame ratio: %f%%", droppedFrames)
-		p.Set(perf.Metric{
-			Name:      "dropped_frames",
-			Unit:      "percent",
-			Direction: perf.SmallerIsBetter,
-		}, droppedFrames)
-	}
+
+	lastRxm := rxMeasurements[len(rxMeasurements)-1]
+	p.Set(perf.Metric{
+		Name:      "rx.dropped_frames_percentage",
+		Unit:      "percent",
+		Direction: perf.SmallerIsBetter,
+	}, lastRxm.FramesDropped/lastRxm.FramesDecoded)
 	return nil
 }
 
@@ -300,11 +299,11 @@ func MeasureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, stream
 		return err
 	}
 
-	framesEncoded, err := MeasureRTCEncodeStats(ctx, conn, readRTCReport, p)
+	err := MeasureRTCEncodeStats(ctx, conn, readRTCReport, p)
 	if err != nil {
 		return errors.Wrap(err, "failed measuring webrtc encode stats")
 	}
-	if err := MeasureRTCDecodeStats(ctx, conn, framesEncoded, streamWidth, streamHeight, readRTCReport, validateFrame, p); err != nil {
+	if err := MeasureRTCDecodeStats(ctx, conn, streamWidth, streamHeight, readRTCReport, validateFrame, p); err != nil {
 		return errors.Wrap(err, "failed measuring webrtc decode stats")
 	}
 	return nil
