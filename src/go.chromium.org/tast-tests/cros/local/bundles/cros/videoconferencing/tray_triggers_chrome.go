@@ -57,7 +57,7 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      6 * time.Minute,
 		Attr: []string{
-			"group:video_conference", "video_conference_per_build", "group:external-dependency",
+			"group:video_conference", "group:external-dependency",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},

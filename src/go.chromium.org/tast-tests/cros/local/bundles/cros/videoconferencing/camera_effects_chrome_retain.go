@@ -37,7 +37,7 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,
 		Attr: []string{
-			"group:video_conference", "video_conference_per_build",
+			"group:video_conference",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		Data: []string{

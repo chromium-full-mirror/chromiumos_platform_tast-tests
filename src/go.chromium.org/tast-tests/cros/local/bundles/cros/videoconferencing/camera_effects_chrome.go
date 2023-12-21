@@ -37,7 +37,6 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 			"group:video_conference",
-			"video_conference_per_build",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
