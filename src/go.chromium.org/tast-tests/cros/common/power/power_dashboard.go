@@ -312,7 +312,12 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 			if !metric.HasStartTs {
 				return nil, time.Time{}, errors.Errorf("metric %s does not have start ts", metric.Name)
 			}
-			start = metric.StartTs
+			if len(value) > 0 {
+				start = metric.StartTs.Add(time.Duration(value[0] * float64(time.Second)))
+			} else {
+				testing.ContextLogf(ctx, "%q metric is an empty slice, so set power log timestamp to start of measurement instead of 1st data point timestamp", metricName)
+				start = metric.StartTs
+			}
 			continue
 		} else if size == 1 {
 			metricType = "other"
