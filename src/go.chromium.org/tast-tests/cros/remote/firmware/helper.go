@@ -940,19 +940,12 @@ func (h *Helper) RequireRPM(ctx context.Context) error {
 // `dutHostname` can be used to override the DUT's hostname, if ssh and rpm have different names.
 // For plugs attached to hyrda, also set var `hydraHostname`.
 func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
-	// Try servo SetPDRole (servo v4 type C). The servo is slightly evil though, and will report that it has this control even for Type-A.
-	connectionType := ""
-	hasControl, err := h.Servo.HasControl(ctx, string(servo.PDRole))
+	// Try servo SetPDRole (servo v4 type C).
+	isServoTypeC, err := h.Servo.IsServoTypeC(ctx)
 	if err != nil {
-		return errors.Wrap(err, "checking for control")
+		return errors.Wrap(err, "failed to check the connection type")
 	}
-	if hasControl {
-		connectionType, err = h.Servo.GetString(ctx, servo.DUTConnectionType)
-		if err != nil {
-			return errors.Wrap(err, "getting connection type")
-		}
-	}
-	if connectionType == "type-c" {
+	if isServoTypeC {
 		role := servo.PDRoleSnk
 		if powerOn {
 			role = servo.PDRoleSrc
@@ -1585,7 +1578,34 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 // If expBoot is false, DUT is expected to reach a specific firmware screen,
 // as documented in the firmware test manual below:
 // https://chromium.googlesource.com/chromiumos/docs/+/HEAD/firmware_test_manual.md#firmware-screen-names
-func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bool) error {
+func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bool) (retErr error) {
+	if expBoot {
+		if hasControl, err := h.Servo.HasControl(ctx, string(servo.CR50UARTCapture)); err != nil {
+			return errors.Wrapf(err, "failed while checking for %s control", servo.CR50UARTCapture)
+		} else if hasControl {
+			// We found a few instances where the DUT reset in the middle of
+			// booting the USB in recovery mode, for example, on crota and delbin.
+			// Capture relevant Uart messages to report these instances.
+			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.CR50UARTCapture)
+			if err != nil {
+				return errors.Wrap(err, "failed to enable Cr50 uart capture")
+			}
+			defer func() {
+				if retErr != nil {
+					tpmRstAsserted := regexp.MustCompile(`tpm_rst_asserted|PLT_RST_L ASSERTED`)
+					if err := h.Servo.PollForRegexp(ctx, servo.CR50UARTStream, tpmRstAsserted, 10*time.Second); err != nil {
+						retErr = errors.Join(retErr, err)
+					}
+					retErr = errors.Join(retErr, errors.New("unexpected reset captured"))
+				}
+				retErr = errors.Join(retErr, closeUART(ctx))
+			}()
+			// Read the UART stream just to make sure there isn't buffered data.
+			if _, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream); err != nil {
+				return errors.Wrap(err, "failed to read GSC UART")
+			}
+		}
+	}
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.USBImageBootTimeout)
 	defer cancelWaitConnect()
 
@@ -1621,9 +1641,18 @@ type powerSupplyDeviceStates struct {
 	BatteryStatus string
 }
 
+// NoBatteryInfoErr is the error returned by CheckPowerSupplyDeviceStates
+// when there's no information found associated with the battery.
+type NoBatteryInfoErr struct {
+	*errors.E
+}
+
 // CheckPowerSupplyDeviceStates runs the command 'power_supply_info' and returns
 // device status, specifically for ac and battery.
 func (h *Helper) CheckPowerSupplyDeviceStates(ctx context.Context) (*powerSupplyDeviceStates, error) {
+	type deviceInfoEmptyErr struct {
+		*errors.E
+	}
 	devices := map[string]*regexp.Regexp{
 		"ac":      regexp.MustCompile(`online:\s+(.+)`),
 		"battery": regexp.MustCompile(`state:\s+(.+)`),
@@ -1635,7 +1664,8 @@ func (h *Helper) CheckPowerSupplyDeviceStates(ctx context.Context) (*powerSupply
 		}
 		matches := expMatch.FindStringSubmatch(string(out))
 		if len(matches) != 2 {
-			return "", errors.Errorf("failed to match regex %q in %q", expMatch, string(out))
+			return "", &deviceInfoEmptyErr{
+				E: errors.Errorf("failed to match regex %q in %q", expMatch, string(out))}
 		}
 		return matches[1], nil
 	}
@@ -1645,9 +1675,24 @@ func (h *Helper) CheckPowerSupplyDeviceStates(ctx context.Context) (*powerSupply
 		return nil, err
 	}
 	if data.BatteryStatus, err = checkState(devices["battery"]); err != nil {
+		if _, ok := err.(*deviceInfoEmptyErr); ok {
+			return nil, &NoBatteryInfoErr{E: errors.Wrap(err, "getting battery status")}
+		}
 		return nil, err
 	}
 	return &data, nil
+}
+
+// CheckBatteryAvailable checks if the DUT has a working battery.
+func (h *Helper) CheckBatteryAvailable(ctx context.Context) (bool, error) {
+	_, err := h.CheckPowerSupplyDeviceStates(ctx)
+	if err != nil {
+		if _, ok := err.(*NoBatteryInfoErr); ok {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // CheckChgFrmPwrSuppInfo compares the ac status from the remote

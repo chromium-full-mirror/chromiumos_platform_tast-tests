@@ -36,6 +36,7 @@ func init() {
 
 func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
+	var chargerRemoved bool
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -58,7 +59,38 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		if err := h.RestoreUSBKey(ctx); err != nil {
 			s.Fatal("Failed to restore the USB: ", err)
 		}
+		if chargerRemoved {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1 * time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+		}
 	}()
+	batteryExists, err := h.CheckBatteryAvailable(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if battery is available: ", err)
+	}
+	supportPDRole, err := h.Servo.IsServoTypeC(ctx)
+	if err != nil {
+		s.Fatal("Failed to check the connection type: ", err)
+	}
+	// We saw that setting servo_pd_role:snk helps some machines
+	// to boot the USB in recovery mode.
+	if batteryExists && supportPDRole {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Failed to remove charger: ", err)
+		}
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1 * time.Minute)
+		defer cancelWaitConnect()
+		if err = h.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to the DUT: ", err)
+		}
+		chargerRemoved = true
+	}
 	if err := bootToNoGoodScreen(ctx, h); err != nil {
 		s.Fatal("Failed to traverse NoGood screen: ", err)
 	}

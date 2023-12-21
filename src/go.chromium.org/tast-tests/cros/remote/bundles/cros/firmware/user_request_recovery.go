@@ -44,6 +44,7 @@ func init() {
 func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	pv := s.FixtValue().(*fixture.Value)
 	h := pv.Helper
+	var chargerRemoved bool
 
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -85,12 +86,45 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=0").Run(); err != nil {
 			s.Fatal("Failed to restore crossystem recovery_request to 0: ", err)
 		}
+		if chargerRemoved {
+			if err := h.SetDUTPower(ctx, true); err != nil {
+				s.Fatal("Failed to connect charger: ", err)
+			}
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1 * time.Minute)
+			defer cancelWaitConnect()
+			if err := h.WaitConnect(waitConnectCtx); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+		}
 	}(cleanupCtx)
 
 	s.Log("Setting crossystem recovery_request to 193")
 	if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=193").Run(); err != nil {
 		s.Fatal("Failed to set crossystem recovery_request to 193: ", err)
 	}
+
+	batteryExists, err := h.CheckBatteryAvailable(ctx)
+	if err != nil {
+		s.Fatal("Failed to check if battery is available: ", err)
+	}
+	supportPDRole, err := h.Servo.IsServoTypeC(ctx)
+	if err != nil {
+		s.Fatal("Failed to check the connection type: ", err)
+	}
+	// We saw that setting servo_pd_role:snk helps some machines
+	// to boot the USB in recovery mode.
+	if batteryExists && supportPDRole {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			s.Fatal("Failed to remove charger: ", err)
+		}
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1 * time.Minute)
+		defer cancelWaitConnect()
+		if err = h.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to the DUT: ", err)
+		}
+		chargerRemoved = true
+	}
+
 	s.Log("Rebooting the DUT with a warm reset")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
 		s.Fatal("Failed to warm reset the DUT: ", err)

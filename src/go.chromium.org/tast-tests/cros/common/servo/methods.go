@@ -1510,3 +1510,21 @@ func (s *Servo) PollForRegexp(ctx context.Context, uart StringControl, toFind *r
 
 	return nil
 }
+
+// IsServoTypeC checks if the dut connection type is type-c.
+func (s *Servo) IsServoTypeC(ctx context.Context) (bool, error) {
+	// The servo is slightly evil, and will report that it has the
+	// servo_pd_role control even for Type-A.
+	connectionType := ""
+	hasControl, err := s.HasControl(ctx, string(PDRole))
+	if err != nil {
+		return false, errors.Wrap(err, "checking for control")
+	}
+	if hasControl {
+		connectionType, err = s.GetString(ctx, DUTConnectionType)
+		if err != nil {
+			return false, errors.Wrap(err, "getting connection type")
+		}
+	}
+	return connectionType == string(DUTConnTypeC), nil
+}
