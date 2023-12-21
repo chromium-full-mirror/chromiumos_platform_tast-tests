@@ -95,9 +95,7 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 	const (
 		// Histograms for hotseat.
 		extendedHotseatWidgetHistogram             = "Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToExtendedHotseat"
-		hiddenHotseatHistogram                     = "Ash.HotseatTransition.AnimationSmoothness.TransitionToHiddenHotseat"
 		hiddenHotseatWidgetHistogram               = "Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToHiddenHotseat"
-		shownHotseatHistogram                      = "Ash.HotseatTransition.AnimationSmoothness.TransitionToShownHotseat"
 		shownHotseatWidgetHistogram                = "Ash.HotseatWidgetAnimation.Widget.AnimationSmoothness.TransitionToShownHotseat"
 		shownHotseatTranslucentBackgroundHistogram = "Ash.HotseatWidgetAnimation.TranslucentBackground.AnimationSmoothness.TransitionToShownHotseat"
 		shownHomeLauncherHistogram                 = "Apps.HomeLauncherTransition.AnimationSmoothness.FadeInOverview"
@@ -206,9 +204,7 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 
 	// Collect metrics data from hiding hotseat by window creation.
 	histogramsName := []string{
-		hiddenHotseatHistogram,
 		hiddenHotseatWidgetHistogram,
-		shownHotseatHistogram,
 		shownHotseatWidgetHistogram}
 	if testType == showNavigationWidget {
 		histogramsName = append(histogramsName,
@@ -273,7 +269,6 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 
 	// Collect metrics data from entering/exiting overview.
 	histogramsName = []string{
-		shownHotseatHistogram,
 		shownHotseatWidgetHistogram,
 		extendedHotseatWidgetHistogram,
 		shownHomeLauncherHistogram,
@@ -292,7 +287,6 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 
 	// Histograms for window activation.
 	windowActivationHistogramNames := map[string]bool{
-		hiddenHotseatHistogram:       true,
 		hiddenHotseatWidgetHistogram: true,
 	}
 	if testType == showNavigationWidget {
