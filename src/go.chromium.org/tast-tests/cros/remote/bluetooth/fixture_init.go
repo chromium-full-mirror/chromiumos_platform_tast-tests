@@ -36,8 +36,8 @@ func init() {
 			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 			FlossEnabled:    false,
 		}),
-		SetUpTimeout:    setUpTimeout + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout,
+		SetUpTimeout:    setUpTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -61,8 +61,8 @@ func init() {
 			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
 			FlossEnabled:    true,
 		}),
-		SetUpTimeout:    setUpTimeout + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout,
+		SetUpTimeout:    setUpTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -235,8 +235,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -264,8 +264,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -542,8 +542,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -571,8 +571,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -600,8 +600,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -629,8 +629,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -658,8 +658,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + 3*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -687,8 +687,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + 3*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 3*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + 3*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -716,8 +716,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + 4*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -745,8 +745,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + 4*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 4*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + 4*btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -776,8 +776,8 @@ func init() {
 			fixtureVarBTPeers,
 			fixtureVarSigninKey,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -807,8 +807,8 @@ func init() {
 			fixtureVarBTPeers,
 			fixtureVarSigninKey,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -843,8 +843,8 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -880,8 +880,8 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -919,8 +919,8 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -957,8 +957,8 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -986,7 +986,6 @@ func init() {
 			DisableFeatures:        []string{},
 			LoginMode:              ui.LoginMode_LOGIN_MODE_GAIA_LOGIN,
 			UseFastPairTapeAccount: true,
-			UseSameGaiaLogin:       true,
 			RequireCompanionDUT:    true,
 			FlossEnabled:           false,
 		}),
@@ -996,8 +995,8 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    2*resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    2*resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: 2*tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: 2 * postTestTimeout,
 		ServiceDeps: []string{
@@ -1025,7 +1024,6 @@ func init() {
 			DisableFeatures:        []string{},
 			LoginMode:              ui.LoginMode_LOGIN_MODE_GAIA_LOGIN,
 			UseFastPairTapeAccount: true,
-			UseSameGaiaLogin:       true,
 			RequireCompanionDUT:    true,
 			FlossEnabled:           true,
 		}),
@@ -1035,8 +1033,8 @@ func init() {
 			fixtureVarFastPairChromePassword,
 			tape.ServiceAccountVar,
 		},
-		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpBuffer,
-		ResetTimeout:    2*resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    2*setUpTimeout + btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    2*resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: 2*tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: 2 * postTestTimeout,
 		ServiceDeps: []string{

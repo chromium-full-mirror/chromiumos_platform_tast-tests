@@ -149,17 +149,18 @@ const (
 	// additional time to reset each btpeer.
 	btpeerResetBuffer = 15 * time.Second
 
-	// enableChromeUISetUpBuffer should be added to the setUpTimeout when
-	// fixtureFeatures.EnableChromeUI is true to give it enough time to restart
-	// and log into chrome. See the ChromeService implementation for more details.
-	enableChromeUISetUpBuffer = 5 * time.Minute
+	// enableChromeUISetUpAndResetBuffer should be added to the setUpTimeout
+	// and resetTimeout when fixtureFeatures.EnableChromeUI is true to give it
+	// enough time to restart and log into chrome.
+	// See the ChromeService implementation for more details.
+	enableChromeUISetUpAndResetBuffer = 5 * time.Minute
 )
 
 type fixtureFeatures struct {
 	// EnableChromeUI will ensure that chrome UI is enabled during the test if
 	// true, or disabled if false.
 	//
-	// The enableChromeUISetUpBuffer must be added to the fixture SetUp when this is
+	// The enableChromeUISetUpAndResetBuffer must be added to the fixture SetUp when this is
 	// true to give it enough time.
 	EnableChromeUI bool
 
@@ -188,10 +189,6 @@ type fixtureFeatures struct {
 	// Pair OTA pool.
 	UseFastPairTapeAccount bool
 
-	// UseSameGaiaLogin enforces that all companion DUTs will login on the same account
-	// as the primary DUT.
-	UseSameGaiaLogin bool
-
 	// RequireFastPairUserVars enables retrieving chrome user credentials from
 	// fixture vars, and requires that they are provided. Required for all Fast
 	// Pair tests that use a GAIA login.
@@ -210,9 +207,18 @@ type fixtureFeatures struct {
 	PowerEnabled bool
 }
 
+type onDutCleanup func(ctx context.Context, dutConfig *DUTConfig)
+
 // DUTConfig groups DUT-specific fixture configs and utils.
 type DUTConfig struct {
-	// DUT is the connection to the primary DUT.
+	// Cleanup functions to call when SetUp fails or during TearDown to free
+	// resources. Not allowed to fail; errors should be logged.
+	// Processed in reverse order (FILO), list cleared when processed.
+	onDutCleanupStack []onDutCleanup
+
+	uiEnabled bool
+
+	// DUT is the connection to the DUT.
 	DUT *dut.DUT
 
 	// DUTRPCClient is a gRPC client that remains connected to the DUT throughout
@@ -260,7 +266,7 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to Connect to the local gRPC service on DUT %s", dut.HostName())
 	}
-	return &DUTConfig{
+	dutConfig := &DUTConfig{
 		DUT:                     dut,
 		DUTRPCClient:            rpcClient,
 		BluetoothService:        bts.NewBluetoothServiceClient(rpcClient.Conn),
@@ -271,13 +277,24 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		QuickSettingsService:    qs.NewQuickSettingsServiceClient(rpcClient.Conn),
 		PowerDeviceSetupService: power.NewDeviceSetupServiceClient(rpcClient.Conn),
 		PowerRecorderService:    power.NewRecorderServiceClient(rpcClient.Conn),
-	}, nil
+	}
+	dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+		if err := dutConfig.DUTRPCClient.Close(ctx); err != nil {
+			testing.ContextLog(ctx, "WARNING: Failed to close DUTRPCClient: ", err)
+		}
+	})
+	return dutConfig, nil
 }
 
 // FixtValue is the value of the test fixture accessible within a test. All
 // variables are configured in fixture.SetUp so that tests can use them without
 // any further configuration.
 type FixtValue struct {
+	// Internal fixture vars set during SetUp.
+	chromeUsername               string
+	chromePassword               string
+	signinProfileTestExtensionID string
+
 	// BTPeers is a list of btpeer clients that are connected to each btpeer
 	// available to the test fixture.
 	BTPeers []*BtpeerClient
@@ -412,7 +429,6 @@ func (fv *FixtValue) StopPowerRecording(ctx context.Context, uploadTestName stri
 
 // GetPowerMetrics calculates the mean value of requested power metrics.
 func (fv *FixtValue) GetPowerMetrics(ctx context.Context, powerResults *perf.Values, metricsName string) (float64, error) {
-
 	var powerMean float64 = -1
 	for key, value := range powerResults.GetValues() {
 		if key.Name == metricsName {
@@ -443,6 +459,7 @@ type fixture struct {
 	// Persistent vars, set just once in newFixture.
 	features        *fixtureFeatures
 	fastPairEnabled bool
+	btStack         bts.BluetoothStackType
 
 	// Stateful vars which are initialized during SetUp.
 	fv                            *FixtValue
@@ -462,6 +479,20 @@ func newFixture(features *fixtureFeatures) *fixture {
 			break
 		}
 	}
+	// Determine desired bluetooth stack for DUTs.
+	if tf.features.FlossEnabled {
+		tf.btStack = bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS
+	} else {
+		tf.btStack = bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ
+	}
+	if tf.features.EnableChromeUI {
+		if tf.btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS {
+			tf.features.EnableFeatures = append(tf.features.EnableFeatures, chromeFeatureFloss)
+			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFlossIsAvailabilityCheckNeeded)
+		} else {
+			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)
+		}
+	}
 	return tf
 }
 
@@ -469,27 +500,25 @@ func newFixture(features *fixtureFeatures) *fixture {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	s.Log("[BLUETOOTH_FIXTURE] SetUp :: START")
+	defer s.Log("[BLUETOOTH_FIXTURE] SetUp :: END")
+
 	// Ensure any stateful fixture properties are set to initial state.
 	tf.fv = &FixtValue{}
 	tf.bluetoothServicesDBusMonitors = nil
 	tf.btsnoopCollectors = nil
 
-	// Determine desired bluetooth stack for DUTs.
-	var btStack bts.BluetoothStackType
-	if tf.features.FlossEnabled {
-		btStack = bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS
-	} else {
-		btStack = bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ
+	if tf.features.EnableChromeUI && tf.features.EnableAudioUI {
+		s.Fatal("Invalid fixture features: EnableChromeUI or EnableAudioUI may be set, but not both")
 	}
 
 	// Parse OOBE fixture var.
-	var signinProfileTestExtensionID string
 	if tf.features.EnableHidScreenOnOobe {
-		var ok bool
-		signinProfileTestExtensionID, ok = s.Var(fixtureVarSigninKey)
+		signinProfileTestExtensionID, ok := s.Var(fixtureVarSigninKey)
 		if !ok {
 			s.Fatal("Failed to get sign-in key variable required for OOBE tests")
 		}
+		tf.fv.signinProfileTestExtensionID = signinProfileTestExtensionID
 	}
 
 	// Connect to btpeers and reset them to a fresh state.
@@ -531,195 +560,24 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 
 	// Cleanup if anything goes wrong during Setup
 	cleanupCtx := ctx
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			tf.cleanupAllDuts(ctx)
+		}
+	}(cleanupCtx)
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	// Resolve credentials to use for all DUTs when UI is enabled.
+	if tf.features.EnableChromeUI {
+		tf.resolveChromeCredentials(ctx, s)
+	}
+
 	// Perform per-DUT setup actions.
-	var primaryDUTUsername, primaryDUTPassword string
 	for dutIndex, dutConfig := range tf.fv.DUTConfigs {
-		dutName := dutConfig.DUT.HostName()
-		s.Logf("=== SetUp for DUT %s started ===", dutName)
-
-		// Start capturing incoming and outgoing bluez and floss D-Bus messages.
-		bluetoothServicesDBusMonitor, err := log.StartDBusMonitorCollector(
-			ctx,
-			dutConfig.DUT.Conn(),
-			"--system",
-			fmt.Sprintf("sender='%s'", dbusServiceBluetoothBluez),
-			fmt.Sprintf("sender='%s'", dbusServiceBluetoothFloss),
-			fmt.Sprintf("sender='%s'", dbusServiceBluetoothFlossManager),
-			fmt.Sprintf("destination='%s'", dbusServiceBluetoothBluez),
-			fmt.Sprintf("destination='%s'", dbusServiceBluetoothFloss),
-			fmt.Sprintf("destination='%s'", dbusServiceBluetoothFlossManager),
-		)
-		if err != nil {
-			s.Fatal("Failed to start dbus-monitor listening to bluez and floss service messages: ", err)
+		if err := tf.setUpDut(ctx, dutConfig); err != nil {
+			s.Fatalf("Failed to set up DUT[%d] %q: %v", dutIndex, dutConfig.DUT.HostName(), err)
 		}
-		tf.bluetoothServicesDBusMonitors = append(tf.bluetoothServicesDBusMonitors, bluetoothServicesDBusMonitor)
-
-		btsnoopCollector, err := log.StartBtsnoopCollector(ctx, dutConfig.DUT.Conn())
-		if err != nil {
-			s.Fatal("Failed to start btsnoop log: ", err)
-		}
-		tf.btsnoopCollectors = append(tf.btsnoopCollectors, btsnoopCollector)
-
-		// Enable/Disable floss feature based on desired bluetooth stack.
-		if btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_FLOSS {
-			tf.features.EnableFeatures = append(tf.features.EnableFeatures, chromeFeatureFloss)
-			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFlossIsAvailabilityCheckNeeded)
-		} else {
-			tf.features.DisableFeatures = append(tf.features.DisableFeatures, chromeFeatureFloss)
-		}
-
-		if tf.features.EnableChromeUI {
-			s.Log("=== Configure Chrome UI ===")
-			// Resolve chrome user credentials.
-			var chromeUsername, chromePassword string
-			s.Log("Resolving chrome user credentials")
-			if tf.features.UseSameGaiaLogin && dutIndex != 0 {
-				// All companion DUTs (expected to be in the last half of the config list) should
-				// use the same GAIA credentials as the first account.
-				chromeUsername = primaryDUTUsername
-				chromePassword = primaryDUTPassword
-			} else if tf.features.RequireFastPairUserVars {
-				// Fast Pair tests require GAIA credentials to be provided, which can be
-				// passed via CLI or will use the default credentials.
-				chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
-				chromePassword = s.RequiredVar(fixtureVarFastPairChromePassword)
-				s.Logf("Using Fast Pair test chrome user credentials for user %q", chromeUsername)
-			} else if tf.features.UseFastPairTapeAccount {
-				// Create a tape account manager and lease a test account for the duration
-				// of the fixture.
-				s.Log("Leasing Fast Pair OTA chrome user with Tape")
-				tapeServiceAccountVar := s.RequiredVar(tape.ServiceAccountVar)
-				var err error
-				tf.fv.tapeAccountManager, tf.fv.tapeAccount, err = tape.NewOwnedTestAccountManager(
-					ctx,
-					[]byte(tapeServiceAccountVar),
-					true,
-					tape.WithTimeout(int32(fixtureVarFastPairTapeCleanupTimeout.Seconds())),
-					tape.WithPoolID(tape.CrossDeviceFastPair),
-				)
-				if err != nil {
-					s.Fatal("Failed to create a tape account manager and lease an account: ", err)
-				}
-				chromeUsername = tf.fv.tapeAccount.Username
-				chromePassword = tf.fv.tapeAccount.Password
-				s.Logf("Using Fast Pair OTA chrome user credentials leased with Tape for user %q", chromeUsername)
-			} else {
-				// By default, use the default username/password used for Fake login.
-				chromeUsername = defaultChromeUsername
-				chromePassword = defaultChromePassword
-				s.Log("Using default fake chrome user credentials")
-			}
-
-			if tf.features.UseSameGaiaLogin && dutIndex == 0 {
-				// Save primary DUT credentials if we have to re-use them for companion DUT logins.
-				primaryDUTUsername = chromeUsername
-				primaryDUTPassword = chromePassword
-			}
-
-			// Start Chrome with the features and login mode provided by the test fixture.
-			var extraArgs []string
-			if tf.fastPairEnabled {
-				extraArgs = fixtureVarFastPairExtraArgs
-			}
-			if _, err := dutConfig.ChromeService.New(ctx, &ui.NewRequest{
-				LoginMode:       tf.features.LoginMode,
-				EnableFeatures:  tf.features.EnableFeatures,
-				DisableFeatures: tf.features.DisableFeatures,
-				Credentials: &ui.NewRequest_Credentials{
-					Username: chromeUsername,
-					Password: chromePassword,
-				},
-				EnableHidScreenOnOobe:        tf.features.EnableHidScreenOnOobe,
-				SigninProfileTestExtensionId: signinProfileTestExtensionID,
-				ExtraArgs:                    extraArgs,
-			}); err != nil {
-				s.Fatalf("Failed to log into chrome on DUT %s: %v", dutName, err)
-			}
-		} else if tf.features.EnableAudioUI {
-			s.Log("=== Configure Audio Service with Chrome UI ===")
-			if _, err := tf.fv.AudioService.New(ctx, &empty.Empty{}); err != nil {
-				s.Fatal("Failed to login Chrome for audio service: ", err)
-			}
-		} else {
-			s.Logf("=== Stopping Chrome UI job on DUT %s ===", dutName)
-			if _, err := dutConfig.UpstartService.StopJob(ctx, &platform.StopJobRequest{
-				JobName: "ui",
-			}); err != nil {
-				s.Fatalf("Failed to stop Chrome UI job on DUT %s: %v", dutName, err)
-			}
-		}
-
-		// Configure and enable desired DUT bluetooth stack.
-		s.Logf("=== Configuring DUT %s Bluetooth stack to use %s ===", dutName, btStack.String())
-		if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
-			StackType: btStack,
-		}); err != nil {
-			s.Fatalf("Failed to configure DUT %s bluetooth stack as %s: %v", dutName, btStack.String(), err)
-		}
-		if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatalf("Failed to enable %s bluetooth stack on DUT %s: %v", btStack.String(), dutName, err)
-		}
-		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
-			s.Errorf("Failed to reset state of DUT %s: %v", dutName, err)
-		}
-
-		// Set up power test
-		if tf.features.PowerEnabled {
-			// Create message SetupRequest
-			s.Log("=== Configure Power Measurement ===")
-
-			setupRequest := power.DeviceSetupRequest{
-				Ui:                 power.UIMode_DISABLE_UI,
-				ScreenBrightness:   power.ScreenMode_ZERO_SCREEN_BRIGHTNESS,
-				KeyboardBrightness: power.KeyboardMode_ZERO_KEYBOARD_BRIGHTNESS,
-				Wifi:               power.WifiMode_DISABLE_WIFI,
-				Bluetooth:          power.BluetoothMode_DO_NOT_CHANGE_BLUETOOTH,
-			}
-
-			if tf.features.EnableChromeUI || tf.features.EnableAudioUI {
-				s.Log("Allow UI for power measurement")
-				setupRequest.Ui = power.UIMode_DO_NOT_CHANGE_UI
-			}
-
-			if _, err := dutConfig.PowerDeviceSetupService.Setup(ctx, &setupRequest); err != nil {
-				s.Fatal("Failed to set up device for power measurement: ", err)
-			}
-			defer func(ctx context.Context) {
-				if !s.HasError() {
-					return
-				}
-				if _, err := dutConfig.PowerDeviceSetupService.Cleanup(ctx, &empty.Empty{}); err != nil {
-					s.Error("Restore device setup failed: ", err)
-				}
-			}(cleanupCtx)
-
-			recorderRequest := power.RecorderRequest{
-				IntervalSec: DefaultBTPowerIntervalSecond,
-			}
-
-			if _, err := dutConfig.PowerRecorderService.Create(ctx, &recorderRequest); err != nil {
-				s.Fatal("Failed to set up recorder for power measurement: ", err)
-			}
-			defer func(ctx context.Context) {
-				if !s.HasError() {
-					return
-				}
-				if _, err := dutConfig.PowerRecorderService.Close(ctx, &empty.Empty{}); err != nil {
-					s.Error("Closing power recorder failed: ", err)
-				}
-			}(cleanupCtx)
-		}
-
-		if btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ {
-			if _, err = tf.fv.BluetoothService.SetDebugLogLevels(ctx, &bts.SetDebugLogLevelsRequest{Level: 1}); err != nil {
-				s.Log("Failed to set log level: ", err)
-			}
-			s.Log("Set debug log level")
-		}
-		s.Logf("Set up for DUT %s completed", dutName)
 	}
 
 	// Save collected bluez D-Bus messages collected thus far.
@@ -735,12 +593,19 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) Reset(ctx context.Context) error {
+	testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] Reset :: START")
+	defer testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] Reset :: END")
 	if err := GetBtpeerProvider().Reset(ctx, tf.fv.BTPeers...); err != nil {
 		return errors.Wrap(err, "failed to reset all btpeers")
 	}
 	for _, dutConfig := range tf.fv.DUTConfigs {
 		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
 			return errors.Wrapf(err, "failed to reset state of DUT %s", dutConfig.DUT.HostName())
+		}
+		if tf.uITestingEnabled() {
+			if err := tf.ResetChromeUI(ctx, dutConfig, true); err != nil {
+				return errors.Wrapf(err, "failed to reset Chrome UI of DUT %s", dutConfig.DUT.HostName())
+			}
 		}
 	}
 	if err := tf.dumpAllCollectedLogs(ctx, "Reset"); err != nil {
@@ -762,6 +627,8 @@ func (tf *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	s.Log("[BLUETOOTH_FIXTURE] PostTest :: START")
+	defer s.Log("[BLUETOOTH_FIXTURE] PostTest :: END")
 	// Save any new dbus logs that occurred during the test.
 	if err := tf.dumpAllCollectedLogs(ctx, "PostTest"); err != nil {
 		s.Fatal("Failed to collect dbus-monitor bluez logs: ", err)
@@ -773,49 +640,15 @@ func (tf *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 //
 // This is necessary to implement testing.FixtureImpl.
 func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	s.Log("[BLUETOOTH_FIXTURE] TearDown :: START")
+	defer s.Log("[BLUETOOTH_FIXTURE] TearDown :: END")
 	// Reset btpeers.
 	if err := GetBtpeerProvider().Reset(ctx, tf.fv.BTPeers...); err != nil {
 		s.Error("Failed to reset all btpeers: ", err)
 	}
 
 	// Tear down each DUT.
-	for _, dutConfig := range tf.fv.DUTConfigs {
-		dutName := dutConfig.DUT.HostName()
-		s.Logf("TearDown for DUT %s started", dutName)
-
-		// Clean up bluetooth state and disable adapter.
-		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
-			s.Errorf("Failed to reset state of DUT %s: %v", dutName, err)
-		}
-		s.Logf("Disabling bluetooth on DUT %s", dutName)
-		if _, err := dutConfig.BluetoothService.Disable(ctx, &emptypb.Empty{}); err != nil {
-			s.Errorf("Failed to disable bluetooth stack on DUT %s: %v", dutName, err)
-		}
-
-		if tf.features.EnableChromeUI {
-			// Clean up chrome login state.
-			if _, err := dutConfig.ChromeService.Close(ctx, &emptypb.Empty{}); err != nil {
-				s.Error("Failed to close Chrome on the DUT: ", err)
-			}
-		}
-
-		// Cleanup for power metrics service
-		if tf.features.PowerEnabled {
-			if _, err := dutConfig.PowerDeviceSetupService.Cleanup(ctx, &empty.Empty{}); err != nil {
-				s.Error("Clean up power metrics failed: ", err)
-			}
-			if _, err := dutConfig.PowerRecorderService.Close(ctx, &empty.Empty{}); err != nil {
-				s.Error("Closing power recorder failed: ", err)
-			}
-		}
-
-		// Close gRPC connection to DUT.
-		if err := dutConfig.DUTRPCClient.Close(ctx); err != nil {
-			s.Error("Failed to close gRPC connection to DUT: ", err)
-		}
-
-		s.Logf("TearDown for DUT %s completed", dutName)
-	}
+	tf.cleanupAllDuts(ctx)
 
 	// Dump and close log collectors.
 	if err := tf.dumpAllCollectedLogs(ctx, "TearDown"); err != nil {
@@ -845,6 +678,8 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requiredBTPeers int) error {
+	s.Log("[BLUETOOTH_FIXTURE] setUpBTPeers :: START")
+	defer s.Log("[BLUETOOTH_FIXTURE] setUpBTPeers :: END")
 	ctx, st := timing.Start(ctx, fmt.Sprintf("setUpBTPeers_%d", requiredBTPeers))
 	defer st.End()
 	if requiredBTPeers <= 0 {
@@ -890,6 +725,272 @@ func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requi
 	}
 	testing.ContextLogf(ctx, "Successfully set up %d btpeers", len(btpeers))
 	tf.fv.BTPeers = btpeers
+	return nil
+}
+
+func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
+	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] setUpDut :: DUT %q :: START", dutConfig.DUT.HostName())
+	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] setUpDut :: DUT %q :: END", dutConfig.DUT.HostName())
+
+	// Stop the Chrome UI if it was running from a prior test, but do not close
+	// the UI services as those may not have been configured yet.
+	if err := tf.stopChromeUI(ctx, dutConfig, true); err != nil {
+		return errors.Wrap(err, "failed to stop Chrome UI")
+	}
+
+	// Start capturing incoming and outgoing bluez and floss D-Bus messages.
+	bluetoothServicesDBusMonitor, err := log.StartDBusMonitorCollector(
+		ctx,
+		dutConfig.DUT.Conn(),
+		"--system",
+		fmt.Sprintf("sender='%s'", dbusServiceBluetoothBluez),
+		fmt.Sprintf("sender='%s'", dbusServiceBluetoothFloss),
+		fmt.Sprintf("sender='%s'", dbusServiceBluetoothFlossManager),
+		fmt.Sprintf("destination='%s'", dbusServiceBluetoothBluez),
+		fmt.Sprintf("destination='%s'", dbusServiceBluetoothFloss),
+		fmt.Sprintf("destination='%s'", dbusServiceBluetoothFlossManager),
+	)
+	if err != nil {
+		return errors.Wrap(err, "failed to start dbus-monitor listening to bluez and floss service messages")
+	}
+	tf.bluetoothServicesDBusMonitors = append(tf.bluetoothServicesDBusMonitors, bluetoothServicesDBusMonitor)
+
+	btsnoopCollector, err := log.StartBtsnoopCollector(ctx, dutConfig.DUT.Conn())
+	if err != nil {
+		return errors.Wrap(err, "failed to start btsnoop log")
+	}
+	tf.btsnoopCollectors = append(tf.btsnoopCollectors, btsnoopCollector)
+
+	// Configure and enable desired DUT bluetooth stack.
+	testing.ContextLogf(ctx, "=== Configuring DUT to use bluetooth stack %q ===", tf.btStack)
+	if _, err := dutConfig.BluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
+		StackType: tf.btStack,
+	}); err != nil {
+		return errors.Wrapf(err, "failed to set DUT bluetooth stack as %q", tf.btStack)
+	}
+	if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrapf(err, "failed to enable bluetooth on DUT with stack %q", tf.btStack)
+	}
+	if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
+		return errors.Wrapf(err, "failed to reset DUT bluetooth state with bluetooth stack %q", tf.btStack)
+	}
+	if tf.btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ {
+		if _, err = tf.fv.BluetoothService.SetDebugLogLevels(ctx, &bts.SetDebugLogLevelsRequest{Level: 1}); err != nil {
+			return errors.Wrap(err, "failed to set bluetooth debug log levels")
+		}
+	}
+	dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to reset state of DUT %q: %v", dutConfig.DUT.HostName(), err)
+		}
+		testing.ContextLog(ctx, "Disabling bluetooth on DUT")
+		if _, err := dutConfig.BluetoothService.Disable(ctx, &emptypb.Empty{}); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to disable bluetooth stack on DUT %q: %v", dutConfig.DUT.HostName(), err)
+		}
+	})
+
+	if err := tf.startChromeUI(ctx, dutConfig); err != nil {
+		return errors.Wrap(err, "failed to start Chrome UI")
+	}
+
+	// Set up power test
+	if tf.features.PowerEnabled {
+		testing.ContextLog(ctx, "=== Configure Power Measurement ===")
+		setupRequest := power.DeviceSetupRequest{
+			Ui:                 power.UIMode_DISABLE_UI,
+			ScreenBrightness:   power.ScreenMode_ZERO_SCREEN_BRIGHTNESS,
+			KeyboardBrightness: power.KeyboardMode_ZERO_KEYBOARD_BRIGHTNESS,
+			Wifi:               power.WifiMode_DISABLE_WIFI,
+			Bluetooth:          power.BluetoothMode_DO_NOT_CHANGE_BLUETOOTH,
+		}
+		if tf.uITestingEnabled() {
+			testing.ContextLog(ctx, "Allow UI for power measurement")
+			setupRequest.Ui = power.UIMode_DO_NOT_CHANGE_UI
+		}
+		if _, err := dutConfig.PowerDeviceSetupService.Setup(ctx, &setupRequest); err != nil {
+			return errors.Wrap(err, "failed to set up device for power measurement")
+		}
+		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+			if _, err := dutConfig.PowerDeviceSetupService.Cleanup(ctx, &empty.Empty{}); err != nil {
+				testing.ContextLog(ctx, "WARNING: Failed to call PowerDeviceSetupService.Cleanup: ", err)
+			}
+		})
+		recorderRequest := power.RecorderRequest{
+			IntervalSec: DefaultBTPowerIntervalSecond,
+		}
+		if _, err := dutConfig.PowerRecorderService.Create(ctx, &recorderRequest); err != nil {
+			return errors.Wrap(err, "failed to set up recorder for power measurement")
+		}
+		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+			if _, err := dutConfig.PowerRecorderService.Close(ctx, &empty.Empty{}); err != nil {
+				testing.ContextLogf(ctx, "WARNING: Failed to call PowerRecorderService.Close on DUT %q: %v", dutConfig.DUT.HostName(), err)
+			}
+		})
+	}
+
+	return nil
+}
+
+func (tf *fixture) cleanupAllDuts(ctx context.Context) {
+	testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] cleanupAllDuts :: START")
+	defer testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] cleanupAllDuts :: END")
+	for _, dutConfig := range tf.fv.DUTConfigs {
+		tf.cleanupDut(ctx, dutConfig)
+	}
+}
+
+func (tf *fixture) cleanupDut(ctx context.Context, dutConfig *DUTConfig) {
+	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] cleanupDut :: DUT %q :: START", dutConfig.DUT.HostName())
+	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] cleanupDut :: DUT %q :: END", dutConfig.DUT.HostName())
+	for i := len(dutConfig.onDutCleanupStack) - 1; i >= 0; i-- {
+		dutConfig.onDutCleanupStack[i](ctx, dutConfig)
+	}
+	dutConfig.onDutCleanupStack = nil
+}
+
+func (tf *fixture) resolveChromeCredentials(ctx context.Context, s *testing.FixtState) {
+	s.Log("[BLUETOOTH_FIXTURE] resolveChromeCredentials :: START")
+	defer s.Log("[BLUETOOTH_FIXTURE] resolveChromeCredentials :: END")
+	if tf.features.RequireFastPairUserVars {
+		// Fast Pair tests require GAIA credentials to be provided, which can be
+		// passed via CLI or will use the default credentials.
+		tf.fv.chromeUsername = s.RequiredVar(fixtureVarFastPairChromeUsername)
+		tf.fv.chromePassword = s.RequiredVar(fixtureVarFastPairChromePassword)
+		s.Logf("Using Fast Pair test chrome user credentials for user %q", tf.fv.chromeUsername)
+	} else if tf.features.UseFastPairTapeAccount {
+		// Create a tape account manager and lease a test account for the duration
+		// of the fixture.
+		s.Log("Leasing Fast Pair OTA chrome user with Tape")
+		tapeServiceAccountVar := s.RequiredVar(tape.ServiceAccountVar)
+		var err error
+		tf.fv.tapeAccountManager, tf.fv.tapeAccount, err = tape.NewOwnedTestAccountManager(
+			ctx,
+			[]byte(tapeServiceAccountVar),
+			true,
+			tape.WithTimeout(int32(fixtureVarFastPairTapeCleanupTimeout.Seconds())),
+			tape.WithPoolID(tape.CrossDeviceFastPair),
+		)
+		if err != nil {
+			s.Fatal("Failed to create a tape account manager and lease an account: ", err)
+		}
+		tf.fv.chromeUsername = tf.fv.tapeAccount.Username
+		tf.fv.chromePassword = tf.fv.tapeAccount.Password
+		s.Logf("Using Fast Pair OTA chrome user credentials leased with Tape for user %q", tf.fv.chromeUsername)
+	} else {
+		// By default, use the default username/password used for Fake login.
+		tf.fv.chromeUsername = defaultChromeUsername
+		tf.fv.chromePassword = defaultChromePassword
+		s.Log("Using default fake chrome user credentials")
+	}
+}
+
+// uITestingEnabled returns true if UI should be enabled for the test based
+// on its features.
+func (tf *fixture) uITestingEnabled() bool {
+	return tf.features.EnableChromeUI || tf.features.EnableAudioUI
+}
+
+func (tf *fixture) stopChromeUI(ctx context.Context, dutConfig *DUTConfig, stopUIJob bool) error {
+	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] stopChromeUI :: DUT %q :: START", dutConfig.DUT.HostName())
+	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] stopChromeUI :: DUT %q :: END", dutConfig.DUT.HostName())
+	if dutConfig.uiEnabled {
+		if tf.features.EnableChromeUI {
+			testing.ContextLog(ctx, "=== Closing ChromeService ===")
+			if _, err := dutConfig.ChromeService.Close(ctx, &empty.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to call ChromeService.Close")
+			}
+			dutConfig.uiEnabled = false
+		} else if tf.features.EnableAudioUI {
+			testing.ContextLog(ctx, "=== Closing AudioService ===")
+			if _, err := dutConfig.AudioService.Close(ctx, &empty.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to call ChromeService.Close")
+			}
+			dutConfig.uiEnabled = false
+		}
+	}
+	if stopUIJob {
+		testing.ContextLog(ctx, "=== Stopping Chrome UI job ===")
+		if _, err := dutConfig.UpstartService.StopJob(ctx, &platform.StopJobRequest{
+			JobName: "ui",
+		}); err != nil {
+			return errors.Wrapf(err, "failed to stop Chrome UI job on DUT %q", dutConfig.DUT.HostName())
+		}
+		dutConfig.uiEnabled = false
+	}
+	return nil
+}
+
+// startChromeUI will start the UI service by logging into chrome either with
+// the ChromeService if EnableChromeUI feature is set or the AudioService if
+// the EnableAudioUI feature is set. No-op if neither are set.
+func (tf *fixture) startChromeUI(ctx context.Context, dutConfig *DUTConfig) error {
+	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] startChromeUI :: DUT %q :: START", dutConfig.DUT.HostName())
+	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] startChromeUI :: DUT %q :: END", dutConfig.DUT.HostName())
+	if tf.features.EnableChromeUI {
+		testing.ContextLog(ctx, "=== Starting Chrome UI with ChromeService ===")
+		var extraArgs []string
+		if tf.fastPairEnabled {
+			extraArgs = fixtureVarFastPairExtraArgs
+		}
+		if _, err := dutConfig.ChromeService.New(ctx, &ui.NewRequest{
+			LoginMode:       tf.features.LoginMode,
+			EnableFeatures:  tf.features.EnableFeatures,
+			DisableFeatures: tf.features.DisableFeatures,
+			Credentials: &ui.NewRequest_Credentials{
+				Username: tf.fv.chromeUsername,
+				Password: tf.fv.chromePassword,
+			},
+			EnableHidScreenOnOobe:        tf.features.EnableHidScreenOnOobe,
+			SigninProfileTestExtensionId: tf.fv.signinProfileTestExtensionID,
+			ExtraArgs:                    extraArgs,
+		}); err != nil {
+			return errors.Wrap(err, "failed to start Chrome UI with ChromeService")
+		}
+		dutConfig.uiEnabled = true
+		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+			if !dutConfig.uiEnabled {
+				return
+			}
+			if _, err := dutConfig.ChromeService.Close(ctx, &emptypb.Empty{}); err != nil {
+				testing.ContextLogf(ctx, "WARNING: Failed to close Chrome UI with ChromeService for DUT %q: %v", dutConfig.DUT.HostName(), err)
+			}
+			dutConfig.uiEnabled = false
+		})
+	} else if tf.features.EnableAudioUI {
+		testing.ContextLog(ctx, "=== Starting Chrome UI with AudioService ===")
+		if _, err := dutConfig.AudioService.New(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to start Chrome UI with AudioService")
+		}
+		dutConfig.uiEnabled = true
+		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+			if !dutConfig.uiEnabled {
+				return
+			}
+			if _, err := dutConfig.AudioService.Close(ctx, &emptypb.Empty{}); err != nil {
+				testing.ContextLogf(ctx, "WARNING: Failed to close Chrome UI with AudioService for DUT %q: %v", dutConfig.DUT.HostName(), err)
+			}
+			dutConfig.uiEnabled = false
+		})
+	} else {
+		testing.ContextLog(ctx, "Skipping start of Chrome UI as no Chrome UI fixture features are enabled for this fixture")
+	}
+	return nil
+}
+
+// ResetChromeUI will log out of chrome, optionally restart the UI job, then log
+// back into chrome. Only supported if UI features are enabled for the fixture.
+func (tf *fixture) ResetChromeUI(ctx context.Context, dutConfig *DUTConfig, restartUIJob bool) error {
+	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] ResetChromeUI :: DUT %q :: START", dutConfig.DUT.HostName())
+	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] ResetChromeUI :: DUT %q :: END", dutConfig.DUT.HostName())
+	if !tf.uITestingEnabled() {
+		return errors.New("the Chrome UI is not enabled for this fixture")
+	}
+	if err := tf.stopChromeUI(ctx, dutConfig, restartUIJob); err != nil {
+		return errors.Wrap(err, "failed to log out of chrome")
+	}
+	if err := tf.startChromeUI(ctx, dutConfig); err != nil {
+		return errors.Wrap(err, "failed to log back into chrome")
+	}
 	return nil
 }
 
