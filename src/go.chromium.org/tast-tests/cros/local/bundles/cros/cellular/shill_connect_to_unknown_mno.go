@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/cellularconst"
 )
 
 type unknownMNOTestParam struct {
@@ -58,7 +59,7 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	apnToConnect := params.ApnToConnect
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
-
+	isNL668, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeNL668)
 	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
 		s.Fatal("Could not find mm dbus object with a valid sim: ", err)
@@ -123,8 +124,8 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 
 	testing.ContextLog(ctx, "modemAttachApn:", modemAttachApn)
 	testing.ContextLog(ctx, "connectApn", bearer)
-
-	if apnName := modemAttachApn["apn"]; apnName != expectedLastAttachAPN {
+	lastAttachMightBeNull := isNL668 // b/217563991#comment137
+	if apnName := modemAttachApn["apn"]; apnName != expectedLastAttachAPN && !(lastAttachMightBeNull && (apnName == nil || apnName == "")) {
 		s.Fatalf("Last Attach APN doesn't match: got %q, want %q", apnName, expectedLastAttachAPN)
 	}
 
