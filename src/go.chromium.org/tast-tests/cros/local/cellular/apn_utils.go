@@ -108,10 +108,10 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "fast.t-mobile.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 		CarrierAtt: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "broadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "broadband"}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "nrbroadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "nrbroadband"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "broadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "broadband"}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "nrbroadband", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "nrbroadband"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierVerizon: []KnownAPN{
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
@@ -147,8 +147,8 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "ltemobile.apn", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 		CarrierTelus: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "isp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "sp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "isp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "sp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 	}
 }
