@@ -85,8 +85,8 @@ type Helper struct {
 }
 
 const (
-	simLockCsvHeader       = "serial,modemtype,modemid,profiletype,profileid,expiration,partnumber,model,manufacturer\n"
-	simLockUnLockCsvHeader = "serial,modemtype,modemid,profiletype,profileid,expiration,owner,model\n"
+	simLockCsvHeader       = "serial,attesteddeviceid,profiletype,profileid,expiration,model,manufacturer\n"
+	simLockUnLockCsvHeader = "serial,attesteddeviceid,profiletype,profileid,expiration,owner,model\n"
 )
 
 const (
@@ -1573,17 +1573,28 @@ func (h *Helper) CreateCarrierLockCsvFile(ctx context.Context, profile string) (
 		return "", errors.Wrap(err, "failed to read serial number")
 	}
 	serial := string(bserial)
+
+	bmodel, err := exec.Command("cat", "/run/chromeos-config/v1/name").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read model")
+	}
+	model := string(bmodel)
+
+	bmanufacturer, err := exec.Command("cat",  "/run/chromeos-config/v1/branding/oem-name").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read manufacturer")
+	}
+	manufacturer := string(bmanufacturer)
+
 	conf := []byte("")
 	csvFileName := "carrier_lock_" + imei + ".csv"
 
 	if profile == "0" {
 		// Build the unlock csv file
-		// TODO: b/279223032 Replace with actual model when simLock server supports signed configuration for models other than Pixel 20
-		conf = []byte(simLockUnLockCsvHeader + serial + ",IMEI," + imei + ",SIM_LOCK," + profile + ",0,0,Pixel 20\n")
+		conf = []byte(simLockUnLockCsvHeader + serial + "," + serial + ",SIM_LOCK," + profile + ",0,0," + model + "\n")
 	} else {
 		// Build the lock csv file
-		// TODO: b/279223032 Replace with actual model when simLock server supports signed configuration for models other than Pixel 20
-		conf = []byte(simLockCsvHeader + serial + ",IMEI," + imei + ",SIM_LOCK," + profile + ",0,GL1EA810001,Pixel 20,Google\n")
+		conf = []byte(simLockCsvHeader + serial + "," + serial + ",SIM_LOCK," + profile + ",0," + model + "," + manufacturer + "\n")
 	}
 
 	err = os.WriteFile(userMyFilesPath+csvFileName, conf, 0644)
@@ -1664,4 +1675,18 @@ func GetKnownApns(ctx context.Context) ([]KnownAPN, error) {
 	}
 	testing.ContextLog(ctx, "knownAPNs: ", knownAPNs)
 	return knownAPNs, nil
+}
+
+// WaitForCarrierLock polls for sim lock type to change to network-pin or none.
+func (h *Helper) WaitForCarrierLock(ctx context.Context, expected bool) error {
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		netPinLocked := h.IsSimNetPinLocked(ctx)
+		if netPinLocked != expected {
+			return errors.Errorf("unexpected carrier lock state, got %t, expected %t", netPinLocked, expected)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  4 * defaultTimeout,
+		Interval: 500 * time.Millisecond,
+	})
 }
