@@ -400,18 +400,7 @@ func PowerTest(ctx context.Context, c *chrome.TestConn, options PowerTestOptions
 			s.Add(StopChargeLimit(ctx, &prefs))
 		}
 		if options.Powerd == DisablePowerd {
-			startPowerdFn, err := DisableService(ctx, "powerd");
-			s.Add(func(ctx context.Context) error {
-				if err := startPowerdFn(ctx); err != nil {
-					return err
-				}
-				// Create a PowerManager object, which will ensure that powerd has started DBus.
-				if _, err := power.NewPowerManager(ctx); err != nil {
-					testing.ContextLog(ctx, "Failed to connect to PowerManager DBus interface after restarting powerd: ", err)
-					return err
-				}
-				return nil
-			}, err)
+			s.Add(DisableService(ctx, "powerd"))
 		}
 		if options.UpdateEngine == DisableUpdateEngine {
 			s.Add(DisableServiceIfExists(ctx, "update-engine"))
