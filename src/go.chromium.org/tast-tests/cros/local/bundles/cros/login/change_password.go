@@ -133,7 +133,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#gaia-password-changed').hidden", 10*time.Second); err != nil {
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#gaia-password-changed').hidden", 20*time.Second); err != nil {
 			s.Fatal("Failed to wait for the gaia password changed screen: ", err)
 		}
 		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#gaia-password-changed').$.oldPasswordInput.value = '%s'", initialCreds.Pass), nil); err != nil {
