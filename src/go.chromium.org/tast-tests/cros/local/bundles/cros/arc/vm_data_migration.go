@@ -76,6 +76,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{
 			"android_vm",
+			"arcvm_data_migration",
 			"chrome",
 			// ARCVM /data migration currently does not support LVM-enabled devices.
 			"no_lvm_stateful_partition",
@@ -169,7 +170,6 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 		chrome.KeepState(),
 		chrome.UnRestrictARCCPU(),
 		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
-		chrome.EnableFeatures("ArcVmDataMigration"),
 		chrome.RemoveNotification(false),
 		chrome.ExtraArgs(args...),
 	}
