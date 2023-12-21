@@ -131,12 +131,16 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return err
 	}
 
-	var gpuErr, cStateErr, cpuErr, batErr error
+	var gpuErr, i915IRQErr, cStateErr, cpuErr, batErr error
 	var wg sync.WaitGroup
-	wg.Add(4)
+	wg.Add(5)
 	go func() {
 		defer wg.Done()
 		gpuErr = graphics.MeasureGPUCounters(ctx, gpuMeasuring, p)
+	}()
+	go func() {
+		defer wg.Done()
+		i915IRQErr = graphics.MeasureI915IRQs(ctx, gpuMeasuring, p)
 	}()
 	go func() {
 		defer wg.Done()
@@ -154,6 +158,9 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	wg.Wait()
 	if gpuErr != nil {
 		return errors.Wrap(gpuErr, "failed to measure GPU counters")
+	}
+	if i915IRQErr != nil {
+		return errors.Wrap(i915IRQErr, "failed to measure i915 IRQs/s")
 	}
 	if cStateErr != nil {
 		return errors.Wrap(cStateErr, "failed to measure Package C-State residency")
