@@ -267,12 +267,11 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		}
 		lastMatchingGoodAPN = apn
 
-		if knownAPN.Optional {
-			optionalAPNSucceeded = true
-		}
-
 		ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)
 		if err != nil {
+			if knownAPN.Optional {
+				continue
+			}
 			s.Fatal("Failed to read network provisioned IP types: ", err)
 		}
 		s.Log("ipv4: ", ipv4, " ipv6: ", ipv6)
@@ -285,7 +284,14 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		}
 
 		if err := helper.RunTestOnCellularInterface(ctx, verifyHostIPConnectivity); err != nil {
+			if knownAPN.Optional {
+				continue
+			}
 			s.Fatal("Failed to run test on cellular interface: ", err)
+		}
+
+		if knownAPN.Optional {
+			optionalAPNSucceeded = true
 		}
 	}
 
