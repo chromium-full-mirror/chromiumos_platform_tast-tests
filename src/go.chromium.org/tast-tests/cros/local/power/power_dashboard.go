@@ -70,12 +70,12 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf.Values, args ...OptionalRecorderArg) error {
 	devInfo := GetDeviceInfo(ctx, args...)
 	metrics := CollectOneTimeMetrics(ctx)
-	pwrLog, err := cp.CreatePowerLogAndUpdatePerfValues(ctx, testName, values, nil, devInfo, metrics)
+	pwrLogs, err := cp.CreatePowerLogsAndUpdatePerfValues(ctx, testName, values, nil, devInfo, metrics)
 	if err != nil {
 		return errors.Wrap(err, "failed to create power log and update perf")
 	}
-	if err := cp.SavePowerLog(ctx, outDir, pwrLog, ""); err != nil {
-		return errors.Wrap(err, "failed to save power log")
+	if err := cp.SavePowerLogs(ctx, outDir, pwrLogs, ""); err != nil {
+		return errors.Wrap(err, "failed to save power logs")
 	}
 	return nil
 }
