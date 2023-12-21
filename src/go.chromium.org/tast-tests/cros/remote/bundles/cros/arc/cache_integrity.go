@@ -94,6 +94,7 @@ func CacheIntegrity(ctx context.Context, s *testing.State) {
 	}
 
 	verifyAPKsAreSymbolicLinks(s, cacheSources, 8, 8)
+	dumpUreadaheadPack(ctx, cacheSources, s.OutDir())
 }
 
 // extractCacheSources extracts caches from the system image.
@@ -225,4 +226,26 @@ func verifyAPKsAreSymbolicLinks(s *testing.State, dir string, minAPKCnt, maxAPKC
 	} else if apkCount > maxAPKCnt {
 		s.Errorf("%q has too many apks (%d > %d)", dir, apkCount, minAPKCnt)
 	}
+}
+
+// dumpUreadaheadPack will dump the binary pack file and hides error on fail.
+func dumpUreadaheadPack(ctx context.Context, packDir, outDir string) {
+	const (
+		ureadaheadLogName  = "ureadahead.log"
+		ureadaheadPackName = "ureadahead.pack"
+	)
+
+	// ureadahead log dump should not be fatal if error.
+	logPath := filepath.Join(outDir, ureadaheadLogName)
+	packPath := filepath.Join(packDir, ureadaheadPackName)
+	cmd := testexec.CommandContext(ctx, "/sbin/ureadahead", "--dump", "--verbose", packPath)
+	logFile, err := os.Create(logPath)
+	if err != nil {
+		testing.ContextLog(ctx, "WARNING: Failed to create log file: ", err)
+	}
+	cmd.Stdout = logFile
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "WARNING: Failed to dump ureadahead pack: ", err)
+	}
+	logFile.Close()
 }
