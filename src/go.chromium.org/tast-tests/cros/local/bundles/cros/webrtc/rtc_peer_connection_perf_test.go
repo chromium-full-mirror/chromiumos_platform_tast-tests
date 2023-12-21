@@ -258,60 +258,69 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 	}
 
 	// Display capture test cases.
-	for _, captureSource := range []peerconnection.DisplayMediaType{
-		peerconnection.CaptureTab,
-		peerconnection.CaptureWindow,
-		peerconnection.CaptureMonitor,
-	} {
-		for _, zeroCopy := range []bool{false, true} {
-			var captureStr, displayMediaTypeStr string
-			switch captureSource {
-			case peerconnection.CaptureMonitor:
-				captureStr += "monitor"
-				displayMediaTypeStr = "peerconnection.CaptureMonitor"
-			case peerconnection.CaptureWindow:
-				captureStr += "window"
-				displayMediaTypeStr = "peerconnection.CaptureWindow"
-			case peerconnection.CaptureTab:
-				captureStr += "tab"
-				displayMediaTypeStr = "peerconnection.CaptureTab"
+	for _, codec := range []string{"h264", "vp8"} {
+		for _, captureSource := range []peerconnection.DisplayMediaType{
+			peerconnection.CaptureTab,
+			peerconnection.CaptureWindow,
+			peerconnection.CaptureMonitor,
+		} {
+			for _, zeroCopy := range []bool{false, true} {
+				var captureStr, displayMediaTypeStr string
+				switch captureSource {
+				case peerconnection.CaptureMonitor:
+					captureStr += "monitor"
+					displayMediaTypeStr = "peerconnection.CaptureMonitor"
+				case peerconnection.CaptureWindow:
+					captureStr += "window"
+					displayMediaTypeStr = "peerconnection.CaptureWindow"
+				case peerconnection.CaptureTab:
+					captureStr += "tab"
+					displayMediaTypeStr = "peerconnection.CaptureTab"
+				}
+				if zeroCopy {
+					captureStr += "_zero_copy"
+				}
+				// Test with a hardware video decoding and encoding.
+				// TODO(b/267966835): Test with software encoding if it is useful.
+				enc := hwEnc
+				dec := hwDec
+				paramData := rtcTestParamsData{
+					VerifyDecoderMode: toVerifyDecoderMode(dec),
+					VerifyEncoderMode: toVerifyEncoderMode(enc),
+					StreamWidth:       k1080p.Width,
+					StreamHeight:      k1080p.Height,
+					DisplayMediaType:  displayMediaTypeStr,
+					BrowserType:       "browser.TypeAsh",
+					TraceChromeEvents: true,
+				}
+
+				var svc string
+				if codec == "vp8" {
+					paramData.Profile = "VP8"
+					paramData.Svc = "L1T3"
+					svc = "_l1t3"
+				} else {
+					paramData.Profile = "H264"
+				}
+
+				var captureFixtureMap = map[peerconnection.DisplayMediaType]map[bool]string{
+					peerconnection.CaptureMonitor: map[bool]string{false: "chromeScreenCapture", true: "chromeZeroCopyScreenCapture"},
+					peerconnection.CaptureWindow:  map[bool]string{false: "chromeWindowCapture", true: "chromeZeroCopyWindowCapture"},
+					peerconnection.CaptureTab:     map[bool]string{false: "chromeTabCapture", true: "chromeZeroCopyTabCapture"},
+				}
+				sourceData := rtcPerfTestSourceData{
+					Name:         fmt.Sprintf("%s_1080p_%s%s_hw_enc_hw_dec", codec, captureStr, svc),
+					ParamData:    paramData,
+					SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
+					Fixture:      captureFixtureMap[captureSource][zeroCopy],
+				}
+				if captureSource == peerconnection.CaptureMonitor {
+					sourceData.HardwareDeps = "hwdep.InternalDisplay()"
+				}
+				sourceDatas = append(sourceDatas, sourceData)
 			}
-			if zeroCopy {
-				captureStr += "_zero_copy"
-			}
-			// Test with a hardware video decoding and encoding.
-			// TODO(b/267966835): Test with software encoding if it is useful.
-			enc := hwEnc
-			dec := hwDec
-			paramData := rtcTestParamsData{
-				VerifyDecoderMode: toVerifyDecoderMode(dec),
-				VerifyEncoderMode: toVerifyEncoderMode(enc),
-				Profile:           "VP8",
-				StreamWidth:       k1080p.Width,
-				StreamHeight:      k1080p.Height,
-				Svc:               "L1T3",
-				DisplayMediaType:  displayMediaTypeStr,
-				BrowserType:       "browser.TypeAsh",
-				TraceChromeEvents: true,
-			}
-			var captureFixtureMap = map[peerconnection.DisplayMediaType]map[bool]string{
-				peerconnection.CaptureMonitor: map[bool]string{false: "chromeScreenCapture", true: "chromeZeroCopyScreenCapture"},
-				peerconnection.CaptureWindow:  map[bool]string{false: "chromeWindowCapture", true: "chromeZeroCopyWindowCapture"},
-				peerconnection.CaptureTab:     map[bool]string{false: "chromeTabCapture", true: "chromeZeroCopyTabCapture"},
-			}
-			sourceData := rtcPerfTestSourceData{
-				Name:         fmt.Sprintf("vp8_1080p_%s_l1t3_hw_enc_hw_dec", captureStr),
-				ParamData:    paramData,
-				SoftwareDeps: softwareCodecsDeps("vp8", enc, dec),
-				Fixture:      captureFixtureMap[captureSource][zeroCopy],
-			}
-			if captureSource == peerconnection.CaptureMonitor {
-				sourceData.HardwareDeps = "hwdep.InternalDisplay()"
-			}
-			sourceDatas = append(sourceDatas, sourceData)
 		}
 	}
-
 	// OOP-VD and OOP-VE test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		for _, ed := range [][]interface{}{
