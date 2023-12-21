@@ -105,8 +105,9 @@ type stroke struct {
 	points []point
 }
 
-// newStroke creates a stroke from the path data.
-func newStroke(path *path, n int) *stroke {
+// newStroke creates a stroke from the path data. If needed, points are interpolated and added
+// into the stroke to ensure that it has at least minNumPoints points.
+func newStroke(path *path, minNumPoints int) *stroke {
 	s := &stroke{}
 
 	// Get the extracted strokes from the path string in the SVG struct.
@@ -114,7 +115,7 @@ func newStroke(path *path, n int) *stroke {
 
 	// Quotient and remainder are used to calculate the number of points required in between the original points.
 	length := len(extractedStroke.points)
-	quotient, remainder := (n-length)/(length-1), (n-length)%(length-1)
+	quotient, remainder := (minNumPoints-length)/(length-1), (minNumPoints-length)%(length-1)
 
 	for i, p := range extractedStroke.points {
 		if i != 0 {
@@ -165,14 +166,14 @@ type strokeGroup struct {
 }
 
 // newStrokeGroup unmarshals the SVG file and returns a strokeGroup with the populated data.
-// n is the number of desired points per stroke.
+// minPointsPerStroke is the desired minimum number of points per stroke.
 // Detailed explanation of the algorithm can be found in go/tast-handwriting-svg-parsing.
-func newStrokeGroup(svgFile *svg, n int) *strokeGroup {
+func newStrokeGroup(svgFile *svg, minPointsPerStroke int) *strokeGroup {
 	sg := &strokeGroup{}
 
 	// Populate the strokeGroup struct with the strokes in the svg struct.
 	for _, path := range svgFile.Defs.Paths {
-		s := newStroke(&path, n)
+		s := newStroke(&path, minPointsPerStroke)
 		if len(s.points) > 0 {
 			sg.strokes = append(sg.strokes, *s)
 		}
@@ -240,8 +241,7 @@ func drawStrokes(ctx context.Context, tconn *chrome.TestConn, sg *strokeGroup) e
 	for _, s := range sg.strokes {
 		for i, p := range s.points {
 			// Mouse will be moved to each of the points to draw the stroke.
-			// A stroke can have up to 50 points, if a stroke is long enough and uses all 50 points to represent
-			// the stroke, it will take 0.5 seconds (10ms * 50) to draw that stroke.
+			// If a stroke has n points, it will take n * 10ms to draw that stroke.
 			if err := mouse.Move(tconn, p.toCoordsPoint(), 10*time.Millisecond)(ctx); err != nil {
 				return errors.Wrap(err, "failed to move mouse")
 			}
@@ -267,8 +267,7 @@ func drawStrokes(ctx context.Context, tconn *chrome.TestConn, sg *strokeGroup) e
 // when numStrokes = 1.
 func (hwCtx *HandwritingContext) drawStrokesFromFile(filePath string, numStrokes int) uiauto.Action {
 	return func(ctx context.Context) error {
-		// Number of points we would like per stroke.
-		const n = 50
+		const minPointsPerStroke = 100
 
 		// Read and unmarshal the SVG file into the corresponding structs.
 		svgFile, err := readSvg(filePath)
@@ -277,7 +276,7 @@ func (hwCtx *HandwritingContext) drawStrokesFromFile(filePath string, numStrokes
 		}
 
 		// Scan the handwriting file and return a strokeGroup with the populated data.
-		sg := newStrokeGroup(svgFile, n)
+		sg := newStrokeGroup(svgFile, minPointsPerStroke)
 
 		// Extract a specific number of strokes if numStrokes is valid.
 		if numStrokes > 0 && numStrokes <= len(sg.strokes) {
