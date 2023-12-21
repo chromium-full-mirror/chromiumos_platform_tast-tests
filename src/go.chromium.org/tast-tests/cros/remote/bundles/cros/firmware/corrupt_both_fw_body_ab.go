@@ -29,9 +29,11 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
-				Name:              "normal_mode",
-				Fixture:           fixture.NormalMode,
-				Val:               "normal",
+				Name:    "normal_mode",
+				Fixture: fixture.NormalMode,
+				Val: &corruptTestVal{
+					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
+				},
 				ExtraAttr:         []string{"firmware_bios"},
 				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 			},
@@ -40,5 +42,5 @@ func init() {
 }
 
 func CorruptBothFWBodyAB(ctx context.Context, s *testing.State) {
-	corruptFWSectionTest(ctx, s, string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection), string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection), "RW firmware unable to verify firmware body")
+	corruptFWSectionTest(ctx, s, CorruptFWBodySection, "RW firmware unable to verify firmware body")
 }

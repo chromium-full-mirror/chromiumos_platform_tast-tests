@@ -75,17 +75,37 @@ func init() {
 	})
 }
 
-func CorruptFWBothAB(ctx context.Context, s *testing.State) {
-	val := s.Param().(*corruptTestVal)
-	corruptFWSectionTest(ctx, s, string(val.sectionA), string(val.sectionB), string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection), "RW firmware unable to verify firmware body")
+func CorruptFWBodySection(ctx context.Context, s *testing.State, h *firmware.Helper, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir string) error {
+	s.Log("Corrupting FW bodies")
+	// Copy BIOS image to corrupt it
+	out, err := h.DUT.Conn().CommandContext(ctx, "cp", backupBiosRemoteImage, corruptBiosRemoteImage).Output(ssh.DumpLogOnError)
+	if err != nil {
+		s.Error("Failed to copy image for corruption: ", out)
+		return err
+	}
+
+	for _, section := range []string{string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection)} {
+		_, err := h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "remove", "-r", section, "-n", "fallback/payload").Output(ssh.DumpLogOnError)
+		if err != nil {
+			s.Error("Failed to corrupt ", section, " section: ", err)
+			return err
+		}
+	}
+	return nil
 }
 
-func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, sectionB, bodyA, bodyB, failureReason string) {
+func CorruptFWBothAB(ctx context.Context, s *testing.State) {
+	corruptFWSectionTest(ctx, s, CorruptFWBodySection, "RW firmware unable to verify firmware body")
+}
+
+func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSection func(context.Context, *testing.State, *firmware.Helper, string, string, string) error, failureReason string) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
 
+	sectionA := string(s.Param().(*corruptTestVal).sectionA)
+	sectionB := string(s.Param().(*corruptTestVal).sectionB)
 	shouldRestoreFirmware := false
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Minute)
@@ -103,7 +123,9 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 			s.Fatal("Failed deleting remote temp dir: ", err)
 		}
 	}()
-	if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
+
+	backupBiosRemoteImage := fmt.Sprintf("%s/bios_backup.bin", remoteTempDir)
+	if err := h.DUT.Conn().CommandContext(ctx, "futility", "read", backupBiosRemoteImage).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed taking bios backup: ", err)
 	}
 	out, err = h.ServoProxy.OutputCommand(ctx, false, "mktemp", "-d", "-p", "/var/tmp", "-t", "fwservoXXXXXX")
@@ -122,7 +144,7 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 	}
 
 	s.Log("Downloading backup to ", localTempDir)
-	if err := linuxssh.GetFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), fmt.Sprintf("%s/bios_backup.bin", localTempDir), linuxssh.DereferenceSymlinks); err != nil {
+	if err := linuxssh.GetFile(ctx, h.DUT.Conn(), backupBiosRemoteImage, fmt.Sprintf("%s/bios_backup.bin", localTempDir), linuxssh.DereferenceSymlinks); err != nil {
 		s.Fatal("Failed to download: ", err)
 	}
 	s.Log("Copying file to servohost ", servoTempDir)
@@ -170,19 +192,9 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 	// - Create yet another image that contains those sections
 	// - Flash it.
 
-	s.Log("Corrupting FW bodies")
-	// Copy BIOS image to corrupt it
 	corruptBiosRemoteImage := fmt.Sprintf("%s/corrupt_bodies.bin", remoteTempDir)
-	out, err = h.DUT.Conn().CommandContext(ctx, "cp", fmt.Sprintf("%s/bios_backup.bin", remoteTempDir), corruptBiosRemoteImage).Output(ssh.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to copy image for corruption: ", out)
-	}
-
-	for _, section := range []string{string(bios.FWBodyAImageSection), string(bios.FWBodyBImageSection)} {
-		out, err = h.DUT.Conn().CommandContext(ctx, "cbfstool", corruptBiosRemoteImage, "remove", "-r", section, "-n", "fallback/payload").Output(ssh.DumpLogOnError)
-		if err != nil {
-			s.Fatal("Failed to corrupt ", section, " section: ", err)
-		}
+	if err := corruptFMAPSection(ctx, s, h, corruptBiosRemoteImage, backupBiosRemoteImage, remoteTempDir); err != nil {
+		s.Fatal("Failed to corrupt FMAP sections", err)
 	}
 
 	s.Log("Signing corrupt image")
@@ -202,7 +214,7 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, sectionA, secti
 	}
 
 	// - Create yet another image that contains those sections
-	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt.bin", remoteTempDir), fmt.Sprintf("%s/bios_backup.bin", remoteTempDir),
+	err = h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/corrupt.bin", remoteTempDir), backupBiosRemoteImage,
 		fmt.Sprintf("%s:%s/%s.bin", sectionA, remoteTempDir, sectionA),
 		fmt.Sprintf("%s:%s/%s.bin", sectionB, remoteTempDir, sectionB),
 	).Run(ssh.DumpLogOnError)
