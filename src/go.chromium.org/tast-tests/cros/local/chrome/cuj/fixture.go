@@ -430,6 +430,27 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserLacrosWithVirtioBalloon",
+		Desc: "Fixture used for lacros variation of UI CUJ tests with Virtio Balloon enabled",
+		Contacts: []string{
+			"andreaorru@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("CrOSLateBootVmMemoryManagementService"),
+			},
+			bt: browser.TypeLacros,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	// TODO(b/302748186): Remove rounded window fixtures.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithRoundedWindows",

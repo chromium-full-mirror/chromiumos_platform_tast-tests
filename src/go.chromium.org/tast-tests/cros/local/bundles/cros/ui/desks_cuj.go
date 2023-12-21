@@ -39,6 +39,12 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
 			},
+			{
+				Name:              "lacros_virtio_balloon",
+				Val:               browser.TypeLacros,
+				ExtraSoftwareDeps: []string{"lacros"},
+				Fixture:           "loggedInToCUJUserLacrosWithVirtioBalloon",
+			},
 
 			// Experimental variants.
 			{
