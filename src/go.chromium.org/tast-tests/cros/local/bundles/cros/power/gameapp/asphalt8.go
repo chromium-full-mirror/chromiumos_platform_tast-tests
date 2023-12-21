@@ -99,13 +99,27 @@ func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 }
 
 // Play plays the game by keyboard for play time.
-func (as *Asphalt8) Play(ctx context.Context, playTime time.Duration) error {
-	kb := as.kb
+func (as *Asphalt8) Play(ctx context.Context, totalPlayTime time.Duration) error {
+	const (
+		key          = "Right+Down"
+		startCarTime = 2 * time.Second
+	)
+	driveInCirclesTime := totalPlayTime - startCarTime
 
-	return uiauto.NamedCombine(fmt.Sprintf("play Asphalt8 game for %v", playTime),
-		kb.AccelPressAction("Up"),
-		uiauto.Sleep(playTime),
-		kb.AccelReleaseAction("Up"))(ctx)
+	kb := as.kb
+	startCar := uiauto.NamedCombine(fmt.Sprintf("start the car for %v", startCarTime),
+		kb.AccelPressAction(key),
+		uiauto.Sleep(startCarTime),
+		kb.AccelReleaseAction(key))
+	driveInCircles := uiauto.NamedCombine(fmt.Sprintf("drive in circles for %v", driveInCirclesTime),
+		kb.AccelPressAction(key),
+		uiauto.Sleep(driveInCirclesTime),
+		kb.AccelReleaseAction(key))
+
+	return uiauto.NamedCombine(fmt.Sprintf("play the Asphalt8 game for %v", totalPlayTime),
+		startCar,
+		driveInCircles,
+	)(ctx)
 }
 
 // End closes the game app if it is launched.
