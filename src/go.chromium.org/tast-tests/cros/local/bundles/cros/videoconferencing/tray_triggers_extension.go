@@ -48,7 +48,6 @@ func init() {
 			{
 				Name:              "lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"video_conference_per_build"},
 				Fixture:           fixture.LoggedInLacrosWithFakeVCExtension,
 			},
 		},
