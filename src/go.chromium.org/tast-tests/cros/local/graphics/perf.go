@@ -34,7 +34,7 @@ import (
 
 // errorOnNonDischarging returns a proper error when the battery is not discharging.
 // If no discharging is expected, then returns nil.
-func errorOnNonDischarging(ctx context.Context) error {
+func errorOnNonDischarging(ctx context.Context, status *power.Status) error {
 	if _, err := power.SysfsBatteryPath(ctx); err != nil {
 		testing.ContextLog(ctx, "This device doesn't have a battery, skip collecting power consumption")
 		return nil
@@ -44,6 +44,7 @@ func errorOnNonDischarging(ctx context.Context) error {
 		testing.ContextLog(ctx, "This device doesn't support chrome EC, skip collecting power consumption")
 		return nil
 	}
+	testing.ContextLog(ctx, "Power status: ", status)
 	return errors.New("the battery is not set to discharge")
 }
 
@@ -650,7 +651,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 		return errors.Wrap(err, "failed to get the battery status")
 	}
 	if status.IsLinePowerConnected() {
-		return errorOnNonDischarging(ctx)
+		return errorOnNonDischarging(ctx, status)
 	}
 
 	// We don't use power.SysfsBatteryMetrics because we want to reject zero
@@ -725,7 +726,7 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 		return errors.Wrap(err, "failed to get the battery status")
 	}
 	if !status.BatteryDischarging {
-		return errorOnNonDischarging(ctx)
+		return errorOnNonDischarging(ctx, status)
 	}
 
 	// We don't use power.SysfsBatteryMetrics because we want to reject zero
