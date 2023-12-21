@@ -135,7 +135,7 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
 func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
-	const profileInterval = 100 * time.Second // Sleep interval to measure the performance metrics.
+	const profileInterval = 10 * time.Second // Sleep interval to measure the performance metrics.
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
 	}
@@ -438,54 +438,56 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 	}
 
 	var wg sync.WaitGroup
-	var ps = make([]*perf.Values, params.NumPeople-1)
+	cameraEncPerf := perf.NewValues()
 	var statErrs = make([]error, params.NumPeople-1)
+	var decPerfs = make([]*perf.Values, params.NumPeople-1)
 	for i := 0; i < params.NumPeople-1; i++ {
+		decPerfs[i] = perf.NewValues()
 		wg.Add(1)
 		go func(i int) {
 			defer wg.Done()
 			readRTCReportFunc := readRTCReport(i, false)
 			if i == params.NumPeople-2 {
-				p := perf.NewValues()
 				var err error
-				err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReportFunc, p)
+				err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReportFunc, cameraEncPerf)
 				if err != nil {
 					statErrs[i] = err
 					return
 				}
-				rtcPerf.MergeWithSuffix("_camera", p)
+
 			}
-			p := perf.NewValues()
-			if err := webrtc.MeasureRTCDecodeStats(ctx, conn, videoWidth, videoHeight, readRTCReportFunc, placeHolderValidateFrame, p); err != nil {
+			if err := webrtc.MeasureRTCDecodeStats(ctx, conn, videoWidth, videoHeight, readRTCReportFunc, placeHolderValidateFrame, decPerfs[i]); err != nil {
 				statErrs[i] = err
 				return
 			}
 		}(i)
 	}
+
 	var presentStatErr error
+	presentEncPerf := perf.NewValues()
 	if params.Present {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			var err error
-			p := perf.NewValues()
-			if err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReport(0, true), p); err != nil {
+			if err = webrtc.MeasureRTCEncodeStats(ctx, conn, readRTCReport(0, true), presentEncPerf); err != nil {
 				presentStatErr = err
 				return
 			}
-			rtcPerf.MergeWithSuffix("_present", p)
 		}()
 	}
 	wg.Wait()
-	for i, p := range ps {
+	for i, decPerf := range decPerfs {
 		if statErrs[i] != nil {
 			return statErrs[i]
 		}
-		rtcPerf.MergeWithSuffix("_"+strconv.Itoa(i), p)
+		rtcPerf.MergeWithSuffix("_"+strconv.Itoa(i), decPerf)
 	}
 	if presentStatErr != nil {
 		return presentStatErr
 	}
+	rtcPerf.MergeWithSuffix("_camera_enc", cameraEncPerf)
+	rtcPerf.MergeWithSuffix("_present_enc", presentEncPerf)
 	return nil
 }
 
