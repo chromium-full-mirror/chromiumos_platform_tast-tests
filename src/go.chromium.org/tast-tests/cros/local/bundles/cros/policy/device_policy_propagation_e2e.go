@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -119,6 +120,13 @@ func DevicePolicyPropagationE2E(ctx context.Context, s *testing.State) {
 	})
 
 	s.Run(ctx, "update", func(context.Context, *testing.State) {
+		pv := perf.NewValues()
+		defer func() {
+			if err := pv.Save(s.OutDir()); err != nil {
+				s.Error("Failed saving perf data: ", err)
+			}
+		}()
+
 		tapePolicies := &tape.AutoUpdateSettingsDevices{
 			UpdateDisabled: false,
 			// Set required fields for API.
@@ -135,18 +143,29 @@ func DevicePolicyPropagationE2E(ctx context.Context, s *testing.State) {
 				},
 			},
 		}
-		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
-			s.Fatal("Failed to set updated policy: ", err)
-		}
-
-		expectedPolicies := []policy.Policy{
-			&policy.DeviceAutoUpdateDisabled{Stat: policy.StatusSet, Val: false},
-		}
+		perf.RecordExecutionTime(
+			pv,
+			"set_policy_time",
+			func() {
+				if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
+					s.Fatal("Failed to set updated policy: ", err)
+				}
+			},
+		)
 
 		ctx, cancel := context.WithTimeout(ctx, policyPropagationTimeout)
 		defer cancel()
-		if err := policyutil.WaitForPolicies(ctx, tconn, expectedPolicies); err != nil {
-			s.Error("Failed to verify updated policy: ", err)
+		expectedPolicies := []policy.Policy{
+			&policy.DeviceAutoUpdateDisabled{Stat: policy.StatusSet, Val: false},
 		}
+		perf.RecordExecutionTime(
+			pv,
+			"propagation_time",
+			func() {
+				if err := policyutil.WaitForPolicies(ctx, tconn, expectedPolicies); err != nil {
+					s.Fatal("Failed to verify updated policy: ", err)
+				}
+			},
+		)
 	})
 }

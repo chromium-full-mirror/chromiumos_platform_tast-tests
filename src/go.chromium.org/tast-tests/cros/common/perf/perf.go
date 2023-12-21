@@ -711,3 +711,19 @@ func validate(s Metric, vs []float64) {
 		}
 	}
 }
+
+// RecordExecutionTime records the execution time of the function `f`
+// for Chrome Performance Dashboard via `pv`, under the metric `name`.
+func RecordExecutionTime(pv *Values, name string, f func()) {
+	start := time.Now()
+
+	f()
+
+	elapsed := time.Now().Sub(start)
+
+	pv.Set(Metric{
+		Name:      name,
+		Unit:      "milliseconds",
+		Direction: SmallerIsBetter,
+	}, (float64)(elapsed.Milliseconds()))
+}
