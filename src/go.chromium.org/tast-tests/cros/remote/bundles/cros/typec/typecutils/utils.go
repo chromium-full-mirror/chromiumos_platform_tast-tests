@@ -321,3 +321,29 @@ func LoginChrome(ctx context.Context, d *dut.DUT, s *testing.State, keyFile stri
 
 	return nil
 }
+
+// UnmountRemovableMedia is a helper to unmount removable media before they are disconnected.
+func UnmountRemovableMedia(ctx context.Context, d *dut.DUT) error {
+	base := "/media/removable"
+
+	paths, err := d.Conn().CommandContext(ctx, "ls", base).Output()
+	if err != nil {
+		return errors.Wrap(err, "could not list "+base)
+	}
+
+	// Unmount each path in /media/removable.
+	for _, path := range strings.Split(string(paths), "\n") {
+		d.Conn().CommandContext(ctx, "umount", filepath.Join(base, strings.TrimSpace(string(path)))).Run()
+	}
+
+	mount, err := d.Conn().CommandContext(ctx, "mount").Output()
+	if err != nil {
+		return errors.Wrap(err, "could not check mounted file systems")
+	}
+
+	// Confirm that no mounted files systems are at /media/removable.
+	if strings.Contains(string(mount), base) {
+		return errors.New("mounted removable media found")
+	}
+	return nil
+}
