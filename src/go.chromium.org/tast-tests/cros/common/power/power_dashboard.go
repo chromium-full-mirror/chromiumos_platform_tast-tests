@@ -357,7 +357,13 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, metr
 	if value, ok := innerDataMap["t"]; ok {
 		var sampleCount = len(value)
 		powerDict["sample_count"] = sampleCount
-		if sampleCount > 0 {
+		if sampleCount > 1 {
+			firsTimestamp := value[0]
+			lastTimestamp := value[sampleCount-1]
+			powerDict["sample_duration"] = (lastTimestamp - firsTimestamp) / (float64(sampleCount) - 1)
+		} else if sampleCount > 0 {
+			// When sampleCount == 1, sample_duration may be wrong
+			// and the power dashboard will only show 1 data point.
 			lastTimestamp := value[sampleCount-1]
 			powerDict["sample_duration"] = lastTimestamp / float64(sampleCount)
 		}
