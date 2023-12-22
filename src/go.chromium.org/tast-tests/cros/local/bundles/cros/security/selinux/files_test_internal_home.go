@@ -66,6 +66,7 @@ func CheckHomeDirectory(ctx context.Context, s *testing.State) {
 		{`/home/\.shadow/[0-9a-f]*/user_secret_stash/.*`, `cros_home_shadow_uid`},
 		{`/home/\.shadow/[0-9a-f]*/auth_factors/.*`, `cros_home_shadow_uid`},
 		{`/home/\.shadow/low_entropy_creds(/.*)?`, `cros_home_shadow_low_entropy_creds`},
+		{`/home/\.shadow/key_store_certs(/.*)?`, `cros_home_shadow_key_store_certs`},
 		// Other unhandled files in .shadow should be cros_home_shadow.
 		{`/home/\.shadow/[^/]*`, `cros_home_shadow`},
 		{`/home/\.shadow/[0-9a-f]*/mount/root/(?:\.cache/)?android-data(/.*)?`, skipTest},
