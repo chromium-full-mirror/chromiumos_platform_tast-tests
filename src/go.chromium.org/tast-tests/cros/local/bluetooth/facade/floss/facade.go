@@ -254,12 +254,22 @@ func (b *BluetoothFlossFacade) Reset(ctx context.Context, powerOn bool) error {
 		removedDevices = true
 	}
 	if removedDevices {
-		deviceAddresses, err = b.Devices(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to fetch bonded devices")
-		}
-		if len(deviceAddresses) != 0 {
-			return errors.Errorf("failed to remove all known devices, still found %d known devices after removal", len(deviceAddresses))
+		const removeDevicesTimeout = 5 * time.Second
+		testing.ContextLogf(ctx, "Confirming all devices have been removed (%s timeout)", removeDevicesTimeout)
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			deviceAddresses, err = b.Devices(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to fetch bonded devices")
+			}
+			if len(deviceAddresses) != 0 {
+				return errors.Errorf("failed to remove all known devices, still found %d known devices after removal", len(deviceAddresses))
+			}
+			return nil
+		}, &testing.PollOptions{
+			Interval: time.Second,
+			Timeout:  removeDevicesTimeout,
+		}); err != nil {
+			return errors.Wrap(err, "failed to confirm all devices were removed")
 		}
 		testing.ContextLog(ctx, "All known devices have been removed")
 	}
