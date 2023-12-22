@@ -650,24 +650,33 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		return nil
 	}
 
-	if err := testing.Poll(ctx, checkCurrentProcessingState, &testing.PollOptions{
-		Interval: time.Second,
-		Timeout:  5 * time.Second,
-	}); err != nil {
-		s.Fatal("Wrong effects running: ", err)
-	}
+	if err := testing.Poll(
+		ctx,
+		func(ctx context.Context) error {
+			if err := checkCurrentProcessingState(ctx); err != nil {
+				return err
+			}
+			s.Log("First check passed")
 
-	const rechecks = 3
-	for i := 0; i < rechecks; i++ {
-		const sleepFor = 200 * time.Millisecond
-		s.Logf("Sleeping for %v to recheck state to ensure it is stablized", sleepFor)
-		// GoBigSleepLint: See above log.
-		if err := testing.Sleep(ctx, sleepFor); err != nil {
-			s.Fatal("Cannot sleep: ", err)
-		}
-		if err := checkCurrentProcessingState(ctx); err != nil {
-			s.Fatal("Wrong effects running after sleep: ", err)
-		}
+			const rechecks = 3
+			for i := 0; i < rechecks; i++ {
+				const sleepFor = 200 * time.Millisecond
+				s.Logf("Sleeping for %v to recheck state to ensure it is stablized", sleepFor)
+				// GoBigSleepLint: See above log.
+				if err := testing.Sleep(ctx, sleepFor); err != nil {
+					return errors.Wrap(err, "cannot sleep")
+				}
+				if err := checkCurrentProcessingState(ctx); err != nil {
+					return errors.Wrap(err, "wrong effects running after sleep")
+				}
+			}
+			return nil
+		},
+		&testing.PollOptions{
+			Interval: time.Second,
+			Timeout:  5 * time.Second,
+		}); err != nil {
+		s.Fatal("Wrong effects running: ", err)
 	}
 
 	// Stop CRAS clients and wait.
