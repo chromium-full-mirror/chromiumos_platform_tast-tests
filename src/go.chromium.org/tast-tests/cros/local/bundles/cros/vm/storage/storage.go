@@ -20,9 +20,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// VirtioFSCacheTimeoutSecond represents the duration of virtiofs device's cache.
-const VirtioFSCacheTimeoutSecond = 1
-
 // Option holds parameters for a guest storage.
 type Option struct {
 	Kind            string
@@ -51,6 +48,21 @@ func NewOption(kind, cache string, caseFold bool, negativeTimeout int) (Option, 
 		return opt, errors.Errorf("invalid storage kind: %v", kind)
 	}
 	return opt, nil
+}
+
+func virtiofsTimeout(c string) (time.Duration, error) {
+	var timeout time.Duration
+	switch c {
+	case "always":
+		timeout = time.Duration(1) * time.Hour
+	case "auto":
+		timeout = time.Duration(1) * time.Second
+	case "never":
+		timeout = time.Duration(0)
+	default:
+		return 0, errors.Errorf("unknown cache policy: %s", c)
+	}
+	return timeout, nil
 }
 
 // SetUpLogicVolume creates a 8G logic volume with lvName in thinpool
@@ -125,12 +137,17 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt 
 		blockOption := fmt.Sprintf("%s,multiple-workers=%v,o_direct=%v", block, isTpq, isODIRECT)
 		storageOpt = vm.RWDisks(blockOption)
 	} else if opt.Kind == "virtiofs" || opt.Kind == "virtiofs_dax" {
+		timeout, err := virtiofsTimeout(opt.cache)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get timeout for virtiofs")
+		}
+
 		storageOpt = vm.SharedDir(vm.SharedDirParam{
 			Src:             shared,
 			Tag:             opt.Tag,
 			FsType:          "fs",
 			Cache:           opt.cache,
-			Timeout:         VirtioFSCacheTimeoutSecond,
+			Timeout:         uint(timeout.Seconds()),
 			Writeback:       true,
 			DAX:             opt.Kind == "virtiofs_dax",
 			CaseFold:        opt.caseFold,
