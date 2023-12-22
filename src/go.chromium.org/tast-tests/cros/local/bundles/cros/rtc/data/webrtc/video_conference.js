@@ -2,6 +2,43 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+class TransformSVCStream {
+  constructor(scalabilityMode, decodeSpatialIndex) {
+    this.decodeSpatialIndex = decodeSpatialIndex;
+    this.decodeLowerLayers = false;
+    this.interLayerDependencyType = '';
+    if (scalabilityMode.startsWith('L1') ||
+      scalabilityMode.startsWith('S')) {
+      this.interLayerDependencyType = 'Off';
+    } else if (scalabilityMode.endsWith('KEY')) {
+      this.interLayerDependencyType = 'OnKey';
+    } else {
+      // VC doesn't support scalabilityMode in which upper spatial layers can
+      // depend other spatial layers on non keyframe.
+      // this.interLayerDependencyType = 'On';
+      console.log("Unexpected scalabilityMode: ", scalabilityMode)
+    }
+  }
+  async transform(frame, controller) {
+    const metadata = frame.getMetadata();
+    const isKeyFrame = frame.type == "key";
+    if (this.interLayerDependencyType == 'OnKey' && isKeyFrame) {
+      // Decode the successive frames until decodeSpatialIndex on keyframe
+      // in k-SVC.
+      this.decodeLowerLayers = true;
+    }
+    let decode = metadata.spatialIndex == this.decodeSpatialIndex ||
+                 this.decodeLowerLayers;
+    if (decode) {
+      controller.enqueue(frame);
+    }
+    if (metadata.spatialIndex == this.decodeSpatialIndex) {
+      // Set to false: We need to decode only frames on the decodeSpatialIndex.
+      this.decodeLowerLayers = false;
+    }
+  }
+};
+
 class VideoConference {
   constructor() {
     this.cameraPreview = document.getElementById('gum');
@@ -20,8 +57,8 @@ class VideoConference {
   async getUserMedia(audio) {
     let constraints = {
       video: {
-        width: {ideal: 1920, max: 1920, min: 1280},
-        height: {ideal: 1080, max: 1080, min: 720},
+        width: { ideal: 1920, max: 1920, min: 1280 },
+        height: { ideal: 1080, max: 1080, min: 720 },
         frameRate: 30,
       },
     };
@@ -38,7 +75,7 @@ class VideoConference {
   }
 
   async startedMediaStream(media) {
-    await new Promise(function(resolve) {
+    await new Promise(function (resolve) {
       media.onplaying = e => {
         resolve();
       };
@@ -58,14 +95,14 @@ class VideoConference {
   // Get the camera resolution.
   getCameraResolution() {
     const streamSettings = this.sentStream.getVideoTracks()[0].getSettings();
-    return { width: streamSettings.width, height: streamSettings.height};
+    return { width: streamSettings.width, height: streamSettings.height };
   }
 
   // Get the display capture resolution. This must not be called if
   // present() is not called.
   getDisplayCaptureResolution() {
     const streamSettings = this.displayStream.getVideoTracks()[0].getSettings();
-    return { width: streamSettings.width, height: streamSettings.height};
+    return { width: streamSettings.width, height: streamSettings.height };
   }
 
   // Shows the camera preview.
@@ -109,12 +146,19 @@ class VideoConference {
   // the videos in the page.
   getVideoGridStyle(N) {
     const columns = Math.ceil(Math.sqrt(N));
-    const rows = (N + columns - 1)/ columns;
+    const rows = (N + columns - 1) / columns;
     const docW = document.documentElement.clientWidth;
     const docH = document.documentElement.clientHeight;
     const width = docW / columns;
     const height = docH / rows;
-    return {width: width, height: height, columns: columns};
+    return { width: width, height: height, columns: columns };
+  }
+
+  getTopSpatialIndex(scalabilityMode) {
+    if (scalabilityMode == 'L2T3_KEY') {
+      return 1;
+    }
+    return 0;
   }
 
   getEncoderConfig(numPeople) {
@@ -199,7 +243,7 @@ class VideoConference {
     const container = document.getElementById('container');
     container.style.display = 'grid';
     container.style.gridTemplateColumns =
-      'repeat(' +  gridStyle.columns + ', 1fr)';
+      'repeat(' + gridStyle.columns + ', 1fr)';
     // Let put camera preview a bottom right in grid.
     this.receiverVideos = new Array(numReceivers);
     for (let i = 0; i < numReceivers; i++) {
@@ -214,6 +258,22 @@ class VideoConference {
     }
   }
 
+  setUpHeaderExtension(transceiver) {
+    // TODO(b/320375799), TODO(crbug.com/1513866): Don't set header extension
+    // once spatialIndex and temporalIndex are filled without the dependency
+    // descriptor header extension.
+    const DependencyDescriptorURI =
+      'http://www.webrtc.org/experiments/rtp-hdrext/generic-frame-descriptor-00'
+    let headerExtensions = transceiver.getHeaderExtensionsToNegotiate();
+    headerExtensions = headerExtensions.map((ext) => {
+      if (ext.uri == DependencyDescriptorURI) {
+        ext.direction = "sendrecv";
+      }
+      return ext;
+    });
+    transceiver.setHeaderExtensionsToNegotiate(headerExtensions);
+  }
+
   async establishConnections(numReceivers, sendEncodings) {
     this.localPCs = new Array(numReceivers);
     this.remotePCs = new Array(numReceivers);
@@ -223,41 +283,55 @@ class VideoConference {
       const clonedLocalPC = new RTCPeerConnection({
         encodedInsertableStreams: true
       });
-      const clonedLocalPCWriter =
-            clonedLocalPC.addTransceiver("video").sender.
+
+      const clonedLocalTransceiver = clonedLocalPC.addTransceiver("video");
+      this.setUpHeaderExtension(clonedLocalTransceiver);
+      const clonedLocalPCWriter = clonedLocalTransceiver.sender.
             createEncodedStreams().writable.getWriter();
       this.localPCs[i] = clonedLocalPC;
       clonedLocalPCWriters[i] = clonedLocalPCWriter;
 
-      let remotePC = new RTCPeerConnection();
+      let remotePC = new RTCPeerConnection({ encodedInsertableStreams: true });
       this.remotePCs[i] = remotePC;
     }
 
-    let mainLocalPC = new RTCPeerConnection({encodedInsertableStreams: true});
-    let mainLocalPCStream = mainLocalPC.addTransceiver(
+    let mainLocalPC = new RTCPeerConnection({ encodedInsertableStreams: true });
+    let mainLocalTransceiver = mainLocalPC.addTransceiver(
       this.sentStream.getVideoTracks()[0], {
-        // Prefer resolution even at the cost of visual quality to avoid falling
-        // down to SW video encoding, see b/181320567 or crbug.com/1179020.
-        degradationPreference: 'maintain-resolution',
-        streams : [ this.sentStream ],
-        sendEncodings : [ sendEncodings ],
-      }).sender.createEncodedStreams();
+      // Prefer resolution even at the cost of visual quality to avoid falling
+      // down to SW video encoding, see b/181320567 or crbug.com/1179020.
+      degradationPreference: 'maintain-resolution',
+      streams: [this.sentStream],
+      sendEncodings: [sendEncodings],
+    });
+    this.setUpHeaderExtension(mainLocalTransceiver);
+    let mainLocalPCStream = mainLocalTransceiver.sender.createEncodedStreams();
 
-    let mainRemotePC = new RTCPeerConnection();
+    let mainRemotePC = new RTCPeerConnection(
+      { encodedInsertableStreams: true }
+    );
     mainRemotePC.addTransceiver('video');
 
     this.localPCs[numReceivers - 1] = mainLocalPC;
     this.remotePCs[numReceivers - 1] = mainRemotePC;
 
+    const topSpatialIndex =
+      this.getTopSpatialIndex(sendEncodings.scalabilityMode);
     for (let i = 0; i < numReceivers; i++) {
       this.remotePCs[i].ontrack = e => {
         this.receiverVideos[i].srcObject = new MediaStream([e.track]);
+        const receiver = e.receiver;
+        const receiverStream = receiver.createEncodedStreams();
+        receiverStream.readable.pipeThrough(
+          new TransformStream(new TransformSVCStream(
+            sendEncodings.scalabilityMode, topSpatialIndex))
+        ).pipeTo(receiverStream.writable);
       };
     }
     let ssrcs = new Array(numReceivers - 1);
     for (let i = 0; i < numReceivers; i++) {
       const ssrc = await this.connect(this.localPCs[i], this.remotePCs[i],
-                                      'VP9');
+        'VP9');
       if (i < ssrcs.length) {
         ssrcs[i] = ssrc;
       }
@@ -270,7 +344,7 @@ class VideoConference {
           const clonedFrame = structuredClone(frame);
           const modifiedMetadata = structuredClone(metadata);
           modifiedMetadata.synchronizationSource = ssrcs[i];
-          clonedFrame.setMetadata(metadata);
+          clonedFrame.setMetadata(modifiedMetadata);
           clonedLocalPCWriters[i].write(clonedFrame);
         }
         controller.enqueue(frame);
@@ -290,11 +364,12 @@ class VideoConference {
       this.localPCs[i].close();
       this.localPCs[i] = null;
     }
-
+    this.remotePCs = [];
+    this.localPCs = [];
     const container = document.getElementById('container');
     const cameraOverlay = document.getElementById('cameraOverlay');
     while (container.lastChild &&
-           container.lastChild !== cameraOverlay) {
+      container.lastChild !== cameraOverlay) {
       container.removeChild(container.lastChild);
     }
   }
@@ -306,23 +381,23 @@ class VideoConference {
         autoGainControl: true,
       },
       video: {
-        framerate: {min: 30, max: 30},
+        framerate: { min: 30, max: 30 },
         displaySurface: "browser", // Tab
       }
     };
     this.displayStream =
-          await navigator.mediaDevices.getDisplayMedia(constraints);
+      await navigator.mediaDevices.getDisplayMedia(constraints);
     this.displayStream.getVideoTracks()[0].applyConstraints(constraints);
     this.displayPreview.srcObject = this.displayStream;
 
     this.displayLocalPC =
-          new RTCPeerConnection({encodedInsertableStreams: true});
+      new RTCPeerConnection({ encodedInsertableStreams: true });
     const displayLocalPCStream = this.displayLocalPC.addTransceiver(
       this.displayStream.getVideoTracks()[0], {
-        degradationPreference: 'maintain-resolution',
-        streams : [ this.displayStream ],
-        sendEncodings : [{'scalabilityMode': 'L1T3'}],
-      }).sender.createEncodedStreams();
+      degradationPreference: 'maintain-resolution',
+      streams: [this.displayStream],
+      sendEncodings: [{ 'scalabilityMode': 'L1T3' }],
+    }).sender.createEncodedStreams();
 
     const displayRemotePC = new RTCPeerConnection();
     displayRemotePC.addTransceiver('video');
