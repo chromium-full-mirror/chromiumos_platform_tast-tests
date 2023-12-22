@@ -32,7 +32,7 @@ import (
 
 // Run runs the desks CUJ by opening up 4 different desks and switching
 // between them using various workflows.
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) {
 	// deskSwitchingDuration is how long we should run each workflow for.
 	// To have the full test run in 10 minutes,  we want to have each of
 	// the 3 workflows run in 10/3 minutes.
@@ -210,7 +210,7 @@ func Run(ctx context.Context, s *testing.State) {
 				// See go/trace-in-cuj-tests about rules for tracing.
 				if deskSwitcher.recordTrace {
 					if cycles == 0 {
-						if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+						if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(systemTraceConfigFile)); err != nil {
 							return errors.Wrap(err, "failed to start tracing")
 						}
 					} else if cycles == 4 {
