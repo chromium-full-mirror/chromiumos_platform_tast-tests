@@ -30,8 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		// TODO: When stable, move to firmware_pd
 		Params: firmware.AddPDPorts([]testing.Param{{
-			Val: firmware.PDTestParams{
-			},
+			Val: firmware.PDTestParams{},
 		}}, []string{"group:firmware", "firmware_pd_unstable"}),
 	})
 }
@@ -80,22 +79,38 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set servoV4 to SNK: ", err)
 	}
 
-	// Poll the PD state, it should end up on PE_SRC_Disabled or
-	// PD_STATE_SRC_DISABLED since we can't be a source in recovery mode.
-	if err := checkPEStates(ctx, s, h, map[string]bool{
-		"PD_STATE_SRC_DISABLED": true,
-		"PE_SRC_Disabled":       true,
-	}); err != nil {
-		s.Fatal("Failed to verify power state: ", err)
+	// GoBigSleepLint: We need to check that we don't reach PE_SRC_Ready or
+	// PD_STATE_SRC_READY. Instead of polling (since we don't care about the
+	// states in between) we just sleep for the 'FirmwareScreen' duration which
+	// is the time required to get to the firmware screen.
+	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+		s.Fatal("Failed to sleep during firmware screen: ", err)
 	}
 
-	// Set the Servo as a source
+	// Check the PD state, it should not be PE_SRC_Ready or PD_STATE_SRC_READY
+	// since we cannot be a source in the recovery screen
+	state, err := h.Servo.GetDUTPDState(ctx)
+	if err != nil {
+		s.Fatal("Failed to check current PD state: ", err)
+	}
+
+	if _, ok := map[string]bool{
+		"PD_STATE_SRC_READY": true,
+		"PE_SRC_Ready":       true,
+	}[state.PEStateName]; ok {
+		s.Fatal("Power state must not be SRC ready")
+	}
+
+	// Set the Servo as a source, renegotiation should start and the PE
+	// state should end up as 'ready'
 	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
 		s.Fatal("Failed to set servoV4 to SNK: ", err)
 	}
 
 	// Poll the PD state, it should end up on PE_SNK_Ready or
 	// PD_STATE_SNK_READY since we can be a sink in recovery mode.
+	// We can poll here, because as soon as the state reaches 'ready', we
+	// can call the test a success.
 	if err := checkPEStates(ctx, s, h, map[string]bool{
 		"PD_STATE_SNK_READY": true,
 		"PE_SNK_Ready":       true,
@@ -105,6 +120,10 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 	}
 }
 
+// checkPEStates checks that the PE state reaches one of the states provided in
+// expectedStates. This function will begin polling the PE state via
+// Servo.GetDUTPDState() and will report an error if the state was never one of
+// the states set to 'true' in the map 'expectedStates'.
 func checkPEStates(ctx context.Context, s *testing.State, h *firmware.Helper, expectedStates map[string]bool) error {
 	// Poll for at least the duration it takes to get to the firmware screen
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
