@@ -139,17 +139,25 @@ func (fixtSerializedStructFixture) TearDown(ctx context.Context, s *testing.Fixt
 
 type dataFileFixture struct{}
 
+// DataFiles contains fixture data files information.
+type DataFiles struct {
+	Files []string // Files contains location for all fixture data files.
+}
+
 func (dataFileFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var files []string
 	for _, fn := range []string{
 		"fixture_data_internal.txt",
 		"fixture_data_external.txt",
 	} {
 		s.Log("Copying ", fn)
-		if err := fsutil.CopyFile(s.DataPath(fn), filepath.Join(s.OutDir(), fn)); err != nil {
+		dst := filepath.Join(s.OutDir(), fn)
+		if err := fsutil.CopyFile(s.DataPath(fn), dst); err != nil {
 			s.Errorf("Failed copying %s: %s", fn, err)
 		}
+		files = append(files, dst)
 	}
-	return nil
+	return &DataFiles{Files: files}
 }
 func (dataFileFixture) Reset(ctx context.Context) error {
 	return nil
