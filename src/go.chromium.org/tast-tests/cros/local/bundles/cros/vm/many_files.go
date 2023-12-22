@@ -468,10 +468,6 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 			if err := disk.DropCaches(ctx); err != nil {
 				s.Fatal("Failed to drop caches: ", err)
 			}
-			// GoBigSleepLint: Sleep until virtiofs's cache is invalidated
-			if err != testing.Sleep(ctx, storage.VirtioFSCacheTimeoutSecond*time.Second) {
-				s.Fatal("Failed to sleep until cache is invalidated: ", err)
-			}
 		}
 
 		if err := runOneTestCase(ctx, toGuest, reader, testCase, s.OutDir(), enableTraceCmd); err != nil {
