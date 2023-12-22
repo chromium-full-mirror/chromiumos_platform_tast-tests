@@ -300,7 +300,7 @@ func PerfSuite(ctx context.Context, s *testing.State) {
 	perfSuite := s.Param().(*perfSuite)
 	s.Logf("Running perf test suite: %s", perfSuite.suiteName)
 	perfSuite.runner.RunTestSuite(ctx, s, perfSuite.suiteName)
-	err := perfSuite.resultsParser.ConvertMetrics(s.OutDir())
+	err := perfSuite.resultsParser.ConvertMetrics(perfSuite.suiteName, s.OutDir())
 	if err != nil {
 		s.Error("Failed to convert metrics: ", err)
 	}

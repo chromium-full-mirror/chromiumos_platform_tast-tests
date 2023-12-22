@@ -12,6 +12,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -188,7 +189,7 @@ type data struct {
 }
 
 type entry struct {
-	Value float64 `xml:"Value"`
+	Value string `xml:"Value"`
 }
 
 // ptsComposite is the structure of PTS composite results to convert to
@@ -340,13 +341,19 @@ func convertToCrosbolt(crosboltNameTable map[string]string, metricType metricTyp
 		if err != nil {
 			return err
 		}
+		// If the value is empty string which means test failed, and cannot
+		// parse the value as float64
+		value, err := strconv.ParseFloat(result.Data.Entry.Value, 64)
+		if err != nil {
+			return errors.Wrapf(err, "failed to parse %q as float", result.Data.Entry.Value)
+		}
 		// Remove the space in title to conform the name format
 		title := strings.Replace(result.Title, " ", "", -1)
 		pv.Set(perf.Metric{
 			Name:      fmt.Sprintf("%v.%v.%v.%v_%v", ptsType, metricType, title, name, crosboltUnit.nameSuffix),
 			Unit:      crosboltUnit.unit,
 			Direction: direction,
-		}, result.Data.Entry.Value)
+		}, value)
 	}
 
 	return nil
@@ -354,7 +361,7 @@ func convertToCrosbolt(crosboltNameTable map[string]string, metricType metricTyp
 
 // ConvertMetrics converts the PTS results from composite.xml in the latest
 // result directory to crosbolt results-chart.json using perf.Values.
-func (r *ResultsParser) ConvertMetrics(outDir string) error {
+func (r *ResultsParser) ConvertMetrics(suiteName, outDir string) error {
 	latestResultDir, err := r.getLatestResultDir()
 	if latestResultDir == "" || err != nil {
 		return errors.New("failed to get latest result directory")
@@ -371,15 +378,23 @@ func (r *ResultsParser) ConvertMetrics(outDir string) error {
 		return errors.Wrap(err, "failed to unmarshal composite.xml")
 	}
 
+	found := false
 	for _, result := range ptsXML.Results {
-		if p, ok := r.ptsComposite[result.Title]; ok {
-			err = convertToCrosbolt(p.crosboltNameTable, p.metricType, &result, r.ptsType, r.pv)
-			if err != nil {
-				return errors.Wrapf(err, "failed to convert phoronix-test-suite %s results to crosbolt results-chart.json", result.Title)
+		if strings.Contains(result.Identifier, suiteName) {
+			found = true
+
+			if p, ok := r.ptsComposite[result.Title]; ok {
+				err = convertToCrosbolt(p.crosboltNameTable, p.metricType, &result, r.ptsType, r.pv)
+				if err != nil {
+					return errors.Wrapf(err, "failed to convert phoronix-test-suite %s results to crosbolt results-chart.json", result.Title)
+				}
 			}
 		}
 	}
 	r.pv.Save(outDir)
+	if found != true {
+		return errors.Errorf("no matched test suite (%s) results be found", suiteName)
+	}
 	return nil
 }
 
