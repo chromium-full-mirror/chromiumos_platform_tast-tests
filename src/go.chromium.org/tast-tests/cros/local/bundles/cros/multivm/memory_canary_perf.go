@@ -153,6 +153,8 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.Wrap(err, "failed to Start UMA metrics")
 	}
 
+	lmkdObserver := memoryuser.NewLmkdObserver(ctx, a)
+
 	canaryCloser, canaryStillAlive, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
 	if err != nil {
 		return err
@@ -164,7 +166,6 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 
 	testing.ContextLog(ctx, "Starting allocation")
 	start := time.Now()
-	logcatStart, err := a.LogcatDeviceTime(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get logcat timestamp for start of run")
 	}
@@ -258,14 +259,44 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.Wrap(err, "failed to free all memory after test")
 	}
 
+	testing.ContextLog(ctx, "Sleeping after test to allow system to settle")
+	// GoBigSleepLint: Sleep for 10s in between iterations so that the
+	// highest priority blockers have a chance to expire.
+	// TODO (kalutes): Figure out a good way to clear the blockers in tests
+	// without waiting.
+	if err := testing.Sleep(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep after test")
+	}
+
+	// We wait for host and guest PSI to settle before scanning logs, so that
+	// memory pressure is low when compute metrics. This makes things a lot less
+	// flaky.
+	const psiLowThreshold = 0.1
+	testing.ContextLogf(ctx, "Waiting for arc and host psi some avg10 to be below %.2f", psiLowThreshold)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		psi, err := memory.NewPSIStats(ctx, a)
+		if err != nil {
+			return err
+		}
+		if psi.Arc.Some.Avg10 > psiLowThreshold || psi.Host.Some.Avg10 > psiLowThreshold {
+			testing.ContextLogf(ctx, "psi some avg10 arc=%f host=%f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10)
+			return errors.Errorf("psi some avg10 arc=%.2f host=%.2f above threshold=%.2f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10, psiLowThreshold)
+		}
+		return nil
+	}, &testing.PollOptions{
+		Interval: 5 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed to wait for PSI to be low between tests")
+	}
+
 	vmmmsLog, err := memoryuser.ParseVmmmsKills(measureCtx, start, stop)
 	if err != nil {
 		return errors.Wrap(err, "failed to parse VMMMS logs")
 	}
 
-	lmkdLog, err := memoryuser.ParseLmkdKills(measureCtx, a, logcatStart, stop)
+	lmkdLog, err := lmkdObserver.Close(ctx, a)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse lmkd kill logs from logcat")
+		return errors.Wrap(err, "failed to collect LMKD logs")
 	}
 
 	discardLog, err := memoryuser.ParseTabDiscards(measureCtx, cr, start, stop)
@@ -433,38 +464,9 @@ func MemoryCanaryPerf(ctx context.Context, s *testing.State) {
 	}, float64(info.Total)/float64(memory.MiB))
 
 	for i := 0; i < iterations; i++ {
-		if i > 0 {
-			s.Log("Sleeping between iterations to allow VMMMS blockers to expire")
-			// GoBigSleepLint: Sleep for 10s in between iterations so that the
-			// highest priority blockers have a chance to expire.
-			// TODO (kalutes): Figure out a good way to clear the blockers in tests
-			// without waiting.
-			if err := testing.Sleep(ctx, 10*time.Second); err != nil {
-				s.Fatal("Failed to sleep between iterations: ", err)
-			}
-
-			const psiLowThreshold = 0.1
-			s.Logf("Waiting for arc and host psi some avg10 to be below %.2f", psiLowThreshold)
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				psi, err := memory.NewPSIStats(ctx, preARC)
-				if err != nil {
-					return err
-				}
-				if psi.Arc.Some.Avg10 > psiLowThreshold || psi.Host.Some.Avg10 > psiLowThreshold {
-					s.Logf("psi some avg10 arc=%f host=%f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10)
-					return errors.Errorf("psi some avg10 arc=%.2f host=%.2f above threshold=%.2f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10, psiLowThreshold)
-				}
-				return nil
-			}, &testing.PollOptions{
-				Interval: 5 * time.Second,
-			}); err != nil {
-				s.Fatal("Failed to wait for PSI to be low between tests: ", err)
-			}
-		}
 		s.Logf("Starting iteration %d of %d", i+1, iterations)
 		if err := stressCanary(ctx, s.DataFileSystem(), param, allocationMiB, allocationPeriod, pre.Chrome, br, preARC, p); err != nil {
 			s.Fatal("Error in the canary stress test: ", err)
 		}
-
 	}
 }
