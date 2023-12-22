@@ -76,7 +76,7 @@ func PinAppToShelf(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	app1 := apps.WebStore
+	app1 := apps.FilesSWA
 	app2 := apps.App{ID: "fake_0", Name: "fake app 0"}
 	app3 := apps.App{ID: "fake_1", Name: "fake app 1"}
 	app4 := apps.Settings
