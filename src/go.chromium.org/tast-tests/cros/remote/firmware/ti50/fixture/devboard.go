@@ -55,7 +55,7 @@ func init() {
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
-		Data:		 defaultFwConfigs,
+		Data:            defaultFwConfigs,
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -68,7 +68,7 @@ func init() {
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemTestAutoImage},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
-		Data:		 defaultFwConfigs,
+		Data:            defaultFwConfigs,
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -81,7 +81,7 @@ func init() {
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "ecgh@google.com"},
 		Impl:            &devboardFixture{image: SystemTestAuto2Image},
 		Vars:            []string{DevBoardService, BuildURL, FwConfigJSON, Chip, Variant, Slot},
-		Data:		 defaultFwConfigs,
+		Data:            defaultFwConfigs,
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: tearDownTimeout,
@@ -180,6 +180,10 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	if imagePath == "" {
 		return
 	}
+
+	// Sometimes cr50 does not show up on the USB bus until it is reset.
+	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, false)
+	gpioSet(ctx, s, board, ti50.GpioTi50ResetL, true)
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if out, _ := board.GSCToolCommand(ctx, imagePath); reGsctoolUpdateNotReady.Match(out) {
