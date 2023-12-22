@@ -304,4 +304,8 @@ func PerfSuite(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Error("Failed to convert metrics: ", err)
 	}
+	err = perfSuite.resultsParser.SaveArtifacts(s.OutDir())
+	if err != nil {
+		s.Error("Failed to save artifacts: ", err)
+	}
 }

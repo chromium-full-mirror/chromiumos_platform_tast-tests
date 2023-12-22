@@ -9,6 +9,7 @@ package metrics
 import (
 	"encoding/xml"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -379,5 +380,51 @@ func (r *ResultsParser) ConvertMetrics(outDir string) error {
 		}
 	}
 	r.pv.Save(outDir)
+	return nil
+}
+
+// SaveArtifacts saves the artifacts in the latest result directory to outDir.
+func (r *ResultsParser) SaveArtifacts(outDir string) error {
+	latestResultDir, err := r.getLatestResultDir()
+	if latestResultDir == "" || err != nil {
+		return errors.New("failed to get latest result directory")
+	}
+	// Walk the latest result directory and copy all files recursively to outDir
+	err = filepath.Walk(latestResultDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel(latestResultDir, path)
+		if err != nil {
+			return err
+		}
+
+		if info.IsDir() {
+			dstSubDir := filepath.Join(outDir, relPath)
+			if err := os.MkdirAll(dstSubDir, os.ModePerm); err != nil {
+				return err
+			}
+			return nil
+		}
+
+		srcFile := filepath.Join(latestResultDir, relPath)
+		dstFile := filepath.Join(outDir, relPath)
+		src, err := os.Open(srcFile)
+		if err != nil {
+			return err
+		}
+		defer src.Close()
+		dst, err := os.Create(dstFile)
+		if err != nil {
+			return err
+		}
+		defer dst.Close()
+		if _, err := io.Copy(dst, src); err != nil {
+			return err
+		}
+
+		return nil
+	})
 	return nil
 }
