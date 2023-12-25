@@ -706,6 +706,37 @@ func Run(ctx context.Context, s *testing.State) {
 	// Make sure the Meet call window hasn't crashed before starting the recorder.
 	assertTabActive(ctx)
 
+	var cleanUpDoc, cleanUpJamboard bool
+	var docsHref, jamboardHref string
+	// Shorten the context to cleanup document.
+	// Some low-end devices take a long time to delete docs, so extend
+	// timeout to one minute.
+	cleanUpDocCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if cleanUpDoc && docsHref != "" {
+			if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
+				faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return true }, cr, "cleanup_doc")
+				s.Log("Failed to delete doc: ", err)
+			}
+		}
+	}(cleanUpDocCtx)
+	// Shorten the context to cleanup jamboard.
+	// Some low-end devices take a long time to delete jamboard, so extend
+	// timeout to one minute.
+	cleanUpJamboardCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if cleanUpJamboard && jamboardHref != "" {
+			if err := googledocs.DeleteJamboardWithURL(tconn, cr, jamboardHref)(ctx); err != nil {
+				faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return true }, cr, "cleanup_jamboard")
+				s.Log("Failed to delete jamboard: ", err)
+			}
+		}
+	}(cleanUpJamboardCtx)
+
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Open up the collab window inside the recorder to collect
 		// PageLoad.PaintTiming.NavigationToFirstContentfulPaint.
@@ -734,22 +765,10 @@ func Run(ctx context.Context, s *testing.State) {
 			}
 
 			if docsURL == defaultDocsURL {
-				var docsHref string
-				// Shorten the context to cleanup document.
-				// Some low-end devices take a long time to delete docs, so extend
-				// timeout to one minute.
-				cleanUpDocCtx := ctx
-				ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-				defer cancel()
-
 				if err := collaborationConn.Eval(ctx, "window.location.href", &docsHref); err != nil {
 					return errors.Wrap(err, "failed to get Docs URL")
 				}
-				defer func(ctx context.Context) {
-					if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
-						s.Log("Failed to delete doc: ", err)
-					}
-				}(cleanUpDocCtx)
+				cleanUpDoc = true
 			}
 
 			collaborationRE = regexp.MustCompile(`\bDocs\b`)
@@ -795,22 +814,10 @@ func Run(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to wait for the page to load")
 			}
 
-			var jamboardHref string
 			if err := collaborationConn.Eval(ctx, "window.location.href", &jamboardHref); err != nil {
 				return errors.Wrap(err, "failed to get Jamboard URL")
 			}
-
-			// Shorten the context to cleanup jamboard.
-			// Some low-end devices take a long time to delete jamboard, so extend
-			// timeout to one minute.
-			cleanUpJamboardCtx := ctx
-			ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
-			defer cancel()
-			defer func(ctx context.Context) {
-				if err := googledocs.DeleteJamboardWithURL(tconn, cr, jamboardHref)(ctx); err != nil {
-					s.Log("Failed to delete jamboard: ", err)
-				}
-			}(cleanUpJamboardCtx)
+			cleanUpJamboard = true
 		}
 
 		var collaborationWindow *ash.Window

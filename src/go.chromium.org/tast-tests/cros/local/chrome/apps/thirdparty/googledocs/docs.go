@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -142,12 +143,16 @@ func DeleteDoc(tconn *chrome.TestConn) action.Action {
 	goToDocsHome := nodewith.Name("Go to Docs home screen").Role(role.Button)
 	return uiauto.NamedCombine("delete document",
 		cuj.ExpandMenu(tconn, fileButton, menu, 392),
-		ui.DoDefault(moveToTrash),
-		ui.DoDefault(goToDocsHome),
-		// When leaving the edit document, the popup "Leave site?" might appear.
-		// Click the leave button if it exists.
-		prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt),
-		ui.WithTimeout(longUITimeout).WaitUntilExists(docHomeWebArea),
+		ui.WaitUntilExists(moveToTrash),
+		uiauto.IfSuccessThenWithLog(ui.Exists(moveToTrash.State(state.Focusable, true)),
+			uiauto.NamedCombine("move to trash",
+				ui.DoDefault(moveToTrash),
+				ui.DoDefault(goToDocsHome),
+				// When leaving the edit document, the popup "Leave site?" might appear.
+				// Click the leave button if it exists.
+				prompts.ClearPotentialPrompts(tconn, 5*time.Second, prompts.LeaveSitePrompt),
+				ui.WithTimeout(longUITimeout).WaitUntilExists(docHomeWebArea),
+			)),
 	)
 }
 
