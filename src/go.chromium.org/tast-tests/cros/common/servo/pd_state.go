@@ -61,16 +61,16 @@ const (
 
 // Maps TCPMv1 state numbers to a friendly string name based on EC's `include/usb_pd.h`
 var peStateNameLookup = map[int]string{
-	0: "DISABLED",
-	1: "SUSPENDED",
-	2: "SNK_DISCONNECTED",
-	3: "SNK_DISCONNECTED_DEBOUNCE",
-	4: "SNK_HARD_RESET_RECOVER",
-	5: "SNK_DISCOVERY",
-	6: "SNK_REQUESTED",
-	7: "SNK_TRANSITION",
-	8: "SNK_READY",
-	9: "SNK_SWAP_INIT",
+	0:  "DISABLED",
+	1:  "SUSPENDED",
+	2:  "SNK_DISCONNECTED",
+	3:  "SNK_DISCONNECTED_DEBOUNCE",
+	4:  "SNK_HARD_RESET_RECOVER",
+	5:  "SNK_DISCOVERY",
+	6:  "SNK_REQUESTED",
+	7:  "SNK_TRANSITION",
+	8:  "SNK_READY",
+	9:  "SNK_SWAP_INIT",
 	10: "SNK_SWAP_SNK_DISABLE",
 	11: "SNK_SWAP_SRC_DISABLE",
 	12: "SNK_SWAP_STANDBY",
@@ -221,13 +221,13 @@ func (t *pdStateTokens) peStateName(ver TCPMVersion) (string, error) {
 
 // PDState encapsulates the full PD port state on an EC or Servo
 type PDState struct {
-	Version     TCPMVersion
-	Port        int
-	Polarity    pdPolarityValue
-	Connection  connectionValue
-	PowerRole   powerRoleValue
-	DataRole    dataRoleValue
-	VConn       bool
+	Version    TCPMVersion
+	Port       int
+	Polarity   pdPolarityValue
+	Connection connectionValue
+	PowerRole  powerRoleValue
+	DataRole   dataRoleValue
+	VConn      bool
 
 	// Warning: PEStateName and PEFlags have different values and meanings
 	// depending on TCPM version. Avoid accessing these members directly
@@ -242,7 +242,7 @@ type PDState struct {
 
 // IsSourceReady returns true if port is in a source-ready state
 func (pdState *PDState) IsSourceReady() bool {
-	switch(pdState.PEStateName) {
+	switch pdState.PEStateName {
 	case "SRC_READY": // TCPMv1
 		return true
 	case "PE_SRC_Ready": // TCPMv2
@@ -254,7 +254,7 @@ func (pdState *PDState) IsSourceReady() bool {
 
 // IsSinkReady returns true if port is in a sink-ready state
 func (pdState *PDState) IsSinkReady() bool {
-	switch(pdState.PEStateName) {
+	switch pdState.PEStateName {
 	case "SNK_READY": // TCPMv1
 		return true
 	case "PE_SNK_Ready": // TCPMv2
@@ -267,6 +267,39 @@ func (pdState *PDState) IsSinkReady() bool {
 // IsPDReady returns true if the port is in a source- or sink-ready state
 func (pdState *PDState) IsPDReady() bool {
 	return pdState.IsSourceReady() || pdState.IsSinkReady()
+}
+
+// Compare verifies that the connection state, power role, and data role between two
+// PDState objects is equivalent and returns nil if so, or an error message.
+func (pdState *PDState) Compare(pdStateAfter *PDState) error {
+	// Connection status
+	if pdState.Connection != pdStateAfter.Connection {
+		return errors.Errorf(
+			"PD connection state doesn't match. Now %s, was %s",
+			pdStateAfter.Connection,
+			pdState.Connection,
+		)
+	}
+
+	// Power role
+	if pdState.PowerRole != pdStateAfter.PowerRole {
+		return errors.Errorf(
+			"Power role doesn't match. Now %s, was %s",
+			pdStateAfter.PowerRole,
+			pdState.PowerRole,
+		)
+	}
+
+	// Data role
+	if pdState.DataRole != pdStateAfter.DataRole {
+		return errors.Errorf(
+			"Data role doesn't match. Now %s, was %s",
+			pdStateAfter.DataRole,
+			pdState.DataRole,
+		)
+	}
+
+	return nil
 }
 
 // getPDStateByTargetAndVersion queries state for a specific port on either a
