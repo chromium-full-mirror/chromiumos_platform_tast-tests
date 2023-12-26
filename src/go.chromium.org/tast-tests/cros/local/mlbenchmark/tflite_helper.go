@@ -71,8 +71,8 @@ func parseOutput(output string) (*benchmarkResults, error) {
 
 	var results benchmarkResults
 	var warmupRe = regexp.MustCompile(`\bcount=([\d\.]+) `)
-	var detailRe = regexp.MustCompile(`\bcount=([\d\.]+) first=[\d\.]+ curr=[\d\.]+ min=[\d\.]+ max=[\d\.]+ avg=([\d\.]+) std=([\d\.]+)`)
-	var summaryRe = regexp.MustCompile(`\bInference timings in us: Init: ([\d\.]+), First inference: ([\d\.]+), Warmup \(avg\): [\d\.\+e]+, Inference \(avg\): [\d\.]+`)
+	var detailRe = regexp.MustCompile(`\bcount=([\d\.]+) first=[\d\.]+ curr=[\d\.]+ min=[\d\.]+ max=[\d\.]+ avg=([\d\.\+e]+) std=([\d\.]+)`)
+	var summaryRe = regexp.MustCompile(`\bInference timings in us: Init: ([\d\.]+), First inference: ([\d\.]+), Warmup \(avg\): [\d\.\+e]+, Inference \(avg\): [\d\.\+e]+`)
 	var memoryRe = regexp.MustCompile(`\bOverall peak memory footprint \(MB\) via periodic monitoring: ([\d\.]+)`)
 
 	scanner := bufio.NewScanner(strings.NewReader(output))

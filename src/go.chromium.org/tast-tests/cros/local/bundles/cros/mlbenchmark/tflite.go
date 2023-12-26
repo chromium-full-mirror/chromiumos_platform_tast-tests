@@ -58,8 +58,6 @@ func init() {
 			{
 				Name:              "mobilenet_v2_1_0_224_quant_gpu_opencl",
 				ExtraSoftwareDeps: []string{"vulkan"},
-				// b:303525985 Grunt cannot process quantized models on CPU.
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("grunt")),
 				Val: mlbenchmark.TFLiteBenchmarkParams{
 					DataFilename:  "ml-test-assets.tar.gz",
 					GraphFilename: "mobilenet_v2_1.0_224_quant.tflite",
