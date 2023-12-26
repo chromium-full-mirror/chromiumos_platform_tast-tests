@@ -131,12 +131,6 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to Cellular for hotspot: ", err)
 	}
 
-	apnBeforeTethering, err := getDefaultBearerApn(ctx, modem)
-	if err != nil {
-		s.Fatal("Failed to get APN before enabling tethering: ", err)
-	}
-	testing.ContextLog(ctx, "APN before enabling tethering retrieved: ", apnBeforeTethering)
-
 	status, err := helper.Manager.CheckTetheringReadiness(ctx)
 	if err != nil {
 		s.Fatalf("Failed to check tethering readiness: %s. Status: %q", err, status)
@@ -149,6 +143,12 @@ func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {
 	if status != shillconst.TetheringReadinessReady {
 		s.Fatalf("Got TetheringReadiness %q, want %q", status, shillconst.TetheringReadinessReady)
 	}
+
+	apnBeforeTethering, err := getDefaultBearerApn(ctx, modem)
+	if err != nil {
+		s.Fatal("Failed to get APN before enabling tethering: ", err)
+	}
+	testing.ContextLog(ctx, "APN before enabling tethering retrieved: ", apnBeforeTethering)
 
 	testing.ContextLog(ctx, "Configure tethering")
 	serviceProps := map[string]interface{}{
