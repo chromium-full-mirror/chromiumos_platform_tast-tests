@@ -240,6 +240,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		ignoreAttachMismatch := testNewAPNUIRevamp && strings.HasPrefix(apn, "wrong-apn")
 		if knownAPN.IsAttachAPN() && apn != expectedAPN && !ignoreAttachMismatch {
 			if knownAPN.Optional {
+				testing.ContextLog(ctx, "ignoreAttachMismatch. Continue")
 				continue
 			}
 			var err error = nil
@@ -253,13 +254,15 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		// Tmobile and EE allow any Default APN, so the test should not fail if the APN matches the wrong one inserted by the test.
 		ignoreDefaultMismatch := testNewAPNUIRevamp && (carrier == cellular.CarrierTmobile || carrier == cellular.CarrierEEUK) && strings.HasPrefix(apn, "wrong-apn")
 		// Rogers allows the NULL APN, so ignore that case.
-		ignoreDefaultMismatch = ignoreDefaultMismatch || (!testNewAPNUIRevamp && (carrier == cellular.CarrierRoger) && apn == "")
+		carrierAllowsNullDefaultAPN := carrier == cellular.CarrierRoger || carrier == cellular.CarrierAtt
+		ignoreDefaultMismatch = ignoreDefaultMismatch || (!testNewAPNUIRevamp && carrierAllowsNullDefaultAPN && apn == "")
 		if apn != expectedAPN && !ignoreDefaultMismatch {
 			// We reach this point when shill connected to cellular, but with a different APN.
 			// This is considered a failure to connect, unless the APN is optional.
 			// This usually happens with SetApn if an early APN succeeds, but latter connections use a wrong APN.
 			// SetApn still adds the LastGoodApn in the try list.
 			if !testNewAPNUIRevamp && knownAPN.Optional && lastMatchingGoodAPN != "" && apn == lastMatchingGoodAPN {
+				testing.ContextLog(ctx, "ignoreDefaultMismatch. Continue")
 				continue
 			}
 			err := cellular.TagKnownBugOnModem(ctx, err, "b/268529296", cellular.ModemFwFilterFM350MR3AndLower)
@@ -270,6 +273,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)
 		if err != nil {
 			if knownAPN.Optional {
+				testing.ContextLog(ctx, "Failed to get provisioned IP types. Continue")
 				continue
 			}
 			s.Fatal("Failed to read network provisioned IP types: ", err)
@@ -285,6 +289,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 
 		if err := helper.RunTestOnCellularInterface(ctx, verifyHostIPConnectivity); err != nil {
 			if knownAPN.Optional {
+				testing.ContextLog(ctx, "Failed to verify connectivity on cellular. Continue")
 				continue
 			}
 			s.Fatal("Failed to run test on cellular interface: ", err)
