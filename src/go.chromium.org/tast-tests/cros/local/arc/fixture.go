@@ -299,7 +299,7 @@ func init() {
 	})
 
 	// arcBootedWithVideoLogging is a fixture similar to arcBootedWithDisableExternalStorage,
-    // but with additional Chrome video logging enabled.
+	// but with additional Chrome video logging enabled.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
@@ -309,10 +309,10 @@ func init() {
 			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
 			chrome.ExtraArgs(
 				"--vmodule=" + strings.Join([]string{
-				"*/media/gpu/chromeos/*=2",
-				"*/media/gpu/vaapi/*=2",
-				"*/media/gpu/v4l2/*=2",
-				"*/components/arc/video_accelerator/*=2"}, ","))}, nil
+					"*/media/gpu/chromeos/*=2",
+					"*/media/gpu/vaapi/*=2",
+					"*/media/gpu/v4l2/*=2",
+					"*/components/arc/video_accelerator/*=2"}, ","))}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithVideoLogging",
@@ -328,13 +328,15 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
-	// arcBootedWithOutOfProcessVideoDecoding is a fixture similar to arcBooted,
+	// arcBootedWithOutOfProcessVideoDecoding is similar to arcBootedWithDisableExternalStorage,
 	// but Chrome is launched with out-of-process video decoding.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.ARCEnabled(),
 			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
 			chrome.ExtraArgs("--enable-features=OutOfProcessVideoDecoding"),
 		}, nil
 	}
@@ -365,10 +367,10 @@ func init() {
 			chrome.ExtraArgs(
 				"--enable-features=OutOfProcessVideoDecoding",
 				"--vmodule="+strings.Join([]string{
-				"*/media/gpu/chromeos/*=2",
-				"*/media/gpu/vaapi/*=2",
-				"*/media/gpu/v4l2/*=2",
-				"*/components/arc/video_accelerator/*=2"}, ","))}, nil
+					"*/media/gpu/chromeos/*=2",
+					"*/media/gpu/vaapi/*=2",
+					"*/media/gpu/v4l2/*=2",
+					"*/components/arc/video_accelerator/*=2"}, ","))}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
 		Name: "arcBootedWithVideoLoggingAndOutOfProcessVideoDecoding",
@@ -396,10 +398,10 @@ func init() {
 			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
 			chrome.ExtraArgs(
 				"--vmodule=" + strings.Join([]string{
-				"*/media/gpu/chromeos/*=2",
-				"*/media/gpu/vaapi/*=2",
-				"*/media/gpu/v4l2/*=2",
-				"*/components/arc/video_accelerator/*=2"}, ","))}, nil
+					"*/media/gpu/chromeos/*=2",
+					"*/media/gpu/vaapi/*=2",
+					"*/media/gpu/v4l2/*=2",
+					"*/components/arc/video_accelerator/*=2"}, ","))}, nil
 	}
 	fixtureConfig.ArcvmConfig = "!--video-decoder\n--video-decoder=libvda-vd\n"
 	testing.AddFixture(&testing.Fixture{

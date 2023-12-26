@@ -30,7 +30,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "h264_1080p_30fps",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "android_container"},
 			ExtraData:         []string{"1080p_30fps_300frames.h264", "1080p_30fps_300frames.h264.json"},
 		}, {
@@ -42,7 +42,7 @@ func init() {
 		}, {
 			Name:              "h264_1080p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "android_vm"},
 			ExtraData:         []string{"1080p_30fps_300frames.h264", "1080p_30fps_300frames.h264.json"},
 		}, {
@@ -54,7 +54,7 @@ func init() {
 		}, {
 			Name:              "h264_1080p_60fps",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264_60, "android_container"},
 			ExtraData:         []string{"1080p_60fps_600frames.h264", "1080p_60fps_600frames.h264.json"},
 		}, {
@@ -66,7 +66,7 @@ func init() {
 		}, {
 			Name:              "h264_1080p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264_60, "android_vm"},
 			ExtraData:         []string{"1080p_60fps_600frames.h264", "1080p_60fps_600frames.h264.json"},
 		}, {
@@ -78,7 +78,7 @@ func init() {
 		}, {
 			Name:              "h264_2160p_30fps",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_30fps_300frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K, "android_container"},
 			ExtraData:         []string{"2160p_30fps_300frames.h264", "2160p_30fps_300frames.h264.json"},
 		}, {
@@ -90,7 +90,7 @@ func init() {
 		}, {
 			Name:              "h264_2160p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_30fps_300frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K, "android_vm"},
 			ExtraData:         []string{"2160p_30fps_300frames.h264", "2160p_30fps_300frames.h264.json"},
 		}, {
@@ -102,7 +102,7 @@ func init() {
 		}, {
 			Name:              "h264_2160p_60fps",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_60fps_600frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K60, "android_container"},
 			ExtraData:         []string{"2160p_60fps_600frames.h264", "2160p_60fps_600frames.h264.json"},
 		}, {
@@ -114,7 +114,7 @@ func init() {
 		}, {
 			Name:              "h264_2160p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_60fps_600frames.h264"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264_4K60, "android_vm"},
 			ExtraData:         []string{"2160p_60fps_600frames.h264", "2160p_60fps_600frames.h264.json"},
 		}, {
@@ -126,7 +126,7 @@ func init() {
 		}, {
 			Name:              "vp8_1080p_30fps",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "android_container"},
 			ExtraData:         []string{"1080p_30fps_300frames.vp8.ivf", "1080p_30fps_300frames.vp8.ivf.json"},
 		}, {
@@ -138,7 +138,7 @@ func init() {
 		}, {
 			Name:              "vp8_1080p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "android_vm"},
 			ExtraData:         []string{"1080p_30fps_300frames.vp8.ivf", "1080p_30fps_300frames.vp8.ivf.json"},
 		}, {
@@ -150,7 +150,7 @@ func init() {
 		}, {
 			Name:              "vp8_1080p_60fps",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8_60, "android_container"},
 			ExtraData:         []string{"1080p_60fps_600frames.vp8.ivf", "1080p_60fps_600frames.vp8.ivf.json"},
 		}, {
@@ -162,7 +162,7 @@ func init() {
 		}, {
 			Name:              "vp8_1080p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8_60, "android_vm"},
 			ExtraData:         []string{"1080p_60fps_600frames.vp8.ivf", "1080p_60fps_600frames.vp8.ivf.json"},
 		}, {
@@ -174,7 +174,7 @@ func init() {
 		}, {
 			Name:              "vp8_2160p_30fps",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_30fps_300frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8_4K, "android_container"},
 			ExtraData:         []string{"2160p_30fps_300frames.vp8.ivf", "2160p_30fps_300frames.vp8.ivf.json"},
 		}, {
@@ -186,7 +186,7 @@ func init() {
 		}, {
 			Name:              "vp8_2160p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_30fps_300frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8_4K, "android_vm"},
 			ExtraData:         []string{"2160p_30fps_300frames.vp8.ivf", "2160p_30fps_300frames.vp8.ivf.json"},
 		}, {
@@ -198,7 +198,7 @@ func init() {
 		}, {
 			Name:              "vp8_2160p_60fps",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_60fps_600frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8_4K60, "android_container"},
 			ExtraData:         []string{"2160p_60fps_600frames.vp8.ivf", "2160p_60fps_600frames.vp8.ivf.json"},
 		}, {
@@ -210,7 +210,7 @@ func init() {
 		}, {
 			Name:              "vp8_2160p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_60fps_600frames.vp8.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8_4K60, "android_vm"},
 			ExtraData:         []string{"2160p_60fps_600frames.vp8.ivf", "2160p_60fps_600frames.vp8.ivf.json"},
 		}, {
@@ -222,7 +222,7 @@ func init() {
 		}, {
 			Name:              "vp9_1080p_30fps",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_container"},
 			ExtraData:         []string{"1080p_30fps_300frames.vp9.ivf", "1080p_30fps_300frames.vp9.ivf.json"},
 		}, {
@@ -234,7 +234,7 @@ func init() {
 		}, {
 			Name:              "vp9_1080p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "android_vm"},
 			ExtraData:         []string{"1080p_30fps_300frames.vp9.ivf", "1080p_30fps_300frames.vp9.ivf.json"},
 		}, {
@@ -246,7 +246,7 @@ func init() {
 		}, {
 			Name:              "vp9_1080p_60fps",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9_60, "android_container"},
 			ExtraData:         []string{"1080p_60fps_600frames.vp9.ivf", "1080p_60fps_600frames.vp9.ivf.json"},
 		}, {
@@ -258,7 +258,7 @@ func init() {
 		}, {
 			Name:              "vp9_1080p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9_60, "android_vm"},
 			ExtraData:         []string{"1080p_60fps_600frames.vp9.ivf", "1080p_60fps_600frames.vp9.ivf.json"},
 		}, {
@@ -270,7 +270,7 @@ func init() {
 		}, {
 			Name:              "vp9_2160p_30fps",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_30fps_300frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9_4K, "android_container"},
 			ExtraData:         []string{"2160p_30fps_300frames.vp9.ivf", "2160p_30fps_300frames.vp9.ivf.json"},
 		}, {
@@ -282,7 +282,7 @@ func init() {
 		}, {
 			Name:              "vp9_2160p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_30fps_300frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9_4K, "android_vm"},
 			ExtraData:         []string{"2160p_30fps_300frames.vp9.ivf", "2160p_30fps_300frames.vp9.ivf.json"},
 		}, {
@@ -294,7 +294,7 @@ func init() {
 		}, {
 			Name:              "vp9_2160p_60fps",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_60fps_600frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9_4K60, "android_container"},
 			ExtraData:         []string{"2160p_60fps_600frames.vp9.ivf", "2160p_60fps_600frames.vp9.ivf.json"},
 		}, {
@@ -306,7 +306,7 @@ func init() {
 		}, {
 			Name:              "vp9_2160p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_60fps_600frames.vp9.ivf"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9_4K60, "android_vm"},
 			ExtraData:         []string{"2160p_60fps_600frames.vp9.ivf", "2160p_60fps_600frames.vp9.ivf.json"},
 		}, {
@@ -318,7 +318,7 @@ func init() {
 		}, {
 			Name:              "hevc_1080p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_30fps_300frames.hevc"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "android_vm"},
 			ExtraData:         []string{"1080p_30fps_300frames.hevc", "1080p_30fps_300frames.hevc.json"},
 		}, {
@@ -330,7 +330,7 @@ func init() {
 		}, {
 			Name:              "hevc_1080p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.hevc"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC60, "android_vm"},
 			ExtraData:         []string{"1080p_60fps_600frames.hevc", "1080p_60fps_600frames.hevc.json"},
 		}, {
@@ -342,7 +342,7 @@ func init() {
 		}, {
 			Name:              "hevc_2160p_30fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_30fps_300frames.hevc"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC4K, "android_vm"},
 			ExtraData:         []string{"2160p_30fps_300frames.hevc", "2160p_30fps_300frames.hevc.json"},
 		}, {
@@ -354,7 +354,7 @@ func init() {
 		}, {
 			Name:              "hevc_2160p_60fps_vm",
 			Val:               video.DecodeTestOptions{TestVideo: "2160p_60fps_600frames.hevc"},
-			Fixture:           "arcBooted",
+			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeHEVC4K60, "android_vm"},
 			ExtraData:         []string{"2160p_60fps_600frames.hevc", "2160p_60fps_600frames.hevc.json"},
 		}, {
