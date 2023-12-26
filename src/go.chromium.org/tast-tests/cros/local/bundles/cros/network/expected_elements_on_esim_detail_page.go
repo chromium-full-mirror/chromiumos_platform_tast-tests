@@ -79,23 +79,23 @@ func ExpectedElementsOnESimDetailPage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find network name label: ", err)
 	}
 
-	if err := ui.Exists(ossettings.AutoconnectToggle)(ctx); err != nil {
+	if err := ui.WaitUntilExists(ossettings.AutoconnectToggle)(ctx); err != nil {
 		s.Fatal("Failed to find autoconnect toggle: ", err)
 	}
 
-	if err := ui.Exists(ossettings.RoamingToggle)(ctx); err != nil {
+	if err := ui.WaitUntilExists(ossettings.RoamingToggle)(ctx); err != nil {
 		s.Fatal("Failed to find roaming toggle: ", err)
 	}
 
-	if err := ui.Exists(ossettings.CellularAdvanced)(ctx); err != nil {
+	if err := ui.WaitUntilExists(ossettings.CellularAdvanced)(ctx); err != nil {
 		s.Fatal("Failed to find advanced button: ", err)
 	}
 
-	if err := ui.Exists(ossettings.CellularNetwork)(ctx); err != nil {
+	if err := ui.WaitUntilExists(ossettings.CellularNetwork)(ctx); err != nil {
 		s.Fatal("Failed to find network button: ", err)
 	}
 
-	if err := ui.Exists(ossettings.CellularProxy)(ctx); err != nil {
+	if err := ui.WaitUntilExists(ossettings.CellularProxy)(ctx); err != nil {
 		s.Fatal("Failed to find proxy button: ", err)
 	}
 }
