@@ -83,9 +83,9 @@ func AddProfileNewAccount(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn).WithTimeout(accountmanager.DefaultUITimeout)
 
 	// Browser controls to open a profile:
-	profileToolbarButton := mapui.BrowserProfileToolbarButton.Focusable()
-	profileMenu := mapui.BrowserProfileMenu
-	addProfileButton := mapui.BrowserProfileAddButton.Focusable().Ancestor(profileMenu)
+	profileToolbarButton := mapui.BrowserProfileToolbarButton().Focusable()
+	profileMenu := mapui.BrowserProfileMenu()
+	addProfileButton := mapui.BrowserProfileAddButton().Focusable().Ancestor(profileMenu)
 
 	// Open a new tab.
 	conn, err := cs.NewConn(ctx, "chrome://version/")
@@ -104,8 +104,8 @@ func AddProfileNewAccount(ctx context.Context, s *testing.State) {
 	}
 
 	// Profile chooser screen:
-	chooseProfileRoot := mapui.BrowserChooseProfileRoot
-	addButton := mapui.BrowserProfileChooserAddButton.Focusable().Ancestor(chooseProfileRoot)
+	chooseProfileRoot := mapui.BrowserChooseProfileRoot()
+	addButton := mapui.BrowserProfileChooserAddButton().Focusable().Ancestor(chooseProfileRoot)
 	if err := ui.Exists(addButton)(ctx); err == nil {
 		// If we get profile chooser screen - click "Add".
 		if err1 := ui.DoDefault(addButton)(ctx); err1 != nil {
@@ -115,10 +115,10 @@ func AddProfileNewAccount(ctx context.Context, s *testing.State) {
 
 	s.Log("Adding a new profile")
 	addAccountDialog := accountmanager.AddAccountDialog()
-	addProfileRoot := mapui.BrowserAddProfileRoot
-	nextButton := mapui.BrowserAddProfileSigninButton.Focusable().Ancestor(addProfileRoot)
-	chooseAccountRoot := mapui.BrowserChooseAccountRoot
-	addAccountButton := mapui.BrowserChooseAccountAddAnotherButton.Focusable().Ancestor(chooseAccountRoot)
+	addProfileRoot := mapui.BrowserAddProfileRoot()
+	nextButton := mapui.BrowserAddProfileSigninButton().Focusable().Ancestor(addProfileRoot)
+	chooseAccountRoot := mapui.BrowserChooseAccountRoot()
+	addAccountButton := mapui.BrowserChooseAccountAddAnotherButton().Focusable().Ancestor(chooseAccountRoot)
 	if err := uiauto.Combine("click on nextButton",
 		ui.WaitUntilExists(nextButton),
 		ui.WithInterval(time.Second).DoDefaultUntil(nextButton, ui.Exists(addAccountButton)),
@@ -133,8 +133,8 @@ func AddProfileNewAccount(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Finish profile addition")
-	syncProfileRoot := mapui.BrowserSyncProfileRoot
-	yesButton := mapui.BrowserSyncProfileYesButton.Focusable().Ancestor(syncProfileRoot)
+	syncProfileRoot := mapui.BrowserSyncProfileRoot()
+	yesButton := mapui.BrowserSyncProfileYesButton().Focusable().Ancestor(syncProfileRoot)
 	if err := uiauto.Combine("click on yesButton",
 		ui.WaitUntilExists(yesButton),
 		ui.DoDefault(yesButton),

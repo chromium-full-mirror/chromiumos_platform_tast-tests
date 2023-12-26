@@ -119,7 +119,7 @@ func AddAccountOSSettings(ctx context.Context, s *testing.State) {
 	defer accManager.CleanUp(cleanupCtx)
 
 	// Open Account Manager page in OS Settings and click Add Google Account button.
-	addAccountButton := mapui.OSSettingsAddGoogleAccountButton
+	addAccountButton := mapui.OSSettingsAddGoogleAccountButton()
 	if err := uiauto.Combine("Click Add Google Account button",
 		accountmanager.OpenAccountManagerSettingsAction(tconn, cr),
 		ui.DoDefault(addAccountButton),

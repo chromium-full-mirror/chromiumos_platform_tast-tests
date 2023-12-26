@@ -4,7 +4,10 @@
 
 package mapui
 
-import "go.chromium.org/tast/core/testing"
+import (
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast/core/testing"
+)
 
 var osSettingsAddGoogleAccountButton = testing.RegisterVarString(
 	"mapui.ossettings.add_google_account_button",
@@ -13,4 +16,6 @@ var osSettingsAddGoogleAccountButton = testing.RegisterVarString(
 )
 
 // OSSettingsAddGoogleAccountButton is a node finder for the Add Google Account button in the OS settings.
-var OSSettingsAddGoogleAccountButton = nodeFromStringVar(osSettingsAddGoogleAccountButton)
+func OSSettingsAddGoogleAccountButton() *nodewith.Finder {
+	return nodeFromStringVar(osSettingsAddGoogleAccountButton)
+}

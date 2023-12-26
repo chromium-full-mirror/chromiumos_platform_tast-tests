@@ -4,7 +4,10 @@
 
 package mapui
 
-import "go.chromium.org/tast/core/testing"
+import (
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast/core/testing"
+)
 
 var browserProfileToolbarButton = testing.RegisterVarString(
 	"mapui.browser.avatar_toolbar_button",
@@ -13,7 +16,9 @@ var browserProfileToolbarButton = testing.RegisterVarString(
 )
 
 // BrowserProfileToolbarButton is a node finder for the Avatar Toolbar button in the browser.
-var BrowserProfileToolbarButton = nodeFromStringVar(browserProfileToolbarButton)
+func BrowserProfileToolbarButton() *nodewith.Finder {
+	return nodeFromStringVar(browserProfileToolbarButton)
+}
 
 var browserProfileMenu = testing.RegisterVarString(
 	"mapui.browser.profile_menu",
@@ -22,7 +27,9 @@ var browserProfileMenu = testing.RegisterVarString(
 )
 
 // BrowserProfileMenu is a node finder for the profile menu of the browser.
-var BrowserProfileMenu = nodeFromStringVar(browserProfileMenu)
+func BrowserProfileMenu() *nodewith.Finder {
+	return nodeFromStringVar(browserProfileMenu)
+}
 
 var browserProfileAddButton = testing.RegisterVarString(
 	"mapui.browser.profile_add_button",
@@ -31,7 +38,9 @@ var browserProfileAddButton = testing.RegisterVarString(
 )
 
 // BrowserProfileAddButton is a node finder for the Add button in the profile menu of the browser.
-var BrowserProfileAddButton = nodeFromStringVar(browserProfileAddButton)
+func BrowserProfileAddButton() *nodewith.Finder {
+	return nodeFromStringVar(browserProfileAddButton)
+}
 
 var browserChooseProfileRoot = testing.RegisterVarString(
 	"mapui.browser.choose_profile_root",
@@ -40,7 +49,9 @@ var browserChooseProfileRoot = testing.RegisterVarString(
 )
 
 // BrowserChooseProfileRoot is a node finder for the profile chooser dialog.
-var BrowserChooseProfileRoot = nodeFromStringVar(browserChooseProfileRoot)
+func BrowserChooseProfileRoot() *nodewith.Finder {
+	return nodeFromStringVar(browserChooseProfileRoot)
+}
 
 var browserProfileChooserAddButton = testing.RegisterVarString(
 	"mapui.browser.profile_chooser_add_button",
@@ -49,7 +60,9 @@ var browserProfileChooserAddButton = testing.RegisterVarString(
 )
 
 // BrowserProfileChooserAddButton is a node finder for the Add button in the profile chooser menu of the browser.
-var BrowserProfileChooserAddButton = nodeFromStringVar(browserProfileChooserAddButton)
+func BrowserProfileChooserAddButton() *nodewith.Finder {
+	return nodeFromStringVar(browserProfileChooserAddButton)
+}
 
 var browserAddProfileRoot = testing.RegisterVarString(
 	"mapui.browser.add_profile_root",
@@ -58,7 +71,9 @@ var browserAddProfileRoot = testing.RegisterVarString(
 )
 
 // BrowserAddProfileRoot is a node finder for the add profile dialog.
-var BrowserAddProfileRoot = nodeFromStringVar(browserAddProfileRoot)
+func BrowserAddProfileRoot() *nodewith.Finder {
+	return nodeFromStringVar(browserAddProfileRoot)
+}
 
 var browserAddProfileSigninButton = testing.RegisterVarString(
 	"mapui.browser.add_profile_signin_button",
@@ -67,7 +82,9 @@ var browserAddProfileSigninButton = testing.RegisterVarString(
 )
 
 // BrowserAddProfileSigninButton is a node finder for the Sign in button when adding a new profile in the browser.
-var BrowserAddProfileSigninButton = nodeFromStringVar(browserAddProfileSigninButton)
+func BrowserAddProfileSigninButton() *nodewith.Finder {
+	return nodeFromStringVar(browserAddProfileSigninButton)
+}
 
 var browserChooseAccountRoot = testing.RegisterVarString(
 	"mapui.browser.choose_account_root",
@@ -76,7 +93,9 @@ var browserChooseAccountRoot = testing.RegisterVarString(
 )
 
 // BrowserChooseAccountRoot is a node finder for the account choosing dialog.
-var BrowserChooseAccountRoot = nodeFromStringVar(browserChooseAccountRoot)
+func BrowserChooseAccountRoot() *nodewith.Finder {
+	return nodeFromStringVar(browserChooseAccountRoot)
+}
 
 var browserChooseAccountAddAnotherButton = testing.RegisterVarString(
 	"mapui.browser.choose_account_add_another_button",
@@ -85,7 +104,9 @@ var browserChooseAccountAddAnotherButton = testing.RegisterVarString(
 )
 
 // BrowserChooseAccountAddAnotherButton is a node finder for the add another button in the account choosing dialog.
-var BrowserChooseAccountAddAnotherButton = nodeFromStringVar(browserChooseAccountAddAnotherButton)
+func BrowserChooseAccountAddAnotherButton() *nodewith.Finder {
+	return nodeFromStringVar(browserChooseAccountAddAnotherButton)
+}
 
 var browserSyncProfileRoot = testing.RegisterVarString(
 	"mapui.browser.sync_profile_root",
@@ -94,7 +115,9 @@ var browserSyncProfileRoot = testing.RegisterVarString(
 )
 
 // BrowserSyncProfileRoot is a node finder for the profile sync dialog.
-var BrowserSyncProfileRoot = nodeFromStringVar(browserSyncProfileRoot)
+func BrowserSyncProfileRoot() *nodewith.Finder {
+	return nodeFromStringVar(browserSyncProfileRoot)
+}
 
 var browserSyncProfileYesButton = testing.RegisterVarString(
 	"mapui.browser.sync_profile_yes_button",
@@ -103,4 +126,6 @@ var browserSyncProfileYesButton = testing.RegisterVarString(
 )
 
 // BrowserSyncProfileYesButton is a node finder for the yes button in the profile sync dialog.
-var BrowserSyncProfileYesButton = nodeFromStringVar(browserSyncProfileYesButton)
+func BrowserSyncProfileYesButton() *nodewith.Finder {
+	return nodeFromStringVar(browserSyncProfileYesButton)
+}
