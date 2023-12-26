@@ -63,7 +63,7 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1 * time.Minute)
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
 			defer cancelWaitConnect()
 			if err := h.WaitConnect(waitConnectCtx); err != nil {
 				s.Fatal("Failed to reconnect to the DUT: ", err)
@@ -84,7 +84,10 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			s.Fatal("Failed to remove charger: ", err)
 		}
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1 * time.Minute)
+		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
+			s.Fatal("Failed to remove watchdog for ccd: ", err)
+		}
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
 		defer cancelWaitConnect()
 		if err = h.WaitConnect(waitConnectCtx); err != nil {
 			s.Fatal("Failed to reconnect to the DUT: ", err)
