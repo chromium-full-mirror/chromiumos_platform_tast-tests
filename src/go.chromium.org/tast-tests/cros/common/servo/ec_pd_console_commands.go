@@ -252,37 +252,16 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 		return errors.Wrap(err, "could not disable EC/DUT's PD debug logs")
 	}
 
-	// Compare PD state before and after (should be the same)
-	pdStateAfter, err := s.GetDUTPDState(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get post-test EC/DUT-side PD port status")
-	}
+	// Poll until the pre- and post-reset states match or we time out.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pdStateAfter, err := s.GetDUTPDState(ctx)
+		if err != nil {
+			return errors.Wrap(err, "cannot read DUT PD state")
+		}
 
-	// Connection status
-	if pdStateBefore.Connection != pdStateAfter.Connection {
-		return errors.Errorf(
-			"PD connection state changed after soft reset. Now %s, expected %s",
-			pdStateAfter.Connection,
-			pdStateBefore.Connection,
-		)
-	}
-
-	// Power role
-	if pdStateBefore.PowerRole != pdStateAfter.PowerRole {
-		return errors.Errorf(
-			"Power role changed after soft reset. Now %s, expected %s",
-			pdStateAfter.PowerRole,
-			pdStateBefore.PowerRole,
-		)
-	}
-
-	// Data role
-	if pdStateBefore.DataRole != pdStateAfter.DataRole {
-		return errors.Errorf(
-			"Data role changed after soft reset. Now %s, expected %s",
-			pdStateAfter.DataRole,
-			pdStateBefore.DataRole,
-		)
+		return pdStateBefore.Compare(pdStateAfter)
+	}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+		return errors.Wrap(err, "timed out waiting for states to match after DUT soft reset")
 	}
 
 	// TODO (b/317808083) query the servo's soft reset counter here

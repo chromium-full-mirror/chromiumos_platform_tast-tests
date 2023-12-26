@@ -128,12 +128,12 @@ func verifyStatesInConsoleLog(ctx context.Context, log string, port int, sequenc
 // TriggerServoPDSoftReset triggers a USB-PD Soft Reset from the Servo-side
 func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 	// Get current port status
-	pdState, err := s.GetServoPDState(ctx)
+	pdStateBefore, err := s.GetServoPDState(ctx)
 	if err != nil {
 		return errors.Wrap(err, "could not get Servo PD state")
 	}
 
-	if pdState.Connection != PDEnabled {
+	if pdStateBefore.Connection != PDEnabled {
 		return errors.New("servo PD status reads disabled. Cannot test without a port partner")
 	}
 
@@ -141,6 +141,18 @@ func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 	err = s.RunServoCommand(ctx, "pd 1 soft")
 	if err != nil {
 		return errors.Wrap(err, "could not trigger soft reset on Servo")
+	}
+
+	// Poll until the pre- and post-reset states match or we time out.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		pdStateAfter, err := s.GetServoPDState(ctx)
+		if err != nil {
+			return errors.Wrap(err, "cannot read servo PD state")
+		}
+
+		return pdStateBefore.Compare(pdStateAfter)
+	}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+		return errors.Wrap(err, "timed out waiting for states to match after servo soft reset")
 	}
 
 	// TODO (b/317808083) query the servo's soft reset counter here
