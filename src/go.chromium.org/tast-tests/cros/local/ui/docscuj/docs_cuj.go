@@ -172,6 +172,23 @@ func Run(ctx context.Context, s *testing.State) {
 	}
 	defer ime.DefaultInputMethod.Activate(tconn)(cleanupCtx)
 
+	var cleanUpDoc bool
+	var docsHref string
+	// Shorten the context to cleanup document.
+	// Some low-end devices take a long time to delete docs, so extend
+	// timeout to one minute.
+	cleanUpDocCtx := ctx
+	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+	defer func(ctx context.Context) {
+		if cleanUpDoc && docsHref != "" {
+			if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
+				faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return true }, cr, "cleanup_doc")
+				s.Log("Failed to delete doc: ", err)
+			}
+		}
+	}(cleanUpDocCtx)
+
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		recorder.Annotate(ctx, "Open_new_Google_Doc")
 
@@ -189,21 +206,10 @@ func Run(ctx context.Context, s *testing.State) {
 			s.Log("Failed to wait for the tab to quiesce")
 		}
 
-		// Shorten the context to cleanup document.
-		// Some low-end devices take a long time to delete docs, so extend
-		// timeout to one minute.
-		cleanUpDocCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-		defer cancel()
-
 		if err := conn.Eval(ctx, "window.location.href", &docsHref); err != nil {
 			return errors.Wrap(err, "failed to get Docs URL")
 		}
-		defer func(ctx context.Context) {
-			if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
-				s.Log("Failed to delete doc: ", err)
-			}
-		}(cleanUpDocCtx)
+		cleanUpDoc = true
 
 		ws, err := ash.GetAllWindows(ctx, tconn)
 		if err != nil {
