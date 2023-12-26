@@ -398,3 +398,18 @@ func CheckRecordedFrequency(
 
 	return nil
 }
+
+// CalculateLeadingZerosDuration calculate the length of the leading zeros of pcm bytes.
+func CalculateLeadingZerosDuration(pcmBytes [][]int32, sampleRate int) (time.Duration, error) {
+	for frame := range pcmBytes[0] {
+		for channel := range pcmBytes {
+			sample := pcmBytes[channel][frame]
+			if sample != 0 {
+				duration := time.Second * time.Duration(frame) / time.Duration(sampleRate)
+				return time.Duration(duration), nil
+			}
+		}
+	}
+
+	return 0, errors.New("file contains all zeros")
+}
