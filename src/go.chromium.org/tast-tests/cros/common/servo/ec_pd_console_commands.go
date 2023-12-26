@@ -285,6 +285,8 @@ func (s *Servo) TriggerPDSoftReset(ctx context.Context) error {
 		)
 	}
 
+	// TODO (b/317808083) query the servo's soft reset counter here
+
 	return nil
 }
 

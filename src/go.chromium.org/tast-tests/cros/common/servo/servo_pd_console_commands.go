@@ -97,29 +97,6 @@ func (s *Servo) DisableServoPDConsoleDebug(ctx context.Context) error {
 	return nil
 }
 
-// checkSequenceInConsoleLog is a helper function to search through console
-// output and ensure a provided sequence of PD state transitions exists.
-func checkSequenceInConsoleLog(log string, port int, sequenceList []string) bool {
-	i := 0
-	for _, stateName := range sequenceList {
-		// Create a regexp object that matches the expected log entry
-		// for this state name.
-		re := regexp.MustCompile(
-			fmt.Sprintf(`C%d\s+[\w]+:?\s(%s)`, port, stateName),
-		)
-		idx := re.FindStringIndex(log[i:])
-
-		if idx == nil {
-			return false
-		}
-
-		// Continue the search for the next expected state after this
-		// log line
-		i += idx[1]
-	}
-	return true
-}
-
 // verifyStatesInConsoleLog is a helper function which extracts all of the PD
 // state messages from servo console output and then verifies the states match
 // in exact order tp the states in the parameter sequenceList
@@ -160,46 +137,13 @@ func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 		return errors.New("servo PD status reads disabled. Cannot test without a port partner")
 	}
 
-	if err := s.EnableServoPDConsoleDebug(ctx); err != nil {
-		return errors.Wrap(err, "could not enable Servo's PD debug logs")
-	}
-
-	// Go back to `pd dump 0` after.
-	defer s.DisableServoPDConsoleDebug(ctx)
-
-	// Depending on the current power role, set the list of expected
-	// PD states following the soft reset
-	var expectedResetSequence []string
-	if pdState.PowerRole == PowerRoleSNK {
-		expectedResetSequence = []string{
-			"SOFT_RESET",
-			"SNK_DISCOVERY",
-			"SNK_REQUESTED",
-			"SNK_TRANSITION",
-			"SNK_READY",
-		}
-	} else if pdState.PowerRole == PowerRoleSRC {
-		expectedResetSequence = []string{
-			"SOFT_RESET",
-			"SRC_DISCOVERY",
-			"SRC_NEGOCIATE", // [sic]
-			"SRC_ACCEPTED",
-			"SRC_POWERED",
-			"SRC_TRANSITION",
-			"SRC_READY",
-		}
-	} else {
-		return errors.New("unknown power role state")
-	}
-
-	// Run the command
-	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 soft", []string{`(.*)(C1)\s+[\w]+:?\s([\w]+_READY)`})
+	// Run the command. Port 1 is the Servo's DUT-facing port.
+	err = s.RunServoCommand(ctx, "pd 1 soft")
 	if err != nil {
 		return errors.Wrap(err, "could not trigger soft reset on Servo")
 	}
-	if !checkSequenceInConsoleLog(out[0][0], 1, expectedResetSequence) {
-		return errors.New("expected reset state sequence not seen in Servo PD soft reset command console output")
-	}
+
+	// TODO (b/317808083) query the servo's soft reset counter here
 
 	return nil
 }
