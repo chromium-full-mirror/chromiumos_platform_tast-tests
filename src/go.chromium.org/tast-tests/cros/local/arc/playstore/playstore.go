@@ -28,9 +28,9 @@ type operation string
 
 const (
 	// Install an app from the Play Store, wait for it to complete and verify the installation.
-	installApp       operation = "install"
+	installApp operation = "install"
 	// Begin installing an app from the Play Store. Does not wait for, or verify, the installation.
-	beginAppInstall  operation = "beginAppInstall"
+	beginAppInstall operation = "beginAppInstall"
 	// Update an app from the Play Store and wait for it to complete.
 	updateApp        operation = "update"
 	playStorePackage           = "com.android.vending"
@@ -68,7 +68,6 @@ func FindActionButton(ctx context.Context, d *ui.Device, actionText string, time
 		buttonClass := ui.ClassName("android.widget.Button")
 		actionButton := d.Object(buttonClass, ui.TextMatches("(?i)"+actionText), ui.Enabled(true))
 		if err := actionButton.WaitForExists(ctx, time.Second); err == nil {
-			testing.ContextLog(ctx, "Found the button")
 			result = actionButton
 			return nil
 		}
@@ -76,12 +75,11 @@ func FindActionButton(ctx context.Context, d *ui.Device, actionText string, time
 		viewClass := ui.ClassName("android.view.View")
 		actionView := d.Object(viewClass, ui.DescriptionMatches("(?i)"+actionText), ui.Enabled(true))
 		if err := actionView.WaitForExists(ctx, time.Second); err == nil {
-			testing.ContextLog(ctx, "Found the view")
 			result = actionView
 			return nil
 		}
 
-		return errors.New("Did not find the button")
+		return errors.Errorf("could not find the button %q", actionText)
 	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
 
 	return result, err
@@ -206,6 +204,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		accountSetupText      = "Complete account setup"
 		permissionsText       = "needs access to"
 		versionText           = "Your device isn.t compatible with this version."
+		incompatibleText      = "This Chromebook isn't compatible with this app."
 		linkPaypalAccountText = "Want to link your PayPal account.*"
 
 		acceptButtonText   = "accept"
@@ -278,7 +277,10 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		// If the version isn't compatible with the device, no install button will be available.
 		// Fail immediately.
 		if err := d.Object(ui.TextMatches(versionText)).Exists(ctx); err == nil {
-			return testing.PollBreak(errors.New("app not compatible with this device"))
+			return testing.PollBreak(errors.New("device not compatible with this version"))
+		}
+		if err := d.Object(ui.TextMatches(incompatibleText)).Exists(ctx); err == nil {
+			return testing.PollBreak(errors.New("device not compatible with this app"))
 		}
 
 		// If retry button appears, reopen the Play Store page by sending the same intent again.
@@ -296,7 +298,7 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 		}
 
 		// If the install or update button is enabled, click it.
-		if opButton, err := FindActionButton(ctx, d, btnText, 2*time.Second); err == nil {
+		if opButton, err := FindActionButton(ctx, d, btnText, 5*time.Second); err == nil {
 			if retriesExhausted() {
 				return testing.PollBreak(errors.Errorf("hit %s attempt limit of %d times", op, tryLimit))
 			}
@@ -306,6 +308,8 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 			if err := opButton.Click(ctx); err != nil {
 				return err
 			}
+		} else {
+			testing.ContextLog(ctx, "Skipped clicking button to start operation: ", err)
 		}
 
 		// Grant permissions if necessary.
