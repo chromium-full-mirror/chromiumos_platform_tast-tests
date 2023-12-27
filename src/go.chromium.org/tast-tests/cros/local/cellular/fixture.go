@@ -118,7 +118,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true).setModemLoggingAllowed(true),
+		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularResetShillProfileOnPostTest",
@@ -210,13 +210,12 @@ type cellularFixture struct {
 	systemUptimeBeforeTest      time.Duration
 	disableCellularInShill      bool
 	// Fixture variables
-	crashFilesTracker []string
-	helper            *Helper
-	modemfwdStopped   bool
-	modemLoggingAllowed bool
+	crashFilesTracker   []string
+	helper              *Helper
+	modemfwdStopped     bool
 	modemLoggingStarted bool
-	sf                *starfish.Starfish
-	netUnlock         func()
+	sf                  *starfish.Starfish
+	netUnlock           func()
 	// Per-test logging marker
 	logMarker *logsaver.Marker
 }
@@ -277,10 +276,6 @@ func (f *cellularFixture) setDisableCellularInShill(value bool) *cellularFixture
 	f.disableCellularInShill = value
 	return f
 }
-func (f *cellularFixture) setModemLoggingAllowed(value bool) *cellularFixture {
-	f.modemLoggingAllowed = value
-	return f
-}
 
 // FixtData holds information made available to tests that specify this fixture.
 type FixtData struct {
@@ -330,21 +325,23 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	f.sf = sfish
 
-	if f.modemLoggingAllowed {
-		// check if OS version is divisible by 10. If it is, start modem logging if available
-		modemLoggingStarted, err := triggerModemLoggingConditionally(ctx)
-		if err != nil {
+	// check if OS version is divisible by 10. If it is, start modem logging if available
+	modemLoggingStarted, err := triggerModemLoggingConditionally(ctx)
+	if err != nil {
+		if f.useFakeDMS {
+			s.Log("Failed to trigger modem logging: ", err)
+		} else {
 			s.Fatal("Failed to trigger modem logging: ", err)
 		}
-		f.modemLoggingStarted = modemLoggingStarted
-		defer func(s *testing.FixtState) {
-			if f.modemLoggingStarted && s.HasError() {
-				if err := stopModemLogging(ctx); err != nil {
-					s.Log("Could not stop modem logging: ", err)
-				}
-			}
-		}(s)
 	}
+	f.modemLoggingStarted = modemLoggingStarted
+	defer func(s *testing.FixtState) {
+		if f.modemLoggingStarted && s.HasError() {
+			if err := stopModemLogging(ctx); err != nil {
+				s.Log("Could not stop modem logging: ", err)
+			}
+		}
+	}(s)
 
 	// b/289540816: Ensure the APN in the modem doesn't contain a leftover value from a manual test.
 	CheckIfL850VerizonAndFixDefaultAPN(ctx)
@@ -674,7 +671,11 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.modemLoggingStarted {
 		if err := stopModemLogging(ctx); err != nil {
-			s.Fatal("Could not stop modem logging: ", err)
+			if f.useFakeDMS {
+				s.Log("Could not stop modem logging: ", err)
+			} else {
+				s.Fatal("Could not stop modem logging: ", err)
+			}
 		}
 	}
 	if f.disableCellularInShill {
