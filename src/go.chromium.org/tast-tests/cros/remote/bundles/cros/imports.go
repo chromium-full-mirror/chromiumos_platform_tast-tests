@@ -33,6 +33,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/kernel"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/labqual"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/meet"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/meta"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/nearbyshare"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/network"
