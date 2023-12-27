@@ -107,6 +107,12 @@ func UIModeTransition(ctx context.Context, s *testing.State) {
 		if err := boot.bypassToBoot(ctx); err != nil {
 			s.Fatal("Failed to bypass firmware screen: ", err)
 		}
+		if boot.transition == devToNormal && (h.Config.ModeSwitcherType == firmware.KeyboardDevSwitcher || h.Config.ModeSwitcherType == firmware.TabletDetachableSwitcher) {
+			s.Log("Pressing Ctrl+U on the to_norm_confirmed screen")
+			if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
+				s.Fatal("Failed to press Ctrl+U on the to_norm_confirmed screen: ", err)
+			}
+		}
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
