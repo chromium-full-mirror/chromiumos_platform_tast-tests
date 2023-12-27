@@ -15,8 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/inputs/data"
-	"go.chromium.org/tast-tests/cros/local/inputs/util"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -30,6 +28,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/input/voice"
+	"go.chromium.org/tast-tests/cros/local/inputs/data"
+	"go.chromium.org/tast-tests/cros/local/inputs/util"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -605,7 +605,9 @@ func (its *InputsTestServer) validateHandwritingInField(uc *useractions.UserCont
 		return uiauto.Combine("handwriting input on virtual keyboard",
 			its.WaitForHandwritingEngineReadyOnField(hwCtx, inputField, dataPath(inputData.HandwritingFile)),
 			hwCtx.DrawStrokesFromFile(dataPath(inputData.HandwritingFile)),
-			uiauto.Sleep(500*time.Millisecond),
+			// Wait for and validate handwriting result. Note that this needs to occur before cleanup
+			// switches back to the main keyboard, since that can interrupt handwriting recogition.
+			its.ValidateResult(inputField, inputData.ExpectedText),
 		)(ctx)
 	}
 	return uiauto.UserAction(
@@ -613,7 +615,6 @@ func (its *InputsTestServer) validateHandwritingInField(uc *useractions.UserCont
 		action,
 		uc,
 		&useractions.UserActionCfg{
-			ValidateResult: its.ValidateResult(inputField, inputData.ExpectedText),
 			Attributes: map[string]string{
 				useractions.AttributeFeature:    useractions.FeatureHandWriting,
 				useractions.AttributeInputField: string(inputField),
