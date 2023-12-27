@@ -9,6 +9,7 @@ import (
 	"context"
 	"encoding/binary"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -37,7 +38,7 @@ func init() {
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
-			ExtraAttr:         []string{"group:hw_agnostic"},
+			ExtraAttr:         []string{"group:hw_agnostic", "informational"},
 		}},
 		Timeout: 7 * time.Minute,
 	})
@@ -54,7 +55,9 @@ func DownloadManager(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	sourcePath := s.DataPath(filename)
 
-	arcdownload.DownloadTestFile(ctx, cr, a, d, sourcePath, targetPath)
+	if err := arcdownload.DownloadTestFile(ctx, cr, a, d, sourcePath, targetPath); err != nil {
+		s.Fatal("Failed to download test file: ", err)
+	}
 
 	defer func(ctx context.Context) {
 		if err := a.RemoveAll(ctx, targetPath); err != nil {
@@ -82,6 +85,9 @@ func DownloadManager(ctx context.Context, s *testing.State) {
 	}
 
 	if !bytes.Equal(downloaded, original) {
+		if err := os.WriteFile(filepath.Join(s.OutDir(), "downloaded_file.jpg"), downloaded, 0644); err != nil {
+			testing.ContextLog(ctx, "Failed to save the downloaded file: ", err)
+		}
 		s.Fatalf("Content mismatch between the original file (%d bytes) and the downloaded file (%d bytes)", binary.Size(original), binary.Size(downloaded))
 	}
 }
