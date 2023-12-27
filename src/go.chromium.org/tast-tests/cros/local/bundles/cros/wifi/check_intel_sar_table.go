@@ -34,7 +34,7 @@ func init() {
 		SoftwareDeps: []string{"wifi"},
 		Attr: []string{"group:mainline", "group:wificell", "wificell_func", "wificell_dut_validation", "group:labqual",
 			// Updating the SAR tables in CBFS can break this test.
-			"group:firmware", "firmware_bios",
+			"group:firmware", "firmware_bios", "firmware_level5",
 		},
 		// NB: The WifiIntel dependency tracks a manually maintained list of devices.
 		// If the test is skipping when it should run or vice versa, check the hwdep

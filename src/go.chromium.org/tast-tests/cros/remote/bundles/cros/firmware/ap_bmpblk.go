@@ -23,9 +23,9 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"jwerner@chromium.org",   // Test author
+			"jwerner@chromium.org", // Test author
 		},
-		Attr:         []string{"group:firmware", "firmware_bios"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
 		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		Fixture:      fixture.NormalMode,
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},

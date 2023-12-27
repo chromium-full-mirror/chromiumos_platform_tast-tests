@@ -15,6 +15,7 @@ import (
 )
 
 func init() {
+	// TODO(b/194910755): Remove this test and use firmware.CorruptFWBothAB.body_normal
 	testing.AddTest(&testing.Test{
 		Func: CorruptBothFWBodyAB,
 		Desc: "Corrupt both copies of AP firmware, verify broken screen with reason 0x1b, restore backup via servo",
@@ -34,7 +35,7 @@ func init() {
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
-				ExtraAttr:         []string{"firmware_bios"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
 				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 			},
 		},
