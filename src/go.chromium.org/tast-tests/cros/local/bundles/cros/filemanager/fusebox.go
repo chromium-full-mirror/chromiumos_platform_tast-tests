@@ -49,8 +49,8 @@ func init() {
 			Name: "fsp", // FSP = the fileSystemProvider API.
 			Val:  "fspVal",
 			ExtraData: []string{
-				"fusebox_fsp_extension/manifest.json",
-				"fusebox_fsp_extension/service-worker.js",
+				"fsp_extension/manifest.json",
+				"fsp_extension/service-worker.js",
 			},
 		}},
 	})
@@ -67,7 +67,7 @@ func Fusebox(ctx context.Context, s *testing.State) {
 	case "fspVal":
 		chromeOpts = []chrome.Option{
 			chrome.UnpackedExtension(filepath.Dir(s.DataPath(
-				"fusebox_fsp_extension/manifest.json"))),
+				"fsp_extension/manifest.json"))),
 		}
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
@@ -341,13 +341,13 @@ func exerciseFuseboxFSP(ctx context.Context, s *testing.State) {
 			if !strings.HasPrefix(name, "fsp.") {
 				continue
 			}
-			filename := filepath.Join(filemanager.FuseboxDirPath, name, "this-is-the-fusebox-fsp-extension.txt")
+			filename := filepath.Join(filemanager.FuseboxDirPath, name, "this-is-the-fsp-extension.txt")
 			if _, err := os.Stat(filename); err == nil {
 				fspDirName = filepath.Join(filemanager.FuseboxDirPath, name)
 				return nil
 			}
 		}
-		return errors.New(`could not find "this-is-the-fusebox-fsp-extension.txt"`)
+		return errors.New(`could not find "this-is-the-fsp-extension.txt"`)
 	}, nil); err != nil {
 		s.Fatal("Could not find fspDirName: ", err)
 	}

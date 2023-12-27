@@ -147,7 +147,7 @@ let ROOT = new Dir('Test Filesystem', [
   new TextFile('empty.txt', ''),
   new TextFile('roses.txt', 'Roses are red.\n'),
   new SlowTextFile('slow-2s.txt', 'Two seconds delay.\n', 2000),
-  new TextFile('this-is-the-fusebox-fsp-extension.txt', ''),
+  new TextFile('this-is-the-fsp-extension.txt', ''),
 ]);
 
 const REQ = {};
@@ -168,8 +168,8 @@ function getByPath(path) {
 
 async function mount() {
   return await chrome.fileSystemProvider.mount({
-    fileSystemId: 'FuseboxFileSystemProviderTastExtension',
-    displayName: 'FuseboxFSPTastExt',
+    fileSystemId: 'FileSystemProviderTastExtension',
+    displayName: 'FSPTastExt',
     writable: false,
   });
 }
