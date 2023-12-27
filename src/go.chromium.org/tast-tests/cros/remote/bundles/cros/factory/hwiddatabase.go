@@ -21,11 +21,14 @@ type extraCmdParams struct {
 // These devices will be supported by runtime probe, the progress is tracked in b/230576848.
 var storageNotProbable = []string{"anahera", "bobba", "chronicler", "dewatt", "pico6"}
 
+// The plan for these device is undecided, the progress is tracked in b/317670344.
+var displayPanelNotProbable = []string{"starmie"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HWIDDatabase,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test the flow from collecting materials, generating HWID database, to verifing the database is valid",
+		Desc:         "Test the flow from collecting materials, generating HWID database, to verifying the database is valid",
 		Contacts:     []string{"chromeos-factory-eng@google.com", "lschyi@google.com"},
 		// ChromeOS > Platform > Enablement > Factory
 		BugComponent: "b:167224",
@@ -38,7 +41,7 @@ func init() {
 		Params: []testing.Param{
 			testing.Param{
 				Name:              "probe_by_default",
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(storageNotProbable...), hwdep.ChromeEC()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(append(storageNotProbable, displayPanelNotProbable...)...), hwdep.ChromeEC()),
 				Val: extraCmdParams{
 					extraBuildParams: []string{
 						"--add-firmware-components",
@@ -53,6 +56,17 @@ func init() {
 						"--add-firmware-components",
 						"--auto-accept-essential-prompt",
 						"storage",
+					},
+				},
+			},
+			testing.Param{
+				Name:              "allow_probe_no_display_panel",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(displayPanelNotProbable...)),
+				Val: extraCmdParams{
+					extraBuildParams: []string{
+						"--add-firmware-components",
+						"--auto-accept-essential-prompt",
+						"display_panel",
 					},
 				},
 			},
