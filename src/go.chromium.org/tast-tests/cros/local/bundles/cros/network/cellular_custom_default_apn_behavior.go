@@ -110,7 +110,7 @@ func CellularCustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, userFriendlyApnName, ""); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
 		s.Fatal("Failed to verify connected UI: ", err)
 	}
 
@@ -132,7 +132,7 @@ func CellularCustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, userFriendlyApnName, "modb"); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, "modb"); err != nil {
 		s.Fatal("Failed to verify modb connected UI: ", err)
 	}
 
@@ -153,7 +153,7 @@ func CellularCustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, userFriendlyApnName, ""); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
 		s.Fatal("Failed to verify connected UI: ", err)
 	}
 
@@ -166,6 +166,8 @@ func CellularCustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to click on edit button of default APN: ", err)
 	}
 
+	invalidSuffix := "_invalid"
+	invalidApnName := apnName + invalidSuffix
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to open the keyboard: ", err)
@@ -173,10 +175,9 @@ func CellularCustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 	defer kb.Close(cleanupCtx)
 	if err := uiauto.Combine("Edit custom APN in edit APN dialog",
 		ui.WaitUntilExists(ossettings.NameOfAPNInput),
-		kb.TypeAction("_invalid"),
+		kb.TypeAction(invalidSuffix),
 		ui.LeftClick(nodewith.Name("Save").Role(role.Button)),
-		// TODO(b/314192325): Update this to include "_invalid".
-		ui.WaitUntilExists(nodewith.NameContaining(apnName)),
+		ui.WaitUntilExists(nodewith.NameContaining(invalidApnName)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to edit custom APN and verify it shows in the APN list: ", err)
 	}
@@ -198,12 +199,12 @@ func CellularCustomDefaultApnBehavior(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to go to apn subpage: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageNotConnectedApnUI(ctx, tconn, cr, userFriendlyApnName); err != nil {
+	if err := mdp.VerifyAPNSubpageNotConnectedApnUI(ctx, tconn, cr, invalidApnName); err != nil {
 		s.Fatal("Failed verify connect failed UI: ", err)
 	}
 
 	// Remove custom APN.
-	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, apnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
+	if err := ossettings.ClickAPNMoreActionsButtonOfType(ctx, tconn, invalidApnName, ossettings.ApnEnabled, false /*isAttach*/, true /*isDefault*/); err != nil {
 		s.Fatal("Failed to click on more actions button of default APN to remove: ", err)
 	}
 
