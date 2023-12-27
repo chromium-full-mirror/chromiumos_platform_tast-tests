@@ -349,6 +349,10 @@ func updateFilteredValues(f, p *Values, m []Metric, i int, names map[string]int)
 // (# of Metrics in the old Values * # of Checkpoints).
 func (p *Values) FilterTimelineByCheckpoints(ckpts *Checkpoints) (*Values, error) {
 	filtered := NewValues()
+	if ckpts == nil || ckpts.IsEmpty() {
+		return filtered, nil
+	}
+
 	btoi := map[bool]int{true: 1, false: -1}
 
 	// Map a timestampSource Metric to the data Metrics that use it.

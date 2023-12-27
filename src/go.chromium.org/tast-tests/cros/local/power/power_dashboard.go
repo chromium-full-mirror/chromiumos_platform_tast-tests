@@ -99,6 +99,13 @@ func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName str
 		}
 	}
 
+	valuesCheckpoints, err := values.FilterTimelineByCheckpoints(checkpoints)
+	if err != nil {
+		return errors.Wrap(err, "failed to filter data with checkpoints")
+	}
+	values.Merge(valuesCheckpoints)
+	values.SaveAsDebugCSV(outDir)
+
 	if err := values.Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to save perf data for crosbolt")
 	}
