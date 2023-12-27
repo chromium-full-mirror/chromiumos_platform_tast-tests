@@ -26,7 +26,7 @@ PolicyAllowRoaming=true
 UseAttachAPN=true
 Powered=true
 
-[cellular_iccidnumber]
+[cellular_#ICCID_NUMBER#]
 Type=cellular
 HasEverConnected=true
 Name=USIM
@@ -35,9 +35,8 @@ ONCSource=0
 LinkMonitorDisabled=false
 ManagedCredentials=false
 TrafficCounterResetTime=0
-Cellular.Iccid=iccidnumber
-Cellular.Imsi=imsinumber
-Cellular.SimCardId=iccidnumber
+Cellular.Iccid=#ICCID_NUMBER#
+Cellular.Imsi=#IMSI_NUMBER#
+Cellular.SimCardId=#ICCID_NUMBER#
 Cellular.AllowRoaming=false
-Cellular.APN.apn=callbox-ipv4
-Cellular.APN.version=2
+#APN_INFO#

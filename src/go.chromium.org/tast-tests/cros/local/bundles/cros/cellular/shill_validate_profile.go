@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/mmconst"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/ctxutil"
@@ -19,17 +19,28 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type shillValidateProfileTestParam struct {
+	TestNewAPNUIRevamp bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           ShillValidateProfile,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verifies that change in profile property able to connect after shill reset, mimics OS update",
+		Desc:           "Verifies that the cellular profile is still valid after a shill/OS upgrade",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "srikanthkumar@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		Data:           []string{"callbox_attach_ipv4_incorrect_apn.pbf", "test_profile.txt"},
 		Fixture:        "cellular",
-		Timeout:        5 * time.Minute,
+		Timeout:        3 * time.Minute,
+		Params: []testing.Param{{
+			Name: "old_ui",
+			Val:  shillValidateProfileTestParam{false},
+		}, {
+			Name: "revamp_apn_ui",
+			Val:  shillValidateProfileTestParam{true},
+		}},
 	})
 }
 
@@ -39,15 +50,15 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 		incorrectAPNProto  = "callbox_attach_ipv4_incorrect_apn.pbf"
 		testDefaultProfile = "test_profile.txt"
 		tempFilePath       = "/var/cache/shill/temp_profile.txt"
+		apn                = "callbox-ipv4"
 	)
-	// Create incorrect proto which fails and convert to pbf and load
-	// default profile exist at /var/cache/shill/default.profile
-	// Load default profile and able to connect successfully to callbox (apn)
-	// Load incorrect textproto apn
-	// Call ResetShill
-	// Check for service failure to connect to callbox (with incorrect apn)
-	// Call ResetShill With Profile a placeholder profile path to sideload test_profile created from default profile and added APN
-	// Should able to connect default.profile
+	params := s.Param().(shillValidateProfileTestParam)
+	testNewAPNUIRevamp := params.TestNewAPNUIRevamp
+	// Test steps:
+	// - Verify that shill connects with an empty profile and default modb.
+	// - Load incorrectAPNProto and verify shill connects with the fallback APN.
+	// - Load a test profile containing a valid pre-upgrade configuration.
+	// The test will fail if shill fails to load and use the pre-upgrade configuration.
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	// Fail early on NL668, otherwise the modem will keep returning WriteFailure on SetInitialEPSBearerSettings.
@@ -56,13 +67,10 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 		s.Fatalf("Fail early to avoid wasting DUT time: %s", nl668Err)
 	}
 
-	// Check cellular connection for default profile.
+	// Check cellular connection for default profile. Shill will connect with any APN, so don't check the APN.
 	if connected, err := checkCellularConnection(ctx, helper, true); err != nil || !connected {
-		s.Fatal("Supposed to connect with the given good apn proto configuration: ", err)
+		s.Fatal("Failed to connect with the default settings: ", err)
 	}
-	s.Log("Connected with default profile - Step1 Done")
-
-	printShillInfo(ctx, helper)
 
 	cleanup, err := cellular.SetServiceProvidersExclusiveOverride(ctx, s.DataPath(incorrectAPNProto))
 	if err != nil {
@@ -70,25 +78,21 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup()
 
-	s.Log("Reset Shill after loading incorrect apn textproto")
+	s.Log("Incorrect apn textproto loaded. Reset shill")
 	errs := helper.ResetShill(ctx)
 	if errs != nil {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
-
-	// Check profile properties after modification.
-	s.Log("Loaded incorrect apn textproto and after resetshill")
-	printShillInfo(ctx, helper)
-
-	// Check cellular connection, should fail to connect with incorrect apn(ipv4 incorrect one), and do not try to connect to default profile(false).
-	if connected, err := checkCellularConnection(ctx, helper, false); err != nil || connected {
-		s.Fatal("Supposed to fail in connecting as incorrect apn loaded: ", err)
+	// Because the modb only contains invalid APNs, shill will connect with the fallback APN,
+	// or it will fail to connect on modems/FWs that don't correctly return the InvalidApn error.
+	connected, err := checkCellularConnection(ctx, helper, false)
+	if err != nil {
+		s.Fatal("Failed to check for cellular connection: ", err)
+	} else if connected {
+		if err := checkAPN(ctx, helper, ""); err != nil {
+			s.Fatal("Failed checking APN: ", err)
+		}
 	}
-	s.Log("Should not connect as its incorrect profile - Step2 Done")
-
-	printShillInfo(ctx, helper)
-	s.Log("Reset shill with test default profile side load")
-
 	modem, err := modemmanager.NewModemWithSim(ctx)
 	if err != nil {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
@@ -108,15 +112,21 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not read test profile from given profile file: ", err)
 	}
 
-	newProfile := strings.Replace(string(testProfile), "iccidnumber", iccid, -1)
-	newProfile = strings.Replace(string(newProfile), "imsinumber", imsi, -1)
+	newProfile := strings.Replace(string(testProfile), "#ICCID_NUMBER#", iccid, -1)
+	newProfile = strings.Replace(string(newProfile), "#IMSI_NUMBER#", imsi, -1)
+	// When using the revamp, keep both values, since most users will still have the old `Cellular.APN` values, as those are not deleted.
+	apnInfo := "Cellular.APN.version=2\nCellular.APN.apn_types=DEFAULT,IA\nCellular.APN.apn=" + apn
+	if testNewAPNUIRevamp {
+		apnInfo = apnInfo + "\n" + `Cellular.CustomAPNList=[{"apn":"` + apn + `","apn_source":"ui","apn_types":"DEFAULT,IA","id":"99","version":"2"}]`
+	}
+	newProfile = strings.Replace(string(newProfile), "#APN_INFO#", apnInfo, -1)
 
 	s.Log("After update: ", newProfile)
 	if err := os.WriteFile(tempFilePath, []byte(newProfile), 0600); err != nil {
-		s.Fatal("Could not write updated test profile to path: ", err)
+		s.Fatal("Failed to write updated test profile to path: ", err)
 	}
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 	defer func(ctx context.Context) {
 		err := os.Remove(tempFilePath)
@@ -125,22 +135,26 @@ func ShillValidateProfile(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Reset shill and update profile properties in default profile.
+	s.Log("Test profile loaded. Reset shill")
 	errs = helper.ResetShillAndSetProfile(ctx, tempFilePath)
 	if errs != nil {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
 
-	// Check cellular connection, should connect with default profile after shill reset.
+	// Shill should connect with the APN in the pre-upgrade test profile.
 	if connected, err := checkCellularConnection(ctx, helper, true); err != nil || !connected {
-		s.Fatal("Supposed to connect with the given good apn proto configuration: ", err)
+		s.Fatal("Failed to connect with the pre-upgrade profile: ", err)
+	}
+	if err := checkAPN(ctx, helper, apn); err != nil {
+		s.Fatal("Failed checking APN: ", err)
 	}
 	s.Log("Successfully connected with side loaded default profile - Step3 Done")
-	printShillInfo(ctx, helper)
+
 }
 
-// checkCellularConnection checks for cellular connection and tries to connect if connect is 'True'.
-func checkCellularConnection(ctx context.Context, helper *cellular.Helper, connect bool) (bool, error) {
+// checkCellularConnection tries to connect and returns the connected status. If |connectionMustSucceed| is false,
+// a failure to connect will not result in an error.
+func checkCellularConnection(ctx context.Context, helper *cellular.Helper, connectionMustSucceed bool) (bool, error) {
 	// Check cellular connection, should able to connect with default apn(ipv4 one).
 	if _, err := helper.Enable(ctx); err != nil {
 		return false, errors.Wrap(err, "failed to enable cellular")
@@ -156,8 +170,8 @@ func checkCellularConnection(ctx context.Context, helper *cellular.Helper, conne
 		return false, errors.Wrap(err, "unable to get isConnected for service")
 	}
 	testing.ContextLog(ctx, "Connecting")
-	if !isConnected && connect {
-		if _, err := helper.ConnectToDefault(ctx); err != nil {
+	if !isConnected {
+		if err := helper.ConnectToServiceWithTimeout(ctx, service, time.Second*10); err != nil && connectionMustSucceed {
 			return false, errors.Wrap(err, "unable to connect to service")
 		}
 		isConnected, _ = service.IsConnected(ctx)
@@ -166,37 +180,15 @@ func checkCellularConnection(ctx context.Context, helper *cellular.Helper, conne
 	return isConnected, nil
 }
 
-// printShillInfo prints shill apns used to connect.
-func printShillInfo(ctx context.Context, helper *cellular.Helper) error {
-	modem, err := modemmanager.NewModemWithSim(ctx)
-	if err != nil {
-		return errors.Wrap(err, "could not find mm dbus object with a valid sim")
-	}
-	modemAttachApn, err := modem.GetInitialEpsBearerSettings(ctx, modem)
-	if err != nil {
-		return errors.Wrap(err, "error getting Attach APN properties")
-	}
-	testing.ContextLog(ctx, "Modem attach APN     : ", modemAttachApn)
-	bearer, err := modem.GetFirstConnectedDataBearer(ctx, mmconst.BearerAPNTypeDefault)
-	if err != nil {
-		return errors.Wrap(err, "error getting connected bearer properties")
-	}
-	apnName, err := bearer.GetAPN()
-	if err != nil {
-		return errors.Wrap(err, "error getting APN name")
-	}
-	testing.ContextLog(ctx, "Connected bearer APN : ", apnName)
-
-	serviceLastAttachAPN, err := helper.GetCellularLastAttachAPN(ctx)
-	if err != nil {
-		return errors.Wrap(err, "error getting Service properties")
-	}
+func checkAPN(ctx context.Context, helper *cellular.Helper, expectedAPN string) error {
 	serviceLastGoodAPN, err := helper.GetCellularLastGoodAPN(ctx)
 	if err != nil {
-		return errors.Wrap(err, "error getting Service properties")
+		return errors.Wrap(err, "unable to get service properties")
 	}
-	testing.ContextLog(ctx, "Service last attach APN: ", serviceLastAttachAPN)
-	testing.ContextLog(ctx, "Service last good APN  : ", serviceLastGoodAPN)
-
+	testing.ContextLog(ctx, "serviceAPN: ", serviceLastGoodAPN)
+	apn := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnName]
+	if expectedAPN != apn {
+		return errors.Errorf("last good APN doesn't match: got %q, want %q", apn, expectedAPN)
+	}
 	return nil
 }
