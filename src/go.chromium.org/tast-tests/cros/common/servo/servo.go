@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
 
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // Servo holds the servod connection information.
@@ -37,9 +36,6 @@ type Servo struct {
 	isPDTester         bool
 	// TODO(b/194310192): Unify the servo UART regexp controls in servod.
 	uartRegexp StringControl
-
-	// If initialPDRole is set, then upon Servo.Close(), the PDRole control will be set to initialPDRole.
-	initialPDRole PDRoleValue
 
 	// For PD tests, this caches the information about the PD port on the DUT.
 	dutPDInfo *DUTPDInfo
@@ -104,12 +100,5 @@ func (s *Servo) verifyConnectivity(ctx context.Context) error {
 
 // Close performs Servo cleanup.
 func (s *Servo) Close(ctx context.Context) error {
-	var firstError error
-	if s.initialPDRole != "" && s.initialPDRole != PDRoleNA {
-		testing.ContextLogf(ctx, "Restoring %q to %q", PDRole, s.initialPDRole)
-		if err := s.SetPDRole(ctx, s.initialPDRole); err != nil && firstError == nil {
-			firstError = errors.Wrapf(err, "restoring servo control %q to %q", PDRole, s.initialPDRole)
-		}
-	}
-	return firstError
+	return nil
 }

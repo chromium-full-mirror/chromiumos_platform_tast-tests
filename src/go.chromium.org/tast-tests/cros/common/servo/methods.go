@@ -1079,12 +1079,6 @@ func (s *Servo) SetPDRole(ctx context.Context, newRole PDRoleValue) error {
 		return errors.Wrap(err, "getting current PD role")
 	}
 
-	// Save the initial PD role so we can restore it during servo.Close()
-	if s.initialPDRole == "" {
-		testing.ContextLogf(ctx, "Saving initial PDRole %q for later", currentRole)
-		s.initialPDRole = currentRole
-	}
-
 	// If not using a servo V4, then we can't set the PD Role
 	if currentRole == PDRoleNA {
 		testing.ContextLogf(ctx, "Skipping setting %q to %q on non-v4 servo", PDRole, newRole)
