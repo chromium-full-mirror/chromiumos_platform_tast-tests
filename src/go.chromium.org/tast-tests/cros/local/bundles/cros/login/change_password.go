@@ -115,6 +115,7 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 			chrome.KeepState(),
 			chrome.RemoveNotification(false), // By default it waits for the user session.
 			chrome.DontSkipOOBEAfterLogin(),
+			chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
 		}
 
 		if isConsumerUpdate {
@@ -133,15 +134,26 @@ func ChangePassword(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#gaia-password-changed').hidden", 20*time.Second); err != nil {
-			s.Fatal("Failed to wait for the gaia password changed screen: ", err)
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 20*time.Second); err != nil {
+			s.Fatal("Failed to wait for enter old password screen: ", err)
 		}
-		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#gaia-password-changed').$.oldPasswordInput.value = '%s'", initialCreds.Pass), nil); err != nil {
-			s.Fatal("Failed to enter old password: ", err)
+
+		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#enter-old-password').$.oldPasswordInput.value = '%s'", initialCreds.Pass), nil); err != nil {
+			s.Fatal("Failed to enter the old password: ", err)
 		}
-		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.next.click()", nil); err != nil {
-			s.Fatal("Failed to click on next button: ", err)
+
+		if err := oobeConn.Eval(ctx, "document.querySelector('#enter-old-password').$.next.click()", nil); err != nil {
+			s.Fatal("Failed to click on the next button: ", err)
 		}
+
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#factor-setup-success').hidden", 20*time.Second); err != nil {
+			s.Fatal("Failed to wait for factor setup success screen: ", err)
+		}
+
+		if err := oobeConn.Eval(ctx, "document.querySelector('#factor-setup-success').$.doneButton.click()", nil); err != nil {
+			s.Fatal("Failed to click on the done button: ", err)
+		}
+
 		if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
 			s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
 		}
