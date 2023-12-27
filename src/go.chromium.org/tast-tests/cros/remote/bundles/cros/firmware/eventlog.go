@@ -55,7 +55,7 @@ func init() {
 			hwdep.SkipOnPlatform("veyron_fievel"),
 			hwdep.SkipOnPlatform("veyron_tiger"),
 		),
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		SoftwareDeps: []string{"crossystem", "flashrom", "chrome"},
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Vars:         []string{"firmware.skipFlashUSB"},
@@ -72,6 +72,7 @@ func init() {
 					requiredEventSets: [][]string{{`System boot`}},
 					prohibitedEvents:  `Developer Mode|Recovery Mode|Sleep| Wake`,
 				},
+				ExtraRequirements: []string{"sys-fw-0025-v01"},
 			},
 			{
 				// Allow some normally disallowed events on rammus. b/184778308
@@ -84,6 +85,7 @@ func init() {
 					prohibitedEvents:  `Developer Mode|Recovery Mode|Sleep| Wake`,
 					allowedEvents:     `^ACPI Wake \| Deep S5$`,
 				},
+				ExtraRequirements: []string{"sys-fw-0025-v01"},
 			},
 			// Test eventlog upon dev->dev reboot.
 			{
@@ -95,6 +97,7 @@ func init() {
 					requiredEventSets: [][]string{{`System boot`, `Chrome ?OS Developer Mode|boot_mode=Developer`}},
 					prohibitedEvents:  `Recovery Mode|Sleep| Wake`,
 				},
+				ExtraRequirements: []string{"sys-fw-0025-v01"},
 			},
 			// Allow some normally disallowed events on rammus. b/184778308
 			{
@@ -107,11 +110,12 @@ func init() {
 					prohibitedEvents:  `Recovery Mode|Sleep| Wake`,
 					allowedEvents:     `^ACPI Wake \| Deep S5$`,
 				},
+				ExtraRequirements: []string{"sys-fw-0025-v01"},
 			},
 			// Test eventlog upon normal->rec reboot.
 			{
 				Name:      "normal_rec",
-				ExtraAttr: []string{"firmware_usb"},
+				ExtraAttr: []string{"firmware_usb", "firmware_ro"},
 				Fixture:   fixture.NormalMode,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeRecovery,
@@ -123,7 +127,7 @@ func init() {
 			// Test eventlog upon rec->normal reboot.
 			{
 				Name:      "rec_normal",
-				ExtraAttr: []string{"firmware_usb"},
+				ExtraAttr: []string{"firmware_usb", "firmware_ro"},
 				Fixture:   fixture.RecModeNoServices,
 				Val: eventLogParams{
 					bootToMode:        fwCommon.BootModeNormal,
@@ -150,7 +154,8 @@ func init() {
 					},
 					prohibitedEvents: `System |Developer Mode|Recovery Mode`,
 				},
-				Timeout: 6 * time.Minute,
+				Timeout:           6 * time.Minute,
+				ExtraRequirements: []string{"sys-fw-0025-v01"},
 			},
 			// Test eventlog with hardware watchdog.
 			{
@@ -163,6 +168,7 @@ func init() {
 						{`System boot|Hardware watchdog reset`},
 					},
 				},
+				ExtraRequirements: []string{"sys-fw-0025-v01"},
 			},
 		},
 	})

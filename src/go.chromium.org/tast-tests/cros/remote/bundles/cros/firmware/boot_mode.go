@@ -78,8 +78,8 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.WarmReset,
 			},
-			ExtraAttr:         []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+			ExtraAttr:         []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
+			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 			Timeout:           60 * time.Minute,
 		}, {
 			Name:    "rec_cold",
@@ -89,8 +89,8 @@ func init() {
 				resetAfterBoot: true,
 				resetType:      firmware.ColdReset,
 			},
-			ExtraAttr:         []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2"},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+			ExtraAttr:         []string{"firmware_smoke", "firmware_usb", "firmware_bios", "firmware_level2", "firmware_ro"},
+			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 			Timeout:           60 * time.Minute,
 		}, {
 			Name:    "dev_usb_cold",
@@ -139,7 +139,7 @@ func init() {
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeDev,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr.
+			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 			Timeout:   60 * time.Minute,
 		}, {
@@ -148,7 +148,7 @@ func init() {
 			Val: bootModeTestParams{
 				bootToMode: fwCommon.BootModeRecovery,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr.
+			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 			Timeout:   60 * time.Minute,
 		}, {
@@ -158,7 +158,7 @@ func init() {
 				bootToMode:    fwCommon.BootModeDev,
 				allowGBBForce: true,
 			},
-			// TODO: When stable, change firmware_unstable to a different attr.
+			// TODO: When stable, change firmware_unstable to "firmware_bios" + "firmware_level2".
 			ExtraAttr: []string{"firmware_unstable", "firmware_usb"},
 			Timeout:   60 * time.Minute,
 		}, {

@@ -65,14 +65,14 @@ func init() {
 			Name:              "dev_rec",
 			Val:               fixtureParams{expectedMode: common.BootModeRecovery, isDevModeExpected: true},
 			Fixture:           fixture.DevRecModeNoServices,
-			ExtraAttr:         []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2"},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+			ExtraAttr:         []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2", "firmware_ro"},
+			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		}, {
 			Name:              "rec",
 			Val:               fixtureParams{expectedMode: common.BootModeRecovery},
 			Fixture:           fixture.RecModeNoServices,
-			ExtraAttr:         []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2"},
-			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+			ExtraAttr:         []string{"group:firmware", "firmware_smoke", "firmware_usb", "group:labqual", "firmware_bios", "firmware_level2", "firmware_ro"},
+			ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		}, {
 			Name:    "devusb_reinstall",
 			Val:     fixtureParams{expectedMode: common.BootModeUSBDev, leaveStatefulMarker: true},

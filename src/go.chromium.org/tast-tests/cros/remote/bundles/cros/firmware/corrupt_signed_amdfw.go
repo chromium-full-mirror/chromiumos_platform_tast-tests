@@ -20,8 +20,8 @@ func init() {
 		Desc:         "Servo based Signed AMDFW section corruption test",
 		Contacts:     []string{"chromeos-faft@google.com", "kramasub@google.com"},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3"},
-		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3", "firmware_ro"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		Timeout:      20 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"crossystem", "flashrom", "amd_cpu"},

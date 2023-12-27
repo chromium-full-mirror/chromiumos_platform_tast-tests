@@ -35,8 +35,8 @@ func init() {
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
-				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level3", "firmware_ro"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 			},
 		},
 	})
