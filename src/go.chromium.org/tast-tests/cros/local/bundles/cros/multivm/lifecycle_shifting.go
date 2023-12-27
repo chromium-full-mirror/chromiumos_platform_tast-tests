@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/memory/metrics"
 	"go.chromium.org/tast-tests/cros/local/multivm"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type lifecycleShiftingParam struct {
@@ -47,6 +48,9 @@ func init() {
 			Pre:               multivm.ArcStarted(),
 			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			// Arc lifecycle unit allocates on the Java heap which is limited to 512MiB.
+			// 2% * 24GiB = 492MiB, which gives room for the rest of the app.
+			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
 			ExtraData: []string{
 				memoryuser.AllocPageFilename,
 				memoryuser.JavascriptFilename,
@@ -56,6 +60,7 @@ func init() {
 			Pre:               multivm.ArcLacrosStarted(),
 			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
+			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
 			ExtraData: []string{
 				memoryuser.AllocPageFilename,
 				memoryuser.JavascriptFilename,
@@ -65,6 +70,7 @@ func init() {
 			Pre:               multivm.ArcStartedVMMMS(),
 			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
 			ExtraData: []string{
 				memoryuser.AllocPageFilename,
 				memoryuser.JavascriptFilename,
@@ -74,6 +80,7 @@ func init() {
 			Pre:               multivm.ArcLacrosStartedVMMMS(),
 			Val:               &lifecycleShiftingParam{inARC: true, inHost: true, browserType: browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
+			ExtraHardwareDeps: hwdep.D(hwdep.MaxMemory(24 * 1024)),
 			ExtraData: []string{
 				memoryuser.AllocPageFilename,
 				memoryuser.JavascriptFilename,
