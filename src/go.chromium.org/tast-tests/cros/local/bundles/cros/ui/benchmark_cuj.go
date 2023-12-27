@@ -283,7 +283,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GBWithoutCooldown",
 			},
 			{
 				Name:    "speedometer_blt_2gb",
@@ -295,7 +295,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GBWithoutCooldown",
 			},
 			{
 				Name:    "speedometer_blt_3gb",
@@ -307,7 +307,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GBWithoutCooldown",
 			},
 			{
 				Name:    "speedometer_blt_4gb",
@@ -319,7 +319,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
 			},
 			{
 				Name:    "motionmark_blt_1gb",
@@ -331,7 +331,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GBWithoutCooldown",
 			},
 			{
 				Name:    "motionmark_blt_2gb",
@@ -343,7 +343,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GBWithoutCooldown",
 			},
 			{
 				Name:    "motionmark_blt_3gb",
@@ -355,7 +355,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GBWithoutCooldown",
 			},
 			{
 				Name:    "motionmark_blt_4gb",
@@ -367,7 +367,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
 			},
 			{
 				Name:    "kraken_blt_1gb",
@@ -379,7 +379,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GBWithoutCooldown",
 			},
 			{
 				Name:    "kraken_blt_2gb",
@@ -391,7 +391,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GBWithoutCooldown",
 			},
 			{
 				Name:    "kraken_blt_3gb",
@@ -403,7 +403,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GBWithoutCooldown",
 			},
 			{
 				Name:    "kraken_blt_4gb",
@@ -415,7 +415,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
 			},
 		},
 	})

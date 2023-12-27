@@ -34,6 +34,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
+	"go.chromium.org/tast-tests/cros/local/mlbenchmark"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -341,7 +342,7 @@ func init() {
 		Contacts: []string{
 			"cwd@google.com",
 			"cros-vm-technology@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			keepState: true,
@@ -1013,7 +1014,7 @@ func init() {
 		Contacts: []string{
 			"cwd@google.com",
 			"cros-vm-technology@google.com",
-			"chromeos-perfmetrics-eng@google.com",
+			"cros-sw-perf@google.com",
 		},
 		Impl: &loggedInToCUJUserFixture{
 			bt: browser.TypeAsh,
@@ -1124,6 +1125,52 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad1GB",
+		Desc: "CUJ fixture that adds 1GB background memory load with WebRTC event logging",
+		Contacts: []string{
+			"yichenz@chromium.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:             browser.TypeAsh,
+			disableARC:     true,
+			docsBlocker:    true,
+			backgroundLoad: true,
+			memoryLoadSize: 1,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad1GBWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and adds 1GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 1,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad2GB",
 		Desc: "CUJ fixture that adds 2GB background memory load",
 		Contacts: []string{
@@ -1140,6 +1187,52 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad2GB",
+		Desc: "CUJ fixture that adds 2GB background memory load with WebRTC event logging",
+		Contacts: []string{
+			"yichenz@chromium.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:             browser.TypeAsh,
+			disableARC:     true,
+			docsBlocker:    true,
+			backgroundLoad: true,
+			memoryLoadSize: 2,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad2GBWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and adds 2GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 2,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
@@ -1164,6 +1257,52 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad3GB",
+		Desc: "CUJ fixture that adds 3GB background memory load with WebRTC event logging",
+		Contacts: []string{
+			"yichenz@chromium.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:             browser.TypeAsh,
+			disableARC:     true,
+			docsBlocker:    true,
+			backgroundLoad: true,
+			memoryLoadSize: 3,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad3GBWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and adds 3GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 3,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad4GB",
 		Desc: "CUJ fixture that adds 4GB background memory load",
 		Contacts: []string{
@@ -1180,6 +1319,115 @@ func init() {
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,
 		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad4GB",
+		Desc: "CUJ fixture that adds 4GB background memory load with WebRTC event logging",
+		Contacts: []string{
+			"yichenz@chromium.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:             browser.TypeAsh,
+			disableARC:     true,
+			docsBlocker:    true,
+			backgroundLoad: true,
+			memoryLoadSize: 4,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and adds 4GB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 4,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithMlbenchmarkDataDirectory",
+		Desc: "CUJ fixture used for UI CUJ tests with mlbenchmark data directory",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:                       browser.TypeAsh,
+			mlbenchmarkDataDirectory: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithMlbenchmarkDataDirectory",
+		Desc: "CUJ fixture with WebRTC event logging with mlbenchmark data directory",
+		Contacts: []string{
+			"yichenz@chromium.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:                       browser.TypeAsh,
+			disableARC:               true,
+			docsBlocker:              true,
+			mlbenchmarkDataDirectory: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithMlbenchmarkDataDirectoryWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown with mlbenchmark data directory",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:                       browser.TypeAsh,
+			mlbenchmarkDataDirectory: true,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
@@ -1409,6 +1657,8 @@ type loggedInToCUJUserFixture struct {
 	backgroundLoad bool
 	// memoryLoadSize specifies the size of additional memory load in gigabytes.
 	memoryLoadSize int
+	// mlbenchmarkDataDirectory describes whether to create data directory for mlbenchmark.
+	mlbenchmarkDataDirectory bool
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -1754,6 +2004,20 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}()
 	}
 
+	if f.mlbenchmarkDataDirectory {
+		go func() {
+			select {
+			case <-s.FixtContext().Done():
+				// Make sure mlbenchmark data directory is removed when fixture is done.
+				if _, err := os.Stat(mlbenchmark.DataDirectory); !os.IsNotExist(err) {
+					if err := os.RemoveAll(mlbenchmark.DataDirectory); err != nil {
+						s.Logf("Failed to clear data directory %s: %v", mlbenchmark.DataDirectory, err)
+					}
+				}
+			}
+		}()
+	}
+
 	f.cr = cr
 	f.arc = a
 	cr = nil
@@ -1861,6 +2125,17 @@ func (f *loggedInToCUJUserFixture) Reset(ctx context.Context) error {
 }
 
 func (f *loggedInToCUJUserFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.mlbenchmarkDataDirectory {
+		if _, err := os.Stat(mlbenchmark.DataDirectory); !os.IsNotExist(err) {
+			if err := os.RemoveAll(mlbenchmark.DataDirectory); err != nil {
+				s.Logf("Failed to clear data directory %s: %v", mlbenchmark.DataDirectory, err)
+			}
+		}
+		if err := os.MkdirAll(mlbenchmark.DataDirectory, 0755); err != nil {
+			s.Logf("Failed to create data directory %s: %v", mlbenchmark.DataDirectory, err)
+		}
+	}
+
 	if f.arc != nil {
 		arcLogOutDir := filepath.Join(s.OutDir(), "arc_logs")
 		if err := os.MkdirAll(arcLogOutDir, 0755); err != nil {
@@ -1900,6 +2175,14 @@ func (f *loggedInToCUJUserFixture) PreTest(ctx context.Context, s *testing.FixtT
 }
 
 func (f *loggedInToCUJUserFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if f.mlbenchmarkDataDirectory {
+		if _, err := os.Stat(mlbenchmark.DataDirectory); !os.IsNotExist(err) {
+			if err := os.RemoveAll(mlbenchmark.DataDirectory); err != nil {
+				s.Logf("Failed to clear data directory %s: %v", mlbenchmark.DataDirectory, err)
+			}
+		}
+	}
+
 	if f.logMarker != nil {
 		if err := f.logMarker.Save(filepath.Join(s.OutDir(), "chrome.log")); err != nil {
 			s.Log("Failed to store per-test log data: ", err)

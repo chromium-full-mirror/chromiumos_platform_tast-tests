@@ -350,7 +350,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad1GB",
 			},
 			{
 				Name:    "docs_blt_2gb",
@@ -368,7 +368,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad2GB",
 			},
 			{
 				Name:    "docs_blt_3gb",
@@ -386,7 +386,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad3GB",
 			},
 			{
 				Name:    "docs_blt_4gb",
@@ -404,7 +404,7 @@ func init() {
 				},
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad4GB",
 			},
 			{
 				Name:      "16p_enterprise",
