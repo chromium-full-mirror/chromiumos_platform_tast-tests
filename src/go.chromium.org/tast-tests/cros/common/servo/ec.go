@@ -192,30 +192,9 @@ func (s *Servo) ECHibernate(ctx context.Context, model string, option Hibernatio
 	}
 	switch option {
 	case "keyboard":
-		if err := func(ctx context.Context) error {
-			for _, targetKey := range []string{"<alt_l>", "<f10>", "h"} {
-				row, col, err := s.GetKeyRowCol(ctx, targetKey, model)
-				if err != nil {
-					return errors.Wrapf(err, "failed to get key %s column and row", targetKey)
-				}
-				targetKeyName := targetKey
-				targetKeyHold := fmt.Sprintf("kbpress %d %d 1", col, row)
-				targetKeyRelease := fmt.Sprintf("kbpress %d %d 0", col, row)
-				testing.ContextLogf(ctx, "Pressing and holding key %s", targetKey)
-				if err := s.RunECCommand(ctx, targetKeyHold); err != nil {
-					return errors.Wrapf(err, "failed to press and hold key %s", targetKey)
-				}
-				defer func(releaseKey, name string) error {
-					testing.ContextLogf(ctx, "Releasing key %s", name)
-					if err := s.RunECCommand(ctx, releaseKey); err != nil {
-						return errors.Wrapf(err, "failed to release key %s", releaseKey)
-					}
-					return nil
-				}(targetKeyRelease, targetKeyName)
-			}
-			return nil
-		}(ctx); err != nil {
-			return err
+		testing.ContextLog(ctx, "Pressing and holding alt+f10+h")
+		if err := s.PressKeys(ctx, []string{"<alt_l>", "<f10>", "h"}, DurTab); err != nil {
+			return errors.Wrap(err, "failed to press keys")
 		}
 	case "console":
 		if err := s.RunECCommand(ctx, "hibernate"); err != nil {
@@ -254,79 +233,6 @@ func (s *Servo) GetECChip(ctx context.Context) (string, error) {
 // Will fail if there is no chromeos EC.
 func (s *Servo) SetDUTPDDataRole(ctx context.Context, role USBCDataRole) error {
 	return s.SetString(ctx, DUTPDDataRole, string(role))
-}
-
-// GetKeyRowCol returns the key row and column for kbpress cmd
-func (s *Servo) GetKeyRowCol(ctx context.Context, key, model string) (int, int, error) {
-	keyMatrix, err := s.getKeyMatrix(ctx, model)
-	if err != nil {
-		return 0, 0, errors.Wrap(err, "failed to get ec key matrix")
-	}
-	pair, ok := keyMatrix[key]
-	if !ok {
-		return 0, 0, errors.New("failed to find key in KeyMatrix map")
-	}
-	return pair.row, pair.col, nil
-
-}
-
-// getKeyMatrix returns the ec key map based on the model name.
-func (s *Servo) getKeyMatrix(ctx context.Context, model string) (map[string]KBMatrixPair, error) {
-	nonStandardKeyMatrixMap := map[string]map[string]KBMatrixPair{
-		"mithrax":   MithraxECKeyMatrix,
-		"frostflow": FrostFlowECKeyMatrix,
-		"osiris":    OsirisECKeyMatrix,
-		"banshee":   BansheeECKeyMatrix,
-	}
-	if model == "delbin" {
-		skuID, err := s.GetSkuID(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to get SKU_ID")
-		}
-		if skuID == 65543 || skuID == 65542 {
-			nonStandardKeyMatrixMap["delbin"] = DelbinECKeyMatrix
-		}
-	}
-	matrix, ok := nonStandardKeyMatrixMap[model]
-	if !ok {
-		return BaseECKeyMatrix, nil
-	}
-	return matrix, nil
-}
-
-// ECPressKey simulates a keypress on the DUT from the servo using kbpress.
-func (s *Servo) ECPressKey(ctx context.Context, key, model string) error {
-	row, col, err := s.GetKeyRowCol(ctx, key, model)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get key %q in key matrix", key)
-	}
-	if err := s.RunECCommand(ctx, fmt.Sprintf("kbpress %d %d 1", col, row)); err != nil {
-		return errors.Wrapf(err, "failed to press key %q", key)
-	}
-	if err := s.RunECCommand(ctx, fmt.Sprintf("kbpress %d %d 0", col, row)); err != nil {
-		return errors.Wrapf(err, "failed to release key %q", key)
-	}
-	return nil
-}
-
-// ECPressCtrlKey simulates a CTRL-keypress on the DUT from the servo using kbpress.
-// baseKey is the key to press while Ctrl is held down, e.g. "d"
-func (s *Servo) ECPressCtrlKey(ctx context.Context, baseKey, model string) error {
-	const ctrlL = "<ctrl_l>"
-	ctrlRow, ctrlCol, err := s.GetKeyRowCol(ctx, ctrlL, model)
-	if err != nil {
-		return errors.Wrapf(err, "failed to get %s in key matrix", ctrlL)
-	}
-	if err := s.RunECCommand(ctx, fmt.Sprintf("kbpress %d %d 1", ctrlCol, ctrlRow)); err != nil {
-		return errors.Wrapf(err, "failed to press key %s>", ctrlL)
-	}
-	if err := s.ECPressKey(ctx, baseKey, model); err != nil {
-		return errors.Wrapf(err, "failed to enter key %q", baseKey)
-	}
-	if err := s.RunECCommand(ctx, fmt.Sprintf("kbpress %d %d 0", ctrlCol, ctrlRow)); err != nil {
-		return errors.Wrapf(err, "failed to release key %s", ctrlL)
-	}
-	return nil
 }
 
 // SetKBBacklight sets the DUT keyboards backlight to the given value (0 - 100).

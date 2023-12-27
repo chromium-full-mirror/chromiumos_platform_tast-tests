@@ -111,7 +111,7 @@ func (k *keyboardBypasser) BypassDevMode(ctx context.Context) error {
 func (k *keyboardBypasser) BypassAltfwMode(ctx context.Context) error {
 	h := k.helper
 	testing.ContextLog(ctx, "Pressing Ctrl-L")
-	return h.Servo.ECPressCtrlKey(ctx, "l", h.Model)
+	return h.Servo.PressKeys(ctx, []string{"<ctrl_l>", "l"}, servo.DurTab)
 }
 
 type legacyKeyboardBypasser struct {

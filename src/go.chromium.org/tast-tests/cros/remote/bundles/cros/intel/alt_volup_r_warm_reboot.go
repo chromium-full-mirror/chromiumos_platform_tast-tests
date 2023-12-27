@@ -6,12 +6,11 @@ package intel
 
 import (
 	"context"
-	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -42,31 +41,8 @@ func AltVolupRWarmReboot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login to chrome: ", err)
 	}
 
-	// Press three keys together: Alt + Vol Up + R
-	if err := func(ctx context.Context) error {
-		for _, targetKey := range []string{"<alt_l>", "<f10>", "r"} {
-			row, col, err := h.Servo.GetKeyRowCol(ctx, targetKey, h.Model)
-			if err != nil {
-				return errors.Wrapf(err, "failed to get key %s column and row", targetKey)
-			}
-			targetKeyName := targetKey
-			targetKeyHold := fmt.Sprintf("kbpress %d %d 1", col, row)
-			targetKeyRelease := fmt.Sprintf("kbpress %d %d 0", col, row)
-			s.Logf("Pressing and holding key %s", targetKey)
-			if err := h.Servo.RunECCommand(ctx, targetKeyHold); err != nil {
-				return errors.Wrapf(err, "failed to press and hold key %s", targetKey)
-			}
-
-			defer func(releaseKey, name string) error {
-				s.Logf("Releasing key %s", name)
-				if err := h.Servo.RunECCommand(ctx, releaseKey); err != nil {
-					return errors.Wrapf(err, "failed to release key %s", releaseKey)
-				}
-				return nil
-			}(targetKeyRelease, targetKeyName)
-		}
-		return nil
-	}(ctx); err != nil {
+	s.Log("Pressing and holding alt+vol up+r")
+	if err := h.Servo.PressKeys(ctx, []string{"<alt_l>", "<f10>", "r"}, servo.DurTab); err != nil {
 		s.Fatal("Failed to press keys: ", err)
 	}
 
