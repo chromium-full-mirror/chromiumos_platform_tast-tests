@@ -92,9 +92,9 @@ func (as *Asphalt8) EnterGameScene(ctx context.Context) error {
 		// Wait up to 2s for the 'MINI-GAME' button.
 		uiauto.NamedAction("wait 'MINI-GAME' button", uiauto.Sleep(2*time.Second)),
 		uiauto.NamedAction("press enter to enter the game scene", kb.AccelAction("Enter")),
-		// On low-end devices, wait up to 2 minutes for entering the game scene.
+		// On low-end devices, wait up to 3 minutes for entering the game scene.
 		uiauto.NamedAction("wait entering the game scene",
-			ud.WithTimeout(2*time.Minute).WaitUntilExists(gameScene)),
+			ud.WithTimeout(3*time.Minute).WaitUntilExists(gameScene)),
 	)(ctx)
 }
 
