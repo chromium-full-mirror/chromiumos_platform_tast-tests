@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -52,8 +53,9 @@ func init() {
 		}, {
 			Name:    "dev",
 			Fixture: fixture.DevModeGBB,
-		},
-		},
+			// On elm, the event log doesn't contain the correct message.
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm")),
+		}},
 	})
 }
 
