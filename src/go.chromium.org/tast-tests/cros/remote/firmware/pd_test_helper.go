@@ -132,9 +132,16 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 		return errors.Wrap(err, "timed out waiting for servo DUT port to source power")
 	}
 
-	if err := h.Servo.RequireDUTPDInfo(ctx); err != nil {
-		return errors.Wrap(err, "RequireDUTPDInfo failed")
+	// Sometimes RequireDUTPDInfo catches a port in a transitional state before it becomes sink- or source-ready. Allow
+	// retrying this step if it doesn't succeed initially.
+	if err := testing.Poll(
+		ctx,
+		h.Servo.RequireDUTPDInfo,
+		&testing.PollOptions{Timeout: 30 * time.Second, Interval: 10 * time.Second},
+	); err != nil {
+		return errors.Wrap(err, "could not find active port after multiple attempts")
 	}
+
 	if requiredPort != nil && h.Servo.DUTPDPort() != *requiredPort {
 		return errors.Errorf("Incorrect PD port. Test wants port %d, got %d", *requiredPort, h.Servo.DUTPDPort())
 	}
