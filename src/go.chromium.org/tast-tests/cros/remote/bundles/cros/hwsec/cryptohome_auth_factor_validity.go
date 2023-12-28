@@ -9,6 +9,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/storage/files"
@@ -291,7 +292,6 @@ func testUpdateFactor(ctx context.Context, client *hwsec.CryptohomeClient, hf *f
 		if err := client.UpdatePasswordAuthFactor(
 			ctx, authSessionID,
 			/*label=*/ util.Password1Label,
-			/*newKeyLabel=*/ util.Password1Label,
 			/*password=*/ util.FirstChangedPassword); err != nil {
 			return errors.Wrap(err, "failed to update auth factor")
 		}
@@ -334,7 +334,6 @@ func testUpdateFactor(ctx context.Context, client *hwsec.CryptohomeClient, hf *f
 		if err := client.UpdatePasswordAuthFactor(
 			ctx, authSessionID,
 			/*label=*/ util.Password1Label,
-			/*newKeyLabel=*/ util.Password1Label,
 			/*password=*/ util.FirstPassword1); err != nil {
 			return errors.Wrap(err, "failed to update auth factor")
 		}

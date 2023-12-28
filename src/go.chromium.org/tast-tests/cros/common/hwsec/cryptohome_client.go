@@ -1061,8 +1061,8 @@ func (u *CryptohomeClient) AddSmartCardAuthFactor(ctx context.Context, authSessi
 }
 
 // UpdatePasswordAuthFactor creates an auth factor for the user with given password.
-func (u *CryptohomeClient) UpdatePasswordAuthFactor(ctx context.Context, authSessionID, label, newKeyLabel, password string) error {
-	_, err := u.binary.updatePasswordAuthFactor(ctx, authSessionID, label, newKeyLabel, password)
+func (u *CryptohomeClient) UpdatePasswordAuthFactor(ctx context.Context, authSessionID, label, password string) error {
+	_, err := u.binary.updatePasswordAuthFactor(ctx, authSessionID, label, password)
 	return err
 }
 

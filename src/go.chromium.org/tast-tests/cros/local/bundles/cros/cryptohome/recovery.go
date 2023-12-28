@@ -140,7 +140,7 @@ func Recovery(ctx context.Context, s *testing.State) {
 		}
 
 		// Update the password and pin auth factors.
-		if err := client.UpdatePasswordAuthFactor(ctx, authSessionID, passwordLabel, passwordLabel, userNewPassword); err != nil {
+		if err := client.UpdatePasswordAuthFactor(ctx, authSessionID, passwordLabel, userNewPassword); err != nil {
 			return errors.Wrap(err, "failed to update user password after recovery")
 		}
 		if err := client.UpdatePinAuthFactor(ctx, authSessionID, pinLabel, userNewPin); err != nil {

@@ -125,7 +125,7 @@ func UpdatePassword(ctx context.Context, s *testing.State) {
 	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	// Try to update password auth factor with wrong label.
-	err = client.UpdatePasswordAuthFactor(ctx, authSessionID, wrongLabel /*label*/, wrongLabel /*newKeyLabel*/, newUserPassword)
+	err = client.UpdatePasswordAuthFactor(ctx, authSessionID, wrongLabel /*label*/, newUserPassword)
 	if err := cryptohomecommon.ExpectCryptohomeErrorCode(err, uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_KEY_NOT_FOUND); err != nil {
 		s.Fatal("Failed to get the correct error code for auth factor update: ", err)
 	}
@@ -143,7 +143,7 @@ func UpdatePassword(ctx context.Context, s *testing.State) {
 	defer client.InvalidateAuthSession(ctxForCleanUp, authSessionID)
 
 	// Update password auth factor.
-	if err := client.UpdatePasswordAuthFactor(ctx, authSessionID, passwordLabel /*label*/, passwordLabel /*newKeyLabel*/, newUserPassword); err != nil {
+	if err := client.UpdatePasswordAuthFactor(ctx, authSessionID, passwordLabel /*label*/, newUserPassword); err != nil {
 		s.Fatal("Failed to unmount vaults for re-mounting: ", err)
 	}
 

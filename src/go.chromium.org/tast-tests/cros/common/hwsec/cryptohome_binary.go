@@ -361,11 +361,10 @@ func (c *cryptohomeBinary) addSmartCardAuthFactor(ctx context.Context, authSessi
 }
 
 // updatePasswordAuthFactor calls "cryptohome --action=update_auth_factor".
-func (c *cryptohomeBinary) updatePasswordAuthFactor(ctx context.Context, authSessionID, label, newKeyLabel, password string) ([]byte, error) {
+func (c *cryptohomeBinary) updatePasswordAuthFactor(ctx context.Context, authSessionID, label, password string) ([]byte, error) {
 	args := []string{"--action=update_auth_factor",
 		"--auth_session_id=" + authSessionID,
 		"--key_label=" + label,
-		"--new_key_label=" + newKeyLabel,
 		"--password=" + password}
 	return c.call(ctx, args...)
 }

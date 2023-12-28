@@ -468,7 +468,7 @@ func testUpdateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClien
 		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, label, oldPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
-		if err := cryptohome.UpdatePasswordAuthFactor(ctx, authSessionID, label, label, changedPassword); err != nil {
+		if err := cryptohome.UpdatePasswordAuthFactor(ctx, authSessionID, label, changedPassword); err != nil {
 			return errors.Wrap(err, "failed to update user password")
 		}
 		return nil
@@ -483,7 +483,7 @@ func testUpdateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeClien
 		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authSessionID, label, changedPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate user with the new password")
 		}
-		if err := cryptohome.UpdatePasswordAuthFactor(ctx, authSessionID, label, label, oldPassword); err != nil {
+		if err := cryptohome.UpdatePasswordAuthFactor(ctx, authSessionID, label, oldPassword); err != nil {
 			return errors.Wrap(err, "failed to update user password back to the old password")
 		}
 		return nil

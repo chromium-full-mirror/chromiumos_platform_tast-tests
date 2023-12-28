@@ -156,7 +156,7 @@ func AuthSessionUnlock(ctx context.Context, s *testing.State) {
 		); err != nil {
 			return errors.Wrap(err, "unexpected AuthSession authorized intents")
 		}
-		if err := client.UpdatePasswordAuthFactor(ctx, authSessionID, passwordLabel, passwordLabel, userPasswordAfterUpdate); err != nil {
+		if err := client.UpdatePasswordAuthFactor(ctx, authSessionID, passwordLabel, userPasswordAfterUpdate); err != nil {
 			return errors.Wrap(err, "failed to update password")
 		}
 		return nil
