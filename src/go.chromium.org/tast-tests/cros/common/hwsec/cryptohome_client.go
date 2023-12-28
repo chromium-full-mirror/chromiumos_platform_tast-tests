@@ -968,6 +968,22 @@ func (u *CryptohomeClient) AuthenticateRecoveryAuthFactor(ctx context.Context, a
 	return err
 }
 
+// FetchRecoveryIDs authenticates an AuthSession with a given authSessionID via recovery auth factor.
+func (u *CryptohomeClient) FetchRecoveryIDs(ctx context.Context, username, label string) ([]string, error) {
+	binaryMsg, err := u.binary.fetchRecoveryIDs(ctx, username, label)
+
+	// Unmarshal proto first, even if there was an error.
+	reply := &uda.RecoveryExtendedInfoReply{}
+	if unmarshErr := proto.Unmarshal(binaryMsg, reply); unmarshErr != nil {
+		return nil, errors.Wrap(unmarshErr, "failed to unmarshal RecoveryExtendedInfoReply")
+	}
+	if err != nil {
+		return reply.RecoveryIds, errors.Wrap(err, "FetchRecoveryIDs failed")
+	}
+
+	return reply.RecoveryIds, nil
+}
+
 // AuthenticateSmartCardAuthFactor authenticates an AuthSession with a given authSessionID via smart card.
 func (u *CryptohomeClient) AuthenticateSmartCardAuthFactor(ctx context.Context, authSessionID, label string, authConfig *AuthConfig) (*uda.AuthenticateAuthFactorReply, error) {
 	extraFlags := authConfigToExtraFlags(authConfig)

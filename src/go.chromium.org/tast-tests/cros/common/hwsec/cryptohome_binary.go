@@ -288,6 +288,15 @@ func (c *cryptohomeBinary) authenticateRecoveryAuthFactor(ctx context.Context, a
 	return c.call(ctx, args...)
 }
 
+// fetchRecoveryIDs calls "cryptohome --action=get_recovery_ids --user=<username> --key_label=<label>".
+func (c *cryptohomeBinary) fetchRecoveryIDs(ctx context.Context, username, label string) ([]byte, error) {
+	args := []string{"--action=get_recovery_ids",
+		"--output-format=binary-protobuf",
+		"--user=" + username,
+		"--key_label=" + label}
+	return c.call(ctx, args...)
+}
+
 // authenticateSmartCardAuthFactor calls "cryptohome --action=authenticate_auth_factor --challenge_response_algo=<algorithm>".
 func (c *cryptohomeBinary) authenticateSmartCardAuthFactor(ctx context.Context, authSessionID, label string, extraFlags []string) ([]byte, error) {
 	args := []string{"--action=authenticate_auth_factor", "--output-format=binary-protobuf", "--auth_session_id=" + authSessionID, "--key_label=" + label}

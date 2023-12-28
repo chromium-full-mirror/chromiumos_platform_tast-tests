@@ -145,6 +145,14 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add a recovery auth factor: ", err)
 	}
 
+	recoveryIDs, err := client.FetchRecoveryIDs(ctx, userName, recoveryLabel)
+	if err != nil {
+		s.Fatal("Failed to get recovery ids: ", err)
+	}
+	if len(recoveryIDs) != 1 {
+		s.Fatalf("Got %v recovery IDs, expected 1", len(recoveryIDs))
+	}
+
 	// Unmount the user.
 	if err := client.UnmountAll(ctx); err != nil {
 		s.Fatal("Failed to unmount vaults for re-mounting: ", err)
@@ -161,7 +169,19 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to update recovery factor: ", err)
 	}
 
-	// TODO(b/192786922): check that recovery id was updated.
+	newRecoveryIDs, err := client.FetchRecoveryIDs(ctx, userName, recoveryLabel)
+	if err != nil {
+		s.Fatal("Failed to get recovery ids after update: ", err)
+	}
+	if len(newRecoveryIDs) != 2 {
+		s.Fatalf("Got %v recovery IDs, expected 2", len(newRecoveryIDs))
+	}
+	if newRecoveryIDs[0] == recoveryIDs[0] {
+		s.Fatalf("Recovery ID is still %s, expected changed ID", newRecoveryIDs[0])
+	}
+	if newRecoveryIDs[1] != recoveryIDs[0] {
+		s.Fatalf("Old recovery ID changed, the value was %s and now %s ", recoveryIDs[0], newRecoveryIDs[1])
+	}
 
 	// Unmount the user.
 	if err := client.UnmountAll(ctx); err != nil {
