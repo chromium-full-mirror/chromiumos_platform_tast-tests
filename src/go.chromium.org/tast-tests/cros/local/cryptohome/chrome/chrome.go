@@ -48,3 +48,27 @@ func WithMigrationPin(ctx context.Context, f func() error) error {
 	defer cr.Close(ctx)
 	return f()
 }
+
+// WithGenerateRecoverableKeyStore executes a block of code after enabling the GenerateRecoverableKeyStore feature.
+func WithGenerateRecoverableKeyStore(ctx context.Context, f func() error) error {
+	const featureName = "CrOSLateBootGenerateRecoverableKeyStore"
+	featureOption := chrome.EnableFeatures(featureName)
+	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
+	if err != nil {
+		return errors.Wrap(err, "failed to start Chrome at the login screen")
+	}
+	defer cr.Close(ctx)
+	return f()
+}
+
+// WithGenerateRecoverableKeyStoreDisabled executes a block of code after disabling the GenerateRecoverableKeyStore feature.
+func WithGenerateRecoverableKeyStoreDisabled(ctx context.Context, f func() error) error {
+	const featureName = "CrOSLateBootGenerateRecoverableKeyStore"
+	featureOption := chrome.DisableFeatures(featureName)
+	cr, err := chrome.New(ctx, chrome.DeferLogin(), featureOption, chrome.KeepState())
+	if err != nil {
+		return errors.Wrap(err, "failed to start Chrome at the login screen")
+	}
+	defer cr.Close(ctx)
+	return f()
+}

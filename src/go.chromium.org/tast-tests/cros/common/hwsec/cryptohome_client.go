@@ -1019,13 +1019,13 @@ func (u *CryptohomeClient) AuthenticateFingerprintAuthFactor(ctx context.Context
 
 // AddAuthFactor creates an auth factor for the user with given password.
 func (u *CryptohomeClient) AddAuthFactor(ctx context.Context, authSessionID, label, password string) error {
-	_, err := u.binary.addAuthFactor(ctx, authSessionID, label, password)
+	_, err := u.binary.addAuthFactor(ctx, authSessionID, label, password, nil)
 	return err
 }
 
 // AddPinAuthFactor creates a pin auth factor for the user.
 func (u *CryptohomeClient) AddPinAuthFactor(ctx context.Context, authSessionID, label, pin string) error {
-	_, err := u.binary.addPinAuthFactor(ctx, authSessionID, label, pin)
+	_, err := u.binary.addPinAuthFactor(ctx, authSessionID, label, pin, nil)
 	return err
 }
 
@@ -1060,9 +1060,9 @@ func (u *CryptohomeClient) AddSmartCardAuthFactor(ctx context.Context, authSessi
 	return err
 }
 
-// UpdatePasswordAuthFactor creates an auth factor for the user with given password.
+// UpdatePasswordAuthFactor updates an auth factor for the user with given password.
 func (u *CryptohomeClient) UpdatePasswordAuthFactor(ctx context.Context, authSessionID, label, password string) error {
-	_, err := u.binary.updatePasswordAuthFactor(ctx, authSessionID, label, password)
+	_, err := u.binary.updatePasswordAuthFactor(ctx, authSessionID, label, password, nil)
 	return err
 }
 
@@ -1086,7 +1086,7 @@ func (u *CryptohomeClient) RelabelAuthFactor(ctx context.Context, authSessionID,
 
 // ReplacePasswordAuthFactor replace an existing auth factor with a new one with given password.
 func (u *CryptohomeClient) ReplacePasswordAuthFactor(ctx context.Context, authSessionID, label, newKeyLabel, password string) error {
-	_, err := u.binary.replacePasswordAuthFactor(ctx, authSessionID, label, newKeyLabel, password)
+	_, err := u.binary.replacePasswordAuthFactor(ctx, authSessionID, label, newKeyLabel, password, nil)
 	return err
 }
 
@@ -1300,4 +1300,46 @@ func (u *CryptohomeClient) WithAuthSession(
 // CreateVaultKeyset calls "--action=create_vault_keyset".
 func (u *CryptohomeClient) CreateVaultKeyset(ctx context.Context, authSessionID, passkey, keyDataLabel string, authFactorType uda.AuthFactorType, disableKeyData bool) error {
 	return u.binary.createVaultKeyset(ctx, authSessionID, passkey, keyDataLabel, authFactorType, disableKeyData)
+}
+
+// The following methods that specify the |hashInfo| param are added because the param is rarely specified,
+// so we don't want to add it as new param of the standard functions used by many callers.
+
+// AddAuthFactorWithHashInfo creates an auth factor for the user with given password and the hash info metadata.
+func (u *CryptohomeClient) AddAuthFactorWithHashInfo(ctx context.Context, authSessionID, label, password string, hashInfo *uda.KnowledgeFactorHashInfo) error {
+	_, err := u.binary.addAuthFactor(ctx, authSessionID, label, password, hashInfo)
+	return err
+}
+
+// UpdatePasswordAuthFactorWithHashInfo updates an auth factor for the user with given password and the hash info metadata.
+func (u *CryptohomeClient) UpdatePasswordAuthFactorWithHashInfo(ctx context.Context, authSessionID, label, password string, hashInfo *uda.KnowledgeFactorHashInfo) error {
+	_, err := u.binary.updatePasswordAuthFactor(ctx, authSessionID, label, password, hashInfo)
+	return err
+}
+
+// ReplacePasswordAuthFactorWithHashInfo replace an existing auth factor with a new one with given password and the hash info metadata.
+func (u *CryptohomeClient) ReplacePasswordAuthFactorWithHashInfo(ctx context.Context, authSessionID, label, newKeyLabel, password string, hashInfo *uda.KnowledgeFactorHashInfo) error {
+	_, err := u.binary.replacePasswordAuthFactor(ctx, authSessionID, label, newKeyLabel, password, hashInfo)
+	return err
+}
+
+// AddPinAuthFactorWithHashInfo creates a pin auth factor for the user with given PIN and the hash info metadata.
+func (u *CryptohomeClient) AddPinAuthFactorWithHashInfo(ctx context.Context, authSessionID, label, pin string, hashInfo *uda.KnowledgeFactorHashInfo) error {
+	_, err := u.binary.addPinAuthFactor(ctx, authSessionID, label, pin, hashInfo)
+	return err
+}
+
+// GetRecoverableKeyStores gets the recoverable key stores of the user.
+func (u *CryptohomeClient) GetRecoverableKeyStores(ctx context.Context, username string) (*uda.GetRecoverableKeyStoresReply, error) {
+	reply := &uda.GetRecoverableKeyStoresReply{}
+
+	binaryMsg, err := u.binary.getRecoverableKeyStores(ctx, username)
+	if err != nil {
+		return reply, errors.Wrap(err, "GetRecoverableKeyStores failed")
+	}
+	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
+		return reply, errors.Wrap(err, "failed to unmarshal GetRecoverableKeyStores reply")
+	}
+
+	return reply, nil
 }

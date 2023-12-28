@@ -311,14 +311,20 @@ func (c *cryptohomeBinary) authenticateFingerprintAuthFactor(ctx context.Context
 }
 
 // addAuthFactor calls "cryptohome --action=add_auth_factor".
-func (c *cryptohomeBinary) addAuthFactor(ctx context.Context, authSessionID, label, password string) ([]byte, error) {
+func (c *cryptohomeBinary) addAuthFactor(ctx context.Context, authSessionID, label, password string, hashInfo *uda.KnowledgeFactorHashInfo) ([]byte, error) {
 	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--password=" + password}
+	if hashInfo != nil {
+		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+	}
 	return c.call(ctx, args...)
 }
 
 // addPinAuthFactor calls "cryptohome --action=add_auth_factor --pin=<pin>".
-func (c *cryptohomeBinary) addPinAuthFactor(ctx context.Context, authSessionID, label, pin string) ([]byte, error) {
+func (c *cryptohomeBinary) addPinAuthFactor(ctx context.Context, authSessionID, label, pin string, hashInfo *uda.KnowledgeFactorHashInfo) ([]byte, error) {
 	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--pin=" + pin}
+	if hashInfo != nil {
+		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+	}
 	return c.call(ctx, args...)
 }
 
@@ -361,11 +367,14 @@ func (c *cryptohomeBinary) addSmartCardAuthFactor(ctx context.Context, authSessi
 }
 
 // updatePasswordAuthFactor calls "cryptohome --action=update_auth_factor".
-func (c *cryptohomeBinary) updatePasswordAuthFactor(ctx context.Context, authSessionID, label, password string) ([]byte, error) {
+func (c *cryptohomeBinary) updatePasswordAuthFactor(ctx context.Context, authSessionID, label, password string, hashInfo *uda.KnowledgeFactorHashInfo) ([]byte, error) {
 	args := []string{"--action=update_auth_factor",
 		"--auth_session_id=" + authSessionID,
 		"--key_label=" + label,
 		"--password=" + password}
+	if hashInfo != nil {
+		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+	}
 	return c.call(ctx, args...)
 }
 
@@ -400,12 +409,15 @@ func (c *cryptohomeBinary) relabelAuthFactor(ctx context.Context, authSessionID,
 }
 
 // replacePasswordAuthFactor calls "cryptohome --action=replace_auth_factor".
-func (c *cryptohomeBinary) replacePasswordAuthFactor(ctx context.Context, authSessionID, label, newKeyLabel, password string) ([]byte, error) {
+func (c *cryptohomeBinary) replacePasswordAuthFactor(ctx context.Context, authSessionID, label, newKeyLabel, password string, hashInfo *uda.KnowledgeFactorHashInfo) ([]byte, error) {
 	args := []string{"--action=replace_auth_factor",
 		"--auth_session_id=" + authSessionID,
 		"--key_label=" + label,
 		"--new_key_label=" + newKeyLabel,
 		"--password=" + password}
+	if hashInfo != nil {
+		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+	}
 	return c.call(ctx, args...)
 }
 
@@ -516,4 +528,10 @@ func (c *cryptohomeBinary) createVaultKeyset(ctx context.Context, authSessionID,
 	}
 	_, err := c.callTestTool(ctx, args...)
 	return err
+}
+
+// getRecoverableKeyStores returns the responses by calling "cryptohome --action=get_recoverable_key_stores".
+func (c *cryptohomeBinary) getRecoverableKeyStores(ctx context.Context, username string) ([]byte, error) {
+	args := []string{"--output-format=binary-protobuf", "--action=get_recoverable_key_stores", "--user=" + username}
+	return c.call(ctx, args...)
 }
