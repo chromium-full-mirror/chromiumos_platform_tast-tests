@@ -599,8 +599,10 @@ func (tf *fixture) Reset(ctx context.Context) error {
 		return errors.Wrap(err, "failed to reset all btpeers")
 	}
 	for _, dutConfig := range tf.fv.DUTConfigs {
-		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
-			return errors.Wrapf(err, "failed to reset state of DUT %s", dutConfig.DUT.HostName())
+		if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
+			PowerOn: true,
+		}); err != nil {
+			return errors.Wrap(err, "failed to reset DUT bluetooth stack")
 		}
 		if tf.uITestingEnabled() {
 			if err := tf.ResetChromeUI(ctx, dutConfig, true); err != nil {
@@ -771,8 +773,10 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 	if _, err := dutConfig.BluetoothService.Enable(ctx, &emptypb.Empty{}); err != nil {
 		return errors.Wrapf(err, "failed to enable bluetooth on DUT with stack %q", tf.btStack)
 	}
-	if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
-		return errors.Wrapf(err, "failed to reset DUT bluetooth state with bluetooth stack %q", tf.btStack)
+	if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
+		PowerOn: true,
+	}); err != nil {
+		return errors.Wrap(err, "failed to reset DUT bluetooth stack")
 	}
 	if tf.btStack == bts.BluetoothStackType_BLUETOOTH_STACK_TYPE_BLUEZ {
 		if _, err = tf.fv.BluetoothService.SetDebugLogLevels(ctx, &bts.SetDebugLogLevelsRequest{Level: 1}); err != nil {
@@ -780,8 +784,10 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 		}
 	}
 	dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
-		if err := tf.resetDutBluetoothState(ctx, dutConfig, true); err != nil {
-			testing.ContextLogf(ctx, "WARNING: Failed to reset state of DUT %q: %v", dutConfig.DUT.HostName(), err)
+		if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
+			PowerOn: true,
+		}); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to reset bluetooth stack of DUT %q: %v", dutConfig.DUT.HostName(), err)
 		}
 		testing.ContextLog(ctx, "Disabling bluetooth on DUT")
 		if _, err := dutConfig.BluetoothService.Disable(ctx, &emptypb.Empty{}); err != nil {
@@ -951,6 +957,11 @@ func (tf *fixture) startChromeUI(ctx context.Context, dutConfig *DUTConfig) erro
 			if !dutConfig.uiEnabled {
 				return
 			}
+			if tf.fastPairEnabled {
+				if _, err := dutConfig.BluetoothUIService.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
+					testing.ContextLogf(ctx, "WARNING: Failed to remove all saved bluetooth devices via UI on DUT %q: %v", dutConfig.DUT.HostName(), err)
+				}
+			}
 			if _, err := dutConfig.ChromeService.Close(ctx, &emptypb.Empty{}); err != nil {
 				testing.ContextLogf(ctx, "WARNING: Failed to close Chrome UI with ChromeService for DUT %q: %v", dutConfig.DUT.HostName(), err)
 			}
@@ -991,6 +1002,12 @@ func (tf *fixture) ResetChromeUI(ctx context.Context, dutConfig *DUTConfig, rest
 	if err := tf.startChromeUI(ctx, dutConfig); err != nil {
 		return errors.Wrap(err, "failed to log back into chrome")
 	}
+	if tf.fastPairEnabled {
+		testing.ContextLog(ctx, "Removing all saved bluetooth devices via UI")
+		if _, err := dutConfig.BluetoothUIService.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to remove all saved bluetooth devices via UI")
+		}
+	}
 	return nil
 }
 
@@ -1015,32 +1032,6 @@ func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) err
 		logDir := filepath.Join("btsnoop", dutName)
 		if err := log.DumpCollectedLogsToFile(ctx, btmonLog, logDir, "btsnoop"); err != nil {
 			return errors.Wrapf(err, "failed to dump collected btsnoop log from %s", dutName)
-		}
-	}
-	return nil
-}
-
-// resetDutBluetoothState resets the bluetooth state of the DUT so that it is
-// ready for tests.
-func (tf *fixture) resetDutBluetoothState(ctx context.Context, dutConfig *DUTConfig, enableBluetooth bool) error {
-	dutName := dutConfig.DUT.HostName()
-	// Reset the state of the bluetooth adapter.
-	testing.ContextLogf(ctx, "Resetting and setting bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
-	if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
-		PowerOn: enableBluetooth,
-	}); err != nil {
-		return errors.Wrapf(err, "failed to reset and set bluetooth enabled to %t on DUT %s", enableBluetooth, dutName)
-	}
-
-	// Handle Fast Pair UI reset needs.
-	if tf.fastPairEnabled {
-		testing.ContextLogf(ctx, "Removing all saved bluetooth devices via UI on DUT %s", dutName)
-		if _, err := dutConfig.BluetoothUIService.RemoveAllSavedDevices(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrapf(err, "failed to remove all saved bluetooth devices via UI on DUT %s", dutName)
-		}
-		testing.ContextLogf(ctx, "Closing all UI notifications on DUT %s", dutName)
-		if _, err := dutConfig.BluetoothUIService.CloseNotifications(ctx, &emptypb.Empty{}); err != nil {
-			return errors.Wrapf(err, "failed to close all UI notifications on DUT %s", dutName)
 		}
 	}
 	return nil
