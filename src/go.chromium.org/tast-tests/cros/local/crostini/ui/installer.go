@@ -146,7 +146,7 @@ func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebia
 	}
 
 	installButton := nodewith.Name("Install").Role(role.Button)
-	installingMsg := nodewith.NameStartingWith("Installing Linux").Role(role.StaticText)
+	installingMsg := nodewith.NameStartingWith("Installing Linux…").Role(role.StaticText)
 
 	// When old linux version is being deprecated, the upgrade modal could be
 	// shown. This happens during the container start step, so find and dismiss
@@ -172,7 +172,7 @@ func (p *Installer) Install(ctx context.Context, debianVersion vm.ContainerDebia
 	}
 
 	if err := uiauto.Combine("click install and wait it to finish",
-		ui.WithInterval(time.Second).DoDefaultUntil(installButton, ui.WithTimeout(3*time.Second).WaitUntilExists(installingMsg)),
+		ui.WithTimeout(30*time.Second).DoDefaultUntil(installButton, ui.WithTimeout(2*time.Second).WaitUntilExists(installingMsg)),
 		// The installation message seems unstable, thus using WaitUntilGoneFor
 		// instead of WaitUntilGone.
 		ui.WithTimeout(installationTimeout).WaitUntilGoneFor(installingMsg, 2*time.Second),

@@ -679,6 +679,11 @@ func (f *crostiniFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 	if checkKeepState(s) && f.preData.startedOK {
 		s.Log("keepState not uninstalling Crostini and deleting image in cleanUp")
 	} else {
+		// Reserve time to unmount termina-dlc in case uninstallation fails.
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+		defer cancel()
+
 		if f.cont != nil {
 			if err := uninstallLinux(ctx, f.tconn); err != nil {
 				s.Log("Failed to uninstall Linux: ", err)
@@ -689,7 +694,7 @@ func (f *crostiniFixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 		// Unmount the VM image to prevent later tests from
 		// using it by accident. Otherwise we may have a dlc
 		// test use the component or vice versa.
-		if err := dlcutil.Uninstall(ctx, "termina-dlc"); err != nil {
+		if err := dlcutil.Uninstall(cleanupCtx, "termina-dlc"); err != nil {
 			s.Error("Failed to unmount termina-dlc: ", err)
 		}
 
