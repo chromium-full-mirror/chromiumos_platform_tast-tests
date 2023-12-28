@@ -341,6 +341,8 @@ func waitVMConciergeJobStabilized(ctx context.Context) error {
 		return nil
 	}
 	testing.ContextLogf(ctx, "Waiting %s job for %v for stabilization (b/193806814)", job, d)
+	// GoBigSleepLint: Wait until the vm_concierge job to stabilize before stopping the ui job.
+	// See b/193806814#10
 	return testing.Sleep(ctx, d)
 }
 
@@ -351,7 +353,7 @@ func DumpJobs(ctx context.Context, path string) error {
 		return err
 	}
 	defer f.Close()
-	cmd := testexec.CommandContext(ctx, "initctl", "list")
+	cmd := testexec.CommandContext(ctx, "sh", "-c", "initctl list | sort -")
 	cmd.Stdout = f
 	return cmd.Run(testexec.DumpLogOnError)
 }
