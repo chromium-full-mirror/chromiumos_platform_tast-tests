@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/play"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -526,6 +527,10 @@ func init() {
 // via a SourceBuffer (using MSE, the Media Source Extensions protocol, and a
 // DASH MPD file).
 func Play(ctx context.Context, s *testing.State) {
+	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Failed to load test expectation: ", err)
+	}
 	testOpt := s.Param().(playParams)
 
 	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
@@ -535,6 +540,8 @@ func Play(ctx context.Context, s *testing.State) {
 	defer lacros.CloseLacros(ctx, l)
 
 	if err := play.TestPlay(ctx, s, cs, cr, testOpt.fileName, testOpt.videoType, testOpt.verifyMode, testOpt.unmutePlayer); err != nil {
-		s.Fatal("TestPlay failed: ", err)
+		if expErr := expectation.ReportError("test failed: ", err); expErr != nil {
+			s.Fatal("Unexpected error: ", expErr)
+		}
 	}
 }

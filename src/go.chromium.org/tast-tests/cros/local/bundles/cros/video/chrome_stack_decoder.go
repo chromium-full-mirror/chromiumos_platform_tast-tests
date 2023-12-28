@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/graphics/expectations"
 	"go.chromium.org/tast-tests/cros/local/media/decoding"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -250,9 +251,15 @@ func init() {
 }
 
 func ChromeStackDecoder(ctx context.Context, s *testing.State) {
+	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
+	if err != nil {
+		s.Fatal("Failed to load test expectation: ", err)
+	}
 	params := s.Param().(chromeStackDecoderTestParam)
 
 	if err := decoding.RunAccelVideoTest(ctx, s.OutDir(), s.DataPath(params.dataPath), decoding.TestParams{DecoderType: decoding.VD}, params.enabledFeatures); err != nil {
-		s.Fatal("test failed: ", err)
+		if expErr := expectation.ReportError("test failed: ", err); expErr != nil {
+			s.Fatal("Unexpected error: ", expErr)
+		}
 	}
 }
