@@ -9,11 +9,12 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"go.chromium.org/tast-tests/cros/local/common"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -25,50 +26,40 @@ import (
 func init() {
 	testing.AddService(&testing.Service{
 		Register: func(srv *grpc.Server, s *testing.ServiceState) {
-			ui.RegisterAudioServiceServer(srv, &AudioService{s: s})
+			ui.RegisterAudioServiceServer(srv, &AudioService{
+				s:            s,
+				sharedObject: common.SharedObjectsForServiceSingleton,
+			})
 		},
 	})
 }
 
 // AudioService implements tast.cros.ui.AudioService.
 type AudioService struct {
-	s  *testing.ServiceState
-	cr *chrome.Chrome
+	s            *testing.ServiceState
+	sharedObject *common.SharedObjectsForService
 }
 
-// New logs into a Chrome session as a fake user. Close must be called later
-// to clean up the associated resources.
-func (as *AudioService) New(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if as.cr != nil {
-		return nil, errors.New("Chrome already available")
-	}
-
-	cr, err := chrome.New(ctx)
-	if err != nil {
-		return nil, err
-	}
-	as.cr = cr
-	return &empty.Empty{}, nil
+// New is no longer supported and will throw an error if called.
+// Deprecated: Use ChromeService.New() instead.
+func (as *AudioService) New(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, errors.New("the AudioService.New method is no longer supported, use ChromeService.New() instead")
 }
 
-// Close releases the resources obtained by New.
-func (as *AudioService) Close(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if as.cr == nil {
-		return nil, errors.New("Chrome not available")
-	}
-	err := as.cr.Close(ctx)
-	as.cr = nil
-	return &empty.Empty{}, err
+// Close is no longer supported and will throw an error if called.
+// Deprecated: Use ChromeService.Close() instead.
+func (as *AudioService) Close(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, errors.New("the AudioService.Close method is no longer supported, use ChromeService.Close() instead")
 }
 
 // OpenDirectoryAndFile performs launching filesapp and opening particular file
 // in given directory.
 func (as *AudioService) OpenDirectoryAndFile(ctx context.Context, req *ui.AudioServiceRequest) (*empty.Empty, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("Chrome not available")
 	}
 
-	tconn, err := as.cr.TestAPIConn(ctx)
+	tconn, err := as.sharedObject.Chrome.TestAPIConn(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,7 +85,7 @@ func (as *AudioService) OpenDirectoryAndFile(ctx context.Context, req *ui.AudioS
 
 // GenerateTestRawData generates test raw data file.
 func (as *AudioService) GenerateTestRawData(ctx context.Context, req *ui.AudioServiceRequest) (*empty.Empty, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("Chrome not available")
 	}
 
@@ -117,7 +108,7 @@ func (as *AudioService) GenerateTestRawData(ctx context.Context, req *ui.AudioSe
 
 // ConvertRawToWav will convert raw data file to wav file format.
 func (as *AudioService) ConvertRawToWav(ctx context.Context, req *ui.AudioServiceRequest) (*empty.Empty, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("Chrome not available")
 	}
 	rawData := audio.TestRawData{
@@ -135,7 +126,7 @@ func (as *AudioService) ConvertRawToWav(ctx context.Context, req *ui.AudioServic
 // KeyboardAccel will create keyboard event and performs keyboard
 // key press with Accel().
 func (as *AudioService) KeyboardAccel(ctx context.Context, req *ui.AudioServiceRequest) (*empty.Empty, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("Chrome not available")
 	}
 	kb, err := input.Keyboard(ctx)
@@ -168,7 +159,7 @@ func (as *AudioService) AudioCrasSelectedInputDevice(ctx context.Context, req *e
 // AudioCrasSelectedOutputDevice will return selected audio device name
 // and audio device type.
 func (as *AudioService) AudioCrasSelectedOutputDevice(ctx context.Context, req *empty.Empty) (*ui.AudioServiceResponse, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("Chrome not available")
 	}
 	// Get Current active node.
@@ -185,7 +176,7 @@ func (as *AudioService) AudioCrasSelectedOutputDevice(ctx context.Context, req *
 
 // VerifyFirstRunningDevice will check for audio routing device status.
 func (as *AudioService) VerifyFirstRunningDevice(ctx context.Context, req *ui.AudioServiceRequest) (*empty.Empty, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("Chrome not available")
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -206,7 +197,7 @@ func (as *AudioService) VerifyFirstRunningDevice(ctx context.Context, req *ui.Au
 
 // SetActiveNodeByType will set the provided audio node as Active audio node.
 func (as *AudioService) SetActiveNodeByType(ctx context.Context, req *ui.AudioServiceRequest) (*empty.Empty, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("Chrome not available")
 	}
 	var cras *audio.Cras
@@ -218,11 +209,11 @@ func (as *AudioService) SetActiveNodeByType(ctx context.Context, req *ui.AudioSe
 
 // DownloadsPath returns the path to the Downloads folder of the current user.
 func (as *AudioService) DownloadsPath(ctx context.Context, req *empty.Empty) (*ui.AudioServiceResponse, error) {
-	if as.cr == nil {
+	if as.sharedObject.Chrome == nil {
 		return nil, errors.New("chrome not available")
 	}
 
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, as.cr.NormalizedUser())
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, as.sharedObject.Chrome.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve users Downloads path")
 	}

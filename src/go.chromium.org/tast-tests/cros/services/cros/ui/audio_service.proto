@@ -10,63 +10,75 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/ui";
 
 import "google/protobuf/empty.proto";
 
-
 // AudioService provides RPC methods to run audio-related operations.
+//
+// Prior to using this service, the ChromeService should be used to start
+// the Chrome UI with ChromeService.New().
 service AudioService {
-  // New logs into a Chrome session as a fake user. Close must be called later
-  // to clean up the associated resources.
-  rpc New (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  // Deprecated: Use ChromeService.New() instead.
+  // New is no longer supported and will throw an error if called.
+  rpc New(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option deprecated = true;
+  }
 
-  // Close releases the resources obtained by New.
-  rpc Close (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  // Deprecated: Use ChromeService.Close() instead.
+  // Close is no longer supported and will throw an error if called.
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {
+    option deprecated = true;
+  }
 
-  // OpenDirectoryAndFile performs launching filesapp and opening particular file
-  // in given directory.
-  rpc OpenDirectoryAndFile (AudioServiceRequest) returns (google.protobuf.Empty) {}
+  // OpenDirectoryAndFile performs launching filesapp and opening particular
+  // file in given directory.
+  rpc OpenDirectoryAndFile(AudioServiceRequest)
+      returns (google.protobuf.Empty) {}
 
   // GenerateTestRawData generates test raw data file.
-  rpc GenerateTestRawData (AudioServiceRequest) returns (google.protobuf.Empty) {}
+  rpc GenerateTestRawData(AudioServiceRequest) returns (google.protobuf.Empty) {
+  }
 
   // ConvertRawToWav will convert raw data file to wav file format.
-  rpc ConvertRawToWav (AudioServiceRequest) returns (google.protobuf.Empty) {}
+  rpc ConvertRawToWav(AudioServiceRequest) returns (google.protobuf.Empty) {}
 
   // KeyboardAccel will create keyboard event and performs keyboard
   // key press with Accel().
-  rpc KeyboardAccel (AudioServiceRequest) returns (google.protobuf.Empty) {}
+  rpc KeyboardAccel(AudioServiceRequest) returns (google.protobuf.Empty) {}
 
   // AudioCrasSelectedInputDevice will return selected audio device name
   // and audio device type.
-  rpc AudioCrasSelectedInputDevice (google.protobuf.Empty) returns (AudioServiceResponse) {}
+  rpc AudioCrasSelectedInputDevice(google.protobuf.Empty)
+      returns (AudioServiceResponse) {}
 
   // AudioCrasSelectedOutputDevice will return selected audio device name
   // and audio device type.
-  rpc AudioCrasSelectedOutputDevice (google.protobuf.Empty) returns (AudioServiceResponse) {}
+  rpc AudioCrasSelectedOutputDevice(google.protobuf.Empty)
+      returns (AudioServiceResponse) {}
 
   // VerifyFirstRunningDevice will check for audio routing device.
-  rpc VerifyFirstRunningDevice (AudioServiceRequest) returns (google.protobuf.Empty) {}
+  rpc VerifyFirstRunningDevice(AudioServiceRequest)
+      returns (google.protobuf.Empty) {}
 
   // SetActiveNodeByType will set the provided audio node as Active audio node.
-  rpc SetActiveNodeByType(AudioServiceRequest) returns (google.protobuf.Empty) {}
+  rpc SetActiveNodeByType(AudioServiceRequest) returns (google.protobuf.Empty) {
+  }
 
   // DownloadsPath returns the path to the Downloads folder of the current user.
   rpc DownloadsPath(google.protobuf.Empty) returns (AudioServiceResponse) {}
 
   // SetWBSEnabled sets whether WBS should be enabled in the audio server
-  rpc SetWBSEnabled (AudioServiceRequest) returns (google.protobuf.Empty) {}
+  rpc SetWBSEnabled(AudioServiceRequest) returns (google.protobuf.Empty) {}
 }
 
 message AudioServiceRequest {
-  string Expr=1;
-  string DirectoryName=2;
-  string FileName=3;
-  int32 DurationInSecs=4;
-  string FilePath=5;
-  bool WBSEnabled=6;
+  string Expr = 1;
+  string DirectoryName = 2;
+  string FileName = 3;
+  int32 DurationInSecs = 4;
+  string FilePath = 5;
+  bool WBSEnabled = 6;
 }
 
 message AudioServiceResponse {
-  string DeviceName=1;
-  string DeviceType=2;
+  string DeviceName = 1;
+  string DeviceType = 2;
   string DownloadsPath = 3;
 }
-

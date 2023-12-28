@@ -164,10 +164,6 @@ type fixtureFeatures struct {
 	// true to give it enough time.
 	EnableChromeUI bool
 
-	// EnableAudioUI will enable audio service through chrome UI. EnableChromeUI and
-	// EnableAudioUI cannot be enabled at the same time.
-	EnableAudioUI bool
-
 	// BTPeerCount requires the specified amount of btpeers to exist in the
 	// testbed and connects to them during setup. A testbed can have more btpeers
 	// than the BTPeerCount, but only that many connections are configured.
@@ -508,10 +504,6 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	tf.bluetoothServicesDBusMonitors = nil
 	tf.btsnoopCollectors = nil
 
-	if tf.features.EnableChromeUI && tf.features.EnableAudioUI {
-		s.Fatal("Invalid fixture features: EnableChromeUI or EnableAudioUI may be set, but not both")
-	}
-
 	// Parse OOBE fixture var.
 	if tf.features.EnableHidScreenOnOobe {
 		signinProfileTestExtensionID, ok := s.Var(fixtureVarSigninKey)
@@ -604,7 +596,7 @@ func (tf *fixture) Reset(ctx context.Context) error {
 		}); err != nil {
 			return errors.Wrap(err, "failed to reset DUT bluetooth stack")
 		}
-		if tf.uITestingEnabled() {
+		if tf.features.EnableChromeUI {
 			if err := tf.ResetChromeUI(ctx, dutConfig, true); err != nil {
 				return errors.Wrapf(err, "failed to reset Chrome UI of DUT %s", dutConfig.DUT.HostName())
 			}
@@ -809,7 +801,7 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 			Wifi:               power.WifiMode_DISABLE_WIFI,
 			Bluetooth:          power.BluetoothMode_DO_NOT_CHANGE_BLUETOOTH,
 		}
-		if tf.uITestingEnabled() {
+		if tf.features.EnableChromeUI {
 			testing.ContextLog(ctx, "Allow UI for power measurement")
 			setupRequest.Ui = power.UIMode_DO_NOT_CHANGE_UI
 		}
@@ -890,29 +882,15 @@ func (tf *fixture) resolveChromeCredentials(ctx context.Context, s *testing.Fixt
 	}
 }
 
-// uITestingEnabled returns true if UI should be enabled for the test based
-// on its features.
-func (tf *fixture) uITestingEnabled() bool {
-	return tf.features.EnableChromeUI || tf.features.EnableAudioUI
-}
-
 func (tf *fixture) stopChromeUI(ctx context.Context, dutConfig *DUTConfig, stopUIJob bool) error {
 	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] stopChromeUI :: DUT %q :: START", dutConfig.DUT.HostName())
 	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] stopChromeUI :: DUT %q :: END", dutConfig.DUT.HostName())
 	if dutConfig.uiEnabled {
-		if tf.features.EnableChromeUI {
-			testing.ContextLog(ctx, "=== Closing ChromeService ===")
-			if _, err := dutConfig.ChromeService.Close(ctx, &empty.Empty{}); err != nil {
-				return errors.Wrap(err, "failed to call ChromeService.Close")
-			}
-			dutConfig.uiEnabled = false
-		} else if tf.features.EnableAudioUI {
-			testing.ContextLog(ctx, "=== Closing AudioService ===")
-			if _, err := dutConfig.AudioService.Close(ctx, &empty.Empty{}); err != nil {
-				return errors.Wrap(err, "failed to call ChromeService.Close")
-			}
-			dutConfig.uiEnabled = false
+		testing.ContextLog(ctx, "=== Closing ChromeService ===")
+		if _, err := dutConfig.ChromeService.Close(ctx, &empty.Empty{}); err != nil {
+			return errors.Wrap(err, "failed to call ChromeService.Close")
 		}
+		dutConfig.uiEnabled = false
 	}
 	if stopUIJob {
 		testing.ContextLog(ctx, "=== Stopping Chrome UI job ===")
@@ -967,21 +945,6 @@ func (tf *fixture) startChromeUI(ctx context.Context, dutConfig *DUTConfig) erro
 			}
 			dutConfig.uiEnabled = false
 		})
-	} else if tf.features.EnableAudioUI {
-		testing.ContextLog(ctx, "=== Starting Chrome UI with AudioService ===")
-		if _, err := dutConfig.AudioService.New(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrap(err, "failed to start Chrome UI with AudioService")
-		}
-		dutConfig.uiEnabled = true
-		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
-			if !dutConfig.uiEnabled {
-				return
-			}
-			if _, err := dutConfig.AudioService.Close(ctx, &emptypb.Empty{}); err != nil {
-				testing.ContextLogf(ctx, "WARNING: Failed to close Chrome UI with AudioService for DUT %q: %v", dutConfig.DUT.HostName(), err)
-			}
-			dutConfig.uiEnabled = false
-		})
 	} else {
 		testing.ContextLog(ctx, "Skipping start of Chrome UI as no Chrome UI fixture features are enabled for this fixture")
 	}
@@ -993,7 +956,7 @@ func (tf *fixture) startChromeUI(ctx context.Context, dutConfig *DUTConfig) erro
 func (tf *fixture) ResetChromeUI(ctx context.Context, dutConfig *DUTConfig, restartUIJob bool) error {
 	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] ResetChromeUI :: DUT %q :: START", dutConfig.DUT.HostName())
 	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] ResetChromeUI :: DUT %q :: END", dutConfig.DUT.HostName())
-	if !tf.uITestingEnabled() {
+	if !tf.features.EnableChromeUI {
 		return errors.New("the Chrome UI is not enabled for this fixture")
 	}
 	if err := tf.stopChromeUI(ctx, dutConfig, restartUIJob); err != nil {

@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
@@ -36,7 +34,7 @@ func init() {
 		Desc:         "Verifies USB device functionality before and after cold boot",
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
-		ServiceDeps:  []string{"tast.cros.ui.AudioService"},
+		ServiceDeps:  []string{"tast.cros.ui.AudioService", "tast.cros.browser.ChromeService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},
 		Vars:         []string{"power.USB2", "power.USB3"},
@@ -126,8 +124,8 @@ func USBDeviceFunctionality(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 		}
-		audioService := ui.NewAudioServiceClient(cl.Conn)
-		if _, err := audioService.New(ctx, &empty.Empty{}); err != nil {
+		chromeService := ui.NewChromeServiceClient(cl.Conn)
+		if _, err := chromeService.New(ctx, &ui.NewRequest{}); err != nil {
 			s.Fatal("Failed to login Chrome: ", err)
 		}
 		return cl, nil

@@ -136,8 +136,7 @@ func init() {
 			"chromeos-bt-team@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
-			EnableChromeUI: false,
-			EnableAudioUI:  true,
+			EnableChromeUI: true,
 			BTPeerCount:    1,
 			FlossEnabled:   true,
 			PowerEnabled:   true,
@@ -145,8 +144,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{
@@ -167,8 +166,7 @@ func init() {
 			"chromeos-bt-team@google.com",
 		},
 		Impl: newFixture(&fixtureFeatures{
-			EnableChromeUI: false,
-			EnableAudioUI:  true,
+			EnableChromeUI: true,
 			BTPeerCount:    1,
 			FlossEnabled:   false,
 			PowerEnabled:   true,
@@ -176,8 +174,8 @@ func init() {
 		Vars: []string{
 			fixtureVarBTPeers,
 		},
-		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout,
-		ResetTimeout:    resetTimeout + btpeerResetBuffer,
+		SetUpTimeout:    setUpTimeout + btpeerSetUpBuffer + BluetoothCooldownTimeout + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
 		TearDownTimeout: tearDownTimeout + btpeerResetBuffer,
 		PostTestTimeout: postTestTimeout,
 		ServiceDeps: []string{

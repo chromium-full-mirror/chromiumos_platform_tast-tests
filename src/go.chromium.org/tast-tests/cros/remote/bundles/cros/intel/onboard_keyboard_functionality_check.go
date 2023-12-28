@@ -12,8 +12,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -40,7 +38,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.ui.AudioService"},
+		ServiceDeps:  []string{"tast.cros.ui.AudioService", "tast.cros.browser.ChromeService"},
 		Attr:         []string{"group:intel-nda"},
 		VarDeps:      []string{"servo"},
 		Params: []testing.Param{{
@@ -76,11 +74,9 @@ func OnboardKeyboardFunctionalityCheck(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
 		}
-
-		// Using audioService client to re-use audioService.KeyboardAccel().
-		audioService := ui.NewAudioServiceClient(cl.Conn)
-		if _, err := audioService.New(ctx, &empty.Empty{}); err != nil {
-			return nil, errors.Wrap(err, "failed to get audioService")
+		chromeService := ui.NewChromeServiceClient(cl.Conn)
+		if _, err := chromeService.New(ctx, &ui.NewRequest{}); err != nil {
+			return nil, errors.Wrap(err, "failed to log into Chrome")
 		}
 		return cl, nil
 	}

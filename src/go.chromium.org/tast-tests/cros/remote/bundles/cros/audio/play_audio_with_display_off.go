@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
-		ServiceDeps:  []string{"tast.cros.ui.AudioService"},
+		ServiceDeps:  []string{"tast.cros.ui.AudioService", "tast.cros.browser.ChromeService"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		Fixture:      fixture.NormalMode,
 	})
@@ -71,10 +71,16 @@ func PlayAudioWithDisplayOff(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
+	chromeService := ui.NewChromeServiceClient(cl.Conn)
 	audioService := ui.NewAudioServiceClient(cl.Conn)
-	if _, err := audioService.New(ctx, &empty.Empty{}); err != nil {
+	if _, err := chromeService.New(ctx, &ui.NewRequest{}); err != nil {
 		s.Fatal("Failed to login Chrome: ", err)
 	}
+	defer func() {
+		if _, err := chromeService.Close(ctx, &empty.Empty{}); err != nil {
+			s.Error("Failed to close ChromeService: ", err)
+		}
+	}()
 
 	initialBrightness, err := systemBrightness(ctx, dut)
 	if err != nil {
