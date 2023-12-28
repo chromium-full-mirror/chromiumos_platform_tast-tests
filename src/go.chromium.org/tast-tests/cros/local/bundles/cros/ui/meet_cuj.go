@@ -405,6 +405,22 @@ func init() {
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad4GB",
+			}, {
+				Name:    "docs_battery_saver",
+				Timeout: meetcuj.DefaultTestTimeout,
+				Val: meetcuj.MeetTest{
+					Bots:        []int{1, 3, 15},
+					Layout:      googlemeet.TiledLayout,
+					Present:     true,
+					Docs:        true,
+					Split:       true,
+					Cam:         true,
+					ZoomOut:     true,
+					Effects:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Fixture:   "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
 			},
 			{
 				Name:      "16p_enterprise",

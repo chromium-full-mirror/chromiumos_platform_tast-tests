@@ -826,6 +826,33 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
+		Desc: "CUJ test fixture with WebRTC event logging and battery saver",
+		Contacts: []string{
+			"darrenwu@google.com",
+			"chromeos-bsm@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:          browser.TypeAsh,
+			disableARC:  true,
+			docsBlocker: true,
+			enableBSM:   true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithFieldTrials",
 		Desc: "CUJ fixture with all field trials enabled",
 		Contacts: []string{
@@ -1574,6 +1601,64 @@ func ChargeBatteryCapacityBeforePowerTest(ctx context.Context) error {
 	return nil
 }
 
+func simulateARCBatterySaver(ctx context.Context, arc *arc.ARC) error {
+	// Android's battery saver won't enable when charging, so simulate being unplugged.
+	if err := arc.Command(ctx, "dumpsys", "battery", "unplug").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to unplug battery in Android")
+	}
+
+	powerd, err := power.NewPowerManager(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to Power Manager")
+	}
+
+	// Wait for battery saver to be enabled.
+	if err := testing.Poll(ctx, func(context context.Context) error {
+		state, err := powerd.GetBatterySaverModeState(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get battery saver state")
+		}
+		if state.Enabled != nil && *state.Enabled {
+			return nil
+		}
+		// Enable battery saver mode if it is not initially enabled.
+		if err := powerd.SetBatterySaverModeState(ctx, true); err != nil {
+			return errors.Wrap(err, "failed to toggle battery saver")
+		}
+		return errors.New("battery saver is not enabled")
+	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 5 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to wait for battery saver to reenable")
+	}
+	return nil
+}
+
+func setARCLowBattery(ctx context.Context, arc *arc.ARC) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := arc.Command(ctx, "settings", "get", "global", "low_power").Output(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrap(err, "failed to get Android battery saver state")
+		}
+		if string(out) == "1\n" {
+			return nil
+		}
+		// Enable the Android battery saver if it's not automatically enabled.
+		if err := arc.Command(ctx, "settings", "put", "global", "low_power", "1").Run(testexec.DumpLogOnError); err != nil {
+			return errors.Wrap(err, "failed to enable Android battery saver")
+		}
+		return errors.New("Android battery saver is not on")
+	}, &testing.PollOptions{Timeout: 8 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to ensure Android battery saver is on")
+	}
+	return nil
+}
+
+func disableARCBatterySaver(ctx context.Context, arc *arc.ARC) error {
+	if err := arc.Command(ctx, "dumpsys", "battery", "reset").Run(testexec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to reset battery unplug in Android")
+	}
+	return nil
+}
+
 type prepareCUJFixture struct {
 	skipCPUCooldown bool
 	chargeBattery   bool
@@ -1659,6 +1744,7 @@ type loggedInToCUJUserFixture struct {
 	memoryLoadSize int
 	// mlbenchmarkDataDirectory describes whether to create data directory for mlbenchmark.
 	mlbenchmarkDataDirectory bool
+	enableBSM                bool
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -1725,6 +1811,9 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 					chrome.DisablePolicyKeyVerification(),
 				)
 			}
+		}
+		if f.enableBSM {
+			opts = append(opts, chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"))
 		}
 		opts = append(opts, f.chromeExtraOpts...)
 		// Delay for logging memory metrics is set to 6 minutes. Considering most of CUJ tests
@@ -1913,6 +2002,12 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 				}
 				s.Fatal("Failed to list running packages: ", err)
 			}
+
+			if f.enableBSM {
+				if err := simulateARCBatterySaver(ctx, a); err != nil {
+					s.Fatal("Failed to simulate ARC battery saver mode: ", err)
+				}
+			}
 		}()
 	}
 
@@ -2065,6 +2160,9 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 		if err := f.arc.Close(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to close ARC connection: ", err)
 		}
+		if err := disableARCBatterySaver(ctx, f.arc); err != nil {
+			testing.ContextLog(ctx, "Failed to disable ARC battery saver: ", err)
+		}
 	}
 
 	if err := f.cr.Close(ctx); err != nil {
@@ -2146,6 +2244,11 @@ func (f *loggedInToCUJUserFixture) PreTest(ctx context.Context, s *testing.FixtT
 		}
 		if err := f.arc.ResetOutDir(ctx, arcLogOutDir); err != nil {
 			s.Log("Failed to reset outDir field of ARC object: ", err)
+		}
+		if f.enableBSM {
+			if err := setARCLowBattery(ctx, f.arc); err != nil {
+				s.Log("Failed to set to low battery in ARC")
+			}
 		}
 	}
 
@@ -2235,40 +2338,16 @@ func (f *androidBatterySaverFixture) SetUp(ctx context.Context, s *testing.FixtS
 	value := s.ParentValue().(FixtureData)
 	f.arc = value.ARC
 
-	// Android's battery saver won't enable when charging, so simulate being unplugged.
-	if err := f.arc.Command(ctx, "dumpsys", "battery", "unplug").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to unplug battery in Android: ", err)
-	}
-
-	powerd, err := power.NewPowerManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to Power Manager: ", err)
-	}
-
-	// Wait for battery saver to be enabled.
-	if err := testing.Poll(ctx, func(context context.Context) error {
-		state, err := powerd.GetBatterySaverModeState(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get battery saver state")
-		}
-		if state.Enabled != nil && *state.Enabled {
-			return nil
-		}
-		// Enable battery saver mode if it is not initially enabled.
-		if err := powerd.SetBatterySaverModeState(ctx, true); err != nil {
-			return errors.Wrap(err, "failed to toggle battery saver")
-		}
-		return errors.New("battery saver is not enabled")
-	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for battery saver to reenable: ", err)
+	if err := simulateARCBatterySaver(ctx, f.arc); err != nil {
+		s.Fatal("Failed to simulate Android battery saver: ", err)
 	}
 
 	return value
 }
 
 func (f *androidBatterySaverFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if err := f.arc.Command(ctx, "dumpsys", "battery", "reset").Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to reset battery unplug in Android: ", err)
+	if err := disableARCBatterySaver(ctx, f.arc); err != nil {
+		s.Fatal("Failed to disable Android battery saver: ", err)
 	}
 	f.arc = nil
 }
@@ -2278,22 +2357,8 @@ func (f *androidBatterySaverFixture) Reset(ctx context.Context) error {
 }
 
 func (f *androidBatterySaverFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := f.arc.Command(ctx, "settings", "get", "global", "low_power").Output(testexec.DumpLogOnError)
-		if err != nil {
-			return errors.Wrap(err, "failed to get Android battery saver state")
-		}
-		if string(out) == "1\n" {
-			return nil
-		}
-		// Enable the Android battery saver if it's not automatically enabled.
-		s.Log("Enable Android battery saver")
-		if err := f.arc.Command(ctx, "settings", "put", "global", "low_power", "1").Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to enable Android battery saver")
-		}
-		return errors.New("Android battery saver is not on")
-	}, &testing.PollOptions{Timeout: 8 * time.Second}); err != nil {
-		s.Fatal("Failed to ensure Android battery saver is on: ", err)
+	if err := setARCLowBattery(ctx, f.arc); err != nil {
+		s.Fatal("Failed to set ARC low battery: ", err)
 	}
 }
 
