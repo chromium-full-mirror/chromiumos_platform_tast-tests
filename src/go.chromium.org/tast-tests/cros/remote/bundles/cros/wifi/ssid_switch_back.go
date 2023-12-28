@@ -36,6 +36,15 @@ func init() {
 }
 
 func SSIDSwitchBack(ctx context.Context, s *testing.State) {
+	// The test verifies that the DUT can rejoin a previously connected AP when it loses connectivity to its current AP by
+	// using the following steps:
+	// 1- Connect the DUT to AP-1.
+	// 2- Deconfigure AP-1 and wait for the AP disconnection event.
+	// 3- Repeat steps 1 and 2 with AP-2 using a different SSID.
+	// 4- Respawn AP-1.
+	// 5- Wait for DUT to reconnect to AP-1.
+	// 6- Verify connection.
+
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	// We might respawn APs with the same options. Generate BSSIDs
