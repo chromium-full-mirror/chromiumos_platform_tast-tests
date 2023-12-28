@@ -35,6 +35,10 @@ func (c *cryptohomeBinary) call(ctx context.Context, args ...string) ([]byte, er
 	return c.runner.Run(ctx, "cryptohome", args...)
 }
 
+func (c *cryptohomeBinary) callTestTool(ctx context.Context, args ...string) ([]byte, error) {
+	return c.runner.Run(ctx, "cryptohome-test-tool", args...)
+}
+
 func (c *cryptohomeBinary) tempFile(ctx context.Context, prefix string) (string, error) {
 	out, err := c.runner.Run(ctx, "mktemp", "/tmp/"+prefix+".XXXXX")
 	if err != nil {
@@ -478,4 +482,28 @@ func (c *cryptohomeBinary) prepareThenAddFpAuthFactor(ctx context.Context, authS
 func (c *cryptohomeBinary) prepareThenAuthFpAuthFactor(ctx context.Context, authSessionID string, labels []string) ([]byte, error) {
 	args := []string{"--action=prepare_and_authenticate_auth_factor", "--fingerprint", "--auth_session_id=" + authSessionID, "--key_labels=" + strings.Join(labels, ",")}
 	return c.call(ctx, args...)
+}
+
+// createVaultKeyset calls "--action=create_vault_keyset".
+func (c *cryptohomeBinary) createVaultKeyset(ctx context.Context, authSessionID, passkey, keyDataLabel string, authFactorType uda.AuthFactorType, disableKeyData bool) error {
+	args := []string{
+		"--action=create_vault_keyset",
+		"--auth_session_id=" + authSessionID,
+		"--passkey=" + passkey,
+		"--key_data_label=" + keyDataLabel,
+	}
+	if disableKeyData {
+		args = append(args, "--disable_key_data=true")
+	}
+	switch authFactorType {
+	case uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD:
+		args = append(args, "--auth_factor_type=password")
+	case uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN:
+		args = append(args, "--auth_factor_type=pin")
+	case uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK:
+		args = append(args, "--use_public_mount_salt=true",
+			"--auth_factor_type=kiosk")
+	}
+	_, err := c.callTestTool(ctx, args...)
+	return err
 }

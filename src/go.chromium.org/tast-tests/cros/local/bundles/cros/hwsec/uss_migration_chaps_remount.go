@@ -83,13 +83,7 @@ func UssMigrationChapsRemount(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to remove old vault for preparation: ", err)
 	}
 
-	// Create a new user when USS is disabled, and create Chaps keys.
-
-	cleanupUSSDisabled, err := helper.DisableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Failed to disable UserSecretStash: ", err)
-	}
-	defer cleanupUSSDisabled(ctxForCleanup)
+	// Create a new user with Vault Keyset, and create Chaps keys.
 
 	pkcs11Util, err := pkcs11.NewChaps(ctx, cmdRunner, client)
 	if err != nil {
@@ -113,7 +107,7 @@ func UssMigrationChapsRemount(ctx context.Context, s *testing.State) {
 	defer pkcs11test.CleanupScratchpad(ctx, cmdRunner, scratchpadPath)
 
 	// Create the various keys.
-	keys, err := util.CreateKeysForTesting(ctx, cmdRunner, pkcs11Util, client, scratchpadPath, util.RSAKey, s.Param().(bool))
+	keys, err := util.CreateKeysForTestingUsingVaultKeyset(ctx, cmdRunner, pkcs11Util, client, scratchpadPath, util.RSAKey, s.Param().(bool))
 	if err != nil {
 		s.Fatal("Failed to create keys for testing: ", err)
 	}
@@ -139,13 +133,7 @@ func UssMigrationChapsRemount(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to unmount vault: ", err)
 	}
 
-	// Enable USS and USS migration and test that Chaps function correctly after migration.
-
-	cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-	}
-	defer cleanupUSSExperiment(ctxForCleanup)
+	// Test that Chaps function correctly after migration.
 
 	if err := client.WithAuthSession(ctx, util.FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		// Authenticate with correct password and migrate backing store to USS.

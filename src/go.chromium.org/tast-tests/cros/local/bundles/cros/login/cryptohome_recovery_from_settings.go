@@ -61,16 +61,6 @@ func CryptohomeRecoveryFromSettings(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	// Enable the UserSecretStash experiment.
-	cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-	}
-	defer cleanupUSSExperiment(cleanupCtx)
 
 	// Log in and log out to create a user pod on the login screen.
 	func() {

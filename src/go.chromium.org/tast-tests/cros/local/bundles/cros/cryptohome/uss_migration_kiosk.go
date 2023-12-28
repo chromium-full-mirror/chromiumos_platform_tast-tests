@@ -10,7 +10,6 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
-	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -79,10 +78,6 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
-	}
 
 	// Wait for cryptohomed to become available if needed.
 	if err := cryptohome.CheckService(ctx); err != nil {
@@ -113,7 +108,7 @@ func UssMigrationKiosk(ctx context.Context, s *testing.State) {
 		}
 		// In the typed setup, create a modern kiosk VK using the standard auth factor API.
 		// In the legacy setup, create a keydata-less credential with no identifying info.
-		if err := testTool.CreateVaultKeyset(ctx, authSessionID, cryptohome.KioskUser /*keyDataLabel=*/, creationLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK, userParam.testLegacyKiosk); err != nil {
+		if err := client.CreateVaultKeyset(ctx, authSessionID, cryptohome.KioskUser /*keyDataLabel=*/, creationLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK, userParam.testLegacyKiosk); err != nil {
 			return errors.Wrap(err, "failed to create VaultKeyset")
 		}
 

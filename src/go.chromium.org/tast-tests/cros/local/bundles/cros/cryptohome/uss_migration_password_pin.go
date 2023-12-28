@@ -10,7 +10,6 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
-	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -60,20 +59,10 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
 
 	// Wait for cryptohomed to become available if needed.
 	if err := cryptohome.CheckService(ctx); err != nil {
 		s.Fatal("Failed to ensure cryptohomed: ", err)
-	}
-
-	// Setup the recovery test tool and fakes.
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
 
 	// Clean up obsolete state, in case there's any.
@@ -97,7 +86,7 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 			}
 			defer client.Unmount(ctxForCleanup, userName)
 			// Add password AuthFactor.
-			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+			if err := client.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
 				return errors.Wrap(err, "failed to create password AuthFactor")
 			}
 			// Check that the password VaultKeyset file is created.
@@ -105,7 +94,7 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to check password VaultKeyset file")
 			}
 			// Add PIN AuthFactor.
-			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
+			if err := client.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
 				return errors.Wrap(err, "failed to create password AuthFactor")
 			}
 			// Check that the PIN VaultKeyset file is created.
@@ -132,18 +121,11 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 
 	// Enable USS and USS migration for the second phase of the test.
 
-	// Enable UserSecretStash.
-	cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-	}
-	defer cleanupUSSExperiment(ctxForCleanup)
-
 	// 2.1. Test password migration.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
 		// Try authenticate with wrong password.
-		_, err = client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, wrongPassword)
+		_, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabel, wrongPassword)
 		if err == nil {
 			return errors.Wrap(err, "AuthenticateAuthFactor succeeded with wrong password, should have failed")
 		}
@@ -187,6 +169,7 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 
 		// Try authenticate with wrong PIN 6 times to lock out the PIN.
 		replyError := &uda.AuthenticateAuthFactorReply{}
+		var err error
 		for i := 0; i < numberOfWrongAttemptToLock; i++ {
 			replyError, err = client.AuthenticatePinAuthFactor(ctx, authSessionID, pinLabel, wrongPin)
 			if err == nil {
@@ -223,7 +206,7 @@ func UssMigrationPasswordPin(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "authenticateAuthFactor succeeded with wrong PIN, should have failed")
 		}
 		// Check that the PIN AuthFactor file doesn't exist; PIN is not migrated.
-		err = cryptohome.CheckKeyBackingStoreExists(ctx, pinAuthFactorFile, userName)
+		err := cryptohome.CheckKeyBackingStoreExists(ctx, pinAuthFactorFile, userName)
 		if err == nil {
 			return errors.Wrap(err, "PIN AuthFactor file shouldn't have created, but exists")
 		}

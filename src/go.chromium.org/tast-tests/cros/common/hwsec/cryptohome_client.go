@@ -1280,3 +1280,8 @@ func (u *CryptohomeClient) WithAuthSession(
 	defer u.InvalidateAuthSession(ctx, authSessionID)
 	return f(authSessionID)
 }
+
+// CreateVaultKeyset calls "--action=create_vault_keyset".
+func (u *CryptohomeClient) CreateVaultKeyset(ctx context.Context, authSessionID, passkey, keyDataLabel string, authFactorType uda.AuthFactorType, disableKeyData bool) error {
+	return u.binary.createVaultKeyset(ctx, authSessionID, passkey, keyDataLabel, authFactorType, disableKeyData)
+}

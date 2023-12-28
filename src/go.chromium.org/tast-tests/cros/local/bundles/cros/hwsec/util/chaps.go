@@ -10,6 +10,8 @@ import (
 	"os"
 	"path"
 
+	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast/core/errors"
@@ -119,9 +121,41 @@ func createKeysForTestingForUser(ctx context.Context, username string, pkcs11Uti
 // scratchpadPath is a temporary location allocated by the test to place materials related to the keys.
 // Note that a user may be created and its vault mounted in this method. Pass in RSAKey or ECKey for keyType.
 func CreateKeysForTesting(ctx context.Context, r hwsec.CmdRunner, pkcs11Util *pkcs11.Chaps, cryptohome *hwsec.CryptohomeClient, scratchpadPath string, keyType KeyType, checkSoftwareBacked bool) (keys []*pkcs11.KeyInfo, retErr error) {
+	return doCreateKeysForTesting(ctx, r, pkcs11Util, cryptohome, scratchpadPath, keyType, checkSoftwareBacked, false)
+}
+
+// CreateKeysForTestingUsingVaultKeyset creates the set of keys that we want to cover in our tests using VaultKeyset instead of USS.
+// scratchpadPath is a temporary location allocated by the test to place materials related to the keys.
+// Note that a user may be created and its vault mounted in this method. Pass in RSAKey or ECKey for keyType.
+func CreateKeysForTestingUsingVaultKeyset(ctx context.Context, r hwsec.CmdRunner, pkcs11Util *pkcs11.Chaps, cryptohome *hwsec.CryptohomeClient, scratchpadPath string, keyType KeyType, checkSoftwareBacked bool) (keys []*pkcs11.KeyInfo, retErr error) {
+	return doCreateKeysForTesting(ctx, r, pkcs11Util, cryptohome, scratchpadPath, keyType, checkSoftwareBacked, true)
+}
+
+func doCreateKeysForTesting(ctx context.Context, r hwsec.CmdRunner, pkcs11Util *pkcs11.Chaps, cryptohome *hwsec.CryptohomeClient, scratchpadPath string, keyType KeyType, checkSoftwareBacked, useVaultKeyset bool) (keys []*pkcs11.KeyInfo, retErr error) {
 	// Mount the vault of the user, so that we can test user keys as well.
-	if err := cryptohome.MountVault(ctx, PasswordLabel, hwsec.NewPassAuthConfig(FirstUsername, FirstPassword), true, hwsec.NewVaultConfig()); err != nil {
-		return keys, errors.Wrap(err, "failed to mount vault")
+	if useVaultKeyset {
+		if err := cryptohome.WithAuthSession(ctx, FirstUsername, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
+			// Create user vault.
+			if err := cryptohome.CreatePersistentUser(ctx, authSessionID); err != nil {
+				return errors.Wrap(err, "failed to create user")
+			}
+			// Mount user home directories and daemon-store directories.
+			if _, err := cryptohome.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
+				return errors.Wrap(err, "failed to mount user profile after creation")
+			}
+			// Add password AuthFactor.
+			if err := cryptohome.CreateVaultKeyset(ctx, authSessionID, FirstPassword, PasswordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, false); err != nil {
+				cryptohome.Unmount(ctx, FirstUsername)
+				return errors.Wrap(err, "failed to create password AuthFactor")
+			}
+			return nil
+		}); err != nil {
+			return keys, errors.Wrap(err, "failed to mount with vault keyset")
+		}
+	} else {
+		if err := cryptohome.MountVault(ctx, PasswordLabel, hwsec.NewPassAuthConfig(FirstUsername, FirstPassword), true, hwsec.NewVaultConfig()); err != nil {
+			return keys, errors.Wrap(err, "failed to mount vault")
+		}
 	}
 	defer func() {
 		// If this method failed, we'll need to cleanup the vault.

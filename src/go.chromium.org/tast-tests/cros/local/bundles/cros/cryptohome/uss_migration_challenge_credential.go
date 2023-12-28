@@ -121,10 +121,6 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
 	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
@@ -188,12 +184,6 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 	// 2. Enable USS and USS migration for the second phase of the test. Test
 	// that only successful authentication migrates the smartcard factor.
 	if err := func() error {
-		cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to enable the UserSecretStash experiment")
-		}
-		defer cleanupUSSExperiment(ctxForCleanup)
-
 		if err := client.WithAuthSession(ctx, testUser, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 
 			// Authenticate with smartcard and migrate backing store to USS.

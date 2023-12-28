@@ -10,7 +10,6 @@ import (
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
-	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
@@ -60,16 +59,6 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-
-	// Setup the recovery test tool and fakes.
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
-	}
 
 	// Wait for cryptohomed to become available if needed.
 	if err := cryptohome.CheckService(ctx); err != nil {
@@ -101,7 +90,7 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 			defer client.Unmount(ctxForCleanup, userName)
 
 			// Add password VaultKeyset.
-			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+			if err := client.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
 				return errors.Wrap(err, "failed to add password VaultKeyset")
 			}
 
@@ -111,7 +100,7 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 			}
 
 			// Add PIN VaultKeyset.
-			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
+			if err := client.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
 				return errors.Wrap(err, "failed to add pin VaultKeyset")
 			}
 
@@ -129,13 +118,6 @@ func UssMigrationUpdateAuthFactor(ctx context.Context, s *testing.State) {
 	}
 	// Cleanup user vault before UssMigrationUpdateAuthFactor exits.
 	defer client.RemoveVault(ctxForCleanup, userName)
-
-	// Enable USS and USS migration for this second phase of the test.
-	cleanupUSSExperiment, err := helper.EnableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-	}
-	defer cleanupUSSExperiment(ctxForCleanup)
 
 	// 2. Test that updating a PIN migrates the PIN factor to USS.
 

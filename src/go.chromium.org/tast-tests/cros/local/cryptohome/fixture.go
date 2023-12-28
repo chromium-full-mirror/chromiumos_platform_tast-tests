@@ -9,8 +9,6 @@ import (
 	"math/rand"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/hwsec"
-	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,14 +38,12 @@ func init() {
 }
 
 type fixtureImpl struct {
-	testUserName   string
-	ussFlagCleanup hwsec.CleanupFunc
+	testUserName string
 }
 
 // AuthSessionFixture provides data on how the session has been configured by the fixture.
 type AuthSessionFixture struct {
 	TestUserName string
-	UssEnabled   bool
 }
 
 func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -65,31 +61,14 @@ func (f *fixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) interface
 		s.Fatal("Failed to remove old test user vault: ", err)
 	}
 
-	// Enable the UserSecretStash experiment for the duration of the test by
-	// creating a flag file that's checked by cryptohomed.
-	// A cleanup routine is returned by the helper function. We will run it
-	// when tearing down the test environment.
-	helper, err := hwseclocal.NewHelper(hwseclocal.NewCmdRunner())
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
-	f.ussFlagCleanup, err = helper.EnableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Failed to enable the UserSecretStash experiment: ", err)
-	}
 	return &AuthSessionFixture{
 		TestUserName: testUserName,
-		UssEnabled:   true,
 	}
 }
 
 func (f *fixtureImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	if err := UnmountAll(ctx); err != nil {
 		s.Error("Failed to unmount all: ", err)
-	}
-	err := f.ussFlagCleanup(ctx)
-	if err != nil {
-		s.Error("Failed to clean up the USS flag: ", err)
 	}
 }
 

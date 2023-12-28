@@ -10,7 +10,7 @@ import (
 	"time"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
-	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hwsec/util"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
@@ -42,11 +42,6 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwsecremote.NewCmdRunner(s.DUT())
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
-	}
-
 	helper, err := hwsecremote.NewHelper(cmdRunner, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
@@ -80,7 +75,7 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to prepare new persistent vault")
 		}
 		// Add password VaultKeyset.
-		if err := testTool.CreateVaultKeyset(ctx, authSessionID, util.FirstPassword1 /*keyDataLabel=*/, util.Password1Label, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+		if err := client.CreateVaultKeyset(ctx, authSessionID, util.FirstPassword1 /*keyDataLabel=*/, util.Password1Label, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
 			return errors.Wrap(err, "failed to add password VaultKeyset")
 		}
 
@@ -150,7 +145,7 @@ func VerifyUnusableVaultBehaviour(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to create persistent user")
 		}
 		// Add password VaultKeyset.
-		if err := testTool.CreateVaultKeyset(ctx, authSessionID, util.FirstPassword1 /*keyDataLabel=*/, util.Password1Label, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+		if err := client.CreateVaultKeyset(ctx, authSessionID, util.FirstPassword1 /*keyDataLabel=*/, util.Password1Label, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
 			return errors.Wrap(err, "failed to add password VaultKeyset")
 		}
 

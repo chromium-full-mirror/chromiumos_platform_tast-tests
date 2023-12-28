@@ -59,10 +59,6 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	helper, err := hwseclocal.NewHelper(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to create hwsec local helper: ", err)
-	}
 
 	// Clean up obsolete state, in case there's any.
 	if err := client.UnmountAll(ctx); err != nil {
@@ -99,10 +95,10 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 			if _, err := client.PreparePersistentVault(ctx, authSessionID /*ecryptfs=*/, false); err != nil {
 				return errors.Wrap(err, "failed to prepare new persistent vault")
 			}
-			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
+			if err := client.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, passwordLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD /*disableKeyData=*/, false); err != nil {
 				return errors.Wrap(err, "failed to create password VaultKeyset")
 			}
-			if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
+			if err := client.CreateVaultKeyset(ctx, authSessionID, userPin /*keyDataLabel=*/, pinLabel, uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN /*disableKeyData=*/, false); err != nil {
 				return errors.Wrap(err, "failed to create pin VaultKeyset")
 			}
 
@@ -139,13 +135,6 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 		s.Fatal("Setup while USS migration was disabled failed: ", err)
 	}
 	defer cryptohome.RemoveVault(ctxForCleanUp, userName)
-
-	// Explicitly switch cryptohome into USS mode.
-	enableUssCleanup, err := helper.EnableUserSecretStash(ctx)
-	if err != nil {
-		s.Fatal("Unable to enable USS after creating credentials: ", err)
-	}
-	defer enableUssCleanup(ctxForCleanUp)
 
 	// Enable migration to verify the migration process.
 	if err := func() error {

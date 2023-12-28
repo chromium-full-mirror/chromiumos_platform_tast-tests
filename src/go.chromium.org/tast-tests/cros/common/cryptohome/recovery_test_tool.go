@@ -15,8 +15,6 @@ import (
 	"os"
 	"path/filepath"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
-
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -220,30 +218,6 @@ func (c *RecoveryTestTool) CreateRecoveryRequest(ctx context.Context) error {
 			c.getFileParam("gaia_rapt_in_file", customRAPTFile),
 			c.getFileParam("epoch_response_in_file", customEpochResponseFile),
 		)
-	}
-	_, err := c.call(ctx, args...)
-	return err
-}
-
-// CreateVaultKeyset calls "--action=create_vault_keyset".
-func (c *RecoveryTestTool) CreateVaultKeyset(ctx context.Context, authSessionID, passkey, keyDataLabel string, authFactorType uda.AuthFactorType, disableKeyData bool) error {
-	args := []string{
-		"--action=create_vault_keyset",
-		"--auth_session_id=" + authSessionID,
-		"--passkey=" + passkey,
-		"--key_data_label=" + keyDataLabel,
-	}
-	if disableKeyData {
-		args = append(args, "--disable_key_data=true")
-	}
-	switch authFactorType {
-	case uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD:
-		args = append(args, "--auth_factor_type=password")
-	case uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN:
-		args = append(args, "--auth_factor_type=pin")
-	case uda.AuthFactorType_AUTH_FACTOR_TYPE_KIOSK:
-		args = append(args, "--use_public_mount_salt=true",
-			"--auth_factor_type=kiosk")
 	}
 	_, err := c.call(ctx, args...)
 	return err

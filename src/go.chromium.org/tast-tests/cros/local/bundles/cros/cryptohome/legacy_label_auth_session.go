@@ -60,10 +60,6 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	cmdRunner := hwseclocal.NewCmdRunner()
-	testTool, err := cryptocommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
-	if err != nil {
-		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
-	}
 
 	// Ensure cryptohomed is started and wait for it to be available.
 	if err := cryptohome.CheckService(ctx); err != nil {
@@ -118,7 +114,7 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 
 		// Create persistent user with a vault keyset that has an empty label.
 		disableKeyData := s.Param().(testParam).disableKeyData
-		if err := testTool.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, "", uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, disableKeyData); err != nil {
+		if err := client.CreateVaultKeyset(ctx, authSessionID, userPassword /*keyDataLabel=*/, "", uda.AuthFactorType_AUTH_FACTOR_TYPE_PASSWORD, disableKeyData); err != nil {
 			return errors.Wrap(err, "failed to create VaultKeyset")
 		}
 
@@ -138,14 +134,14 @@ func LegacyLabelAuthSession(ctx context.Context, s *testing.State) {
 	// Verify authentication using the new APIs.
 	if err := client.WithAuthSession(ctx, userName, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authSessionID string) error {
 		// Verify authenticate fails if no or incorrect label is passed.
-		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, "" /*keyLabel*/, userPassword); err == nil {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, "" /*keyLabel*/, userPassword); err == nil {
 			return errors.Wrap(err, "authentication with empty label succeeded unexpectedly")
 		}
-		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, wrongKeyLabel, userPassword); err == nil {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, wrongKeyLabel, userPassword); err == nil {
 			return errors.Wrap(err, "authentication with incorrect label succeeded unexpectedly")
 		}
 		// Verify authentication succeeds if the legacy label is explicitly passed.
-		if _, err = client.AuthenticateAuthFactor(ctx, authSessionID, legacyKeyLabel, userPassword); err != nil {
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, legacyKeyLabel, userPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		// Verify mounting succeeds.
