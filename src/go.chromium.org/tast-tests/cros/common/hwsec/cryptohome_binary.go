@@ -341,7 +341,8 @@ func (c *cryptohomeBinary) addRecoveryAuthFactor(ctx context.Context, authSessio
 		"--key_label=" + label,
 		"--recovery_mediator_pub_key=" + mediatorPubKeyHex,
 		"--recovery_user_gaia_id=" + userGaiaID,
-		"--recovery_device_user_id=" + deviceUserID}
+		"--recovery_device_user_id=" + deviceUserID,
+		"--ensure_fresh_recovery_id"}
 	return c.call(ctx, args...)
 }
 
@@ -376,7 +377,8 @@ func (c *cryptohomeBinary) updateRecoveryAuthFactor(ctx context.Context, authSes
 		"--key_label=" + label,
 		"--recovery_mediator_pub_key=" + mediatorPubKeyHex,
 		"--recovery_user_gaia_id=" + userGaiaID,
-		"--recovery_device_user_id=" + deviceUserID}
+		"--recovery_device_user_id=" + deviceUserID,
+		"--ensure_fresh_recovery_id"}
 	return c.call(ctx, args...)
 }
 
