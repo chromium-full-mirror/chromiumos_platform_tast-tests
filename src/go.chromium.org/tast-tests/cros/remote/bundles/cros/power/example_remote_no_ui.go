@@ -114,7 +114,7 @@ func ExampleRemoteNoUI(ctx context.Context, s *testing.State) {
 	// Optionally insert custom metrics here. You must not insert
 	// them before uploading to dashboard or upload may fail.
 	perfVals.Set(perf.Metric{
-		Name: "custom_metric.",
+		Name: "custom_metric",
 		Unit: "unit",
 	}, 10.0)
 
