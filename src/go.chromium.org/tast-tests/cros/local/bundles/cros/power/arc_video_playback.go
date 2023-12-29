@@ -6,7 +6,6 @@ package power
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -14,13 +13,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/power/arcvideoplayback"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -227,15 +224,11 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 		fileName += ".mp4"
 	}
 	videoPath := s.DataPath("arc_video_playback/" + fileName)
-	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
+	cleanupFile, err := mxApp.CopyFileToDownloadsFolder(ctx, videoPath)
 	if err != nil {
-		s.Fatal("Failed to retrieve user's Downloads path: ", err)
+		s.Fatal("Failed to copy video file to Downloads folder: ", err)
 	}
-	targetFilePath := filepath.Join(downloadsPath, fileName)
-	if err := fsutil.CopyFile(videoPath, targetFilePath); err != nil {
-		s.Fatal("Failed to copy the file to the 'Downloads' folder: ", err)
-	}
-	defer os.Remove(targetFilePath)
+	defer cleanupFile()
 
 	recorder := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer recorder.Close(cleanupCtx)

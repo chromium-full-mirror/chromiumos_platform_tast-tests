@@ -40,6 +40,7 @@ type TestParams struct {
 	TestName      string
 	OutDir        string
 	ElementAPKURL string
+	VideoPath     string
 	TabletMode    bool
 	BrowserTime   time.Duration
 	SocialAppTime time.Duration
@@ -87,6 +88,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		outDir        = params.OutDir
 		testName      = params.TestName
 		elementAPKURL = params.ElementAPKURL
+		videoPath     = params.VideoPath
 		browserTime   = params.BrowserTime
 		socialAppTime = params.SocialAppTime
 		videoAppTime  = params.VideoAppTime
@@ -136,6 +138,11 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		return errors.Wrap(err, "failed to install MxPlayer app")
 	}
 	defer videoApp.Uninstall(closeCtx)
+	cleanupFile, err := videoApp.CopyFileToDownloadsFolder(ctx, videoPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to copy video file to Downloads folder")
+	}
+	defer cleanupFile()
 
 	const recordInterval = 5 * time.Second
 	recorder := power.NewRecorder(ctx, recordInterval, outDir, testName)
@@ -302,7 +309,7 @@ func browserActivity(ctx context.Context, br *browser.Browser, tconn *chrome.Tes
 
 			url := fmt.Sprintf("%s%s?ver=%s&dest=%s", urlPrefix, redirectFile, config.URLData.Version, site)
 			if err := conn.Navigate(ctx, url); err != nil {
-				return errors.Wrapf(err, "failed to navigate to %s: %v", url, err)
+				return errors.Wrapf(err, "failed to navigate to %s", url)
 			}
 
 			// If the webpage's loading time times out, skip it and try the next one.
@@ -378,6 +385,6 @@ func videoAppActivity(ctx context.Context, uiHandler cuj.UIActionHandler, isFirs
 		videoApp.OpenAndPlayVideo(videoName),
 		setLoopOn,
 		uiauto.Sleep(videoPlayTime),
-		videoApp.CloseVideo,
+		videoApp.CloseVideo(videoName),
 	)(ctx)
 }

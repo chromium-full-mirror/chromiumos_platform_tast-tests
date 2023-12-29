@@ -7,6 +7,8 @@ package arcvideoplayback
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -20,9 +22,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -47,6 +51,7 @@ type MxPlayerApp struct {
 	kb    *input.KeyboardEventWriter
 	a     *arc.ARC
 	d     *androidui.Device
+	cr    *chrome.Chrome
 }
 
 // NewMxPlayerApp creates an instance of MX Player app.
@@ -67,6 +72,40 @@ func (m *MxPlayerApp) Install(ctx context.Context) error {
 // Uninstall uninstalls the MX Player app if it has been installed.
 func (m *MxPlayerApp) Uninstall(ctx context.Context) error {
 	return util.UninstallApp(ctx, m.a, mxPlayerPackage)
+}
+
+// CopyFileToDownloadsFolder copies the video file to the 'Downloads' folder and check if
+// the file has finished copying. Remember to call the cleanup function to delete the file
+// created in this function.
+func (m *MxPlayerApp) CopyFileToDownloadsFolder(ctx context.Context, videoPath string) (cleanup func() error, retErr error) {
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, m.cr.NormalizedUser())
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to retrieve user's Downloads path")
+	}
+	fileName := filepath.Base(videoPath)
+	targetFilePath := filepath.Join(downloadsPath, fileName)
+	if err := fsutil.CopyFile(videoPath, targetFilePath); err != nil {
+		return nil, errors.Wrap(err, "failed to copy the file to the 'Downloads' folder")
+	}
+	defer func() {
+		if retErr != nil {
+			os.Remove(targetFilePath)
+		}
+	}()
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		files, err := filepath.Glob(filepath.Join(downloadsPath, fileName))
+		if err != nil {
+			return errors.Wrap(err, "failed to glob video file")
+		}
+		if len(files) == 0 {
+			return errors.New("file not found")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
+		return nil, errors.Wrap(err, "failed to find video file in Downloads folder")
+	}
+	return func() error { return os.Remove(targetFilePath) }, nil
 }
 
 // Launch launches the MX Player app.
@@ -108,7 +147,7 @@ func (m *MxPlayerApp) DismissPrompts(ctx context.Context) error {
 func (m *MxPlayerApp) OpenAndPlayVideo(videoName string) uiauto.Action {
 	bufferingText := m.d.Object(androidui.ID(mxPlayerIDPrefix+"loading"), androidui.TextContains("Buffering"), androidui.ClassName(textClassName))
 	return uiauto.NamedCombine("play video and ensure the video is playing",
-		m.openVideoFromDownloadFolder(videoName),
+		m.openVideoFromSearchResult(videoName),
 		// Sometimes the notification prompt pops up after entering video page.
 		// Dismiss it to do the following actions.
 		m.dismissNotificationPrompt,
@@ -119,29 +158,49 @@ func (m *MxPlayerApp) OpenAndPlayVideo(videoName string) uiauto.Action {
 	)
 }
 
-func (m *MxPlayerApp) openVideoFromDownloadFolder(videoName string) uiauto.Action {
+func (m *MxPlayerApp) openVideoFromSearchResult(videoName string) uiauto.Action {
 	videoTitle := m.d.Object(androidui.ID(mxPlayerIDPrefix+"title"), androidui.Text(videoName))
-	clickDownloadFolder := func(ctx context.Context) error {
+	searchText := m.d.Object(androidui.ID(mxPlayerIDPrefix+"search_src_text"), androidui.ClassName("android.widget.AutoCompleteTextView"))
+	clickSearchButton := func(ctx context.Context) error {
 		closeBtn := m.d.Object(androidui.PackageName(mxPlayerPackage), androidui.DescriptionContains("close"))
 		androidCloseBtn := m.d.Object(androidui.PackageName("com.android.vending"), androidui.Description("Close"))
-		downloadFolder := m.d.Object(androidui.ID(mxPlayerIDPrefix+"title"), androidui.Text("Download"))
-		foundObject, err := cuj.FindAnyExists(ctx, defaultUITimeout, closeBtn, androidCloseBtn, downloadFolder)
+		searchBtn := m.d.Object(androidui.ID(mxPlayerIDPrefix+"search"), androidui.ClassName(textClassName))
+		foundObject, err := cuj.FindAnyExists(ctx, defaultUITimeout, closeBtn, androidCloseBtn, searchBtn)
 		if err != nil {
-			return errors.Wrap(err, "failed to find download folder or close ads button")
+			return errors.Wrap(err, "failed to find search button or close ads button")
 		}
-		if foundObject != downloadFolder {
+		if foundObject != searchBtn {
 			if err := cuj.FindAndClick(foundObject, defaultUITimeout)(ctx); err != nil {
 				return errors.Wrap(err, "failed to click close ads button")
 			}
 		}
-		return uiauto.NamedCombine("click download folder",
-			cuj.FindAndClick(downloadFolder, longUITimeout),
-			cuj.WaitForExists(videoTitle, longUITimeout),
+		return uiauto.NamedCombine("click search button",
+			cuj.FindAndClick(searchBtn, defaultUITimeout),
+			cuj.FindAndClick(searchText, defaultUITimeout),
 		)(ctx)
 	}
-	return uiauto.NamedCombine("open video from download folder",
-		uiauto.Retry(retryTimes, clickDownloadFolder),
-		cuj.FindAndClick(videoTitle, defaultUITimeout),
+	inputVideoName := uiauto.Combine("input video name",
+		cuj.FindAndClick(searchText, defaultUITimeout),
+		m.kb.AccelAction("Ctrl+A"),
+		m.kb.TypeAction(videoName),
+	)
+	verifyVideoName := func(ctx context.Context) error {
+		url, err := searchText.GetText(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get search text")
+		}
+		if url != videoName {
+			testing.ContextLog(ctx, "Search text: ", videoName)
+			return errors.Wrap(err, "failed to input correct video name")
+		}
+		return nil
+	}
+	ui := uiauto.New(m.tconn)
+	return uiauto.NamedCombine("open video from search result",
+		clickSearchButton,
+		ui.RetryUntil(inputVideoName, verifyVideoName),
+		m.kb.AccelAction("Enter"),
+		ui.RetryUntil(cuj.FindAndClick(videoTitle, defaultUITimeout), cuj.WaitUntilGone(videoTitle, defaultUITimeout)),
 	)
 }
 
@@ -167,17 +226,17 @@ func (m *MxPlayerApp) skipHintButton(ctx context.Context) error {
 }
 
 // CloseVideo closes the video and returns to home page.
-func (m *MxPlayerApp) CloseVideo(ctx context.Context) error {
+func (m *MxPlayerApp) CloseVideo(videoName string) uiauto.Action {
 	navigateUp := m.d.Object(androidui.PackageName(mxPlayerPackage), androidui.DescriptionMatches("(Navigate up|Back)"), androidui.ClassName(imageBtnClassName))
-	downloadTitle := m.d.Object(androidui.ID(mxPlayerIDPrefix+"tv_title"), androidui.Text("Download"))
+	videoTitle := m.d.Object(androidui.ID(mxPlayerIDPrefix+"title"), androidui.Text(videoName))
 	return uiauto.NamedCombine("close the video and return to home page",
 		// Pause the video to show ui layout.
 		m.EnsurePaused,
 		cuj.FindAndClick(navigateUp, defaultUITimeout),
-		cuj.WaitForExists(downloadTitle, defaultUITimeout),
+		cuj.WaitForExists(videoTitle, defaultUITimeout),
 		cuj.FindAndClick(navigateUp, defaultUITimeout),
-		cuj.WaitUntilGone(downloadTitle, defaultUITimeout),
-	)(ctx)
+		cuj.WaitUntilGone(videoTitle, defaultUITimeout),
+	)
 }
 
 // EnterFullScreen switches Mx Player video to full screen.
