@@ -117,6 +117,13 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		s.Log("Failed to create test start setup notification: ", err)
 	}
 
+	testing.ContextLog(ctx, "Start setting up the power recorder")
+	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName())
+	defer r.Close(cleanupCtx)
+	if err := r.Cooldown(ctx); err != nil {
+		s.Error("Failed to cooldown before the manual setup: ", err)
+	}
+
 	// Give a few minutes for testers to do manual testing setup.
 	// Testers can press "Ctrl + Alt + /" to bring up the keyboard
 	// shortcuts widget to end the manual setup at any time.
@@ -141,11 +148,8 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	testing.ContextLog(ctx, "Start setting up the power recorder")
-	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
-		s.Error("Cooldown failed: ", err)
+		s.Log("Failed to cooldown after the manual setup: ", err)
 	}
 	if err := r.Start(ctx); err != nil {
 		s.Fatal("Cannot start collecting power metrics: ", err)
