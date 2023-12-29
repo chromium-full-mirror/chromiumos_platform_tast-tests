@@ -155,7 +155,9 @@ func (h *UIHelper) SendMessage(ctx context.Context, number, message string) erro
 		kb.AccelAction("Ctrl+A"),
 		kb.AccelAction("Backspace"),
 		kb.TypeAction(number),
+		kb.AccelAction("Down"),
 		kb.AccelAction("Enter"),
+		kb.AccelAction("Esc"),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to focus the phone number text field")
 	}
