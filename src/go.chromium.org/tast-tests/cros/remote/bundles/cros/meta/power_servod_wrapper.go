@@ -30,6 +30,9 @@ import (
 Example:
 tast run -var "subtest=power.ExampleUI.ash_kbbl" $DUT_IP meta.PowerServodWrapper.cpd_manual
 
+To specify a servo port, use: -var "servo=<servo-host>:<servo-port>"
+
+For more options see go/tast-running#Running-tests-with-Servo
 */
 
 type testParams struct {
