@@ -114,6 +114,7 @@ func PDProtocol(ctx context.Context, s *testing.State) {
 	if err := checkPEStates(ctx, s, h, map[string]bool{
 		"PD_STATE_SNK_READY": true,
 		"PE_SNK_Ready":       true,
+		"SNK_READY":          true,
 	}); err != nil {
 		s.Fatal("Failed to verify power state: ", err)
 	}
