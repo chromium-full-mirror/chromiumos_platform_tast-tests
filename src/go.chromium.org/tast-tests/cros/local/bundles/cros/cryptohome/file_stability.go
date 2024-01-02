@@ -28,7 +28,7 @@ func init() {
 		Func:         FileStability,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the cryptohome is stable after login",
-		Contacts:     []string{"chromeos-security@google.com", "iby@chromium.org"},
+		Contacts:     []string{"cryptohome-core@google.com", "iby@chromium.org"},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline"},
