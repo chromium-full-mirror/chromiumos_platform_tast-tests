@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package runtimeprobe provides utilities for runtime_probe tests.
 package runtimeprobe
 
 import (
@@ -17,6 +16,7 @@ import (
 
 	rppb "chromiumos/system_api/runtime_probe_proto"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe/fixture"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -274,6 +274,14 @@ func decreaseComponentCount(count map[string]int, model, category string, compon
 	return true, name
 }
 
+// releasedDeviceDeps is a hardware dependency that only runs a test on DUTs
+// that has normal probe configs without private probe configs.
+var releasedDeviceDeps = hwdep.D(hwdep.RuntimeProbeConfig(), hwdep.RuntimeProbeConfigPrivate(false))
+
+// unreleasedDeviceDeps is a hardware dependency that only runs a test on DUTs
+// that has private probe configs.
+var unreleasedDeviceDeps = hwdep.D(hwdep.RuntimeProbeConfigPrivate(true))
+
 type probeFunctionTestParam struct {
 	categories           []string
 	allowExtraComponents bool
@@ -281,8 +289,9 @@ type probeFunctionTestParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: ProbeFunction,
-		Desc: "Checks that probe results are expected",
+		Func:         ProbeFunction,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks that probe results are expected",
 		Contacts: []string{
 			"chromeos-runtime-probe@google.com",
 			"clarkchung@google.com",
@@ -290,51 +299,115 @@ func init() {
 		BugComponent: "b:606088",
 		Attr:         []string{"group:racc", "racc_config_installed"},
 		SoftwareDeps: []string{"racc"},
-		HardwareDeps: hwdep.D(hwdep.RuntimeProbeConfig()),
-		Vars:         []string{"autotest_host_info_labels"},
-		Params: []testing.Param{{
-			Name: "battery",
-			Val: probeFunctionTestParam{
-				categories:           []string{"battery"},
-				allowExtraComponents: false,
+		VarDeps:      []string{"autotest_host_info_labels"},
+		Params: []testing.Param{
+			{
+				Name:              "battery",
+				ExtraHardwareDeps: releasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"battery"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "battery_private",
+				Fixture:           fixture.DecryptProbeConfig,
+				ExtraHardwareDeps: unreleasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"battery"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "camera",
+				ExtraHardwareDeps: releasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"camera"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "camera_private",
+				Fixture:           fixture.DecryptProbeConfig,
+				ExtraHardwareDeps: unreleasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"camera"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "edid",
+				ExtraHardwareDeps: releasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"display_panel"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "edid_private",
+				Fixture:           fixture.DecryptProbeConfig,
+				ExtraHardwareDeps: unreleasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"display_panel"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "input_device",
+				ExtraHardwareDeps: releasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"stylus", "touchpad", "touchscreen"},
+					allowExtraComponents: true,
+				},
+			}, {
+				Name:              "input_device_private",
+				Fixture:           fixture.DecryptProbeConfig,
+				ExtraHardwareDeps: unreleasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"stylus", "touchpad", "touchscreen"},
+					allowExtraComponents: true,
+				},
+			}, {
+				Name:              "memory",
+				ExtraHardwareDeps: releasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"dram"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "memory_private",
+				Fixture:           fixture.DecryptProbeConfig,
+				ExtraHardwareDeps: unreleasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"dram"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "network",
+				ExtraHardwareDeps: releasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"cellular", "ethernet", "wireless"},
+					allowExtraComponents: true,
+				},
+			}, {
+				Name:              "network_private",
+				Fixture:           fixture.DecryptProbeConfig,
+				ExtraHardwareDeps: unreleasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"cellular", "ethernet", "wireless"},
+					allowExtraComponents: true,
+				},
+			}, {
+				Name:              "storage",
+				ExtraHardwareDeps: releasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"storage"},
+					allowExtraComponents: false,
+				},
+			}, {
+				Name:              "storage_private",
+				Fixture:           fixture.DecryptProbeConfig,
+				ExtraHardwareDeps: unreleasedDeviceDeps,
+				Val: probeFunctionTestParam{
+					categories:           []string{"storage"},
+					allowExtraComponents: false,
+				},
 			},
-		}, {
-			Name: "camera",
-			Val: probeFunctionTestParam{
-				categories:           []string{"camera"},
-				allowExtraComponents: false,
-			},
-		}, {
-			Name: "edid",
-			Val: probeFunctionTestParam{
-				categories:           []string{"display_panel"},
-				allowExtraComponents: false,
-			},
-		}, {
-			Name: "input_device",
-			Val: probeFunctionTestParam{
-				categories:           []string{"stylus", "touchpad", "touchscreen"},
-				allowExtraComponents: true,
-			},
-		}, {
-			Name: "memory",
-			Val: probeFunctionTestParam{
-				categories:           []string{"dram"},
-				allowExtraComponents: false,
-			},
-		}, {
-			Name: "network",
-			Val: probeFunctionTestParam{
-				categories:           []string{"cellular", "ethernet", "wireless"},
-				allowExtraComponents: true,
-			},
-		}, {
-			Name: "storage",
-			Val: probeFunctionTestParam{
-				categories:           []string{"storage"},
-				allowExtraComponents: false,
-			},
-		}},
+		},
 	})
 }
 
