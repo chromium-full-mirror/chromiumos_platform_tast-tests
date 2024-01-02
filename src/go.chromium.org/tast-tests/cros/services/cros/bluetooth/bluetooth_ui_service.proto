@@ -11,40 +11,59 @@ import "google/protobuf/empty.proto";
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/bluetooth";
 
 // BluetoothUIService allows bluetooth remote tests make calls to local,
-// bluetooth-specific functions using UI actions necessary for testing bluetooth features.
+// bluetooth-specific functions using UI actions necessary for testing bluetooth
+// features.
 //
-// For direct management of bluetooth services, use the BluetoothService instead.
+// For direct management of bluetooth services, use the BluetoothService
+// instead.
 service BluetoothUIService {
   // PairWithFastPairNotification will attempt to pair a fast pair device with
   // the fast pair notification.
-  rpc PairWithFastPairNotification(PairWithFastPairNotificationRequest) returns (google.protobuf.Empty) {}
+  rpc PairWithFastPairNotification(PairWithFastPairNotificationRequest)
+      returns (google.protobuf.Empty) {}
 
   // CloseNotifications closes all open notifications.
-  rpc CloseNotifications(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc CloseNotifications(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 
-  // ConfirmSavedDevicesState will attempt to confirm the state of Saved Devices on the Saved
-  // Devices subpage. The array of devices should be in the expected order. Fails if the list
-  // of Saved Devices doesn't match the one provided.
-  rpc ConfirmSavedDevicesState(ConfirmSavedDevicesStateRequest) returns (google.protobuf.Empty) {}
+  // ConfirmSavedDevicesState will attempt to confirm the state of Saved Devices
+  // on the Saved Devices subpage. The array of devices should be in the
+  // expected order. Fails if the list of Saved Devices doesn't match the one
+  // provided.
+  rpc ConfirmSavedDevicesState(ConfirmSavedDevicesStateRequest)
+      returns (google.protobuf.Empty) {}
 
-  // RemoveAllSavedDevices will attempt to remove all of the devices from the Saved Devices subpage.
-  rpc RemoveAllSavedDevices(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  // RemoveAllSavedDevices will attempt to remove all of the devices from the
+  // Saved Devices subpage.
+  rpc RemoveAllSavedDevices(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 
   // PairDeviceWithQuickSettings pairs with the specified device through UI
   // interactions with the Quick Settings.
-  rpc PairDeviceWithQuickSettings(PairDeviceWithQuickSettingsRequest) returns (google.protobuf.Empty) {}
+  rpc PairDeviceWithQuickSettings(PairDeviceWithQuickSettingsRequest)
+      returns (google.protobuf.Empty) {}
 
-  // ForgetBluetoothDevice will attempt to navigate to the Device Detail subpage for the device specified in the request,
-  // then click "Forget" to forget the device.
-  rpc ForgetBluetoothDevice(ForgetBluetoothDeviceRequest) returns (google.protobuf.Empty) {}
+  // ForgetBluetoothDevice will attempt to navigate to the Device Detail subpage
+  // for the device specified in the request, then click "Forget" to forget the
+  // device.
+  rpc ForgetBluetoothDevice(ForgetBluetoothDeviceRequest)
+      returns (google.protobuf.Empty) {}
 
-  // CollectDeviceList will attempt to collect and list all available Bluetooth devices
-  // in the Bluetooth page in the OS-Settings.
-  rpc CollectDeviceList(google.protobuf.Empty) returns (CollectDeviceListResponse) {}
+  // CollectDeviceList will attempt to collect and list all available Bluetooth
+  // devices in the Bluetooth page in the OS-Settings.
+  rpc CollectDeviceList(google.protobuf.Empty)
+      returns (CollectDeviceListResponse) {}
 
-  // BluetoothDeviceDetail will attempt to navigate to the Device Detail subpage for the device
-  // specified in the request, then retrieves the information of this particular device.
-  rpc BluetoothDeviceDetail(BluetoothDeviceDetailRequest) returns (BluetoothDeviceDetailResponse) {}
+  // BluetoothDeviceDetail will attempt to navigate to the Device Detail subpage
+  // for the device specified in the request, then retrieves the information of
+  // this particular device.
+  rpc BluetoothDeviceDetail(BluetoothDeviceDetailRequest)
+      returns (BluetoothDeviceDetailResponse) {}
+
+  // RenameBluetoothDevice will attempt to navigate to the Device Detail subpage
+  // for the device specified in the request, then renames the Bluetooth device.
+  rpc RenameBluetoothDevice(RenameBluetoothDeviceRequest)
+      returns (google.protobuf.Empty) {}
 }
 
 enum FastPairProtocol {
@@ -54,25 +73,15 @@ enum FastPairProtocol {
   FAST_PAIR_PROTOCOL_RETROACTIVE = 3;
 }
 
-message PairWithFastPairNotificationRequest {
-  FastPairProtocol protocol = 1;
-}
+message PairWithFastPairNotificationRequest { FastPairProtocol protocol = 1; }
 
-message ConfirmSavedDevicesStateRequest {
-  repeated string device_names = 1;
-}
+message ConfirmSavedDevicesStateRequest { repeated string device_names = 1; }
 
-message PairDeviceWithQuickSettingsRequest {
-  string advertisedName = 1;
-}
+message PairDeviceWithQuickSettingsRequest { string advertisedName = 1; }
 
-message ForgetBluetoothDeviceRequest {
-  string device_name = 1;
-}
+message ForgetBluetoothDeviceRequest { string device_name = 1; }
 
-message Battery {
-  optional string percentage = 1;
-}
+message Battery { optional string percentage = 1; }
 
 message Device {
   string name = 1;
@@ -80,14 +89,13 @@ message Device {
   repeated Battery battery_information = 3;
 }
 
-message CollectDeviceListResponse {
-  repeated Device devices = 1;
-}
+message CollectDeviceListResponse { repeated Device devices = 1; }
 
-message BluetoothDeviceDetailRequest {
-  string name = 1;
-}
+message BluetoothDeviceDetailRequest { string name = 1; }
 
-message BluetoothDeviceDetailResponse {
+message BluetoothDeviceDetailResponse { Device device = 1; }
+
+message RenameBluetoothDeviceRequest {
   Device device = 1;
+  string custom_name = 2;
 }

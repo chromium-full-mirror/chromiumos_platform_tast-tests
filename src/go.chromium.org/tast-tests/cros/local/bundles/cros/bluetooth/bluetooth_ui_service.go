@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
+	"go.chromium.org/tast-tests/cros/local/input"
 	pb "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -400,9 +401,10 @@ func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty)
 	// Regular expression for finding a device entry.
 	//
 	// These are examples of the target label:
-	// 	Device 1 of 2 named KEYBD_REF. Device is connected. Device type is unknown. Device has 99% battery.
-	// 	Device 2 of 2 named MOUSE_REF. Device is not connected. Device type is unknown.
-	r := regexp.MustCompile(`^Device \d+ of \d+ named (.*)\. Device is (connected|not connected)\. Device type is \w+\.( Device has (\d+)% battery)?$`)
+	// 	Device 1 of 3 named KEYBD_REF. Device is connected. Device type is unknown. Device has 99% battery.
+	// 	Device 2 of 3 named MOUSE_REF. Device is not connected. Device type is unknown.
+	// 	Device 3 of 3 named RenamedBT. Device is not connected. Device is a mouse.
+	r := regexp.MustCompile(`^Device \d+ of \d+ named (.*)\. Device is (connected|not connected)\. Device (type is|is a) \w+\.( Device has (\d+)% battery\.)?$`)
 	infos, err := settings.NodesInfo(ctx, nodewith.NameRegex(r).HasClass("list-item"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get nodes information")
@@ -411,13 +413,14 @@ func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty)
 	devices := make([]*pb.Device, 0, len(infos))
 	for _, info := range infos {
 		ss := r.FindStringSubmatch(info.Name)
-		// Expecting 5 sub-matches which are
+		// Expecting 6 sub-matches which are
 		// 	0: entire match
 		// 	1: device name
 		// 	2: connected state
-		// 	3: battery information
-		// 	4: battery level value
-		if ss == nil || len(ss) != 5 {
+		// 	3: device type information
+		// 	4: battery information
+		// 	5: battery level value
+		if ss == nil || len(ss) != 6 {
 			return nil, errors.Errorf("failed to extract string sub match by %q from %q, sub matches: %d", r.String(), info.Name, len(ss))
 		}
 		device := &pb.Device{
@@ -517,6 +520,59 @@ func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.Bluet
 	}
 
 	return &pb.BluetoothDeviceDetailResponse{Device: device}, nil
+}
+
+// RenameBluetoothDevice renames the Bluetooth device within OS Settings Bluetooth device detail page.
+func (bui *BtUIService) RenameBluetoothDevice(ctx context.Context, req *pb.RenameBluetoothDeviceRequest) (_ *emptypb.Empty, retErr error) {
+	if req.GetCustomName() == "" {
+		return &emptypb.Empty{}, errors.New("invalid custom name")
+	}
+
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
+	if err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	deviceName := req.Device.GetName()
+	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, deviceName)
+	if err != nil {
+		return &emptypb.Empty{}, errors.Wrapf(err, "failed to navigate to Bluetooth device %q detail page", deviceName)
+	}
+	defer settings.Close(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "rename_bluetooth_device")
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to get a keyboard event writer")
+	}
+	defer kb.Close(cleanupCtx)
+
+	deviceNameDialog := nodewith.Name("Device name").Role(role.Dialog)
+	if err := settings.LeftClickUntil(
+		nodewith.Name(fmt.Sprintf("Change device name for %s", deviceName)).Role(role.Button),
+		settings.WithTimeout(3*time.Second).WaitUntilExists(deviceNameDialog),
+	)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to launch the change Bluetooth device name dialog")
+	}
+	defer func(ctx context.Context) {
+		// Clean up the dialog when the error occurs.
+		if retErr != nil {
+			kb.TypeKey(ctx, input.KEY_ESC)
+		}
+	}(cleanupCtx)
+
+	return &emptypb.Empty{}, uiauto.Combine("rename the Bluetooth device",
+		settings.EnsureFocused(nodewith.Name("Device name").Role(role.TextField).Ancestor(deviceNameDialog)),
+		kb.AccelAction("Ctrl+A"),
+		kb.TypeAction(req.GetCustomName()),
+		settings.LeftClick(nodewith.Name("Done").Role(role.Button).Ancestor(deviceNameDialog)),
+		settings.WaitUntilGone(deviceNameDialog),
+		settings.WaitUntilExists(nodewith.Name(req.GetCustomName()).Role(role.Heading).HasClass("cr-title-text")),
+	)(ctx)
 }
 
 // crAndTestAPIConn obtains/returns the (*chrome.Chrome) instance and the TestAPI connection.

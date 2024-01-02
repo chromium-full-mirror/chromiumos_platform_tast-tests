@@ -258,6 +258,8 @@ type DUTConfig struct {
 	// PowerRecorderService is a client of the RecorderService that measures the
 	// power consumption.
 	PowerRecorderService power.RecorderServiceClient
+
+	startChromeOption *ui.NewRequest
 }
 
 func (c *DUTConfig) addCleanupStep(f onDutCleanup) {
@@ -311,6 +313,27 @@ func (c *DUTConfig) dumpBtsnoopLogs(ctx context.Context, logName string) error {
 		return errors.Wrapf(err, "failed to dump collected btsnoop log from DUT %q", c.DUT.HostName())
 	}
 	return nil
+}
+
+// DUTReLogin checks that we are currently logged in, and afterwards will log
+// the user out then log the user back in.
+// An error will be thrown if the DUT hasn't logged in yet.
+func (c *DUTConfig) DUTReLogin(ctx context.Context) error {
+	if !c.uiEnabled {
+		return errors.New("DUT does not have the UI enabled")
+	}
+
+	if c.startChromeOption.LoginMode == ui.LoginMode_LOGIN_MODE_NO_LOGIN {
+		return errors.New("DUT is not logged in")
+	}
+
+	if _, err := c.ChromeService.Close(ctx, &emptypb.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to releases the chrome session from the dut")
+	}
+
+	c.startChromeOption.KeepState = true
+	_, err := c.ChromeService.New(ctx, c.startChromeOption)
+	return err
 }
 
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
@@ -980,7 +1003,7 @@ func (tf *fixture) startChromeUI(ctx context.Context, dutConfig *DUTConfig) erro
 		if tf.fastPairEnabled {
 			extraArgs = fixtureVarFastPairExtraArgs
 		}
-		if _, err := dutConfig.ChromeService.New(ctx, &ui.NewRequest{
+		dutConfig.startChromeOption = &ui.NewRequest{
 			LoginMode:       tf.features.LoginMode,
 			EnableFeatures:  tf.features.EnableFeatures,
 			DisableFeatures: tf.features.DisableFeatures,
@@ -991,7 +1014,9 @@ func (tf *fixture) startChromeUI(ctx context.Context, dutConfig *DUTConfig) erro
 			EnableHidScreenOnOobe:        tf.features.EnableHidScreenOnOobe,
 			SigninProfileTestExtensionId: tf.fv.signinProfileTestExtensionID,
 			ExtraArgs:                    extraArgs,
-		}); err != nil {
+		}
+
+		if _, err := dutConfig.ChromeService.New(ctx, dutConfig.startChromeOption); err != nil {
 			return errors.Wrap(err, "failed to start Chrome UI with ChromeService")
 		}
 		dutConfig.uiEnabled = true
