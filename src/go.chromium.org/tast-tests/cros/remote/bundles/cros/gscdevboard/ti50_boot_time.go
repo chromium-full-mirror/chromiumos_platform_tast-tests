@@ -125,6 +125,10 @@ func checkBootTrace(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 		stages = append(stages, t[1])
 		v, err := strconv.Atoi(t[2])
 		th.MustSucceed(err, "parse int")
+		if prefix == "DeepSleep_" && t[1] == "ProjectStart" {
+			// ProjectStart is not valid for deep sleep (b/318415821).
+			continue
+		}
 		totalTime += v
 		if t[1] == "ProjectStart" || t[1] == "EcRstDeasserted" || t[1] == "TpmAppReady" {
 			logTime(s, pv, prefix+t[1], uint32(totalTime))
