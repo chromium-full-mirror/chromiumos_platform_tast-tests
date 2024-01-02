@@ -34,9 +34,6 @@ func init() {
 	})
 }
 
-// The time to remain in suspend, in seconds.
-const suspendDurationS = 15
-
 // TbtSuspend does the following:
 //
 // - Disconnect the dock via MCCI switch.
@@ -84,6 +81,8 @@ func TbtSuspend(ctx context.Context, s *testing.State) {
 
 // performTbtSuspendIteration runs 1 iteration of the Thunderbolt suspend test.
 func performTbtSuspendIteration(ctx context.Context, d *dut.DUT, sw *mcci.Switch, mcciPort int) error {
+	const suspendDurationS = 15
+
 	// Disconnect the dock.
 	sw.DisablePorts()
 
