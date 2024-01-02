@@ -101,6 +101,8 @@ func (param noUnexpectedUITestParam) kioskModeOptions(ctx context.Context) ([]ki
 	options := []kioskmode.Option{
 		kioskmode.AutoLaunch(accountID),
 		kioskmode.CustomLocalAccounts(&accounts),
+		// Disables tablet mode by forcing clamshell.
+		kioskmode.ExtraChromeOptions(chrome.ExtraArgs("--force-tablet-mode=clamshell")),
 	}
 
 	if param.isLacros {
