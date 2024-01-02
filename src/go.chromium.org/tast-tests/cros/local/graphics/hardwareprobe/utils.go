@@ -8,6 +8,8 @@ package hardwareprobe
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -37,14 +39,21 @@ type hardwareProbeResult struct {
 
 // GetHardwareProbeResult saves the information to path and returns detailed information gathered by hardware_probe binaries in the DUT.
 func GetHardwareProbeResult(ctx context.Context) (hardwareProbeResult, error) {
-	out, err := testexec.CommandContext(ctx, hardwareProbeBinary).Output(testexec.DumpLogOnError)
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return hardwareProbeResult{}, errors.New("failed to get outDir")
+	}
+	file := filepath.Join(outDir, "hardware_probe.json")
+	out, err := testexec.CommandContext(ctx, hardwareProbeBinary, "-output", file).CombinedOutput(testexec.DumpLogOnError)
 	if err != nil {
 		return hardwareProbeResult{}, errors.Wrapf(err, "failed to run %v, output: %v", hardwareProbeBinary, string(out))
 	}
-	testing.ContextLog(ctx, "HardwareProbe Output: ", string(out))
-
+	b, err := os.ReadFile(file)
+	if err != nil {
+		return hardwareProbeResult{}, errors.Wrap(err, "failed to read json")
+	}
 	var result hardwareProbeResult
-	if err := json.Unmarshal(out, &result); err != nil {
+	if err := json.Unmarshal(b, &result); err != nil {
 		return hardwareProbeResult{}, errors.Wrapf(err, "failed to unmarshal data: %v", string(out))
 	}
 	return result, nil
