@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/login"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
@@ -165,30 +166,16 @@ func logInWithLocalPassword(ctx context.Context, s *testing.State) (c *chrome.Ch
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	// After the Gaia login we need to navigate to the local password setup screen
-	// to set the local password (instead of the Gaia password).
-	// TODO(b/309740812): Replace the OOBE calls with one API to setup a local
-	// password.
 	oobeConn, err := cr.WaitForOOBEConnection(ctx)
 	if err != nil {
 		s.Fatal("Failed to wait for OOBE connection: ", err)
 	}
 	defer oobeConn.Close()
-	if err := oobeConn.Eval(ctx, "OobeAPI.advanceToScreen('local-password-setup')", nil); err != nil {
-		s.Fatal("Failed to advance to the 'local-password-setup' screen: ", err)
+
+	if err := login.SetupLocalPassword(ctx, oobeConn, localPassword); err != nil {
+		s.Fatal("Failed to setup local password: ", err)
 	}
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.isReadyForTesting()"); err != nil {
-		s.Fatal("Failed to wait for the LocalPasswordSetupScreen to be visible: ", err)
-	}
-	if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPassword(pw); }`, localPassword); err != nil {
-		s.Fatal("Failed to enter local password: ", err)
-	}
-	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isDone()"); err != nil {
-		s.Fatal("Failed to wait for the done step to be visible: ", err)
-	}
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.clickDone()", nil); err != nil {
-		s.Fatal("Failed to click on done button: ", err)
-	}
+
 	if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
 		// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
 		s.Log("Failed to call skip post login screens: ", err)
