@@ -1294,114 +1294,26 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "basic_explicit_s2v_char",
+				Name: "basic_explicit_s2v",
 				Val: oclctsTest{
 					executable: "test_basic",
-					args:       "explicit_s2v_char",
+					args:       "explicit_s2v",
 				},
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "basic_explicit_s2v_double",
+				Name: "basic_fp2int",
 				Val: oclctsTest{
 					executable: "test_basic",
-					args:       "explicit_s2v_double",
+					args:       "fp2int",
 				},
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "basic_explicit_s2v_float",
+				Name: "basic_fpmath",
 				Val: oclctsTest{
 					executable: "test_basic",
-					args:       "explicit_s2v_float",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_explicit_s2v_int",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "explicit_s2v_int",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_explicit_s2v_long",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "explicit_s2v_long",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_explicit_s2v_short",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "explicit_s2v_short",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_explicit_s2v_uchar",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "explicit_s2v_uchar",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_explicit_s2v_uint",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "explicit_s2v_uint",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_explicit_s2v_ulong",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "explicit_s2v_ulong",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_explicit_s2v_ushort",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "explicit_s2v_ushort",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_float2int",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "float2int",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_fpmath_float2",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "fpmath_float2",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_fpmath_float4",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "fpmath_float4",
-				},
-				Timeout: 1 * time.Minute,
-			},
-			{
-				Name: "basic_fpmath_float",
-				Val: oclctsTest{
-					executable: "test_basic",
-					args:       "fpmath_float",
+					args:       "fpmath",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -1582,10 +1494,10 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
-				Name: "basic_int2float",
+				Name: "basic_int2fp",
 				Val: oclctsTest{
 					executable: "test_basic",
-					args:       "int2float",
+					args:       "int2fp",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -7026,6 +6938,14 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_commonfns",
 					args:       "min",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "commonfns_mixf",
+				Val: oclctsTest{
+					executable: "test_commonfns",
+					args:       "mixf",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -19706,6 +19626,22 @@ func init() {
 				Val: oclctsTest{
 					executable: "test_select",
 					args:       "select_ushort_ushort -w",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "select_select_half_short",
+				Val: oclctsTest{
+					executable: "test_select",
+					args:       "select_half_short",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "select_select_half_ushort",
+				Val: oclctsTest{
+					executable: "test_select",
+					args:       "select_half_ushort",
 				},
 				Timeout: 1 * time.Minute,
 			},
