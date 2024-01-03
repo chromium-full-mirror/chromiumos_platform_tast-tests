@@ -11,34 +11,14 @@ import (
 	"strings"
 	"time"
 
+	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 )
 
-// Status holds power supply information reported by powerd's dump_power_status
-// tool.
-type Status struct {
-	LinePowerConnected bool
-	LinePowerCurrent   float64
-	LinePowerType      string
-
-	BatteryPresent          bool
-	BatteryDischarging      bool
-	BatteryPercent          float64
-	BatteryDisplayPercent   float64
-	BatteryCharge           float64
-	BatteryChargeFull       float64
-	BatteryChargeFullDesign float64
-	BatteryCurrent          float64
-	BatteryEnergy           float64
-	BatteryEnergyRate       float64
-	BatteryVoltage          float64
-	BatteryStatus           string
-}
-
 // GetStatus returns current power supply information.
-func GetStatus(ctx context.Context) (*Status, error) {
+func GetStatus(ctx context.Context) (*pb.Status, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	cmd := testexec.CommandContext(ctx, "dump_power_status")
@@ -77,7 +57,7 @@ func GetStatus(ctx context.Context) (*Status, error) {
 		m[f[0]] = f[1]
 	}
 
-	s := &Status{
+	s := &pb.Status{
 		LinePowerConnected:      getNumValue("line_power_connected") != 0.0,
 		LinePowerCurrent:        getNumValue("line_power_current"),
 		LinePowerType:           m["line_power_type"],
@@ -103,7 +83,7 @@ func GetStatus(ctx context.Context) (*Status, error) {
 // IsLinePowerConnected returns a boolean indicating if the line power is
 // connected. "line_power_connected" from dump_power_status does not reflect the
 // true state of battery on Jacuzzi and Kukui.
-func (s Status) IsLinePowerConnected() bool {
+func IsLinePowerConnected(s *pb.Status) bool {
 	if util.SupportChargeOverride() {
 		return s.LinePowerConnected
 	}

@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package tast.common.power.powerpb;
+
+option go_package = "go.chromium.org/tast-tests/cros/common/power/powerpb";
+
+// Status holds power supply information reported by powerd's dump_power_status
+// tool.
+message Status {
+  bool line_power_connected = 1;
+  double line_power_current = 2;
+  string line_power_type = 3;
+
+  bool battery_present = 4;
+  bool battery_discharging = 5;
+  double battery_percent = 6;
+  double battery_display_percent = 7;
+  double battery_charge = 8;
+  double battery_charge_full = 9;
+  double battery_charge_full_design = 10;
+  double battery_current = 11;
+  double battery_energy = 12;
+  double battery_energy_rate = 13;
+  double battery_voltage = 14;
+  string battery_status = 15;
+}

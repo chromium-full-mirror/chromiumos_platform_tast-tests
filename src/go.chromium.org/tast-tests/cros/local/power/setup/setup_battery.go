@@ -215,7 +215,7 @@ func chargeBattery(ctx context.Context, targetPercentage float64, isPowerQual bo
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
 		}
-		if !status.IsLinePowerConnected() {
+		if !power.IsLinePowerConnected(status) {
 			return testing.PollBreak(errors.Wrap(err, "power source is not connected while charging"))
 		}
 		if status.BatteryPercent < targetPercentage {
@@ -277,7 +277,7 @@ func drainBattery(ctx context.Context, targetPercentage float64) error {
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
 		}
-		if status.IsLinePowerConnected() {
+		if power.IsLinePowerConnected(status) {
 			return testing.PollBreak(errors.Wrap(err, "power source is connected while discharging"))
 		}
 		if status.BatteryPercent > targetPercentage {
@@ -298,10 +298,10 @@ func WaitUntilPowerSourceChanges(ctx context.Context, acConnected bool) error {
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to obtain DUT power status"))
 		}
-		if acConnected && !status.IsLinePowerConnected() {
+		if acConnected && !power.IsLinePowerConnected(status) {
 			return errors.New("expected device to connect to AC power source but device is discharging from battery")
 		}
-		if !acConnected && status.IsLinePowerConnected() {
+		if !acConnected && power.IsLinePowerConnected(status) {
 			return errors.New("expected device to discharge from battery but device is charging from AC power source")
 		}
 		return nil

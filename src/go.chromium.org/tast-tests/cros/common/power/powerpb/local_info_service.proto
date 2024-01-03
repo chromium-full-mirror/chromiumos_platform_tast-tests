@@ -5,10 +5,13 @@ package tast.common.power.powerpb;
 import "google/protobuf/empty.proto";
 import "device_info.proto";
 import "one_time_metrics.proto";
+import "power_status.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/common/power/powerpb";
 
 service LocalInfoService {
-    rpc GetDeviceInfoFromDUT(google.protobuf.Empty) returns (DeviceInfo) {}
-    rpc GetOneTimeMetricsFromDUT(google.protobuf.Empty) returns (OneTimeMetrics) {}
+  rpc GetDeviceInfoFromDUT(google.protobuf.Empty) returns (DeviceInfo) {}
+  rpc GetOneTimeMetricsFromDUT(google.protobuf.Empty) returns (OneTimeMetrics) {
+  }
+  rpc GetPowerStatus(google.protobuf.Empty) returns (Status) {}
 }

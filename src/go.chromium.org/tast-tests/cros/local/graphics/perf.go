@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
@@ -34,7 +35,7 @@ import (
 
 // errorOnNonDischarging returns a proper error when the battery is not discharging.
 // If no discharging is expected, then returns nil.
-func errorOnNonDischarging(ctx context.Context, status *power.Status) error {
+func errorOnNonDischarging(ctx context.Context, status *pb.Status) error {
 	if _, err := power.SysfsBatteryPath(ctx); err != nil {
 		testing.ContextLog(ctx, "This device doesn't have a battery, skip collecting power consumption")
 		return nil
@@ -650,7 +651,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 	if err != nil {
 		return errors.Wrap(err, "failed to get the battery status")
 	}
-	if status.IsLinePowerConnected() {
+	if power.IsLinePowerConnected(status) {
 		return errorOnNonDischarging(ctx, status)
 	}
 

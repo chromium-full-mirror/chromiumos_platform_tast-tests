@@ -36,3 +36,8 @@ func (s *LocalInfoService) GetDeviceInfoFromDUT(ctx context.Context, req *empty.
 func (s *LocalInfoService) GetOneTimeMetricsFromDUT(ctx context.Context, req *empty.Empty) (*pb.OneTimeMetrics, error) {
 	return pl.CollectOneTimeMetrics(ctx), nil
 }
+
+// GetPowerStatus returns the power supply information reported by powerd's dump_power_status tool.
+func (s *LocalInfoService) GetPowerStatus(ctx context.Context, req *empty.Empty) (*pb.Status, error) {
+	return pl.GetStatus(ctx)
+}
