@@ -31,11 +31,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/minidump"
-
+	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-
-	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/timing"
 )
 
@@ -215,6 +213,11 @@ func (c *Chrome) Creds() Creds { return c.cfg.Creds() }
 
 // VKEnabled returns whether virtual keyboard is enabled.
 func (c *Chrome) VKEnabled() bool { return c.cfg.VKEnabled() }
+
+// FieldTrialConfigEnabled returns whether field trial config is enabled.
+func (c *Chrome) FieldTrialConfigEnabled() bool {
+	return c.cfg.FieldTrialConfig() == "enable" || setup.FieldTrialConfig.Value() == "enable"
+}
 
 // LoginMode returns the user login mode as string.
 func (c *Chrome) LoginMode() string {

@@ -62,7 +62,7 @@ var (
 	DebianUpgradeText = nodewith.NameStartingWith("An upgrade to Debian").First().Onscreen()
 	PageLinux         = nodewith.NameStartingWith(PageNameLinux).First().Onscreen()
 	// We may need to update this if more 'Turn on' buttons are added to Settings, but there isn't a good way to make this more specific yet.
-	TurnOnButton          = nodewith.Name("Turn on").Role(role.Button).Ancestor(ossettings.WindowFinder).Onscreen()
+	TurnOnButton          = nodewith.NameRegex(regexp.MustCompile(`Turn on|Set Up`)).Role(role.Button).Ancestor(ossettings.WindowFinder).Onscreen()
 	DevelopersButton      = nodewith.Name("Developers").Role(role.Button).Ancestor(ossettings.WindowFinder).Onscreen()
 	LinuxText             = nodewith.Name("Linux development environment").Role(role.StaticText).Ancestor(ossettings.WindowFinder).Onscreen()
 	nextButton            = nodewith.Name("Next").Role(role.Button).Onscreen()
@@ -91,6 +91,11 @@ var (
 	continueButton        = nodewith.Name("Continue").Role(role.Button).Ancestor(shareUSBFailDlg).Onscreen()
 )
 
+const (
+	settingsCrostiniPage = "crostini"
+	settingsHelpPage     = "help"
+)
+
 // Settings represents an instance of the Linux settings in Settings App.
 type Settings struct {
 	ui    *uiauto.Context
@@ -106,10 +111,16 @@ func OpenLinuxSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Ch
 	}
 
 	ui := uiauto.New(tconn)
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "crostini", ui.WaitUntilExists(DevelopersButton)); err != nil {
+	// TODO(b/318422635) Unify the UI when new UI is launched.
+	crostiniPage := settingsCrostiniPage
+	if cr.FieldTrialConfigEnabled() {
+		crostiniPage = settingsHelpPage
+	}
+
+	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, crostiniPage, ui.WaitUntilExists(DevelopersButton)); err != nil {
 		return nil, errors.Wrap(err, "failed to launch settings app")
 	}
-	if err := ui.LeftClick(DevelopersButton)(ctx); err != nil {
+	if err := ui.DoDefault(DevelopersButton)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to go to linux subpage")
 	}
 
@@ -179,10 +190,16 @@ func OpenLinuxInstaller(ctx context.Context, tconn *chrome.TestConn, cr *chrome.
 	}
 
 	ui := uiauto.New(tconn)
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "crostini", ui.WaitUntilExists(TurnOnButton)); err != nil {
+
+	// TODO(b/318422635) Unify the UI when new UI is launched.
+	crostiniPage := settingsCrostiniPage
+	if cr.FieldTrialConfigEnabled() {
+		crostiniPage = settingsHelpPage
+	}
+	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, crostiniPage, ui.WaitUntilExists(TurnOnButton)); err != nil {
 		return nil, errors.Wrap(err, "failed to launch settings app")
 	}
-	if err := ui.LeftClick(TurnOnButton)(ctx); err != nil {
+	if err := ui.DoDefault(TurnOnButton)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to open Linux installer")
 	}
 
@@ -200,7 +217,13 @@ func OpenLinuxInstallerAndClickNext(ctx context.Context, tconn *chrome.TestConn,
 	}
 
 	ui := uiauto.New(tconn).WithInterval(500 * time.Millisecond)
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "crostini", ui.WaitUntilExists(LinuxText)); err != nil {
+
+	// TODO(b/318422635) Unify the UI when new UI is launched.
+	crostiniPage := settingsCrostiniPage
+	if cr.FieldTrialConfigEnabled() {
+		crostiniPage = settingsHelpPage
+	}
+	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, crostiniPage, ui.WaitUntilExists(LinuxText)); err != nil {
 		return errors.Wrap(err, "failed to launch settings app")
 	}
 
@@ -212,7 +235,7 @@ func OpenLinuxInstallerAndClickNext(ctx context.Context, tconn *chrome.TestConn,
 
 	if err := ui.WaitUntilExists(DevelopersButton)(ctx); err == nil {
 		// Linux has been installed already, uninstall it.
-		if err := ui.LeftClickUntil(DevelopersButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(removeLinuxButton))(ctx); err != nil {
+		if err := ui.DoDefaultUntil(DevelopersButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(removeLinuxButton))(ctx); err != nil {
 			return errors.Wrap(err, "failed to go to linux subpage")
 		}
 
@@ -223,8 +246,8 @@ func OpenLinuxInstallerAndClickNext(ctx context.Context, tconn *chrome.TestConn,
 
 	installButton := nodewith.Name("Install").Role(role.Button)
 	if err := uiauto.Combine("open Install and click button Next",
-		ui.LeftClickUntil(TurnOnButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(nextButton)),
-		ui.LeftClickUntil(nextButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(installButton)))(ctx); err != nil {
+		ui.DoDefaultUntil(TurnOnButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(nextButton)),
+		ui.DoDefaultUntil(nextButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(installButton)))(ctx); err != nil {
 		return errors.Wrap(err, "failed to click button Next on the installer")
 	}
 	return nil
@@ -495,6 +518,7 @@ func UpdateDiskSizeSliderWithJS(ctx context.Context, conn *chrome.Conn, sliderCo
 func ChangeDiskSize(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, targetDiskSize uint64) (uint64, error) {
 	const crostiniSettingsURL = "chrome://os-settings/crostini"
 	const diskResizeDialogName = "settings-crostini-disk-resize-dialog"
+	testing.ContextLog(ctx, crostiniSettingsURL)
 	targetMatcher := func(t *chrome.Target) bool { return strings.HasPrefix(t.URL, crostiniSettingsURL) }
 	conn, err := cr.NewConnForTarget(ctx, targetMatcher)
 	if err != nil {

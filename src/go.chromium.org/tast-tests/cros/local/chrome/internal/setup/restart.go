@@ -21,7 +21,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -32,11 +31,12 @@ import (
 // https://source.corp.google.com/chromeos_public/src/platform2/libbrillo/brillo/cryptohome.cc;l=83
 var obfuscatedUsernameRegexp = regexp.MustCompile(`^[\da-f]{40}$`)
 
+// FieldTrialConfig is a global runtime variable for field trial config.
 // Experiements in fieldtrial_testing_config.json are enabled in certain builds.
 // https://source.chromium.org/chromium/chromium/src/+/main:testing/variations/README.md
 // This var allows you to enable, disable or use the default for your build. Tests can
 // also set enable or disable via `chrome.FieldTrialConfig()` which overrides this var.
-var fieldTrialConfig = testing.RegisterVarString(
+var FieldTrialConfig = testing.RegisterVarString(
 	"setup.FieldTrialConfig",
 	"default",
 	"[enable|disable|default] Whether to force enable / disable fieldtrial_testing_config experiements, or use default.")
@@ -269,14 +269,14 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 
 	var fieldTrialConfigValue = cfg.FieldTrialConfig()
 	if fieldTrialConfigValue == "" {
-		fieldTrialConfigValue = fieldTrialConfig.Value()
+		fieldTrialConfigValue = FieldTrialConfig.Value()
 	}
 	if fieldTrialConfigValue == "enable" {
 		args = append(args, "--enable-field-trial-config")
 	} else if fieldTrialConfigValue == "disable" {
 		args = append(args, "--disable-field-trial-config")
 	} else if fieldTrialConfigValue != "default" {
-		return errors.Errorf("unexpected value for `%v`: %v", fieldTrialConfig.Name(), fieldTrialConfigValue)
+		return errors.Errorf("unexpected value for `%v`: %v", FieldTrialConfig.Name(), fieldTrialConfigValue)
 	}
 
 	// Lacros features and additional args used to launch lacros-chrome should be delimited by
