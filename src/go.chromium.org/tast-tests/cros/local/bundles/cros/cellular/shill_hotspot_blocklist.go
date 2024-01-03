@@ -6,7 +6,6 @@ package cellular
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"golang.org/x/exp/slices"
@@ -56,15 +55,13 @@ func ShillHotspotBlocklist(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Unable to get firmware revision from shill: ", err)
 	}
-	inFirmwareBlocklist := false
-	blocklistL850 := []string{"18500.5001.00.02.24.09", "18500.5001.00.03.25.18", "18500.5001.00.04.26.01", "18500.5001.00.04.26.06"}
-	blocklistFM350 := []string{"81600.0000.00.29.19.16"}
-	for _, prefix := range append(blocklistL850, blocklistFM350...) {
-		if strings.HasPrefix(fw, prefix) {
-			inFirmwareBlocklist = true
-			break
-		}
+	modemType, err := cellular.GetModemType(ctx)
+	if err != nil {
+		s.Fatal("Failed to get modem type: ", err)
 	}
+
+	inFirmwareBlocklist := cellular.ModemFwFilterL850MR5AndLower.IsMatch(modemType, fw) ||
+		cellular.ModemFwFilterFM350MR1.IsMatch(modemType, fw)
 	if inFirmwareBlocklist && cellularInUpstreamTechCrOS {
 		s.Fatalf("Hotspot should not be allowed on fw: %q", fw)
 	}
