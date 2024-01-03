@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -399,53 +400,92 @@ type ModemFwFilter uint32
 
 // Supported modem fw filters.
 const (
-	ModemFwFilterL850MR7AndLower ModemFwFilter = iota
+	ModemFwFilterL850MR5AndLower ModemFwFilter = iota
+	ModemFwFilterL850MR7AndLower
+	ModemFwFilterL850MR8
 	ModemFwFilterNL668A01
+	ModemFwFilterNL668A04
+	ModemFwFilterFM350MR1
 	ModemFwFilterFM350MR3AndLower
+	ModemFwFilterFM350MR4
 	ModemFwFilterFM101MR1
+	ModemFwFilterFM101MR2
+	ModemFwFilterEM060V01
+	ModemFwFilterSC7180All
 )
 
 // IsMatch returns true the modem type and modem FW match the filter
 func (filter ModemFwFilter) IsMatch(modemType cellularconst.ModemType, fwVersion string) bool {
 	switch filter {
+	case ModemFwFilterL850MR5AndLower:
+		if modemType != cellularconst.ModemTypeL850 {
+			return false
+		}
+		r := regexp.MustCompile("^18500.5001.[0-9]{2}.0[2-4].[0-9]{2}.[0-9]{2}.*")
+		return r.MatchString(fwVersion)
 	case ModemFwFilterL850MR7AndLower:
 		if modemType != cellularconst.ModemTypeL850 {
 			return false
 		}
-		commonPrefix := "18500.5001.00."
-		for _, subversion := range []string{"02.", "03.", "04.", "05.", "06."} {
-			if strings.HasPrefix(fwVersion, commonPrefix+subversion) {
-				return true
-			}
+		r := regexp.MustCompile("^18500.5001.[0-9]{2}.0[5-6].[0-9]{2}.[0-9]{2}.*")
+		return ModemFwFilterL850MR5AndLower.IsMatch(modemType, fwVersion) || r.MatchString(fwVersion)
+	case ModemFwFilterL850MR8:
+		if modemType != cellularconst.ModemTypeL850 {
+			return false
 		}
-		return false
+		r := regexp.MustCompile("^18500.5001.[0-9]{2}.07.[0-9]{2}.[0-9]{2}.*")
+		return r.MatchString(fwVersion)
 	case ModemFwFilterNL668A01:
 		if modemType == cellularconst.ModemTypeNL668 && strings.HasSuffix(fwVersion, "A01") {
 			return true
 		}
 		return false
+	case ModemFwFilterNL668A04:
+		if modemType == cellularconst.ModemTypeNL668 && strings.HasSuffix(fwVersion, "A04") {
+			return true
+		}
+		return false
+	case ModemFwFilterFM350MR1:
+		if modemType != cellularconst.ModemTypeFM350 {
+			return false
+		}
+		return strings.HasPrefix(fwVersion, "81600.0000.00.29.19.16")
 	case ModemFwFilterFM350MR3AndLower:
 		if modemType != cellularconst.ModemTypeFM350 {
 			return false
 		}
-		commonPrefix := "81600.0000.00.29."
-		for _, subversion := range []string{"19.16", "21.21", "21.24"} {
-			if strings.HasPrefix(fwVersion, commonPrefix+subversion) {
-				return true
-			}
+		return ModemFwFilterFM350MR1.IsMatch(modemType, fwVersion) ||
+			strings.HasPrefix(fwVersion, "81600.0000.00.29.21.21") || // MR2
+			strings.HasPrefix(fwVersion, "81600.0000.00.29.21.24") // MR3
+	case ModemFwFilterFM350MR4:
+		if modemType != cellularconst.ModemTypeFM350 {
+			return false
 		}
-		return false
+		return strings.HasPrefix(fwVersion, "81600.0000.00.29.23.06")
 	case ModemFwFilterFM101MR1:
 		if modemType != cellularconst.ModemTypeFM101 {
 			return false
 		}
-		commonMiddle := ".0000.00.01.01."
-		for _, prefix := range []string{"19500", "19501"} {
-			if strings.HasPrefix(fwVersion, prefix+commonMiddle) {
-				return true
-			}
+		r := regexp.MustCompile("^1950[0-9].0000.00.01.01.[0-9]{2}.*")
+		return r.MatchString(fwVersion)
+	case ModemFwFilterFM101MR2:
+		if modemType != cellularconst.ModemTypeFM101 {
+			return false
 		}
-		return false
+		r := regexp.MustCompile("^1950[0-9].0000.00.01.02.[0-9]{2}.*")
+		return r.MatchString(fwVersion)
+	case ModemFwFilterEM060V01:
+		if modemType != cellularconst.ModemTypeEM060 {
+			return false
+		}
+		r := regexp.MustCompile("^01.[0-9]{3}.*")
+		return r.MatchString(fwVersion)
+	case ModemFwFilterSC7180All:
+		if modemType != cellularconst.ModemTypeSC7180 {
+			return false
+		}
+		// As far as I know, all versions in trogdor are the same.
+		return true
 	}
 	panic("unhandled switch case")
 }
