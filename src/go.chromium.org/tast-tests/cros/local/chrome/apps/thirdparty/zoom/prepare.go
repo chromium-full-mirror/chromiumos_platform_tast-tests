@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/prompts"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -56,15 +55,9 @@ func navigateToZoomAndSignIn(ctx context.Context, cr *chrome.Chrome, br *browser
 
 	// Register new account if required.
 	// Sometimes it takes a long time to display the next page.
-	continueButton := nodewith.Name("Continue").Role(role.Button)
-	nodeFound, err = ui.WithTimeout(3*time.Minute).FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea, continueButton)
+	nodeFound, err = ui.WithTimeout(3*time.Minute).FindAnyExists(ctx, myAccountLink, myProfileImg, agreeToTermsArea)
 	if err != nil {
 		return errors.Wrap(err, "failed to reach either my account or registration flow")
-	}
-	if nodeFound == continueButton {
-		if err := ui.LeftClick(continueButton)(ctx); err != nil {
-			return errors.Wrap(err, "failed to click continue button")
-		}
 	}
 	if nodeFound == agreeToTermsArea {
 		testing.ContextLog(ctx, "Creating new Zoom account")
@@ -87,6 +80,7 @@ func signIn(conn *chrome.Conn, tconn *chrome.TestConn) action.Action {
 		signInArea := nodewith.NameContaining("Google").Role(role.RootWebArea)
 		// Use First() to select the first account in the account list.
 		accountSelectLink := nodewith.NameRegex(regexp.MustCompile("@.*.com")).Role(role.Link).Ancestor(signInArea).First()
+		continueButton := nodewith.Name("Continue").Role(role.Button)
 
 		if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 			return errors.Wrap(err, "failed to wait for page loading complete")
@@ -115,8 +109,18 @@ func signIn(conn *chrome.Conn, tconn *chrome.TestConn) action.Action {
 			return errors.Wrap(err, "failed select account")
 		}
 
-		if err := ui.WaitUntilAnyExists(myAccountLink, myProfileImg)(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for MY ACCOUNT or My Profile")
+		nodeFound, err := ui.FindAnyExists(ctx, myAccountLink, myProfileImg, continueButton)
+		if err != nil {
+			return errors.Wrap(err, "failed to wait for MY ACCOUNT or My Profile or continue button")
+		}
+
+		if nodeFound == continueButton {
+			if err := ui.LeftClick(continueButton)(ctx); err != nil {
+				return errors.Wrap(err, "failed to click continue button")
+			}
+			if err := ui.WaitUntilAnyExists(myAccountLink, myProfileImg)(ctx); err != nil {
+				return errors.Wrap(err, "failed to wait for MY ACCOUNT or My Profile")
+			}
 		}
 		return nil
 	}
