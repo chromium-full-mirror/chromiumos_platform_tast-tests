@@ -34,7 +34,7 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware"},
 		ServiceDeps:  []string{"tast.cros.firmware.KernelService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
@@ -45,10 +45,11 @@ func init() {
 				Timeout: 30 * time.Minute,
 			},
 			{
-				Name:    "dev",
-				Fixture: fixture.DevModeGBB,
-				Val:     common.BootModeDev,
-				Timeout: 10 * time.Minute,
+				Name:      "dev",
+				Fixture:   fixture.DevModeGBB,
+				Val:       common.BootModeDev,
+				Timeout:   10 * time.Minute,
+				ExtraAttr: []string{"firmware_unstable"},
 			},
 		},
 	})
