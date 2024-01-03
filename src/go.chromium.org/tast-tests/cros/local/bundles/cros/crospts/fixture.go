@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/crospts/ptsworld"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -163,6 +164,13 @@ type PtsWorldFixture struct {
 }
 
 func (f *PtsWorldFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	if err := upstart.CheckJob(ctx, "ui"); err == nil {
+		s.Log("Stop Chrome UI")
+		if err := upstart.StopJob(ctx, "ui"); err != nil {
+			s.Fatal("Failed to stop ui: ", err)
+			return err
+		}
+	}
 	if err := f.fixture.Prepare(ctx, s); err != nil {
 		s.Fatal("Failed to prepare PTSWorld: ", err)
 		return err
@@ -183,6 +191,10 @@ func (f *PtsWorldFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		if err := f.fixture.Unmount(ctx, s); err != nil {
 			s.Fatal("Failed to unmount PTSWorld: ", err)
 		}
+	}
+	if err := upstart.CheckJob(ctx, "ui"); err != nil {
+		s.Log("Start Chrome UI")
+		upstart.EnsureJobRunning(ctx, "ui")
 	}
 }
 
