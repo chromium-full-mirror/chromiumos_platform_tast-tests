@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -25,6 +26,7 @@ func init() {
 		BugComponent: "b:782045",
 		Attr:         []string{"group:mainline", "group:fingerprint-cq", "informational"},
 		ServiceDeps:  []string{"tast.cros.platform.UpstartService"},
+		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 	})
 }
 
