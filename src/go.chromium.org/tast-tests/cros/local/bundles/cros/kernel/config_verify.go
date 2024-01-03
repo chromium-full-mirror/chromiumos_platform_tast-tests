@@ -105,8 +105,6 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"PID_NS",
 		"NET_NS",
 		"USER_NS",
-		// Security; perform additional validation of credentials.
-		"DEBUG_CREDENTIALS",
 
 		// Binary formats.
 		"BINFMT_ELF",
@@ -339,6 +337,17 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		// EXFAT is still experimental in 5.4.
 		missing = append(missing, "EXFAT_FS")
 	}
+
+	if ver.IsOrLess(6, 1) {
+		// CONFIG_DEBUG_CREDENTIALS was removed during the 6.7 dev cycle and
+		// backported to 6.6:
+		// https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?h=v6.7-rc8&id=ae1914174a63a558113e80d24ccac2773f9f7b2b
+		// https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?h=v6.6.9&id=207f135d819344c03333246f784f6666e652e081
+		//
+		// Security; perform additional validation of credentials.
+		builtin = append(builtin, "DEBUG_CREDENTIALS")
+	}
+
 	isX86Family := regexp.MustCompile(`^i\d86$`).MatchString(arch) || arch == "x86_64"
 	if isX86Family {
 		// Kernel: make sure port 0xED is the one used for I/O delay.
