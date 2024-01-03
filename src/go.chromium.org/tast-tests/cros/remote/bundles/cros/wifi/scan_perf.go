@@ -147,13 +147,10 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		// Thresholds for scan tests.
 		fgFullScanThreshold        = 4 * time.Second
 		bgFullScanThreshold        = 7 * time.Second
-		bgFullScanThresholdRelaxed = 9 * time.Second
-		// TODO(b/256486257): Move these 6E requirements to new test variants when new AVL requirements are settled.
-		fgFullScanThresholdWiFi6ERelaxed = 15 * time.Second
-		bgFullScanThresholdWiFi6ERelaxed = 15 * time.Second
+		bgFullScanThresholdRelaxed = 8 * time.Second
 		// Thresholds for passive scan tests.
-		fgPassiveScanThreshold = 8 * time.Second
-		bgPassiveScanThreshold = 14 * time.Second
+		fgPassiveScanThreshold = 7 * time.Second
+		bgPassiveScanThreshold = 13 * time.Second
 	)
 
 	// TODO(b/253096914): The following chipsets are known to have slower bg scan times.
@@ -161,14 +158,6 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	bgRelaxedChipsets := map[wlan.DeviceID]struct{}{
 		wlan.MediaTekMT7921PCIE: {},
 		wlan.MediaTekMT7921SDIO: {},
-	}
-
-	// TODO(b/256486257): We lack data for WiFi6E models so threshold is not determined yet.
-	// Temporarily set to sufficiently long values to make those tests always pass for those fail to reach regular thresholds.
-	wifi6eRelaxedChipsets := map[wlan.DeviceID]struct{}{
-		wlan.QualcommWCN6855:  {},
-		wlan.QualcommWCN6750:  {},
-		wlan.Realtek8852CPCIE: {},
 	}
 
 	// TODO(b/260276685): Shared fixture among test variants causes a longer 1st bg when dtim config is different from the last subtest.
@@ -353,11 +342,6 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	threshold := fgFullScanThreshold
 	if requestScanType == shillconst.WiFiRequestScanTypePassive {
 		threshold = fgPassiveScanThreshold
-	} else if tc.useRelaxedThreshold {
-		if _, ok := wifi6eRelaxedChipsets[devID]; ok {
-			threshold = fgFullScanThresholdWiFi6ERelaxed
-			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
-		}
 	}
 	if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, requestScanType); err != nil {
 		s.Fatalf("Failed to set WiFi RequestScan type to %s: %v", requestScanType, err)
@@ -425,9 +409,6 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		if _, ok := bgRelaxedChipsets[devID]; ok {
 			threshold = bgFullScanThresholdRelaxed
 			s.Logf("There is a known issue (b/253096914) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
-		} else if _, ok := wifi6eRelaxedChipsets[devID]; ok {
-			threshold = bgFullScanThresholdWiFi6ERelaxed
-			s.Logf("There is a known issue (b/256486257) for this WiFi6E chip (%s), use a sufficiently long threshold and this test always passes", devInfo.Name)
 		}
 	}
 	if requestScanType == shillconst.WiFiRequestScanTypePassive {
