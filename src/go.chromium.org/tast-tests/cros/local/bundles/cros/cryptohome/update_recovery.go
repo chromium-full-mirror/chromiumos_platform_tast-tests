@@ -7,8 +7,10 @@ package cryptohome
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"io/ioutil"
 	"path/filepath"
+	"reflect"
 
 	uda "chromiumos/system_api/user_data_auth_proto"
 
@@ -87,6 +89,21 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		}
 	}(s, testTool)
 
+	mediatorPubKeyFromMetadata := func() []byte {
+		listFactors, err := client.ListAuthFactors(ctx, userName)
+		if err != nil {
+			s.Fatal("Failed to list auth factors: ", err)
+			return []byte{}
+		}
+		for _, factor := range listFactors.ConfiguredAuthFactorsWithStatus {
+			if factor.AuthFactor.Type == uda.AuthFactorType_AUTH_FACTOR_TYPE_CRYPTOHOME_RECOVERY {
+				return factor.AuthFactor.GetCryptohomeRecoveryMetadata().MediatorPubKey
+			}
+		}
+		s.Fatal("Failed to find recovery factor")
+		return []byte{}
+	}
+
 	authenticateWithRecovery := func() (string, error) {
 		// Authenticate a new auth session via the new added recovery auth factor and mount the user.
 		_, authSessionID, err = client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
@@ -135,22 +152,33 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create persistent user: ", err)
 	}
 
-	mediatorPubKey, err := testTool.FetchFakeMediatorPubKeyHex(ctx)
+	mediatorPubKeyHex, err := testTool.FetchFakeMediatorPubKeyHex(ctx)
 	if err != nil {
 		s.Fatal("Failed to get mediator pub key: ", err)
 	}
 
 	// Add a recovery auth factor to the user.
-	if err := client.AddRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, mediatorPubKey, userGaiaID, deviceUserID); err != nil {
+	if err := client.AddRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, mediatorPubKeyHex, userGaiaID, deviceUserID); err != nil {
 		s.Fatal("Failed to add a recovery auth factor: ", err)
 	}
 
+	// Confirm that a recovery ID was created.
 	recoveryIDs, err := client.FetchRecoveryIDs(ctx, userName, recoveryLabel)
 	if err != nil {
 		s.Fatal("Failed to get recovery ids: ", err)
 	}
 	if len(recoveryIDs) != 1 {
 		s.Fatalf("Got %v recovery IDs, expected 1", len(recoveryIDs))
+	}
+
+	// Confirm that recovery factor metadata has correct public key.
+	mediatorPubKey, err := hex.DecodeString(mediatorPubKeyHex)
+	if err != nil {
+		s.Fatal("Failed to decode mediator pub key: ", err)
+	}
+	actualPubKey := mediatorPubKeyFromMetadata()
+	if !reflect.DeepEqual(actualPubKey, mediatorPubKey) {
+		s.Fatalf("Incorrect mediator pub key in recovery metadata; got %v, expected %v", actualPubKey, mediatorPubKey)
 	}
 
 	// Unmount the user.
@@ -165,7 +193,7 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 	}
 
 	// Update recovery auth factor.
-	if err := client.UpdateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel /*label*/, mediatorPubKey, userGaiaID, deviceUserID); err != nil {
+	if err := client.UpdateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel /*label*/, mediatorPubKeyHex, userGaiaID, deviceUserID); err != nil {
 		s.Fatal("Failed to update recovery factor: ", err)
 	}
 
@@ -192,4 +220,7 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 	if _, err := authenticateWithRecovery(); err != nil {
 		s.Fatal("Failed to authenticate with recovery factor after update: ", err)
 	}
+
+	// TODO(b/289178330): Update recovery auth factor with a different public key;
+	// confirm that recovery factor metadata has a new public key.
 }
