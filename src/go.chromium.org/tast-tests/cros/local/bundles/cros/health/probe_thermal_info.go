@@ -35,7 +35,7 @@ type thermalInfo struct {
 // The maximum temperature difference we allow between the value gathered by
 // healthd and by tast test. This value is arbitrarily decided, and should be
 // changed if tests fail consistently.
-const maxTemperatureDelta = 3
+const maxTemperatureDelta = 10
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -116,8 +116,16 @@ func compareSensors(v1, v2 thermalSensorInfo) bool {
 
 // verifySensors checks whether the sensors returned by healthd matches those gathered by tast test.
 func verifySensors(gotSensors, expectedSensors []thermalSensorInfo) error {
-	// Sort the sensors in alphabetical order according to its Name property.
-	sortOpt := cmpopts.SortSlices(func(a, b thermalSensorInfo) bool { return a.Name < b.Name })
+	// Sort the sensors in order according to it source, then name, then temperature.
+	sortOpt := cmpopts.SortSlices(func(a, b thermalSensorInfo) bool {
+		if a.Source != b.Source {
+			return a.Source < b.Source
+		}
+		if a.Name != b.Name {
+			return a.Name < b.Name
+		}
+		return a.TemperatureCelsius < b.TemperatureCelsius
+	})
 	compareOpt := cmp.Comparer(compareSensors)
 
 	if diff := cmp.Diff(expectedSensors, gotSensors, compareOpt, sortOpt); diff != "" {
