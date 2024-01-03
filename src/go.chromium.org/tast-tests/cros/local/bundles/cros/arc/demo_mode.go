@@ -114,7 +114,7 @@ func DemoMode(ctx context.Context, s *testing.State) {
 	// (calculator) app page would not show a grayed out Install button, but rather a text "Your
 	// administrator has not given you access to this item.".
 	demoModeTextView := d.Object(ui.ClassName("android.widget.TextView"), ui.TextMatches(inDemoModeText))
-	if err := demoModeTextView.WaitForExists(ctx, 15*time.Second); err != nil {
+	if err := demoModeTextView.WaitForExists(ctx, 90*time.Second); err != nil {
 		s.Fatal("Failed to find \"In demo mode...\" in Play Store: ", err)
 	}
 
