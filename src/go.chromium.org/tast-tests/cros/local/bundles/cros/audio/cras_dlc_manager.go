@@ -27,7 +27,7 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Timeout:      5 * time.Minute,
-		SoftwareDeps: []string{"chrome", "dlc"},
+		SoftwareDeps: []string{"chrome", "dlc", "cros_internal"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("amd64-generic")),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
