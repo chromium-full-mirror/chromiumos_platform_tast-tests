@@ -10,9 +10,11 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
+	"go.chromium.org/tast/core/ctxutil"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/tape"
@@ -21,7 +23,6 @@ import (
 	qs "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -212,7 +213,9 @@ type DUTConfig struct {
 	// Processed in reverse order (FILO), list cleared when processed.
 	onDutCleanupStack []onDutCleanup
 
-	uiEnabled bool
+	btsnoopCollector             *log.BtsnoopCollector
+	bluetoothServicesDBusMonitor *log.DBusMonitorCollector
+	uiEnabled                    bool
 
 	// DUT is the connection to the DUT.
 	DUT *dut.DUT
@@ -257,6 +260,59 @@ type DUTConfig struct {
 	PowerRecorderService power.RecorderServiceClient
 }
 
+func (c *DUTConfig) addCleanupStep(f onDutCleanup) {
+	c.onDutCleanupStack = append(c.onDutCleanupStack, f)
+}
+
+func (c *DUTConfig) cleanup(ctx context.Context) {
+	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] cleanup :: DUT %q :: START", c.DUT.HostName())
+	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] cleanup :: DUT %q :: END", c.DUT.HostName())
+	for i := len(c.onDutCleanupStack) - 1; i >= 0; i-- {
+		c.onDutCleanupStack[i](ctx, c)
+	}
+	c.onDutCleanupStack = nil
+}
+
+func (c *DUTConfig) dumpLogs(ctx context.Context, logName string) error {
+	if c.bluetoothServicesDBusMonitor != nil {
+		if err := c.dumpBluetoothServiceDBusLogs(ctx, logName); err != nil {
+			return errors.Wrapf(err, "failed to dump bluetooth service dbus logs from DUT %q", c.DUT.HostName())
+		}
+	}
+	if c.btsnoopCollector != nil {
+		if err := c.dumpBtsnoopLogs(ctx, logName); err != nil {
+			return errors.Wrapf(err, "failed to dump btsnoop logs from DUT %q", c.DUT.HostName())
+		}
+	}
+	return nil
+}
+
+func (c *DUTConfig) dumpBluetoothServiceDBusLogs(ctx context.Context, logName string) error {
+	if c.bluetoothServicesDBusMonitor == nil {
+		return errors.New("bluetoothServicesDBusMonitor is nil")
+	}
+	testing.ContextLogf(ctx, "Dumping collected bluetooth service dbus monitor logs from DUT %q for %q", c.DUT.HostName(), logName)
+	cleanDutName := regexp.MustCompile(`[\W_]+`).ReplaceAllString(c.DUT.HostName(), "_")
+	logDir := filepath.Join("dbus_monitor_bluetooth", cleanDutName)
+	if err := log.DumpCollectedLogsToFile(ctx, c.bluetoothServicesDBusMonitor, logDir, logName); err != nil {
+		return errors.Wrapf(err, "failed to dump collected dbus-monitor messages from DUT %q", c.DUT.HostName())
+	}
+	return nil
+}
+
+func (c *DUTConfig) dumpBtsnoopLogs(ctx context.Context, logName string) error {
+	if c.btsnoopCollector == nil {
+		return errors.New("btsnoopCollector is nil")
+	}
+	testing.ContextLogf(ctx, "Dumping collected btsnoop logs from DUT %q for %q", c.DUT.HostName(), logName)
+	cleanDutName := regexp.MustCompile(`[\W_]+`).ReplaceAllString(c.DUT.HostName(), "_")
+	logDir := filepath.Join("btsnoop", cleanDutName)
+	if err := log.DumpCollectedLogsToFile(ctx, c.btsnoopCollector, logDir, logName); err != nil {
+		return errors.Wrapf(err, "failed to dump collected btsnoop log from DUT %q", c.DUT.HostName())
+	}
+	return nil
+}
+
 func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (*DUTConfig, error) {
 	rpcClient, err := rpc.Dial(ctx, dut, RPCHint)
 	if err != nil {
@@ -274,7 +330,7 @@ func newDUTConfig(ctx context.Context, dut *dut.DUT, RPCHint *testing.RPCHint) (
 		PowerDeviceSetupService: power.NewDeviceSetupServiceClient(rpcClient.Conn),
 		PowerRecorderService:    power.NewRecorderServiceClient(rpcClient.Conn),
 	}
-	dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+	dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
 		if err := dutConfig.DUTRPCClient.Close(ctx); err != nil {
 			testing.ContextLog(ctx, "WARNING: Failed to close DUTRPCClient: ", err)
 		}
@@ -458,9 +514,7 @@ type fixture struct {
 	btStack         bts.BluetoothStackType
 
 	// Stateful vars which are initialized during SetUp.
-	fv                            *FixtValue
-	bluetoothServicesDBusMonitors []*log.DBusMonitorCollector
-	btsnoopCollectors             []*log.BtsnoopCollector
+	fv *FixtValue
 }
 
 func newFixture(features *fixtureFeatures) *fixture {
@@ -499,10 +553,13 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	s.Log("[BLUETOOTH_FIXTURE] SetUp :: START")
 	defer s.Log("[BLUETOOTH_FIXTURE] SetUp :: END")
 
-	// Ensure any stateful fixture properties are set to initial state.
+	// Clear stateful fixture properties on setup and on setup failure.
 	tf.fv = &FixtValue{}
-	tf.bluetoothServicesDBusMonitors = nil
-	tf.btsnoopCollectors = nil
+	defer func() {
+		if s.HasError() {
+			tf.fv = nil
+		}
+	}()
 
 	// Parse OOBE fixture var.
 	if tf.features.EnableHidScreenOnOobe {
@@ -517,6 +574,16 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 	if err := tf.setUpBTPeers(ctx, s, tf.features.BTPeerCount); err != nil {
 		s.Fatal("Failed to set up btpeers: ", err)
 	}
+
+	// Cleanup duts if anything goes wrong during their setup process.
+	cleanupCtx := ctx
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			tf.cleanupAllDuts(ctx)
+		}
+	}(cleanupCtx)
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
 
 	// Configure primary DUT.
 	primaryDUTConfig, err := newDUTConfig(s.FixtContext(), s.DUT(), s.RPCHint())
@@ -550,16 +617,6 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		tf.fv.DUTConfigs = append(tf.fv.DUTConfigs, companionDUTConfig)
 	}
 
-	// Cleanup if anything goes wrong during Setup
-	cleanupCtx := ctx
-	defer func(ctx context.Context) {
-		if s.HasError() {
-			tf.cleanupAllDuts(ctx)
-		}
-	}(cleanupCtx)
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
-
 	// Resolve credentials to use for all DUTs when UI is enabled.
 	if tf.features.EnableChromeUI {
 		tf.resolveChromeCredentials(ctx, s)
@@ -572,7 +629,7 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		}
 	}
 
-	// Save collected bluez D-Bus messages collected thus far.
+	// Save collected logs collected thus far from setup process actions.
 	if err := tf.dumpAllCollectedLogs(ctx, "SetUp"); err != nil {
 		s.Fatal("Failed to collect dbus-monitor bluez logs: ", err)
 	}
@@ -646,17 +703,7 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 
 	// Dump and close log collectors.
 	if err := tf.dumpAllCollectedLogs(ctx, "TearDown"); err != nil {
-		s.Error("Failed to collect dbus-monitor bluez logs: ", err)
-	}
-	for _, dbusMonitor := range tf.bluetoothServicesDBusMonitors {
-		if err := dbusMonitor.Close(); err != nil {
-			s.Error("Failed to close dbus-monitor: ", err)
-		}
-	}
-	for _, btsnoopCollector := range tf.btsnoopCollectors {
-		if err := btsnoopCollector.Close(); err != nil {
-			s.Error("Failed to close btsnoop log collectors: ", err)
-		}
+		s.Error("Failed to dump logs: ", err)
 	}
 	for _, btpeer := range tf.fv.BTPeers {
 		btpeer.StopLogCollection(ctx)
@@ -669,6 +716,9 @@ func (tf *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Error("Failed to clean up Tape OTA: ", err)
 		}
 	}
+
+	// Clear stateful fixture properties.
+	tf.fv = nil
 }
 
 func (tf *fixture) setUpBTPeers(ctx context.Context, s *testing.FixtState, requiredBTPeers int) error {
@@ -747,13 +797,31 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to start dbus-monitor listening to bluez and floss service messages")
 	}
-	tf.bluetoothServicesDBusMonitors = append(tf.bluetoothServicesDBusMonitors, bluetoothServicesDBusMonitor)
+	dutConfig.bluetoothServicesDBusMonitor = bluetoothServicesDBusMonitor
+	dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
+		if err := dutConfig.dumpBluetoothServiceDBusLogs(ctx, "cleanup"); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to dump bluetooth service dbus logs from DUT %q: %v", dutConfig.DUT.HostName(), err)
+		}
+		if err := dutConfig.bluetoothServicesDBusMonitor.Close(); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to close bluetooth service dbus log collector for DUT %q: %v", dutConfig.DUT.HostName(), err)
+		}
+		dutConfig.bluetoothServicesDBusMonitor = nil
+	})
 
 	btsnoopCollector, err := log.StartBtsnoopCollector(ctx, dutConfig.DUT.Conn())
 	if err != nil {
 		return errors.Wrap(err, "failed to start btsnoop log")
 	}
-	tf.btsnoopCollectors = append(tf.btsnoopCollectors, btsnoopCollector)
+	dutConfig.btsnoopCollector = btsnoopCollector
+	dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
+		if err := dutConfig.dumpBtsnoopLogs(ctx, "cleanup"); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to dump btsnoop logs from DUT %q: %v", dutConfig.DUT.HostName(), err)
+		}
+		if err := dutConfig.btsnoopCollector.Close(); err != nil {
+			testing.ContextLogf(ctx, "WARNING: Failed to close btsnoop log collector for DUT %q: %v", dutConfig.DUT.HostName(), err)
+		}
+		dutConfig.btsnoopCollector = nil
+	})
 
 	// Configure and enable desired DUT bluetooth stack.
 	testing.ContextLogf(ctx, "=== Configuring DUT to use bluetooth stack %q ===", tf.btStack)
@@ -775,7 +843,7 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 			return errors.Wrap(err, "failed to set bluetooth debug log levels")
 		}
 	}
-	dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+	dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
 		if _, err := dutConfig.BluetoothService.Reset(ctx, &bts.ResetRequest{
 			PowerOn: true,
 		}); err != nil {
@@ -808,7 +876,7 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 		if _, err := dutConfig.PowerDeviceSetupService.Setup(ctx, &setupRequest); err != nil {
 			return errors.Wrap(err, "failed to set up device for power measurement")
 		}
-		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+		dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
 			if _, err := dutConfig.PowerDeviceSetupService.Cleanup(ctx, &empty.Empty{}); err != nil {
 				testing.ContextLog(ctx, "WARNING: Failed to call PowerDeviceSetupService.Cleanup: ", err)
 			}
@@ -819,7 +887,7 @@ func (tf *fixture) setUpDut(ctx context.Context, dutConfig *DUTConfig) error {
 		if _, err := dutConfig.PowerRecorderService.Create(ctx, &recorderRequest); err != nil {
 			return errors.Wrap(err, "failed to set up recorder for power measurement")
 		}
-		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+		dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
 			if _, err := dutConfig.PowerRecorderService.Close(ctx, &empty.Empty{}); err != nil {
 				testing.ContextLogf(ctx, "WARNING: Failed to call PowerRecorderService.Close on DUT %q: %v", dutConfig.DUT.HostName(), err)
 			}
@@ -833,17 +901,8 @@ func (tf *fixture) cleanupAllDuts(ctx context.Context) {
 	testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] cleanupAllDuts :: START")
 	defer testing.ContextLog(ctx, "[BLUETOOTH_FIXTURE] cleanupAllDuts :: END")
 	for _, dutConfig := range tf.fv.DUTConfigs {
-		tf.cleanupDut(ctx, dutConfig)
+		dutConfig.cleanup(ctx)
 	}
-}
-
-func (tf *fixture) cleanupDut(ctx context.Context, dutConfig *DUTConfig) {
-	testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] cleanupDut :: DUT %q :: START", dutConfig.DUT.HostName())
-	defer testing.ContextLogf(ctx, "[BLUETOOTH_FIXTURE] cleanupDut :: DUT %q :: END", dutConfig.DUT.HostName())
-	for i := len(dutConfig.onDutCleanupStack) - 1; i >= 0; i-- {
-		dutConfig.onDutCleanupStack[i](ctx, dutConfig)
-	}
-	dutConfig.onDutCleanupStack = nil
 }
 
 func (tf *fixture) resolveChromeCredentials(ctx context.Context, s *testing.FixtState) {
@@ -931,7 +990,7 @@ func (tf *fixture) startChromeUI(ctx context.Context, dutConfig *DUTConfig) erro
 			return errors.Wrap(err, "failed to start Chrome UI with ChromeService")
 		}
 		dutConfig.uiEnabled = true
-		dutConfig.onDutCleanupStack = append(dutConfig.onDutCleanupStack, func(ctx context.Context, dutConfig *DUTConfig) {
+		dutConfig.addCleanupStep(func(ctx context.Context, dutConfig *DUTConfig) {
 			if !dutConfig.uiEnabled {
 				return
 			}
@@ -977,24 +1036,16 @@ func (tf *fixture) ResetChromeUI(ctx context.Context, dutConfig *DUTConfig, rest
 func (tf *fixture) dumpAllCollectedLogs(ctx context.Context, logName string) error {
 	ctx, st := timing.Start(ctx, "dumpAllCollectedLogs")
 	defer st.End()
-	for i, dbusMonitor := range tf.bluetoothServicesDBusMonitors {
-		dutName := fmt.Sprintf("dut%d", i)
-		logDir := filepath.Join("dbus_monitor_bluetooth", dutName)
-		if err := log.DumpCollectedLogsToFile(ctx, dbusMonitor, logDir, logName); err != nil {
-			return errors.Wrapf(err, "failed to dump collected dbus-monitor messages from %s", dutName)
+	// Dump DUT logs.
+	for _, dutConfig := range tf.fv.DUTConfigs {
+		if err := dutConfig.dumpLogs(ctx, logName); err != nil {
+			return errors.Wrapf(err, "failed to dump logs for DUT %q", dutConfig.DUT.HostName())
 		}
 	}
+	// Dump btpeer logs.
 	for _, btpeer := range tf.fv.BTPeers {
 		if err := btpeer.DumpLogs(ctx, logName); err != nil {
 			return errors.Wrapf(err, "failed to dump logs for btpeer %q", btpeer.Hostname())
-		}
-	}
-	for i, btmonLog := range tf.btsnoopCollectors {
-		testing.ContextLogf(ctx, "Dump logs for btsnoop dut %d", i)
-		dutName := fmt.Sprintf("dut%d", i)
-		logDir := filepath.Join("btsnoop", dutName)
-		if err := log.DumpCollectedLogsToFile(ctx, btmonLog, logDir, "btsnoop"); err != nil {
-			return errors.Wrapf(err, "failed to dump collected btsnoop log from %s", dutName)
 		}
 	}
 	return nil
