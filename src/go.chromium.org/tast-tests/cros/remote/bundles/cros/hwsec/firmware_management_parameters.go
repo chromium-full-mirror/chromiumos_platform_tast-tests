@@ -24,7 +24,7 @@ func init() {
 		},
 		BugComponent: "b:1188704",
 		SoftwareDeps: []string{"tpm_clear_allowed"},
-		Attr:         []string{"group:hwsec_destructive_func"},
+		Attr:         []string{"group:hwsec_destructive_func", "group:device_management"},
 	})
 }
 

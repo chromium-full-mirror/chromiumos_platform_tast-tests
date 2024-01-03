@@ -24,7 +24,7 @@ func init() {
 			"zuan@chromium.org", // Test author
 		},
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:hwsec_destructive_func", "group:cryptohome"},
+		Attr:         []string{"group:hwsec_destructive_func", "group:cryptohome", "group:device_management"},
 		SoftwareDeps: []string{"tpm_clear_allowed", "reboot"},
 		Timeout:      5 * time.Minute,
 	})

@@ -26,7 +26,7 @@ func init() {
 		},
 		// ChromeOS > Platform > System > Hardware Security > HwSec AP
 		BugComponent: "b:1188704",
-		Attr:         []string{"group:hw_agnostic"},
+		Attr:         []string{"group:hw_agnostic", "group:device_management"},
 		// TODO(b/249934249): Add the gsc version test after we enabled the ti50-emulator.
 		SoftwareDeps: []string{"tpm2_simulator"},
 		Params: []testing.Param{
