@@ -100,7 +100,9 @@ func ChargeDischargeBattery(ctx context.Context, s *testing.State) {
 	}
 
 	if restartPowerd, err := setup.DisableService(ctx, "powerd"); err == nil {
-		defer restartPowerd(ctx)
+		if restartPowerd != nil {
+			defer restartPowerd(ctx)
+		}
 	} else {
 		testing.ContextLogf(ctx, "Failed to stop powerd: %v; Still prepare battery to target range even though it might take longer", err)
 	}
