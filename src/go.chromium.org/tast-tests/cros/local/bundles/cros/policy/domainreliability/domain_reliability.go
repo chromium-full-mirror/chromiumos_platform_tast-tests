@@ -10,14 +10,11 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/policy/networkrequestmonitor"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/network/ping"
-	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -58,9 +55,8 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 }
 
 // TriggerDomainReliabilityAllowed triggers domain reliability diagnostic data
-// reporting when allowed by policy. It is triggered by preventing DNS resolution
-// for all hostnames including a test domain reliability URL and attempting to connect
-// to that URL.
+// reporting when allowed by policy.
+// It is triggered by block images.google.com and return 500 error.
 func TriggerDomainReliabilityAllowed(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
 	cr := params.Chrome
 	tconn, err := cr.TestAPIConn(ctx)
@@ -73,33 +69,7 @@ func TriggerDomainReliabilityAllowed(ctx context.Context, params networkrequestm
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Set up test topology and cleanup.
-	testEnv := routing.NewSimpleNetworkEnvWithoutResetProfile(true, true, true, true)
-	if err := testEnv.SetUp(ctx); err != nil {
-		return errors.Wrap(err, "failed to set up routing test env")
-	}
-	defer func(ctx context.Context) error {
-		if err := testEnv.TearDown(ctx); err != nil {
-			return errors.Wrap(err, "failed to tear down routing test env")
-		}
-		return err
-	}(cleanupCtx)
-
-	// Wait for online and verify topology in host.
-	if err := testEnv.ShillService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 10*time.Second); err != nil {
-		return errors.Wrap(err, "failed to wait for service online")
-	}
-	var pingAddrs []string
-	pingAddrs = append(pingAddrs, routing.TestDomainNameV4)
-	pingAddrs = append(pingAddrs, routing.TestDomainNameV6)
-	for _, target := range pingAddrs {
-		if err := ping.ExpectPingSuccessWithTimeout(ctx, target, "chronos", 10*time.Second); err != nil {
-			return errors.Wrapf(err, "network verification failed: %v is not reachable as user %s on host", target, "chronos")
-		}
-	}
-
 	// Open new tab and navigate to domainReliabilityTestURL.
-	// Here we cannot use cr.Conn, because the network test insfrastructure blocks all sites.
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get keyboard")
@@ -112,10 +82,10 @@ func TriggerDomainReliabilityAllowed(ctx context.Context, params networkrequestm
 		return errors.Wrapf(err, "failed to type %s", DomainReliabilityTestURL)
 	}
 
-	// Wait for DNS probe to complete to ensure domain reliability report is created.
+	// Wait for traffic error to ensure domain reliability report is created.
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(nodewith.Name("DNS_PROBE_FINISHED_NO_INTERNET").Role(role.StaticText))(ctx); err != nil {
-		return errors.Wrap(err, "failed to wait for DNS probe to complete")
+	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(nodewith.NameContaining("Error injected by mitmproxy.").Role(role.StaticText))(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for traffic error")
 	}
 
 	return nil

@@ -175,7 +175,7 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 	return nil
 }
 
-// verifyProxyStart verifys that the proxy starts successfully by get google home page.
+// verifyProxyStart verifies that the proxy starts successfully by get youtube home page.
 func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	// Get cert.
 	certFilePath, err := mp.RootCertificate(ctx)
@@ -209,7 +209,8 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, err := client.Get("https://www.google.com"); err != nil {
+		// Avoid using www.google.com because some tests may block google.com domain.
+		if _, err := client.Get("https://www.youtube.com"); err != nil {
 			return errors.Wrap(err, "failed to access google homepage")
 		}
 		return nil

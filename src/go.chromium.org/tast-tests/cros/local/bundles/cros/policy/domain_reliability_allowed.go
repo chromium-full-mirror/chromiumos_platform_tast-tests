@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
@@ -39,7 +40,8 @@ func init() {
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier"},
-		Timeout:      5 * time.Minute,
+		Data:         []string{"domain_reliability_500_requests.py"},
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
 				Fixture: fixture.FakeDMSEnrolled,
@@ -116,6 +118,16 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
+			mp := mitmproxy.New()
+			mp.SetOutDir(s.OutDir())
+			mp.SetScriptPath(s.DataPath("domain_reliability_500_requests.py"))
+
+			cleanup, err := cr.LaunchAndApplyProxy(ctx, mp)
+			if err != nil {
+				s.Fatal("Failed to launch and apply proxy: ", err)
+			}
+			defer cleanup(cleanupCtx)
+
 			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
@@ -127,7 +139,7 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			// since the upload happens in the background and there is no UI notification.
 			// Wait to allow time to write to log (starts after 1 minute).
 			foundAnnotation, err := netExport.FindUntil(ctx, domainreliability.AnnotationHashCode, &testing.PollOptions{
-				Timeout:  80 * time.Second,
+				Timeout:  180 * time.Second,
 				Interval: 10 * time.Second,
 			})
 			if err != nil {
