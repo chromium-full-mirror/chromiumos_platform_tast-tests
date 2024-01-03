@@ -6,18 +6,21 @@ package power
 
 import (
 	"context"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	rp "go.chromium.org/tast-tests/cros/remote/power"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -70,6 +73,7 @@ func init() {
 				ExtraRequirements: []string{"pwr-batLife-0005-v01", "pwr-batLife-0013-v01"},
 			},
 		},
+		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService"},
 	})
 }
 
@@ -116,9 +120,24 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	// Get target state for entrance map
 	targetState := s.Param().(string)
 
+	// Connect to rpc service client
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	defer cl.Close(ctx)
+	client := ps.NewLocalInfoServiceClient(cl.Conn)
+
 	// Ensure that the DUT has a charged battery
-	chargeBattery(ctx, s)
-	capacity, err := getCapacity(ctx, s.DUT())
+	if err := rp.ChargeBattery(ctx, chargeTarget, client); err != nil {
+		s.Fatal("Failed to charge battery: ", err)
+	}
+
+	status, err := client.GetPowerStatus(ctx, &empty.Empty{})
+	if err != nil {
+		s.Fatal("Failed to call gRPC service for power status: ", err)
+	}
+	capacity := status.GetBatteryChargeFull()
 	s.Logf("Charged Ah capacity of battery is  %f", capacity)
 
 	// Make sure that the watchdog on ccd is disconnected
@@ -242,45 +261,6 @@ func LowPowerConsumption(ctx context.Context, s *testing.State) {
 	if err := h.Servo.WatchdogAdd(ctx, servo.WatchdogCCD); err != nil {
 		s.Fatal("Failed to switch CCD watchdog on: ", err)
 	}
-}
-
-func chargeBattery(ctx context.Context, s *testing.State) {
-	s.Logf("Waiting for battery to reach %f", chargeTarget)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := s.DUT().Conn().CommandContext(ctx, "power_supply_info").Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to get power_supply_info")
-		}
-		fullChargeRe := regexp.MustCompile(`.*display percentage:\s*([0-9.]*)`)
-		matches := fullChargeRe.FindSubmatch(out)
-		if len(matches) != 2 {
-			return errors.Wrap(err, "display percentage not found in power_supply_info")
-		}
-		if percent, err := strconv.ParseFloat(string(matches[1]), 64); err != nil {
-			return err
-		} else if percent < chargeTarget {
-			s.Logf("charging, percentage is %f percent", percent)
-			return errors.Errorf("display percentage %f, want >%f", percent, chargeTarget)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Minute, Interval: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to finish charging battery: ", err)
-	}
-}
-
-// getCapacity gets battery capacity information from power_supply_info,
-// returns the value in amp hours
-func getCapacity(ctx context.Context, dut *dut.DUT) (float64, error) {
-	out, err := dut.Conn().CommandContext(ctx, "power_supply_info").Output()
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to get power_supply_info")
-	}
-	fullChargeRe := regexp.MustCompile(`.*full charge \(Ah\):\s*([0-9.]*)`)
-	matches := fullChargeRe.FindSubmatch(out)
-	if len(matches) != 2 {
-		return 0, errors.Wrap(err, "full charge (Ah) not found in power_supply_info")
-	}
-	return strconv.ParseFloat(string(matches[1]), 64)
 }
 
 // entranceTable is a map to the entrance functions for different states

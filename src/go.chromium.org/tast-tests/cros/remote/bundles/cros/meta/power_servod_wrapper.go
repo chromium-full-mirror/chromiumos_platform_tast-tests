@@ -16,11 +16,11 @@ import (
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	rp "go.chromium.org/tast-tests/cros/remote/power"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -179,7 +179,17 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		filters = append(filters, regexp.MustCompile(param.filter))
 	}
 
-	chargeBattery(ctx, s)
+	// Connect to rpc service clients.
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	defer cl.Close(ctx)
+	client := ps.NewLocalInfoServiceClient(cl.Conn)
+
+	if err := rp.ChargeBattery(ctx, chargeTarget, client); err != nil {
+		s.Fatal("Failed to charge battery: ", err)
+	}
 
 	// Disable charging.
 	if _, err := s.DUT().Conn().CommandContext(ctx, "ectool", "chargeoverride", "dontcharge").Output(); err != nil {
@@ -243,7 +253,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to save perf data for crosbolt: ", err)
 	}
 
-	devInfo, oneTimeMetrics, err := localDUTInfo(ctx, s.DUT(), s.RPCHint())
+	devInfo, oneTimeMetrics, err := localDUTInfo(ctx, client)
 	if err != nil {
 		s.Fatal("Failed to get local DUT info: ", err)
 	}
@@ -254,14 +264,7 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 
 }
 
-func localDUTInfo(ctx context.Context, dut *dut.DUT, rpchint *testing.RPCHint) (*ps.DeviceInfo, *ps.OneTimeMetrics, error) {
-	cl, err := rpc.Dial(ctx, dut, rpchint)
-	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to connect to the RPC service on the DUT")
-	}
-	defer cl.Close(ctx)
-
-	client := ps.NewLocalInfoServiceClient(cl.Conn)
+func localDUTInfo(ctx context.Context, client ps.LocalInfoServiceClient) (*ps.DeviceInfo, *ps.OneTimeMetrics, error) {
 	devInfo, err := client.GetDeviceInfoFromDUT(ctx, &empty.Empty{})
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "failed to call gRPC service for device info")
@@ -272,33 +275,4 @@ func localDUTInfo(ctx context.Context, dut *dut.DUT, rpchint *testing.RPCHint) (
 		return nil, nil, errors.Wrap(err, "failed to call gRPC service for one time metrics")
 	}
 	return devInfo, oneTimeMetrics, nil
-}
-
-func chargeBattery(ctx context.Context, s *testing.State) {
-	s.Logf("Waiting for battery to reach %f", chargeTarget)
-
-	// TODO: b/301489823 - Use dump_power_status.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := s.DUT().Conn().CommandContext(ctx, "power_supply_info").Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to get power_supply_info")
-		}
-		if regexp.MustCompile(`.*online:\s*yes`).Find(out) == nil {
-			return testing.PollBreak(errors.Wrap(err, "power is not connected"))
-		}
-		fullChargeRe := regexp.MustCompile(`.*display percentage:\s*([0-9.]*)`)
-		matches := fullChargeRe.FindSubmatch(out)
-		if len(matches) != 2 {
-			return errors.Wrap(err, "display percentage not found in power_supply_info")
-		}
-		if percent, err := strconv.ParseFloat(string(matches[1]), 64); err != nil {
-			return err
-		} else if percent < chargeTarget {
-			s.Logf("charging, percentage is %f percent", percent)
-			return errors.Errorf("display percentage %f, want >%f", percent, chargeTarget)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Minute, Interval: 5 * time.Second}); err != nil {
-		s.Fatal("Failed to finish charging battery: ", err)
-	}
 }
