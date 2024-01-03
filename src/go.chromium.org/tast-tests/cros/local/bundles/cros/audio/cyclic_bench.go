@@ -15,9 +15,11 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"golang.org/x/exp/slices"
 )
 
 type schedPolicy int
@@ -73,6 +75,22 @@ const (
 	// defaultStressWorker is the number of workers spawned in the stress test per cpu thread.
 	defaultStressWorker = 2
 )
+
+// TODO(b/297967956): Remove devices when latencies are stable
+var cyclicBenchUnstableModels = []string{
+	// asurada
+	"hayato", "spherion",
+	// volteer
+	"chronicler", "collis", "copano", "delbin", "drobit", "elemi", "lillipup", "lindar", "volet", "volta",
+	// strongbad
+	"coachz", "homestar", "quackingstick", "wormdingler",
+	// trogdor
+	"kingoftown", "lazor", "limozeen", "pazquel", "pazquel360", "pompom",
+	// staryu
+	"starmie",
+	// elm
+	"elm",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -397,8 +415,13 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			Direction: perf.SmallerIsBetter}
 		p.Set(maxLatency, stat.Max)
 
+		model, err := crosconfig.Get(ctx, "/", "name")
+		if err != nil {
+			s.Error("Failed to read model from cros_config: ", err)
+		}
+
 		if stat.Max > float64(param.MaxLatencyThreshold/time.Microsecond) {
-			if param.ShouldFail {
+			if param.ShouldFail && !slices.Contains(cyclicBenchUnstableModels, model) {
 				s.Error("Max latency exceeds threshold: ", stat.Max,
 					"us > ", param.MaxLatencyThreshold)
 			} else {
