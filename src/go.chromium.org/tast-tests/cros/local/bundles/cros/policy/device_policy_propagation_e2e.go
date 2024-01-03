@@ -57,7 +57,7 @@ func init() {
 }
 
 func DevicePolicyPropagationE2E(ctx context.Context, s *testing.State) {
-	fixtData := fixture.TAPEEnrolledFixtData{}
+	fixtData := fixture.TAPEAccountData{}
 	if err := s.FixtFillValue(&fixtData); err != nil {
 		s.Fatal("Failed to deserialize remote fixture data: ", err)
 	}

@@ -127,11 +127,15 @@ const (
 const (
 	// TAPEEnrolled is a fixture name.
 	TAPEEnrolled = "tapeEnrolled"
+	// TAPEAccount is a fixture name.
+	TAPEAccount = "tapeAccount"
 )
 
-// TAPEEnrolledFixtData is used by the TAPEEnrolled to pass data to tests.
-type TAPEEnrolledFixtData struct {
-	Username  string
-	Password  string
-	RequestID string
+// TAPEAccountData contains TAPE account data.
+type TAPEAccountData struct {
+	Username    string
+	Password    string
+	RequestID   string
+	CustomerID  string
+	OrgUnitPath string
 }

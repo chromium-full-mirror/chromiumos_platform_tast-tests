@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,18 +36,17 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.TAPEAccount,
 		Vars: []string{
 			tape.ServiceAccountVar,
 		},
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     fixture.ChromeTAPEEnrolledLoggedIn,
-		Desc:     "Logged into a real managed user session on an erolled device",
-		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
-		Impl: &tapeChromeFixture{
-			importUser: true,
-		},
+		Name:            fixture.ChromeTAPEEnrolledLoggedIn,
+		Desc:            "Logged into a real managed user session on an erolled device",
+		Contacts:        []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},
+		Impl:            &tapeChromeFixture{},
 		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -78,9 +76,6 @@ func (t TAPEChromeFixtData) Chrome() *chrome.Chrome {
 }
 
 type tapeChromeFixture struct {
-	// importUser indicates the fixture should import the user from the parent fixture.
-	importUser bool
-
 	// chrome is a connection to an already-started Chrome instance that loads policies from DMServer.
 	chrome *chrome.Chrome
 
@@ -95,50 +90,17 @@ type tapeChromeFixture struct {
 	// clean stores if Chrome is clean after PostTest.
 	// It is considered clean if it does not interfere with the next test, e.g. with a locked screen.
 	clean bool
-
-	// accountManager is used to clean up when leasing a user.
-	accountManager *tape.OwnedTestAccountManager
 }
 
 func (t *tapeChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
-	defer cancel()
-
-	ok := false
-
-	if t.importUser {
-		fixtData := fixture.TAPEEnrolledFixtData{}
-		if err := s.ParentFillValue(&fixtData); err != nil {
-			s.Fatal("Failed to deserialize remote fixture data: ", err)
-		}
-
-		t.username = fixtData.Username
-		t.password = fixtData.Password
-		t.requestID = fixtData.RequestID
-	} else {
-		tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
-		if err != nil {
-			s.Fatal("Failed to create tape client: ", err)
-		}
-
-		timeout := int32(tapeFixturetotalRunTime.Seconds())
-		accountManager, account, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
-		if err != nil {
-			s.Fatal("Failed to create an account manager and lease an account: ", err)
-		}
-		defer func(ctx context.Context) {
-			if !ok {
-				accountManager.CleanUp(cleanupCtx)
-			}
-		}(cleanupCtx)
-
-		t.accountManager = accountManager
-
-		t.username = account.Username
-		t.password = account.Password
-		t.requestID = account.RequestID
+	fixtData := fixture.TAPEAccountData{}
+	if err := s.ParentFillValue(&fixtData); err != nil {
+		s.Fatal("Failed to deserialize remote fixture data: ", err)
 	}
+
+	t.username = fixtData.Username
+	t.password = fixtData.Password
+	t.requestID = fixtData.RequestID
 
 	cr, err := chrome.New(ctx,
 		chrome.GAIALogin(chrome.Creds{User: t.username, Pass: t.password}),
@@ -147,8 +109,6 @@ func (t *tapeChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 	if err != nil {
 		s.Fatal("Failed to start chrome: ", err)
 	}
-
-	ok = true
 
 	t.chrome = cr
 
@@ -161,12 +121,6 @@ func (t *tapeChromeFixture) SetUp(ctx context.Context, s *testing.FixtState) int
 }
 
 func (t *tapeChromeFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	if t.accountManager != nil {
-		if err := t.accountManager.CleanUp(ctx); err != nil {
-			s.Error("Failed to cleanup TAPE: ", err)
-		}
-	}
-
 	chrome.Unlock()
 
 	if t.chrome == nil {

@@ -17,14 +17,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	tapeFixturetotalRunTime = 30 * time.Minute
-)
-
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name: fixture.TAPEEnrolled,
-		Desc: "Leases an account using TAPE and enrolls using real DMServer",
+		Desc: "Enrolls using real DMServer by using a TAPE account",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",
@@ -34,6 +30,7 @@ func init() {
 		TearDownTimeout: 5 * time.Minute,
 		ResetTimeout:    15 * time.Second,
 		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.TAPEAccount,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			"tast.cros.hwsec.OwnershipService",
@@ -47,12 +44,13 @@ func init() {
 }
 
 type tapeEnrolledFixt struct {
-	accountManager *tape.OwnedTestAccountManager
-	account        *tape.OwnedTestAccount
-	rpcClient      *rpc.Client
+	account   *fixture.TAPEAccountData
+	rpcClient *rpc.Client
 }
 
 func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	e.account = s.ParentValue().(*fixture.TAPEAccountData)
+
 	ok := false
 
 	cleanupCtx := ctx
@@ -83,21 +81,9 @@ func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) inte
 		s.Fatal("Failed to create tape client: ", err)
 	}
 
-	timeout := int32(tapeFixturetotalRunTime.Seconds())
-	// Create an account manager and lease a test account for the duration of the test.
-	accountManager, account, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, true /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(tape.DefaultManaged))
-	if err != nil {
-		s.Fatal("Failed to create an account manager and lease an account: ", err)
-	}
 	defer func(ctx context.Context) {
 		if !ok {
-			accountManager.CleanUp(cleanupCtx)
-		}
-	}(cleanupCtx)
-
-	defer func(ctx context.Context) {
-		if !ok {
-			if err := tapeClient.DeprovisionHelper(ctx, rpcClient, account.CustomerID, account.OrgUnitPath); err != nil {
+			if err := tapeClient.DeprovisionHelper(ctx, rpcClient, e.account.CustomerID, e.account.OrgUnitPath); err != nil {
 				s.Fatal("Failed to deprovision device: ", err)
 			}
 		}
@@ -105,8 +91,8 @@ func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) inte
 
 	policyClient := pspb.NewPolicyServiceClient(rpcClient.Conn)
 	if _, err := policyClient.GAIAEnrollUsingChrome(ctx, &pspb.GAIAEnrollUsingChromeRequest{
-		Username: account.Username,
-		Password: account.Password,
+		Username: e.account.Username,
+		Password: e.account.Password,
 	}); err != nil {
 		s.Fatal("Failed to enroll using Chrome: ", err)
 	}
@@ -120,16 +106,9 @@ func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) inte
 		s.Error("Failed to connect to DUT: ", err)
 	}
 
-	e.accountManager = accountManager
-	e.account = account
-
 	ok = true
 
-	return &fixture.TAPEEnrolledFixtData{
-		Username:  account.Username,
-		Password:  account.Password,
-		RequestID: account.RequestID,
-	}
+	return e.account
 }
 
 func (e *tapeEnrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
@@ -157,16 +136,8 @@ func (e *tapeEnrolledFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 	defer cl.Close(ctx)
 
-	if e.account != nil {
-		tapeClient.ReleaseOwnedTestAccount(ctx, e.account)
-	}
-
-	if e.accountManager != nil {
-		if err := tapeClient.DeprovisionHelper(ctx, cl, e.account.CustomerID, e.account.OrgUnitPath); err != nil {
-			s.Fatal("Failed to deprovision device: ", err)
-		}
-
-		e.accountManager.CleanUp(ctx)
+	if err := tapeClient.DeprovisionHelper(ctx, cl, e.account.CustomerID, e.account.OrgUnitPath); err != nil {
+		s.Fatal("Failed to deprovision device: ", err)
 	}
 }
 
