@@ -36,6 +36,17 @@ type ChargeParams struct {
 	IsPowerQual bool
 }
 
+// RegressionTestChargeParam is used for tests in power_regression suite that
+// take >= 1hr. They need to be charged to 50% of battery to prevent force
+// discharge failure from low battery threshold.
+var RegressionTestChargeParam = ChargeParams{
+	MinChargePercentage:   50.0,
+	MaxChargePercentage:   100.0,
+	DischargeOnCompletion: true,
+	IsCustomized:          false,
+	IsPowerQual:           false,
+}
+
 // IdleParams defines the screen & bluetooth on/off behavior and the time params
 // for a idle test.
 type IdleParams struct {

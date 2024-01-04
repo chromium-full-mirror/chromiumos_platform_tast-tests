@@ -56,7 +56,7 @@ func init() {
 			}, {
 				Name:      "h264_1080_30fps_1hr_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_1080_30fps", TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
-				Timeout:   time.Hour + power.RecorderTimeout,
+				Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4"},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
@@ -122,7 +122,7 @@ func init() {
 			}, {
 				Name:      "vp9_1080_30fps_1hr_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_1080_30fps", TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
-				Timeout:   time.Hour + power.RecorderTimeout,
+				Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
 				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm"},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
@@ -214,6 +214,12 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	}
 	if total == time.Duration(0) {
 		total = defaultTimeParams.Total
+	}
+	// For tests that take more than 1 hour, make sure the device has at least
+	// 50% of battery.
+	if total >= time.Hour {
+		s.Logf("Prepare the device to have at least %.2f%% battery", power.RegressionTestChargeParam.MinChargePercentage)
+		setup.PrepareBattery(ctx, power.RegressionTestChargeParam)
 	}
 
 	// VP8 and VP9 use webm, h264, av1 use mp4.
