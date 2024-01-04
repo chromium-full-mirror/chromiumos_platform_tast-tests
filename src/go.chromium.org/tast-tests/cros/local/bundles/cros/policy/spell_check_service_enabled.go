@@ -99,7 +99,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			defer netExport.Cleanup(cleanupCtx)
 
 			mp := mitmproxy.New()
-			mp.SetBinaryPath(s.DataPath(mitmproxy.MitmdumpBinFile)).SetOutDir(s.OutDir())
+			mp.SetOutDir(s.OutDir())
 			cleanup, err := cr.LaunchAndApplyProxy(ctx, mp)
 			if err != nil {
 				s.Fatal("Failed to launch and apply proxy: ", err)

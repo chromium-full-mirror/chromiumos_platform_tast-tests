@@ -17,8 +17,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const mitmdumpBinFile = "mitmdump_bin"
-
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NetworkMonitor,
@@ -32,7 +30,6 @@ func init() {
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
-		Data:         []string{mitmdumpBinFile},
 		Fixture:      fixture.ChromeLoggedIn,
 	})
 }
@@ -45,7 +42,7 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	mp := mitmproxy.New()
-	mp.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetOutDir(s.OutDir())
+	mp.SetOutDir(s.OutDir())
 
 	cleanup, err := cr.LaunchAndApplyProxy(ctx, mp)
 	if err != nil {

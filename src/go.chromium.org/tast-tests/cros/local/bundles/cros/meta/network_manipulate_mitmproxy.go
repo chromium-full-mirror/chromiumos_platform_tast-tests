@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	mitmdumpBinFile = "mitmdump_bin"
 	httpRedirect    = "mitmproxy_redirect_requests.py"
 	httpErrorInject = "mitmproxy_inject_500_requests.py"
 )
@@ -38,7 +37,6 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      fixture.ChromeLoggedIn,
-		Data:         []string{mitmdumpBinFile},
 		Params: []testing.Param{{
 			Name:      "redirect",
 			Val:       "redirect",
@@ -65,8 +63,7 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	proxy := mitmproxy.New()
 
-	// TODO(b/298126986): Use binary in test image.
-	proxy.SetBinaryPath(s.DataPath(mitmdumpBinFile)).SetOutDir(s.OutDir())
+	proxy.SetOutDir(s.OutDir())
 
 	if redirectCase {
 		proxy.SetScriptPath(s.DataPath(httpRedirect))
