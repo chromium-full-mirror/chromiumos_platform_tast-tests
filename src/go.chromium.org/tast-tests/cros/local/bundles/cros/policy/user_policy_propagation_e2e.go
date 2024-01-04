@@ -78,6 +78,7 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a tape client: ", err)
 	}
 
+	initialPolicyFailedToBeVerified := false
 	s.Run(ctx, "initial", func(context.Context, *testing.State) {
 		tapePolicies := &tape.AllowDinosaurEasterEggUsers{
 			AllowDinosaurEasterEgg: tape.NULLABLEBOOLEAN_FALSE,
@@ -93,9 +94,17 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 		ctx, cancel := context.WithTimeout(ctx, policyPropagationTimeout)
 		defer cancel()
 		if err := policyutil.WaitForPolicies(ctx, tconn, expectedPolicies); err != nil {
-			s.Error("Failed to verify initial policy: ", err)
+			// This test tolerates occasional propagation timeouts due to DMServer's
+			// 24h SLO for invalidations. We rely on Crosbolt metrics and Perfmon
+			// alerts instead.
+			s.Log("Failed to verify initial policy: ", err)
+			initialPolicyFailedToBeVerified = true
 		}
 	})
+	if initialPolicyFailedToBeVerified {
+		s.Log("Skipping the rest of the test")
+		return
+	}
 
 	s.Run(ctx, "update", func(context.Context, *testing.State) {
 		pv := perf.NewValues()
@@ -108,15 +117,15 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 		tapePolicies := &tape.AllowDinosaurEasterEggUsers{
 			AllowDinosaurEasterEgg: tape.NULLABLEBOOLEAN_TRUE,
 		}
-		perf.RecordExecutionTime(
+		if err := perf.RecordExecutionTime(
 			pv,
 			"set_policy_time",
-			func() {
-				if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
-					s.Fatal("Failed to set updated policy: ", err)
-				}
+			func() error {
+				return tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID)
 			},
-		)
+		); err != nil {
+			s.Fatal("Failed to set updated policy: ", err)
+		}
 
 		ctx, cancel := context.WithTimeout(ctx, policyPropagationTimeout)
 		defer cancel()
@@ -126,10 +135,15 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 		perf.RecordExecutionTime(
 			pv,
 			"propagation_time",
-			func() {
-				if err := policyutil.WaitForPolicies(ctx, tconn, expectedPolicies); err != nil {
-					s.Fatal("Failed to verify updated policy: ", err)
+			func() error {
+				err := policyutil.WaitForPolicies(ctx, tconn, expectedPolicies)
+				if err != nil {
+					// This test tolerates occasional propagation timeouts due to
+					// DMServer's 24h SLO for invalidations. We rely on Crosbolt metrics
+					// and Perfmon alerts instead.
+					s.Log("Failed to verify updated policy: ", err)
 				}
+				return err
 			},
 		)
 	})

@@ -713,17 +713,25 @@ func validate(s Metric, vs []float64) {
 }
 
 // RecordExecutionTime records the execution time of the function `f`
-// for Chrome Performance Dashboard via `pv`, under the metric `name`.
-func RecordExecutionTime(pv *Values, name string, f func()) {
-	start := time.Now()
+// for Chrome Performance Dashboard via `pv`, under the metric `name`. If `f`
+// returns an error, no data is recorded and error is forwarded.
+func RecordExecutionTime(pv *Values, name string, f func() error) error {
+	return recordExecutionTimeWithClock(pv, name, f, defaultClock{})
+}
 
-	f()
+func recordExecutionTimeWithClock(pv *Values, name string, f func() error, clock Clock) error {
+	start := clock.Now()
 
-	elapsed := time.Now().Sub(start)
+	if err := f(); err != nil {
+		return err
+	}
 
+	elapsed := clock.Now().Sub(start)
 	pv.Set(Metric{
 		Name:      name,
 		Unit:      "milliseconds",
 		Direction: SmallerIsBetter,
 	}, (float64)(elapsed.Milliseconds()))
+
+	return nil
 }

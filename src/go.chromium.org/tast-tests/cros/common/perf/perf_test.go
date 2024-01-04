@@ -476,3 +476,37 @@ func TestSaveAsDebugCSV(t *testing.T) {
 
 	saveAndCompareCSV(t, p, "testdata/TestSaveAsDebugCSV.csv")
 }
+
+func TestRecordExecutionTime(t *testing.T) {
+	p := NewValues()
+	clock := NewFakeClock()
+
+	err := recordExecutionTimeWithClock(
+		p, "metric", func() error {
+			clock.Advance(100 * time.Millisecond)
+			return nil
+		},
+		clock,
+	)
+
+	if err != nil {
+		t.Errorf("Unexpected error: %s", err)
+	}
+	saveAndCompare(t, p, "testdata/TestRecordExecutionTime.json")
+}
+
+func TestRecordExecutionTimeWithError(t *testing.T) {
+	p := NewValues()
+	testErr := errors.New("test error")
+
+	err := RecordExecutionTime(
+		p, "metric", func() error {
+			return testErr
+		},
+	)
+
+	if err != testErr {
+		t.Fatal("Failed to forward error")
+	}
+	saveAndCompare(t, p, "testdata/TestRecordExecutionTimeWithError.json")
+}

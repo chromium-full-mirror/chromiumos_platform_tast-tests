@@ -1,0 +1,10 @@
+{
+  "metric": {
+    "summary": {
+      "improvement_direction": "down",
+      "type": "scalar",
+      "units": "milliseconds",
+      "value": 100
+    }
+  }
+}
