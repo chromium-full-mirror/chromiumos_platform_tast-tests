@@ -77,7 +77,7 @@ func USBShareMassStorage(ctx context.Context, s *testing.State) {
 		deviceLabel         = "virtual-usb"
 		containerHomeDir    = "/home/testuser"
 		containerMountDir   = containerHomeDir + "/usb-drive"
-		mountDirPrefix      = "mass_storage_"
+		mountDir            = "/media/removable/" + deviceLabel
 	)
 	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	cont := s.FixtValue().(crostini.FixtureData).Cont
@@ -91,34 +91,21 @@ func USBShareMassStorage(ctx context.Context, s *testing.State) {
 	handler := faillog.DumpUITreeWithScreenshotHandler(cleanupCtx, tconn, "ui_tree")
 	s.AttachErrorHandlers(handler, handler)
 
-	mountPoint, cleanup, err := setupMassStorage(ctx, deviceLabel)
+	_, cleanup, err := setupMassStorage(ctx, deviceLabel)
 	if err != nil {
 		s.Fatal("Unable to setup the mass storage device: ", err)
 	}
 	defer cleanup(cleanupCtx)
 
-	mountDir, err := os.MkdirTemp("", mountDirPrefix)
-	if err != nil {
-		s.Fatal("Failed to create a temporary dir to mount the mass storage device: ", err)
+	if err := waitUntilMountedOutside(ctx, mountDir); err != nil {
+		s.Fatal("Timed out waiting for ChromeOS to mount the mass storage device: ", err)
 	}
-	defer os.RemoveAll(mountDir)
 
-	unmountOutside, err := mountOutside(ctx, mountPoint, mountDir)
-	if err != nil {
-		s.Fatal("Failed to mount the storage device: ", err)
-	}
-	defer unmountOutside(cleanupCtx)
-
-	// Create outside file. This must be done before the mass storage is shared with Crostini.
-	// Otherwise there'll be no access.
 	outsideFilePath := filepath.Join(mountDir, outsideFile)
 	if err := os.WriteFile(outsideFilePath, []byte(outsideFileContents), 0644); err != nil {
 		s.Fatalf("Failed to create file %q: %s", outsideFilePath, err)
 	}
 	defer os.Remove(outsideFilePath)
-	if err := unmountOutside(ctx); err != nil {
-		s.Fatal("Unable to unmount the mass storage device: ", err)
-	}
 
 	settings, err := settings.OpenLinuxSettings(ctx, tconn, cr, settings.ManageUSBDevices)
 	if err != nil {
@@ -169,11 +156,9 @@ func USBShareMassStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Mass storage device is still present in the container: ", err)
 	}
 
-	unmountOutside, err = mountOutside(ctx, mountPoint, mountDir)
-	if err != nil {
-		s.Fatal("Failed to mount the storage device: ", err)
+	if err := waitUntilMountedOutside(ctx, mountDir); err != nil {
+		s.Fatal("Timed out waiting for ChromeOS to mount the mass storage device: ", err)
 	}
-	defer unmountOutside(cleanupCtx)
 
 	// Assert can read a file written to the usb storage inside of the container after unsharing.
 	insideFilePath := filepath.Join(mountDir, insideFile)
@@ -182,6 +167,18 @@ func USBShareMassStorage(ctx context.Context, s *testing.State) {
 	} else if string(out) != insideFileContents {
 		s.Fatalf("The usb storage file contents is unexpected, want: %q, got %q", insideFileContents, string(out))
 	}
+}
+
+func waitUntilMountedOutside(ctx context.Context, mountDir string) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if _, stderr, err := testexec.CommandContext(ctx, "mountpoint", mountDir).SeparatedOutput(); err != nil {
+			return errors.Wrapf(err, "failed to find a mountpoint: %q", string(stderr))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
+		return errors.Wrapf(err, "timed out waiting for a mountpoint %q", mountDir)
+	}
+	return nil
 }
 
 func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string) (action.Action, error) {
@@ -197,7 +194,7 @@ func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string
 		}
 		mountPoint = string(out)
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
 		return nil, errors.Wrapf(err, "failed to identify the mount point for label %q", label)
 	}
 	if err := cont.Command(ctx, "mkdir", "-p", mountDir).Run(testexec.DumpLogOnError); err != nil {
@@ -216,7 +213,7 @@ func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string
 			return errors.Wrapf(err, "%s is not mounted on %s yet", mountPoint, mountDir)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
 		return nil, errors.Wrapf(err, "%s is not mounted on %s", mountPoint, mountDir)
 	}
 	isUnmounted := false
@@ -251,30 +248,6 @@ func setupMassStorage(ctx context.Context, label string) (string, action.Action,
 	return mountPoint, usbMassStorage.CleanUp, nil
 }
 
-func mountOutside(ctx context.Context, mountPoint, dir string) (action.Action, error) {
-	// When switching between ChromeOS and Crostini, the device may not be available for some time. Therefore need to poll.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if out, err := testexec.CommandContext(ctx, "mount", mountPoint, dir).Output(); err != nil {
-			return errors.Wrapf(err, "mount failed: %q", string(out))
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
-		return nil, errors.Wrap(err, "failed to mount the mass storage device")
-	}
-	isUnmounted := false
-	cleanup := func(ctx context.Context) error {
-		if isUnmounted {
-			return nil
-		}
-		if err := testexec.CommandContext(ctx, "umount", dir).Run(testexec.DumpLogOnError); err != nil {
-			return errors.Wrap(err, "failed to umount the mass storage device")
-		}
-		isUnmounted = true
-		return nil
-	}
-	return cleanup, nil
-}
-
 func assertDeviceSharedState(ctx context.Context, cont *vm.Container, deviceID string, expectedSharedState bool) error {
 	// When switching between ChromeOS and Crostini, the device may not be available for some time. Therefore need to poll.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -286,7 +259,7 @@ func assertDeviceSharedState(ctx context.Context, cont *vm.Container, deviceID s
 			errors.Errorf("device %q shared state in lsusb output does not match the expectation, want %t, got %t, lsusb output: %q", deviceID, expectedSharedState, !expectedSharedState, string(out))
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 1 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
 		return errors.Wrapf(err, "failed to assert device shared state is %t", expectedSharedState)
 	}
 	return nil
