@@ -205,6 +205,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 			ap.Mode(ap.Mode80211axPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 			ap.HEChWidth(ap.HEChWidth20Or40),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}, {
@@ -216,6 +217,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
 			ap.HEChWidth(ap.HEChWidth20Or40),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}, {
@@ -227,6 +229,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 			ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}, {
@@ -239,6 +242,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
 	}}

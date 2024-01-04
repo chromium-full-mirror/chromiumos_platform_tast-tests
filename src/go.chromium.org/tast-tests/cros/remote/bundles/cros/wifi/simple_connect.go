@@ -203,6 +203,7 @@ func init() {
 						ap.HEChWidth(ap.HEChWidth20Or40),
 					},
 				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
@@ -216,6 +217,7 @@ func init() {
 						ap.HEChWidth(ap.HEChWidth20Or40),
 					},
 				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
@@ -229,6 +231,7 @@ func init() {
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 					},
 				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
@@ -243,6 +246,7 @@ func init() {
 						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
 					},
 				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX"},
 			}, {
