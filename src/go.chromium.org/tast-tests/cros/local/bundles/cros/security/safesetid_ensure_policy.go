@@ -24,7 +24,7 @@ func init() {
 		},
 		BugComponent: "b:1040049",
 		SoftwareDeps: []string{},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 	})
 }
 
