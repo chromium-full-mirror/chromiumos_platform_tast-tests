@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,6 +29,7 @@ func init() {
 		Impl:            &tapeAccountFixt{},
 		SetUpTimeout:    5 * time.Minute,
 		TearDownTimeout: 3 * time.Minute,
+		ResetTimeout:    30 * time.Second,
 		ServiceDeps: []string{
 			"tast.cros.policy.PolicyService",
 			"tast.cros.hwsec.OwnershipService",
@@ -41,12 +43,14 @@ func init() {
 }
 
 type tapeAccountFixt struct {
-	accountManager *tape.OwnedTestAccountManager
-	account        *tape.OwnedTestAccount
+	accountManager    *tape.OwnedTestAccountManager
+	account           *tape.OwnedTestAccount
+	serviceAccountVar []byte
 }
 
 func (e *tapeAccountFixt) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
+	e.serviceAccountVar = []byte(s.RequiredVar(tape.ServiceAccountVar))
+	tapeClient, err := tape.NewClient(ctx, e.serviceAccountVar)
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
@@ -77,7 +81,15 @@ func (e *tapeAccountFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 }
 
 func (e *tapeAccountFixt) Reset(ctx context.Context) error {
-	// TODO(b/316326530): Reset tape account
+
+	// Clean up account between tests.
+	tapeClient, err := tape.NewClient(ctx, e.serviceAccountVar)
+	if err != nil {
+		return errors.Wrap(err, "failed to create tape client")
+	}
+	if err = tapeClient.CleanUpAccount(ctx, e.account.RequestID); err != nil {
+		return errors.Wrap(err, "failed to clean up the account")
+	}
 
 	return nil
 }

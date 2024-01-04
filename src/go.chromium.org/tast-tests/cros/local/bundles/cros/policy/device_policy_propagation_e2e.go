@@ -88,18 +88,6 @@ func DevicePolicyPropagationE2E(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a tape client: ", err)
 	}
 
-	// TODO(b/316326530): Replace with generic cleanup in the fixture.
-	defer func(ctx context.Context) {
-		// Can't unset all update policy values.
-		// Disabled updates is the default on test images anyway.
-		tapePolicies := &tape.AutoUpdateSettingsDevices{
-			UpdateDisabled: true,
-		}
-		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{"updateDisabled"} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
-			s.Fatal("Failed to clean up policies: ", err)
-		}
-	}(cleanupCtx)
-
 	s.Run(ctx, "initial", func(context.Context, *testing.State) {
 		tapePolicies := &tape.AutoUpdateSettingsDevices{
 			UpdateDisabled: true,

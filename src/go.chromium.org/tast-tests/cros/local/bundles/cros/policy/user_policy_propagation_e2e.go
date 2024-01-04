@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -69,10 +68,6 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 
 	const policyPropagationTimeout = 10 * time.Minute
 
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
-	defer cancel()
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a TestAPIConn: ", err)
@@ -82,16 +77,6 @@ func UserPolicyPropagationE2E(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a tape client: ", err)
 	}
-
-	// TODO(b/316326530): Replace with generic cleanup in the fixture.
-	defer func(ctx context.Context) {
-		tapePolicies := &tape.AllowDinosaurEasterEggUsers{
-			AllowDinosaurEasterEgg: tape.NULLABLEBOOLEAN_UNSET,
-		}
-		if err := tapeClient.SetPolicy(ctx, tapePolicies, []string{} /*updateMask*/, nil /*additionalTargetKeys*/, fixtData.RequestID); err != nil {
-			s.Fatal("Failed to clean up policies: ", err)
-		}
-	}(cleanupCtx)
 
 	s.Run(ctx, "initial", func(context.Context, *testing.State) {
 		tapePolicies := &tape.AllowDinosaurEasterEggUsers{

@@ -379,6 +379,26 @@ func (c *client) SetPolicy(ctx context.Context, policySchema PolicySchema, updat
 	return nil
 }
 
+// CleanUpAccount cleans up an owned test account identified by a requestID.
+func (c *client) CleanUpAccount(ctx context.Context, requestID string) error {
+	payloadBytes, err := json.Marshal(requestID)
+	if err != nil {
+		return errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "OTA/cleanup", callTimeout, 0, payloadBytes)
+	if err != nil {
+		return errors.Wrap(err, "failed to make request")
+	}
+	defer response.Body.Close()
+
+	// Make sure the request was successful.
+	if response.StatusCode != 200 {
+		return errors.Errorf("failed to cleanup account, status code: %d", response.StatusCode)
+	}
+
+	return nil
+}
+
 // storeDeprovisioningIDsRequest is a struct containing the necessary data to store the deprovisioning IDs in TAPE.
 type storeDeprovisioningIDsRequest struct {
 	DeviceID           string `json:"deviceid"`
