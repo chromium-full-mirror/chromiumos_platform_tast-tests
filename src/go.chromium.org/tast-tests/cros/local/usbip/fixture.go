@@ -237,7 +237,7 @@ func (u *ServerFixture) Reset(ctx context.Context) error {
 // PreTest starts the USBIP server.
 func (u *ServerFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := u.server.Start(ctx, func(err error) {
-		s.Fatalf("Error while serving requests: %s", err)
+		s.Fatal("Error while serving requests: ", err)
 	}); err != nil {
 		s.Fatal("Failed to start the server: ", err)
 	}

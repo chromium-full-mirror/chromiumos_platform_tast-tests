@@ -66,6 +66,16 @@ func Keyboard(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "keyboard")
 
 	var detach usbip.DetachFn
+	isDetached := false
+	safeDetach := func(ctx context.Context) error {
+		if isDetached || detach == nil {
+			return nil
+		}
+		err := detach(ctx)
+		isDetached = err == nil
+		return err
+	}
+	defer safeDetach(cleanupCtx)
 	testText := "This is a test message."
 	promptText := "crosh>"
 	window := nodewith.Name("crosh").Role(role.Window).ClassName("BrowserFrame")
@@ -81,6 +91,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 			if err != nil {
 				return errors.Wrap(err, "failed to attach a virtual keyboard")
 			}
+			isDetached = false
 			k.Type(testText)
 			return nil
 		},
@@ -92,7 +103,7 @@ func Keyboard(ctx context.Context, s *testing.State) {
 		func(ctx context.Context) error {
 			// Need to wrap detach into a function, because its value is changed as a part of uiauto.Combine execution.
 			// Otherwise uiauto.Combine would capture original value(nil) and fail.
-			return detach(ctx)
+			return safeDetach(ctx)
 		},
 	))(ctx); err != nil {
 		s.Fatal("Unable to attach the keyboard, type text, detach the keyboard (performed twice): ", err)
