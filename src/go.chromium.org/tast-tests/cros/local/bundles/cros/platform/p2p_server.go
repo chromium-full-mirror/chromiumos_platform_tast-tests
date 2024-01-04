@@ -9,12 +9,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/mdns"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -165,20 +166,23 @@ func P2PServer(fullCtx context.Context, s *testing.State) {
 		s.Errorf("Service port is %d; want %d", srv.Port, p2p.ServicePort)
 	}
 
-	// Share a file and check that it is advertised.
-	s.Log("Testing a new file is advertised")
+	testUUID := uuid.New().String()
+	testFileBase := "somefile-" + testUUID
+	testFileName := testFileBase + ".p2p"
 
 	const (
-		testFileBase = "somefile"
-		testFileName = "somefile.p2p"
-		testFileSize = 123456
-		advertisedID = "id_somefile=123456"
+		testFileSize = 2048
 	)
+	advertisedID := "id_" + testFileBase + "=" + strconv.Itoa(testFileSize)
+
+	// Share a file and check that it is advertised.
+	s.Log("Testing a new file is advertised, should find ", testFileName)
+
 	rand, err := generateRandomBytes(testFileSize)
 	if err != nil {
 		s.Fatal("Failed to generate a random file: ", err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(p2p.SharedDir, testFileName), rand, 0666); err != nil {
+	if err := os.WriteFile(filepath.Join(p2p.SharedDir, testFileName), rand, 0666); err != nil {
 		s.Fatalf("Failed to save %s: %v", testFileName, err)
 	}
 
