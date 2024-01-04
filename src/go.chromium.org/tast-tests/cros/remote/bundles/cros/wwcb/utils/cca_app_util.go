@@ -296,44 +296,44 @@ func waitForFileSaved(ctx context.Context, fs *dutfs.Client, dir string, pat *re
 }
 
 // ConnectExternalCamera connects an external camera through a fixture and returns device information.
-func ConnectExternalCamera(ctx context.Context, dut *dut.DUT, extCameraID string) (string, error) {
-	before, err := USBCamerasFromV4L2Test(ctx, dut)
+func ConnectExternalCamera(ctx context.Context, dut *dut.DUT, extCameraID string) ([]string, error) {
+	before, err := DevicesFromV4L2(ctx, dut)
 	if err != nil {
-		return "", errors.Wrap(err, "failed to get v4l2 devices before connecting external camera")
+		return nil, errors.Wrap(err, "failed to get v4l2 devices before connecting external camera")
 	}
 
 	if err := ControlFixture(ctx, extCameraID, "on"); err != nil {
-		return "", errors.Wrap(err, "failed to control fixture to connect external camera")
+		return nil, errors.Wrap(err, "failed to control fixture to connect external camera")
 	}
 
-	var extCamera string
+	var extCameras []string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		after, err := USBCamerasFromV4L2Test(ctx, dut)
+		after, err := DevicesFromV4L2(ctx, dut)
 		if err != nil {
 			return errors.Wrap(err, "failed to get v4l2 devices after connecting external camera")
 		}
 
 		diff := FindDifference(after, before)
-		if len(diff) == 1 {
-			extCamera = diff[0]
+		if len(diff) >= 1 {
+			extCameras = diff
 			return nil
 		}
 		return errors.New("Unable to find the external camera")
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
-		return "", err
+		return nil, err
 	}
-	return extCamera, nil
+	return extCameras, nil
 }
 
 // SwitchCCADevice clicks the "switch device" button on the CCA app.
-func SwitchCCADevice(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient, expectedDevice string) error {
+func SwitchCCADevice(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient, expectedDevices []string) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		currentDevice, err := CCAUseDevice(ctx, dut)
 		if err != nil {
 			return errors.Wrap(err, "failed to retrieve CCA app is using which camera")
 		}
 
-		if expectedDevice == currentDevice {
+		if Contains(expectedDevices, currentDevice) {
 			return nil
 		}
 
@@ -345,13 +345,13 @@ func SwitchCCADevice(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationS
 			return errors.Wrap(err, "failed to to click switch button")
 		}
 
-		return errors.Errorf("CCA app is not using the expected camera; current: %s, expected: %v", currentDevice, expectedDevice)
+		return errors.Errorf("CCA app is not using the expected camera; current: %s, expected: %v", currentDevice, expectedDevices)
 	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 3 * time.Second})
 }
 
 // CCAUseDevice returns the device currently being used by the CCA application.
 func CCAUseDevice(ctx context.Context, dut *dut.DUT) (string, error) {
-	devices, err := USBCamerasFromV4L2Test(ctx, dut)
+	devices, err := DevicesFromV4L2(ctx, dut)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get v4l2 devices")
 	}
@@ -360,11 +360,18 @@ func CCAUseDevice(ctx context.Context, dut *dut.DUT) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "execute lsof command")
 	}
-	output := string(out)
 
 	for _, device := range devices {
-		if strings.Contains(output, device) && strings.Contains(output, "arc-camera") {
-			return device, nil
+		if strings.Contains(device, "/dev/video") {
+			for _, line := range strings.Split(string(out), "\n") {
+				if strings.Contains(line, "arc-camera") {
+					for _, item := range strings.Fields(line) {
+						if item == device {
+							return device, nil
+						}
+					}
+				}
+			}
 		}
 	}
 	return "", errors.New("Unable to find CCA app is using which v4l2 devices")
