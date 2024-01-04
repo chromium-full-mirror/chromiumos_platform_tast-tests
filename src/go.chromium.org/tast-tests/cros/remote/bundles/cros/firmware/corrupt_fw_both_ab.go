@@ -38,35 +38,41 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_level3"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      25 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
-				Name:    "body_normal",
-				Fixture: fixture.NormalMode,
+				Name:              "body_normal",
+				Fixture:           fixture.NormalMode,
+				ExtraAttr:         []string{"firmware_bios"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 			{
-				Name:    "body_dev",
-				Fixture: fixture.DevModeGBB,
+				Name:              "body_dev",
+				Fixture:           fixture.DevModeGBB,
+				ExtraAttr:         []string{"firmware_bios"},
+				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
 			},
 			{
-				Name:    "sig_normal",
-				Fixture: fixture.NormalMode,
+				Name:      "sig_normal",
+				Fixture:   fixture.NormalMode,
+				ExtraAttr: []string{"firmware_unstable"},
 				Val: &corruptTestVal{
 					bios.FWSignAImageSection, bios.FWSignBImageSection,
 				},
 			},
 			{
-				Name:    "sig_dev",
-				Fixture: fixture.DevModeGBB,
+				Name:      "sig_dev",
+				Fixture:   fixture.DevModeGBB,
+				ExtraAttr: []string{"firmware_unstable"},
 				Val: &corruptTestVal{
 					bios.FWSignAImageSection, bios.FWSignBImageSection,
 				},
