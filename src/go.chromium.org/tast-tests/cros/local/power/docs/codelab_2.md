@@ -1,4 +1,4 @@
-# Tast Power Tests Codelab #2: Charge or Drain the Battery Before Test
+# Tast Local Power Tests Codelab #2: Charge or Drain the Battery Before Test
 
 ## Introduction
 

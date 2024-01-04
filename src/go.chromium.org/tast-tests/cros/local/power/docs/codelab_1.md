@@ -1,10 +1,14 @@
-# Tast Power Tests Codelab #1: power.ExampleUI
+# Tast Local Power Tests Codelab #1: power.ExampleUI
 
 This codelab outlines the structure of a simple local Tast test
 [power.ExampleUI] to set up a device for power measurement and collect power
 metrics while the device is idling. By following this codelab, we can quickly
 get started with evaluating the power impact of a particular use case or a new
 feature.
+
+For remote power tests, see [Tast Remote Power Tests].
+
+[Tast Remote Power Tests]: http://cs/h/chromium/chromiumos/codesearch/+/main:src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/remote/power/docs/codelab_1.md
 
 [power.ExampleUI]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/power/example_ui.go
 
