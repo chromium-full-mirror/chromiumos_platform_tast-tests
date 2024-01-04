@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/windowarrangementcuj"
-
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -77,6 +76,16 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			// Experimental variants.
+			{
+				Name: "blt_50mb",
+				Val: windowarrangementcuj.TestParam{
+					BrowserType: browser.TypeAsh,
+					Tablet:      true,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(append(cuj.Experimental8GBModelConditions(), hwdep.TouchScreen())...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MB",
+			},
 			{
 				Name: "blt_1gb",
 				Val: windowarrangementcuj.TestParam{

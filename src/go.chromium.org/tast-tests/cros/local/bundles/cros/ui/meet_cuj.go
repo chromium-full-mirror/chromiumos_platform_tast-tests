@@ -335,6 +335,24 @@ func init() {
 				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 			},
 			{
+				Name:    "docs_blt_50mb",
+				Timeout: meetcuj.DefaultTestTimeout,
+				Val: meetcuj.MeetTest{
+					Bots:        []int{1, 3, 15},
+					Layout:      googlemeet.TiledLayout,
+					Present:     true,
+					Docs:        true,
+					Split:       true,
+					Cam:         true,
+					ZoomOut:     true,
+					Effects:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad50MB",
+			},
+			{
 				Name:    "docs_blt_1gb",
 				Timeout: meetcuj.DefaultTestTimeout,
 				Val: meetcuj.MeetTest{

@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/googlesheetscuj"
-
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -83,6 +82,15 @@ func init() {
 				},
 				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
 				Fixture:   "loggedInToCUJUserWithLauncherImageSearch",
+			},
+			{
+				Name: "blt_50mb",
+				Val: googlesheetscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MB",
 			},
 			{
 				Name: "blt_1gb",

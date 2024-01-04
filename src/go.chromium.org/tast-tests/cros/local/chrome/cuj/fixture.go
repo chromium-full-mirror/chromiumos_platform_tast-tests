@@ -39,7 +39,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -1132,6 +1131,72 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad50MB",
+		Desc: "CUJ fixture that adds 50MB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 50,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad50MB",
+		Desc: "CUJ fixture that adds 50MB background memory load with WebRTC event logging",
+		Contacts: []string{
+			"yichenz@chromium.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:             browser.TypeAsh,
+			disableARC:     true,
+			docsBlocker:    true,
+			backgroundLoad: true,
+			memoryLoadSize: 50,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithBackgroundLoad50MBWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and adds 50MB background memory load",
+		Contacts: []string{
+			"yichenz@chromium.org",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:             browser.TypeAsh,
+			backgroundLoad: true,
+			memoryLoadSize: 50,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBackgroundLoad1GB",
 		Desc: "CUJ fixture that adds 1GB background memory load",
 		Contacts: []string{
@@ -1141,7 +1206,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 1,
+			memoryLoadSize: 1024,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1168,7 +1233,7 @@ func init() {
 			disableARC:     true,
 			docsBlocker:    true,
 			backgroundLoad: true,
-			memoryLoadSize: 1,
+			memoryLoadSize: 1024,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1188,7 +1253,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 1,
+			memoryLoadSize: 1024,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -1207,7 +1272,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 2,
+			memoryLoadSize: 1024 * 2,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1234,7 +1299,7 @@ func init() {
 			disableARC:     true,
 			docsBlocker:    true,
 			backgroundLoad: true,
-			memoryLoadSize: 2,
+			memoryLoadSize: 1024 * 2,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1254,7 +1319,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 2,
+			memoryLoadSize: 1024 * 2,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -1273,7 +1338,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 3,
+			memoryLoadSize: 1024 * 3,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1300,7 +1365,7 @@ func init() {
 			disableARC:     true,
 			docsBlocker:    true,
 			backgroundLoad: true,
-			memoryLoadSize: 3,
+			memoryLoadSize: 1024 * 3,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1320,7 +1385,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 3,
+			memoryLoadSize: 1024 * 3,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -1339,7 +1404,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 4,
+			memoryLoadSize: 1024 * 4,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1366,7 +1431,7 @@ func init() {
 			disableARC:     true,
 			docsBlocker:    true,
 			backgroundLoad: true,
-			memoryLoadSize: 4,
+			memoryLoadSize: 1024 * 4,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
@@ -1386,7 +1451,7 @@ func init() {
 		Impl: &loggedInToCUJUserFixture{
 			bt:             browser.TypeAsh,
 			backgroundLoad: true,
-			memoryLoadSize: 4,
+			memoryLoadSize: 1024 * 4,
 		},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
@@ -1740,7 +1805,7 @@ type loggedInToCUJUserFixture struct {
 	cleanupTheme       func(ctx context.Context) error
 	// backgroundLoad describes whether to add background load.
 	backgroundLoad bool
-	// memoryLoadSize specifies the size of additional memory load in gigabytes.
+	// memoryLoadSize specifies the size of additional memory load in megabytes.
 	memoryLoadSize int
 	// mlbenchmarkDataDirectory describes whether to create data directory for mlbenchmark.
 	mlbenchmarkDataDirectory bool
@@ -2064,15 +2129,15 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		}
 
 		// Create a mount point and mount Ramfs.
-		mountArgs := []string{"-t", "ramfs", "-o", fmt.Sprintf("size=%vg", f.memoryLoadSize), "ramfs", testMountDir}
+		mountArgs := []string{"-t", "ramfs", "-o", fmt.Sprintf("size=%vM", f.memoryLoadSize), "ramfs", testMountDir}
 		mountCmd := testexec.CommandContext(ctx, "mount", mountArgs...)
 		if err := mountCmd.Run(testexec.DumpLogOnError); err != nil {
 			s.Fatalf("Failed to run mount %v: %v", mountArgs, err)
 		}
 		testing.ContextLog(ctx, "Successfully completed mount ", mountArgs)
 
-		// Write `f.memoryLoadSize` gigabytes data to the mounted Ramfs.
-		ddArgs := []string{"if=/dev/zero", fmt.Sprintf("of=%szero", testMountDir), "bs=1G", fmt.Sprintf("count=%v", f.memoryLoadSize)}
+		// Write `f.memoryLoadSize` data to the mounted Ramfs.
+		ddArgs := []string{"if=/dev/zero", fmt.Sprintf("of=%szero", testMountDir), "bs=1M", fmt.Sprintf("count=%v", f.memoryLoadSize)}
 		ddCmd := testexec.CommandContext(ctx, "dd", ddArgs...)
 		if err := ddCmd.Run(testexec.DumpLogOnError); err != nil {
 			s.Fatalf("Failed to run dd %v: %v", ddArgs, err)

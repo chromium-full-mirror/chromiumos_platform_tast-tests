@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/videocuj"
-
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -67,6 +66,13 @@ func init() {
 				ExtraAttr: []string{"cuj_experimental"},
 				Val:       browser.TypeAsh,
 				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
+			},
+			{
+				Name:              "blt_50mb",
+				Val:               browser.TypeAsh,
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MB",
 			},
 			{
 				Name:              "blt_1gb",

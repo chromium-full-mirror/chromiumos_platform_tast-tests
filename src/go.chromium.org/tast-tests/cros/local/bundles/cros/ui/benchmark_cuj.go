@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/benchmarkcuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
-
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -274,6 +273,18 @@ func init() {
 			},
 			// Experimental variants.
 			{
+				Name:    "speedometer_blt_50mb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MBWithoutCooldown",
+			},
+			{
 				Name:    "speedometer_blt_1gb",
 				Timeout: defaultTimeout,
 				Val: benchmarkcuj.BenchmarkTest{
@@ -322,6 +333,18 @@ func init() {
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
 			},
 			{
+				Name:    "motionmark_blt_50mb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MBWithoutCooldown",
+			},
+			{
 				Name:    "motionmark_blt_1gb",
 				Timeout: defaultTimeout,
 				Val: benchmarkcuj.BenchmarkTest{
@@ -368,6 +391,18 @@ func init() {
 				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
+			},
+			{
+				Name:    "kraken_blt_50mb",
+				Timeout: defaultTimeout,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
+				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MBWithoutCooldown",
 			},
 			{
 				Name:    "kraken_blt_1gb",
