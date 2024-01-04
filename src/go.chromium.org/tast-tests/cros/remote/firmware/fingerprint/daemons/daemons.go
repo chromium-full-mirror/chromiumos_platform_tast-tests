@@ -8,6 +8,7 @@ package daemons
 
 import (
 	"context"
+	"sort"
 	"strings"
 	"time"
 
@@ -48,6 +49,7 @@ func (j UpstartJob) String() string {
 		for k, v := range j.Args {
 			args = append(args, k+"="+v)
 		}
+		sort.Strings(args)
 		s.WriteString("(" + strings.Join(args, " ") + ")")
 	}
 	return s.String()
