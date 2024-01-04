@@ -1059,6 +1059,11 @@ func (ms *ModeSwitcher) RebootToFirmwareScreen(ctx context.Context, fwScreen fwC
 			return errors.Wrap(err, "failed to reboot to recovery screen")
 		}
 	}
+	testing.ContextLogf(ctx, "Sleeping for %s (FirmwareScreen) ", h.Config.FirmwareScreen)
+	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
+	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %s", h.Config.FirmwareScreen)
+	}
 	return nil
 }
 

@@ -83,10 +83,6 @@ func FwScreenPowerOff(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new menu bypasser: ", err)
 	}
-	// GoBigSleepLint: Delay to wait for the firmware screen during boot-up.
-	if err := testing.Sleep(ctx, h.Config.FirmwareScreen); err != nil {
-		s.Fatal("Failed to sleep for firmware screen: ", err)
-	}
 	s.Log("Selecting \"Power off\" from UI menu")
 	if err := menuBypasser.PowerOff(ctx); err != nil {
 		s.Fatal("Failed to power off the DUT: ", err)

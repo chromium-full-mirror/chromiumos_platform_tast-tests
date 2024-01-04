@@ -19,6 +19,9 @@ type bypasser interface {
 	// TriggerDevToNormal moves the DUT from the developer warning screen
 	// to normal mode.
 	TriggerDevToNormal(ctx context.Context) error
+	// TriggerToNormScreen moves the DUT from the developer warning screen
+	// to to_norm screen.
+	TriggerToNormScreen(ctx context.Context) error
 	// BypassDevBootUSB bypasses the developer mode firmware logic to boot
 	// from the USB.
 	BypassDevBootUSB(ctx context.Context) error
@@ -74,16 +77,19 @@ func (k *keyboardBypasser) TriggerRecToDev(ctx context.Context) error {
 	return nil
 }
 
-func (k *keyboardBypasser) TriggerDevToNormal(ctx context.Context) error {
+func (k *keyboardBypasser) TriggerToNormScreen(ctx context.Context) error {
 	h := k.helper
-	/*
-		1. Press Ctrl+S.
-		2. Sleep for [KeypressDelay] seconds.
-		3. Press enter.
-	*/
 	testing.ContextLog(ctx, "Pressing Ctrl-S")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlS, servo.DurTab); err != nil {
 		return errors.Wrap(err, "pressing Ctrl-S on firmware screen while disabling dev mode")
+	}
+	return nil
+}
+
+func (k *keyboardBypasser) TriggerDevToNormal(ctx context.Context) error {
+	h := k.helper
+	if err := k.TriggerToNormScreen(ctx); err != nil {
+		return errors.Wrap(err, "failed to trigger the to_norm screen")
 	}
 	testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
 	// GoBigSleepLint: Simulate a specific speed of key press.
@@ -122,11 +128,19 @@ func (lk *legacyKeyboardBypasser) TriggerRecToDev(ctx context.Context) error {
 	return lk.keyboardBypasser.TriggerRecToDev(ctx)
 }
 
-func (lk *legacyKeyboardBypasser) TriggerDevToNormal(ctx context.Context) error {
+func (lk *legacyKeyboardBypasser) TriggerToNormScreen(ctx context.Context) error {
 	h := lk.helper
 	testing.ContextLog(ctx, "Pressing SPACE")
 	if err := h.Servo.PressKey(ctx, " ", servo.DurTab); err != nil {
 		return errors.Wrap(err, "pressing SPACE on firmware screen while disabling dev mode")
+	}
+	return nil
+}
+
+func (lk *legacyKeyboardBypasser) TriggerDevToNormal(ctx context.Context) error {
+	h := lk.helper
+	if err := lk.TriggerToNormScreen(ctx); err != nil {
+		return errors.Wrap(err, "failed to trigger the to_norm screen")
 	}
 	testing.ContextLogf(ctx, "Sleeping %s (KeypressDelay)", h.Config.KeypressDelay)
 	// GoBigSleepLint: Simulate a specific speed of key press.
@@ -189,15 +203,13 @@ func (ld *legacyDetachableBypasser) TriggerRecToDev(ctx context.Context) error {
 	return nil
 }
 
-func (ld *legacyDetachableBypasser) TriggerDevToNormal(ctx context.Context) error {
+func (ld *legacyDetachableBypasser) TriggerToNormScreen(ctx context.Context) error {
 	/*
 		1. Hold volume_up for 200ms to highlight the previous menu item,
 		   'Enable Root Verification'.
 		2. Sleep for [KeypressDelay] seconds to confirm keypress.
 		3. Press power to select Enable Root Verification.
 		4. Sleep for [KeypressDelay] seconds to confirm keypress.
-		5. Wait until the TO_NORM screen appears.
-		6. Press power to select Confirm Enabling Verified Boot.
 	*/
 	h := ld.helper
 	if err := h.Servo.SetInt(ctx, servo.VolumeUpHold, 200); err != nil {
@@ -214,6 +226,14 @@ func (ld *legacyDetachableBypasser) TriggerDevToNormal(ctx context.Context) erro
 	if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
 		return errors.Wrapf(err, "sleeping for %s (KeypressDelay) while disabling dev mode", h.Config.KeypressDelay)
 	}
+	return nil
+}
+
+func (ld *legacyDetachableBypasser) TriggerDevToNormal(ctx context.Context) error {
+	if err := ld.TriggerToNormScreen(ctx); err != nil {
+		return errors.Wrap(err, "failed to trigger the to_norm screen")
+	}
+	// Press power to select Confirm Enabling Verified Boot.
 	if err := ld.navigator.SelectOption(ctx); err != nil {
 		return errors.Wrap(err, "selecting menu option 'Confirm Enabling Verified Boot'")
 	}

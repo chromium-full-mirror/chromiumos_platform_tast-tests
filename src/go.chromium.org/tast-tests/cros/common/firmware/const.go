@@ -104,4 +104,5 @@ const (
 	FwDeveloperScreen FwScreenType = iota
 	FwRecoveryScreen
 	FwBrokenScreen
+	FwToNormScreen
 )
