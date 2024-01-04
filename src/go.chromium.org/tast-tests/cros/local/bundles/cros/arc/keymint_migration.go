@@ -25,8 +25,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A key migration test",
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
-		// ChromeOS > Software > ARC++ > Commercial > Secret Management
-		BugComponent: "b:1284082",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      7 * time.Minute,
 		// TODO(b/301347001): Enable this test for ARC T+.

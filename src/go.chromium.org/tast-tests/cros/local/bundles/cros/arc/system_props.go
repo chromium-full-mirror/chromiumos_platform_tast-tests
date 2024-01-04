@@ -34,8 +34,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that all ARC system props are set",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "play_store", "android_vm"},
 		Timeout:      15 * time.Minute,

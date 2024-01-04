@@ -32,8 +32,8 @@ func init() {
 			"arc-commercial@google.com",
 			"mhasank@google.com",
 		},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		SoftwareDeps: []string{"reboot", "chrome", "play_store"},
 		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,

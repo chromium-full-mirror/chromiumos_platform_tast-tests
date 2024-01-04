@@ -30,8 +30,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if App Install Triggers Parent Permission For Unicorn Account",
 		Contacts:     []string{"arc-commercial@google.com", "cros-arc-te@google.com", "jinrongwu@google.com"},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      10 * time.Minute,

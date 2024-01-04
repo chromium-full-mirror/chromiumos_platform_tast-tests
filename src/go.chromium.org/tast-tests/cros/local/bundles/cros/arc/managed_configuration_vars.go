@@ -30,8 +30,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that managed configuration variables are replaced for force-installed apps",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      15 * time.Minute,

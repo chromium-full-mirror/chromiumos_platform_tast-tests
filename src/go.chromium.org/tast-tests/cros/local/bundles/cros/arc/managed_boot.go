@@ -31,8 +31,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that ARC is booted when policy is set",
 		Contacts:     []string{"arc-commercial@google.com", "mhasank@chromium.org"},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "play_store"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,

@@ -24,8 +24,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enter Demo Mode from OOBE via offline mode, verify Play Store can be opened",
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		Fixture:      fixture.PostDemoModeOOBEProd,
 		Attr:         []string{"group:mainline"},
 		// Demo Mode uses Zero Touch Enrollment for enterprise enrollment, which

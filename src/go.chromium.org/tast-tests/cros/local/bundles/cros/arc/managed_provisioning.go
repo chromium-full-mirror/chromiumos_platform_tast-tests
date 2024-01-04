@@ -31,8 +31,8 @@ func init() {
 			"mhasank@chromium.org",
 			"yaohuali@google.com",
 		},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		Attr:         []string{"group:mainline", "group:arc-functional"},
 		VarDeps: []string{
 			arcent.LoginPoolVar,

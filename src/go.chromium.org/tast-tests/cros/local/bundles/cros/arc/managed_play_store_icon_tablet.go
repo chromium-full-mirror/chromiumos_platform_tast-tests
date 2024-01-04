@@ -31,8 +31,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the visibility of Play Store icon on tablet form factor w.r.t. ArcPolicy",
 		Contacts:     []string{"arc-commercial@google.com", "yaohuali@google.com"},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
