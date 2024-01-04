@@ -363,6 +363,16 @@ func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWr
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain the top-row layout")
 	}
+
+	// To mitigate test case failures caused by varying Chrome window modes across boards,
+        // standardize by maximizing the window. If already maximized, proceed without intervention.
+	maximizeButton := nodewith.Name("Maximize").Role(role.Button)
+	if err := cui.WaitUntilExists(maximizeButton)(ctx); err == nil {
+		if err := kb.Accel(ctx, "alt+="); err != nil {
+			return errors.Wrap(err, "failed to press alt+= key to Maximize the window")
+		}
+	}
+
 	if err := kb.Accel(ctx, "f"); err != nil {
 		return errors.Wrap(err, "failed to press f key to enter fullscreen")
 	}
@@ -397,19 +407,18 @@ func youtubePlayerFunctionalities(ctx context.Context, kb *input.KeyboardEventWr
 	}
 
 	if err := kb.Accel(ctx, "alt+="); err != nil {
-		return errors.Wrap(err, "failed to press alt+= key to maximize the window")
-	}
-
-	maximizeButton := nodewith.Name("Maximize").Role(role.Button)
-	if err := cui.WaitUntilExists(maximizeButton)(ctx); err == nil {
-		return errors.Wrap(err, "failed due to existence of Maximize button after maximizing window")
-	}
-
-	if err := kb.Accel(ctx, "alt+="); err != nil {
 		return errors.Wrap(err, "failed to press alt+= key to normalize the window back from maximize")
 	}
 
 	if err := cui.WaitUntilExists(maximizeButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed due to existence of Maximize button after maximizing window")
+	}
+
+	if err := kb.Accel(ctx, "alt+="); err != nil {
+		return errors.Wrap(err, "failed to press alt+= key to maximize the window")
+	}
+
+	if err := cui.WaitUntilExists(maximizeButton)(ctx); err == nil {
 		return errors.Wrap(err, "failed to check the existence of Maximize button after normalizing window")
 	}
 
