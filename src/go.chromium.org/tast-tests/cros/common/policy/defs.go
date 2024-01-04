@@ -27189,29 +27189,29 @@ func (p *DeviceHardwareVideoDecodingEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1186. TabOrganizationAllowed
+// 1186. TabOrganizerSettings
 // This policy can be modified without rebooting.
 // ****************************************************************************
-type TabOrganizationAllowed struct {
+type TabOrganizerSettings struct {
 	Stat Status
 	Val  int
 }
 
-func (p *TabOrganizationAllowed) Name() string          { return "TabOrganizationAllowed" }
-func (p *TabOrganizationAllowed) Scope() Scope          { return ScopeUser }
-func (p *TabOrganizationAllowed) Status() Status        { return p.Stat }
-func (p *TabOrganizationAllowed) UntypedV() interface{} { return p.Val }
-func (p *TabOrganizationAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *TabOrganizerSettings) Name() string          { return "TabOrganizerSettings" }
+func (p *TabOrganizerSettings) Scope() Scope          { return ScopeUser }
+func (p *TabOrganizerSettings) Status() Status        { return p.Stat }
+func (p *TabOrganizerSettings) UntypedV() interface{} { return p.Val }
+func (p *TabOrganizerSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v int
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as int", m)
 	}
 	return v, nil
 }
-func (p *TabOrganizationAllowed) SetProto(m *protoreflect.Message) {
+func (p *TabOrganizerSettings) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *TabOrganizationAllowed) Equal(iface interface{}) bool {
+func (p *TabOrganizerSettings) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
 	if !ok {
 		return ok
@@ -27220,29 +27220,29 @@ func (p *TabOrganizationAllowed) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1187. ComposeAllowed
+// 1187. HelpMeWriteSettings
 // This policy can be modified without rebooting.
 // ****************************************************************************
-type ComposeAllowed struct {
+type HelpMeWriteSettings struct {
 	Stat Status
 	Val  int
 }
 
-func (p *ComposeAllowed) Name() string          { return "ComposeAllowed" }
-func (p *ComposeAllowed) Scope() Scope          { return ScopeUser }
-func (p *ComposeAllowed) Status() Status        { return p.Stat }
-func (p *ComposeAllowed) UntypedV() interface{} { return p.Val }
-func (p *ComposeAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *HelpMeWriteSettings) Name() string          { return "HelpMeWriteSettings" }
+func (p *HelpMeWriteSettings) Scope() Scope          { return ScopeUser }
+func (p *HelpMeWriteSettings) Status() Status        { return p.Stat }
+func (p *HelpMeWriteSettings) UntypedV() interface{} { return p.Val }
+func (p *HelpMeWriteSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v int
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as int", m)
 	}
 	return v, nil
 }
-func (p *ComposeAllowed) SetProto(m *protoreflect.Message) {
+func (p *HelpMeWriteSettings) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *ComposeAllowed) Equal(iface interface{}) bool {
+func (p *HelpMeWriteSettings) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
 	if !ok {
 		return ok
@@ -27251,29 +27251,29 @@ func (p *ComposeAllowed) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1188. WallpaperSearchAllowed
+// 1188. CreateThemesSettings
 // This policy can be modified without rebooting.
 // ****************************************************************************
-type WallpaperSearchAllowed struct {
+type CreateThemesSettings struct {
 	Stat Status
 	Val  int
 }
 
-func (p *WallpaperSearchAllowed) Name() string          { return "WallpaperSearchAllowed" }
-func (p *WallpaperSearchAllowed) Scope() Scope          { return ScopeUser }
-func (p *WallpaperSearchAllowed) Status() Status        { return p.Stat }
-func (p *WallpaperSearchAllowed) UntypedV() interface{} { return p.Val }
-func (p *WallpaperSearchAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+func (p *CreateThemesSettings) Name() string          { return "CreateThemesSettings" }
+func (p *CreateThemesSettings) Scope() Scope          { return ScopeUser }
+func (p *CreateThemesSettings) Status() Status        { return p.Stat }
+func (p *CreateThemesSettings) UntypedV() interface{} { return p.Val }
+func (p *CreateThemesSettings) UnmarshalAs(m json.RawMessage) (interface{}, error) {
 	var v int
 	if err := json.Unmarshal(m, &v); err != nil {
 		return nil, errors.Wrapf(err, "could not read %s as int", m)
 	}
 	return v, nil
 }
-func (p *WallpaperSearchAllowed) SetProto(m *protoreflect.Message) {
+func (p *CreateThemesSettings) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
-func (p *WallpaperSearchAllowed) Equal(iface interface{}) bool {
+func (p *CreateThemesSettings) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
 	if !ok {
 		return ok
@@ -27284,7 +27284,6 @@ func (p *WallpaperSearchAllowed) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1190. AlwaysOnVpnPreConnectUrlAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type AlwaysOnVpnPreConnectUrlAllowlist struct {
 	Stat Status
@@ -28988,12 +28987,12 @@ func newByName(name string) (Policy, error) {
 		return &OopPrintDriversAllowed{}, nil
 	case "DeviceHardwareVideoDecodingEnabled":
 		return &DeviceHardwareVideoDecodingEnabled{}, nil
-	case "TabOrganizationAllowed":
-		return &TabOrganizationAllowed{}, nil
-	case "ComposeAllowed":
-		return &ComposeAllowed{}, nil
-	case "WallpaperSearchAllowed":
-		return &WallpaperSearchAllowed{}, nil
+	case "TabOrganizerSettings":
+		return &TabOrganizerSettings{}, nil
+	case "HelpMeWriteSettings":
+		return &HelpMeWriteSettings{}, nil
+	case "CreateThemesSettings":
+		return &CreateThemesSettings{}, nil
 	case "AlwaysOnVpnPreConnectUrlAllowlist":
 		return &AlwaysOnVpnPreConnectUrlAllowlist{}, nil
 	default:
