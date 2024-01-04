@@ -102,6 +102,7 @@ func init() {
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuQcom...)),
 			},
 			{
 				Name: "kms_busy",
