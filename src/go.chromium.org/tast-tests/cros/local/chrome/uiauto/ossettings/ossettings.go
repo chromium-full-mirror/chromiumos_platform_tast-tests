@@ -134,7 +134,7 @@ func LaunchAtAppMgmtPage(ctx context.Context, tconn *chrome.TestConn, cr *chrome
 
 // ConfirmPassword enters the provided password in OS Settings, to open password-protected pages.
 func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) error {
-	passwordNode := nodewith.Name("Confirm your password")
+	passwordNode := nodewith.Name("Confirm your password").Role(role.Dialog)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

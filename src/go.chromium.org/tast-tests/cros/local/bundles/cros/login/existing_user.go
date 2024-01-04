@@ -150,38 +150,12 @@ func logInWithLocalPassword(ctx context.Context, s *testing.State) (c *chrome.Ch
 		localPassword = "testpass"
 	)
 
-	cr, err := chrome.New(ctx,
+	cr, err := login.SetupUserWithLocalPassword(ctx,
+		localPassword,
 		chrome.GAIALogin(chrome.Creds{User: s.RequiredVar("floatingworkspace.cros_username"), Pass: s.RequiredVar("floatingworkspace.cros_password")}),
-		chrome.DontSkipOOBEAfterLogin(),
-		chrome.EnableFeatures("LocalPasswordForConsumers"),
-		chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
 	)
 	if err != nil {
-		s.Fatal("Chrome login failed: ", err)
-	}
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect Test API: ", err)
-	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
-
-	oobeConn, err := cr.WaitForOOBEConnection(ctx)
-	if err != nil {
-		s.Fatal("Failed to wait for OOBE connection: ", err)
-	}
-	defer oobeConn.Close()
-
-	if err := login.SetupLocalPassword(ctx, oobeConn, localPassword); err != nil {
-		s.Fatal("Failed to setup local password: ", err)
-	}
-
-	if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
-		// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
-		s.Log("Failed to call skip post login screens: ", err)
-	}
-	if err := cr.WaitForOOBEConnectionToBeDismissed(ctx); err != nil {
-		s.Fatal("Failed to wait for OOBE to be dismissed: ", err)
+		s.Fatal("Failed to setup user: ", err)
 	}
 
 	return cr, chrome.Creds{User: cr.Creds().User, Pass: localPassword}
