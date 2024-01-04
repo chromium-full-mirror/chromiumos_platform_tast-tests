@@ -65,13 +65,14 @@ func CCALaunchWithExternalCamera(ctx context.Context, s *testing.State) {
 	uiautoSvc := ui.NewAutomationServiceClient(cl.Conn)
 
 	// Check USB webcam can be detect properly (lsusb, dmesg, etc...).
-	builtinDevices, err := utils.USBCamerasFromV4L2Test(ctx, dut)
+	builtinDevices, err := utils.DevicesFromV4L2(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to get built-in devices from V4L2: ", err)
 	}
 	if len(builtinDevices) == 0 {
 		s.Fatal("Expect to get at least one built-in device, but get nothing")
 	}
+	testing.ContextLog(ctx, "Found built-in camera: ", builtinDevices)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
