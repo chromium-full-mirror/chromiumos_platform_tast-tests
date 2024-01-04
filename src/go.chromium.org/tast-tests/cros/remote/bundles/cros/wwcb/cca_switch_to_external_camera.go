@@ -98,7 +98,7 @@ func CCASwitchToExternalCamera(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Check USB webcam can be detect properly (lsusb, dmesg, etc...).
-	builtinDevices, err := utils.USBCamerasFromV4L2Test(ctx, dut)
+	builtinDevices, err := utils.DevicesFromV4L2(ctx, dut)
 	if err != nil {
 		s.Fatal("Failed to get built-in devices from V4L2: ", err)
 	}
