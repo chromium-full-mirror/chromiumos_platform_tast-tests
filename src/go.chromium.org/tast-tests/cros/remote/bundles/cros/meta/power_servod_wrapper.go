@@ -230,11 +230,15 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to stop recording: ", err)
 	}
-	servoResult, err = cp.TrimSubtestResults(ctx, resultsDir, subtest, servoResult)
+
+	mS, mE, err := cp.FindMeasureStartAndEnd(ctx, s.OutDir(), subtest)
+	if err != nil {
+		s.Fatal("Failed to find start and end of subtest: ", err)
+	}
+	servoResult, err = cp.TrimSubtestResults(mS, mE, servoResult)
 	if err != nil {
 		s.Fatal("Failed to format subtest results: ", err)
 	}
-
 	if err := servoResult.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save perf data for crosbolt: ", err)
 	}

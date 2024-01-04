@@ -16,24 +16,20 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// powerLogJSON is the mapping to the power_log.json object.
-type powerLogJSON struct {
-	Timestamp string `json:"timestamp"`
-}
-
 // findSubtestStartTime gets the start timestamp (seconds since January 1, 1970).
 // It first reads from power_log.json if available, and compares it to the timestamp from result.json.
 // If power_log.json is not available, it will only return the timestamp from result.json.
-func findSubtestStartTime(ctx context.Context, resultsDir string) (time.Time, error) {
-	powerLogTs, logErr := findSubtestStartTimeFromPowerLog(resultsDir)
+func findSubtestStartTime(ctx context.Context, resultsDir, subtest string) (time.Time, error) {
+	subtestDir := filepath.Join(resultsDir, "tests", subtest)
+	powerLogTs, logErr := findSubtestStartTimeFromPowerLog(subtestDir)
 	if logErr != nil {
-		testing.ContextLog(ctx, "Couldn't find start timestamp from power log")
+		testing.ContextLog(ctx, "Couldn't find start timestamp from power log: ", logErr)
 	}
 	resultsTs, resultsErr := findSubtestStartTimeFromResultsJSON(resultsDir)
 	if resultsErr != nil {
 		return time.Time{}, errors.Wrap(resultsErr, "couldn't find subtest start time in tast results.json")
 	}
-	if logErr != nil {
+	if logErr == nil {
 		if !resultsTs.Before(powerLogTs) {
 			return time.Time{}, errors.New("inconsistent timestamps; start time in power log should be after results.json")
 		}
@@ -43,10 +39,14 @@ func findSubtestStartTime(ctx context.Context, resultsDir string) (time.Time, er
 	return resultsTs, nil
 }
 
+// powerLogJSON is the mapping to the power_log.json object.
+type powerLogJSON struct {
+	Timestamp float64 `json:"timestamp"`
+}
+
 // findSubtestStartTimeFromPowerLog gets the start timestamp (seconds since January 1, 1970)
 // of a test from the power_log.json file.
-func findSubtestStartTimeFromPowerLog(resultsDir string) (time.Time, error) {
-	subtestDir := filepath.Join(resultsDir, "subtest_results")
+func findSubtestStartTimeFromPowerLog(subtestDir string) (time.Time, error) {
 	rf, err := os.Open(filepath.Join(subtestDir, "power_log.json"))
 	if err != nil {
 		return time.Time{}, errors.Wrap(err, "couldn't open power log file")
@@ -57,7 +57,8 @@ func findSubtestStartTimeFromPowerLog(resultsDir string) (time.Time, error) {
 	if err = json.NewDecoder(rf).Decode(&powerLog); err != nil {
 		return time.Time{}, errors.Wrap(err, "couldn't decode results from power log")
 	}
-	return time.Parse(time.RFC3339Nano, powerLog.Timestamp)
+
+	return time.Unix(0, int64(powerLog.Timestamp*float64(time.Second))).UTC(), nil
 }
 
 // subtestResult is the mapping to the results.json object.
@@ -138,21 +139,27 @@ func GetOverlapIndices(measureStarted, measureEnded time.Time, tsData []time.Tim
 	return overlapStartIdx, overlapEndIdx, nil
 }
 
+// FindMeasureStartAndEnd looks for the start and end timestamp of a given subtest.
+func FindMeasureStartAndEnd(ctx context.Context, outDir, subtest string) (time.Time, time.Time, error) {
+	resultsDir := filepath.Join(outDir, "subtest_results")
+	measureStarted, err := findSubtestStartTime(ctx, resultsDir, subtest)
+	if err != nil {
+		return time.Time{}, time.Time{}, errors.Wrap(err, "failed to get subtest start time")
+	}
+	subtestDir := filepath.Join(resultsDir, "tests", subtest)
+	lastTimelineValue, err := findSubtestLastTimelineValue(subtestDir)
+	if err != nil {
+		return time.Time{}, time.Time{}, errors.Wrap(err, "failed to get subtest last timeline value")
+	}
+	measureEnded := measureStarted.Add(lastTimelineValue)
+	return measureStarted, measureEnded, nil
+
+}
+
 // TrimSubtestResults takes the perf values of and the name of the subtest whose timeline
 // duration we want to match. It reads the start and end timestamp (seconds since January 1, 1970)
 // of the subtest, and trims remote side perf values to the duration of the subtest.
-func TrimSubtestResults(ctx context.Context, resultsDir, subtest string, values *perf.Values) (*perf.Values, error) {
-	subtestDir := filepath.Join(resultsDir, "tests", subtest)
-	measureStarted, err := findSubtestStartTime(ctx, resultsDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get subtest start time")
-	}
-	lastTimelineValue, err := findSubtestLastTimelineValue(subtestDir)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get last timeline value")
-	}
-	measureEnded := measureStarted.Add(lastTimelineValue)
-
+func TrimSubtestResults(measureStarted, measureEnded time.Time, values *perf.Values) (*perf.Values, error) {
 	// Get perf metric by name.
 	var intervalMetric perf.Metric
 	for metric := range values.GetValues() {
@@ -161,7 +168,6 @@ func TrimSubtestResults(ctx context.Context, resultsDir, subtest string, values 
 			break
 		}
 	}
-
 	if !intervalMetric.HasStartTs {
 		return nil, errors.New("couldn't find valid interval metric")
 	}

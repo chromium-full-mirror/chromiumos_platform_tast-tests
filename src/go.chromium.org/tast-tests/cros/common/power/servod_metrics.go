@@ -60,7 +60,7 @@ func (m *ServodMetrics) Setup(ctx context.Context, prefix, intervalName string) 
 	for _, rail := range m.rails {
 		name := m.trimRailName(string(rail))
 		m.metrics[string(rail)] = perf.Metric{
-			Name:      prefix + ServodMetricType + name,
+			Name:      prefix + name,
 			Unit:      ServodMetricTypeUnit,
 			Direction: perf.SmallerIsBetter,
 			Multiple:  true,
