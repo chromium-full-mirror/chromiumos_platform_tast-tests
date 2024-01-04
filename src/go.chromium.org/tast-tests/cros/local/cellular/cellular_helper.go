@@ -131,8 +131,6 @@ func NewHelper(ctx context.Context) (*Helper, error) {
 		return nil, errors.Wrap(err, "failed to find default Cellular Service")
 	}
 
-	CheckIfVilbozVerizonAndFixAttachAPN(ctx)
-
 	// Start collecting DBus logs
 	if err := helper.CaptureDBusLogs(ctx); err != nil {
 		testing.ContextLog(ctx, "Warning: Unable to start DBus log capture: ", err)
@@ -164,32 +162,6 @@ func (h *Helper) ClearSIMLockFromHostInfo(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// CheckIfVilbozVerizonAndFixAttachAPN checks if the device is a vilboz with a verizon SIM card,
-// and tries to fix the attach APN if that's the case. This is needed because there are 2 bugs
-// in the modem FW that prevent clearing the attach APN(b/253685780).
-func CheckIfVilbozVerizonAndFixAttachAPN(ctx context.Context) {
-	modem, err := modemmanager.NewModem(ctx)
-	if err != nil {
-		return
-	}
-	variant, err := GetDeviceVariant(ctx)
-	if err != nil || variant != "vilboz" {
-		return
-	}
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
-	if err != nil || operatorID != "311480" {
-		return
-	}
-	modem3gpp, err := modem.GetModem3gpp(ctx)
-	if err != nil {
-		return
-	}
-	testing.ContextLog(ctx, "Verizon Vilboz device: Try fixing the attach APN")
-	if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err != nil {
-		testing.ContextLog(ctx, "Failed to set initial EPS bearer settings: ", err)
-	}
 }
 
 // CheckIfL850VerizonAndFixDefaultAPN checks if the device has a L850GL modem with a verizon SIM card,
