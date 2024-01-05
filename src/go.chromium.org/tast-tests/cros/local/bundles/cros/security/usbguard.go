@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that USBGuard-related feature flags work as intended",
 		Fixture:      fixture.ChromeLoggedIn,
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "usbguard"},
 		BugComponent: "b:1048474", // ChromeOS > Security > Usb_bouncer/Usbguard
 		Contacts: []string{
