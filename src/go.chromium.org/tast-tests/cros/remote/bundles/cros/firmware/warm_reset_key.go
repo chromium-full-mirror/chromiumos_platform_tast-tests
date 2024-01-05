@@ -15,7 +15,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WARMResetKey,
+		Func:         WarmResetKey,
 		Desc:         "Test to verify that a warm reset can be performed by key combination: Alt+Volume Up+r (sysrq_r)",
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
 		BugComponent: "b:281859363", // ChromeOS > Platform > System > Firmware > AP
@@ -24,27 +24,28 @@ func init() {
 	})
 }
 
-func isECRebooted(ctx context.Context, s *testing.State) bool {
+func apResetCount(ctx context.Context, s *testing.State) int {
 	h := s.FixtValue().(*fixture.Value).Helper
 	ec := firmware.NewECTool(h.DUT, firmware.ECToolNameMain)
 	apResetCount, err := ec.GetAPResetCount(ctx)
 	if err != nil {
 		s.Fatal("Failed to get ec reset count: ", err)
 	}
-	return (apResetCount == 1)
+	testing.ContextLog(ctx, "apResetCount = ", apResetCount)
+	return apResetCount
 }
 
-/*
- * This API sends the servo command sysrq_r, which initiates the warm reset using
- * 'Alt+Volume Up+r' key combination. The API then compares the boot IDs before and
- * after the warm reset to verify that the warm reset was successful.
- */
-func WARMResetKey(ctx context.Context, s *testing.State) {
-
+// WarmResetKey sends the servo command sysrq_r, which initiates the warm reset using
+// 'Alt+Volume Up+r' key combination. Then it compares the boot IDs before and
+// after the warm reset to verify that the warm reset was successful.
+func WarmResetKey(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
+
+	// Get the starting AP reset count, so we can validate it only increases by 1.
+	startingApResetCount := apResetCount(ctx, s)
 
 	// Get initial boot ID.
 	initialBootID, err := h.Reporter.BootID(ctx)
@@ -79,7 +80,18 @@ func WARMResetKey(ctx context.Context, s *testing.State) {
 		expectECReboot = true
 	}
 
-	if expectECReboot == false && isECRebooted(ctx, s) {
+	currentApResetCount := apResetCount(ctx, s)
+
+	// The test is forcing an AP reboot, so we expect the AP reset count to
+	// increase by exactly 1. Any other value indicates an error.
+	totalApResetCount := currentApResetCount - startingApResetCount
+	if !expectECReboot && totalApResetCount <= 0 {
+		// AP reset count was cleared, which indicates the EC rebooted (and
+		// cleared the counter).
 		s.Fatal("Unexpected EC reboot")
+	} else if totalApResetCount > 1 {
+		// If the reboot count is >1 then the AP rebooted too many times from
+		// a single 'Alt+Volume Up+r' press.
+		s.Fatal("Unexpected multiple AP reboots")
 	}
 }
