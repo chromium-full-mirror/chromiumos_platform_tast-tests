@@ -556,6 +556,13 @@ func (f *crostiniFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		s.Fatal("Failed to get user's Downloads path: ", err)
 	}
 
+	// Delete any previous snapshot when keepState is used.
+	if checkKeepState(s) {
+		if err := f.cont.DeleteCopy(ctx, snapshotName); err != nil {
+			s.Log("Failed to delete previous snapshot before test: ", err)
+		}
+	}
+
 	if err := f.cont.CreateCopy(ctx, snapshotName); err != nil {
 		s.Fatal("Failed to take snapshot before test: ", err)
 	}
