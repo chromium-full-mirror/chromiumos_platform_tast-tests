@@ -143,6 +143,35 @@ func (t *TpmHandle) NvUndefineSpace(p tpm2.TPMSNVPublic) error {
 	return err
 }
 
+// TpmvGetBootMode reads boot mode via TPM GetBootMode vendor command.
+func (t *TpmHandle) TpmvGetBootMode() (byte, error) {
+	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" + // size
+		"20000000" + // ordinal: vendor
+		"0034") // subcommand: GetBootMode
+
+	response, err := t.Send(tpmvGetBootMode)
+	if err != nil {
+		return 0, err
+	}
+	mode := response[12]
+	return mode, nil
+}
+
+// TpmvCommitNvmem sends the CommitNvmem vendor command.
+func (t *TpmHandle) TpmvCommitNvmem() error {
+	tpmvCommitNvmem, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" + // size
+		"20000000" + // ordinal: vendor
+		"0015") // subcommand: CommitNvmem
+	if err != nil {
+		return err
+	}
+
+	_, err = t.Send(tpmvCommitNvmem)
+	return err
+}
+
 // KernelAttr generates the public area for the kernel NV index.
 func KernelAttr() tpm2.TPMSNVPublic {
 	return tpm2.TPMSNVPublic{

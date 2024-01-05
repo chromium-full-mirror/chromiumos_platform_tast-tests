@@ -5,8 +5,6 @@
 package utils
 
 import (
-	"encoding/hex"
-
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 )
 
@@ -30,35 +28,6 @@ func (t *TpmHelper) ReadRegister(register ti50.TpmRegister) []byte {
 		t.h.Fatalf("failed to read TPM register %s: %s", register, err)
 	}
 	return response
-}
-
-// TpmvGetBootMode reads boot mode via TPM GetBootMode vendor command.
-func (t *TpmHelper) TpmvGetBootMode() (byte, error) {
-	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0034") // subcommand: GetBootMode
-
-	response, err := t.Send(tpmvGetBootMode)
-	if err != nil {
-		return 0, err
-	}
-	mode := response[12]
-	return mode, nil
-}
-
-// TpmvCommitNvmem sned the CommitNvmem vendor command.
-func (t *TpmHelper) TpmvCommitNvmem() error {
-	tpmvCommitNvmem, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
-		"0000000c" + // size
-		"20000000" + // ordinal: vendor
-		"0015") // subcommand: CommitNvmem
-	if err != nil {
-		return err
-	}
-
-	_, err = t.Send(tpmvCommitNvmem)
-	return err
 }
 
 // MakeFWMPFile creates the 40 bytes FWMP file with the specified flags
