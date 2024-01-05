@@ -61,6 +61,9 @@ const (
 
 	// TpmBusI2c means that the TPM is to be reached via I2C
 	TpmBusI2c TpmBus = "i2c"
+
+	// TpmBusInvalid is an "invalid" enum value of type TpmBus.
+	TpmBusInvalid TpmBus = "invalid"
 )
 
 // TpmI2cAddress is Ti50's 7-bit I2C address (0x50 = decimal 80).

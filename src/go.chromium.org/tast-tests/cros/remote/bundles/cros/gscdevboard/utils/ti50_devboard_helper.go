@@ -222,7 +222,7 @@ type DevboardHelper struct {
 func NewDevboardHelper(s *testing.State) DevboardHelper {
 	f := s.FixtValue().(*fixture.Value)
 	b := f.DevBoard()
-	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second)
+	gscConsole := b.PhysicalUart(ti50.UartConsole, 5*time.Second)
 	return DevboardHelper{b, gscConsole, s, f.TestbedType}
 }
 
@@ -432,18 +432,16 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 	// the UART messages right after GSC reset are captured.
 	testing.ContextLogf(ctx, "Restarting Ti50 for %s TPM", bus)
 	h.ResetWithStraps(ctx, straps...)
-	// TODO(b/305814102): check board properties on H1 to verify SPI vs I2C
-	if h.TestbedType != ti50.GscH1Shield {
-		// Ti50 prints "I2C" or "SPI" based on the TPM Bus type.
-		m, err := h.ReadSerialSubmatch(ctx, regexp.MustCompile(`Strap config: .* TPM Bus: ([^;]+);`))
-		if err != nil {
-			h.Fatalf("Could not find TPM strap: %s", err)
-		} else if strings.ToLower(string(m[1])) != string(bus) {
-			h.Fatalf("Wrong TPM strap: got %s, wanted %s", m[1], bus)
-		}
-	}
 	th := FirmwareTestingHelper{FirmwareTestingHelperDelegate: h}
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+
+	actualBus, err := i.GetBoardPropertiesTPMBus(ctx)
+	if err != nil {
+		h.Fatalf("Error running brdprop: %v", err)
+	}
+	if actualBus != bus {
+		h.Fatalf("Unexpected TPM bus: board reported %s, expected %s", actualBus, bus)
+	}
 
 	// Tell Ti50 that the AP came out of reset.  This will cause Ti50 to start responding to
 	// TPM commands.

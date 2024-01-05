@@ -45,6 +45,8 @@ var (
 	verRWCr50StrRE = `cr50_([a-z1-9]+)\S*-([[:xdigit:]]+)`
 	verRWTi50StrRE = `ti50_common_([a-z]+)\S*:(\S+)`
 	verRWGSCStrRE  = verRWCr50StrRE + `|` + verRWTi50StrRE
+	// GSC board properties
+	brdPropRE = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -693,4 +695,35 @@ func (i *CrOSImage) WaitForTestlabEnable(ctx context.Context, timeout time.Durat
 func (i *CrOSImage) WaitForTestlabDisable(ctx context.Context, timeout time.Duration) error {
 	_, err := i.WaitUntilMatch(ctx, testlabDisabledRE, timeout)
 	return err
+}
+
+// GetBoardProperties gets the numerical value from the "brdprop" GSC command.
+func (i *CrOSImage) GetBoardProperties(ctx context.Context) (uint64, error) {
+	output, err := i.safeCommand(ctx, "brdprop")
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to run GSC brdprop command")
+	}
+	matches := brdPropRE.FindStringSubmatch(output)
+	brdprop, _ := strconv.ParseUint(matches[1], 16, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to parse brdprop value")
+	}
+	return brdprop, nil
+}
+
+// GetBoardPropertiesTPMBus uses the "brdprop" GSC command to discover
+// transport of the TPM bus (SPI/I2C).
+func (i *CrOSImage) GetBoardPropertiesTPMBus(ctx context.Context) (TpmBus, error) {
+	brdprop, err := i.GetBoardProperties(ctx)
+	if err != nil {
+		return TpmBusInvalid, err
+	}
+	switch brdprop & 0x03 {
+	case 0x01:
+		return TpmBusSpi, nil
+	case 0x02:
+		return TpmBusI2c, nil
+	default:
+		return TpmBusInvalid, errors.Errorf("unrecognized brdprop value: 0x%08x", brdprop)
+	}
 }
