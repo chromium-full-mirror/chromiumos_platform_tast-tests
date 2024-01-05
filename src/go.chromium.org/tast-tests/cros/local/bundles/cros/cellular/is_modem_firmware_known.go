@@ -53,7 +53,7 @@ func IsModemFirmwareKnown(ctx context.Context, s *testing.State) {
 			return
 		}
 	case cellularconst.ModemTypeL850:
-		if cellular.ModemFwFilterL850MR7AndLower.IsMatch(modemType, fwVersion) || cellular.ModemFwFilterL850MR8.IsMatch(modemType, fwVersion) {
+		if cellular.ModemFwFilterL850MR8AndLower.IsMatch(modemType, fwVersion) {
 			return
 		}
 	case cellularconst.ModemTypeNL668:
