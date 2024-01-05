@@ -166,15 +166,6 @@ func init() {
 				},
 				Timeout:           20 * time.Minute,
 				ExtraAttr:         []string{"graphics_weekly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuQcom...)),
-			}, {
-				Name: "kms_cursor_legacy_unstable",
-				Val: graphics.IgtTest{
-					Exe: "kms_cursor_legacy",
-				},
-				Timeout:           20 * time.Minute,
-				ExtraAttr:         []string{"graphics_weekly"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Platform(graphics.IgtGpuQcom...)),
 			}, {
 				Name: "kms_dp_aux_dev",
 				Val: graphics.IgtTest{
