@@ -74,6 +74,9 @@ func SafesetidEnsurePolicy(ctx context.Context, s *testing.State) {
 		{"cros-disks", "fuse-rar2fs", false, false},
 		{"cros-disks", "fuse-zip", false, false},
 
+		{"patchpaneld", "nobody", true, true},
+		{"patchpaneld", "nobody", false, false},
+
 		{"shill", "nobody", true, true},
 		{"shill", "vpn", true, true},
 		{"shill", "syslog", true, true},
@@ -84,6 +87,8 @@ func SafesetidEnsurePolicy(ctx context.Context, s *testing.State) {
 		{"shill", "nobody", false, false},
 
 		{"cros-disks", "root", true, false},
+		{"nobody", "chronos", true, false},
+		{"patchpaneld", "chronos", true, false},
 		{"shill", "chronos", true, false},
 		{"vpn", "root", true, false},
 	} {
@@ -167,6 +172,7 @@ func checkUsersAndGroupsExist() error {
 		{Name: "fuse-zip", Uid: "309", Gid: "309", HomeDir: "/dev/null"},
 		{Name: "ntfs-3g", Uid: "300", Gid: "300", HomeDir: "/dev/null"},
 		{Name: "nobody", Uid: "65534", Gid: "65534", HomeDir: "/dev/null"},
+		{Name: "patchpaneld", Uid: "284", Gid: "284", HomeDir: "/dev/null"},
 		{Name: "vpn", Uid: "212", Gid: "212", HomeDir: "/dev/null"},
 		{Name: "syslog", Uid: "202", Gid: "202", HomeDir: "/dev/null"},
 		{Name: "dhcp", Uid: "224", Gid: "224", HomeDir: "/dev/null"},
