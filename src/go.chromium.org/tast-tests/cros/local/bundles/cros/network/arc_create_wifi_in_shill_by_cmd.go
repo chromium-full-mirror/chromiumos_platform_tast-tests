@@ -22,8 +22,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-var failReg = regexp.MustCompile(`.*Save failed.*`)
-
 // wifiInShillByCmdTestCase describes the parameters of a single test case.
 type wifiInShillByCmdTestCase struct {
 	// args consist of a cmd that will be run to create network.
@@ -125,6 +123,7 @@ func ARCCreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	failReg := regexp.MustCompile(`.*Save failed.*`)
 	if failReg.Match(out) {
 		s.Fatal("Failed to add network, output is: ", string(out))
 	}

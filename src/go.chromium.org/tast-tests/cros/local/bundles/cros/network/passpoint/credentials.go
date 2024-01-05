@@ -15,7 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wifi/certutil"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/certutil"
 	"go.chromium.org/tast/core/errors"
 )
 

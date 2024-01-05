@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package wifi
+package network
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wifi/passpoint"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/passpoint"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package wifi
+package network
 
 import (
 	"context"
 	"time"
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/wifi/passpoint"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/passpoint"
 	"go.chromium.org/tast-tests/cros/local/hostapd"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/shill"
