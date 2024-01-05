@@ -840,6 +840,16 @@ type SlotInfo struct {
 	tokenLabel string
 }
 
+// SlotIndex returns the PKCS#11 token slot index.
+func (si SlotInfo) SlotIndex() int {
+	return si.slotIndex
+}
+
+// TokenLabel returns the PKCS#11 token label.
+func (si SlotInfo) TokenLabel() string {
+	return si.tokenLabel
+}
+
 // ListSlots lists the slots in chaps
 func (p *Chaps) ListSlots(ctx context.Context) ([]SlotInfo, error) {
 	data, err := p.RunPkcs11Tool(ctx, "--list-slots")
