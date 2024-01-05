@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-tpm/tpm2"
+
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
 	"go.chromium.org/tast/core/testing"
@@ -54,37 +56,56 @@ func (c *ccdOpenImpl) Reset(ctx context.Context) error {
 	return nil
 }
 
-// EnsureTestLabEnabled ensures that testlab mode is open
-func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUTControlAndreiboard, i *ti50.CrOSImage) {
-	out := runCommand(ctx, s, i, "ccd testlab")
-
-	if strings.Contains(out, "CCD test lab mode enabled") {
-		s.Log("Testlab mode already enabled")
+// EnsureFWMPDisabled ensures that FWMP is removed
+func EnsureFWMPDisabled(ctx context.Context, s TestingState, b *remoteTi50.DUTControlAndreiboard, i *ti50.CrOSImage) {
+	out := runCommand(ctx, s, i, "ccd")
+	if !strings.Contains(out, "fwmp_lock") {
 		return
 	}
+	s.Log("FWMP currently enabled. Removing FWMP")
 
-	s.Log("Testlab mode not enabled")
 	s.Log("Restarting ti50 with CCD, SPI, and Clamshell straps and AP on to remove FWMP")
 	gpioApplyStrap(ctx, s, b, ti50.CcdSuzyQ, ti50.StrapForCcdOpenFixture)
 	gpioSet(ctx, s, b, ti50.GpioTi50PltRstL, true)
 	mustSucceed(s, b.Reset(ctx), "Reset board")
 	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
-	s.Log("Removing FWMP space if present (which can block ccd open)")
 	tpm := ti50.NewTpmHandle(ctx, b, ti50.TpmBusSpi)
-	attr := ti50.FwmpAttr()
-	tpm.NvUndefineSpace(attr)
 
-	s.Logf("Setting %s to high", ti50.GpioTi50ChassisOpen)
+	// Startup, Undefined, then Commit changes
+	startup := tpm2.Startup{StartupType: tpm2.TPMSUClear}
+	if _, err := startup.Execute(tpm); err != nil {
+		s.Fatal("TPM startup error: ", err)
+	}
+	if err := tpm.NvUndefineSpace(ti50.FwmpAttr()); err != nil {
+		s.Fatal("Could not undefined FWMP: ", err)
+	}
+	if err := tpm.TpmvCommitNvmem(); err != nil {
+		s.Fatal("Could not commit nvmem changes: ", err)
+	}
+
+	// Turn AP back off
+	gpioSet(ctx, s, b, ti50.GpioTi50PltRstL, false)
+	s.Log("FWMP space removed")
+}
+
+// EnsureTestLabEnabled ensures that testlab mode is open
+func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUTControlAndreiboard, i *ti50.CrOSImage) {
+	EnsureFWMPDisabled(ctx, s, b, i)
+
+	out := runCommand(ctx, s, i, "ccd testlab")
+	if strings.Contains(out, "CCD test lab mode enabled") {
+		return
+	}
+
+	s.Log("Testlab disabled. Enabling now")
 	gpioSet(ctx, s, b, ti50.GpioTi50ChassisOpen, true)
 
-	s.Log("Opening CCD with chassis open and no FWMP space. Should be instant")
 	out = runCommand(ctx, s, i, "ccd open")
 	if !ccdOpened.MatchString(out) {
 		s.Fatal("CCD did not open, but got instead: ", out)
 	}
 
-	s.Log("Setting testlab to enabled")
 	// Reset to clear chip factory mode to allow testlab enable.
 	runCommand(ctx, s, i, "ccd reset")
 	mustSucceed(s, i.StartTestlabEnable(ctx), "Testlab enable")
