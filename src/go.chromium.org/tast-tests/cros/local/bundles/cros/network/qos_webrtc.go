@@ -30,7 +30,9 @@ func init() {
 		BugComponent: "b:156085",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		SoftwareDeps: []string{"bpf", "wifi", "chrome", caps.BuiltinCamera},
+		// TODO(b/317282580#comment2): Remove `no_kernel_upstream` once
+		// crrev.com/c/5119091 is in the kernel upstream branch.
+		SoftwareDeps: []string{"bpf", "wifi", "chrome", caps.BuiltinCamera, "no_kernel_upstream"},
 		Data:         webrtc.TestFiles(),
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      5 * time.Minute, // need to start Chrome in the test
