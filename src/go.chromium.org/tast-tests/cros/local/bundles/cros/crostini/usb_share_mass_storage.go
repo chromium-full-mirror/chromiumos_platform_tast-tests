@@ -183,24 +183,24 @@ func waitUntilMountedOutside(ctx context.Context, mountDir string) error {
 
 func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string) (action.Action, error) {
 	// When switching between ChromeOS and Crostini, the device may not be available for some time. Therefore need to poll.
-	var mountPoint string
+	var device string
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		out, err := cont.Command(ctx, "sudo", "blkid", "--label", label).Output()
 		if err != nil {
-			return errors.Wrapf(err, "failed to get mount point by label: %q", string(out))
+			return errors.Wrapf(err, "failed to get device path by label: %q", string(out))
 		}
 		if string(out) == "" {
-			return errors.Wrapf(err, "no mount points found for label %q", label)
+			return errors.Wrapf(err, "no device found for label %q", label)
 		}
-		mountPoint = string(out)
+		device = string(out)
 		return nil
 	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
-		return nil, errors.Wrapf(err, "failed to identify the mount point for label %q", label)
+		return nil, errors.Wrapf(err, "failed to identify the device for label %q", label)
 	}
 	if err := cont.Command(ctx, "mkdir", "-p", mountDir).Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to create a mount dir")
 	}
-	if err := cont.Command(ctx, "fuse2fs", mountPoint, mountDir, "-o", "fakeroot").Run(testexec.DumpLogOnError); err != nil {
+	if err := cont.Command(ctx, "fuse2fs", device, mountDir, "-o", "fakeroot").Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to mount mass storage device inside of the container")
 	}
 	// Mounting could take some time. Need to verify it is done before proceeding.
@@ -210,11 +210,11 @@ func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string
 			return errors.Wrapf(err, "failed to list mount points: %q", string(out))
 		}
 		if !strings.Contains(string(out), mountDir) {
-			return errors.Wrapf(err, "%s is not mounted on %s yet", mountPoint, mountDir)
+			return errors.Wrapf(err, "%s is not mounted on %s yet", device, mountDir)
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: time.Second}); err != nil {
-		return nil, errors.Wrapf(err, "%s is not mounted on %s", mountPoint, mountDir)
+		return nil, errors.Wrapf(err, "%s is not mounted on %s", device, mountDir)
 	}
 	isUnmounted := false
 	cleanup := func(ctx context.Context) error {
