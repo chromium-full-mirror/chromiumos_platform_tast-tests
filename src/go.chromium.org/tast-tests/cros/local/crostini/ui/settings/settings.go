@@ -62,16 +62,16 @@ var (
 	DebianUpgradeText = nodewith.NameStartingWith("An upgrade to Debian").First().Onscreen()
 	PageLinux         = nodewith.NameStartingWith(PageNameLinux).First().Onscreen()
 	// We may need to update this if more 'Turn on' buttons are added to Settings, but there isn't a good way to make this more specific yet.
-	TurnOnButton          = nodewith.NameRegex(regexp.MustCompile(`Turn on|Set Up`)).Role(role.Button).Ancestor(ossettings.WindowFinder).Onscreen()
-	DevelopersButton      = nodewith.Name("Developers").Role(role.Button).Ancestor(ossettings.WindowFinder).Onscreen()
-	LinuxText             = nodewith.Name("Linux development environment").Role(role.StaticText).Ancestor(ossettings.WindowFinder).Onscreen()
+	TurnOnButton          = nodewith.NameRegex(regexp.MustCompile(`Turn on|Set Up`)).Role(role.Button).Ancestor(ossettings.WindowFinder)
+	DevelopersButton      = nodewith.Name("Developers").Role(role.Button).Ancestor(ossettings.WindowFinder)
+	LinuxText             = nodewith.Name("Linux development environment").Role(role.StaticText).Ancestor(ossettings.WindowFinder)
 	nextButton            = nodewith.Name("Next").Role(role.Button).Onscreen()
 	settingsHead          = nodewith.Name("Settings").Role(role.Heading).Onscreen()
 	emptySharedFoldersMsg = nodewith.Name("Shared folders will appear here").Role(role.StaticText).Onscreen()
 	sharedFoldersList     = nodewith.Name("Shared folders").Role(role.List).Onscreen()
 	unshareFailDlg        = nodewith.Name("Unshare failed").Role(role.StaticText).Ancestor(nodewith.Role(role.Dialog)).Onscreen()
 	tryAgainButton        = nodewith.Name("Try again").Role(role.Button).Onscreen()
-	removeLinuxButton     = nodewith.NameRegex(regexp.MustCompile(`Remove.*`)).Role(role.Button).Onscreen()
+	removeLinuxButton     = nodewith.NameRegex(regexp.MustCompile(`Remove.*`)).Role(role.Button)
 	removeLinuxDialog     = nodewith.NameRegex(regexp.MustCompile("Remove|Delete")).Role(role.Dialog).First().Onscreen()
 	resizeButton          = nodewith.Name("Change disk size").Role(role.Button).Onscreen()
 	RemoveLinuxAlert      = nodewith.Name("Remove Linux development environment").Role(role.AlertDialog).ClassName("Widget").Onscreen()
@@ -199,7 +199,7 @@ func OpenLinuxInstaller(ctx context.Context, tconn *chrome.TestConn, cr *chrome.
 	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, crostiniPage, ui.WaitUntilExists(TurnOnButton)); err != nil {
 		return nil, errors.Wrap(err, "failed to launch settings app")
 	}
-	if err := ui.DoDefault(TurnOnButton)(ctx); err != nil {
+	if err := ui.DoDefaultUntil(TurnOnButton, ui.WithTimeout(shortUITimeout).WaitUntilExists(nextButton))(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to open Linux installer")
 	}
 
