@@ -155,15 +155,23 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		if testNewAPNUIRevamp {
 			// Append all other APNs after the one we are testing if the current APN is an attach APN. It should work either way.
 			apn := knownAPN.GetAPNForShill()
-			wrongApn := make(map[string]string)
-			for k, v := range apn {
-				wrongApn[k] = v
-			}
-			// Add a different wrong-apn every time to avoid throttling algorithms in the modem.
-			wrongApn[shillconst.DevicePropertyCellularAPNInfoApnName] = fmt.Sprintf("wrong-apn%d", counter)
 			counter++
-			// Start with a wrong APN to ensure the round robin works correctly.
-			apns := []map[string]string{wrongApn}
+			var apns = []map[string]string{}
+			// Skip this on verizon otherwise the round robin breaks. b/289540816
+			isL850MR8AndLower, _, _, err := cellular.ModemFwMatch(ctx, cellular.ModemFwFilterL850MR8AndLower)
+			if err != nil {
+				s.Fatal("Failed to check the modem FW version: ", err)
+			}
+			if !(carrier == cellular.CarrierVerizon && isL850MR8AndLower) {
+				wrongApn := make(map[string]string)
+				for k, v := range apn {
+					wrongApn[k] = v
+				}
+				// Add a different wrong-apn every time to avoid throttling algorithms in the modem.
+				wrongApn[shillconst.DevicePropertyCellularAPNInfoApnName] = fmt.Sprintf("wrong-apn%d", counter)
+				// Start with a wrong APN to ensure the round robin works correctly.
+				apns = append(apns, wrongApn)
+			}
 			apns = append(apns, apn)
 			if knownAPN.IsAttachAPN() {
 				for _, knownAPN2 := range knownAPNs {

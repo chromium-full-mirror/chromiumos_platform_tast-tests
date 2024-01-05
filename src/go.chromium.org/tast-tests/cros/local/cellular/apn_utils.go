@@ -114,7 +114,7 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "nrbroadband"}, APNTypes: []string{typeDefault}},
 		},
 		CarrierVerizon: []KnownAPN{
-			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", ipType: ipv4v6}, APNTypes: []string{typeDefault, typeIA}},
+			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 			KnownAPN{Optional: false, APNInfo: map[string]interface{}{apn: "vzwinternet"}, APNTypes: []string{typeDefault}},
 		},
 		// Japan
