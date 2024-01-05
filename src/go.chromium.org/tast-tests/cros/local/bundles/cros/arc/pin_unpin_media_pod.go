@@ -39,7 +39,7 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1052117", // ChromeOS > Software > ARC++ > EngProd
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "chrome_internal", "arc"},
 		// There are two apps to be installed in this case.
 		Timeout: 2*time.Minute + 2*apputil.InstallationTimeout,
