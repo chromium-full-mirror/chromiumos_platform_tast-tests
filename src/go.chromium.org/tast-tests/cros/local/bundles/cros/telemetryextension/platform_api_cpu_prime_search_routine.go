@@ -27,7 +27,9 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
-			"group:mainline", "informational",
+			"group:mainline",
+			"informational",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{
