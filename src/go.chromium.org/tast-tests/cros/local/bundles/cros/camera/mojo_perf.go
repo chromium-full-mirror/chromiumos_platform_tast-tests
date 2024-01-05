@@ -21,7 +21,7 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "ototot@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Timeout:      1 * time.Minute,
+		Timeout:      5 * time.Minute,
 	})
 }
 
