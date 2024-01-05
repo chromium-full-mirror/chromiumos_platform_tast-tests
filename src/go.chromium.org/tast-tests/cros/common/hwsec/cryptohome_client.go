@@ -1067,8 +1067,11 @@ func (u *CryptohomeClient) UpdatePasswordAuthFactor(ctx context.Context, authSes
 }
 
 // UpdateRecoveryAuthFactor updates the recovery auth factor for the user.
-func (u *CryptohomeClient) UpdateRecoveryAuthFactor(ctx context.Context, authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID string) error {
-	_, err := u.binary.updateRecoveryAuthFactor(ctx, authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID)
+func (u *CryptohomeClient) UpdateRecoveryAuthFactor(
+	ctx context.Context,
+	authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID string,
+	ensureFreshRecoveryID bool) error {
+	_, err := u.binary.updateRecoveryAuthFactor(ctx, authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID, ensureFreshRecoveryID)
 	return err
 }
 

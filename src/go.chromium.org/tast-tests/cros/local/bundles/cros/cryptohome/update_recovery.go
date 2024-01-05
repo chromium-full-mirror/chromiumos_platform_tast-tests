@@ -36,6 +36,12 @@ func init() {
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",
+		Params: []testing.Param{{
+			Val: true,
+		}, {
+			Name: "no_id_rotation",
+			Val:  false,
+		}},
 	})
 }
 
@@ -131,7 +137,8 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 			return authSessionID, errors.Wrap(err, "failed to get ledger info")
 		}
 
-		if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response, ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey); err != nil {
+		if err := client.AuthenticateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch, response,
+			ledgerInfo.Name, ledgerInfo.KeyHash, ledgerInfo.PublicKey); err != nil {
 			return authSessionID, errors.Wrap(err, "failed to authenticate recovery auth factor")
 		}
 		if _, err := client.PreparePersistentVault(ctx, authSessionID, false /*ecryptfs*/); err != nil {
@@ -192,8 +199,11 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to authenticate with recovery factor: ", err)
 	}
 
+	rotateRecoveryID := s.Param().(bool)
+
 	// Update recovery auth factor.
-	if err := client.UpdateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel /*label*/, mediatorPubKeyHex, userGaiaID, deviceUserID); err != nil {
+	if err := client.UpdateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel /*label*/, mediatorPubKeyHex,
+		userGaiaID, deviceUserID, rotateRecoveryID /*ensureFreshRecoveryID*/); err != nil {
 		s.Fatal("Failed to update recovery factor: ", err)
 	}
 
@@ -201,14 +211,29 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get recovery ids after update: ", err)
 	}
-	if len(newRecoveryIDs) != 2 {
-		s.Fatalf("Got %v recovery IDs, expected 2", len(newRecoveryIDs))
-	}
-	if newRecoveryIDs[0] == recoveryIDs[0] {
-		s.Fatalf("Recovery ID is still %s, expected changed ID", newRecoveryIDs[0])
-	}
-	if newRecoveryIDs[1] != recoveryIDs[0] {
-		s.Fatalf("Old recovery ID changed, the value was %s and now %s ", recoveryIDs[0], newRecoveryIDs[1])
+	recoveryID := recoveryIDs[0]
+	if rotateRecoveryID {
+		// Recovery id was rotated, we expect to have the list of 2 items: [new_id, previous_id]
+		if len(newRecoveryIDs) != 2 {
+			s.Fatalf("Got %v recovery IDs, expected 2", len(newRecoveryIDs))
+		}
+		newRecoveryID := newRecoveryIDs[0]
+		previousRecoveryID := newRecoveryIDs[1]
+		if newRecoveryID == recoveryID {
+			s.Fatalf("Recovery ID is still %s, expected changed ID", newRecoveryID)
+		}
+		if previousRecoveryID != recoveryID {
+			s.Fatalf("Old recovery ID changed, the value was %s and now %s ", recoveryID, previousRecoveryID)
+		}
+	} else {
+		// Recovery id was not rotated, we expect to have the list of 1 item: [previous_id]
+		if len(recoveryIDs) != 1 {
+			s.Fatalf("Got %v recovery IDs, expected 1", len(recoveryIDs))
+		}
+		newRecoveryID := newRecoveryIDs[0]
+		if newRecoveryID != recoveryID {
+			s.Fatalf("Recovery ID is changed to %s, expected %s", newRecoveryID, recoveryID)
+		}
 	}
 
 	// Unmount the user.

@@ -379,14 +379,19 @@ func (c *cryptohomeBinary) updatePasswordAuthFactor(ctx context.Context, authSes
 }
 
 // updateRecoveryAuthFactor calls "cryptohome --action=update_auth_factor --recovery_mediator_pub_key=mediatorPubKeyHex".
-func (c *cryptohomeBinary) updateRecoveryAuthFactor(ctx context.Context, authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID string) ([]byte, error) {
+func (c *cryptohomeBinary) updateRecoveryAuthFactor(
+	ctx context.Context,
+	authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID string,
+	ensureFreshRecoveryID bool) ([]byte, error) {
 	args := []string{"--action=update_auth_factor",
 		"--auth_session_id=" + authSessionID,
 		"--key_label=" + label,
 		"--recovery_mediator_pub_key=" + mediatorPubKeyHex,
 		"--recovery_user_gaia_id=" + userGaiaID,
-		"--recovery_device_user_id=" + deviceUserID,
-		"--ensure_fresh_recovery_id"}
+		"--recovery_device_user_id=" + deviceUserID}
+	if ensureFreshRecoveryID {
+		args = append(args, "--ensure_fresh_recovery_id")
+	}
 	return c.call(ctx, args...)
 }
 
