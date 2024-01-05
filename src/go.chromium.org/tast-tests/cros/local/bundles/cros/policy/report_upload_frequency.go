@@ -29,7 +29,7 @@ func init() {
 			"albertojuarez@google.com",
 		},
 		BugComponent: "b:817866",
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		Timeout:      6 * time.Minute, // Increased timeout as we need to wait for report uploads.
