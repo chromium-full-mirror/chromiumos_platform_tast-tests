@@ -37,7 +37,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.ui.AudioService", "tast.cros.browser.ChromeService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		VarDeps:      []string{"servo"},
-		Vars:         []string{"power.USB2", "power.USB3"},
+		Vars:         []string{"intel.USB2", "intel.USB3"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Params: []testing.Param{{
 			Name: "hid_coldboot",
@@ -93,12 +93,12 @@ func USBDeviceFunctionality(ctx context.Context, s *testing.State) {
 	dut := s.DUT()
 	testParam := s.Param().(usbDeviceTestParam)
 
-	// power.usbDeviceName variable is required for USB storage related tests.
+	// intel.USB2 or intel.USB3 variable is required for USB storage related tests.
 	var usbStorageName string
 	if testParam.pendriveVersion == "2.0" {
-		usbStorageName = s.RequiredVar("power.USB2")
-	} else {
-		usbStorageName = s.RequiredVar("power.USB3")
+		usbStorageName = s.RequiredVar("intel.USB2")
+	} else if testParam.pendriveVersion == "3.0" {
+		usbStorageName = s.RequiredVar("intel.USB3")
 	}
 
 	servoSpec := s.RequiredVar("servo")
