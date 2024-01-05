@@ -841,32 +841,38 @@ type SlotInfo struct {
 
 // ListSlots lists the slots in chaps
 func (p *Chaps) ListSlots(ctx context.Context) ([]SlotInfo, error) {
-	const (
-		slotPrefix       = "Slot"
-		tokenLabelPrefix = "  token label"
-	)
 	data, err := p.RunPkcs11Tool(ctx, "--list-slots")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list slots")
 	}
+	sections, err := parsePkcs11ToolOutput(string(data))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse output")
+	}
+
+	return parseSlots(sections)
+}
+
+func parseSlots(sections []section) ([]SlotInfo, error) {
+	const (
+		slotPrefix    = "Slot"
+		tokenLabelKey = "token label"
+	)
 
 	var result []SlotInfo
-	for _, s := range strings.Split(string(data), "\n") {
-		if strings.HasPrefix(s, slotPrefix) {
-			result = append(result, SlotInfo{})
-			if _, err := fmt.Sscanf(s, "Slot %d", &result[len(result)-1].slotIndex); err != nil {
-				return nil, errors.Wrapf(err, "failed to parse slot name %q", s)
-			}
-		} else if strings.HasPrefix(s, tokenLabelPrefix) {
-			if len(result) < 1 {
-				return nil, errors.Wrap(err, "label appeared before slot index")
-			}
-			n := strings.Index(s, ":")
-			if n == -1 {
-				return nil, errors.Wrapf(err, "failed to parse slot name %q", s)
-			}
-			result[len(result)-1].tokenLabel = s[n+2:]
+	for _, s := range sections {
+		if !strings.HasPrefix(s.header, slotPrefix) {
+			continue
 		}
+		var slotIndex int
+		if _, err := fmt.Sscanf(s.header, "Slot %d", &slotIndex); err != nil {
+			return nil, errors.Wrapf(err, "failed to parse slot index %q", s)
+		}
+		tokenLabel, ok := s.keys[tokenLabelKey]
+		if !ok {
+			return nil, errors.Errorf("no token label in slot %d", slotIndex)
+		}
+		result = append(result, SlotInfo{slotIndex: slotIndex, tokenLabel: tokenLabel})
 	}
 
 	return result, nil
