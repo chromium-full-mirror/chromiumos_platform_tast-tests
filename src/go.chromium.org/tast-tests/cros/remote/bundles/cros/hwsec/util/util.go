@@ -7,7 +7,6 @@ package util
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -15,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pkcs11"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
-	fwfixture "go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"
 	"go.chromium.org/tast-tests/cros/remote/u2fd"
 	"go.chromium.org/tast/core/errors"
@@ -177,50 +175,4 @@ func CopyFilesToRemote(ctx context.Context, s *testing.State, cl *dutfs.Client) 
 		s.DataPath("webauthn.html"): "webauthn.html",
 		s.DataPath("bundle.js"):     "bundle.js",
 	})
-}
-
-// FlashromWpStatus returns the write protect status reported by `flashrom` for
-// target "AP" or "EC".
-func FlashromWpStatus(ctx context.Context, s *testing.State, target string) (bool, error) {
-	h := s.FixtValue().(*fwfixture.Value).Helper
-
-	sn, err := h.Servo.GetGscUSBSerialNumberDescriptor(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to get GSC serial number")
-	}
-
-	// Run the `flashrom` command on the servo host and explicitly ignore errors
-	// here since a flashrom command failure will occur if WP is enabled
-	stdout, stderr, _ := h.ServoProxy.SeparatedOutputCommand(ctx, true, "flashrom", "-p", "raiden_debug_spi:target="+target+",serial="+sn, "--wp-status")
-	output := string(stdout) + string(stderr)
-
-	// Wait for the DUT to become responsive again since checking the WP status
-	// via flashrom causes an AP reboot
-	testing.ContextLog(ctx, "Waiting to ensure DUT booted after `flashrom` wp status query")
-	if err := h.EnsureDUTBooted(ctx); err != nil {
-		return false, errors.Wrap(err, "failed to ensure DUT booted after running `flashrom` command")
-	}
-	testing.ContextLog(ctx, "DUT booted successfully")
-
-	// Check if WP is disabled. If the target is "EC", `flashrom` might report
-	// that no device is found.
-	match, err := regexp.MatchString("WP: write protect is disabled.|No EEPROM/flash device found.", output)
-	if err != nil {
-		return false, errors.New("failed to run regexp match to check for WP disabled")
-	}
-	if match {
-		return false, nil
-	}
-
-	// Check if WP is enabled
-	match, err = regexp.MatchString(`WP: write protect is enabled.|Raiden: Target SPI bridge is disabled \(is WP enabled\?\)`, output)
-	if err != nil {
-		return false, errors.New("failed to run regexp match to check for WP enabled")
-	}
-	if match {
-		return true, nil
-	}
-
-	// A flashrom or regex matching error occurred
-	return false, errors.New("failed to determine if WP is enabled or disabled via `flashrom`, command output = " + output)
 }
