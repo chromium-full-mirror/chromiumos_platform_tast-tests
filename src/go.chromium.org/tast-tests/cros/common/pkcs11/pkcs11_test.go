@@ -5,7 +5,10 @@
 package pkcs11
 
 import (
+	"crypto/x509"
 	"testing"
+
+	"go.chromium.org/tast/core/errors"
 )
 
 func TestParseSlotsOk(t *testing.T) {
@@ -86,5 +89,96 @@ func TestParseSlotsNoTokenLabel(t *testing.T) {
 
 	if _, err := parseSlots(sections); err == nil {
 		t.Error("Expected error from parseSlots")
+	}
+}
+
+func fakeCertReaderSuccess(ckaID string) (*x509.Certificate, error) {
+	return nil, nil
+}
+
+func fakeCertReaderFailure(ckaID string) (*x509.Certificate, error) {
+	return nil, errors.New("failure")
+}
+
+func TestParseCertsOk(t *testing.T) {
+	input := `
+Private Key Object; RSA
+  label:      Device_5CD2501TVS's example-NEW-CERT-PROV-T-CA ID
+  ID:         76784a14bb8fcecd68c2e2d426270d40326c6b81
+  Usage:      sign
+  Access:     sensitive
+Certificate Object; type = X.509 cert
+  label:      Device_5CD2501TVS's example-NEW-CERT-PROV-T-CA ID
+  subject:    DN: O=TestCompanyNameForDevice, OU=TestCompanyNameForDevice, CN=Device_5CD2501TVS
+  ID:         76784a14bb8fcecd68c2e2d426270d40326c6b81
+Certificate Object; type = X.509 cert
+  label:      SecondCert label
+  subject:    DN: CN=SecondCert
+  ID:         399672eaa648114f4bfc18d0bb52510a7a0ca3cd`
+
+	sections, err := parsePkcs11ToolOutput(input)
+	if err != nil {
+		t.Fatal("Unexpected failure: ", err)
+	}
+
+	certs, err := parseAndReadCerts(sections, fakeCertReaderSuccess)
+
+	if err != nil {
+		t.Fatal("Unexpected fail: ", err)
+	}
+	if len(certs) != 2 {
+		t.Fatalf("Expected 2 certs, got %d", len(certs))
+	}
+
+	if certs[0].ckaID != "76784a14bb8fcecd68c2e2d426270d40326c6b81" {
+		t.Errorf("Wrong ckaID in certs[0] - expected \"76784a14bb8fcecd68c2e2d426270d40326c6b81\", got \"%s\"", certs[0].ckaID)
+	}
+	if certs[1].ckaID != "399672eaa648114f4bfc18d0bb52510a7a0ca3cd" {
+		t.Errorf("Wrong ckaID in certs[1] - expected \"399672eaa648114f4bfc18d0bb52510a7a0ca3cd\", got \"%s\"", certs[1].ckaID)
+	}
+}
+
+func TestParseCertsNoID(t *testing.T) {
+	sections := []section{
+		{
+			header: "Certificate Object",
+			keys: map[string]string{
+				"unrelated key": "Token 1",
+			},
+		},
+	}
+
+	if _, err := parseAndReadCerts(sections, fakeCertReaderSuccess); err == nil {
+		t.Error("Expected error from parseAndReadCerts")
+	}
+}
+
+func TestParseCertsEmptyID(t *testing.T) {
+	sections := []section{
+		{
+			header: "Certificate Object",
+			keys: map[string]string{
+				"ID": "",
+			},
+		},
+	}
+
+	if _, err := parseAndReadCerts(sections, fakeCertReaderSuccess); err == nil {
+		t.Error("Expected error from parseAndReadCerts")
+	}
+}
+
+func TestParseCertsCertReaderFailure(t *testing.T) {
+	sections := []section{
+		{
+			header: "Certificate Object",
+			keys: map[string]string{
+				"ID": "Token 1",
+			},
+		},
+	}
+
+	if _, err := parseAndReadCerts(sections, fakeCertReaderFailure); err == nil {
+		t.Error("Expected error from parseAndReadCerts")
 	}
 }

@@ -6,6 +6,7 @@ package pkcs11
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"path/filepath"
 	"strconv"
@@ -876,4 +877,81 @@ func parseSlots(sections []section) ([]SlotInfo, error) {
 	}
 
 	return result, nil
+}
+
+// CertInfo holds info about a certificate on a PKCS#11 token.
+type CertInfo struct {
+	// The CKA_ID of the certificate object
+	ckaID string
+
+	// The parsed certificate
+	cert *x509.Certificate
+}
+
+// CkaID returns the CKA_ID attribute of the certificate object.
+func (ci CertInfo) CkaID() string {
+	return ci.ckaID
+}
+
+// Cert returns the parsed certificate.
+func (ci CertInfo) Cert() *x509.Certificate {
+	return ci.cert
+}
+
+// ListCerts lists all certificates on a slot.
+func (p *Chaps) ListCerts(ctx context.Context, slotIndex int) ([]CertInfo, error) {
+	data, err := p.RunPkcs11Tool(ctx, fmt.Sprintf("--slot=%d", slotIndex), "--list-objects")
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to list objects in slot %d", slotIndex)
+	}
+
+	sections, err := parsePkcs11ToolOutput(string(data))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse output")
+	}
+
+	certReader := func(ckaID string) (*x509.Certificate, error) {
+		return p.readCert(ctx, slotIndex, ckaID)
+	}
+	return parseAndReadCerts(sections, certReader)
+}
+
+type certReaderFunc = func(ckaID string) (*x509.Certificate, error)
+
+func parseAndReadCerts(sections []section, certReader certReaderFunc) ([]CertInfo, error) {
+	const (
+		certPrefix = "Certificate Object"
+		ckaIDKey   = "ID"
+	)
+
+	var result []CertInfo
+	for _, s := range sections {
+		if !strings.HasPrefix(s.header, certPrefix) {
+			continue
+		}
+		ckaID, ok := s.keys[ckaIDKey]
+		if !ok || len(ckaID) == 0 {
+			return nil, errors.New("no ID in certificate object")
+		}
+		cert, err := certReader(ckaID)
+		if err != nil {
+			return nil, errors.Wrapf(err, "can't read cert with ckaID %s", ckaID)
+		}
+		result = append(result, CertInfo{ckaID: ckaID, cert: cert})
+	}
+
+	return result, nil
+}
+
+// readCert exports a DER-encoded certificate from the PKCS#11 slot and parses it as x509.Certificate.
+func (p *Chaps) readCert(ctx context.Context, slotIndex int, ckaID string) (*x509.Certificate, error) {
+	data, err := p.RunPkcs11Tool(ctx, "--slot="+strconv.Itoa(slotIndex), "--read-object", "--type", "cert", "--id", ckaID)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read cert slot=%d ckaID=%s", slotIndex, ckaID)
+	}
+	cert, err := x509.ParseCertificate(data)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse cert slot=%d ckaID=%s", slotIndex, ckaID)
+	}
+	return cert, nil
 }
