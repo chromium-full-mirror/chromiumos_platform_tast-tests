@@ -9,12 +9,12 @@ import (
 	"encoding/hex"
 	"reflect"
 	"regexp"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcwifi"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -120,7 +120,7 @@ func ARCCreateWifiInShillByCmd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add network: ", err)
 	}
 	defer func() {
-		if err := forgetNetwork(cleanupCtx, a, tc.ssid); err != nil {
+		if err := arcwifi.ForgetNetwork(cleanupCtx, a, tc.ssid); err != nil {
 			s.Fatal("Failed to forget network: ", err)
 		}
 	}()
@@ -224,32 +224,4 @@ func containsElement(list []string, a string) bool {
 		}
 	}
 	return false
-}
-
-func forgetNetwork(ctx context.Context, a *arc.ARC, ssid string) error {
-	out, err := a.Command(ctx, "cmd", "wifi", "list-networks").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return err
-	}
-
-	for _, network := range strings.Split(string(out), "\n") {
-		// Get network information by shell cmd, if len(network) is 0, means len(netInfos) is also 0,
-		// information line is empty, skip.
-		if len(network) == 0 {
-			continue
-		}
-		netInfos := strings.Split(network, " ")
-
-		// The output is in the format of:
-		// networkid=<netID> SSID=<SSID> BSSID=<BSSID> guid=<guid> security=<security>
-		// currentSSID is the SSID of current network. If currentSSID matches newly added
-		// network, get networkId of this network and forget network through shell cmd.
-		currentSSID := strings.Split(string(netInfos[1]), "\"")[1]
-
-		if currentSSID == ssid {
-			netID := strings.Split(netInfos[0], "=")[1]
-			return a.Command(ctx, "cmd", "wifi", "forget-network", netID).Run(testexec.DumpLogOnError)
-		}
-	}
-	return nil
 }
