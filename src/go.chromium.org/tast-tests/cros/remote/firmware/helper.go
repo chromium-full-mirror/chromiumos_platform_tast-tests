@@ -1843,10 +1843,19 @@ func (h *Helper) WaitFirmwareScreen(ctx context.Context, timeout time.Duration) 
 					return nil
 				}
 			}
-			return errors.Errorf("failed to find keyboard enabled after %s", timeout)
+			return errors.New("keyboard disabled")
 		}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: timeout})
+		if err == nil {
+			return nil
+		}
+		// We waited the full timeout, so it's fine.
+		if strings.Contains(err.Error(), "context deadline exceeded during a poll") {
+			testing.ContextLog(ctx, "Ignoring error: ", err)
+			return nil
+		}
+		// Fall through to sleep if the error is ecCmd8042NotFound
 		_, ok := err.(*ecCmd8042NotFound)
-		if err == nil || !ok {
+		if !ok {
 			return err
 		}
 	}
