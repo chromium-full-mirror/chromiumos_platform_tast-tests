@@ -22,6 +22,10 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+var revenUcmlessCards = map[string]bool{
+	"HDA Intel PCH": true,
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UCMSequences,
@@ -151,6 +155,19 @@ func UCMSequences(ctx context.Context, s *testing.State) {
 	}
 
 	for _, card := range cards {
+		// TODO(b/319288703): Consider adding a small/empty ucm
+		// file for HDA Intel PCH.
+		// reven's x1g6 carbon does not currently require any ucm file,
+		// but later generations do.
+		model, err := crosconfig.Get(ctx, "/", "name")
+		if err != nil {
+			s.Fatal("Cannot detect model from config")
+		}
+		if model == "reven" && revenUcmlessCards[card.ShortName] {
+			s.Log("Skipping sound card as it's known to work without UCM")
+			continue
+		}
+
 		shouldIgnoreUCMSuffix := boardConfig.ShouldIgnoreUCMSuffix(card.ShortName)
 
 		s.Logf("Testing card: %q, ucm-suffix: %q, shouldIgnoreUCMSuffix: %v", card.ShortName, ucmSuffix, shouldIgnoreUCMSuffix)
