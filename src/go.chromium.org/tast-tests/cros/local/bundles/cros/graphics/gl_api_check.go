@@ -27,7 +27,7 @@ func init() {
 			"chromeos-gfx@google.com",
 			"syedfaaiz@google.com",
 		},
-		Fixture: "chromeGraphics",
+		Fixture: "gpuWatchDog",
 		Timeout: 1 * time.Minute,
 	})
 }
