@@ -73,6 +73,34 @@ func (s *Servo) RequireChargerAttached(ctx context.Context) error {
 	return nil
 }
 
+// EnableServoConsoleChannel enables the provided console log channel (and turns all but the console CLI off)
+func (s *Servo) EnableServoConsoleChannel(ctx context.Context, channelName string) error {
+	// Get current console state
+	//  0 - full row
+	//  1 - channel index
+	//  2 - channel mask
+	//  3 - enabled flag
+	//  4 - channel name
+	out, err := s.RunServoCommandGetOutput(ctx, "chan", []string{fmt.Sprintf(`(\d+)\s+(\w+)\s+(\*?)\s+%s[\r\n]`, channelName)})
+	if err != nil {
+		return errors.Wrapf(err, "failed to query channel %q", channelName)
+	}
+
+	mask, err := strconv.ParseUint(out[0][2], 16, 32)
+	if err != nil {
+		return errors.Wrap(err, "cannot parse channel mask")
+	}
+
+	if out[0][3] == "*" {
+		// No update necessary
+		testing.ContextLogf(ctx, "Servo console channel %q already enabled", channelName)
+		return nil
+	}
+
+	testing.ContextLogf(ctx, "Enabling Servo console channel %q", channelName)
+	return s.RunServoCommand(ctx, fmt.Sprintf("chan 0x%08x", mask))
+}
+
 // EnableServoPDConsoleDebug enables PD console debugging level 2 on the Servo
 func (s *Servo) EnableServoPDConsoleDebug(ctx context.Context) error {
 	cmd := "pd dump 2"
@@ -95,6 +123,29 @@ func (s *Servo) DisableServoPDConsoleDebug(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+// checkSequenceInConsoleLog is a helper function to search through console
+// output and ensure a provided sequence of PD state transitions exists.
+func checkSequenceInConsoleLog(log string, port int, sequenceList []string) bool {
+	i := 0
+	for _, stateName := range sequenceList {
+		// Create a regexp object that matches the expected log entry
+		// for this state name.
+		re := regexp.MustCompile(
+			fmt.Sprintf(`C%d\s+[\w]+:?\s(%s)`, port, stateName),
+		)
+		idx := re.FindStringIndex(log[i:])
+
+		if idx == nil {
+			return false
+		}
+
+		// Continue the search for the next expected state after this
+		// log line
+		i += idx[1]
+	}
+	return true
 }
 
 // verifyStatesInConsoleLog is a helper function which extracts all of the PD
@@ -137,10 +188,49 @@ func (s *Servo) TriggerServoPDSoftReset(ctx context.Context) error {
 		return errors.New("servo PD status reads disabled. Cannot test without a port partner")
 	}
 
-	// Run the command. Port 1 is the Servo's DUT-facing port.
-	err = s.RunServoCommand(ctx, "pd 1 soft")
+	if err := s.EnableServoConsoleChannel(ctx, "usbpd"); err != nil {
+		return err
+	}
+
+	if err := s.EnableServoPDConsoleDebug(ctx); err != nil {
+		return errors.Wrap(err, "could not enable Servo's PD debug logs")
+	}
+
+	// Go back to `pd dump 0` after.
+	defer s.DisableServoPDConsoleDebug(ctx)
+
+	// Depending on the current power role, set the list of expected
+	// PD states following the soft reset
+	var expectedResetSequence []string
+	if pdStateBefore.PowerRole == PowerRoleSNK {
+		expectedResetSequence = []string{
+			"SOFT_RESET",
+			"SNK_DISCOVERY",
+			"SNK_REQUESTED",
+			"SNK_TRANSITION",
+			"SNK_READY",
+		}
+	} else if pdStateBefore.PowerRole == PowerRoleSRC {
+		expectedResetSequence = []string{
+			"SOFT_RESET",
+			"SRC_DISCOVERY",
+			"SRC_NEGOCIATE", // [sic]
+			"SRC_ACCEPTED",
+			"SRC_POWERED",
+			"SRC_TRANSITION",
+			"SRC_READY",
+		}
+	} else {
+		return errors.New("unknown power role state")
+	}
+
+	// Run the command
+	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 soft", []string{`(.*)(C1)\s+[\w]+:?\s([\w]+_READY)`})
 	if err != nil {
 		return errors.Wrap(err, "could not trigger soft reset on Servo")
+	}
+	if !checkSequenceInConsoleLog(out[0][0], 1, expectedResetSequence) {
+		return errors.New("expected reset state sequence not seen in Servo PD soft reset command console output")
 	}
 
 	// Poll until the pre- and post-reset states match or we time out.
