@@ -41,7 +41,7 @@ func init() {
 		},
 		Parent:          "chromeLoggedIn",
 		Impl:            &dlcFixture{},
-		SetUpTimeout:    30 * time.Second,
+		SetUpTimeout:    60 * time.Second,
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 5 * time.Second,
 	})
