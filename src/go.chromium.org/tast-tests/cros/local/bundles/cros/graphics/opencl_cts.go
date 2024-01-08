@@ -19633,7 +19633,7 @@ func init() {
 				Name: "select_select_half_short",
 				Val: oclctsTest{
 					executable: "test_select",
-					args:       "select_half_short",
+					args:       "select_half_short -w",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -19641,7 +19641,7 @@ func init() {
 				Name: "select_select_half_ushort",
 				Val: oclctsTest{
 					executable: "test_select",
-					args:       "select_half_ushort",
+					args:       "select_half_ushort -w",
 				},
 				Timeout: 1 * time.Minute,
 			},
