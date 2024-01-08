@@ -20,6 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A functional test that verifies OptIn flow",
 		Contacts: []string{
+			// Please assign test failures to current constable on-call
+			"arc-constables@google.com",
 			"arc-core@google.com",
 			"mhasank@chromium.org",
 		},

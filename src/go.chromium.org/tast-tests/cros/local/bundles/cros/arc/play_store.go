@@ -24,7 +24,12 @@ func init() {
 		Func:         PlayStore,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "A functional test of the Play Store that installs Google Calculator",
-		Contacts:     []string{"arc-core@google.com", "cros-arc-te@google.com", "mhasank@chromium.org"},
+		Contacts: []string{
+			// Please assign test failures to current constable on-call
+			"arc-constables@google.com",
+			"arc-core@google.com",
+			"mhasank@chromium.org",
+		},
 		// ChromeOS > Software > ARC++ > Core > Play Store Setup
 		BugComponent: "b:1131344",
 		Attr:         []string{"group:arc-functional", "group:mainline"},

@@ -30,7 +30,11 @@ func init() {
 		Func:         Boot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that Android boots",
-		Contacts:     []string{"arc-core@google.com"},
+		Contacts: []string{
+			// Please assign test failures to current constable on-call
+			"arc-constables@google.com",
+			"arc-core@google.com",
+		},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
 		SoftwareDeps: []string{"chrome"},
