@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Demonstrates how to use gRPC support to run Go code on DUT",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.example.ChromeService"},
 	})

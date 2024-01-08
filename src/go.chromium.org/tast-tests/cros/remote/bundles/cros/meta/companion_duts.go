@@ -17,6 +17,7 @@ func init() {
 		Desc:         "Ensure DUT and companion DUTs are accessible",
 		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

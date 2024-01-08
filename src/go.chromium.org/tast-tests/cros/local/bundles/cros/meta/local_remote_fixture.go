@@ -17,6 +17,7 @@ func init() {
 		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Fixture:      "metaRemote",
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

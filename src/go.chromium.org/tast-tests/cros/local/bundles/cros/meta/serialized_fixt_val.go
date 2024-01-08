@@ -41,7 +41,7 @@ func init() {
 		},
 		Desc:         "Ensure remote fixture values can be accessed local fixtures ",
 		Contacts:     []string{"tast-core@google.com", "seewaifu@chromium.org", "yichiyan@chromium.org"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		BugComponent: "b:1034522",
 	})
 }

@@ -16,6 +16,7 @@ func init() {
 		Desc:         "Example to access DUT features from a remote test",
 		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

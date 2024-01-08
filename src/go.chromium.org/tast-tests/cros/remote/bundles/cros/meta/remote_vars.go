@@ -19,6 +19,7 @@ func init() {
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		VarDeps:      []string{"meta.RemoteVars.var"},
+		Attr:         []string{"group:hw_agnostic"},
 		// This test is called by remote tests in the meta package.
 	})
 }

@@ -22,6 +22,7 @@ func init() {
 		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Fixture:      "metaRemoteFixtureDUTFeature",
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

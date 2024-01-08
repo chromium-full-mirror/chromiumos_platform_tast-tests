@@ -19,6 +19,7 @@ func init() {
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		// Timeout is set to 8 minutes: 3 for reboot and 5 for sleep.
 		Timeout: time.Minute * 8,
+		Attr:    []string{"group:hw_agnostic"},
 	})
 }
 

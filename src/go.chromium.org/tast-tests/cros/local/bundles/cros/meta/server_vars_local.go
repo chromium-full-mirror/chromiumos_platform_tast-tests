@@ -18,6 +18,7 @@ func init() {
 		Desc:         "Demonstrate how to get server variable values in local tests",
 		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

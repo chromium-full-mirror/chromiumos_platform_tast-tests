@@ -16,7 +16,7 @@ func init() {
 		Desc:         "Access cloud storage file with a space in the path",
 		Contacts:     []string{"tast-core@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
 }
 

@@ -16,6 +16,7 @@ func init() {
 		Desc:         "Always crashes",
 		Contacts:     []string{"tast-core@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

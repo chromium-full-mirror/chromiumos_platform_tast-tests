@@ -21,7 +21,7 @@ func init() {
 		Desc:         "Check if faillog for the UI tree works",
 		Contacts:     []string{"tast-core@google.com", "hidehiko@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 	})
 }

@@ -18,7 +18,7 @@ func init() {
 		Desc:         "Demonstrates ARC fixture",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBooted",
 		Params: []testing.Param{

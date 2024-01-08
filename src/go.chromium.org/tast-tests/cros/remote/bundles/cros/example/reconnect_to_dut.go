@@ -16,7 +16,7 @@ func init() {
 		Desc:         "Demonstrates connecting to and disconnecting from DUT",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
 }
 

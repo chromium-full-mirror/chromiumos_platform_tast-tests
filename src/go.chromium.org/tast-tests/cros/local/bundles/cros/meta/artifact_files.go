@@ -17,7 +17,7 @@ func init() {
 		Desc:         "Demonstrates how to use artifact data files",
 		Contacts:     []string{"tast-core@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Data:         []string{"artifact_files_partial_metadata_json"},
 	})
 }

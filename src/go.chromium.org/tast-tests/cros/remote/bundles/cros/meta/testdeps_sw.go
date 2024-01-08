@@ -21,6 +21,7 @@ func init() {
 		Desc:         "Ensure DUTs dependencies with primary:octopus-sparky360 companion:hana-hana will pass, either or both changed will skip",
 		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com", "yichiyan@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

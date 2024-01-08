@@ -21,6 +21,7 @@ func init() {
 		Desc:         "Terminates the current SSH connection",
 		Contacts:     []string{"tast-core@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:hw_agnostic"},
 		// This test always fails.
 	})
 }

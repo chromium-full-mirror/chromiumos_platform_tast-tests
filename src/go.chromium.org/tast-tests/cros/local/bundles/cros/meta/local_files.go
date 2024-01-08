@@ -23,6 +23,7 @@ func init() {
 			"local_files_external.txt",
 		},
 		Fixture: "metaLocalDataFilesFixture",
+		Attr:    []string{"group:hw_agnostic"},
 		// This test is executed by remote tests in the meta package.
 	})
 }

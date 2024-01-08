@@ -42,6 +42,7 @@ func init() {
 		Desc:         "Verifies that Tast can run tests",
 		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
+		Attr:         []string{"group:hw_agnostic"},
 		Params: []testing.Param{{
 			Name: "faillog",
 			Val: runTestsParam{
@@ -81,7 +82,7 @@ func init() {
 					"fixtures/metaLocalDataFilesFixture/fixture_data_external.txt": "This is an external data file.\n",
 				},
 			},
-			ExtraAttr: []string{"group:mainline", "group:meta", "group:hw_agnostic"},
+			ExtraAttr: []string{"group:mainline", "group:meta"},
 		}, {
 			Name: "files_remote",
 			Val: runTestsParam{
@@ -110,7 +111,7 @@ func init() {
 					{Name: "meta.LocalPanic", Errors: []tastrun.TestError{{Reason: "Panic: intentionally panicking"}}},
 				},
 			},
-			ExtraAttr: []string{"group:mainline", "group:meta", "group:hw_agnostic"},
+			ExtraAttr: []string{"group:mainline", "group:meta"},
 		}, {
 			Name: "vars",
 			Val: runTestsParam{
@@ -128,7 +129,7 @@ func init() {
 				},
 			},
 			// TODO: b/316638447 -- Reenable after this test is more stable.
-			ExtraAttr: []string{"group:mainline", "informational", "group:meta", "group:hw_agnostic"},
+			ExtraAttr: []string{"group:mainline", "informational", "group:meta"},
 		}},
 	})
 }

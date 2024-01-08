@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Runtime variables",
 		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 	})
 }
 
