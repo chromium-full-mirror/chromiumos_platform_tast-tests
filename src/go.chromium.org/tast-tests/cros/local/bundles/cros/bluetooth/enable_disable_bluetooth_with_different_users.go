@@ -59,8 +59,9 @@ func init() {
 			}, {
 				Name: "floss_enabled",
 				Val: enableDisableBluetoothWithDifferentUsersParams{
-					btImpl:         &floss.Floss{},
-					enableFeatures: []string{"Floss"},
+					btImpl:          &floss.Floss{},
+					enableFeatures:  []string{"Floss"},
+					disableFeatures: []string{"FlossIsAvailabilityCheckNeeded"},
 				},
 				ExtraAttr:         []string{"bluetooth_floss_flaky"},
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
