@@ -197,7 +197,7 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	mxApp := arcvideoplayback.NewMxPlayerApp(tconn, kb, a, d)
+	mxApp := arcvideoplayback.NewMxPlayerApp(cr, tconn, kb, a, d)
 	if err := mxApp.Install(ctx); err != nil {
 		s.Fatal("Failed to install MX Player app: ", err)
 	}

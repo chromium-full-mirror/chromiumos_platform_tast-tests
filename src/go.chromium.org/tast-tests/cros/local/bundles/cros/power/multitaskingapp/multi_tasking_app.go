@@ -133,7 +133,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	}
 	defer socialApp.Uninstall(closeCtx)
 
-	videoApp := arcvideoplayback.NewMxPlayerApp(tconn, kb, a, d)
+	videoApp := arcvideoplayback.NewMxPlayerApp(cr, tconn, kb, a, d)
 	if err := videoApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install MxPlayer app")
 	}

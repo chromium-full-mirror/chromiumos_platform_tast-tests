@@ -55,12 +55,13 @@ type MxPlayerApp struct {
 }
 
 // NewMxPlayerApp creates an instance of MX Player app.
-func NewMxPlayerApp(tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device) *MxPlayerApp {
+func NewMxPlayerApp(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device) *MxPlayerApp {
 	return &MxPlayerApp{
 		tconn: tconn,
 		kb:    kb,
 		a:     a,
 		d:     d,
+		cr:    cr,
 	}
 }
 
