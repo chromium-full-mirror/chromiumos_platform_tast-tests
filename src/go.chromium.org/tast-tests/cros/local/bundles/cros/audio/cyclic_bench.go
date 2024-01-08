@@ -90,6 +90,8 @@ var cyclicBenchUnstableModels = []string{
 	"starmie",
 	// elm
 	"elm",
+	// jacuzzi
+	"burnet", "willow",
 }
 
 func init() {
