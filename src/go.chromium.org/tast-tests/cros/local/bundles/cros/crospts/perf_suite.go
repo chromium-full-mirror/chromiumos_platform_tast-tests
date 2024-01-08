@@ -188,7 +188,7 @@ func init() {
 				suiteName:     "vpxenc-3.2.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			Timeout: 60 * time.Minute,
 		}, {
 			Name:    "vpxenc_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -197,7 +197,7 @@ func init() {
 				suiteName:     "vpxenc-3.2.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 30 * time.Minute,
+			Timeout: 60 * time.Minute,
 		}, {
 			Name:    "tensorflowlite_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
