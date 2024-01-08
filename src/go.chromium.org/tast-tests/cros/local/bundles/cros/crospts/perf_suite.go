@@ -36,8 +36,6 @@ func init() {
 				suiteName:     "leveldb-1.0.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			// TODO(darrenwu): The test time was tested on brya. Need to run the
-			// test on other low end DUT.
 			Timeout: 40 * time.Minute,
 		}, {
 			Name:    "leveldb_cros_arm64",
