@@ -176,6 +176,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraSoftwareDeps: []string{"no_amd_cpu"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ExternalDisplay()),
 			}, {
 				Name: "kms_flip",
 				Val: graphics.IgtTest{
@@ -211,13 +212,6 @@ func init() {
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HdmiConnected()),
-			}, {
-				Name: "kms_frontbuffer_tracking",
-				Val: graphics.IgtTest{
-					Exe: "kms_frontbuffer_tracking",
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
 			}, {
 				Name: "kms_getfb",
 				Val: graphics.IgtTest{

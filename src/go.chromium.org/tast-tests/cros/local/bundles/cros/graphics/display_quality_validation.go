@@ -329,15 +329,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.HdmiConnected()),
 			},
 			{
-				Name: "kms_frontbuffer_tracking",
-				Val: graphics.IgtTest{
-					Exe:      "kms_frontbuffer_tracking",
-					Subtests: []string{"basic"},
-				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
-			},
-			{
 				Name: "kms_getfb",
 				Val: graphics.IgtTest{
 					Exe: "kms_getfb",

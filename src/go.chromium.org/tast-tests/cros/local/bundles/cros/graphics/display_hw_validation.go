@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -106,6 +107,7 @@ func init() {
 				},
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ExternalDisplay()),
 				ExtraRequirements: []string{"gpu-kern-0006-v01"},
 			},
 			{
