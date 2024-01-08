@@ -34,7 +34,12 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
-		Impl:            fixtureImplWithFeatures([]string{"Floss"}, []string{}, false),
+		// chromeFeatureFlossIsAvailabilityCheckNeeded needs to be disabled when
+		// chromeFeatureFloss is enabled.
+		Impl:            fixtureImplWithFeatures(
+					[]string{"Floss"},
+					[]string{"FlossIsAvailabilityCheckNeeded"},
+					false),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
@@ -59,7 +64,12 @@ func init() {
 			"chadduffin@chromium.org",
 			"cros-connectivity@google.com",
 		},
-		Impl:            fixtureImplWithFeatures([]string{"Floss"}, []string{}, true),
+		// chromeFeatureFlossIsAvailabilityCheckNeeded needs to be disabled when
+		// chromeFeatureFloss is enabled.
+		Impl:            fixtureImplWithFeatures(
+					[]string{"Floss"},
+					[]string{"FlossIsAvailabilityCheckNeeded"},
+					true),
 		Vars:            []string{"ui.signinProfileTestExtensionManifestKey"},
 		SetUpTimeout:    chrome.FixtureSetUpTimeout,
 		ResetTimeout:    chrome.ResetTimeout,
