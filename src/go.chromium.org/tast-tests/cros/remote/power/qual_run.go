@@ -13,6 +13,7 @@ import (
 	"path"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"gonum.org/v1/gonum/stat"
@@ -296,7 +297,7 @@ func findTestDir(test string, dirs []fs.DirEntry) (dir string, err error) {
 		}
 		var newSuffix int64 = 0
 		if matches[1] != "" {
-			newSuffix, err = strconv.ParseInt(matches[1], 10, 64)
+			newSuffix, err = strconv.ParseInt(strings.Replace(matches[1], ".", "", -1), 10, 64)
 			if err != nil {
 				return
 			}
