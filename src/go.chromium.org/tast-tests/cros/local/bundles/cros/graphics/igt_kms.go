@@ -27,6 +27,7 @@ func init() {
 		// ChromeOS > Platform > Graphics > Display
 		BugComponent: "b:188154",
 		SoftwareDeps: []string{"drm_atomic", "igt", "no_qemu"},
+		HardwareDeps: hwdep.D(hwdep.Display()),
 		Attr:         []string{"group:graphics", "graphics_igt"},
 		Fixture:      "chromeGraphicsIgt",
 		Params: []testing.Param{
