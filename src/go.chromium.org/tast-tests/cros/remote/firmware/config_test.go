@@ -7,7 +7,6 @@ package firmware
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
@@ -99,8 +98,8 @@ func setupMockData(t *testing.T) (cfgDir, cfgFilepath string, retErr error) {
 	}()
 
 	// Create mock consolidated JSON file
-	cfgFilepath = filepath.Join(cfgDir, consolidatedBasename)
-	if err = ioutil.WriteFile(cfgFilepath, mockJSON, 0644); err != nil {
+	cfgFilepath = filepath.Join(cfgDir, ConfigFile)
+	if err = os.WriteFile(cfgFilepath, mockJSON, 0644); err != nil {
 		return "", "", errors.Wrapf(err, "writing mock json to file %s", cfgFilepath)
 	}
 

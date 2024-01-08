@@ -44,20 +44,14 @@ const (
 
 // USBEnablePin represents each object in the list in the config files for the key "custom_usb_enable_pins".
 type USBEnablePin struct {
-	Name string
-	Ioex bool
+	Name      string
+	Ioex      bool
 	ActiveLow bool
 }
 
-// cfgDirName is the name of the folder within data/ containing the platform config datafiles.
-const cfgDirName = "fw-testing-configs"
-
-// consolidatedBasename is the name of the .json file containing all platforms' config data.
-const consolidatedBasename = "CONSOLIDATED.json"
-
 // ConfigFile is the relative path from data/ to the .json file containing all platforms' config data.
 // It is intended to be used in the Data field of a testing.Test declaration.
-var ConfigFile = filepath.Join(cfgDirName, consolidatedBasename)
+var ConfigFile = "CONSOLIDATED.json"
 
 // defaultName is the name of the CONSOLIDATED.json attribute containing default values.
 const defaultName = "DEFAULTS"
