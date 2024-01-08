@@ -1,12 +1,13 @@
 set noparent
 
 # ARC++ team
-mhasank@chromium.org
+alanding@chromium.org
+hirono@chromium.org
+jinrongwu@google.com
 kinaba@chromium.org
 khmel@chromium.org
+mhasank@chromium.org
 niwa@chromium.org
-jinrongwu@google.com
-hirono@chromium.org
 
 # Tast team for bulk/emergencies
 include /OWNERS.tast
