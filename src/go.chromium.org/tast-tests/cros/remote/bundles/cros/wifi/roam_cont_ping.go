@@ -38,11 +38,17 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell", "wificell_perf", "wificell_openwrt", "wificell_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCapture),
-		Timeout:      time.Minute * 5, // The average test time doubled.
-		Vars:         []string{"wifi.RoamContPing.rounds"},
+		TestBedDeps: []string{
+			tbdep.Wificell,
+			tbdep.WifiStateNormal,
+			tbdep.PeripheralWifiStateWorking,
+			// TODO(b/319149188) Replace this with a feature requirement once available.
+			tbdep.WifiRouterModels("OPENWRT[Ubiquiti_UniFi_6_Lite]")[0],
+		},
+		ServiceDeps: []string{wificell.ShillServiceName},
+		Fixture:     wificell.FixtureID(wificell.TFFeaturesCapture),
+		Timeout:     time.Minute * 5, // The average test time doubled.
+		Vars:        []string{"wifi.RoamContPing.rounds"},
 		Params: []testing.Param{{
 			Name: "none",
 			Val: wifiutil.ContParam{
