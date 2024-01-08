@@ -56,7 +56,7 @@ func init() {
 		Desc:         "Runs test while capturing power data using servod",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
-		Contacts:     []string{"cros-pe-pnp@google.com", "khwon@google.com", "zhaon@google.com"},
+		Contacts:     []string{"cros-pe-pnp@google.com", "zhaon@google.com", "khwon@google.com"},
 		Timeout:      24 * time.Hour, // Depends on subtest, so set maximum value here.
 		Params: []testing.Param{
 			// Special test cases can be added as a Param here.
