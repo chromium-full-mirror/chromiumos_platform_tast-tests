@@ -88,8 +88,6 @@ func init() {
 				suiteName:     "cachebench-1.1.2",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			// TODO(darrenwu): The test time was tested on cherry. Need to run the
-			// test on other low end DUT.
 			Timeout: 1 * time.Hour,
 		}, {
 			Name:    "compress7zip_cros_x86",
@@ -99,7 +97,7 @@ func init() {
 				suiteName:     "compress-7zip-1.10.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 30 * time.Minute,
 		}, {
 			Name:    "compress7zip_cros_arm64",
 			Fixture: "mountUnmountPtsWorldForCrOSarm64",
@@ -108,7 +106,7 @@ func init() {
 				suiteName:     "compress-7zip-1.10.0",
 				resultsParser: metrics.NewResultsParser(ptsworld.CrosResultsDir, ptsworld.TypeCros),
 			},
-			Timeout: 10 * time.Minute,
+			Timeout: 30 * time.Minute,
 		}, {
 			Name:    "openssl_cros_x86",
 			Fixture: "mountUnmountPtsWorldForCrOSx86",
