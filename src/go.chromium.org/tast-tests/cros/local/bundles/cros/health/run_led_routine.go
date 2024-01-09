@@ -23,7 +23,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DiagRoutineLED,
+		Func:         RunLEDRoutine,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that cros_healthd can run LED routine",
 		Contacts: []string{
@@ -35,14 +35,6 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Attr:         []string{"group:mainline"},
 		Fixture:      "crosHealthdRunning",
-		Params: []testing.Param{{
-			Name: "v2_passed",
-			Val: croshealthd.RoutineTestingConfigV2{
-				ArgsBuilder:    buildLEDRoutineArgs,
-				RoutineRunner:  runLEDDiag,
-				ResultVerifier: croshealthd.VerifyRoutinePassedV2,
-			},
-		}},
 	})
 }
 
@@ -118,8 +110,12 @@ func runLEDDiag(ctx context.Context, args []string) (string, error) {
 	return string(stdout), nil
 }
 
-func DiagRoutineLED(ctx context.Context, s *testing.State) {
-	config := s.Param().(croshealthd.RoutineTestingConfigV2)
+func RunLEDRoutine(ctx context.Context, s *testing.State) {
+	config := croshealthd.RoutineTestingConfigV2{
+		ArgsBuilder:    buildLEDRoutineArgs,
+		RoutineRunner:  runLEDDiag,
+		ResultVerifier: croshealthd.VerifyRoutinePassedV2,
+	}
 	if err := croshealthd.TestDiagRoutineV2(ctx, config); err != nil {
 		s.Fatal("Routine verification failed: ", err)
 	}
