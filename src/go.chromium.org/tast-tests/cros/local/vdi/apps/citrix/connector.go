@@ -38,18 +38,16 @@ func (c *Connector) Init(s *testing.FixtState, tconn *chrome.TestConn, d *uidete
 	c.keyboard = k
 }
 
-// EnterServerURL enters url to the Citrix setup.
+// EnterServerURL enters url to the Citrix setup and hits connect.
 func (c *Connector) EnterServerURL(ctx context.Context, cfg *apps.VDILoginConfig) error {
 	testing.ContextLog(ctx, "Citrix: entering server url")
+	ui := uiauto.New(c.tconn)
 
-	//TODO: b/268335458 Relpace uidetect with uiauto when applicable.
-	if err := c.detector.WithTimeout(uiDetectionTimeout).WaitUntilExists(uidetection.Word("https://URL"))(ctx); err != nil {
-		return errors.Wrap(err, "failed waiting for Citrix splashscreen")
-	}
-
+	textField := nodewith.Name("Store URL or Email address").Role(role.TextField)
 	testing.ContextLog(ctx, "Citrix: entering server url")
 	if err := uiauto.Combine("enter citrix server url, connect and wait for next screen",
-		c.keyboard.AccelAction("Tab"), // Enter server test box.
+		ui.WaitUntilExists(textField),
+		ui.DoDefault(textField),
 		c.keyboard.TypeAction(cfg.Server),
 		c.keyboard.AccelAction("Enter"), // Connect to the server.
 	)(ctx); err != nil {
