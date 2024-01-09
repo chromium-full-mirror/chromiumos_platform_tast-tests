@@ -353,8 +353,11 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 	if err := filesApp.OpenUSBDriveWithName("UNTITLED")(ctx); err != nil {
 		s.Fatal("Failed to open formatted USB drive: ", err)
 	}
+	// TODO(crbug.com/1515361): Remove additional debugging logs once resolved.
 	if err := filesApp.FileExists(files.DlFileName)(ctx); err == nil {
+		faillog.DumpUITreeToFile(ctx, s.OutDir(), tconnAsh, "before_file_delete.txt")
 		if err := filesApp.DeleteFileOrFolder(keyboard, files.DlFileName)(ctx); err != nil {
+			faillog.DumpUITreeToFile(ctx, s.OutDir(), tconnAsh, "on_file_delete_error.txt")
 			s.Error("Failed to delete file before pasting: ", err)
 		}
 	}
