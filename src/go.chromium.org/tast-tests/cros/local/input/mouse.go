@@ -36,13 +36,14 @@ func Mouse(ctx context.Context) (*MouseEventWriter, error) {
 	var evTypes uint32 = 1<<EV_KEY | 1<<EV_REL
 	if mw.dev, mw.virt, err = createVirtual(name, devID{usbBus, 0, 0, 0}, 0, evTypes,
 		map[EventType]*big.Int{
-			EV_KEY: makeBigIntFromEventCodes([]EventCode{BTN_LEFT, BTN_RIGHT}),
+			EV_KEY: makeBigIntFromEventCodes([]EventCode{BTN_LEFT, BTN_RIGHT, BTN_MIDDLE, BTN_EXTRA, KEY_S}),
 			EV_REL: makeBigIntFromEventCodes([]EventCode{REL_X, REL_Y, REL_WHEEL_HI_RES, REL_WHEEL}),
 		}, nil); err != nil {
 		return nil, err
 	}
 
-	// Sleep briefly to give Chrome and other processes time to see the new device.
+	// GoBigSleepLint Sleep briefly to give Chrome and other processes time to
+	// see the new device.
 	// TODO(crbug.com/1015264): Remove the hard-coded sleep.
 	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 		return nil, err
@@ -137,6 +138,19 @@ func (mw *MouseEventWriter) RightClick() error {
 	}
 
 	if err := mw.releaseButton(BTN_RIGHT); err != nil {
+		return err
+	}
+
+	return mw.rw.Sync()
+}
+
+// MiddleClick presses and releases the mouse middle button.
+func (mw *MouseEventWriter) MiddleClick() error {
+	if err := mw.pressButton(BTN_MIDDLE); err != nil {
+		return err
+	}
+
+	if err := mw.releaseButton(BTN_MIDDLE); err != nil {
 		return err
 	}
 

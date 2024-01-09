@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/devicesettings/constants"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -32,5 +33,32 @@ func Remap(ctx context.Context, ui *uiauto.Context, from, to string) error {
 	)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to choose %q option", to)
 	}
+	return nil
+}
+
+// NavigateMouseCustomization navigates control to mouse button customzation page
+func NavigateMouseCustomization(ctx context.Context, ui *uiauto.Context, mouseName string) error {
+
+	if err := ui.DoDefault(constants.MouseRow)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click mouse row")
+	}
+
+	mouseHeading := nodewith.NameContaining(mouseName).Role(role.Heading)
+	if err := ui.WaitUntilExists(mouseHeading)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to find the connected mouse %s ", mouseName)
+	}
+
+	// Verify if the customization link shows up in the mouse section.
+	customizeLink := nodewith.Name("Customize mouse buttons").Role(role.Link).First()
+	if err := ui.WithTimeout(2 * time.Minute).LeftClick(customizeLink)(ctx); err != nil {
+		return errors.Wrap(err, "failed to Find or click customize mouse buttons link Customize mouse buttons")
+	}
+
+	// Verify if the virtual mouse connected shows up.
+	mouseText := nodewith.NameContaining("Click additional buttons on your " + mouseName).Role(role.StaticText)
+	if err := ui.WaitUntilExists(mouseText)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to find text Tast virtual mouse in customization page %s", mouseName)
+	}
+
 	return nil
 }
