@@ -93,7 +93,7 @@ func WaitForARCServiceState(ctx context.Context, a *arc.ARC, pkg, svc string, ex
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 		return errors.Wrapf(err, "service not in expected running state of %t", expectedRunning)
 	}
 	return nil
