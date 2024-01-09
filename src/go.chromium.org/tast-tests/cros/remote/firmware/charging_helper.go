@@ -195,15 +195,13 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 	// Param flags:00000002
 	// Charging:  Not Allowed
 	// Charge:    100 %
-	//   Display:  100 %               (...)
+	//   Display:  100.0 %               (...)
 
-	reStatus := `Status:\s*0[xX]([0-9a-fA-F]+)\s+((?:(?:EMPTY|FULL|DCHG|INIT)\s+)*)((?:(?:RT|RC|\--|TD|OT|TC|OC)\s+)*)[\r\n]`
-	reParam := `Param\s*flags:\s*([0-9a-fA-F]+)`
-	reCharging := `Charging:\s*(Allowed|Not Allowed)`
-	reCharge := `Charge:\s*(\d+)\s*\%`
-	reDisplay := `Display:\s*(\d+\.\d+)\s*\%`
-
-	batteryPattern := []string{reStatus, reParam, reCharging, reCharge, reDisplay}
+	reStatus := regexp.MustCompile(`Status:\s*0[xX]([0-9a-fA-F]+)\s+((?:(?:EMPTY|FULL|DCHG|INIT)\s+)*)((?:(?:RT|RC|\--|TD|OT|TC|OC)\s+)*)[\r\n]`)
+	reParam := regexp.MustCompile(`Param\s*flags:\s*([0-9a-fA-F]+)`)
+	reCharging := regexp.MustCompile(`Charging:\s*(Allowed|Not Allowed)`)
+	reCharge := regexp.MustCompile(`Charge:\s*(\d+)\s*\%`)
+	reDisplay := regexp.MustCompile(`Display:\s*(\d+\.\d+)\s*\%`)
 
 	var statusCode, params int64
 	var charge, display float64
@@ -212,16 +210,23 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 	var charging string
 
 	// Get battery info from EC, retry in case output is corrupted/interrupted.
-	out, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "battery 2", batteryPattern)
+	out, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "battery 3", []string{`bat.*(?:\> |ec\:\~\$)`})
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to run 'battery' command in ec console")
+		return nil, errors.Wrap(err, "failed to get 'battery' output from ec console")
+	}
+	fullOutput := out[0][0]
+
+	statusMatch := reStatus.FindStringSubmatch(fullOutput)
+	if statusMatch == nil {
+		return nil, errors.Errorf("failed to parse status in output: %s", fullOutput)
 	}
 
-	statusCode, err = strconv.ParseInt(out[0][1], 16, 64)
+	statusCode, err = strconv.ParseInt(statusMatch[1], 16, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse battery status as int")
 	}
-	statusRaw := strings.Split(strings.TrimSpace(out[0][2]), " ")
+
+	statusRaw := strings.Split(strings.TrimSpace(statusMatch[2]), " ")
 	for _, v := range statusRaw {
 		if v == "" {
 			continue
@@ -236,7 +241,7 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 		}
 		status = append(status, s)
 	}
-	alarmsRaw := strings.Split(strings.TrimSpace(out[0][3]), " ")
+	alarmsRaw := strings.Split(strings.TrimSpace(statusMatch[3]), " ")
 	for _, v := range alarmsRaw {
 		if v == "" {
 			continue
@@ -251,16 +256,36 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 		}
 		alarms = append(alarms, s)
 	}
-	params, err = strconv.ParseInt(out[1][1], 16, 64)
+
+	paramMatch := reParam.FindStringSubmatch(fullOutput)
+	if paramMatch == nil {
+		return nil, errors.Errorf("failed to parse params in output: %s", fullOutput)
+	}
+	params, err = strconv.ParseInt(paramMatch[1], 16, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse battery params as int")
 	}
-	charging = out[2][1]
-	charge, err = strconv.ParseFloat(out[3][1], 64)
+
+	chargingMatch := reCharging.FindStringSubmatch(fullOutput)
+	if chargingMatch == nil {
+		return nil, errors.Errorf("failed to parse charging in output: %s", fullOutput)
+	}
+	charging = chargingMatch[1]
+
+	chargeMatch := reCharge.FindStringSubmatch(fullOutput)
+	if chargeMatch == nil {
+		return nil, errors.Errorf("failed to parse charge percent in output: %s", fullOutput)
+	}
+	charge, err = strconv.ParseFloat(chargeMatch[1], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse battery charge as float")
 	}
-	display, err = strconv.ParseFloat(out[4][1], 64)
+
+	displayMatch := reDisplay.FindStringSubmatch(fullOutput)
+	if displayMatch == nil {
+		return nil, errors.Errorf("failed to parse display percent in output: %s", fullOutput)
+	}
+	display, err = strconv.ParseFloat(displayMatch[1], 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse displayed charge as float")
 	}
@@ -302,7 +327,8 @@ func PollToSetChargerStatus(ctx context.Context, h *Helper, attachCharger bool) 
 		}
 		return nil
 		// Metaknight takes a worst case of ~120s to notice the charger, so retry for 200s instead.
-	}, &testing.PollOptions{Timeout: 200 * time.Second, Interval: 10 * time.Second}); err != nil {
+		// Include extra time to account for setting charger status with RPM.
+	}, &testing.PollOptions{Timeout: 300 * time.Second, Interval: 10 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to check if charger is attached")
 	}
 	return nil
