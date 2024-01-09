@@ -15,8 +15,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/event"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -105,9 +107,9 @@ func LauncherPageSwitchPerf(ctx context.Context, s *testing.State) {
 
 	// Find the apps grid view bounds.
 	ac := uiauto.New(tconn)
-	appsGridView := nodewith.ClassName("AppsGridView")
+	appsGridView := nodewith.ClassName(launcher.PagedAppsGridViewClass)
 	pageSwitcher := nodewith.ClassName("PageSwitcher")
-	pageButtons := nodewith.ClassName("IconButton").Ancestor(pageSwitcher)
+	pageButtons := nodewith.Role(role.Button).Ancestor(pageSwitcher)
 
 	buttonsInfo, err := ac.NodesInfo(ctx, pageButtons)
 	if err != nil {
