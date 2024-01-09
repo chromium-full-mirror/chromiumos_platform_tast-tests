@@ -42,6 +42,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		Params: []testing.Param{{
 			Fixture: "virtualUsbPrinterModulesLoadedWithChromePolicyLoggedIn",
