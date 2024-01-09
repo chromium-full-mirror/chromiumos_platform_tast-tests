@@ -35,7 +35,7 @@ func init() {
 		},
 		BugComponent: "crbug:OS>LaCrOS",
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      fixture.LacrosPolicyLoggedIn,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.LacrosSecondaryProfilesAllowed{}, pci.VerifiedFunctionalityUI),
