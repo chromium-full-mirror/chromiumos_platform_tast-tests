@@ -25,7 +25,7 @@ func init() {
 		Desc:           "Disable roaming on a roaming sim and verify connecting to network fails",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"nikhilcn@chromium.org",
+			"nikhilcn@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},

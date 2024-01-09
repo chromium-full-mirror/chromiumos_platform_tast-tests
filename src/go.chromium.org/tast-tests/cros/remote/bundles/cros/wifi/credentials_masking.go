@@ -54,7 +54,6 @@ func init() {
 			"cros-connectivity@google.com",
 			"chromeos-connectivity-engprod@google.com",
 			"kinwang.lao@cienet.com",
-			"cienet-development@googlegroups.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi

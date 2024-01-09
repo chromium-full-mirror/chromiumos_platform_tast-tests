@@ -29,7 +29,7 @@ func init() {
 		Desc:           "Checks the roaming label status on a roaming and non roaming SIM",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"nikhilcn@chromium.org",
+			"nikhilcn@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},

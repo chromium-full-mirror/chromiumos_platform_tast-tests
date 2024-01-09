@@ -21,7 +21,7 @@ func init() {
 		Desc:           "Checks that Cellular can be enabled and disabled from the OS Settings",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"nikhilcn@chromium.org",
+			"nikhilcn@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},

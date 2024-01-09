@@ -40,7 +40,7 @@ func init() {
 		Desc:           "Checks that the Bluetooth adapter state preference is preserved for the device and users",
 		Contacts: []string{
 			"cros-connectivity@google.com",
-			"gordonseto@chromium.org",
+			"gordonseto@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
