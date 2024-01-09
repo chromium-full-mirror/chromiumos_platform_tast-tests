@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/fake"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/uitools"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -49,8 +50,13 @@ func Run(ctx context.Context, chrome *chrome.Chrome, ppdFilePath, toPrintFilePat
 	}
 
 	testing.ContextLog(ctx, "Registering a printer")
-	err = tconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", map[string]string{"printerName": printerID, "printerId": printerID, "printerUri": "socket://localhost:9101/", "printerPpd": ppdFilePath})
-	if err != nil {
+	printerInfo := uitools.PrinterInfo{
+		DisplayName: printerID,
+		ID:          printerID,
+		URI:         "socket://localhost:9101/",
+		PPDPath:     ppdFilePath,
+	}
+	if err := uitools.AddOrUpdatePrinter(ctx, tconn, printerInfo); err != nil {
 		return nil, errors.Wrap(err, "autotestPrivate.updatePrinter() failed")
 	}
 

@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/printpreview"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/printing/ippeveprinter"
@@ -110,40 +109,21 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	// Open OS Settings and navigate to the Printing page.
-	ui := uiauto.New(tconn)
-	if err := uitools.NavigateToPrintersSettingsPage(ctx, tconn, cr, ui); err != nil {
-		s.Fatal("Failed to launch Settings page: ", err)
+	// Add the printer to Chrome
+	const printerDisplayName = "IPP Everywhere Printer"
+	const printerID = "PrintFinishingFeaturesPrinter"
+	printerInfo := uitools.PrinterInfo{
+		DisplayName: printerDisplayName,
+		ID:          printerID,
+		URI:         printer.IppURI(),
+	}
+	if err := uitools.AddOrUpdatePrinter(ctx, tconn, printerInfo); err != nil {
+		s.Fatal("Failed to add printer to Chrome: ", err)
 	}
 
-	const printerDisplayName = "IPP Everywhere Printer"
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get the keyboard: ", err)
-	}
-	defer kb.Close(ctx)
 	// Hide all notifications to prevent them from covering the printer entry.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all notifications: ", err)
-	}
-
-	// Open the Add Printers dialog.
-	if err := uitools.OpenAddPrinterDialog(ctx, ui); err != nil {
-		s.Fatal("Failed to open the Add Printers dialog: ", err)
-	}
-
-	nameFinder := nodewith.Role("textField").Name("Name")
-	addressFinder := nodewith.Role("textField").Name("Address")
-	if err := uiauto.Combine("set printer details",
-		ui.LeftClick(nameFinder),
-		ui.EnsureFocused(nameFinder),
-		kb.TypeAction(printerDisplayName),
-		ui.LeftClick(addressFinder),
-		ui.EnsureFocused(addressFinder),
-		kb.TypeAction(fmt.Sprintf("localhost:%d", printer.Port())),
-		ui.LeftClick(nodewith.Role("button").Name("Add")),
-	)(ctx); err != nil {
-		s.Fatal("Failed to set printer details: ", err)
 	}
 
 	// Create a browser (either ash or lacros, based on browser type).
@@ -160,6 +140,11 @@ func PrintFinishingFeatures(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get the keyboard: ", err)
+	}
+	defer kb.Close(ctx)
 	if err := uiauto.Combine("open Print Preview with shortcut Ctrl+P",
 		kb.AccelAction("Ctrl+P"),
 		printpreview.WaitForPrintPreview(tconn),

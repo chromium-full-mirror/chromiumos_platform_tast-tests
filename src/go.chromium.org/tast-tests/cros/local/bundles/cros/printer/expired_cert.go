@@ -6,7 +6,6 @@ package printer
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -98,6 +97,7 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	}
 
 	const printerDisplayName = "expiredCert"
+	const printerID = "ExpiredCertPrinter"
 
 	// Start virtual printer with expired certificate.
 	printer, err := ippeveprinter.Start(ctx,
@@ -113,45 +113,20 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Open OS Settings and navigate to the Printing page.
-	ui := uiauto.New(tconn)
-	if err := uitools.NavigateToPrintersSettingsPage(ctx, tconn, cr, ui); err != nil {
-		s.Fatal("Failed to launch Settings page: ", err)
+	// Add the printer
+	s.Log("Adding printer to Chrome")
+	printerInfo := uitools.PrinterInfo{
+		DisplayName: printerDisplayName,
+		ID:          printerID,
+		URI:         printer.IppsURI(),
 	}
-
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to get the keyboard: ", err)
+	if err := uitools.AddOrUpdatePrinter(ctx, tconn, printerInfo); err != nil {
+		s.Fatal("Unable to add printer to Chrome: ", err)
 	}
-	defer kb.Close(ctx)
 
 	// Hide all notifications to prevent them from covering the printer entry.
 	if err := ash.CloseNotifications(ctx, tconn); err != nil {
 		s.Fatal("Failed to close all notifications: ", err)
-	}
-
-	// Open the Add Printers dialog.
-	if err := uitools.OpenAddPrinterDialog(ctx, ui); err != nil {
-		s.Fatal("Failed to open the Add Printers dialog: ", err)
-	}
-
-	nameFinder := nodewith.Role("textField").Name("Name")
-	addressFinder := nodewith.Role("textField").Name("Address")
-
-	// Select IPPS for the protocol.
-	if err = printpreview.SetDropdown(ctx, tconn, "Protocol", "Internet Printing Protocol (IPPS)"); err != nil {
-		s.Fatal("Failed to select IPPS from dropdown menu: ", err)
-	}
-	if err := uiauto.Combine("set printer details",
-		ui.DoDefault(nameFinder),
-		ui.EnsureFocused(nameFinder),
-		kb.TypeAction(printerDisplayName),
-		ui.DoDefault(addressFinder),
-		ui.EnsureFocused(addressFinder),
-		kb.TypeAction(fmt.Sprintf("localhost:%d", printer.Port())),
-		ui.DoDefault(nodewith.Role("button").Name("Add")),
-	)(ctx); err != nil {
-		s.Fatal("Failed to set printer details: ", err)
 	}
 
 	printManager, err := printmanagementapp.Launch(ctx, tconn)
@@ -182,6 +157,12 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get the keyboard: ", err)
+	}
+	defer kb.Close(ctx)
+
 	if err := uiauto.Combine("open Print Preview with shortcut Ctrl+P",
 		kb.AccelAction("Ctrl+P"),
 		printpreview.WaitForPrintPreview(tconn),
@@ -210,6 +191,7 @@ func ExpiredCert(ctx context.Context, s *testing.State) {
 	}
 
 	// Check print job history to make sure job is marked as failed.
+	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Check print history for failed job",
 		printManager.Focus(),
 		printManager.VerifyPrintJob(),

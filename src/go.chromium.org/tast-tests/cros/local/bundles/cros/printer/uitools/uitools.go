@@ -74,6 +74,14 @@ var (
 	ViewPpdFinder                *nodewith.Finder = nodewith.Role(role.Button).Name(ViewPpdName)
 )
 
+// PrinterInfo represents the information needed by the "Add printer" dialog and the AddOrUpdatePrinter function.
+type PrinterInfo struct {
+	DisplayName string
+	ID          string
+	URI         string
+	PPDPath     string
+}
+
 // GetPpdWindowFinder will create the finder for the given printer name.
 func GetPpdWindowFinder(printerName string) *nodewith.Finder {
 	return nodewith.Role(role.Window).HasClass("Widget").NameStartingWith(printerName + ".ppd").First()
@@ -149,4 +157,18 @@ func OpenAddPrinterDialog(ctx context.Context, ui *uiauto.Context) error {
 	}
 
 	return nil
+}
+
+// AddOrUpdatePrinter adds a printer to Chrome.  If a printer with the same ID
+// already exists, it will be overwritten with the new info.
+func AddOrUpdatePrinter(ctx context.Context, tconn *chrome.TestConn, printer PrinterInfo) error {
+	printerInfo := map[string]string{
+		"printerName": printer.DisplayName,
+		"printerId":   printer.ID,
+		"printerUri":  printer.URI,
+	}
+	if printer.PPDPath != "" {
+		printerInfo["printerPpd"] = printer.PPDPath
+	}
+	return tconn.Call(ctx, nil, "chrome.autotestPrivate.updatePrinter", printerInfo)
 }
