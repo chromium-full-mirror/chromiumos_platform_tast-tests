@@ -45,11 +45,6 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
 		}, {
 			// Contact: yycheng@google.com
-			Name:    "cpu_cache",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUCache),
-			Fixture: "crosHealthdRunningAndRebootDUT",
-		}, {
-			// Contact: yycheng@google.com
 			Name:    "cpu_stress",
 			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 			Fixture: "crosHealthdRunningAndRebootDUT",
