@@ -38,7 +38,7 @@ func init() {
 				runCameraDiagnosticServiceCheck: false,
 			},
 			// TODO(b/315739688): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
