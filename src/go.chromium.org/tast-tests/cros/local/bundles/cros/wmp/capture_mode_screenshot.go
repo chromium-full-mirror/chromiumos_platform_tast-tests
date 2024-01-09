@@ -42,8 +42,9 @@ func init() {
 				Val:  wmp.PartialScreen,
 			},
 			{
-				Name: "window",
-				Val:  wmp.Window,
+				Name:      "window",
+				Val:       wmp.Window,
+				ExtraAttr: []string{"group:hw_agnostic"},
 			},
 		},
 		SearchFlags: []*testing.StringPair{{
