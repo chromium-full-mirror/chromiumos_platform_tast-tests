@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -566,6 +567,8 @@ func saveRunArtifact(ctx context.Context, cred, artFile, url, uploadURL string) 
 	return nil
 }
 
+var releaseRegex = regexp.MustCompile("g([a-z0-9]{12})")
+
 func findKernelCommit(ctx context.Context, d *dut.DUT) (string, error) {
 	kr, err := d.Conn().CommandContext(ctx, "uname", "-r").Output()
 	if err != nil {
@@ -574,15 +577,12 @@ func findKernelCommit(ctx context.Context, d *dut.DUT) (string, error) {
 	kernelRelease := strings.TrimSpace(string(kr))
 	// Release for devices with a debug kernel should look something as follows.
 	// "5.10.141-lockdep-19696-gb7597b887eec".
-	parts := strings.Split(kernelRelease, "-")
-	if len(parts) < 2 {
-		return "", errors.Errorf("unexpected release in uname [%v]", kernelRelease)
+	// To make local testing easier, releases of the following format are also accepted.
+	// "6.1.68-lockdep-09535-g48a7298061e0-dirty".
+	if match := releaseRegex.FindStringSubmatch(kernelRelease); len(match) >= 2 {
+		return match[1], nil
 	}
-	commit := parts[len(parts)-1]
-	if !strings.HasPrefix(commit, "g") {
-		return "", errors.Errorf("unexpected commit [%v] for uname [%v]", commit, kernelRelease)
-	}
-	return commit[1:], nil
+	return "", errors.Errorf("unsupported uname release [%v]", kernelRelease)
 }
 
 func findBoard(ctx context.Context, d *dut.DUT) (string, error) {
