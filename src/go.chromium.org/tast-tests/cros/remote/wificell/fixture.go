@@ -143,6 +143,7 @@ func init() {
 		fixtures[TFFeaturesEnroll].ServiceDeps,
 		"tast.cros.hwsec.OwnershipService",
 		"tast.cros.policy.PolicyService",
+		"tast.cros.graphics.ScreenshotService",
 	)
 	fixtures[TFFeaturesEnroll].SetUpTimeout = 10 * time.Minute
 	fixtures[TFFeaturesEnroll].TearDownTimeout = 8 * time.Minute
