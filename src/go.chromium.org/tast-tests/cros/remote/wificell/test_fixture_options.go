@@ -63,6 +63,12 @@ type TFOptions struct {
 	// Default is false.
 	EnablePacketCapture bool
 
+	// EnableBridgeAndVeth when true, will configure bridge and veth between
+	// two WLAN interfaces in a router.
+	//
+	// Default is false.
+	EnableBridgeAndVeth bool
+
 	// UseFirstRouterAsPcap when true, will use the first primary router also as
 	// the pcap. This can have limited packet capturing abilities, so only enable
 	// this when specifically needed by a test.
@@ -129,6 +135,7 @@ func newTFOptions() *TFOptions {
 		HostUserOverrides:    nil,
 		RequirePrimaryRouter: true,
 		EnablePacketCapture:  false,
+		EnableBridgeAndVeth:  false,
 		UseFirstRouterAsPcap: false,
 		EnableRouterReboot:   true,
 		EnableDutUI:          false,
@@ -233,6 +240,12 @@ func (b *TFOptionsBuilder) RequirePrimaryRouter(requireRouter bool) *TFOptionsBu
 // EnablePacketCapture sets TFOptions.EnablePacketCapture.
 func (b *TFOptionsBuilder) EnablePacketCapture(enablePacketCapture bool) *TFOptionsBuilder {
 	b.options.EnablePacketCapture = enablePacketCapture
+	return b
+}
+
+// EnableBridgeAndVeth sets TFOptions.EnableBridgeAndVeth.
+func (b *TFOptionsBuilder) EnableBridgeAndVeth(enableBridgeAndVeth bool) *TFOptionsBuilder {
+	b.options.EnableBridgeAndVeth = enableBridgeAndVeth
 	return b
 }
 

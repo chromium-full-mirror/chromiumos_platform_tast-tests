@@ -51,7 +51,7 @@ func init() {
 		Attr:            []string{"group:wificell", "wificell_func"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
-		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesBridgeAndVeth),
 		Requirements:    []string{tdreq.WiFiGenSupportMBO, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{{
@@ -88,57 +88,33 @@ func init() {
 	})
 }
 
-/*
-RoamFT tests the ability to perform fast roaming, where the DUT doesn’t go
-through the whole regular association process during roaming. The ordering of
-RoamFT is as follows:
-1. Set up the bridge for the communication between ap0 and ap1.
-2. Start ap0 and the DHCP server.
-3. Connect the DUT to ap0 and verify the connection.
-4. Start a property watcher on the DUT.
-5. Start ap1.
-6. ap0 sends a BSS transition management (TM) request to the DUT.
-7. Upon the reception of the BSS TM request, the DUT scans and transitions to ap1.
-8. Check the property watcher and see if the DUT stays connected during the roaming.
-9. Verify the connection to ap1.
-*/
-
 func RoamFT(ctx context.Context, s *testing.State) {
 	/*
-		Roaming using FT is different from standard roaming in that there
-		is a special key exchange protocol that needs to occur between the
-		APs prior to a successful roam. In order for this communication to
-		work, we need to construct a specific interface architecture as
-		shown below:
-		             _________                       _________
-		            |         |                     |         |
-		            |   br0   |                     |   br1   |
-		            |_________|                     |_________|
-		           ____|   |____                   ____|   |____
-		     _____|____     ____|____         ____|____     ____|_____
-		    |          |   |         |       |         |   |          |
-		    | managed0 |   |  veth0  | <---> |  veth1  |   | managed1 |
-		    |__________|   |_________|       |_________|   |__________|
-
-		The managed0 and managed1 interfaces cannot communicate with each
-		other without a bridge. However, the same bridge cannot be used
-		to bridge the two interfaces either (as soon as managed0 is bound
-		to a bridge, hostapd would notice and would configure the same MAC
-		address as managed0 onto the bridge, and send/recv the L2 packet
-		with the bridge). Thus, we create a virtual ethernet interface with
-		one peer on either bridge to allow the bridges to forward traffic
-		between managed0 and managed1.
+	   RoamFT tests the ability to perform fast roaming, where the DUT
+	   doesn’t go through the whole regular association process during
+	   roaming. The ordering of RoamFT is as follows:
+	   1. Set up the bridge for the communication between ap0 and ap1.
+	   2. Start ap0 and the DHCP server.
+	   3. Connect the DUT to ap0 and verify the connection.
+	   4. Start a property watcher on the DUT.
+	   5. Start ap1.
+	   6. ap0 sends a BSS transition management (TM) request to the DUT.
+	   7. Upon the reception of the BSS TM request, the DUT scans and
+	      transitions to ap1.
+	   8. Check the property watcher and see if the DUT stays connected
+	      during the roaming.
+	   9. Verify the connection to ap1.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 
-	router, err := tf.StandardRouterWithBridgeAndVethSupport()
+	router, err := tf.StandardRouter()
 	if err != nil {
 		s.Fatal("Failed to get router: ", err)
 	}
 
-	// Shorten a second for releasing each network device.
-	reserveForRelease := func(ctx context.Context) (context.Context, func()) {
-		return ctxutil.Shorten(ctx, time.Second)
+	br, err := tf.GetBridgesOnRouterID(wificell.DefaultRouter)
+	if err != nil {
+		s.Fatal("Failed to get bridge names on router: ", err)
 	}
 
 	apID := 0
@@ -157,49 +133,6 @@ func RoamFT(ctx context.Context, s *testing.State) {
 	runOnce := func(ctx context.Context, secConfFac security.ConfigFactory, expectedFailure bool) {
 		var cancel context.CancelFunc
 		var err error
-		var br [2]string
-		for i := 0; i < 2; i++ {
-			br[i], err = router.NewBridge(ctx)
-			if err != nil {
-				s.Fatal("Failed to get a bridge: ", err)
-			}
-			defer func(ctx context.Context, b string) {
-				if err := router.ReleaseBridge(ctx, b); err != nil {
-					s.Error("Failed to release bridge: ", err)
-				}
-			}(ctx, br[i])
-			ctx, cancel = reserveForRelease(ctx)
-			defer cancel()
-		}
-
-		var veth [2]string
-		veth[0], veth[1], err = router.NewVethPair(ctx)
-		if err != nil {
-			s.Fatal("Failed to get a veth pair: ", err)
-		}
-		defer func(ctx context.Context) {
-			if err := router.ReleaseVethPair(ctx, veth[0]); err != nil {
-				s.Error("Failed to release veth: ", err)
-			}
-		}(ctx)
-		ctx, cancel = reserveForRelease(ctx)
-		defer cancel()
-
-		// Bind the two ends of the veth to the two bridges.
-		for i := 0; i < 2; i++ {
-			if err := router.BindVethToBridge(ctx, veth[i], br[i]); err != nil {
-				s.Fatalf("Failed to bind the veth %q to bridge %q: %v", veth[i], br[i], err)
-			}
-			defer func(ctx context.Context, ve string) {
-				if err := router.UnbindVeth(ctx, ve); err != nil {
-					s.Errorf("Failed to unbind %q: %v", ve, err)
-				}
-			}(ctx, veth[i])
-			ctx, cancel = reserveForRelease(ctx)
-			defer cancel()
-		}
-
-		s.Logf("Network environment setup is done: %s <= %s----%s => %s", br[0], veth[0], veth[1], br[1])
 
 		mac0, err := hostapd.RandomMAC()
 		if err != nil {

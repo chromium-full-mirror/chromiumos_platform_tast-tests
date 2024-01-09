@@ -164,11 +164,19 @@ const (
 	ChromeFeatureHotspot = "Hotspot"
 )
 
+// bridgeVeth holds all variables related to bridges and veth on a router.
+type bridgeVethData struct {
+	r    router.StandardWithBridgeAndVeth
+	br   []string
+	veth []string
+}
+
 // TODO(b/234845693): make that an independent structure.
 type routerData struct {
 	target string
 	host   *ssh.Conn
 	object router.Base
+	brveth *bridgeVethData
 }
 
 // TODO(b/234845693): make that an independent structure.
@@ -678,10 +686,23 @@ func (tf *TestFixture) ReinitRouters(ctx context.Context, doPcapReboot bool) err
 				return err
 			}
 		}
-		testing.ContextLogf(ctx, "Rebooted %d routers", len(routersToReboot))
+		testing.ContextLogf(ctx, "Rebooted and re-initialized %d routers", len(routersToReboot))
 	} else {
 		testing.ContextLog(ctx, "Skipping router reboot step: No routers")
 	}
+
+	if tf.options.EnableBridgeAndVeth {
+		for i, rd := range tf.routers {
+			// Configure bridges and veth on routers except pcap.
+			if rd != tf.pcap {
+				if err := tf.initializeBridgeAndVethOnRouter(ctx, rd); err != nil {
+					return errors.Wrapf(err, "failed to initialize bridges and veths on router %d", i)
+				}
+				testing.ContextLogf(ctx, "Re-initialized bridges and veths at router %d", i)
+			}
+		}
+	}
+
 	return nil
 }
 
@@ -716,6 +737,7 @@ func (tf *TestFixture) rebootRouter(ctx context.Context, rd *routerData) error {
 	_ = rd.host.Close(ctx)
 	rd.host = nil
 	rd.object = nil
+	rd.brveth = nil
 
 	// Give the router a moment to shut down before trying to reconnect.
 	testing.ContextLogf(ctx, "Waiting %s before trying to reconnect to %s", routerPostRebootWaitTime, routerMsgName)
@@ -795,6 +817,26 @@ func (tf *TestFixture) Close(ctx context.Context) (firstErr error) {
 	for i, rd := range tf.routers {
 		routerDescription := fmt.Sprintf("primary router[%d] target %q", i, rd.target)
 		testing.ContextLogf(ctx, "Closing %s", routerDescription)
+
+		// De-configure bridges and veths on routers except pcap.
+		if rd.brveth != nil && rd != tf.pcap {
+			testing.ContextLogf(ctx, "Closing bridges and veths at router %d", i)
+			bv := rd.brveth
+
+			for j := 0; j < 2; j++ {
+				if err := bv.r.UnbindVeth(ctx, bv.veth[j]); err != nil {
+					utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to unbind %q", bv.veth[j]))
+				}
+				if err := bv.r.ReleaseBridge(ctx, bv.br[j]); err != nil {
+					utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to release bridge %q: ", bv.br[j]))
+				}
+			}
+			if err := bv.r.ReleaseVethPair(ctx, bv.veth[0]); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to release veth"))
+			}
+			testing.ContextLogf(ctx, "Closed bridges and veths at router %d", i)
+		}
+
 		if rd.object != nil {
 			if err := rd.object.Close(ctx); err != nil {
 				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to close router controller for %s", routerDescription))
@@ -2610,4 +2652,74 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 	}
 
 	return wpa.AuthAlgoInvalid, nil
+}
+
+/*
+	Some tests like RoamFT require a networking setup in which there
+	is a special key exchange protocol that needs to occur between the
+	APs prior to a successful roam. In order for this communication to
+	work, we need to construct a specific interface architecture as
+	shown below:
+	             _________                       _________
+	            |         |                     |         |
+	            |   br0   |                     |   br1   |
+	            |_________|                     |_________|
+	           ____|   |____                   ____|   |____
+	     _____|____     ____|____         ____|____     ____|_____
+	    |          |   |         |       |         |   |          |
+	    | managed0 |   |  veth0  | <---> |  veth1  |   | managed1 |
+	    |__________|   |_________|       |_________|   |__________|
+
+	The managed0 and managed1 interfaces cannot communicate with each
+	other without a bridge. However, the same bridge cannot be used
+	to bridge the two interfaces either (as soon as managed0 is bound
+	to a bridge, hostapd would notice and would configure the same MAC
+	address as managed0 onto the bridge, and send/recv the L2 packet
+	with the bridge). Thus, we create a virtual ethernet interface with
+	one peer on either bridge to allow the bridges to forward traffic
+	between managed0 and managed1.
+*/
+
+// initializeBridgeAndVethOnRouter sets up bridges and veths on router.
+func (tf *TestFixture) initializeBridgeAndVethOnRouter(ctx context.Context, rd *routerData) error {
+	var err error
+	router, ok := rd.object.(router.StandardWithBridgeAndVeth)
+	if !ok {
+		return errors.New("router is not a standard router with bridge and veth support")
+	}
+
+	bv := &bridgeVethData{br: make([]string, 2), veth: make([]string, 2)}
+	bv.r = router
+
+	bv.veth[0], bv.veth[1], err = bv.r.NewVethPair(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get a veth pair")
+	}
+
+	// Bind the two ends of the veth to the two bridges.
+	for i := 0; i < 2; i++ {
+		bv.br[i], err = bv.r.NewBridge(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get a bridge")
+		}
+		if err := bv.r.BindVethToBridge(ctx, bv.veth[i], bv.br[i]); err != nil {
+			return errors.Wrapf(err, "failed to bind the veth %q to bridge %q", bv.veth[i], bv.br[i])
+		}
+	}
+
+	rd.brveth = bv
+	testing.ContextLogf(ctx, "Network environment setup is done: %s <= %s----%s => %s", bv.br[0], bv.veth[0], bv.veth[1], bv.br[1])
+	return nil
+}
+
+// GetBridgesOnRouterID gets all of bridge names on router at idx.
+func (tf *TestFixture) GetBridgesOnRouterID(idx RouterIdx) ([]string, error) {
+	if len(tf.routers) <= int(idx) {
+		return nil, errors.Errorf("router index (%d) out of range [0, %d)", idx, len(tf.routers))
+	}
+
+	if tf.routers[idx].brveth == nil {
+		return nil, errors.New("no bridge set up on router")
+	}
+	return tf.routers[idx].brveth.br, nil
 }

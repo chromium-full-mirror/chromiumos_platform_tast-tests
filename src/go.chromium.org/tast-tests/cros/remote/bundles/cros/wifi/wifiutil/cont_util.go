@@ -43,11 +43,9 @@ type ContParam struct {
 // ContTest holds all variables to be accessible for the whole continuity test.
 type ContTest struct {
 	tf             *wificell.TestFixture
-	r              router.StandardWithBridgeAndVeth
+	r              router.Standard
 	pcap           support.Capture
 	clientMAC      string
-	br             [2]string
-	veth           [2]string
 	mac            [2]net.HardwareAddr
 	apOps          [2][]hostapd.Option
 	ap             [2]*hostapd.Server
@@ -118,28 +116,6 @@ func ServerIP() string {
 
 // ContinuityTestInitialSetup performs the initial setup of the test environment.
 func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wificell.TestFixture) (context.Context, *ContTest, func()) {
-	/*
-		Because we need single DHCP server sharing same address pool for
-		clients connected to either AP, we use a setup similar to RoamFT:
-		             _________                       _________
-		            |         |                     |         |
-		            |   br0   |                     |   br1   |
-		            |_________|                     |_________|
-		           ____|   |____                   ____|   |____
-		     _____|____     ____|____         ____|____     ____|_____
-		    |          |   |         |       |         |   |          |
-		    | managed0 |   |  veth0  | <---> |  veth1  |   | managed1 |
-		    |__________|   |_________|       |_________|   |__________|
-
-		The managed0 and managed1 interfaces cannot communicate with each
-		other without a bridge. However, the same bridge cannot be used
-		to bridge the two interfaces either (as soon as managed0 is bound
-		to a bridge, hostapd would notice and would configure the same MAC
-		address as managed0 onto the bridge, and send/recv the L2 packet
-		with the bridge). Thus, we create a virtual ethernet interface with
-		one peer on either bridge to allow the bridges to forward traffic
-		between managed0 and managed1.
-	*/
 	ct := &ContTest{tf: tf}
 	ds, destroyIfNotExported := newDestructorStack()
 	defer destroyIfNotExported()
@@ -183,44 +159,25 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 		}
 	})
 
-	ct.r, err = tf.StandardRouterWithBridgeAndVethSupport()
+	ct.r, err = tf.StandardRouter()
 	if err != nil {
 		s.Fatal("Failed to get router: ", err)
 	}
 	ct.pcap = tf.PcapRouter()
-	ct.veth[0], ct.veth[1], err = ct.r.NewVethPair(ctx)
+
+	br, err := tf.GetBridgesOnRouterID(wificell.DefaultRouter)
 	if err != nil {
-		s.Fatal("Failed to get a veth pair: ", err)
+		s.Fatal("Failed to get bridge names on router: ", err)
 	}
-	ds.push(func() {
-		if err := ct.r.ReleaseVethPair(ctx, ct.veth[0]); err != nil {
-			s.Error("Failed to release veth: ", err)
-		}
-	})
+
 	// Bind the two ends of the veth to the two bridges.
 	for i := 0; i < 2; i++ {
-		ct.br[i], err = ct.r.NewBridge(ctx)
-		if err != nil {
-			s.Fatal("Failed to get a bridge: ", err)
-		}
-		if err := ct.r.BindVethToBridge(ctx, ct.veth[i], ct.br[i]); err != nil {
-			s.Fatalf("Failed to bind the veth %q to bridge %q: %v", ct.veth[i], ct.br[i], err)
-		}
 		ct.mac[i], err = hostapd.RandomMAC()
 		if err != nil {
 			s.Fatal("Failed to get a random mac address: ", err)
 		}
 	}
-	ds.push(func() {
-		if err := ct.r.ReleaseBridge(ctx, ct.br[0]); err != nil {
-			s.Error("Failed to release bridge: ", err)
-		}
-		if err := ct.r.ReleaseBridge(ctx, ct.br[1]); err != nil {
-			s.Error("Failed to release bridge: ", err)
-		}
-	})
 
-	s.Logf("Network environment setup is done: %s <= %s----%s => %s", ct.br[0], ct.veth[0], ct.veth[1], ct.br[1])
 	var (
 		id0 = hex.EncodeToString(ct.mac[0])
 		id1 = hex.EncodeToString(ct.mac[1])
@@ -235,7 +192,7 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 
 	// Basic config
 	for i := 0; i < 2; i++ {
-		ct.apOps[i] = append(ct.apOps[i], hostapd.SSID(ssid), hostapd.BSSID(ct.mac[i].String()), hostapd.Bridge(ct.br[i]))
+		ct.apOps[i] = append(ct.apOps[i], hostapd.SSID(ssid), hostapd.BSSID(ct.mac[i].String()), hostapd.Bridge(br[i]))
 		ct.apOps[i] = append(ct.apOps[i], param.ApOpts[i]...)
 	}
 
@@ -289,7 +246,7 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 		dutCapturer.Close(ctx)
 	})
 
-	s.Log("Starting the first AP on ", ct.br[0])
+	s.Log("Starting the first AP on ", br[0])
 
 	ct.ap[0], err = ct.r.StartHostapd(ctx, ap0Name, ap0Conf)
 	if err != nil {
@@ -301,8 +258,8 @@ func ContinuityTestInitialSetup(ctx context.Context, s *testing.State, tf *wific
 		}
 	})
 
-	s.Logf("Starting the DHCP server on %s, serverIP=%s", ct.br[0], serverIP)
-	ct.dserv, err = ct.r.StartDHCP(ctx, ap0Name, ct.br[0], startIP, endIP, serverIP, broadcastIP, mask, nil)
+	s.Logf("Starting the DHCP server on %s, serverIP=%s", br[0], serverIP)
+	ct.dserv, err = ct.r.StartDHCP(ctx, ap0Name, br[0], startIP, endIP, serverIP, broadcastIP, mask, nil)
 	if err != nil {
 		s.Fatal("Failed to start the DHCP server: ", err)
 	}

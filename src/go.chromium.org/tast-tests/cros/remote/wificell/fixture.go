@@ -86,6 +86,8 @@ func init() {
 	params[TFFeaturesNone] = "Default wificell setup with router and pcap object. Note that pcap and router can point to the same Access Point. Also, unlike wificellFixtWithCapture, the fixture won't spawn Capturer. Users may spawn Capturer with customized configuration when needed"
 	params[TFFeaturesCapture] = "Wificell setup with Capturer on pcap for each configured AP"
 	params[TFFeaturesCapture|TFFeaturesRouterAsCapture] = "Wificell setup with default capturer on router instead of pcap"
+	params[TFFeaturesBridgeAndVeth] = "Wificell setup with bridge and veth support on router"
+	params[TFFeaturesBridgeAndVeth|TFFeaturesCapture] = "Wificell setup with bridge and veth support on router and Capturer on pcap"
 	params[TFFeaturesRouters] = "Wificell setup with multiple routers"
 	params[TFFeaturesRouters|TFFeaturesAttenuator] = "WiFi roaming setup with multiple routers and attenuators"
 	params[TFFeaturesEnroll] = "Wificell setup with router and pcap object and chrome enrolled"
@@ -163,6 +165,8 @@ const (
 	TFFeaturesNone TFFeatures = 0
 	// TFFeaturesCapture is a feature that spawns packet capturer in TestFixture.
 	TFFeaturesCapture = 1 << iota
+	// TFFeaturesBridgeAndVeth to configure bridge and veth setup on top of default setup.
+	TFFeaturesBridgeAndVeth
 	// TFFeaturesRouters allows to configure more than one router.
 	TFFeaturesRouters
 	// TFFeaturesAttenuator feature facilitates attenuator handling.
@@ -193,6 +197,10 @@ func (enum TFFeatures) String() string {
 		ret = append(ret, "Capture")
 		// Punch out the bit to check for weird values later.
 		enum ^= TFFeaturesCapture
+	}
+	if enum&TFFeaturesBridgeAndVeth != 0 {
+		ret = append(ret, "BridgeAndVeth")
+		enum ^= TFFeaturesBridgeAndVeth
 	}
 	if enum&TFFeaturesRouters != 0 {
 		ret = append(ret, "Routers")
@@ -546,6 +554,10 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Fatalf("Failed to parse bool fixture var %q: %v", fixtureVarEnableRouterReboot, err)
 		}
 		ops.EnableRouterReboot(enableRouterReboot)
+	}
+
+	if f.features&TFFeaturesBridgeAndVeth != 0 {
+		ops.EnableBridgeAndVeth(true)
 	}
 
 	tf, err := NewTestFixture(ctx, s.FixtContext(), ops.Build())

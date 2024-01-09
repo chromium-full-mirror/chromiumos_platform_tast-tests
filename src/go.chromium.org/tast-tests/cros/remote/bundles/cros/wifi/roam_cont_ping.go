@@ -46,9 +46,12 @@ func init() {
 			tbdep.WifiRouterModels("OPENWRT[Ubiquiti_UniFi_6_Lite]")[0],
 		},
 		ServiceDeps: []string{wificell.ShillServiceName},
-		Fixture:     wificell.FixtureID(wificell.TFFeaturesCapture),
-		Timeout:     time.Minute * 5, // The average test time doubled.
-		Vars:        []string{"wifi.RoamContPing.rounds"},
+		// A single DHCP server sharing same address pool for clients
+		// connected to either AP is needed, so that a setup with bridges
+		// and veths is used.
+		Fixture: wificell.FixtureID(wificell.TFFeaturesBridgeAndVeth | wificell.TFFeaturesCapture),
+		Timeout: time.Minute * 5, // The average test time doubled.
+		Vars:    []string{"wifi.RoamContPing.rounds"},
 		Params: []testing.Param{{
 			Name: "none",
 			Val: wifiutil.ContParam{
