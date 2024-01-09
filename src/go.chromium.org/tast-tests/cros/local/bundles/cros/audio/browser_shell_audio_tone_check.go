@@ -9,12 +9,12 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/audionode"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
@@ -61,10 +61,27 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 	}
 	defer vk.Close(ctx)
 
-	const expectedAudioNode = "INTERNAL_SPEAKER"
-	audioDeviceName, err := audionode.SetAudioNode(ctx, expectedAudioNode)
+	// Select internal speaker through UI
+	if err := quicksettings.Show(ctx, tconn); err != nil {
+		s.Fatal("Failed to show the quicksettings to select playback node: ", err)
+	}
+	defer func() {
+		if err := quicksettings.Hide(cleanupCtx, tconn); err != nil {
+			testing.ContextLog(ctx, "Failed to hide the quicksettings on defer: ", err)
+		}
+	}()
+	if err := quicksettings.SelectAudioOption(ctx, tconn, "Speaker (internal)"); err != nil {
+		s.Fatal("Failed to select Internal Speaker output: ", err)
+	}
+
+	// Get Current active node.
+	cras, err := audio.NewCras(ctx)
 	if err != nil {
-		s.Fatal("Failed to set the Audio node: ", err)
+		s.Fatal("Failed to create Cras object")
+	}
+	audioDeviceName, _, err := cras.SelectedOutputDevice(ctx)
+	if err != nil {
+		s.Fatal("Failed to get the selected audio device: ", err)
 	}
 
 	// Launching browser shell.
