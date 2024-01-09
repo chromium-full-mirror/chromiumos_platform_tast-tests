@@ -161,11 +161,16 @@ func exerciseFuseboxAdvanced(ctx context.Context, s *testing.State, tdd tempDirD
 		{"mkdir", "FFP/d0"},
 		{"mkdir", "FFP/d0/d1"},
 		{"cp", "FFP/copy", "FFP/d0/anotherCopy"},
+		{"cp", "FFP/copy", "FFP/d0/flushedCopy"},
 		{"ls", "FFP/d0/anotherCopy"},
 		{"mv", "FFP/file", "FFP/move"},
 		{"ls", "FFP"},
 		{"cat", "FFP/d0/anotherCopy"},
 		{"rm -rf", "FFP/copy", "FFP/d0", "FFP/move"},
+		{"writefile", "FFP/dee", "tweedledee"},
+		{"writefile", "FFP/dum", "tweedledum"},
+		{"mv", "FFP/dee", "FFP/dum"},
+		{"readfile", "FFP/dum", "tweedledee"},
 	}
 
 	for _, command := range commands {
@@ -209,6 +214,13 @@ func exerciseFuseboxAdvanced(ctx context.Context, s *testing.State, tdd tempDirD
 				s.Fatalf("exercise %q: renameFile: %v", command, err)
 			}
 
+		case "readfile":
+			if got, err := os.ReadFile(arg(1)); err != nil {
+				s.Fatalf("exercise %q: ReadFile: %v", command, err)
+			} else if string(got) != arg(2) {
+				s.Fatalf("exercise %q: ReadFile: got %q, want %q", command, got, arg(2))
+			}
+
 		case "rm -rf":
 			for i := 1; i < len(command); i++ {
 				if err := removeAll(arg(i)); err != nil {
@@ -221,6 +233,11 @@ func exerciseFuseboxAdvanced(ctx context.Context, s *testing.State, tdd tempDirD
 				s.Fatalf("exercise %q: Create: %v", command, err)
 			} else if err = f.Close(); err != nil {
 				s.Fatalf("exercise %q: Close: %v", command, err)
+			}
+
+		case "writefile":
+			if err := os.WriteFile(arg(1), []byte(arg(2)), 0666); err != nil {
+				s.Fatalf("exercise %q: WriteFile: %v", command, err)
 			}
 
 		default:
@@ -256,6 +273,13 @@ func copyFile(srcName, dstName string) error {
 		return err
 	}
 	_, cErr := io.Copy(dst, src)
+
+	if (cErr == nil) && strings.Contains(dstName, "flush") {
+		// "Sync" is Go's stdlib's name for a file flush - what the kernel
+		// calls fsync.
+		cErr = dst.Sync()
+	}
+
 	sErr := src.Close()
 	dErr := dst.Close()
 	if cErr != nil {
@@ -279,6 +303,10 @@ func removeAll(path string) error {
 }
 
 // renameFile is a rough approximation to running /usr/bin/mv on a Fusebox file.
+//
+// When dstName already exists, this is like "mv", not "mv -i", and should
+// return a nil error. "go doc os rename" says that "If newpath already exists
+// and is not a directory, Rename replaces it".
 func renameFile(srcName, dstName string) error {
 	return os.Rename(srcName, dstName)
 }
