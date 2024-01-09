@@ -16,8 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/touch"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -123,9 +122,8 @@ func ImmersiveMode(ctx context.Context, s *testing.State) {
 
 	// Launcher should be hidden in immersive mode.
 	ac := uiauto.New(tconn).WithTimeout(timeout)
-	launcher := nodewith.Name("Launcher").ClassName("ash/HomeButton").Role(role.Button)
-	if err := ac.WaitUntilGone(launcher)(ctx); err != nil {
-		s.Fatal("Launcher is present in immersive mode: ", err)
+	if err := ac.WaitUntilGone(launcher.HomeButtonFinder)(ctx); err != nil {
+		s.Fatal("Launcher button is present in immersive mode: ", err)
 	}
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
@@ -142,8 +140,8 @@ func ImmersiveMode(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine(
 		"swipe up from the bottom edge, and check if the launcher appears",
 		tc.Swipe(screenBottomPt, tc.SwipeTo(screenCenterPt, time.Second)),
-		// Launcher should appear after the swipe.
-		ac.WaitUntilExists(launcher),
+		// Launcher button should appear after the swipe.
+		ac.WaitUntilExists(launcher.HomeButtonFinder),
 	)(ctx); err != nil {
 		s.Fatal("Failed to swipe up to reveal launcher: ", err)
 	}

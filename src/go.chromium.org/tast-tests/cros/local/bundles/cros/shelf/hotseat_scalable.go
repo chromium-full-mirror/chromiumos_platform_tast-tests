@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
@@ -93,7 +94,7 @@ func HotseatScalable(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("wait launcher and status menu exist",
-		ui.WaitUntilExists(nodewith.Name("Launcher").HasClass("ash/HomeButton").Role(role.Button)),
+		ui.WaitUntilExists(launcher.HomeButtonFinder),
 		ui.WaitUntilExists(nodewith.HasClass("UnifiedSystemTray").Role(role.Button)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify launcher or status menu: ", err)

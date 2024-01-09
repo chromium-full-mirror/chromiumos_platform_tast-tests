@@ -87,7 +87,7 @@ func SwipeToggleLauncher(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for stable shelf bounds: ", err)
 	}
 
-	homeButton, err := ui.Location(ctx, nodewith.ClassName("ash/HomeButton"))
+	homeButton, err := ui.Location(ctx, launcher.HomeButtonFinder)
 	if err != nil {
 		s.Fatal("Failed to get locaton for home button: ", err)
 	}

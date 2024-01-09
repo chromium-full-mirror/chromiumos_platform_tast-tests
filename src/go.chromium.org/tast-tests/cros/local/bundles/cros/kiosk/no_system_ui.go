@@ -88,7 +88,7 @@ func NoSystemUI(ctx context.Context, s *testing.State) {
 		errorElementName string
 	}{
 		{
-			className:        "ash/HomeButton",
+			className:        "HomeButton",
 			errorElementName: "'Launcher' button",
 		},
 		{

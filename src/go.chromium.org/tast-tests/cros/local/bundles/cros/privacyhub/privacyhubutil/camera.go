@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -57,10 +58,9 @@ func IsImageBlack(img image.Image) (bool, error) {
 
 func launchCameraAppFromHomeMenu(ctx context.Context, tconn *browser.TestConn) {
 	ui := uiauto.New(tconn)
-	homeButton := nodewith.Role("button").Name("Launcher").ClassName("ash/HomeButton")
 	cameraAppButton := nodewith.Role("button").Name("Camera").ClassName("AppListItemView").First()
 
-	if err := ui.LeftClick(homeButton)(ctx); err != nil {
+	if err := ui.LeftClick(launcher.HomeButtonFinder)(ctx); err != nil {
 		errors.Wrap(err, "failed to left click")
 	}
 	if err := ui.LeftClick(cameraAppButton)(ctx); err != nil {

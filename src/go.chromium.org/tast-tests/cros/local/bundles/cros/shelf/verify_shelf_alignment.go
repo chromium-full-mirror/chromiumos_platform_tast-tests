@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
@@ -161,8 +162,7 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the first shelf app icon to be idle when the shelf alignment is ShelfAlignmentBottom: ", err)
 	}
 
-	homeButton := nodewith.ClassName("ash/HomeButton")
-	homeButtonBounds, err := ui.Location(ctx, homeButton)
+	homeButtonBounds, err := ui.Location(ctx, launcher.HomeButtonFinder)
 	if err != nil {
 		s.Fatal("Failed to find the home button: ", err)
 	}
@@ -225,7 +225,7 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	}
 
 	// Check the distance between the home button and the screen top side.
-	homeButtonBounds, err = ui.Location(ctx, homeButton)
+	homeButtonBounds, err = ui.Location(ctx, launcher.HomeButtonFinder)
 	if err != nil {
 		s.Fatal("Failed to find the home button with the left shelf: ", err)
 	}
@@ -270,7 +270,7 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the first shelf app icon to be idle when the shelf alignment is ShelfAlignmentRight: ", err)
 	}
 
-	homeButtonBounds, err = ui.Location(ctx, homeButton)
+	homeButtonBounds, err = ui.Location(ctx, launcher.HomeButtonFinder)
 	if err != nil {
 		s.Fatal("Failed to find the home button with the right shelf: ", err)
 	}

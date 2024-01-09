@@ -61,6 +61,9 @@ const SearchResultPageView = "SearchResultPageView"
 // SearchBoxView defines the class name of the search box view.
 const SearchBoxView = "SearchBoxView"
 
+// HomeButtonFinder is the finder for the home button in shelf.
+var HomeButtonFinder = nodewith.Name("Launcher").Role(role.Button).Ancestor(nodewith.HasClass("ShelfContainer"))
+
 // UnnamedFolderFinder is the finder of a newly created folder with the default name.
 var UnnamedFolderFinder = nodewith.Name("Folder Unnamed").HasClass(ExpandedItemsClass)
 
@@ -522,7 +525,7 @@ func CloseBubbleLauncher(tconn *chrome.TestConn) uiauto.Action {
 	bubbleLauncher := nodewith.HasClass(BubbleAppsGridViewClass)
 	ui := uiauto.New(tconn)
 	return uiauto.Combine("Wait for bubble launcher to be closed",
-		ui.LeftClick(nodewith.HasClass("ash/HomeButton")),
+		ui.LeftClick(HomeButtonFinder),
 		ui.WaitUntilGone(bubbleLauncher),
 	)
 }

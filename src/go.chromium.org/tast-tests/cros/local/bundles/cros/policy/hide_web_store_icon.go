@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/testing"
@@ -103,7 +104,7 @@ func HideWebStoreIcon(ctx context.Context, s *testing.State) {
 				// it seems to be mostly flaky at ash.WaitForLauncherState(ctx, tconn, ash.FullscreenAllApps).
 				if err := uiauto.Combine("Open Launcher and go to Expanded Apps list view",
 					uia.WithInterval(500*time.Millisecond).LeftClickUntil(
-						nodewith.Name("Launcher").HasClass("ash/HomeButton"),
+						launcher.HomeButtonFinder,
 						uia.Exists(nodewith.HasClass("AppListBubbleView")),
 					),
 				)(ctx); err != nil {
