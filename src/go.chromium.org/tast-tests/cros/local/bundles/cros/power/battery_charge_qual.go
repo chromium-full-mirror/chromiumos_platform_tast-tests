@@ -30,12 +30,13 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BatteryChargeQual,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that battery can be charged or discharged to a certain range",
+		Desc:         "Measure battery charging speed in Active S0 idle state with default screen brightness",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
 		HardwareDeps: hwdep.D(
 			hwdep.Battery(), // Test doesn't run on ChromeOS devices without a battery.
 		),
+		Fixture: "chromeLoggedIn",
 		// Battery should be drained before the test gets started and usually we expect it
 		// to finish within 3 hours and at most 4 hours.
 		Timeout: 4 * time.Hour,
@@ -55,6 +56,14 @@ func BatteryChargeQual(ctx context.Context, s *testing.State) {
 
 	if status.BatteryPercent > chargePrepThreshold {
 		s.Fatalf("Battery should be drained below %.2f%% before the test", chargePrepThreshold)
+	}
+
+	if restartPowerd, err := setup.DisableService(ctx, "powerd"); err == nil {
+		if restartPowerd != nil {
+			defer restartPowerd(ctx)
+		}
+	} else {
+		s.Fatal("Failed to stop powerd: ", err)
 	}
 
 	r := power.NewRecorder(ctx, 20*time.Second, s.OutDir(), s.TestName())
