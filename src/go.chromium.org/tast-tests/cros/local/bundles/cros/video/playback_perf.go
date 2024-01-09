@@ -1053,6 +1053,32 @@ func init() {
 				Fixture:           "chromeVideo",
 			},
 			{
+				Name: "h264_720p_30fps_hw_3x3_oopvd",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+					gridWidth:   3,
+					gridHeight:  3,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
+				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
+				Fixture:           "chromeVideoOOPVD",
+			},
+			{
+				Name: "h264_720p_30fps_hw_3x3_oopvd_decoder_thread",
+				Val: playbackPerfParams{
+					fileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
+					decoderType: 0,
+					browserType: browser.TypeAsh,
+					gridWidth:   3,
+					gridHeight:  3,
+				},
+				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
+				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
+				Fixture:           "chromeVideoOOPVDAndDedicatedDecoderThread",
+			},
+			{
 				Name: "h264_720p_30fps_hw_lacros",
 				Val: playbackPerfParams{
 					fileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
