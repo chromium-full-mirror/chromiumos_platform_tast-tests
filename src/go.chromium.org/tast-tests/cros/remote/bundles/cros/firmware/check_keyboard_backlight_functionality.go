@@ -209,17 +209,25 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut 
 	}
 	waitConnectCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to dut")
 	}
 
-	kbLightValues, err := getKBLightValFromPowerd(ctx, h)
-	if err != nil {
+	var kbLightValues []int
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		var err error
+		kbLightValues, err = getKBLightValFromPowerd(ctx, h)
+		if err != nil {
+			return err
+		}
+		if len(kbLightValues)%2 != 0 || len(kbLightValues) == 0 {
+			return errors.New("unexpected number of keyboard backlight values")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 1 * time.Second}); err != nil {
 		return err
 	}
-	if len(kbLightValues) < 2 {
-		return errors.New("unexpected number of keyboard backlight values")
-	}
+
 	kbLightClosedLid := kbLightValues[len(kbLightValues)-2]
 	if kbLightClosedLid != 0 {
 		return errors.Errorf("expected kb backlight to be 0 when lid is closed, but got: %d", kbLightClosedLid)
