@@ -567,15 +567,16 @@ func saveRunArtifact(ctx context.Context, cred, artFile, url, uploadURL string) 
 }
 
 func findKernelCommit(ctx context.Context, d *dut.DUT) (string, error) {
-	kernelRelease, err := d.Conn().CommandContext(ctx, "uname", "-r").Output()
+	kr, err := d.Conn().CommandContext(ctx, "uname", "-r").Output()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to find uname")
 	}
+	kernelRelease := strings.TrimSpace(string(kr))
 	// Release for devices with a debug kernel should look something as follows.
 	// "5.10.141-lockdep-19696-gb7597b887eec".
-	parts := strings.Split(strings.TrimSpace(string(kernelRelease)), "-")
+	parts := strings.Split(kernelRelease, "-")
 	if len(parts) < 2 {
-		return "", errors.Errorf("unexpected release in uname [%v]", string(kernelRelease))
+		return "", errors.Errorf("unexpected release in uname [%v]", kernelRelease)
 	}
 	commit := parts[len(parts)-1]
 	if !strings.HasPrefix(commit, "g") {
