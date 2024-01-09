@@ -63,7 +63,7 @@ func VTPMEKCert(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to prepare for enrollment: ", err)
 	}
 
-	nvdata, err := testexec.CommandContext(ctx, "trunks_client", "--index_data", "--index=0x1C0000a", "--vtpm").Output()
+	nvdata, err := testexec.CommandContext(ctx, "vtpm_client", "--index_data", "--index=0x1C0000a", "--vtpm").Output()
 	if err != nil {
 		s.Fatal("Failed to read nvdata: ", err)
 	}
