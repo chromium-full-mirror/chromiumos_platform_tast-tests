@@ -63,8 +63,8 @@ type enrolledFixt struct {
 	rpcClient *rpc.Client
 }
 
-func dumpVPDContent(ctx context.Context, d *dut.DUT) ([]byte, error) {
-	out, err := d.Conn().CommandContext(ctx, "vpd", "-i", "RW_VPD", "-l").Output(ssh.DumpLogOnError)
+func dumpVPDContent(ctx context.Context, d *dut.DUT, partition string) ([]byte, error) {
+	out, err := d.Conn().CommandContext(ctx, "vpd", "-i", partition, "-l").Output(ssh.DumpLogOnError)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to run the vpd command")
 	}
@@ -72,37 +72,77 @@ func dumpVPDContent(ctx context.Context, d *dut.DUT) ([]byte, error) {
 	return out, nil
 }
 
-func checkVPDState(ctx context.Context, d *dut.DUT) error {
+func checkRequiredFields(roVPDContent, rwVPDContent string) error {
+	// https://chromeos.google.com/partner/dlm/docs/factory/vpd.html#required-ro-fields
+	requiredROFields := []string{"stable_device_secret_DO_NOT_SHARE", "serial_number"}
 	// https://chromeos.google.com/partner/dlm/docs/factory/vpd.html#required-rw-fields
-	const requiredField = "gbind_attribute"
+	requiredRWFields := []string{"ubind_attribute", "gbind_attribute"}
 
+	for _, field := range requiredROFields {
+		if !strings.Contains(roVPDContent, field) {
+			return errors.Errorf("could not find RO field %q", field)
+		}
+	}
+
+	for _, field := range requiredRWFields {
+		if !strings.Contains(rwVPDContent, field) {
+			return errors.Errorf("could not find RW field %q", field)
+		}
+	}
+
+	return nil
+}
+
+func checkVPDState(ctx context.Context, d *dut.DUT) error {
 	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return errors.New("no output directory")
 	}
 
-	if out, err := dumpVPDContent(ctx, d); err != nil {
+	roVPDContent, err := dumpVPDContent(ctx, d, "RO_VPD")
+	if err != nil {
 		return err
-	} else if !strings.Contains(string(out), requiredField) {
+	}
+	rwVPDContent, err := dumpVPDContent(ctx, d, "RW_VPD")
+	if err != nil {
+		return err
+	}
+
+	if vpdReadErr := checkRequiredFields(string(roVPDContent), string(rwVPDContent)); vpdReadErr != nil {
 		// VPD is not running well, returning an error. Second run will confirm
 		// whether the error is transitory.
+		testing.ContextLogf(ctx, "VPD error: %f; trying again to check if error is transitory", vpdReadErr)
 
-		if err := os.WriteFile(filepath.Join(outDir, "vpd-dump.txt"), out, 0644); err != nil {
-			return errors.New("failed to dump VPD content")
+		if err := os.WriteFile(filepath.Join(outDir, "vpd-ro-dump.txt"), roVPDContent, 0644); err != nil {
+			return errors.Wrap(err, "failed to dump VPD content")
 		}
 
-		out, err := dumpVPDContent(ctx, d)
+		if err := os.WriteFile(filepath.Join(outDir, "vpd-rw-dump.txt"), rwVPDContent, 0644); err != nil {
+			return errors.Wrap(err, "failed to dump VPD content")
+		}
+
+		roVPDContent, err := dumpVPDContent(ctx, d, "RO_VPD")
 		if err != nil {
-			return errors.Wrap(err, "failed the second dump of the VPD")
+			errors.Wrap(err, "failed second VPD Dump")
 		}
-		if err := os.WriteFile(filepath.Join(outDir, "vpd-dump-2.txt"), out, 0644); err != nil {
-			return errors.New("failed to dump VPD content")
-		}
-		if strings.Contains(string(out), requiredField) {
-			return errors.Errorf("VPD error, first run did not find %q, second run did", requiredField)
+		rwVPDContent, err := dumpVPDContent(ctx, d, "RW_VPD")
+		if err != nil {
+			return err
 		}
 
-		return errors.Errorf("VPD error, did not find the required field %q", requiredField)
+		if err := os.WriteFile(filepath.Join(outDir, "vpd-ro-dump-2.txt"), roVPDContent, 0644); err != nil {
+			return errors.Wrap(err, "failed to dump VPD content")
+		}
+
+		if err := os.WriteFile(filepath.Join(outDir, "vpd-rw-dump-2.txt"), rwVPDContent, 0644); err != nil {
+			return errors.Wrap(err, "failed to dump VPD content")
+		}
+
+		if err := checkRequiredFields(string(roVPDContent), string(rwVPDContent)); err != nil {
+			return errors.Wrapf(err, "VPD error, did not find the required fields: first run %v, second run: ", vpdReadErr)
+		}
+
+		return errors.Wrap(vpdReadErr, "VPD error, first run did not find all fields, second run did")
 	}
 
 	return nil
