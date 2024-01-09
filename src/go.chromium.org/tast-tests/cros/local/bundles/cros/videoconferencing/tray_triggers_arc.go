@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vctray"
 	"go.chromium.org/tast-tests/cros/local/videoconferencing/fixture"
 
@@ -100,6 +101,13 @@ func TrayTriggersARC(ctx context.Context, s *testing.State) {
 		vcTray.WaitUntilState(vctray.DevCamera, vctray.DeviceInUse),
 	)(ctx); err != nil {
 		s.Fatal("Failed to verify camera triggers vcTray: ", err)
+	}
+
+	// This step will fail on the ARC-T board because the test application loses focus when it opens.
+	// This is a temporary fix to prevent tests from being blocked by the test application issue.
+	// https://b.corp.google.com/issues/319318909
+	if err := uiauto.New(tconn).RightClick(nodewith.ClassName("HeaderView"))(ctx); err != nil {
+		s.Fatal("Failed to make test app be focused: ", err)
 	}
 
 	if err := common.VerifyReturnToApp(ctx, tconn); err != nil {
