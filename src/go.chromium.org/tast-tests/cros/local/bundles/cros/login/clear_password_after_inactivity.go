@@ -75,8 +75,7 @@ func ClearPasswordAfterInactivity(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanUpCtx, s.OutDir(), s.HasError, tconn)
 
 	// Wait for the login screen to be ready for password entry.
-	readyForPassword := func(st lockscreen.State) bool { return st.ReadyForPassword }
-	if _, err := lockscreen.WaitState(ctx, tconn, readyForPassword, 30*time.Second); err != nil {
+	if err := lockscreen.WaitForPasswordEntry(ctx, tconn, 30*time.Second); err != nil {
 		s.Fatal("Failed to wait for login screen: ", err)
 	}
 
