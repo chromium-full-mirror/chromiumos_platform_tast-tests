@@ -52,6 +52,9 @@ func HardwareProbe(ctx context.Context, s *testing.State) {
 		return
 	}
 	// Check if fields are valid.
+	if result.GPUInfo == nil || len(result.GPUInfo) == 0 {
+		s.Error("Failed to find any GPU in hardware_probe result")
+	}
 	for _, info := range result.GPUInfo {
 		if info.Family == "unknown" || info.Family == "" {
 			s.Error("Unrecognized gpu family: ", info.Family)
@@ -62,5 +65,11 @@ func HardwareProbe(ctx context.Context, s *testing.State) {
 	}
 	if result.CPUFamily == "unknown" || result.CPUFamily == "" {
 		s.Error("Unrecognized CPU family: ", result.CPUFamily)
+	}
+	if result.Disk == nil {
+		s.Error("Failed to get disk information")
+	}
+	if result.Memory == 0 {
+		s.Error("Failed to get memory size")
 	}
 }

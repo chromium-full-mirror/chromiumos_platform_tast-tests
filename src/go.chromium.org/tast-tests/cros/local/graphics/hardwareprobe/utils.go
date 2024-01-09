@@ -31,10 +31,16 @@ type gpuInfo struct {
 	Vendor string `json:"GPUVendor"`
 }
 
+type disk struct {
+	SizeGb int `json:"size_gb"`
+}
+
 type hardwareProbeResult struct {
 	VGADevice []pciDevice `json:"VGA_Devices"`
 	GPUInfo   []gpuInfo   `json:"GPU_Family"`
 	CPUFamily string      `json:"CPU_SOC_Family"`
+	Memory    int         `json:"Memory"`
+	Disk      *disk       `json:"Disk"`
 }
 
 // GetHardwareProbeResult saves the information to path and returns detailed information gathered by hardware_probe binaries in the DUT.
