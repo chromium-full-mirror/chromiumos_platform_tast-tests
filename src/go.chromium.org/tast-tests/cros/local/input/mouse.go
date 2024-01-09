@@ -34,7 +34,7 @@ func Mouse(ctx context.Context) (*MouseEventWriter, error) {
 	const usbBus = 0x3 // BUS_USB from input.h
 	var err error
 	var evTypes uint32 = 1<<EV_KEY | 1<<EV_REL
-	if mw.dev, mw.virt, err = createVirtual(name, devID{usbBus, 0, 0, 0}, 0, evTypes,
+	if mw.dev, mw.virt, err = createVirtual(name, devID{usbBus, 0x1532, 0x0090, 0}, 0, evTypes,
 		map[EventType]*big.Int{
 			EV_KEY: makeBigIntFromEventCodes([]EventCode{BTN_LEFT, BTN_RIGHT, BTN_MIDDLE, BTN_EXTRA, KEY_S}),
 			EV_REL: makeBigIntFromEventCodes([]EventCode{REL_X, REL_Y, REL_WHEEL_HI_RES, REL_WHEEL}),
@@ -151,6 +151,19 @@ func (mw *MouseEventWriter) MiddleClick() error {
 	}
 
 	if err := mw.releaseButton(BTN_MIDDLE); err != nil {
+		return err
+	}
+
+	return mw.rw.Sync()
+}
+
+// KeyboardActionClick triggers a KB event from the virtual mouse.
+func (mw *MouseEventWriter) KeyboardActionClick(btn EventCode) error {
+	if err := mw.pressButton(btn); err != nil {
+		return err
+	}
+
+	if err := mw.releaseButton(btn); err != nil {
 		return err
 	}
 
