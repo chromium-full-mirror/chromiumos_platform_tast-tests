@@ -42,9 +42,10 @@ func init() {
 		Timeout:      5 * time.Minute,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			Name:    "ash",
-			Val:     browser.TypeAsh,
-			Fixture: fixture.DeskAPIAsh,
+			Name:      "ash",
+			Val:       browser.TypeAsh,
+			Fixture:   fixture.DeskAPIAsh,
+			ExtraAttr: []string{"group:hw_agnostic"},
 		}, {
 			Name:              "lacros",
 			Val:               browser.TypeLacros,
