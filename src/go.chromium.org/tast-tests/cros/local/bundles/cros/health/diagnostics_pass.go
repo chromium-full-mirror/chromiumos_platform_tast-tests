@@ -116,10 +116,9 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: yycheng@google.com
-			Name:      "memory",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
-			Fixture:   "crosHealthdRunningAndRebootDUT",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name:    "memory",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineMemory),
+			Fixture: "crosHealthdRunningAndRebootDUT",
 		}, {
 			// Contact: byronlee@google.com
 			Name:      "sensitive_sensor",
