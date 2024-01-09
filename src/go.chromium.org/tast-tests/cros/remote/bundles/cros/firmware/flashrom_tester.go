@@ -81,7 +81,7 @@ func FlashromTester(ctx context.Context, s *testing.State) {
 	defer restore(s)
 
 	backendChoiceArg := s.Param().(string)
-	cmd := h.DUT.Conn().CommandContext(ctx, "flashrom_tester", "--debug", backendChoiceArg, "host")
+	cmd := h.DUT.Conn().CommandContext(ctx, "flashrom_tester", "--debug", backendChoiceArg, "internal")
 
 	stdin, err := cmd.StdinPipe()
 	if err != nil {
