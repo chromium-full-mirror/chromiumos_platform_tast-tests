@@ -96,21 +96,20 @@ func checkSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 	}
 
 	var checkCategory []SysLogCategory
-	if ignoreCategories, ok := ignoreCategoriesMap[testName]; ok {
-		if inList(SysLogAll, ignoreCategories) {
-			testing.ContextLogf(ctx, "Test %s requested to ignore all syslog checks", testName)
-			return nil
-		}
-		for category := range sysLogSignatureMap {
-			if inList(category, ignoreCategories) {
-				testing.ContextLogf(ctx, "Test %s requested to ignore check for `%v`", testName, category)
-				continue
-			}
-			checkCategory = append(checkCategory, category)
-		}
+	ignoreCategories, ok := ignoreCategoriesMap[testName]
+	if ok && inList(SysLogAll, ignoreCategories) {
+		testing.ContextLogf(ctx, "Test %s requested to ignore all syslog checks", testName)
+		return nil
 	}
 
-	testing.ContextLogf(ctx, "Checking syslog with folowing categories: %q", checkCategory)
+	for category := range sysLogSignatureMap {
+		if ok && inList(category, ignoreCategories) {
+			testing.ContextLogf(ctx, "Test %s requested to ignore check for `%v`", testName, category)
+			continue
+		}
+		checkCategory = append(checkCategory, category)
+	}
+	testing.ContextLogf(ctx, "Checking syslog with following categories: %q", checkCategory)
 
 	for {
 		e, err := reader.Read()
