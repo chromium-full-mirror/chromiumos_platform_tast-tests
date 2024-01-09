@@ -22,6 +22,19 @@ chromeos {
           }
         }
       }
+      test_plan_starlark_files {
+        host: "chrome-internal.googlesource.com"
+        project: "chromeos/config-internal"
+        path: "test/plans/v2/ctpv1_compatible/templated/mtp_cq.star"
+        template_parameters {
+          suite_name: "mtp-cq-filemanager"
+          tag_criteria {
+            # TODO(b/319119030): Remove `tag_excludes` once test_plan validate takes the tags excluded by the Starlark file into consideration.
+            tag_excludes: "informational"
+            test_names: "tast.filemanager.*"
+          }
+        }
+      }
     }
   }
 }
