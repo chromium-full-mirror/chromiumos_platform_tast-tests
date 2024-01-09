@@ -9,8 +9,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
-
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/remote/typec/mcci"
 	"go.chromium.org/tast-tests/cros/services/cros/usb"
@@ -33,9 +31,6 @@ func init() {
 		Timeout:      5 * time.Minute,
 	})
 }
-
-// USB-IF interface class code for mass storage devices.
-const massStorageClass = 8
 
 // Usb3StorageHotplug does the following:
 //
@@ -98,9 +93,9 @@ func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.
 		return errors.Wrap(err, "failed to sleep for USB disconnection")
 	}
 
-	countBefore, err := usb3ExternalStorageCount(ctx, cl)
+	externalStorageBefore, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
 	if err != nil {
-		return errors.Wrap(err, "could not get external storage count before hotplug")
+		return errors.Wrap(err, "could not get external storage list before hotplug")
 	}
 
 	// Enable the switch.
@@ -111,40 +106,12 @@ func performUsb3StorageHotplugIteration(ctx context.Context, d *dut.DUT, cl usb.
 		return errors.Wrap(err, "failed to sleep for USB enumeration")
 	}
 
-	countAfter, err := usb3ExternalStorageCount(ctx, cl)
+	externalStorageAfter, err := typecutils.Usb3GetExternalStorageList(ctx, cl)
 	if err != nil {
-		return errors.Wrap(err, "could not get external storage count after hotplug")
-	}
-
-	if countBefore >= countAfter {
+		return errors.Wrap(err, "could not get external storage list after hotplug")
+	} else 	if len(externalStorageBefore) >= len(externalStorageAfter) {
 		return errors.New("failed to enumerate new USB storage device")
 	}
 
 	return nil
-}
-
-// usb3ExternalStorageCount returns the number of currently connected external USB storage devices
-// based on the removable property and interface classes.
-func usb3ExternalStorageCount(ctx context.Context, cl usb.SysfsServiceClient) (int, error) {
-	count := 0
-
-	deviceMap, err := cl.GetDevices(ctx, &empty.Empty{})
-	if err != nil {
-		return 0, errors.Wrap(err, "unable to get USB device map")
-	}
-
-	for _, device := range deviceMap.Devices {
-		if device.Removable == usb.RemovableAttribute_REMOVABLE_ATTRIBUTE_FIXED || device.Speed <= 480 {
-			continue
-		}
-
-		for _, interf := range device.Interfaces {
-			if interf.InterfaceClass == massStorageClass {
-				count++
-				break
-			}
-		}
-	}
-
-	return count, nil
 }

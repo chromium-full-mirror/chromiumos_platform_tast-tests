@@ -15,8 +15,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/services/cros/typec"
+	"go.chromium.org/tast-tests/cros/services/cros/usb"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -50,6 +53,11 @@ const (
 const (
 	TbtGenAny = iota
 	TbtGen4   = 4
+)
+
+// USB Class Codes.
+const (
+	ClassMassStorage = 0x8
 )
 
 // List of built-in Thunderbolt devices enumerated by the OS.
@@ -346,4 +354,31 @@ func UnmountRemovableMedia(ctx context.Context, d *dut.DUT) error {
 		return errors.New("mounted removable media found")
 	}
 	return nil
+}
+
+// Usb3GetExternalStorageList returns a list of currently connected external USB storage devices
+// based on the removable property and interface classes. The returned value is an array of
+// strings containing each devices address (example: "3-2.1.3").
+func Usb3GetExternalStorageList(ctx context.Context, cl usb.SysfsServiceClient) ([]string, error) {
+	var externalStorageList []string
+
+	deviceMap, err := cl.GetDevices(ctx, &empty.Empty{})
+	if err != nil {
+		return externalStorageList, errors.Wrap(err, "unable to get USB device map")
+	}
+
+	for addr, device := range deviceMap.Devices {
+		if device.Removable == usb.RemovableAttribute_REMOVABLE_ATTRIBUTE_FIXED || device.Speed <= 480 {
+			continue
+		}
+
+		for _, interf := range device.Interfaces {
+			if interf.InterfaceClass == ClassMassStorage {
+				externalStorageList = append(externalStorageList, addr)
+				break
+			}
+		}
+	}
+
+	return externalStorageList, nil
 }
