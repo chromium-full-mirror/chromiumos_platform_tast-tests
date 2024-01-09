@@ -32,7 +32,7 @@ func init() {
 // indefinitely, causing the test infrastucture to mark the test as failed.
 // TODO: add different kinds of suspend test, including stress test
 func Suspend(ctx context.Context, s *testing.State) {
-	_, err := suspend.ForDuration(ctx, 10*time.Second)
+	_, err := suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second)
 	if err != nil {
 		s.Fatal("Failed to suspend: ", err)
 	}

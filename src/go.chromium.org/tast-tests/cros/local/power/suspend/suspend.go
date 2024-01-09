@@ -288,3 +288,40 @@ func Request(ctx context.Context, params ...Param) (ResumeInfo, error) {
 func ForDuration(ctx context.Context, t time.Duration) (ResumeInfo, error) {
 	return Request(ctx, For(t), Timeout(defaultTimeout))
 }
+
+func setUserspaceFreezetimeout(ctx context.Context, t time.Duration) (func(), error) {
+	const pmFreezeTimeoutPath = "/sys/power/pm_freeze_timeout"
+
+	oldMsecsStr, err := ioutil.ReadFile(pmFreezeTimeoutPath)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not read timeout from %s", pmFreezeTimeoutPath)
+	}
+
+	msecs := t.Milliseconds()
+	testing.ContextLogf(ctx, "Setting pm_freeze_timeout to %v ms", msecs)
+	if err = ioutil.WriteFile(pmFreezeTimeoutPath, []byte(fmt.Sprintf("%d\n", msecs)), 0644); err != nil {
+		return nil, errors.Wrapf(err, "could not write timeout to %v", pmFreezeTimeoutPath)
+	}
+
+	restoreUserspaceFreezeTimeout := func() {
+		testing.ContextLogf(ctx, "Resetting pm_freeze_timeout to %s ms", strings.TrimSpace(string(oldMsecsStr)))
+		err := ioutil.WriteFile(pmFreezeTimeoutPath, oldMsecsStr, 0644)
+		if err != nil {
+			testing.ContextLogf(ctx, "Couldn't write old timeout to %v err %v", pmFreezeTimeoutPath, err)
+		}
+	}
+	return restoreUserspaceFreezeTimeout, nil
+}
+
+// ForDurationWithKernelFreezeTimeout behaves like ForDuration, but it also sets the
+// pm_freeze_timeout so that diagnostic information about any hung tasks holding up freezing
+// userspace gets emitted to demsg.
+func ForDurationWithKernelFreezeTimeout(ctx context.Context, suspendDuration, freezeTimeout time.Duration) (ResumeInfo, error) {
+	restorefn, err := setUserspaceFreezetimeout(ctx, freezeTimeout)
+	if err != nil {
+		return ResumeInfo{}, err
+	}
+	defer restorefn()
+
+	return ForDuration(ctx, suspendDuration)
+}
