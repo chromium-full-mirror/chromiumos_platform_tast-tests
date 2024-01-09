@@ -75,9 +75,8 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	// Close browser shell window as cleanup.
 	defer func(ctx context.Context) {
-		croshCloseButton := nodewith.Name("Close").ClassName("FrameCaptionButton").Role(role.Button).First()
-		if err := ui.LeftClick(croshCloseButton)(ctx); err != nil {
-			s.Error("Failed to close browser shell: ", err)
+		if err := vk.Accel(ctx, "Ctrl+Shift+W"); err != nil {
+			s.Fatal("Failed to press Ctrl+Shift+W to close browser shell: ", err)
 		}
 	}(cleanupCtx)
 
@@ -123,12 +122,8 @@ func BrowserShellAudioToneCheck(ctx context.Context, s *testing.State) {
 	}
 
 	// Close loaded Terminal Settings page.
-	closeBttn := nodewith.Name("Close").Role(role.Button).Ancestor(nodewith.NameContaining("Terminal - Settings").First())
-	if err := ui.Exists(closeBttn)(ctx); err != nil {
-		s.Fatal("Failed to find 'Close' button for Terminal Settings page: ", err)
-	}
-	if err := ui.LeftClick(closeBttn)(ctx); err != nil {
-		s.Fatal("Failed click 'Close' button for Terminal Settings page: ", err)
+	if err := vk.Accel(ctx, "Ctrl+Shift+W"); err != nil {
+		s.Fatal("Failed to press Ctrl+Shift+W to close Terminal Settings page: ", err)
 	}
 
 	// Press downward arror keyboard key.
