@@ -28,7 +28,7 @@ func init() {
 			"lxj@google.com",
 		},
 		BugComponent: "b:658562",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 	})
 }
