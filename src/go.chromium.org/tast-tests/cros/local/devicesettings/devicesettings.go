@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/devicesettings/constants"
+	"go.chromium.org/tast-tests/cros/local/input"
 
 	"go.chromium.org/tast/core/errors"
 )
@@ -58,6 +59,21 @@ func NavigateMouseCustomization(ctx context.Context, ui *uiauto.Context, mouseNa
 	mouseText := nodewith.NameContaining("Click additional buttons on your " + mouseName).Role(role.StaticText)
 	if err := ui.WaitUntilExists(mouseText)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to find text Tast virtual mouse in customization page %s", mouseName)
+	}
+
+	return nil
+}
+
+// ClearTextArea allows to clear the text area for the button name while on edit mode.
+func ClearTextArea(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, buttonNameText string) error {
+
+	buttonNameTextbox := nodewith.Name(buttonNameText).Role(role.TextField)
+	if err := uiauto.Combine("Clear the textbox for button name",
+		ui.WaitUntilExists(buttonNameTextbox.Focused()),
+		kb.AccelAction("Ctrl+A"),
+		kb.TypeKeyAction(input.KEY_BACKSPACE),
+	)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to clear text at %s for the existing Other Button 1 name", buttonNameText)
 	}
 
 	return nil
