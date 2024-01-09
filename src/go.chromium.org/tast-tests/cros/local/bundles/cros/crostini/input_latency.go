@@ -444,12 +444,11 @@ func startInputLatencyServer(ctx context.Context, cont *vm.Container, socketServ
 	var portString string
 	// Waiting for server to be ready.
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		getPortCmd := cont.Command(ctx, "cat", portFile)
-		out, err := perfutil.RunCmd(ctx, getPortCmd, errFile)
+		out, err := cont.ReadFile(ctx, portFile)
 		if err != nil {
 			return err
 		}
-		portString = string(out)
+		portString = out
 		return nil
 	}, &testing.PollOptions{Timeout: 3 * time.Second})
 	if err != nil {
