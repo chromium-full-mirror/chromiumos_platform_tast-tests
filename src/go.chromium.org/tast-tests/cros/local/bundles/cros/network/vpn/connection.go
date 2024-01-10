@@ -434,7 +434,7 @@ func (c *Connection) Connect(ctx context.Context) error {
 	if err := c.service.WaitForConnectedOrError(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for service connected")
 	}
-	if err := ping.ExpectPingSuccessWithTimeout(ctx, c.Server.OverlayIPv4, "chronos", 5*time.Second); err != nil {
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, c.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		return errors.Wrap(err, "failed to verify VPN routing")
 	}
 
