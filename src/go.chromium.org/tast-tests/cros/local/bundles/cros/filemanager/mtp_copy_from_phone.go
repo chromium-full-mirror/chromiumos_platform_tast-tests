@@ -33,7 +33,7 @@ func init() {
 			"chromeos-files-syd@google.com",
 			"ashpakov@google.com",
 		},
-		Attr:         []string{"group:mtp"},
+		Attr:         []string{"group:mtp_cq"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Fixture:      "mtpWithAndroid",
