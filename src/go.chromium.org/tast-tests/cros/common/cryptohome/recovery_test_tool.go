@@ -20,24 +20,12 @@ import (
 )
 
 const (
-	destinationShareFile                 = "dst"
-	extendedPcrBoundDestinationShareFile = "dst_extended_pcr"
-	ledgerInfoFile                       = "ledger_info"
-	rsaPrivKeyFile                       = "rsa_priv_key"
-	channelPubKeyFile                    = "channel_pub"
-	channelPrivKeyFile                   = "channel_priv"
-	hsmPayloadFile                       = "hsm_payload"
-	recoverySecretCreatedFile            = "secr_crea"
-	ephemeralPubKeyFile                  = "ephemeral_pub"
-	recoveryRequestFile                  = "recovery_req"
-	recoveryResponseFile                 = "response"
-	recoverySecretDecryptedFile          = "secr_decr"
-	customRAPTFile                       = "custom_rapt"
-	customEpochResponseFile              = "custom_epoch_response"
-	epochResponseFile                    = "epoch_response"
-	mediatorPubKeyFile                   = "mediator_pub_key"
-	customMediatorPubKeyFile             = "custom_mediator_pub_key"
-	recoveryIDFile                       = "recovery_id"
+	ledgerInfoFile       = "ledger_info"
+	recoveryRequestFile  = "recovery_req"
+	recoveryResponseFile = "response"
+	epochResponseFile    = "epoch_response"
+	mediatorPrivKeyFile  = "mediator_priv_key"
+	mediatorPubKeyFile   = "mediator_pub_key"
 )
 
 // LedgerInfo stores public properties of a recovery ledger. This information
@@ -59,10 +47,10 @@ type RecoveryTestTool struct {
 	runner hwsec.CmdRunner
 }
 
-// NewRecoveryTestToolWithFakeMediator creates a new instance of RecoveryTestTool with generated directory.
+// NewRecoveryTestTool creates a new instance of RecoveryTestTool with generated directory.
 // The instance will use fake (local) mediation.
 // Call RemoveDir in the end of the test.
-func NewRecoveryTestToolWithFakeMediator(r hwsec.CmdRunner) (*RecoveryTestTool, error) {
+func NewRecoveryTestTool(r hwsec.CmdRunner) (*RecoveryTestTool, error) {
 	// Create a temp directory.
 	name, err := ioutil.TempDir("", "cryptohome_test_tool_out_*")
 	if err != nil {
@@ -139,9 +127,9 @@ func (c *RecoveryTestTool) CreateSmartCardVaultKeyset(ctx context.Context, authS
 	return err
 }
 
-// FakeMediateWithRequest calls "--action=recovery_crypto_mediate" step.
+// FakeMediate calls "--action=recovery_crypto_mediate" step.
 // Returns hex-encoded response on success.
-func (c *RecoveryTestTool) FakeMediateWithRequest(ctx context.Context, requestHex string) (string, error) {
+func (c *RecoveryTestTool) FakeMediate(ctx context.Context, requestHex string) (string, error) {
 	if err := c.writeFile(recoveryRequestFile, []byte(requestHex)); err != nil {
 		return "", errors.Wrapf(err, "could not write the recovery request file (%s)", recoveryRequestFile)
 	}
@@ -149,6 +137,33 @@ func (c *RecoveryTestTool) FakeMediateWithRequest(ctx context.Context, requestHe
 	if _, err := c.call(ctx,
 		"--action=recovery_crypto_mediate",
 		c.getFileParam("recovery_request_in_file", recoveryRequestFile),
+		c.getFileParam("recovery_response_out_file", recoveryResponseFile),
+	); err != nil {
+		return "", errors.Wrap(err, "could not perform recovery_crypto_mediate")
+	}
+
+	responseHex, err := ioutil.ReadFile(c.getFullFilePath(recoveryResponseFile))
+	if err != nil {
+		return "", errors.Wrapf(err, "could not read the recovery response file (%s)", recoveryResponseFile)
+	}
+	return string(responseHex), nil
+}
+
+// FakeMediateWithPrivateKey calls "--action=recovery_crypto_mediate" step.
+// Returns hex-encoded response on success.
+func (c *RecoveryTestTool) FakeMediateWithPrivateKey(ctx context.Context, requestHex, mediatorPrivateKeyHex string) (string, error) {
+	if err := c.writeFile(recoveryRequestFile, []byte(requestHex)); err != nil {
+		return "", errors.Wrapf(err, "could not write the recovery request file (%s)", recoveryRequestFile)
+	}
+
+	if err := c.writeFile(mediatorPrivKeyFile, []byte(mediatorPrivateKeyHex)); err != nil {
+		return "", errors.Wrapf(err, "could not write the mediator priv key file (%s)", mediatorPrivKeyFile)
+	}
+
+	if _, err := c.call(ctx,
+		"--action=recovery_crypto_mediate",
+		c.getFileParam("recovery_request_in_file", recoveryRequestFile),
+		c.getFileParam("mediator_priv_key_in_file", mediatorPrivKeyFile),
 		c.getFileParam("recovery_response_out_file", recoveryResponseFile),
 	); err != nil {
 		return "", errors.Wrap(err, "could not perform recovery_crypto_mediate")

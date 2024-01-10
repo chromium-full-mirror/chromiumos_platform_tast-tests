@@ -121,7 +121,7 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	testTool, err := cryptohomecommon.NewRecoveryTestTool(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}

@@ -76,7 +76,7 @@ func RecoveryError(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to add a password authfactor: ", err)
 	}
 
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	testTool, err := cryptohomecommon.NewRecoveryTestTool(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}

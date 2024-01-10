@@ -22,6 +22,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type updateRecoveryTestParam struct {
+	rotateRecoveryID  bool
+	rotateMediatorKey bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: UpdateRecovery,
@@ -37,10 +42,24 @@ func init() {
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 		Fixture:      "ussAuthSessionFixture",
 		Params: []testing.Param{{
-			Val: true,
+			Val: updateRecoveryTestParam{
+				// Regular use case - we rotate recovery id after successful authentication,
+				// but the mediator keys remain the same.
+				rotateRecoveryID:  true,
+				rotateMediatorKey: false,
+			},
 		}, {
 			Name: "no_id_rotation",
-			Val:  false,
+			Val: updateRecoveryTestParam{
+				rotateRecoveryID:  false,
+				rotateMediatorKey: false,
+			},
+		}, {
+			Name: "rotate_mediator_keys",
+			Val: updateRecoveryTestParam{
+				rotateRecoveryID:  false,
+				rotateMediatorKey: true,
+			},
 		}},
 	})
 }
@@ -55,6 +74,12 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		shadow          = "/home/.shadow"
 		userGaiaID      = "123456789"
 		deviceUserID    = "123-456-AA-BB"
+		// Hardcoded fake mediator and epoch public and private keys. Do not use them in production!
+		// Keys were generated at random using EllipticCurve::GenerateKeysAsSecureBlobs method and converted to hex.
+		mediatorPubKey1Hex  = "3059301306072a8648ce3d020106082a8648ce3d03010703420004bcc6e3b259a79f8e31eb3f31801c4b2f9bf91c1bee253b9f6c8f8cbf1767b6908223a4c9ed6c671eb5d2715537d5b7c4bf9647f6fc5c64d1b11a26f5dd46e5d8"
+		mediatorPrivKey1Hex = "dfce2cfba5986cc03b0b5e03a8b8e553d7a4efe3b330ad87eecef7e508d4e23f"
+		mediatorPubKey2Hex  = "3059301306072a8648ce3d020106082a8648ce3d030107034200043b36a784ec23f118c23974af3cf2b3ed92a9ea0c0ac34f1fced904f88b6bbf2e7f6941b6ecd4814b855be96602472da5ea19e7d89e19dc6af0a993a0b4e814c6"
+		mediatorPrivKey2Hex = "e41746214b760a4b59e41e79ef6e4250fb053e6566e5660619938e2e78024c63"
 	)
 
 	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
@@ -85,7 +110,7 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to write a file to the vault: ", err)
 	}
 
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	testTool, err := cryptohomecommon.NewRecoveryTestTool(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
@@ -110,7 +135,7 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		return []byte{}
 	}
 
-	authenticateWithRecovery := func() (string, error) {
+	authenticateWithRecovery := func(mediatorPrivKey string) (string, error) {
 		// Authenticate a new auth session via the new added recovery auth factor and mount the user.
 		_, authSessionID, err = client.StartAuthSession(ctx, userName, false /*ephemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 		if err != nil {
@@ -127,7 +152,7 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 			return authSessionID, errors.Wrap(err, "failed to get recovery request")
 		}
 
-		response, err := testTool.FakeMediateWithRequest(ctx, requestHex)
+		response, err := testTool.FakeMediateWithPrivateKey(ctx, requestHex, mediatorPrivKey)
 		if err != nil {
 			return authSessionID, errors.Wrap(err, "failed to mediate")
 		}
@@ -159,13 +184,8 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create persistent user: ", err)
 	}
 
-	mediatorPubKeyHex, err := testTool.FetchFakeMediatorPubKeyHex(ctx)
-	if err != nil {
-		s.Fatal("Failed to get mediator pub key: ", err)
-	}
-
 	// Add a recovery auth factor to the user.
-	if err := client.AddRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, mediatorPubKeyHex, userGaiaID, deviceUserID); err != nil {
+	if err := client.AddRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, mediatorPubKey1Hex, userGaiaID, deviceUserID); err != nil {
 		s.Fatal("Failed to add a recovery auth factor: ", err)
 	}
 
@@ -179,7 +199,7 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 	}
 
 	// Confirm that recovery factor metadata has correct public key.
-	mediatorPubKey, err := hex.DecodeString(mediatorPubKeyHex)
+	mediatorPubKey, err := hex.DecodeString(mediatorPubKey1Hex)
 	if err != nil {
 		s.Fatal("Failed to decode mediator pub key: ", err)
 	}
@@ -194,16 +214,22 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 	}
 
 	// Successfully authenticate with recovery.
-	authSessionID, err = authenticateWithRecovery()
+	authSessionID, err = authenticateWithRecovery(mediatorPrivKey1Hex)
 	if err != nil {
 		s.Fatal("Failed to authenticate with recovery factor: ", err)
 	}
 
-	rotateRecoveryID := s.Param().(bool)
+	param := s.Param().(updateRecoveryTestParam)
+	newMediatorPrivKeyHex := mediatorPrivKey1Hex
+	newMediatorPubKeyHex := mediatorPubKey1Hex
+	if param.rotateMediatorKey {
+		newMediatorPrivKeyHex = mediatorPrivKey2Hex
+		newMediatorPubKeyHex = mediatorPubKey2Hex
+	}
 
 	// Update recovery auth factor.
-	if err := client.UpdateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel /*label*/, mediatorPubKeyHex,
-		userGaiaID, deviceUserID, rotateRecoveryID /*ensureFreshRecoveryID*/); err != nil {
+	if err := client.UpdateRecoveryAuthFactor(ctx, authSessionID, recoveryLabel /*label*/, newMediatorPubKeyHex,
+		userGaiaID, deviceUserID, param.rotateRecoveryID /*ensureFreshRecoveryID*/); err != nil {
 		s.Fatal("Failed to update recovery factor: ", err)
 	}
 
@@ -212,7 +238,7 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get recovery ids after update: ", err)
 	}
 	recoveryID := recoveryIDs[0]
-	if rotateRecoveryID {
+	if param.rotateRecoveryID {
 		// Recovery id was rotated, we expect to have the list of 2 items: [new_id, previous_id]
 		if len(newRecoveryIDs) != 2 {
 			s.Fatalf("Got %v recovery IDs, expected 2", len(newRecoveryIDs))
@@ -242,10 +268,17 @@ func UpdateRecovery(ctx context.Context, s *testing.State) {
 	}
 
 	// Successfully authenticate with recovery factor.
-	if _, err := authenticateWithRecovery(); err != nil {
+	if _, err := authenticateWithRecovery(newMediatorPrivKeyHex); err != nil {
 		s.Fatal("Failed to authenticate with recovery factor after update: ", err)
 	}
 
-	// TODO(b/289178330): Update recovery auth factor with a different public key;
-	// confirm that recovery factor metadata has a new public key.
+	// Confirm that recovery factor metadata has correct public key.
+	newMediatorPubKey, err := hex.DecodeString(newMediatorPubKeyHex)
+	if err != nil {
+		s.Fatal("Failed to decode mediator pub key: ", err)
+	}
+	newActualPubKey := mediatorPubKeyFromMetadata()
+	if !reflect.DeepEqual(newActualPubKey, newMediatorPubKey) {
+		s.Fatalf("Incorrect new mediator pub key in recovery metadata; got %v, expected %v", newActualPubKey, newMediatorPubKey)
+	}
 }

@@ -69,7 +69,7 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 	}
 
 	// Setup the recovery test tool and fakes.
-	testTool, err := cryptohomecommon.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	testTool, err := cryptohomecommon.NewRecoveryTestTool(cmdRunner)
 	if err != nil {
 		s.Fatal("Failed to initialize RecoveryTestTool: ", err)
 	}
@@ -205,7 +205,7 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to get recovery request")
 			}
 
-			response, err := testTool.FakeMediateWithRequest(ctx, requestHex)
+			response, err := testTool.FakeMediate(ctx, requestHex)
 			if err != nil {
 				return errors.Wrap(err, "failed to mediate")
 			}

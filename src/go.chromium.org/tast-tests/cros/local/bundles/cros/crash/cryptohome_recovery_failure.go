@@ -143,7 +143,7 @@ func induceRecoveryRequestFailure(ctx context.Context) error {
 		return errors.Wrap(err, "failed to add a password authfactor")
 	}
 
-	testTool, err := recoverytool.NewRecoveryTestToolWithFakeMediator(cmdRunner)
+	testTool, err := recoverytool.NewRecoveryTestTool(cmdRunner)
 	if err != nil {
 		return errors.Wrap(err, "failed to initialize RecoveryTestTool")
 	}
