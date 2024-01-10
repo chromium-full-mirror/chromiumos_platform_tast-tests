@@ -63,8 +63,8 @@ func LaunchFromLauncherAppList(ctx context.Context, s *testing.State) {
 	// Launch the app from the Launcher via scrolling and clicking the app.
 	if err := uiauto.Combine("find and click the shortcut app in launcher",
 		launcher.Open(tconn),
-		ui.FocusAndWait(launcher.AppItemViewFinder(apps.ShortcutCustomization.Name).First()),
-		ui.LeftClick(launcher.AppItemViewFinder(apps.ShortcutCustomization.Name).First()),
+		ui.FocusAndWait(launcher.AppItemViewFinder(apps.ShortcutCustomization.ShortName()).First()),
+		ui.LeftClick(launcher.AppItemViewFinder(apps.ShortcutCustomization.ShortName()).First()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to find and click the shortcut app in launcher: ", err)
 	}

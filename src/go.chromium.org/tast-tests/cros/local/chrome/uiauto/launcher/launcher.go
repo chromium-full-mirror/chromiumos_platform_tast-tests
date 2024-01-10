@@ -557,8 +557,9 @@ func WaitForClamshellLauncherSearchExit(tconn *chrome.TestConn) uiauto.Action {
 }
 
 // AppItemViewFinder returns a Finder to find the specified app in an open launcher's item view.
-func AppItemViewFinder(appName string) *nodewith.Finder {
-	return nodewith.Name(appName).HasClass(ExpandedItemsClass)
+// Note that itemName should be the short name of an app.
+func AppItemViewFinder(itemName string) *nodewith.Finder {
+	return nodewith.Name(itemName).HasClass(ExpandedItemsClass)
 }
 
 // Search return a function that executes a search query.
@@ -652,8 +653,8 @@ func LaunchApp(tconn *chrome.TestConn, appName string) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine(fmt.Sprintf("LaunchApp(%s)", appName),
 		OpenExpandedView(tconn),
-		ui.FocusAndWait(AppItemViewFinder(appName).First()),
-		ui.LeftClick(AppItemViewFinder(appName).First()),
+		ui.FocusAndWait(AppItemViewFinder(appName /* TODO: use short name */).First()),
+		ui.LeftClick(AppItemViewFinder(appName /* TODO: use short name */).First()),
 	)
 }
 
@@ -662,8 +663,8 @@ func LaunchApp(tconn *chrome.TestConn, appName string) uiauto.Action {
 func PinAppToShelf(tconn *chrome.TestConn, app apps.App, container *nodewith.Finder) uiauto.Action {
 	ui := uiauto.New(tconn)
 	return uiauto.Combine(fmt.Sprintf("PinAppToShelf(%+q)", app),
-		ui.FocusAndWait(AppItemViewFinder(app.Name).Ancestor(container)),
-		ui.RightClick(AppItemViewFinder(app.Name).Ancestor(container)),
+		ui.FocusAndWait(AppItemViewFinder(app.ShortName()).Ancestor(container)),
+		ui.RightClick(AppItemViewFinder(app.ShortName()).Ancestor(container)),
 		ui.LeftClick(nodewith.Name("Pin to shelf").HasClass("MenuItemView")),
 	)
 }
@@ -673,8 +674,8 @@ func UnpinAppFromShelf(tconn *chrome.TestConn, app apps.App, container *nodewith
 	ui := uiauto.New(tconn)
 	return uiauto.Combine(fmt.Sprintf("UnpinAppFromShelf(%+q)", app),
 		OpenExpandedView(tconn),
-		ui.FocusAndWait(AppItemViewFinder(app.Name).Ancestor(container)),
-		ui.RightClick(AppItemViewFinder(app.Name).Ancestor(container)),
+		ui.FocusAndWait(AppItemViewFinder(app.ShortName()).Ancestor(container)),
+		ui.RightClick(AppItemViewFinder(app.ShortName()).Ancestor(container)),
 		ui.LeftClick(nodewith.Name("Unpin from shelf").HasClass("MenuItemView")),
 	)
 }

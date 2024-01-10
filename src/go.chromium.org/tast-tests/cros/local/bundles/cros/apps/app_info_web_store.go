@@ -59,7 +59,7 @@ func AppInfoWebStore(ctx context.Context, s *testing.State) {
 	permissionTxt := nodewith.Name(permissions).Role(role.StaticText).Ancestor(settings)
 	storageTxt := nodewith.Name(storage).Role(role.StaticText).Ancestor(settings)
 	manageTxt := nodewith.Name(manage).Role(role.StaticText).Ancestor(settings)
-	launcherApp := launcher.AppItemViewFinder(apps.WebStore.Name).First()
+	launcherApp := launcher.AppItemViewFinder(apps.WebStore.ShortName()).First()
 
 	ui := uiauto.New(tconn)
 	checkMenuAndSettings := uiauto.Combine("check app context menu and settings",

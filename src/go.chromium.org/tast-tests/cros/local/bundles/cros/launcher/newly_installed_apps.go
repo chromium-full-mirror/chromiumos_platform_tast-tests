@@ -115,14 +115,14 @@ func NewlyInstalledApps(ctx context.Context, s *testing.State) {
 }
 
 // appItemViewNode finds the app node ignoring the recent apps section.
-func appItemViewNode(appName string, tabletMode bool) *nodewith.Finder {
+func appItemViewNode(appShortName string, tabletMode bool) *nodewith.Finder {
 	var ancestorNode *nodewith.Finder
 	if tabletMode {
 		ancestorNode = nodewith.ClassName(launcher.PagedAppsGridViewClass)
 	} else {
 		ancestorNode = nodewith.ClassName(launcher.BubbleAppsGridViewClass)
 	}
-	return launcher.AppItemViewFinder(appName).Ancestor(ancestorNode).First()
+	return launcher.AppItemViewFinder(appShortName).Ancestor(ancestorNode).First()
 }
 
 // isInNewInstallState computes if the app view is in new install state.
