@@ -345,11 +345,16 @@ func (m *MxPlayerApp) ChangeToResizable(ctx context.Context) error {
 
 	mxPlayerWindow := nodewith.Role(role.Window).Name(apps.MxPlayer.Name).First()
 	centerBtn := nodewith.Role(role.Button).HasClass("FrameCenterButton").Ancestor(mxPlayerWindow)
-	if err := ui.Exists(centerBtn)(ctx); err != nil {
+	maximizeBtn := nodewith.Role(role.Button).HasClass("FrameSizeButton").Name("Maximize").Ancestor(mxPlayerWindow)
+	foundBtn, err := ui.FindAnyExists(ctx, centerBtn, maximizeBtn)
+	if err != nil {
 		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
-			return errors.Wrap(err, "no 'Frame Center' button to change window size")
+			return errors.Wrap(err, "no 'Frame Center' or 'Maximize' button to change window size")
 		}
-		return errors.Wrap(err, "failed to check the existence of center button")
+		return errors.Wrap(err, "failed to check the existence of resize button")
+	}
+	if foundBtn == maximizeBtn {
+		return nil
 	}
 
 	const resizable = "Resizable"
