@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/starfish"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -31,6 +32,12 @@ func init() {
 		Timeout:        20 * time.Minute,
 		VarDeps:        []string{"cellular.gaiaAccountPool"},
 		Vars:           []string{"autotest_host_info_labels"},
+		Params: []testing.Param{
+			{
+				Name:              "",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("yavilla")),
+			},
+		},
 	})
 }
 
@@ -125,20 +132,16 @@ func CarrierLockEndToEndSIMSwap(ctx context.Context, s *testing.State) {
 	}
 	uiHelper.LaunchChromeWithCarrierLock(ctx, gaiaCreds.User, gaiaCreds.Pass)
 
-	s.Log("Wait for service to come up and get fresh config")
-
-	// GoBigSleepLint: Wait for carrier lock service to get fresh config
-	testing.Sleep(ctx, 60*time.Second)
-
-	s.Log("Test Connect before SIM swap")
-	_, err = helper.Connect(ctx)
-
-	if err == nil && carrier != "verizon" {
-		s.Fatal("Connect succeeded expectedly after applying carrier lock. Current carrier: ", carrier)
-	}
-
-	if err != nil && carrier == "verizon" {
-		s.Fatal("Connect failed unexpectedly after applying carrier lock. Current carrier: ", carrier)
+	if carrier != "verizon" {
+		s.Log("Wait for sim lock type to change to network-pin")
+		if err = helper.WaitForCarrierLock(ctx, true); err != nil {
+			s.Fatal("Card not reported as network-pin locked: ", carrier)
+		}
+	} else {
+		s.Log("Wait for sim lock type to change to none")
+		if err = helper.WaitForCarrierLock(ctx, false); err != nil {
+			s.Fatal("Card not reported as unlocked: ", carrier)
+		}
 	}
 
 	s.Log("Performing SIM swap")
@@ -150,14 +153,15 @@ func CarrierLockEndToEndSIMSwap(ctx context.Context, s *testing.State) {
 
 	s.Log("Starfish Index after SIM swap: ", slots[1], " carrier: ", carrier)
 
-	s.Log("Test Connect after SIM swap")
-	_, err = helper.Connect(ctx)
-
-	if err == nil && carrier != "verizon" {
-		s.Fatal("Connect succeeded expectedly after applying carrier lock. Current carrier: ", carrier)
-	}
-
-	if err != nil && carrier == "verizon" {
-		s.Fatal("Connect failed unexpectedly after applying carrier lock. Current carrier: ", carrier)
+	if carrier != "verizon" {
+		s.Log("Wait for sim lock type to change to network-pin")
+		if err = helper.WaitForCarrierLock(ctx, true); err != nil {
+			s.Fatal("Card not reported as network-pin locked: ", carrier)
+		}
+	} else {
+		s.Log("Wait for sim lock type to change to none")
+		if err = helper.WaitForCarrierLock(ctx, false); err != nil {
+			s.Fatal("Card not reported as unlocked: ", carrier)
+		}
 	}
 }

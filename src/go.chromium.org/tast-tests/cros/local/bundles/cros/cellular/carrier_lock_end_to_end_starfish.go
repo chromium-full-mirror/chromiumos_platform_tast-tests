@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/starfish"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -31,6 +32,12 @@ func init() {
 		SoftwareDeps:   []string{"chrome"},
 		Timeout:        20 * time.Minute,
 		VarDeps:        []string{"cellular.gaiaAccountPool"},
+		Params: []testing.Param{
+			{
+				Name:              "",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("yavilla")),
+			},
+		},
 	})
 }
 
@@ -105,21 +112,17 @@ func CarrierLockEndToEndStarfish(ctx context.Context, s *testing.State) {
 	}
 	uiHelper.LaunchChromeWithCarrierLock(ctx, gaiaCreds.User, gaiaCreds.Pass)
 
-	s.Log("Wait for service to come up and get fresh config")
-
-	// GoBigSleepLint: Wait for carrier lock service to get fresh config
-	testing.Sleep(ctx, 60*time.Second)
-
-	s.Log("Test Connect after locking")
-	_, err = helper.Connect(ctx)
-
 	// starfish carrier labels are different from regular carrier labels
-	if err == nil && carrier != "verizon" {
-		s.Fatal("Connect succeeded expectedly after applying carrier lock. Current carrier: ", carrier)
-	}
-
-	if err != nil && carrier == "verizon" {
-		s.Fatal("Connect failed unexpectedly after applying carrier lock. Current carrier: ", carrier)
+	if carrier != "verizon" {
+		s.Log("Wait for sim lock type to change to network-pin")
+		if err = helper.WaitForCarrierLock(ctx, true); err != nil {
+			s.Fatal("Card not reported as network-pin locked: ", carrier)
+		}
+	} else {
+		s.Log("Wait for sim lock type to change to none")
+		if err = helper.WaitForCarrierLock(ctx, false); err != nil {
+			s.Fatal("Card not reported as unlocked: ", carrier)
+		}
 	}
 
 	s.Log("upload the unlock config")
@@ -129,17 +132,8 @@ func CarrierLockEndToEndStarfish(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create and upload CSV file: ", err)
 	}
 
-	s.Log("Wait for FCM notification")
-
-	// GoBigSleepLint: Wait for FCM notification and carrier lock service to fetch new
-	// unlock configuration.
-	// There is no way to know if FCM notification was received and processed by
-	// carrier lock manager other than to wait for predefined time.
-	testing.Sleep(ctx, 3*time.Minute)
-
-	s.Log("Test Connect after unlocking")
-	// Ensure that cellular can connect after carrier lock is removed
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Failed to connect to cellular service after carrier unlock: ", err)
+	s.Log("Wait for sim lock type to change to none")
+	if err = helper.WaitForCarrierLock(ctx, false); err != nil {
+		s.Fatal("Card not reported as unlocked: ", carrier)
 	}
 }
