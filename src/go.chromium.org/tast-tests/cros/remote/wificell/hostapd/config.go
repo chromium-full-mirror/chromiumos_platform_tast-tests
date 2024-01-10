@@ -884,7 +884,9 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		if c.EHTCenterChannel != 0 {
 			configure("eht_oper_centr_freq_seg0_idx", strconv.Itoa(c.EHTCenterChannel))
 		}
-		// TODO(b/305821231) Enable setting require_eht to 1
+		if c.Mode == Mode80211bePure {
+			configure("require_eht", "1")
+		}
 	}
 	if c.HTCaps != 0 {
 		configure("wmm_enabled", "1")
