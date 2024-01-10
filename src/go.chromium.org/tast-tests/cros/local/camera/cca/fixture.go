@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	powerFixture "go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -40,6 +41,8 @@ const (
 	cleanupTimeout         = 10 * time.Second
 	setUpTimeout           = chrome.LoginTimeout + testBridgeSetUpTimeout + cleanupTimeout
 	tearDownTimeout        = chrome.ResetTimeout
+	powerSetUpTimeout      = setUpTimeout + powerFixture.SetUpTimeout
+	powerTearDownTimeout   = tearDownTimeout + powerFixture.TearDownTimeout
 )
 
 type feature string
@@ -251,7 +254,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "ccaTestBridgeReadyWithAutoFramingForceEnabled",
 		Desc:            "Set up test bridge for CCA with Auto Framing force enabled",
-		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org", "chromeos-camera-eng@google.com"},
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamesan@chromium.org"},
 		Impl:            &fixture{forceEnableAutoFraming: true},
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
@@ -278,6 +281,26 @@ func init() {
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: tearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerTestWithFakeHALCamera",
+		Desc:            "Set up test bridge for CCA without Auto QR Code detection for a power Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
+		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeHALCamera},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaPowerTestWithFakeHALCameraAutoQREnabled",
+		Desc:            "Set up test bridge for CCA with Auto QR Code detection for a power Test",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "dorahkim@chromium.org"},
+		Impl:            &fixture{powerTest: true, useCameraType: testutil.UseFakeHALCamera, enableFeatures: []feature{"CameraAppAutoQRDetection"}},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		TearDownTimeout: powerTearDownTimeout,
 	})
 }
 
@@ -358,12 +381,14 @@ type fixture struct {
 	guestMode              bool
 	launchCCAInCameraBox   bool
 	forceEnableAutoFraming bool
+	powerTest              bool
 	requireAudioLoopback   bool
 	debugParams            DebugParams
 	enableFeatures         []feature
 	disableFeatures        []feature
 	screenRecorder         *uiauto.ScreenRecorder
 	tabletIP               string
+	cleanup                func(context.Context) error
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -374,6 +399,12 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	success := false
 
 	var chromeOpts []chrome.Option
+
+	if f.powerTest {
+		// b/228256145 to avoid powerd restart.
+		chromeOpts = append(chromeOpts, chrome.DisableFeatures("FirmwareUpdaterApp"))
+	}
+
 	for _, f := range f.enableFeatures {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures(string(f)))
 	}
@@ -495,6 +526,27 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		s.Fatal("Failed to mute audio: ", err)
 	}
 
+	if f.powerTest {
+		tconn, err := f.cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to get test API: ", err)
+		}
+
+		opt := &powerFixture.PowerTestOptions{
+			NightLight:         powerFixture.DisableNightLight,
+			DarkTheme:          powerFixture.EnableLightTheme,
+			KeyboardBrightness: powerFixture.SetKbBrightnessToZero,
+		}
+
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+		cleanup, err := powerFixture.PowerTestSetup(ctx, "ccaPowerTest", tconn, opt)
+		if err != nil {
+			s.Fatal("Power fixture failed: ", err)
+		}
+		f.cleanup = cleanup
+	}
+
 	success = true
 	return FixtureData{
 		Chrome:          f.cr,
@@ -514,6 +566,12 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 }
 
 func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	if f.cleanup != nil {
+		if err := f.cleanup(ctx); err != nil {
+			s.Error("Cleanup failed: ", err)
+		}
+	}
+
 	if err := crastestclient.Unmute(ctx); err != nil {
 		s.Error("Failed to unmute audio: ", err)
 	}
