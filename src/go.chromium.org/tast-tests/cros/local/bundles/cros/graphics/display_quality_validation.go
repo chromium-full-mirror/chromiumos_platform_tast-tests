@@ -173,10 +173,6 @@ func init() {
 				Name: "kms_concurrent",
 				Val: graphics.IgtTest{
 					Exe: "kms_concurrent",
-					Subtests: []string{
-						"pipe-A",
-						"pipe-B",
-					},
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
@@ -184,7 +180,7 @@ func init() {
 			{
 				Name: "kms_content_protection",
 				Val: graphics.IgtTest{
-					Exe: "kms_concurrent",
+					Exe: "kms_content_protection",
 					Subtests: []string{
 						"atomic-dpms", "atomic", "legacy",
 					},
@@ -267,10 +263,10 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_cursor_edge_walk",
 					Subtests: []string{
-						"left-edge",
-						"right-edge",
-						"top-edge",
-						"top-bottom",
+						"64x64-left-edge",
+						"64x64-right-edge",
+						"64x64-top-edge",
+						"64x64-top-bottom",
 					},
 				},
 				Timeout:   5 * time.Minute,
@@ -471,10 +467,10 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_psr",
 					Subtests: []string{
-						"primary_page_flip",
-						"cursor_plane_move",
-						"sprite_plane_onoff",
-						"primary_mmap_gtt",
+						"*primary-page-flip",
+						"*cursor-plane-move",
+						"*sprite-plane-onoff",
+						"*primary-mmap-gtt",
 					},
 					IsSkipOk: true,
 				},
@@ -511,7 +507,7 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_vblank",
 					Subtests: []string{
-						"pipe-a-ts-continuation-suspend",
+						"ts-continuation-suspend",
 					},
 				},
 				Timeout:   5 * time.Minute,
