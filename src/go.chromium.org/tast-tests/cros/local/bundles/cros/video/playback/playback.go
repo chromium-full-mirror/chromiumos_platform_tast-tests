@@ -16,12 +16,17 @@ import (
 	"sync"
 	"time"
 
+	"github.com/mafredri/cdp/protocol/media"
+
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
@@ -69,9 +74,67 @@ type contextSwitchStat struct {
 	avgDuration time.Duration
 }
 
-// RunTest measures a number of performance metrics while playing a video with
-// or without hardware acceleration as per decoderType.
-func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, videoName string, decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureSteadyStateMetrics, measureRoughness bool) {
+// PerfSetting is the setting for playback perf configuration.
+type PerfSetting struct {
+	// If set, trace system evens using perfetto during playback.
+	PerfTracing bool
+	// If set, we record steady-state metrics: metrics that require convergence to within a specific tolerance in order to reduce noise across test runs.
+	MeasureSteadyStateMetrics bool
+	// If set, uses a longer video sequence which allows for measuring Media Devtools "playback roughness".
+	MeasureRoughness bool
+}
+
+// Config is the configuration to run Playback test.
+type Config struct {
+	FileName    string
+	DecoderType DecoderType
+	BrowserType browser.Type
+	// Creates a layout of |Grid.Width| x |Grid.Height| videos for playback. Values less than 1 are clamped to a grid of 1x1.
+	Grid coords.Size
+	// If set, run performance measurement while playing the video.
+	PerfMeasurement bool
+	// Setting to configure additional performance measurements.
+	PerfSetting PerfSetting
+}
+
+// RunTest measures a number of performance metrics while playing a video with or without hardware acceleration as per DecoderType.
+func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, config Config) {
+	// Save 10 seconds for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	// Set up the browser for testing.
+	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), config.BrowserType)
+	if err != nil {
+		s.Fatal("Failed to initialize test: ", err)
+	}
+	defer lacros.CloseLacros(cleanupCtx, l)
+	var br *browser.Browser
+	switch config.BrowserType {
+	case browser.TypeAsh:
+		br = cr.Browser()
+	case browser.TypeLacros:
+		br = l.Browser()
+	}
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API: ", err)
+	}
+	// Set shelf to auto-hide.
+	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get primary display info: ", err)
+	}
+	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
+	if err != nil {
+		s.Fatal("Failed to get shelf behavior: ", err)
+	}
+	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide); err != nil {
+		s.Fatal("Failed to set shelf behavior to Never Auto Hide: ", err)
+	}
+	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
+
 	vl, err := logging.NewVideoLogger()
 	if err != nil {
 		s.Fatal("Failed to set values for verbose logging")
@@ -84,52 +147,45 @@ func RunTest(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bT
 	defer crastestclient.Unmute(ctx)
 
 	s.Log("Starting playback")
-	if err = measurePerformance(ctx, s, cs, tconn, bTconn, s.DataFileSystem(), videoName, decoderType, gridWidth, gridHeight, perfTracing, measureSteadyStateMetrics, measureRoughness, s.OutDir()); err != nil {
-		s.Fatal("Playback test failed: ", err)
-	}
-}
-
-// measurePerformance collects video playback performance playing a video with
-// either SW or HW decoder.
-func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, fileSystem http.FileSystem, videoName string,
-	decoderType DecoderType, gridWidth, gridHeight int, perfTracing, measureSteadyStateMetrics, measureRoughness bool, outDir string) error {
-	server := httptest.NewServer(http.FileServer(fileSystem))
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
 
 	url := server.URL + "/video.html"
 	conn, err := cs.NewConn(ctx, url)
 	if err != nil {
-		return errors.Wrap(err, "failed to open video page")
+		s.Fatal("Failed to open video page: ", err)
 	}
 	defer conn.Close()
-	defer conn.CloseTarget(ctx)
+	defer conn.CloseTarget(cleanupCtx)
 
 	observer, err := conn.GetMediaPropertiesChangedObserver(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to retrieve DevTools Media messages")
+		s.Fatal("Failed to retrieve DevTools Media messages: ", err)
 	}
 
 	// The page is already rendered with 1 video element by default.
 	defaultGridSize := 1
-	if gridWidth*gridHeight > defaultGridSize {
-		if err := conn.Call(ctx, nil, "setGridSize", gridWidth, gridHeight); err != nil {
-			return errors.Wrap(err, "failed to adjust the grid size")
+	gridSize := config.Grid.Width * config.Grid.Height
+	if gridSize > defaultGridSize {
+		if err := conn.Call(ctx, nil, "setGridSize", config.Grid.Width, config.Grid.Height); err != nil {
+			s.Fatal("Failed to adjust the grid size: ", err)
 		}
 	}
 
 	// Wait until video element(s) are loaded.
-	exprn := fmt.Sprintf("document.getElementsByTagName('video').length == %d", int(math.Max(1.0, float64(gridWidth*gridHeight))))
+	exprn := fmt.Sprintf("document.getElementsByTagName('video').length == %d", int(math.Max(1.0, float64(gridSize))))
 	if err := conn.WaitForExpr(ctx, exprn); err != nil {
-		return errors.Wrap(err, "failed to wait for video element loading")
+		s.Fatal("Failed to wait for video element loading: ", err)
 	}
 
-	// For consistency across test runs, let's try to put the UI in a known state:
-	// rotate the display to landscape-primary and maximize the browser window.
+	// Rotate the display to landscape-primary.
 	if _, err := display.GetInternalInfo(ctx, tconn); err == nil {
 		if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to set display to landscape-primary orientation")
+			s.Fatal("Failed to set display to landscape-primary orientation: ", err)
 		}
 	}
+
+	// Maximize the playback window.
 	w, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "ChromeOS Video Test")
 	if err != nil {
 		s.Fatal("Failed to find the window that contains the video: ", err)
@@ -138,49 +194,83 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		s.Fatal("Failed to maximize the window that contains the video: ", err)
 	}
 
-	// Wait for CPU to cool down before playing the video and recording metrics.
-	if err := cpu.Cooldown(ctx); err != nil {
-		return err
+	if config.PerfMeasurement {
+		// Wait for CPU to cool down before playing the video and recording metrics.
+		if err := cpu.Cooldown(ctx); err != nil {
+			s.Fatal("Failed to wait for cpu to cooldown: ", err)
+		}
 	}
 
-	// TODO(b/183044442): before playing and measuring, we should probably ensure
-	// that the UI is in a known state.
-	if err := conn.Call(ctx, nil, "playRepeatedly", videoName); err != nil {
-		return errors.Wrap(err, "failed to start video")
+	// Start playing the video.
+	if err := conn.Call(ctx, nil, "playRepeatedly", config.FileName); err != nil {
+		s.Fatal("Failed to start video: ", err)
 	}
 
-	// Wait until videoElement has advanced so that chrome:media-internals has
-	// time to fill in their fields.
+	// Wait until videoElement has advanced so that chrome:media-internals has time to fill in their fields.
 	if err := conn.WaitForExpr(ctx, videoElement+".currentTime > 1"); err != nil {
-		return errors.Wrap(err, "failed waiting for video to advance playback")
+		s.Fatal("Failed waiting for video to advance playback: ", err)
 	}
 
 	isPlatform, decoderName, err := devtools.GetVideoDecoder(ctx, observer, url)
 	if err != nil {
-		return errors.Wrap(err, "failed to parse Media DevTools")
+		s.Fatal("Failed to parse Media DevTools: ", err)
 	}
-	if decoderType == Hardware && !isPlatform {
-		return errors.New("hardware decoding accelerator was expected but wasn't used")
+	if config.DecoderType == Hardware && !isPlatform {
+		s.Fatal("Hardware decoding accelerator was expected but wasn't used")
 	}
-	if decoderType == Software && isPlatform {
-		return errors.New("software decoding was expected but wasn't used")
+	if config.DecoderType == Software && isPlatform {
+		s.Fatal("Software decoding was expected but wasn't used")
 	}
-	testing.ContextLog(ctx, "decoderName: ", decoderName)
+	s.Log("decoderName: ", decoderName)
 
+	if config.PerfMeasurement {
+		if err := measurePerformance(ctx, measureParams{
+			conn, tconn, bTconn,
+			url, observer, config.PerfSetting,
+			s.DataPath(TraceConfigFile),
+			s.DataPath(GPUThreadSchedSQLFile),
+		}); err != nil {
+			s.Fatal("Playback test failed: ", err)
+		}
+	}
+}
+
+type measureParams struct {
+	conn     *chrome.Conn
+	tconn    *chrome.TestConn
+	bTconn   *chrome.TestConn
+	url      string // URL to the video
+	observer media.PlayerPropertiesChangedClient
+	config   PerfSetting
+
+	traceConfigPath       string
+	gpuThreadSchedSQLPath string
+}
+
+// measurePerformance collects video playback performance playing a video with either SW or HW decoder.
+func measurePerformance(ctx context.Context, params measureParams) error {
 	p := perf.NewValues()
+	// Save the perf result to OutDir even if something wrong while measuring the performance.
+	defer func() {
+		outDir, ok := testing.ContextOutDir(ctx)
+		if !ok {
+			return
+		}
+		p.Save(outDir)
+	}()
 
 	const decodeHistogram = "Media.MojoVideoDecoder.Decode"
-	initDecodeHistogram, err := metrics.GetHistogram(ctx, bTconn, decodeHistogram)
+	initDecodeHistogram, err := metrics.GetHistogram(ctx, params.bTconn, decodeHistogram)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
 	const platformdecodeHistogram = "Media.PlatformVideoDecoding.Decode"
-	initPlatformdecodeHistogram, err := metrics.GetHistogram(ctx, tconn, platformdecodeHistogram)
+	initPlatformdecodeHistogram, err := metrics.GetHistogram(ctx, params.tconn, platformdecodeHistogram)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
 	const overlaysHistogram = "Viz.DisplayCompositor.OverlayStrategy"
-	initOverlaysHistogram, err := metrics.GetHistogram(ctx, tconn, overlaysHistogram)
+	initOverlaysHistogram, err := metrics.GetHistogram(ctx, params.tconn, overlaysHistogram)
 	if err != nil {
 		return errors.Wrap(err, "failed to get initial histogram")
 	}
@@ -194,7 +284,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	maxPromotedOverlayValue := 5
 
 	var measurementDuration time.Duration
-	if measureRoughness {
+	if params.config.MeasureRoughness {
 		measurementDuration = measurementDurationLong
 	} else {
 		measurementDuration = measurementDurationShort
@@ -226,7 +316,7 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}()
 	go func() {
 		defer wg.Done()
-		wakeupErr = graphics.MeasureThreadPoolUnnecessaryWakeups(ctx, bTconn, measurementDuration, p)
+		wakeupErr = graphics.MeasureThreadPoolUnnecessaryWakeups(ctx, params.bTconn, measurementDuration, p)
 	}()
 	go func() {
 		defer wg.Done()
@@ -234,25 +324,32 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 	}()
 	go func() {
 		defer wg.Done()
-		batErr = graphics.MeasureSystemPowerConsumption(ctx, tconn, measurementDuration, p)
+		batErr = graphics.MeasureSystemPowerConsumption(ctx, params.tconn, measurementDuration, p)
 	}()
-	if measureSteadyStateMetrics {
+	if params.config.MeasureSteadyStateMetrics {
 		wg.Add(1)
 
 		go func() {
 			defer wg.Done()
-			batErr = graphics.MeasureSteadyStateSystemPowerConsumption(ctx, tconn,
-				100 /*numSamples*/, 500*time.Millisecond /*samplePeriod*/, 0.15 /*tolerance*/, measurementDuration /*minDuration*/, p)
+			batErr = graphics.MeasureSteadyStateSystemPowerConsumption(
+				ctx,
+				params.tconn,
+				100,                  /*numSamples*/
+				500*time.Millisecond, /*samplePeriod*/
+				0.15,                 /*tolerance*/
+				measurementDuration,  /*minDuration*/
+				p,
+			)
 		}()
 	}
-	if measureRoughness {
+	if params.config.MeasureRoughness {
 		wg.Add(1)
 
 		go func() {
 			defer wg.Done()
 			// If the video sequence is not long enough, roughness won't be provided by
 			// Media Devtools and this call will timeout.
-			roughness, roughnessErr = devtools.GetVideoPlaybackRoughness(ctx, observer, url)
+			roughness, roughnessErr = devtools.GetVideoPlaybackRoughness(ctx, params.observer, params.url)
 		}()
 	}
 
@@ -285,21 +382,21 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		return errors.Wrap(roughnessErr, "failed to measure playback roughness")
 	}
 
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, bTconn, decodeHistogram, initDecodeHistogram, p, "video_decode_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, decodeHistogram, initDecodeHistogram, p, "video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Decode perf metric")
 	}
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p, "platform_video_decode_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p, "platform_video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Platform Decode perf metric")
 	}
-	if err := graphics.UpdateOverlaysMetricFromHistogram(ctx, tconn, overlaysHistogram, initOverlaysHistogram, minPromotedOverlayValue, maxPromotedOverlayValue, p, "overlays"); err != nil {
+	if err := graphics.UpdateOverlaysMetricFromHistogram(ctx, params.tconn, overlaysHistogram, initOverlaysHistogram, minPromotedOverlayValue, maxPromotedOverlayValue, p, "overlays"); err != nil {
 		return errors.Wrap(err, "failed to calculate overlays metric")
 	}
 
-	if err := sampleDroppedFrames(ctx, conn, p); err != nil {
+	if err := sampleDroppedFrames(ctx, params.conn, p); err != nil {
 		return errors.Wrap(err, "failed to get dropped frames and percentage")
 	}
 
-	if measureRoughness {
+	if params.config.MeasureRoughness {
 		p.Set(perf.Metric{
 			Name:      "roughness",
 			Unit:      "percent",
@@ -307,8 +404,8 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 		}, float64(roughness))
 	}
 
-	if perfTracing {
-		gpuCSStat, gpuMainCSStat, traceErr := measureContextSwitch(ctx, s, measurementDuration)
+	if params.config.PerfTracing {
+		gpuCSStat, gpuMainCSStat, traceErr := measureContextSwitch(ctx, measurementDuration, params.traceConfigPath, params.gpuThreadSchedSQLPath)
 		if traceErr != nil {
 			return errors.Wrap(traceErr, "failed to measure CPU sched events")
 		}
@@ -334,11 +431,9 @@ func measurePerformance(ctx context.Context, s *testing.State, cs ash.ConnSource
 			Direction: perf.SmallerIsBetter,
 		}, float64(gpuMainCSStat.avgDuration.Milliseconds()))
 	}
-	if err := conn.Eval(ctx, videoElement+".pause()", nil); err != nil {
+	if err := params.conn.Eval(ctx, videoElement+".pause()", nil); err != nil {
 		return errors.Wrap(err, "failed to stop video")
 	}
-
-	p.Save(outDir)
 	return nil
 }
 
@@ -379,7 +474,7 @@ func sampleDroppedFrames(ctx context.Context, conn *chrome.Conn, p *perf.Values)
 // measureContextSwitch measure the number of context switches in GPU process and its average waiting duration.
 // gpu represents the values of all the threads in GPU process.
 // gpuMain represents the values of the GPU main thread.
-func measureContextSwitch(ctx context.Context, s *testing.State, measurementDuration time.Duration) (gpu, gpuMain contextSwitchStat, err error) {
+func measureContextSwitch(ctx context.Context, measurementDuration time.Duration, traceConfigPath, gpuThreadSchedSQLPath string) (gpu, gpuMain contextSwitchStat, err error) {
 	ctxForCleanup := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
@@ -391,7 +486,7 @@ func measureContextSwitch(ctx context.Context, s *testing.State, measurementDura
 
 	testing.ContextLog(ctx, "Tracing scheduler events")
 	// Record system events for |measurementDuration|.
-	sess, err := tracing.StartSession(ctx, s.DataPath(TraceConfigFile))
+	sess, err := tracing.StartSession(ctx, traceConfigPath)
 	if err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed to start tracing")
 	}
@@ -414,7 +509,7 @@ func measureContextSwitch(ctx context.Context, s *testing.State, measurementDura
 	}
 	testing.ContextLog(ctx, "Completed tracing events")
 
-	results, err := sess.RunQuery(ctx, s.DataPath(GPUThreadSchedSQLFile))
+	results, err := sess.RunQuery(ctx, gpuThreadSchedSQLPath)
 	if err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed in querying")
 	}

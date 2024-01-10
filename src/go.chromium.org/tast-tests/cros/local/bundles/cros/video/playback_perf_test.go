@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/genparams"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/playback"
+	"go.chromium.org/tast-tests/cros/local/coords"
 )
 
 // To regenerate the test parameters by running the following in a chroot:
@@ -77,12 +78,11 @@ func genPlaybackPerfSwDeps(codec string, resolution, fps int, dec string) []stri
 type playbackParamData struct {
 	Name string
 
-	// playbackPerfParams
+	// playback.Config
 	File                      string
 	DecoderType               playback.DecoderType
 	BrowserType               string
-	GridWidth                 int
-	GridHeight                int
+	Grid                      coords.Size
 	PerfTracing               bool
 	MeasureSteadyStateMetrics bool
 	MeasureRoughness          bool
@@ -141,7 +141,7 @@ func genPlaybackParam(codec, file string, resolution, fps int, dec, nameSuffix, 
 	}
 }
 
-func TestPlaybackPerfParams(t *testing.T) {
+func TestPlaybackPerfConfig(t *testing.T) {
 	var params []playbackParamData
 
 	codecs := []string{"h264", "vp8", "vp9", "av1", "hevc"}
@@ -266,8 +266,8 @@ func TestPlaybackPerfParams(t *testing.T) {
 		resolution, fps, dec := 720, 30, "hw"
 		param := genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
 			resolution, fps, dec, "3x3", "", nil)
-		param.GridWidth = 3
-		param.GridHeight = 3
+		param.Grid.Width = 3
+		param.Grid.Height = 3
 		params = append(params, param)
 	}
 
@@ -276,13 +276,13 @@ func TestPlaybackPerfParams(t *testing.T) {
 		codec, resolution, fps, dec := "h264", 720, 30, "hw"
 		param := genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
 			resolution, fps, dec, "3x3_oopvd", "chromeVideoOOPVD", nil)
-		param.GridWidth = 3
-		param.GridHeight = 3
+		param.Grid.Width = 3
+		param.Grid.Height = 3
 		params = append(params, param)
 		param = genPlaybackParam(codec, genPlaybackPerfDataPath(codec, resolution, fps),
 			resolution, fps, dec, "3x3_oopvd_decoder_thread", "chromeVideoOOPVDAndDedicatedDecoderThread", nil)
-		param.GridWidth = 3
-		param.GridHeight = 3
+		param.Grid.Width = 3
+		param.Grid.Height = 3
 		params = append(params, param)
 	}
 
@@ -329,8 +329,8 @@ func TestPlaybackPerfParams(t *testing.T) {
 			param := genPlaybackParam(codec,
 				genPlaybackPerfDataPath(codec, resolution, fps),
 				resolution, fps, dec, testNameSuffix, "", nil)
-			param.GridWidth = gridW
-			param.GridHeight = gridH
+			param.Grid.Width = gridW
+			param.Grid.Height = gridH
 			param.PerfTracing = true
 			if numVideos > 10 {
 				// More than 10 videos in parallel is too much for Grunt, see b/290637628.
@@ -370,25 +370,22 @@ func TestPlaybackPerfParams(t *testing.T) {
 
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
-		Val:  playbackPerfParams{
-			fileName: {{ .File | fmt }},
-			decoderType: {{ .DecoderType }},
-			browserType: {{ .BrowserType }},
-			{{ if .GridWidth }}
-			gridWidth: {{ .GridWidth | fmt }},
+		Val:  playback.Config{
+			FileName: {{ .File | fmt }},
+			DecoderType: {{ .DecoderType }},
+			BrowserType: {{ .BrowserType }},
+			{{ if or (ne .Grid.Width 0) (ne .Grid.Height 0) }}
+			Grid: coords.Size{
+				Width: {{ .Grid.Width | fmt }},
+				Height: {{ .Grid.Height | fmt }},
+			},
 			{{ end }}
-			{{ if .GridHeight }}
-			gridHeight: {{ .GridHeight | fmt }},
-			{{ end }}
-			{{ if .PerfTracing }}
-			perfTracing: {{ .PerfTracing | fmt }},
-			{{ end }}
-			{{ if .MeasureSteadyStateMetrics }}
-			measureSteadyStateMetrics: {{ .MeasureSteadyStateMetrics | fmt }},
-			{{ end }}
-			{{ if .MeasureRoughness }}
-			measureRoughness: {{ .MeasureRoughness | fmt }},
-			{{ end }}
+			PerfMeasurement: true,
+			PerfSetting: playback.PerfSetting {
+				{{ if .PerfTracing }} PerfTracing: {{ .PerfTracing | fmt }}, {{ end }}
+				{{ if .MeasureSteadyStateMetrics }} MeasureSteadyStateMetrics: {{ .MeasureSteadyStateMetrics | fmt }}, {{ end }}
+				{{ if .MeasureRoughness }} MeasureRoughness: {{ .MeasureRoughness | fmt }}, {{ end }}
+			},
 		},
 		{{ if .HardwareDeps }}
 		ExtraHardwareDeps: hwdep.D({{ .HardwareDeps }}),
