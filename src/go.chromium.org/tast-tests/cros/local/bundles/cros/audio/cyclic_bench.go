@@ -202,7 +202,6 @@ func init() {
 						Policy:   otherSched,
 						Priority: 0,
 					},
-					ShouldFail: true,
 				},
 			},
 			{
