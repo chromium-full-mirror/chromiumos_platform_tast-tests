@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify non-alphanumeric keys (tab, ctrl+c, ctrl+v, arrows, backspace and enter) work in VSCode",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:crostini_app_cq"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",

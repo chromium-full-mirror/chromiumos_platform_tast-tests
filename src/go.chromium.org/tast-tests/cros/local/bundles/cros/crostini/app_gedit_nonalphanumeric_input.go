@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify non-alphanumeric keys (tab, ctrl+c, ctrl+v, arrows, backspace and enter) work in gedit app",
 		Contacts:     []string{"clumptini@google.com", "sophialin@google.com"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:crostini_app_cq"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
