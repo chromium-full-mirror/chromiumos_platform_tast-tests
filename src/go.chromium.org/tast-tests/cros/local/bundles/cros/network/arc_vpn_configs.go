@@ -27,7 +27,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		Fixture:      "shillResetWithArcBooted",
+		Fixture:      "vpnEnvWithArcBooted",
 		SoftwareDeps: []string{"arc", "wireguard"},
 	})
 }
@@ -41,7 +41,7 @@ type arcVPNConfigsTestCase struct {
 // ARCVPNConfigs tests that a few specific config fields from the host VPN are passed and set on
 // the mirrored ARC VPN correctly.
 func ARCVPNConfigs(ctx context.Context, s *testing.State) {
-	a := s.FixtValue().(*arc.PreData).ARC
+	a := s.FixtValue().(vpn.FixtureEnv).ARC
 
 	// Connect with our first config and verify values.
 	if err := verifyVPNWithTestCase(ctx, s, a, arcVPNConfigsTestCase{

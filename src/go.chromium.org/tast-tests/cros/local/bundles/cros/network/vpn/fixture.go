@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
 	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
@@ -64,6 +65,19 @@ func init() {
 		TearDownTimeout: certOpTimeout + chrome.LoginTimeout + 5*time.Second,
 		Impl:            &vpnFixture{useCert: true, useCr: true},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "vpnEnvWithArcBooted",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states, starting Chrome session, and also booting ARC",
+		Contacts: []string{
+			"cassiewang@google.com",      // fixture maintainer
+			"cros-networking@google.com", // platform networking team
+		},
+		SetUpTimeout:    chrome.LoginTimeout + 5*time.Second + arc.BootTimeout,
+		PostTestTimeout: charonExitTimeout + 5*time.Second,
+		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            &vpnFixture{useCert: false, useCr: true, useARC: true},
+	})
 }
 
 // resetShillVPNState resets the VPN-related states in shill in a best-effort
@@ -110,6 +124,7 @@ func resetShillVPNState(ctx context.Context) {
 //   - Prepare the cert store and install user certificate (and server CA certificate
 //     if Chrome is required).
 //   - Start a new Chrome session if required.
+//   - Boot ARC if ARC is required.
 //
 // When a test failed, to ensure we have a clean setup, shill will be reset if
 // there is no Chrome, and a full restart of this fixture will happen if there is Chrome.
@@ -117,15 +132,18 @@ type vpnFixture struct {
 	hasError  bool // if the previous test has error
 	useCert   bool // if we need to install certs
 	useCr     bool // if Chrome is needed
+	useARC    bool // if ARC is needed
 	cr        *chrome.Chrome
 	certStore *netcertstore.Store
 	logMarker *logsaver.Marker // to store fixture and per-test log
+	a         *arc.ARC
 }
 
 // FixtureEnv wraps the variables created by the fixture and used in the tests.
 type FixtureEnv struct {
 	Cr       *chrome.Chrome
 	CertVals CertVals
+	ARC      *arc.ARC
 }
 
 // CertVals contains the required values to setup a cert-based VPN service.
@@ -166,33 +184,45 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 	}
 
 	if f.useCr {
-		if !f.useCert {
-			s.Fatal("Cert and Chrome should be enabled together")
+		// To avoid resetting TPM.
+		chromeOpts := []chrome.Option{chrome.KeepState()}
+
+		if f.useCert {
+			// Install CA cert to TPM. Since CA certs are stored as raw strings in
+			// shill's profile, this is only required when Chrome is involved.
+			if _, err := f.certStore.InstallCertKeyPair(ctx, "", certificate.TestCert1().CACred.Cert); err != nil {
+				s.Fatal("Failed to install CA cert: ", err)
+			}
+
+			cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
+
+			// To use the same user as certs are installed for.
+			chromeOpts = append(chromeOpts, chrome.FakeLogin(cred))
+		}
+		if f.useARC {
+			chromeOpts = append(chromeOpts, chrome.ARCEnabled())
 		}
 
-		// Install CA cert to TPM. Since CA certs are stored as raw strings in
-		// shill's profile, this is only required when Chrome is involved.
-		if _, err := f.certStore.InstallCertKeyPair(ctx, "", certificate.TestCert1().CACred.Cert); err != nil {
-			s.Fatal("Failed to install CA cert: ", err)
-		}
-
-		cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
-		cr, err := chrome.New(
-			ctx,
-			chrome.KeepState(),     // to avoid resetting TPM
-			chrome.FakeLogin(cred), // to use the same user as certs are installed for
-		)
+		cr, err := chrome.New(ctx, chromeOpts...)
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
 		f.cr = cr
 	}
 
+	if f.useARC {
+		a, err := arc.NewWithTimeout(ctx, s.OutDir(), arc.BootTimeout, f.cr.NormalizedUser())
+		if err != nil {
+			s.Error("Failed to start ARC: ", err)
+		}
+		f.a = a
+	}
+
 	if err := f.stopLogSaver(ctx, "net.setup.log"); err != nil {
 		s.Error("Failed to stop log saver: ", err)
 	}
 
-	return FixtureEnv{f.cr, certVals}
+	return FixtureEnv{f.cr, certVals, f.a}
 }
 
 func (f *vpnFixture) Reset(ctx context.Context) error {

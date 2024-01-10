@@ -23,7 +23,7 @@ func init() {
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
-		Fixture:      "shillResetWithArcBooted",
+		Fixture:      "vpnEnvWithArcBooted",
 		Params: []testing.Param{{
 			Name:              "container",
 			Val:               "container",
@@ -43,7 +43,7 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 5*time.Second)
 	defer cancel()
 
-	a := s.FixtValue().(*arc.PreData).ARC
+	a := s.FixtValue().(vpn.FixtureEnv).ARC
 
 	conn, err := arcvpn.SetUpHostVPN(ctx, vpn.TypeL2TPIPsec)
 	if err != nil {
