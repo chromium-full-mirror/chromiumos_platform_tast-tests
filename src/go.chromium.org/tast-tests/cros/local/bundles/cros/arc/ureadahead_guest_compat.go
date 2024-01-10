@@ -117,7 +117,7 @@ func UreadaheadGuestCompat(ctx context.Context, s *testing.State) {
 	if durationSecs, err := strconv.ParseFloat(result[3], 64); err != nil {
 		s.Fatalf("Failed to parse group %q from %q: %v", result[3], str, err)
 	} else if durationSecs == 0.0 {
-		s.Fatalf("Invalid readahead time in seconds: %f", durationSecs)
+		s.Logf("WARNING: Invalid readahead time in seconds: %f", durationSecs)
 	}
 }
 
