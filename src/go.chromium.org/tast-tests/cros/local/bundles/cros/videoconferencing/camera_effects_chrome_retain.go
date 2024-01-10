@@ -69,11 +69,12 @@ func init() {
 			{
 				Fixture: fixture.LoggedInWithFakeHALAndEffectsEnabled,
 			},
-			{
-				Name:              "lacros",
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           fixture.LoggedInLacrosWithFakeHALAndEffectsEnabled,
-			},
+			// Disabled by TORA.  See: b/297948060
+			//{
+			//	Name:              "lacros",
+			//	ExtraSoftwareDeps: []string{"lacros"},
+			//	Fixture:           fixture.LoggedInLacrosWithFakeHALAndEffectsEnabled,
+			//},
 		},
 		Vars: screenshot.ScreenDiffVars,
 	})
