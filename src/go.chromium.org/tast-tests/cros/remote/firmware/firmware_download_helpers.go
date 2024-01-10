@@ -44,6 +44,12 @@ const (
 	ECFirmware FWType = "EC"
 	// APFirmware indicates firmware for AP
 	APFirmware FWType = "AP"
+	// ECFirmwareFileToFlash is the name of the EC firmware bin to flash
+	ECFirmwareFileToFlash = "ecFirmwareForTest.bin"
+	// APFirmwareFileToFlash is the name of the AP firmware bin to flash
+	APFirmwareFileToFlash = "FirmwareForTest.bin"
+	// MonitorFileToFlash is the name of the Monitor bin to flash
+	MonitorFileToFlash = "npcx_monitor.bin"
 )
 
 // VerifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
@@ -115,26 +121,52 @@ func DownloadFirmwareFile(ctx context.Context, cs *testing.CloudStorage, tmpDir,
 	return nil
 }
 
+// DownloadRequiredFirmwareFiles will extract and download the specified AP and EC .bin files from the firmware tar in the cloud storage
+func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.CloudStorage, gcsFirmwareFilePath, servoTmpDir, fwidModel string) (string, string, string, error) {
+	ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwidModel, ECFirmware)
+	apFileNamePool, _ := getFileNamePools(ctx, fwidModel, APFirmware)
+	var apBin, ecBin, monitorBin string
+
+	// Find a devserver that works from servo host, and download image from there.
+	for _, devserver := range cs.Devservers() {
+		testing.ContextLogf(ctx, "Trying devserver at %q", devserver)
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
+			testing.ContextLog(ctx, "Devserver not healthy: ", err)
+			continue
+		}
+		artifactsURL := strings.TrimSuffix(cs.BuildArtifactsURL(), "/")
+		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=%s", devserver, artifactsURL, gcsFirmwareFilePath)
+		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", stagingURL); err != nil {
+			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
+			continue
+		}
+		testing.ContextLogf(ctx, "Successfully staged from %q", stagingURL)
+		monitorBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, MonitorFileToFlash, ecMonitorFileNamePool)
+		apBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, APFirmwareFileToFlash, apFileNamePool)
+		ecBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, ECFirmwareFileToFlash, ecFilenamePool)
+		// Extracted all the required files from this devserver
+		return ecBin, monitorBin, apBin, nil
+	}
+	return "", "", "", errors.New("no devservers able to stage firmware image")
+}
+
 // UntarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
 func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType FWType) (string, string, error) {
 	// List of possible formats for the binary file found in a downloaded tar file.
 	const ecMonitorFileName = "npcx_monitor.bin"
 	ecMonitorFile := ""
-	var filenamePool []string
-	if fwType == APFirmware {
-		filenamePool = []string{fmt.Sprintf("image-%s.bin", fwidModel), fmt.Sprintf("./image-%s.bin", fwidModel), "image.bin"}
-	} else if fwType == ECFirmware {
-		filenamePool = []string{fmt.Sprintf("%s/ec.bin", fwidModel), fmt.Sprintf("./%s/ec.bin", fwidModel)}
+	filenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwidModel, fwType)
+	if fwType == ECFirmware {
 		// Extract subsidiary binaries for EC
 		// Find a monitor binary for NPCX_UUT chip type, if any.
-		for _, f := range filenamePool {
-			monitorFile := strings.Replace(f, "ec.bin", ecMonitorFileName, 1)
-			if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+FirmwareFileName, "-C", tmpDir, monitorFile).Run(ssh.DumpLogOnError); err != nil {
-				testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", monitorFile, err)
+		for _, f := range ecMonitorFileNamePool {
+			if err := testexec.CommandContext(ctx, "tar", "-xvf", tmpDir+"/"+FirmwareFileName, "-C", tmpDir, f).Run(ssh.DumpLogOnError); err != nil {
+				testing.ContextLogf(ctx, "WARNING! failed to untar the image with the name %q: %v", f, err)
 				continue
 			}
-			ecMonitorFile = monitorFile
-			testing.ContextLogf(ctx, "Found monitor image with the name %q", monitorFile)
+			ecMonitorFile = f
+			testing.ContextLogf(ctx, "Found monitor image with the name %q", f)
 			break
 		}
 	}
@@ -147,4 +179,38 @@ func UntarUnknownFileName(ctx context.Context, tmpDir, fwidModel string, fwType 
 		return filename, ecMonitorFile, nil
 	}
 	return "", "", errors.Wrap(err, "failed to untar fw bin file from the downloaded tar file")
+}
+
+// getFileNamePools gets the possible file name pools based on the type of firmware
+func getFileNamePools(ctx context.Context, fwidModel string, fwType FWType) ([]string, []string) {
+	// List of possible formats for the binary file found in a downloaded tar file.
+	const ecMonitorFileName = "npcx_monitor.bin"
+	var filenamePool []string
+	var monitorFileNamePool []string
+	if fwType == APFirmware {
+		filenamePool = []string{fmt.Sprintf("image-%s.bin", fwidModel), fmt.Sprintf("./image-%s.bin", fwidModel), "image.bin"}
+	} else if fwType == ECFirmware {
+		filenamePool = []string{fmt.Sprintf("%s/ec.bin", fwidModel), fmt.Sprintf("./%s/ec.bin", fwidModel)}
+		// Extract subsidiary binaries for EC
+		// Find a monitor binary for NPCX_UUT chip type, if any.
+		for _, f := range filenamePool {
+			monitorFile := strings.Replace(f, "ec.bin", ecMonitorFileName, 1)
+			monitorFileNamePool = append(monitorFileNamePool, monitorFile)
+		}
+	}
+	return filenamePool, monitorFileNamePool
+}
+
+// extractFirmwareFile extracts the firmware file based on the specified name pools to the labstation
+func extractFirmwareFile(ctx context.Context, h *Helper, devserver, gcsFirmwareFilePath, servoTmpDir, firmwareFileName string, fileNamePool []string) string {
+	for _, filename := range fileNamePool {
+		testImageURL := fmt.Sprintf("%s/extract/%s?file=%s", devserver, gcsFirmwareFilePath, filename)
+		testing.ContextLogf(ctx, "Downloading image file %q", filename)
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", testImageURL, "--output", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileName)); err != nil {
+			testing.ContextLogf(ctx, "Failed to extract image file at %q: %v", testImageURL, err)
+			continue
+		}
+		return firmwareFileName
+	}
+	return ""
 }
