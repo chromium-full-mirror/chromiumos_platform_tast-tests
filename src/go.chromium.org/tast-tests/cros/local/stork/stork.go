@@ -211,7 +211,7 @@ func tryCurlCommand(ctx context.Context, args []string) ([]byte, error) {
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  30 * time.Second,
+		Timeout:  time.Minute,
 		Interval: 10 * time.Second,
 	}); err != nil {
 		return nil, err

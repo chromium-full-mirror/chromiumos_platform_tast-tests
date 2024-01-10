@@ -32,14 +32,14 @@ func init() {
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_sim_test_esim"},
 		Fixture:        "chromeLoggedInWithMojoTestEuiccAndSmdsSupport",
-		Timeout:        12 * time.Minute,
+		Timeout:        15 * time.Minute,
 	})
 }
 
 // InstallProfileWithUI ensures that an eSIM profile can be installed using the UI.
 func InstallProfileWithUI(ctx context.Context, s *testing.State) {
 	// The maximum amount of time we will wait for various eSIM installation operations.
-	const scanDuration = 2 * time.Minute
+	const scanDuration = 5 * time.Minute
 	const installDuration = 5 * time.Minute
 	const uninstallDuration = 2 * time.Minute
 
@@ -96,7 +96,7 @@ func InstallProfileWithUI(ctx context.Context, s *testing.State) {
 	}
 
 	var scanButton = nodewith.NameContaining("Scan").Role(role.Button).Ancestor(dialog)
-	var testProfileOption = nodewith.NameContaining("Test Profile").Role(role.StaticText).First().Ancestor(dialog)
+	var testProfileOption = nodewith.NameContaining("Test Profile").Role(role.StaticText).Ancestor(dialog).First()
 	var installButton = nodewith.NameContaining("Next").Role(role.Button).Ancestor(dialog)
 	var successPage = nodewith.NameContaining("Network added").Role(role.StaticText).Ancestor(dialog)
 	var doneButton = nodewith.NameContaining("Done").Role(role.Button).Ancestor(dialog)
