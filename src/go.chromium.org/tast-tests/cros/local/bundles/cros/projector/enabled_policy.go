@@ -166,7 +166,7 @@ func testProjectorEnabled(ctx context.Context, cr *chrome.Chrome, fdms *fakedms.
 		return errors.Wrap(err, "failed to wait for for Screencast and launcher to close")
 	}
 
-	if err := launcher.LaunchApp(tconn, apps.Projector.Name)(ctx); err != nil {
+	if err := launcher.LaunchApp(tconn, apps.Projector.ShortName())(ctx); err != nil {
 		return errors.Wrap(err, "failed to find Screencast in the launcher")
 	}
 

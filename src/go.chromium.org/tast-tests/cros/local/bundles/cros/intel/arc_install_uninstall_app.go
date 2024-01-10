@@ -61,8 +61,8 @@ func ARCInstallUninstallApp(ctx context.Context, s *testing.State) {
 		}
 
 		// Check the newly downloaded app in Launcher.
-		if err := launcher.LaunchApp(tconn, app.Name)(ctx); err != nil {
-			s.Fatalf("Failed to launch %s: %v ", app.Name, err)
+		if err := launcher.LaunchApp(tconn, app.ShortName())(ctx); err != nil {
+			s.Fatalf("Failed to launch %s: %v ", app.ShortName(), err)
 		}
 
 		if err := apps.Close(ctx, tconn, app.ID); err != nil {
@@ -90,7 +90,7 @@ func ARCInstallUninstallApp(ctx context.Context, s *testing.State) {
 
 	for _, app := range pkgs {
 		// Verify the app icon is not visible in Launcher and the app fails to launch.
-		if err := launcher.LaunchApp(tconn, app.Name)(ctx); err == nil {
+		if err := launcher.LaunchApp(tconn, app.ShortName())(ctx); err == nil {
 			s.Fatal("Installed app remained in launcher after play store disabled: ", err)
 		}
 	}

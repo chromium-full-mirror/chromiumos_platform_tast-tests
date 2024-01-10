@@ -122,7 +122,7 @@ func MultipleArcProfile(ctx context.Context, s *testing.State) {
 		return
 	}
 	// TODO(b/210702593): Replace with LaunchAndWaitForAppOpen once fixed.
-	if err := uiauto.Retry(3, launcher.LaunchApp(tconn, apps.Chat.Name))(ctx); err != nil {
+	if err := uiauto.Retry(3, launcher.LaunchApp(tconn, apps.Chat.ShortName()))(ctx); err != nil {
 		s.Fatal("Failed to launch Chat app after 3 retries: ", err)
 	}
 

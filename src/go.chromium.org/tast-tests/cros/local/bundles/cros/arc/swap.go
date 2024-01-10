@@ -63,7 +63,7 @@ func Swap(ctx context.Context, s *testing.State) {
 	}
 
 	// Launch the test app and check that swap gets disabled
-	if err := launcher.LaunchApp(tconn, swap.AppName)(ctx); err != nil {
+	if err := launcher.LaunchApp(tconn, swap.AppName /* short name should be same as AppName*/)(ctx); err != nil {
 		s.Fatal("Failed to launch: ", err)
 	}
 

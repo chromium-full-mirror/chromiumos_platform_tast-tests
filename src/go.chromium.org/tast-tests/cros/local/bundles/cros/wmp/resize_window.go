@@ -171,10 +171,11 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 
 		appList = []*wmputils.ResizeApp{
 			{
-				Name:         chromeApp.Name,
-				ID:           chromeApp.ID,
-				IsArcApp:     false,
-				WindowFinder: browserRoot,
+				Name:                chromeApp.Name,
+				LauncherItemNameOpt: chromeApp.ShortName(),
+				ID:                  chromeApp.ID,
+				IsArcApp:            false,
+				WindowFinder:        browserRoot,
 			},
 		}
 	case appCase:
@@ -194,10 +195,11 @@ func ResizeWindow(ctx context.Context, s *testing.State) {
 				WindowFinder: cwsApp.windowFinder,
 			},
 			{
-				Name:         apps.Files.Name,
-				ID:           apps.FilesSWA.ID,
-				IsArcApp:     false,
-				WindowFinder: filesapp.WindowFinder(apps.FilesSWA.ID),
+				Name:                apps.FilesSWA.Name,
+				LauncherItemNameOpt: apps.FilesSWA.ShortName(),
+				ID:                  apps.FilesSWA.ID,
+				IsArcApp:            false,
+				WindowFinder:        filesapp.WindowFinder(apps.FilesSWA.ID),
 			},
 		}
 	case arcCase:
@@ -278,8 +280,8 @@ func resizeSubTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		return errors.Wrapf(err, "failed to wait for %s is installed and ready to use", resizeApp.Name)
 	}
 
-	if err := launcher.LaunchApp(tconn, resizeApp.Name)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to launch app %q", resizeApp.Name)
+	if err := launcher.LaunchApp(tconn, resizeApp.LauncherItemName())(ctx); err != nil {
+		return errors.Wrapf(err, "failed to launch app %q", resizeApp.LauncherItemName())
 	}
 	defer closeApp(cleanupSubTestCtx, tconn, resizeApp)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupSubTestCtx, outDir, func() bool { return retErr != nil }, cr, resizeApp.Name)

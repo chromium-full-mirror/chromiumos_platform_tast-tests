@@ -44,6 +44,7 @@ func LauncherApps(ctx context.Context, s *testing.State) {
 
 	pkgName := "com.google.android.calculator"
 	appName := apps.Calculator.Name
+	appShortName := apps.Calculator.ShortName()
 	appID := apps.Calculator.ID
 
 	// Setup Chrome.
@@ -86,7 +87,7 @@ func LauncherApps(ctx context.Context, s *testing.State) {
 
 	// Check the newly downloaded app in Launcher.
 	// TODO(b/210702593): Replace with LaunchAndWaitForAppOpen once fixed.
-	if err := launcher.LaunchApp(tconn, appName)(ctx); err != nil {
+	if err := launcher.LaunchApp(tconn, appShortName)(ctx); err != nil {
 		s.Fatal("Failed to launch: ", err)
 	}
 
@@ -115,7 +116,7 @@ func LauncherApps(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify the app icon is not visible in Launcher and the app fails to launch.
-	if err := launcher.LaunchApp(tconn, appName)(ctx); err == nil {
+	if err := launcher.LaunchApp(tconn, appShortName)(ctx); err == nil {
 		s.Fatal("Installed app remained in launcher after play store disabled")
 	}
 }

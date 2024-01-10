@@ -95,8 +95,8 @@ func PinAppToShelf(ctx context.Context, s *testing.State) {
 	}
 
 	// Launch another app that is not pinned.
-	if err := launcher.LaunchApp(tconn, app4.Name)(ctx); err != nil {
-		s.Fatalf("Failed to run application %v from application list view: %v", app4.Name, err)
+	if err := launcher.LaunchApp(tconn, app4.ShortName())(ctx); err != nil {
+		s.Fatalf("Failed to run application %v from application list view: %v", app4.ShortName(), err)
 	}
 
 	// Verify the newly launched app is the rightmost button.
@@ -106,8 +106,8 @@ func PinAppToShelf(ctx context.Context, s *testing.State) {
 	}
 
 	// Launch another app that is not pinned.
-	if err := launcher.LaunchApp(tconn, app5.Name)(ctx); err != nil {
-		s.Fatalf("Failed to run application %v from application list view: %v", app5.Name, err)
+	if err := launcher.LaunchApp(tconn, app5.ShortName())(ctx); err != nil {
+		s.Fatalf("Failed to run application %v from application list view: %v", app5.ShortName(), err)
 	}
 
 	// Verify the newly launched app is the rightmost button.

@@ -335,7 +335,7 @@ func testLauncherLaunchPlayStore(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	if err := launcher.LaunchApp(tconn, apps.PlayStore.Name)(ctx); err != nil {
+	if err := launcher.LaunchApp(tconn, apps.PlayStore.ShortName())(ctx); err != nil {
 		s.Fatal("Failed to launch PlayStore from launcher: ", err)
 	}
 
@@ -390,7 +390,7 @@ func testFixupPlayStore(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	if err := launcher.LaunchApp(tconn, apps.PlayStore.Name)(ctx); err != nil {
+	if err := launcher.LaunchApp(tconn, apps.PlayStore.ShortName())(ctx); err != nil {
 		s.Fatal("Failed to launch PlayStore from launcher: ", err)
 	}
 

@@ -641,7 +641,7 @@ func TriggerAppListSortAndWaitForUndoButtonExist(ctx context.Context, ui *uiauto
 // LaunchAndWaitForAppOpen return a function that launches an app from the expanded launcher and waits for it to be open.
 func LaunchAndWaitForAppOpen(tconn *chrome.TestConn, app apps.App) uiauto.Action {
 	return uiauto.Combine(fmt.Sprintf("LaunchAndWaitForAppOpen(%+q)", app),
-		LaunchApp(tconn, app.Name),
+		LaunchApp(tconn, app.ShortName()),
 		func(ctx context.Context) error {
 			return ash.WaitForApp(ctx, tconn, app.ID, time.Minute)
 		},
@@ -649,12 +649,13 @@ func LaunchAndWaitForAppOpen(tconn *chrome.TestConn, app apps.App) uiauto.Action
 }
 
 // LaunchApp return a function that launches an app from the expanded launcher.
-func LaunchApp(tconn *chrome.TestConn, appName string) uiauto.Action {
+// Note that appShortName should be the short name of the app.
+func LaunchApp(tconn *chrome.TestConn, appShortName string) uiauto.Action {
 	ui := uiauto.New(tconn)
-	return uiauto.Combine(fmt.Sprintf("LaunchApp(%s)", appName),
+	return uiauto.Combine(fmt.Sprintf("LaunchApp(%s)", appShortName),
 		OpenExpandedView(tconn),
-		ui.FocusAndWait(AppItemViewFinder(appName /* TODO: use short name */).First()),
-		ui.LeftClick(AppItemViewFinder(appName /* TODO: use short name */).First()),
+		ui.FocusAndWait(AppItemViewFinder(appShortName).First()),
+		ui.LeftClick(AppItemViewFinder(appShortName).First()),
 	)
 }
 

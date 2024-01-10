@@ -53,10 +53,21 @@ func AllBounds() []WindowBound {
 
 // ResizeApp represents an app that will be resized.
 type ResizeApp struct {
+	// The name of the app. (Example: "Google Chrome")
 	Name         string
 	ID           string
 	IsArcApp     bool
 	WindowFinder *nodewith.Finder
+	// The item name of the app displayed on the launcher. (Example: "Chrome")
+	LauncherItemNameOpt string
+}
+
+// LauncherItemName returns `LauncherItemNameOpt` if it is defined. Otherwise it returns `Name`.
+func (ra *ResizeApp) LauncherItemName() string {
+	if ra.LauncherItemNameOpt != "" {
+		return ra.LauncherItemNameOpt
+	}
+	return ra.Name
 }
 
 // TurnOffWindowPreset sets the mode of ARC app from `Tablet` to `Resizable`.

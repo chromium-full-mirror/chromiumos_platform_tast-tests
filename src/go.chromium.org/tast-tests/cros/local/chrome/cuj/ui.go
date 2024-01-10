@@ -121,7 +121,7 @@ func GetBrowserStartTime(ctx context.Context, tconn *chrome.TestConn,
 		// Browser launch time is calculated from opening the extension launcher.
 		// Expect to take longer than starting straight from the shelf.
 		startTime = time.Now()
-		if err := launcher.LaunchApp(tconn, chromeApp.Name)(ctx); err != nil {
+		if err := launcher.LaunchApp(tconn, chromeApp.ShortName())(ctx); err != nil {
 			return nil, -1, errors.Wrap(err, "failed to launch the Chrome app from launcher")
 		}
 		// Make sure app is launched.
