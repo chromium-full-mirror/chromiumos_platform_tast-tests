@@ -25,8 +25,9 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Fixture:      "shillResetWithArcBooted",
 		Params: []testing.Param{{
-			Val:               "p",
-			ExtraSoftwareDeps: []string{"android_p"},
+			Name:              "container",
+			Val:               "container",
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			Val:               "vm",
@@ -87,7 +88,7 @@ func ARCVPNCrash(ctx context.Context, s *testing.State) {
 	// will fall back to if there's an issue with the ARC VPN.
 	arcVersion := s.Param().(string)
 	network := "eth0"
-	if arcVersion == "p" {
+	if arcVersion == "container" {
 		network = "arc0"
 	}
 	if err := arc.ExpectPingSuccess(ctx, a, network, conn.Server.OverlayIPv4); err != nil {
