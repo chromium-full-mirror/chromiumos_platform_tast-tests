@@ -29,7 +29,7 @@ func init() {
 		},
 		// ChromeOS > Software > Family > Parental controls
 		BugComponent: "b:1090157",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
 		Fixture:      "familyLinkUnicornPolicyLogin",
