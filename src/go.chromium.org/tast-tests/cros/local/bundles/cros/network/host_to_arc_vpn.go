@@ -85,8 +85,8 @@ func HostToARCVPN(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Starting ArcVpnTest app")
-	if _, err := a.Command(ctx, "am", "start", arcvpn.VPNTestAppPkg+"/"+arcvpn.VPNTestAppAct).Output(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to start ArcVpnTest app activity: ", err)
+	if err := arcvpn.StartARCVPN(ctx, a); err != nil {
+		s.Fatal("Failed to send ArcVpnTest app: ", err)
 	}
 
 	// Make sure the host is disconnected.

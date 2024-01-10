@@ -19,17 +19,6 @@ import android.util.Log;
 
 import java.io.IOException;
 
-/**
- * Test app that starts a simple VPN. It's not expected to actually forward data in/out, just to
- * register some VPN with the system.
- *
- * To preauthorize the package and bypass user dialog:
- *   $ adb shell dumpsys wifi authorize-vpn org.chromium.arc.testapp.arcvpn
- *
- * To start the activity which then starts the service:
- *   $ adb shell am start \
- *       org.chromium.arc.testapp.arcvpn/org.chromium.arc.testapp.arcvpn.MainActivity
- */
 public class ArcTestVpnService extends VpnService {
     private static final String TAG = ArcTestVpnService.class.getSimpleName();
 
@@ -42,11 +31,11 @@ public class ArcTestVpnService extends VpnService {
     private ParcelFileDescriptor mTunFd;
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-
+    public int onStartCommand(Intent intent, int flags, int startId) {
         showNotification();
         setUpVpnService();
+
+        return START_NOT_STICKY;
     }
 
     /** Called when the system has deactivated the underlying interface. */

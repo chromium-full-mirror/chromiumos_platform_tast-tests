@@ -79,11 +79,8 @@ func ArcVpnVmmSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to execute authorize-vpn command: ", err)
 	}
 
-	// Only components with android.permission.BIND_VPN_SERVICE can bind to
-	// VPNs, so we can't directly start the service from a non-root shell.
-	// Instead, have a broadcast receiver ask that the system start the VPN.
-	if _, err := a.BroadcastIntent(ctx, arcvpn.VPNTestAppBroadcast, "--include-stopped-packages", "--receiver-include-background"); err != nil {
-		s.Fatal("Failed to send broadcast: ", err)
+	if err := arcvpn.StartARCVPN(ctx, a); err != nil {
+		s.Fatal("Failed to send ArcVpnTest app: ", err)
 	}
 
 	s.Log("Validating VPN")

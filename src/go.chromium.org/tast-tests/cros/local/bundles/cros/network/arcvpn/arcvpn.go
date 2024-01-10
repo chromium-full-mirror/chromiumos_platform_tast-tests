@@ -30,9 +30,8 @@ const (
 const (
 	VPNTestAppAPK       = "ArcVpnTest.apk"
 	VPNTestAppPkg       = "org.chromium.arc.testapp.arcvpn"
-	VPNTestAppAct       = "org.chromium.arc.testapp.arcvpn.MainActivity"
 	VPNTestAppSvc       = "org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
-	VPNTestAppBroadcast = "org.chromium.arc.testapp.swap.LAUNCH_VPN"
+	VPNTestAppBroadcast = "org.chromium.arc.testapp.arcvpn.LAUNCH_VPN"
 	TunIP               = "192.168.2.2"
 )
 
@@ -59,6 +58,18 @@ func SetARCVPNEnabled(ctx context.Context, a *arc.ARC, enabled bool) error {
 
 	if !strings.Contains(string(o), "sEnableArcHostVpnAdbFlag="+fmt.Sprintf("%t", enabled)) {
 		return errors.New("unable to set sEnableArcHostVpnAdbFlag to " + fmt.Sprintf("%t", enabled))
+	}
+	return nil
+}
+
+// StartARCVPN starts the ARC test vpn app by broadcasting an intent that the ArcVpnTestApp
+// BroadcastReceiver receives.
+func StartARCVPN(ctx context.Context, a *arc.ARC) error {
+	// Only components with android.permission.BIND_VPN_SERVICE can bind to
+	// VPNs, so we can't directly start the service from a non-root shell.
+	// Instead, have a broadcast receiver ask that the system start the VPN.
+	if _, err := a.BroadcastIntent(ctx, VPNTestAppBroadcast, "--include-stopped-packages", "--receiver-include-background"); err != nil {
+		return errors.Wrapf(err, "failed to send %s intent", VPNTestAppBroadcast)
 	}
 	return nil
 }
