@@ -242,7 +242,10 @@ func QosWebRTC(ctx context.Context, s *testing.State) {
 	for webrtcPktCnt < expectedPktCnt {
 		select {
 		case p := <-capturer.Packets():
-			if p.UDP != nil && p.IPv4.SrcIP.String() == rtcLocalIP && p.IPv4.DstIP.String() == rtcLocalIPInNetns {
+			if p.UDP == nil {
+				continue
+			}
+			if p.IPv4 != nil && p.IPv4.SrcIP.String() == rtcLocalIP && p.IPv4.DstIP.String() == rtcLocalIPInNetns {
 				if p.DSCP() == dscpMultimediaConferencing {
 					webrtcPktCnt++
 				}
