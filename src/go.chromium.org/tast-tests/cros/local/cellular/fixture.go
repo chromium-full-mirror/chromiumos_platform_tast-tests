@@ -743,6 +743,7 @@ func waitForModemToBeExported(ctx context.Context) (*modemmanager.Modem, error) 
 			if err != nil {
 				return nil, errors.Wrap(err, "failed to restart modem")
 			}
+			return modem, nil
 		}
 		return nil, err
 	}
