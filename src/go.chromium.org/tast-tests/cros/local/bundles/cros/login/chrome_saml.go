@@ -41,7 +41,8 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		Params: []testing.Param{{
-			Name: "",
+			Name:      "",
+			ExtraAttr: []string{"group:hw_agnostic"},
 		}, {
 			Name:    "enrolled",
 			Fixture: fixture.FakeDMSEnrolled,
