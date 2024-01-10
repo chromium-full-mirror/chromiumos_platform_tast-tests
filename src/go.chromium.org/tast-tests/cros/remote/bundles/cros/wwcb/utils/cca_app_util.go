@@ -170,8 +170,12 @@ func TakeSinglePhoto(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationS
 }
 
 // RecordVideo returns a file info using the Camera app to record video.
-func RecordVideo(ctx context.Context, uiautoSvc ui.AutomationServiceClient, fs *dutfs.Client, d time.Duration, dir string) (os.FileInfo, error) {
-	videoStartTime := time.Now()
+func RecordVideo(ctx context.Context, dut *dut.DUT, uiautoSvc ui.AutomationServiceClient, fs *dutfs.Client, d time.Duration, dir string) (os.FileInfo, error) {
+	videoStartTime, err := CurrentTime(ctx, dut)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current time on the Chromebook")
+	}
+
 	if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: startRecordFinder}); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for start recording button from context menu")
 	}

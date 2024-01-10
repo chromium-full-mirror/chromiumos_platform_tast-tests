@@ -182,7 +182,7 @@ func CCARecordFromExternalCamera(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to switch video mode: ", err)
 	}
 
-	video, err := utils.RecordVideo(ctx, uiautoSvc, fs, 1*time.Second, utils.CameraPath)
+	video, err := utils.RecordVideo(ctx, dut, uiautoSvc, fs, 1*time.Second, utils.CameraPath)
 	if err != nil {
 		s.Fatal("Failed to record video: ", err)
 	}
