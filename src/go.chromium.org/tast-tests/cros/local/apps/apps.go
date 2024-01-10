@@ -30,6 +30,16 @@ type App struct {
 	ID string
 	// Name is the name of the app.
 	Name string
+	// shortName is the short name of the app. If this field is empty, ShortName() returns the name stored in Name.
+	shortName string
+}
+
+// ShortName returns the short name of the app if shortName is defined. Otherwise it retunrs the name of the app.
+func (app *App) ShortName() string {
+	if app.shortName != "" {
+		return app.shortName
+	}
+	return app.Name
 }
 
 // App IDs can be found at chrome://app-service-internals.
@@ -170,14 +180,17 @@ var Help = App{
 
 // Lacros has details about the Lacros browser app.
 var Lacros = App{
-	ID:   "jaimifaeiicidiikhmjedcgdimealfbh",
-	Name: "Google Chrome",
+	ID:        "jaimifaeiicidiikhmjedcgdimealfbh",
+	Name:      "Google Chrome",
+	shortName: "Chrome",
 }
+
 // LacrosOld has details about the older Lacros browser app.
 var LacrosOld = App{
 	ID:   "jaimifaeiicidiikhmjedcgdimealfbh",
 	Name: "Chrome",
 }
+
 // LacrosChromium has details about the Lacros browser app built without branding.
 var LacrosChromium = App{
 	ID:   "jaimifaeiicidiikhmjedcgdimealfbh",
