@@ -41,6 +41,7 @@ func init() {
 			"group:golden_tier",
 			"group:mainline",
 			"informational",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Data:         policyquickanswers.DataFiles(),

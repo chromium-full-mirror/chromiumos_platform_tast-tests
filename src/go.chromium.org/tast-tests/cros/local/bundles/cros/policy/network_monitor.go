@@ -31,6 +31,7 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      3 * time.Minute,
 		Fixture:      fixture.ChromeLoggedIn,
+		Attr:         []string{"group:hw_agnostic"},
 	})
 }
 

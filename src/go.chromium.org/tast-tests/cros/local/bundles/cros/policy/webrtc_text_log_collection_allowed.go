@@ -30,7 +30,7 @@ func init() {
 			"sugandhagoyal@google.com",
 		},
 		BugComponent: "b:1129862",
-		Attr:         []string{"group:golden_tier"},
+		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.bond_credentials"},
 		Timeout:      8 * time.Minute,

@@ -38,7 +38,9 @@ func init() {
 		BugComponent: "b:1129862",
 		Attr: []string{
 			"group:golden_tier",
-			"group:hardware"},
+			"group:hardware",
+			"group:hw_agnostic",
+		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"policy.managedUserAccountPool"},
 		Fixture:      fixture.FakeDMS,
