@@ -30,12 +30,13 @@ func init() {
 			"anastasiian@chromium.org",
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-			"group:hw_agnostic",
+		Attr:         []string{
+			// Disabled by TORA.  See: b/302954814
+			// "group:golden_tier",
+			// "group:medium_low_tier",
+			// "group:hardware",
+			// "group:complementary",
+			// "group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{{
