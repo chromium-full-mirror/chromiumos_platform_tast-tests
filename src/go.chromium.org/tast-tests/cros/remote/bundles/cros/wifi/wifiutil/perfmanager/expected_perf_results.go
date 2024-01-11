@@ -501,6 +501,50 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 			},
 		},
 	},
+	// TODO(b/316207256) Update expected throughput values for SoftAPT routers after
+	// running tests for a sufficient amount of time.
+	routerSupport.SoftAPT: {
+		TestTypeTCPTx: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{100, 0},
+			},
+		},
+		TestTypeTCPRx: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{100, 0},
+			},
+		},
+		TestTypeTCPBidirectional: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{80, 0},
+			},
+		},
+		TestTypeUDPTx: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{100, 0},
+			},
+		},
+		TestTypeUDPRx: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{100, 0},
+			},
+		},
+		TestTypeUDPBidirectional: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{80, 0},
+			},
+		},
+		TestTypeUDPTxSmall: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{20, 0},
+			},
+		},
+		TestTypeUDPRxSmall: {
+			ap.Mode80211axMixed: {
+				ap.ChWidth20: ExpectedTput{20, 0},
+			},
+		},
+	},
 }
 
 // ExpectedThroughputWiFi return the expected must and should throughput.

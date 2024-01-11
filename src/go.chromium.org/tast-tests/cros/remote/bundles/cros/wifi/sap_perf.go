@@ -7,45 +7,57 @@ package wifi
 import (
 	"context"
 	"fmt"
-	"math"
 	"sort"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil/perfmanager"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
+	remoteiw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dutcfg"
+	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
+	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast-tests/cros/remote/wificell/tethering"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-type sapPerfTestcase struct {
-	// Testcase name to be used in perf.
-	printableName string
-	// Any extra options for tethering.
-	tetheringOpts []tethering.Option
-	// Security facility (nil for Open mode).
-	secConfFac security.ConfigFactory
-	// Use wpa_cli API to setup tethering.
-	useWpaCliAPI bool
-	// TCP vs UDP.
-	protocol iperf.Protocol
-	// Reverse direction (AP=>STA).
-	reverse bool
-	// Iperf options.
-	opts []iperf.ConfigOption
-	// Minimum throughput, set to track regressions: average - 3 * sigma.
-	minThroughput iperf.BitRate
-	// Maximum jitter.
-	maxJitter time.Duration
+type sapPerfTestThreshold struct {
+	throughput iperf.BitRate
+	jitter     time.Duration
+	lost       float64
 }
+
+type sapPerfTestcase struct {
+	tetheringOpts []tethering.Option
+	secConfFac    security.ConfigFactory
+	useWpaCliAPI  bool
+	powerSave     bool
+}
+
+var (
+	jitterThreshold time.Duration = 20 * time.Millisecond
+	lostThreshold   float64       = 5
+	perfTestTypes                 = []perfmanager.TestType{
+		perfmanager.TestTypeTCPTx,
+		perfmanager.TestTypeTCPRx,
+		perfmanager.TestTypeUDPTx,
+		perfmanager.TestTypeUDPRx,
+		perfmanager.TestTypeTCPBidirectional,
+		perfmanager.TestTypeUDPBidirectional,
+		perfmanager.TestTypeUDPTxSmall,
+		perfmanager.TestTypeUDPRxSmall,
+	}
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -54,6 +66,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 			"jsiuda@google.com",               // Test author
+			"jintaolin@google.com",
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
@@ -61,270 +74,48 @@ func init() {
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
-		Timeout:      15 * time.Minute,
+		Timeout:      20 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		Params: []testing.Param{
 			{
-				// TCP performance. Download|Upload directions based on the STA perspective.
-				Name: "upload_tcp",
+				Name: "open",
 				Val: []sapPerfTestcase{{
-					printableName: "open_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
 					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolTCP,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 95 * iperf.Mbps,
-				}, {
-					printableName: "open_5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolTCP,
-					opts:          []iperf.ConfigOption{},
-					// TODO(b/269164431): adjust per channel BW and MCS.
-					minThroughput: 125 * iperf.Mbps,
-				}, {
-					printableName: "wpa2_2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolTCP,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 95 * iperf.Mbps,
-				}, {
-					printableName: "wpa2_5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolTCP,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 125 * iperf.Mbps,
+					powerSave:     false,
 				}},
 			},
 			{
-				// TCP performance, AP->STA direction.
-				Name: "download_tcp",
+				Name: "wpa2",
 				Val: []sapPerfTestcase{{
-					printableName: "open2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolTCP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 95 * iperf.Mbps,
-				}, {
-					printableName: "open_5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolTCP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 125 * iperf.Mbps,
-				}, {
-					printableName: "wpa2_2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolTCP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 95 * iperf.Mbps,
-				}, {
-					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
 						tethering.SecMode(wpa.ModePureWPA2)},
 					secConfFac: wpa.NewConfigFactory(
 						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					protocol:      iperf.ProtocolTCP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 125 * iperf.Mbps,
+					powerSave: false,
 				}},
 			},
 			{
-				// UDP performance, STA->AP direction.
-				Name: "upload_udp",
+				Name: "wpa3",
 				Val: []sapPerfTestcase{{
-					printableName: "open2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 100 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "open5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 125 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_2_4",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
+						tethering.SecMode(wpa.ModePureWPA3)},
 					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+						"chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 100 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 125 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
+					powerSave: false,
 				}},
 			},
 			{
-				// UDP performance, AP->STA direction.
-				Name: "download_udp",
+				Name: "wpa3mixed",
 				Val: []sapPerfTestcase{{
-					printableName: "open2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 100 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "open5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 125 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 100 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_5",
 					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
+						tethering.SecMode(wpa.ModeMixedWPA3)},
 					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
+						"chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP),
 					),
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{},
-					minThroughput: 125 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}},
-			},
-			{
-				// Small packets UDP performance (e.g. for games), STA->AP direction.
-				Name: "upload_udp_small",
-				Val: []sapPerfTestcase{{
-					printableName: "open2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 40 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "open5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 65 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 40 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolUDP,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 65 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}},
-			},
-			{
-				// Small packets UDP performance, AP->STA direction.
-				Name: "download_udp_small",
-				Val: []sapPerfTestcase{{
-					printableName: "open2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 40 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "open5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true)},
-					useWpaCliAPI:  true,
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 65 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_2_4",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band2p4g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 40 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
-				}, {
-					printableName: "wpa2_5",
-					tetheringOpts: []tethering.Option{tethering.Band(tethering.Band5g), tethering.NoUplink(true),
-						tethering.SecMode(wpa.ModePureWPA2)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP),
-					),
-					protocol:      iperf.ProtocolUDP,
-					reverse:       true,
-					opts:          []iperf.ConfigOption{iperf.DatagramLengthOption(112 * iperf.B)},
-					minThroughput: 65 * iperf.Mbps,
-					maxJitter:     10 * time.Millisecond,
+					powerSave: false,
 				}},
 			},
 		},
@@ -335,14 +126,15 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 	/*
 		This test checks throughput performance of the chromebook by using
 		the following steps:
-		1- Disable the station interface.
+		1- Disable the station interface on the main DUT.
 		2- Configures the main DUT as a soft AP.
 		3- Configures the Companion DUT as a STA.
 		4- Connects the the STA to the soft AP.
-		5- Verify the connection by running iperf test.
-		6- Deconfigure the STA.
-		7- Deconfigure the soft AP.
-		8- Re-enable the station interface.
+		5- Disable bgscan and power save on STA.
+		6- Measure the throughput performance on different traffic types/directions.
+		7- Deconfigure the STA.
+		8- Deconfigure the soft AP.
+		9- Re-enable the station interface on the main DUT.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 	if tf.NumberOfDUTs() < 2 {
@@ -359,13 +151,71 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	logPerfValues := func(label, unit string, value float64, dir perf.Direction) {
+		pv.Set(perf.Metric{
+			Name:      label,
+			Unit:      unit,
+			Direction: dir,
+		}, value)
+		s.Logf("%s: %v", label, value)
+	}
+
+	// Disable background scan which causes severe udp_rx throughput drops that can cause
+	// a disconnection during perf tests on the companion DUT. Refer to b/315880821.
+	ctx, restoreBgAndFg, err := tf.DUTWifiClient(wificell.PeerDUT1).TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
+	// Verify that performance test result passes requirements and save the result.
+	verifyResults := func(ctx context.Context, testType perfmanager.TestType, pr *iperf.Result) {
+		// TODO(b/316207256) Retrieve PHY spec from connection status.
+		expectedThroughput, err := perfmanager.ExpectedThroughputWiFi(support.SoftAPT, testType, hostapd.Mode80211axMixed, hostapd.ChWidth20)
+		if err != nil {
+			s.Fatal("Failed to get expected throughput")
+		}
+		if float64(pr.Throughput/iperf.Mbps) < expectedThroughput.Must {
+			s.Fatalf("Unacceptable throughput in performance test. Wanted > %v Mbps, got %v Mbps", expectedThroughput.Must, pr.Throughput/iperf.Mbps)
+		}
+
+		// Keep jitter and packet lost informational for UDP small packet tests.
+		// TODO(b/316207256): Set jitter and lost criteria for these tests based on test results.
+		if testType == perfmanager.TestTypeUDPTx || testType == perfmanager.TestTypeUDPRx {
+			if pr.PercentLoss > lostThreshold {
+				s.Fatalf("Unacceptable loss in performance test. Wanted <= %f%%, got %f%%", lostThreshold, pr.PercentLoss)
+			}
+		}
+
+		if testType == perfmanager.TestTypeUDPTx || testType == perfmanager.TestTypeUDPRx {
+			if len(pr.Jitter) == 0 {
+				s.Fatal("No jitter results")
+			}
+			sort.Slice(pr.Jitter, func(i, j int) bool {
+				return pr.Jitter[i] < pr.Jitter[j]
+			})
+			// Pick 90th percentile value. We want to exclude top 10% of recorded jitters,
+			// so we can be pretty convinced that 90% of our traffic fits under the maximum acceptable jitter threshold.
+			jitter := pr.Jitter[(len(pr.Jitter)-1)*9/10]
+			s.Logf("90th percentile jitter: %vus", jitter.Microseconds())
+			if jitter >= jitterThreshold {
+				s.Fatalf("Unacceptable jitter in performance test. Wanted < %dus, got %dus", jitterThreshold, jitter.Microseconds())
+			}
+		}
+	}
+
 	testOnce := func(ctx context.Context, s *testing.State, tc sapPerfTestcase) {
 		tf.UseWpaCliAPI(tc.useWpaCliAPI)
-		iface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
+
+		apPrimIface, err := tf.DUTClientInterface(ctx, wificell.DefaultDUT)
 		if err != nil {
 			s.Fatal("DUT: failed to get the client WiFi interface, err: ", err)
 		}
-		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, append([]tethering.Option{tethering.PriIface(iface)}, tc.tetheringOpts...), tc.secConfFac)
+		tetheringConf, _, err := tf.StartTethering(ctx, wificell.DefaultDUT, append([]tethering.Option{tethering.PriIface(apPrimIface)}, tc.tetheringOpts...), tc.secConfFac)
 		if err != nil {
 			s.Fatal("Failed to start tethering session on DUT, err: ", err)
 		}
@@ -376,7 +226,9 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		}(ctx)
 		ctx, cancel := tf.ReserveForStopTethering(ctx)
 		defer cancel()
-		s.Log("Tethering session started")
+		// Create apConfigTag which is used in the keyval
+		apConfigDesc := tetheringConf.PerfDesc()
+		s.Logf("Tethering session started with config: %s", apConfigDesc)
 
 		_, err = tf.ConnectWifiFromDUT(ctx, wificell.PeerDUT1, tetheringConf.SSID, dutcfg.ConnSecurity(tetheringConf.SecConf))
 		if err != nil {
@@ -391,51 +243,76 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		defer cancel()
 		s.Log("Connected")
 
-		pr, err := tf.SAPPerf(ctx, tc.protocol, tc.reverse, tc.opts...)
+		staIface, err := tf.DUTClientInterface(ctx, wificell.PeerDUT1)
 		if err != nil {
-			s.Fatal("Failed to run the performance verification: ", err)
+			s.Fatal("DUT: failed to get the STA WiFi interface, err: ", err)
 		}
 
-		if pr.Throughput < tc.minThroughput {
-			s.Fatalf("Unacceptable throughput in performance test. Wanted > %v Mbps, got %v Mbps", tc.minThroughput/iperf.Mbps, pr.Throughput/iperf.Mbps)
+		// Disable power save on the companion DUT
+		iwr := remoteiw.NewRemoteRunner(tf.DUTConn(wificell.PeerDUT1))
+		psMode, err := iwr.PowersaveMode(ctx, staIface)
+		if err != nil {
+			s.Error("Failed to get the powersave mode of the WiFi interface, err: ", err)
 		}
-		if pr.PercentLoss > 5.0 {
-			s.Fatalf("Unacceptable loss in performance test. Wanted <= 5%%, got %f", pr.PercentLoss)
-		}
-
-		// Store perf metrics. Using only tc.printableName is enough because results of each subtest are stored in a separate directory.
-		pv.Set(perf.Metric{
-			Name:      "throughput_" + tc.printableName,
-			Unit:      "Mbps",
-			Direction: perf.BiggerIsBetter,
-		}, math.Round(float64(pr.Throughput/iperf.Mbps))) // Rounding to get rid of the excess of non-significant data, e.g. 184.026360 Mbit/s.
-		pv.Set(perf.Metric{
-			Name:      "loss_" + tc.printableName,
-			Unit:      "percent",
-			Direction: perf.SmallerIsBetter,
-		}, float64(pr.PercentLoss))
-
-		// If maxJitter is set, it means that we need jitter results.
-		if tc.maxJitter > 0 {
-			if len(pr.Jitter) == 0 {
-				s.Fatal("No jitter results")
+		defer func(ctx context.Context) error {
+			if err := iwr.SetPowersaveMode(ctx, staIface, psMode); err != nil {
+				s.Errorf("Failed to set the powersave mode %t: %v", psMode, err)
 			}
-			sort.Slice(pr.Jitter, func(i, j int) bool {
-				return pr.Jitter[i] < pr.Jitter[j]
-			})
-			// Pick 90th percentile value. We want to exclude top 10% of recorded jitters,
-			// so we can be pretty convinced that 90% of our traffic fits under the maximum acceptable jitter threshold.
-			jitter := pr.Jitter[(len(pr.Jitter)-1)*9/10]
-			s.Logf("90th percentile jitter: %vus", jitter.Microseconds())
-			if jitter >= tc.maxJitter {
-				s.Fatalf("Unacceptable jitter in performance test. Wanted < %dus, got %dus", tc.maxJitter.Microseconds(), jitter.Microseconds())
-			}
-			pv.Set(perf.Metric{
-				Name:      "jitter_" + tc.printableName,
-				Unit:      "us",
-				Direction: perf.SmallerIsBetter,
-			}, float64(jitter.Microseconds()))
+			return nil
+		}(ctx)
+		ctx, cancel = ctxutil.Shorten(ctx, 2*time.Second)
+		defer cancel()
+		if err := iwr.SetPowersaveMode(ctx, staIface, tc.powerSave); err != nil {
+			s.Fatalf("Failed to set the powersave mode %t: %v", tc.powerSave, err)
 		}
+
+		apIP, err := tf.DUTIfaceIPv4Addrs(ctx, wificell.DefaultDUT, shillconst.ApInterfaceName)
+		if err != nil || len(apIP) == 0 {
+			s.Fatal("Failed to get SoftAP IP address, err: ", err)
+		}
+
+		staIP, err := tf.DUTIfaceIPv4Addrs(ctx, wificell.PeerDUT1, staIface)
+		if err != nil || len(staIP) == 0 {
+			s.Fatal("Failed to get STA IP address, err: ", err)
+		}
+
+		// 2-way performance setup
+		manager, err := perfmanager.NewTestManager(ctx, tf.DUTConn(wificell.PeerDUT1), tf.DUTConn(wificell.DefaultDUT), nil, support.SoftAPT, staIP[0].String(), apIP[0].String(), staIface)
+		if err != nil {
+			s.Fatal("Failed to get performance test manager, err: ", err)
+		}
+		defer func(ctx context.Context) error {
+			if err := manager.Close(ctx); err != nil {
+				s.Error("Failed to Close Perf Test Manager, err: ", err)
+			}
+			return nil
+		}(ctx)
+		ctx, cancel = ctxutil.Shorten(ctx, 2*time.Second)
+
+		doRun := func(ctx context.Context) error {
+			for _, testType := range perfTestTypes {
+				s.Logf("Performing [[ %s ]]", testType)
+				config, err := manager.Config(support.SoftAPT, testType, 0)
+				if err != nil {
+					return errors.Wrapf(err, "failed to get the iperf/netperf configuration for test type %s", testType)
+				}
+				session, err := manager.Session(ctx, testType)
+				if err != nil {
+					return errors.Wrapf(err, "failed to get the iperf/netperf session for test type %s", testType)
+				}
+				pr, _, err := session.Run(ctx, config)
+				if err != nil {
+					return errors.Wrap(err, "failed to run session")
+				}
+				logPerfValues(fmt.Sprintf("%s.%s", apConfigDesc, testType), "Mbps", float64(pr.Throughput/iperf.Mbps), perf.BiggerIsBetter)
+				verifyResults(ctx, testType, pr)
+			}
+			return nil
+		}
+		if err := tf.AssertNoDisconnect(ctx, wificell.PeerDUT1, doRun); err != nil {
+			s.Error("Failed run performance test, err: ", err)
+		}
+		s.Log("Deconfiguring")
 	}
 
 	testcases := s.Param().([]sapPerfTestcase)
@@ -443,7 +320,7 @@ func SAPPerf(ctx context.Context, s *testing.State) {
 		subtest := func(ctx context.Context, s *testing.State) {
 			testOnce(ctx, s, tc)
 		}
-		s.Run(ctx, fmt.Sprintf("Testcase #%d/%d: %s", i+1, len(testcases), tc.printableName), subtest)
+		s.Run(ctx, fmt.Sprintf("Testcase #%d/%d", i+1, len(testcases)), subtest)
 	}
 	s.Log("Tearing down")
 }

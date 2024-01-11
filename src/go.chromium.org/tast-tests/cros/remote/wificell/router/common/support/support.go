@@ -32,6 +32,8 @@ const (
 	OpenWrtT
 	// UbuntuT is the Ubuntu router type.
 	UbuntuT
+	// SoftAPT is the Soft AP router type.
+	SoftAPT
 	// UnknownT is an unknown router type.
 	UnknownT
 )

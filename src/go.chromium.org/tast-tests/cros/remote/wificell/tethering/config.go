@@ -5,6 +5,8 @@
 package tethering
 
 import (
+	"fmt"
+
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
@@ -143,4 +145,9 @@ func (c *Config) validate() error {
 	}
 
 	return nil
+}
+
+// PerfDesc returns the description of this config.
+func (c *Config) PerfDesc() string {
+	return fmt.Sprintf("%s_%s", c.Band.String(), c.SecConf.Class())
 }

@@ -1495,10 +1495,15 @@ func (tf *TestFixture) DUTIPv4Addrs(ctx context.Context, dutIdx DutIdx) ([]net.I
 		return nil, errors.Wrap(err, "DUT: failed to get the client WiFi interface")
 	}
 
-	netIface := &wifi.GetIPv4AddrsRequest{
+	return tf.DUTIfaceIPv4Addrs(ctx, dutIdx, iface)
+}
+
+// DUTIfaceIPv4Addrs returns the IPv4 addresses for the specific interface.
+func (tf *TestFixture) DUTIfaceIPv4Addrs(ctx context.Context, dutIdx DutIdx, iface string) ([]net.IP, error) {
+	addrsReq := &wifi.GetIPv4AddrsRequest{
 		InterfaceName: iface,
 	}
-	addrs, err := tf.DUTWifiClient(dutIdx).GetIPv4Addrs(ctx, netIface)
+	addrs, err := tf.DUTWifiClient(dutIdx).GetIPv4Addrs(ctx, addrsReq)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get the IPv4 addresses")
 	}
