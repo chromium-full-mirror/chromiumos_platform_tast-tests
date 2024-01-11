@@ -627,3 +627,137 @@ func (c *client) MoveDevicesToOU(ctx context.Context, deviceIDs []string, orgUni
 	}
 	return string(respBody), nil
 }
+
+// CommandTypeEnum is an enum for different types of remote commands.
+type CommandTypeEnum int
+
+const (
+	// CommandTypeReboot is the enum to reboot the device.
+	CommandTypeReboot = 0
+	// CommandTypeTakeAScreenshot is the enum to take a screenshot.
+	CommandTypeTakeAScreenshot = 1
+	// CommandTypeSetVolume is the enum to set the volume.
+	CommandTypeSetVolume = 2
+	// CommandTypeWipeUsers is the enum to wipe the users from a device.
+	CommandTypeWipeUsers = 5
+	// CommandTypeDeviceStartCRDSession is the enum to start a CRD session on the device.
+	CommandTypeDeviceStartCRDSession = 6
+	// CommandTypeRemotePowerwash is the enum to powerwash the device.
+	CommandTypeRemotePowerwash = 7
+	// CommandTypeCaptureLogs is the enum to capture the logs from the device.
+	CommandTypeCaptureLogs = 9
+)
+
+// RemoteCommand is a struct describing a remote command used in IssueCommand.
+type RemoteCommand struct {
+	CommandType CommandTypeEnum `json:"commandType"`
+	Payload     string          `json:"payload"`
+}
+
+// IssueCommandRequest is a struct containing the necessary data to issue a
+// remote command.
+type IssueCommandRequest struct {
+	DeviceID      string        `json:"deviceid"`
+	CustomerID    string        `json:"customerid"`
+	RemoteCommand RemoteCommand `json:"command"`
+}
+
+// IssueCommandResponse is a struct containing the response from an IssueCommand call.
+type IssueCommandResponse struct {
+	CommandID string `json:"commandId"`
+}
+
+// IssueCommand calls TAPE to issue a remote command to a device, identified by their deviceID.
+// For available remote commands see https://developers.google.com/admin-sdk/directory/reference/rest/v1/customer.devices.chromeos.commands#CommandType
+func (c *client) IssueCommand(ctx context.Context, deviceID, customerID string, remoteCommand RemoteCommand) (*IssueCommandResponse, error) {
+	request := &IssueCommandRequest{
+		DeviceID:      deviceID,
+		CustomerID:    customerID,
+		RemoteCommand: remoteCommand,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal data")
+	}
+
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/issueCommand", callTimeout, 0, payloadBytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read response")
+	}
+
+	var issueCommandResponse IssueCommandResponse
+	err = json.Unmarshal([]byte(respBody), &issueCommandResponse)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to marshal json response: %v", response)
+	}
+
+	return &issueCommandResponse, nil
+}
+
+// GetCommandRequest is a struct containing the necessary data to retrieve the
+// status of a remote command.
+type GetCommandRequest struct {
+	DeviceID   string `json:"deviceid"`
+	CustomerID string `json:"customerid"`
+	CommandID  string `json:"commandid"`
+}
+
+// RemoteCommandResult is a struct containing the result of the execution of a
+// remote command on a device.
+type RemoteCommandResult struct {
+	Result               string    `json:"result"`
+	ExecuteTime          time.Time `json:"executeTime"`
+	ErrorMessage         string    `json:"errorMessage"`
+	CommandResultPayload string    `json:"commandResultPayload"`
+}
+
+// GetCommandResponse is a struct containing the response from a GetCommand call.
+type GetCommandResponse struct {
+	CommandID         string              `json:"commandId"`
+	Type              string              `json:"type"`
+	IssueTime         time.Time           `json:"issueTime"`
+	State             string              `json:"state"`
+	CommandExpireTime string              `json:"commandExpireTime"`
+	CommandResult     RemoteCommandResult `json:"commandResult"`
+	Payload           string              `json:"payload"`
+}
+
+// GetCommand calls TAPE to retrieve the status of a remote command identified by a commandID.
+// The status will be returned in a GetCommandResponse struct.
+func (c *client) GetCommand(ctx context.Context, deviceID, customerID, commandID string) (*GetCommandResponse, error) {
+	request := &GetCommandRequest{
+		DeviceID:   deviceID,
+		CustomerID: customerID,
+		CommandID:  commandID,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Devices/getCommand", callTimeout, 0, payloadBytes)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read response")
+	}
+
+	var getCommandResponse GetCommandResponse
+	err = json.Unmarshal([]byte(respBody), &getCommandResponse)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to marshal json response: %v", response)
+	}
+
+	return &getCommandResponse, nil
+}
