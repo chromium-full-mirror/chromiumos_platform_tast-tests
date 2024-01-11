@@ -96,20 +96,18 @@ func verifyEcRestOnGscReset(ctx context.Context, s *testing.State, b utils.Devbo
 func verifyEcResetOnTpmvRebootCmd(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
 	s.Log("Verify EC reset on GSC reboot TPMV command")
 
-	// Ensure we have a stable (after waiting) CCD connection for gsctool commands
-	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	testing.Sleep(ctx, time.Second) // GoBigSleepLint: No good way to poll for USB stability
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.FfClamshell)
 
 	s.Log("Start gpio monitoring")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
 
-	_, err := b.GSCToolCommand(ctx, "", "--reboot")
-	th.MustSucceed(err, "Error calling gsctool --reboot")
+	err := tpm.TpmvReboot(1000)
+	th.MustSucceed(err, "Error sending TPMV reboot")
 
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
 	// Give a little more time for gpio monitoring to catch EC_RST edges after GSC boots
-	testing.Sleep(ctx, time.Second) // GoBigSleepLint: No good way to poll for EC_RST
+	testing.Sleep(ctx, 3*time.Second) // GoBigSleepLint: No good way to poll for EC_RST
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
 	s.Log("Stop gpio monitoring: ", events)
