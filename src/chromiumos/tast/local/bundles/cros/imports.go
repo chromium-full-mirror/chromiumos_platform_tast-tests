@@ -69,6 +69,7 @@ import (
 	_ "chromiumos/tast/local/bundles/cros/loginapi"
 	_ "chromiumos/tast/local/bundles/cros/logs"
 	_ "chromiumos/tast/local/bundles/cros/media"
+	_ "chromiumos/tast/local/bundles/cros/meet"
 	_ "chromiumos/tast/local/bundles/cros/meta"
 	_ "chromiumos/tast/local/bundles/cros/mgs"
 	_ "chromiumos/tast/local/bundles/cros/mlservice"
