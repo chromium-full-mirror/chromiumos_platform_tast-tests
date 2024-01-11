@@ -49,6 +49,13 @@ func init() {
 					PoolID:   tape.EnrollmentSAML,
 				},
 			},
+			{
+				Name: "staging",
+				Val: gaiaenrollment.TestParams{
+					DMServer: policy.DMServerStagingURL,
+					PoolID:   tape.EnrollmentSAML,
+				},
+			},
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,

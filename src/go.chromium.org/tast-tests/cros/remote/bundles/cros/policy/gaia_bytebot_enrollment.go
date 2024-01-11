@@ -47,6 +47,13 @@ func init() {
 				},
 			},
 			{
+				Name: "staging",
+				Val: gaiaenrollment.TestParams{
+					DMServer: policy.DMServerStagingURL,
+					PoolID:   tape.ChromeosbytebotCom,
+				},
+			},
+			{
 				Name:      "live",
 				ExtraAttr: []string{"group:dmserver-enrollment-live"},
 				Val: gaiaenrollment.TestParams{

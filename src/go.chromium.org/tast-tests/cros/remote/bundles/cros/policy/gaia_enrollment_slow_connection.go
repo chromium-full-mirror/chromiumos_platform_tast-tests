@@ -73,6 +73,20 @@ func init() {
 					PoolID:   tape.Crosprqa4Com,
 				},
 			},
+			{
+				Name: "staging",
+				Val: gaiaenrollment.TestParams{
+					DMServer: policy.DMServerStagingURL,
+					PoolID:   tape.Enrollment,
+				},
+			},
+			{
+				Name: "staging_new_saml",
+				Val: gaiaenrollment.TestParams{
+					DMServer: policy.DMServerStagingURL,
+					PoolID:   tape.Crosprqa4Com,
+				},
+			},
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,

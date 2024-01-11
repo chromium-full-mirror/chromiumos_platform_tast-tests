@@ -53,6 +53,14 @@ func init() {
 					dmserver: policy.DMServerAlphaURL,
 				},
 			},
+			{
+				Name: "staging_flexorgs",
+				Val: testDetails{
+					username: "policy.GAIAFlexorgsEnrollment.flex_user_name",
+					password: "policy.GAIAFlexorgsEnrollment.flex_password",
+					dmserver: policy.DMServerStagingURL,
+				},
+			},
 		},
 		Vars: []string{
 			"policy.GAIAFlexorgsEnrollment.flex_user_name",

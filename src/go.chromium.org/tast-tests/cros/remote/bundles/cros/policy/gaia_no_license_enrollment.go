@@ -53,6 +53,14 @@ func init() {
 					dmserver: policy.DMServerAlphaURL,
 				},
 			},
+			{
+				Name: "staging",
+				Val: testResources{
+					username: "policy.GAIANoLicenseEnrollment.user_name",
+					password: "policy.GAIANoLicenseEnrollment.password",
+					dmserver: policy.DMServerStagingURL,
+				},
+			},
 		},
 		Vars: []string{
 			"policy.GAIANoLicenseEnrollment.user_name",
