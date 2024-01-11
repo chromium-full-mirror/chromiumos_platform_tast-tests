@@ -56,13 +56,6 @@ const (
 	// Time to sleep while collecting data.
 	// The time to wait just after stating to play video so that CPU usage gets stable.
 	stabilizationDuration = 5 * time.Second
-	// The time to wait after CPU is stable so as to measure solid metric values for
-	// short video tests.
-	measurementDurationShort = 25 * time.Second
-	// The time to wait after CPU is stable so as to measure solid metric values for
-	// long video tests.
-	measurementDurationLong = 100 * time.Second
-
 	// TraceConfigFile is the perfetto config file to profile the scheduler events.
 	TraceConfigFile = "perfetto_tbm_traced_probes.pbtxt"
 	// GPUThreadSchedSQLFile is the sql script to count the number of context
@@ -101,6 +94,8 @@ type Config struct {
 	PerfSetting PerfSetting
 	// If set, let whole system go to suspend state while playing the video.
 	SuspendResume bool
+	// The video playback duration, if set to 0, it runs indefinitely or until global timeout is hit.
+	Duration time.Duration
 }
 
 // RunTest measures a number of performance metrics while playing a video with or without hardware acceleration as per DecoderType.
@@ -230,20 +225,35 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 	s.Log("decoderName: ", decoderName)
 
 	if config.PerfMeasurement {
+		s.Logf("Playing %v video while measuring performance", config.Duration)
 		if err := measurePerformance(ctx, measureParams{
-			conn, tconn, bTconn,
-			url, observer, config.PerfSetting,
-			s.DataPath(TraceConfigFile),
-			s.DataPath(GPUThreadSchedSQLFile),
+			conn:                  conn,
+			tconn:                 tconn,
+			bTconn:                bTconn,
+			url:                   url,
+			observer:              observer,
+			config:                config.PerfSetting,
+			duration:              config.Duration,
+			traceConfigPath:       s.DataPath(TraceConfigFile),
+			gpuThreadSchedSQLPath: s.DataPath(GPUThreadSchedSQLFile),
 		}); err != nil {
 			s.Fatal("Video playback failed: ", err)
 		}
 	}
-	// Test video playback continuity after system goes through suspend/resume cycle.
+	// Test video playback continuously after system goes through suspend/resume cycle.
 	if config.SuspendResume {
-		// TODO: set dynamic timeout instead of hard-wire 5 minutes here.
-		if err := suspendResume(ctx, cr, 5*time.Minute, s.TestName()); err != nil {
+		s.Logf("Playing %v video while performancing system suspend/resume", config.Duration)
+		if err := suspendResume(ctx, cr, config.Duration, s.TestName()); err != nil {
 			s.Fatal("Video playback failed: ", err)
+		}
+	}
+	if !config.PerfMeasurement && !config.SuspendResume {
+		s.Logf("Sleeping for %v duration while playing video", config.Duration)
+		select {
+		case <-ctx.Done():
+			s.Fatal("Context timeout: ", ctx.Err())
+		case <-time.After(config.Duration):
+			return
 		}
 	}
 }
@@ -344,6 +354,9 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, duration time.Duratio
 	select {
 	case resultErr = <-errChan:
 		break
+	case <-ctx.Done():
+		quit <- true
+		return ctx.Err()
 	case <-time.After(duration):
 		testing.ContextLog(ctx, "playback duration hit, stopping suspend_resume loop")
 		quit <- true
@@ -359,6 +372,7 @@ type measureParams struct {
 	url      string // URL to the video
 	observer media.PlayerPropertiesChangedClient
 	config   PerfSetting
+	duration time.Duration // Duration of the measurement.
 
 	traceConfigPath       string
 	gpuThreadSchedSQLPath string
@@ -400,12 +414,7 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 	minPromotedOverlayValue := 2
 	maxPromotedOverlayValue := 5
 
-	var measurementDuration time.Duration
-	if params.config.MeasureRoughness {
-		measurementDuration = measurementDurationLong
-	} else {
-		measurementDuration = measurementDurationShort
-	}
+	measurementDuration := params.duration
 
 	var roughness float64
 	var gpuErr, i915IRQErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr error
