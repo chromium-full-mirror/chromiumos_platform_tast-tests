@@ -20,7 +20,7 @@ func TestManyFiles(t *testing.T) {
 		Kernel          string
 		Cache           string
 		CaseFold        bool
-		Dep             string
+		Deps            []string
 		Fixture         string
 		NegativeTimeout int
 	}
@@ -38,11 +38,15 @@ func TestManyFiles(t *testing.T) {
 	}{{"arcvm", "android_vm", "chromeLoggedIn"}, {"termina", "dlc", "vmDLC"}} {
 		// Block
 		for _, kind := range []string{"block", "block_lvm"} {
+			deps := []string{p.dep}
+			if kind == "block_lvm" {
+				deps = append(deps, "lvm_stateful_partition")
+			}
 			params = append(params, paramData{
 				Name:    fmt.Sprintf("%s_%s", kind, p.kernel),
 				Kernel:  p.kernel,
 				Kind:    kind,
-				Dep:     p.dep,
+				Deps:    deps,
 				Fixture: p.fixture,
 			})
 		}
@@ -53,6 +57,7 @@ func TestManyFiles(t *testing.T) {
 			{policy: "always", negativeTimeout: 0},
 			{policy: "always", negativeTimeout: 3600},
 		} {
+			deps := []string{p.dep}
 			for _, caseFold := range []bool{false, true} {
 				if cache.negativeTimeout > 0 && caseFold {
 					// Negative cache is not supported with case-folding.
@@ -78,7 +83,7 @@ func TestManyFiles(t *testing.T) {
 					Cache:           cache.policy,
 					CaseFold:        caseFold,
 					NegativeTimeout: cache.negativeTimeout,
-					Dep:             p.dep,
+					Deps:            deps,
 					Fixture:         p.fixture,
 				})
 			}
@@ -96,7 +101,7 @@ func TestManyFiles(t *testing.T) {
 				negativeTimeout: {{ .NegativeTimeout }},
 			},
 			Fixture: {{ .Fixture | fmt }},
-			ExtraSoftwareDeps: []string { {{ .Dep | fmt }} },
+			ExtraSoftwareDeps: {{ .Deps | fmt }},
 		},
 		{{ end }}`,
 		params)

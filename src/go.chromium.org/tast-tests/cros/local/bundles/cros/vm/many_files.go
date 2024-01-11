@@ -89,7 +89,7 @@ func init() {
 					negativeTimeout: 0,
 				},
 				Fixture:           "chromeLoggedIn",
-				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraSoftwareDeps: []string{"android_vm", "lvm_stateful_partition"},
 			},
 			{
 				Name: "virtiofs_arcvm",
@@ -173,7 +173,7 @@ func init() {
 					negativeTimeout: 0,
 				},
 				Fixture:           "vmDLC",
-				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraSoftwareDeps: []string{"dlc", "lvm_stateful_partition"},
 			},
 			{
 				Name: "virtiofs_termina",
