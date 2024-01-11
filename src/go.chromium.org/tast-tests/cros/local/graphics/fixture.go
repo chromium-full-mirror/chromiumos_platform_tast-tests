@@ -438,7 +438,7 @@ func (f *gpuWatchHangsFixture) PreTest(ctx context.Context, s *testing.FixtTestS
 	} else {
 		f.postFunc = append(f.postFunc, func(ctx context.Context) error {
 			defer sysLogReader.Close()
-			if err := checkSysLog(ctx, s.TestName(), sysLogReader); err != nil {
+			if err := CheckSysLog(ctx, s.TestName(), sysLogReader); err != nil {
 				if sErr := DumpGraphicsDebugFiles(ctx, s.OutDir()); sErr != nil {
 					return errors.Wrap(err, sErr.Error())
 				}

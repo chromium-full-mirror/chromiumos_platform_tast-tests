@@ -80,8 +80,8 @@ var (
 	ignoreCategoriesMap = map[string][]SysLogCategory{}
 )
 
-// checkSysLog checks signatures from the reader. It returns error if failed to read the file or certain patterns are detected.
-func checkSysLog(ctx context.Context, testName string, reader *syslog.Reader) error {
+// CheckSysLog checks signatures from the reader. It returns error if failed to read the file or certain patterns are detected.
+func CheckSysLog(ctx context.Context, testName string, reader *syslog.Reader) error {
 	if reader == nil {
 		return errors.New("nil syslog.Reader")
 	}
