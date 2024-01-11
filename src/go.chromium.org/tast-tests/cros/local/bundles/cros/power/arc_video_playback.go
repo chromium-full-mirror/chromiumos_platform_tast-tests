@@ -37,128 +37,97 @@ func init() {
 		SoftwareDeps: []string{"chrome", "arc"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "powerAshARC",
+		Timeout:      3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
 		Params: []testing.Param{
 			{
 				Name:      "h264_720_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_720_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/h264_720_30fps.mp4"},
 			}, {
 				Name:      "h264_720_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_720_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/h264_720_60fps.mp4"},
 			}, {
 				Name:      "h264_1080_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_1080_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
-				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4"},
-			}, {
-				Name:      "h264_1080_30fps_1hr_ash",
-				Val:       arcVideoTestParam{VideoName: "h264_1080_30fps", TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
-				Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4"},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
 				Name:      "h264_1080_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_1080_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/h264_1080_60fps.mp4"},
 			}, {
 				Name:      "h264_4k_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_4k_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/h264_4k_30fps.mp4"},
 			}, {
 				Name:      "h264_4k_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "h264_4k_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/h264_4k_60fps.mp4"},
 			}, {
 				Name:      "vp8_720_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp8_720_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp8_720_30fps.webm"},
 			}, {
 				Name:      "vp8_720_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp8_720_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp8_720_60fps.webm"},
 			}, {
 				Name:      "vp8_1080_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp8_1080_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp8_1080_30fps.webm"},
 			}, {
 				Name:      "vp8_1080_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp8_1080_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp8_1080_60fps.webm"},
 			}, {
 				Name:      "vp8_4k_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp8_4k_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp8_4k_30fps.webm"},
 			}, {
 				Name:      "vp8_4k_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp8_4k_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp8_4k_60fps.webm"},
 			}, {
 				Name:      "vp9_720_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_720_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp9_720_30fps.webm"},
 			}, {
 				Name:      "vp9_720_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_720_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp9_720_60fps.webm"},
 			}, {
 				Name:      "vp9_1080_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_1080_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
-				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm"},
-			}, {
-				Name:      "vp9_1080_30fps_1hr_ash",
-				Val:       arcVideoTestParam{VideoName: "vp9_1080_30fps", TimeParams: power.TimeParams{Total: time.Hour, Interval: 5 * time.Second}},
-				Timeout:   3*time.Hour + power.RecorderTimeout, // 1 hour for video and 2 hour for charging
 				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm"},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
 				Name:      "vp9_1080_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_1080_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp9_1080_60fps.webm"},
 			}, {
 				Name:      "vp9_4k_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_4k_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp9_4k_30fps.webm"},
 			}, {
 				Name:      "vp9_4k_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "vp9_4k_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/vp9_4k_60fps.webm"},
 			}, {
 				Name:      "av1_720_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "av1_720_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/av1_720_30fps.mp4"},
 			}, {
 				Name:      "av1_720_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "av1_720_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/av1_720_60fps.mp4"},
 			}, {
 				Name:      "av1_1080_30fps_ash",
 				Val:       arcVideoTestParam{VideoName: "av1_1080_30fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/av1_1080_30fps.mp4"},
 			}, {
 				Name:      "av1_1080_60fps_ash",
 				Val:       arcVideoTestParam{VideoName: "av1_1080_60fps"},
-				Timeout:   5*time.Minute + power.RecorderTimeout,
 				ExtraData: []string{"arc_video_playback/av1_1080_60fps.mp4"},
 			},
 		},
@@ -208,7 +177,7 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	videoName := s.Param().(arcVideoTestParam).VideoName
 
 	// Use default value for timeParam if not set.
-	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: 5 * time.Minute}
+	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: time.Hour}
 	if interval == time.Duration(0) {
 		interval = defaultTimeParams.Interval
 	}
