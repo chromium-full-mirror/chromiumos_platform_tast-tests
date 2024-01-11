@@ -37,6 +37,7 @@ type BearerProperties struct {
 	multiplex    uint32
 	password     string
 	user         string
+	profileID    int32
 	// Indicators of property existence
 	HasApn          bool
 	HasAllowRoaming bool
@@ -46,7 +47,13 @@ type BearerProperties struct {
 	HasMultiplex    bool
 	HasPassword     bool
 	HasUser         bool
+	HasProfileID    bool
 }
+
+// InvalidProfileID is a sentinel value for profile ID when it is not present or when the profile is not valid.
+const (
+	InvalidProfileID = -1
+)
 
 // Bearer represents a MM Bearer dbus object
 type Bearer struct {
@@ -180,6 +187,16 @@ func (b *Bearer) IsIPType(ipType mmconst.BearerIPFamily) (bool, error) {
 	return (properties.ipType & uint32(ipType)) != 0, nil
 }
 
+// GetProfileID gets the profile ID from the bearer properties or
+// InvalidProfileID if it is not present.
+func (b *Bearer) GetProfileID() (int32, error) {
+	properties := b.Properties()
+	if !properties.HasProfileID {
+		return InvalidProfileID, errors.New("failed to read the profile ID")
+	}
+	return properties.profileID, nil
+}
+
 // Interface gets the Interface value
 func (b *Bearer) Interface() string {
 	value, err := b.props.GetString(mmconst.BearerPropertyInterface)
@@ -293,5 +310,12 @@ func (b *Bearer) Properties() BearerProperties {
 		properties.user, ok = value.(string)
 	}
 	properties.HasUser = ok
+	// Profile ID
+	value, ok = innerProps[mmconst.BearerPropertyProfileID]
+	if ok {
+		properties.profileID, ok = value.(int32)
+	}
+	properties.HasProfileID = ok
+
 	return properties
 }

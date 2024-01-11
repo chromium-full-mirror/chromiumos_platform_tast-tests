@@ -1040,3 +1040,35 @@ func SetModemmanagerLogLevel(ctx context.Context, level string) error {
 	}
 	return nil
 }
+
+// GetProfiles fetches the list of 3GPP profiles from the profile manager interface.
+func (m *Modem) GetProfiles(ctx context.Context) ([]map[string]interface{}, error) {
+	modemPath := dbus.ObjectPath(m.String())
+	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerProfileManagerInterface, modemPath)
+	if err != nil {
+		return nil, err
+	}
+
+	response := ph.Call(ctx, mmconst.ModemProfileManagerList)
+	if response.Err != nil {
+		return nil, errors.Wrap(response.Err, "failed to list profiles")
+	}
+	if len(response.Body) != 1 {
+		return nil, errors.Errorf("profile list call resulted in incorrect response len: %d", len(response.Body))
+	}
+	body, ok := response.Body[0].([]map[string]dbus.Variant)
+	if !ok {
+		return nil, errors.New("could not parse profiles")
+	}
+
+	// Unwrap the dbus.Variants into their underlying value.
+	profiles := make([]map[string]interface{}, 0, len(body))
+	for _, props := range body {
+		profile := make(map[string]interface{})
+		for key, value := range props {
+			profile[key] = value.Value()
+		}
+		profiles = append(profiles, profile)
+	}
+	return profiles, nil
+}

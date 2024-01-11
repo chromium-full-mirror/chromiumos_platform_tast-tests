@@ -32,6 +32,11 @@ const (
 	ModemModem3gppPropertyOperatorCode     = "OperatorCode"
 )
 
+// ModemManager1.Modem.Modem3gpp.ProfileManager properties
+const (
+	ModemProfileManagerList = "List"
+)
+
 // ModemManager1.Modem.Simple properties
 const (
 	SimpleModemPropertyState    = "state"
@@ -74,6 +79,7 @@ const (
 	BearerPropertyMultiplex    = "multiplex"
 	BearerPropertyPassword     = "password"
 	BearerPropertyUser         = "user"
+	BearerPropertyProfileID    = "profile-id"
 	// IPConfig related properties
 	BearerPropertyIPMethod  = "method"
 	BearerPropertyIPAddress = "address"

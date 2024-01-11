@@ -8,18 +8,19 @@ package modemmanager
 // ModemManager1 constants
 const (
 	// dbus constants
-	DBusModemmanagerPath                 = "/org/freedesktop/ModemManager1"
-	DBusModemmanagerService              = "org.freedesktop.ModemManager1"
-	DBusModemmanagerInterface            = "org.freedesktop.ModemManager1"
-	DBusModemmanagerBearerInterface      = "org.freedesktop.ModemManager1.Bearer"
-	DBusModemmanagerModemInterface       = "org.freedesktop.ModemManager1.Modem"
-	DBusModemmanagerMessageInterface     = "org.freedesktop.ModemManager1.Modem.Messaging"
-	DBusModemmanager3gppModemInterface   = "org.freedesktop.ModemManager1.Modem.Modem3gpp"
-	DBusModemmanagerSimpleModemInterface = "org.freedesktop.ModemManager1.Modem.Simple"
-	DBusModemmanagerSARInterface         = "org.freedesktop.ModemManager1.Modem.Sar"
-	DBusModemmanagerSignalInterface      = "org.freedesktop.ModemManager1.Modem.Signal"
-	DBusModemmanagerSimInterface         = "org.freedesktop.ModemManager1.Sim"
-	DBusModemmanagerSmsInterface         = "org.freedesktop.ModemManager1.Sms"
+	DBusModemmanagerPath                    = "/org/freedesktop/ModemManager1"
+	DBusModemmanagerService                 = "org.freedesktop.ModemManager1"
+	DBusModemmanagerInterface               = "org.freedesktop.ModemManager1"
+	DBusModemmanagerBearerInterface         = "org.freedesktop.ModemManager1.Bearer"
+	DBusModemmanagerModemInterface          = "org.freedesktop.ModemManager1.Modem"
+	DBusModemmanagerMessageInterface        = "org.freedesktop.ModemManager1.Modem.Messaging"
+	DBusModemmanager3gppModemInterface      = "org.freedesktop.ModemManager1.Modem.Modem3gpp"
+	DBusModemmanagerProfileManagerInterface = "org.freedesktop.ModemManager1.Modem.Modem3gpp.ProfileManager"
+	DBusModemmanagerSimpleModemInterface    = "org.freedesktop.ModemManager1.Modem.Simple"
+	DBusModemmanagerSARInterface            = "org.freedesktop.ModemManager1.Modem.Sar"
+	DBusModemmanagerSignalInterface         = "org.freedesktop.ModemManager1.Modem.Signal"
+	DBusModemmanagerSimInterface            = "org.freedesktop.ModemManager1.Sim"
+	DBusModemmanagerSmsInterface            = "org.freedesktop.ModemManager1.Sms"
 	// JobName is the name of the Modem Manager process
 	JobName = "modemmanager"
 )
