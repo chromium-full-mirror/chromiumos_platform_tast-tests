@@ -31,6 +31,7 @@ import (
 type loginScreenLaunchTestParam struct {
 	browserType     browser.Type
 	lacrosSelection lacros.Selection
+	forkZygotes     bool
 	keepAlive       bool // Ignored when browserType == TypeAsh.
 }
 
@@ -61,6 +62,17 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
+					false, // Don't fork Zygotes.
+					false, // keepAlive disabled
+				},
+			},
+			{
+				Name:      "rootfs_zygotes",
+				ExtraAttr: []string{"group:mainline", "informational"},
+				Val: loginScreenLaunchTestParam{
+					browser.TypeLacros,
+					lacros.Rootfs,
+					true,  // Fork Zygotes.
 					false, // keepAlive disabled
 				},
 			},
@@ -70,7 +82,8 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					true, // keepAlive enabled
+					false, // Don't fork Zygotes.
+					true,  // keepAlive enabled
 				},
 			},
 			{
@@ -79,6 +92,7 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeAsh,
 					lacros.Rootfs,
+					false, // Don't fork Zygotes.
 					false, // ignored
 				},
 			},
@@ -247,8 +261,13 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"),
 	}
 
-	// Setup Lacros configuration.
+	// Fork zygotes at login screen if the corresponding param is enabled.
 	params := s.Param().(loginScreenLaunchTestParam)
+	if params.forkZygotes {
+		options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
+	}
+
+	// Setup Lacros configuration.
 	lacrosCfg := lacrosfixt.NewConfig(
 		lacrosfixt.Selection(params.lacrosSelection),
 		lacrosfixt.KeepAlive(params.keepAlive))
@@ -280,7 +299,13 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	if len(info.LacrosPath) == 0 {
 		s.Fatal("Failed to get Lacros path")
 	}
-	lacrosProcsAtLoginScreen, err := waitForLacrosProcs(ctx, info.LacrosPath, 1)
+
+	// If Zygotes are forking at login screen, there will be 3 additional Chrome processes.
+	expectedProcesses := 1
+	if params.forkZygotes {
+		expectedProcesses += 3
+	}
+	lacrosProcsAtLoginScreen, err := waitForLacrosProcs(ctx, info.LacrosPath, expectedProcesses)
 	if err != nil {
 		s.Fatal("Failed to get Lacros processes at login screen: ", err)
 	}
