@@ -178,6 +178,14 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		// The attack surface for 'gdbus' is minimal, and these processes are short-lived by nature
 		// since they are waiting for a D-Bus endpoint to come up.
 		{"gdbus", "root", "root", 0},
+		// 'quipper' is short-lived and used for profiling.
+		{"quipper", "root", "root", 0},
+		// 'pvs' is a symlink to '/sbin/lvm'.
+		{"pvs", "root", "root", 0},
+		// 'arc-file-syncer' performs bi-directional file synchronization for the set of
+		// predefined control files.
+		// TODO(b/319667794): Sandbox 'arc-file-syncer' better.
+		{"arc-file-syncer", "root", "root", 0},
 
 		// One-off processes that we see when this test runs together with other tests.
 		// src/overlays/overlay-kip/chromeos-base/modem-watchdog/files/chromeos-kip-modem-watchdog.sh
@@ -193,6 +201,7 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"ureadahead", "root", "root", 0},
 		{"sed", "root", "root", 0},
 		{"start", "root", "root", 0},
+		{"evtest", "root", "root", 0},
 	}
 
 	// Names of processes whose children should be ignored. These processes themselves are also ignored.
