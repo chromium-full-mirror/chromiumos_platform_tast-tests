@@ -38,7 +38,7 @@ func init() {
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
-		Timeout:      15 * time.Minute,
+		Timeout:      30*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:    "vp9_hd_24fps_ash",
 			Fixture: "powerAsh",
@@ -235,7 +235,7 @@ func VideoEncode(ctx context.Context, s *testing.State) {
 	total := videoEncodeFormatParams.VideoEncodeTimeParams.Total
 
 	// Use default value for timeParam if not set.
-	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute}
+	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: 30 * time.Minute}
 	if interval == time.Duration(0) {
 		interval = defaultTimeParams.Interval
 	}
