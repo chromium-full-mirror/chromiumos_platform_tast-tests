@@ -274,7 +274,7 @@ func arrangeWindow(ctx context.Context, tconn *chrome.TestConn, appID string, wi
 
 // browserActivity defines test scenario of browser.
 // Open a website, browse the page and wait 12 seconds.
-// The total execution time is 2 minutes (5 rounds).
+// The total execution time is 6 minutes.
 func browserActivity(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, conn *chrome.Conn, uiHandler cuj.UIActionHandler, browserApp apps.App, browserTime time.Duration) error {
 	const (
 		// chromeTabQuiescenceTimeout defines the maximum time duration to wait for a Chrome tab to achieve quiescence.

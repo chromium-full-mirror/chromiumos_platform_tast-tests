@@ -22,13 +22,13 @@ import (
 
 const (
 	// Execution time ratio of browser, social app and video app is 2:3:5.
-	// browserWaitTime is set to 12 seconds and executed 5 times in total.
-	// The total execution time including swipe up and down is about 2 minutes.
-	// socialAppTime is set to 3 minutes.
-	// videoPlayTime is set to 5 minutes.
-	socialAppTime = 3 * time.Minute
-	videoPlayTime = 5 * time.Minute
-	browserTime   = 2 * time.Minute
+	// browserWaitTime is set to 12 seconds for each page.
+	// The total execution time including swipe up and down is about 6 minutes.
+	// socialAppTime is set to 9 minutes.
+	// videoPlayTime is set to 15 minutes.
+	socialAppTime = 9 * time.Minute
+	videoPlayTime = 15 * time.Minute
+	browserTime   = 6 * time.Minute
 
 	multiTaskingAppPrepareTimeout = 10 * time.Minute
 	multiTaskingAppExecutionTime  = (socialAppTime + videoPlayTime + browserTime) * 2
