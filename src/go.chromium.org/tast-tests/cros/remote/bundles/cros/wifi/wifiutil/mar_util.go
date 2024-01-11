@@ -25,7 +25,8 @@ func isBroadcastMAC(mac net.HardwareAddr) bool {
 // findWrongPackets is a simple filter returning all packets from capture
 // indicated by pcapPath that fail to pass the wrongMAC check, that is when
 // wrongMAC function returns true.
-func findWrongPackets(pcapPath string, wrongMAC func(mac net.HardwareAddr, toDS bool) bool) ([]gopacket.Packet, error) {
+// If checkCali is false, it won't take into account calibration packets.
+func findWrongPackets(pcapPath string, wrongMAC func(mac net.HardwareAddr, toDS bool) bool, checkCali bool) ([]gopacket.Packet, error) {
 	filters := []pcap.Filter{
 		pcap.RejectLowSignal(),
 		pcap.Dot11FCSValid(),
@@ -33,7 +34,7 @@ func findWrongPackets(pcapPath string, wrongMAC func(mac net.HardwareAddr, toDS 
 			layers.LayerTypeDot11,
 			func(layer gopacket.Layer) bool {
 				dot11 := layer.(*layers.Dot11)
-				if dot11.Flags.ToDS() {
+				if dot11.Flags.ToDS() && (checkCali || !bytes.Equal(dot11.Address1, dot11.Address2)) {
 					return wrongMAC(dot11.Address2, true)
 				}
 				if dot11.Flags.FromDS() {
@@ -67,7 +68,7 @@ func VerifyMACIsKept(ctx context.Context, macAddr net.HardwareAddr, pcapPath str
 	if wrongMAC(macAddr, true) {
 		return errors.Errorf("hardware address changed: got %s, want %s", macAddr, origMAC)
 	}
-	packets, err := findWrongPackets(pcapPath, wrongMAC)
+	packets, err := findWrongPackets(pcapPath, wrongMAC, false)
 	if err != nil {
 		return errors.Wrap(err, "failed to read packets")
 	}
@@ -98,7 +99,7 @@ func VerifyMACIsChanged(ctx context.Context, macAddr net.HardwareAddr, pcapPath 
 	if wrongMAC(macAddr, true) {
 		return errors.New("used previous MAC address: " + prevMACUsed.String())
 	}
-	packets, err := findWrongPackets(pcapPath, wrongMAC)
+	packets, err := findWrongPackets(pcapPath, wrongMAC, true)
 	if err != nil {
 		return errors.Wrap(err, "failed to read packets")
 	}
