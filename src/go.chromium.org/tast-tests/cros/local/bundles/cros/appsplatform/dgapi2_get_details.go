@@ -6,10 +6,11 @@ package appsplatform
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/playbilling/dgapi2"
+	"go.chromium.org/tast-tests/cros/local/playbilling"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -24,9 +25,9 @@ func init() {
 			"chromeos-apps-foundation-team@google.com",
 		},
 		BugComponent: "crbug:Platform>Apps>Foundation>Stores",
-		Attr:         []string{"group:hw_agnostic"}, // TODO(crbug.com/1441386) reintroduce the test once sample app is restored
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "playBillingDgapi2Fixture",
+		Fixture:      "playBillingFixture",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
@@ -39,7 +40,7 @@ func init() {
 
 // Dgapi2GetDetails Checks DGAPI2 test app returns details.
 func Dgapi2GetDetails(ctx context.Context, s *testing.State) {
-	p := s.FixtValue().(*dgapi2.FixtDgapiData)
+	p := s.FixtValue().(*playbilling.FixtData)
 	cr := p.Chrome
 	testApp := p.TestApp
 
@@ -48,7 +49,15 @@ func Dgapi2GetDetails(ctx context.Context, s *testing.State) {
 	defer cancel()
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "Dgapi2GetDetails")
 
-	if err := testApp.VerifyDetailsLogs(ctx); err != nil {
-		s.Fatal("Failed to verify logs: ", err)
+	if err := testApp.Launch(ctx); err != nil {
+		s.Fatal("Failed to launch Play Billing test app: ", err)
+	}
+
+	details, err := testApp.GetDetails(ctx, "book")
+	if err != nil {
+		s.Fatal("Failed to get details: ", err)
+	}
+	if !strings.Contains(details, `"Test book to purchase"`) {
+		s.Fatalf(`Unexpected details, getDetails("book") = %s, want "Test book to purchase"`, details)
 	}
 }

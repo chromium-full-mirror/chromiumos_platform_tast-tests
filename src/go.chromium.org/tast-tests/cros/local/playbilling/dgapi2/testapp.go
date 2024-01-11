@@ -6,10 +6,8 @@ package dgapi2
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -165,7 +163,7 @@ func (ta *TestAppDgapi2) signIn(ctx context.Context, appConn *chrome.Conn, cr *c
 			return signInConn.WaitForExprWithTimeout(ctx, userEntryJS, uiTimeout)
 		},
 		func(context.Context) error {
-			// Sleep briefly because login button may not be clickable yet.
+			// GoBigSleepLint: Sleep briefly because login button may not be clickable yet.
 			return testing.Sleep(ctx, 1*time.Second)
 		},
 		func(context.Context) error {
@@ -219,47 +217,6 @@ func all(vs []skuDetails, f func(skuDetails) bool) bool {
 		}
 	}
 	return true
-}
-
-// verifyGetDetailsLogs verifies logs for getDetails response.
-func verifyGetDetailsLogs(logs []string) error {
-	foundStart := false
-	var skuEntries []string
-	getDetailsPrefix := "getDetails returned:"
-	for _, v := range logs {
-		if !foundStart && strings.HasPrefix(v, getDetailsPrefix) {
-			foundStart = true
-			continue
-		}
-		if foundStart && !strings.HasPrefix(v, "{") {
-			break
-		}
-		if foundStart {
-			skuEntries = append(skuEntries, v)
-		}
-	}
-
-	if len(skuEntries) == 0 {
-		return errors.Errorf(`failed to find log entries starting with %q, received: %q`, getDetailsPrefix, logs)
-	}
-
-	var detailsResult []skuDetails
-	if err := json.Unmarshal([]byte(fmt.Sprintf("[%s]", strings.Join(skuEntries, ","))), &detailsResult); err != nil {
-		return errors.Wrap(err, "unable to parse json")
-	}
-
-	areItemsValid := all(detailsResult, isItemValid)
-
-	if !areItemsValid {
-		return errors.Errorf("returned json items aren't valid: %v", detailsResult)
-	}
-
-	return nil
-}
-
-// VerifyDetailsLogs verifies logs contain expected getDetails response.
-func (ta *TestAppDgapi2) VerifyDetailsLogs(ctx context.Context) error {
-	return ta.verifyLogs(ctx, verifyGetDetailsLogs)
 }
 
 // VerifyLogsMatch verifies logs contain an entry that matches the passed regex.

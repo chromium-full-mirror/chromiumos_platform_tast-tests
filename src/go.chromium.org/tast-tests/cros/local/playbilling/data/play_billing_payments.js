@@ -58,3 +58,22 @@ function buy(sku) {
             .catch(error => console.error(error.message));
     }
 }
+
+/**
+ * Attempts to get details of the supplied sku.
+ *
+ * @param {string} sku The unit code to purchase.
+ */
+async function getDetails(sku) {
+  try {
+    document.getElementById("errors").innerHTML = "";
+    let service = await window.getDigitalGoodsService(PAYMENT_METHOD);
+    let details = await service.getDetails([sku]);
+    let str = JSON.stringify(details);
+    document.getElementById("details").innerHTML = str;
+    return str;
+  } catch (e) {
+    document.getElementById("errors").innerHTML = e.message;
+    throw e;
+  }
+}

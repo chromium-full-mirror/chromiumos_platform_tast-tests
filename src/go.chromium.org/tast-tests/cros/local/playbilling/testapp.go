@@ -7,6 +7,7 @@ package playbilling
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -62,4 +63,16 @@ func (ta *TestApp) RequiredAuthConfirm(ctx context.Context) error {
 // CheckPaymentSuccessful checks for a presence of payment successful screen in the android ui tree.
 func (ta *TestApp) CheckPaymentSuccessful(ctx context.Context) error {
 	return CheckPaymentSuccessful(ta.uiAutomator)(ctx)
+}
+
+// GetDetails calls dgapi GetDetails and returns result.
+func (ta *TestApp) GetDetails(ctx context.Context, sku string) (string, error) {
+	if err := ta.pbconn.WaitForExprFailOnErrWithTimeout(ctx, "window.getDetails != undefined", 30*time.Second); err != nil {
+		return "", errors.Wrap(err, "failed to wait for getDetails to be defined")
+	}
+	var details string
+	if err := ta.pbconn.Eval(ctx, fmt.Sprintf("getDetails('%s')", sku), &details); err != nil {
+		return "", errors.Wrap(err, "failed to get details")
+	}
+	return details, nil
 }

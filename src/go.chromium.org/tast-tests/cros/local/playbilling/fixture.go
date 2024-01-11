@@ -44,7 +44,7 @@ var playBillingWebApk = webapk.WebAPK{
 	Name:              "Play Billing Test PWA",
 	ID:                "obcppbejhdfcplncjdlmagmpfjhmipii",
 	Port:              8080,
-	ApkDataPath:       "ArcPlayBillingTestPWA_20220210.apk",
+	ApkDataPath:       "ArcPlayBillingTestPWA_20240112.apk",
 	IndexPageDataPath: index,
 }
 
@@ -83,6 +83,8 @@ func init() {
 		Vars:         []string{assetLinksVar},
 		Data:         DataFiles,
 		SetUpTimeout: 2 * time.Minute,
+		// Time required to install tast.play_billing APK.
+		PreTestTimeout: 30 * time.Second,
 	})
 }
 
@@ -98,6 +100,7 @@ type playBillingFixture struct {
 //		...
 //	}
 type FixtData struct {
+	Chrome  *chrome.Chrome
 	TestApp *TestApp
 }
 
@@ -111,11 +114,6 @@ func (f *playBillingFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal("Failed to create WebAPK Manager: ", err)
 	}
 	f.wm = wm
-
-	// Install the test APK.
-	if err := wm.InstallApk(ctx); err != nil {
-		s.Fatal("Failed to install the APK: ", err)
-	}
 
 	pwaDir, err := ioutil.TempDir("", "tast-play-billing-pwa")
 	if err != nil {
@@ -150,7 +148,7 @@ func (f *playBillingFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 
 	testApp := NewTestApp(ctx, arcDevice, uiDevice, wm)
 
-	return &FixtData{testApp}
+	return &FixtData{cr, testApp}
 }
 
 func (f *playBillingFixture) Reset(ctx context.Context) error {
@@ -158,7 +156,12 @@ func (f *playBillingFixture) Reset(ctx context.Context) error {
 	return nil
 }
 
-func (f *playBillingFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {}
+func (f *playBillingFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Install the test APK.
+	if err := f.wm.InstallApk(ctx); err != nil {
+		s.Fatal("Failed to install the APK: ", err)
+	}
+}
 
 func (f *playBillingFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
