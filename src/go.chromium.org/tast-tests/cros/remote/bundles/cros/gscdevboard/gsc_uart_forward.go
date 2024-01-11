@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"math/rand"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -52,6 +53,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.ResetWithStraps(ctx, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	b.WaitUntilCCDConnected(ctx)
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, no uServo")
@@ -81,6 +83,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.ResetWithStraps(ctx, ti50.ServoMicroConnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	b.WaitUntilCCDConnected(ctx)
 
 	// Test forwarding on each of three ports.
 	s.Log("AP off, with uServo")
@@ -111,8 +114,11 @@ func testForwarding(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	defer uart.Close(ctx)
 
 	// Flush out any "DATA LOST" message along with other queued-up data.
-	uart.WriteSerial(ctx, []byte{13, 10})
-	th.MustSucceed(ccd.ClearInput(ctx), "Error clearing buffer")
+	if expectUartToUsb {
+		uart.WriteSerial(ctx, []byte("AB\r\n"))
+		_, err := ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
+		th.MustSucceed(err, "Error clearing buffer")
+	}
 
 	// Send data to UART, expecting to read it out of the USB interface.
 	databuf := []byte(fmt.Sprintf("The quick red fox jumps over the lazy brown dog for the %dth time", r.Intn(1000000000)))
