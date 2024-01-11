@@ -1,4 +1,4 @@
-// Copyright 2024 The ChromiumOS Authors
+// Copyright 2020 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -200,7 +200,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Name:      "80211axhe20",
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on channel 40 with a channel width of 20MHz."),
-		ExtraAttr: []string{"wificell_func_ax"},
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211axPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 			ap.HEChWidth(ap.HEChWidth20Or40),
@@ -212,7 +212,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Name:      "80211axhe40",
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on channel 157 with a channel width of 40MHz."),
-		ExtraAttr: []string{"wificell_func_ax"},
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
 			ap.HEChWidth(ap.HEChWidth20Or40),
@@ -224,7 +224,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Name:      "80211axhe80mixed",
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
-		ExtraAttr: []string{"wificell_func_ax"},
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
@@ -235,7 +235,7 @@ func simpleConnect80211ax() []*simpleConnectParams {
 	}, {
 		Name:      "80211axhe80pure",
 		Fixture:   defaultFixture,
-		ExtraAttr: []string{"wificell_func_ax"},
+		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Doc: append(simpleConnectDocPref("an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use HE WiFi standard."),
 		Val: []simpleConnectParamsVal{{APOpts: `

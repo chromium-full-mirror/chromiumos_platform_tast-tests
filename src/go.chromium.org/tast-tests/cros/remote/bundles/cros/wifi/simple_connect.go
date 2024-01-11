@@ -1,4 +1,4 @@
-// Copyright 2024 The ChromiumOS Authors
+// Copyright 2020 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
@@ -196,7 +196,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 40 with a channel width of 20MHz.
 				Name:      "80211axhe20",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_func_ax"},
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211axPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
@@ -210,7 +210,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ax network on channel 157 with a channel width of 40MHz.
 				Name:      "80211axhe40",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_func_ax"},
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
@@ -224,7 +224,7 @@ func init() {
 				// Verifies that DUT can connect to an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
 				Name:      "80211axhe80mixed",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_func_ax"},
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
@@ -239,7 +239,7 @@ func init() {
 				// The router is forced to use HE WiFi standard.
 				Name:      "80211axhe80pure",
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
-				ExtraAttr: []string{"wificell_func_ax"},
+				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
