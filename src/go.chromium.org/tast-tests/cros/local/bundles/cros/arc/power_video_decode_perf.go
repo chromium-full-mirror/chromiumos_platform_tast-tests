@@ -478,7 +478,7 @@ func PowerVideoDecodePerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Error while recording power metrics: ", err)
 	}
 
-	if err := p.Save(s.OutDir()); err != nil {
-		s.Error("Failed saving perf data: ", err)
+	if err := power.GeneratePowerLogAndSaveToCrosbolt(ctx, s.OutDir(), s.TestName(), p, nil); err != nil {
+		s.Error("Failed to save and upload power metrics: ", err)
 	}
 }
