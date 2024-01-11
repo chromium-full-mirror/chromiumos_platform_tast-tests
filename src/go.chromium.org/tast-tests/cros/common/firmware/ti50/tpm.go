@@ -6,6 +6,7 @@ package ti50
 
 import (
 	"context"
+	"encoding/binary"
 	"encoding/hex"
 
 	"github.com/google/go-tpm/tpm2"
@@ -157,6 +158,13 @@ func (t *TpmHandle) TpmvGetBootMode() (byte, error) {
 	if err != nil {
 		return 0, err
 	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return 0, err
+	}
+	if errorCode != 0 {
+		return 0, errors.Errorf("GetBootMode command returned error: 0x%x", errorCode)
+	}
 	mode := response[12]
 	return mode, nil
 }
@@ -171,8 +179,53 @@ func (t *TpmHandle) TpmvCommitNvmem() error {
 		return err
 	}
 
-	_, err = t.Send(tpmvCommitNvmem)
-	return err
+	response, err := t.Send(tpmvCommitNvmem)
+	if err != nil {
+		return err
+	}
+
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return err
+	}
+	if errorCode != 0 {
+		return errors.Errorf("CommitNvmem returned error: 0x%x", errorCode)
+	}
+	return nil
+}
+
+// TpmvReboot sends the reboot vendor command for the specified number of ms.
+func (t *TpmHandle) TpmvReboot(ms uint16) error {
+	tpmvReboot, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000e" + // size
+		"20000000" + // ordinal: vendor
+		"0013") // subcommand: ImmediateReset
+	if err != nil {
+		return err
+	}
+	// Add ms parameter
+	tpmvReboot = binary.BigEndian.AppendUint16(tpmvReboot, ms)
+
+	response, err := t.Send(tpmvReboot)
+	if err != nil {
+		return err
+	}
+
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return err
+	}
+	if errorCode != 0 {
+		return errors.Errorf("Reboot command returned error: 0x%x", errorCode)
+	}
+	return nil
+}
+
+func getTPMVResponseStatus(buf []byte) (uint32, error) {
+	if len(buf) < 10 {
+		return 1, errors.Errorf("TPMV response not large enough: %v", buf)
+	}
+	return binary.BigEndian.Uint32(buf[6:10]), nil
 }
 
 // KernelAttr generates the public area for the kernel NV index.
