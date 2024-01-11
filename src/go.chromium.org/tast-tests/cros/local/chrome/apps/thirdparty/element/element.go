@@ -48,7 +48,9 @@ const (
 	textClass        = "android.widget.TextView"
 	imageButtonClass = "android.widget.ImageButton"
 
-	retryTimes       = 3
+	retryTimes = 3
+	// If the network is unstable, account synchronization may take a long time.
+	syncTimeout      = time.Minute
 	longUITimeout    = 30 * time.Second
 	defaultUITimeout = 15 * time.Second
 	shortUITimeout   = 5 * time.Second
@@ -143,7 +145,8 @@ func (e *Element) Login(ctx context.Context, username string) error {
 	notNowButton := e.d.Object(ui.Text("NOT NOW"), ui.ResourceID(elementIDPrefix+"later"))
 	waitingStatusText := e.d.Object(ui.ResourceID(waitingStatusTextID), ui.ClassName(textClass))
 	return uiauto.NamedCombine("skip splash",
-		apputil.ClickIfExist(notNowButton, defaultUITimeout),
+		// The |notNowButton| might take more time to appear on low-end devices.
+		apputil.ClickIfExist(notNowButton, longUITimeout),
 		e.dismissNotificationPrompt,
 		// Wait for the app finishes syncing the account data with the server.
 		// 1. If the account only joins a few rooms, the text would immediately disappear
@@ -151,7 +154,7 @@ func (e *Element) Login(ctx context.Context, username string) error {
 		// 2. If the account joins many rooms, the data sync might take a long time to finish.
 		uiauto.IfSuccessThen(
 			apputil.WaitForExists(waitingStatusText, defaultUITimeout),
-			apputil.WaitUntilGone(waitingStatusText, longUITimeout),
+			apputil.WaitUntilGone(waitingStatusText, syncTimeout),
 		),
 		e.dismissEncryptionAlert,
 	)(ctx)
