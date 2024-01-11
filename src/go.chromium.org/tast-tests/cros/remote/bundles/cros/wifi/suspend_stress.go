@@ -20,6 +20,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const suspendIterationTimeout = 40 * time.Second
+const baseTimeout = 30 * time.Second
+
 type suspendStressParam struct {
 	suspendCount int
 	apOps        []hostapd.Option
@@ -44,6 +47,7 @@ func init() {
 			{
 				Name:      "80211g",
 				ExtraAttr: []string{"wificell_func", "wificell_suspend"},
+				Timeout:   baseTimeout + suspendIterationTimeout*15,
 				Val: []suspendStressParam{
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(1), hostapd.Mode(hostapd.Mode80211g)}},
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211g)}},
@@ -54,6 +58,7 @@ func init() {
 			{
 				Name:      "80211n24ht40",
 				ExtraAttr: []string{"wificell_func", "wificell_suspend"},
+				Timeout:   baseTimeout + suspendIterationTimeout*5,
 				Val: []suspendStressParam{
 					{
 						suspendCount: 5,
@@ -65,6 +70,7 @@ func init() {
 			{
 				Name:      "80211n5ht40",
 				ExtraAttr: []string{"wificell_func", "wificell_suspend"},
+				Timeout:   baseTimeout + suspendIterationTimeout*5,
 				Val: []suspendStressParam{
 					{
 						suspendCount: 5,
@@ -76,6 +82,7 @@ func init() {
 			{
 				Name:      "80211acvht80",
 				ExtraAttr: []string{"wificell_func", "wificell_suspend"},
+				Timeout:   baseTimeout + suspendIterationTimeout*5,
 				Val: []suspendStressParam{
 					{
 						suspendCount: 5,
@@ -90,6 +97,7 @@ func init() {
 			{
 				Name:      "hidden",
 				ExtraAttr: []string{"wificell_func", "wificell_suspend"},
+				Timeout:   baseTimeout + suspendIterationTimeout*15,
 				Val: []suspendStressParam{
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(6), hostapd.Mode(hostapd.Mode80211g), hostapd.Hidden(), hostapd.SpectrumManagement()}},
 					{suspendCount: 5, apOps: []hostapd.Option{hostapd.Channel(36), hostapd.Mode(hostapd.Mode80211nPure), hostapd.Hidden(), hostapd.HTCaps(hostapd.HTCapHT20), hostapd.SpectrumManagement()}},
@@ -100,6 +108,7 @@ func init() {
 			{
 				Name:      "wpa2",
 				ExtraAttr: []string{"wificell_func", "wificell_suspend"},
+				Timeout:   baseTimeout + suspendIterationTimeout*5,
 				Val: []suspendStressParam{
 					{
 						suspendCount: 5,
@@ -112,7 +121,7 @@ func init() {
 			{
 				Name:      "stress_80211n24ht40",
 				ExtraAttr: []string{"wificell_stress"},
-				Timeout:   time.Hour * 4,
+				Timeout:   baseTimeout + suspendIterationTimeout*690,
 				Val: []suspendStressParam{
 					{
 						suspendCount: 690,
@@ -124,7 +133,7 @@ func init() {
 			{
 				Name:      "stress_wpa2",
 				ExtraAttr: []string{"wificell_stress"},
-				Timeout:   time.Hour * 4,
+				Timeout:   baseTimeout + suspendIterationTimeout*690,
 				Val: []suspendStressParam{
 					{
 						suspendCount: 690,
