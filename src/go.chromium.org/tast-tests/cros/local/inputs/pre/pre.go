@@ -42,6 +42,14 @@ var StableModels = []string{
 	"kenzo",
 	"pico",
 	"willow",
+	// Intel models.
+	"brya",
+	"craask",
+	"skolas",
+	"skolas-refresh",
+	"aviko",
+	"rex",
+	"screebo",
 }
 
 // UnstableModels is a list of newly proposed models that are expected to be

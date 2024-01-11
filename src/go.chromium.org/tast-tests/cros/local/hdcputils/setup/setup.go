@@ -12,5 +12,5 @@ import (
 // HDCP stands for High-bandwidth Digital Content Protection.
 // Allowed hardware models are listed below.
 func PerfHDCPDevices() hwdep.Condition {
-	return hwdep.Model("volteer", "voxel", "redrix", "brya")
+	return hwdep.Model("volteer", "voxel", "redrix", "brya", "craask", "skolas", "skolas-refresh", "aviko", "rex", "screebo")
 }
