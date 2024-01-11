@@ -20,13 +20,18 @@ import (
 )
 
 type gamingAppParams struct {
-	game func(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) gameapp.GameApp
+	game     func(ctx context.Context, kb *input.KeyboardEventWriter, tconn *chrome.TestConn, a *arc.ARC, d *androidui.Device, dataPath func(string) string) gameapp.GameApp
+	playTime time.Duration
 }
 
 const (
 	gamingAppPrepareTimeout = 10 * time.Minute
-	gamingAppPlayTime       = 3 * time.Minute
-	gamingAppTimeout        = gamingAppPrepareTimeout + gamingAppPlayTime + power.RecorderTimeout
+
+	asphalt8PlayTime     = 30 * time.Minute
+	superTuxKartPlayTime = 60 * time.Minute
+
+	asphalt8Timeout     = gamingAppPrepareTimeout + asphalt8PlayTime + power.RecorderTimeout
+	superTuxKartTimeout = gamingAppPrepareTimeout + superTuxKartPlayTime + power.RecorderTimeout
 
 	superTuxKartAPKURLVar = "power.super_tux_kart_apk_url"
 )
@@ -47,21 +52,24 @@ func init() {
 		SoftwareDeps: []string{"chrome", "arc"},
 		Vars:         []string{superTuxKartAPKURLVar},
 		Fixture:      "powerAshARC",
-		Timeout:      gamingAppTimeout,
 		Params: []testing.Param{
 			{
 				Name: "asphalt8",
 				Val: gamingAppParams{
-					game: gameapp.NewAsphalt8,
+					game:     gameapp.NewAsphalt8,
+					playTime: asphalt8PlayTime,
 				},
+				Timeout:   asphalt8Timeout,
 				ExtraData: []string{gameapp.Asphalt8IconGameScene},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			},
 			{
 				Name: "super_tux_kart",
 				Val: gamingAppParams{
-					game: gameapp.NewSuperTuxKart,
+					game:     gameapp.NewSuperTuxKart,
+					playTime: superTuxKartPlayTime,
 				},
+				Timeout:   superTuxKartTimeout,
 				ExtraData: []string{gameapp.SuperTuxKartIconGameScene},
 				ExtraAttr: []string{"group:power", "power_regression"},
 			},
@@ -94,13 +102,14 @@ func GamingApp(ctx context.Context, s *testing.State) {
 	defer kb.Close(cleanupCtx)
 
 	game := s.Param().(gamingAppParams).game(ctx, kb, tconn, a, d, s.DataPath)
+	playTime := s.Param().(gamingAppParams).playTime
 	if superTuxKart, isSuperTuxKart := game.(*gameapp.SuperTuxKart); isSuperTuxKart {
 		if url, ok := s.Var(superTuxKartAPKURLVar); ok {
 			superTuxKart.SetAPKURL(url)
 		}
 	}
 	// Run the app and collect the power data in the meantime.
-	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), gamingAppPlayTime); err != nil {
+	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), playTime); err != nil {
 		s.Fatal("Failed to run game app: ", err)
 	}
 }
