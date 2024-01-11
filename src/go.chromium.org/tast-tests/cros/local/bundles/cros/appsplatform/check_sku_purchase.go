@@ -24,7 +24,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "playBillingFixture",
-		Data:         playbilling.DataFiles,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
