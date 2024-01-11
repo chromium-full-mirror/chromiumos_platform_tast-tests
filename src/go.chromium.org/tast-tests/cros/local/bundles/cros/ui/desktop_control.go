@@ -34,7 +34,6 @@ func init() {
 			"newcomer@chromium.org",
 			"tbarzic@chromium.org",
 			"kaznacheev@chromium.org",
-			"mukai@chromium.org", // Tast author
 		},
 		BugComponent: "b:1288352", // ChromeOS > Software > System UI Surfaces > Shelf
 		Attr:         []string{"group:mainline"},
@@ -228,7 +227,7 @@ func DesktopControl(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to proceed the test scenario")
 		}
 
-		// Right now there's no way to identify the quick settings is closed.
+		// GoBigSleepLint: Right now there's no way to identify the quick settings is closed.
 		// Just wait 1 second. TODO(crbug.com/1099502): replace by a test API.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return errors.Wrap(err, "failed to wait for the quick settings to be closed")
