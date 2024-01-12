@@ -54,7 +54,7 @@ func (c *RemoteClient) Start(ctx context.Context, config *Config) (*Result, erro
 	clientCtx, cancel := context.WithTimeout(ctx, config.TestTime+commandTimeoutMargin)
 	defer cancel()
 
-	if err := c.fw.open(ctx, config); err != nil {
+	if err := c.fw.open(ctx, config.ServerIP); err != nil {
 		return nil, errors.Wrap(err, "failed to configure client firewall")
 	}
 

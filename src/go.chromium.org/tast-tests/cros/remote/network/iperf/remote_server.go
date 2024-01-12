@@ -74,7 +74,7 @@ func (c *RemoteServer) Start(ctx context.Context, config *Config) error {
 	testing.ContextLog(ctx, "Starting iperf server")
 	testing.ContextLogf(ctx, "iperf server invocation: %s", iperfCommand)
 
-	if err := c.fw.open(ctx, config); err != nil {
+	if err := c.fw.open(ctx, config.ClientIP); err != nil {
 		return errors.Wrap(err, "failed to configure server firewall")
 	}
 

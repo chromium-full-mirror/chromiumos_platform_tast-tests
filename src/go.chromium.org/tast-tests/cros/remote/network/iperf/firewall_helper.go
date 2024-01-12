@@ -15,51 +15,65 @@ import (
 
 // firewallHelper adds firewall rules and keeps track of them for cleaning up later.
 type firewallHelper struct {
-	fwr   *fwremote.Runner
-	rules [][]firewall.RuleOption
+	fwr          *fwremote.Runner
+	cleanupRules [][]firewall.RuleOption
 }
 
 func newFirewallHelper(conn *ssh.Conn) *firewallHelper {
 	return &firewallHelper{
-		fwr:   fwremote.NewRemoteRunner(conn),
-		rules: make([][]firewall.RuleOption, 0),
+		fwr:          fwremote.NewRemoteRunner(conn),
+		cleanupRules: make([][]firewall.RuleOption, 0),
 	}
 }
 
-func (f *firewallHelper) open(ctx context.Context, cfg *Config) error {
-	var proto firewall.RuleOption
-	if cfg.Protocol == ProtocolUDP {
-		proto = firewall.OptionProto(firewall.L4ProtoUDP)
-	} else {
-		proto = firewall.OptionProto(firewall.L4ProtoTCP)
-	}
-
-	rules := []firewall.RuleOption{
-		firewall.OptionAppendRule(firewall.InputChain),
-		proto,
-		firewall.OptionDPort(cfg.Port),
+func (f *firewallHelper) open(ctx context.Context, peerAddr string) error {
+	// TODO(b/319776793): use static chain for test iptables rule.
+	allowRxOpts := []firewall.RuleOption{
+		firewall.OptionSource(peerAddr),
 		firewall.OptionJumpTarget(firewall.TargetAccept),
 		firewall.OptionWait(10),
 	}
-
-	if err := f.fwr.ExecuteCommand(ctx, rules...); err != nil {
-		return err
+	allowTxOpts := []firewall.RuleOption{
+		firewall.OptionDestination(peerAddr),
+		firewall.OptionJumpTarget(firewall.TargetAccept),
+		firewall.OptionWait(10),
+	}
+	rules := [][]firewall.RuleOption{
+		// Command: iptables -I INPUT -s ${peerAddr} -j ACCEPT -w 10
+		append([]firewall.RuleOption{firewall.OptionInsertRule(firewall.InputChain)}, allowRxOpts...),
+		// Command: iptables -I OUTPUT -d ${peerAddr} -j ACCEPT -w 10
+		append([]firewall.RuleOption{firewall.OptionInsertRule(firewall.OutputChain)}, allowTxOpts...),
+	}
+	f.cleanupRules = [][]firewall.RuleOption{
+		// Command: iptables -D INPUT -s ${peerAddr} -j ACCEPT -w 10
+		append([]firewall.RuleOption{firewall.OptionDeleteRule(firewall.InputChain)}, allowRxOpts...),
+		// Command: iptables -D OUTPUT -d ${peerAddr} -j ACCEPT -w 10
+		append([]firewall.RuleOption{firewall.OptionDeleteRule(firewall.OutputChain)}, allowTxOpts...),
 	}
 
-	f.rules = append(f.rules, rules[1:])
-	return nil
-}
-
-func (f *firewallHelper) close(ctx context.Context) error {
 	var allErrors error
-	for _, fw := range f.rules {
-		args := []firewall.RuleOption{firewall.OptionDeleteRule(firewall.InputChain)}
-		args = append(args, fw...)
-		if err := f.fwr.ExecuteCommand(ctx, args...); err != nil {
+	for _, fw := range rules {
+		if err := f.fwr.ExecuteCommand(ctx, fw...); err != nil {
 			allErrors = errors.Wrapf(allErrors, "failed to configure firewall, %s", err) // NOLINT
 		}
 	}
 
-	f.rules = make([][]firewall.RuleOption, 0)
+	if allErrors != nil {
+		f.close(ctx)
+	}
+
+	return allErrors
+}
+
+func (f *firewallHelper) close(ctx context.Context) error {
+	// TODO(b/319776793): clean up static chain for test iptables rule.
+	var allErrors error
+	for _, fw := range f.cleanupRules {
+		if err := f.fwr.ExecuteCommand(ctx, fw...); err != nil {
+			allErrors = errors.Wrapf(allErrors, "failed to configure firewall, %s", err) // NOLINT
+		}
+	}
+
+	f.cleanupRules = f.cleanupRules[:0]
 	return allErrors
 }

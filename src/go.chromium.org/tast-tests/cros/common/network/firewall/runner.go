@@ -40,8 +40,10 @@ type Command string
 const (
 	// CommandAppend add rule.
 	CommandAppend Command = "-A"
+	// CommandInsert insert rule.
+	CommandInsert Command = "-I"
 	// CommandDelete del rule.
-	CommandDelete = "-D"
+	CommandDelete Command = "-D"
 )
 
 // Chain with rules
@@ -84,6 +86,13 @@ func (r *Runner) ExecuteCommand(ctx context.Context, ruleOpt ...RuleOption) erro
 func OptionAppendRule(chain Chain) RuleOption {
 	return func(args *[]string) {
 		*args = append(*args, string(CommandAppend), string(chain))
+	}
+}
+
+// OptionInsertRule inserts a new rule to a given chain.
+func OptionInsertRule(chain Chain) RuleOption {
+	return func(args *[]string) {
+		*args = append(*args, string(CommandInsert), string(chain))
 	}
 }
 
@@ -141,6 +150,14 @@ func OptionWait(seconds int) RuleOption {
 func OptionSource(address string) RuleOption {
 	return func(args *[]string) {
 		*args = append(*args, "--source", address)
+	}
+}
+
+// OptionDestination sets up the destination address which can be either
+// a network name, a hostname, a network IP address (with /mask), or a plain IP address.
+func OptionDestination(address string) RuleOption {
+	return func(args *[]string) {
+		*args = append(*args, "--destination", address)
 	}
 }
 
