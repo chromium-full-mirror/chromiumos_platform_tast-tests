@@ -16,10 +16,6 @@ __pycache__/
 # GN out directory
 android/out/
 
-# Nested checkout
-src/go.chromium.org/tast-tests/cros/remote/firmware/data/fw-testing-configs/
-src/go.chromium.org/tast-tests/cros/remote/firmware/data/fw-testing-configs/
-
 # Intelij
 .idea
 
