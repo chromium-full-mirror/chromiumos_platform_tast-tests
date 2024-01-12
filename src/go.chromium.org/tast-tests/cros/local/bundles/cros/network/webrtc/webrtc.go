@@ -65,8 +65,11 @@ func (e *env) SetUp(ctx context.Context, httpServerRoot http.FileSystem) error {
 // connection ("remote"). We simulate a NAT environment, so the local peer will
 // talk to remoteIPAfterNAT and the remote peer will talk to localIPAfterNAT.
 // The caller should guarantee that the routing setup is done before calling
-// this function to make them reachable.
-func (e *env) StartConn(ctx context.Context, localIPAfterNAT, remoteIPAfterNAT string) error {
+// this function to make them reachable. outDir will be used to store the chrome
+// logs on error.
+func (e *env) StartConn(ctx context.Context, outDir, localIPAfterNAT, remoteIPAfterNAT string) (retErr error) {
+	defer e.cr.SaveLogsOnError(ctx, outDir, func() bool { return retErr != nil })
+
 	url := e.server.URL + "/" + htmlFile
 	conn, err := e.cr.NewConn(ctx, url)
 	if err != nil {

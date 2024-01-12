@@ -214,7 +214,7 @@ func QosWebRTC(ctx context.Context, s *testing.State) {
 	}()
 
 	// Open the WebRTC webpage.
-	if err := webrtcEnv.StartConn(ctx, rtcRemoteIPInNetns, rtcLocalIPInNetns); err != nil {
+	if err := webrtcEnv.StartConn(ctx, s.OutDir(), rtcRemoteIPInNetns, rtcLocalIPInNetns); err != nil {
 		s.Fatal("Failed to open the WebRTC webpage: ", err)
 	}
 
