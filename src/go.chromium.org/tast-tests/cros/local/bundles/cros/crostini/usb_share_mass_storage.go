@@ -235,7 +235,7 @@ func mountInside(ctx context.Context, cont *vm.Container, label, mountDir string
 
 func setupMassStorage(ctx context.Context, label string) (string, action.Action, error) {
 	usbMassStorage := usbdevice.NewUSBMassStorage()
-	if err := usbMassStorage.Init(ctx, 10 /*sizeInMb*/); err != nil {
+	if err := usbMassStorage.Init(ctx, 100 /*sizeInMb*/); err != nil {
 		return "", nil, errors.Wrap(err, "failed to initialise the mass storage device")
 	}
 	if err := usbMassStorage.PlugIn(ctx, false /*readOnly*/); err != nil {

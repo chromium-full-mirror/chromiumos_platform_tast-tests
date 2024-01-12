@@ -69,7 +69,6 @@ func USBCopy(ctx context.Context, s *testing.State) {
 		deviceLabel          = "virtual-usb"
 		defaultDir           = "/media/removable/" + deviceLabel
 		defaultUsbLabel      = "USB Drive"
-		mountDirPrefix       = "mass_storage_"
 		pasteToUsbFile       = "paste-to-usb.txt"
 		pasteToUsbContents   = "pasteToUsb"
 		pasteFromUsbFile     = "paste-from-usb.txt"
@@ -170,7 +169,7 @@ func USBCopy(ctx context.Context, s *testing.State) {
 
 func setupMassStorage(ctx context.Context, label, fs string) (action.Action, error) {
 	ms := usbdevice.NewUSBMassStorage()
-	sizeInMb := uint64(10)
+	sizeInMb := uint64(100)
 	if err := ms.Init(ctx, sizeInMb); err != nil {
 		return nil, errors.Wrap(err, "failed to initialise the mass storage device")
 	}
