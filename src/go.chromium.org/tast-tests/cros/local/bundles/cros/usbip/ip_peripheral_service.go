@@ -30,8 +30,8 @@ func init() {
 		},
 		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
-		HardwareDeps: hwdep.D(hwdep.Platform("fizz", "kalista")),
+		SoftwareDeps: []string{"chrome", "meets_device"},
+		HardwareDeps: hwdep.D(hwdep.Model("ambassador", "endeavour", "endeavour_c")),
 	})
 }
 
