@@ -6,5 +6,15 @@ include /src/go.chromium.org/tast-tests/cros/local/arc/OWNERS
 # Paper I/O team owns printing
 per-file print.go=file:chromiumos/owners:v1:/printscan/OWNERS.printscan
 
+# WM experts own WM-related tests
+per-file resize_lock*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
+per-file split_view.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
+per-file compat_snap.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
+per-file window_manager*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
+per-file wm_*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
+
+# Notification experts own notification-related tests
+per-file notification*.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.notif
+
 # Tast team for bulk/emergencies
 include /OWNERS.tast

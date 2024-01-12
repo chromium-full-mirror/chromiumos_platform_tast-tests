@@ -9,5 +9,10 @@ khmel@chromium.org
 mhasank@chromium.org
 niwa@chromium.org
 
+# Domain experts
+per-file activity.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
+per-file dumpsys.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.wm
+per-file notification.go=file:/src/go.chromium.org/tast-tests/cros/local/arc/OWNERS.notif
+
 # Tast team for bulk/emergencies
 include /OWNERS.tast
