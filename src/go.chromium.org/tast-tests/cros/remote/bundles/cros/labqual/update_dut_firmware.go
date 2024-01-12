@@ -175,22 +175,25 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	if firmwarePathVal != "" || localFirmwarePathVal != "" {
 		if firmwarePathVal != "" {
 			s.Log("Downloading Firmware to Flash")
-			ecBinToFlash, monitorBinToFlash, apBinToFlash, err = firmware.DownloadRequiredFirmwareFiles(ctx, h, s.CloudStorage(), firmwarePathVal, tmpFwDir, fwidModel)
+			firmwareFilesToFlash, err := firmware.DownloadRequiredFirmwareFiles(ctx, h, s.CloudStorage(), firmwarePathVal, tmpFwDir, fwidModel)
 			if err != nil {
 				s.Fatal("Failed to download firmware files: ", err)
 			}
 			// copy firmware files to the local host as they need to be copied to the DUT for DUT firmware flashing test
-			if apBinToFlash != "" {
+			if firmwareFilesToFlash.APFirmwareFile != "" {
+				apBinToFlash = firmwareFilesToFlash.APFirmwareFile
 				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.APFirmwareFileToFlash), fmt.Sprintf("%s/%s", tmpDir, apBinToFlash)); err != nil {
 					s.Fatal("Failed to copy AP firmware file from servo host: ", err)
 				}
 			}
-			if ecBinToFlash != "" {
+			if firmwareFilesToFlash.ECFirmwareFile != "" {
+				ecBinToFlash = firmwareFilesToFlash.ECFirmwareFile
 				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.ECFirmwareFileToFlash), fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)); err != nil {
 					s.Fatal("Failed to copy EC firmware file from servo host: ", err)
 				}
 			}
-			if monitorBinToFlash != "" {
+			if firmwareFilesToFlash.MonitorFile != "" {
+				monitorBinToFlash = firmwareFilesToFlash.MonitorFile
 				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpFwDir, firmware.MonitorFileToFlash), fmt.Sprintf("%s/%s", tmpDir, monitorBinToFlash)); err != nil {
 					s.Fatal("Failed to copy EC monitor firmware file from servo host: ", err)
 				}

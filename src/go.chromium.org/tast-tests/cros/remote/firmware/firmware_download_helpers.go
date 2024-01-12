@@ -23,6 +23,13 @@ import (
 // FWType represents the type of firmware we are working on - AP or EC
 type FWType string
 
+// FWFilesToFlash represents the name of firmware bin to flash
+type FWFilesToFlash struct {
+	ECFirmwareFile string
+	APFirmwareFile string
+	MonitorFile    string
+}
+
 var (
 	// FirmwarePath is the GCS location for the firmware to be downloaded
 	FirmwarePath = testing.RegisterVarString(
@@ -45,11 +52,11 @@ const (
 	// APFirmware indicates firmware for AP
 	APFirmware FWType = "AP"
 	// ECFirmwareFileToFlash is the name of the EC firmware bin to flash
-	ECFirmwareFileToFlash = "ecFirmwareForTest.bin"
+	ECFirmwareFileToFlash string = "ecFirmwareForTest.bin"
 	// APFirmwareFileToFlash is the name of the AP firmware bin to flash
-	APFirmwareFileToFlash = "FirmwareForTest.bin"
+	APFirmwareFileToFlash string = "FirmwareForTest.bin"
 	// MonitorFileToFlash is the name of the Monitor bin to flash
-	MonitorFileToFlash = "npcx_monitor.bin"
+	MonitorFileToFlash string = "npcx_monitor.bin"
 )
 
 // VerifyFwIDs will show in logs the current firmware version and compare it to expected ones if they are provided.
@@ -122,7 +129,7 @@ func DownloadFirmwareFile(ctx context.Context, cs *testing.CloudStorage, tmpDir,
 }
 
 // DownloadRequiredFirmwareFiles will extract and download the specified AP and EC .bin files from the firmware tar in the cloud storage
-func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.CloudStorage, gcsFirmwareFilePath, servoTmpDir, fwidModel string) (string, string, string, error) {
+func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.CloudStorage, gcsFirmwareFilePath, servoTmpDir, fwidModel string) (*FWFilesToFlash, error) {
 	ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwidModel, ECFirmware)
 	apFileNamePool, _ := getFileNamePools(ctx, fwidModel, APFirmware)
 	var apBin, ecBin, monitorBin string
@@ -146,9 +153,9 @@ func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.C
 		apBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, APFirmwareFileToFlash, apFileNamePool)
 		ecBin = extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, servoTmpDir, ECFirmwareFileToFlash, ecFilenamePool)
 		// Extracted all the required files from this devserver
-		return ecBin, monitorBin, apBin, nil
+		return &FWFilesToFlash{ECFirmwareFile: ecBin, MonitorFile: monitorBin, APFirmwareFile: apBin}, nil
 	}
-	return "", "", "", errors.New("no devservers able to stage firmware image")
+	return nil, errors.New("no devservers able to stage firmware image")
 }
 
 // UntarUnknownFileName will try to untar the respective fw bin file from the downloaded tar file.
