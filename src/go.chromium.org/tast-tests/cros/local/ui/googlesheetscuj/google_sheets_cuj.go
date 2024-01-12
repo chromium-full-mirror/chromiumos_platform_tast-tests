@@ -1,6 +1,8 @@
 // Copyright 2023 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+
+// Package googlesheetscuj contains the test code for GoogleSheetsCUJ.
 package googlesheetscuj
 
 import (
@@ -8,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -40,7 +43,7 @@ type TestParam struct {
 
 // Run opens up a Google Sheets file, and use mousewheel/trackpad/keypress to
 // scroll the sheets file, to test the Google Sheets performance.
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, s *testing.State) *perf.Values {
 	const (
 		timeout                 = 10 * time.Second
 		overallScrollTimeout    = 10 * time.Minute
@@ -322,4 +325,5 @@ func Run(ctx context.Context, s *testing.State) {
 	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
 		s.Error("Failed to save histogram raw data: ", err)
 	}
+	return pv
 }

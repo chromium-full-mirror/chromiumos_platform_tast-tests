@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -39,7 +40,7 @@ import (
 
 // Run opens up a new Google Doc, and types paragraphs in multiple
 // languages, speeds, and styles, to test the Google Docs performance.
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -404,4 +405,5 @@ func Run(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)
 	}
+	return pv
 }

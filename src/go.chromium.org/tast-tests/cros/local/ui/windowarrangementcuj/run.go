@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -34,7 +35,7 @@ import (
 
 // Run runs WindowArrangementCUJ which measures the performance of
 // critical user journey for window arrangements
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, s *testing.State) *perf.Values {
 	const (
 		timeout  = 10 * time.Second
 		duration = 2 * time.Second
@@ -302,4 +303,5 @@ func Run(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save the perf data: ", err)
 	}
+	return pv
 }

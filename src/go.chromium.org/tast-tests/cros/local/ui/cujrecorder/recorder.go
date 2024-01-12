@@ -1256,6 +1256,7 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 	}
 
 	r.duration += time.Now().Sub(r.startedAtTm)
+	r.pv.Set(perf.Metric{Name: "TestMetrics.StartedAtTime", Variant: "summary", Unit: "Unix"}, float64(r.startedAtTm.Unix()))
 	r.startedAtTm = time.Time{} // Reset to zero.
 
 	if r.screenRecorderCleanup != nil {

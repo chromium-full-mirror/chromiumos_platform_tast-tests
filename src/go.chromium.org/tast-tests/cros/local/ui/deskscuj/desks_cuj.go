@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -32,7 +33,7 @@ import (
 
 // Run runs the desks CUJ by opening up 4 different desks and switching
 // between them using various workflows.
-func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) {
+func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *perf.Values {
 	// deskSwitchingDuration is how long we should run each workflow for.
 	// To have the full test run in 10 minutes,  we want to have each of
 	// the 3 workflows run in 10/3 minutes.
@@ -304,4 +305,5 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save the performance data: ", err)
 	}
+	return pv
 }

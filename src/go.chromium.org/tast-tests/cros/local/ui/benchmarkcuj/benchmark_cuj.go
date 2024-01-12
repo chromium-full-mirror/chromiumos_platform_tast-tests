@@ -59,7 +59,7 @@ type benchmarkInfo struct {
 }
 
 // Run runs the Benchmark CUJ by running the benchmark and recording the result.
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, s *testing.State) *perf.Values {
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -186,4 +186,5 @@ func Run(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)
 	}
+	return pv
 }

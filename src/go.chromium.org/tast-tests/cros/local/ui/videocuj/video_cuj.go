@@ -39,7 +39,7 @@ import (
 
 // Run runs VideoCUJ by opening CrosVideo and playing the video at
 // different resolutions and frame rates.
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, s *testing.State) *perf.Values {
 	const (
 		videoURL          = "http://crosvideo.appspot.com/?codec=%s&resolution=1080&loop=true"
 		totalTestDuration = 10 * time.Minute
@@ -505,6 +505,7 @@ func Run(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)
 	}
+	return pv
 }
 
 // getFrameData reads the dropped frames and decoded frames from a given

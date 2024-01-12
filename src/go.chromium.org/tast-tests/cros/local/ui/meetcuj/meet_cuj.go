@@ -145,7 +145,7 @@ var FakeCamHALCfg720p = &fakeCameraHALCfg{
 //
 // After recording:
 //   - Record and save metrics.
-func Run(ctx context.Context, s *testing.State) {
+func Run(ctx context.Context, s *testing.State) *perf.Values {
 	const (
 		// The addBotTimeout allows 3 2-minute BondAPI request retries by the
 		// Bond lib.
@@ -1542,6 +1542,7 @@ func Run(ctx context.Context, s *testing.State) {
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save the perf data: ", err)
 	}
+	return pv
 }
 
 // toggleFileMenuButton toggles the "File" menu button for press and release metrics.
