@@ -49,7 +49,7 @@ func init() {
 			hwdep.ForceDischarge(),
 		),
 		Fixture: setup.PowerAshAdaptiveCharging,
-		Timeout: time.Hour, // We only need up to an hour if the battery is low. Otherwise, the test should finish in about 10 minutes.
+		Timeout: 90 * time.Minute, // We only need up to 90 minutes if the battery is low or the system discharges slowly. Otherwise, the test should finish in about 10 minutes or less.
 	})
 }
 
@@ -65,9 +65,10 @@ func AdaptiveCharging(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
 	// Putting battery within testable range where the Adaptive Charging
-	// notification will show.
-	if err := charge.EnsureBatteryWithinRange(ctx, cr, 80.0, 95.0); err != nil {
-		s.Fatalf("Failed to ensure battery percentage within %d%% to %d%%: %v", 80, 95, err)
+	// notification will show. Adaptive Charging will only trigger when the
+	// battery is at or below 95%, so discharge down to at least 93%.
+	if err := charge.EnsureBatteryWithinRange(ctx, cr, 80.0, 93.0); err != nil {
+		s.Fatalf("Failed to ensure battery percentage within %d%% to %d%%: %v", 80, 93, err)
 	}
 
 	// Ensure that charging is turned on.
