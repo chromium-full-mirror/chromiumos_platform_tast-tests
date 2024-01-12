@@ -123,22 +123,8 @@ func (e *Element) Login(ctx context.Context, username string) error {
 		return err
 	}
 
-	userLink := nodewith.NameContaining(username).Role(role.Link)
-	createAccountRootWebArea := nodewith.Name("Create your account").Role(role.RootWebArea)
-	continueLink := nodewith.Name("Continue").Role(role.Link)
-	if err := uiauto.NamedCombine("login with Google",
-		e.waitForLoginWindowMaximized,
-		e.ui.DoDefaultUntil(userLink,
-			e.ui.WithTimeout(shortUITimeout).WaitUntilGone(userLink),
-		),
-		e.ui.WaitUntilAnyExists(createAccountRootWebArea, continueLink),
-		uiauto.IfSuccessThen(
-			e.ui.Exists(createAccountRootWebArea),
-			e.createAccount(username),
-		),
-		e.ui.DoDefault(continueLink),
-	)(ctx); err != nil {
-		return err
+	if err := e.loginWithGoogle(ctx, username); err != nil {
+		return errors.Wrap(err, "failed to login with Google")
 	}
 
 	const waitingStatusTextID = elementIDPrefix + "waitingStatusText"
@@ -158,6 +144,44 @@ func (e *Element) Login(ctx context.Context, username string) error {
 		),
 		e.dismissEncryptionAlert,
 	)(ctx)
+}
+
+// loginWithGoogle completes the login flow with Google account.
+func (e *Element) loginWithGoogle(ctx context.Context, username string) error {
+	userLink := nodewith.NameContaining(username).Role(role.Link)
+	if err := uiauto.NamedCombine("select user "+username,
+		e.waitForLoginWindowMaximized,
+		e.ui.DoDefaultUntil(userLink,
+			e.ui.WithTimeout(shortUITimeout).WaitUntilGone(userLink),
+		),
+	)(ctx); err != nil {
+		return err
+	}
+
+	continueButton := nodewith.Name("Continue").Role(role.Button)
+	createAccountRootWebArea := nodewith.Name("Create your account").Role(role.RootWebArea)
+	continueLink := nodewith.Name("Continue").Role(role.Link)
+	foundNode, err := e.ui.FindAnyExists(ctx, continueButton, createAccountRootWebArea, continueLink)
+	if err != nil {
+		return errors.Wrap(err, "failed to find node on login window")
+	}
+	if foundNode == continueButton {
+		// Sometimes the account would forget the permission of the element app.
+		// Re-grant the permission for the app by clicking the continue button.
+		if err := e.ui.DoDefault(continueButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click continue button")
+		}
+		foundNode, err = e.ui.FindAnyExists(ctx, createAccountRootWebArea, continueLink)
+		if err != nil {
+			return errors.Wrap(err, "failed to find node on login window")
+		}
+	}
+	if foundNode == createAccountRootWebArea {
+		if err := e.createAccount(username)(ctx); err != nil {
+			return errors.Wrap(err, "failed to create account")
+		}
+	}
+	return e.ui.DoDefault(continueLink)(ctx)
 }
 
 // waitForLoginWindowMaximized activates and maximizes the login window.
