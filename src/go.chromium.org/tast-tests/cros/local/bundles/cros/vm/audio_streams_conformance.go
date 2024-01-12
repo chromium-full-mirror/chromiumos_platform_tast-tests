@@ -61,6 +61,10 @@ var relaxedCriteriaModels = []string{
 	// b/269065601#comment8: Devices with RT1015p amp have an additional 300ms delay on the power on sequence, so we relax the criteria for them.
 	"beetley", "blipper", "galith360", "galnat", "galnat360", "galtic", "galtic360", "sasukette", "storo", "storo360",
 }
+var skippedModels = []string{
+	// TODO(b/312097873): remove "brya" when b/309904720 is fixed.
+	"brya",
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -68,6 +72,7 @@ func init() {
 		Desc:         "Test AudioStream implementation correctness",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "paulhsia@google.com"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel(skippedModels...)),
 		SoftwareDeps: []string{"vm_host"},
 		Fixture:      "uiStopped",
 		BugComponent: "b:1332660",
