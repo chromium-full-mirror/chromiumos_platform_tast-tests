@@ -618,9 +618,37 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	applyEffects := nodewith.Name("Apply visual effects").Role(role.MenuItem)
 	blur := nodewith.Name("Blur your background").Role(role.ToggleButton).Focusable()
-	turnOffBlur := nodewith.Name("Turn off visual effects").Role(role.ToggleButton).Focusable()
+	turnOffEffects := nodewith.Name("Turn off visual effects").Focusable()
 	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(meetRootWebArea).Focusable()
 	setEffect := func(ctx context.Context, effect *nodewith.Finder) error {
+		toggleEffect := func(ctx context.Context) error {
+			if effect == turnOffEffects {
+				toggleButton := turnOffEffects.Role(role.ToggleButton)
+				popUpButton := turnOffEffects.Role(role.PopUpButton)
+
+				turnOffEffectsButton, err := ui.FindAnyExists(ctx, toggleButton, popUpButton)
+				if err != nil {
+					return errors.Wrap(err, "failed to find 'Turn off visual effects' button")
+				}
+				s.Log("Turn off visual effects")
+				if turnOffEffectsButton == popUpButton {
+					nodeInfo, err := ui.Info(ctx, turnOffEffectsButton)
+					if err != nil {
+						return errors.Wrap(err, "failed to find 'Turn off visual effects' button")
+					}
+					if nodeInfo.Description == "No effects applied" {
+						return nil
+					}
+					removeAllItem := nodewith.Name("Remove all").Role(role.MenuItem)
+					return uiauto.Combine("turn off visual effects",
+						ui.LeftClick(popUpButton),
+						ui.LeftClick(removeAllItem))(ctx)
+				}
+			}
+			return uiLongWait.DoDefaultUntil(effect,
+				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(effect, true))(ctx)
+		}
+
 		return uiauto.Combine(
 			fmt.Sprintf("set effect with node %v", effect),
 			// Open the "More options" popup, and wait until we see
@@ -632,9 +660,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			ui.DoDefault(applyEffects),
 			uiLongWait.WaitUntilExists(effect),
 
-			// Toggle the effect.
-			uiLongWait.DoDefaultUntil(effect,
-				ui.WithTimeout(5*time.Second).WaitUntilCheckedState(effect, true)),
+			toggleEffect,
 
 			// Close the visual effects section.
 			ui.DoDefault(closeButton),
@@ -647,7 +673,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			s.Fatal("Failed to turn on visual effects: ", err)
 		}
 	} else {
-		if err := setEffect(ctx, turnOffBlur); err != nil {
+		if err := setEffect(ctx, turnOffEffects); err != nil {
 			s.Fatal("Failed to turn off visual effects: ", err)
 		}
 	}
@@ -1470,8 +1496,8 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	}
 
 	if meet.Effects {
-		if err := setEffect(ctx, turnOffBlur); err != nil {
-			s.Log("Failed to turn off blur: ", err)
+		if err := setEffect(ctx, turnOffEffects); err != nil {
+			s.Log("Failed to turn off visual effects: ", err)
 		}
 	}
 
