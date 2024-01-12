@@ -76,7 +76,7 @@ func init() {
 			Name:      "display_on_bt_on_ash",
 			Fixture:   "powerAsh",
 			Val:       displayOnBTOn,
-			ExtraAttr: []string{"group:power", "power_daily"},
+			ExtraAttr: []string{"group:power", "power_regression"},
 		}, {
 			Name:    "display_off_bt_on_ash",
 			Fixture: "powerAsh",
