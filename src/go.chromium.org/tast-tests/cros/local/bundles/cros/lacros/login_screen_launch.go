@@ -156,7 +156,8 @@ func waitForShelf(ctx context.Context, tConn *chrome.TestConn) error {
 	return nil
 }
 
-// runningLacrosProcs returns a map from PID to executable path of all the Lacros processes running.
+// runningLacrosProcs returns a map from PID to executable path of all the `chrome` Lacros processes running.
+// Excludes other binaries such as `chrome_crashpad_handler` and `nacl_helper`.
 func runningLacrosProcs(ctx context.Context, lacrosPath string) (map[int32]string, error) {
 	procs, err := lacrosproc.ProcsFromPath(ctx, lacrosPath)
 	if err != nil {
@@ -165,31 +166,29 @@ func runningLacrosProcs(ctx context.Context, lacrosPath string) (map[int32]strin
 
 	lacrosProcs := make(map[int32]string)
 	for _, proc := range procs {
-		if exe, err := proc.Exe(); err == nil {
-			lacrosProcs[proc.Pid] = exe
+		if name, err := proc.Name(); err == nil && name == "chrome" {
+			if exe, err := proc.Exe(); err == nil {
+				lacrosProcs[proc.Pid] = exe
+			}
 		}
 	}
 
 	return lacrosProcs, nil
 }
 
-// waitForLacrosProcs waits until Lacros processes are running, then returns all of them.
-func waitForLacrosProcs(ctx context.Context, lacrosPath string) (lacrosProcs map[int32]string, err error) {
-	// NOTE: depending on timing, it is possible, although not likely, that this function
-	// will return only the first Lacros process, before the children processes are spawned.
-	// That's ok, as that process will be the browser process and if it persists across logins,
-	// it means pre-launching and resuming succeeded.
+// waitForLacrosProcs waits until at least minProcesses Lacros processes are running, then returns all of them.
+func waitForLacrosProcs(ctx context.Context, lacrosPath string, minProcesses int) (lacrosProcs map[int32]string, err error) {
 	if err = testing.Poll(ctx, func(ctx context.Context) error {
 		lacrosProcs, err = runningLacrosProcs(ctx, lacrosPath)
 		if err != nil {
 			return err
 		}
-		if len(lacrosProcs) == 0 {
-			return errors.New("lacros is not yet running (no lacros processes)")
+		if len(lacrosProcs) < minProcesses {
+			return errors.Errorf("expected %d lacros processes, %d found", minProcesses, len(lacrosProcs))
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-		return lacrosProcs, errors.Wrap(err, "lacros is not running (no lacros processes)")
+		return lacrosProcs, errors.Wrap(err, "lacros processes not running")
 	}
 	return lacrosProcs, nil
 }
@@ -281,7 +280,7 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	if len(info.LacrosPath) == 0 {
 		s.Fatal("Failed to get Lacros path")
 	}
-	lacrosProcsAtLoginScreen, err := waitForLacrosProcs(ctx, info.LacrosPath)
+	lacrosProcsAtLoginScreen, err := waitForLacrosProcs(ctx, info.LacrosPath, 1)
 	if err != nil {
 		s.Fatal("Failed to get Lacros processes at login screen: ", err)
 	}
@@ -308,7 +307,7 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	// Gather the Lacros processes running after login has been completed.
 	if params.browserType == browser.TypeLacros {
 		// If Lacros is enabled for the user, Lacros should be running in the session.
-		lacrosProcsAfterLogin, err := waitForLacrosProcs(ctx, info.LacrosPath)
+		lacrosProcsAfterLogin, err := waitForLacrosProcs(ctx, info.LacrosPath, len(lacrosProcsAtLoginScreen))
 		// Couldn't get the processes, or there are no Lacros processes.
 		if err != nil {
 			s.Fatal("Failed to get Lacros processes after login: ", err)
