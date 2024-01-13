@@ -90,7 +90,7 @@ func Freeplay(ctx context.Context, s *testing.State) {
 		"Youtube":       "agimnkijcaahngcdmfeangaknmldooml",
 		"GoogleDocs":    "cepkndkdlbllfhpfhledabdcdbidehkd",
 		"BeFunky":       "fjoomcalbeohjbnlcneddljemclcekeg",
-		"SumoPaint":     "ioeckplmjbkckfdcpkibkhhbefdabjgc",
+		"SumoPaint":     "genadphlobhbpdnafiphnppelkagmghm",
 		"Spotify":       "pjibgclleladliembfgfagdaldikeohf",
 		"GooglePhotos":  "fdbkkojdbojonckghlanfaopfakedeca",
 		"StardewValley": "ljibeljdcmpldadfgijmbaocjibloonn",

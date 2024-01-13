@@ -26,7 +26,9 @@ import (
 )
 
 const (
-	setUpTimeout    = 350 * time.Second
+	// Set long enough timeout for SetUp() as Demo Mode OOBE flow need to download
+	// Demo Mode components which could be slow depending on network latency.
+	setUpTimeout    = 8 * time.Minute
 	tearDownTimeout = 60 * time.Second
 )
 
