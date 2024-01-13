@@ -17,9 +17,9 @@ import (
 	"github.com/google/gopacket/layers"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
-	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/ieee80211"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/network/ip"
 	remotewpacli "go.chromium.org/tast-tests/cros/remote/network/wpacli"

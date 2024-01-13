@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/network/arping"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/arping"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"

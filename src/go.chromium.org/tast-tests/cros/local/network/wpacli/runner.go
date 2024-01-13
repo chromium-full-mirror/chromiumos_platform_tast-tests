@@ -6,7 +6,7 @@
 package wpacli
 
 import (
-	"go.chromium.org/tast-tests/cros/common/network/wpacli"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
 )
 

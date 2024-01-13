@@ -9,7 +9,7 @@ import (
 	"net"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dhcp"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"

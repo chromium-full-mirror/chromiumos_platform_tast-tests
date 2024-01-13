@@ -6,7 +6,7 @@
 package arping
 
 import (
-	"go.chromium.org/tast-tests/cros/common/network/arping"
+	"go.chromium.org/tast-tests/cros/common/wifi/arping"
 	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast/core/ssh"
 )

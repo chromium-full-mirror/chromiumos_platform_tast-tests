@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast/core/errors"

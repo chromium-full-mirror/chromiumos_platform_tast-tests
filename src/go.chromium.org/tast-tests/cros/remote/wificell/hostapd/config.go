@@ -12,9 +12,9 @@ import (
 	"strconv"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/wifi/hostap"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/base"
 	"go.chromium.org/tast/core/errors"

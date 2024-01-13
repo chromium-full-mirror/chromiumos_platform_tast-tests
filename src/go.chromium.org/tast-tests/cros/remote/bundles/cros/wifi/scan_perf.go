@@ -11,10 +11,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
-	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"

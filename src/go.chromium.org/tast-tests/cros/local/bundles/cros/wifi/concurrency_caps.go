@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	localIw "go.chromium.org/tast-tests/cros/local/network/iw"
 	"go.chromium.org/tast/core/testing"
 )

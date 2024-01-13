@@ -11,8 +11,8 @@ import (
 	"path"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/testing"

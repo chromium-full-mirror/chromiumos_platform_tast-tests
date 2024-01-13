@@ -8,7 +8,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/network/ip"
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"

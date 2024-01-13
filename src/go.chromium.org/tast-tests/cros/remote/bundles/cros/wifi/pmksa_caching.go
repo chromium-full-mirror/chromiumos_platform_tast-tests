@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
-	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"

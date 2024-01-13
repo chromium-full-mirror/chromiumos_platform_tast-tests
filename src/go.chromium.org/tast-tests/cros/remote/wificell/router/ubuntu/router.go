@@ -12,8 +12,8 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/network/ip"
-	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	remote_ip "go.chromium.org/tast-tests/cros/remote/network/ip"
 	remote_iw "go.chromium.org/tast-tests/cros/remote/network/iw"

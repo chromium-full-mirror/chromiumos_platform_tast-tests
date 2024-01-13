@@ -13,10 +13,10 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/attenuator"

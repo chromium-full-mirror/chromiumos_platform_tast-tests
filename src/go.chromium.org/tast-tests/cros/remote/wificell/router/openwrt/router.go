@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"go.chromium.org/chromiumos/config/go/test/lab/api"
-	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	remoteIp "go.chromium.org/tast-tests/cros/remote/network/ip"
 	remoteIw "go.chromium.org/tast-tests/cros/remote/network/iw"

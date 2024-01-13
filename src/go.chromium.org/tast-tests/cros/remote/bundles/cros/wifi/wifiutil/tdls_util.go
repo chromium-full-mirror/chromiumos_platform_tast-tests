@@ -13,7 +13,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	remoteiw "go.chromium.org/tast-tests/cros/remote/network/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"
 	"go.chromium.org/tast/core/errors"

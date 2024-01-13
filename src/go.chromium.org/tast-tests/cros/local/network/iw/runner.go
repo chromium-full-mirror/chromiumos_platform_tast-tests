@@ -6,7 +6,7 @@
 package iw
 
 import (
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
 )
 

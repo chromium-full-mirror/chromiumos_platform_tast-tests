@@ -14,7 +14,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"

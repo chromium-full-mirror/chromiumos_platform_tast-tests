@@ -10,9 +10,9 @@ import (
 	"reflect"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/network/wpacli"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast-tests/cros/remote/wificell"

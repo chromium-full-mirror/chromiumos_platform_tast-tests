@@ -8,8 +8,8 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/common/network/ip"
-	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"
 	"go.chromium.org/tast/core/errors"

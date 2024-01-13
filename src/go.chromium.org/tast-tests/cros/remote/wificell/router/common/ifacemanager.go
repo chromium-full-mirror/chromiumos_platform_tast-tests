@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"go.chromium.org/tast-tests/cros/common/network/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

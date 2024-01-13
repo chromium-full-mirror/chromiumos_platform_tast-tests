@@ -24,12 +24,12 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"go.chromium.org/tast-tests/cros/common/network/firewall"
-	"go.chromium.org/tast-tests/cros/common/network/iw"
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/network/protoutil"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
