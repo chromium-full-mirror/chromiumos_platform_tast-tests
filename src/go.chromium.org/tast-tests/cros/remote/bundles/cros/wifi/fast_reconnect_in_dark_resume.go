@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/network/ip"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -36,6 +37,7 @@ func init() {
 		// TODO(b/187362093): Extend the platforms when WoWLAN is known to be good on them.
 		HardwareDeps: hwdep.D(hwdep.Platform("volteer"), hwdep.ChromeEC()),
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 	})
 }
 
