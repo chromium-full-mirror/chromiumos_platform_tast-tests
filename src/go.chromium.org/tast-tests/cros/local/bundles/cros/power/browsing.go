@@ -60,16 +60,18 @@ func init() {
 			Val:               browsingTestParam{ConfigName: "browsing", TimeParams: power.TimeParams{Interval: 20 * time.Second, Total: time.Hour}},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
-			Name:    "20min_ash",
-			Fixture: "powerAsh",
-			Timeout: 20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
-			Val:     browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
+			Name:      "20min_ash",
+			Fixture:   "powerAsh",
+			Timeout:   20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
+			Val:       browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
+			ExtraAttr: []string{"group:power", "power_daily"},
 		}, {
 			Name:              "20min_lacros",
 			Fixture:           "powerLacros",
 			Timeout:           20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "browsing_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
 			ExtraSoftwareDeps: []string{"lacros"},
+			ExtraAttr:         []string{"group:power", "power_daily"},
 		}, {
 			Name:    "heavy_ash",
 			Fixture: "powerAsh",
@@ -86,14 +88,13 @@ func init() {
 			Fixture:   "powerAsh",
 			Timeout:   20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:       browsingTestParam{ConfigName: "heavy_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
+			ExtraAttr: []string{"group:power", "power_regression"},
 		}, {
 			Name:              "heavy_20min_lacros",
 			Fixture:           "powerLacros",
 			Timeout:           20*time.Minute + setupTimeoutBuffer + power.RecorderTimeout,
 			Val:               browsingTestParam{ConfigName: "heavy_20min", TimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 20 * time.Minute}},
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:    "custom_ash",
 			Fixture: "powerAsh",

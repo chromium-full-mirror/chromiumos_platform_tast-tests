@@ -38,16 +38,17 @@ func init() {
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"chrome", caps.BuiltinOrVividCamera},
 		Params: []testing.Param{{
-			Name:    "3m_ash",
-			Fixture: "powerAsh",
-			Val:     power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
-			Timeout: 3*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			Name:      "3m_ash",
+			Fixture:   "powerAsh",
+			Val:       power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
+			Timeout:   3*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			ExtraAttr: []string{"group:power", "power_daily"},
 		}, {
 			Name:      "25m_ash",
 			Fixture:   "powerAsh",
 			Val:       power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
 			Timeout:   25*time.Minute + timeoutBuffer + power.RecorderTimeout,
-			ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild", "group:power", "power_regression"},
+			ExtraAttr: []string{"group:power", "power_regression"},
 		}, {
 			Name:    "2hr_ash",
 			Fixture: "powerAsh",
@@ -59,13 +60,13 @@ func init() {
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               power.TimeParams{Interval: 5 * time.Second, Total: 3 * time.Minute},
 			Timeout:           3*time.Minute + timeoutBuffer + power.RecorderTimeout,
+			ExtraAttr:         []string{"group:power", "power_daily"},
 		}, {
 			Name:              "25m_lacros",
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               power.TimeParams{Interval: 20 * time.Second, Total: 25 * time.Minute},
 			Timeout:           25*time.Minute + timeoutBuffer + power.RecorderTimeout,
-			ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		}, {
 			Name:              "2hr_lacros",
 			Fixture:           "powerLacros",
