@@ -6,6 +6,22 @@
 
 let localPeerConnection;
 let remotePeerConnection;
+let localCanvas;
+
+// Make an animation in canvas to trigger the network traffic.
+function drawCanvas() {
+  const ctx = localCanvas.getContext('2d');
+  const width = localCanvas.width;
+  const height = localCanvas.height;
+  const now = new Date();
+  ctx.fillStyle = "white";
+  ctx.fillRect(0,0,width, height);
+  ctx.font = "50px serif";
+  ctx.fillStyle = "black";
+  ctx.fillText(now.getMilliseconds(), 0, height, width);
+
+  window.requestAnimationFrame(drawCanvas);
+}
 
 // The entry point of this WebRTC test app. We setup two peer connections on the
 // same tab: `local` is the side collecting and sending the streams, and
@@ -18,19 +34,10 @@ let remotePeerConnection;
 // - The local side will be known as `localNatIp` on the remote side;
 // - The remote side will be known as `remoteNatIp` on the local side.
 async function start(localNatIp, remoteNatIp) {
-  let localStream;
-  const localVideo = document.getElementById('localVideo');
+  window.requestAnimationFrame(drawCanvas);
 
-  try {
-    const constraints = {audio: true, video: true};
-    const stream = await navigator.mediaDevices.getUserMedia(constraints);
-    localVideo.srcObject = stream;
-    localStream = stream;
-  } catch (e) {
-    console.error(`getUserMedia() error: ${e.name}`);
-    return;
-  }
-
+  localCanvas = document.getElementById('localCanvas');
+  const localStream = localCanvas.captureStream();
   const videoTracks = localStream.getVideoTracks();
   const audioTracks = localStream.getAudioTracks();
   if (videoTracks.length > 0) {
