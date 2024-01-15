@@ -101,11 +101,6 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get config: ", err)
 	}
 
-	ms, err := firmware.NewModeSwitcher(ctx, h)
-	if err != nil {
-		s.Fatal("Failed to create mode switcher: ", err)
-	}
-
 	checkLaptopMode := func(ctx context.Context) (bool, error) {
 		if err := h.RequireRPCUtils(ctx); err != nil {
 			return false, errors.Wrap(err, "requiring RPC utils")
@@ -154,22 +149,13 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		s.Log("Setting power off")
-		if err := ms.PowerOff(ctx); err != nil {
-			s.Fatal("Failed to power off DUT: ", err)
-		}
-
-		// GoBigSleepLint: Sleeping for a few seconds after DUT power off.
-		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-			s.Fatal("Failed to sleep for 5 seconds: ", err)
-		}
 		s.Log("Rebooting the DUT with cold reset")
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 			s.Fatal("Failed to reboot the DUT with cold reset: ", err)
 		}
 
 		s.Log("Waiting for the boot to complete")
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
@@ -338,10 +324,6 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		}
 
 		// When DUT is a detachable, a tap on the power button would turn off the screen.
-		// We are yet to verify if this would be the case in general for all detachables.
-		// As of now, we've observed such behavior on Kukui and Soraka, but not on Strongbad.
-		// ModeSwitcherType seems to be one indicator that'll distinguish between them.
-		// We're continuing to identify better indicators.
 		if out, err := readDispBusRuntime(ctx, h); err != nil {
 			s.Log("Failed to read display bus info: ", err)
 		} else {
@@ -497,21 +479,14 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		repeatedSteps(testCase)
 	}
 
-	s.Log("Setting power off")
-	if err := ms.PowerOff(ctx); err != nil {
-		s.Fatal("Failed to power off DUT: ", err)
-	}
-
 	s.Log("Pressing and holding the power button for 3~8 seconds")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(h.Config.HoldPwrButtonPowerOff)); err != nil {
 		s.Fatal("Failed to press and hold on the power button for 3~8 second: ", err)
 	}
 
-	// On some DUTs, pressing 3~8 seconds would leave them in the off state, while some others would power on.
-	// We are currently in the process of defining DUT categories for the respective behaviors.
-	s.Log("Waiting for power state to become G3 or S0")
-	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3", "S0"); err != nil {
-		s.Fatal("Failed to get G3 or S0 powerstate: ", err)
+	s.Log("Waiting for power state to become G3")
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+		s.Fatal("Failed to get G3 powerstate: ", err)
 	}
 
 	s.Log("Getting powerstate information")
@@ -520,6 +495,18 @@ func ECLaptopMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get powerstate: ", err)
 	}
 	s.Logf("Power state: %s", powerState)
+
+	s.Log("Rebooting the DUT with cold reset")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+		s.Fatal("Failed to reboot the DUT with cold reset: ", err)
+	}
+
+	s.Log("Waiting for the boot to complete")
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancelWaitConnect()
+	if err := h.WaitConnect(waitConnectCtx); err != nil {
+		s.Fatal("Failed to reconnect to DUT: ", err)
+	}
 }
 
 // checkAndSetLaptopMode first checks if the passed EC command exists, and uses it to turn off tablet mode.
