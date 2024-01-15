@@ -130,7 +130,7 @@ func CleanUpStorageFromSettings(cr *chrome.Chrome, tconn *chrome.TestConn) uiaut
 			return errors.Wrap(err, "failed to launch Google Drive settings")
 		}
 
-		usingZeroBytesText := nodewith.Role(role.StaticText).Name("Using 0 B")
+		usingZeroBOrFourKBText := nodewith.Role(role.StaticText).NameRegex(regexp.MustCompile("Using (0 |4.0 K)B"))
 		return uiauto.Combine("clean up storage in settings",
 			// If bulk pinning is enabled, disable it first.
 			uiauto.IfSuccessThen(
@@ -142,8 +142,11 @@ func CleanUpStorageFromSettings(cr *chrome.Chrome, tconn *chrome.TestConn) uiaut
 			ui.WithInterval(time.Second).LeftClickUntil(cleanUpStorageButton, ui.Exists(dialogConfirmButton)),
 			// Click the dialog confirm button.
 			ui.LeftClick(dialogConfirmButton),
-			// Wait until the offline storage shows up as "Using 0 B".
-			ui.WaitUntilExists(usingZeroBytesText),
+			// Wait until the offline storage shows up as "Using 0 B" which happens
+			// when all the files are removed or "Using 4.0 KB" which happens when a
+			// file is pre-cached (via a read) and is not removed as part of the
+			// "Clear offline files" button.
+			ui.WaitUntilExists(usingZeroBOrFourKBText),
 		)(ctx)
 	}
 }
