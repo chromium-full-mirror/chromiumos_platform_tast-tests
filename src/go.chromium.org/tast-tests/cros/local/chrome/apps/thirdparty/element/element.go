@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Emoji represents the type of emoji in the Element app.
@@ -428,40 +429,64 @@ func (e *Element) RenameCurrentRoom(newRoomName string) uiauto.Action {
 	moreOptionsButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("More options"), ui.Clickable(true))
 	optionTitle := e.d.Object(ui.Text("Settings"), ui.ResourceID(elementIDPrefix+"title"))
 	roomSettingsTitle := e.d.Object(ui.Text("Room settings"), ui.ResourceID(actionTitleID))
-	openRoomSettings := uiauto.NamedCombine("open room settings",
+	openSettingsPage := uiauto.NamedCombine("open Settings page",
 		apputil.FindAndClick(moreOptionsButton, defaultUITimeout),
 		apputil.FindAndClick(optionTitle, defaultUITimeout),
 		apputil.WaitForExists(roomSettingsTitle, defaultUITimeout),
 	)
 
-	navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
-	discardChangeButton := e.d.Object(ui.Text("DISCARD CHANGES"), ui.ClassName(buttonClass))
-	returnToSettingsPage := uiauto.Combine("return to settings page",
-		apputil.FindAndClick(navigateUpButton, defaultUITimeout),
-		apputil.ClickIfExist(discardChangeButton, defaultUITimeout),
-	)
-
-	saveButton := e.d.Object(ui.Text("SAVE"), ui.ResourceID(elementIDPrefix+"roomSettingsSaveAction"))
-	newToolbarTitle := e.d.Object(ui.Text(newRoomName), ui.ResourceID(elementIDPrefix+"roomSettingsToolbarTitleView"))
-	setRoomNameAndSave := uiauto.Combine("set room name and save",
-		// Return to the room settings page when retrying.
-		uiauto.IfFailThen(
-			roomSettingsTitle.Exists,
-			returnToSettingsPage,
-		),
-		apputil.FindAndClick(roomSettingsTitle, defaultUITimeout),
-		e.typeText(roomNameFieldID, newRoomName),
-		apputil.FindAndClick(saveButton, defaultUITimeout),
-		apputil.WaitUntilGone(saveButton, defaultUITimeout),
-		apputil.WaitForExists(newToolbarTitle, defaultUITimeout),
-	)
 	return uiauto.NamedCombine("rename current room as "+newRoomName,
 		e.navigateUpToObject(moreOptionsButton),
-		openRoomSettings,
+		openSettingsPage,
 		// Sometimes the save button does not appear.
 		// Retry to ensure the room is renamed.
-		uiauto.Retry(retryTimes, setRoomNameAndSave),
+		uiauto.Retry(retryTimes, e.setRoomNameAndSave(newRoomName)),
 	)
+}
+
+func (e *Element) setRoomNameAndSave(newRoomName string) uiauto.Action {
+	return func(ctx context.Context) error {
+		navigateUpButton := e.d.Object(ui.PackageName(elementPackage), ui.Description("Navigate up"), ui.ClassName(imageButtonClass))
+		discardChangeButton := e.d.Object(ui.Text("DISCARD CHANGES"), ui.ClassName(buttonClass))
+		returnToSettingsPage := uiauto.Combine("return to Settings page",
+			apputil.FindAndClick(navigateUpButton, defaultUITimeout),
+			apputil.ClickIfExist(discardChangeButton, defaultUITimeout),
+		)
+
+		roomSettingsTitle := e.d.Object(ui.Text("Room settings"), ui.ResourceID(actionTitleID))
+		toolbarTitle := e.d.Object(ui.ResourceID(elementIDPrefix + "roomSettingsToolbarTitleView"))
+		if err := uiauto.NamedCombine("enter room settings",
+			// Return to the Settings page when retrying.
+			uiauto.IfFailThen(
+				roomSettingsTitle.Exists,
+				returnToSettingsPage,
+			),
+			apputil.FindAndClick(roomSettingsTitle, defaultUITimeout),
+			apputil.WaitForExists(toolbarTitle, defaultUITimeout),
+		)(ctx); err != nil {
+			return err
+		}
+
+		// The room might be renamed in previous retries.
+		// Check the current name before setting the new name.
+		currentRoomName, err := toolbarTitle.GetText(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get current room name")
+		}
+		if currentRoomName == newRoomName {
+			testing.ContextLog(ctx, "Room name has been renamed to "+newRoomName)
+			return nil
+		}
+
+		saveButton := e.d.Object(ui.Text("SAVE"), ui.ResourceID(elementIDPrefix+"roomSettingsSaveAction"))
+		newToolbarTitle := e.d.Object(ui.Text(newRoomName), ui.ResourceID(elementIDPrefix+"roomSettingsToolbarTitleView"))
+		return uiauto.NamedCombine("set room name and save",
+			e.typeText(roomNameFieldID, newRoomName),
+			apputil.FindAndClick(saveButton, defaultUITimeout),
+			apputil.WaitUntilGone(saveButton, defaultUITimeout),
+			apputil.WaitForExists(newToolbarTitle, defaultUITimeout),
+		)(ctx)
+	}
 }
 
 // SearchPublicRoom searches the existing public room with the ID and the name.
