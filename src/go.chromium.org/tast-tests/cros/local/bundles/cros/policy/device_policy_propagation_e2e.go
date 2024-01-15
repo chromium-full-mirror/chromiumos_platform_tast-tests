@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -156,19 +157,32 @@ func DevicePolicyPropagationE2E(ctx context.Context, s *testing.State) {
 		expectedPolicies := []policy.Policy{
 			&policy.DeviceAutoUpdateDisabled{Stat: policy.StatusSet, Val: false},
 		}
-		perf.RecordExecutionTime(
+		if err := perf.RecordExecutionTime(
 			pv,
 			"propagation_time",
 			func() error {
-				err := policyutil.WaitForPolicies(ctx, tconn, expectedPolicies)
-				if err != nil {
-					// This test tolerates occasional propagation timeouts due to
-					// DMServer's 24h SLO for invalidations. We rely on Crosbolt metrics
-					// and Perfmon alerts instead.
-					s.Log("Failed to verify updated policy: ", err)
-				}
-				return err
+				return policyutil.WaitForPolicies(ctx, tconn, expectedPolicies)
 			},
-		)
+		); err != nil {
+			// While polling for policies inside WaitForPolicies, the Tast framework
+			// swallows the DeadlineExceeded error and instead returns the last error
+			// before the timeout. Hence we use ctx.Err() instead.
+			if !errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				s.Fatal("Failed to verify updated policy: ", err)
+			}
+
+			// This test tolerates occasional propagation timeouts due to DMServer's
+			// 24h SLO for invalidations. We rely on Crosbolt metrics and Perfmon
+			// alerts instead.
+			s.Log("Failed to verify updated policy: ", err)
+
+			// Report propagation time as the timeout value to differentiate between
+			// tests not being run and timing out in Crosbolt data.
+			pv.Set(perf.Metric{
+				Name:      "propagation_time",
+				Unit:      "milliseconds",
+				Direction: perf.SmallerIsBetter,
+			}, (float64)(policyPropagationTimeout.Milliseconds()))
+		}
 	})
 }
