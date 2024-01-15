@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	rebootCheckTimeout = 5 * time.Minute
+	rebootCheckTimeout = 7 * time.Minute
 )
 
 func init() {
