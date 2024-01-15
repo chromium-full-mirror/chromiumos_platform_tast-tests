@@ -35,8 +35,8 @@ func init() {
 		Fixture:      "ccaTestBridgeReady",
 		Params: []testing.Param{{
 			ExtraAttr: []string{"crosbolt_perbuild"},
-			// Five subtests each have 5 mins timeout. 5mins * 5 = 25 minutes.
-			Timeout: 25 * time.Minute,
+			// Six subtests each have 5 mins timeout. 5mins * 6 = 30 minutes.
+			Timeout: 30 * time.Minute,
 			Val: param{
 				subtestTimeout:  5 * time.Minute,
 				measureDuration: 20 * time.Second,
@@ -44,8 +44,8 @@ func init() {
 		}, {
 			Name:      "long",
 			ExtraAttr: []string{"crosbolt_nightly"},
-			// Five subtests each have 20 mins timeout. 20mins * 5 = 100 minutes.
-			Timeout: 100 * time.Minute,
+			// Six subtests each have 20 mins timeout. 20mins * 6 = 120 minutes.
+			Timeout: 120 * time.Minute,
 			Val: param{
 				subtestTimeout:  20 * time.Minute,
 				measureDuration: 5 * time.Minute,
@@ -80,6 +80,9 @@ func CCAUIPerf(ctx context.Context, s *testing.State) {
 	}{{
 		"testPreviewPerformance",
 		testPreviewPerformance,
+	}, {
+		"testQRPreviewPerformance",
+		testQRPreviewPerformance,
 	}, {
 		"testRecordingPerformance",
 		testRecordingPerformance,
@@ -170,6 +173,12 @@ func preparePerfTest(ctx context.Context, resetChrome cca.ResetChromeFunc, testB
 func testPreviewPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData, measureDuration time.Duration) error {
 	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
 		return cca.MeasurePreviewPerformance(ctx, app, perfData, facing, measureDuration)
+	})
+}
+
+func testQRPreviewPerformance(ctx context.Context, app *cca.App, perfData *cca.PerfData, measureDuration time.Duration) error {
+	return app.RunThroughCameras(ctx, func(facing cca.Facing) error {
+		return cca.MeasureQRPreviewPerformance(ctx, app, perfData, facing, measureDuration)
 	})
 }
 

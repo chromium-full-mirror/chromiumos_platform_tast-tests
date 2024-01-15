@@ -8,7 +8,6 @@ package cca
 import (
 	"context"
 	"fmt"
-	"math"
 	"regexp"
 	"time"
 
@@ -100,7 +99,7 @@ func measureStabilizedUsage(ctx context.Context, measureDuration time.Duration) 
 	return mediacpu.MeasureUsage(ctx, measureDuration)
 }
 
-// MeasurePreviewPerformance measures the performance of preview with QR code detection on and off.
+// MeasurePreviewPerformance measures the performance of preview.
 func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, measureDuration time.Duration) error {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -130,7 +129,6 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 		return errors.Wrap(err, "failed to measure CPU and power usage")
 	}
 
-	var cpuUsage float64
 	if cpuUsage, exist := usage["cpu"]; exist {
 		testing.ContextLogf(ctx, "Measured preview CPU usage: %.1f%%", cpuUsage)
 
@@ -143,7 +141,6 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 		testing.ContextLog(ctx, "Failed to measure preview CPU usage")
 	}
 
-	var powerUsage float64
 	if powerUsage, exist := usage["power"]; exist {
 		testing.ContextLogf(ctx, "Measured preview power usage: %.1f Watts", powerUsage)
 
@@ -167,7 +164,15 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 		Direction: perf.BiggerIsBetter,
 	}, fps)
 
-	// Enable QR code detection and measure the performance again.
+	return nil
+}
+
+// MeasureQRPreviewPerformance measures the performance of preview with QR code detection.
+func MeasureQRPreviewPerformance(ctx context.Context, app *App, perfData *PerfData, facing Facing, measureDuration time.Duration) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	if err := app.OpenQRCodeScanMode(ctx); err != nil {
 		return errors.Wrap(err, "failed to open QR code scan mode")
 	}
@@ -189,17 +194,6 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 			Unit:      "percent",
 			Direction: perf.SmallerIsBetter,
 		}, cpuUsageQR)
-
-		if cpuUsage != 0 {
-			overhead := math.Max(0, cpuUsageQR-cpuUsage)
-
-			testing.ContextLogf(ctx, "Measured QR code detection CPU usage: %.1f%%, overhead = %.1f%%", cpuUsageQR, overhead)
-			perfData.SetMetricValue(perf.Metric{
-				Name:      fmt.Sprintf("cpu_overhead_qrcode-facing-%s", facing),
-				Unit:      "percent",
-				Direction: perf.SmallerIsBetter,
-			}, overhead)
-		}
 	} else {
 		testing.ContextLog(ctx, "Failed to measure preview CPU usage with QR code detection")
 	}
@@ -210,17 +204,6 @@ func MeasurePreviewPerformance(ctx context.Context, app *App, perfData *PerfData
 			Unit:      "Watts",
 			Direction: perf.SmallerIsBetter,
 		}, powerUsageQR)
-
-		if powerUsage != 0 {
-			overhead := math.Max(0, powerUsageQR-powerUsage)
-
-			testing.ContextLogf(ctx, "Measured QR code detection power usage: %.1f Watts, overhead = %.1f Watts", powerUsageQR, overhead)
-			perfData.SetMetricValue(perf.Metric{
-				Name:      fmt.Sprintf("power_overhead_qrcode-facing-%s", facing),
-				Unit:      "Watts",
-				Direction: perf.SmallerIsBetter,
-			}, overhead)
-		}
 	} else {
 		testing.ContextLog(ctx, "Failed to measure preview power usage with QR code detection")
 	}
