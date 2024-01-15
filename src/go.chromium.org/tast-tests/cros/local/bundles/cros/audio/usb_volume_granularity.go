@@ -181,8 +181,18 @@ func USBVolumeGranularity(ctx context.Context, s *testing.State) {
 			s.Fatalf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
 		}
 	}
-	// For case 10-25 steps, numberOfVolumeSteps == expectNumberOfVolumeChanges
-	for numberOfVolumeSteps := 10; numberOfVolumeSteps <= 25; numberOfVolumeSteps++ {
+	// For case 10-16 steps, expecting to see 25 volume changes. This is because either (1) volume steps too small, or (2) volume range too small.
+        // ref crrev/c/4914310
+        // Note: snd-dummy have small volume range if volume step <= 16.
+	// TODO: b/320214702 - Update this or that after clearly defining how to handle either (1) volume steps too small, or (2) volume range too small.
+	for numberOfVolumeSteps := 10; numberOfVolumeSteps <= 16; numberOfVolumeSteps++ {
+		err := verifyNumberOfVolumeChanges(ctx, cr, kb, numberOfVolumeSteps, expectNumberOfVolumeChanges)
+		if err != nil {
+			s.Fatalf("Fail to verify numberOfVolumeSteps[%d] expectNumberOfVolumeChanges[%d]: %v", numberOfVolumeSteps, expectNumberOfVolumeChanges, err)
+		}
+	}
+	// For case 17-25 steps, numberOfVolumeSteps == expectNumberOfVolumeChanges
+	for numberOfVolumeSteps := 17; numberOfVolumeSteps <= 25; numberOfVolumeSteps++ {
 		expectNumberOfVolumeChanges := numberOfVolumeSteps
 		err := verifyNumberOfVolumeChanges(ctx, cr, kb, numberOfVolumeSteps, expectNumberOfVolumeChanges)
 		if err != nil {
