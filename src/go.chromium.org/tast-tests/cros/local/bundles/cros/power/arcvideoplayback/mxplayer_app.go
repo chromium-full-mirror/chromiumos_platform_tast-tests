@@ -9,6 +9,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -345,15 +346,15 @@ func (m *MxPlayerApp) ChangeToResizable(ctx context.Context) error {
 
 	mxPlayerWindow := nodewith.Role(role.Window).Name(apps.MxPlayer.Name).First()
 	centerBtn := nodewith.Role(role.Button).HasClass("FrameCenterButton").Ancestor(mxPlayerWindow)
-	maximizeBtn := nodewith.Role(role.Button).HasClass("FrameSizeButton").Name("Maximize").Ancestor(mxPlayerWindow)
-	foundBtn, err := ui.FindAnyExists(ctx, centerBtn, maximizeBtn)
+	resizeBtn := nodewith.Role(role.Button).HasClass("FrameSizeButton").NameRegex(regexp.MustCompile("(Maximize|Restore)")).Ancestor(mxPlayerWindow)
+	foundBtn, err := ui.FindAnyExists(ctx, centerBtn, resizeBtn)
 	if err != nil {
 		if strings.Contains(err.Error(), nodewith.ErrNotFound) {
-			return errors.Wrap(err, "no 'Frame Center' or 'Maximize' button to change window size")
+			return errors.Wrap(err, "no 'Frame Center' or resize button to change window size")
 		}
 		return errors.Wrap(err, "failed to check the existence of resize button")
 	}
-	if foundBtn == maximizeBtn {
+	if foundBtn == resizeBtn {
 		return nil
 	}
 
