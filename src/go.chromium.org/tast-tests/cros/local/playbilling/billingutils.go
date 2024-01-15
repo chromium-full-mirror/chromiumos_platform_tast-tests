@@ -110,11 +110,6 @@ func ClickButtonOnArcPaymentOverlay(uiAutomator *ui.Device, buttonType, objectTe
 	}
 }
 
-// Click1TapBuy clicks 1-tap buy button.
-func Click1TapBuy(uiAutomator *ui.Device) action.Action {
-	return ClickButtonOnArcPaymentOverlay(uiAutomator, "Button", "1-tap buy")
-}
-
 // RequiredAuthConfirm clicks "Yes, always" button in required auth window.
 func RequiredAuthConfirm(uiAutomator *ui.Device) action.Action {
 	return action.IfSuccessThen(
@@ -123,22 +118,6 @@ func RequiredAuthConfirm(uiAutomator *ui.Device) action.Action {
 			ClickButtonOnArcPaymentOverlay(uiAutomator, "RadioButton", "Yes, always"),
 			ClickButtonOnArcPaymentOverlay(uiAutomator, "Button", "OK"),
 		),
-	)
-}
-
-// TapPointsDecline declines tap points proposal, if available.
-func TapPointsDecline(uiAutomator *ui.Device) action.Action {
-	return action.IfSuccessThen(
-		checkPresenceOfArcObject(uiAutomator, "android.widget.TextView", "See Google Play Points terms"),
-		ClickButtonOnArcPaymentOverlay(uiAutomator, "Button", "Not now"),
-	)
-}
-
-// AlreadyOwnErrorClose closes "You already own this item" window.
-func AlreadyOwnErrorClose(uiAutomator *ui.Device) action.Action {
-	return uiauto.Combine("close error window",
-		checkPresenceOfArcObject(uiAutomator, "android.widget.TextView", `You already own this item\.`),
-		ClickButtonOnArcPaymentOverlay(uiAutomator, "Button", "OK"),
 	)
 }
 
