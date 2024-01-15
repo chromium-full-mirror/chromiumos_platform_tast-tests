@@ -73,7 +73,29 @@ func RestartCras(ctx context.Context) (*Cras, error) {
 	cras, err := NewCras(ctx)
 	if err == nil {
 		testing.ContextLog(ctx, "CRAS restarted")
+	} else {
+		return nil, err
 	}
+
+	// Ensure DLCs are initialized.
+	if err := testing.Poll(ctx,
+		func(ctx context.Context) error {
+			s2, err := cras.dumpS2(ctx)
+			if err != nil {
+				return errors.Wrap(err, "dump s2")
+			}
+			if !s2.Input.DLCManagerReady {
+				return errors.New("CRAS DLC manager not ready")
+			}
+			return nil
+		}, &testing.PollOptions{
+			Timeout:  10 * time.Second,
+			Interval: 1 * time.Second,
+		},
+	); err != nil {
+		return cras, err
+	}
+
 	return cras, err
 }
 
