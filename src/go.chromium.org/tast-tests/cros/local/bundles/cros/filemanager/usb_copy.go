@@ -10,8 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/action"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -66,9 +64,6 @@ func init() {
 
 func USBCopy(ctx context.Context, s *testing.State) {
 	const (
-		deviceLabel          = "virtual-usb"
-		defaultDir           = "/media/removable/" + deviceLabel
-		defaultUsbLabel      = "USB Drive"
 		pasteToUsbFile       = "paste-to-usb.txt"
 		pasteToUsbContents   = "pasteToUsb"
 		pasteFromUsbFile     = "paste-from-usb.txt"
@@ -84,18 +79,20 @@ func USBCopy(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	fs := s.Param().(string)
-	cleanupMs, err := setupMassStorage(ctx, deviceLabel, fs)
+	ms, err := setupMassStorage(ctx, fs)
 	if err != nil {
 		s.Fatal("Unable to setup the mass storage device: ", err)
 	}
-	defer cleanupMs(cleanupCtx)
+	defer ms.CleanUp(cleanupCtx)
 
-	if err := waitUntilMounted(ctx, defaultDir); err != nil {
+	mountDirPath, err := ms.WaitUntilMounted(ctx)
+	if err != nil {
 		s.Fatal("Timed out waiting for ChromeOS to mount the mass storage device: ", err)
 	}
+	mountDir := filepath.Base(mountDirPath)
 	if fs == "ext4" {
 		// Change the ownership of the mountDir so that test user could modify it.
-		if err := os.Chown(defaultDir, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
+		if err := os.Chown(mountDirPath, int(sysutil.ChronosUID), int(sysutil.ChronosGID)); err != nil {
 			s.Fatal("Failed to chown: ", err)
 		}
 	}
@@ -106,8 +103,8 @@ func USBCopy(ctx context.Context, s *testing.State) {
 	}
 
 	testFiles := map[string]string{
-		filepath.Join(downloadsPath, pasteToUsbFile): pasteToUsbContents,
-		filepath.Join(defaultDir, pasteFromUsbFile):  pasteFromUsbContents,
+		filepath.Join(downloadsPath, pasteToUsbFile):  pasteToUsbContents,
+		filepath.Join(mountDirPath, pasteFromUsbFile): pasteFromUsbContents,
 	}
 	for path, contents := range testFiles {
 		if err := os.WriteFile(path, []byte(contents), 0644); err != nil {
@@ -133,16 +130,13 @@ func USBCopy(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Paste a test file from the downloads directory to the USB",
 		files.OpenDownloads(),
 		files.CopyFileToClipboard(pasteToUsbFile),
-		action.IfFailThen(
-			files.WithTimeout(10*time.Second).OpenPath(filesapp.FilesTitlePrefix+deviceLabel, deviceLabel),
-			files.WithTimeout(10*time.Second).OpenPath(filesapp.FilesTitlePrefix+defaultUsbLabel, defaultUsbLabel), // Sometimes device label is not recognised and the default one is used.
-		),
+		files.WithTimeout(10*time.Second).OpenPath(filesapp.FilesTitlePrefix+mountDir, mountDir),
 		files.PasteFileFromClipboard(kb),
 		files.WithTimeout(10*time.Second).WaitForFile(pasteToUsbFile),
 	)(ctx); err != nil {
 		s.Fatalf("Failed to copy %q to the usb: %v", pasteToUsbFile, err)
 	}
-	defer os.Remove(filepath.Join(defaultDir, pasteToUsbFile))
+	defer os.Remove(filepath.Join(mountDirPath, pasteToUsbFile))
 
 	if err := uiauto.Combine("Paste a test file from the USB to the downloads directory",
 		files.CopyFileToClipboard(pasteFromUsbFile),
@@ -154,7 +148,7 @@ func USBCopy(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(filepath.Join(downloadsPath, pasteFromUsbFile))
 
-	testFiles[filepath.Join(defaultDir, pasteToUsbFile)] = pasteToUsbContents
+	testFiles[filepath.Join(mountDirPath, pasteToUsbFile)] = pasteToUsbContents
 	testFiles[filepath.Join(downloadsPath, pasteFromUsbFile)] = pasteFromUsbContents
 	for path, original := range testFiles {
 		result, err := os.ReadFile(path)
@@ -167,7 +161,8 @@ func USBCopy(ctx context.Context, s *testing.State) {
 	}
 }
 
-func setupMassStorage(ctx context.Context, label, fs string) (action.Action, error) {
+func setupMassStorage(ctx context.Context, fs string) (*usbdevice.UsbMassStorageImpl, error) {
+	label := "virtual-usb"
 	ms := usbdevice.NewUSBMassStorage()
 	sizeInMb := uint64(100)
 	if err := ms.Init(ctx, sizeInMb); err != nil {
@@ -176,36 +171,23 @@ func setupMassStorage(ctx context.Context, label, fs string) (action.Action, err
 	if err := ms.PlugIn(ctx, false); err != nil {
 		return nil, errors.Wrap(err, "failed to plug in the mass storage device")
 	}
-	if fs == "ext4" {
-		if err := ms.FormatFileSystem(ctx, "mkfs.ext4", "-L", label); err != nil {
-			return nil, errors.Wrap(err, "failed to format the mass storage device in ext4")
-		}
-	} else if fs == "exfat" {
-		if err := ms.FormatFileSystem(ctx, "mkfs.exfat", "-n", label); err != nil {
-			return nil, errors.Wrap(err, "failed to format the mass storage device in exfat")
-		}
-	} else if fs == "ntfs" {
-		if err := ms.FormatFileSystem(ctx, "mkfs.ntfs", "--fast", "-L", label); err != nil {
-			return nil, errors.Wrap(err, "failed to format the mass storage device in ntfs")
-		}
-	} else if fs == "vfat" {
-		if err := ms.FormatFileSystem(ctx, "mkfs.vfat", "-n", label); err != nil {
-			return nil, errors.Wrap(err, "failed to format the mass storage device in vfat")
-		}
-	} else {
-		return nil, errors.Errorf("unexpected file system %s", fs)
-	}
-	return ms.CleanUp, nil
-}
 
-func waitUntilMounted(ctx context.Context, mountDir string) error {
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if _, stderr, err := testexec.CommandContext(ctx, "mountpoint", mountDir).SeparatedOutput(); err != nil {
-			return errors.Wrapf(err, "failed to find a mountpoint: %q", string(stderr))
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 3 * time.Second}); err != nil {
-		return errors.Wrapf(err, "timed out waiting for a mountpoint %q", mountDir)
+	var err error
+	switch fs {
+	case "ext4":
+		err = ms.FormatFileSystem(ctx, "mkfs.ext4", "-L", label)
+	case "exfat":
+		err = ms.FormatFileSystem(ctx, "mkfs.exfat", "-n", label)
+	case "ntfs":
+		err = ms.FormatFileSystem(ctx, "mkfs.ntfs", "--fast", "-L", label)
+	case "vfat":
+		err = ms.FormatFileSystem(ctx, "mkfs.vfat", "-n", label)
+	default:
+		err = errors.Errorf("unsupported file system %s", fs)
 	}
-	return nil
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to format the mass storage device in %q", fs)
+	}
+
+	return ms, nil
 }

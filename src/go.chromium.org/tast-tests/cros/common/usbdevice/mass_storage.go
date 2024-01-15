@@ -6,6 +6,8 @@ package usbdevice
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -20,8 +22,9 @@ const (
 	backingFilePath = "/tmp/virtual_usb_file"
 )
 
-type usbMassStorageImpl struct {
-	devicePath string
+// UsbMassStorageImpl represents a virtual USB mass storage device.
+type UsbMassStorageImpl struct {
+	partitionUUID string
 }
 
 // NewUSBMassStorage returns an instance to help creating the virtual USB mass storage device.
@@ -33,12 +36,12 @@ type usbMassStorageImpl struct {
 //  5. CleanUp
 //
 // Limitation: Since we use modprobe, there is at most one virtual USB mass storage device at a time.
-func NewUSBMassStorage() *usbMassStorageImpl {
-	return &usbMassStorageImpl{}
+func NewUSBMassStorage() *UsbMassStorageImpl {
+	return &UsbMassStorageImpl{}
 }
 
-// Inits create the USB backing file and the virtual hub.
-func (m *usbMassStorageImpl) Init(ctx context.Context, sizeInMb uint64) error {
+// Init creates the USB backing file and the virtual hub.
+func (m *UsbMassStorageImpl) Init(ctx context.Context, sizeInMb uint64) error {
 	// Create the virtual root hub.
 	if err := testexec.CommandContext(ctx, "modprobe", "dummy_hcd").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to load dummy_hcd module")
@@ -51,7 +54,7 @@ func (m *usbMassStorageImpl) Init(ctx context.Context, sizeInMb uint64) error {
 }
 
 // setupBackingFile sets up the backing file used by the virtual USB mass storage device.
-func (m *usbMassStorageImpl) setupBackingFile(ctx context.Context, sizeInMb uint64) error {
+func (m *UsbMassStorageImpl) setupBackingFile(ctx context.Context, sizeInMb uint64) error {
 	// Create the backing file.
 	if err := testexec.CommandContext(ctx, "fallocate", "--length="+strconv.FormatUint(sizeInMb, 10)+"M", backingFilePath).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to create virtual USB file")
@@ -62,7 +65,7 @@ func (m *usbMassStorageImpl) setupBackingFile(ctx context.Context, sizeInMb uint
 	}
 	// Create primary partition. In most case, one partition is enough.
 	// For future developers: You can use "mkpart extended" to create other partition if needed.
-	// But findDevicePath only reports the path of the first partition. You may also modify there.
+	// But findPartitionUUID only reports the UUID of the first partition. You may also modify there.
 	if err := testexec.CommandContext(ctx, "parted", "-s", backingFilePath, "mkpart", "primary", "0%", "90%").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to create partition")
 	}
@@ -71,7 +74,7 @@ func (m *usbMassStorageImpl) setupBackingFile(ctx context.Context, sizeInMb uint
 }
 
 // PlugIn plugs in the virtual USB device by using the backing file. Once it's done, you can also observe the udev add events.
-func (m *usbMassStorageImpl) PlugIn(ctx context.Context, readOnly bool) error {
+func (m *UsbMassStorageImpl) PlugIn(ctx context.Context, readOnly bool) error {
 	var roParam string
 	if readOnly {
 		roParam = "ro=1"
@@ -81,16 +84,16 @@ func (m *usbMassStorageImpl) PlugIn(ctx context.Context, readOnly bool) error {
 		return errors.Wrap(err, "failed to plug in the virtual USB device")
 	}
 
-	// Find the USB device path.
-	path, err := m.findDevicePath(ctx)
+	// Find the USB device partitionUUID.
+	partitionUUID, err := m.findPartitionUUID(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to find the USB device path")
+		return errors.Wrap(err, "failed to find the USB device part UUID")
 	}
-	m.devicePath = path
+	m.partitionUUID = partitionUUID
 
 	// Wait for the device path emerge.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := os.Stat(m.devicePath)
+		_, err := os.Stat(m.DevicePath())
 		return err
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 15 * time.Second}); err != nil {
 		return errors.Wrap(err, "the device path does not exist")
@@ -100,7 +103,7 @@ func (m *usbMassStorageImpl) PlugIn(ctx context.Context, readOnly bool) error {
 }
 
 // PlugOut plugs out the virtual USB device. You can also observe the udev remove events.
-func (m *usbMassStorageImpl) PlugOut(ctx context.Context) error {
+func (m *UsbMassStorageImpl) PlugOut(ctx context.Context) error {
 	if err := testexec.CommandContext(ctx, "modprobe", "g_mass_storage", "-r").Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to plug out the virtual USB device")
 	}
@@ -110,8 +113,8 @@ func (m *usbMassStorageImpl) PlugOut(ctx context.Context) error {
 // FormatFileSystem formats the first partition.
 // "command" for example, "mkfs.fat", "mkfs.ext4", "mkfs.ntfs".
 // "arg" - arguments to pass to the command.
-func (m *usbMassStorageImpl) FormatFileSystem(ctx context.Context, command string, arg ...string) error {
-	arg = append(arg, m.devicePath)
+func (m *UsbMassStorageImpl) FormatFileSystem(ctx context.Context, command string, arg ...string) error {
+	arg = append(arg, m.DevicePath())
 	if err := testexec.CommandContext(ctx, command, arg...).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to format the file system")
 	}
@@ -120,7 +123,7 @@ func (m *usbMassStorageImpl) FormatFileSystem(ctx context.Context, command strin
 }
 
 // CleanUp cleans the environment.
-func (m *usbMassStorageImpl) CleanUp(ctx context.Context) error {
+func (m *UsbMassStorageImpl) CleanUp(ctx context.Context) error {
 	if err := m.PlugOut(ctx); err != nil {
 		return errors.Wrap(err, "failed to remove g_mass_storage module")
 	}
@@ -134,16 +137,50 @@ func (m *usbMassStorageImpl) CleanUp(ctx context.Context) error {
 }
 
 // DevicePath returns the device path of the first partition.
-func (m *usbMassStorageImpl) DevicePath() string {
-	return m.devicePath
+func (m *UsbMassStorageImpl) DevicePath() string {
+	return "/dev/disk/by-partuuid/" + m.partitionUUID
 }
 
-// findDevicePath finds the device path of the first partition.
-func (m *usbMassStorageImpl) findDevicePath(ctx context.Context) (string, error) {
+// findPartitionUUID finds the part UUID of the first partition.
+func (m *UsbMassStorageImpl) findPartitionUUID(ctx context.Context) (string, error) {
 	partUUID, err := testexec.CommandContext(ctx, "sfdisk", "--part-uuid", backingFilePath, "1").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to query the part-uuid")
 	}
 
-	return "/dev/disk/by-partuuid/" + strings.ToLower(strings.TrimSuffix(string(partUUID), "\n")), nil
+	return strings.ToLower(strings.TrimSuffix(string(partUUID), "\n")), nil
+}
+
+type findmntFileSystem struct {
+	Target string `json:"target"`
+}
+
+type findmntOutput struct {
+	FileSystems []findmntFileSystem `json:"filesystems"`
+}
+
+// WaitUntilMounted waits until the mass storage USB drive is mounted by ChromeOS.
+// This will usually happen soon after PlugIn and FormatFileSystem complete.
+// Returns the mountpoint.
+func (m *UsbMassStorageImpl) WaitUntilMounted(ctx context.Context) (string, error) {
+	var mountpoint string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := testexec.CommandContext(ctx, "findmnt", "--source", fmt.Sprintf("PARTUUID=%s", m.partitionUUID), "-o", "TARGET", "--json").Output()
+		if err != nil {
+			return errors.Wrapf(err, "failed to get device name by partition uuid: %q", string(out))
+		}
+		var result findmntOutput
+		if err := json.Unmarshal(out, &result); err != nil {
+			return errors.Wrapf(err, "failed to parse findmnt output %s", string(out))
+		}
+		if result.FileSystems == nil || len(result.FileSystems) == 0 || result.FileSystems[0].Target == "" {
+			return errors.Wrapf(err, "unable to find mountpoint for the device in findmnt output %s", string(out))
+		}
+		mountpoint = result.FileSystems[0].Target
+		return nil
+	}, &testing.PollOptions{Interval: 3 * time.Second, Timeout: 30 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "timed out waiting for the device to mount")
+	}
+
+	return mountpoint, nil
 }
