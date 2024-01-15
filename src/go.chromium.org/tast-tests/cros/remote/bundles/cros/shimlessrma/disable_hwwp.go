@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma/rmaweb"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/ctxutil"
@@ -202,12 +203,14 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	}
 	// Restart will dispose resources, so don't dispose resources explicitly.
 
-	// Always bypass calibration in this test.
-	// We have another test just for calibration.
-	if err := action.Combine("bypass calibration after firmware installation",
-		uiHelper.FirmwareInstallationPageOperation,
-		uiHelper.BypassCalibration,
-	)(ctx); err != nil {
+	// Given the flakiness of USB on the lab devices, the USB may malfunction at the first place.
+	// We should let the test continue if the USB is already unseen to the DUT.
+	if err := uiHelper.FirmwareHelper.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
+		s.Log("Fail to set USB Mux state: ", err)
+	}
+
+	// Always bypass calibration in this test. We have another test just for calibration.
+	if err := uiHelper.BypassCalibration(ctx); err != nil {
 		s.Fatal("Fail to bypass calibration after firmware installation: ", err)
 	}
 
