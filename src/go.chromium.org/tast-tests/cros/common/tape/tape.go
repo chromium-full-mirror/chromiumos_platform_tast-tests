@@ -628,6 +628,39 @@ func (c *client) MoveDevicesToOU(ctx context.Context, deviceIDs []string, orgUni
 	return string(respBody), nil
 }
 
+// MoveUserToOURequest is a struct containing the necessary data to move a
+// user to an an organizational unit.
+type MoveUserToOURequest struct {
+	RequestID   string `json:"request_id"`
+	OrgUnitPath string `json:"orgunitpath"`
+}
+
+// MoveUserToOU calls TAPE to move a user, identified by their requestID to an
+// organizational unit with the path orgUnitPath (e.g. "/myOU/mySubOU"). Moved users will
+// be moved back to their original OU when the account is released.
+func (c *client) MoveUserToOU(ctx context.Context, requestID, orgUnitPath string) (string, error) {
+	request := &MoveUserToOURequest{
+		RequestID:   requestID,
+		OrgUnitPath: orgUnitPath,
+	}
+
+	payloadBytes, err := json.Marshal(request)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to marshal data")
+	}
+	response, err := c.sendRequestWithTimeout(ctx, "POST", "Users/moveUserToOU", callTimeout, 0, payloadBytes)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to make REST call")
+	}
+
+	// Read the response.
+	respBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to read response")
+	}
+	return string(respBody), nil
+}
+
 // CommandTypeEnum is an enum for different types of remote commands.
 type CommandTypeEnum int
 
