@@ -92,6 +92,7 @@ func init() {
 			pci.SearchFlag(&policy.WebAuthnFactors{}, pci.VerifiedFunctionalityUI),
 			pci.SearchFlag(&policy.QuickUnlockModeAllowlist{}, pci.VerifiedValue),
 		},
+		Timeout: 3 * time.Minute,
 	})
 }
 
