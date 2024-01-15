@@ -30,6 +30,14 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// OdfsUnpackedLocation makes tests run the unpacked version of ODFS instead of
+// the version from Web Store.
+var OdfsUnpackedLocation = testing.RegisterVarString(
+	"onedrive.OdfsUnpackedLocation",
+	"",
+	"ODFS unpacked extension location",
+)
+
 func init() {
 	var opts = []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync", "--vmodule=cloud_upload*=3")}
 
@@ -165,13 +173,6 @@ func prepareOfficeFile(srcPath, targetFolder string) (testFile TestFile, err err
 	return testFile, nil
 }
 
-// Run unpacked version of ODFS instead of the version from Web Store.
-var odfsUnpackedLocation = testing.RegisterVarString(
-	"onedrive.OdfsUnpackedLocation",
-	"",
-	"ODFS unpacked extension location",
-)
-
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
 	var err error
@@ -185,7 +186,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		driveAPIClient = s.ParentValue().(*drivefs.FixtureData).APIClient
 	} else if f.provider == filesconsts.OneDrive {
 		opts := f.chromeOptions
-		odfsDevPath := odfsUnpackedLocation.Value()
+		odfsDevPath := OdfsUnpackedLocation.Value()
 		isOdfsDev := len(odfsDevPath) > 0
 
 		if f.bt == browser.TypeLacros {
