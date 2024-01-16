@@ -29,6 +29,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast/core/errors"
@@ -248,6 +249,15 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		}
 		defer arc.RestoreArcvmDevConf(ctx)
 	}
+
+	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics
+	cleanup, err := setup.PowerTestSetup(ctx, "multicast disabled", nil, &setup.PowerTestOptions{
+		Multicast: setup.DisableMulticast,
+	})
+	if err != nil {
+		s.Fatal("Could not disable multicast: ", err)
+	}
+	defer cleanup(ctx)
 
 	var gaia chrome.Option
 	if param.username != "" {

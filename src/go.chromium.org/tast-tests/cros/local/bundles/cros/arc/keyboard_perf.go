@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/inputlatency"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -53,6 +54,15 @@ func init() {
 }
 
 func KeyboardPerf(ctx context.Context, s *testing.State) {
+	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics
+	cleanup, err := setup.PowerTestSetup(ctx, "multicast disabled", nil, &setup.PowerTestOptions{
+		Multicast: setup.DisableMulticast,
+	})
+	if err != nil {
+		s.Fatal("Could not disable multicast: ", err)
+	}
+	defer cleanup(ctx)
+
 	cr := s.FixtValue().(*arc.PreData).Chrome
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

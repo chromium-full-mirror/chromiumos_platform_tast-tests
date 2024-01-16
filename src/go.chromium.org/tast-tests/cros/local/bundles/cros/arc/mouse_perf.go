@@ -63,12 +63,14 @@ func MousePerf(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
-	// Disable powerd to ensure the device doesn't go to sleep while waiting for CPU to be stabilized
-	cleanup, err := setup.PowerTestSetup(ctx, "powerd disabled", nil, &setup.PowerTestOptions{
-		Powerd: setup.DisablePowerd,
+	// Disable powerd to ensure the device doesn't go to sleep while waiting for CPU to be stabilized,
+	// and multicast to ensure CPU can be idle.
+	cleanup, err := setup.PowerTestSetup(ctx, "powerd and multicast disabled", nil, &setup.PowerTestOptions{
+		Powerd:    setup.DisablePowerd,
+		Multicast: setup.DisableMulticast,
 	})
 	if err != nil {
-		s.Fatal("Failed to disable powerd: ", err)
+		s.Fatal("Failed to disable powerd and multicast: ", err)
 	}
 	defer cleanup(cleanupCtx)
 

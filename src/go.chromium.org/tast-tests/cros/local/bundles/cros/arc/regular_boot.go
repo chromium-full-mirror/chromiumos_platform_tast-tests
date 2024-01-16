@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -100,6 +101,15 @@ func init() {
 
 // RegularBoot steps through multiple ARC boots.
 func RegularBoot(ctx context.Context, s *testing.State) {
+	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics
+	cleanup, err := setup.PowerTestSetup(ctx, "multicast disabled", nil, &setup.PowerTestOptions{
+		Multicast: setup.DisableMulticast,
+	})
+	if err != nil {
+		s.Fatal("Could not disable multicast: ", err)
+	}
+	defer cleanup(ctx)
+
 	params := s.Param().(testParams)
 	creds, err := performArcInitialBoot(ctx, s.RequiredVar("arc.perfAccountPool"), params.chromeArgs)
 	if err != nil {
