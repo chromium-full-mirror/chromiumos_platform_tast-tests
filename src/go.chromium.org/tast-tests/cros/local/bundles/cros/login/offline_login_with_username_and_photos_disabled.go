@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -266,7 +267,11 @@ func setupOwnerAndUsersAndPresetting(ctx, cleanUpCtxs context.Context, s *testin
 	}
 
 	// For the device owner we wait until their ownership has been established.
-	userutil.WaitForOwnership(ctx, cr)
+	err = userutil.WaitForOwnership(ctx, cr)
+
+	if err != nil {
+		s.Fatal("User setup to owner failed: ", err)
+	}
 
 	// Setup the Setting Options.
 	tconn, err := cr.TestAPIConn(ctx)
@@ -285,8 +290,37 @@ func setupOwnerAndUsersAndPresetting(ctx, cleanUpCtxs context.Context, s *testin
 	}
 	ui := uiauto.New(tconn)
 
-	if err := ui.LeftClick(nodewith.Name("Show usernames and photos on the sign-in screen").Role(role.ToggleButton))(ctx); err != nil {
+	err = ui.LeftClick(nodewith.Name("Show usernames and photos on the sign-in screen").Role(role.ToggleButton))(ctx)
+	if err != nil {
 		s.Fatal("Failed to click on the show usernames and photos toggle: ", err)
+	}
+
+	// Waiting for PropertyChangeComplete signal for the ShowUserNames setting
+	// to confirm it has been written to disk.
+	sessionManager, err := session.NewSessionManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create session_manager binding: ", err)
+	}
+	settingsWatcher, err := sessionManager.WatchPropertyChangeComplete(ctx)
+	if err != nil {
+		s.Fatal("Failed to start watching PropertyChangeComplete signal: ", err)
+	}
+	defer settingsWatcher.Close(ctx)
+
+	select {
+	case <-settingsWatcher.Signals:
+	case <-ctx.Done():
+		s.Fatal("Timed out waiting for PropertyChangeComplete signal: ", ctx.Err())
+	}
+
+	setting, err := session.RetrieveSettings(ctx, sessionManager)
+
+	if err != nil {
+		s.Fatal("Failed to retrieve settings: ", err)
+	}
+
+	if setting.ShowUserNames.GetShowUserNames() {
+		s.Fatal("Failed to toggle ShowUserNames value")
 	}
 
 	// Create another user.
