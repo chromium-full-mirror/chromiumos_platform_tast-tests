@@ -7,8 +7,7 @@ class TransformSVCStream {
     this.decodeSpatialIndex = decodeSpatialIndex;
     this.decodeLowerLayers = false;
     this.interLayerDependencyType = '';
-    if (scalabilityMode.startsWith('L1') ||
-      scalabilityMode.startsWith('S')) {
+    if (scalabilityMode.startsWith('L1') || scalabilityMode.startsWith('S')) {
       this.interLayerDependencyType = 'Off';
     } else if (scalabilityMode.endsWith('KEY')) {
       this.interLayerDependencyType = 'OnKey';
@@ -16,19 +15,20 @@ class TransformSVCStream {
       // VC doesn't support scalabilityMode in which upper spatial layers can
       // depend other spatial layers on non keyframe.
       // this.interLayerDependencyType = 'On';
-      console.log("Unexpected scalabilityMode: ", scalabilityMode)
+      console.log('Unexpected scalabilityMode: ', scalabilityMode);
     }
   }
   async transform(frame, controller) {
     const metadata = frame.getMetadata();
-    const isKeyFrame = frame.type == "key";
+    const isKeyFrame = frame.type == 'key';
     if (this.interLayerDependencyType == 'OnKey' && isKeyFrame) {
       // Decode the successive frames until decodeSpatialIndex on keyframe
       // in k-SVC.
       this.decodeLowerLayers = true;
     }
-    let decode = metadata.spatialIndex == this.decodeSpatialIndex ||
-                 this.decodeLowerLayers;
+    let decode =
+      metadata.spatialIndex == this.decodeSpatialIndex ||
+      this.decodeLowerLayers;
     if (decode) {
       controller.enqueue(frame);
     }
@@ -37,7 +37,7 @@ class TransformSVCStream {
       this.decodeLowerLayers = false;
     }
   }
-};
+}
 
 class VideoConference {
   constructor() {
@@ -66,7 +66,7 @@ class VideoConference {
       constraints.audio = {
         echoCancellation: true,
         autoGainControl: true,
-      }
+      };
     }
 
     let stream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -76,7 +76,7 @@ class VideoConference {
 
   async startedMediaStream(media) {
     await new Promise(function (resolve) {
-      media.onplaying = e => {
+      media.onplaying = (e) => {
         resolve();
       };
     });
@@ -129,8 +129,8 @@ class VideoConference {
   }
 
   async connect(localPC, remotePC, codec) {
-    localPC.onicecandidate = e => remotePC.addIceCandidate(e.candidate);
-    remotePC.onicecandidate = e => localPC.addIceCandidate(e.candidate);
+    localPC.onicecandidate = (e) => remotePC.addIceCandidate(e.candidate);
+    remotePC.onicecandidate = (e) => localPC.addIceCandidate(e.candidate);
 
     let offer = await localPC.createOffer();
     offer.sdp = setSdpDefaultVideoCodec(offer.sdp, codec);
@@ -182,7 +182,7 @@ class VideoConference {
     return {
       inputHeight: cameraHeight,
       outputHeight: encodeHeight,
-      scalabilityMode: scalabilityMode
+      scalabilityMode: scalabilityMode,
     };
   }
 
@@ -220,7 +220,7 @@ class VideoConference {
     let encCfg = this.getEncoderConfig(numPeople);
     let sendEncodings = {
       scaleResolutionDownBy: encCfg.inputHeight / encCfg.outputHeight,
-      scalabilityMode: encCfg.scalabilityMode
+      scalabilityMode: encCfg.scalabilityMode,
     };
 
     if (present) {
@@ -263,11 +263,11 @@ class VideoConference {
     // once spatialIndex and temporalIndex are filled without the dependency
     // descriptor header extension.
     const DependencyDescriptorURI =
-      'http://www.webrtc.org/experiments/rtp-hdrext/generic-frame-descriptor-00'
+      'http://www.webrtc.org/experiments/rtp-hdrext/generic-frame-descriptor-00';
     let headerExtensions = transceiver.getHeaderExtensionsToNegotiate();
     headerExtensions = headerExtensions.map((ext) => {
       if (ext.uri == DependencyDescriptorURI) {
-        ext.direction = "sendrecv";
+        ext.direction = 'sendrecv';
       }
       return ext;
     });
@@ -281,13 +281,14 @@ class VideoConference {
     let clonedLocalPCWriters = new Array(numReceivers - 1);
     for (let i = 0; i < numReceivers - 1; i++) {
       const clonedLocalPC = new RTCPeerConnection({
-        encodedInsertableStreams: true
+        encodedInsertableStreams: true,
       });
 
-      const clonedLocalTransceiver = clonedLocalPC.addTransceiver("video");
+      const clonedLocalTransceiver = clonedLocalPC.addTransceiver('video');
       this.setUpHeaderExtension(clonedLocalTransceiver);
-      const clonedLocalPCWriter = clonedLocalTransceiver.sender.
-            createEncodedStreams().writable.getWriter();
+      const clonedLocalPCWriter = clonedLocalTransceiver.sender
+        .createEncodedStreams()
+        .writable.getWriter();
       this.localPCs[i] = clonedLocalPC;
       clonedLocalPCWriters[i] = clonedLocalPCWriter;
 
@@ -297,59 +298,75 @@ class VideoConference {
 
     let mainLocalPC = new RTCPeerConnection({ encodedInsertableStreams: true });
     let mainLocalTransceiver = mainLocalPC.addTransceiver(
-      this.sentStream.getVideoTracks()[0], {
-      // Prefer resolution even at the cost of visual quality to avoid falling
-      // down to SW video encoding, see b/181320567 or crbug.com/1179020.
-      degradationPreference: 'maintain-resolution',
-      streams: [this.sentStream],
-      sendEncodings: [sendEncodings],
-    });
+      this.sentStream.getVideoTracks()[0],
+      {
+        // Prefer resolution even at the cost of visual quality to avoid falling
+        // down to SW video encoding, see b/181320567 or crbug.com/1179020.
+        degradationPreference: 'maintain-resolution',
+        streams: [this.sentStream],
+        sendEncodings: [sendEncodings],
+      }
+    );
     this.setUpHeaderExtension(mainLocalTransceiver);
     let mainLocalPCStream = mainLocalTransceiver.sender.createEncodedStreams();
 
-    let mainRemotePC = new RTCPeerConnection(
-      { encodedInsertableStreams: true }
-    );
+    let mainRemotePC = new RTCPeerConnection({
+      encodedInsertableStreams: true,
+    });
     mainRemotePC.addTransceiver('video');
 
     this.localPCs[numReceivers - 1] = mainLocalPC;
     this.remotePCs[numReceivers - 1] = mainRemotePC;
 
-    const topSpatialIndex =
-      this.getTopSpatialIndex(sendEncodings.scalabilityMode);
+    const topSpatialIndex = this.getTopSpatialIndex(
+      sendEncodings.scalabilityMode
+    );
     for (let i = 0; i < numReceivers; i++) {
-      this.remotePCs[i].ontrack = e => {
+      this.remotePCs[i].ontrack = (e) => {
         this.receiverVideos[i].srcObject = new MediaStream([e.track]);
         const receiver = e.receiver;
         const receiverStream = receiver.createEncodedStreams();
-        receiverStream.readable.pipeThrough(
-          new TransformStream(new TransformSVCStream(
-            sendEncodings.scalabilityMode, topSpatialIndex))
-        ).pipeTo(receiverStream.writable);
+        receiverStream.readable
+          .pipeThrough(
+            new TransformStream(
+              new TransformSVCStream(
+                sendEncodings.scalabilityMode,
+                topSpatialIndex
+              )
+            )
+          )
+          .pipeTo(receiverStream.writable);
       };
     }
     let ssrcs = new Array(numReceivers - 1);
     for (let i = 0; i < numReceivers; i++) {
-      const ssrc = await this.connect(this.localPCs[i], this.remotePCs[i],
-        'VP9');
+      const ssrc = await this.connect(
+        this.localPCs[i],
+        this.remotePCs[i],
+        'VP9'
+      );
       if (i < ssrcs.length) {
         ssrcs[i] = ssrc;
       }
     }
 
-    mainLocalPCStream.readable.pipeThrough(new TransformStream({
-      transform(frame, controller) {
-        const metadata = frame.getMetadata();
-        for (let i = 0; i < ssrcs.length; i++) {
-          const clonedFrame = structuredClone(frame);
-          const modifiedMetadata = structuredClone(metadata);
-          modifiedMetadata.synchronizationSource = ssrcs[i];
-          clonedFrame.setMetadata(modifiedMetadata);
-          clonedLocalPCWriters[i].write(clonedFrame);
-        }
-        controller.enqueue(frame);
-      }
-    })).pipeTo(mainLocalPCStream.writable);
+    mainLocalPCStream.readable
+      .pipeThrough(
+        new TransformStream({
+          transform(frame, controller) {
+            const metadata = frame.getMetadata();
+            for (let i = 0; i < ssrcs.length; i++) {
+              const clonedFrame = structuredClone(frame);
+              const modifiedMetadata = structuredClone(metadata);
+              modifiedMetadata.synchronizationSource = ssrcs[i];
+              clonedFrame.setMetadata(modifiedMetadata);
+              clonedLocalPCWriters[i].write(clonedFrame);
+            }
+            controller.enqueue(frame);
+          },
+        })
+      )
+      .pipeTo(mainLocalPCStream.writable);
 
     // TODO(hiroh): Wait for all the decoders to run.
     // playing event is not fired forever here. What event should I use?
@@ -368,8 +385,7 @@ class VideoConference {
     this.localPCs = [];
     const container = document.getElementById('container');
     const cameraOverlay = document.getElementById('cameraOverlay');
-    while (container.lastChild &&
-      container.lastChild !== cameraOverlay) {
+    while (container.lastChild && container.lastChild !== cameraOverlay) {
       container.removeChild(container.lastChild);
     }
   }
@@ -382,22 +398,25 @@ class VideoConference {
       },
       video: {
         framerate: { min: 30, max: 30 },
-        displaySurface: "browser", // Tab
-      }
+        displaySurface: 'browser', // Tab
+      },
     };
-    this.displayStream =
-      await navigator.mediaDevices.getDisplayMedia(constraints);
+    this.displayStream = await navigator.mediaDevices.getDisplayMedia(
+      constraints
+    );
     this.displayStream.getVideoTracks()[0].applyConstraints(constraints);
     this.displayPreview.srcObject = this.displayStream;
 
-    this.displayLocalPC =
-      new RTCPeerConnection({ encodedInsertableStreams: true });
-    const displayLocalPCStream = this.displayLocalPC.addTransceiver(
-      this.displayStream.getVideoTracks()[0], {
-      degradationPreference: 'maintain-resolution',
-      streams: [this.displayStream],
-      sendEncodings: [{ 'scalabilityMode': 'L1T3' }],
-    }).sender.createEncodedStreams();
+    this.displayLocalPC = new RTCPeerConnection({
+      encodedInsertableStreams: true,
+    });
+    const displayLocalPCStream = this.displayLocalPC
+      .addTransceiver(this.displayStream.getVideoTracks()[0], {
+        degradationPreference: 'maintain-resolution',
+        streams: [this.displayStream],
+        sendEncodings: [{ scalabilityMode: 'L1T3' }],
+      })
+      .sender.createEncodedStreams();
 
     const displayRemotePC = new RTCPeerConnection();
     displayRemotePC.addTransceiver('video');
@@ -405,10 +424,14 @@ class VideoConference {
 
     // Drop all encoded frames so that one encoder runs but no decoder runs for
     // screen sharing.
-    displayLocalPCStream.readable.pipeThrough(new TransformStream({
-      transform(frame, controller) {
-        return;
-      }
-    })).pipeTo(displayLocalPCStream.writable);
+    displayLocalPCStream.readable
+      .pipeThrough(
+        new TransformStream({
+          transform(frame, controller) {
+            return;
+          },
+        })
+      )
+      .pipeTo(displayLocalPCStream.writable);
   }
-};
+}
