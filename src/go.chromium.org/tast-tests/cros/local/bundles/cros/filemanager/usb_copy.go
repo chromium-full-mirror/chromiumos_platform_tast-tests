@@ -164,7 +164,7 @@ func USBCopy(ctx context.Context, s *testing.State) {
 func setupMassStorage(ctx context.Context, fs string) (*usbdevice.UsbMassStorageImpl, error) {
 	label := "virtual-usb"
 	ms := usbdevice.NewUSBMassStorage()
-	sizeInMb := uint64(100)
+	sizeInMb := uint64(16)
 	if err := ms.Init(ctx, sizeInMb); err != nil {
 		return nil, errors.Wrap(err, "failed to initialise the mass storage device")
 	}
