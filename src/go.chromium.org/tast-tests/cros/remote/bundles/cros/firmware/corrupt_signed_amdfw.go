@@ -23,7 +23,15 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level3", "firmware_ro"},
 		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 		Timeout:      20 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(
+			// AMD devices before skyrim don't have the separate signed AMDFW section.
+			// grunt
+			"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya",
+			// guybrush
+			"dewatt", "nipperkin",
+			// zork
+			"berknip", "dirinboz", "ezkinil", "gumboz", "jelboz360", "morphius", "vilboz", "vilboz14", "vilboz360", "woomax",
+		)),
 		SoftwareDeps: []string{"crossystem", "flashrom", "amd_cpu"},
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService", "tast.cros.firmware.UtilsService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
