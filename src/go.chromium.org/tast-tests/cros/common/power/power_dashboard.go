@@ -18,8 +18,6 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/exp/maps"
-
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
@@ -731,10 +729,22 @@ func tagTimelineWithCheckpoints(values *perf.Values, checkpoints *perf.Checkpoin
 			}
 		}
 		// Tag each Unix timestamp with the Checkpoint names.
+		visible := 0
 		if len(started) > 0 {
 			tagsEmpty = false
+			for tag := range started {
+				checkpointTags[i] = append(checkpointTags[i], tag)
+				if !strings.HasPrefix(tag, "loop") {
+					visible++
+				}
+			}
 		}
-		checkpointTags[i] = maps.Keys(started)
+		// The power dashboard runs into UI misalignment if a data point has
+		// no visible checkpoint tags.
+		if visible == 0 {
+			checkpointTags[i] = append(checkpointTags[i], "none")
+		}
+
 	}
 
 	// If there is no valid checkpoint for the entire test, return nil to save

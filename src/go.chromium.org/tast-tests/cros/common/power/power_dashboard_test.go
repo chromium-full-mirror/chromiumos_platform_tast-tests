@@ -87,7 +87,7 @@ func TestCheckpointTags(t *testing.T) {
 	if err != nil {
 		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
 	}
-	example := [][]string{{}, {"work1"}, {"work1", "work2"}, {"work1", "work3"}, {"work3"}}
+	example := [][]string{{"none"}, {"work1"}, {"work1", "work2"}, {"work1", "work3"}, {"work3"}}
 
 	compareTags(t, tags, example)
 }
@@ -110,7 +110,7 @@ func TestCheckpointTagsOverlap(t *testing.T) {
 	if err != nil {
 		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
 	}
-	example := [][]string{{}, {"work1"}, {"work1"}, {"work1"}, {"work1"}}
+	example := [][]string{{"none"}, {"work1"}, {"work1"}, {"work1"}, {"work1"}}
 
 	compareTags(t, tags, example)
 }
@@ -183,7 +183,7 @@ func TestCheckpointTagsOnTimestamp(t *testing.T) {
 	if err != nil {
 		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
 	}
-	example := [][]string{{}, {"work"}, {"work"}, {}, {}}
+	example := [][]string{{"none"}, {"work"}, {"work"}, {"none"}, {"none"}}
 
 	compareTags(t, tags, example)
 }
