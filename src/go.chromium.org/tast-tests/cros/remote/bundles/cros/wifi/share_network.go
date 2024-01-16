@@ -54,6 +54,7 @@ const (
 type shareNetworkTestNetwork struct {
 	*wificell.APIface
 	configs     *shareNetworkTestNetworkConfigs
+	routerID    int
 	joinRequest *wifi.JoinWifiRequest
 }
 
@@ -69,10 +70,15 @@ const shareNetworkTestNetworkPsk = "chromeos"
 var (
 	openNetwork = &shareNetworkTestNetwork{
 		configs: &shareNetworkTestNetworkConfigs{
-			ssidPrefix:          "Test_open_network_",
-			options:             wificell.DefaultOpenNetworkAPOptions(),
+			ssidPrefix: "Test_open_network_",
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.Channel(1),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+			},
 			sharedWithOtherUser: true,
 		},
+		routerID: 0,
 		joinRequest: &wifi.JoinWifiRequest{
 			Security:            &wifi.JoinWifiRequest_None{},
 			ShareWithOtherUsers: wifi.JoinWifiRequest_Default,
@@ -81,11 +87,17 @@ var (
 
 	secureNetwork = &shareNetworkTestNetwork{
 		configs: &shareNetworkTestNetworkConfigs{
-			ssidPrefix:          "Test_WPA3_network_1_",
-			securityConfig:      wpa.NewConfigFactory(shareNetworkTestNetworkPsk, wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-			options:             wificell.DefaultWPA3NetworkAPOptions(),
+			ssidPrefix:     "Test_WPA3_network_1_",
+			securityConfig: wpa.NewConfigFactory(shareNetworkTestNetworkPsk, wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.Channel(48),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.PMF(hostapd.PMFOptional),
+			},
 			sharedWithOtherUser: false,
 		},
+		routerID: 0,
 		joinRequest: &wifi.JoinWifiRequest{
 			Security:            &wifi.JoinWifiRequest_Psk{Psk: shareNetworkTestNetworkPsk},
 			ShareWithOtherUsers: wifi.JoinWifiRequest_TurnOff,
@@ -94,11 +106,17 @@ var (
 
 	secureNetwork2 = &shareNetworkTestNetwork{
 		configs: &shareNetworkTestNetworkConfigs{
-			ssidPrefix:          "Test_WPA3_network_2_",
-			securityConfig:      wpa.NewConfigFactory(shareNetworkTestNetworkPsk, wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
-			options:             wificell.DefaultWPA3NetworkAPOptions(),
+			ssidPrefix:     "Test_WPA3_network_2_",
+			securityConfig: wpa.NewConfigFactory(shareNetworkTestNetworkPsk, wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.Channel(48),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.PMF(hostapd.PMFOptional),
+			},
 			sharedWithOtherUser: false,
 		},
+		routerID: 1,
 		joinRequest: &wifi.JoinWifiRequest{
 			Security:            &wifi.JoinWifiRequest_Psk{Psk: shareNetworkTestNetworkPsk},
 			ShareWithOtherUsers: wifi.JoinWifiRequest_TurnOff,
@@ -139,7 +157,7 @@ func init() {
 		},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
 		Params: []testing.Param{
 			{
 				Val: []*shareNetworkTestScenario{
@@ -307,7 +325,7 @@ func configureNetworks(tf *wificell.TestFixture, networks []*shareNetworkTestNet
 			}
 
 			opts := append(network.configs.options, hostapd.SSID(hostapd.RandomSSID(network.configs.ssidPrefix)))
-			ap, err := tf.ConfigureAP(ctx, opts, network.configs.securityConfig)
+			ap, err := tf.ConfigureAPOnRouterID(ctx, network.routerID, opts, network.configs.securityConfig, false, false)
 			if err != nil {
 				return errors.Wrap(err, "failed to configure the AP")
 			}
