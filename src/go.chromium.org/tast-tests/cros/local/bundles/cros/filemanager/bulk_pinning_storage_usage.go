@@ -86,11 +86,6 @@ func BulkPinningStorageUsage(ctx context.Context, s *testing.State) {
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	offlineSizeBefore, driveSizeBefore, err := recordOfflineSize(ctx, cr, tconn)
-	if err != nil {
-		s.Fatal("Failed to get offline disk usage before enabling bulk pinning: ", err)
-	}
-
 	// Create test files.
 	testFiles, err := createFiles(ctx, driveFsClient, s.TestName(), s.DataPath("test_1KB.txt"))
 	if err != nil {
@@ -106,17 +101,21 @@ func BulkPinningStorageUsage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get offline disk usage after enabling bulk pinning: ", err)
 	}
 
-	expected := offlineSizeBefore + uint64(len(testFiles)*1024)
-	if offlineSizeAfter < expected {
-		s.Fatalf("Failed to verify os offline usage, got %s, want %s",
+	// Multiple tests can be running with the same account at the same time, so
+	// new files can be created at the same time by other tests. When bulk pinning
+	// is enabled this can pin more files than is created in this test account, so
+	// instead of verifying EXACTLY the offline size ensure that at least the
+	// size of the created files is accounted for here.
+	sizeOfOfflineFiles := uint64(len(testFiles) * 1024)
+	if offlineSizeAfter < sizeOfOfflineFiles {
+		s.Fatalf("Failed to verify OS settings offline usage, got %s, want larger than %s",
 			strconv.FormatUint(offlineSizeAfter, 10),
-			strconv.FormatUint(expected, 10))
+			strconv.FormatUint(sizeOfOfflineFiles, 10))
 	}
-	expected = driveSizeBefore + uint64(len(testFiles)*1024)
-	if driveSizeAfter < expected {
-		s.Fatalf("Failed to verify os offline usage, got %s, want %s",
+	if driveSizeAfter < sizeOfOfflineFiles {
+		s.Fatalf("Failed to verify Drive settings offline usage, got %s, want larger than %s",
 			strconv.FormatUint(driveSizeAfter, 10),
-			strconv.FormatUint(expected, 10))
+			strconv.FormatUint(sizeOfOfflineFiles, 10))
 	}
 }
 
