@@ -6,11 +6,13 @@ package camera
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/benchmark"
+	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -21,13 +23,22 @@ func init() {
 		Contacts:     []string{"chromeos-camera-eng@google.com", "ototot@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Timeout:      5 * time.Minute,
+		Timeout:      30 * time.Minute, // TODO(oToToT): Reduce timeout once the result is stable
 	})
 }
 
 func MojoPerf(ctx context.Context, s *testing.State) {
+	if err := cpu.WaitUntilIdle(ctx); err != nil {
+		s.Fatal("Failed to wait until CPU idle: ", err)
+	}
+
 	const exec = "mojo_perf_test"
-	result, err := benchmark.New(exec).Run(ctx)
+	result, err := benchmark.New(
+		exec,
+		// Produce a human-friendly output file for ease of debugging.
+		benchmark.OutputFile(filepath.Join(s.OutDir(), "console_output.txt")),
+		benchmark.OutputResultFormat(benchmark.Console),
+	).Run(ctx)
 
 	if err != nil {
 		s.Fatal("Failed to run Mojo performance test: ", err)
