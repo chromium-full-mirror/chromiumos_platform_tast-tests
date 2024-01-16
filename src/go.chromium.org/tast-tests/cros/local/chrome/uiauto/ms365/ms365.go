@@ -60,6 +60,19 @@ func App(ctx context.Context, tconn *chrome.TestConn, accountPool string) (*Ms36
 	return &Ms365{ui: ui, kb: kb, tconn: tconn, UserName: msCreds.User, Password: msCreds.Pass}, nil
 }
 
+// AppWithCreds returns an instance of the M365 with defined credentials.
+func AppWithCreds(ctx context.Context, tconn *chrome.TestConn, creds credconfig.Creds) (*Ms365, error) {
+	// Most of the interactions are with remote service, increase the timeout to 60s.
+	ui := uiauto.New(tconn).WithTimeout(60 * time.Second)
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Ms365{ui: ui, kb: kb, tconn: tconn, UserName: creds.User, Password: creds.Pass}, nil
+}
+
 // InputUserName waits for the Microsoft sign in window and input the username.
 func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 	msSignInWindow := nodewith.Role(role.RootWebArea).Name("Sign in to your account")
@@ -77,7 +90,7 @@ func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 
 // InputPassword waits for the Microsoft "input password" screen and input the password.
 func (ms *Ms365) InputPassword(password string) uiauto.Action {
-	msPasswordWindow := nodewith.Role(role.RootWebArea).Name("Sign in to your Microsoft account")
+	msPasswordWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("Sign in to your( Microsoft)? account"))
 	passwordInput := nodewith.Ancestor(msPasswordWindow).Role(role.TextField).NameContaining("password")
 
 	return uiauto.Combine("MS SignIn Password",
@@ -92,7 +105,7 @@ func (ms *Ms365) InputPassword(password string) uiauto.Action {
 
 // StaySignedIn waits for the Microsoft "Stayed Signed in?" screen and clicks YES.
 func (ms *Ms365) StaySignedIn() uiauto.Action {
-	msStaySignedInWindowName := regexp.MustCompile("(Microsoft account|" + regexp.QuoteMeta("Stay signed in?") + ")")
+	msStaySignedInWindowName := regexp.MustCompile("(Microsoft account|Sign in to your account|" + regexp.QuoteMeta("Stay signed in?") + ")")
 	msStaySignedInWindow := nodewith.Role(role.RootWebArea).NameRegex(msStaySignedInWindowName)
 	msStaySignedInButton := nodewith.Ancestor(msStaySignedInWindow).Role(role.StaticText).Name("Yes")
 
