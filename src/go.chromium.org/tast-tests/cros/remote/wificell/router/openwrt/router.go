@@ -18,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	remoteIp "go.chromium.org/tast-tests/cros/remote/network/ip"
-	remoteIw "go.chromium.org/tast-tests/cros/remote/network/iw"
+	remoteIw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/dhcp"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"

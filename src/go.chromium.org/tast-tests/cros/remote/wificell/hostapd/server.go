@@ -22,7 +22,7 @@ import (
 	"github.com/google/gopacket/layers"
 
 	"go.chromium.org/tast-tests/cros/common/network/daemonutil"
-	"go.chromium.org/tast-tests/cros/remote/network/iw"
+	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"

@@ -13,7 +13,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	group_owner "go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
-	"go.chromium.org/tast-tests/cros/remote/network/iw"
+	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 
 	"go.chromium.org/tast/core/testing"

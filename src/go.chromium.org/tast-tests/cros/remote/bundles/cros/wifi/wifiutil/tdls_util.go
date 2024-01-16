@@ -14,7 +14,7 @@ import (
 	"github.com/google/gopacket/layers"
 
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
-	remoteiw "go.chromium.org/tast-tests/cros/remote/network/iw"
+	remoteiw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"

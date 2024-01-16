@@ -22,7 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/network/ip"
-	remotewpacli "go.chromium.org/tast-tests/cros/remote/network/wpacli"
+	remotewpacli "go.chromium.org/tast-tests/cros/remote/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/remote/wificell/pcap"

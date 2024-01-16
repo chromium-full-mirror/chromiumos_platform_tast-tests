@@ -20,7 +20,7 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
 	remoteip "go.chromium.org/tast-tests/cros/remote/network/ip"
-	remoteiw "go.chromium.org/tast-tests/cros/remote/network/iw"
+	remoteiw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/framesender"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"

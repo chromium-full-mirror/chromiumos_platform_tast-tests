@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
-	localIw "go.chromium.org/tast-tests/cros/local/network/iw"
+	localIw "go.chromium.org/tast-tests/cros/local/wifi/iw"
 	"go.chromium.org/tast/core/testing"
 )
 
