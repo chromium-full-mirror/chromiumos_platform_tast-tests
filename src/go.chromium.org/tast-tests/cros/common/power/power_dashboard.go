@@ -359,6 +359,7 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, chec
 	noTimeline := false
 	// TODO: b/316820383 - power dashboard should support multiple timelines.
 	if value, ok := innerDataMap["t"]; ok {
+
 		var sampleCount = len(value)
 		powerDict["sample_count"] = sampleCount
 		if sampleCount > 1 {
@@ -370,17 +371,18 @@ func convertPerfValuesToPowerDict(ctx context.Context, values *perf.Values, chec
 			// and the power dashboard will only show 1 data point.
 			lastTimestamp := value[sampleCount-1]
 			powerDict["sample_duration"] = lastTimestamp / float64(sampleCount)
-
-			// checkpointsList is list of lists, where each list contains the
-			// Checkpoint names that are on for the corresponding timestamp.
-			checkpointsList, err := tagTimelineWithCheckpoints(values, checkpoints)
-			if err != nil {
-				return nil, time.Time{}, errors.Wrap(err, "unable to process the checkpoints for power_log.json")
-			}
-			if checkpointsList != nil {
-				powerDict["checkpoint"] = checkpointsList
-			}
 		}
+
+		// checkpointsList is list of lists, where each list contains the
+		// Checkpoint names that are on for the corresponding timestamp.
+		checkpointsList, err := tagTimelineWithCheckpoints(values, checkpoints)
+		if err != nil {
+			return nil, time.Time{}, errors.Wrap(err, "unable to process the checkpoints for power_log.json")
+		}
+		if checkpointsList != nil {
+			powerDict["checkpoint"] = checkpointsList
+		}
+
 	} else {
 		// In Power Qual V2, the main test could ask to generate power log for
 		// personas without giving a timeline. In this case, we want to generate
