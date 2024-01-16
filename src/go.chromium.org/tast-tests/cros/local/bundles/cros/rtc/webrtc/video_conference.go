@@ -135,7 +135,7 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
 func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
-	const profileInterval = 10 * time.Second // Sleep interval to measure the performance metrics.
+	const profileInterval = 100 * time.Second // Sleep interval to measure the performance metrics.
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
 	}
