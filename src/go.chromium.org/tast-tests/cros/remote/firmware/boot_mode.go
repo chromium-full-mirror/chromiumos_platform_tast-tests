@@ -980,7 +980,7 @@ func (ms *ModeSwitcher) RunBypasserUntilDUTConnected(ctx context.Context, params
 	waitConnectOpt := []WaitConnectOption{ResetEthernetDongle}
 	switch params.RepeatBypasser {
 	case true:
-		connectTimeout := 2 * time.Second
+		connectTimeout := 3 * time.Second
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if err := params.BypasserMethod(ctx); err != nil {
 				return err

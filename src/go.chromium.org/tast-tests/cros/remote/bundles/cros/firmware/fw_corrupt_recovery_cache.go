@@ -127,6 +127,11 @@ func FWCorruptRecoveryCache(ctx context.Context, s *testing.State) {
 
 	defer func(ctx context.Context) {
 		h.DisconnectDUT(ctx)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancelWaitConnect()
+		if err := h.DUT.WaitConnect(waitConnectCtx); err != nil {
+			s.Fatal("Failed to reconnect to DUT: ", err)
+		}
 		s.Log("Reconnecting to BiosService on DUT")
 		if err := h.RequireBiosServiceClient(ctx); err != nil {
 			s.Fatal("Failed to reconnect to BiosServiceClient on DUT: ", err)
