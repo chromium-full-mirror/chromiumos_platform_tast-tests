@@ -134,25 +134,25 @@ func CrosToCrosRanging(ctx context.Context, s *testing.State) {
 	// Converts CrOS_1 Mac address to int, which will serve as the key for the ranging results
 	dut1Address := uwb.ByteSliceToInt(controleeReq.Params.DeviceMacAddress)
 
-	//Get ranging summary for main DUT's ranging session with CrOS 1
+	// Get ranging summary for main DUT's ranging session with CrOS 1
 	summary, err := uwb.GetRangingSessionSummary(reports.RangingResults[dut1Address], &bounds, true, false)
 	s.Logf("Ranging summary: %v ", *summary)
 
 	// Report error if insufficient percentage of Status_OK reports
-	if summary.SuccessReportRate < 0.90 {
-		s.Errorf("Ranging Session Status_OK report rate too low at %f, passing criteria is 0.90", summary.SuccessReportRate)
+	if summary.SuccessReportRate < 90 {
+		s.Errorf("Ranging Session Status_OK report rate too low at %f, passing criteria is 90%%", summary.SuccessReportRate)
 	}
 
 	// Report error if an insufficient share of the reported distances fall within the acceptable boundaries of the actual distances
 	if summary.DistanceStats.WithinBoundaryPercentage < uwb.DistanceMinAcceptablePercent {
-		s.Errorf("Ranging session distance reports within upper bound of %d and lower bound of %d is at %f, which is below passing criteria of %d",
+		s.Errorf("Ranging session distance reports within upper bound of %d and lower bound of %d is at %f%%, which is below passing criteria of %d%%",
 			bounds.DistanceUpperBound, bounds.DistanceLowerBound, summary.DistanceStats.WithinBoundaryPercentage, uwb.DistanceMinAcceptablePercent)
 	}
 
 	// Report error if an insufficient share of the reported angles fall within the acceptable boundaries of the actual distances
 	if aoa {
 		if summary.AzimuthStats.WithinBoundaryPercentage < uwb.AngleMinAcceptablePercent {
-			s.Errorf("Ranging session azimuth reports within upper bound of %f and lower bound of %f is at %f, which is below passing criteria of %d",
+			s.Errorf("Ranging session azimuth reports within upper bound of %f and lower bound of %f is at %f%%, which is below passing criteria of %d%%",
 				bounds.AzimuthUpperBound, bounds.AzimuthLowerBound, summary.AzimuthStats.WithinBoundaryPercentage, uwb.AngleMinAcceptablePercent)
 		}
 	}

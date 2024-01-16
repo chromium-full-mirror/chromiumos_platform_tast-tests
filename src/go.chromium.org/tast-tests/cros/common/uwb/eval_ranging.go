@@ -61,7 +61,7 @@ func GetRangingSessionSummary(result *RangingResult, expected *ExpectedRangingBo
 	report := &RangingSessionSummary{
 		TotalReportCount:      result.TotalReportCount,
 		SuccessfulReportCount: result.SuccessfulReportCount,
-		SuccessReportRate:     float64(result.SuccessfulReportCount) / float64(result.TotalReportCount),
+		SuccessReportRate:     (float64(result.SuccessfulReportCount) / float64(result.TotalReportCount)) * 100,
 		StatusCodes:           result.StatusCodes,
 		DistanceStats:         getDistanceDataStats(result.DistanceReadings, expected.DistanceUpperBound, expected.DistanceLowerBound),
 	}
@@ -164,7 +164,7 @@ func withinBoundaryPercentage(data []uint32, upperBound, lowerBound uint32) floa
 			validCount++
 		}
 	}
-	return float64(validCount) / float64(total)
+	return (float64(validCount) / float64(total)) * 100
 }
 
 // withinBoundaryPercentageAndFOM accepts a set of data, upper and lower bound (inclusive). It returns
@@ -185,7 +185,7 @@ func withinBoundaryPercentageAndFOM(data []*AngleReading, upperBound, lowerBound
 		}
 
 	}
-	return float64(validCount) / float64(total), float64(validFOMCount) / float64(total)
+	return (float64(validCount) / float64(total)) * 100, (float64(validFOMCount) / float64(total)) * 100
 }
 
 func getAoaOnly(data []*AngleReading) []float64 {

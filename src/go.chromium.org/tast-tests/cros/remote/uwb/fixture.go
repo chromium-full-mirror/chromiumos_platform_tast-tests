@@ -165,7 +165,7 @@ func (f *mixedPeerRemoteFixture) TearDown(ctx context.Context, s *testing.FixtSt
 			s.Errorf("DUT %d error with Disable call in Teardown: %v", i, err)
 		}
 
-		//restart uwbd d-bus daemon
+		// restart uwbd d-bus daemon
 		err = restartUwbd(ctx, dut)
 		if err != nil {
 			s.Errorf("DUT %d error in restarting uwbd: %v", i, err)
@@ -178,18 +178,19 @@ func (f *mixedPeerRemoteFixture) Reset(ctx context.Context) error {
 		dut := f.crosDUTs[i].dut
 		client := *f.crosDUTs[i].client
 
-		//restart uwbd
-		err := restartUwbd(ctx, dut)
-		if err != nil {
-			return err
-		}
-
-		//disable and enable UWB
-		err = uwb.CallAndCheckOK(client.Disable(ctx, &emptypb.Empty{}))
+		// disable UWB
+		err := uwb.CallAndCheckOK(client.Disable(ctx, &emptypb.Empty{}))
 		if err != nil {
 			return errors.Wrap(err, "Disable call error in fixture Reset")
 		}
 
+		// restart uwbd
+		err = restartUwbd(ctx, dut)
+		if err != nil {
+			return err
+		}
+
+		// enable UWB
 		err = uwb.CallAndCheckOK(client.Enable(ctx, &emptypb.Empty{}))
 		if err != nil {
 			return errors.Wrap(err, "Enable call error in fixture Reset")
@@ -353,13 +354,13 @@ func restartUwbd(ctx context.Context, d *dut.DUT) error {
 	cmd := d.Conn().CommandContext(ctx, "stop", "uwbd")
 	err := cmd.Run()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "stop uwbd failed")
 	}
 
 	cmd = d.Conn().CommandContext(ctx, "start", "uwbd")
 	err = cmd.Run()
 	if err != nil {
-		return err
+		return errors.Wrap(err, "start uwbd failed")
 	}
 	return nil
 }
