@@ -123,12 +123,40 @@ const (
 	PersistentProjectorChild = "persistentProjectorChild"
 )
 
+// Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/tape_account.go.
+const (
+	// TAPEAccount is a fixture name.
+	TAPEAccount = "tapeAccount"
+	//	EnterpriseConnectorsMGSAshWebProtectDisabledAccount is a fixture name.
+	EnterpriseConnectorsMGSAshWebProtectDisabledAccount = "enterpriseConnectorsMGSAshWebProtectDisabledAccount"
+	//	EnterpriseConnectorsMGSAshWebProtectEnabledAllowAccount is a fixture name.
+	EnterpriseConnectorsMGSAshWebProtectEnabledAllowAccount = "enterpriseConnectorsMGSAshWebProtectEnabledAllowAccount"
+	//	EnterpriseConnectorsMGSAshWebProtectEnabledBlockAccount is a fixture name.
+	EnterpriseConnectorsMGSAshWebProtectEnabledBlockAccount = "enterpriseConnectorsMGSAshWebProtectEnabledBlockAccount"
+	//	EnterpriseConnectorsMGSLacrosWebProtectDisabledAccount is a fixture name.
+	EnterpriseConnectorsMGSLacrosWebProtectDisabledAccount = "enterpriseConnectorsMGSLacrosWebProtectDisabledAccount"
+	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount is a fixture name.
+	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount = "enterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount"
+	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount is a fixture name.
+	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount = "enterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount"
+)
+
 // Fixture defined in go.chromium.org/tast-tests/cros/remote/policyutil/tape_enrolled.go.
 const (
 	// TAPEEnrolled is a fixture name.
 	TAPEEnrolled = "tapeEnrolled"
-	// TAPEAccount is a fixture name.
-	TAPEAccount = "tapeAccount"
+	//	EnterpriseConnectorsMGSAshWebProtectDisabledEnrolled is a fixture name.
+	EnterpriseConnectorsMGSAshWebProtectDisabledEnrolled = "enterpriseConnectorsMGSAshWebProtectDisabledEnrolled"
+	//	EnterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled is a fixture name.
+	EnterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled = "enterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled"
+	//	EnterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled is a fixture name.
+	EnterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled = "enterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled"
+	//	EnterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled is a fixture name.
+	EnterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled = "enterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled"
+	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled is a fixture name.
+	EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled = "enterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled"
+	//	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled is a fixture name.
+	EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled = "enterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled"
 )
 
 // TAPEAccountData contains TAPE account data.

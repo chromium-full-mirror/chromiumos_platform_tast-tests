@@ -41,6 +41,150 @@ func init() {
 			tape.ServiceAccountVar,
 		},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.EnterpriseConnectorsMGSAshWebProtectDisabledEnrolled,
+		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Ash web protect disabled",
+		Contacts: []string{
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+			"mohamedaomar@google.com",
+		},
+		Impl:            &tapeEnrolledFixt{},
+		SetUpTimeout:    enrollmentSetupTimeout,
+		TearDownTimeout: 5 * time.Minute,
+		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.EnterpriseConnectorsMGSAshWebProtectDisabledAccount,
+		ServiceDeps: []string{
+			"tast.cros.policy.PolicyService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.baserpc.FileSystem",
+			"tast.cros.tape.Service",
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.EnterpriseConnectorsMGSAshWebProtectEnabledAllowEnrolled,
+		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Ash web protect enabled and allowed",
+		Contacts: []string{
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+			"mohamedaomar@google.com",
+		},
+		Impl:            &tapeEnrolledFixt{},
+		SetUpTimeout:    enrollmentSetupTimeout,
+		TearDownTimeout: 5 * time.Minute,
+		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.EnterpriseConnectorsMGSAshWebProtectEnabledAllowAccount,
+		ServiceDeps: []string{
+			"tast.cros.policy.PolicyService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.baserpc.FileSystem",
+			"tast.cros.tape.Service",
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.EnterpriseConnectorsMGSAshWebProtectEnabledBlockEnrolled,
+		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Ash web protect enabled and blocked",
+		Contacts: []string{
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+			"mohamedaomar@google.com",
+		},
+		Impl:            &tapeEnrolledFixt{},
+		SetUpTimeout:    enrollmentSetupTimeout,
+		TearDownTimeout: 5 * time.Minute,
+		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.EnterpriseConnectorsMGSAshWebProtectEnabledBlockAccount,
+		ServiceDeps: []string{
+			"tast.cros.policy.PolicyService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.baserpc.FileSystem",
+			"tast.cros.tape.Service",
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.EnterpriseConnectorsMGSLacrosWebProtectDisabledEnrolled,
+		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Lacros web protect disabled",
+		Contacts: []string{
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+			"mohamedaomar@google.com",
+		},
+		Impl:            &tapeEnrolledFixt{},
+		SetUpTimeout:    enrollmentSetupTimeout,
+		TearDownTimeout: 5 * time.Minute,
+		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.EnterpriseConnectorsMGSLacrosWebProtectDisabledAccount,
+		ServiceDeps: []string{
+			"tast.cros.policy.PolicyService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.baserpc.FileSystem",
+			"tast.cros.tape.Service",
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowEnrolled,
+		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Lacros web protect enabled and allowed",
+		Contacts: []string{
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+			"mohamedaomar@google.com",
+		},
+		Impl:            &tapeEnrolledFixt{},
+		SetUpTimeout:    enrollmentSetupTimeout,
+		TearDownTimeout: 5 * time.Minute,
+		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledAllowAccount,
+		ServiceDeps: []string{
+			"tast.cros.policy.PolicyService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.baserpc.FileSystem",
+			"tast.cros.tape.Service",
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockEnrolled,
+		Desc: "Enrolls using real DMServer by using a TAPE account with Autolaunch MGS and pre-applied policies for Lacros web protect enabled and blocked",
+		Contacts: []string{
+			"cros-enterprise-connectors@google.com",
+			"webprotect-eng@google.com",
+			"mohamedaomar@google.com",
+		},
+		Impl:            &tapeEnrolledFixt{},
+		SetUpTimeout:    enrollmentSetupTimeout,
+		TearDownTimeout: 5 * time.Minute,
+		ResetTimeout:    15 * time.Second,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.EnterpriseConnectorsMGSLacrosWebProtectEnabledBlockAccount,
+		ServiceDeps: []string{
+			"tast.cros.policy.PolicyService",
+			"tast.cros.hwsec.OwnershipService",
+			"tast.cros.baserpc.FileSystem",
+			"tast.cros.tape.Service",
+		},
+		Vars: []string{
+			tape.ServiceAccountVar,
+		},
+	})
 }
 
 type tapeEnrolledFixt struct {
