@@ -12,6 +12,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/common/policy"
+	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -25,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
+	"go.chromium.org/tast-tests/cros/local/vdi/fixtures"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -45,7 +49,7 @@ func init() {
 		Name:     "onedrive",
 		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
-		Impl: &fixture{
+		Impl: &onedriveFixture{
 			bt:            browser.TypeAsh,
 			chromeOptions: opts,
 			provider:      filesconsts.OneDrive,
@@ -62,7 +66,7 @@ func init() {
 		Name:     "onedriveLacros",
 		Desc:     "Lacros variant of onedrive",
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
-		Impl: &fixture{
+		Impl: &onedriveFixture{
 			bt:            browser.TypeLacros,
 			chromeOptions: opts,
 			provider:      filesconsts.OneDrive,
@@ -76,10 +80,28 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "onedriveManaged",
+		Desc:     "Enterprise variant of onedrive with the corresponding policies set to 'allowed'",
+		Contacts: []string{"lmasopust@google.com", "cros-commercial-clippy-eng@google.com"},
+		Impl: &onedriveFixture{
+			bt:            browser.TypeAsh,
+			chromeOptions: opts,
+			provider:      filesconsts.OneDrive,
+		},
+		Parent:          fixture.FakeDMS,
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: 30 * time.Second,
+		PreTestTimeout:  60 * time.Second,
+		PostTestTimeout: 30 * time.Second,
+		Data:            []string{"Sample_DOCX_file_20230704.docx", "Sample_PPTX_file_20230704.pptx", "Sample_XLSX_file_20230724.xlsx"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "onedriveAndGoogleDrive",
 		Desc:     "Sets up 3 office files docx, pptx and xlsx. At tear down tries to remove them from the remote service via ODFS",
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
-		Impl: &fixture{
+		Impl: &onedriveFixture{
 			bt:       browser.TypeAsh,
 			provider: filesconsts.DriveFs,
 		},
@@ -96,7 +118,7 @@ func init() {
 		Name:     "onedriveAndGoogleDriveLacros",
 		Desc:     "Lacros variant of onedriveAndGoogleDrive",
 		Contacts: []string{"lucmult@chromium.org", "chromeos-files-syd@chromum.org"},
-		Impl: &fixture{
+		Impl: &onedriveFixture{
 			bt:       browser.TypeLacros,
 			provider: filesconsts.DriveFs,
 		},
@@ -137,9 +159,20 @@ type FixtureData struct {
 	// The APIClient singleton used to make calls directly to Drive.
 	// This will be nil for tests without DriveFS.
 	DriveAPIClient *drivefs.APIClient
+
+	// FakeDMS is the running DMS server if any.
+	fakeDMS *fakedms.FakeDMS
 }
 
-type fixture struct {
+// FakeDMS implements the HasFakeDMS interface.
+func (f FixtureData) FakeDMS() *fakedms.FakeDMS {
+	if f.fakeDMS == nil {
+		panic("FakeDMS is called with nil fakeDMS instance")
+	}
+	return f.fakeDMS
+}
+
+type onedriveFixture struct {
 	cr            *chrome.Chrome
 	tconn         *chrome.TestConn
 	chromeOptions []chrome.Option
@@ -153,6 +186,7 @@ type fixture struct {
 	// Maps the keys docx, xlsx and pptx to the full local path in the  Data directory.
 	// Used to share the path between SetUp() and PreTest().
 	srcFiles map[string]string
+	fdms     *fakedms.FakeDMS
 }
 
 // prepareOfficeFile copies the test file to a sub-folder of downloads with a unique name.
@@ -173,11 +207,12 @@ func prepareOfficeFile(srcPath, targetFolder string) (testFile TestFile, err err
 	return testFile, nil
 }
 
-func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+func (f *onedriveFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var cr *chrome.Chrome
 	var err error
 	var driveFsClient *drivefs.DriveFs
 	var driveAPIClient *drivefs.APIClient
+
 	if f.provider == filesconsts.DriveFs {
 		// Lacros is handled by the its parent fixture.
 		cr = s.ParentValue().(*drivefs.FixtureData).Chrome
@@ -188,6 +223,31 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		opts := f.chromeOptions
 		odfsDevPath := OdfsUnpackedLocation.Value()
 		isOdfsDev := len(odfsDevPath) > 0
+
+		// Checks whether the current fixture has a FakeDMS parent fixture.
+		fdms, isPolicyTest := s.ParentValue().(*fakedms.FakeDMS)
+		if isPolicyTest {
+			s.Log("fdms found")
+			if err := fdms.Ping(ctx); err != nil {
+				s.Fatal("Failed to ping FakeDMS: ", err)
+			}
+
+			f.fdms = fdms
+
+			pb := policy.NewBlob()
+			pb.PolicyUser = fixtures.Username
+			pb.AddPolicies([]policy.Policy{
+				&policy.MicrosoftOneDriveMount{Val: "allowed"},
+				&policy.MicrosoftOfficeCloudUpload{Val: "allowed"},
+				&policy.MicrosoftOneDriveAccountRestrictions{Val: []string{"common"}},
+			})
+			if err := fdms.WritePolicyBlob(pb); err != nil {
+				s.Fatal("Failed to write policies to FakeDMS: ", err)
+			}
+
+			opts = append(opts, chrome.DMSPolicy(f.fdms.URL))
+			opts = append(opts, chrome.FakeLogin(chrome.Creds{User: fixtures.Username, Pass: fixtures.Password}))
+		}
 
 		if f.bt == browser.TypeLacros {
 			if isOdfsDev {
@@ -246,11 +306,12 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		TargetFolder:   targetFolder,
 		DriveFs:        driveFsClient,
 		DriveAPIClient: driveAPIClient,
+		fakeDMS:        f.fdms,
 	}
 	return f.data
 }
 
-func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
+func (f *onedriveFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	// For DriveFS the parent fixture takes care of closing it.
 	if f.provider == filesconsts.OneDrive {
 		if err := f.cr.Close(ctx); err != nil {
@@ -260,14 +321,14 @@ func (f *fixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	}
 }
 
-func (f *fixture) Reset(ctx context.Context) error {
+func (f *onedriveFixture) Reset(ctx context.Context) error {
 	if err := ash.CloseAllWindows(ctx, f.tconn); err != nil {
 		testing.ContextLog(ctx, "Failed trying to close all windows: ", err)
 	}
 	return nil
 }
 
-func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *onedriveFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	recorder, err := uiauto.NewScreenRecorder(ctx, f.tconn)
 	if err != nil {
 		s.Log("Failed to create screen recorder: ", err)
@@ -340,7 +401,7 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 // PostTests makes a best effort attempt to restore the state to where it was pretest.
-func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+func (f *onedriveFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	// Local Files.
 	dirEntries, err := os.ReadDir(f.downloadSubFolder)
 	if err != nil {
