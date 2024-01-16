@@ -183,7 +183,6 @@ func (uiHelper *UIHelper) WriteProtectPageChooseManual(ctx context.Context) erro
 	return action.Combine("write Protect page operation and choose manual",
 		uiHelper.writeProtectPageOperation("Manually turn off"),
 		uiHelper.disconnectBatteryByCr50(),
-		uiHelper.changeWriteProtectStatus(servo.FWWPStateOff),
 	)(ctx)
 
 }
@@ -233,7 +232,6 @@ func (uiHelper *UIHelper) DeviceProvisionPageOperation(ctx context.Context) erro
 	return action.Combine("device Provision page operation",
 		uiHelper.waitForPageToLoad("Provisioning the device…", timeInSecondToLoadPage),
 		uiHelper.connectBatteryByCr50(),
-		uiHelper.changeWriteProtectStatus(servo.FWWPStateOn),
 	)(ctx)
 }
 
@@ -361,14 +359,6 @@ func (uiHelper *UIHelper) VerifyLogIsSaved(ctx context.Context) error {
 
 // RSUPageOperation handles all operations on RSU Page.
 func (uiHelper *UIHelper) RSUPageOperation(ctx context.Context) error {
-	// Change battery status and WP status
-	if err := action.Combine("disconnect Battery and disable WP",
-		uiHelper.disconnectBatteryByCr50(),
-		uiHelper.changeWriteProtectStatus(servo.FWWPStateOff),
-	)(ctx); err != nil {
-		return err
-	}
-
 	if err := action.Combine("click Challenge Code URL",
 		uiHelper.waitForPageToLoad("Perform RMA Server Unlock", timeInSecondToLoadPage),
 		uiHelper.clickLink("this URL"),
@@ -460,7 +450,6 @@ func (uiHelper *UIHelper) SetupInitStatus(ctx context.Context, enroll bool) erro
 		//                 flexibility and make action sequences more clear.
 		uiHelper.changeEnrollment(enroll),
 		uiHelper.openCCDIfNotOpen(),
-		uiHelper.changeWriteProtectStatus(servo.FWWPStateOn),
 	)(ctx)
 }
 
