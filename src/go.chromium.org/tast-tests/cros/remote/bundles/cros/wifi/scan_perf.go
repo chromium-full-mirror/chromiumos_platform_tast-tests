@@ -88,7 +88,6 @@ func init() {
 					useRelaxedThreshold: false,
 					isPassive6GHzScan:   true,
 				},
-				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
 			{
