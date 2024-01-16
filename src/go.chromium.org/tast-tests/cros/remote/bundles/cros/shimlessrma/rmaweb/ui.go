@@ -454,11 +454,13 @@ func (uiHelper *UIHelper) SetupInitStatus(ctx context.Context, enroll bool) erro
 	}
 
 	return action.Combine("setup init status for test",
-		// Open CCD needs to be executed after disable Factory mode.
-		// It is because disable Factory mode will also lock CCD.
+		// Reboot in |changeEnrollment| will lock CCD (after leaving factory mode),
+		// so we have to call it before opening CCD.
+		// TODO(jeffulin): Separate reboot from |changeEnrollment| so we can have more
+		//                 flexibility and make action sequences more clear.
+		uiHelper.changeEnrollment(enroll),
 		uiHelper.openCCDIfNotOpen(),
 		uiHelper.changeWriteProtectStatus(servo.FWWPStateOn),
-		uiHelper.changeEnrollment(enroll),
 	)(ctx)
 }
 
