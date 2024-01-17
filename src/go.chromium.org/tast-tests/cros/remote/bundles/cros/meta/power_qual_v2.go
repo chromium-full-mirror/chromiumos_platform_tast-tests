@@ -45,9 +45,28 @@ func init() {
 				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/videoplayback_lacros_test.json",
 			},
 			{
+				Name:              "full",
+				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/full.json",
+				ExtraRequirements: []string{"pwr-batLife-0009-v03"},
+			},
+			{
+				Name:              "videoplayback",
+				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/video_playback.json",
+				ExtraRequirements: []string{"pwr-batLife-0010-v03"},
+			},
+			{
+				Name:              "videocall",
+				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/video_call.json",
+				ExtraRequirements: []string{"pwr-batLife-0011-v03"},
+			},
+			{
 				Name:              "browsing",
 				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing.json",
 				ExtraRequirements: []string{"pwr-batLife-0012-v01"},
+			},
+			{
+				Name: "short",
+				Val:  "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/short.json",
 			},
 			// TODO(b/274972858): add other parameterized tests.
 			// For example, add "essential" and "advanced" tests that use different configurations.
