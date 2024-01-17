@@ -57,7 +57,7 @@ func init() {
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
 		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome", "wifi", "arc"},
+		SoftwareDeps: []string{"chrome", "wifi", "arc", "no_android_p"},
 		Timeout:      10 * time.Minute,
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
 		Params: []testing.Param{
@@ -193,8 +193,18 @@ func QosAppMonitor(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable ethernet in ARC: ", err)
 	}
 	defer func() {
-		if err := a.Command(ctx, "dumpsys", "wifi", "transports", "eth").Run(testexec.DumpLogOnError); err != nil {
+		if err := a.Command(cleanupCtx, "dumpsys", "wifi", "transports", "eth").Run(testexec.DumpLogOnError); err != nil {
 			s.Error(err, "failed to re-enable ethernet in ARC")
+		}
+	}()
+
+	// Asking powerd to keep the display on to keep test app responsive to requests.
+	if err := testexec.CommandContext(ctx, "set_power_policy", "--screen_wake_lock=1").Run(testexec.DumpLogOnError); err != nil {
+		s.Fatal("Failed to change power policy: ", err)
+	}
+	defer func() {
+		if err := testexec.CommandContext(cleanupCtx, "set_power_policy", "reset").Run(testexec.DumpLogOnError); err != nil {
+			s.Error("Failed to reset power policy: ", err)
 		}
 	}()
 
@@ -205,6 +215,11 @@ func QosAppMonitor(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create WiFi router environment: ", err)
 	}
+	defer func() {
+		if err := wifi.Cleanup(cleanupCtx); err != nil {
+			s.Error("Failed to clean up virtual WiFi router: ", err)
+		}
+	}()
 
 	if err := wifi.Service.Connect(ctx); err != nil {
 		s.Fatal("Failed to connect to WiFi: ", err)
