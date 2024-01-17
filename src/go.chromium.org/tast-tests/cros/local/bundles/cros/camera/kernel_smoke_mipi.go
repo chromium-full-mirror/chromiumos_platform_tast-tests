@@ -33,16 +33,21 @@ func configFiles() []string {
 		modelConfigFile,
 		"kernel_smoke_mipi/atlas.yaml",
 		"kernel_smoke_mipi/aviko-KC4eb5.yaml",
+		"kernel_smoke_mipi/brya.yaml",
 		"kernel_smoke_mipi/craask-TC0002.yaml",
 		"kernel_smoke_mipi/craaskbowl-TC0003.yaml",
 		"kernel_smoke_mipi/drawcia-LV0001.yaml",
 		"kernel_smoke_mipi/kano-CH0001.yaml",
 		"kernel_smoke_mipi/kano-CH3c6d.yaml",
+		"kernel_smoke_mipi/karis-CH3c6d.yaml",
 		"kernel_smoke_mipi/maglia-TC0003.yaml",
 		"kernel_smoke_mipi/magolor-TC0003.yaml",
 		"kernel_smoke_mipi/nautilus.yaml",
+		"kernel_smoke_mipi/nautiluslte.yaml",
 		"kernel_smoke_mipi/nocturne.yaml",
 		"kernel_smoke_mipi/redrix-PLcf06.yaml",
+		"kernel_smoke_mipi/rex-KC6977.yaml",
+		"kernel_smoke_mipi/rex-CH3c6d.yaml",
 		"kernel_smoke_mipi/screebo-ST0d2c.yaml",
 		"kernel_smoke_mipi/skolas-KC4eb5.yaml",
 		"kernel_smoke_mipi/soraka.yaml",
@@ -50,6 +55,7 @@ func configFiles() []string {
 		"kernel_smoke_mipi/vell-TCf939.yaml",
 		"kernel_smoke_mipi/voema-CH0001.yaml",
 		"kernel_smoke_mipi/xivu360-KC0001.yaml",
+		"kernel_smoke_mipi/yavilly-LV0001.yaml",
 	}
 }
 
@@ -57,6 +63,7 @@ func configFiles() []string {
 var unsupportedModel = []string{
 	"krane", "kakadu", "kodama", "katsu", // kukui
 	"coachz", "homestar", "mrbland", "wormdingler", "quackingstick", // strongbad
+	"rex4es", "screebo4es", // rex es
 }
 
 func init() {

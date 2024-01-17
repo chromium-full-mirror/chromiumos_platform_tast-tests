@@ -7,6 +7,10 @@
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
+  "brya": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
   "craask-TC0002": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
@@ -27,6 +31,10 @@
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 1"
   },
+  "karis-CH3c6d": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
   "maglia-TC0003": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
@@ -39,6 +47,10 @@
     "bus_info": "PCI:0000:00:14.3",
     "out_entity": "ipu3-cio2 0"
   },
+  "nautiluslte": {
+    "bus_info": "PCI:0000:00:14.3",
+    "out_entity": "ipu3-cio2 0"
+  },
   "nocturne": {
     "bus_info": "PCI:0000:00:14.3",
     "out_entity": "ipu3-cio2 0"
@@ -46,6 +58,14 @@
   "redrix-PLcf06": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
+  "rex-CH3c6d": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
+  "rex-KC6977": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
   },
   "screebo-ST0d2c": {
     "bus_info": "pci:pci0000:00",
@@ -72,6 +92,10 @@
     "out_entity": "Intel IPU6 BE SOC capture 1"
   },
   "xivu360-KC0001": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
+  "yavilly-LV0001": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   }
