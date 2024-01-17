@@ -14,21 +14,22 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
-
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/tape"
 	"go.chromium.org/tast-tests/cros/remote/gaiaenrollment"
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
+	"go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
-const zeroTouchEnrollmentTimeout = 4 * time.Minute
+const zeroTouchEnrollmentTimeout = 25 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -44,7 +45,7 @@ func init() {
 		SoftwareDeps: []string{"reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.policy.PolicyService", "tast.cros.tape.Service", "tast.cros.hwsec.OwnershipService", "tast.cros.graphics.ScreenshotService"},
 		Fixture:      fixture.CleanOwnership,
-		Timeout:      7 * time.Minute,
+		Timeout:      30 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
 			// Zero Touch Enrollment.
@@ -96,16 +97,8 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to pre-provision device: ", err)
 	}
 
-	dutConn := s.DUT().Conn()
-	// Getting the date for 1 month ago, this is needed for the RLZ command below.
-	currentTime := time.Now()
-	last1Month := currentTime.AddDate(0, -1, 0)
-	timeLayout := "2006-01-02"
-	oneMonthAgoDate := last1Month.Format(timeLayout)
-	// Setting the RLZ ping embargo end date.
-	oneMonthAgo := fmt.Sprintf("rlz_embargo_end_date=\"%s\"", oneMonthAgoDate)
-	if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-s", oneMonthAgo).Run(exec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to set rlz date: ", err)
+	if err := setVpdValuesForInitialEnrollment(ctx, s.DUT().Conn()); err != nil {
+		s.Fatal("Failed to get VPD ready for ZTE: ", err)
 	}
 
 	// Shorten deadline to leave time separately for logging and cleanup.
@@ -129,8 +122,6 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	}
 	defer captureScreenshotOnError(cleanupCtx, s.HasError)
 
-	pc := ps.NewPolicyServiceClient(cl.Conn)
-
 	tapeClient, err := tape.NewClient(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)))
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
@@ -152,13 +143,64 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if _, err := pc.ZeroTouchEnrollUsingChrome(ctx, &ps.ZeroTouchEnrollUsingChromeRequest{
-		DmserverURL: dmServerURL,
-		ManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
-	}); err != nil {
-		s.Fatal("Failed to zero touch enroll using chrome: ", err)
+	// It may take a while for our preprovisioning command to succeed, wait for a bit and then retry ZTE a few times.
+	// GoBigSleepLint: Waiting a bit speeds up the test because provisioning takes time.
+	testing.Sleep(ctx, time.Minute)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Give ZTE attempt 5 minutes to succeed, then retry.
+		oobeCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+		defer cancel()
+
+		// Reconnect to the device because cleaning the TPM restarts Chrome.
+		cl, err = rpc.Dial(oobeCtx, s.DUT(), s.RPCHint())
+		if err != nil {
+			return errors.Wrap(err, "failed to connect to the RPC service on the DUT")
+		}
+		defer cl.Close(ctx)
+
+		policyClient := ps.NewPolicyServiceClient(cl.Conn)
+
+		if _, err := policyClient.ZeroTouchEnrollUsingChrome(oobeCtx, &ps.ZeroTouchEnrollUsingChromeRequest{
+			DmserverURL: dmServerURL,
+			ManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+		}); err != nil {
+			// Clear TPM to reset any state left by the failed ZTE attempt.
+			ownershipClient := hwsec.NewOwnershipServiceClient(cl.Conn)
+
+			if _, err := ownershipClient.EnsureTPMAndSystemStateAreReset(ctx, &empty.Empty{}); err != nil {
+				return errors.Wrap(err, "failed to reset the TPM locally")
+			}
+
+			return err
+		}
+
+		return nil
+	}, &testing.PollOptions{Interval: 2 * time.Minute}); err != nil {
+		s.Fatal("Failed to ZTE enroll using chrome: ", err)
 	}
-	defer pc.StopChrome(cleanupCtx, &empty.Empty{})
+}
+
+func setVpdValuesForInitialEnrollment(ctx context.Context, dutConn *ssh.Conn) error {
+	if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-d", "check_enrollment").Run(exec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to delete check_enrollment")
+	}
+
+	// Setting the RLZ ping embargo end date to one month ago.
+	currentTime := time.Now()
+	last1Month := currentTime.AddDate(0, -1, 0)
+	timeLayout := "2006-01-02"
+	oneMonthAgoDate := last1Month.Format(timeLayout)
+	oneMonthAgo := fmt.Sprintf("rlz_embargo_end_date=\"%s\"", oneMonthAgoDate)
+	if err := dutConn.CommandContext(ctx, "vpd", "-i", "RW_VPD", "-s", oneMonthAgo).Run(exec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to set rlz date")
+	}
+
+	// Refresh dump_vpd_log because we don't reboot.
+	if err := dutConn.CommandContext(ctx, "dump_vpd_log", "--force").Run(exec.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to refresh dump_vpd_log")
+	}
+
+	return nil
 }
 
 func preProvisionDevice(ctx context.Context, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey string) error {
