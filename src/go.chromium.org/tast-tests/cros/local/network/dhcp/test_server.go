@@ -144,6 +144,9 @@ func (s *testServer) runLoop(ctx context.Context, rules []HandlingRule) error {
 
 		rule := rules[0]
 		code := rule.handle(packet)
+
+		testing.ContextLogf(ctx, "Test DHCP server received a DHCP packet %s, action %s", packet, code)
+
 		if code&popHandler != 0 {
 			rules = rules[1:]
 		}

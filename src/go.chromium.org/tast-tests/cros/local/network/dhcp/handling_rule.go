@@ -5,6 +5,7 @@
 package dhcp
 
 import (
+	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -28,6 +29,26 @@ const (
 	// Note that the failure bit has precedence over the success bit.
 	testSucceeded response = 1 << 3
 )
+
+func (r response) String() string {
+	var strs []string
+	if r&noAction != 0 {
+		strs = append(strs, "no_action")
+	}
+	if r&haveResponse != 0 {
+		strs = append(strs, "have_response")
+	}
+	if r&popHandler != 0 {
+		strs = append(strs, "pop_handler")
+	}
+	if r&testFailed != 0 {
+		strs = append(strs, "test_failed")
+	}
+	if r&testSucceeded != 0 {
+		strs = append(strs, "test_succeeded")
+	}
+	return strings.Join(strs, ",")
+}
 
 // DHCP handling rule types.
 type rule int
