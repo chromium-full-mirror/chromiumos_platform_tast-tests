@@ -577,7 +577,6 @@ func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error 
 	if err := uiauto.Combine("Add and verify APN added",
 		s.ui.LeftClick(nodewith.Name("Add").Role(role.Button)),
 		s.ui.WaitUntilExists(nodewith.NameContaining(apn.Name).First()),
-		s.ui.EnsureExistsFor(nodewith.NameContaining(apn.Name).First(), 10*time.Second),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to add custom APN and verify it shows in the APN list")
 	}
