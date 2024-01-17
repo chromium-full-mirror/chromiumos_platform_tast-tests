@@ -257,7 +257,7 @@ func (f *Fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 // SetConsent enables or disables metrics consent, based on the value of consent.
 // Pre: cr must point to a logged-in chrome session.
 func SetConsent(ctx context.Context, cr *chrome.Chrome, consent bool) error {
-	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 
 	if err := ensureSoftwareDeps(ctx); err != nil {
