@@ -40,7 +40,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"chrome", "non_meets_device"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
