@@ -155,7 +155,7 @@ func skipGmailSplash(ctx context.Context, tconn *chrome.TestConn, d *ui.Device) 
 		}
 	}
 
-	gotIt := d.Object(ui.Text("GOT IT"))
+	gotIt := d.Object(ui.TextMatches("(?i)GOT IT"))
 	if err := gotIt.WaitForExists(ctx, actionTimeout); err != nil {
 		testing.ContextLog(ctx, `Failed to find "GOT IT" button, believing splash screen has been dismissed already`)
 		return nil
@@ -180,15 +180,12 @@ func skipGmailSplash(ctx context.Context, tconn *chrome.TestConn, d *ui.Device) 
 		}
 	}
 	takeMe := d.Object(ui.Text("TAKE ME TO GMAIL"))
-	if err := takeMe.WaitForExists(ctx, actionTimeout); err != nil {
-		return errors.Wrap(err, `"TAKE ME TO GMAIL" is not shown`)
-	}
-	if err := takeMe.Click(ctx); err != nil {
+	if err := cuj.ClickIfExist(takeMe, actionTimeout)(ctx); err != nil {
 		return errors.Wrap(err, `failed to click "TAKE ME TO GMAIL" button`)
 	}
 	// After clicking 'take me to gmail', it might show a series of dialogs to
 	// finalize the setup. Skip these dialogs by clicking their 'ok' buttons.
-	for i := 0; i < customPanelMaxCount; i++ {
+	if err := uiauto.Retry(customPanelMaxCount, func(ctx context.Context) error {
 		dialog := d.Object(ui.ID(dialogID))
 		if err := dialog.WaitForExists(ctx, actionTimeout); err != nil {
 			return nil
@@ -197,6 +194,10 @@ func skipGmailSplash(ctx context.Context, tconn *chrome.TestConn, d *ui.Device) 
 		if err := dismiss.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click the dismiss button")
 		}
+		return errors.New("too many dialog popups")
+	})(ctx); err != nil {
+		return err
 	}
-	return errors.New("too many dialog popups")
+
+	return cuj.ClickIfExist(gotIt, actionTimeout)(ctx)
 }
