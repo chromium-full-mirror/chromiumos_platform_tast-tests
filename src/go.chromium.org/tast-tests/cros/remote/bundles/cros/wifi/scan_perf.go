@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -18,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/network/cmd"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
-	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -31,8 +29,6 @@ import (
 type scanPerfTestCase struct {
 	// apOpts holds options to configure hostapd.
 	apOpts []ap.Option
-	// useRelaxedThreshold indicates whether to allow extra time for WiFi scan.
-	useRelaxedThreshold bool
 	// isPassive6GHzScan indicates WiFi RequestScan type, true = passive 6GHz-only scan, false = active full scan
 	isPassive6GHzScan bool
 }
@@ -79,14 +75,13 @@ func init() {
 				// See https://source.corp.google.com/chromeos_public/src/third_party/wpa_supplicant-cros/next/src/ap/ap_config.c;rcl=20a522b9ebe52bac34cc4ecfc1a9722cc1e77cdc;l=88
 				// Since crrev.com/c/3996676, averages of full scan times are recorded in stead of one full scan.
 				Val: scanPerfTestCase{
-					useRelaxedThreshold: true,
+					isPassive6GHzScan: false,
 				},
 			},
 			{
 				Name: "passive6ghz",
 				Val: scanPerfTestCase{
-					useRelaxedThreshold: false,
-					isPassive6GHzScan:   true,
+					isPassive6GHzScan: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
 			},
@@ -94,7 +89,7 @@ func init() {
 				// This variant runs on unstable chipsets with default parameters.
 				Name: "unstable",
 				Val: scanPerfTestCase{
-					useRelaxedThreshold: false,
+					isPassive6GHzScan: false,
 				},
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(deviceWithUnstableScan...)),
@@ -102,15 +97,15 @@ func init() {
 			{
 				Name: "dtim1",
 				Val: scanPerfTestCase{
-					apOpts:              []ap.Option{ap.DTIMPeriod(1)},
-					useRelaxedThreshold: true,
+					apOpts:            []ap.Option{ap.DTIMPeriod(1)},
+					isPassive6GHzScan: false,
 				},
 			},
 			{
 				Name: "dtim1unstable",
 				Val: scanPerfTestCase{
-					apOpts:              []ap.Option{ap.DTIMPeriod(1)},
-					useRelaxedThreshold: false,
+					apOpts:            []ap.Option{ap.DTIMPeriod(1)},
+					isPassive6GHzScan: false,
 				},
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(deviceWithUnstableScan...)),
@@ -144,20 +139,12 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		pollTimeout       = 15 * time.Second
 
 		// Thresholds for scan tests.
-		fgFullScanThreshold        = 4 * time.Second
-		bgFullScanThreshold        = 7 * time.Second
-		bgFullScanThresholdRelaxed = 8 * time.Second
+		fgFullScanThreshold = 4 * time.Second
+		bgFullScanThreshold = 8 * time.Second
 		// Thresholds for passive scan tests.
 		fgPassiveScanThreshold = 7 * time.Second
 		bgPassiveScanThreshold = 13 * time.Second
 	)
-
-	// TODO(b/253096914): The following chipsets are known to have slower bg scan times.
-	// Use relaxed threshold until the bug has been solved.
-	bgRelaxedChipsets := map[wlan.DeviceID]struct{}{
-		wlan.MediaTekMT7921PCIE: {},
-		wlan.MediaTekMT7921SDIO: {},
-	}
 
 	// TODO(b/260276685): Shared fixture among test variants causes a longer 1st bg when dtim config is different from the last subtest.
 	// Create a new test fixture for each test variant. Use shared |wificellFixt| when fixed.
@@ -196,15 +183,6 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect rpc: ", err)
 	}
 	defer r.Close(ctx)
-
-	client := wifi.NewShillServiceClient(r.Conn)
-
-	// Get the information of the WLAN device.
-	devInfo, err := client.GetDeviceInfo(ctx, &empty.Empty{})
-	if err != nil {
-		s.Fatal("Failed obtaining WLAN device information through rpc: ", err)
-	}
-	devID := wlan.DeviceID(devInfo.Id)
 
 	options := wificell.DefaultOpenNetworkAPOptions()
 	tc := s.Param().(scanPerfTestCase)
@@ -404,11 +382,6 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	threshold = bgFullScanThreshold
 	if requestScanType == shillconst.WiFiRequestScanTypePassive {
 		threshold = bgPassiveScanThreshold
-	} else if tc.useRelaxedThreshold {
-		if _, ok := bgRelaxedChipsets[devID]; ok {
-			threshold = bgFullScanThresholdRelaxed
-			s.Logf("There is a known issue (b/253096914) for this WiFi chip (%s), use a relaxed threshold: %s", devInfo.Name, threshold)
-		}
 	}
 	if requestScanType == shillconst.WiFiRequestScanTypePassive {
 		if err := tf.WifiClient().SetRequestScanTypeProperty(ctx, requestScanType); err != nil {
