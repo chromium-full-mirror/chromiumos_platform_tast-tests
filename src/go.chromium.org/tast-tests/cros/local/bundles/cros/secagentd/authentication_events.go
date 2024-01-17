@@ -5,7 +5,7 @@
 package secagentd
 
 import (
-	rep "chromiumos/reporting"
+	rep "go.chromium.org/chromiumos/reporting"
 	xdr "chromiumos/xdr/secagentd"
 	"context"
 	"strconv"

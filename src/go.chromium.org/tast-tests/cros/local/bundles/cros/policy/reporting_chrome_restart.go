@@ -9,6 +9,8 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/chromiumos/reporting"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -16,8 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
-
-	"chromiumos/reporting"
 )
 
 func init() {

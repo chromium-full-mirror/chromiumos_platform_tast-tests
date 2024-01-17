@@ -12,7 +12,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/sys/unix"
 
-	"chromiumos/reporting"
+	"go.chromium.org/chromiumos/reporting"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"

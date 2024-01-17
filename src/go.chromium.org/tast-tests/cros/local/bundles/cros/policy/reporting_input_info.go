@@ -12,6 +12,8 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	"go.chromium.org/chromiumos/reporting"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -24,8 +26,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-
-	"chromiumos/reporting"
 )
 
 func init() {

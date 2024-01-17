@@ -19,14 +19,14 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
+	"go.chromium.org/chromiumos/reporting"
+
 	"go.chromium.org/tast-tests/cros/local/missiveutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"golang.org/x/crypto/chacha20"
 	"golang.org/x/crypto/curve25519"
 	"golang.org/x/crypto/hkdf"
-
-	"chromiumos/reporting"
 )
 
 // MissiveDefaultFeature is the feature that should be passed to Chrome when

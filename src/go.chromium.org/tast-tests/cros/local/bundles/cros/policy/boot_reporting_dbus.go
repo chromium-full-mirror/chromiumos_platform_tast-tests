@@ -11,7 +11,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"google.golang.org/protobuf/proto"
 
-	rep "chromiumos/reporting"
+	rep "go.chromium.org/chromiumos/reporting"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
