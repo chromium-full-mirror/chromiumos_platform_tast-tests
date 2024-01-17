@@ -336,12 +336,7 @@ func setSARStatus(ctx context.Context, enabled bool) (*empty.Empty, error) {
 		return nil, errors.Wrap(err, "failed to create modem")
 	}
 
-	sarInterface, err := modem.GetSARInterface(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get modem SAR interface")
-	}
-
-	if sarInterface.EnableSAR(ctx, enabled); err != nil {
+	if modem.EnableSAR(ctx, enabled); err != nil {
 		return nil, errors.Wrap(err, "failed to enable SAR")
 	}
 
@@ -355,12 +350,7 @@ func (s *RemoteCellularService) ConfigureSar(ctx context.Context, req *cellular_
 		return nil, errors.Wrap(err, "failed to create modem")
 	}
 
-	sarInterface, err := modem.GetSARInterface(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get modem SAR interface")
-	}
-
-	if sarInterface.SetSARPowerLevel(ctx, uint32(req.PowerLevel)); err != nil {
+	if modem.SetSARPowerLevel(ctx, uint32(req.PowerLevel)); err != nil {
 		return nil, errors.Wrap(err, "failed to enable SAR")
 	}
 

@@ -38,27 +38,22 @@ func ModemmanagerSARInterfaceVerification(ctx context.Context, s *testing.State)
 		s.Fatal("Modem enable failed with: ", err)
 	}
 
-	sar, err := modem.GetSARInterface(ctx)
-	if err != nil {
-		s.Fatal("Failed to read SAR interface: ", err)
-	}
-
 	// Check Enable SAR
-	if err := updateAndCheckSARState(ctx, sar, true); err != nil {
+	if err := updateAndCheckSARState(ctx, modem, true); err != nil {
 		s.Fatal("Failed to enable SAR: ", err)
 	} else {
 		s.Log("Enabled SAR")
 	}
 
 	// Check Disable SAR
-	if err := updateAndCheckSARState(ctx, sar, false); err != nil {
+	if err := updateAndCheckSARState(ctx, modem, false); err != nil {
 		s.Fatal("Failed to disable SAR: ", err)
 	} else {
 		s.Log("Disabled SAR")
 	}
 
 	// Re-enable SAR
-	if err := updateAndCheckSARState(ctx, sar, true); err != nil {
+	if err := updateAndCheckSARState(ctx, modem, true); err != nil {
 		s.Fatal("Failed to re-enable SAR: ", err)
 	} else {
 		s.Log("Re-enabled SAR")
