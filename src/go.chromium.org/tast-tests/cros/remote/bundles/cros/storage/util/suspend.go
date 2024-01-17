@@ -39,30 +39,52 @@ func SuspendStressTest(ctx context.Context, dut *dut.DUT, count int) (string, er
 	return pidSuspend, nil
 }
 
+// checkZeroFailure parses a suspend stress result line and if it is an error we care about,
+// checks that we see 0 failures.
+func checkZeroFailure(ctx context.Context, line string, errors []string) bool {
+	strPieces := strings.Split(line, ":")
+	for _, errMsg := range errors {
+		if errMsg == strPieces[0] {
+			val := strings.TrimSpace(strPieces[1])
+			if val != "0" {
+				testing.ContextLogf(ctx, "Found non-zero error: %s", line)
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // CheckSuspendStressResults parses the results file containing the SuspendStressTest
 // output and checks for errors.
 func CheckSuspendStressResults(ctx context.Context, dut *dut.DUT) error {
 	const (
-		zeroPrematureWakes    = "Premature wakes: 0"
-		zeroSuspendFailures   = "Suspend failures: 0"
-		zeroFirmwareLogErrors = "Firmware log errors: 0"
-		zeroS0ixErrors        = "s0ix errors: 0"
+		prematureWakes    = "Premature wakes"
+		suspendFailures   = "Suspend failures"
+		firmwareLogErrors = "Firmware log errors"
+		s0ixErrors        = "s0ix errors"
 	)
-	zeroSuspendErrors := []string{zeroPrematureWakes, zeroSuspendFailures, zeroFirmwareLogErrors, zeroS0ixErrors}
+	suspendErrors := []string{prematureWakes, suspendFailures, firmwareLogErrors, s0ixErrors}
 
 	out, err := RunCmdWithStringOutputSilent(ctx, dut, "cat", suspendStressResults)
 	if err != nil {
 		return errors.Wrap(err, "failed to read suspend stress test results, device likely rebooted")
 	}
 
-	for _, errMsg := range zeroSuspendErrors {
-		if !strings.Contains(out, errMsg) {
-			out = strings.Replace(out, "\n", " ", -1)
-			resultStart := strings.Index(out, "Finished")
-			results := out[resultStart:]
-			return errors.Errorf("failed: expect zero failures for %q, got %q", errMsg, results)
+	resultStart := strings.Index(out, "Finished")
+	results := out[resultStart:]
+
+	lines := strings.Split(results, "\n")
+	for _, line := range lines {
+		if !strings.Contains(line, ":") {
+			continue
+		}
+		if !checkZeroFailure(ctx, line, suspendErrors) {
+			res := strings.Replace(results, "\n", " ", -1)
+			return errors.Errorf("failed: expect zero failures for %q, got %q", line, res)
 		}
 	}
+
 	return nil
 
 }
