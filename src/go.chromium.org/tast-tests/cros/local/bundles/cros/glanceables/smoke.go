@@ -6,7 +6,10 @@ package glanceables
 
 import (
 	"context"
+	"regexp"
 	"time"
+
+	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -29,10 +32,8 @@ type testCase struct {
 	pass            string
 	enabledFeatures []string
 	// whether glanceables are hidden if the policy value is not set
-	showBubblesWithoutPolicy bool
-	showStudentBubble        bool
-	showTeacherBubble        bool
-	showTaskBubble           bool
+	showStudentBubble bool
+	showTaskBubble    bool
 }
 
 func init() {
@@ -58,8 +59,6 @@ func init() {
 		Vars: []string{
 			"glanceables.Smoke.studentUsername",
 			"glanceables.Smoke.studentPassword",
-			"glanceables.Smoke.teacherUsername",
-			"glanceables.Smoke.teacherPassword",
 			"glanceables.Smoke.regularUsername",
 			"glanceables.Smoke.regularPassword",
 		},
@@ -72,7 +71,6 @@ func init() {
 				pass:              "glanceables.Smoke.studentPassword",
 				enabledFeatures:   []string{"GlanceablesV2"},
 				showStudentBubble: true,
-				showTeacherBubble: false,
 				showTaskBubble:    true,
 			},
 		}, {
@@ -83,40 +81,6 @@ func init() {
 				pass:              "glanceables.Smoke.studentPassword",
 				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
 				showStudentBubble: true,
-				showTeacherBubble: false,
-				showTaskBubble:    true,
-			},
-		}, {
-			Name: "teacher",
-			Val: testCase{
-				isManaged:         true,
-				user:              "glanceables.Smoke.teacherUsername",
-				pass:              "glanceables.Smoke.teacherPassword",
-				enabledFeatures:   []string{"GlanceablesV2,GlanceablesV2ClassroomTeacherView"},
-				showStudentBubble: false,
-				showTeacherBubble: true,
-				showTaskBubble:    true,
-			},
-		}, {
-			Name: "teacher_trusted_tester",
-			Val: testCase{
-				isManaged:         true,
-				user:              "glanceables.Smoke.teacherUsername",
-				pass:              "glanceables.Smoke.teacherPassword",
-				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
-				showStudentBubble: false,
-				showTeacherBubble: false,
-				showTaskBubble:    true,
-			},
-		}, {
-			Name: "teacher_trusted_tester_with_teacher_view",
-			Val: testCase{
-				isManaged:         true,
-				user:              "glanceables.Smoke.teacherUsername",
-				pass:              "glanceables.Smoke.teacherPassword",
-				enabledFeatures:   []string{"GlanceablesV2TrustedTesters,GlanceablesV2ClassroomTeacherView"},
-				showStudentBubble: false,
-				showTeacherBubble: true,
 				showTaskBubble:    true,
 			},
 		}, {
@@ -127,7 +91,6 @@ func init() {
 				pass:              "glanceables.Smoke.regularPassword",
 				enabledFeatures:   []string{"GlanceablesV2"},
 				showStudentBubble: false,
-				showTeacherBubble: false,
 				showTaskBubble:    true,
 			},
 		}, {
@@ -138,7 +101,6 @@ func init() {
 				pass:              "glanceables.Smoke.regularPassword",
 				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
 				showStudentBubble: false,
-				showTeacherBubble: false,
 				showTaskBubble:    true,
 			},
 		}, {
@@ -149,7 +111,6 @@ func init() {
 				pass:              "",
 				enabledFeatures:   []string{"GlanceablesV2"},
 				showStudentBubble: false,
-				showTeacherBubble: false,
 				showTaskBubble:    true,
 			},
 		}, {
@@ -160,8 +121,27 @@ func init() {
 				pass:              "",
 				enabledFeatures:   []string{"GlanceablesV2TrustedTesters"},
 				showStudentBubble: false,
-				showTeacherBubble: false,
 				showTaskBubble:    false,
+			},
+		}, {
+			Name: "managed_tasks",
+			Val: testCase{
+				isManaged:         true,
+				user:              "glanceables.Smoke.regularUsername",
+				pass:              "glanceables.Smoke.regularPassword",
+				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
+				showStudentBubble: false,
+				showTaskBubble:    true,
+			},
+		}, {
+			Name: "regular_tasks",
+			Val: testCase{
+				isManaged:         false,
+				user:              "",
+				pass:              "",
+				enabledFeatures:   []string{"GlanceablesTimeManagementTasksView"},
+				showStudentBubble: false,
+				showTaskBubble:    true,
 			},
 		}},
 		SoftwareDeps: []string{"chrome"},
@@ -224,7 +204,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	if err := verifyGlanceableBubblesVisibility(ctx, ui, param.showTaskBubble, param.showStudentBubble, param.showTeacherBubble); err != nil {
+	if err := verifyGlanceableBubblesVisibility(ctx, ui, param.showTaskBubble, param.showStudentBubble); err != nil {
 		s.Fatal("Failed verifying bubbles with initial glanceables policy: ", err)
 	}
 
@@ -234,14 +214,14 @@ func Smoke(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to reset policies in Chrome: ", err)
 		}
 
-		if err := verifyGlanceableBubblesVisibility(ctx, ui, false, false, false); err != nil {
+		if err := verifyGlanceableBubblesVisibility(ctx, ui, slices.Contains(param.enabledFeatures, "GlanceablesTimeManagementTasksView"), false); err != nil {
 			s.Fatal("Failed verifying bubbles with glanceables disabled by policy: ", err)
 		}
 	}
 }
 
 // verifyGlanceableBubblesVisibility shows time management surface by pressing date tray, and verifies visibility of different bubbles within the UI surface.
-func verifyGlanceableBubblesVisibility(ctx context.Context, ui *uiauto.Context, showTaskBubble, showStudentBubble, showTeacherBubble bool) error {
+func verifyGlanceableBubblesVisibility(ctx context.Context, ui *uiauto.Context, showTaskBubble, showStudentBubble bool) error {
 	if err := openGlanceablesBubble(ctx, ui); err != nil {
 		return errors.Wrap(err, "failed to open the glanceables bubble")
 	}
@@ -255,16 +235,7 @@ func verifyGlanceableBubblesVisibility(ctx context.Context, ui *uiauto.Context, 
 		return errors.Wrapf(err, "unexpected glanceables student bubble visibility state: got %t expected %t", isUIElementVisible, showStudentBubble)
 	}
 
-	teacherView := nodewith.ClassName("ClassroomBubbleTeacherView")
-	isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, teacherView)
-	if err != nil {
-		return errors.Wrap(err, "failed to check visibility of glanceables teacher bubble")
-	}
-	if isUIElementVisible != showTeacherBubble {
-		return errors.Wrapf(err, "unexpected glanceables teacher bubble visibility state: got %t expected %t", isUIElementVisible, showTeacherBubble)
-	}
-
-	tasksView := nodewith.ClassName("TasksBubbleView")
+	tasksView := nodewith.ClassNameRegex(regexp.MustCompile("TasksBubbleView|GlanceablesTasksView"))
 	isUIElementVisible, err = isGlanceablesBubbleVisible(ctx, ui, tasksView)
 	if err != nil {
 		return errors.Wrap(err, "failed to check visibility of glanceables tasks bubble")
@@ -291,12 +262,22 @@ func openGlanceablesBubble(ctx context.Context, ui *uiauto.Context) error {
 
 	calendarView := nodewith.ClassName("CalendarView")
 	mainHeaderTriView := nodewith.ClassName("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.ClassName("RelayoutView").Ancestor(mainHeaderTriView).Nth(1)
-	mainHeader := nodewith.Name("Calendar").ClassName("Label").Ancestor(mainHeaderContainer)
+	buttonsContainer := nodewith.ClassName("RelayoutView").Ancestor(mainHeaderTriView).Nth(2)
+	todayButton := nodewith.Ancestor(buttonsContainer).Nth(0)
 
-	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
-		return errors.Wrap(err, "failed to find calendar main label after opening calendar view")
+	if err := ui.WaitUntilExists(todayButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to find calendar's \"Today\" button")
 	}
+
+	viewInfo, err := ui.Info(ctx, todayButton)
+	if err != nil {
+		return errors.Wrap(err, "failed to get calendar's \"Today\" button view info")
+	}
+
+	if viewInfo.Description != "Go back to today" {
+		return errors.Errorf("unexpected calendar's \"Today\" description; got %q, want %q", viewInfo.Description, "Go back to today")
+	}
+
 	return nil
 }
 
