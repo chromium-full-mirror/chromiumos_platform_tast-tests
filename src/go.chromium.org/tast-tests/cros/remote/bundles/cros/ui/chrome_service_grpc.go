@@ -15,7 +15,6 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -30,18 +29,19 @@ func init() {
 		Desc:         "Check basic functionality of ChromeService",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "jonfan@google.com"},
 		BugComponent: "b:1034649",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"ui.gaiaPoolDefault"},
-		HardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Clamshell)),
+		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{{
-			Name: "default_fake_login",
-			Val:  &pb.NewRequest{},
+			Name:      "default_fake_login",
+			Val:       &pb.NewRequest{},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 		}, {
 			Name: "default_fake_login_with_region",
 			Val: &pb.NewRequest{
 				Region: "jp",
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "fake_login",
 			Val: &pb.NewRequest{
@@ -55,6 +55,7 @@ func init() {
 				EnableFeatures:  []string{"GwpAsanMalloc", "GwpAsanPartitionAlloc"},
 				ExtraArgs:       []string{"--enable-logging"},
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "fake_login_try_reuse_sessions",
 			Val: &pb.NewRequest{
@@ -69,6 +70,7 @@ func init() {
 				EnableFeatures: []string{"GwpAsanMalloc", "GwpAsanPartitionAlloc"},
 				ExtraArgs:      []string{"--enable-logging"},
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "gaia_login",
 			Val: &pb.NewRequest{
@@ -76,15 +78,18 @@ func init() {
 				// Credentials will be populated based on "ui.gaiaPoolDefault" in the main test function.
 				LoginMode: pb.LoginMode_LOGIN_MODE_GAIA_LOGIN,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "default_fake_login_lacros",
 			Val: &pb.NewRequest{
 				// Default to using Rootfs Lacros.
 				Lacros: &pb.Lacros{Selection: pb.Lacros_SELECTION_ROOTFS}},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:              "disabled_lacros",
 			Val:               &pb.NewRequest{},
+			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
 		}},
 	})
