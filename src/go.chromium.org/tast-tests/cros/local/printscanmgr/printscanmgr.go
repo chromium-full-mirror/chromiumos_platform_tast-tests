@@ -13,6 +13,7 @@ import (
 	"github.com/golang/protobuf/proto"
 
 	ppb "chromiumos/system_api/printscanmgr_proto"
+
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -79,6 +80,27 @@ func (p *Printscanmgr) CupsAddManuallyConfiguredPrinter(ctx context.Context, req
 	response := &ppb.CupsAddManuallyConfiguredPrinterResponse{}
 	if err = proto.Unmarshal(buf, response); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal CupsAddManuallyConfiguredPrinterResponse")
+	}
+
+	return response, nil
+}
+
+// PrintscanDebugSetCategories calls the
+// printscanmgr.PrintscanDebugSetCategories D-Bus method.
+func (p *Printscanmgr) PrintscanDebugSetCategories(ctx context.Context, request *ppb.PrintscanDebugSetCategoriesRequest) (*ppb.PrintscanDebugSetCategoriesResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal PrintscanDebugSetCategoriesRequest")
+	}
+
+	var buf []byte
+	if err := p.obj.CallWithContext(ctx, dbusInterface+".PrintscanDebugSetCategories", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call PrintscanDebugSetCategories")
+	}
+
+	response := &ppb.PrintscanDebugSetCategoriesResponse{}
+	if err = proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal PrintscanDebugSetCategoriesResponse")
 	}
 
 	return response, nil
