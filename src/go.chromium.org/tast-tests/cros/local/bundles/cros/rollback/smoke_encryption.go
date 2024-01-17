@@ -42,23 +42,19 @@ func init() {
 			Name: "oobe_config_restore_running",
 			Val:  oobeConfigRestoreRunningTest,
 		}, {
-			Name:      "oobe_config_save_no_flag",
-			Val:       oobeConfigSaveNoFlagTest,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "oobe_config_save_no_flag",
+			Val:  oobeConfigSaveNoFlagTest,
 		}, {
-			Name:      "rollback_encrypt_and_failed_decrypt",
-			Val:       rollbackEncryptFailedDecryptTest,
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name: "rollback_encrypt_and_failed_decrypt",
+			Val:  rollbackEncryptFailedDecryptTest,
 		}, {
 			Name:              "tpm_encryption",
 			Val:               tpmEncryptionTest,
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpmNvramRollbackSpace()),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}, {
 			Name:              "tpm_encryption_corrupted_metrics",
 			Val:               tpmEncryptionCorruptedMetricsTest,
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpmNvramRollbackSpace()),
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
