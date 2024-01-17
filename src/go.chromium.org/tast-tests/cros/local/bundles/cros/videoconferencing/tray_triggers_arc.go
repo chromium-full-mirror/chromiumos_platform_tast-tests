@@ -37,7 +37,6 @@ func init() {
 		Attr: []string{
 			"group:camera_dependent",
 			"group:external-dependency",
-			"group:video_conference",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		TestBedDeps:  []string{tbdep.Cbx(false)},

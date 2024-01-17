@@ -36,7 +36,6 @@ func init() {
 				// this binary is installed from ml-core-tests
 				// into /usr/bin/
 				ExtraAttr: []string{
-					"group:video_conference",
 					"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 				},
 				ExtraTestBedDeps:  []string{tbdep.Cbx(false)},

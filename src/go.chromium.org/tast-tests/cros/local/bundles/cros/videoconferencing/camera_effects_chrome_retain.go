@@ -38,7 +38,6 @@ func init() {
 		BugComponent: "b:187682",
 		Timeout:      10 * time.Minute,
 		Attr: []string{
-			"group:video_conference",
 			"group:cbx", "cbx_feature_enabled", "cbx_unstable",
 		},
 		TestBedDeps: []string{tbdep.Cbx(false)},
