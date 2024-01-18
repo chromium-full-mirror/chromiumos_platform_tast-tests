@@ -43,19 +43,20 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		Params: []testing.Param{
 			{
-				Name:      "short",
-				Timeout:   30 * time.Minute,
-				Val:       25,
+				Name: "short",
+				// 10 iterations takes between 7-15 minutes depending on model and number of errors encountered.
+				Timeout:   20 * time.Minute,
+				Val:       10,
 				ExtraAttr: []string{"firmware_stress"},
 			},
 			{
 				Name:    "medium",
-				Timeout: 300 * time.Minute,
+				Timeout: 400 * time.Minute,
 				Val:     250,
 			},
 			{
-				Name:    "long",
-				Timeout: 3000 * time.Minute,
+				Name:    "fw_qual",
+				Timeout: 4000 * time.Minute,
 				Val:     2500,
 			},
 		},
@@ -63,8 +64,8 @@ func init() {
 }
 
 const (
-	minResuspendResumeTime = 2
-	maxResuspendResumeTime = 8 // Sets time range between [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime).
+	minResuspendResumeTime = 5
+	maxResuspendResumeTime = 10 // Sets time range between [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime).
 	suspendDuration        = 15
 	powerdDelayDur         = 3
 )

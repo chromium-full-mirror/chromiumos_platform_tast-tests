@@ -44,7 +44,9 @@ func init() {
 		Attr:         []string{"group:firmware", "firmware_stress"},
 		Vars:         []string{"firmware.consecutiveBootIters", "firmware.consecutiveBootCustomCmd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      40 * time.Hour,
+		// Default 10 iterations typically takes anywhere from 5 - 70 minutes
+		// depending on the model and amount of errors encountered.
+		Timeout:      30 * time.Hour,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{

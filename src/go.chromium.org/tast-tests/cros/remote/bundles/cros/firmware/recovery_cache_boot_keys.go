@@ -66,21 +66,24 @@ func init() {
 				Name:      "normal_stress",
 				Fixture:   fixture.NormalMode,
 				ExtraAttr: []string{"firmware_stress"},
-				Timeout:   120 * time.Minute,
+				// 10 iterations takes between 50-70 minutes depending on model and number of errors encountered.
+				Timeout: 80 * time.Minute,
 				Val: recCacheBootKeysParam{
 					bootMode: common.BootModeNormal,
-					numIters: 15,
+					numIters: 10,
 				},
 			}, {
 				Name:      "dev_stress",
 				Fixture:   fixture.DevModeGBB,
 				ExtraAttr: []string{"firmware_stress"},
-				Timeout:   120 * time.Minute,
+				// 10 iterations takes between 60-85 minutes depending on model and number of errors encountered.
+				Timeout: 100 * time.Minute,
 				Val: recCacheBootKeysParam{
 					bootMode: common.BootModeDev,
-					numIters: 15,
+					numIters: 10,
 				},
-			}},
+			},
+		},
 	})
 }
 

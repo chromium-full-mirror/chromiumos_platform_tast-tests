@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
@@ -27,12 +26,29 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_stress"},
-		Vars:         []string{"firmware.DevModeStressIters"},
+		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Timeout:      60 * time.Minute,
 		Fixture:      fixture.DevMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{
+			{
+				Name: "short",
+				// 10 iterations takes between 13-30 minutes depending on model and number of errors encountered.
+				Timeout:   40 * time.Minute,
+				Val:       10,
+				ExtraAttr: []string{"firmware_stress"},
+			},
+			{
+				Name:    "medium",
+				Timeout: 400 * time.Minute,
+				Val:     100,
+			},
+			{
+				Name:    "fw_qual",
+				Timeout: 2000 * time.Minute,
+				Val:     500,
+			},
+		},
 	})
 }
 
@@ -42,15 +58,7 @@ func DevModeStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
 
-	numIters := 30
-	if numItersStr, ok := s.Var("firmware.DevModeStressIters"); ok {
-		numItersInt, err := strconv.Atoi(numItersStr)
-		if err != nil {
-			s.Fatalf("Invalid value for var firmware.DevModeStressIters: got %q, expected int", numItersStr)
-		} else {
-			numIters = numItersInt
-		}
-	}
+	numIters := s.Param().(int)
 
 	verifyBootMode := func() error {
 		if mainfwType, err := h.Reporter.CrossystemParam(ctx, reporters.CrossystemParamMainfwType); err != nil {

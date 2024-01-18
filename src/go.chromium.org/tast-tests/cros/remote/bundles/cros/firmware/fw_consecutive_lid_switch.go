@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -16,28 +15,40 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-var (
-	runCycles = testing.RegisterVarString(
-		"firmware.FWConsecutiveLidSwitch.RunCycles",
-		"100",
-		"The number of lid open/close cycles")
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: FWConsecutiveLidSwitch, LacrosStatus: testing.LacrosVariantUnneeded, Desc: "Trigger lid switch on and off many times consecutively",
+		Func:         FWConsecutiveLidSwitch,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Trigger lid switch on and off many times consecutively",
 		Contacts: []string{
 			"chromeos-faft@google.com",
 			"js@semihalf.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_stress"},
+		Attr:         []string{"group:firmware"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		Fixture:      fixture.NormalMode,
-		// This test could take a long time, at least 1 minute per retry
-		Timeout: 40 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name: "short",
+				// 10 iterations takes between 0.5-4 minutes depending on model and number of errors encountered.
+				Timeout:   10 * time.Minute,
+				Val:       10,
+				ExtraAttr: []string{"firmware_stress"},
+			},
+			{
+				Name:    "medium",
+				Timeout: 100 * time.Minute,
+				Val:     250,
+			},
+			{
+				Name:    "fw_qual",
+				Timeout: 1000 * time.Minute,
+				Val:     2500,
+			},
+		},
 	})
 }
 
@@ -51,16 +62,7 @@ func FWConsecutiveLidSwitch(ctx context.Context, s *testing.State) {
 		wakeDelay  time.Duration = 1 * time.Second
 	)
 
-	cycles, err := strconv.Atoi(runCycles.Value())
-	if err != nil {
-		s.Fatalf("Bad value %v is set for variable %v: %v",
-			runCycles.Value(), runCycles.Name(), err)
-	}
-	if cycles < 1 {
-		s.Fatalf("%v must be positive instead of %v",
-			runCycles.Name(), cycles)
-		return
-	}
+	cycles := s.Param().(int)
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
