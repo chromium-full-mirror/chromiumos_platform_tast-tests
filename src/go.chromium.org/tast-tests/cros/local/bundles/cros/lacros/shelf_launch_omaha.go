@@ -39,7 +39,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests launching and interacting with stateful-lacros across the supported channels served in Omaha",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-tast@google.com", "hyungtaekim@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros", "lacros_stable"},
 		// Only run on a subset of devices since it downloads from omaha and it will not use our lab's caching mechanisms. We don't want to overload our lab.

@@ -35,7 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests basic audio recording on lacros",
 		Contacts:     []string{"lacros-team@google.com", "yuhsuan@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudio"}.Instance(),

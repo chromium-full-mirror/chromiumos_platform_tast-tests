@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that Lacros should not be older than Ash based on the version skew policy",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-team@google.com", "hyungtaekim@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 	})

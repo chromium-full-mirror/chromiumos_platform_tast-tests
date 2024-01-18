@@ -27,7 +27,7 @@ func init() {
 			"lacros-team@google.com",
 			"neis@chromium.org",
 		},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Timeout:      2*chrome.LoginTimeout + time.Minute,

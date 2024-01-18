@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Captures startup metrics for Lacros after cold booting the system",
 		Contacts:     []string{"lacros-team@google.com", "hidehiko@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Vars:         []string{"meta.ColdbootStartupPerf.iterations"},

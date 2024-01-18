@@ -36,7 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that Stateful Lacros is selected when it is newer than Rootfs Lacros",
 		Contacts:     []string{"chromeos-sw-engprod@google.com", "lacros-team@google.com", "hyungtaekim@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		// TODO(b/287277678): Test is disabled in continuous testing until root caused. Change Attr to string{"group:mainline", "informational"},
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome", "lacros"},

@@ -46,7 +46,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Runs a video conference and text input window side-by-side with either ash-chrome and lacros-chrome",
 		Contacts:     []string{"lacros-team@google.com", "hidehiko@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.baserpc.FileSystem"},
 		Timeout:      5 * time.Minute,

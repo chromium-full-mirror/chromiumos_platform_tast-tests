@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Runs JS microbench against both ash-chrome and lacros-chrome",
 		Contacts:     []string{"lacros-team@google.com", "hidehiko@chromium.org", "edcourtney@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosPerf",

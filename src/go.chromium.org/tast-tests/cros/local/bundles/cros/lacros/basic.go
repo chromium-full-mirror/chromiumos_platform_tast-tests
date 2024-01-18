@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests basic lacros startup",
 		Contacts:     []string{"lacros-team@google.com", "chromeos-sw-engprod@google.com", "erikchen@chromium.org", "hidehiko@chromium.org", "edcourtney@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacros",

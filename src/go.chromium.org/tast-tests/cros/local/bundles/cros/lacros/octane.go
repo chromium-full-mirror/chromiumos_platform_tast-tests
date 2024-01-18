@@ -24,7 +24,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Lacros Octane test",
 		Contacts:     []string{"lacros-team@google.com", "edcourtney@chromium.org", "erikchen@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Timeout:      60 * time.Minute,

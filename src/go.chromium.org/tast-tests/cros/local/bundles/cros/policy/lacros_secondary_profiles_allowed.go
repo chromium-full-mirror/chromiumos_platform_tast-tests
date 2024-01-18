@@ -33,7 +33,7 @@ func init() {
 			"lacros-team@google.com",
 			"anastasiian@chromium.org", // Test author
 		},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      fixture.LacrosPolicyLoggedIn,

@@ -30,7 +30,7 @@ func init() {
 			"ythjkt@google.com",
 			"hidehiko@google.com",
 		},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Data:         []string{"migrate/indexeddb_check.js", "migrate/indexeddb_set.js", "migrate/boring_page.html"},

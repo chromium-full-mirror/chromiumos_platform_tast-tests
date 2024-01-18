@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Runs the MotionMark browser benchmark on either Ash or LaCrOS",
 		Contacts:     []string{"lacros-team@google.com", "hidehiko@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      20 * time.Minute,

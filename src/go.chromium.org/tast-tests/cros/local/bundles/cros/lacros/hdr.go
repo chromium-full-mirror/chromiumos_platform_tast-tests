@@ -35,7 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that hdr videos play on lacros and use a 30-bit buffer",
 		Contacts:     []string{"lacros-team@google.com", "mrfemi@google.com"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "informational", "group:graphics", "graphics_perbuild"},
 		HardwareDeps: hwdep.D(hwdep.Model("kohaku")),
 		SoftwareDeps: []string{"chrome", "lacros"},

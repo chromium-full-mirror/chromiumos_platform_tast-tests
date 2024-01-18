@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Runs Edu user CUJ in Lacros including installing apps and open webpages with authentication",
 		Contacts:     []string{"lacros-team@google.com"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("markarth")),
 		SoftwareDeps: []string{"chrome", "lacros"},

@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests browser activation via shelf controller and via accelerator shortcuts",
 		Contacts:     []string{"lacros-team@google.com", "neis@google.com"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "lacros", "gpu_sandboxing"},
 		Params: []testing.Param{{

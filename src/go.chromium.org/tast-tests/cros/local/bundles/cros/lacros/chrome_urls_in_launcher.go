@@ -30,7 +30,7 @@ func init() {
 			"lacros-tast@google.com",
 			"neis@chromium.org",
 		},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Timeout:      4 * time.Minute,

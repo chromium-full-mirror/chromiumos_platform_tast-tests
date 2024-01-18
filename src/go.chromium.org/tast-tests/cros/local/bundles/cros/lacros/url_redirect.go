@@ -57,7 +57,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests system URL redirect usage",
 		Contacts:     []string{"lacros-team@google.com", "skuhne@chromium.org", "hidehiko@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		SoftwareDeps: []string{"chrome", "lacros", "gpu_sandboxing"},
 		Fixture:      "lacros",
 		Timeout:      15 * time.Minute,

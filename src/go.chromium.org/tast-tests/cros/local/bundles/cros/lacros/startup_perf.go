@@ -61,7 +61,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Captures startup metrics for Lacros configurations and modes",
 		Contacts:     []string{"lacros-team@google.com", "hidehiko@chromium.org"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.GAIALoginTimeout + 10*time.Minute,

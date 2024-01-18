@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Tests pinned stream on lacros",
 		Contacts:     []string{"lacros-team@google.com", "yuhsuan@chromium.org"},
 		Attr:         []string{"group:mainline", "group:audio"},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Fixture:      "lacrosAudio",
 		Data:         []string{"sine_2ch_440hz_10s_20231101.wav", "audio_playback_test.html"},

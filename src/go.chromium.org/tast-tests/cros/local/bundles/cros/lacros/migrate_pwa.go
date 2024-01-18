@@ -31,7 +31,7 @@ func init() {
 			"ythjkt@google.com", // Test author
 			"neis@google.com",
 		},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Data:         []string{"migrate_pwa/register_sw.js", "migrate_pwa/sw.js", "migrate_pwa/pwa.html"},

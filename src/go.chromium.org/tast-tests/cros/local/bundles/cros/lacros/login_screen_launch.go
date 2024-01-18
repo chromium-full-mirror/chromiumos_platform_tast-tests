@@ -45,7 +45,7 @@ func init() {
 			"andreaorru@chromium.org",
 			"hidehiko@chromium.org",
 		},
-		BugComponent: "crbug:OS>LaCrOS",
+		BugComponent: "b:1456869",
 		SoftwareDeps: []string{"chrome", "chrome_internal", "lacros"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
