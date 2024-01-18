@@ -62,6 +62,12 @@ func init() {
 		Data:     []string{},
 		Impl:     &fixtSerializedSameBundleFixture{},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaLocalSetupFailureFixture",
+		Desc:     "Test tast fixture failures",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
+		Impl:     localSetupFailureFixture{},
+	})
 }
 
 type fixtSerializedStringFixture struct{}
@@ -201,3 +207,18 @@ func (dff *dutFeatureFixture) TearDown(ctx context.Context, s *testing.FixtState
 		s.Fatal("Got unexpected feature in TearDown")
 	}
 }
+
+type localSetupFailureFixture struct{}
+
+func (localSetupFailureFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	s.Error("Failed intentionally ")
+	return nil
+}
+func (localSetupFailureFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (localSetupFailureFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+
+}
+func (localSetupFailureFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (localSetupFailureFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
