@@ -62,7 +62,7 @@ func CrosConfigMatchesDevice(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to capture dmesg: ", err)
 			}
 		}(ctx)
-		s.Fatal("Cros-config supports fingerprint, but /dev/cros_fp is not preset")
+		s.Fatal("Cros-config supports fingerprint, but /dev/cros_fp is not present")
 	}
 	if fpDevExists && !cfgFpSupported {
 		s.Fatal("The /dev/cros_fp device exists, but cros-config doesn't support fingerprint")
