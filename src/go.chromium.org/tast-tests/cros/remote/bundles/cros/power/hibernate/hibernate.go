@@ -78,6 +78,12 @@ func NewTester(ctx context.Context, s *testing.State, account *tape.OwnedTestAcc
 // CleanUp should be called when the test is about to exit to clean up any resources that
 // might be left behind otherwise.
 func (t *Tester) CleanUp(ctx context.Context) {
+	if t.memPressureMB > 0 {
+		if err := t.dut.Conn().CommandContext(ctx, "/usr/local/bin/killall", "-SIGKILL", "stress-ng").Run(); err != nil {
+			t.logger.Log("Failed to kill stress-ng: ", err)
+		}
+	}
+
 	if t.accountManager != nil {
 		t.logger.Log("Cleaning up owned test accounts")
 
@@ -313,58 +319,34 @@ func (t *Tester) forceMemPressure(ctx context.Context, sizeMB uint32) error {
 	defer cancel()
 
 	t.logger.Logf("Allocating %dMB of memory...", sizeMB)
-	// We use ramfs rather than tmpfs for a few reasons. The primary reason is that
-	// ramfs is not evictable so we don't have to worry about it being compressible or
-	// not because it will never be swapped out anyway. Additionally, it's not size
-	// restricted to the size of the mount as it would be with tmpfs.
-	//
-	// We also use this as an opportunity to check for any corruption by storing
-	// the sha256 of this large allocation along with it which can be verified on
-	// resume.
-	allocCmd := `
-	mountpoint /run/mem_pressure || \
-	mkdir /run/mem_pressure 2>/dev/null ; \
-	mount -t ramfs ramfs /run/mem_pressure ; \
-	dd if=/dev/urandom of=/run/mem_pressure/alloc bs=1M count=%d && \
-	sha256sum /run/mem_pressure/alloc | cut -f1 -d' ' | tee /run/mem_pressure/alloc_sha256
-	`
+
+	// We use stress-ng rather than ramfs or tmpfs to tie the memory to a
+	// a process. This makes the memory eligible for per process memory
+	// reclaim, which results in the memory being pushed to zram. If zram
+	// writeback is enabled the memory may be written to disk at hibernate
+	// time separately from the hibernate image, which reduces the hibernate
+	// image size and thus resume time.
+	allocCmd := `cd /tmp; \
+	  /usr/bin/nohup \
+	    /usr/local/bin/stress-ng --vm 1 --vm-bytes %dM --vm-keep --vm-populate --vm-method rand-sum \
+	      --verify -t 6h -v > /dev/null 2>&1 &`
+
 	allocCmdToRun := fmt.Sprintf(allocCmd, sizeMB)
 	out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", allocCmdToRun).CombinedOutput()
 	if err != nil {
 		return errors.Wrapf(err, "allocating memory failed: %s", out)
 	}
 
-	return nil
-}
+	// Give stress-ng some time to set up the memory
+	t.sleepWithContext(ctx, 5*time.Second)
 
-func (t *Tester) verifyMemPressureHashOnResume(ctx context.Context) error {
-	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
-	defer cancel()
-
-	t.logger.Log("Verifiying mem pressure hash after resume...")
-	verifyCmd := `
-	set -e ; \
-	[ -f /run/mem_pressure/alloc ] && \
-	COMPUTED_HASH=$(sha256sum /run/mem_pressure/alloc | cut -f1 -d' '); \
-	INMEM_HASH=$(cat /run/mem_pressure/alloc_sha256); \
-	if [ "$COMPUTED_HASH" = "$INMEM_HASH" ]; then \
-		echo -n "OK"
-		exit 0; \
-	fi; \
-	echo -n "FAILED HASH VERIFICATION, GOT:$COMPUTED_HASH WANTED:$INMEM_HASH"; \
-	exit 1;
-	`
-	out, err := t.dut.Conn().CommandContext(cmdCtx, "/bin/sh", "-c", verifyCmd).CombinedOutput()
+	// Stop stress-ng (but keep it 'running') to avoid high CPU usage and
+	// constant mem faults.
+	out, err = t.dut.Conn().CommandContext(cmdCtx, "/usr/local/bin/killall", "-SIGSTOP", "stress-ng").CombinedOutput()
 	if err != nil {
-		return errors.Wrapf(err, "failed to verify mem pressure: %s", string(out))
+		return errors.Wrapf(err, "failed to stop stress-ng: %s", out)
 	}
 
-	if strings.Contains(string(out), "FAILED HASH VERIFICATION") {
-		msg := fmt.Sprintf("memory pressure contents didn't match: %s", string(out))
-		return errors.New(msg)
-	}
-
-	t.logger.Logf("Mem pressure hash Verification result: %s", out)
 	return nil
 }
 
@@ -463,12 +445,6 @@ func (t *Tester) postResumeSteps(ctx context.Context) error {
 	// a hibernate/resume cycle
 	if err := t.verifyKernelHibernateRestoreLogs(ctx, kernelLog); err != nil {
 		return err
-	}
-
-	if t.memPressureMB > 0 {
-		if err := t.verifyMemPressureHashOnResume(ctx); err != nil {
-			return err
-		}
 	}
 
 	return nil
