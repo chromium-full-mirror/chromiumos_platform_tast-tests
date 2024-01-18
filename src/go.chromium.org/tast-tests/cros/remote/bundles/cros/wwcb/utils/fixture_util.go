@@ -252,13 +252,6 @@ func ControlFixture(ctx context.Context, uid, cmd string) error {
 	return nil
 }
 
-// OpenAllFixture is for open all fixture.
-func OpenAllFixture(ctx context.Context) {
-	for uid := range fixtureOnline {
-		ControlFixture(ctx, uid, "on")
-	}
-}
-
 // CloseAllFixture turns off all fixtures connected to the host and powers cycle it according to the
 // input parameter.
 func CloseAllFixture(ctx context.Context) error {
