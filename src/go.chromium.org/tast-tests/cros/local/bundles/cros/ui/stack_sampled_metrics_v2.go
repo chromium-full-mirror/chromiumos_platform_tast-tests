@@ -45,15 +45,16 @@ func init() {
 		BugComponent: "b:1087262",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "stack_sampled_metrics"},
+		Timeout:      2 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "ash",
 			Fixture: fixture.ChromeLoggedInWithStackSampledMetrics,
 			Val:     browser.TypeAsh,
 		}, {
-			Name:    "lacros",
-			Fixture: "lacrosWithStackSampledMetrics",
+			Name:              "lacros",
+			Fixture:           "lacrosWithStackSampledMetrics",
 			ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-			Val:     browser.TypeLacros,
+			Val:               browser.TypeLacros,
 		}},
 	})
 }
