@@ -101,11 +101,13 @@ var convertibleKeyboardScanned = []string{
 	"collis",
 	"morphius",
 	"ezkinil",
-	"kohaku",
 	"voxel",
 	"blooguard",
 	"jelboz360",
 	"copano",
+	"woomax",
+	"grabbiter",
+	"treeya360",
 }
 
 func init() {
@@ -233,7 +235,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	touchscreen := inputs.NewTouchscreenServiceClient(h.RPCClient.Conn)
 
 	s.Log("Sleeping for a few seconds before starting a new Chrome")
-	// GoBigSleepLint: Wait for DUT to be stable before starting new Chrome.
+	// GoBigSleepLint: Stabilize the machine before starting Chrome.
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep for a few seconds: ", err)
 	}
@@ -319,8 +321,11 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		case evKeyboard:
 			regex := `Event.*time.*code\s(\d*)\s\(` + `KEY_ENTER` + `\)`
 			expMatch = regexp.MustCompile(regex)
-		case evTouchpad, evTouchscreen:
+		case evTouchpad:
 			regex := `Event.*time.*code\s(\d*)\s\(` + `ABS_PRESSURE` + `\)`
+			expMatch = regexp.MustCompile(regex)
+		case evTouchscreen:
+			regex := `Event.*time.*code\s(\d*)\s\(` + `BTN_TOUCH` + `\)`
 			expMatch = regexp.MustCompile(regex)
 		case evDisplay:
 			regex := `UDEV.*change.*\s+\(` + `backlight` + `\)`
@@ -454,14 +459,15 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 		i := 0
 		return testing.Poll(ctx, func(ctx context.Context) error {
 			s.Logf("Pressing on power button for %q", displayOffPwrDur)
-			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
+			if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.Dur(displayOffPwrDur)); err != nil {
 				return errors.Wrap(err, "error in pressing power button")
 			}
 			i++
 			if i <= 8 {
 				displayOffPwrDur += 100 * time.Millisecond
 			}
-			// GoBigSleepLint: Wait until key is released.
+			// GoBigSleepLint: Simulate a specific speed of turning the
+			// display on and off.
 			if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 				return errors.Wrap(err, "error in sleeping for 1 second")
 			}
@@ -488,7 +494,8 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 				if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab); err != nil {
 					return errors.Wrap(err, "error in pressing power button")
 				}
-				// GoBigSleepLint: Wait until key is released.
+				// GoBigSleepLint: Simulate a specific speed of turning the
+				// display on and off.
 				if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 					return errors.Wrap(err, "error in sleeping for 1 second")
 				}
@@ -561,7 +568,8 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to set tablet mode angle")
 				}
 			}
-			// GoBigSleepLint: Allow some delay to ensure that DUT has completely transitioned out of tablet mode.
+			// GoBigSleepLint: Stabilize the machine to ensure that the DUT
+			// has completely transitioned out of tablet mode.
 			if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}
@@ -584,7 +592,8 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to set tablet mode angle")
 				}
 			}
-			// GoBigSleepLint: Allow some delay to ensure that DUT has completely transitioned out of tablet mode.
+			// GoBigSleepLint: Stabilize the machine to ensure that the DUT
+			// has completely transitioned out of tablet mode.
 			if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 				return errors.Wrap(err, "failed to sleep")
 			}
@@ -593,22 +602,22 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			if err := h.Servo.CloseLid(ctx); err != nil {
 				return errors.Wrap(err, "error in closing the lid")
 			}
-			s.Log("Delay for a few seconds and check lid state from EC console")
-			// GoBigSleepLint; For debugging purposes, delay for a few seconds after closing lid,
-			// and print out lid state from EC console prior to checking the power state.
-			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
-				return errors.Wrap(err, "failed to sleep")
-			}
-			lidStateEC, err := h.Servo.RunECCommandGetOutput(ctx, "lidstate", []string{`lid state:\s*([^\n]*)[\n\r]`})
-			if err != nil {
-				return errors.Wrap(err, "failed to read lidstate from EC console")
-			}
-			if strings.TrimSpace(lidStateEC[0][1]) != "closed" {
-				return errors.Errorf("expected lid closed, but got:%s", lidStateEC[0][1])
-			}
 
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				lidStateEC, err := h.Servo.RunECCommandGetOutput(ctx, "lidstate", []string{`lid state:\s*([^\n]*)[\n\r]`})
+				if err != nil {
+					return errors.Wrap(err, "failed to read lidstate from EC console")
+				}
+				if strings.TrimSpace(lidStateEC[0][1]) != "closed" {
+					return errors.Errorf("expected lid closed, but got:%s", lidStateEC[0][1])
+				}
+				return nil
+			}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 10 * time.Second}); err != nil {
+				return err
+			}
 			s.Log("Wait for a few seconds before opening DUT's lid")
-			// GoBigSleepLint: Wait for stable state before opening lid.
+			// GoBigSleepLint: Simulate a specific speed of closing and
+			// opening the device's lid.
 			if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 				return errors.Wrap(err, "error in sleeping before opening DUT's lid")
 			}
@@ -649,10 +658,6 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 				if err := verifyScreenState(ctx, expectOn); err != nil {
 					return errors.Wrapf(err, "error in verifying DUT's screen state: %q", expectOn)
 				}
-			}
-			// GoBigSleepLint: TODO: check if this sleep is needed in this poll.
-			if err := testing.Sleep(ctx, 1*time.Second); err != nil {
-				return errors.Wrap(err, "error in sleeping for 1 second")
 			}
 			return nil
 		}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 1 * time.Minute}); err != nil {
@@ -729,12 +734,12 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			}()
 		}
 
-		// GoBigSleepLint: Allow some delay to ensure that DUT has completely transitioned into tablet mode.
-		if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-			s.Fatal("Failed to sleep: ", err)
-		}
-
-		if err := verifyScreenState(ctx, expectOn); err != nil {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if err := verifyScreenState(ctx, expectOn); err != nil {
+				return errors.Wrap(err, "failed to verify screen state")
+			}
+			return nil
+		}, &testing.PollOptions{Interval: 2 * time.Second, Timeout: 10 * time.Second}); err != nil {
 			s.Fatal("After turning on tablemode: ", err)
 		}
 
