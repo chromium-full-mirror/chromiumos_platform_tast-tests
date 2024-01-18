@@ -40,7 +40,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RunTests,
 		Desc:         "Verifies that Tast can run tests",
-		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:hw_agnostic"},
 		Params: []testing.Param{{

@@ -16,7 +16,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalFiles,
 		Desc:         "Helper test that uses data and output files",
-		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Data: []string{
 			"local_files_internal.txt",

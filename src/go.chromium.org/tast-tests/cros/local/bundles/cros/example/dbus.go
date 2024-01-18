@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DBus,
 		Desc:         "Demonstrates how to use D-Bus",
-		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 	})

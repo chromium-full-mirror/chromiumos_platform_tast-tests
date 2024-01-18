@@ -14,7 +14,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LocalPanic,
 		Desc:         "Helper test that panics",
-		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:hw_agnostic"},
 		// This test is called by remote tests in the meta package.

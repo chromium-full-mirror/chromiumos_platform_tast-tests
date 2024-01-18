@@ -16,7 +16,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RemoteVars,
 		Desc:         "Helper test that inspects a runtime variable",
-		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		VarDeps:      []string{"meta.RemoteVars.var"},
 		Attr:         []string{"group:hw_agnostic"},

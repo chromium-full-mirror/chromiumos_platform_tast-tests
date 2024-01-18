@@ -19,7 +19,7 @@ func init() {
 		Func:         ChromeFixture,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Demonstrates Chrome fixture",
-		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		// TODO: b/316638447 -- Reenable after this test is more stable.
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

@@ -21,7 +21,7 @@ func init() {
 		Func:         ChromeExtension,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Demonstrates loading a custom Chrome extension",
-		Contacts:     []string{"tast-core@google.com", "nya@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Data:         []string{"chrome_extension_manifest.json"},
 		SoftwareDeps: []string{"chrome"},
