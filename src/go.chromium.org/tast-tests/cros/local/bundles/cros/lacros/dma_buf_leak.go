@@ -30,7 +30,7 @@ func init() {
 		Fixture:      "lacros",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"lacros_stable"},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline"},
 			// Kaisa is a Puff and is currently used in Lacros Green Release
 			// Voxel is a Volteer and is currently used in Browser CQ and OS CQ chrome uprev
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kaisa", "voxel")),
