@@ -14,9 +14,9 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/network/cmd"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -83,9 +83,15 @@ type ANQPQueryDoneEvent struct {
 // WPAMonitor holds internal context of the WPA monitor.
 type WPAMonitor struct {
 	stdin         io.WriteCloser
+	stdout        io.ReadCloser
 	stdoutScanner *bufio.Scanner
-	cmd           *ssh.Cmd
+	cmd           cmd.Runner
 	lines         chan string
+}
+
+// NewWPAMonitor returns runner-agnostic WPAMonitor.
+func NewWPAMonitor(c cmd.Runner) *WPAMonitor {
+	return &WPAMonitor{cmd: c}
 }
 
 type eventDef struct {
@@ -235,8 +241,8 @@ func (e *ANQPQueryDoneEvent) ToLogString() string {
 
 // StartWPAMonitor configures and starts wpa_supplicant events monitor
 // newCtx is ctx shortened for the stop function, which should be deferred by the caller.
-func (w *WPAMonitor) StartWPAMonitor(ctx context.Context, dutConn *ssh.Conn, timeout time.Duration) (stop func(), newCtx context.Context, retErr error) {
-	if err := w.Start(ctx, dutConn); err != nil {
+func (w *WPAMonitor) StartWPAMonitor(ctx context.Context, timeout time.Duration) (stop func(), newCtx context.Context, retErr error) {
+	if err := w.Start(ctx); err != nil {
 		return nil, ctx, err
 	}
 	sCtx, sCancel := ctxutil.Shorten(ctx, timeout)
@@ -254,20 +260,24 @@ func (w *WPAMonitor) StartWPAMonitor(ctx context.Context, dutConn *ssh.Conn, tim
 // Start initializes the wpa_supplicant monitor.
 // It starts wpa_cli process in background and creates a thread collecting its output.
 // Both need to be stopped with a call to w.Stop().
-func (w *WPAMonitor) Start(ctx context.Context, dutConn *ssh.Conn) error {
-	cmd := dutConn.CommandContext(ctx, "sudo", "-u", "wpa", "wpa_cli")
+func (w *WPAMonitor) Start(ctx context.Context) error {
+	if w.cmd == nil {
+		// This situation is not much likely, but better safe than sorry.
+		return errors.New("WPAMonitor runner not set")
+	}
+	w.cmd.CreateCmd(ctx, "sudo", "-u", "wpa", "wpa_cli")
 
-	stdin, err := cmd.StdinPipe()
+	stdin, err := w.cmd.StdinPipe()
 	if err != nil {
 		return errors.Wrap(err, "failed to get stdin pipe to wpa_cli")
 	}
 
-	stdout, err := cmd.StdoutPipe()
+	stdout, err := w.cmd.StdoutPipe()
 	if err != nil {
 		return errors.Wrap(err, "failed to get stdout pipe from wpa_cli")
 	}
 
-	if err := cmd.Start(); err != nil {
+	if err := w.cmd.StartCmd(); err != nil {
 		return errors.Wrap(err, "failed to start wpa_cli")
 	}
 
@@ -275,7 +285,6 @@ func (w *WPAMonitor) Start(ctx context.Context, dutConn *ssh.Conn) error {
 
 	w.stdin = stdin
 	w.stdoutScanner = bufio.NewScanner(stdout)
-	w.cmd = cmd
 
 	go func() {
 		defer close(w.lines)
@@ -319,7 +328,7 @@ func (w *WPAMonitor) Stop(ctx context.Context) error {
 		testing.ContextLog(ctx, "Failed to send command to wpa_cli: ", err)
 	}
 	w.stdin.Close()
-	if err := w.cmd.Wait(); err != nil {
+	if err := w.cmd.WaitCmd(); err != nil {
 		return errors.Wrap(err, "failed to wait for wpa_cli exit")
 	}
 	// drain w.lines in case scan goroutine is stuck on writing to a full channel

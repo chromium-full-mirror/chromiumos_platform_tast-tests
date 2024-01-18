@@ -101,6 +101,16 @@ func (r *cmdRunner) SetStdOut(stdoutFile *os.File) {
 	return
 }
 
+// StdinPipe is a stub function which always returns nil.
+func (r *cmdRunner) StdinPipe() (io.WriteCloser, error) {
+	return nil, errors.New("shall not be called")
+}
+
+// StdoutPipe is a stub function which always returns nil.
+func (r *cmdRunner) StdoutPipe() (io.ReadCloser, error) {
+	return nil, errors.New("shall not be called")
+}
+
 // StderrPipe is a mock function which always returns nil.
 func (r *cmdRunner) StderrPipe() (io.ReadCloser, error) {
 	return nil, errors.New("shall not be called")

@@ -16,7 +16,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/cmd"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -264,10 +263,10 @@ func (r *Runner) CheckScanResults(ctx context.Context, ssid string) error {
 
 // DiscoverNetwork scans for specific network with SSID and returns nil if the network is found
 // in the scan results.
-func (r *Runner) DiscoverNetwork(ctx context.Context, dutConn *ssh.Conn, ssid string) error {
+func (r *Runner) DiscoverNetwork(ctx context.Context, ssid string) error {
 	const wpaMonitorStopTimeout = 2 * time.Second
-	wpaMonitor := new(WPAMonitor)
-	stop, ctx, err := wpaMonitor.StartWPAMonitor(ctx, dutConn, wpaMonitorStopTimeout)
+	wpaMonitor := r.NewWPAMonitor()
+	stop, ctx, err := wpaMonitor.StartWPAMonitor(ctx, wpaMonitorStopTimeout)
 	if err != nil {
 		return errors.Wrap(err, "failed to start wpa monitor")
 	}
@@ -418,10 +417,10 @@ func (r *Runner) fetchANQP(ctx context.Context) error {
 }
 
 // FetchANQP triggers ANQP request for each compatible BSS found during the last scan.
-func (r *Runner) FetchANQP(ctx context.Context, dutConn *ssh.Conn, bssid string) error {
+func (r *Runner) FetchANQP(ctx context.Context, bssid string) error {
 	const wpaMonitorStopTimeout = 2 * time.Second
-	wpaMonitor := new(WPAMonitor)
-	stop, ctx, err := wpaMonitor.StartWPAMonitor(ctx, dutConn, wpaMonitorStopTimeout)
+	wpaMonitor := r.NewWPAMonitor()
+	stop, ctx, err := wpaMonitor.StartWPAMonitor(ctx, wpaMonitorStopTimeout)
 	if err != nil {
 		return errors.Wrap(err, "failed to start wpa monitor")
 	}
@@ -564,4 +563,9 @@ func (r *Runner) BSS(ctx context.Context, addr net.HardwareAddr) (map[string]str
 		}
 	}
 	return bss, nil
+}
+
+// NewWPAMonitor returns new WPA Monitor that will be handled by this runner.
+func (r *Runner) NewWPAMonitor() *WPAMonitor {
+	return NewWPAMonitor(r.cmd)
 }

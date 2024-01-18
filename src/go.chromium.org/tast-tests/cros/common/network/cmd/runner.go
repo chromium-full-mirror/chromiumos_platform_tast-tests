@@ -19,9 +19,13 @@ type Runner interface {
 	Output(ctx context.Context, cmd string, args ...string) ([]byte, error)
 	// CreateCmd creates a command.
 	CreateCmd(ctx context.Context, cmd string, args ...string)
-	// SetStdOut sets the standard output of existed command.
+	// StdinPipe gets standard input pipe of the existing command.
+	StdinPipe() (io.WriteCloser, error)
+	// SetStdOut sets the standard output of the existing command.
 	SetStdOut(stdoutFile *os.File)
-	// StderrPipe sets standard error pipe of existed command.
+	// StdoutPipe gets standard output pipe of the existing command.
+	StdoutPipe() (io.ReadCloser, error)
+	// StderrPipe gets standard error pipe of the existing command.
 	StderrPipe() (io.ReadCloser, error)
 	// StartCmd starts a command that is created by r.Create().
 	StartCmd() error

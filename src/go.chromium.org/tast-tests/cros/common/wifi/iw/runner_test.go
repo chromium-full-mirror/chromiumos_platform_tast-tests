@@ -48,6 +48,16 @@ func (r *stubCmdRunner) SetStdOut(stdoutFile *os.File) {
 	return
 }
 
+// StdinPipe is a stub function which always returns nil.
+func (r *stubCmdRunner) StdinPipe() (io.WriteCloser, error) {
+	return nil, nil
+}
+
+// StdoutPipe is a stub function which always returns nil.
+func (r *stubCmdRunner) StdoutPipe() (io.ReadCloser, error) {
+	return nil, nil
+}
+
 // StderrPipe is a mock function which always returns nil.
 func (r *stubCmdRunner) StderrPipe() (io.ReadCloser, error) {
 	return nil, nil

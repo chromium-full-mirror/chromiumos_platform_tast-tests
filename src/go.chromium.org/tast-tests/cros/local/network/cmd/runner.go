@@ -46,12 +46,22 @@ func (r *LocalCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...stri
 	r.command = testexec.CommandContext(ctx, cmd, args...)
 }
 
-// SetStdOut sets the standard output of existed command.
+// SetStdOut sets the standard output of existing command.
 func (r *LocalCmdRunner) SetStdOut(stdoutFile *os.File) {
 	r.command.Stdout = stdoutFile
 }
 
-// StderrPipe sets standard error pipe of existed command.
+// StdinPipe returns standard error pipe of existing command.
+func (r *LocalCmdRunner) StdinPipe() (io.WriteCloser, error) {
+	return r.command.StdinPipe()
+}
+
+// StdoutPipe returns standard error pipe of existing command.
+func (r *LocalCmdRunner) StdoutPipe() (io.ReadCloser, error) {
+	return r.command.StdoutPipe()
+}
+
+// StderrPipe returns standard error pipe of existing command.
 func (r *LocalCmdRunner) StderrPipe() (io.ReadCloser, error) {
 	return r.command.StderrPipe()
 }

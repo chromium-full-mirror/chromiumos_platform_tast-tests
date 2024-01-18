@@ -1022,8 +1022,9 @@ func (tf *TestFixture) DeconfigAllAPs(ctx context.Context) error {
 // newCtx is ctx shortened for the stop function, which should be deferred by the caller.
 func (tf *TestFixture) StartWPAMonitor(ctx context.Context, dutIdx DutIdx) (wpaMonitor *wpacli.WPAMonitor, stop func(), newCtx context.Context, retErr error) {
 	const wpaMonitorStopTimeout = 10 * time.Second
-	wpaMonitor = new(wpacli.WPAMonitor)
-	stop, newCtx, err := wpaMonitor.StartWPAMonitor(ctx, tf.duts[dutIdx].dut.Conn(), wpaMonitorStopTimeout)
+	wpaRunner := remotewpacli.NewRemoteRunner(tf.duts[dutIdx].dut.Conn())
+	wpaMonitor = wpaRunner.NewWPAMonitor()
+	stop, newCtx, err := wpaMonitor.StartWPAMonitor(ctx, wpaMonitorStopTimeout)
 	if err != nil {
 		return nil, nil, ctx, err
 	}
@@ -1656,8 +1657,8 @@ func (tf *TestFixture) P2PConfigureGO(ctx context.Context, device P2PDevice, ops
 	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	const wpaMonitorStopTimeout = 5 * time.Second
-	wpaMonitor := new(wpacli.WPAMonitor)
-	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, tf.p2pGO.Conn(), wpaMonitorStopTimeout)
+	wpaMonitor := wpar.NewWPAMonitor()
+	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, wpaMonitorStopTimeout)
 	if err != nil {
 		return errors.Wrap(err, "failed to start wpa monitor")
 	}
@@ -1712,7 +1713,7 @@ func (tf *TestFixture) P2PConfigureClient(ctx context.Context, device P2PDevice)
 
 	wpar := remotewpacli.NewRemoteRunner(tf.p2pClient.Conn())
 
-	if err := wpar.DiscoverNetwork(ctx, tf.duts[PeerDUT1].dut.Conn(), tf.p2pGroupSSID); err != nil {
+	if err := wpar.DiscoverNetwork(ctx, tf.p2pGroupSSID); err != nil {
 		return err
 	}
 	tf.p2pClientNetID, err = wpar.P2PAddGONetwork(ctx, tf.p2pGroupSSID, tf.p2pGroupPassphrase)
@@ -1732,8 +1733,8 @@ func (tf *TestFixture) P2PConnect(ctx context.Context) error {
 	timeoutCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	const wpaMonitorStopTimeout = 5 * time.Second
-	wpaMonitor := new(wpacli.WPAMonitor)
-	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, tf.p2pClient.Conn(), wpaMonitorStopTimeout)
+	wpaMonitor := wpar.NewWPAMonitor()
+	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, wpaMonitorStopTimeout)
 	if err != nil {
 		return errors.Wrap(err, "failed to start wpa monitor")
 	}

@@ -169,13 +169,13 @@ func ANQP(ctx context.Context, s *testing.State) {
 
 	// Trigger a scan and wait for the network 'tc.ssid' to be available in
 	// scan results.
-	if err := runner.DiscoverNetwork(ctx, tf.DUTConn(wificell.DefaultDUT), tc.ssid); err != nil {
+	if err := runner.DiscoverNetwork(ctx, tc.ssid); err != nil {
 		s.Fatal("Network discovery failed: ", err)
 	}
 
 	// Ask wpa_supplicant to fetch ANQP data for all the compatible access point
 	// found in range during last scan.
-	if err := runner.FetchANQP(ctx, tf.DUTConn(wificell.DefaultDUT), tc.bssid.String()); err != nil {
+	if err := runner.FetchANQP(ctx, tc.bssid.String()); err != nil {
 		s.Fatal("ANQP fetch failed: ", err)
 	}
 

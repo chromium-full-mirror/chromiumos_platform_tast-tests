@@ -46,12 +46,22 @@ func (r *RemoteCmdRunner) CreateCmd(ctx context.Context, cmd string, args ...str
 	r.command = r.Host.CommandContext(ctx, cmd, args...)
 }
 
-// SetStdOut sets the standard output of existed command.
+// SetStdOut sets the standard output of existing command.
 func (r *RemoteCmdRunner) SetStdOut(stdoutFile *os.File) {
 	r.command.Stdout = stdoutFile
 }
 
-// StderrPipe sets standard error pipe of existed command.
+// StdinPipe returns standard input pipe of the existing command.
+func (r *RemoteCmdRunner) StdinPipe() (io.WriteCloser, error) {
+	return r.command.StdinPipe()
+}
+
+// StdoutPipe returns standard output pipe of existing command.
+func (r *RemoteCmdRunner) StdoutPipe() (io.ReadCloser, error) {
+	return r.command.StdoutPipe()
+}
+
+// StderrPipe returns standard error pipe of existing command.
 func (r *RemoteCmdRunner) StderrPipe() (io.ReadCloser, error) {
 	return r.command.StderrPipe()
 }
