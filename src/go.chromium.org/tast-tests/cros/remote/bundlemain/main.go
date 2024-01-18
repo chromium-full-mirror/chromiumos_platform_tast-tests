@@ -171,7 +171,9 @@ func testHookRemote(ctx context.Context, s *testing.TestHookState) func(ctx cont
 			}
 
 			// Ensure the TPM is in the expect state after tast finish.
-			if err := hwsecCheckTPMState(ctx, s, hwsecTpmStatus, hwsecDACounter); err != nil {
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				return hwsecCheckTPMState(ctx, s, hwsecTpmStatus, hwsecDACounter)
+			}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 				s.Error("Failed to check TPM state: ", err)
 			}
 
