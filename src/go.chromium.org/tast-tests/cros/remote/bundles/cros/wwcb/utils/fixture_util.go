@@ -270,20 +270,6 @@ func CloseAllFixture(ctx context.Context) error {
 	return nil
 }
 
-// GetOnlineDisplayFixture is for getting online display fixture
-func GetOnlineDisplayFixture() map[string]string {
-
-	displayFixtureOnline := make(map[string]string)
-
-	for uid, port := range fixtureOnline {
-		if fixtureIsDisplay[uid] {
-			displayFixtureOnline[uid] = port
-		}
-	}
-
-	return displayFixtureOnline
-}
-
 // PowerCycleFixture Turns the IP power supply's 4th port (assigned to the USB hub) off and on to power cycle the fixtures.
 func PowerCycleFixture(ctx context.Context) error {
 	ippowerPorts := []int{USBHubPort}
