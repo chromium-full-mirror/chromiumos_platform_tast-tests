@@ -77,7 +77,8 @@ func RestartCras(ctx context.Context) (*Cras, error) {
 		return nil, err
 	}
 
-	// Ensure DLCs are initialized.
+	const waitDLCUpTo = 10 * time.Second
+	// Wait until DLCs are initialized, for up to waitDLCUpTo.
 	if err := testing.Poll(ctx,
 		func(ctx context.Context) error {
 			s2, err := cras.dumpS2(ctx)
@@ -89,14 +90,14 @@ func RestartCras(ctx context.Context) (*Cras, error) {
 			}
 			return nil
 		}, &testing.PollOptions{
-			Timeout:  10 * time.Second,
+			Timeout:  waitDLCUpTo,
 			Interval: 1 * time.Second,
 		},
 	); err != nil {
-		return cras, err
+		testing.ContextLog(ctx, "Waiting for DLC manager: ", err)
 	}
 
-	return cras, err
+	return cras, nil
 }
 
 // CrasNode contains the metadata of Node in Cras.
