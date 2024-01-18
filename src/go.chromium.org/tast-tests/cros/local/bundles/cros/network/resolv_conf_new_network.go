@@ -30,7 +30,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic", "group:network", "network_platform"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "low_priority_proxy_disabled",
