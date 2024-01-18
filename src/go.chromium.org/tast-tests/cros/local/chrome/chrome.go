@@ -190,6 +190,11 @@ type Chrome struct {
 	logFilename string
 	logMarker   *logsaver.Marker
 
+	// The time just before ash-chrome is (re)started. This timestamp marks the
+	// earliest time for considering Lacros logs as part of the current test.
+	// TODO(andreaorru): support the reuse case.
+	logsStartTime time.Time
+
 	loginPending bool // true if login is pending until ContinueLogin is called
 }
 
@@ -390,6 +395,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		return nil, errors.Wrap(err, "failed to prepare extensions for lacros-chrome")
 	}
 
+	logsStartTime := time.Now().UTC()
 	if err := setup.RestartChromeForTesting(ctx, cfg, exts.AshArgs(), lacrosExts.LacrosArgs()); err != nil {
 		return nil, errors.Wrap(err, "failed to restart chrome for testing")
 	}
@@ -459,6 +465,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		sess:              sess,
 		logFilename:       logFilename,
 		logMarker:         logsaver.NewMarkerNoOffset(logFilename),
+		logsStartTime:     logsStartTime,
 		loginPending:      loginPending,
 	}, nil
 }
@@ -490,6 +497,10 @@ func (c *Chrome) Close(ctx context.Context) error {
 func (c *Chrome) saveLogs(ctx context.Context, outDir string) error {
 	c.agg.Save(filepath.Join(outDir, "jslog.txt"))
 
+	if err := lacros.SaveLogsAfter(ctx, outDir, c.logsStartTime); err != nil {
+		testing.ContextLog(ctx, "Failed to store per-test Lacros log data: ", err)
+	}
+
 	if err := c.logMarker.Save(filepath.Join(outDir, filepath.Base(c.logFilename))); err != nil {
 		testing.ContextLog(ctx, "Failed to save the entire log: ", err)
 		return err
@@ -497,7 +508,7 @@ func (c *Chrome) saveLogs(ctx context.Context, outDir string) error {
 	return nil
 }
 
-// SaveLogsOnError saves jsLog.txt and chrome_$date-$time in the outDir when hasError returns true.
+// SaveLogsOnError saves jsLog.txt, chrome_$date-$time and lacros_$date-$time.log in the outDir when hasError returns true.
 func (c *Chrome) SaveLogsOnError(ctx context.Context, outDir string, hasError func() bool) error {
 	if hasError() {
 		return c.saveLogs(ctx, outDir)

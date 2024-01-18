@@ -2,11 +2,12 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package lacros is an internal package (to chrome) that exists solely to
-// define the ResetState function (resetting Lacros state) such that it can be
-// used in chrome.ResetState without causing an import cycle.
-// Its contents are reexported as part of the public packages lacros and
-// lacrosinfo.
+// Package lacros is an internal package (to chrome) providing Lacros-related things
+// that can't be or don't need to be defined in the public lacros* packages:
+//   - ResetState and related code for resetting the Lacros state. (These are reexported
+//     as part of the public packages lacros and lacrosinfo. Moving them there would cause
+//     an import cycle.)
+//   - SaveLogsAfter and related code for collecting per-test Lacros log files.
 package lacros
 
 import (
@@ -24,7 +25,7 @@ import (
 )
 
 const (
-	// UserDataDir is the directory that contains the user data of lacros.
+	// UserDataDir is the directory that contains the user data of Lacros.
 	UserDataDir = "/home/chronos/user/lacros/"
 )
 
