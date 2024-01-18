@@ -196,10 +196,6 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 		if err := readKeyPress(ctx, h, scanner, key, keyCode, keyPressFunc); err != nil {
 			s.Fatal("Failed to read key: ", err)
 		}
-		// GoBigSleepLint: Wait for reading to complete before entering next key to prevent failing previous read.
-		if err := testing.Sleep(ctx, typeTimeout); err != nil {
-			s.Fatalf("Failed to sleep for %s waiting to type next key", typeTimeout)
-		}
 	}
 }
 
