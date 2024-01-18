@@ -101,7 +101,7 @@ func init() {
 				shouldFail:            true,
 			},
 			Fixture:   "vpnEnv",
-			ExtraAttr: []string{"group:network", "network_platform_unstable"},
+			ExtraAttr: []string{"group:network", "network_platform"},
 		}, {
 			Name: "l2tp_ipsec_psk_xauth_wrong_user",
 			Val: vpnConnectTestParams{
@@ -114,7 +114,7 @@ func init() {
 				shouldFail:          true,
 			},
 			Fixture:   "vpnEnv",
-			ExtraAttr: []string{"group:network", "network_platform_unstable"},
+			ExtraAttr: []string{"group:network", "network_platform"},
 		}, {
 			Name: "l2tp_ipsec_cert",
 			Val: vpnConnectTestParams{
@@ -174,7 +174,7 @@ func init() {
 				shouldFail:                 true,
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform_unstable"},
+			ExtraAttr:         []string{"group:network", "network_platform"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_subject",
@@ -188,7 +188,7 @@ func init() {
 				shouldFail:                    true,
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform_unstable"},
+			ExtraAttr:         []string{"group:network", "network_platform"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_wrong_cn",
@@ -202,7 +202,7 @@ func init() {
 				shouldFail:               true,
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform_unstable"},
+			ExtraAttr:         []string{"group:network", "network_platform"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "openvpn_cert_verify_cn_only",
@@ -214,7 +214,7 @@ func init() {
 				},
 			},
 			Fixture:           "vpnEnvWithCerts",
-			ExtraAttr:         []string{"group:network", "network_platform_unstable"},
+			ExtraAttr:         []string{"group:network", "network_platform"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm()),
 		}, {
 			Name: "wireguard_psk",

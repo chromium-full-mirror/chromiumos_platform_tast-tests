@@ -31,7 +31,7 @@ func init() {
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:network", "network_platform_unstable"},
+		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"wireguard"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

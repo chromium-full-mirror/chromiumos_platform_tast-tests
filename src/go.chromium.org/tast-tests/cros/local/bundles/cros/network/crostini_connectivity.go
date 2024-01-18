@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Checks IPv4 and IPv6 connectivity inside penguin container",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
 		BugComponent: "b:156085",
-		Attr:         []string{"group:network", "network_platform_unstable"},
+		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: crostini.CrostiniMinDiskSize,
 		Params: []testing.Param{

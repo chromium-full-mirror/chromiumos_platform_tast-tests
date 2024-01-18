@@ -29,7 +29,7 @@ func init() {
 		},
 		// ChromeOS > Platform > System > Networking
 		BugComponent: "b:156085",
-		Attr:         []string{"group:network", "network_platform_unstable"},
+		Attr:         []string{"group:network", "network_platform"},
 	})
 }
 
