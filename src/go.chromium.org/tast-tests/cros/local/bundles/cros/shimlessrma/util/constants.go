@@ -6,6 +6,7 @@
 package util
 
 // ShimlessRmaEnabledModels are models with Shimless RMA support.
+// TODO(jeffulin): Add stable model list for critical tests.
 var ShimlessRmaEnabledModels = []string{
 	// octopus
 	"fleex",
@@ -76,6 +77,14 @@ var ShimlessRmaEnabledModels = []string{
 	// dedede
 	"bookem",
 	"boten",
+	"cret",
+	"cret360",
+	"maglia",
+	"maglith",
+	"magolor",
 	// nissa
+	"craask",
+	"craaskbowl",
+	"craaskvin",
 	"pujjo",
 	"pujjoteen"}

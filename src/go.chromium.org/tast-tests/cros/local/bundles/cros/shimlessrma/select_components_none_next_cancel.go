@@ -28,13 +28,18 @@ func init() {
 		},
 		// ChromeOS > Platform > Enablement > Serviceability > Shimless RMA
 		BugComponent: "b:1002147",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 		},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Model(util.ShimlessRmaEnabledModels...)),
 		Timeout:      5 * time.Minute,
+		// TODO(jeffulin): Add critical parameters when staging results found stable.
+		Params: []testing.Param{{
+			Name:      "staging",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}},
 	})
 }
 
