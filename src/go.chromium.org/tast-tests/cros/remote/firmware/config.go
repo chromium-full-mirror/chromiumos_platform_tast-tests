@@ -99,6 +99,8 @@ type Config struct {
 	RawUSBPlug                       float64 `json:"usb_plug"`
 	RawRecInvalidScreen              float64 `json:"rec_invalid_screen"`
 	RawMiniOSScreen                  float64 `json:"minios_screen"`
+	RawECWatchdogPeriod              float64 `json:"ec_watchdog_period"`
+	RawECWatchdogLeadingTime         float64 `json:"ec_watchdog_warning_leading_time"`
 
 	// Actual duration fields are populated during NewConfig based on raw JSON duration values, defined above.
 	DelayRebootToPing             time.Duration
@@ -112,6 +114,8 @@ type Config struct {
 	KeypressDelay                 time.Duration
 	RecInvalidScreen              time.Duration
 	MiniOSScreen                  time.Duration
+	ECWatchdogPeriod              time.Duration
+	ECWatchdogLeadingTime         time.Duration
 	// Shutdown is supposed to be the time the DUT takes to power off.
 	//
 	// Deprecated: Do not use this, just wait for G3/S5 power states instead.
@@ -222,7 +226,8 @@ func NewConfig(cfgFilepath, board, model string) (*Config, error) {
 	cfg.USBPlug = toSeconds(cfg.RawUSBPlug)
 	cfg.RecInvalidScreen = toSeconds(cfg.RawRecInvalidScreen)
 	cfg.MiniOSScreen = toSeconds(cfg.RawMiniOSScreen)
-
+	cfg.ECWatchdogPeriod = toSeconds(cfg.RawECWatchdogPeriod)
+	cfg.ECWatchdogLeadingTime = toSeconds(cfg.RawECWatchdogLeadingTime)
 	// Parse list of raw json objects into go structs
 	cfg.USBEnablePins = parseRawUSBEnablePins(cfg.RawUSBEnablePins)
 

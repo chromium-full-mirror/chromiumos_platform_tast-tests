@@ -543,6 +543,18 @@ func (ec *ECTool) GetECUptime(ctx context.Context) (float64, error) {
 	return uptime, nil
 }
 
+// GetPanicInfo returns the panic info from the EC as a string
+func (ec *ECTool) GetPanicInfo(ctx context.Context) (string, error) {
+	out, err := ec.Command(ctx, "panicinfo").Output(ssh.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrapf(err, "running 'ectool panicinfo' on DUT, got: %v", string(out))
+	}
+
+	outstr := string(out)
+
+	return outstr, nil
+}
+
 // GetAPResetCount returns the number of AP resets since EC boot.
 func (ec *ECTool) GetAPResetCount(ctx context.Context) (int, error) {
 	out, err := ec.Command(ctx, "uptimeinfo").Output(ssh.DumpLogOnError)
