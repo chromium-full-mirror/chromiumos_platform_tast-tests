@@ -229,11 +229,9 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	s.Log("Expected Exec: ", expExec.String())
 	s.Log("Expected Terminate: ", expTerm.String())
 
-	execFound, terminateFound := false, false
-
+	execFound, terminateFound, coalescedTerminate := false, false, false
 	for {
 		bExecs, bTerminates := checkProcessEventWatcher(s, ew)
-
 		if bExecs != nil {
 			for _, exec := range bExecs {
 				if exec != nil && exec.GetSpawnProcess() != nil && exec.GetSpawnProcess().GetCanonicalPid() == expPid {
@@ -244,6 +242,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 					copyUUID(exec.GetParentProcess(), expExec.ParentProcess)
 					// Copy over the terminate timestamp if present.
 					if exec.TerminateTimestampUs != nil {
+						coalescedTerminate = true
 						expExec.TerminateTimestampUs = proto.Int64(exec.GetTerminateTimestampUs())
 					}
 					// The spawned process is guaranteed to be seen for the first
@@ -279,7 +278,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 				}
 			}
 		}
-		if execFound {
+		if execFound && (coalescedTerminate || terminateFound) {
 			break
 		}
 	}
