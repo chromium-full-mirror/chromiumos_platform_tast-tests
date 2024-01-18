@@ -320,9 +320,9 @@ func init() {
 			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// x86-64 ARC: eve(eve-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
+			// x86-64 ARC: akali360(nami-Intel), dewatt(guybrush-AMD), nipperkin(guybrush-AMD)
 			// arm64 ARC: kodama(kukui), katsu(kukui), pompom(trogdor), pazquel(trogdor)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("eve", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("akali360", "dewatt", "nipperkin", "kodama", "katsu", "pompom", "pazquel")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
