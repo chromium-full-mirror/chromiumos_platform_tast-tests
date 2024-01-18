@@ -76,6 +76,7 @@ var (
 			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
 		}, "|")),
 	}
+	sysLogKernelSplatsDetail = regexp.MustCompile(`RIP:\s+[0-9a-f]+:(.+)`) // Skip over the code segment register to capture the text after the column.
 	// ignoreCategoriesMap maps testName to a list of SysLogCategory it would like to ignore when calling checkSysLog.
 	ignoreCategoriesMap = map[string][]SysLogCategory{}
 )
@@ -122,6 +123,23 @@ func CheckSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 		for _, category := range checkCategory {
 			re := sysLogSignatureMap[category]
 			if re.MatchString(e.Content) {
+				if category == SysLogKernelSplats {
+					// Normally we return the first match of a regexp. For splats this is not informative,
+					// so read a few lines further for the RIP: entry. This typically appears 5-15 lines after
+					// the splat starts.
+					for i := 1; i < 20; i++ {
+						e, err := reader.Read()
+						if err != nil {
+							continue
+						}
+						if match := sysLogKernelSplatsDetail.FindStringSubmatch(e.Content); match != nil {
+							testing.ContextLog(ctx, "Found kernel splat detail with regex: ", sysLogKernelSplatsDetail.String())
+							return errors.Errorf("%v: %s", category, match[1])
+						}
+					}
+					testing.ContextLog(ctx, "Failed to read kernel splat detail")
+					return errors.Errorf("%v: %s", category, "Kernel splat without RIP: detail")
+				}
 				// Only output the full regex once we already found to prevent the reader reads the output itself.
 				testing.ContextLog(ctx, "Found with following regex: ", re.String())
 				return errors.Errorf("%v: %s", category, e.Content)
