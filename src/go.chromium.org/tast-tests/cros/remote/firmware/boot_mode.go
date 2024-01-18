@@ -19,7 +19,6 @@ import (
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	fwpb "go.chromium.org/tast-tests/cros/services/cros/firmware"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -623,6 +622,11 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 
 	// If AP off, finish booting
 	if resetType == APOff {
+		testing.ContextLog(ctx, "Wait 2 seconds for AC and battery initialization to complete")
+		// GoBigSleepLint: Because storo sets the minimum power requirement at starup.So add 2S sleep before pressing power button to make battery and adapter initialization done.
+		if err := testing.Sleep(ctx, 2*time.Second); err != nil {
+			return errors.Wrap(err, "Fail to sleep ")
+		}
 		if err := h.Servo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurShortPress); err != nil {
 			return errors.Wrap(err, "failed to press powerkey")
 		}
