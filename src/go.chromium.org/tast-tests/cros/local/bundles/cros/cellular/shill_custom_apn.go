@@ -7,7 +7,6 @@ package cellular
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"strings"
 	"time"
 
@@ -153,7 +152,6 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		}
 
 		if testNewAPNUIRevamp {
-			// Append all other APNs after the one we are testing if the current APN is an attach APN. It should work either way.
 			apn := knownAPN.GetAPNForShill()
 			counter++
 			var apns = []map[string]string{}
@@ -173,15 +171,6 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 				apns = append(apns, wrongApn)
 			}
 			apns = append(apns, apn)
-			if knownAPN.IsAttachAPN() {
-				for _, knownAPN2 := range knownAPNs {
-					apn2 := knownAPN2.GetAPNForShill()
-					if !reflect.DeepEqual(apn2, apn) {
-						apns = append(apns, apn2)
-					}
-				}
-			}
-
 			if err = helper.SetCustomAPNList(ctx, apns); err != nil {
 				s.Fatal("Unable to set the custom APN: ", err)
 			}
