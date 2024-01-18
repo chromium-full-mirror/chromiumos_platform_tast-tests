@@ -12,6 +12,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -38,7 +39,8 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
-		Fixture: "arcBooted",
+		Fixture: "arcBootedWithDisableExternalStorage",
+		Timeout: 10 * time.Minute,
 	})
 }
 
