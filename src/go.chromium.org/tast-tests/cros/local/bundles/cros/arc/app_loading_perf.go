@@ -31,11 +31,14 @@ type testParameters struct {
 }
 
 var (
+	// disabledFeatures is a list of features to disable while running the test.
+	disabledFeatures = []string{"--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"}
+
 	// arcAppLoadingBooted is a precondition similar to arc.Booted() with no opt-in and disables some heavy Android activities that use system resources.
-	arcAppLoadingBooted = arc.NewPrecondition("arcapploading_booted", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), "--disable-features=FirmwareUpdaterApp")...)
+	arcAppLoadingBooted = arc.NewPrecondition("arcapploading_booted", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
 
 	// arcAppLoadingBootedLacros is a precondition similar arcAppLoadingBooted but with Lacros enabled.
-	arcAppLoadingBootedLacros = arc.NewPreconditionWithBrowserType("arcapploading_booted_lacros", browser.TypeLacros, nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), "--disable-features=FirmwareUpdaterApp")...)
+	arcAppLoadingBootedLacros = arc.NewPreconditionWithBrowserType("arcapploading_booted_lacros", browser.TypeLacros, nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
 )
 
 func init() {

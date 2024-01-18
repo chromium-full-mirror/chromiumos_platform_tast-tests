@@ -124,7 +124,11 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 
 	// Add the default power test configuration.
 	sup.Add(setup.PowerTest(ctx, tconn,
-		setup.PowerTestOptions{Wifi: config.WifiInterfacesMode, NightLight: setup.DisableNightLight},
+		setup.PowerTestOptions{
+			Wifi:       config.WifiInterfacesMode,
+			NightLight: setup.DisableNightLight,
+			Multicast:  setup.DisableMulticast,
+		},
 		setup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 	if err := sup.Check(ctx); err != nil {
