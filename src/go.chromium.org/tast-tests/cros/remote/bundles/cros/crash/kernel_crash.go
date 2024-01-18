@@ -229,7 +229,7 @@ func KernelCrash(ctx context.Context, s *testing.State) {
 			continue
 		}
 		s.Log("Checking signature line for non-zero")
-		if err := d.GetFile(cleanupCtx, match.Files[0],
+		if err := d.GetFile(ctx, match.Files[0],
 			filepath.Join(s.OutDir(), path.Base(match.Files[0]))); err != nil {
 			s.Error("Failed to save meta file")
 			continue
