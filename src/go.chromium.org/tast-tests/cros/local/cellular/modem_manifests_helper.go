@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 
 	"github.com/golang/protobuf/proto"
-	// The contents of chromiumos/modemfwd are built and generated in platform2/modemfwd/.
-	mfwd "chromiumos/modemfwd"
+	// The contents of go.chromium.org/chromiumos/modemfwd are built and generated in platform2/modemfwd/.
+	mfwd "go.chromium.org/chromiumos/modemfwd"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/modemfwd"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
