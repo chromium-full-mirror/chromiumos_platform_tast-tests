@@ -502,6 +502,9 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
+	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
+		s.Error("Failed to save histogram raw data: ", err)
+	}
 	if err := pv.Save(s.OutDir()); err != nil {
 		s.Error("Failed to store values: ", err)
 	}
