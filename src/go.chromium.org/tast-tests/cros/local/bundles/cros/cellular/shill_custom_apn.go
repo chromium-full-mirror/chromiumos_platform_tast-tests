@@ -67,7 +67,10 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not get modem3gpp object: ", err)
 	}
-
+	dutVariant, err := cellular.GetDeviceVariant(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get device variant: %s", err)
+	}
 	// Shorten deadline to leave time for cleanup.
 	clearAttachCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
@@ -239,6 +242,9 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 			var err error = nil
 			if apn == "" {
 				err = cellular.TagKnownBugOnModem(ctx, err, "b/245968064", cellular.ModemFwFilterL850MR7AndLower)
+				if dutVariant == "vell_fm350" {
+					err = cellular.TagKnownBugOnModem(ctx, err, "b/269275283", cellular.ModemFwFilterFM350MR3AndLower)
+				}
 			}
 			s.Fatalf("Last Attach APN doesn't match: got %q, want %q. %s", apn, expectedAPN, cellular.ErrorToCleanString(err))
 		}
