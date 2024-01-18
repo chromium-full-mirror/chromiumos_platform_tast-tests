@@ -15481,7 +15481,7 @@ func init() {
 				Name: "image_streams_1darray_cl_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_FLOAT",
+					args:       "1Darray CL_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15489,7 +15489,7 @@ func init() {
 				Name: "image_streams_1darray_cl_half_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_HALF_FLOAT",
+					args:       "1Darray CL_HALF_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15497,7 +15497,7 @@ func init() {
 				Name: "image_streams_1darray_cl_signed_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_SIGNED_INT16",
+					args:       "1Darray CL_SIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15505,7 +15505,7 @@ func init() {
 				Name: "image_streams_1darray_cl_signed_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_SIGNED_INT32",
+					args:       "1Darray CL_SIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15513,7 +15513,7 @@ func init() {
 				Name: "image_streams_1darray_cl_signed_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_SIGNED_INT8",
+					args:       "1Darray CL_SIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15521,7 +15521,7 @@ func init() {
 				Name: "image_streams_1darray_cl_snorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_SNORM_INT16",
+					args:       "1Darray CL_SNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15529,7 +15529,7 @@ func init() {
 				Name: "image_streams_1darray_cl_snorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_SNORM_INT8",
+					args:       "1Darray CL_SNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15537,7 +15537,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unorm_int_101010",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNORM_INT_101010",
+					args:       "1Darray CL_UNORM_INT_101010 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15545,7 +15545,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNORM_INT16",
+					args:       "1Darray CL_UNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15553,7 +15553,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNORM_INT8",
+					args:       "1Darray CL_UNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15561,7 +15561,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unorm_short_555",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNORM_SHORT_555",
+					args:       "1Darray CL_UNORM_SHORT_555 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15569,7 +15569,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unorm_short_565",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNORM_SHORT_565",
+					args:       "1Darray CL_UNORM_SHORT_565 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15577,7 +15577,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unsigned_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNSIGNED_INT16",
+					args:       "1Darray CL_UNSIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15585,7 +15585,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unsigned_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNSIGNED_INT32",
+					args:       "1Darray CL_UNSIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15593,7 +15593,7 @@ func init() {
 				Name: "image_streams_1darray_cl_unsigned_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1Darray CL_UNSIGNED_INT8",
+					args:       "1Darray CL_UNSIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15601,7 +15601,7 @@ func init() {
 				Name: "image_streams_1d_cl_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_FLOAT",
+					args:       "1D CL_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15609,7 +15609,7 @@ func init() {
 				Name: "image_streams_1d_cl_half_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_HALF_FLOAT",
+					args:       "1D CL_HALF_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15617,7 +15617,7 @@ func init() {
 				Name: "image_streams_1d_cl_signed_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_SIGNED_INT16",
+					args:       "1D CL_SIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15625,7 +15625,7 @@ func init() {
 				Name: "image_streams_1d_cl_signed_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_SIGNED_INT32",
+					args:       "1D CL_SIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15633,7 +15633,7 @@ func init() {
 				Name: "image_streams_1d_cl_signed_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_SIGNED_INT8",
+					args:       "1D CL_SIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15641,7 +15641,7 @@ func init() {
 				Name: "image_streams_1d_cl_snorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_SNORM_INT16",
+					args:       "1D CL_SNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15649,7 +15649,7 @@ func init() {
 				Name: "image_streams_1d_cl_snorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_SNORM_INT8",
+					args:       "1D CL_SNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15657,7 +15657,7 @@ func init() {
 				Name: "image_streams_1d_cl_unorm_int_101010",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNORM_INT_101010",
+					args:       "1D CL_UNORM_INT_101010 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15665,7 +15665,7 @@ func init() {
 				Name: "image_streams_1d_cl_unorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNORM_INT16",
+					args:       "1D CL_UNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15673,7 +15673,7 @@ func init() {
 				Name: "image_streams_1d_cl_unorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNORM_INT8",
+					args:       "1D CL_UNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15681,7 +15681,7 @@ func init() {
 				Name: "image_streams_1d_cl_unorm_short_555",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNORM_SHORT_555",
+					args:       "1D CL_UNORM_SHORT_555 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15689,7 +15689,7 @@ func init() {
 				Name: "image_streams_1d_cl_unorm_short_565",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNORM_SHORT_565",
+					args:       "1D CL_UNORM_SHORT_565 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15697,7 +15697,7 @@ func init() {
 				Name: "image_streams_1d_cl_unsigned_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNSIGNED_INT16",
+					args:       "1D CL_UNSIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15705,7 +15705,7 @@ func init() {
 				Name: "image_streams_1d_cl_unsigned_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNSIGNED_INT32",
+					args:       "1D CL_UNSIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15713,7 +15713,7 @@ func init() {
 				Name: "image_streams_1d_cl_unsigned_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "1D CL_UNSIGNED_INT8",
+					args:       "1D CL_UNSIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15721,7 +15721,7 @@ func init() {
 				Name: "image_streams_2darray_cl_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_FLOAT",
+					args:       "2Darray CL_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15729,7 +15729,7 @@ func init() {
 				Name: "image_streams_2darray_cl_half_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_HALF_FLOAT",
+					args:       "2Darray CL_HALF_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15737,7 +15737,7 @@ func init() {
 				Name: "image_streams_2darray_cl_signed_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_SIGNED_INT16",
+					args:       "2Darray CL_SIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15745,7 +15745,7 @@ func init() {
 				Name: "image_streams_2darray_cl_signed_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_SIGNED_INT32",
+					args:       "2Darray CL_SIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15753,7 +15753,7 @@ func init() {
 				Name: "image_streams_2darray_cl_signed_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_SIGNED_INT8",
+					args:       "2Darray CL_SIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15761,7 +15761,7 @@ func init() {
 				Name: "image_streams_2darray_cl_snorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_SNORM_INT16",
+					args:       "2Darray CL_SNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15769,7 +15769,7 @@ func init() {
 				Name: "image_streams_2darray_cl_snorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_SNORM_INT8",
+					args:       "2Darray CL_SNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15777,7 +15777,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unorm_int_101010",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNORM_INT_101010",
+					args:       "2Darray CL_UNORM_INT_101010 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15785,7 +15785,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNORM_INT16",
+					args:       "2Darray CL_UNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15793,7 +15793,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNORM_INT8",
+					args:       "2Darray CL_UNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15801,7 +15801,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unorm_short_555",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNORM_SHORT_555",
+					args:       "2Darray CL_UNORM_SHORT_555 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15809,7 +15809,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unorm_short_565",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNORM_SHORT_565",
+					args:       "2Darray CL_UNORM_SHORT_565 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15817,7 +15817,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unsigned_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNSIGNED_INT16",
+					args:       "2Darray CL_UNSIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15825,7 +15825,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unsigned_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNSIGNED_INT32",
+					args:       "2Darray CL_UNSIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15833,7 +15833,7 @@ func init() {
 				Name: "image_streams_2darray_cl_unsigned_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2Darray CL_UNSIGNED_INT8",
+					args:       "2Darray CL_UNSIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15841,7 +15841,7 @@ func init() {
 				Name: "image_streams_2d_cl_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_FLOAT",
+					args:       "2D CL_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15849,7 +15849,7 @@ func init() {
 				Name: "image_streams_2d_cl_half_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_HALF_FLOAT",
+					args:       "2D CL_HALF_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15857,7 +15857,7 @@ func init() {
 				Name: "image_streams_2d_cl_signed_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_SIGNED_INT16",
+					args:       "2D CL_SIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15865,7 +15865,7 @@ func init() {
 				Name: "image_streams_2d_cl_signed_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_SIGNED_INT32",
+					args:       "2D CL_SIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15873,7 +15873,7 @@ func init() {
 				Name: "image_streams_2d_cl_signed_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_SIGNED_INT8",
+					args:       "2D CL_SIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15881,7 +15881,7 @@ func init() {
 				Name: "image_streams_2d_cl_snorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_SNORM_INT16",
+					args:       "2D CL_SNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15889,7 +15889,7 @@ func init() {
 				Name: "image_streams_2d_cl_snorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_SNORM_INT8",
+					args:       "2D CL_SNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15897,7 +15897,7 @@ func init() {
 				Name: "image_streams_2d_cl_unorm_int_101010",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNORM_INT_101010",
+					args:       "2D CL_UNORM_INT_101010 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15905,7 +15905,7 @@ func init() {
 				Name: "image_streams_2d_cl_unorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNORM_INT16",
+					args:       "2D CL_UNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15913,7 +15913,7 @@ func init() {
 				Name: "image_streams_2d_cl_unorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNORM_INT8",
+					args:       "2D CL_UNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15921,7 +15921,7 @@ func init() {
 				Name: "image_streams_2d_cl_unorm_short_555",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNORM_SHORT_555",
+					args:       "2D CL_UNORM_SHORT_555 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15929,7 +15929,7 @@ func init() {
 				Name: "image_streams_2d_cl_unorm_short_565",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNORM_SHORT_565",
+					args:       "2D CL_UNORM_SHORT_565 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -15937,7 +15937,7 @@ func init() {
 				Name: "image_streams_2d_cl_unsigned_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNSIGNED_INT16",
+					args:       "2D CL_UNSIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15945,7 +15945,7 @@ func init() {
 				Name: "image_streams_2d_cl_unsigned_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNSIGNED_INT32",
+					args:       "2D CL_UNSIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15953,7 +15953,7 @@ func init() {
 				Name: "image_streams_2d_cl_unsigned_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "2D CL_UNSIGNED_INT8",
+					args:       "2D CL_UNSIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15961,7 +15961,7 @@ func init() {
 				Name: "image_streams_3d_cl_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_FLOAT",
+					args:       "3D CL_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15969,7 +15969,7 @@ func init() {
 				Name: "image_streams_3d_cl_half_float",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_HALF_FLOAT",
+					args:       "3D CL_HALF_FLOAT CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15977,7 +15977,7 @@ func init() {
 				Name: "image_streams_3d_cl_signed_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_SIGNED_INT16",
+					args:       "3D CL_SIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15985,7 +15985,7 @@ func init() {
 				Name: "image_streams_3d_cl_signed_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_SIGNED_INT32",
+					args:       "3D CL_SIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -15993,7 +15993,7 @@ func init() {
 				Name: "image_streams_3d_cl_signed_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_SIGNED_INT8",
+					args:       "3D CL_SIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -16001,7 +16001,7 @@ func init() {
 				Name: "image_streams_3d_cl_snorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_SNORM_INT16",
+					args:       "3D CL_SNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 20 * time.Minute,
 			},
@@ -16009,7 +16009,7 @@ func init() {
 				Name: "image_streams_3d_cl_snorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_SNORM_INT8",
+					args:       "3D CL_SNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 20 * time.Minute,
 			},
@@ -16017,7 +16017,7 @@ func init() {
 				Name: "image_streams_3d_cl_unorm_int_101010",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNORM_INT_101010",
+					args:       "3D CL_UNORM_INT_101010 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16025,7 +16025,7 @@ func init() {
 				Name: "image_streams_3d_cl_unorm_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNORM_INT16",
+					args:       "3D CL_UNORM_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -16033,7 +16033,7 @@ func init() {
 				Name: "image_streams_3d_cl_unorm_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNORM_INT8",
+					args:       "3D CL_UNORM_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -16041,7 +16041,7 @@ func init() {
 				Name: "image_streams_3d_cl_unorm_short_555",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNORM_SHORT_555",
+					args:       "3D CL_UNORM_SHORT_555 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16049,7 +16049,7 @@ func init() {
 				Name: "image_streams_3d_cl_unorm_short_565",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNORM_SHORT_565",
+					args:       "3D CL_UNORM_SHORT_565 CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16057,7 +16057,7 @@ func init() {
 				Name: "image_streams_3d_cl_unsigned_int16",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNSIGNED_INT16",
+					args:       "3D CL_UNSIGNED_INT16 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -16065,7 +16065,7 @@ func init() {
 				Name: "image_streams_3d_cl_unsigned_int32",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNSIGNED_INT32",
+					args:       "3D CL_UNSIGNED_INT32 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -16073,7 +16073,7 @@ func init() {
 				Name: "image_streams_3d_cl_unsigned_int8",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "3D CL_UNSIGNED_INT8",
+					args:       "3D CL_UNSIGNED_INT8 CL_FILTER_NEAREST",
 				},
 				Timeout: 10 * time.Minute,
 			},
@@ -16081,7 +16081,7 @@ func init() {
 				Name: "image_streams_clgetimagerequirementsinfoext_negative",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "clGetImageRequirementsInfoEXT_negative",
+					args:       "clGetImageRequirementsInfoEXT_negative CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16089,7 +16089,7 @@ func init() {
 				Name: "image_streams_cl_image_requirements_max_val_ext_negative",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "cl_image_requirements_max_val_ext_negative",
+					args:       "cl_image_requirements_max_val_ext_negative CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16097,7 +16097,7 @@ func init() {
 				Name: "image_streams_cl_image_requirements_max_val_ext_positive",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "cl_image_requirements_max_val_ext_positive",
+					args:       "cl_image_requirements_max_val_ext_positive CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16105,7 +16105,7 @@ func init() {
 				Name: "image_streams_cl_image_requirements_size_ext_consistency",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "cl_image_requirements_size_ext_consistency",
+					args:       "cl_image_requirements_size_ext_consistency CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16113,7 +16113,7 @@ func init() {
 				Name: "image_streams_cl_image_requirements_size_ext_negative",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "cl_image_requirements_size_ext_negative",
+					args:       "cl_image_requirements_size_ext_negative CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16121,7 +16121,7 @@ func init() {
 				Name: "image_streams_image2d_from_buffer_positive",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "image2d_from_buffer_positive",
+					args:       "image2d_from_buffer_positive CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16129,7 +16129,7 @@ func init() {
 				Name: "image_streams_image_from_buffer_alignment_negative",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "image_from_buffer_alignment_negative",
+					args:       "image_from_buffer_alignment_negative CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16137,7 +16137,7 @@ func init() {
 				Name: "image_streams_image_from_buffer_fill_positive",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "image_from_buffer_fill_positive",
+					args:       "image_from_buffer_fill_positive CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16145,7 +16145,7 @@ func init() {
 				Name: "image_streams_image_from_buffer_read_positive",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "image_from_buffer_read_positive",
+					args:       "image_from_buffer_read_positive CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16153,7 +16153,7 @@ func init() {
 				Name: "image_streams_image_from_small_buffer_negative",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "image_from_small_buffer_negative",
+					args:       "image_from_small_buffer_negative CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16161,7 +16161,7 @@ func init() {
 				Name: "image_streams_imageinfo_image_from_buffer_positive",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "imageInfo_image_from_buffer_positive",
+					args:       "imageInfo_image_from_buffer_positive CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
@@ -16169,7 +16169,7 @@ func init() {
 				Name: "image_streams_meminfo_image_from_buffer_positive",
 				Val: oclctsTest{
 					executable: "test_image_streams",
-					args:       "memInfo_image_from_buffer_positive",
+					args:       "memInfo_image_from_buffer_positive CL_FILTER_NEAREST",
 				},
 				Timeout: 1 * time.Minute,
 			},
