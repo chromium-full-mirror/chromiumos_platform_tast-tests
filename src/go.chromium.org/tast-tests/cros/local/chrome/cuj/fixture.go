@@ -32,6 +32,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/mlbenchmark"
@@ -1750,6 +1751,11 @@ func (f *prepareCUJFixture) PreTest(ctx context.Context, s *testing.FixtTestStat
 		if err := ChargeBatteryCapacityBeforePowerTest(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to charge battery capacity before power test: ", err)
 		}
+	}
+
+	// Drop host caches for predictable results.
+	if err := disk.DropCaches(ctx); err != nil {
+		s.Fatal("Failed to drop caches: ", err)
 	}
 
 	// Wait for CPU stabilization and package idling.
