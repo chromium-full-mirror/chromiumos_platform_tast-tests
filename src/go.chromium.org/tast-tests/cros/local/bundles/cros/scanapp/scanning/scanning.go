@@ -21,6 +21,8 @@ import (
 	"strings"
 	"time"
 
+	lpb "chromiumos/system_api/lorgnette_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -32,6 +34,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/printing/document"
 	"go.chromium.org/tast-tests/cros/local/printing/ippusbbridge"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
+	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -615,13 +618,33 @@ func RunAppSettingsTests(ctx context.Context, s *testing.State, cr *chrome.Chrom
 	s.Log("Finished all subtests and starting cleanup")
 }
 
+func setLorgnetteDebug(ctx context.Context, enabled bool) (bool, error) {
+	l, err := lorgnette.New(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "unable to connect to lorgnette")
+	}
+
+	request := &lpb.SetDebugConfigRequest{
+		Enabled: enabled,
+	}
+	response, err := l.SetDebugConfig(ctx, request)
+	if err != nil {
+		return false, errors.Wrap(err, "unable to send SetDebugConfigRequest")
+	}
+
+	return response.OldEnabled, nil
+}
+
 // RunHardwareTests tests that the scan app can select each of the options
 // provided by `scanner`. This function is intended to be run on real hardware,
 // not the virtual USB printer.
 func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, scanner ScannerDescriptor, mode HardwareTestMode) {
+	// Use cleanupCtx for any deferred cleanups in case of timeouts or
+	// cancellations on the shortened context.
+	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
-	defer faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_tree")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -644,6 +667,18 @@ func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 	if err := ensureScannerIdle(ctx, uri, backend); err != nil {
 		s.Fatal("Scanner not idle: ", err)
 	}
+
+	// Put lorgnette into debug mode so we get extra logs if the scanner fails.
+	oldDebug, err := setLorgnetteDebug(ctx, true)
+	if err != nil {
+		s.Fatal("Failed to set lorgnette debug level: ", err)
+	}
+	defer func(ctx context.Context) {
+		_, err := setLorgnetteDebug(ctx, oldDebug)
+		if err != nil {
+			s.Log("Failed to reset lorgnette debug level: ", err)
+		}
+	}(cleanupCtx)
 
 	app, err := scanapp.LaunchWithPollOpts(ctx, testing.PollOptions{Interval: 300 * time.Millisecond, Timeout: 1 * time.Minute}, tconn)
 	if err != nil {
@@ -720,6 +755,8 @@ func RunHardwareTests(ctx context.Context, s *testing.State, cr *chrome.Chrome, 
 			if err != nil {
 				s.Fatal("Failed to get next scan combination: ", err)
 			}
+
+			s.Logf("Selecting scan combination: {%v %v %v}", colorMode, pageSize, resolution)
 
 			if err := app.SelectColorMode(colorMode)(ctx); err != nil {
 				s.Fatalf("Failed to select color mode: %s: %v", colorMode, err)

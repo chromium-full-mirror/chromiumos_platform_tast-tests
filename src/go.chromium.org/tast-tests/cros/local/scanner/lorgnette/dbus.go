@@ -360,3 +360,23 @@ func (l *Lorgnette) ReadScanData(ctx context.Context, request *lpb.ReadScanDataR
 
 	return response, nil
 }
+
+// SetDebugConfig calls lorgnette's SetDebugConfig method and returns the remote response.
+func (l *Lorgnette) SetDebugConfig(ctx context.Context, request *lpb.SetDebugConfigRequest) (*lpb.SetDebugConfigResponse, error) {
+	marshalled, err := proto.Marshal(request)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to marshal SetDebugConfigRequest")
+	}
+
+	var buf []byte
+	if err := l.obj.CallWithContext(ctx, dbusInterface+".SetDebugConfig", 0, marshalled).Store(&buf); err != nil {
+		return nil, errors.Wrap(err, "failed to call SetDebugConfig")
+	}
+
+	response := &lpb.SetDebugConfigResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal SetDebugConfigResponse")
+	}
+
+	return response, nil
+}
