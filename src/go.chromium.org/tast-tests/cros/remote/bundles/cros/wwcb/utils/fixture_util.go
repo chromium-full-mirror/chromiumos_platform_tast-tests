@@ -270,14 +270,6 @@ func CloseAllFixture(ctx context.Context) error {
 	return nil
 }
 
-// PrintAllFixture is for print all fixture on context log.
-func PrintAllFixture(ctx context.Context) {
-	for uid, port := range fixtureOnline {
-		s := fmt.Sprintf("print all fixture id: %s => port: %s \n", uid, port)
-		testing.ContextLog(ctx, s)
-	}
-}
-
 // GetOnlineDisplayFixture is for getting online display fixture
 func GetOnlineDisplayFixture() map[string]string {
 
