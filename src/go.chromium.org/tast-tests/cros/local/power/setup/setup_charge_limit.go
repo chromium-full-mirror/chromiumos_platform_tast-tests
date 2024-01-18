@@ -34,7 +34,7 @@ func waitForChargeLimit(ctx context.Context) error {
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		stdout, err := testexec.CommandContext(ctx, "ectool", "chargecontrol").Output()
 		if err != nil {
-			return testing.PollBreak(err)
+			return testing.PollBreak(errors.Wrap(err, "failed to run 'ectool chargecontrol'"))
 		}
 		regex := regexp.MustCompile(`Battery sustainer = ([a-z]+)`)
 		times := regex.FindStringSubmatch(string(stdout))
