@@ -36,6 +36,7 @@ var WindowFinder *nodewith.Finder = nodewith.Name(apps.Scan.Name).HasClass("Brow
 var scanButtonFinder *nodewith.Finder = nodewith.NameRegex(regexp.MustCompile("(Scan)(\\spage\\s1)?")).Role(role.Button)
 
 var doneButtonFinder *nodewith.Finder = nodewith.Name("Done").Role(role.Button)
+var failedDialogFinder *nodewith.Finder = nodewith.Name("Couldn't complete scan").Role(role.Dialog)
 
 // ScanApp represents an instance of the Scan App.
 type ScanApp struct {
@@ -288,9 +289,14 @@ func (s *ScanApp) SetScanSettings(settings ScanSettings) uiauto.Action {
 func (s *ScanApp) Scan() uiauto.Action {
 	return uiauto.Combine("scan",
 		s.LeftClick(scanButtonFinder),
-		// Wait until the done button is displayed to verify the scan completed
-		// successfully.
-		s.WithTimeout(2*time.Minute).WaitUntilExists(doneButtonFinder),
+		// Wait until either:
+		//   1. The done button is displayed to verify the scan completed successfully.
+		//   2. The error dialog is displayed.  Return an error in this case so the caller
+		//      doesn't have to wait for the whole timeout to discover that the Done button
+		//      isn't there.
+		s.WithTimeout(2*time.Minute).WaitUntilAnyExists(doneButtonFinder, failedDialogFinder),
+		uiauto.IfSuccessThen(s.WithTimeout(1*time.Second).WaitUntilExists(failedDialogFinder),
+			func(context.Context) error { return errors.New("Scan app displayed error dialog") }),
 	)
 }
 

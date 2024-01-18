@@ -29,6 +29,15 @@ func (s *ScanApp) WaitUntilExists(finder *nodewith.Finder) uiauto.Action {
 	return s.ui.WaitUntilExists(finder.FinalAncestor(WindowFinder))
 }
 
+// WaitUntilAnyExists calls ui.WaitUntilAnyExists scoping the finders to the Scan App.
+func (s *ScanApp) WaitUntilAnyExists(finders ...*nodewith.Finder) uiauto.Action {
+	var scoped = []*nodewith.Finder{}
+	for _, f := range finders {
+		scoped = append(scoped, f.FinalAncestor(WindowFinder))
+	}
+	return s.ui.WaitUntilAnyExists(scoped...)
+}
+
 // WaitUntilGone calls ui.WaitUntilGone scoping the finder to the Scan App.
 func (s *ScanApp) WaitUntilGone(finder *nodewith.Finder) uiauto.Action {
 	return s.ui.WaitUntilGone(finder.FinalAncestor(WindowFinder))
