@@ -26,8 +26,8 @@ import (
 // DialogHelper defines a helper for configuring the "Join VPN dialog".
 // The "Join VPN dialog" must be opened before utilizing the helper.
 type DialogHelper interface {
-	// FillInVPNConfigurations fills in the VPN configurations on the "Join VPN dialog".
-	FillInVPNConfigurations(context.Context, *chrome.Chrome, *chrome.TestConn, *input.KeyboardEventWriter) error
+	// FillInConfigurations fills in the VPN configurations on the "Join VPN dialog".
+	FillInConfigurations(context.Context, *chrome.Chrome, *chrome.TestConn, *input.KeyboardEventWriter) error
 
 	// ConnectAndWait clicks the "Connect" button on the "Join VPN dialog" and then navigates to the detail page of the VPN network,
 	// waiting for it to be connected.
@@ -35,34 +35,34 @@ type DialogHelper interface {
 	ConnectAndWait(context.Context, *chrome.TestConn) error
 }
 
-// NewVPNDialogHelper returns a helper capable of configuring different types of VPN network.
+// NewDialogHelper returns a helper capable of configuring different types of VPN network.
 // The clientCertName is optional, only required for some VPN types, an error will be thrown if it is not specified when it should be.
-func NewVPNDialogHelper(vpnType vpn.Type, props *vpn.ShillProperties, vpnName string, clientCertName *string) (DialogHelper, error) {
+func NewDialogHelper(vpnType vpn.Type, config *vpn.Config, props *vpn.ShillProperties, vpnName string, clientCertName *string) (DialogHelper, error) {
 	baseHelper := &dialogHelperBase{props: props, vpnName: vpnName}
 
 	switch vpnType {
 	case vpn.TypeIKEv2:
-		authType, err := props.IPsecAuthType()
-		if err != nil {
-			return nil, err
+		if config == nil {
+			return nil, errors.New("invalid VPN config")
 		}
-		if clientCertName == nil && authType == vpn.AuthTypeCert {
+		if config.IPsecAuthType == vpn.AuthTypeCert && clientCertName == nil {
 			return nil, errors.Errorf("expecting clientCertName to be provided for %q", vpnType.String())
 		}
 		return &ikev2Helper{
 			dialogHelperBase: baseHelper,
+			ipsecAuthType:    config.IPsecAuthType,
 			clientCertName:   *clientCertName,
 		}, nil
 	case vpn.TypeL2TPIPsec:
-		authType, err := props.IPsecAuthType()
-		if err != nil {
-			return nil, err
+		if config == nil {
+			return nil, errors.New("invalid VPN config")
 		}
-		if clientCertName == nil && authType == vpn.AuthTypeCert {
+		if config.IPsecAuthType == vpn.AuthTypeCert && clientCertName == nil {
 			return nil, errors.Errorf("expecting clientCertName to be provided for %q", vpnType.String())
 		}
 		return &l2tpipsecHelper{
 			dialogHelperBase: baseHelper,
+			ipsecAuthType:    config.IPsecAuthType,
 			clientCertName:   *clientCertName,
 		}, nil
 	case vpn.TypeOpenVPN:
@@ -82,7 +82,7 @@ func NewVPNDialogHelper(vpnType vpn.Type, props *vpn.ShillProperties, vpnName st
 	}
 }
 
-// NewVPNDialogHelperWithVPNServer returns a helper to configure a specific VPN
+// NewDialogHelperWithVPNServer returns a helper to configure a specific VPN
 // network.
 // It starts a VPN server (and necessary network environment) based on the
 // specified configs, returns the started VPN server, the helper, and a cleanup
@@ -92,7 +92,7 @@ func NewVPNDialogHelper(vpnType vpn.Type, props *vpn.ShillProperties, vpnName st
 // Caller MUST call the returned cleanup closure to clean up resources.
 // Note that vpnNameOnUI is only a name of this VPN network that end user
 // attempt to add through ChromeOS UI.
-func NewVPNDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNameOnUI string) (server *vpn.Server, dialogHelper DialogHelper, cleanup uiauto.Action, retErr error) {
+func NewDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNameOnUI string) (server *vpn.Server, dialogHelper DialogHelper, cleanup uiauto.Action, retErr error) {
 	var cleanups []uiauto.Action
 
 	// This function will start some processes which are supposed to be kept
@@ -138,8 +138,8 @@ func NewVPNDialogHelperWithVPNServer(ctx context.Context, cfg *vpn.Config, vpnNa
 		return nil, nil, nil, errors.Wrap(err, "failed to generate D-Bus properties")
 	}
 
-	certName := fmt.Sprintf("%s [%s]", cfg.CertVals.CACred.Info.CommonName, cfg.CertVals.ClientCred.Info.CommonName)
-	if dialogHelper, err = NewVPNDialogHelper(server.Config.Type, props, vpnNameOnUI, &certName); err != nil {
+	certName := fmt.Sprintf("%s [%s]", cfg.CertVals.Credentials.CACred.Info.CommonName, cfg.CertVals.Credentials.ClientCred.Info.CommonName)
+	if dialogHelper, err = NewDialogHelper(server.Config.Type, cfg, props, vpnNameOnUI, &certName); err != nil {
 		return nil, nil, nil, errors.Wrap(err, "failed to create a UI helper")
 	}
 
@@ -165,10 +165,11 @@ func (helper *dialogHelperBase) ConnectAndWait(ctx context.Context, tconn *chrom
 
 type ikev2Helper struct {
 	*dialogHelperBase
+	ipsecAuthType  vpn.IPsecAuthType
 	clientCertName string
 }
 
-func (helper *ikev2Helper) FillInVPNConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+func (helper *ikev2Helper) FillInConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
 	settings := ossettings.New(tconn)
 	comboBox := nodewith.Role(role.ComboBoxSelect).Ancestor(ossettings.WindowFinder)
 
@@ -180,12 +181,7 @@ func (helper *ikev2Helper) FillInVPNConfigurations(ctx context.Context, cr *chro
 		return err
 	}
 
-	authType, err := helper.props.IPsecAuthType()
-	if err != nil {
-		return err
-	}
-
-	switch authType {
+	switch t := helper.ipsecAuthType; t {
 	case vpn.AuthTypeCert:
 		return uiauto.Combine("configure VPN",
 			dropdown.SelectDropDownOption(tconn, comboBox.Name("Authentication type"), "User certificate"),
@@ -208,16 +204,17 @@ func (helper *ikev2Helper) FillInVPNConfigurations(ctx context.Context, cr *chro
 			inputTextField(settings, kb, "Remote identity (optional)", helper.props.GetString("IKEv2.RemoteIdentity")),
 		)(ctx)
 	default:
-		return errors.Errorf("unknown auth type %s", authType)
+		return errors.Errorf("unknown auth type %s", t)
 	}
 }
 
 type l2tpipsecHelper struct {
 	*dialogHelperBase
+	ipsecAuthType  vpn.IPsecAuthType
 	clientCertName string
 }
 
-func (helper *l2tpipsecHelper) FillInVPNConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+func (helper *l2tpipsecHelper) FillInConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
 	settings := ossettings.New(tconn)
 	comboBox := nodewith.Role(role.ComboBoxSelect).Ancestor(ossettings.WindowFinder)
 
@@ -231,12 +228,7 @@ func (helper *l2tpipsecHelper) FillInVPNConfigurations(ctx context.Context, cr *
 		return err
 	}
 
-	authType, err := helper.props.IPsecAuthType()
-	if err != nil {
-		return err
-	}
-
-	switch authType {
+	switch t := helper.ipsecAuthType; t {
 	case vpn.AuthTypeCert:
 		return uiauto.Combine("configure VPN",
 			dropdown.SelectDropDownOption(tconn, comboBox.Name("Authentication type"), "User certificate"),
@@ -250,7 +242,7 @@ func (helper *l2tpipsecHelper) FillInVPNConfigurations(ctx context.Context, cr *
 			inputTextField(settings, kb, "Pre-shared key", helper.props.GetString("L2TPIPsec.PSK")),
 		)(ctx)
 	default:
-		return errors.Errorf("unknown auth type %s", authType)
+		return errors.Errorf("unknown auth type %s", t)
 	}
 }
 
@@ -259,7 +251,7 @@ type openvpnHelper struct {
 	clientCertName string
 }
 
-func (helper *openvpnHelper) FillInVPNConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+func (helper *openvpnHelper) FillInConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
 	settings := ossettings.New(tconn)
 	comboBox := nodewith.Role(role.ComboBoxSelect).Ancestor(ossettings.WindowFinder)
 
@@ -279,7 +271,7 @@ type wireguardHelper struct {
 	*dialogHelperBase
 }
 
-func (helper *wireguardHelper) FillInVPNConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
+func (helper *wireguardHelper) FillInConfigurations(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter) error {
 	settings := ossettings.New(tconn)
 	addrs := helper.props.Get("WireGuard.IPAddress").([]string)
 

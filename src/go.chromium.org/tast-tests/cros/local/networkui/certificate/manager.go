@@ -199,7 +199,22 @@ func (m *Manager) ImportCACert(fileName string, org Organization, trustSettings 
 	)
 }
 
-// CreateCertAndImport create and import the CA certificate and the client certificate contained in the CertStore.
+// CreateCertAndImport creates and imports the CA certificate and the client certificate contained in the CertStore.
+func CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, bt browser.Type, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
+	manager, err := Launch(ctx, tconn, cr.Browser())
+	if err != nil {
+		return errors.Wrap(err, "failed to launch certificate manager")
+	}
+	defer manager.Close(cleanupCtx)
+
+	return manager.CreateCertAndImport(ctx, cr, bt, certs, importType, password, trustSettings)
+}
+
+// CreateCertAndImport creates and imports the CA certificate and the client certificate contained in the CertStore.
 func (m *Manager) CreateCertAndImport(ctx context.Context, cr *chrome.Chrome, bt browser.Type, certs certificate.CertStore, importType ImportType, password string, trustSettings CATrustSettings) (retErr error) {
 	// Reserve a longer time in case the certificate needs to be deleted.
 	cleanupCtx := ctx
@@ -355,6 +370,31 @@ func downloadFromLocalHTTPServer(ctx context.Context, cr *chrome.Chrome, bt brow
 			app.DeleteFileOrFolder(kb, fileName),
 		)(ctx)
 	}, nil
+}
+
+// DeleteCert deletes the certificate from the Certificates Manager.
+func DeleteCert(tconn *chrome.TestConn, br *browser.Browser, certs ...*CertData) uiauto.Action {
+	return func(ctx context.Context) error {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+		defer cancel()
+
+		manager, err := Launch(ctx, tconn, br)
+		if err != nil {
+			return errors.Wrap(err, "failed to launch certificate manager")
+		}
+		defer manager.Close(cleanupCtx)
+
+		var retErr error
+		for _, cert := range certs {
+			if err := manager.DeleteCert(cert.Name(), cert.Organization(), cert.certType)(ctx); err != nil {
+				// Not return here to proceed with deleting other certificates.
+				// Errors will be wrapped together and returned at the end.
+				retErr = errors.Wrap(err, "failed to delete certificate")
+			}
+		}
+		return retErr
+	}
 }
 
 // DeleteCert deletes the certificate from the Certificates Manager.

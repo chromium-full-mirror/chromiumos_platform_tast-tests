@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package network
+package networkui
 
 import (
 	"context"
@@ -102,17 +102,17 @@ func VPNAreUserSpecified(ctx context.Context, s *testing.State) {
 type vpnAreUserSpecifiedTestResource struct {
 	outDir string
 
-	certVals          vpn.CertVals
+	certVals          *vpn.CertVals
 	userCertsNameOnUI string
 
 	cleanupVPNEnv uiauto.Action
 }
 
-func newVPNAreUserSpecifiedTestResource(certVals vpn.CertVals, outDir string) *vpnAreUserSpecifiedTestResource {
+func newVPNAreUserSpecifiedTestResource(certVals *vpn.CertVals, outDir string) *vpnAreUserSpecifiedTestResource {
 	return &vpnAreUserSpecifiedTestResource{
 		outDir:            outDir,
 		certVals:          certVals,
-		userCertsNameOnUI: fmt.Sprintf("%s [%s]", certVals.CACred.Info.CommonName, certVals.ClientCred.Info.CommonName),
+		userCertsNameOnUI: fmt.Sprintf("%s [%s]", certVals.Credentials.CACred.Info.CommonName, certVals.Credentials.ClientCred.Info.CommonName),
 	}
 }
 
@@ -160,7 +160,7 @@ func joinVPN(res *vpnAreUserSpecifiedTestResource) vpnAreUserSpecifiedTestAction
 			vpn.WithCertVals(res.certVals),
 		)
 
-		_, vpnHelper, cleanup, err := vpnManager.NewVPNDialogHelperWithVPNServer(ctx, cfg, vpnNetworkName)
+		_, vpnHelper, cleanup, err := vpnManager.NewDialogHelperWithVPNServer(ctx, cfg, vpnNetworkName)
 		if err != nil {
 			return errors.Wrap(err, "failed to prepare vpn env for testing")
 		}
@@ -183,7 +183,7 @@ func joinVPN(res *vpnAreUserSpecifiedTestResource) vpnAreUserSpecifiedTestAction
 		defer settings.Close(cleanupCtx)
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, cr, "vpn_settings_ui_dump")
 
-		if err := vpnHelper.FillInVPNConfigurations(ctx, cr, tconn, kb); err != nil {
+		if err := vpnHelper.FillInConfigurations(ctx, cr, tconn, kb); err != nil {
 			return errors.Wrap(err, "failed to configure VPN service")
 		}
 

@@ -14,15 +14,18 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pkcs11/netcertstore"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	"go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
+	certManager "go.chromium.org/tast-tests/cros/local/networkui/certificate"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-const certOpTimeout = 30 * time.Second
+const certOpTimeout = 2 * time.Minute
 
 func init() {
 	testing.AddFixture(&testing.Fixture{
@@ -38,11 +41,11 @@ func init() {
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &vpnFixture{useCert: false, useCr: false},
+		Impl:            &vpnFixture{useCert: false, crMode: notUsed},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithCerts",
-		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states and installing certs",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states and installing certs (via `netcertstore`)",
 		Contacts: []string{
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
@@ -53,11 +56,11 @@ func init() {
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: certOpTimeout + 5*time.Second,
-		Impl:            &vpnFixture{useCert: true, useCr: false},
+		Impl:            &vpnFixture{useCert: true, crMode: notUsed},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithCertsAndChromeLoggedIn",
-		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states, installing certs, and starting Chrome session",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states, installing certs (via UI), and starting Chrome session",
 		Contacts: []string{
 			"jiejiang@google.com",        // fixture maintainer
 			"cros-networking@google.com", // platform networking team
@@ -68,7 +71,7 @@ func init() {
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
 		TearDownTimeout: certOpTimeout + chrome.LoginTimeout + 5*time.Second,
-		Impl:            &vpnFixture{useCert: true, useCr: true},
+		Impl:            &vpnFixture{useCert: true, crMode: loggedInDeviceOwner},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "vpnEnvWithArcBooted",
@@ -83,7 +86,41 @@ func init() {
 		PostTestTimeout: charonExitTimeout + 5*time.Second,
 		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
 		TearDownTimeout: 5 * time.Second,
-		Impl:            &vpnFixture{useCert: false, useCr: true, useARC: true},
+		Impl:            &vpnFixture{useCert: false, crMode: loggedInDeviceOwner, useARC: true},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "vpnEnvWithCertsAndNonDeviceOwnerLoggedIn",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states, installing certs (via UI), and starting Chrome session for a non-device owner",
+		Contacts: []string{
+			"alfredyu@cienet.com",                              // primary fixture maintainer
+			"chromeos-connectivity-cienet-external@google.com", // external automation team
+			"jiejiang@google.com",                              // secondary fixture maintainer
+			"cros-networking@google.com",                       // platform networking team
+		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
+		SetUpTimeout:    certOpTimeout + 2*chrome.LoginTimeout + 5*time.Second,
+		PostTestTimeout: charonExitTimeout + 5*time.Second,
+		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
+		TearDownTimeout: certOpTimeout + 2*chrome.LoginTimeout + 5*time.Second,
+		Impl:            &vpnFixture{useCert: true, crMode: loggedInNonDeviceOwner},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "vpnEnvWithCertsAndGuestLoggedIn",
+		Desc: "A fixture that sets up the environment for VPN connections, including resetting shill states, installing certs (via UI), and starting Chrome session for a guest user",
+		Contacts: []string{
+			"alfredyu@cienet.com",                              // primary fixture maintainer
+			"chromeos-connectivity-cienet-external@google.com", // external automation team
+			"jiejiang@google.com",                              // secondary fixture maintainer
+			"cros-networking@google.com",                       // platform networking team
+		},
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent:    "b:1493959",
+		SetUpTimeout:    certOpTimeout + chrome.LoginTimeout + 5*time.Second,
+		PostTestTimeout: charonExitTimeout + 5*time.Second,
+		ResetTimeout:    chrome.ResetTimeout + 5*time.Second,
+		TearDownTimeout: certOpTimeout + chrome.LoginTimeout + 5*time.Second,
+		Impl:            &vpnFixture{useCert: true, crMode: loggedInGuest},
 	})
 }
 
@@ -125,6 +162,15 @@ func resetShillVPNState(ctx context.Context) {
 	}
 }
 
+type crMode int
+
+const (
+	notUsed crMode = iota
+	loggedInDeviceOwner
+	loggedInNonDeviceOwner
+	loggedInGuest
+)
+
 // vpnFixture is a fixture to prepare environment that can be used to test VPN
 // connections. Particularly, this fixture does the followings:
 //   - Reset shill in SetUp and TearDown, to make sure we have a clean shill profile.
@@ -136,20 +182,21 @@ func resetShillVPNState(ctx context.Context) {
 // When a test failed, to ensure we have a clean setup, shill will be reset if
 // there is no Chrome, and a full restart of this fixture will happen if there is Chrome.
 type vpnFixture struct {
-	hasError  bool // if the previous test has error
-	useCert   bool // if we need to install certs
-	useCr     bool // if Chrome is needed
-	useARC    bool // if ARC is needed
-	cr        *chrome.Chrome
-	certStore *netcertstore.Store
-	logMarker *logsaver.Marker // to store fixture and per-test log
-	a         *arc.ARC
+	hasError     bool // if the previous test has error
+	useCert      bool // if we need to install certs
+	useARC       bool // if ARC is needed
+	crMode       crMode
+	cr           *chrome.Chrome
+	tconn        *chrome.TestConn
+	logMarker    *logsaver.Marker // to store fixture and per-test log
+	a            *arc.ARC
+	certsManager certsManager
 }
 
 // FixtureEnv wraps the variables created by the fixture and used in the tests.
 type FixtureEnv struct {
 	Cr       *chrome.Chrome
-	CertVals CertVals
+	CertVals *CertVals
 	ARC      *arc.ARC
 }
 
@@ -163,29 +210,35 @@ func (f FixtureEnv) Chrome() *chrome.Chrome {
 
 // CertVals contains the required values to setup a cert-based VPN service.
 type CertVals struct {
-	certificate.CertStore
-	id   string
-	slot string
-	pin  string
+	// This is the credentials of the set of certificates.
+	Credentials certificate.CertStore
+	// This is the information of where the the certificates are installed.
+	// Note that it's only available when the `netcertstore` is used.
+	Store *tpmStore
+}
+
+type tpmStore struct {
+	id, slot, pin string
 }
 
 // NewCertVals returns a new CertVals initialized.
 // id is the ID to the object when certificates inserted into the user token.
 // userToken is the PKCS#11 data related to the user token.
-func NewCertVals(cert certificate.CertStore, userToken netcertstore.Token, id string) CertVals {
-	return CertVals{
-		CertStore: cert,
-		id:        id,
-		slot:      fmt.Sprintf("%d", userToken.Slot),
-		pin:       userToken.Pin,
+func NewCertVals(cert certificate.CertStore, userToken netcertstore.Token, id string) *CertVals {
+	return &CertVals{
+		Credentials: cert,
+		Store: &tpmStore{
+			id:   id,
+			slot: fmt.Sprintf("%d", userToken.Slot),
+			pin:  userToken.Pin,
+		},
 	}
 }
 
-func installUserCert(ctx context.Context, certStore *netcertstore.Store) (CertVals, error) {
-	cert := certificate.TestCert1()
-	clientCred := cert.ClientCred
+func installUserCert(ctx context.Context, certCreds certificate.CertStore, certStore *netcertstore.Store) (*CertVals, error) {
+	clientCred := certCreds.ClientCred
 	id, err := certStore.InstallCertKeyPair(ctx, clientCred.PrivateKey, clientCred.Cert)
-	return NewCertVals(cert, certStore.UserToken, id), err
+	return NewCertVals(certCreds, certStore.UserToken, id), err
 }
 
 func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -195,49 +248,51 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 
 	resetShillVPNState(ctx)
 
-	var certVals CertVals
-	if f.useCert {
-		runner := hwsec.NewCmdRunner()
-		certStore, err := netcertstore.CreateStore(ctx, runner)
-		if err != nil {
-			s.Fatal("Failed to create cert store: ", err)
-		}
-		f.certStore = certStore
+	defaultCred := chrome.Creds{User: "testuser@gmail.com", Pass: "testpass"}
+	defaultCerts := certificate.TestCert1()
 
-		certVals, err = installUserCert(ctx, f.certStore)
-		if err != nil {
-			s.Fatal("Failed to install cert: ", err)
-		}
-	}
-
-	if f.useCr {
-		// To avoid resetting TPM.
-		chromeOpts := []chrome.Option{chrome.KeepState()}
-
+	var chromeOpts []chrome.Option
+	switch f.crMode {
+	case notUsed:
 		if f.useCert {
-			// Install CA cert to TPM. Since CA certs are stored as raw strings in
-			// shill's profile, this is only required when Chrome is involved.
-			if _, err := f.certStore.InstallCertKeyPair(ctx, "", certificate.TestCert1().CACred.Cert); err != nil {
-				s.Fatal("Failed to install CA cert: ", err)
-			}
-
-			cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
-
-			// To use the same user as certs are installed for.
-			chromeOpts = append(chromeOpts,
-				chrome.FakeLogin(cred),
-				chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
-			)
+			f.certsManager = newCertsManagerNonUI(defaultCerts)
 		}
+	case loggedInNonDeviceOwner:
+		// Creating a user profile of the device owner so that
+		// the next user will be the non-device owner.
+		deviceOwnerCred := chrome.Creds{User: "deviceOwner_" + defaultCred.User, Pass: defaultCred.Pass}
+		if err := userutil.CreateDeviceOwner(ctx, deviceOwnerCred.User, deviceOwnerCred.Pass); err != nil {
+			s.Fatal("Failed to create device owner: ", err)
+		}
+		chromeOpts = append(chromeOpts, chrome.KeepState())
+		fallthrough
+	case loggedInDeviceOwner:
+		chromeOpts = append(chromeOpts, chrome.FakeLogin(defaultCred))
 		if f.useARC {
 			chromeOpts = append(chromeOpts, chrome.ARCEnabled())
 		}
+		if f.useCert {
+			f.certsManager = newCertsManagerUI(defaultCerts, certManager.TypeImportAndBind)
+		}
+	case loggedInGuest:
+		chromeOpts = append(chromeOpts, chrome.GuestLogin())
+		if f.useCert {
+			f.certsManager = newCertsManagerUI(defaultCerts, certManager.TypeImport) // Guests are not supposed to bind the certificates.
+		}
+	}
 
+	if chromeOpts != nil {
 		cr, err := chrome.New(ctx, chromeOpts...)
 		if err != nil {
 			s.Fatal("Failed to start Chrome: ", err)
 		}
 		f.cr = cr
+
+		tconn, err := cr.TestAPIConn(ctx)
+		if err != nil {
+			s.Fatal("Failed to create Test API connection: ", err)
+		}
+		f.tconn = tconn
 	}
 
 	if f.useARC {
@@ -246,6 +301,15 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 			s.Error("Failed to start ARC: ", err)
 		}
 		f.a = a
+	}
+
+	var certVals *CertVals
+	if f.certsManager != nil {
+		vals, err := f.certsManager.install(ctx, f.cr, f.tconn)
+		if err != nil {
+			s.Fatal("Failed to import certificates: ", err)
+		}
+		certVals = vals
 	}
 
 	if err := f.stopLogSaver(ctx, "net.setup.log"); err != nil {
@@ -257,7 +321,7 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 
 func (f *vpnFixture) Reset(ctx context.Context) error {
 	resetShillVPNState(ctx)
-	if !f.useCr {
+	if f.cr == nil {
 		return nil
 	}
 	if err := f.cr.Responded(ctx); err != nil {
@@ -302,23 +366,25 @@ func (f *vpnFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 		s.Error("Failed to start log saver: ", err)
 	}
 
-	if f.useCr {
+	if f.certsManager != nil {
+		if err := f.certsManager.delete(ctx); err != nil {
+			s.Error("Failed to delete certificates: ", err)
+		}
+		f.certsManager = nil
+	}
+
+	if f.cr != nil {
 		if err := f.cr.Close(ctx); err != nil {
 			s.Log("Failed to close Chrome connection: ", err)
 		}
 		f.cr = nil
 	}
 
-	if f.useCert {
-		if err := f.certStore.Cleanup(ctx); err != nil {
-			s.Error("Failed to clean up cert store: ", err)
-		}
-	}
-
-	if f.useARC {
+	if f.a != nil {
 		if err := f.a.Close(ctx); err != nil {
 			s.Error("Failed to close ARC: ", err)
 		}
+		f.a = nil
 	}
 
 	if err := f.stopLogSaver(ctx, "net.teardown.log"); err != nil {
@@ -355,4 +421,91 @@ func (f *vpnFixture) stopLogSaver(ctx context.Context, name string) error {
 	}
 	f.logMarker = nil
 	return nil
+}
+
+type certsManager interface {
+	install(context.Context, *chrome.Chrome, *chrome.TestConn) (*CertVals, error)
+	delete(context.Context) error
+}
+
+type certsManagerNonUI struct {
+	certStore *netcertstore.Store
+	certs     certificate.CertStore
+}
+
+func newCertsManagerNonUI(certs certificate.CertStore) certsManager {
+	return &certsManagerNonUI{certs: certs}
+}
+
+func (c *certsManagerNonUI) install(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (*CertVals, error) {
+	runner := hwsec.NewCmdRunner()
+	certStore, err := netcertstore.CreateStore(ctx, runner)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create cert store")
+	}
+	c.certStore = certStore
+
+	certVals, err := installUserCert(ctx, c.certs, c.certStore)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to install cert")
+	}
+
+	return certVals, nil
+}
+
+func (c *certsManagerNonUI) delete(ctx context.Context) error {
+	if c.certStore != nil {
+		if err := c.certStore.Cleanup(ctx); err != nil {
+			return errors.Wrap(err, "failed to clean up cert store")
+		}
+		c.certStore = nil
+	}
+	return nil
+}
+
+type certsManagerUI struct {
+	certs      certificate.CertStore
+	importType certManager.ImportType
+
+	cr    *chrome.Chrome
+	tconn *chrome.TestConn
+}
+
+func newCertsManagerUI(certs certificate.CertStore, importType certManager.ImportType) certsManager {
+	return &certsManagerUI{
+		certs:      certs,
+		importType: importType,
+	}
+}
+
+func (c *certsManagerUI) install(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (*CertVals, error) {
+	c.cr = cr
+	c.tconn = tconn
+	if c.cr == nil || c.tconn == nil {
+		return nil, errors.New("failed to import certificates by the certificate manager: Chrome not yet started")
+	}
+	// TODO(crbug/1366609): Support Lacros once the issue has been resolved.
+	browserType := browser.TypeAsh
+	return &CertVals{Credentials: c.certs}, certManager.CreateCertAndImport(
+		ctx,
+		c.cr,
+		c.tconn,
+		browserType,
+		c.certs,
+		c.importType,
+		"", /* password */
+		0,  /* trust settings for the CA certificate */
+	)
+}
+
+func (c *certsManagerUI) delete(ctx context.Context) error {
+	if c.cr == nil || c.tconn == nil {
+		return errors.New("failed to delete certificates by the certificate manager: Chrome not yet started")
+	}
+	return certManager.DeleteCert(
+		c.tconn,
+		c.cr.Browser(),
+		certManager.NewCertData(c.certs, certManager.TypeClient),
+		certManager.NewCertData(c.certs, certManager.TypeCA),
+	)(ctx)
 }

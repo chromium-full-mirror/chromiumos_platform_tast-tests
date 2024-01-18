@@ -59,7 +59,7 @@ type Config struct {
 	IPType IPType
 	// CertVals contains necessary values to setup a cert-based VPN service. This
 	// is only used by cert-based VPNs (e.g., L2TP/IPsec-cert, OpenVPN, etc.).
-	CertVals CertVals
+	CertVals *CertVals
 
 	ipv4Subnet *subnet.IPv4Subnet
 	ipv6Subnet *subnet.IPv6Subnet
@@ -264,7 +264,7 @@ func WithWGClientIPv6(ip string) Option {
 
 // WithCertVals sets up the certificate value used by client.
 // This is mandatory by connections using certificates for authentication.
-func WithCertVals(val CertVals) Option {
+func WithCertVals(val *CertVals) Option {
 	return func(c *Config) {
 		c.CertVals = val
 	}
@@ -660,9 +660,11 @@ func createL2TPIPsecProperties(server *Server) (*ShillProperties, error) {
 	} else if config.IPsecAuthType == AuthTypeCert {
 		properties["Name"] = "test-vpn-l2tp-cert"
 		properties["L2TPIPsec.CACertPEM"] = []string{certificate.TestCert1().CACred.Cert}
-		properties["L2TPIPsec.ClientCertID"] = config.CertVals.id
-		properties["L2TPIPsec.ClientCertSlot"] = config.CertVals.slot
-		properties["L2TPIPsec.PIN"] = config.CertVals.pin
+		if config.CertVals != nil && config.CertVals.Store != nil {
+			properties["L2TPIPsec.ClientCertID"] = config.CertVals.Store.id
+			properties["L2TPIPsec.ClientCertSlot"] = config.CertVals.Store.slot
+			properties["L2TPIPsec.PIN"] = config.CertVals.Store.pin
+		}
 	} else {
 		return nil, errors.Errorf("unexpected auth type %s for L2TP/IPsec", config.IPsecAuthType)
 	}
@@ -693,8 +695,10 @@ func createIKEv2Properties(server *Server) (*ShillProperties, error) {
 	case AuthTypeCert:
 		properties["IKEv2.AuthenticationType"] = "Cert"
 		properties["IKEv2.CACertPEM"] = []string{certificate.TestCert1().CACred.Cert}
-		properties["IKEv2.ClientCertID"] = config.CertVals.id
-		properties["IKEv2.ClientCertSlot"] = config.CertVals.slot
+		if config.CertVals != nil && config.CertVals.Store != nil {
+			properties["IKEv2.ClientCertID"] = config.CertVals.Store.id
+			properties["IKEv2.ClientCertSlot"] = config.CertVals.Store.slot
+		}
 		properties["IKEv2.RemoteIdentity"] = ikeServerIdentity
 	case AuthTypeEAP:
 		properties["IKEv2.AuthenticationType"] = "EAP"
@@ -717,11 +721,13 @@ func createOpenVPNProperties(server *Server) (*ShillProperties, error) {
 		"Provider.Type":         "openvpn",
 		"Type":                  "vpn",
 		"OpenVPN.CACertPEM":     []string{certificate.TestCert1().CACred.Cert},
-		"OpenVPN.Pkcs11.ID":     config.CertVals.id,
-		"OpenVPN.Pkcs11.PIN":    config.CertVals.pin,
 		"OpenVPN.RemoteCertEKU": "TLS Web Server Authentication",
 		"OpenVPN.Verb":          "5",
 		"SaveCredentials":       true,
+	}
+	if config.CertVals != nil && config.CertVals.Store != nil {
+		properties["OpenVPN.Pkcs11.ID"] = config.CertVals.Store.id
+		properties["OpenVPN.Pkcs11.PIN"] = config.CertVals.Store.pin
 	}
 
 	if config.openVPNUseUserPassword {
@@ -864,9 +870,7 @@ func (c *Connection) Service() *shill.Service {
 }
 
 // ShillProperties holds the properties of a VPN network for shill.
-type ShillProperties struct {
-	raw map[string]interface{}
-}
+type ShillProperties struct{ raw map[string]interface{} }
 
 // GetPropertiesMap returns the raw properties map.
 func (s *ShillProperties) GetPropertiesMap() map[string]interface{} { return s.raw }
@@ -879,19 +883,3 @@ func (s *ShillProperties) GetString(key string) string { return s.raw[key].(stri
 
 // Get returns the property of a specific key.
 func (s *ShillProperties) Get(key string) interface{} { return s.raw[key] }
-
-// IPsecAuthType infers IPsecAuthType AuthType from the properties map.
-func (s *ShillProperties) IPsecAuthType() (IPsecAuthType, error) {
-	for authType, keys := range map[IPsecAuthType][]string{
-		AuthTypePSK:  {"L2TPIPsec.PSK", "IKEv2.PSK"},
-		AuthTypeCert: {"L2TPIPsec.ClientCertID", "IKEv2.ClientCertID"},
-		AuthTypeEAP:  {"EAP.EAP"},
-	} {
-		for _, key := range keys {
-			if _, ok := s.raw[key]; ok {
-				return authType, nil
-			}
-		}
-	}
-	return 0, errors.New(`the properties map does not contain the information of "IPsecAuthType"`)
-}

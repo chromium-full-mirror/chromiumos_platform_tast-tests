@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package network
+package networkui
 
 import (
 	"context"
@@ -128,7 +128,7 @@ func VPNIncorrectCreds(ctx context.Context, s *testing.State) {
 		props[key] = value
 	}
 
-	clientCertName := fmt.Sprintf("%s [%s]", fv.CertVals.CACred.Info.CommonName, fv.CertVals.ClientCred.Info.CommonName)
+	clientCertName := fmt.Sprintf("%s [%s]", fv.CertVals.Credentials.CACred.Info.CommonName, fv.CertVals.Credentials.ClientCred.Info.CommonName)
 	tc := s.Param().(*vpnIncorrectCredsTestParam)
 	// Update VPN properties based on the incorrect credential of the current test case.
 	props[tc.subjectProperty] = incorrectPropVal
@@ -141,12 +141,12 @@ func VPNIncorrectCreds(ctx context.Context, s *testing.State) {
 	defer settings.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "vpn_settings_ui_dump")
 
-	vpnHelper, err := vpnManager.NewVPNDialogHelper(config.Type, vpnProps, vpnName, &clientCertName)
+	vpnHelper, err := vpnManager.NewDialogHelper(config.Type, &vpnServer.Config, vpnProps, vpnName, &clientCertName)
 	if err != nil {
 		s.Fatal("Failed to create a UI helper: ", err)
 	}
 
-	if err := vpnHelper.FillInVPNConfigurations(ctx, cr, tconn, kb); err != nil {
+	if err := vpnHelper.FillInConfigurations(ctx, cr, tconn, kb); err != nil {
 		s.Fatal("Failed to configure vpn service: ", err)
 	}
 

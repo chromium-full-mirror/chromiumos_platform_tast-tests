@@ -6,13 +6,13 @@ package networkui
 
 import (
 	"context"
-	"fmt"
 	"reflect"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/networkui/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/networkui/proxysettings"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/ime"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
@@ -28,12 +28,16 @@ import (
 type vpnUITestCase struct {
 	vpnType       vpn.Type
 	ipsecAuthType vpn.IPsecAuthType
+	browserType   browser.Type
 }
 
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: VPNUI,
-		Desc: "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI, verify the availability of proxy settings for a connected VPN",
+		// This test launches a web page so there should be a lacros variant.
+		// Lacros test will be added once the issue (crbug/1366609) is fixed.
+		LacrosStatus: testing.LacrosVariantNeeded,
+		Desc:         "Follows the user flow to create, connect, disconnect, and forget a VPN service via UI, verify the availability of proxy settings for a connected VPN",
 		Contacts: []string{
 			"cros-networking@google.com",
 			"jiejiang@google.com",
@@ -41,65 +45,105 @@ func init() {
 			"chromeos-connectivity-engprod@google.com",
 			"shijinabraham@google.com",
 			"chadduffin@chromium.org",
+			"ryan.liu@cienet.com",
+			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent:   "b:1493959",
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LifeCycleStage: testing.LifeCycleInDevelopment,
 		Attr:           []string{"group:mainline", "informational"},
 		SoftwareDeps:   []string{"chrome"},
-		Fixture:        "vpnEnvWithCertsAndChromeLoggedIn",
-		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
-			Name: "ikev2_cert",
+			Name:    "ikev2_cert",
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 			Val: vpnUITestCase{
 				vpnType:       vpn.TypeIKEv2,
 				ipsecAuthType: vpn.AuthTypeCert,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
-			Name: "ikev2_eap",
+			Name:    "ikev2_eap",
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 			Val: vpnUITestCase{
 				vpnType:       vpn.TypeIKEv2,
 				ipsecAuthType: vpn.AuthTypeEAP,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
-			Name: "ikev2_psk",
+			Name:    "ikev2_psk",
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 			Val: vpnUITestCase{
 				vpnType:       vpn.TypeIKEv2,
 				ipsecAuthType: vpn.AuthTypePSK,
 			},
 			ExtraSoftwareDeps: []string{"ikev2"},
 		}, {
-			Name: "l2tp_ipsec_cert",
+			Name:    "l2tp_ipsec_cert",
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 			Val: vpnUITestCase{
 				vpnType:       vpn.TypeL2TPIPsec,
 				ipsecAuthType: vpn.AuthTypeCert,
 			},
 		}, {
-			Name: "l2tp_ipsec_psk",
+			Name:    "l2tp_ipsec_psk",
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 			Val: vpnUITestCase{
 				vpnType:       vpn.TypeL2TPIPsec,
 				ipsecAuthType: vpn.AuthTypePSK,
 			},
 		}, {
-			Name: "openvpn",
+			Name:    "openvpn",
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 			Val: vpnUITestCase{
 				vpnType: vpn.TypeOpenVPN,
 			},
 		}, {
-			Name: "wireguard",
+			Name:    "wireguard",
+			Fixture: "vpnEnvWithCertsAndChromeLoggedIn",
 			Val: vpnUITestCase{
 				vpnType: vpn.TypeWireGuard,
 			},
 			ExtraSoftwareDeps: []string{"wireguard"},
+		}, {
+			Name:    "ikev2_cert_non_device_owner",
+			Fixture: "vpnEnvWithCertsAndNonDeviceOwnerLoggedIn",
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeIKEv2,
+				ipsecAuthType: vpn.AuthTypeCert,
+			},
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name:    "ikev2_eap_non_device_owner",
+			Fixture: "vpnEnvWithCertsAndNonDeviceOwnerLoggedIn",
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeIKEv2,
+				ipsecAuthType: vpn.AuthTypeEAP,
+			},
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name:    "ikev2_eap_guest",
+			Fixture: "vpnEnvWithCertsAndGuestLoggedIn",
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeIKEv2,
+				ipsecAuthType: vpn.AuthTypeEAP,
+				browserType:   browser.TypeAsh,
+			},
+			ExtraSoftwareDeps: []string{"ikev2"},
+		}, {
+			Name:    "ikev2_psk_non_device_owner",
+			Fixture: "vpnEnvWithCertsAndNonDeviceOwnerLoggedIn",
+			Val: vpnUITestCase{
+				vpnType:       vpn.TypeIKEv2,
+				ipsecAuthType: vpn.AuthTypePSK,
+			},
+			ExtraSoftwareDeps: []string{"ikev2"},
 		}},
 	})
 }
 
 func VPNUI(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
@@ -121,18 +165,12 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get keyboard: ", err)
 	}
-	defer ew.Close(ctx)
+	defer ew.Close(cleanupCtx)
 
-	// Prepares virtualnet environment for the VPN server.
-	networkEnv, err := vpn.CreateNetworkTopology(ctx)
-	if err != nil {
-		s.Fatal("Failed to create network topology for VPN tests: ", err)
+	certVals := s.FixtValue().(vpn.FixtureEnv).CertVals
+	if certVals == nil {
+		s.Fatal("Failed to obtain an valid certificate values")
 	}
-	defer func() {
-		if err := networkEnv.TearDown(cleanupCtx); err != nil {
-			s.Error("Failed to tear down network topology for VPN tests: ", err)
-		}
-	}()
 
 	// Prepares VPN server.
 	tc := s.Param().(vpnUITestCase)
@@ -141,33 +179,20 @@ func VPNUI(ctx context.Context, s *testing.State) {
 		vpn.WithIPsecAuthType(tc.ipsecAuthType),
 		vpn.WithOpenVPNUseUserPassword(),
 		vpn.WithWGUsePSK(true),
+		vpn.WithCertVals(certVals),
 		// Enable dual-stack VPN so that 1) we can verify Chrome does not crash with
 		// a dual-stack VPN connection; 2) for WireGuard, both IPv4 and IPv6 config
 		// can be input properly. Note that not all VPN supports IPv6, IPv4-only VPN
 		// will be set up when IPv6 is not supported.
 		vpn.WithIPType(vpn.IPTypeIPv4AndIPv6),
 	)
-	vpnServer, err := vpn.StartServerWithConfig(ctx, networkEnv.Server1, config)
-	if err != nil {
-		s.Fatal("Failed to create VPN connection: ", err)
-	}
-	defer vpnServer.Exit(cleanupCtx)
 
-	// Get property values for this VPN connection so that we can fill them in UI.
-	vpnProps, err := vpn.CreateProperties(vpnServer, nil /*secondServer*/)
-	if err != nil {
-		s.Fatal("Failed to generate D-Bus properties: ", err)
-	}
-
-	// Inputs VPN properties via UI.
 	svcName := "vpn-test-" + tc.vpnType.String()
-	fv := s.FixtValue().(vpn.FixtureEnv)
-	clientCertName := fmt.Sprintf("%s [%s]", fv.CertVals.CACred.Info.CommonName, fv.CertVals.ClientCred.Info.CommonName)
-
-	vpnHelper, err := vpnManager.NewVPNDialogHelper(tc.vpnType, vpnProps, svcName, &clientCertName)
+	vpnServer, vpnHelper, cleanup, err := vpnManager.NewDialogHelperWithVPNServer(ctx, config, svcName)
 	if err != nil {
-		s.Fatal("Failed to create a UI helper: ", err)
+		s.Fatal("Failed to start VPN server: ", err)
 	}
+	defer cleanup(cleanupCtx)
 
 	settings, err := ossettings.OpenJoinVPNDialog(ctx, tconn, cr)
 	if err != nil {
@@ -177,7 +202,7 @@ func VPNUI(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "vpn_settings_ui_dump")
 
 	// Configures service on the VPN dialog page.
-	if err := vpnHelper.FillInVPNConfigurations(ctx, cr, tconn, ew); err != nil {
+	if err := vpnHelper.FillInConfigurations(ctx, cr, tconn, ew); err != nil {
 		s.Fatal("Failed to configure on VPN dialog: ", err)
 	}
 
