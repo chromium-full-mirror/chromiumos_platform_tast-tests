@@ -46,7 +46,7 @@ func RecoverableKeyStores(ctx context.Context, s *testing.State) {
 	const (
 		userPassword            = "secret"
 		passwordLabel           = "password"
-		passwordLabelNoMetadata = "password-no-metadata"
+		passwordLabelNoKeyStore = "password-no-key-store"
 		userPassword2           = "secret2"
 		passwordLabel2          = "password-2"
 		userPassword3           = "secret3"
@@ -57,20 +57,29 @@ func RecoverableKeyStores(ctx context.Context, s *testing.State) {
 
 	// Hash info used for each of the auth factors to test.
 	hashInfo := uda.KnowledgeFactorHashInfo{
-		Algorithm: cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_SHA256_TOP_HALF,
-		Salt:      []byte("salt"),
+		Algorithm:              cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_SHA256_TOP_HALF,
+		Salt:                   []byte("salt"),
+		ShouldGenerateKeyStore: true,
 	}
 	hashInfo2 := uda.KnowledgeFactorHashInfo{
-		Algorithm: cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_SHA256_TOP_HALF,
-		Salt:      []byte("salt2"),
+		Algorithm:              cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_SHA256_TOP_HALF,
+		Salt:                   []byte("salt2"),
+		ShouldGenerateKeyStore: true,
 	}
 	hashInfo3 := uda.KnowledgeFactorHashInfo{
-		Algorithm: cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_SHA256_TOP_HALF,
-		Salt:      []byte("salt3"),
+		Algorithm:              cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_SHA256_TOP_HALF,
+		Salt:                   []byte("salt3"),
+		ShouldGenerateKeyStore: true,
+	}
+	hashInfoNoKeyStore := uda.KnowledgeFactorHashInfo{
+		Algorithm:              cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_SHA256_TOP_HALF,
+		Salt:                   []byte("salt4"),
+		ShouldGenerateKeyStore: false,
 	}
 	hashInfoPin := uda.KnowledgeFactorHashInfo{
-		Algorithm: cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_PBKDF2_AES256_1234,
-		Salt:      []byte("salt-pin"),
+		Algorithm:              cryptohome_proto.KnowledgeFactorHashAlgorithm_HASH_TYPE_PBKDF2_AES256_1234,
+		Salt:                   []byte("salt-pin"),
+		ShouldGenerateKeyStore: true,
 	}
 
 	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
@@ -100,10 +109,9 @@ func RecoverableKeyStores(ctx context.Context, s *testing.State) {
 		if err := client.AddAuthFactorWithHashInfo(ctx, authSessionID, passwordLabel, userPassword, &hashInfo); err != nil {
 			return errors.Wrap(err, "failed to add password auth factor")
 		}
-		// Add a password without metadata that we don't actually care in this test. We need this to
-		// authenticate the auth session again later without using |passwordLabel| (so that we can separately
-		// test its behavior later).
-		if err := client.AddAuthFactor(ctx, authSessionID, passwordLabelNoMetadata, userPassword); err != nil {
+		// Add another password to authenticate the auth session again later without using
+		// |passwordLabel| (so that we can separately test its behavior later).
+		if err := client.AddAuthFactorWithHashInfo(ctx, authSessionID, passwordLabelNoKeyStore, userPassword, &hashInfoNoKeyStore); err != nil {
 			return errors.Wrap(err, "failed to add password auth factor")
 		}
 		return nil
@@ -123,17 +131,21 @@ func RecoverableKeyStores(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start auth session: ", err)
 		}
-		// Authenticate the auth session. Note that auth factors without hash info metadata won't generate
-		// recoverable key stores.
-		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabelNoMetadata, userPassword); err != nil {
+		// Authenticate the auth session. Note that it is set to not generate key stores, so we should still
+		// have 0 key stores here.
+		if _, err := client.AuthenticateAuthFactor(ctx, authSessionID, passwordLabelNoKeyStore, userPassword); err != nil {
 			return errors.Wrap(err, "failed to authenticate password auth factor")
+		}
+		keyStores, err := getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 0)
+		if err != nil {
+			return errors.Wrap(err, "failed to get recoverable key stores with correct size")
 		}
 
 		// Add another password factor. This time the key store should be generated.
 		if err := client.AddAuthFactorWithHashInfo(ctx, authSessionID, passwordLabel2, userPassword2, &hashInfo2); err != nil {
 			return errors.Wrap(err, "failed to add password auth factor")
 		}
-		keyStores, err := getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 1)
+		keyStores, err = getRecoverableKeyStoresAndCheckSize(ctx, client, userName, 1)
 		if err != nil {
 			return errors.Wrap(err, "failed to get recoverable key stores with correct size")
 		}

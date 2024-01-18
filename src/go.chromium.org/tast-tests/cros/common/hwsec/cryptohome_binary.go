@@ -315,6 +315,9 @@ func (c *cryptohomeBinary) addAuthFactor(ctx context.Context, authSessionID, lab
 	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--password=" + password}
 	if hashInfo != nil {
 		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+		if hashInfo.ShouldGenerateKeyStore {
+			args = append(args, "--generate_key_store")
+		}
 	}
 	return c.call(ctx, args...)
 }
@@ -324,6 +327,9 @@ func (c *cryptohomeBinary) addPinAuthFactor(ctx context.Context, authSessionID, 
 	args := []string{"--action=add_auth_factor", "--auth_session_id=" + authSessionID, "--key_label=" + label, "--pin=" + pin}
 	if hashInfo != nil {
 		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+		if hashInfo.ShouldGenerateKeyStore {
+			args = append(args, "--generate_key_store")
+		}
 	}
 	return c.call(ctx, args...)
 }
@@ -374,6 +380,9 @@ func (c *cryptohomeBinary) updatePasswordAuthFactor(ctx context.Context, authSes
 		"--password=" + password}
 	if hashInfo != nil {
 		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+		if hashInfo.ShouldGenerateKeyStore {
+			args = append(args, "--generate_key_store")
+		}
 	}
 	return c.call(ctx, args...)
 }
@@ -422,6 +431,9 @@ func (c *cryptohomeBinary) replacePasswordAuthFactor(ctx context.Context, authSe
 		"--password=" + password}
 	if hashInfo != nil {
 		args = append(args, "--hash_algorithm="+hashInfo.Algorithm.String(), "--hash_salt="+hex.EncodeToString(hashInfo.Salt))
+		if hashInfo.ShouldGenerateKeyStore {
+			args = append(args, "--generate_key_store")
+		}
 	}
 	return c.call(ctx, args...)
 }
