@@ -84,74 +84,72 @@ var (
 	USBHubPort = 4
 )
 
-// InitFixture initializes fixtures.
+// requestSerialPort returns a response after sends a request to the serial port.
+func requestSerialPort(ctx context.Context, port, req string) (string, error) {
+	mode := &serial.Mode{
+		BaudRate: 9600,
+	}
+	usbPort, err := serial.Open(port, mode)
+	if err != nil {
+		return "", errors.Wrap(err, "open serial port")
+	}
+	defer usbPort.Close()
+
+	if err := usbPort.SetReadTimeout(3 * time.Second); err != nil {
+		return "", errors.Wrap(err, "set read timeout")
+	}
+
+	if _, err := usbPort.Write([]byte(req)); err != nil {
+		return "", errors.Wrap(err, "write serial port")
+	}
+
+	// Read the response.
+	var resp string
+	buff := make([]byte, 1000)
+	for {
+		n, err := usbPort.Read(buff)
+		if err != nil {
+			return "", errors.Wrap(err, "read serial port")
+		}
+		if n == 0 {
+			fmt.Println("\nEOF")
+			break
+		}
+
+		resp = strings.TrimSpace(string(buff[:n]))
+	}
+
+	return resp, nil
+}
+
+// InitFixture stores each detected fixture in a list and sets the fixtures status to off.
 func InitFixture(ctx context.Context) error {
 	ports, err := serial.GetPortsList()
 	if err != nil {
 		return errors.Wrap(err, "failed to get port list")
 	}
-
 	if len(ports) == 0 {
 		return errors.New("no serial ports found")
 	}
 
-	// GoBigSleepLint: Prevent switch fixture function not in time.
-	testing.Sleep(ctx, 3*time.Second)
-
-	// Print the list of detected ports.
+	// Retrieve the fixture information from each serial port.
 	for _, port := range ports {
-		// Open the first serial port detected at 9600bps N81.
-		mode := &serial.Mode{
-			BaudRate: 9600,
-		}
-
-		usbPort, err := serial.Open(port, mode)
+		resp, err := requestSerialPort(ctx, port, "i")
 		if err != nil {
-			return errors.Wrap(err, "serial open error")
+			return errors.Wrap(err, "request serial port")
 		}
 
-		var t = 3 * time.Second
-		usbPort.SetReadTimeout(t)
+		for _, s := range strings.Split(resp, "\n") {
+			if len(s) > fixtureIDLen && strings.Count(s[0:15], "_") == 2 && strings.Count(s[0:15], " ") == 0 {
+				serial := s[0:15]
+				testing.ContextLogf(ctx, "test fixture id: %s => port: %s", serial, port)
 
-		_, err = usbPort.Write([]byte("i"))
-		if err != nil {
-			return errors.Wrap(err, "serial write error")
-		}
-
-		// Read and print the response.
-		buff := make([]byte, 1000)
-		for {
-			// Reads up to 1000 bytes.
-			n, err := usbPort.Read(buff)
-
-			if err != nil {
-				return errors.Wrap(err, "serial read error")
-			}
-
-			if n == 0 {
-				fmt.Println("\nEOF")
-				break
-			}
-
-			mString := string(buff[:n])
-			mString = strings.Replace(mString, "\r", "", -1)
-			res := strings.Split(mString, "\n")
-
-			for _, s := range res {
-				if len(s) > fixtureIDLen && strings.Count(s[0:15], "_") == 2 && strings.Count(s[0:15], " ") == 0 {
-					serial := s[0:15]
-					fixtureID := fmt.Sprintf("test fixture id: %s => port: %s", serial, port)
-					testing.ContextLog(ctx, fixtureID)
-
-					uid, found := fixtureUID[serial]
-
-					if found {
-						fixtureOnline[uid] = port
-					}
+				uid, found := fixtureUID[serial]
+				if found {
+					fixtureOnline[uid] = port
 				}
 			}
 		}
-		usbPort.Close()
 	}
 
 	// Since all fixtures are considered off at the beginning of each test.
@@ -166,88 +164,40 @@ func InitFixture(ctx context.Context) error {
 // TestAllFixtures tests all fixtures are alive.
 func TestAllFixtures(ctx context.Context) error {
 	for uid, port := range fixtureOnline {
-		// Open the serial port detected at 9600bps.
-		mode := &serial.Mode{
-			BaudRate: 9600,
-		}
-
-		usbPort, err := serial.Open(port, mode)
+		resp, err := requestSerialPort(ctx, port, "i")
 		if err != nil {
-			return errors.Wrapf(err, "open uid:%s error", uid)
-		}
-		defer usbPort.Close()
-		var t = 3 * time.Second
-		usbPort.SetReadTimeout(t)
-
-		_, err = usbPort.Write([]byte("i"))
-		if err != nil {
-			return errors.Wrapf(err, "write uid:%s error", uid)
+			return errors.Wrap(err, "request serial port")
 		}
 
-		// Read and print the response.
-		buff := make([]byte, 1000)
-		for {
-			// Reads up to 1000 bytes.
-			n, err := usbPort.Read(buff)
-
-			if err != nil {
-				return errors.Wrapf(err, "uid:%s read error", uid)
-			}
-
-			if n == 0 {
+		for _, s := range strings.Split(resp, "\n") {
+			if len(s) > fixtureIDLen && strings.Count(s[0:15], "_") == 2 && strings.Count(s[0:15], " ") == 0 {
 				break
-			}
-			mString := string(buff[:n])
-			mString = strings.Replace(mString, "\r", "", -1)
-			res := strings.Split(mString, "\n")
-
-			for _, s := range res {
-				if len(s) > fixtureIDLen && strings.Count(s[0:15], "_") == 2 && strings.Count(s[0:15], " ") == 0 {
-					break
-				} else {
-					return errors.Errorf("failed to read uid:%s info", uid)
-				}
+			} else {
+				return errors.Errorf("failed to read uid:%s info", uid)
 			}
 		}
 	}
+
 	return nil
 }
 
-// ControlFixture is for control fixture.
-func ControlFixture(ctx context.Context, uid, cmd string) error {
-	s := fmt.Sprintf("Fixture '%s' set '%s' ", uid, cmd)
-	testing.ContextLog(ctx, s)
+// ControlFixture sets the fixture status to on or off.
+func ControlFixture(ctx context.Context, uid, status string) error {
+	testing.ContextLogf(ctx, "Set fixture %q to %q", uid, status)
 
 	port, found := fixtureOnline[uid]
-
 	if !found {
-		s := fmt.Sprintf("uid %s is not in online fixture list.", uid)
-		return errors.New(s)
+		return errors.Errorf("Unable to find the serial port of the fixture uid: %s", uid)
 	}
 
-	mode := &serial.Mode{
-		BaudRate: 9600,
+	cmd, found := fixtureCmd[uid][status]
+	if !found {
+		return errors.Errorf("Unable to find the correspond command of the fixture status: %s", status)
 	}
 
-	usbPort, err := serial.Open(port, mode)
-	if err != nil {
-		return errors.Wrap(err, "serial open error")
+	if _, err := requestSerialPort(ctx, port, cmd); err != nil {
+		return errors.Wrap(err, "request serial port")
 	}
-
-	var t time.Duration = 3 * time.Second
-	usbPort.SetReadTimeout(t)
-
-	cmdNum := fixtureCmd[uid][cmd]
-
-	_, err = usbPort.Write([]byte(cmdNum))
-	if err != nil {
-		return errors.Wrap(err, "serial write error")
-	}
-
-	usbPort.Close()
-
-	// GoBigSleepLint: Prevent switch fixture function not in time.
-	testing.Sleep(ctx, 7*time.Second)
 
 	return nil
 }
