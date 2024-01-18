@@ -19975,6 +19975,13 @@ func OpenclCts(ctx context.Context, s *testing.State) {
 	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL. It will avoid timeout on some devices.
 	os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
 
+	// Geminilake are really slow run all tests in wimpy to avoid timeouts.
+	chipsetType := expectations.GpuChipsetFile
+	chipset, chipsetErr := chipsetType.GetDeviceIdentifier(ctx)
+	if chipsetErr == nil && chipset == "chipset-geminilake" {
+		os.Setenv("CL_WIMPY_MODE", "1")
+	}
+
 	expectation, err := expectations.GetTestExpectation(ctx, s.TestName())
 	if err != nil {
 		s.Fatal("Failed to load test expectation: ", err)
