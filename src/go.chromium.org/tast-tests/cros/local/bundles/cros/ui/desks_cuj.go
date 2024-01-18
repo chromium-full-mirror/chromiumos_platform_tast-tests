@@ -40,6 +40,7 @@ func init() {
 			},
 			{
 				Name:              "lacros_virtio_balloon",
+				ExtraAttr:         []string{"cuj_experimental"},
 				Val:               browser.TypeLacros,
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacrosWithVirtioBalloon",
