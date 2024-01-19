@@ -122,51 +122,26 @@ func (m *Modem) SetSARPowerLevel(ctx context.Context, power uint32) error {
 	return nil
 }
 
-// GetMessagingInterface creates a PropertyHolder for the Message object.
-func (m *Modem) GetMessagingInterface(ctx context.Context) (*Modem, error) {
+// DeleteAllMessages deletes all sms messages
+func (m *Modem) DeleteAllMessages(ctx context.Context) error {
 	modemPath := dbus.ObjectPath(m.String())
 	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerMessageInterface, modemPath)
 	if err != nil {
-		return nil, err
+		return errors.Wrap(err, "failed to get message interface")
 	}
-	return &Modem{ph}, nil
-}
 
-// GetMessagesList Retrieves all SMS messages.
-func (m *Modem) GetMessagesList(ctx context.Context) ([]dbus.ObjectPath, error) {
-	msgProps, err := m.GetProperties(ctx)
+	msgProps, err := ph.GetProperties(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to call Messages.GetProperties")
+		return errors.Wrap(err, "failed to get message properties")
 	}
+
 	msgList, err := msgProps.GetObjectPaths(mmconst.ModemPropertyMessages)
 	if err != nil {
-		return nil, errors.Wrap(err, "missing Messages.SimSlots property")
+		return errors.Wrap(err, "failed to get message paths")
 	}
 
-	return msgList, nil
-}
-
-// DeleteMessage deletes an sms message specified by path.
-func (m *Modem) DeleteMessage(ctx context.Context, path dbus.ObjectPath) error {
-	err := m.Call(ctx, mmconst.MessagesDelete, path).Err
-	if err != nil {
-		return errors.Wrapf(err, "failed to delete message with path: %s", path)
-	}
-	return nil
-}
-
-// DeleteAllMessages deletes all sms messages
-func (m *Modem) DeleteAllMessages(ctx context.Context) error {
-	msgInterface, err := m.GetMessagingInterface(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get messaging interface")
-	}
-	msgList, err := msgInterface.GetMessagesList(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get list of messages")
-	}
 	for _, path := range msgList {
-		if err := msgInterface.DeleteMessage(ctx, path); err != nil {
+		if err := ph.Call(ctx, mmconst.MessagesDelete, path).Err; err != nil {
 			testing.ContextLog(ctx, err.Error())
 		}
 	}
