@@ -8,6 +8,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -16,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -139,7 +142,7 @@ func HIDDeviceFunctionalityCheck(ctx context.Context, s *testing.State) {
 	}
 
 	for inputEventID, sendReportAction := range inputEventIDToSendReportActionMap {
-		if err := sendHIDReportAndVerify(ctx, s.DUT(), device.AdvertisedName(), sendReportAction, inputEventID); err != nil {
+		if err := sendHIDReportAndVerify(ctx, s.DUT(), sendReportAction, device.AdvertisedName(), inputEventID, s.OutDir()); err != nil {
 			s.Fatalf("Failed to verify Bluetooth HID %q %q functionality: %v", device.AdvertisedName(), inputEventID, err)
 		}
 	}
@@ -147,8 +150,8 @@ func HIDDeviceFunctionalityCheck(ctx context.Context, s *testing.State) {
 
 // sendHIDReportAndVerify sends the HID report by triggering the Bluetooth HID event and
 // verifies its functionality on the chromeOS by the evtest command-line tool.
-func sendHIDReportAndVerify(ctx context.Context, dut *dut.DUT, deviceName string, sendReport action.Action, expectedEvent string) error {
-	devicePath, err := fetchDevicePath(ctx, dut, deviceName)
+func sendHIDReportAndVerify(ctx context.Context, dut *dut.DUT, sendReport action.Action, deviceName, expectedEvent, outDir string) error {
+	devicePath, err := fetchDevicePath(ctx, dut, deviceName, outDir)
 	if err != nil {
 		return errors.Wrapf(err, "failed to fetch the Bluetooth device %q device event path", deviceName)
 	}
@@ -196,7 +199,7 @@ func sendHIDReportAndVerify(ctx context.Context, dut *dut.DUT, deviceName string
 }
 
 // fetchDevicePath returns device path that can be used by evtest command-line tool.
-func fetchDevicePath(ctx context.Context, dut *dut.DUT, deviceName string) (string, error) {
+func fetchDevicePath(ctx context.Context, dut *dut.DUT, deviceName, outDir string) (_ string, retErr error) {
 	// Variables for finding the device ID by match information of registered input devices.
 	//
 	// This is an example of the information of a input device:
@@ -223,12 +226,28 @@ func fetchDevicePath(ctx context.Context, dut *dut.DUT, deviceName string) (stri
 
 	var deviceID string
 
+	var inputDevices []byte
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Second)
+	defer cancel()
+
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			path := filepath.Join(outDir, fmt.Sprintf("input_devices_%v", time.Now().Unix()))
+			if err := os.WriteFile(path, inputDevices, 0644); err != nil {
+				testing.ContextLog(ctx, "Failed to dump the device file content: ", err)
+			}
+		}
+	}(cleanupCtx)
+
 	// A Bluetooth device could take a while to be completely registered as an input device, especially for the low end devices.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		data, err := linuxssh.ReadFile(ctx, dut.Conn(), "/proc/bus/input/devices")
 		if err != nil {
 			return errors.Wrap(err, "failed to acquire the full info of all input devices")
 		}
+		inputDevices = data
 
 		ss := reg.FindStringSubmatch(string(data))
 		// Expecting 7 sub-matches which are the entire match, 5 line-breaks and the device-ID.
