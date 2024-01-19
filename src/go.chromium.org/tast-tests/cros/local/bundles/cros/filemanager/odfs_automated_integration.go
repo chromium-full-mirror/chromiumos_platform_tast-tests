@@ -17,6 +17,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/filemanager"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
@@ -122,6 +124,10 @@ func OdfsAutomatedIntegration(ctx context.Context, s *testing.State) {
 	}
 	defer files.Close(cleanupCtx)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "odfs_file_crud")
+
+	if err = files.WaitUntilExists(nodewith.Name(filesapp.OneDrive).Role(role.TreeItem))(ctx); err != nil {
+		s.Fatal("Failed to find OneDrive folder in files app: ", err)
+	}
 
 	odfsToken, err := files.GetOdfsFuseboxToken(ctx, cr)
 	if err != nil {
