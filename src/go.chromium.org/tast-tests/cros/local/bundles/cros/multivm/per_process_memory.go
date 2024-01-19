@@ -307,8 +307,8 @@ func generateResultsChart(resultFiles []string, outdir string) error {
 		runResultsMap := make(map[string]uint64)
 		for _, r := range rollups {
 			for k, v := range r.Rollup {
-				// Only output PSS to crosbolt dashboard.
-				if k != "Pss" {
+				// Only output PSS and swap PSS to crosbolt dashboard.
+				if k != "Pss" && k != "SwapPss" {
 					continue
 				}
 				processName := r.Command
