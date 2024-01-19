@@ -109,7 +109,10 @@ func copyUUID(from, to *xdr.Process) {
 func checkProcessEventWatcher(s *testing.State, ew *dbusutil.EventWatcher) ([]*xdr.ProcessExecEvent, []*xdr.ProcessTerminateEvent) {
 	event, ok := <-ew.Events()
 	if !ok {
-		s.Fatal("Timed out waiting for expected events")
+		if ew.Err() != nil {
+			s.Log("DBus watcher error:", ew.Err().Error())
+		}
+		s.Fatal("DBus watcher channel closed: unable to read anymore events")
 	}
 	if len(event.Arguments) == 0 {
 		return nil, nil
@@ -163,6 +166,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
+	s.Log("Restarting secagentd")
 	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
 		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
@@ -172,18 +176,21 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
+	s.Log("Installing DBus monitor")
 	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 45*time.Second)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
 	defer cancel()
 
+	s.Log("Waiting for secagentd to install BPFs")
 	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
 	}
 	// Launch a primer command to definitely set the "first seen exec" time
 	// in secagentd. This will help avoid false positives for "meta_first_seen"
 	// in terminate events.
+	s.Log("Starting '/bin/yes' to generate exec events")
 	primeCmd := testexec.CommandContext(ctx, "/bin/yes")
 	if err := primeCmd.Start(); err != nil {
 		s.Fatalf("Error starting %q: %v ", primeCmd, err)
