@@ -1215,7 +1215,7 @@ func DragIconToNeighbourPage(tconn *chrome.TestConn, item *nodewith.Finder, next
 		}
 
 		// Get destination location during drag.
-		end, err := ui.Location(ctx, nodewith.HasClass("AppsGridView"))
+		end, err := ui.Location(ctx, nodewith.HasClass(PagedAppsGridViewClass))
 		if err != nil {
 			return errors.Wrap(err, "failed to get location for AppsGridView")
 		}
