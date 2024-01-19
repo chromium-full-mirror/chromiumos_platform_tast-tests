@@ -112,6 +112,9 @@ func initializeSwitchTaskByHotseat(ctx context.Context, tconn *chrome.TestConn, 
 				currIconIdx = 0
 			}
 
+			if len(iconBounds) <= currIconIdx {
+				return errors.Errorf("'currIconIdx'(%d) is outside the range of 'iconBounds' with length %d", currIconIdx, len(iconBounds))
+			}
 			if err := pc.ClickAt(iconBounds[currIconIdx].CenterPoint())(ctx); err != nil {
 				return errors.Wrapf(err, "failed to click icon at %d", currIconIdx)
 			}
