@@ -15,6 +15,14 @@ import (
 )
 
 func disableBluezAdapter(ctx context.Context) (CleanupCallback, error) {
+	if adapters, err := bluez.Adapters(ctx); err == nil && len(adapters) == 0 {
+		testing.ContextLog(ctx, "Bluetooth adapter is missing")
+		return func(ctx context.Context) error { return nil }, nil
+	}
+	if state, err := bluez.IsEnabled(ctx); err == nil && state == false {
+		testing.ContextLog(ctx, "Bluetooth adapter is disabled")
+		return func(ctx context.Context) error { return nil }, nil
+	}
 	testing.ContextLog(ctx, "Disabling the bluez adapter")
 	if err := bluez.Disable(ctx); err != nil {
 		return func(ctx context.Context) error { return nil }, err
@@ -26,6 +34,10 @@ func disableBluezAdapter(ctx context.Context) (CleanupCallback, error) {
 }
 
 func disableFlossAdapter(ctx context.Context) (CleanupCallback, error) {
+	if state, err := floss.GetFlossEnabled(ctx); err == nil && state == false {
+		testing.ContextLog(ctx, "Bluetooth adapter is missing or disabled")
+		return func(ctx context.Context) error { return nil }, nil
+	}
 	testing.ContextLog(ctx, "Disabling the floss adapter")
 	if err := floss.SetFlossEnabled(ctx, false); err != nil {
 		return func(ctx context.Context) error { return nil }, err
