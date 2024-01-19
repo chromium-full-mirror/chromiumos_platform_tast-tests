@@ -2,11 +2,14 @@
 <html>
 <head><title>GetDisplayMedia test</title></head>
 <body>
+  <canvas id="canvas" width="10" height="10"></canvas>
   <video id="video" controls autoplay muted></video>
+<script src="canvas_animation.js"></script>
 <script src="third_party/blackframe.js"></script>
 <script>
 
-function start(surface) {
+async function start(surface) {
+  await drawCanvasAlternatingColours(320, 240, 30);
   return new Promise((resolve, reject) => {
     const video = document.querySelector('video');
 
