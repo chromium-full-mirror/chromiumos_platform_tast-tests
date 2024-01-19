@@ -9,7 +9,6 @@ import (
 	"runtime"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/multivm"
@@ -50,11 +49,23 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create shill client: ", err)
 	}
-	restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
-	if err != nil {
-		s.Fatal("Failed to hide unused ethernet: ", err)
+
+	// Disable the physical ethernet so that the only Ethernet service
+	// available is the veth service created below.
+	if enableFunc, err := m.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet); err != nil {
+		s.Fatal("Unable to disable Ethernet: ", err)
+	} else if enableFunc != nil {
+		newCtx, cancel := ctxutil.Shorten(ctx, shill.EnableWaitTime)
+		defer cancel()
+		defer enableFunc(ctx)
+		ctx = newCtx
 	}
-	defer restoreEthernet(cleanupCtx)
+
+	if enabled, err := m.IsEnabled(ctx, shill.TechnologyEthernet); err != nil {
+		s.Fatal("Error calling IsEnabled: ", err)
+	} else if enabled {
+		s.Fatal("Ethernet is still enabled")
+	}
 
 	// Set up virtualnet environment.
 	pool := subnet.NewPool()
