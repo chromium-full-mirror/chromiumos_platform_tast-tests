@@ -484,7 +484,7 @@ func (filter ModemFwFilter) IsMatch(modemType cellularconst.ModemType, fwVersion
 		if modemType != cellularconst.ModemTypeEM060 {
 			return false
 		}
-		r := regexp.MustCompile("^01.[0-9]{3}.*")
+		r := regexp.MustCompile("^EM060KGLAAR01(A11|A12)M2G")
 		return r.MatchString(fwVersion)
 	case ModemFwFilterSC7180All:
 		if modemType != cellularconst.ModemTypeSC7180 {
