@@ -425,8 +425,12 @@ func (fv *FixtValue) CompanionDUTConfig(companionNum uint) *DUTConfig {
 	return fv.DUTConfigs[companionNum]
 }
 
-// StartPowerRecording to start a recording for power metrics.
+// StartPowerRecording to cooldown the device and start a recording for power metrics.
 func (fv *FixtValue) StartPowerRecording(ctx context.Context) error {
+	testing.ContextLog(ctx, "Cooling down device")
+	if _, err := fv.PowerRecorderService.Cooldown(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to cooldown device")
+	}
 	testing.ContextLog(ctx, "Start recording power metrics")
 	if _, err := fv.PowerRecorderService.Start(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to start recording power metrics")

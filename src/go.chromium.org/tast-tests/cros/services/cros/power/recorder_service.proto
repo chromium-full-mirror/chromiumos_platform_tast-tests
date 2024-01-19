@@ -15,18 +15,17 @@ import "device_info.proto";
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/power";
 
 service RecorderService {
-    rpc Create(RecorderRequest) returns (google.protobuf.Empty) {}
-    rpc Start(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-    rpc Stop(google.protobuf.Empty) returns (RecorderResult) {}
-    rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Create(RecorderRequest) returns (google.protobuf.Empty) {}
+  rpc Cooldown(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Start(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Stop(google.protobuf.Empty) returns (RecorderResult) {}
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
-message RecorderRequest {
-    int64 interval_sec = 1;
-}
+message RecorderRequest { int64 interval_sec = 1; }
 
 message RecorderResult {
-    tast.common.perf.perfpb.Values perf_metrics = 1;
-    tast.common.power.powerpb.OneTimeMetrics one_time_metrics = 2;
-    tast.common.power.powerpb.DeviceInfo device_info = 3;
+  tast.common.perf.perfpb.Values perf_metrics = 1;
+  tast.common.power.powerpb.OneTimeMetrics one_time_metrics = 2;
+  tast.common.power.powerpb.DeviceInfo device_info = 3;
 }

@@ -80,6 +80,11 @@ func ExampleRemoteNoUI(ctx context.Context, s *testing.State) {
 	// Close the recorder once the test finishes.
 	defer rs.Close(ctx, &empty.Empty{})
 
+	// Cooldown device.
+	if _, err = rs.Cooldown(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to cool down device: ", err)
+	}
+
 	// Start recording metrics.
 	if _, err = rs.Start(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to start recording metrics: ", err)

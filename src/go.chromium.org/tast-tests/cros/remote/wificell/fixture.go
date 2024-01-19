@@ -330,7 +330,13 @@ func (f *tastFixtureImpl) takeIdleWiFiMeasurement(ctx context.Context, s *testin
 	if f.tf.powerRecorderClient == nil {
 		return errors.New("no power recorder client available")
 	}
+
 	ctx, restore, err := f.tf.RemoveWiFiInterfaces(ctx, DefaultDUT)
+
+	if _, err := f.tf.powerRecorderClient.Cooldown(ctx, &empty.Empty{}); err != nil {
+		return errors.Wrap(err, "failed to cooldown device")
+	}
+
 	if _, err := f.tf.powerRecorderClient.Start(ctx, &empty.Empty{}); err != nil {
 		return errors.Wrap(err, "failed to start metrics")
 	}
@@ -666,6 +672,9 @@ func (f *tastFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState)
 	}
 
 	if f.features&TFFeaturesPower != 0 {
+		if _, err := f.tf.powerRecorderClient.Cooldown(s.TestContext(), &empty.Empty{}); err != nil {
+			s.Fatal("Failed to cooldown device: ", err)
+		}
 		if _, err := f.tf.powerRecorderClient.Start(s.TestContext(), &empty.Empty{}); err != nil {
 			s.Fatal("Failed to start power metrics: ", err)
 		}

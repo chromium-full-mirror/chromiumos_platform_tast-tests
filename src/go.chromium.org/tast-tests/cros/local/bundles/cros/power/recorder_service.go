@@ -42,14 +42,23 @@ func (r *RecorderService) Create(ctx context.Context, req *ps.RecorderRequest) (
 	return &empty.Empty{}, nil
 }
 
-// Start metrics recording after the device is cooled down.
-func (r *RecorderService) Start(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+// Cooldown device and wait for CPU utilisation to reduce to an acceptable level.
+func (r *RecorderService) Cooldown(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	if r.recorder == nil {
-		return nil, errors.New("cannot start recording as a recorder was not created")
+		return nil, errors.New("cannot cooldown device as a recorder was not created")
 	}
 
 	if err := r.recorder.Cooldown(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to cooldown before recording")
+		return nil, errors.Wrap(err, "failed to cooldown device")
+	}
+
+	return &empty.Empty{}, nil
+}
+
+// Start metrics recording.
+func (r *RecorderService) Start(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	if r.recorder == nil {
+		return nil, errors.New("cannot start recording as a recorder was not created")
 	}
 
 	if err := r.recorder.Start(r.s.ServiceContext()); err != nil {

@@ -88,9 +88,9 @@ func ExampleRemoteUI(ctx context.Context, s *testing.State) {
 	// Close the recorder once the test finishes.
 	defer rs.Close(ctx, &empty.Empty{})
 
-	// Start recording metrics.
-	if _, err = rs.Start(ctx, &empty.Empty{}); err != nil {
-		s.Fatal("Failed to start recording metrics: ", err)
+	// Cooldown device.
+	if _, err = rs.Cooldown(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to cool down device: ", err)
 	}
 
 	// Open a WebGL load in the browser.
@@ -99,6 +99,11 @@ func ExampleRemoteUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open page: ", err)
 	}
 	defer cns.Close(ctx, &ui.CloseRequest{Id: connInfo.Id})
+
+	// Start recording metrics.
+	if _, err = rs.Start(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to start recording metrics: ", err)
+	}
 
 	// Maintaining the power test environment and measuring for 30 seconds.
 	// GoBigSleepLint: sleep to let the device run the workload.
