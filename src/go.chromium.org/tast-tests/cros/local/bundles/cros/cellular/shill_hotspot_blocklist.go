@@ -44,8 +44,12 @@ func ShillHotspotBlocklist(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Failed to get board: %s", err)
 	}
+	variant, err := cellular.GetDeviceVariant(ctx)
+	if err != nil {
+		s.Fatalf("Failed to get device variant: %s", err)
+	}
 	cellularInUpstreamTechCrOS := slices.Contains(technologies, shill.TechnologyCellular)
-	variantInBlocklist := (board == "trogdor" || board == "strongbad")
+	variantInBlocklist := (board == "trogdor" || board == "strongbad" || variant == "pujjoteen5_fm350")
 	if variantInBlocklist && cellularInUpstreamTechCrOS {
 		s.Fatal("Hotspot should not be allowed on variant")
 	}
