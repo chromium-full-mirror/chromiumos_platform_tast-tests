@@ -62,6 +62,15 @@ func Nested(ctx context.Context, name string, nestedSetup func(s *Setup) error) 
 	return callback, nil
 }
 
+// DisableMulticastSetup creates a setup that disables multicast.
+func DisableMulticastSetup(ctx context.Context) (CleanupCallback, error) {
+	return Nested(ctx, "DisableMulticast", func(s *Setup) error {
+		s.Add(DisableServiceIfExists(ctx, "avahi"))
+		s.Add(DisableAllMulticast(ctx))
+		return nil
+	})
+}
+
 // Setup accumulates the results of setup items so that their results can be
 // checked, errors logged, and cleaned up.
 type Setup struct {

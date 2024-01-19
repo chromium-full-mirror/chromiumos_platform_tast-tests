@@ -102,9 +102,7 @@ func init() {
 // RegularBoot steps through multiple ARC boots.
 func RegularBoot(ctx context.Context, s *testing.State) {
 	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics
-	cleanup, err := setup.PowerTestSetup(ctx, "multicast disabled", nil, &setup.PowerTestOptions{
-		Multicast: setup.DisableMulticast,
-	})
+	cleanup, err := setup.DisableMulticastSetup(ctx)
 	if err != nil {
 		s.Fatal("Could not disable multicast: ", err)
 	}
