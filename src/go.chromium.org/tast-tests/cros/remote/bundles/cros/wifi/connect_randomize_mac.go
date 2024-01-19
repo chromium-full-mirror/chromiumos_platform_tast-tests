@@ -53,6 +53,7 @@ func init() {
 				Name:              "unstable",
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiDevice(wlan.Intel9260, wlan.Intel9000)),
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

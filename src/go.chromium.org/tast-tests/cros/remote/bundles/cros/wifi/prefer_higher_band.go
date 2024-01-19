@@ -70,6 +70,7 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
 				Name: "2ghz_6ghz",
@@ -82,6 +83,7 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

@@ -28,11 +28,12 @@ func init() {
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		// TODO(b/187362093): Add a SoftwareDep for wake_on_wifi.
-		Attr:         []string{"group:wificell", "wificell_func", "wificell_suspend", "wificell_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Requirements: []string{tdreq.WiFiPwrTimingWoW},
+		Attr:            []string{"group:wificell", "wificell_func", "wificell_suspend", "wificell_unstable"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Requirements:    []string{tdreq.WiFiPwrTimingWoW},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 

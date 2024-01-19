@@ -66,13 +66,14 @@ func init() {
 		Desc:     "Verifies that a DUT is able to perform ANQP requests and process replies",
 		Contacts: []string{"cros-networking@google.com", "damiendejean@chromium.org"},
 		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
-		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Timeout:      10 * time.Minute,
-		Requirements: []string{tdreq.WiFiGenSupportPasspoint},
+		BugComponent:    "b:156085",
+		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Timeout:         10 * time.Minute,
+		Requirements:    []string{tdreq.WiFiGenSupportPasspoint},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
 			{
 				Name: "anqp_basic_info",

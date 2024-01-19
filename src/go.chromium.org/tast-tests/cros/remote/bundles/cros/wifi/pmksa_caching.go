@@ -67,6 +67,7 @@ func init() {
 					authAlgo: wpa.AuthAlgoOpen,
 					checkEap: true,
 				},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
 				Name:              "8021xwpa3",
@@ -81,6 +82,7 @@ func init() {
 					authAlgo: wpa.AuthAlgoOpen,
 					checkEap: true,
 				},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
 				Name:              "sae",
@@ -95,6 +97,7 @@ func init() {
 					),
 					authAlgo: wpa.AuthAlgoSAE,
 				},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

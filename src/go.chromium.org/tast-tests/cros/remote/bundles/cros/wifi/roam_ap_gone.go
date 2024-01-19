@@ -59,6 +59,7 @@ func init() {
 					secConfFac:     nil,
 					enableBSSFlush: false,
 				},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA APs in full view of it.
 				Name: "wpa",
@@ -68,6 +69,7 @@ func init() {
 					secConfFac:     wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					enableBSSFlush: false,
 				},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WEP APs in full view of it.
 				Name: "wep",
@@ -79,6 +81,7 @@ func init() {
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				// Verifies that DUT can roam between two WPA-EAP APs in full view of it.
 				Name: "8021xwpa",
@@ -89,6 +92,7 @@ func init() {
 					enableBSSFlush: false,
 				},
 				ExtraRequirements: []string{tdreq.WiFiSecSupportWPA2Enterprise},
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			}, {
 				Name: "flushbss",
 				// Verifies that DUT can roam between two APs with minimal idle time after bss flush.
@@ -98,6 +102,7 @@ func init() {
 					secConfFac:     nil,
 					enableBSSFlush: true,
 				},
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

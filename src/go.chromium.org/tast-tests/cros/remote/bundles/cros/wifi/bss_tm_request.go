@@ -90,6 +90,7 @@ func init() {
 					pmfRequiredAP1: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
 				// Verifies that DUT can roam from a BSS with SAE key management to a BSS with PSK key management and back.
@@ -101,6 +102,7 @@ func init() {
 					pmfRequiredAP0: true,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				VariantCategory:   `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 		},
 	})

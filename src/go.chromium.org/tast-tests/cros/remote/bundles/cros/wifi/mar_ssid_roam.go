@@ -33,13 +33,14 @@ func init() {
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 		},
-		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_func", "wificell_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
-		ServiceDeps:  []string{wificell.ShillServiceName},
-		HardwareDeps: hwdep.D(hwdep.WifiMACAddrRandomize()),
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
-		Requirements: []string{tdreq.WiFiGenSupportMARConn},
+		BugComponent:    "b:893827", // ChromeOS > Platform > Connectivity > WiFi
+		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
+		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		ServiceDeps:     []string{wificell.ShillServiceName},
+		HardwareDeps:    hwdep.D(hwdep.WifiMACAddrRandomize()),
+		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
+		Requirements:    []string{tdreq.WiFiGenSupportMARConn},
+		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
 }
 
