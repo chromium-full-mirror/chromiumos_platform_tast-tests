@@ -8,7 +8,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/playbilling"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,7 +38,14 @@ func init() {
 
 // CheckSkuPurchase uses the test SKU android.test.purchased to test the purchase flow.
 func CheckSkuPurchase(ctx context.Context, s *testing.State) {
-	testApp := s.FixtValue().(*playbilling.FixtData).TestApp
+	p := s.FixtValue().(*playbilling.FixtData)
+	cr := p.Chrome
+	testApp := p.TestApp
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "CheckSkuPurchase")
 
 	if err := testApp.Launch(ctx); err != nil {
 		s.Fatal("Failed to launch Play Billing test app: ", err)

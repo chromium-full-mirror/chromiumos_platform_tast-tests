@@ -9,54 +9,38 @@ const PAYMENT_METHOD = "https://play.google.com/billing";
  *
  * @param {string} sku The unit code to purchase.
  */
-function buy(sku) {
-    if (!window.PaymentRequest) {
-        console.log("No PaymentRequest object.");
-    }
+async function buy(sku) {
+  const supportedInstruments = [{
+    supportedMethods: PAYMENT_METHOD,
+    data: {
+      sku: sku,
+    },
+  }];
+  const item_details = {
+    total: {
+      label: "Total",
+      amount: {
+        currency: "AUD",
+        value: "1",
+      },
+    },
+  };
 
-    const supportedInstruments = [{
-        supportedMethods: PAYMENT_METHOD,
-        data: {
-            sku: sku,
-        },
-    }];
-
-    const item_details = {
-        total: {
-            label: "Total",
-            amount: {
-                currency: "AUD",
-                value: "1",
-            },
-        },
-    };
-
+  try {
     const request = new PaymentRequest(supportedInstruments, item_details);
-
-    if (request.canMakePayment) {
-        request.canMakePayment()
-            .then(result => {
-                console.log(result ?
-                    "Can make payment." :
-                    "Cannot make payment.");
-            })
-            .catch(error => console.error(error.message));
-    }
-
-    if (request.hasEnrolledInstrument) {
-        request.hasEnrolledInstrument()
-            .then(result => {
-                console.log(result ?
-                    "Has enrolled instrument." :
-                    "No enrolled instrument.");
-
-                request.show().then((response) => {
-                    console.log('payment successful');
-                    response.complete('success');
-                });
-            })
-            .catch(error => console.error(error.message));
-    }
+    const buyChecks = `canMakePayment=${
+      await request.canMakePayment()}, hasEnrolledInstrument=${
+      await request.hasEnrolledInstrument()}`;
+    console.log(buyChecks);
+    document.getElementById("buy-checks").innerHTML = buyChecks;
+    const response = await request.show();
+    console.log("payment successful");
+    await response.complete("success");
+  } catch (e) {
+    document.getElementById("errors").innerHTML = e.message;
+    console.error(e.message);
+    throw e;
+  }
 }
 
 /**

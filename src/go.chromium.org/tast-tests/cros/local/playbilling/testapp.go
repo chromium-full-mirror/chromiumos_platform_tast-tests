@@ -62,7 +62,12 @@ func (ta *TestApp) RequiredAuthConfirm(ctx context.Context) error {
 
 // CheckPaymentSuccessful checks for a presence of payment successful screen in the android ui tree.
 func (ta *TestApp) CheckPaymentSuccessful(ctx context.Context) error {
-	return CheckPaymentSuccessful(ta.uiAutomator)(ctx)
+	if err := CheckPaymentSuccessful(ta.uiAutomator)(ctx); err != nil {
+		var msg string
+		_ = ta.pbconn.Eval(ctx, "document.getElementById('errors').innerHTML", &msg)
+		return errors.Wrap(err, msg)
+	}
+	return nil
 }
 
 // GetDetails calls dgapi GetDetails and returns result.
