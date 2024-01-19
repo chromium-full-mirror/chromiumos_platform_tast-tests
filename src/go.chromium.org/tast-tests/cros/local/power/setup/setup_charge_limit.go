@@ -21,6 +21,12 @@ func ChargeLimitEnabled(ctx context.Context) bool {
 	return testexec.CommandContext(ctx, "check_powerd_config", "--charge_limit_enabled").Run() == nil
 }
 
+// ChargeControlV2Support indicates if EC supports chargecontrol V2 by checking
+// exit status of "ectool chargecontrol".
+func ChargeControlV2Support(ctx context.Context) bool {
+	return testexec.CommandContext(ctx, "ectool", "chargecontrol").Run() == nil
+}
+
 const chargeLimitEnabledPrefPath = "/var/lib/power_manager/charge_limit_enabled"
 
 func waitForChargeLimit(ctx context.Context) error {

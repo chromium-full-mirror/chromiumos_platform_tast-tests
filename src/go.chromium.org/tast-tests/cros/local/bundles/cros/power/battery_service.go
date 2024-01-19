@@ -138,7 +138,7 @@ func (b *BatteryService) DrainBattery(ctx context.Context, req *power.BatteryReq
 }
 
 func (b *BatteryService) StopChargeLimit(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if !setup.ChargeLimitEnabled(ctx) {
+	if !setup.ChargeLimitEnabled(ctx) || !setup.ChargeControlV2Support(ctx) {
 		return &empty.Empty{}, nil
 	}
 	if _, err := setup.StopChargeLimit(ctx, b.prefs); err != nil {

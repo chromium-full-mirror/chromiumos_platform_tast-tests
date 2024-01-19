@@ -72,7 +72,7 @@ func SetupCheck(ctx context.Context, s *testing.State) {
 		DarkTheme:  setup.EnableDarkTheme,
 		Ramfs:      setup.SetupRamfs,
 	}
-	if setup.ChargeLimitEnabled(ctx) && discharge {
+	if setup.ChargeControlV2Support(ctx) && setup.ChargeLimitEnabled(ctx) && discharge {
 		testOptions.ChargeLimit = setup.DisableChargeLimit
 	}
 	// Make sure disable ui happens after ui-related setup.
