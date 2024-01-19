@@ -60,15 +60,15 @@ func VmmmsKillPriorityToString(priority VmmmsPriority) string {
 // logs.
 func ParseVmmmsKillPriority(s string) (VmmmsPriority, error) {
 	switch s {
-	case "RESIZE_PRIORITY_FOCUSED_APP":
+	case "FocusedApp":
 		return VmmmsFocusedAppPriority, nil
-	case "RESIZE_PRIORITY_PERCEPTIBLE_TAB":
+	case "PerceptibleTab":
 		return VmmmsPerceptibleTabPriority, nil
-	case "RESIZE_PRIORITY_PERCEPTIBLE_APP":
+	case "PerceptibleApp":
 		return VmmmsPerceptibleAppPriority, nil
-	case "RESIZE_PRIORITY_CACHED_TAB":
+	case "CachedTab":
 		return VmmmsCachedTabPriority, nil
-	case "RESIZE_PRIORITY_CACHED_APP":
+	case "CachedApp":
 		return VmmmsCachedAppPriority, nil
 	default:
 		return -1, errors.Errorf("unexpected VMMMS KillTrace priority %q", s)
@@ -84,7 +84,7 @@ type VmmmsKillInfo struct {
 }
 
 // 2023-10-31T07:32:23.450025Z INFO vm_concierge[21465]: KillTrace:[35,RESIZE_PRIORITY_CACHED_APP,53MB]
-var killTraceRE = regexp.MustCompile(`^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}(?:Z|[+-]\d{2}:\d{2})) INFO vm_concierge\[\d+\]: KillTrace:\[(?P<cid>\d+),(?P<priority>[A-Z_]+),(?P<sizeMB>\d+)MB\]`)
+var killTraceRE = regexp.MustCompile(`^(?P<timestamp>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{6}(?:Z|[+-]\d{2}:\d{2})) INFO vm_concierge\[\d+\]: KillTrace:\[(?P<cid>\d+),(?P<priority>[a-zA-Z_]+),(?P<sizeMB>\d+)MB\]`)
 
 // ParseVmmmsKills reads all KillTrace lines from /var/log/messages between the
 // given time stamps and returns a list of VmmmsKillInfo in chronological order.
