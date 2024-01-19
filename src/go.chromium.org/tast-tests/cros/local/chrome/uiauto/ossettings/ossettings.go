@@ -498,7 +498,7 @@ func (s *OSSettings) ClearSearch() uiauto.Action {
 // Then it clicks the Uninstall button to uninstall.
 func UninstallApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, appName, appID string) error {
 	ui := uiauto.New(tconn)
-	appNode := nodewith.Name(appName).HasClass("cr-title-text")
+	appNode := nodewith.Name(appName).Role(role.Heading).Ancestor(WindowFinder)
 	osSettings, err := LaunchAtPageURL(ctx, tconn, cr, "app-management/detail?id="+appID, ui.WaitUntilExists(appNode))
 	if err != nil {
 		testing.ContextLogf(ctx, "Failed to open Settings app at the app %s, it may not exist: %s", appName, err)
