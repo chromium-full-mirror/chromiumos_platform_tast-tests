@@ -644,7 +644,19 @@ func (c *Container) RestoreCopy(ctx context.Context, name string) error {
 	}
 
 	// Stop the container.
-	if _, err := c.VM.LXCCommand(ctx, "stop", "-f", c.containerName); err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// First check if the container is already stopped.
+		out, err := c.VM.LXCCommand(ctx, "list", "-cs", "-fcsv", c.containerName)
+		if err != nil {
+			return err
+		}
+		if string(out) == "STOPPED\n" {
+			return nil
+		}
+
+		_, err = c.VM.LXCCommand(ctx, "stop", "-f", c.containerName)
+		return err
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
 		return errors.Wrap(err, "failed to stop the container")
 	}
 
