@@ -11,7 +11,6 @@ import (
 	"net/http/httptest"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -21,7 +20,6 @@ import (
 // platform.MemoryStressBasic test.
 type MemoryStressUnit struct {
 	url      string
-	conn     *chrome.Conn
 	tconn    *browser.TestConn
 	cooldown time.Duration
 	tabID    int // ID of new tab, so we can query for liveness later
@@ -34,7 +32,10 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser) error 
 	if err != nil {
 		return errors.New("failed to open MemoryStressUnit page")
 	}
-	st.conn = conn
+	// Leaving the debug connection for a target attached results in
+	// PageDiscardingHelper treating the tab as protected. So we close the
+	// connection after verifying that the allocation complete.
+	defer conn.Close()
 
 	// Because chrome.tabs is not available on the conn, query active tabs
 	// assuming there's only one window so only one active tab, and the active tab is
@@ -61,6 +62,8 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser) error 
 		return errors.Wrap(err, "unexpected error waiting for allocation")
 	}
 	if st.cooldown > 0 {
+		// GoBigSleepLint we sleep here to throttle allocation of memory. Allocating
+		// as fast as possible can cause instability.
 		if err := testing.Sleep(ctx, st.cooldown); err != nil {
 			return errors.Wrap(err, "failed to sleep for cooldown")
 		}
@@ -70,10 +73,6 @@ func (st *MemoryStressUnit) Run(ctx context.Context, br *browser.Browser) error 
 
 // Close closes the memory stress allocation tab.
 func (st *MemoryStressUnit) Close(ctx context.Context, br *browser.Browser) error {
-	if st.conn == nil {
-		return nil
-	}
-	st.conn.Close()
 	if err := st.tconn.Call(ctx, nil, `async (url) => {
 		const query = tast.promisify(chrome.tabs.query);
 		const remove = tast.promisify(chrome.tabs.remove);
@@ -206,7 +205,6 @@ func (s *MemoryStressServer) NewMemoryStressUnit(allocMiB int, ratio float32, co
 	s.nextID++
 	return &MemoryStressUnit{
 		url:      url,
-		conn:     nil,
 		cooldown: cooldown,
 	}
 }
