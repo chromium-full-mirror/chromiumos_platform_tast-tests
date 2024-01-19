@@ -85,6 +85,7 @@ func (t *tab) activate(ctx context.Context) (bool, error) {
 type App struct {
 	Name          string // Name of the Chrome app.
 	URL           string // URL to install the app from.
+	WebTab        string // Name of the Web store Tab.
 	VerifyText    string // Button text after the app is installed/uninstalled.
 	AddRemoveText string // Button text when the app is available to be added.
 	ConfirmText   string // Button text to confirm the installation.
@@ -106,6 +107,8 @@ func UpgradeWebstoreApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Te
 	addRemove := nodewith.Name(app.AddRemoveText).Role(role.Button).First()
 	confirm := nodewith.Name(app.ConfirmText).Role(role.Button)
 	checkingButton := nodewith.Name("Checking...").Role(role.Button)
+	tabButton := nodewith.Name(app.WebTab).Role(role.StaticText).First()
+	closeButton := nodewith.Name("Close").Role(role.Button).ClassName("FrameCaptionButton")
 
 	// Wait for addRemove element, if found then click the addRemove button.
 	if err := uiauto.IfSuccessThen(ui.WithTimeout(time.Minute).WaitUntilExists(addRemove), ui.LeftClick(addRemove))(ctx); err != nil {
@@ -133,10 +136,11 @@ func UpgradeWebstoreApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Te
 	} else if !a {
 		return errors.New("main tab is not activated")
 	}
-
-	// Check if the app is upgraded or not.
-	if err := ui.WaitUntilExists(upgraded)(ctx); err != nil {
+	if err := ui.RetryUntil(ui.LeftClick(tabButton), ui.Exists(upgraded))(ctx); err != nil {
 		return errors.Wrap(err, "failed to find UI element")
+	}
+	if err := ui.LeftClick(closeButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to close the window")
 	}
 	return nil
 }

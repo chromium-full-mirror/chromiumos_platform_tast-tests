@@ -17,6 +17,7 @@ type appsParams struct {
 	appName    string
 	urlAppName string
 	urlAppID   string
+	tabName    string
 }
 
 func init() {
@@ -32,7 +33,8 @@ func init() {
 			{
 				Name: "google_photo",
 				Val: appsParams{appName: "Google Photo",
-					urlAppName: "save-image-to-google-phot",
+					urlAppName: "save-image-to-google-photos",
+					tabName:    "Save Image To Google Photos",
 					urlAppID:   "djakijfdccnmmnknpmphdkkjbjfenkne",
 				},
 				Fixture: "chromeLoggedIn",
@@ -41,6 +43,7 @@ func init() {
 				Name: "cut_the_rope",
 				Val: appsParams{appName: "Cut The Rope",
 					urlAppName: "cut-the-rope-original",
+					tabName:    "Cut The Rope Original",
 					urlAppID:   "fjiiikojnkdhmnbhcdkieejjjohfpcoo",
 				},
 				Fixture: "chromeLoggedIn",
@@ -62,6 +65,7 @@ func WebstoreAppInstallUninstall(ctx context.Context, s *testing.State) {
 	// App Install parameters.
 	app := webstore.App{Name: testOpt.appName,
 		URL:           appURL,
+		WebTab:        testOpt.tabName,
 		VerifyText:    "Remove from Chrome",
 		AddRemoveText: "Add to Chrome",
 		ConfirmText:   "Add extension",
@@ -75,6 +79,7 @@ func WebstoreAppInstallUninstall(ctx context.Context, s *testing.State) {
 	// App Uninstall parameters.
 	app = webstore.App{Name: testOpt.appName,
 		URL:           appURL,
+		WebTab:        testOpt.tabName,
 		VerifyText:    "Add to Chrome",
 		AddRemoveText: "Remove from Chrome",
 		ConfirmText:   "Remove",
