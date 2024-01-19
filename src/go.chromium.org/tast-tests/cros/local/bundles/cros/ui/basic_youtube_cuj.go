@@ -53,7 +53,7 @@ func BasicYoutubeCUJ(ctx context.Context, s *testing.State) {
 	var videoSource = youtube.VideoSrc{
 		URL:     "https://www.youtube.com/watch?v=LXb3EKWsInQ",
 		Title:   "COSTA RICA IN 4K 60fps HDR (ULTRA HD)",
-		Quality: "1080p60",
+		Quality: "1080p",
 	}
 
 	// Give 5 seconds to cleanup other resources.

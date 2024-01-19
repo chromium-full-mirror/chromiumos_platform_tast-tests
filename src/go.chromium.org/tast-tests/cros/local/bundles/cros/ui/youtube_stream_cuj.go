@@ -47,7 +47,7 @@ func init() {
 			Val: youtube.VideoSrc{
 				URL:     "https://www.youtube.com/watch?v=LXb3EKWsInQ",
 				Title:   "COSTA RICA IN 4K 60fps HDR (ULTRA HD)",
-				Quality: "1080p60",
+				Quality: "1080p",
 			},
 		}, {
 			Name:      "1440p30",
@@ -65,7 +65,7 @@ func init() {
 			Val: youtube.VideoSrc{
 				URL:     "https://www.youtube.com/watch?v=LXb3EKWsInQ",
 				Title:   "COSTA RICA IN 4K 60fps HDR (ULTRA HD)",
-				Quality: "1440p60",
+				Quality: "1440p",
 			},
 		}, { // Battery saver tests only run manually
 			Name:    "1080p30_battery_saver",
