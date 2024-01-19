@@ -11,6 +11,10 @@
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
   },
+  "bugzzy-KCfa36": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 0"
+  },
   "craask-TC0002": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
