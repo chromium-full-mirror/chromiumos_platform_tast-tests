@@ -92,7 +92,7 @@ func coolDownConfig() cpu.CoolDownConfig {
 func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chrome) (retScore float64, retErr error) {
 	const (
 		packageName            = "org.chromium.arc.testapp.apploading"
-		tPowerSnapshotDuration = 5 * time.Second
+		tPowerSnapshotInterval = 10 * time.Second
 	)
 
 	testName := packageName + "." + config.ClassName
@@ -141,7 +141,7 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 		return 0, errors.Wrap(err, "failed to install apk app")
 	}
 
-	metrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Prefix(config.Prefix+"_"), perf.Interval(tPowerSnapshotDuration))
+	metrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Prefix(config.Prefix+"_"), perf.Interval(tPowerSnapshotInterval))
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to build metrics")
 	}
