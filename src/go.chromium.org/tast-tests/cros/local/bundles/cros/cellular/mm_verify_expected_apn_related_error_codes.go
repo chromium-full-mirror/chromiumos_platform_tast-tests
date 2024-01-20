@@ -190,11 +190,10 @@ func connectAndGetBearerErrorCode(ctx context.Context, s *testing.State, modem, 
 	if err != nil {
 		s.Fatalf("Failed to get bearer : %s", err)
 	}
-	connectionError := bearer.ConnectionError()
-	testing.ContextLog(ctx, "connectionError: ", connectionError)
-	if len(connectionError) < 2 {
-		s.Fatalf("Failed to parse connection error: %q", connectionError)
+	connectionError, err := bearer.ConnectionError().ToString()
+	if err != nil {
+		s.Fatalf("Failed to get bearer error: %s", err)
 	}
-	return connectionError[0]
+	return connectionError
 
 }

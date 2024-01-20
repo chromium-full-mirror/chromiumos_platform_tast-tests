@@ -64,6 +64,9 @@ type Bearer struct {
 	modem *Modem
 }
 
+// BearerConnectionError represents a MM Bearer error dbus object
+type BearerConnectionError []string
+
 // NewBearer creates a new Bearer adapter from bearer properties.
 func NewBearer(ctx context.Context, bearerPath, modemPath dbus.ObjectPath) (*Bearer, error) {
 	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerBearerInterface, bearerPath)
@@ -228,12 +231,20 @@ func (b *Bearer) Connected() bool {
 }
 
 // ConnectionError gets the ConnectionError value
-func (b *Bearer) ConnectionError() []string {
+func (b *Bearer) ConnectionError() BearerConnectionError {
 	value, err := b.props.GetStructOfStrings(mmconst.BearerPropertyConnectionError)
 	if err != nil {
 		panic("missing ConnectionError property")
 	}
 	return value
+}
+
+// ToString gets the error code from the ConnectionError value
+func (e BearerConnectionError) ToString() (string, error) {
+	if len(e) < 2 {
+		return "", errors.Errorf("failed to parse connection error: %q", e)
+	}
+	return e[0], nil
 }
 
 // Multiplexed gets the Multiplexed value
