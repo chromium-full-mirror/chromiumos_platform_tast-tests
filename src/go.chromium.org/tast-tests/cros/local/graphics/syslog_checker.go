@@ -76,7 +76,8 @@ var (
 			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
 		}, "|")),
 	}
-	sysLogKernelSplatsDetail = regexp.MustCompile(`RIP:\s+[0-9a-f]+:(.+)`) // Skip over the code segment register to capture the text after the column.
+	sysLogSkipKernelTimeStamp = regexp.MustCompile(`\[\s*[0-9]+\.[0-9]+\]\s(.*)`) // Skip over the kernel timestamps to capture the rest of the line.
+	sysLogKernelSplatsDetail  = regexp.MustCompile(`RIP:\s+[0-9a-f]+:(.+)`)       // Skip over the code segment register to capture the text after the colon.
 	// ignoreCategoriesMap maps testName to a list of SysLogCategory it would like to ignore when calling checkSysLog.
 	ignoreCategoriesMap = map[string][]SysLogCategory{}
 )
@@ -119,10 +120,16 @@ func CheckSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 		} else if err != nil {
 			return errors.Wrap(err, "failed to read syslog")
 		}
-
+		c := e.Content
+		if e.Program == "kernel" {
+			// Remove kernel timestamp from beginning of line if found.
+			if match := sysLogSkipKernelTimeStamp.FindStringSubmatch(c); match != nil {
+				c = match[1]
+			}
+		}
 		for _, category := range checkCategory {
 			re := sysLogSignatureMap[category]
-			if re.MatchString(e.Content) {
+			if re.MatchString(c) {
 				if category == SysLogKernelSplats {
 					// Normally we return the first match of a regexp. For splats this is not informative,
 					// so read a few lines further for the RIP: entry. This typically appears 5-15 lines after
@@ -142,7 +149,7 @@ func CheckSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 				}
 				// Only output the full regex once we already found to prevent the reader reads the output itself.
 				testing.ContextLog(ctx, "Found with following regex: ", re.String())
-				return errors.Errorf("%v: %s", category, e.Content)
+				return errors.Errorf("%v: %s", category, c)
 			}
 		}
 
