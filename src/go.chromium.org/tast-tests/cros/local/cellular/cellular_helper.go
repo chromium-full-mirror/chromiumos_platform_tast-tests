@@ -164,24 +164,43 @@ func (h *Helper) ClearSIMLockFromHostInfo(ctx context.Context) error {
 	return nil
 }
 
+func isL850Verizon(ctx context.Context, modem *modemmanager.Modem) bool {
+	modemType, err := GetModemType(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get modem type: ", err)
+		return false
+	}
+	if modemType != cellularconst.ModemTypeL850 {
+		return false
+	}
+	operatorID, err := modem.GetOperatorIdentifier(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get operator identifier: ", err)
+		return false
+	}
+	carrier, err := GetCarrier(operatorID)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get carrier: ", err)
+		return false
+	}
+	return carrier == CarrierVerizon
+}
+
 // CheckIfL850VerizonAndFixDefaultAPN checks if the device has a L850GL modem with a verizon SIM card,
 // and tries to fix the default APN in the modem. This is needed because there are 2 bugs
 // in the modem FW that causes the modem to report the last used APN as provisioned by the carrier(b/289540816, b/289530609).
 func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
-	modemType, err := GetModemType(ctx)
-	if err != nil || modemType != cellularconst.ModemTypeL850 {
-		return
-	}
 	modem, err := modemmanager.NewModem(ctx)
 	if err != nil {
+		testing.ContextLog(ctx, "Failed to get new modem: ", err)
 		return
 	}
-	operatorID, err := modem.GetOperatorIdentifier(ctx)
-	if err != nil || operatorID != "311480" {
+	if !isL850Verizon(ctx, modem) {
 		return
 	}
 	simpleModem, err := modem.GetSimpleModem(ctx)
 	if err != nil {
+		testing.ContextLog(ctx, "Failed to get simple modem: ", err)
 		return
 	}
 	testing.ContextLog(ctx, "Verizon L850 device: Try fixing the default APN")
@@ -208,6 +227,66 @@ func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
 		testing.ContextLog(ctx, "Failed to enable: ", err)
 	}
 	return
+}
+
+// RebootL850VerizonIfModemCanNoLongerConnect checks if the device has a L850GL modem with a verizon SIM card,
+// and tries to fix the modem by rebooting it if the device is stuck and cannot connect to vzwinternet(b/309953824).
+// Only returns an error if the modem object is not valid.
+func RebootL850VerizonIfModemCanNoLongerConnect(ctx context.Context, modemPtr **modemmanager.Modem) error {
+	if *modemPtr == nil {
+		testing.ContextLog(ctx, "Invalid modem pointer")
+		return errors.New("invalid modem pointer")
+	}
+	modem := *modemPtr
+	if !isL850Verizon(ctx, modem) {
+		return nil
+	}
+	simpleModem, err := modem.GetSimpleModem(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get simple modem: ", err)
+		return nil
+	}
+
+	// Delete all bearers to ensure the bearer error code is from the next connection attempt.
+	modem.DeleteAllBearers(ctx, modem)
+
+	testing.ContextLog(ctx, "Check if modem needs to be restarted on L850/Verizon")
+	if _, err := modemmanager.Connect(ctx, simpleModem, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err == nil {
+		if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+			testing.ContextLog(ctx, "Failed to disconnect: ", err)
+		}
+		// Ensure we remove the bearer object created during the previous step.
+		modem.DeleteAllBearers(ctx, modem)
+		// Connected successfully. Nothing else to do here
+		return nil
+	}
+
+	testing.ContextLog(ctx, "Failed to connect: ", err)
+	bearer, err := modem.GetFirstDataBearer(ctx, mmconst.BearerAPNTypeDefault)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get bearer: ", err)
+		return nil
+	}
+	connectionError, err := bearer.ConnectionError().ToString()
+	if err != nil {
+		testing.ContextLogf(ctx, "Failed to get bearer error: %s", err)
+		return nil
+	}
+
+	// Ensure we remove the bearer object created during the previous step.
+	modem.DeleteAllBearers(ctx, modem)
+
+	if connectionError == "org.freedesktop.ModemManager1.Error.MobileEquipment.NotAllowed" {
+		testing.ContextLog(ctx, "Modem cannot connect to vzwinternet(b/309953824). Reset modem")
+		if *modemPtr, err = RestartModemWithHelper(ctx); err != nil {
+			testing.ContextLogf(ctx, "Failed to restart modem: %s", err)
+			return err
+		}
+	} else if connectionError != "" {
+		testing.ContextLogf(ctx, "Last bearer connection error: %s", connectionError)
+	}
+
+	return nil
 }
 
 // WaitForEnabledState polls for the specified enable state for cellular.
@@ -1580,7 +1659,7 @@ func (h *Helper) CreateCarrierLockCsvFile(ctx context.Context, profile string) (
 	}
 	model := string(bmodel)
 
-	bmanufacturer, err := exec.Command("cat",  "/run/chromeos-config/v1/branding/oem-name").Output()
+	bmanufacturer, err := exec.Command("cat", "/run/chromeos-config/v1/branding/oem-name").Output()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read manufacturer")
 	}

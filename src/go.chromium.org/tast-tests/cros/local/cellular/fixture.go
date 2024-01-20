@@ -637,6 +637,14 @@ func (f *cellularFixture) PostTest(ctx context.Context, s *testing.FixtTestState
 			testing.ContextLogf(ctx, "Failed to restart job: shill, %s", errs)
 		}
 	}
+	modem, err := modemmanager.NewModem(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to create modem object: ", err)
+	} else {
+		if err = RebootL850VerizonIfModemCanNoLongerConnect(ctx, &modem); err != nil {
+			testing.ContextLog(ctx, "Failed to restart modem: ", err)
+		}
+	}
 
 	if f.netUnlock != nil {
 		f.netUnlock()
