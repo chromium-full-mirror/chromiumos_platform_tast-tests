@@ -62,8 +62,7 @@ func init() {
 			Val: touchpadInfoTestParams{
 				TouchpadValidation: true,
 			},
-			// TODO(b/313704138): Use the internal TouchpadType hardware dependency when available.
-			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Detachable), hwdep.Touchpad()),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalTouchpad()),
 		}, {
 			Name: "",
 			Val: touchpadInfoTestParams{
