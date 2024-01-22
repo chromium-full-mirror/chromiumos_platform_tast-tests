@@ -668,7 +668,7 @@ func (ms *ModeSwitcher) ModeAwareReboot(ctx context.Context, resetType ResetType
 		connectCtx, cancel := context.WithTimeout(ctx, connectTime)
 		defer cancel()
 		if err := h.WaitConnect(connectCtx, waitConnectOpt...); err != nil {
-			return errors.Wrap(err, "failed to connect to DUT")
+			return errors.Wrapf(err, "failed to connect to DUT within %s", connectTime)
 		}
 	}
 	if bootID, err := h.Reporter.BootID(ctx); err != nil {

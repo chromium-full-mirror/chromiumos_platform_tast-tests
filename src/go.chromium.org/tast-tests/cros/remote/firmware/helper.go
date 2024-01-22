@@ -847,6 +847,14 @@ func wcOptsContain(opts []WaitConnectOption, contained WaitConnectOption) bool {
 func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) error {
 	const reconnectRetryDelay = time.Second
 
+	deadline, ok := ctx.Deadline()
+	if ok {
+		totalWaitTime := deadline.Sub(time.Now())
+		if totalWaitTime < 2*time.Second {
+			// There isn't enough time to connect
+			return errors.Errorf("context timeout too short, need at least %s, got %s", 2*time.Second, totalWaitTime)
+		}
+	}
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "failed to connect to servo")
 	}
@@ -872,7 +880,7 @@ func (h *Helper) WaitConnect(ctx context.Context, opts ...WaitConnectOption) err
 			remainingTime := deadline.Sub(time.Now())
 			if remainingTime < 2*time.Second {
 				// There isn't enough time to connect
-				return errors.Errorf("context timeout too short, need at least %s, got %s", 2*time.Second, remainingTime)
+				return context.DeadlineExceeded
 			}
 		}
 		// SetDUTPDDataRole would fail when DUT is still in the process
