@@ -54,7 +54,7 @@ func init() {
 				tabletMode: false,
 			},
 			Timeout:   10 * time.Minute,
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:    "tablet_mode",
 			Fixture: fixture.NormalMode,

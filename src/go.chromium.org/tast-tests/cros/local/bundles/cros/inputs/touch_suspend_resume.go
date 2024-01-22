@@ -45,7 +45,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "ambalavanan.m.m@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"inputs_deps", "chrome"},
-		Attr:         []string{"group:intel-nda"},
+		Attr:         []string{"group:intel-sleep"},
 		Data:         []string{"canvas.html"},
 		HardwareDeps: hwdep.D(hwdep.TouchScreen(), hwdep.X86()),
 		Fixture:      "chromeLoggedIn",

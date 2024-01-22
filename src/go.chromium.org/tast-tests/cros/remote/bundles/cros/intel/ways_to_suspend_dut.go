@@ -39,7 +39,7 @@ func init() {
 			Name:      "clamshell",
 			Val:       false,
 			Timeout:   30 * time.Minute,
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "tablet",
 			Val:       true,

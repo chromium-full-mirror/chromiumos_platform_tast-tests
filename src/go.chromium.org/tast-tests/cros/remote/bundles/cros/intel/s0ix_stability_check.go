@@ -45,7 +45,7 @@ func init() {
 			Val: s0ixCheckTestParams{
 				tabletMode: false,
 			},
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name: "tablet_mode",
 			Val: s0ixCheckTestParams{

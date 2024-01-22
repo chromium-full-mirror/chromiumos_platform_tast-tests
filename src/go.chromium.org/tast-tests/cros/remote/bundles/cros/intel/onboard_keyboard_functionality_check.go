@@ -39,17 +39,18 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.ui.AudioService", "tast.cros.browser.ChromeService"},
-		Attr:         []string{"group:intel-nda"},
 		VarDeps:      []string{"servo"},
 		Params: []testing.Param{{
 			Name:              "suspend_resume",
 			Val:               suspendStressTest,
 			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
+			ExtraAttr:         []string{"group:intel-sleep"},
 			Timeout:           10 * time.Minute,
 		}, {
 			Name:              "coldboot",
 			Val:               shutdownStressTest,
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+			ExtraAttr:         []string{"group:intel-nda"},
 			Timeout:           15 * time.Minute,
 		},
 		}})

@@ -28,7 +28,7 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:intel-nda"},
+		Attr:         []string{"group:intel-sleep"},
 		Vars:         []string{"servo"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		Timeout:      4 * time.Minute,

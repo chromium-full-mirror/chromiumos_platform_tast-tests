@@ -62,7 +62,7 @@ func init() {
 			Name:      "only_system_idle",
 			Val:       deviceFunctionality{functionality: onlySystemIdle},
 			Timeout:   20 * time.Minute,
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}},
 	})
 }

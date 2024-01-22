@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
-		Attr:         []string{"group:intel-nda"},
+		Attr:         []string{"group:intel-sleep"},
 		Data:         []string{"1080p_60fps_600frames.vp8.webm", "video.html", "playback.js"},
 		VarDeps:      []string{"servo"},
 		Timeout:      8 * time.Minute,

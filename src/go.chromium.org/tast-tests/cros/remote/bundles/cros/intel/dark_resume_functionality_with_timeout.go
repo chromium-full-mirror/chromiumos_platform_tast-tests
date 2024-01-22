@@ -34,7 +34,7 @@ func init() {
 		BugComponent: "b:157291",
 		SoftwareDeps: []string{"chrome", "reboot"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
-		Attr:         []string{"group:intel-nda"},
+		Attr:         []string{"group:intel-sleep"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.X86(), hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,

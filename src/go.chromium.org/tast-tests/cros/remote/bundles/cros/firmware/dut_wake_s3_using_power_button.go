@@ -40,7 +40,7 @@ func init() {
 		Vars:         []string{"servo"},
 		// TODO(b/199674322): Add back to firmware_unstable once this test actually works.
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:intel-nda"},
+		Attr:         []string{"group:intel-sleep"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
 		Timeout:      10 * time.Minute,

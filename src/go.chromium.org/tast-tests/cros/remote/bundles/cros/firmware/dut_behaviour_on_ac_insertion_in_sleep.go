@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Vars:         []string{"servo"},
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:    []string{"group:firmware", "group:intel-nda"},
+		Attr:    []string{"group:firmware", "group:intel-sleep"},
 		Fixture: fixture.NormalMode,
 	})
 }

@@ -47,7 +47,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		// Disabled due to 98%-99% failure rate and preventing other tests from running. TODO(b/242478571): fix and re-enable.
 		//Attr:         []string{"group:mainline", "informational"},
-		Attr:         []string{"group:intel-nda"},
+		Attr:         []string{"group:intel-sleep"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService", "tast.cros.inputs.KeyboardService"},
 		Vars: []string{"servo",
