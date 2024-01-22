@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/scanapp/printer_add_epson_thermal_receipt_20240122.ppd",
+  "size": 4466,
+  "sha256sum": "02271312233254a705430016084b78cd5e8a95ebac208e1cc5db080ace8e4c50"
+}

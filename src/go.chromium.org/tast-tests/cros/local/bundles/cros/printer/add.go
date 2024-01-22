@@ -464,6 +464,15 @@ func init() {
 					Options:      []string{"job-password=1234"},
 				},
 				ExtraData: []string{"to_print.pdf", "printer_unsupported_GenericPostScript.ppd.gz", "printer_pin_print_unsupported_golden.ps"},
+			}, {
+				Name: "epson_thermal_receipt",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_epson_thermal_receipt.ppd",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "receipt_70mmx80mm.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_epson_thermal_receipt.ppd", "receipt_70mmx80mm.bin"},
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})

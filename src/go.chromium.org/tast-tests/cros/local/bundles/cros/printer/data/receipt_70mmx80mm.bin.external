@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/scanapp/receipt_70mmx80mm_20240122.bin",
+  "size": 33216,
+  "sha256sum": "b07f817f3430a77cdf7c8e391dc2fad6e71a78640ca91f2172d6608c79667910"
+}
