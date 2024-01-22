@@ -186,17 +186,32 @@ func playDRMVideo(ctx context.Context, s *testing.State, cs ash.ConnSource, cr *
 		return false, errors.Wrap(err, "failed to initialize the keyboard writer")
 	}
 	defer ew.Close(ctx)
-	if err := ew.Type(ctx, "f"); err != nil {
-		return false, errors.Wrap(err, "failed to inject the 'f' key")
+
+	// Wait until the JS code indicates it has gone full screen.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := ew.Type(ctx, "f"); err != nil {
+			return errors.Wrap(err, "failed to inject the 'f' key")
+		}
+		var videoIsInFullscreen bool
+		if err := conn.Eval(ctx, `video_is_in_fullscreen`, &videoIsInFullscreen); err != nil {
+			return errors.Wrap(err, "could not determine whether the video is being displayed in fullscreen")
+		}
+		if !videoIsInFullscreen {
+			return errors.New("the video is not yet displayed in fullscreen")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  5 * time.Second,
+		Interval: 1 * time.Second,
+	}); err != nil {
+		return false, errors.Wrap(err, "could not display the video in fullscreen")
 	}
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return false, errors.Wrap(err, "failed to connect to test API")
-	}
-
-	if err := ash.WaitForFullScreen(ctx, tconn); err != nil {
-		return false, errors.Wrap(err, "failed waiting for full screen")
+	// We still have issues not actually being in full screen sometimes, so sleep
+	// a second to ensure we are.
+	// GoBigSleepLint: Wait for fullscreen to resolve flakiness.
+	if err := testing.Sleep(ctx, time.Second); err != nil {
+		return false, errors.Wrap(err, "failed to sleep prior to taking screenshot")
 	}
 
 	// Take the screenshot, we don't need to wait because we are only verifying
