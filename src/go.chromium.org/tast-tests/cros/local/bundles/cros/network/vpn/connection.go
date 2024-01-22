@@ -427,6 +427,12 @@ func StartConnection(ctx context.Context, env *virtualnet.Env, vpnType Type, opt
 // Connect lets shill connect to the VPN service, waits for it connected, and
 // then verifies the routing layer setup before return.
 func (c *Connection) Connect(ctx context.Context) error {
+	// Ignore the check for the second server here.
+	testing.ContextLog(ctx, "Verifying underlay connectivity before connecting to VPN")
+	if err := ping.ExpectPingSuccessWithTimeout(ctx, c.Server.UnderlayIP, "root", 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to verify underlay connectivity before initiating connecting to VPN")
+	}
+
 	testing.ContextLog(ctx, "Waiting for VPN service connected")
 	if err := c.service.Connect(ctx); err != nil {
 		return errors.Wrap(err, "failed to call Connect on service")
