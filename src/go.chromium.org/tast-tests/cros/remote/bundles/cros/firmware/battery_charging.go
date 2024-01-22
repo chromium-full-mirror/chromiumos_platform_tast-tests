@@ -106,6 +106,22 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart powerd: ", err)
 	}
 
+	type connectTimeoutCheckAP struct {
+		err error
+	}
+	checkAPErr := connectTimeoutCheckAP{}
+
+	defer func() {
+		if checkAPErr.err != nil {
+			apPower, screenState, err := h.Servo.GetAPState(ctx)
+			if err != nil {
+				s.Error("Failed to get ap status: ", err)
+			} else {
+				s.Errorf("Found ap power state %s and screen state %s", apPower, screenState)
+			}
+		}
+	}()
+
 	for _, tc := range []struct {
 		plugAC     bool
 		wakeSource string
@@ -124,6 +140,9 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 		waitConnectShortCtx, cancelWaitConnectShort := context.WithTimeout(ctx, 5*time.Minute)
 		defer cancelWaitConnectShort()
 		if err := h.WaitConnect(waitConnectShortCtx); err != nil {
+			if errors.As(err, &context.DeadlineExceeded) {
+				checkAPErr.err = err
+			}
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
 
@@ -171,6 +190,9 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 				s.Log("Failed to query usb mux: ", err)
 			} else {
 				s.Logf("Detected USB=1 on port %s", port)
+			}
+			if h.RPM != nil {
+				s.Fatal("While determining charger state after using RPM: ", err)
 			}
 			s.Fatal("While determining charger state: ", err)
 		}
@@ -231,6 +253,9 @@ func BatteryCharging(ctx context.Context, s *testing.State) {
 		}
 
 		if err := waitConnectFromSuspend(ctx, h); err != nil {
+			if errors.As(err, &context.DeadlineExceeded) {
+				checkAPErr.err = err
+			}
 			s.Fatal("Failed to reconnect to DUT after waking DUT from suspend: ", err)
 		}
 
