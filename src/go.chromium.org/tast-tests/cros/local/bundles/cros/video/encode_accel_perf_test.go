@@ -14,6 +14,17 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
 )
 
+type videoTitle string
+
+const (
+	crowdRun      videoTitle = "crowd_run"
+	desktop2      videoTitle = "desktop2"
+	fallOut4      videoTitle = "fallout4"
+	gipsRecMotion videoTitle = "gipsrecmotion"
+	gipsReStat    videoTitle = "gipsrestat"
+	lifeOfPixel   videoTitle = "life_of_pixel"
+)
+
 func toCodecStr(profile videotype.CodecProfile) string {
 	switch profile {
 	case videotype.H264BaselineProf:
@@ -94,9 +105,9 @@ func encodePerfSoftwareDeps(profile videotype.CodecProfile, height int, vbr bool
 	return deps
 }
 
-func webMAndJSONFile(videoTitle string, height int) (string, string) {
-	webMFileNameTable := map[string]map[int]string{
-		"crowd_run": {
+func webMAndJSONFile(title videoTitle, height int) (string, string) {
+	webMFileNameTable := map[videoTitle]map[int]string{
+		crowdRun: {
 			180:  "encode/crowd_run-320x180_60frames.vp9.webm",
 			270:  "encode/crowd_run-480x270_60frames.vp9.webm",
 			360:  "encode/crowd_run-640x360_60frames.vp9.webm",
@@ -105,7 +116,7 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 			1080: "encode/crowd_run-1920x1080_60frames.vp9.webm",
 			2160: "encode/crowd_run-3840x2160_60frames.vp9.webm",
 		},
-		"desktop2": {
+		desktop2: {
 			180:  "encode/desktop2-320x180_850frames.vp9.webm",
 			270:  "encode/desktop2-480x270_850frames.vp9.webm",
 			360:  "encode/desktop2-640x360_850frames.vp9.webm",
@@ -114,12 +125,12 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 			1080: "encode/desktop2-1920x1080_490frames.vp9.webm",
 			2160: "encode/desktop2-3840x2160_170frames.vp9.webm",
 		},
-		"fallout4": {
+		fallOut4: {
 			720:  "encode/fallout4-1280x720_600frames.vp9.webm",
 			1080: "encode/fallout4-1920x1080_290frames.vp9.webm",
 			2160: "encode/fallout4-3840x2160_100frames.vp9.webm",
 		},
-		"gipsrecmotion": {
+		gipsRecMotion: {
 			180:  "encode/gipsrecmotion-320x180_850frames.vp9.webm",
 			270:  "encode/gipsrecmotion-480x270_850frames.vp9.webm",
 			360:  "encode/gipsrecmotion-640x360_850frames.vp9.webm",
@@ -128,7 +139,7 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 			1080: "encode/gipsrecmotion-1920x1080_430frames.vp9.webm",
 			2160: "encode/gipsrecmotion-3840x2160_140frames.vp9.webm",
 		},
-		"gipsrestat": {
+		gipsReStat: {
 			180:  "encode/gipsrestat-320x180_846frames.vp9.webm",
 			270:  "encode/gipsrestat-480x270_846frames.vp9.webm",
 			360:  "encode/gipsrestat-640x360_846frames.vp9.webm",
@@ -137,14 +148,14 @@ func webMAndJSONFile(videoTitle string, height int) (string, string) {
 			1080: "encode/gipsrestat-1920x1080_450frames.vp9.webm",
 			2160: "encode/gipsrestat-3840x2160_150frames.vp9.webm",
 		},
-		"life_of_pixel": {
+		lifeOfPixel: {
 			1080: "encode/life_of_pixel-1920x1080_600frames.vp9.webm",
 			2160: "encode/life_of_pixel-3840x2160_600frames.vp9.webm",
 		},
 	}
-	webMFileName, found := webMFileNameTable[videoTitle][height]
+	webMFileName, found := webMFileNameTable[title][height]
 	if !found {
-		panic(fmt.Sprintf("no webm file is found for %s:%d", videoTitle, height))
+		panic(fmt.Sprintf("no webm file is found for %s:%d", title, height))
 	}
 	webMJSONFileName := webMFileName + ".json"
 	return webMFileName, webMJSONFileName
@@ -174,19 +185,19 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		HardwareDeps string
 	}
 	type testPatterns struct {
-		title    string
+		title    videoTitle
 		testType string
 		heights  []int
 	}
 
 	basicHeights := []int{180, 270, 360, 540, 720, 1080, 2160}
 	testVideos := []testPatterns{
-		{"crowd_run", "encode.Speed", basicHeights},
-		{"desktop2", "encode.SpeedAndQuality", basicHeights},
-		{"fallout4", "encode.SpeedAndQuality", []int{720, 1080, 2160}},
-		{"gipsrecmotion", "encode.SpeedAndQuality", basicHeights},
-		{"gipsrestat", "encode.SpeedAndQuality", basicHeights},
-		{"life_of_pixel", "encode.SpeedAndQuality", []int{1080, 2160}},
+		{crowdRun, "encode.Speed", basicHeights},
+		{desktop2, "encode.SpeedAndQuality", basicHeights},
+		{fallOut4, "encode.SpeedAndQuality", []int{720, 1080, 2160}},
+		{gipsRecMotion, "encode.SpeedAndQuality", basicHeights},
+		{gipsReStat, "encode.SpeedAndQuality", basicHeights},
+		{lifeOfPixel, "encode.SpeedAndQuality", []int{1080, 2160}},
 	}
 
 	var params []encodeAccelPerfParam
@@ -216,22 +227,22 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 
 	//Temporal and spatial layer encoding.
 	for _, c := range [][]interface{}{
-		{videotype.H264BaselineProf, 720, "L1T2", "desktop2"},
-		{videotype.H264BaselineProf, 720, "L1T3", "desktop2"},
-		{videotype.VP9Prof, 540, "L1T2", "desktop2"},
-		{videotype.VP9Prof, 540, "L1T3", "desktop2"},
-		{videotype.VP9Prof, 540, "L2T3_KEY", "desktop2"},
-		{videotype.VP9Prof, 540, "L3T3_KEY", "desktop2"},
-		{videotype.VP9Prof, 540, "S2T3", "desktop2"},
-		{videotype.VP9Prof, 540, "S3T3", "desktop2"},
-		{videotype.VP9Prof, 720, "L1T2", "desktop2"},
-		{videotype.VP9Prof, 720, "L1T3", "desktop2"},
-		{videotype.VP9Prof, 720, "L2T3_KEY", "desktop2"},
-		{videotype.VP9Prof, 720, "L3T3_KEY", "desktop2"},
-		{videotype.VP9Prof, 720, "S2T3", "desktop2"},
-		{videotype.VP9Prof, 720, "S3T3", "desktop2"},
-		{videotype.VP8Prof, 1080, "L1T2", "life_of_pixel"},
-		{videotype.VP8Prof, 1080, "L1T3", "life_of_pixel"},
+		{videotype.H264BaselineProf, 720, "L1T2", desktop2},
+		{videotype.H264BaselineProf, 720, "L1T3", desktop2},
+		{videotype.VP9Prof, 540, "L1T2", desktop2},
+		{videotype.VP9Prof, 540, "L1T3", desktop2},
+		{videotype.VP9Prof, 540, "L2T3_KEY", desktop2},
+		{videotype.VP9Prof, 540, "L3T3_KEY", desktop2},
+		{videotype.VP9Prof, 540, "S2T3", desktop2},
+		{videotype.VP9Prof, 540, "S3T3", desktop2},
+		{videotype.VP9Prof, 720, "L1T2", desktop2},
+		{videotype.VP9Prof, 720, "L1T3", desktop2},
+		{videotype.VP9Prof, 720, "L2T3_KEY", desktop2},
+		{videotype.VP9Prof, 720, "L3T3_KEY", desktop2},
+		{videotype.VP9Prof, 720, "S2T3", desktop2},
+		{videotype.VP9Prof, 720, "S3T3", desktop2},
+		{videotype.VP8Prof, 1080, "L1T2", lifeOfPixel},
+		{videotype.VP8Prof, 1080, "L1T3", lifeOfPixel},
 	} {
 		profile := c[0].(videotype.CodecProfile)
 		height := c[1].(int)
@@ -242,10 +253,10 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			deps = append(deps, caps.HWEncodeVP9OddDimension)
 		}
 
-		videoTitle := c[3].(string)
-		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
+		title := c[3].(videoTitle)
+		webMFile, webMJSONFile := webMAndJSONFile(title, height)
 		param := encodeAccelPerfParam{
-			Name:         fmt.Sprintf("%s_%dp_%s_%s", toCodecStr(profile), height, strings.ToLower(svc), videoTitle),
+			Name:         fmt.Sprintf("%s_%dp_%s_%s", toCodecStr(profile), height, strings.ToLower(svc), title),
 			WebMName:     webMFile,
 			Profile:      toProfileStr(profile),
 			SVCMode:      svc,
@@ -261,11 +272,11 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 
 	// VBR encoding.
 	for _, height := range []int{720, 1080, 2160} {
-		videoTitle := "fallout4"
+		title := fallOut4
 		profile := videotype.H264BaselineProf
-		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
+		webMFile, webMJSONFile := webMAndJSONFile(title, height)
 		param := encodeAccelPerfParam{
-			Name:         fmt.Sprintf("%s_%dp_vbr_%s", toCodecStr(profile), height, videoTitle),
+			Name:         fmt.Sprintf("%s_%dp_vbr_%s", toCodecStr(profile), height, title),
 			WebMName:     webMFile,
 			Profile:      toProfileStr(profile),
 			BitrateMode:  "vbr",
@@ -279,13 +290,13 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 	}
 	// VBR encoding: H264 high profile and high bitrates.
 	for _, multiplier := range []int{1, 2, 4, 6, 8} {
-		videoTitle := "fallout4"
+		title := fallOut4
 		height := 1080
-		webMFile, webMJSONFile := webMAndJSONFile(videoTitle, height)
+		webMFile, webMJSONFile := webMAndJSONFile(title, height)
 		defaultBitrate := 2480 * 1000 * 2
 		profile := videotype.H264HighProf
 		param := encodeAccelPerfParam{
-			Name:         fmt.Sprintf("%s_%dp_x%d_vbr_%s", toCodecStr(profile), height, multiplier, videoTitle),
+			Name:         fmt.Sprintf("%s_%dp_x%d_vbr_%s", toCodecStr(profile), height, multiplier, title),
 			WebMName:     webMFile,
 			Profile:      toProfileStr(profile),
 			BitrateMode:  "vbr",
