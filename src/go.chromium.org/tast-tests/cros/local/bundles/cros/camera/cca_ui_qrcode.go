@@ -144,6 +144,9 @@ func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app 
 		if err := app.Click(ctx, testParams.copyButton.button); err != nil {
 			return errors.Wrap(err, "failed to click copy button")
 		}
+		if err := app.WaitForVisibleState(ctx, cca.Snackbar, true); err != nil {
+			return errors.Wrap(err, "failed to show snack bar")
+		}
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {

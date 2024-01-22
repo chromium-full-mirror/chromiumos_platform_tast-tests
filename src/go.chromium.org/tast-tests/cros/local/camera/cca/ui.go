@@ -154,6 +154,8 @@ const (
 	SettingsHeader UIComponentName = "settingsHeader"
 	// Shutter is a shutter button used to take a picture and start/stop a video.
 	Shutter UIComponentName = "shutter"
+	// Snackbar is a snackbar showing a label.
+	Snackbar UIComponentName = "snackbar"
 	// SwitchDeviceButton is the button for switching camera device.
 	SwitchDeviceButton UIComponentName = "switchDeviceButton"
 	// TiltDownButton is the button for tilting down preview.
