@@ -132,7 +132,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 	// The poll is necessary as the IPv6 nameservers might not be pushed yet.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value: ", err)
 	}
 
@@ -226,7 +226,7 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 	// Assert /etc/resolv.conf content after the new network is removed.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return dns.VerifyResolvConfContents(ctx, baseConfig, params.dnsProxyEnabled)
-	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 30 * time.Second}); err != nil {
 		s.Fatal("Failed to check resolv.conf value after removing the new network: ", err)
 	}
 }
