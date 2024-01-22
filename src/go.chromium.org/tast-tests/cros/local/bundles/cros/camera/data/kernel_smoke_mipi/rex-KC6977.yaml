@@ -68,10 +68,8 @@ remap_entity_by_name:
 - id: 148
   name: Intel IPU6 CSI2 BE capture
 - id: 298
-  name: hi556 13-0020
-- id: 338
   name: ov13b10 0-0036
-- id: 344
+- id: 338
   name: dw9714 0-000c
 media_ctl:
   info:
@@ -79,9 +77,9 @@ media_ctl:
     model: ipu6
     serial:
     bus_info: pci:pci0000:00
-    media_version: 393544
+    media_version: 393545
     hw_revision: 0
-    driver_version: 393544
+    driver_version: 393545
   entities:
   - desc:
       id: 1
@@ -116,9 +114,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -133,9 +131,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -169,7 +167,7 @@ media_ctl:
           index: 0
           flags: 1
           reserved: [0, 0]
-        flags: 1
+        flags: 0
         reserved: [0, 0]
       - sink:
           entity: 91
@@ -224,14 +222,14 @@ media_ctl:
       links: 0
     v4l_properties:
       fmt_video_capture_mplane:
-        width: 2592
-        height: 1944
+        width: 1
+        height: 1
         pixelformat: 540029273
         field: 1
         colorspace: 11
         plane_fmt:
-        - sizeimage: 6348480
-          bytesperline: 3264
+        - sizeimage: 1088
+          bytesperline: 64
         - sizeimage: 0
           bytesperline: 0
         - sizeimage: 0
@@ -2191,9 +2189,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -2210,12 +2208,12 @@ media_ctl:
         crop:
           left: 0
           top: 0
-          width: 2592
-          height: 1944
+          width: 4096
+          height: 3072
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -2226,15 +2224,15 @@ media_ctl:
           crop:
             left: 0
             top: 0
-            width: 2592
-            height: 1944
+            width: 4096
+            height: 3072
       links:
       - sink:
           entity: 85
           index: 0
           flags: 5
           reserved: [0, 0]
-        flags: 5
+        flags: 4
         reserved: [0, 0]
   - desc:
       id: 85
@@ -2247,14 +2245,14 @@ media_ctl:
       links: 0
     v4l_properties:
       fmt_video_capture_mplane:
-        width: 2592
-        height: 1944
-        pixelformat: 808534338
+        width: 1
+        height: 1
+        pixelformat: 540029273
         field: 1
         colorspace: 11
         plane_fmt:
-        - sizeimage: 10082880
-          bytesperline: 5184
+        - sizeimage: 1088
+          bytesperline: 64
         - sizeimage: 0
           bytesperline: 0
         - sizeimage: 0
@@ -3663,180 +3661,6 @@ media_ctl:
       links: []
   - desc:
       id: 298
-      name: hi556 13-0020
-      type: 131073
-      revision: 0
-      flags: 0
-      group_id: 0
-      pads: 1
-      links: 1
-    v4l_properties: {}
-    controls:
-    - desc:
-        id: 9963793
-        type: 1
-        name: Exposure
-        minimum: 6
-        maximum: 2066
-        step: 1
-        default_value: 2066
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 2066
-    - desc:
-        id: 10356993
-        type: 1
-        name: Vertical Blanking
-        minimum: 124
-        maximum: 30823
-        step: 1
-        default_value: 124
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 124
-    - desc:
-        id: 10356994
-        type: 1
-        name: Horizontal Blanking
-        minimum: 224
-        maximum: 224
-        step: 1
-        default_value: 224
-        flags: 4
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 224
-    - desc:
-        id: 10356995
-        type: 1
-        name: Analogue Gain
-        minimum: 0
-        maximum: 240
-        step: 1
-        default_value: 0
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 0
-    - desc:
-        id: 10422529
-        type: 9
-        name: Link Frequency
-        minimum: 0
-        maximum: 0
-        step: 1
-        default_value: 0
-        flags: 4
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 0
-    - desc:
-        id: 10422530
-        type: 5
-        name: Pixel Rate
-        minimum: 0
-        maximum: 174800000
-        step: 1
-        default_value: 174800000
-        flags: 4
-        elem_size: 8
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 174800000
-    - desc:
-        id: 10422531
-        type: 3
-        name: Test Pattern
-        minimum: 0
-        maximum: 8
-        step: 1
-        default_value: 0
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 0
-    - desc:
-        id: 10422533
-        type: 1
-        name: Digital Gain
-        minimum: 0
-        maximum: 2048
-        step: 1
-        default_value: 256
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 256
-    pads:
-    - desc:
-        entity: 298
-        index: 0
-        flags: 2
-        reserved: [0, 0]
-      subdev_properties:
-        crop:
-          left: 0
-          top: 0
-          width: 2592
-          height: 1944
-        fmt:
-          width: 2592
-          height: 1944
-          code: 12298
-          field: 1
-          colorspace: 0
-          ycbcr_enc: 0
-          quantization: 0
-          xfer_func: 0
-          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        selection:
-          crop:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-          crop_default:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-          crop_bounds:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-          native_size:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-      links:
-      - sink:
-          entity: 1
-          index: 0
-          flags: 5
-          reserved: [0, 0]
-        flags: 1
-        reserved: [0, 0]
-  - desc:
-      id: 338
       name: ov13b10 0-0036
       type: 131073
       revision: 0
@@ -3988,7 +3812,7 @@ media_ctl:
       - 4085
     pads:
     - desc:
-        entity: 338
+        entity: 298
         index: 0
         flags: 2
         reserved: [0, 0]
@@ -4012,7 +3836,7 @@ media_ctl:
         flags: 1
         reserved: [0, 0]
   - desc:
-      id: 344
+      id: 338
       name: dw9714 0-000c
       type: 131075
       revision: 0
@@ -4035,5 +3859,5 @@ media_ctl:
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 421
+      - 208
     pads: []

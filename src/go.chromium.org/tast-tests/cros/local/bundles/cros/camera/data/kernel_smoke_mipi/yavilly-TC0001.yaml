@@ -67,21 +67,19 @@ remap_entity_by_name:
   name: Intel IPU6 CSI2 BE
 - id: 148
   name: Intel IPU6 CSI2 BE capture
-- id: 298
-  name: hi556 13-0020
+- id: 332
+  name: ov8856 11-0036
 - id: 338
-  name: ov13b10 0-0036
-- id: 344
-  name: dw9714 0-000c
+  name: dw9714 11-000c
 media_ctl:
   info:
     driver: intel-ipu6-isys
     model: ipu6
     serial:
     bus_info: pci:pci0000:00
-    media_version: 393544
+    media_version: 331667
     hw_revision: 0
-    driver_version: 393544
+    driver_version: 331667
   entities:
   - desc:
       id: 1
@@ -116,9 +114,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -133,9 +131,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -169,7 +167,7 @@ media_ctl:
           index: 0
           flags: 1
           reserved: [0, 0]
-        flags: 1
+        flags: 0
         reserved: [0, 0]
       - sink:
           entity: 91
@@ -224,14 +222,14 @@ media_ctl:
       links: 0
     v4l_properties:
       fmt_video_capture_mplane:
-        width: 2592
-        height: 1944
+        width: 1
+        height: 1
         pixelformat: 540029273
         field: 1
         colorspace: 11
         plane_fmt:
-        - sizeimage: 6348480
-          bytesperline: 3264
+        - sizeimage: 1088
+          bytesperline: 64
         - sizeimage: 0
           bytesperline: 0
         - sizeimage: 0
@@ -354,9 +352,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 4096
-          height: 3072
-          code: 8202
+          width: 3280
+          height: 2464
+          code: 12298
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -371,9 +369,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 4096
-          height: 3072
-          code: 8202
+          width: 3280
+          height: 2464
+          code: 12298
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -400,7 +398,7 @@ media_ctl:
           index: 0
           flags: 1
           reserved: [0, 0]
-        flags: 0
+        flags: 1
         reserved: [0, 0]
       - sink:
           entity: 82
@@ -1068,9 +1066,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 4208
-          height: 3120
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -1085,9 +1083,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 4208
-          height: 3120
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -1114,7 +1112,7 @@ media_ctl:
           index: 0
           flags: 1
           reserved: [0, 0]
-        flags: 1
+        flags: 0
         reserved: [0, 0]
       - sink:
           entity: 82
@@ -2005,8 +2003,8 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 4208
-          height: 3120
+          width: 3280
+          height: 2464
           code: 12298
           field: 1
           colorspace: 0
@@ -2024,11 +2022,11 @@ media_ctl:
         crop:
           left: 0
           top: 0
-          width: 4208
-          height: 3120
+          width: 3296
+          height: 2464
         fmt:
-          width: 4208
-          height: 3120
+          width: 3296
+          height: 2464
           code: 12298
           field: 1
           colorspace: 0
@@ -2040,8 +2038,8 @@ media_ctl:
           crop:
             left: 0
             top: 0
-            width: 4208
-            height: 3120
+            width: 3296
+            height: 2464
       links:
       - sink:
           entity: 76
@@ -2061,14 +2059,14 @@ media_ctl:
       links: 0
     v4l_properties:
       fmt_video_capture_mplane:
-        width: 4208
-        height: 3120
+        width: 3296
+        height: 2464
         pixelformat: 808534338
         field: 1
         colorspace: 11
         plane_fmt:
-        - sizeimage: 27185152
-          bytesperline: 8704
+        - sizeimage: 16416768
+          bytesperline: 6656
         - sizeimage: 0
           bytesperline: 0
         - sizeimage: 0
@@ -2191,9 +2189,9 @@ media_ctl:
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -2210,12 +2208,12 @@ media_ctl:
         crop:
           left: 0
           top: 0
-          width: 2592
-          height: 1944
+          width: 4096
+          height: 3072
         fmt:
-          width: 2592
-          height: 1944
-          code: 12298
+          width: 4096
+          height: 3072
+          code: 8202
           field: 1
           colorspace: 0
           ycbcr_enc: 0
@@ -2226,15 +2224,15 @@ media_ctl:
           crop:
             left: 0
             top: 0
-            width: 2592
-            height: 1944
+            width: 4096
+            height: 3072
       links:
       - sink:
           entity: 85
           index: 0
           flags: 5
           reserved: [0, 0]
-        flags: 5
+        flags: 4
         reserved: [0, 0]
   - desc:
       id: 85
@@ -2247,14 +2245,14 @@ media_ctl:
       links: 0
     v4l_properties:
       fmt_video_capture_mplane:
-        width: 2592
-        height: 1944
-        pixelformat: 808534338
+        width: 1
+        height: 1
+        pixelformat: 540029273
         field: 1
         colorspace: 11
         plane_fmt:
-        - sizeimage: 10082880
-          bytesperline: 5184
+        - sizeimage: 1088
+          bytesperline: 64
         - sizeimage: 0
           bytesperline: 0
         - sizeimage: 0
@@ -3662,8 +3660,8 @@ media_ctl:
             height: 0
       links: []
   - desc:
-      id: 298
-      name: hi556 13-0020
+      id: 332
+      name: ov8856 11-0036
       type: 131073
       revision: 0
       flags: 0
@@ -3677,189 +3675,15 @@ media_ctl:
         type: 1
         name: Exposure
         minimum: 6
-        maximum: 2066
+        maximum: 2484
         step: 1
-        default_value: 2066
+        default_value: 2484
         flags: 0
         elem_size: 4
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 2066
-    - desc:
-        id: 10356993
-        type: 1
-        name: Vertical Blanking
-        minimum: 124
-        maximum: 30823
-        step: 1
-        default_value: 124
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 124
-    - desc:
-        id: 10356994
-        type: 1
-        name: Horizontal Blanking
-        minimum: 224
-        maximum: 224
-        step: 1
-        default_value: 224
-        flags: 4
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 224
-    - desc:
-        id: 10356995
-        type: 1
-        name: Analogue Gain
-        minimum: 0
-        maximum: 240
-        step: 1
-        default_value: 0
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 0
-    - desc:
-        id: 10422529
-        type: 9
-        name: Link Frequency
-        minimum: 0
-        maximum: 0
-        step: 1
-        default_value: 0
-        flags: 4
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 0
-    - desc:
-        id: 10422530
-        type: 5
-        name: Pixel Rate
-        minimum: 0
-        maximum: 174800000
-        step: 1
-        default_value: 174800000
-        flags: 4
-        elem_size: 8
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 174800000
-    - desc:
-        id: 10422531
-        type: 3
-        name: Test Pattern
-        minimum: 0
-        maximum: 8
-        step: 1
-        default_value: 0
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 0
-    - desc:
-        id: 10422533
-        type: 1
-        name: Digital Gain
-        minimum: 0
-        maximum: 2048
-        step: 1
-        default_value: 256
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 256
-    pads:
-    - desc:
-        entity: 298
-        index: 0
-        flags: 2
-        reserved: [0, 0]
-      subdev_properties:
-        crop:
-          left: 0
-          top: 0
-          width: 2592
-          height: 1944
-        fmt:
-          width: 2592
-          height: 1944
-          code: 12298
-          field: 1
-          colorspace: 0
-          ycbcr_enc: 0
-          quantization: 0
-          xfer_func: 0
-          reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        selection:
-          crop:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-          crop_default:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-          crop_bounds:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-          native_size:
-            left: 0
-            top: 0
-            width: 2592
-            height: 1944
-      links:
-      - sink:
-          entity: 1
-          index: 0
-          flags: 5
-          reserved: [0, 0]
-        flags: 1
-        reserved: [0, 0]
-  - desc:
-      id: 338
-      name: ov13b10 0-0036
-      type: 131073
-      revision: 0
-      flags: 0
-      group_id: 0
-      pads: 1
-      links: 1
-    v4l_properties: {}
-    controls:
-    - desc:
-        id: 9963793
-        type: 1
-        name: Exposure
-        minimum: 4
-        maximum: 3188
-        step: 1
-        default_value: 3188
-        flags: 0
-        elem_size: 4
-        reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-      values:
-      - 3175
+      - 2484
     - desc:
         id: 9963796
         type: 2
@@ -3873,7 +3697,7 @@ media_ctl:
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 1
+      - 0
     - desc:
         id: 9963797
         type: 2
@@ -3887,41 +3711,41 @@ media_ctl:
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 1
+      - 0
     - desc:
         id: 10356993
         type: 1
         name: Vertical Blanking
-        minimum: 76
-        maximum: 29647
+        minimum: 24
+        maximum: 30303
         step: 1
-        default_value: 76
+        default_value: 24
         flags: 0
         elem_size: 4
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 76
+      - 26
     - desc:
         id: 10356994
         type: 1
         name: Horizontal Blanking
-        minimum: 496
-        maximum: 496
+        minimum: 576
+        maximum: 576
         step: 1
-        default_value: 496
+        default_value: 576
         flags: 4
         elem_size: 4
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 496
+      - 576
     - desc:
         id: 10356995
         type: 1
         name: Analogue Gain
         minimum: 128
-        maximum: 1984
+        maximum: 2047
         step: 1
         default_value: 128
         flags: 0
@@ -3929,13 +3753,13 @@ media_ctl:
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 1982
+      - 1984
     - desc:
         id: 10422529
         type: 9
         name: Link Frequency
         minimum: 0
-        maximum: 0
+        maximum: 1
         step: 1
         default_value: 0
         flags: 4
@@ -3949,15 +3773,15 @@ media_ctl:
         type: 5
         name: Pixel Rate
         minimum: 0
-        maximum: 448000000
+        maximum: 288000000
         step: 1
-        default_value: 448000000
+        default_value: 288000000
         flags: 4
         elem_size: 8
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 448000000
+      - 288000000
     - desc:
         id: 10422531
         type: 3
@@ -3976,26 +3800,26 @@ media_ctl:
         id: 10422533
         type: 1
         name: Digital Gain
-        minimum: 1024
+        minimum: 0
         maximum: 4095
         step: 1
-        default_value: 2560
+        default_value: 1024
         flags: 0
         elem_size: 4
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 4085
+      - 3061
     pads:
     - desc:
-        entity: 338
+        entity: 332
         index: 0
         flags: 2
         reserved: [0, 0]
       subdev_properties:
         fmt:
-          width: 4208
-          height: 3120
+          width: 3280
+          height: 2464
           code: 12298
           field: 1
           colorspace: 0
@@ -4005,15 +3829,15 @@ media_ctl:
           reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       links:
       - sink:
-          entity: 37
+          entity: 10
           index: 0
           flags: 5
           reserved: [0, 0]
         flags: 1
         reserved: [0, 0]
   - desc:
-      id: 344
-      name: dw9714 0-000c
+      id: 338
+      name: dw9714 11-000c
       type: 131075
       revision: 0
       flags: 0
@@ -4035,5 +3859,5 @@ media_ctl:
         reserved: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
       values:
-      - 421
+      - 341
     pads: []
