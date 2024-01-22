@@ -35,7 +35,7 @@ func init() {
 		Params: []testing.Param{{
 			Name: "power_test_prep",
 			Val: power.ChargeParams{
-				MinChargePercentage:   30.0,
+				MinChargePercentage:   40.0,
 				MaxChargePercentage:   97.0,
 				DischargeOnCompletion: true,
 				IsCustomized:          false,
@@ -68,6 +68,76 @@ func init() {
 				IsCustomized:          true,
 				IsPowerQual:           false},
 			Timeout: 5 * time.Hour,
+		}, {
+			Name: "power_qual_prep_97_browsing",
+			Val: power.ChargeParams{
+				MinChargePercentage:   96.0,
+				MaxChargePercentage:   97.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
+		}, {
+			Name: "power_qual_prep_92_browsing_heavy",
+			Val: power.ChargeParams{
+				MinChargePercentage:   91.0,
+				MaxChargePercentage:   92.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
+		}, {
+			Name: "power_qual_prep_85_vpb_vp9",
+			Val: power.ChargeParams{
+				MinChargePercentage:   84.0,
+				MaxChargePercentage:   85.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
+		}, {
+			Name: "power_qual_prep_78_vpb_h264",
+			Val: power.ChargeParams{
+				MinChargePercentage:   77.0,
+				MaxChargePercentage:   78.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
+		}, {
+			Name: "power_qual_prep_70_vc",
+			Val: power.ChargeParams{
+				MinChargePercentage:   69.0,
+				MaxChargePercentage:   70.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
+		}, {
+			Name: "power_qual_prep_35_65_arc",
+			Val: power.ChargeParams{
+				MinChargePercentage:   35.0,
+				MaxChargePercentage:   65.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
+		}, {
+			Name: "power_qual_prep_30_40_informational",
+			Val: power.ChargeParams{
+				MinChargePercentage:   30.0,
+				MaxChargePercentage:   40.0,
+				DischargeOnCompletion: true,
+				IsCustomized:          false,
+				IsPowerQual:           false,
+			},
+			Timeout: 3 * time.Hour,
 		}},
 	})
 }
