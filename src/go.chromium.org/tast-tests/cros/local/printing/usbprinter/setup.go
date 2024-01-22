@@ -288,7 +288,7 @@ func Start(ctx context.Context, opts ...Option) (pr *Printer, err error) {
 	}
 
 	op := config{
-		args: []string{"-o0", "virtual-usb-printer"},
+		args: []string{"-o0", "/usr/local/bin/virtual-usb-printer.sh"},
 	}
 	for _, field := range opts {
 		if err := field(&op); err != nil {
