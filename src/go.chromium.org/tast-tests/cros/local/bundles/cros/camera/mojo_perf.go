@@ -13,6 +13,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/benchmark"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,6 +30,19 @@ func init() {
 }
 
 func MojoPerf(ctx context.Context, s *testing.State) {
+	// Stop the UI job. While this isn't required to run the test binary, it's
+	// possible a previous tests left tabs open or an animation is playing,
+	// influencing our performance results.
+	if err := upstart.StopJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to stop ui: ", err)
+	}
+	defer upstart.EnsureJobRunning(ctx, "ui")
+
+	// Reserve time for restarting the ui job at the end of the test.
+	const cleanupTime = 10 * time.Second
+	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
+	defer cancel()
+
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		s.Fatal("Failed to wait until CPU idle: ", err)
 	}
