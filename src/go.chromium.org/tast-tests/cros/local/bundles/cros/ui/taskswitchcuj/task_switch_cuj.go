@@ -406,6 +406,36 @@ func Run(ctx context.Context, s *testing.State) {
 			}
 		}
 
+		// Find the 'WebGL Aquarium' window and shifts focus to it.
+		w, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, "WebGL Aquarium")
+		if err != nil {
+			return errors.Wrap(err, "could not find window with matching title")
+		}
+		if err := w.ActivateWindow(ctx, tconn); err != nil {
+			return errors.Wrap(err, "failed to activate 'WebGL Aquarium' window")
+		}
+		// GoBigSleepLint: Wait a few seconds to let the page load.
+		// Wait a fixed amount of time to keep consistency among
+		// different devices.
+		if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep")
+		}
+		if err := uiauto.Retry(3, func(ctx context.Context) error {
+			// Test the tab connection and reconnect if needed. This is necessary for
+			// discarded tabs due to OOM issue.
+			isAlive, err := extraTab.IsAlive(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to check if extraTab is still alive")
+			}
+			if !isAlive {
+				if err := extraTab.Reconnect(ctx, br); err != nil {
+					return errors.Wrap(err, "cdp connection is invalid and failed to reconnect")
+				}
+			}
+			return nil
+		})(ctx); err != nil {
+			return errors.Wrap(err, "failed to check the extraTab connection and reconnect")
+		}
 		// Navigate away to record PageLoad.PaintTiming.NavigationToLargestContentfulPaint2.
 		if err := extraTab.Conn.Navigate(ctx, "chrome://version"); err != nil {
 			return errors.Wrap(err, "failed to navigate to chrome://version")

@@ -6,6 +6,7 @@ package cuj
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -114,4 +115,31 @@ func (t *TabConn) WaitForQuiescence(ctx context.Context, timeout time.Duration) 
 	} else {
 		testing.ContextLog(ctx, "Tab quiescence time: ", time.Now().Sub(start))
 	}
+}
+
+// Reconnect reconnects to the tab.
+func (t *TabConn) Reconnect(ctx context.Context, br *browser.Browser) error {
+	var err error
+	if t.Conn, err = br.NewConnForTarget(ctx, chrome.MatchTargetURL(t.URL)); err != nil {
+		return errors.Wrapf(err, "failed to reconnect to target %q", t.URL)
+	}
+
+	testing.ContextLogf(ctx, "Target (tab: [%s]) was successfully reconnected", t.URL)
+	return nil
+}
+
+// IsAlive checks if the tab connection is still alive.
+func (t *TabConn) IsAlive(ctx context.Context) (bool, error) {
+	var url string
+	err := t.Conn.Eval(ctx, "window.location.href", &url)
+	if err != nil {
+		re := regexp.MustCompile(`rpcc: the connection is closing: session: detach failed for session [0-9A-F]{32}: cdp.Target: DetachFromTarget: rpc error: No session with given id`)
+		if re.MatchString(err.Error()) {
+			testing.ContextLog(ctx, "Tab has been discarded/killed")
+			return false, nil
+		}
+		return false, err
+	}
+	testing.ContextLogf(ctx, "The connection is alive for %s", url)
+	return true, nil
 }
