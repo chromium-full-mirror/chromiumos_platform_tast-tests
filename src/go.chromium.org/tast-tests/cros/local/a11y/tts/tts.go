@@ -46,6 +46,51 @@ func GoogleTTSEnUsVoice() VoiceData {
 	}
 }
 
+// GoogleTTSEsEsVoice is a convenience method that returns VoiceData that
+// represents the es-ES voice for the Google text to speech engine.
+func GoogleTTSEsEsVoice() VoiceData {
+	return VoiceData{
+		ExtID:  GoogleTTSExtensionID,
+		Locale: "es-ES",
+	}
+}
+
+// GoogleTTSFrFrVoice is a convenience method that returns VoiceData that
+// represents the fr-FR voice for the Google text to speech engine.
+func GoogleTTSFrFrVoice() VoiceData {
+	return VoiceData{
+		ExtID:  GoogleTTSExtensionID,
+		Locale: "fr-FR",
+	}
+}
+
+// GoogleTTSHiInVoice is a convenience method that returns VoiceData that
+// represents the hi-IN voice for the Google text to speech engine.
+func GoogleTTSHiInVoice() VoiceData {
+	return VoiceData{
+		ExtID:  GoogleTTSExtensionID,
+		Locale: "hi-IN",
+	}
+}
+
+// GoogleTTSJaJpVoice is a convenience method that returns VoiceData that
+// represents the ja-JP voice for the Google text to speech engine.
+func GoogleTTSJaJpVoice() VoiceData {
+	return VoiceData{
+		ExtID:  GoogleTTSExtensionID,
+		Locale: "ja-JP",
+	}
+}
+
+// GoogleTTSNlNlVoice is a convenience method that returns VoiceData that
+// represents the nl-NL voice for the Google text to speech engine.
+func GoogleTTSNlNlVoice() VoiceData {
+	return VoiceData{
+		ExtID:  GoogleTTSExtensionID,
+		Locale: "nl-NL",
+	}
+}
+
 // EspeakElVoice is a convenience method that returns VoiceData that represents
 // the el (Greek) voice for the eSpeak text to speech engine. Note: eSpeak does
 // not come with an English voice built-in. We use Greek in many tests because
@@ -284,6 +329,7 @@ type SpeakOptions struct {
 	Lang  string  `json:"lang"`
 	Pitch float32 `json:"pitch"`
 	Rate  float32 `json:"rate"`
+	Name  string  `json:"voiceName"`
 }
 
 // UtteranceData defines the data included in a Text to Speech utterance.
@@ -293,7 +339,7 @@ type UtteranceData struct {
 }
 
 func (ud UtteranceData) String() string {
-	return fmt.Sprintf("'%s' (lang: %s, rate: %.2f, pitch: %.2f)", ud.Utterance, ud.Options.Lang, ud.Options.Rate, ud.Options.Pitch)
+	return fmt.Sprintf("'%s' (lang: %s, rate: %.2f, pitch: %.2f, voiceName: %s)", ud.Utterance, ud.Options.Lang, ud.Options.Rate, ud.Options.Pitch, ud.Options.Name)
 }
 
 // SpeechExpectation defines an interface for a speech expectation.
@@ -314,7 +360,7 @@ type StringExpectation struct {
 }
 
 // OptionsExpectation represents data for a speech expectation, where |expectation|
-// is a string and expectedOptions is a SpeakOptions object with pitch, rate and lang.
+// is a string and expectedOptions is a SpeakOptions object with pitch, rate, lang, and voice name.
 type OptionsExpectation struct {
 	expectation     string
 	expectedOptions SpeakOptions
@@ -340,19 +386,23 @@ func (se StringExpectation) matches(utteranceData UtteranceData) error {
 func (oe OptionsExpectation) matches(utteranceData UtteranceData) error {
 	var errs []string
 	if oe.expectation != utteranceData.Utterance {
-		errs = append(errs, fmt.Sprintf("expected utterance: %s does not match utterance: %s", oe.expectation, utteranceData.Utterance))
+		errs = append(errs, fmt.Sprintf("expected utterance: %v does not match utterance: %v", oe.expectation, utteranceData.Utterance))
 	}
 
-	if oe.expectedOptions.Lang != utteranceData.Options.Lang {
-		errs = append(errs, fmt.Sprintf("expected lang: %s does not match lang: %s", oe.expectedOptions.Lang, utteranceData.Options.Lang))
+	if oe.expectedOptions.Lang != "" && oe.expectedOptions.Lang != utteranceData.Options.Lang {
+		errs = append(errs, fmt.Sprintf("expected lang: %v does not match lang: %v", oe.expectedOptions.Lang, utteranceData.Options.Lang))
 	}
 
-	if oe.expectedOptions.Pitch != utteranceData.Options.Pitch {
+	if oe.expectedOptions.Pitch != 0 && oe.expectedOptions.Pitch != utteranceData.Options.Pitch {
 		errs = append(errs, fmt.Sprintf("expected pitch: %.2f does not match pitch: %.2f", oe.expectedOptions.Pitch, utteranceData.Options.Pitch))
 	}
 
-	if oe.expectedOptions.Rate != utteranceData.Options.Rate {
+	if oe.expectedOptions.Rate != 0 && oe.expectedOptions.Rate != utteranceData.Options.Rate {
 		errs = append(errs, fmt.Sprintf("expected rate: %.2f does not match rate: %.2f", oe.expectedOptions.Rate, utteranceData.Options.Rate))
+	}
+
+	if oe.expectedOptions.Name != "" && oe.expectedOptions.Name != utteranceData.Options.Name {
+		errs = append(errs, fmt.Sprintf("expected voice name: %v does not match voice name: %v", oe.expectedOptions.Name, utteranceData.Options.Name))
 	}
 
 	if len(errs) > 0 {
@@ -363,7 +413,7 @@ func (oe OptionsExpectation) matches(utteranceData UtteranceData) error {
 }
 
 func (oe OptionsExpectation) String() string {
-	return fmt.Sprintf("'%s' (lang: %s, rate: %.2f, pitch: %.2f)", oe.expectation, oe.expectedOptions.Lang, oe.expectedOptions.Pitch, oe.expectedOptions.Rate)
+	return fmt.Sprintf("'%s' (lang: %s, rate: %.2f, pitch: %.2f, voiceName: %s)", oe.expectation, oe.expectedOptions.Lang, oe.expectedOptions.Pitch, oe.expectedOptions.Rate, oe.expectedOptions.Name)
 }
 
 // NewRegexExpectation is a convenience method for creating a RegexExpectation
@@ -381,7 +431,13 @@ func NewStringExpectation(expectation string) StringExpectation {
 // NewOptionsExpectation is a convenience method for creating an OptionsExpectation
 // object.
 func NewOptionsExpectation(utterance, lang string, pitch, rate float32) OptionsExpectation {
-	return OptionsExpectation{utterance, SpeakOptions{lang, pitch, rate}}
+	return OptionsExpectation{utterance, SpeakOptions{Lang: lang, Pitch: pitch, Rate: rate}}
+}
+
+// NewOptionsVoiceExpectation is a convenience method for creating an
+// OptionsExpectation object with voice-related parameters.
+func NewOptionsVoiceExpectation(utterance, lang, voiceName string) OptionsExpectation {
+	return OptionsExpectation{utterance, SpeakOptions{Lang: lang, Name: voiceName}}
 }
 
 // Consume ensures that the expectations were spoken by the TTS engine. It also
