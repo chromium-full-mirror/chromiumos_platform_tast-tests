@@ -170,10 +170,11 @@ func Idle(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to maximize the browser window: ", err)
 	}
 
-	r := power.NewRecorder(ctx, idleTimeParams.Interval, s.OutDir(), s.TestName())
-	defer r.Close(cleanupCtx)
-
 	var params = s.Param().(power.IdleParams)
+	var interval = s.Param().(power.IdleParams).IdleTimeParams.Interval
+
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	defer r.Close(cleanupCtx)
 
 	s.Logf("Display is on %t, BT is on %t", params.DisplayPower, params.BluetoothPower)
 	if params.DisplayPower {
