@@ -134,22 +134,35 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 		if err != nil {
 			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
 		}
-		// Read the power metrics from the test power_log json file.
-		average, err := readPowerMetrics(path.Join(testsDir, dir, "power_log.json"))
+		outputDir := path.Join(testsDir, dir)
+		files, err := os.ReadDir(outputDir)
 		if err != nil {
-			return errors.Wrapf(err, "failed to read power metrics for test %s", t)
+			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
 		}
-		r.testPowers[t] = &result.Power{Average: result.Average{
-			MinutesBatteryLife:       average[power.MinutesBatteryLifeKey].(float64),
-			MinutesBatteryLifeTested: average[power.MinutesBatteryLifeTestedKey].(float64),
-		}}
-		// Record other average values.
-		for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
-			if value, ok := average[key]; ok {
-				r.otherInfo[key] = value
+		for _, f := range files {
+			// Since there are more than 1 power log json files, read power metrics from a specific file.
+			if f.IsDir() || !strings.HasPrefix(f.Name(), "power_log") || !strings.HasSuffix(f.Name(), "json") {
+				continue
 			}
+			average, err := readPowerMetrics(path.Join(outputDir, f.Name()))
+			if err != nil {
+				return errors.Wrapf(err, "failed to read power metrics for test %s", t)
+			}
+			if _, ok := average[power.MinutesBatteryLifeKey]; !ok {
+				continue
+			}
+			r.testPowers[t] = &result.Power{Average: result.Average{
+				MinutesBatteryLife:       average[power.MinutesBatteryLifeKey].(float64),
+				MinutesBatteryLifeTested: average[power.MinutesBatteryLifeTestedKey].(float64),
+			}}
+			// Record other average values.
+			for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
+				if value, ok := average[key]; ok {
+					r.otherInfo[key] = value
+				}
+			}
+			break
 		}
-
 	}
 	return nil
 }
