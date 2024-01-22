@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/exp/slices"
+
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 
@@ -25,6 +27,46 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+// sortingKey returns the key to sort a USB device. It is a 1D (flattened)
+// representation of the fields.
+//
+// The following fields are ignored because healthd does not report them.
+//   - BusNumber
+//   - DevNumber
+func sortingKey(d usbutil.Device) []string {
+	fields := []string{
+		d.VendorID,
+		d.ProdID,
+		d.VendorName,
+		d.ProductName,
+		d.Class,
+		d.SubClass,
+		d.Protocol,
+	}
+	for _, ifc := range d.Interfaces {
+		dr := "(none)"
+		if ifc.Driver != nil {
+			dr = *ifc.Driver
+		}
+		fields = append(
+			fields,
+			string(ifc.InterfaceNumber),
+			ifc.Class,
+			ifc.SubClass,
+			ifc.Protocol,
+			dr,
+		)
+	}
+	version := "null"
+	versionFormat := "null"
+	if d.FwupdFirmwareVersionInfo != nil {
+		version = d.FwupdFirmwareVersionInfo.Version
+		versionFormat = d.FwupdFirmwareVersionInfo.VersionFormat
+	}
+	fields = append(fields, version, versionFormat)
+	return fields
+}
 
 type busInfoTestParams struct {
 	// Whether to check thunderbolt devices.
@@ -269,12 +311,13 @@ func validateUSBDevices(ctx context.Context, devs []types.BusDevice) error {
 		}
 		got = append(got, udOut)
 	}
-	usbutil.Sort(got)
 	exp, err := usbutil.AttachedDevices(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get expected devices")
 	}
-	if d := cmp.Diff(exp, got, cmpopts.IgnoreFields(usbutil.Device{}, "BusNumber", "DevNumber")); d != "" {
+	if d := cmp.Diff(exp, got, cmpopts.SortSlices(func(d1, d2 usbutil.Device) bool {
+		return slices.Compare(sortingKey(d1), sortingKey(d2)) < 0
+	}), cmpopts.IgnoreFields(usbutil.Device{}, "BusNumber", "DevNumber")); d != "" {
 		return errors.Errorf("unexpected USB device data, (-expected + got): %s", d)
 	}
 	return nil

@@ -287,46 +287,6 @@ func TestAttachedDevices(t *testing.T) {
 	}
 	e := []Device{
 		Device{
-			VendorID:    "0bda",
-			ProdID:      "8153",
-			VendorName:  "Realtek Semiconductor Corp.",
-			ProductName: "UNITEK Y-3470B",
-			Class:       "00",
-			SubClass:    "00",
-			Protocol:    "00",
-			Interfaces: []Interface{
-				Interface{
-					InterfaceNumber: 0,
-					Class:           "ff",
-					SubClass:        "ff",
-					Protocol:        "00",
-					Driver:          ptr("r8152"),
-				},
-			},
-			BusNumber: "05",
-			DevNumber: "2",
-		},
-		Device{
-			VendorID:    "0bda",
-			ProdID:      "8153",
-			VendorName:  "Realtek Semiconductor Corp.",
-			ProductName: "USB 10/100/1000 LAN",
-			Class:       "00",
-			SubClass:    "00",
-			Protocol:    "00",
-			Interfaces: []Interface{
-				Interface{
-					InterfaceNumber: 0,
-					Class:           "ff",
-					SubClass:        "ff",
-					Protocol:        "00",
-					Driver:          ptr("r8152"),
-				},
-			},
-			BusNumber: "04",
-			DevNumber: "1",
-		},
-		Device{
 			VendorID:    "1a2b",
 			ProdID:      "3c4d",
 			VendorName:  "Linux Foundation",
@@ -423,6 +383,46 @@ func TestAttachedDevices(t *testing.T) {
 			},
 			BusNumber: "03",
 			DevNumber: "4",
+		},
+		Device{
+			VendorID:    "0bda",
+			ProdID:      "8153",
+			VendorName:  "Realtek Semiconductor Corp.",
+			ProductName: "USB 10/100/1000 LAN",
+			Class:       "00",
+			SubClass:    "00",
+			Protocol:    "00",
+			Interfaces: []Interface{
+				Interface{
+					InterfaceNumber: 0,
+					Class:           "ff",
+					SubClass:        "ff",
+					Protocol:        "00",
+					Driver:          ptr("r8152"),
+				},
+			},
+			BusNumber: "04",
+			DevNumber: "1",
+		},
+		Device{
+			VendorID:    "0bda",
+			ProdID:      "8153",
+			VendorName:  "Realtek Semiconductor Corp.",
+			ProductName: "UNITEK Y-3470B",
+			Class:       "00",
+			SubClass:    "00",
+			Protocol:    "00",
+			Interfaces: []Interface{
+				Interface{
+					InterfaceNumber: 0,
+					Class:           "ff",
+					SubClass:        "ff",
+					Protocol:        "00",
+					Driver:          ptr("r8152"),
+				},
+			},
+			BusNumber: "05",
+			DevNumber: "2",
 		},
 		Device{
 			VendorID:    "2a2b",

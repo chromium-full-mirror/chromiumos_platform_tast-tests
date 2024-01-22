@@ -13,7 +13,6 @@ import (
 	"io/ioutil"
 	"os"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -276,7 +275,7 @@ func deviceFirmwareVersion(fwupdDevices []fwupdDevice, vendorID, prodID, serial 
 	return nil
 }
 
-// AttachedDevices returns attached USB devices, sorted by the fields of Device.
+// AttachedDevices returns attached USB devices.
 func AttachedDevices(ctx context.Context) ([]Device, error) {
 	fwupdDevices, err := pollForFwupdDevices(ctx)
 	if err != nil {
@@ -368,62 +367,7 @@ func AttachedDevices(ctx context.Context) ([]Device, error) {
 		r.FwupdFirmwareVersionInfo = deviceFirmwareVersion(fwupdDevices, r.VendorID, r.ProdID, serial)
 		res = append(res, r)
 	}
-	Sort(res)
 	return res, nil
-}
-
-// key returns the key to sort a device. It is fields join by '$'.
-func (d *Device) key() string {
-	const splitter = "$"
-	fields := []string{
-		d.VendorID,
-		d.ProdID,
-		d.VendorName,
-		d.ProductName,
-		d.Class,
-		d.SubClass,
-		d.Protocol,
-		d.BusNumber,
-		d.DevNumber,
-	}
-	s := strings.Join(fields, splitter)
-	for _, ifc := range d.Interfaces {
-		dr := "(none)"
-		if ifc.Driver != nil {
-			dr = *ifc.Driver
-		}
-		fields = []string{
-			s,
-			string(ifc.InterfaceNumber),
-			ifc.Class,
-			ifc.SubClass,
-			ifc.Protocol,
-			dr,
-		}
-		s = strings.Join(fields, splitter)
-	}
-	version := "null"
-	versionFormat := "null"
-	if d.FwupdFirmwareVersionInfo != nil {
-		version = d.FwupdFirmwareVersionInfo.Version
-		versionFormat = d.FwupdFirmwareVersionInfo.VersionFormat
-	}
-	fields = []string{
-		s,
-		version,
-		versionFormat,
-	}
-	s = strings.Join(fields, splitter)
-	return s
-}
-
-// Sort sorts a slice of Devices.
-func Sort(d []Device) {
-	sort.Slice(d, func(i, j int) bool {
-		x := d[i]
-		y := d[j]
-		return x.key() < y.key()
-	})
 }
 
 // RemovableDevices returns the all mounted removable devices connected to DUT.
