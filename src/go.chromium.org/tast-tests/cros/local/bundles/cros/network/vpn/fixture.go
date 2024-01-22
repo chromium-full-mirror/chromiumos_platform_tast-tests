@@ -243,6 +243,12 @@ func (f *vpnFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := f.startLogSaver(ctx); err != nil {
 		s.Error("Failed to start log saver: ", err)
 	}
+
+	if f.useARC {
+		if err := f.a.ResetOutDir(ctx, s.OutDir()); err != nil {
+			s.Error("Failed to to reset outDir field of ARC object: ", err)
+		}
+	}
 }
 
 func (f *vpnFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
@@ -252,6 +258,12 @@ func (f *vpnFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	f.hasError = s.HasError()
 	if err := f.stopLogSaver(ctx, "net.log"); err != nil {
 		s.Error("Failed to stop log saver: ", err)
+	}
+
+	if f.useARC {
+		if err := f.a.SaveLogFiles(ctx); err != nil {
+			s.Error("Failed to to save ARC-related log files: ", err)
+		}
 	}
 }
 
@@ -270,6 +282,12 @@ func (f *vpnFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 	if f.useCert {
 		if err := f.certStore.Cleanup(ctx); err != nil {
 			s.Error("Failed to clean up cert store: ", err)
+		}
+	}
+
+	if f.useARC {
+		if err := f.a.Close(ctx); err != nil {
+			s.Error("Failed to close ARC: ", err)
 		}
 	}
 
