@@ -122,13 +122,13 @@ func DHCPRenew(ctx context.Context, s *testing.State) {
 		dhcp.OptionMap{}, dhcp.FieldMap{}, false /*shouldRespond*/, "")
 	discoveryRule.SetIsFinalHandler(true)
 
-	// The time values here are not accurate, so we allow +1/-1 delta in the
-	// verification.
+	// The time values here are not accurate (the leaseStartTime is a late
+	// estimate of the real time), so we allow +1/-2 delta in the verification.
 	leaseStartTime := time.Now()
 	t1 := leaseStartTime.Add(leaseT1Seconds * time.Second)
-	t1Rule.SetTargetTime(t1.Add(-1*time.Second), t1.Add(time.Second))
+	t1Rule.SetTargetTime(t1.Add(-2*time.Second), t1.Add(time.Second))
 	t2 := leaseStartTime.Add(leaseT2Seconds * time.Second)
-	t2Rule.SetTargetTime(t2.Add(-1*time.Second), t2.Add(time.Second))
+	t2Rule.SetTargetTime(t2.Add(-2*time.Second), t2.Add(time.Second))
 
 	if _, errs := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*t1Rule, *t2Rule, *discoveryRule}, func(ctx context.Context) error {
 		pw, err := svc.CreateWatcher(ctx)
