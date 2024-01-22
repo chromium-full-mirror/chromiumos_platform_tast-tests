@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -89,8 +90,9 @@ func init() {
 }
 
 type playBillingFixture struct {
-	wm     *webapk.Manager
-	pwaDir string
+	arcDevice *arc.ARC
+	wm        *webapk.Manager
+	pwaDir    string
 }
 
 // The FixtData object is made available to users of this fixture via:
@@ -105,11 +107,11 @@ type FixtData struct {
 }
 
 func (f *playBillingFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
-	arcDevice := s.ParentValue().(*arc.PreData).ARC
+	f.arcDevice = s.ParentValue().(*arc.PreData).ARC
 	cr := s.ParentValue().(*arc.PreData).Chrome
 	uiDevice := s.ParentValue().(*arc.PreData).UIDevice
 
-	wm, err := webapk.NewManager(ctx, cr, cr.Browser(), arcDevice, s, playBillingWebApk)
+	wm, err := webapk.NewManager(ctx, cr, cr.Browser(), f.arcDevice, s, playBillingWebApk)
 	if err != nil {
 		s.Fatal("Failed to create WebAPK Manager: ", err)
 	}
@@ -146,7 +148,7 @@ func (f *playBillingFixture) SetUp(ctx context.Context, s *testing.FixtState) in
 		s.Fatal("Failed to start PWA server: ", err)
 	})
 
-	testApp := NewTestApp(ctx, arcDevice, uiDevice, wm)
+	testApp := NewTestApp(ctx, f.arcDevice, uiDevice, wm)
 
 	return &FixtData{cr, testApp}
 }
@@ -160,6 +162,22 @@ func (f *playBillingFixture) PreTest(ctx context.Context, s *testing.FixtTestSta
 	// Install the test APK.
 	if err := f.wm.InstallApk(ctx); err != nil {
 		s.Fatal("Failed to install the APK: ", err)
+	}
+
+	// Enable link capturing on the ARC side. Automatically verifying the link
+	// (as per https://developer.android.com/training/app-links/verify-site-associations)
+	// is difficult in a test environment, so this is a shortcut which has the
+	// same visible impact.
+	// PackageManager commands for preferring links change across Android versions.
+	version, err := arc.SDKVersion()
+	if err != nil {
+		s.Fatal("Failed to get ARC version: ", err)
+	}
+
+	if version >= arc.SDKT {
+		if err := f.arcDevice.Command(ctx, "pm", "set-app-links", "--package", "tast.play_billing", "2", "all").Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to set Android link capturing setting: ", err)
+		}
 	}
 }
 
