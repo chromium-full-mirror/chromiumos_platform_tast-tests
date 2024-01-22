@@ -1,0 +1,5 @@
+{
+  "sha256sum": "9bcfeb145b646ec9d5aba202b5dc37995463f62f3540ed424a64027f709bbc1c",
+  "size": 13173344,
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/encode/life_of_process-1920x1080_600frames_20240123.vp9.webm"
+}

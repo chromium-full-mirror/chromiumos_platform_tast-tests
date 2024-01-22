@@ -78,6 +78,9 @@ var md5OfYUV60Frames = map[string]string{
 
 	"encode/life_of_pixel-1920x1080_600frames.vp9.webm": "60a797f607ee18622e61e1090494c428",
 	"encode/life_of_pixel-3840x2160_600frames.vp9.webm": "d78016bf96a0ee143d76e48e646249bd",
+
+	"encode/life_of_process-1920x1080_600frames.vp9.webm": "12575c805342bdf5dc0460ef4ba11e8b",
+	"encode/sc_web_browsing-1920x1080_300frames.vp9.webm": "ad2aa79912bd777cefd394948f3b5e2d",
 }
 
 // AccelPerfTestType denotes the tests to be run with video_encode_accelerator_perf_tests.
@@ -92,6 +95,16 @@ const (
 	Speed AccelPerfTestType = (1 << 1)
 	// SpeedAndQuality runs the speed and quality performance tests.
 	SpeedAndQuality AccelPerfTestType = Quality | Speed
+)
+
+// ContentType represents the content type of a video
+type ContentType int
+
+const (
+	// Camera denotes the content of a video is one produced by camera.
+	Camera ContentType = iota
+	// Display denotes the content of a video is one produced by display.
+	Display ContentType = iota
 )
 
 // TestOptions is the options for runAccelVideoTest.
@@ -116,6 +129,9 @@ type TestOptions struct {
 
 	// Encode bitrate.
 	Bitrate int
+
+	// Content type
+	Content ContentType
 }
 
 func webMJSONFileNameFor(webMFileName string) string {
@@ -337,6 +353,12 @@ func RunAccelVideoPerfTest(ctx context.Context, s *testing.State, opts TestOptio
 	}
 	if opts.Bitrate > 0 {
 		testArgs = append(testArgs, fmt.Sprintf("--bitrate=%d", opts.Bitrate))
+	}
+	switch opts.Content {
+	case Camera:
+		testArgs = append(testArgs, fmt.Sprintf("--content_type=camera"))
+	case Display:
+		testArgs = append(testArgs, fmt.Sprintf("--content_type=display"))
 	}
 
 	p := perf.NewValues()

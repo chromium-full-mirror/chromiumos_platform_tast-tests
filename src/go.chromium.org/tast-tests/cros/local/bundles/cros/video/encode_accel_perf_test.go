@@ -23,6 +23,8 @@ const (
 	gipsRecMotion videoTitle = "gipsrecmotion"
 	gipsReStat    videoTitle = "gipsrestat"
 	lifeOfPixel   videoTitle = "life_of_pixel"
+	lifeOfProcess videoTitle = "life_of_process"
+	scWebBrowsing videoTitle = "sc_web_browsing"
 )
 
 func toCodecStr(profile videotype.CodecProfile) string {
@@ -152,6 +154,12 @@ func webMAndJSONFile(title videoTitle, height int) (string, string) {
 			1080: "encode/life_of_pixel-1920x1080_600frames.vp9.webm",
 			2160: "encode/life_of_pixel-3840x2160_600frames.vp9.webm",
 		},
+		lifeOfProcess: {
+			1080: "encode/life_of_process-1920x1080_600frames.vp9.webm",
+		},
+		scWebBrowsing: {
+			1080: "encode/sc_web_browsing-1920x1080_300frames.vp9.webm",
+		},
 	}
 	webMFileName, found := webMFileNameTable[title][height]
 	if !found {
@@ -178,6 +186,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		Profile      string
 		BitrateMode  string
 		Bitrate      int
+		Content      string
 		SVCMode      string
 		Attr         []string
 		Data         []string
@@ -198,6 +207,8 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		{gipsRecMotion, "encode.SpeedAndQuality", basicHeights},
 		{gipsReStat, "encode.SpeedAndQuality", basicHeights},
 		{lifeOfPixel, "encode.SpeedAndQuality", []int{1080, 2160}},
+		{lifeOfProcess, "encode.SpeedAndQuality", []int{1080}},
+		{scWebBrowsing, "encode.SpeedAndQuality", []int{1080}},
 	}
 
 	var params []encodeAccelPerfParam
@@ -215,6 +226,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 					Profile:      toProfileStr(profile),
 					BitrateMode:  "cbr",
 					TestType:     testVideo.testType,
+					Content:      "encode.Camera",
 					Attr:         []string{"graphics_perbuild"},
 					Data:         []string{webMFile, webMJSONFile},
 					SoftwareDeps: encodePerfSoftwareDeps(profile, height, false),
@@ -222,6 +234,31 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 				}
 				params = append(params, param)
 			}
+		}
+	}
+
+	// Screen sharing: 1080p
+	for _, title := range []videoTitle{
+		lifeOfPixel,
+		lifeOfProcess,
+		scWebBrowsing,
+	} {
+		for _, profile := range []videotype.CodecProfile{videotype.VP8Prof, videotype.VP9Prof, videotype.AV1MainProf} {
+			height := 1080
+			webMFile, webMJSONFile := webMAndJSONFile(title, height)
+			param := encodeAccelPerfParam{
+				Name:         fmt.Sprintf("%s_%dp_%s_display", toCodecStr(profile), height, title),
+				WebMName:     webMFile,
+				Profile:      toProfileStr(profile),
+				BitrateMode:  "cbr",
+				Content:      "encode.Display",
+				TestType:     "encode.SpeedAndQuality",
+				Attr:         []string{"graphics_perbuild"},
+				Data:         []string{webMFile, webMJSONFile},
+				SoftwareDeps: encodePerfSoftwareDeps(profile, height, false),
+				HardwareDeps: hardwareDeps(height),
+			}
+			params = append(params, param)
 		}
 	}
 
@@ -243,6 +280,10 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		{videotype.VP9Prof, 720, "S3T3", desktop2},
 		{videotype.VP8Prof, 1080, "L1T2", lifeOfPixel},
 		{videotype.VP8Prof, 1080, "L1T3", lifeOfPixel},
+		{videotype.VP8Prof, 1080, "L1T2", lifeOfProcess},
+		{videotype.VP8Prof, 1080, "L1T3", lifeOfProcess},
+		{videotype.VP8Prof, 1080, "L1T2", scWebBrowsing},
+		{videotype.VP8Prof, 1080, "L1T3", scWebBrowsing},
 	} {
 		profile := c[0].(videotype.CodecProfile)
 		height := c[1].(int)
@@ -261,6 +302,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			Profile:      toProfileStr(profile),
 			SVCMode:      svc,
 			BitrateMode:  "cbr",
+			Content:      "encode.Camera",
 			TestType:     "encode.SpeedAndQuality",
 			Attr:         []string{"graphics_perbuild"},
 			Data:         []string{webMFile, webMJSONFile},
@@ -280,6 +322,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			WebMName:     webMFile,
 			Profile:      toProfileStr(profile),
 			BitrateMode:  "vbr",
+			Content:      "encode.Camera",
 			TestType:     "encode.Quality",
 			Attr:         []string{"graphics_perbuild"},
 			Data:         []string{webMFile, webMJSONFile},
@@ -301,6 +344,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 			Profile:      toProfileStr(profile),
 			BitrateMode:  "vbr",
 			Bitrate:      defaultBitrate * multiplier,
+			Content:      "encode.Camera",
 			TestType:     "encode.Quality",
 			Attr:         []string{"graphics_weekly"},
 			Data:         []string{webMFile, webMJSONFile},
@@ -323,6 +367,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
             {{ if .Bitrate }}
             Bitrate : {{ .Bitrate | fmt}},
             {{ end }}
+            Content: {{ .Content }},
             },
             ExtraAttr: {{ .Attr | fmt}},
             ExtraData: {{ .Data | fmt}},
