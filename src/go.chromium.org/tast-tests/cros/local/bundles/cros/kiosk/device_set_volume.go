@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"time"
 
+	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
+
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
@@ -20,8 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
-
-	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
 )
 
 func init() {

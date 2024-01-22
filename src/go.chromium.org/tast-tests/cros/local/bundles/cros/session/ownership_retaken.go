@@ -14,7 +14,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
+	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
+
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"

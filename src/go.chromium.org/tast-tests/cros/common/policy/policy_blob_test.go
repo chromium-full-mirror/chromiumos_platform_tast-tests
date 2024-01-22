@@ -11,7 +11,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
+	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 )
 
 func TestMarshalAndUnmarshalBlob(t *testing.T) {

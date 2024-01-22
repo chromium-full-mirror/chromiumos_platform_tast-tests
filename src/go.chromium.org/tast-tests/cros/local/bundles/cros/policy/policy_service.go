@@ -19,7 +19,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/proto"
 
-	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
+	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"

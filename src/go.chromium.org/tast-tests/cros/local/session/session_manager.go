@@ -12,7 +12,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/policy/chromium/policy/enterprise_management_proto"
+	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 	lm "chromiumos/system_api/login_manager_proto"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"

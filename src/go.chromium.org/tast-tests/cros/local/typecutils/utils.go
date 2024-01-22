@@ -17,7 +17,8 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	"chromiumos/policy/chromium/policy/enterprise_management_proto"
+	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
+
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"

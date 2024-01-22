@@ -10,7 +10,7 @@ import (
 
 	"github.com/gogo/protobuf/proto"
 
-	empb "chromiumos/policy/chromium/policy/enterprise_management_proto"
+	empb "go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 )
 
 func TestMessageEqual(t *testing.T) {

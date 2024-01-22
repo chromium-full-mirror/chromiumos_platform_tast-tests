@@ -9,7 +9,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	"chromiumos/policy/chromium/policy/enterprise_management_proto"
+	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/session"
