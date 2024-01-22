@@ -90,11 +90,11 @@ func init() {
 
 // Value allows tests to obtain a ti50 devboard.
 type Value struct {
-	grpcConn      *grpc.ClientConn
-	devboard      *remoteTi50.DUTControlAndreiboard
-	ImagePath     string
-	FwConfigJsons []string
-	TestbedType   ti50.TestbedType
+	grpcConn          *grpc.ClientConn
+	devboard          *remoteTi50.DUTControlAndreiboard
+	ImagePath         string
+	FwConfigJsons     []string
+	TestbedProperties remoteTi50.TestbedProperties
 }
 
 // DevBoard returns the existing DevBoard connection instance.
@@ -125,13 +125,13 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Create devboard controller used for remainder of tests
 	i.v.devboard = remoteTi50.NewDUTControlAndreiboard(i.v.grpcConn)
 
-	testbedProperties, err := i.v.devboard.Query(ctx)
-	if err != nil {
+	if p, err := i.v.devboard.Query(ctx); err != nil {
 		s.Fatal("querying testbed: ", err)
+	} else {
+		i.v.TestbedProperties = p
 	}
-	i.v.TestbedType = testbedProperties.TestbedType
 
-	iv, err := downloadImage(ctx, testbedProperties, i.image, s)
+	iv, err := downloadImage(ctx, i.v.TestbedProperties, i.image, s)
 	if err != nil {
 		s.Fatal("download image: ", err)
 	}
@@ -145,8 +145,8 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 
 	testing.ContextLog(ctx, "Setting up image: ", imagePath)
-	if testbedProperties.TestbedType == "gsc_h1_shield" {
-		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons, testbedProperties)
+	if i.v.TestbedProperties.TestbedType == "gsc_h1_shield" {
+		setupCr50Image(ctx, s, i.v.devboard, imagePath, fwConfigJsons, i.v.TestbedProperties)
 	} else if err := i.v.devboard.Setup(ctx, imagePath, fwConfigJsons); err != nil {
 		s.Fatal("Setup: ", err)
 	}

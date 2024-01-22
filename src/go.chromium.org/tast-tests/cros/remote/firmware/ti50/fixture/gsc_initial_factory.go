@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"regexp"
 	"strings"
 	"time"
 
@@ -24,17 +23,13 @@ const (
 	GSCInitialFactory = "gscInitialFactory"
 
 	// gsEfiLocation specifies the GS bucket location with %s placeholders for dev ids
-	gsEfiLocation = "gs://chromeos-localmirror-private/distfiles/chromeos-ti50-debug/dt_shield/ti50_Unknown_NodeLocked-%s-%s_ti50-accessory-mp.bin"
+	gsEfiLocation = "gs://chromeos-localmirror-private/distfiles/chromeos-ti50-debug/dt_shield/ti50_Unknown_NodeLocked-%s_ti50-accessory-mp.bin"
 	// tmpEfiLocation specifies the format of temporary file for EFI images
-	tmpEfiLocation = "ti50-efi-%s-%s.*.bin"
+	tmpEfiLocation = "ti50-efi-%s.*.bin"
 
 	copyFromGSTimeout  = 30 * time.Second
 	rescueTwiceTimeout = 2 * time.Minute
 	removeFileTimeout  = 5 * time.Second
-)
-
-var (
-	sysInfoRegex = regexp.MustCompile(`DEV_ID:\s+0x(\S+)\s0x(\S+)`)
 )
 
 func init() {
@@ -60,39 +55,21 @@ func (c *initialFactoryImpl) SetUp(ctx context.Context, s *testing.FixtState) in
 		c.v = s.ParentValue().(*Value)
 	}
 	// Host emulation does not need to erase anything, it always started erased
-	if c.v.TestbedType == ti50.GscHostEmulation {
+	if c.v.TestbedProperties.TestbedType == ti50.GscHostEmulation {
 		return c.v
 	}
 	if c.v.ImagePath == "" {
 		s.Fatal("InitialFactory fixture must specify a image (i.e. through buildurl var)")
 	}
 
-	b := c.v.devboard
-
-	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start testing session")
-	defer b.EndSession(ctx)
-
-	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second)
-	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
-	defer i.Close(ctx)
-
-	mustSucceed(s, b.Reset(ctx), "Release GSC from reset")
-	mustSucceed(s, i.WaitUntilBooted(ctx), "Test image revives after reboot")
-
-	sysInfo := runCommand(ctx, s, i, "sysinfo")
-	devIds := sysInfoRegex.FindAllStringSubmatch(sysInfo, 1)[0]
-	if len(devIds) != 3 {
-		s.Fatal("The sysinfo command did not return devices, instead got: ", sysInfo)
-	}
-
 	// Create and close temp file immediately so we can overwrite it
-	file, err := os.CreateTemp("", fmt.Sprintf(tmpEfiLocation, devIds[1], devIds[2]))
+	file, err := os.CreateTemp("", fmt.Sprintf(tmpEfiLocation, c.v.TestbedProperties.UsbSerial))
 	if err != nil {
 		s.Fatal("Could not open temp file for efi: ", err)
 	}
 	file.Close()
 	c.efiImagePath = file.Name()
-	gsEfiLocation := fmt.Sprintf(gsEfiLocation, devIds[1], devIds[2])
+	gsEfiLocation := fmt.Sprintf(gsEfiLocation, c.v.TestbedProperties.UsbSerial)
 
 	testing.ContextLogf(ctx, "Copying EFI from %q to %q ", gsEfiLocation, c.efiImagePath)
 	cmd := exec.CommandContext(ctx, "gsutil", "cp", gsEfiLocation, c.efiImagePath)
@@ -125,7 +102,7 @@ func (c *initialFactoryImpl) eraseInfoPage(ctx context.Context, s *testing.FixtT
 
 func (c *initialFactoryImpl) eraseAPROVerificationSettings(ctx context.Context, s *testing.FixtTestState) {
 	// Haven does not have AP RO verification settings that need to be erased
-	if c.v.TestbedType == ti50.GscH1Shield {
+	if c.v.TestbedProperties.TestbedType == ti50.GscH1Shield {
 		return
 	}
 	b := c.v.devboard
@@ -149,7 +126,7 @@ func (c *initialFactoryImpl) eraseAPROVerificationSettings(ctx context.Context, 
 
 func (c *initialFactoryImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	// Host emulation does not need to erase anything, it always started erased
-	if c.v.TestbedType == ti50.GscHostEmulation {
+	if c.v.TestbedProperties.TestbedType == ti50.GscHostEmulation {
 		return
 	}
 

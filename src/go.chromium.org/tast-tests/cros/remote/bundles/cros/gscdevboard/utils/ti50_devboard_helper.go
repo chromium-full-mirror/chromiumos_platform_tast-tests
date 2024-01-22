@@ -223,7 +223,7 @@ func NewDevboardHelper(s *testing.State) DevboardHelper {
 	f := s.FixtValue().(*fixture.Value)
 	b := f.DevBoard()
 	gscConsole := b.PhysicalUart(ti50.UartConsole, 5*time.Second)
-	return DevboardHelper{b, gscConsole, s, f.TestbedType}
+	return DevboardHelper{b, gscConsole, s, f.TestbedProperties.TestbedType}
 }
 
 // GscProperties returns an object that can be queried about varios aspects of the GSC currently
