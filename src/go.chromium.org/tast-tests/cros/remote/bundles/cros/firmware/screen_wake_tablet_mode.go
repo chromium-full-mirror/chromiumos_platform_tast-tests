@@ -183,7 +183,7 @@ func init() {
 				hwdep.Keyboard(),
 				hwdep.Touchpad(),
 				hwdep.TouchScreen(),
-				hwdep.SkipOnModel(convertibleKeyboardScanned...),
+				hwdep.SkipOnModel(append(convertibleKeyboardScanned, "robo360", "nautilus", "nautiluslte", "pantheon")...),
 			),
 			Val: &screenWakeTabletModeArgs{
 				hasLid:                  true,
@@ -200,7 +200,6 @@ func init() {
 }
 
 func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
-
 	h := s.FixtValue().(*fixture.Value).Helper
 
 	if err := h.RequireConfig(ctx); err != nil {
@@ -239,13 +238,50 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to sleep for a few seconds: ", err)
 	}
-
+	closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.CR50UARTCapture)
+	if err != nil {
+		s.Fatal("Failed to enable Cr50 uart capture: ", err)
+	}
+	defer func() {
+		if err := closeUART(ctx); err != nil {
+			s.Fatal("Failed to disable capturing cr50 UART: ", err)
+		}
+	}()
+	// Read the UART stream just to make sure there isn't buffered data.
+	if _, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream); err != nil {
+		s.Fatal("Failed to read GSC UART: ", err)
+	}
+	s.Log("Starting a new Chrome for the touchscreen service")
 	// Start a logged-in Chrome session, which is required prior to TouchscreenTap in the screenWake function.
 	if _, err := touchscreen.NewChrome(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Failed to start a new Chrome for the touchscreen service: ", err)
 	}
 	defer touchscreen.CloseChrome(ctx, &empty.Empty{})
 
+	type noMatchErr struct {
+		*errors.E
+	}
+	// Found some DUTs such as corsola and nissa start slow crypto after
+	// running touchscreen.NewChrome(). It takes about 5 seconds to finish
+	// crypto process.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream)
+		if err != nil {
+			return errors.Wrap(err, "failed to read GSC UART")
+		}
+		cryptoDone := regexp.MustCompile(`Crypto done`)
+		if cryptoDone.MatchString(out) {
+			return nil
+		}
+		return &noMatchErr{E: errors.New("did not find 'Crypto done' in the GSC UART stream")}
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 10 * time.Second}); err != nil {
+		if _, ok := errors.Unwrap(err).(*noMatchErr); !ok {
+			s.Fatal("Unexpected error occurred: ", err)
+		}
+	}
+	if err := closeUART(ctx); err != nil {
+		s.Fatal("Failed to disable capturing cr50 UART: ", err)
+	}
 	// Declare a rpc service for detecting touchpad.
 	touchpad := inputs.NewTouchpadServiceClient(h.RPCClient.Conn)
 
