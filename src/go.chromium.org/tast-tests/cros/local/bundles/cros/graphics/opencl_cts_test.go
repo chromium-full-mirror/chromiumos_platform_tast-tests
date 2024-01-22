@@ -25,7 +25,10 @@ var oclCtsParams []paramData
 
 func addTest(suite, args, additionalArgs string, timeout int) {
 	argsAggregate := strings.Replace(args, " ", "_", -1)
-	name := strings.ToLower(suite + "_" + argsAggregate)
+	name := suite
+	if argsAggregate != "" {
+		name = strings.ToLower(suite + "_" + argsAggregate)
+	}
 	oclCtsParams = append(oclCtsParams,
 		paramData{
 			Name:       name,
@@ -1894,6 +1897,16 @@ func TestOpenclCtsParamsAreGenerated(t *testing.T) {
 	addTest("conversions", "ushort_uint", "-w -1", 1)
 	addTest("conversions", "ushort_ulong", "-w -1", 1)
 	addTest("conversions", "ushort_ushort", "-w -1", 1)
+	addTest("device_execution", "", "", 1)
+	addTest("device_partition", "partition_equally", "", 1)
+	addTest("device_partition", "partition_by_counts", "", 1)
+	addTest("device_partition", "partition_by_affinity_domain_numa", "", 1)
+	addTest("device_partition", "partition_by_affinity_domain_l4_cache", "", 1)
+	addTest("device_partition", "partition_by_affinity_domain_l3_cache", "", 1)
+	addTest("device_partition", "partition_by_affinity_domain_l2_cache", "", 1)
+	addTest("device_partition", "partition_by_affinity_domain_l1_cache", "", 1)
+	addTest("device_partition", "partition_by_affinity_domain_next_partitionable", "", 1)
+	addTest("device_partition", "partition_all", "", 1)
 	addTest("device_timer", "device_and_host_timers", "", 1)
 	addTest("device_timer", "timer_resolution_queries", "", 1)
 	addTest("events", "callbacks", "", 1)
@@ -2255,6 +2268,7 @@ func TestOpenclCtsParamsAreGenerated(t *testing.T) {
 	addTest("non_uniform_work_group", "non_uniform_other_atomics", "", 1)
 	addTest("non_uniform_work_group", "non_uniform_other_barriers", "", 1)
 	addTest("non_uniform_work_group", "non_uniform_other_basic", "", 1)
+	addTest("pipes", "", "", 1)
 	addTest("printf", "address_space_0", "", 1)
 	addTest("printf", "address_space_1", "", 1)
 	addTest("printf", "address_space_2", "", 1)
@@ -2487,6 +2501,8 @@ func TestOpenclCtsParamsAreGenerated(t *testing.T) {
 	addTest("select", "select_ushort_ushort", "-w", 1)
 	addTest("select", "select_half_short", "-w", 1)
 	addTest("select", "select_half_ushort", "-w", 1)
+	addTest("spirv_new", "", "", 1)
+	addTest("svm", "", "", 1)
 	addTest("thread_dimensions", "full_1d_explicit_local", "", 1)
 	addTest("thread_dimensions", "full_1d_implicit_local", "", 1)
 	addTest("thread_dimensions", "full_2d_explicit_local", "", 10)

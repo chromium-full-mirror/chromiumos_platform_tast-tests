@@ -14902,6 +14902,86 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "device_execution",
+				Val: oclctsTest{
+					executable: "test_device_execution",
+					args:       "",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_equally",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_equally",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_by_counts",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_by_counts",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_by_affinity_domain_numa",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_by_affinity_domain_numa",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_by_affinity_domain_l4_cache",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_by_affinity_domain_l4_cache",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_by_affinity_domain_l3_cache",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_by_affinity_domain_l3_cache",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_by_affinity_domain_l2_cache",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_by_affinity_domain_l2_cache",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_by_affinity_domain_l1_cache",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_by_affinity_domain_l1_cache",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_by_affinity_domain_next_partitionable",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_by_affinity_domain_next_partitionable",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "device_partition_partition_all",
+				Val: oclctsTest{
+					executable: "test_device_partition",
+					args:       "partition_all",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "device_timer_device_and_host_timers",
 				Val: oclctsTest{
 					executable: "test_device_timer",
@@ -17790,6 +17870,14 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "pipes",
+				Val: oclctsTest{
+					executable: "test_pipes",
+					args:       "",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "printf_address_space_0",
 				Val: oclctsTest{
 					executable: "test_printf",
@@ -19646,6 +19734,22 @@ func init() {
 				Timeout: 1 * time.Minute,
 			},
 			{
+				Name: "spirv_new",
+				Val: oclctsTest{
+					executable: "test_spirv_new",
+					args:       "",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
+				Name: "svm",
+				Val: oclctsTest{
+					executable: "test_svm",
+					args:       "",
+				},
+				Timeout: 1 * time.Minute,
+			},
+			{
 				Name: "thread_dimensions_full_1d_explicit_local",
 				Val: oclctsTest{
 					executable: "test_thread_dimensions",
@@ -19970,10 +20074,17 @@ func OpenclCts(ctx context.Context, s *testing.State) {
 	os.Setenv("CLVK_LOG", "2")
 	// Make sure the test has write permission in clvk's temporary folder.
 	os.Setenv("CLVK_COMPILER_TEMP_DIR", os.TempDir())
-	// Set OpenCL version to CL1.2
-	os.Setenv("CLVK_OPENCL_VERSION", "0x00402000")
 	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL. It will avoid timeout on some devices.
 	os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
+	// CL_FILTER_LINEAR is not required for the compliance. Run the CTS without CL_FILTER_LINEAR support.
+	os.Setenv("CLVK_SUPPORTS_FILTER_LINEAR", "0")
+
+	// api_null_buffer_arg requires physical addressing to pass
+	// Do not run everything with physical addressing because it impacts performance
+	if s.TestName() == "graphics.OpenclCts.api_null_buffer_arg" {
+		os.Setenv("CLVK_PHYSICAL_ADDRESSING", "1")
+		os.Setenv("CLVK_SPIRV_ARCH", "spir64")
+	}
 
 	// Geminilake are really slow run all tests in wimpy to avoid timeouts.
 	chipsetType := expectations.GpuChipsetFile
