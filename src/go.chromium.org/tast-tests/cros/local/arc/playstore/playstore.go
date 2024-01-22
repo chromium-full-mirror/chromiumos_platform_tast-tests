@@ -64,25 +64,36 @@ func FindInstallButton(ctx context.Context, d *ui.Device, timeout time.Duration)
 func FindActionButton(ctx context.Context, d *ui.Device, actionText string, timeout time.Duration) (*ui.Object, error) {
 	var result *ui.Object
 
+	buttonClass := ui.ClassName("android.widget.Button")
+	actionButton := d.Object(buttonClass, ui.TextMatches("(?i)"+actionText), ui.Enabled(true))
+
+	viewClass := ui.ClassName("android.view.View")
+	actionView := d.Object(viewClass, ui.DescriptionMatches("(?i)"+actionText), ui.Enabled(true))
+
+	textViewClass := ui.ClassName("android.widget.TextView")
+	actionTextView := d.Object(textViewClass, ui.DescriptionMatches("(?i)"+actionText), ui.Enabled(true))
+
+	result, err := findAnyExists(ctx, timeout, actionButton, actionView, actionTextView)
+	if err != nil {
+		return nil, errors.Wrapf(err, "could not find the button %q", actionText)
+	}
+	return result, nil
+}
+
+// findAnyExists finds and returns the first object that exists.
+func findAnyExists(ctx context.Context, timeout time.Duration, objects ...*ui.Object) (*ui.Object, error) {
+	var targetObject *ui.Object
 	err := testing.Poll(ctx, func(ctx context.Context) error {
-		buttonClass := ui.ClassName("android.widget.Button")
-		actionButton := d.Object(buttonClass, ui.TextMatches("(?i)"+actionText), ui.Enabled(true))
-		if err := actionButton.WaitForExists(ctx, time.Second); err == nil {
-			result = actionButton
-			return nil
+		for _, object := range objects {
+			if err := object.Exists(ctx); err == nil {
+				targetObject = object
+				return nil
+			}
 		}
-
-		viewClass := ui.ClassName("android.view.View")
-		actionView := d.Object(viewClass, ui.DescriptionMatches("(?i)"+actionText), ui.Enabled(true))
-		if err := actionView.WaitForExists(ctx, time.Second); err == nil {
-			result = actionView
-			return nil
-		}
-
-		return errors.Errorf("could not find the button %q", actionText)
+		return errors.New("failed to find any given objects")
 	}, &testing.PollOptions{Timeout: timeout, Interval: time.Second})
 
-	return result, err
+	return targetObject, err
 }
 
 // FindAndDismissErrorDialog finds and dismisses all possible intermittent errors in Play Store.
