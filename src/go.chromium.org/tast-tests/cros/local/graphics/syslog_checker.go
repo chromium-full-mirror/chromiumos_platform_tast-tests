@@ -76,8 +76,8 @@ var (
 			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
 		}, "|")),
 	}
-	sysLogSkipKernelTimeStamp = regexp.MustCompile(`\[\s*[0-9]+\.[0-9]+\]\s(.*)`) // Skip over the kernel timestamps to capture the rest of the line.
-	sysLogKernelSplatsDetail  = regexp.MustCompile(`RIP:\s+[0-9a-f]+:(.+)`)       // Skip over the code segment register to capture the text after the colon.
+	sysLogSkipKernelTimeStamp = regexp.MustCompile(`\[\s*[0-9]+\.[0-9]+\]\s(.*)`)         // Skip over the kernel timestamps to capture the rest of the line.
+	sysLogKernelSplatsDetail  = regexp.MustCompile(`[RIP:\s+[0-9a-f]+:(.+)|pc\s:\s(.+)]`) // x86: Skip over the code segment register to capture the text after the colon. arm: look for pc and capture text after colon.
 	// ignoreCategoriesMap maps testName to a list of SysLogCategory it would like to ignore when calling checkSysLog.
 	ignoreCategoriesMap = map[string][]SysLogCategory{}
 )
