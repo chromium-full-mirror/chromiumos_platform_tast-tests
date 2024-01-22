@@ -27,14 +27,10 @@ func (a *ARC) NewUIDevice(ctx context.Context) (*ui.Device, error) {
 	return ui.NewDeviceWithRetry(ctx, a.device)
 }
 
-// DumpUIHierarchyOnError dumps arc UI hierarchy to 'arc_uidump.xml', when the test fails.
-// Call this function after closing arc UI devices. Otherwise the uiautomator might exist with errors like
-// status 137.
-func (a *ARC) DumpUIHierarchyOnError(ctx context.Context, outDir string, hasError func() bool) error {
-	if !hasError() {
-		return nil
-	}
-
+// DumpUIHierarchy dumps arc UI hierarchy to 'arc_uidump.xml'. Call this
+// function after closing arc UI devices, since only one can be attached at
+// a time or it will fail with code 137.
+func (a *ARC) DumpUIHierarchy(ctx context.Context, outDir string) error {
 	dumpFile := "/sdcard/window_dump.xml"
 
 	if err := a.Command(ctx, "uiautomator", "dump").Run(testexec.DumpLogOnError); err != nil {
@@ -47,12 +43,49 @@ func (a *ARC) DumpUIHierarchyOnError(ctx context.Context, outDir string, hasErro
 		return errors.Wrapf(err, "failed to create directory %s", dir)
 	}
 
-	file := filepath.Join(dir, "arc_uidump.xml")
+	outputFile := "arc_uidump.xml"
+	file := filepath.Join(dir, outputFile)
 	if err := a.PullFile(ctx, dumpFile, file); err != nil {
 		return errors.Wrap(err, "failed to pull UI dump to outDir")
 	}
 
+	testing.ContextLogf(ctx, "Test failed. Dumped ARC UI hierarchy into %s", outputFile)
 	return nil
+}
+
+// DumpUIHierarchyOnError dumps arc UI hierarchy to 'arc_uidump.xml' when the
+// test fails. Call this function after closing arc UI devices, since only
+// one can be attached at a time or it will fail with code 137.
+func (a *ARC) DumpUIHierarchyOnError(ctx context.Context, outDir string, hasError func() bool) error {
+	if !hasError() {
+		return nil
+	}
+
+	return a.DumpUIHierarchy(ctx, outDir)
+}
+
+// DumpUIHierarchyHandler dumps the arc UI hierarchy to 'arc_uidump.xml'. A UI
+// device is optional. Pass nil if no devices are open. If provided, closes the
+// given UI device since only one instance can be attached at a time.
+//
+// This function can be used with s.AttachErrorHandlers to dump the hierarchy
+// immediately after failure, before any cleanup functions run. For example:
+//
+// uiDumpHandler := a.DumpUIHierarchyHandler(cleanupCtx, d, s.OutDir())
+//
+// s.AttachErrorHandlers(uiDumpHandler, uiDumpHandler)
+func (a *ARC) DumpUIHierarchyHandler(ctx context.Context, d *ui.Device, outDir string) func(string) {
+	return func(_ string) {
+		if d != nil {
+			testing.ContextLog(ctx, "Closing existing UI device to dump UI hierarchy")
+			if err := d.Close(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close ARC UI device: ", err)
+			}
+		}
+		if err := a.DumpUIHierarchy(ctx, outDir); err != nil {
+			testing.ContextLog(ctx, "Failed to dump ARC UI hierarchy: ", err)
+		}
+	}
 }
 
 // OpenPlayStoreAccountSettings opens account settings in PlayStore where user
