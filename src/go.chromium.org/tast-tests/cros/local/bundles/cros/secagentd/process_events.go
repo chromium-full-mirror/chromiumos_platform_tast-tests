@@ -176,13 +176,6 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
-	s.Log("Installing DBus monitor")
-	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 45*time.Second)
-	if err != nil {
-		s.Fatal("Failed to setup dbus monitoring: ", err)
-	}
-	defer cancel()
-
 	s.Log("Waiting for secagentd to install BPFs")
 	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
 		s.Fatal("Failed to verify secagentd is ready to test: ", err)
@@ -190,11 +183,15 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	// Launch a primer command to definitely set the "first seen exec" time
 	// in secagentd. This will help avoid false positives for "meta_first_seen"
 	// in terminate events.
-	s.Log("Starting '/bin/yes' to generate exec events")
+	s.Log("Starting '/bin/yes' to set first seen exec time")
 	primeCmd := testexec.CommandContext(ctx, "/bin/yes")
 	if err := primeCmd.Start(); err != nil {
 		s.Fatalf("Error starting %q: %v ", primeCmd, err)
 	}
+	if err := primeCmd.Kill(); err != nil {
+		s.Fatalf("Failed to kill %q: %v", primeCmd, err)
+	}
+
 	// Guarantee that "first seen exec" time is at least two seconds
 	// before we exec the command we want to monitor.
 	// Justification: If exec time is equal to first seen exec time
@@ -206,13 +203,15 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	if err := testing.Sleep(ctx, 2*time.Second); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
-	if err := primeCmd.Kill(); err != nil {
-		s.Fatalf("Failed to kill %q: %v", primeCmd, err)
-	}
-	// Don't check the error here because it will likely just say
-	// "signal: Killed"
-	primeCmd.Wait()
 
+	s.Log("Installing DBus monitor")
+	ew, cancel, err := secagentddbusmonitor.SetupDbusWatcherWithTimeout(ctx, agentPid, 2*time.Minute)
+	if err != nil {
+		s.Fatal("Failed to setup dbus monitoring: ", err)
+	}
+	defer cancel()
+
+	s.Log("Starting '/bin/yes' as the process to monitor exec and terminate events for")
 	// Launch a long running process and scrape procfs.
 	cmd := testexec.CommandContext(ctx, "/bin/yes")
 	if err := cmd.Start(); err != nil {
