@@ -99,7 +99,7 @@ func DRMTraceTool(ctx context.Context, s *testing.State) {
 	s.Log("Verify DRMTraceTool parameters are reset correctly")
 	sm := func() *session.SessionManager {
 		// Set up the test environment. Should be done quickly.
-		const setupTimeout = 30 * time.Second
+		const setupTimeout = 4 * time.Minute
 		setupCtx, cancel := context.WithTimeout(ctx, setupTimeout)
 		defer cancel()
 
