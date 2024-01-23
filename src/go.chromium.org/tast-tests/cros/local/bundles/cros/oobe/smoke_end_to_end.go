@@ -40,7 +40,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "non_meets_device"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
@@ -48,7 +48,8 @@ func init() {
 		},
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
-			Val: param{isAddPersonFlow: false, usePreprod: false},
+			ExtraAttr: []string{"group:criticalstaging"},
+			Val:       param{isAddPersonFlow: false, usePreprod: false},
 		}, {
 			Name: "add_person_flow",
 			Val:  param{isAddPersonFlow: true, usePreprod: false},
