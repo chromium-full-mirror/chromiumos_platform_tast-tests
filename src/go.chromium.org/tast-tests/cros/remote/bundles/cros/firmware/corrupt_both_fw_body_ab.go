@@ -15,7 +15,7 @@ import (
 )
 
 func init() {
-	// TODO(b/194910755): Remove this test and use firmware.CorruptFWBothAB.body_normal
+	// TODO(b/319107854): Remove this test and use firmware.CorruptFWBothAB.body_normal
 	testing.AddTest(&testing.Test{
 		Func: CorruptBothFWBodyAB,
 		Desc: "Corrupt both copies of AP firmware, verify broken screen with reason 0x1b, restore backup via servo",
@@ -24,7 +24,6 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
 		Timeout:      25 * time.Minute,
 		SoftwareDeps: []string{"crossystem", "flashrom"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -35,8 +34,6 @@ func init() {
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
 				},
-				ExtraAttr:         []string{"firmware_bios", "firmware_level3", "firmware_ro"},
-				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01"},
 			},
 		},
 	})
