@@ -63,7 +63,7 @@ func init() {
 			{
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.TabletVK,
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:criticalstaging"},
+				ExtraAttr:         []string{"group:input-tools-upstream"},
 			},
 			{
 				Name:              "informational",

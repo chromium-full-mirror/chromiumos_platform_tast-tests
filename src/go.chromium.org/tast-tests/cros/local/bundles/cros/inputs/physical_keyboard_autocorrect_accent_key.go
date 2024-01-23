@@ -53,7 +53,7 @@ func init() {
 				Fixture:           fixture.LacrosClamshellNonVK,
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
-				ExtraAttr:         []string{"group:criticalstaging", "informational"},
+				ExtraAttr:         []string{"informational"},
 			},
 		},
 	})

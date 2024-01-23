@@ -72,7 +72,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(pre.InputsStableModels),
 				Fixture:           fixture.ClamshellNonVK,
 				Val:               pkTypingTestIMEs,
-				ExtraAttr:         []string{"group:input-tools-upstream", "group:criticalstaging"},
+				ExtraAttr:         []string{"group:input-tools-upstream"},
 			},
 			{
 				Name:              "informational",
