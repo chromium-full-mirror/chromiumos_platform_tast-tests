@@ -116,6 +116,7 @@ func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUT
 		// Ti50 requires 100ms delay between short presses.
 		testing.Sleep(ctx, 100*time.Millisecond) // GoBigSleepLint: Simulating button press
 		gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, false)
+		testing.Sleep(ctx, 10*time.Millisecond) // GoBigSleepLint: Simulating button press
 		gpioSet(ctx, s, b, ti50.GpioTi50PowerBtnL, true)
 	}
 	mustSucceed(s, i.WaitForTestlabEnable(ctx, time.Second*2), "Testlab was not enabled")
@@ -138,11 +139,6 @@ func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if c.v.TestbedType == ti50.GscHostEmulation {
 		// TODO(b/283151960): Enabling Testlab mode not yet supported on host emulation
 		// (no SPI).
-		return
-	}
-	if c.v.TestbedType == ti50.GscOpentitanCw310Fpga {
-		// TODO(jbk): Once OpenTitan port has SPI TPM capability, and other feature
-		// parity, this should be re-enabled.
 		return
 	}
 
