@@ -25,7 +25,7 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		SoftwareDeps: []string{"diagnostics"},
 		// TODO(b/306101885): Promote to critical.
-		Attr:    []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:    []string{"group:mainline", "informational"},
 		Fixture: "crosHealthdRunning",
 	})
 }
