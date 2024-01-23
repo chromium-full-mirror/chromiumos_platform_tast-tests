@@ -28,10 +28,9 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		// TODO: When stable, move to firmware_pd
 		Params: firmware.AddPDPorts([]testing.Param{{
 			Val: firmware.PDTestParams{},
-		}}, []string{"group:firmware", "firmware_pd_unstable"}),
+		}}, []string{"group:firmware", "firmware_pd"}),
 	})
 }
 
