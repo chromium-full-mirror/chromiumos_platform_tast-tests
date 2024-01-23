@@ -22,7 +22,7 @@ func init() {
 			"chromeos-platform-power@google.com",
 		},
 		BugComponent: "b:1361410",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
 	})
 }

@@ -33,7 +33,7 @@ func init() {
 		},
 		// Software > Fundamentals > Machine Intelligence > Adaptive Charging
 		BugComponent: "b:843222",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"ml_service"},
 	})
 }
