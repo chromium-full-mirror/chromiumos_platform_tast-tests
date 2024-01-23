@@ -159,6 +159,9 @@ func (t TestConfig) Run(ctx context.Context, dut *dut.DUT) error {
 	}
 
 	if t.ResultWriter != nil {
+		if res.DiskUtil == nil {
+			return errors.New("Unable to determine DiskUtil from fio results")
+		}
 		t.ResultWriter.Report(res.DiskUtil[0].Name, res)
 	}
 
@@ -209,6 +212,9 @@ func (t TestConfig) ParseFioResults(ctx context.Context, dut *dut.DUT) error {
 	}
 
 	if t.ResultWriter != nil {
+		if res.DiskUtil == nil {
+			return errors.New("Unable to determine DiskUtil from fio results")
+		}
 		t.ResultWriter.Report(res.DiskUtil[0].Name, res)
 	}
 
