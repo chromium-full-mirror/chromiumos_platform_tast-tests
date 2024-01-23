@@ -150,6 +150,15 @@ func SocialApp(ctx context.Context, s *testing.State) {
 			faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), s.HasError, cr, "ui_dump")
 		}
 		if isAppSetup {
+			if !d.Alive(ctx) {
+				if newDevice, err := a.NewUIDevice(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to create new UI device for social app cleanup: ", err)
+				} else {
+					app.SetUIDevice(newDevice)
+					defer newDevice.Close(ctx)
+				}
+			}
+
 			if err := app.CleanUp(ctx); err != nil {
 				s.Log("Failed to cleanup app: ", err)
 			}

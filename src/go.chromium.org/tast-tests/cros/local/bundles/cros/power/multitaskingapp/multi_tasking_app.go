@@ -159,10 +159,38 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	}
 	defer socialApp.Close(closeCtx)
 
+	isSocialAppSetup := false
+	defer func(ctx context.Context) {
+		// Only dump the faillog of the setup steps here.
+		// The faillog of the main test procedure is separately dumped.
+		if !isSocialAppSetup {
+			// Close the ARC UI device before dumping ARC UI Hierarchy.
+			// Otherwise uiautomator might exist with errors.
+			if err := d.Close(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to close the ARC UI device: ", err)
+			}
+			a.DumpUIHierarchyOnError(ctx, filepath.Join(outDir, "arc"), func() bool { return retErr != nil })
+			faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return retErr != nil }, cr, "setup_dump")
+		} else {
+			if !d.Alive(ctx) {
+				if newDevice, err := a.NewUIDevice(ctx); err != nil {
+					testing.ContextLog(ctx, "Failed to create new UI device for social app cleanup: ", err)
+				} else {
+					socialApp.SetUIDevice(newDevice)
+					defer newDevice.Close(ctx)
+				}
+			}
+
+			if err := socialApp.CleanUp(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to clean up social app: ", err)
+			}
+		}
+	}(closeCtx)
+
 	if err := socialApp.SetUp(ctx); err != nil {
 		return errors.Wrap(err, "failed to set up social app for testing")
 	}
-	defer socialApp.CleanUp(closeCtx)
+	isSocialAppSetup = true
 
 	if err := arrangeWindow(ctx, tconn, apps.Element.ID, ash.WindowStatePrimarySnapped, params.TabletMode); err != nil {
 		return errors.Wrap(err, "failed to set Element window state and wait")
