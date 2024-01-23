@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // callboxHotspotTestProfileName is the profile we create and use for cellular tethering tests.
@@ -99,8 +100,9 @@ func init() {
 				Val:       shillCallboxHotspotTestParam{"callbox_tethering_dun_and_default_ipv6_and_ipv4.pbf", "callbox-ipv6", "callbox-dun-ipv4", "callbox-ipv6"},
 				ExtraData: []string{"callbox_tethering_dun_and_default_ipv6_and_ipv4.pbf"},
 			}},
-		Fixture: "cellularResetShillProfileOnPostTest",
-		Timeout: 2 * time.Minute,
+		Fixture:      "cellularResetShillProfileOnPostTest",
+		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
+		Timeout:      2 * time.Minute,
 	})
 }
 

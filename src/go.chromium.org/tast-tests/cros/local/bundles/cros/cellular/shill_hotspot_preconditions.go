@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // hotspotTestProfileName is the profile we create and use for cellular tethering tests.
@@ -46,8 +47,9 @@ func init() {
 				disableCellularWithoutStop: true,
 			},
 		}},
-		Fixture: "cellular",
-		Timeout: 2 * time.Minute,
+		Fixture:      "cellular",
+		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
+		Timeout:      2 * time.Minute,
 	})
 }
 
