@@ -267,7 +267,7 @@ func gpioApplyStrap(ctx context.Context, s TestingState, b ti50.DevBoard, straps
 
 func mustSucceed(s TestingState, err error, format string, args ...interface{}) {
 	if err != nil {
-		s.Fatalf(format+": %s", append(args, err))
+		s.Fatalf(format+": %s", append(args, err)...)
 	}
 }
 
