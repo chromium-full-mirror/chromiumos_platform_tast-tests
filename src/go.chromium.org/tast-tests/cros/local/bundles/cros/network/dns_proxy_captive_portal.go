@@ -91,12 +91,24 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	// accommodate captive portal check on first and subsequent probes.
 	// The HTTPS URLs are necessary as we are using custom certificates for
 	// virtualnet's network.
-	if err := m.SetProperty(ctx, shillconst.ManagerPropertyPortalHTTPSURL, captiveportalconsts.HTTPSPortalURL); err != nil {
+	url, err := m.GetAndSetProperty(ctx, shillconst.ManagerPropertyPortalHTTPSURL, captiveportalconsts.HTTPSPortalURL)
+	if err != nil {
 		s.Fatal("Failed to set portal https url: ", err)
 	}
-	if err := m.SetProperty(ctx, shillconst.ManagerPropertyPortalFallbackHTTPSURLs, captiveportalconsts.HTTPSPortalURL); err != nil {
+	defer func() {
+		if err := m.SetProperty(cleanupCtx, shillconst.ManagerPropertyPortalHTTPSURL, url); err != nil {
+			s.Error("Failed to revert portal https url: ", err)
+		}
+	}()
+	fallbackURLs, err := m.GetAndSetProperty(ctx, shillconst.ManagerPropertyPortalFallbackHTTPSURLs, captiveportalconsts.HTTPSPortalURL)
+	if err != nil {
 		s.Fatal("Failed to set portal fallback https urls: ", err)
 	}
+	defer func() {
+		if err := m.SetProperty(cleanupCtx, shillconst.ManagerPropertyPortalFallbackHTTPSURLs, fallbackURLs); err != nil {
+			s.Error("Failed to revert portal fallback https urls: ", err)
+		}
+	}()
 
 	httpsCerts := certs.New(certs.SSLCrtPath, certificate.TestCert3())
 	cleanupCerts, err := httpsCerts.InstallTestCerts(ctx)
