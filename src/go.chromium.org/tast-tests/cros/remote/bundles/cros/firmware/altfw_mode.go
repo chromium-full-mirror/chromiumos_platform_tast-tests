@@ -40,8 +40,8 @@ func init() {
 			"sjg@chromium.org",         // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, move to firmware_bios.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		// TODO(b/296600641): Add to firmware_unstable, and then when stable, move to firmware_bios.
+		Attr:         []string{"group:firmware"},
 		Fixture:      fixture.DevMode,
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.AlternativeFirmware()),
