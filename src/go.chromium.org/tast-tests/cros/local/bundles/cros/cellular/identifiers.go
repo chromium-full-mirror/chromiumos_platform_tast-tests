@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Verifies that a modem returns valid identifiers",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_run_isolated", "cellular_cq"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_run_isolated", "cellular_cq", "cellular_dut_check"},
 		Timeout:      4 * time.Minute,
 		Fixture:      "cellular",
 	})
