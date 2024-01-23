@@ -76,7 +76,7 @@ func init() {
 		SoftwareDeps: []string{"vm_host"},
 		Fixture:      "uiStopped",
 		BugComponent: "b:1332660",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
 		Params: []testing.Param{
 			{
