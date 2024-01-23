@@ -60,7 +60,6 @@ func USBStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to plug in a virtual USB storage: ", err)
 	}
 	defer usbMassStorage.CleanUp(cleanupCtx)
-	s.Log("Created a virtual USB mass storage device")
 
 	attachedDevices, err := usbutil.AttachedDevices(ctx)
 	if err != nil {
@@ -102,7 +101,7 @@ func USBStorage(ctx context.Context, s *testing.State) {
 	// Check if the device is attached to bruschetta and find its device file
 	// It takes a few seconds until the device is available on the VM
 	if err := testing.Poll(ctx, func(context.Context) error {
-		if err := guestos.FindUSBDeviceInVM(ctx, bru.VM, device); err != nil {
+		if err := guestos.FindUSBDeviceInVM(ctx, bru, device); err != nil {
 			return errors.Wrap(err, "failed to find the device")
 		}
 		if err := bru.Command(ctx, "ls", deviceFile).Run(); err != nil {
@@ -113,13 +112,11 @@ func USBStorage(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: usbOperationTimeout, Interval: 1 * time.Second}); err != nil {
 		s.Fatal("Failed to find the device in the VM: ", err)
 	}
-	s.Log("Attached the storage device to bruschetta")
 
 	// Run the read/write test on the device
-	if err := guestos.VMStorageReadWriteTest(ctx, bru.VM, deviceFile, "/tmp/usb_test.bin", 1); err != nil {
+	if err := guestos.VMStorageReadWriteTest(ctx, bru, deviceFile, "/tmp/usb_test.bin", 1); err != nil {
 		s.Fatal("Read and write test failed: ", err)
 	}
-	s.Log("Succeeded to run the read and write test")
 
 	// Detach the device from bruschetta
 	// This command must be run by chronos user due to permission reason
@@ -132,7 +129,7 @@ func USBStorage(ctx context.Context, s *testing.State) {
 	// Check if the device isn't attached to bruschetta anymore
 	// It takes a few seconds until the device is detached from the VM
 	if err := testing.Poll(ctx, func(context.Context) error {
-		if err := guestos.FindUSBDeviceInVM(ctx, bru.VM, device); err == nil {
+		if err := guestos.FindUSBDeviceInVM(ctx, bru, device); err == nil {
 			return errors.New("the device is found in the VM")
 		}
 		return nil
@@ -140,5 +137,4 @@ func USBStorage(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: usbOperationTimeout, Interval: 1 * time.Second}); err != nil {
 		s.Fatal("Failed to detach the device: ", err)
 	}
-	s.Log("Detached the storage device from bruschetta")
 }
