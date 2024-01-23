@@ -142,6 +142,43 @@ func setWindowBounds(ctx context.Context, ctconn *chrome.TestConn, windowID int,
 	return nil
 }
 
+func reduceDisplayZoomFactor(ctx context.Context, ctconn *chrome.TestConn) (
+	func(context.Context, *chrome.TestConn) error,
+	error,
+) {
+	info, err := display.GetPrimaryInfo(ctx, ctconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get the primary display info")
+	}
+
+	displayZoomFactors := info.AvailableDisplayZoomFactors
+	if len(displayZoomFactors) == 0 {
+		return nil, errors.New("failed to get AvailableDisplayZoomFactors")
+	}
+	originalZoom := info.DisplayZoomFactor
+	newZoom := 0.0
+	// Get the first zoom factor less than the original one.
+	for i := len(displayZoomFactors) - 1; i >= 0; i-- {
+		if displayZoomFactors[i] < originalZoom {
+			newZoom = displayZoomFactors[i]
+			break
+		}
+	}
+	if newZoom == 0 {
+		return nil, errors.Errorf("invalid AvailableDisplayZoomFactors: want array with at least one value less than '%.2f', got %v", originalZoom, displayZoomFactors)
+	}
+
+	if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &newZoom}); err != nil {
+		return nil, errors.Wrapf(err, "failed to set zoom factor of primary display to %f", newZoom)
+	}
+	return func(ctx context.Context, ctconn *chrome.TestConn) error {
+		if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{DisplayZoomFactor: &originalZoom}); err != nil {
+			return errors.Wrapf(err, "failed to revert zoom factor of primary display to %f", originalZoom)
+		}
+		return nil
+	}, nil
+}
+
 // testInvocation describes a particular test run. A test run involves running a particular scenario
 // (e.g. moveocclusion) with a particular type of Chrome (ChromeOS or Lacros) on a particular page.
 // This structure holds the necessary data to do this.
@@ -169,6 +206,7 @@ func runTest(ctx context.Context, tconn, ctconn *chrome.TestConn, tracer traceab
 	}
 
 	perfFn := func(ctx context.Context) error {
+		// GoBigSleepLint: sleep to collect metrics.
 		return testing.Sleep(ctx, testDuration)
 	}
 	if invoc.scenario == TestTypeResize {
@@ -255,7 +293,7 @@ func runTest(ctx context.Context, tconn, ctconn *chrome.TestConn, tracer traceab
 		defer toggleThreeDotMenu(ctx, tconn)
 	}
 
-	// Sleep for three seconds after loading pages / setting up the environment.
+	// GoBigSleepLint: sleep for three seconds after loading pages / setting up the environment.
 	// Loading a page can cause some transient spikes in activity or similar
 	// 'unstable' state. Unfortunately there's no clear condition to wait for like
 	// there is before the test starts (CPU activity and temperature). Wait three
@@ -370,24 +408,43 @@ func RunGpuCUJ(ctx context.Context, cr *chrome.Chrome, params TestParams, server
 		}
 	}()
 
+	infos, err := display.GetInfo(ctx, ctconn)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to get display info")
+	}
+	if len(infos) != 1 {
+		return nil, nil, errors.New("failed to find unique display")
+	}
+	info := infos[0]
 	if params.Rot90 {
-		infos, err := display.GetInfo(ctx, ctconn)
-		if err != nil {
-			return nil, nil, errors.Wrap(err, "failed to get display info")
-		}
-
-		if len(infos) != 1 {
-			return nil, nil, errors.New("failed to find unique display")
-		}
-
 		rot := 90
-		if err := display.SetDisplayProperties(ctx, ctconn, infos[0].ID, display.DisplayProperties{Rotation: &rot}); err != nil {
+		if err := display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{Rotation: &rot}); err != nil {
 			return nil, nil, errors.Wrap(err, "failed to rotate display")
 		}
 		// Restore the initial rotation.
 		cleanup = lacrosperf.CombineCleanup(ctx, cleanup, func(ctx context.Context) error {
-			return display.SetDisplayProperties(ctx, ctconn, infos[0].ID, display.DisplayProperties{Rotation: &infos[0].Rotation})
+			return display.SetDisplayProperties(ctx, ctconn, info.ID, display.DisplayProperties{Rotation: &info.Rotation})
 		}, "failed to restore the initial display rotation")
+	} else if params.TestType == TestTypeMoveOcclusion || params.TestType == TestTypeMoveOcclusionWithCrosWindow {
+		// According to b/320175701, the display width of the devices that failing
+		// the tests are 1080px.
+		const smallDisplayWidth = 1080
+		// In the 'MoveOcclusion' scenario, when in landscape mode on devices with
+		// small displays like 1080x675, the desired window width might be smaller
+		// than the minimum width of the Chrome window. Check the width and reduce
+		// the display zoom factor down by 1 if it's smaller than 'smallDisplayWidth'.
+		if info.Bounds.Width <= smallDisplayWidth {
+			testing.ContextLogf(ctx, "The width(%d) of the display is equal or smaller than %d px, set the display factor down by 1", info.Bounds.Width, smallDisplayWidth)
+
+			revertZoom, err := reduceDisplayZoomFactor(ctx, ctconn)
+			if err != nil {
+				return nil, nil, errors.Wrap(err, "failed to set the zoom factor of the primary display")
+			}
+			// Restore the display zoom factor.
+			cleanup = lacrosperf.CombineCleanup(ctx, cleanup, func(ctx context.Context) error {
+				return revertZoom(ctx, ctconn)
+			}, "failed to restore the initial zoom factor of primary display")
+		}
 	}
 
 	pv := perf.NewValues()
