@@ -82,8 +82,7 @@ func init() {
 			},
 			{
 				// Verifies that DUT can roam from a BSS with PSK key management to a BSS with SAE key management and back.
-				Name:      "psk_to_sae",
-				ExtraAttr: []string{"wificell_unstable"},
+				Name: "psk_to_sae",
 				Val: bssTMReqTestCase{
 					secConfFac0:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
 					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
@@ -94,8 +93,7 @@ func init() {
 			},
 			{
 				// Verifies that DUT can roam from a BSS with SAE key management to a BSS with PSK key management and back.
-				Name:      "sae_to_psk",
-				ExtraAttr: []string{"wificell_unstable"},
+				Name: "sae_to_psk",
 				Val: bssTMReqTestCase{
 					secConfFac0:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					secConfFac1:    wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherCCMP)),
