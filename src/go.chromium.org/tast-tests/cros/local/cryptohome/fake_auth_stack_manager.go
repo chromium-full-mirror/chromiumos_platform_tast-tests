@@ -202,7 +202,7 @@ func (m *FakeAuthStackManager) CreateCredential(reqBytes []byte) ([]byte, *dbus.
 	if m.sessionState != enrollSession {
 		return nil, dbus.MakeFailedError(errors.New("cannot respond to CreateCredential outside active enroll sessions"))
 	}
-	var request messages.CreateCredentialRequestV2
+	var request messages.CreateCredentialRequest
 	if err := proto.Unmarshal(reqBytes, &request); err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to unmarshal request"))
 	}
@@ -257,7 +257,7 @@ func (m *FakeAuthStackManager) AuthenticateCredential(reqBytes []byte) ([]byte, 
 	if m.sessionState != noSession {
 		return nil, dbus.MakeFailedError(errors.New("cannot respond to AuthenticateCredential with active sessions"))
 	}
-	var request messages.AuthenticateCredentialRequestV2
+	var request messages.AuthenticateCredentialRequest
 	if err := proto.Unmarshal(reqBytes, &request); err != nil {
 		return nil, dbus.MakeFailedError(errors.Wrap(err, "failed to unmarshal request"))
 	}
