@@ -86,8 +86,16 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 		s.Fatal("Enable Portal Detection failed: ", err)
 	}
 
+	// Shill currently does not have a method to fully restart a portal
+	// probe. Set both portal HTTPS URL and portal fallback HTTPS URLs to
+	// accommodate captive portal check on first and subsequent probes.
+	// The HTTPS URLs are necessary as we are using custom certificates for
+	// virtualnet's network.
 	if err := m.SetProperty(ctx, shillconst.ManagerPropertyPortalHTTPSURL, captiveportalconsts.HTTPSPortalURL); err != nil {
 		s.Fatal("Failed to set portal https url: ", err)
+	}
+	if err := m.SetProperty(ctx, shillconst.ManagerPropertyPortalFallbackHTTPSURLs, captiveportalconsts.HTTPSPortalURL); err != nil {
+		s.Fatal("Failed to set portal fallback https urls: ", err)
 	}
 
 	httpsCerts := certs.New(certs.SSLCrtPath, certificate.TestCert3())
