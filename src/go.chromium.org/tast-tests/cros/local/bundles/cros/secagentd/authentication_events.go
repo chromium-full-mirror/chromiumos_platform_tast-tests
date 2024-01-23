@@ -5,11 +5,12 @@
 package secagentd
 
 import (
-	rep "go.chromium.org/chromiumos/reporting"
 	xdr "chromiumos/xdr/secagentd"
 	"context"
 	"strconv"
 	"time"
+
+	rep "go.chromium.org/chromiumos/reporting"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdcommon"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
@@ -43,10 +44,19 @@ func init() {
 		},
 		// ChromeOS > Security > ChromeOS Enterprise Security
 		BugComponent: "b:1208373",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:enterprise-reporting"},
 		Timeout:      3 * time.Minute,
 		SoftwareDeps: []string{"bpf", "chrome"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{
+			{
+				Name:              "mainline",
+				ExtraSoftwareDeps: []string{"secagentd_auth_stable"},
+			}, {
+				Name:      "informational",
+				ExtraAttr: []string{"informational"},
+			},
+		},
 	})
 }
 
