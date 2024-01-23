@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -136,23 +135,24 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Fatalf("Gcode file (%s) not found on HMR", gcodeFileName)
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
+	serviceChannel := make(chan error)
 	DutEvtestService := inputspb.NewStylusEvtestCaptureServiceClient(client.Conn)
 
 	go func() {
 		// Start recording evtest stylus touch data from DUT.
 		dutResponse, err := DutEvtestService.StartStylusDataCapture(ctx, &empty.Empty{})
 		if err != nil {
-			s.Fatal("Failed to run StartStylusDataCapture : ", err)
+			serviceChannel <- errors.Wrap(err, "failed to run StartStylusDataCapture")
+			return
 		}
 		// Copy file from DUT to Host machine.
 		dutTouchLogFilePath := dutResponse.GetStylusLogPath()
 		err = linuxssh.GetFile(ctx, s.DUT().Conn(), dutTouchLogFilePath, hostRawTouchLogFilePath, linuxssh.PreserveSymlinks)
 		if err != nil {
-			s.Fatal("Failed to copy file from DUT to Host: ", err)
+			serviceChannel <- errors.Wrap(err, "failed to copy file from DUT to Host")
+			return
 		}
-		wg.Done()
+		serviceChannel <- nil
 	}()
 
 	// Begins executing HMR motions on DUT.
@@ -189,7 +189,10 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run StopStylusDataCapture: ", err)
 	}
 	// Wait until stylus touch data file has been copied from DUT to Host.
-	wg.Wait()
+	err = <-serviceChannel
+	if err != nil {
+		s.Fatal("Failed to collect touch logs from DUT: ", err)
+	}
 
 	// Delete stylus touch data file from DUT.
 	if _, err = DutEvtestService.CleanUp(ctx, &empty.Empty{}); err != nil {
