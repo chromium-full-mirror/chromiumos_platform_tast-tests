@@ -100,10 +100,10 @@ var PhoneHubShelfIcon = nodewith.Name("Phone Hub").Role(role.Button).ClassName("
 var phoneHubSettingPod = nodewith.Ancestor(PhoneHubTray).Role(role.ToggleButton)
 
 // SilencePhonePod is the finder for Phone Hub's Silence Phone pod.
-var SilencePhonePod = phoneHubSettingPod.NameContaining("Toggle Silence phone")
+var SilencePhonePod = phoneHubSettingPod.NameContaining("Toggle Silence")
 
 // LocatePhonePod is the finder for Phone Hub's "Locate phone" pod.
-var LocatePhonePod = phoneHubSettingPod.NameContaining("Toggle Locate phone")
+var LocatePhonePod = phoneHubSettingPod.NameContaining("Toggle Locate")
 
 // Show opens Phone Hub if it's not already open.
 func Show(ctx context.Context, tconn *chrome.TestConn) error {
