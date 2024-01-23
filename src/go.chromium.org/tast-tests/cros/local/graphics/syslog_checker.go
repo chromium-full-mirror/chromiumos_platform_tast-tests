@@ -40,11 +40,47 @@ const (
 	SysLogAll SysLogCategory = "*"
 )
 
+type sysLogChecker struct {
+	category SysLogCategory                               // category this checker belongs to.
+	re       *regexp.Regexp                               // regular expression it tries to look for.
+	handler  func(context.Context, *syslog.Reader) string // handler to find informative information from the reader.
+}
+
 var (
-	// Signatures in /var/log/messages to look for.
-	// TODO: Consider skips certain regexp check by GPU family.
-	sysLogSignatureMap = map[SysLogCategory]*regexp.Regexp{
-		SysLogGpuHangs: regexp.MustCompile(strings.Join([]string{
+	sysLogSkipKernelTimeStamp = regexp.MustCompile(`\[\s*[0-9]+\.[0-9]+\]\s(.*)`) // Skip over the kernel timestamps to capture the rest of the line.
+
+	// kernelSplatsHandler tries to analysis informative messages from a kernel splats.
+	kernelSplatsHandler = func(ctx context.Context, reader *syslog.Reader) string {
+		// x86: Skip over the code segment register to capture the text after the colon.
+		// arm: look for pc and capture text after colon.
+		x86RIPRegex := regexp.MustCompile(`RIP:\s+[0-9a-f]+:(.+)`)
+		armPCRegex := regexp.MustCompile(`pc\s:\s(.+)`)
+
+		// Normally we return the first match of a regexp. For splats this is not informative.
+		// Read a few lines further for the RIP or pc entry.
+		// This typically appears 5-15 lines after the splat starts.
+		for i := 1; i < 20; i++ {
+			e, err := reader.Read()
+			if err != nil {
+				continue
+			}
+			if match := x86RIPRegex.FindStringSubmatch(e.Content); match != nil {
+				testing.ContextLog(ctx, "Found kernel splat detail with regex: ", x86RIPRegex.String())
+				return match[1]
+			}
+			if match := armPCRegex.FindStringSubmatch(e.Content); match != nil {
+				testing.ContextLog(ctx, "Found kernel splat detail with regex: ", armPCRegex.String())
+				return match[1]
+			}
+		}
+		testing.ContextLog(ctx, "Failed to read kernel splat detail")
+		return "Kernel splat without RIP: detail"
+	}
+
+	allCheckers = []sysLogChecker{{
+		// Checker to check GPU hangs.
+		category: SysLogGpuHangs,
+		re: regexp.MustCompile(strings.Join([]string{
 			// i915
 			`drm:i915_hangcheck_elapsed`,
 			`drm:i915_hangcheck_hung`,
@@ -64,20 +100,34 @@ var (
 			`mtk-mdp.*: cmdq timeout`,
 			`scp ipi .* ack time out !`,
 		}, "|")),
-		SysLogAmdGpuErrors: regexp.MustCompile(strings.Join([]string{
+	}, {
+		// Checker to check amd drivers error.
+		category: SysLogAmdGpuErrors,
+		re: regexp.MustCompile(strings.Join([]string{
 			`Error scheduling IBs`,          // b/288942766
 			`VM_L2_PROTECTION_FAULT_STATUS`, // b/271644551
 		}, "|")),
-		SysLogKernelSplats:        regexp.MustCompile(`------------\[ cut here \]------------`),
-		SysLogMediatekIOMMUErrors: regexp.MustCompile(`mtk-iommu .*: fault`),
-		SysLogMediatekVideoErrors: regexp.MustCompile(`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`),
-		SysLogQualcommVideoErrors: regexp.MustCompile(strings.Join([]string{
+	}, {
+		// Checker to check the kernel splats.
+		category: SysLogKernelSplats,
+		re:       regexp.MustCompile(`------------\[ cut here \]------------`),
+		handler:  kernelSplatsHandler,
+	}, {
+		// Checker to check mediatek IOMMU errors
+		category: SysLogMediatekIOMMUErrors,
+		re:       regexp.MustCompile(`mtk-iommu .*: fault`),
+	}, {
+		// Checker to check mediatek video driver errors.
+		category: SysLogMediatekVideoErrors,
+		re:       regexp.MustCompile(`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`),
+	}, {
+		// Checker to check qualcomm video errors.
+		category: SysLogQualcommVideoErrors,
+		re: regexp.MustCompile(strings.Join([]string{
 			`qcom-venus .*video-codec: SFR message from FW:`,
 			`qcom-venus-decoder .*video-codec:video-decoder: dec: event session error`,
 		}, "|")),
-	}
-	sysLogSkipKernelTimeStamp = regexp.MustCompile(`\[\s*[0-9]+\.[0-9]+\]\s(.*)`)         // Skip over the kernel timestamps to capture the rest of the line.
-	sysLogKernelSplatsDetail  = regexp.MustCompile(`[RIP:\s+[0-9a-f]+:(.+)|pc\s:\s(.+)]`) // x86: Skip over the code segment register to capture the text after the colon. arm: look for pc and capture text after colon.
+	}}
 	// ignoreCategoriesMap maps testName to a list of SysLogCategory it would like to ignore when calling checkSysLog.
 	ignoreCategoriesMap = map[string][]SysLogCategory{}
 )
@@ -97,21 +147,23 @@ func CheckSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 		return false
 	}
 
-	var checkCategory []SysLogCategory
 	ignoreCategories, ok := ignoreCategoriesMap[testName]
 	if ok && inList(SysLogAll, ignoreCategories) {
 		testing.ContextLogf(ctx, "Test %s requested to ignore all syslog checks", testName)
 		return nil
 	}
 
-	for category := range sysLogSignatureMap {
-		if ok && inList(category, ignoreCategories) {
-			testing.ContextLogf(ctx, "Test %s requested to ignore check for `%v`", testName, category)
+	var checkers []sysLogChecker
+	var categories []SysLogCategory
+	for _, checker := range allCheckers {
+		if ok && inList(checker.category, ignoreCategories) {
+			testing.ContextLogf(ctx, "Test %s requested to ignore check for `%v`", testName, checker.category)
 			continue
 		}
-		checkCategory = append(checkCategory, category)
+		checkers = append(checkers, checker)
+		categories = append(categories, checker.category)
 	}
-	testing.ContextLogf(ctx, "Checking syslog with following categories: %q", checkCategory)
+	testing.ContextLogf(ctx, "Checking syslog with following categories: %q", categories)
 
 	for {
 		e, err := reader.Read()
@@ -120,37 +172,23 @@ func CheckSysLog(ctx context.Context, testName string, reader *syslog.Reader) er
 		} else if err != nil {
 			return errors.Wrap(err, "failed to read syslog")
 		}
-		c := e.Content
 		if e.Program == "kernel" {
 			// Remove kernel timestamp from beginning of line if found.
-			if match := sysLogSkipKernelTimeStamp.FindStringSubmatch(c); match != nil {
-				c = match[1]
+			if match := sysLogSkipKernelTimeStamp.FindStringSubmatch(e.Content); match != nil {
+				e.Content = match[1]
 			}
 		}
-		for _, category := range checkCategory {
-			re := sysLogSignatureMap[category]
-			if re.MatchString(c) {
-				if category == SysLogKernelSplats {
-					// Normally we return the first match of a regexp. For splats this is not informative,
-					// so read a few lines further for the RIP: entry. This typically appears 5-15 lines after
-					// the splat starts.
-					for i := 1; i < 20; i++ {
-						e, err := reader.Read()
-						if err != nil {
-							continue
-						}
-						if match := sysLogKernelSplatsDetail.FindStringSubmatch(e.Content); match != nil {
-							testing.ContextLog(ctx, "Found kernel splat detail with regex: ", sysLogKernelSplatsDetail.String())
-							return errors.Errorf("%v: %s", category, match[1])
-						}
-					}
-					testing.ContextLog(ctx, "Failed to read kernel splat detail")
-					return errors.Errorf("%v: %s", category, "Kernel splat without RIP: detail")
-				}
-				// Only output the full regex once we already found to prevent the reader reads the output itself.
-				testing.ContextLog(ctx, "Found with following regex: ", re.String())
-				return errors.Errorf("%v: %s", category, c)
+		for _, checker := range checkers {
+			if !checker.re.MatchString(e.Content) {
+				continue
 			}
+			msg := e.Content
+			if checker.handler != nil {
+				msg = checker.handler(ctx, reader)
+			}
+			// This line must put after handler otherwise the regex may be caught.
+			testing.ContextLog(ctx, "Found with following regex: ", checker.re.String())
+			return errors.Errorf("%v: %s", checker.category, msg)
 		}
 
 		if ctx.Err() != nil {
