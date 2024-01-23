@@ -36,13 +36,9 @@ func init() {
 		Fixture: fixture.NormalMode,
 		Timeout: 15 * time.Minute,
 		// Only run on platforms that include CL crrev/c/1234747 so that CBI can be reversibly written to.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.ECFeatureCBI(), hwdep.SkipOnModel(
-			"jax", // Fizz models
-			"kench",
-			"sion",
-			"bard", // Nami models
-			"ekko",
-			"syndra",
+		HardwareDeps: hwdep.D(hwdep.ECBuildConfigOptions(
+			"BATTERY_CONFIG_IN_CBI",
+			"PLATFORM_EC_BATTERY_CONFIG_IN_CBI",
 		)),
 	})
 }
