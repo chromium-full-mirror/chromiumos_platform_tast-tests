@@ -83,53 +83,11 @@ func getDefaultBearerApn(ctx context.Context, modem *modemmanager.Modem) (string
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get default bearer")
 	}
-	apn, err := bearer.GetAPN()
-	if err == nil {
-		return apn, nil
-	}
-
-	// APN is not present. Check for profile ID instead as connections initiated using a
-	// profile will not contain APN details in the bearer and we have to look them up
-	// in the profile list.
-	profileID, err := bearer.GetProfileID()
+	apn, err := bearer.GetAPN(ctx)
 	if err != nil {
-		return "", errors.Wrap(err, "bearer contained neither APN nor profile ID")
+		return "", errors.Wrap(err, "failed to get default bearer APN")
 	}
-
-	profiles, err := modem.GetProfiles(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get profiles list")
-	}
-
-	for _, profile := range profiles {
-		// This is almost certainly a malformed profile if either of these fail, but
-		// it's not really what we're testing for here.
-		idProp, ok := profile[mmconst.BearerPropertyProfileID]
-		if !ok {
-			continue
-		}
-		id, ok := idProp.(int32)
-		if !ok {
-			continue
-		}
-
-		if profileID != id {
-			continue
-		}
-
-		apnProp, ok := profile[mmconst.BearerPropertyApn]
-		if !ok {
-			return "", errors.Errorf("profile %v has no APN", profileID)
-		}
-		apn, ok = apnProp.(string)
-		if !ok {
-			return "", errors.Errorf("profile %v had a malformed APN %v", profileID, apnProp)
-		}
-
-		return apn, nil
-	}
-
-	return "", errors.Errorf("could not find profile %v in the profile list", profileID)
+	return apn, nil
 }
 
 func ShillHotspotPreconditions(ctx context.Context, s *testing.State) {

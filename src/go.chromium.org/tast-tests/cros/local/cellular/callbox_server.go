@@ -57,7 +57,7 @@ func NewCallboxServer(ctx context.Context) (*CallboxServer, error) {
 	if interfaceName == "" {
 		return nil, errors.New("interface has no name")
 	}
-	apn, err := bearer.GetAPN()
+	apn, err := bearer.GetAPN(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get APN")
 	}

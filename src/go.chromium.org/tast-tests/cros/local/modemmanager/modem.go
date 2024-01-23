@@ -953,11 +953,11 @@ func (m *Modem) GetFirstDataBearer(ctx context.Context, apnType mmconst.BearerAP
 		return nil, errors.Wrap(bearerPaths.err, "failed to read Bearer paths")
 	}
 	for _, opath := range bearerPaths.objectPaths {
-		bearer, err := NewBearer(ctx, opath)
+		bearer, err := NewBearer(ctx, opath, dbus.ObjectPath(m.String()))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create Bearer object")
 		}
-		isAPNType, err := bearer.IsAPNType(apnType)
+		isAPNType, err := bearer.IsAPNType(ctx, apnType)
 		if err != nil {
 			return nil, err
 		}
@@ -979,11 +979,11 @@ func (m *Modem) GetFirstConnectedDataBearer(ctx context.Context, apnType mmconst
 		return nil, errors.Wrap(bearerPaths.err, "failed to read Bearer paths")
 	}
 	for _, opath := range bearerPaths.objectPaths {
-		bearer, err := NewBearer(ctx, opath)
+		bearer, err := NewBearer(ctx, opath, dbus.ObjectPath(m.String()))
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create Bearer object")
 		}
-		isAPNType, err := bearer.IsAPNType(apnType)
+		isAPNType, err := bearer.IsAPNType(ctx, apnType)
 		if err != nil {
 			return nil, err
 		}

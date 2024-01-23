@@ -37,6 +37,7 @@ type BearerProperties struct {
 	multiplex    uint32
 	password     string
 	user         string
+	profile      *BearerProperties
 	profileID    int32
 	// Indicators of property existence
 	HasApn          bool
@@ -60,10 +61,11 @@ type Bearer struct {
 	ph    *dbusutil.PropertyHolder
 	props *dbusutil.Properties
 	path  dbus.ObjectPath
+	modem *Modem
 }
 
 // NewBearer creates a new Bearer adapter from bearer properties.
-func NewBearer(ctx context.Context, bearerPath dbus.ObjectPath) (*Bearer, error) {
+func NewBearer(ctx context.Context, bearerPath, modemPath dbus.ObjectPath) (*Bearer, error) {
 	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerBearerInterface, bearerPath)
 	if err != nil {
 		return nil, err
@@ -108,8 +110,12 @@ func NewBearer(ctx context.Context, bearerPath dbus.ObjectPath) (*Bearer, error)
 	if !ok {
 		return nil, errors.New("failed to parse bearer properties")
 	}
+	modem, err := NewModemFromPath(ctx, modemPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create modem object")
+	}
 
-	return &Bearer{ph: ph, path: bearerPath, props: props}, nil
+	return &Bearer{ph: ph, path: bearerPath, props: props, modem: modem}, nil
 }
 
 func parseIPConfig(props *dbusutil.Properties, propertyName string) (*IPConfig, error) {
@@ -161,26 +167,32 @@ func parseIPConfig(props *dbusutil.Properties, propertyName string) (*IPConfig, 
 }
 
 // GetAPN gets the APN from the bearer properties
-func (b *Bearer) GetAPN() (string, error) {
-	properties := b.Properties()
-	if !properties.HasApn {
-		return "", errors.New("failed to read the APN")
+func (b *Bearer) GetAPN(ctx context.Context) (string, error) {
+	properties := b.Properties(ctx)
+	if properties.profile != nil && properties.profile.HasApn {
+		return properties.profile.apn, nil
 	}
-	return properties.apn, nil
+	if properties.HasApn {
+		return properties.apn, nil
+	}
+	return "", errors.New("failed to read the APN")
 }
 
 // IsAPNType checks if the APN is of the type |apnType|
-func (b *Bearer) IsAPNType(apnType mmconst.BearerAPNType) (bool, error) {
-	properties := b.Properties()
-	if !properties.HasApnType {
-		return false, errors.New("failed to read the APN type")
+func (b *Bearer) IsAPNType(ctx context.Context, apnType mmconst.BearerAPNType) (bool, error) {
+	properties := b.Properties(ctx)
+	if properties.profile != nil && properties.profile.HasApnType {
+		return (properties.profile.apnType & uint32(apnType)) != 0, nil
 	}
-	return (properties.apnType & uint32(apnType)) != 0, nil
+	if properties.HasApnType {
+		return (properties.apnType & uint32(apnType)) != 0, nil
+	}
+	return false, errors.New("failed to read the APN type")
 }
 
 // IsIPType checks if the IP of the bearer is of the type |ipType|
-func (b *Bearer) IsIPType(ipType mmconst.BearerIPFamily) (bool, error) {
-	properties := b.Properties()
+func (b *Bearer) IsIPType(ctx context.Context, ipType mmconst.BearerIPFamily) (bool, error) {
+	properties := b.Properties(ctx)
 	if !properties.HasIPType {
 		return false, errors.New("failed to read the IP type")
 	}
@@ -189,8 +201,8 @@ func (b *Bearer) IsIPType(ipType mmconst.BearerIPFamily) (bool, error) {
 
 // GetProfileID gets the profile ID from the bearer properties or
 // InvalidProfileID if it is not present.
-func (b *Bearer) GetProfileID() (int32, error) {
-	properties := b.Properties()
+func (b *Bearer) GetProfileID(ctx context.Context) (int32, error) {
+	properties := b.Properties(ctx)
 	if !properties.HasProfileID {
 		return InvalidProfileID, errors.New("failed to read the profile ID")
 	}
@@ -252,7 +264,7 @@ func (b *Bearer) IP6Config() *IPConfig {
 }
 
 // Properties gets the Properties value
-func (b *Bearer) Properties() BearerProperties {
+func (b *Bearer) Properties(ctx context.Context) BearerProperties {
 	innerPropsGet, err := b.props.Get(mmconst.BearerPropertyProperties)
 	if err != nil {
 		panic("failed to read bearer properties")
@@ -316,6 +328,62 @@ func (b *Bearer) Properties() BearerProperties {
 		properties.profileID, ok = value.(int32)
 	}
 	properties.HasProfileID = ok
+
+	properties.profile = nil
+	// Read the inner properties of the profile if the bearer was created using a profile ID.
+	if properties.HasProfileID && properties.profileID != InvalidProfileID {
+		profiles, err := b.modem.GetProfiles(ctx)
+		if err != nil {
+			panic(err)
+		}
+		for _, profile := range profiles {
+			// This is almost certainly a malformed profile if either of these fail, but
+			// it's not really what we're testing for here.
+			idProp, ok := profile[mmconst.BearerPropertyProfileID]
+			if !ok {
+				continue
+			}
+			id, ok := idProp.(int32)
+			if !ok {
+				continue
+			}
+
+			if properties.profileID != id {
+				continue
+			}
+
+			properties.profile = &BearerProperties{}
+			value, ok := profile[mmconst.BearerPropertyApn]
+			if ok {
+				properties.profile.apn, ok = value.(string)
+			}
+			properties.profile.HasApn = ok
+
+			value, ok = profile[mmconst.BearerPropertyApnType]
+			if ok {
+				properties.profile.apnType, ok = value.(uint32)
+			}
+			properties.profile.HasApnType = ok
+
+			value, ok = profile[mmconst.BearerPropertyAllowedAuth]
+			if ok {
+				properties.profile.allowedAuth, ok = value.(uint32)
+			}
+			properties.profile.HasAllowedAuth = ok
+
+			value, ok = profile[mmconst.BearerPropertyPassword]
+			if ok {
+				properties.profile.password, ok = value.(string)
+			}
+			properties.profile.HasPassword = ok
+
+			value, ok = profile[mmconst.BearerPropertyUser]
+			if ok {
+				properties.profile.user, ok = value.(string)
+			}
+			properties.profile.HasUser = ok
+		}
+	}
 
 	return properties
 }

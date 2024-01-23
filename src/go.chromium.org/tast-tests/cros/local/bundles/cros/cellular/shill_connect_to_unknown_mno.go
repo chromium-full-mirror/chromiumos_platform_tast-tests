@@ -129,7 +129,7 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 		s.Fatalf("Last Attach APN doesn't match: got %q, want %q", apnName, expectedLastAttachAPN)
 	}
 
-	if apnName, err := bearer.GetAPN(); err != nil {
+	if apnName, err := bearer.GetAPN(ctx); err != nil {
 		s.Fatal("Error getting APN name: ", err)
 	} else if apnName != expectedLastGoodAPN {
 		s.Fatalf("Last good APN doesn't match: got %q, want %q", apnName, expectedLastGoodAPN)
