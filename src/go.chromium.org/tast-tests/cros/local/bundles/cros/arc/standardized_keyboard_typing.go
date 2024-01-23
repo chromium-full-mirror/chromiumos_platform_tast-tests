@@ -89,7 +89,14 @@ func runStandardizedKeyboardTypingTest(ctx context.Context, testParameters stand
 		return errors.Wrapf(err, "unable to type: %v", textForTest)
 	}
 
-	if err := testParameters.Device.Object(ui.ID(textKeyboardInputID), ui.Text(textForTest)).WaitForExists(ctx, standardizedtestutil.ShortUITimeout); err != nil {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if text, err := testParameters.Device.Object(ui.ID(textKeyboardInputID)).GetText(ctx); err != nil {
+			return errors.Wrapf(err, "unable to get text from object id %q", textKeyboardInputID)
+		} else if text != textForTest {
+			return errors.Errorf("typed text is not expected. got: %q, want: %q", text, textForTest)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: standardizedtestutil.ShortUITimeout}); err != nil {
 		return errors.Wrapf(err, "unable to confirm %v was typed", textForTest)
 	}
 

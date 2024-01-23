@@ -32,7 +32,7 @@ import (
 )
 
 // ShortUITimeout stores the time a UI action has before a timeout should occur.
-const ShortUITimeout = 30 * time.Second
+const ShortUITimeout = 10 * time.Second
 
 // RunTestCasesCleanupTime stores the amount of time a test has to clean up between runs.
 const RunTestCasesCleanupTime = 20 * time.Second
