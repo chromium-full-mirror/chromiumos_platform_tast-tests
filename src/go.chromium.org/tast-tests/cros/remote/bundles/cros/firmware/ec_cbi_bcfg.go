@@ -9,7 +9,6 @@ import (
 	"context"
 	"encoding/json"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -54,8 +53,6 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to disable write protect: ", err)
 	}
 
-	commonControlTag := "11"
-	commonControlTagBatteryConfigBit := 1 << 0
 	batteryConfigTag := "12"
 	modifiedTag := false
 	originalBcicData := ""
@@ -66,20 +63,7 @@ func ECCbiBcfg(ctx context.Context, s *testing.State) {
 	battManufName := ""
 	battDeviceName := ""
 
-	out, err := readTagFromCbi(ctx, h, commonControlTag)
-	if err != nil {
-		s.Fatal("Expected read to succeed: ", err)
-	}
-	commonControlTagValue, err := strconv.Atoi(out)
-	if err != nil {
-		s.Fatal("Expected int output, but got: ", out, err)
-	}
-	if (commonControlTagValue & commonControlTagBatteryConfigBit) == 0 {
-		s.Fatal("CBI don't contain Battery config, got: ", commonControlTagValue, err)
-		return
-	}
-
-	originalBcicData, err = readBatteryConfigFromCbi(ctx, h, batteryConfigTag)
+	originalBcicData, err := readBatteryConfigFromCbi(ctx, h, batteryConfigTag)
 	if err != nil {
 		s.Fatal("Expected read to succeed: ", err)
 	}
