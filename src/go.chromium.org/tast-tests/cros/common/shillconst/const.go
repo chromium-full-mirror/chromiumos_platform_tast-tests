@@ -126,6 +126,7 @@ const (
 	ManagerPropertyRequestScanType                    = "WiFi.RequestScanType"
 	ManagerPropertyScanAllowRoam                      = "WiFi.ScanAllowRoam"
 	ManagerPropertyDOHProviders                       = "DNSProxyDOHProviders"
+	ManagerPropertyPortalFallbackHTTPSURLs            = "PortalFallbackHttpsUrls"
 	ManagerPropertyPortalHTTPSURL                     = "PortalHttpsUrl"
 	ManagerPropertyDefaultService                     = "DefaultService"
 	ManagerPropertyDefaultTechnology                  = "DefaultTechnology"
