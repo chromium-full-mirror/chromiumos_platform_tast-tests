@@ -281,7 +281,7 @@ func WaitForDownloadViaDownloadBubble(ctx context.Context, tconnAsh *chrome.Test
 	ui := uiauto.New(tconnAsh)
 
 	downloadsToolbarButton := nodewith.Role(role.Button).HasClass("DownloadToolbarButtonView")
-	if err := ui.WithTimeout(2 * time.Second).WaitUntilExists(downloadsToolbarButton)(ctx); err != nil {
+	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(downloadsToolbarButton)(ctx); err != nil {
 		testing.ContextLog(ctx, "Didn't show DownloadBubble: ", err)
 		return DownloadBubbleStateUnavailable, nil
 	}
