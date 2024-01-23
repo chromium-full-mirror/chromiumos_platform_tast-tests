@@ -101,7 +101,7 @@ func DownloadFirmwareFile(ctx context.Context, cs *testing.CloudStorage, tmpDir,
 	// Stage the complete path.
 	r, err := cs.Open(ctx, fmt.Sprintf("gs://%s", gcsFirmwareFilePath))
 	if err != nil {
-		return errors.Wrapf(err, "failed to stage file for url %q", gcsFirmwareFilePath)
+		return errors.Wrapf(err, "failed to open file for url %q", gcsFirmwareFilePath)
 	}
 
 	// Open tmp file
@@ -117,9 +117,6 @@ func DownloadFirmwareFile(ctx context.Context, cs *testing.CloudStorage, tmpDir,
 		return nil
 	}()
 	w := bufio.NewWriter(fo)
-	if err != nil {
-		return errors.Wrapf(err, "failed to stage file for url %q", gcsFirmwareFilePath)
-	}
 	written, err := io.Copy(w, r)
 	if err != nil {
 		return errors.Wrap(err, "failed to download the file")
