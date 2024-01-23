@@ -30,7 +30,7 @@ func init() {
 		BugComponent: "crbug:OS>LaCrOS",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Timeout:      3 * time.Minute,
+		Timeout:      2*chrome.LoginTimeout + time.Minute,
 	})
 }
 
