@@ -524,6 +524,12 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	if v.checkinTime, err = readResultProp(ctx, a, "dev.arc.accountcheckin.result"); err != nil {
 		return v, err
 	}
+	if v.signInTime <= 0 {
+		return v, errors.Errorf("sign-in time is not positive: %f", v.signInTime)
+	}
+	if v.checkinTime <= 0 {
+		return v, errors.Errorf("checkin time is not positive: %f", v.checkinTime)
+	}
 
 	// Calculate
 	//   * kernel boot time as a difference init process started and preStartTime.
