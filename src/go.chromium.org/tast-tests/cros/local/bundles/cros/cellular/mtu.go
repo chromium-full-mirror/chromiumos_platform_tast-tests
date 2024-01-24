@@ -74,9 +74,12 @@ func MTU(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
 
-	service, err := helper.Connect(ctx)
+	if err := helper.WaitForModemRegisteredAfterReset(ctx, 20*time.Second); err != nil {
+		s.Fatal("Modem not registered: ", err)
+	}
+	service, err := helper.ConnectWithTimeout(ctx, 10*time.Second)
 	if err != nil {
-		s.Fatal("Unable to connect to service: ", err)
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	ipConfig, err := service.GetCurrentIPConfig(ctx)

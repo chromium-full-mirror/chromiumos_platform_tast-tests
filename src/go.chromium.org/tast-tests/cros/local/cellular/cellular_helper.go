@@ -485,6 +485,39 @@ func (h *Helper) SetServiceAutoConnect(ctx context.Context, autoConnect bool) (b
 	return true, nil
 }
 
+// WaitForModemRegisteredAfterReset polls the modem and verifies that the modem stays in that state for some time.
+// This is done to ensure the modem is registered after shill has updated the initial EPS bearer settings.
+func (h *Helper) WaitForModemRegisteredAfterReset(ctx context.Context, timeout time.Duration) error {
+	const pollPeriod = 100 * time.Millisecond
+	window := 2 * time.Second
+	registeredTime := time.Time{}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		modem, err := modemmanager.NewModem(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get modem info after enabling tethering")
+		}
+		isRegistered, err := modem.IsRegistered(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to fetch registration state")
+		}
+		if !isRegistered {
+			registeredTime = time.Time{}
+			return errors.New("modem not registered")
+		}
+		if registeredTime.IsZero() {
+			registeredTime = time.Now()
+		}
+
+		if time.Now().Sub(registeredTime) < window {
+			return errors.New("modem not yet registered for enough time")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  timeout,
+		Interval: pollPeriod,
+	})
+}
+
 // ConnectToDefault connects to the default Cellular Service.
 func (h *Helper) ConnectToDefault(ctx context.Context) (time.Duration, error) {
 	ctx, st := timing.Start(ctx, "Helper.ConnectToDefault")
@@ -536,7 +569,7 @@ func (h *Helper) ConnectToServiceWithTimeout(ctx context.Context, service *shill
 		return nil
 	}, &testing.PollOptions{
 		Timeout:  timeout,
-		Interval: 5 * time.Second,
+		Interval: 1 * time.Second,
 	}); err != nil {
 		return errors.Wrapf(err, "connect to %s failed", name)
 	}
@@ -554,34 +587,59 @@ func (h *Helper) ConnectToService(ctx context.Context, service *shill.Service) e
 	return h.ConnectToServiceWithTimeout(ctx, service, defaultTimeout*6)
 }
 
-// Connect to default service if the current cellular service is not connected, otherwise return an error
-func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
-	ctx, st := timing.Start(ctx, "Helper.Connect")
+// ConnectWithTimeout connects to default service if the current cellular service is not connected specifying a timeout value,
+// otherwise return an error
+func (h *Helper) ConnectWithTimeout(ctx context.Context, connectTimeout time.Duration) (*shill.Service, error) {
+	ctx, st := timing.Start(ctx, "Helper.ConnectWithTimeout")
 	defer st.End()
-	service, err := h.FindServiceForDevice(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "unable to determine the default cellular service")
-	}
 
-	name, err := service.GetName(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get the name of the default service")
-	}
-
-	if isConnected, err := service.IsConnected(ctx); err != nil {
-		return nil, errors.Wrapf(err, "unable to get the connected state for %q", name)
-	} else if !isConnected {
-		if err := h.ConnectToServiceWithTimeout(ctx, service, longTimeout); err != nil {
-			return nil, errors.Wrapf(err, "unable to connect to the default service %q", name)
+	contextWithTimeoutWrapper := func(ctx context.Context) (*shill.Service, error) {
+		service, err := h.FindServiceForDevice(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to determine the default cellular service")
 		}
+
+		name, err := service.GetName(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get the name of the default service")
+		}
+
+		if isConnected, err := service.IsConnected(ctx); err != nil {
+			return nil, errors.Wrapf(err, "unable to get the connected state for %q", name)
+		} else if !isConnected {
+			if err := h.ConnectToServiceWithTimeout(ctx, service, connectTimeout); err != nil {
+				return nil, errors.Wrapf(err, "unable to connect to the default service %q", name)
+			}
+		}
+
+		// Wait for the service state to become connected and online.
+		if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, connectTimeout); err != nil {
+			return nil, errors.Wrapf(err, "default service %q connected but failed to become online", name)
+		}
+		return service, nil
 	}
 
-	// Wait up to 1 minute for the service state to become connected and online.
-	if err := service.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, longTimeout); err != nil {
-		return nil, errors.Wrapf(err, "default service %q connected but failed to become online", name)
+	connectCtx, cancel := context.WithTimeout(ctx, connectTimeout)
+	defer cancel()
+	service, err := contextWithTimeoutWrapper(connectCtx)
+	if err != nil {
+		select {
+		case <-connectCtx.Done():
+			// Add more details to the error when the failure is due to connectTimeout.
+			return nil, errors.Wrapf(err, "timed out after %v while connecting", connectTimeout)
+		default:
+			return nil, err
+		}
+
 	}
 
 	return service, nil
+
+}
+
+// Connect to default service if the current cellular service is not connected, otherwise return an error
+func (h *Helper) Connect(ctx context.Context) (*shill.Service, error) {
+	return h.ConnectWithTimeout(ctx, longTimeout)
 }
 
 // Disconnect from the Cellular Service and ensure that the disconnect succeeded, otherwise return an error.

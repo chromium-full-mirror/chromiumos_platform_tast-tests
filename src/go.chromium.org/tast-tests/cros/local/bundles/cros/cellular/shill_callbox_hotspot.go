@@ -174,7 +174,12 @@ func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
 
-	if _, err := helper.Connect(ctx); err != nil {
+	// Wait until registered to start a connection attempt with a small timeout.
+	if err := helper.WaitForModemRegisteredAfterReset(ctx, 20*time.Second); err != nil {
+		s.Fatal("Modem not registered: ", err)
+	}
+
+	if _, err := helper.ConnectWithTimeout(ctx, 5*time.Second); err != nil {
 		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 

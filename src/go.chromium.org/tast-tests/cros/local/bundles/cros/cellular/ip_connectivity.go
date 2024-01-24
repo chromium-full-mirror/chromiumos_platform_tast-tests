@@ -75,8 +75,12 @@ func IPConnectivity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
 
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Unable to connect to service: ", err)
+	if err := helper.WaitForModemRegisteredAfterReset(ctx, 20*time.Second); err != nil {
+		s.Fatal("Modem not registered: ", err)
+	}
+
+	if _, err := helper.ConnectWithTimeout(ctx, 10*time.Second); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
 	}
 
 	ipv4, ipv6, err := helper.GetNetworkProvisionedCellularIPTypes(ctx)

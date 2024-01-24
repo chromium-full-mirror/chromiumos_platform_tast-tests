@@ -126,9 +126,15 @@ func ShillApn(ctx context.Context, s *testing.State) {
 	if err := helper.WaitForEnabledState(ctx, true); err != nil {
 		s.Fatal("Cellular service did not reach Enabled state: ", err)
 	}
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Unable to Connect to Service: ", err)
+
+	if err := helper.WaitForModemRegisteredAfterReset(ctx, 60*time.Second); err != nil {
+		s.Fatal("Modem not registered: ", err)
 	}
+
+	if _, err := helper.ConnectWithTimeout(ctx, 5*time.Second); err != nil {
+		s.Fatal("Failed to connect to cellular service: ", err)
+	}
+
 	serviceLastAttachAPN, err := helper.GetCellularLastAttachAPN(ctx)
 	if err != nil {
 		s.Fatal("Error getting Service properties: ", err)

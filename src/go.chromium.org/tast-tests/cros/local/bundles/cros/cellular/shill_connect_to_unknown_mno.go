@@ -95,7 +95,7 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to find Cellular Service for Device: ", err)
 	}
 
-	if err := modem.WaitForState(ctx, mmconst.ModemStateRegistered, 20*time.Second); err != nil {
+	if err := helper.WaitForModemRegisteredAfterReset(ctx, 20*time.Second); err != nil {
 		s.Fatal("Modem is not registered")
 	}
 
@@ -104,7 +104,7 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 	if err = helper.SetCustomAPNList(ctx, apns); err != nil {
 		s.Fatal("Unable to set the custom APN: ", err)
 	}
-	_, err = helper.Connect(ctx)
+	_, err = helper.ConnectWithTimeout(ctx, 5*time.Second)
 	if err != nil {
 		s.Fatal("Unable to connect to service: ", err)
 	}
