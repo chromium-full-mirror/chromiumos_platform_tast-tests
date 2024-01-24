@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Verify kernel kfence errors are logged as expected",
 		Contacts:     []string{"cros-telemetry@google.com", "mutexlox@google.com", "swboyd@chromium.org"},
 		BugComponent: "b:1032705",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		// TODO(b/201790026): The lkdtm resides on the debugfs,
 		// which is not accessible when integrity mode is
 		// enabled.
