@@ -19,6 +19,7 @@ import (
 	uda "chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -26,7 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/u2fd"
+	localu2fd "go.chromium.org/tast-tests/cros/local/u2fd"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -232,7 +233,7 @@ func addWebAuthnData(ctx context.Context, cr *chrome.Chrome, webauthnURL, passwo
 		return nil
 	}
 
-	webauthnCred, err := u2fd.MakeCredentialInLocalSite(ctx, conn, tconn, u2fd.WebAuthnRegistrationConfig{Uv: "preferred"}, authCallback)
+	webauthnCred, err := localu2fd.MakeCredentialInLocalSite(ctx, conn, tconn, u2fd.WebAuthnRegistrationConfig{Uv: "preferred"}, authCallback)
 	if err != nil {
 		return errors.Wrap(err, "failed to perform WebAuthn MakeCredential")
 	}

@@ -16,13 +16,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/u2fd"
+	localu2fd "go.chromium.org/tast-tests/cros/local/u2fd"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	"go.chromium.org/tast/core/ctxutil"
@@ -55,7 +56,7 @@ type WebauthnService struct {
 	// Keeping keyboard in state instead of creating it each time because it takes about 5 seconds to create a keyboard.
 	keyboard *input.KeyboardEventWriter
 	conn     *chrome.Conn
-	srv      *u2fd.WebAuthnHTTPServer
+	srv      *localu2fd.WebAuthnHTTPServer
 
 	fakeDMS    *fakedms.FakeDMS
 	fakeDMSDir string
@@ -75,7 +76,7 @@ func (c *WebauthnService) New(ctx context.Context, req *hwsec.NewRequest) (*empt
 		return nil, errors.Wrap(err, "failed to restart ui job")
 	}
 
-	srv := u2fd.NewWebAuthnHTTPServer(ctx, http.Dir(req.GetDataPath()))
+	srv := localu2fd.NewWebAuthnHTTPServer(ctx, http.Dir(req.GetDataPath()))
 	defer func(ctx context.Context) {
 		if !ok {
 			srv.Close(ctx)
@@ -250,7 +251,7 @@ func (c *WebauthnService) StartMakeCredential(ctx context.Context, req *empty.Em
 	}
 	fillAuthenticatorAttachment(&config, c.cfg.authenticatorType)
 	fillAttestation(&config, c.cfg.attestationType)
-	channel := u2fd.InitiateMakeCredentialInLocalSite(ctx, c.conn, config)
+	channel := localu2fd.InitiateMakeCredentialInLocalSite(ctx, c.conn, config)
 
 	var res u2fd.MakeCredentialResult
 	select {
@@ -286,17 +287,17 @@ func (c *WebauthnService) DoMakeCredential(ctx context.Context, req *empty.Empty
 	// If authenticator type is "Platform", there's only platform option so
 	// we don't have to manually click "This device".
 	if c.cfg.authenticatorType != hwsec.AuthenticatorType_PLATFORM {
-		if err := u2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
+		if err := localu2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
 			return nil, err
 		}
 	}
 
 	if c.cfg.hasDialog {
-		if err := u2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
+		if err := localu2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
 			return nil, err
 		}
 	} else {
-		if err := u2fd.WaitForPopup(ctx, tconn); err != nil {
+		if err := localu2fd.WaitForPopup(ctx, tconn); err != nil {
 			return nil, err
 		}
 	}
@@ -311,7 +312,7 @@ func (c *WebauthnService) EndMakeCredential(ctx context.Context, req *empty.Empt
 	}
 
 	if !c.cfg.hasDialog {
-		if err := u2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
+		if err := localu2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
 			return nil, err
 		}
 	}
@@ -336,7 +337,7 @@ func (c *WebauthnService) StartGetAssertion(ctx context.Context, req *hwsec.Star
 		},
 		Uv: uvToString(c.cfg.userVerification),
 	}
-	channel := u2fd.InitiateGetAssertionInLocalSite(ctx, c.conn, config)
+	channel := localu2fd.InitiateGetAssertionInLocalSite(ctx, c.conn, config)
 
 	select {
 	case err := <-channel:
@@ -356,11 +357,11 @@ func (c *WebauthnService) DoGetAssertion(ctx context.Context, req *empty.Empty) 
 	}
 
 	if c.cfg.hasDialog {
-		if err := u2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
+		if err := localu2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
 			return nil, err
 		}
 	} else {
-		if err := u2fd.WaitForPopup(ctx, tconn); err != nil {
+		if err := localu2fd.WaitForPopup(ctx, tconn); err != nil {
 			return nil, err
 		}
 	}
@@ -375,7 +376,7 @@ func (c *WebauthnService) EndGetAssertion(ctx context.Context, req *empty.Empty)
 	}
 
 	if !c.cfg.hasDialog {
-		if err := u2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
+		if err := localu2fd.WaitUntilPopupGone(ctx, tconn); err != nil {
 			return nil, err
 		}
 	}

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/util"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -17,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/u2fd"
+	localu2fd "go.chromium.org/tast-tests/cros/local/u2fd"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -193,7 +194,7 @@ func testWebauthnLogin(ctx context.Context, config *util.CrossVersionLoginConfig
 		return errors.Wrap(err, "failed to log in with password")
 	}
 
-	u2fDaemon, err := u2fd.NewU2fDaemon(ctx)
+	u2fDaemon, err := localu2fd.NewU2fDaemon(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to u2fd")
 	}
@@ -235,7 +236,7 @@ func testWebauthnLogin(ctx context.Context, config *util.CrossVersionLoginConfig
 		Keys: []u2fd.WebAuthnCredential{*config.WebAuthnCred},
 		Uv:   "preferred",
 	}
-	if err := u2fd.GetAssertionInLocalSite(ctx, conn, tconn, assertionConfig, authCallback); err != nil {
+	if err := localu2fd.GetAssertionInLocalSite(ctx, conn, tconn, assertionConfig, authCallback); err != nil {
 		return errors.Wrap(err, "failed to perform WebAuthn GetAssertion")
 	}
 

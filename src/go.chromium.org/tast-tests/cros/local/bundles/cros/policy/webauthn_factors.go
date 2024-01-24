@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
+	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -25,7 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
-	"go.chromium.org/tast-tests/cros/local/u2fd"
+	localu2fd "go.chromium.org/tast-tests/cros/local/u2fd"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -110,7 +111,7 @@ func WebauthnFactors(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	server := u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
+	server := localu2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
 	defer server.Close(cleanupCtx)
 
 	type testCase struct {
@@ -293,12 +294,12 @@ func getExpectedWebAuthnCapabilities(quickUnlockModeAllowlist *policy.QuickUnloc
 }
 
 func verifyInSessionAuthDialog(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, pinEnabled bool) error {
-	u2fd.InitiateMakeCredentialInLocalSite(ctx, conn, u2fd.WebAuthnRegistrationConfig{Uv: "preferred"})
+	localu2fd.InitiateMakeCredentialInLocalSite(ctx, conn, u2fd.WebAuthnRegistrationConfig{Uv: "preferred"})
 
-	if err := u2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
+	if err := localu2fd.ChoosePlatformAuthenticator(ctx, tconn); err != nil {
 		return err
 	}
-	if err := u2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
+	if err := localu2fd.WaitForWebAuthnDialog(ctx, tconn); err != nil {
 		return err
 	}
 
