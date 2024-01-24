@@ -76,11 +76,8 @@ func HibernateVMDebug(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a new test: ", err)
 	}
-	defer func() {
-		if err := ht.CleanUp(ctx); err != nil {
-			s.Log("Failed to cleanup: ", err)
-		}
-	}()
+
+	defer ht.CleanUp(ctx)
 
 	if cycleID > 0 {
 		ht.OverrideCycleID(cycleID)

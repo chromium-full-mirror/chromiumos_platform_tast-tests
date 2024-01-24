@@ -77,13 +77,14 @@ func NewTester(ctx context.Context, s *testing.State, account *tape.OwnedTestAcc
 
 // CleanUp should be called when the test is about to exit to clean up any resources that
 // might be left behind otherwise.
-func (t *Tester) CleanUp(ctx context.Context) error {
+func (t *Tester) CleanUp(ctx context.Context) {
 	if t.accountManager != nil {
 		t.logger.Log("Cleaning up owned test accounts")
-		return t.accountManager.CleanUp(ctx)
-	}
 
-	return nil
+		if err := t.accountManager.CleanUp(ctx); err != nil {
+			t.logger.Log(err)
+		}
+	}
 }
 
 // OverrideCycleID overrides the hibernate cycle id.
