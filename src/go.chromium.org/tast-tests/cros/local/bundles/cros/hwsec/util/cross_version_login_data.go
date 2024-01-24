@@ -19,6 +19,7 @@ import (
 	uda "chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
+	"go.chromium.org/tast-tests/cros/common/hwsec/util"
 	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -33,24 +34,13 @@ import (
 )
 
 // VaultKeyInfo contains the information of a vault key
-type VaultKeyInfo struct {
-	Password   string
-	KeyLabel   string
-	LowEntropy bool
-}
+type VaultKeyInfo = util.VaultKeyInfo
 
 // NewVaultKeyInfo creates VaultKeyInfo from password, label and lowEntropy
-func NewVaultKeyInfo(password, label string, lowEntropy bool) *VaultKeyInfo {
-	info := &VaultKeyInfo{
-		Password:   password,
-		KeyLabel:   label,
-		LowEntropy: lowEntropy,
-	}
-	return info
-}
+var NewVaultKeyInfo = util.NewVaultKeyInfo
 
 // VaultFSType indicates the type of the file system used for the user vault.
-type VaultFSType int
+type VaultFSType = util.VaultFSType
 
 const (
 	// NoVaultFS represents the absence of the user vault in the snapshot.
@@ -60,45 +50,7 @@ const (
 )
 
 // CrossVersionLoginConfig contains the information for cross-version login
-type CrossVersionLoginConfig struct {
-	AuthConfig     hwsec.AuthConfig
-	RsaKey         *rsa.PrivateKey
-	KeyLabel       string
-	ExtraVaultKeys []VaultKeyInfo
-	VaultFSType    VaultFSType
-	WebAuthnCred   *u2fd.WebAuthnCredential
-	InstallAttrs   map[string]string
-}
-
-// NewPassAuthCrossVersionLoginConfig creates cross version-login config from password auth config
-func NewPassAuthCrossVersionLoginConfig(authConfig *hwsec.AuthConfig, keyLabel string) *CrossVersionLoginConfig {
-	config := &CrossVersionLoginConfig{
-		AuthConfig: *authConfig,
-		KeyLabel:   keyLabel,
-	}
-	return config
-}
-
-// AddVaultKeyData adds a vault key to cryptohome and store the VaultKeyInfo to the config
-func (config *CrossVersionLoginConfig) AddVaultKeyData(ctx context.Context, cryptohome *hwsec.CryptohomeClient, authID string, info *VaultKeyInfo) error {
-	if info.LowEntropy {
-		if err := cryptohome.AddPinAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
-			return errors.Wrap(err, "failed to add pin")
-		}
-		if _, err := cryptohome.AuthenticatePinAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
-			return errors.Wrap(err, "failed to verify added pin")
-		}
-	} else {
-		if err := cryptohome.AddAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
-			return errors.Wrap(err, "failed to add password")
-		}
-		if _, err := cryptohome.AuthenticateAuthFactor(ctx, authID, info.KeyLabel, info.Password); err != nil {
-			return errors.Wrap(err, "failed to verify added password")
-		}
-	}
-	config.ExtraVaultKeys = append(config.ExtraVaultKeys, *info)
-	return nil
-}
+type CrossVersionLoginConfig = util.CrossVersionLoginConfig
 
 // NewChallengeAuthCrossVersionLoginConfig creates cross-version login config from challenge auth config and rsa key
 func NewChallengeAuthCrossVersionLoginConfig(authConfig *hwsec.AuthConfig, keyLabel string, rsaKey *rsa.PrivateKey) *CrossVersionLoginConfig {
@@ -268,7 +220,7 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 	keyLabel := authFactors[0].Label
 
 	authConfig := hwsec.NewPassAuthConfig(username, password)
-	config := NewPassAuthCrossVersionLoginConfig(authConfig, keyLabel)
+	config := util.NewPassAuthCrossVersionLoginConfig(authConfig, keyLabel)
 	ecryptfsExists, err := ecryptfsVaultExists(ctx, cryptohome, username)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to check ecryptfs presence")
