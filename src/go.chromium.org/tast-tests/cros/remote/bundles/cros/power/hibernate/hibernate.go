@@ -193,10 +193,18 @@ func (t *Tester) PreHibernateSteps(ctx context.Context, skipReboot bool) error {
 	ctxCycle, cancel := context.WithTimeout(ctx, CycleMaxDuration)
 	defer cancel()
 
-	if t.isFirstCycle && !skipReboot {
-		// Make sure the system is in a consistent state.
-		if err := t.reboot(ctxCycle); err != nil {
-			return err
+	if t.isFirstCycle {
+		if !skipReboot {
+			// Make sure the system is in a consistent state.
+			if err := t.reboot(ctxCycle); err != nil {
+				return err
+			}
+		}
+
+		if t.memPressureMB > 0 {
+			if err := t.forceMemPressure(ctx, t.memPressureMB); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -341,7 +349,6 @@ func (t *Tester) verifyMemPressureHashOnResume(ctx context.Context) error {
 	INMEM_HASH=$(cat /run/mem_pressure/alloc_sha256); \
 	if [ "$COMPUTED_HASH" = "$INMEM_HASH" ]; then \
 		echo -n "OK"
-		umount /run/mem_pressure
 		exit 0; \
 	fi; \
 	echo -n "FAILED HASH VERIFICATION, GOT:$COMPUTED_HASH WANTED:$INMEM_HASH"; \
@@ -374,12 +381,6 @@ func (t *Tester) waitForDutUnreachable(ctx context.Context) error {
 func (t *Tester) hibernate(ctx context.Context, reboot bool) error {
 	if err := t.disableConsoleSuspend(ctx); err != nil {
 		return err
-	}
-
-	if t.memPressureMB > 0 {
-		if err := t.forceMemPressure(ctx, t.memPressureMB); err != nil {
-			return err
-		}
 	}
 
 	cmdCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
