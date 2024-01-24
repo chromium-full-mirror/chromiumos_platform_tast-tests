@@ -124,7 +124,7 @@ func (s *Servo) RunECCommandGetOutput(ctx context.Context, cmd string, patterns 
 	return ConvertToStringArrayArray(ctx, iList)
 }
 
-func (s *Servo) runECCommandGetOutputNoConsoleLogsHelper(ctx context.Context, cmd string, patterns []string, allowRetries bool) ([][]string, error) {
+func (s *Servo) runECCommandGetOutputNoConsoleLogsHelper(ctx context.Context, cmd string, patterns []string, allowRetries bool) (output [][]string, retErr error) {
 	// EC console can be extremely chatty. Log messages are liable to interrupt
 	// the console output, breaking the regex pattern. Turn off all other channels
 	// and restore after.
@@ -140,12 +140,9 @@ func (s *Servo) runECCommandGetOutputNoConsoleLogsHelper(ctx context.Context, cm
 	// Restore original mask
 	defer func() {
 		if err := s.RestoreDUTConsoleChannelMask(ctx); err != nil {
-			panic("Cannot restore console chanel mask to original state")
+			retErr = errors.Join(errors.Wrap(err, "cannot restore console chanel mask to original state"))
 		}
-		testing.ContextLog(ctx, "EC console logs restored")
 	}()
-
-	testing.ContextLog(ctx, "EC console logs off")
 
 	if allowRetries {
 		// Use a polling loop to retry the command if not successful.
