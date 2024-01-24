@@ -147,6 +147,91 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiTputHE80TCPTx, tdreq.WiFiTputHE80TCPRx, tdreq.WiFiTputHE80TCPRxTx, tdreq.WiFiTputHE80UDPTx, tdreq.WiFiTputHE80UDPRx, tdreq.WiFiTputHE80UDPRxTx},
 			},
+			// TODO(b/323903848) Stabilize WiFi 6E performance tests
+			{
+				// Network: WPA3-SAE ("pure") HE20 802.11axe.
+				Name: "he20_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+			},
+			{
+				// Network: WPA3-SAE ("pure") HE40 802.11axe.
+				Name: "he40_6ghz",
+				// TODO(b/323591821) Enable setting channel width to 40MHz on
+				// 6GHz channels.
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC),
+						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+			},
+			{
+				// Network: WPA3-SAE ("pure") HE80 802.11axe.
+				Name: "he80_pure_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+			},
+			{
+				// Network: WPA3-SAE ("mixed") HE80 802.11axe.
+				Name: "he80_mixed_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+			},
+			{
+				// Network: WPA3-SAE ("pure") HE160 802.11axe.
+				Name: "he160_pure_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+			},
+			{
+				// Network: WPA3-SAE ("mixed") HE160 802.11axe.
+				Name: "he160_mixed_6ghz",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+					secConfFac: wpa.NewConfigFactory("chromeos",
+						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+			},
 			{
 				// Network: open HT20 802.11n.
 				Name: "ht20",
@@ -399,6 +484,22 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 		ctx, cancel := tf.ReserveForDeconfigAP(ctx, apIface)
 		defer cancel()
 		s.Log("AP setup done")
+
+		// For 6GHz tests, initialize the DUT regdomain to US so that the DUT is
+		// able to actively scan the 6GHz band.
+		if ap.Is6GHzOpClass(apIface.Config().OpClass) {
+			initialRegDomain, err := tf.InitializeRegdomainUS(ctx)
+			if err != nil {
+				s.Fatal("Failed to initialize the regulatory domain: ", err)
+			}
+			defer func(ctx context.Context) {
+				if err := tf.ResetRegdomain(ctx, initialRegDomain); err != nil {
+					s.Error("Failed to reset the regulatory domain: ", err)
+				}
+			}(ctx)
+			ctx, cancel = ctxutil.Shorten(ctx, 500*time.Millisecond)
+			defer cancel()
+		}
 
 		_, err = tf.ConnectWifiAP(ctx, apIface)
 		if err != nil {
