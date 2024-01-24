@@ -207,26 +207,26 @@ func init() {
 			"cross_version_login/R118-15604.60.0_betty_20231123_data.tar.gz",
 		},
 	})
-  testing.AddFixture(&testing.Fixture{
-    Name: "crossVersionTi50R119",
-    Desc: "Loads the data of milestone R119 from the Ti50 simulator device",
-    Contacts: []string{
-      "cros-hwsec@google.com",
-      "chingkang@google.com",
-    },
-    SetUpTimeout:    crossVersionSetUpTimeout,
-    ResetTimeout:    crossVersionResetTimeout,
-    TearDownTimeout: crossVersionTearDownTimeout,
-    Parent:          "crossVersionBackup",
-    Impl: &crossVersionFixtImpl{
-      dataPrefix: "R119-15633.69.0_betty_20231212",
-      useCurrent: false,
-    },
-    Data: []string{
-      "cross_version_login/R119-15633.69.0_betty_20231212_config.json",
-      "cross_version_login/R119-15633.69.0_betty_20231212_data.tar.gz",
-    },
-  })
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTi50R119",
+		Desc: "Loads the data of milestone R119 from the Ti50 simulator device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R119-15633.69.0_betty_20231212",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R119-15633.69.0_betty_20231212_config.json",
+			"cross_version_login/R119-15633.69.0_betty_20231212_data.tar.gz",
+		},
+	})
 
 	// Fixtures of cross version with TPM2.0
 	testing.AddFixture(&testing.Fixture{
@@ -829,26 +829,26 @@ func init() {
 			"cross_version_login/R118-15604.33.0_novato_20231123_data.tar.gz",
 		},
 	})
-  testing.AddFixture(&testing.Fixture{
-    Name: "crossVersionTpm2R119",
-    Desc: "Loads the data of milestone R119 from the tpm2 device",
-    Contacts: []string{
-      "cros-hwsec@google.com",
-      "chingkang@google.com",
-    },
-    SetUpTimeout:    crossVersionSetUpTimeout,
-    ResetTimeout:    crossVersionResetTimeout,
-    TearDownTimeout: crossVersionTearDownTimeout,
-    Parent:          "crossVersionBackup",
-    Impl: &crossVersionFixtImpl{
-      dataPrefix: "R119-15633.69.0_amd64-generic_20231212",
-      useCurrent: false,
-    },
-    Data: []string{
-      "cross_version_login/R119-15633.69.0_amd64-generic_20231212_config.json",
-      "cross_version_login/R119-15633.69.0_amd64-generic_20231212_data.tar.gz",
-    },
-  })
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpm2R119",
+		Desc: "Loads the data of milestone R119 from the tpm2 device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R119-15633.69.0_amd64-generic_20231212",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R119-15633.69.0_amd64-generic_20231212_config.json",
+			"cross_version_login/R119-15633.69.0_amd64-generic_20231212_data.tar.gz",
+		},
+	})
 
 	// Fixtures of cross version with TPM dynamic
 	testing.AddFixture(&testing.Fixture{
@@ -1311,26 +1311,26 @@ func init() {
 			"cross_version_login/R118-15604.60.0_reven-vmtest_20231123_data.tar.gz",
 		},
 	})
-  testing.AddFixture(&testing.Fixture{
-    Name: "crossVersionTpmDynamicR119",
-    Desc: "Loads the data of milestone R119 from the tpm dynamic device",
-    Contacts: []string{
-      "cros-hwsec@google.com",
-      "chingkang@google.com",
-    },
-    SetUpTimeout:    crossVersionSetUpTimeout,
-    ResetTimeout:    crossVersionResetTimeout,
-    TearDownTimeout: crossVersionTearDownTimeout,
-    Parent:          "crossVersionBackup",
-    Impl: &crossVersionFixtImpl{
-      dataPrefix: "R119-15633.69.0_reven-vmtest_20231212",
-      useCurrent: false,
-    },
-    Data: []string{
-      "cross_version_login/R119-15633.69.0_reven-vmtest_20231212_config.json",
-      "cross_version_login/R119-15633.69.0_reven-vmtest_20231212_data.tar.gz",
-    },
-  })
+	testing.AddFixture(&testing.Fixture{
+		Name: "crossVersionTpmDynamicR119",
+		Desc: "Loads the data of milestone R119 from the tpm dynamic device",
+		Contacts: []string{
+			"cros-hwsec@google.com",
+			"chingkang@google.com",
+		},
+		SetUpTimeout:    crossVersionSetUpTimeout,
+		ResetTimeout:    crossVersionResetTimeout,
+		TearDownTimeout: crossVersionTearDownTimeout,
+		Parent:          "crossVersionBackup",
+		Impl: &crossVersionFixtImpl{
+			dataPrefix: "R119-15633.69.0_reven-vmtest_20231212",
+			useCurrent: false,
+		},
+		Data: []string{
+			"cross_version_login/R119-15633.69.0_reven-vmtest_20231212_config.json",
+			"cross_version_login/R119-15633.69.0_reven-vmtest_20231212_data.tar.gz",
+		},
+	})
 }
 
 type cleanupFunc func(context.Context) error
@@ -1351,7 +1351,6 @@ func (f *backupFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	daemonController := helper.DaemonController()
 
 	// Soft clear the TPM before preparing the DUT.
 	if err := helper.EnsureTPMAndSystemStateAreReset(ctx); err != nil {
@@ -1364,13 +1363,13 @@ func (f *backupFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 	}
 	// Create backup data to recover state later.
 	backupPath := filepath.Join(tmpDir, "backup_data.tar.xz")
-	if err := hwseclocal.SaveLoginData(ctx, daemonController, backupPath, true /*includeTpm*/); err != nil {
+	if err := helper.SaveLoginData(ctx, backupPath, true /*includeTpm*/); err != nil {
 		s.Fatal("Failed to backup login data: ", err)
 	}
 	f.webauthnServer = u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
 	f.cleanup = func(ctx context.Context) error {
 		// Load back the origin login data after the test.
-		if err := hwseclocal.LoadLoginData(ctx, daemonController, backupPath, true /*includeTpm*/); err != nil {
+		if err := helper.LoadLoginData(ctx, backupPath, true /*includeTpm*/); err != nil {
 			return errors.Wrap(err, "failed to load login data")
 		}
 		if err := os.RemoveAll(tmpDir); err != nil {
@@ -1423,8 +1422,6 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	daemonController := helper.DaemonController()
-	cryptohome := helper.CryptohomeClient()
 
 	tmpDir, err := ioutil.TempDir("", "cross_version_login")
 	if err != nil {
@@ -1438,7 +1435,7 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		dataPath = filepath.Join(tmpDir, "data.tar.gz")
 		configPath = filepath.Join(tmpDir, "config.json")
 		s.Log("Preparing login data of current version")
-		if err := util.PrepareCrossVersionLoginData(ctx, s.Logf, cryptohome, daemonController, dataPath, configPath, parentData.WebAuthnURL); err != nil {
+		if err := util.PrepareCrossVersionLoginData(ctx, s.Logf, helper.CmdHelper, dataPath, configPath, parentData.WebAuthnURL); err != nil {
 			s.Fatal("Failed to prepare login data for current version: ", err)
 		}
 	} else {
@@ -1450,15 +1447,15 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 
 	configJSON, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		return errors.Wrapf(err, "failed to read %q", configPath)
+		s.Fatalf("Failed to read %q: %v", configPath, err)
 	}
 	var configList []util.CrossVersionLoginConfig
 	if err := json.Unmarshal(configJSON, &configList); err != nil {
-		return errors.Wrap(err, "failed to read json")
+		s.Fatal("Failed to read json: ", err)
 	}
 
-	if err := hwseclocal.LoadLoginData(ctx, daemonController, dataPath, true /*includeTpm*/); err != nil {
-		return errors.Wrap(err, "failed to load login data")
+	if err := helper.LoadLoginData(ctx, dataPath, true /*includeTpm*/); err != nil {
+		s.Fatal("Failed to load login data: ", err)
 	}
 
 	f.dataPath = dataPath
@@ -1483,8 +1480,7 @@ func (f *crossVersionFixtImpl) Reset(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create hwsec local helper")
 	}
-	daemonController := helper.DaemonController()
-	if err := hwseclocal.LoadLoginData(ctx, daemonController, f.dataPath, true /*includeTpm*/); err != nil {
+	if err := helper.LoadLoginData(ctx, f.dataPath, true /*includeTpm*/); err != nil {
 		return errors.Wrap(err, "failed to load login data")
 	}
 	return nil

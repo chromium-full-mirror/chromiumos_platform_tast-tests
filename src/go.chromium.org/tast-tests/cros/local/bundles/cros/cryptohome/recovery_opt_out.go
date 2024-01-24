@@ -66,7 +66,6 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	daemonController := helper.DaemonController()
 
 	// Clean up obsolete state, in case there's any.
 	if err := client.UnmountAll(ctx); err != nil {
@@ -151,7 +150,7 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 	// Backup the login data.
 	dataPath := filepath.Join(loginDataBackup, "data.tar.gz")
 	s.Log("Preparing login data of current version")
-	if err := hwseclocal.SaveLoginData(ctx, daemonController, dataPath, false /*includeTpm*/); err != nil {
+	if err := helper.SaveLoginData(ctx, dataPath, false /*includeTpm*/); err != nil {
 		s.Fatal("Failed to backup login data: ", err)
 	}
 
@@ -177,7 +176,7 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 	}
 
 	// Restore the login data.
-	if err := hwseclocal.LoadLoginData(ctx, daemonController, dataPath, false /*includeTpm*/); err != nil {
+	if err := helper.LoadLoginData(ctx, dataPath, false /*includeTpm*/); err != nil {
 		s.Fatal("Failed to restore login data: ", err)
 	}
 

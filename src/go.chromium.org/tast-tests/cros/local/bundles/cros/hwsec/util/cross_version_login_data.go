@@ -17,6 +17,7 @@ import (
 
 	cpb "chromiumos/system_api/cryptohome_proto"
 	uda "chromiumos/system_api/user_data_auth_proto"
+
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -24,7 +25,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
-	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/u2fd"
 	"go.chromium.org/tast/core/errors"
@@ -327,7 +327,10 @@ func setInstallAttributes(ctx context.Context, cryptohome *hwsec.CryptohomeClien
 }
 
 // PrepareCrossVersionLoginData prepares the login data and config for CrossVersionLogin and saves them to dataPath and configPath respectively
-func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptohome *hwsec.CryptohomeClient, daemonController *hwsec.DaemonController, dataPath, configPath, webauthnURL string) (retErr error) {
+func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, helper hwsec.CmdHelper, dataPath, configPath, webauthnURL string) (retErr error) {
+	daemonController := helper.DaemonController()
+	cryptohome := helper.CryptohomeClient()
+
 	var configList []CrossVersionLoginConfig
 
 	defer func() {
@@ -376,7 +379,7 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, cryptoh
 	// Note that if the format of either CrossVersionLoginConfigData or CrossVersionLoginConfig is changed,
 	// the hwsec.CrossVersionLogin should be modified and the generated data should be regenerated.
 	// Create compressed data for mocking the login data in this version, which will be used in hwsec.CrossVersionLogin.
-	if err := hwseclocal.SaveLoginData(ctx, daemonController, dataPath, true /*includeTpm*/); err != nil {
+	if err := helper.SaveLoginData(ctx, dataPath, true /*includeTpm*/); err != nil {
 		return errors.Wrap(err, "failed to create cross-version-login data")
 	}
 	// Create JSON file of CrossVersionLoginConfig object in order to record which login method we needed to test in hwsec.CrossVersionLogin.

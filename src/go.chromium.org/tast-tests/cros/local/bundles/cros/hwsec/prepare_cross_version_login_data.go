@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/util"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/u2fd"
@@ -47,8 +46,6 @@ func PrepareCrossVersionLoginData(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	daemonController := helper.DaemonController()
-	cryptohome := hwsec.NewCryptohomeClient(cmdRunner)
 
 	server := u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
 	defer server.Close(cleanupCtx)
@@ -62,7 +59,7 @@ func PrepareCrossVersionLoginData(ctx context.Context, s *testing.State) {
 
 	dataPath := filepath.Join(tmpDir, "data.tar.gz")
 	configPath := filepath.Join(tmpDir, "config.json")
-	if err := util.PrepareCrossVersionLoginData(ctx, s.Logf, cryptohome, daemonController, dataPath, configPath, server.URL+"/webauthn.html"); err != nil {
+	if err := util.PrepareCrossVersionLoginData(ctx, s.Logf, helper.CmdHelper, dataPath, configPath, server.URL+"/webauthn.html"); err != nil {
 		s.Fatal("Failed to prepare cross-version login data: ", err)
 	}
 }

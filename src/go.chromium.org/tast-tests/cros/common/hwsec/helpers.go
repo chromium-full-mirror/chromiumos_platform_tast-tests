@@ -166,6 +166,12 @@ func (h *CmdHelper) RemoveFile(ctx context.Context, filename string) error {
 	return err
 }
 
+// RemoveAll would delete all the files and dirs
+func (h *CmdHelper) RemoveAll(ctx context.Context, filename string) error {
+	_, err := h.cmdRunner.Run(ctx, "rm", "-rf", "--", filename)
+	return err
+}
+
 // ReadFile would read data from the file
 func (h *CmdHelper) ReadFile(ctx context.Context, filename string) ([]byte, error) {
 	return h.cmdRunner.Run(ctx, "cat", "--", filename)

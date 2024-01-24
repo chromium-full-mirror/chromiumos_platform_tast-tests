@@ -6,32 +6,21 @@ package hwsec
 
 import (
 	"context"
-	"io/ioutil"
-	"os"
-	"path"
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/hwsec"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-func pathExists(ctx context.Context, path string) (bool) {
-	_, err := os.Stat(path)
-	if err == nil {
-		return true
-	}
-	if !errors.Is(err, os.ErrNotExist) {
-		testing.ContextLog(ctx, "Failed to stat /var/lib/device_management dir: ", err)
-	}
-	return false
+func (h *CmdHelper) pathExists(ctx context.Context, path string) bool {
+	_, err := h.cmdRunner.Run(ctx, "stat", path)
+	return err == nil
 }
 
-func runCmdOrFailWithOut(cmd *testexec.Cmd) error {
-	out, err := cmd.CombinedOutput()
+func (h *CmdHelper) runCmdOrFailWithOut(ctx context.Context, cmd string, args ...string) error {
+	out, err := h.cmdRunner.RunWithCombinedOutput(ctx, cmd, args...)
 	if err != nil {
 		// Return programs's output on failures. Avoid line breaks in error
 		// messages, to keep the Tast logs readable.
@@ -41,23 +30,20 @@ func runCmdOrFailWithOut(cmd *testexec.Cmd) error {
 	return nil
 }
 
-func decompressData(ctx context.Context, src string) error {
+func (h *CmdHelper) decompressData(ctx context.Context, src string) error {
 	// Use the "tar" program as it takes care of recursive unpacking,
 	// preserving ownership, permissions and SELinux attributes.
-	cmd := testexec.CommandContext(ctx, "/bin/tar",
+	return h.runCmdOrFailWithOut(ctx, "/bin/tar",
 		"--extract",              // extract files from an archive
 		"--gzip",                 // filter the archive through gunzip
 		"--preserve-permissions", // extract file permissions
 		"--same-owner",           // extract file ownership
+		"--directory=/",          // unpacks files to the root directory
 		"--file",                 // read from the file specified in the next argument
 		src)
-	// Set the work directory for "tar" at "/", so that it unpacks files
-	// at correct locations.
-	cmd.Dir = "/"
-	return runCmdOrFailWithOut(cmd)
 }
 
-func compressData(ctx context.Context, dst string, paths, ignorePaths []string) error {
+func (h *CmdHelper) compressData(ctx context.Context, dst string, paths, ignorePaths []string) error {
 	// Use the "tar" program as it takes care of recursive packing,
 	// preserving ownership, permissions and SELinux attributes.
 	args := append([]string{
@@ -74,23 +60,23 @@ func compressData(ctx context.Context, dst string, paths, ignorePaths []string) 
 	}
 	// Specify the input paths to archive.
 	args = append(args, paths...)
-	cmd := testexec.CommandContext(ctx, "/bin/tar", args...)
-	return runCmdOrFailWithOut(cmd)
+	return h.runCmdOrFailWithOut(ctx, "/bin/tar", args...)
 }
 
 // SaveLoginData creates the compressed file of login data:
-// - /home/.shadow
-// - /home/chronos
-// - /mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip (if includeTpm is set to true).
-// - /var/lib/device_management (for install-time attributes, starting from R119)
-func SaveLoginData(ctx context.Context, daemonController *hwsec.DaemonController, archivePath string, includeTpm bool) error {
-	if err := stopHwsecDaemons(ctx, daemonController, includeTpm); err != nil {
+//
+//   - /home/.shadow
+//   - /home/chronos
+//   - /mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip (if includeTpm is set to true).
+//   - /var/lib/device_management (for install-time attributes, starting from R119)
+func (h *CmdHelper) SaveLoginData(ctx context.Context, archivePath string, includeTpm bool) error {
+	if err := h.stopDaemons(ctx, includeTpm); err != nil {
 		return err
 	}
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
-	defer ensureHwsecDaemons(cleanupCtx, daemonController, includeTpm)
+	defer h.ensureDaemons(cleanupCtx, includeTpm)
 
 	paths := []string{
 		"/home/.shadow",
@@ -101,7 +87,7 @@ func SaveLoginData(ctx context.Context, daemonController *hwsec.DaemonController
 	}
 
 	// Starting from R119, we started storing install_attributes.pb inside /var/lib/device_management/
-	if pathExists(ctx, "/var/lib/device_management") {
+	if h.pathExists(ctx, "/var/lib/device_management") {
 		paths = append(paths, "/var/lib/device_management")
 	}
 
@@ -111,98 +97,83 @@ func SaveLoginData(ctx context.Context, daemonController *hwsec.DaemonController
 	ignorePaths := []string{
 		"/home/.shadow/*/mount",
 	}
-	if err := compressData(ctx, archivePath, paths, ignorePaths); err != nil {
+	if err := h.compressData(ctx, archivePath, paths, ignorePaths); err != nil {
 		return errors.Wrap(err, "failed to compress the cryptohome data")
 	}
 	return nil
 }
 
-// removeAllChildren deletes all files and folders from the specified directory.
-func removeAllChildren(dirPath string) error {
-	dir, err := ioutil.ReadDir(dirPath)
-	if err != nil {
-		return errors.Wrap(err, "failed to read dir")
-	}
-	firstErr := error(nil)
-	for _, f := range dir {
-		fullPath := path.Join([]string{dirPath, f.Name()}...)
-		if err := os.RemoveAll(fullPath); err != nil {
-			// Continue even after seeing an error, to at least attempt
-			// deleting other files.
-			firstErr = errors.Wrapf(err, "failed to remove %s", f)
-		}
-	}
-	return firstErr
-}
-
 // LoadLoginData loads the login data from compressed file.
-func LoadLoginData(ctx context.Context, daemonController *hwsec.DaemonController, archivePath string, includeTpm bool) error {
-	if err := stopHwsecDaemons(ctx, daemonController, includeTpm); err != nil {
+func (h *CmdHelper) LoadLoginData(ctx context.Context, archivePath string, includeTpm bool) error {
+	if err := h.stopDaemons(ctx, includeTpm); err != nil {
 		return err
 	}
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
-	defer ensureHwsecDaemons(cleanupCtx, daemonController, includeTpm)
+	defer h.ensureDaemons(cleanupCtx, includeTpm)
 
 	// Remove the `/home/.shadow` first to prevent any unexpected file remaining.
-	if err := os.RemoveAll("/home/.shadow"); err != nil {
+	if err := h.RemoveAll(ctx, "/home/.shadow"); err != nil {
 		return errors.Wrap(err, "failed to remove old /home/.shadow data")
 	}
 	// Clean up `/home/chronos` as well (note that deleting this directory itself would fail).
-	if err := removeAllChildren("/home/chronos"); err != nil {
-		return errors.Wrap(err, "failed to remove old /home/chronos data")
+	if err := h.RemoveAll(ctx, "/home/chronos/*"); err != nil {
+		return errors.Wrap(err, "failed to remove old /home/chronos/* data")
+	}
+	if err := h.RemoveAll(ctx, "/home/chronos/.*"); err != nil {
+		return errors.Wrap(err, "failed to remove old /home/chronos/.* data")
 	}
 	// Clean up `/var/lib/device_management` if exists
-	if pathExists(ctx, "/var/lib/device_management") {
-		if err := removeAllChildren("/var/lib/device_management"); err != nil {
+	if h.pathExists(ctx, "/var/lib/device_management") {
+		if err := h.RemoveAll(ctx, "/var/lib/device_management/*"); err != nil {
 			return errors.Wrap(err, "failed to remove old /var/lib/device_management data")
 		}
 	}
 
-	if err := decompressData(ctx, archivePath); err != nil {
+	if err := h.decompressData(ctx, archivePath); err != nil {
 		return errors.Wrap(err, "failed to decompress the cryptohome data")
 	}
 
 	// Run `restorecon` to make sure SELinux attributes are correct after the decompression.
-	if err := testexec.CommandContext(ctx, "restorecon", "-r", "/home/.shadow").Run(); err != nil {
+	if _, err := h.cmdRunner.Run(ctx, "restorecon", "-r", "/home/.shadow"); err != nil {
 		return errors.Wrap(err, "failed to restore selinux attributes")
 	}
 	return nil
 }
 
-func stopHwsecDaemons(ctx context.Context, daemonController *hwsec.DaemonController, includeTpm bool) error {
-	if err := daemonController.TryStop(ctx, hwsec.UIDaemon); err != nil {
+func (h *CmdHelper) stopDaemons(ctx context.Context, includeTpm bool) error {
+	if err := h.daemonController.TryStop(ctx, UIDaemon); err != nil {
 		return errors.Wrap(err, "failed to try to stop UI")
 	}
-	if err := daemonController.TryStopDaemons(ctx, hwsec.HighLevelTPMDaemons); err != nil {
+	if err := h.daemonController.TryStopDaemons(ctx, HighLevelTPMDaemons); err != nil {
 		return errors.Wrap(err, "failed to try to stop high-level TPM daemons")
 	}
-	if err := daemonController.TryStopDaemons(ctx, hwsec.LowLevelTPMDaemons); err != nil {
+	if err := h.daemonController.TryStopDaemons(ctx, LowLevelTPMDaemons); err != nil {
 		return errors.Wrap(err, "failed to try to stop low-level TPM daemons")
 	}
 	if !includeTpm {
 		return nil
 	}
-	if err := daemonController.TryStop(ctx, hwsec.TPM2SimulatorDaemon); err != nil {
+	if err := h.daemonController.TryStop(ctx, TPM2SimulatorDaemon); err != nil {
 		return errors.Wrap(err, "failed to try to stop tpm2-simulator")
 	}
 	return nil
 }
 
-func ensureHwsecDaemons(ctx context.Context, daemonController *hwsec.DaemonController, includeTpm bool) {
+func (h *CmdHelper) ensureDaemons(ctx context.Context, includeTpm bool) {
 	if includeTpm {
-		if err := daemonController.Ensure(ctx, hwsec.TPM2SimulatorDaemon); err != nil {
+		if err := h.daemonController.Ensure(ctx, TPM2SimulatorDaemon); err != nil {
 			testing.ContextLog(ctx, "Failed to ensure tpm2-simulator: ", err)
 		}
 	}
-	if err := daemonController.EnsureDaemons(ctx, hwsec.LowLevelTPMDaemons); err != nil {
+	if err := h.daemonController.EnsureDaemons(ctx, LowLevelTPMDaemons); err != nil {
 		testing.ContextLog(ctx, "Failed to ensure low-level TPM daemons: ", err)
 	}
-	if err := daemonController.EnsureDaemons(ctx, hwsec.HighLevelTPMDaemons); err != nil {
+	if err := h.daemonController.EnsureDaemons(ctx, HighLevelTPMDaemons); err != nil {
 		testing.ContextLog(ctx, "Failed to ensure high-level TPM daemons: ", err)
 	}
-	if err := daemonController.Ensure(ctx, hwsec.UIDaemon); err != nil {
+	if err := h.daemonController.Ensure(ctx, UIDaemon); err != nil {
 		testing.ContextLog(ctx, "Failed to ensure UI: ", err)
 	}
 }
