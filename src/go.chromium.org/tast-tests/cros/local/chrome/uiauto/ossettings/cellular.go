@@ -428,7 +428,7 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 	}
 
 	// If the APN is automatically detected, it is provided by the modb.
-	if source == "modb" && !strings.Contains(connectedNodeInnterText, "Automatically detected") {
+	if (source == "modb" || source == "modem") && !strings.Contains(connectedNodeInnterText, "Automatically detected") {
 		return errors.New("failed to show Automatically detected for database provided APN in connected APN row text")
 	}
 
