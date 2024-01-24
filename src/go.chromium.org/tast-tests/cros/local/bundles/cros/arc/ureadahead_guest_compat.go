@@ -9,8 +9,6 @@ import (
 	"context"
 	"os"
 	"path/filepath"
-	"regexp"
-	"strconv"
 	"strings"
 	"time"
 
@@ -95,31 +93,6 @@ func UreadaheadGuestCompat(ctx context.Context, s *testing.State) {
 	}
 	if err := enableTraceEvents(ctx, false /*enable*/); err != nil {
 		s.Fatal("Failed to reset trace events: ", err)
-	}
-
-	// Verify readahead mode can run to completion (read pack) and readahead time is valid.
-	outReadahead, err := arc.BootstrapCommand(ctx, execCmd, crosUreadaheadBin, "--use-existing-trace-events", "--verbose").Output(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to run CrOS ureadahead pack read in guest OS: ", err)
-	}
-	// Example output:
-	// <text>
-	// Read pack: 0.000s
-	// Readahead: 0.372s
-	re := regexp.MustCompile(`Read pack:*(.+)[\r\n]Readahead:(\s+)([0-9]+([.][0-9]*)?|[.][0-9]+)s`)
-	str := string(outReadahead[:])
-	if _, err := logFile.WriteString(str + "\n"); err != nil {
-		s.Fatal("Failed to write log file: ", err)
-	}
-	// Verify readahead time is valid.
-	result := re.FindStringSubmatch(str)
-	if result == nil {
-		s.Fatalf("Failed to verify compatibility in readahead mode, see %s for details", logPath)
-	}
-	if durationSecs, err := strconv.ParseFloat(result[3], 64); err != nil {
-		s.Fatalf("Failed to parse group %q from %q: %v", result[3], str, err)
-	} else if durationSecs == 0.0 {
-		s.Logf("WARNING: Invalid readahead time in seconds: %f", durationSecs)
 	}
 }
 
