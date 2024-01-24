@@ -259,7 +259,12 @@ public class QosMonitorActivity extends Activity {
         if (mRecorder == null) {
             return;
         }
-        mRecorder.stop();
+        try {
+            mRecorder.stop();
+        } catch (RuntimeException e) {
+            Log.e(TAG, "Stop recorder failed due to immediate stop after start,"
+                    + "continue with cleanup", e);
+        }
         mRecorder.release();
         mRecorder = null;
 
