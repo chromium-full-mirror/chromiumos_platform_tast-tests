@@ -6,8 +6,9 @@ package graphics
 
 import (
 	"context"
+	"encoding/xml"
+	"io"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -18,32 +19,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type clpeakTestCase struct {
-	args  []string // command args
-	dType string   // result dType string
-}
-
 const (
 	clPeakBinPath = "/usr/local/opencl/clpeak"
-	regexVal      = `[0-9]?[0-9]?\s*:\s*(\d+\.\d+)`
-)
-
-var (
-	/* This order shows how different data types are tested in clpeak
-	Sample output :
-	float   : 767.48
-	float2  : 810.81
-	float4  : 843.06
-	float8  : 726.12
-	float16 : 735.98
-	*/
-	typeAppend = []string{"", "2", "4", "8", "16"}
-	// Argument -> data type map.
-	arg2Type = []clpeakTestCase{
-		{args: strings.Split("--compute-hp", " "), dType: "half"},
-		{args: strings.Split("--compute-sp", " "), dType: "float"},
-		{args: strings.Split("--compute-integer", " "), dType: "int"},
-	}
+	xmlArg        = "--xml-file"
+	xmlFileName   = "clpeak.xml"
 )
 
 func init() {
@@ -64,42 +43,74 @@ func init() {
 	})
 }
 
-func savePerfClpeak(number float64, name string, pv *perf.Values) {
-	direction := perf.BiggerIsBetter
-	var unit = "GFLOPS"
-	if strings.Contains(name, "int") {
-		unit = "GIOPS"
-	}
-	pv.Set(perf.Metric{
-		Name:      name,
-		Unit:      unit,
-		Direction: direction,
-	}, float64(number))
-}
+func processElement(decoder *xml.Decoder, pv *perf.Values) error {
+	// Continue reading tokens until we reach the end of the input stream.
+	currentCategory := ""
+	currentUnit := ""
+	for {
+		token, err := decoder.Token()
+		if err == io.EOF {
+			break
+		}
 
-func extractData(data, dType string) ([]float64, error) {
-	re := regexp.MustCompile(dType + regexVal)
-	// Iterate over the lines in the string.
-	var values []float64
-	for _, line := range strings.Split(data, "\n") {
-		// Find all matches for the regular expression in the line.
-		matches := re.FindAllStringSubmatch(line, -1)
-		for _, match := range matches {
-			val, err := strconv.ParseFloat(match[1], 64)
-			if err != nil {
-				return nil, errors.Errorf("failed to convert %v to float64", match[1])
+		if err != nil {
+			return errors.Wrap(err, "failed to decode token")
+		}
+
+		switch startElement := token.(type) {
+		case xml.StartElement:
+			currName := startElement.Name.Local
+			// if this is not a new category append the name and move on
+			if currentCategory != "" && currentUnit != "" {
+				currentCategory += "-" + currName
+			} else {
+				// this is a new category with potentially new units
+				currentCategory = currName
+
+				// extract Unit
+				for _, attr := range startElement.Attr {
+					if attr.Name.Local == "unit" {
+						currentUnit = attr.Value
+						break
+					}
+				}
 			}
-			values = append(values, val)
+		case xml.CharData:
+			// this may be a metric or just a string of whitespaces
+			valueStr := strings.TrimSpace(string(startElement))
+			if len(valueStr) == 0 || strings.Contains(currentCategory, "8") || strings.Contains(currentCategory, "16") {
+				continue
+			}
+			direction := perf.BiggerIsBetter
+			// smaller is better for kernel-latency
+			if strings.Contains(currentCategory, "latency") {
+				direction = perf.SmallerIsBetter
+			}
+			value, err := strconv.ParseFloat(valueStr, 64)
+			if err != nil {
+				return errors.Wrap(err, "failed to convert string to float")
+			}
+			pv.Set(perf.Metric{
+				Name:      currentCategory,
+				Unit:      currentUnit,
+				Direction: direction,
+			}, float64(value))
+
+		case xml.EndElement:
+			parts := strings.Split(currentCategory, "-")
+			if len(parts) > 1 {
+				currentCategory = strings.Join(parts[:len(parts)-1], "-")
+			} else {
+				// Reset unit and category when exiting a category
+				currentUnit = ""
+				currentCategory = ""
+			}
 		}
 	}
-	if len(values) != len(typeAppend) {
-		return nil, errors.Errorf("size of values for %s does not match the number of data types : %s", dType, data)
-	}
-	return values, nil
+	return nil
 }
 
 func Clpeak(ctx context.Context, s *testing.State) {
-
 	pv := perf.NewValues()
 	defer func() {
 		if err := pv.Save(s.OutDir()); err != nil {
@@ -111,32 +122,23 @@ func Clpeak(ctx context.Context, s *testing.State) {
 	os.Setenv("CLVK_LOG", "2")
 	// Force MAX_MEM_ALLOC_SIZE to the minimum required by OpenCL. It will avoid timeout on some devices.
 	os.Setenv("CLVK_MAX_MEM_ALLOC_SIZE_MB", "1024")
+	xmlFileAbsolutePath := s.OutDir() + xmlFileName
 
 	// Run the whole suite once.
-	stdout, stderr, err := testexec.CommandContext(ctx, clPeakBinPath).SeparatedOutput(testexec.DumpLogOnError)
+	stdout, stderr, err := testexec.CommandContext(ctx, clPeakBinPath, xmlArg, xmlFileAbsolutePath).SeparatedOutput(testexec.DumpLogOnError)
+	s.Log(string(stdout), string(stderr))
 	if err != nil {
-		s.Errorf("Failed to run %v: %v", string(stderr), err)
+		s.Errorf("Failed to run %v: %v", clPeakBinPath, err)
 	}
-	s.Log(string(stdout))
 
-	// Run individual benchmarks
-	for _, test := range arg2Type {
-		stdout, stderr, err := testexec.CommandContext(ctx, clPeakBinPath, test.args...).SeparatedOutput(testexec.DumpLogOnError)
-		data := string(stdout)
-		if err != nil {
-			s.Errorf("Failed to run %v: %v", string(stderr), err)
-			continue
-		}
-		if strings.Contains(data, "Skipped") {
-			s.Log("Warning: Device does not support", test.dType)
-			continue
-		}
-		values, err := extractData(data, test.dType)
-		if err != nil {
-			s.Error("Error occured : ", err)
-		}
-		for index, val := range values {
-			savePerfClpeak(val, test.dType+typeAppend[index], pv)
-		}
+	// Read XML file and extract the data
+	xmlFile, err := os.Open(xmlFileAbsolutePath)
+	if err != nil {
+		s.Fatal("Failed to open file: ", err)
+	}
+	defer xmlFile.Close()
+	decoder := xml.NewDecoder(xmlFile)
+	if err = processElement(decoder, pv); err != nil {
+		s.Fatal("Error while gathering metrics: ", err)
 	}
 }
