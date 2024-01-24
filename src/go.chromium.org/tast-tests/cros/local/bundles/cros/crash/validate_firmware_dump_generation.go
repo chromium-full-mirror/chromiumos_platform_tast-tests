@@ -242,7 +242,9 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 	cr, err := chrome.New(
 		ctx,
 		login,
-		chrome.DMSPolicy(fdms.URL))
+		chrome.DMSPolicy(fdms.URL),
+		chrome.EnableFeatures("CrOSLateBootAllowFirmwareDumps"),
+	)
 	if err != nil {
 		return rl.Retry("connect to Chrome", err)
 	}
