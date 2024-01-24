@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/godbus/dbus/v5"
-
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
@@ -37,11 +35,6 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find MM dbus object with a valid sim: ", err)
 	}
 
-	simpleModem, err := modem.GetSimpleModem(ctx)
-	if err != nil {
-		s.Fatal("Could not get simplemodem object: ", err)
-	}
-
 	operatorID, err := modem.GetOperatorIdentifier(ctx)
 	if err != nil {
 		s.Fatal("Cannot get the OperatorIdentifier: ", err)
@@ -52,11 +45,6 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot find known APNs: ", err)
 	}
 
-	modem3gpp, err := modem.GetModem3gpp(ctx)
-	if err != nil {
-		s.Fatal("Could not get modem3gpp object: ", err)
-	}
-
 	// Shorten deadline to leave time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
@@ -64,10 +52,10 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		if err := modem.Enable(ctx); err != nil {
 			testing.ContextLog(ctx, "Modem enable failed with: ", err)
 		}
-		if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+		if err := modem.DisconnectAll(ctx); err != nil {
 			testing.ContextLog(ctx, "Modem disconnect failed with: ", err)
 		}
-		if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, map[string]interface{}{"apn": ""}); err != nil {
+		if err := modem.SetInitialEpsBearerSettings(ctx, map[string]interface{}{"apn": ""}); err != nil {
 			testing.ContextLog(ctx, "Failed to clear the initial EPS bearer settings: ", err)
 		}
 	}(cleanupCtx)
@@ -97,10 +85,10 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 			attachApn = mmApnInfo
 		}
 		s.Log("Attaching with: ", attachApn)
-		if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, attachApn); err != nil {
+		if err := modem.SetInitialEpsBearerSettings(ctx, attachApn); err != nil {
 			s.Log("Failed to set initial EPS bearer settings: ", err)
 		}
-		if err := modemmanager.EnsureRegistered(ctx, modem, simpleModem); err != nil {
+		if err := modem.EnsureRegistered(ctx); err != nil {
 			if knownAPN.Optional {
 				s.Log(ctx, "Failed to register")
 				continue
@@ -112,7 +100,7 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 		s.Log("Connecting with ", mmApnInfo)
 		mmApnInfo[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
 
-		if _, err = modemmanager.Connect(ctx, simpleModem, mmApnInfo); err != nil {
+		if _, err = modem.Connect(ctx, mmApnInfo); err != nil {
 			if knownAPN.Optional {
 				s.Log("Failed to connect")
 				continue
@@ -123,11 +111,11 @@ func ModemmanagerEnableAndConnect(ctx context.Context, s *testing.State) {
 			optionalAPNSucceeded = true
 		}
 		s.Log("Disconnect")
-		if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+		if err := modem.DisconnectAll(ctx); err != nil {
 			s.Fatal("Modem disconnect failed with: ", err)
 		}
 
-		if err := modemmanager.EnsureConnectState(ctx, modem, simpleModem, false); err != nil {
+		if err := modem.EnsureConnectState(ctx, false); err != nil {
 			s.Fatal("Modem not disconnected: ", err)
 		}
 	}

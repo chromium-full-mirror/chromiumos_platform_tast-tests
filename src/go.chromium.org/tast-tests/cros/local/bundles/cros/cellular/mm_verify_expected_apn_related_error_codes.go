@@ -8,8 +8,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/godbus/dbus/v5"
-
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
@@ -63,14 +61,6 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 	if err != nil {
 		s.Fatal("Failed to create Modem: ", err)
 	}
-	modem3gpp, err := modem.GetModem3gpp(ctx)
-	if err != nil {
-		s.Fatal("Could not get modem3gpp object: ", err)
-	}
-	simpleModem, err := modem.GetSimpleModem(ctx)
-	if err != nil {
-		s.Fatal("Could not get simplemodem object: ", err)
-	}
 
 	// Create variables with short names to make the dict declarations legible.
 	const apn = mmconst.BearerPropertyApn
@@ -81,10 +71,10 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 	const apnType = mmconst.BearerPropertyApnType
 
 	// Clear the attach APN to use the default attach APN
-	if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, map[string]interface{}{apn: "", apnType: mmconst.BearerAPNTypeInitial}); err != nil {
+	if err := modem.SetInitialEpsBearerSettings(ctx, map[string]interface{}{apn: "", apnType: mmconst.BearerAPNTypeInitial}); err != nil {
 		s.Fatal("Failed to clear the initial EPS bearer settings: ", err)
 	}
-	if err := modemmanager.EnsureRegistered(ctx, modem, simpleModem); err != nil {
+	if err := modem.EnsureRegistered(ctx); err != nil {
 		s.Fatal("Modem not registered: ", err)
 	}
 
@@ -92,7 +82,7 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 	clearCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Second)
 	defer func(ctx context.Context) {
-		if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+		if err := modem.DisconnectAll(ctx); err != nil {
 			testing.ContextLog(ctx, "Modem disconnect failed with: ", err)
 		}
 		modem.DeleteAllBearers(ctx, modem)
@@ -101,46 +91,46 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 
 	switch params.errorType {
 	case wrongApnErrors:
-		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apnType: mmconst.BearerAPNTypeDefault})
+		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.Core.InvalidArgs" {
 			s.Fatalf("Expected error for empty apn properties doesn't match : %s", errorCode)
 		}
 
 		serviceOptionNotSubscribed := "org.freedesktop.ModemManager1.Error.MobileEquipment.ServiceOptionNotSubscribed"
 		missingOrUnknownApn := "org.freedesktop.ModemManager1.Error.MobileEquipment.MissingOrUnknownApn"
-		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "invalid-apn", apnType: mmconst.BearerAPNTypeDefault})
+		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "invalid-apn", apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != serviceOptionNotSubscribed && errorCode != missingOrUnknownApn {
 			s.Fatalf("Expected error for invalid apn doesn't match : %s", errorCode)
 		}
 
 	case authenticationErrors:
 		userAuthenticationFailed := "org.freedesktop.ModemManager1.Error.MobileEquipment.UserAuthenticationFailed"
-		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4-chap", user: "wrong-username", apnType: mmconst.BearerAPNTypeDefault})
+		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "callbox-ipv4-chap", user: "wrong-username", apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != userAuthenticationFailed {
 			s.Fatalf("Expected error for authentication failed doesn't match:%s", errorCode)
 		}
 
-		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4-chap", user: "username", pass: "wrong-password", apnType: mmconst.BearerAPNTypeDefault})
+		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "callbox-ipv4-chap", user: "username", pass: "wrong-password", apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != userAuthenticationFailed {
 			s.Fatalf("Expected error for authentication failed doesn't match:%s", errorCode)
 		}
 
 		isL850, _ := cellular.IsModemType(ctx, cellularconst.ModemTypeL850)
-		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4-chap", user: "username", pass: "password", auth: mmconst.BearerAllowedAuthPAP, apnType: mmconst.BearerAPNTypeDefault})
+		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "callbox-ipv4-chap", user: "username", pass: "password", auth: mmconst.BearerAllowedAuthPAP, apnType: mmconst.BearerAPNTypeDefault})
 		if isL850 && errorCode == "" {
 			testing.ContextLog(ctx, "INFO: b/264796148 L850 connects with any authentication")
 		} else if errorCode != userAuthenticationFailed {
 			s.Fatalf("Expected error for authentication failed doesn't match:%s", errorCode)
 		}
 
-		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4-pap", user: "username", pass: "password", apnType: mmconst.BearerAPNTypeDefault})
+		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "callbox-ipv4-pap", user: "username", pass: "password", apnType: mmconst.BearerAPNTypeDefault})
 		if isL850 && errorCode == "" {
 			testing.ContextLog(ctx, "INFO: b/264796148 L850 connects with any authentication")
 		} else if errorCode != userAuthenticationFailed {
 			s.Fatalf("Expected error for authentication failed doesn't match:%s", errorCode)
 		}
 
-		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4-pap", user: "username", pass: "password", auth: mmconst.BearerAllowedAuthCHAP, apnType: mmconst.BearerAPNTypeDefault})
+		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "callbox-ipv4-pap", user: "username", pass: "password", auth: mmconst.BearerAllowedAuthCHAP, apnType: mmconst.BearerAPNTypeDefault})
 		if isL850 && errorCode == "" {
 			testing.ContextLog(ctx, "INFO: b/264796148 L850 connects with any authentication")
 		} else if errorCode != userAuthenticationFailed {
@@ -153,14 +143,14 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 		if errOldFw != nil {
 			s.Fatalf("Fail early to avoid putting the DUT in a bad state: %s", errOldFw)
 		}
-		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv4", ipType: mmconst.BearerIPFamilyIPv6, apnType: mmconst.BearerAPNTypeDefault})
+		errorCode := connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "callbox-ipv4", ipType: mmconst.BearerIPFamilyIPv6, apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.MobileEquipment.Ipv4OnlyAllowed" {
 			err := cellular.TagKnownBugOnModem(ctx, nil, "b/263815534", cellular.ModemFwFilterL850MR7AndLower)
 			err = cellular.TagKnownBugOnModem(ctx, err, "b/290110554", cellular.ModemFwFilterFM350MR3AndLower)
 			s.Fatalf("Expected error for Ipv4OnlyAllowed doesn't match:%s: %s", errorCode, err)
 		}
 
-		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, simpleModem, map[string]interface{}{apn: "callbox-ipv6", ipType: mmconst.BearerIPFamilyIPv4, apnType: mmconst.BearerAPNTypeDefault})
+		errorCode = connectAndGetBearerErrorCode(ctx, s, modem, map[string]interface{}{apn: "callbox-ipv6", ipType: mmconst.BearerIPFamilyIPv4, apnType: mmconst.BearerAPNTypeDefault})
 		if errorCode != "org.freedesktop.ModemManager1.Error.MobileEquipment.Ipv6OnlyAllowed" {
 			err := cellular.TagKnownBugOnModem(ctx, nil, "b/263815534", cellular.ModemFwFilterL850MR7AndLower)
 			err = cellular.TagKnownBugOnModem(ctx, err, "b/290110554", cellular.ModemFwFilterFM350MR3AndLower)
@@ -173,15 +163,15 @@ func MMVerifyExpectedApnRelatedErrorCodes(ctx context.Context, s *testing.State)
 
 }
 
-func connectAndGetBearerErrorCode(ctx context.Context, s *testing.State, modem, simpleModem *modemmanager.Modem, props map[string]interface{}) string {
+func connectAndGetBearerErrorCode(ctx context.Context, s *testing.State, modem *modemmanager.Modem, props map[string]interface{}) string {
 	testing.ContextLog(ctx, "Connecting with APN: ", props)
 	// Clear all bearer objects
-	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+	if err := modem.DisconnectAll(ctx); err != nil {
 		s.Fatal("Modem disconnect failed with: ", err)
 	}
 	modem.DeleteAllBearers(ctx, modem)
 
-	if _, err := modemmanager.Connect(ctx, simpleModem, props); err != nil {
+	if _, err := modem.Connect(ctx, props); err != nil {
 		testing.ContextLogf(ctx, "Expected error: fail to connect: %q", err)
 	} else {
 		return ""

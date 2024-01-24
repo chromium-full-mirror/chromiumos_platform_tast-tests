@@ -67,8 +67,8 @@ func NewModem(ctx context.Context) (*Modem, error) {
 	return NewModemFromPath(ctx, modemPath)
 }
 
-// GetSimpleModem creates a PropertyHolder for the SimpleModem object.
-func (m *Modem) GetSimpleModem(ctx context.Context) (*Modem, error) {
+// getSimpleModem creates a PropertyHolder for the SimpleModem object.
+func (m *Modem) getSimpleModem(ctx context.Context) (*Modem, error) {
 	modemPath := dbus.ObjectPath(m.String())
 	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanagerSimpleModemInterface, modemPath)
 	if err != nil {
@@ -196,8 +196,8 @@ func (m *Modem) GetEquipmentIdentifier(ctx context.Context) (string, error) {
 	return imei, nil
 }
 
-// GetModem3gpp creates a PropertyHolder for the Modem3gpp object.
-func (m *Modem) GetModem3gpp(ctx context.Context) (*Modem, error) {
+// getModem3gpp creates a PropertyHolder for the Modem3gpp object.
+func (m *Modem) getModem3gpp(ctx context.Context) (*Modem, error) {
 	modemPath := dbus.ObjectPath(m.String())
 	ph, err := dbusutil.NewPropertyHolder(ctx, DBusModemmanagerService, DBusModemmanager3gppModemInterface, modemPath)
 	if err != nil {
@@ -501,9 +501,12 @@ func (m *Modem) IsPowered(ctx context.Context) (bool, error) {
 func (m *Modem) IsRegistered(ctx context.Context) (bool, error) {
 	// for SimpleModem GetStatus returned properties
 	var props map[string]interface{}
-
-	if err := m.Call(ctx, "GetStatus").Store(&props); err != nil {
-		return false, errors.Wrapf(err, "failed getting properties of %v", m)
+	simpleModem, err := m.getSimpleModem(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "could not get simpleModem object")
+	}
+	if err := simpleModem.Call(ctx, "GetStatus").Store(&props); err != nil {
+		return false, errors.Wrapf(err, "failed getting properties of %v", simpleModem)
 	}
 	simpleProps := dbusutil.NewProperties(props)
 	modemState, err := simpleProps.GetUint32(mmconst.SimpleModemPropertyRegState)
@@ -527,9 +530,12 @@ func (m *Modem) IsRegistered(ctx context.Context) (bool, error) {
 func (m *Modem) IsConnected(ctx context.Context) (bool, error) {
 	// for SimpleModem GetStatus returned properties
 	var props map[string]interface{}
-
-	if err := m.Call(ctx, "GetStatus").Store(&props); err != nil {
-		return false, errors.Wrapf(err, "failed getting properties of %v", m)
+	simpleModem, err := m.getSimpleModem(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "could not get simpleModem object")
+	}
+	if err := simpleModem.Call(ctx, "GetStatus").Store(&props); err != nil {
+		return false, errors.Wrapf(err, "failed getting properties of %v", simpleModem)
 	}
 	simpleProps := dbusutil.NewProperties(props)
 	modemState, err := simpleProps.GetUint32(mmconst.SimpleModemPropertyState)
@@ -666,13 +672,13 @@ func (m *Modem) SetPrimarySimSlot(ctx context.Context, primary uint32) (*Modem, 
 }
 
 // EnsureConnectState polls for modem state to be connected or disconnected.
-func EnsureConnectState(ctx context.Context, modem, simpleModem *Modem, expectedConnected bool) error {
+func (m *Modem) EnsureConnectState(ctx context.Context, expectedConnected bool) error {
 	// poll for expected modem state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := modem.EnsureEnabled(ctx); err != nil {
+		if err := m.EnsureEnabled(ctx); err != nil {
 			return errors.Wrap(err, "modem not enabled")
 		}
-		isConnected, err := simpleModem.IsConnected(ctx)
+		isConnected, err := m.IsConnected(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch connected state")
 		}
@@ -690,20 +696,20 @@ func EnsureConnectState(ctx context.Context, modem, simpleModem *Modem, expected
 }
 
 // EnsureRegistered polls for simple modem property m3gpp-registration-state.
-func EnsureRegistered(ctx context.Context, modem, simpleModem *Modem) error {
-	if isPowered, err := modem.IsPowered(ctx); err != nil {
+func (m *Modem) EnsureRegistered(ctx context.Context) error {
+	if isPowered, err := m.IsPowered(ctx); err != nil {
 		return errors.New("failed to read modem powered state")
 	} else if !isPowered {
 		return errors.New("modem not powered")
 	}
-	if isEnabled, err := modem.IsEnabled(ctx); err != nil {
+	if isEnabled, err := m.IsEnabled(ctx); err != nil {
 		return errors.New("failed to read modem enabled state")
 	} else if !isEnabled {
 		return errors.New("modem not enabled")
 	}
 	// poll for expected modem state
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isRegistered, err := simpleModem.IsRegistered(ctx)
+		isRegistered, err := m.IsRegistered(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to fetch reigstration state")
 		}
@@ -721,19 +727,23 @@ func EnsureRegistered(ctx context.Context, modem, simpleModem *Modem) error {
 }
 
 // Connect calls the connect function on simple modem D-Bus and returns the bearer path if it connects successfully.
-func Connect(ctx context.Context, modem *Modem, props map[string]interface{}) (dbus.ObjectPath, error) {
+func (m *Modem) Connect(ctx context.Context, props map[string]interface{}) (dbus.ObjectPath, error) {
 	bearerPath := dbus.ObjectPath("")
+	simpleModem, err := m.getSimpleModem(ctx)
+	if err != nil {
+		return bearerPath, errors.Wrap(err, "could not get simpleModem object")
+	}
 	// Validate the apn settings for consistency.
 	if _, ok := props[mmconst.BearerPropertyApnType]; !ok {
 		props[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
 	}
-	response := modem.Call(ctx, mmconst.ModemConnect, props)
+	response := simpleModem.Call(ctx, mmconst.ModemConnect, props)
 	if (response.Err != nil) && (strings.Contains(response.Err.Error(), "no-service")) {
 		return bearerPath, errors.Wrap(response.Err, "failed to connect can be network issue")
 	} else if response.Err != nil {
 		return bearerPath, errors.Wrap(response.Err, "failed to connect")
 	}
-	if isConnected, err := modem.IsConnected(ctx); err != nil {
+	if isConnected, err := m.IsConnected(ctx); err != nil {
 		return bearerPath, errors.Wrap(err, "failed to fetch connected state")
 	} else if !isConnected {
 		return bearerPath, errors.Wrap(err, "modem not connected")
@@ -746,6 +756,23 @@ func Connect(ctx context.Context, modem *Modem, props map[string]interface{}) (d
 		return bearerPath, errors.New("could not parse bearer path")
 	}
 	return bearerPath, nil
+}
+
+// Disconnect calls the disconnect function on simple modem D-Bus.
+func (m *Modem) Disconnect(ctx context.Context, path dbus.ObjectPath) error {
+	simpleModem, err := m.getSimpleModem(ctx)
+	if err != nil {
+		return errors.Wrap(err, "could not get simpleModem object")
+	}
+	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, path).Err; err != nil {
+		return errors.Wrap(err, "modem disconnect failed")
+	}
+	return nil
+}
+
+// DisconnectAll calls the disconnect function on simple modem D-Bus to disconnect all bearers.
+func (m *Modem) DisconnectAll(ctx context.Context) error {
+	return m.Disconnect(ctx, dbus.ObjectPath("/"))
 }
 
 // InhibitModem inhibits the first available modem on DBus. Use the returned callback to uninhibit.
@@ -868,7 +895,7 @@ func (m *Modem) GetSimIdentifier(ctx context.Context) (string, error) {
 
 // GetOperatorCode gets current operator code, return operator code if sim is active.
 func (m *Modem) GetOperatorCode(ctx context.Context) (string, error) {
-	modem3gpp, err := m.GetModem3gpp(ctx)
+	modem3gpp, err := m.getModem3gpp(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get 3gpp modem")
 	}
@@ -911,7 +938,11 @@ func (m *Modem) GetFwVersion(ctx context.Context, modem *Modem) (string, error) 
 }
 
 // SetInitialEpsBearerSettings sets the Attach APN.
-func SetInitialEpsBearerSettings(ctx context.Context, modem3gpp *Modem, props map[string]interface{}) error {
+func (m *Modem) SetInitialEpsBearerSettings(ctx context.Context, props map[string]interface{}) error {
+	modem3gpp, err := m.getModem3gpp(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get 3gpp modem")
+	}
 	// Validate the apn settings for consistency.
 	if _, ok := props[mmconst.BearerPropertyApnType]; !ok {
 		props[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeInitial

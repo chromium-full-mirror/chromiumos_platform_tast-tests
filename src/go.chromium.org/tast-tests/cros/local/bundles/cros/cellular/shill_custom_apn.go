@@ -63,10 +63,6 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create cellular.Helper (precondition): ", err)
 	}
 
-	modem3gpp, err := modem.GetModem3gpp(ctx)
-	if err != nil {
-		s.Fatal("Could not get modem3gpp object: ", err)
-	}
 	dutVariant, err := cellular.GetDeviceVariant(ctx)
 	if err != nil {
 		s.Fatalf("Failed to get device variant: %s", err)
@@ -75,7 +71,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	clearAttachCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer func(ctx context.Context) {
-		if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, map[string]interface{}{"apn": ""}); err != nil {
+		if err := modem.SetInitialEpsBearerSettings(ctx, map[string]interface{}{"apn": ""}); err != nil {
 			testing.ContextLog(ctx, "Failed to clear the initial EPS bearer settings: ", err)
 		}
 
@@ -89,7 +85,7 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 
 	// Try to start the test with a bad attach APN to ensure that shill clears the attach APN if needed.
 	// Some modems don't allow custom attach APNs, so a failure here should not fail the test.
-	if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, map[string]interface{}{"apn": "wrong_attach", "ip-type": mmconst.BearerIPFamilyIPv4}); err != nil {
+	if err := modem.SetInitialEpsBearerSettings(ctx, map[string]interface{}{"apn": "wrong_attach", "ip-type": mmconst.BearerIPFamilyIPv4}); err != nil {
 		testing.ContextLog(ctx, "Failed to set initial EPS bearer settings: ", err)
 	}
 

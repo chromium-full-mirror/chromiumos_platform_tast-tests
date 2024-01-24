@@ -200,20 +200,16 @@ func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
 	if !isL850Verizon(ctx, modem) {
 		return
 	}
-	simpleModem, err := modem.GetSimpleModem(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get simple modem: ", err)
-		return
-	}
+
 	testing.ContextLog(ctx, "Verizon L850 device: Try fixing the default APN")
 
-	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+	if err := modem.DisconnectAll(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to disconnect: ", err)
 	}
-	if _, err := modemmanager.Connect(ctx, simpleModem, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err != nil {
+	if _, err := modem.Connect(ctx, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err != nil {
 		testing.ContextLog(ctx, "Failed to connect: ", err)
 	}
-	if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+	if err := modem.DisconnectAll(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to disconnect: ", err)
 	}
 
@@ -243,18 +239,13 @@ func RebootL850VerizonIfModemCanNoLongerConnect(ctx context.Context, modemPtr **
 	if !isL850Verizon(ctx, modem) {
 		return nil
 	}
-	simpleModem, err := modem.GetSimpleModem(ctx)
-	if err != nil {
-		testing.ContextLog(ctx, "Failed to get simple modem: ", err)
-		return nil
-	}
-
 	// Delete all bearers to ensure the bearer error code is from the next connection attempt.
 	modem.DeleteAllBearers(ctx, modem)
 
 	testing.ContextLog(ctx, "Check if modem needs to be restarted on L850/Verizon")
-	if _, err := modemmanager.Connect(ctx, simpleModem, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err == nil {
-		if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+	var err error
+	if _, err := modem.Connect(ctx, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err == nil {
+		if err := modem.DisconnectAll(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to disconnect: ", err)
 		}
 		// Ensure we remove the bearer object created during the previous step.

@@ -65,12 +65,8 @@ func ShillConnectToUnknownMno(ctx context.Context, s *testing.State) {
 		s.Fatal("Could not find mm dbus object with a valid sim: ", err)
 	}
 
-	modem3gpp, err := modem.GetModem3gpp(ctx)
-	if err != nil {
-		s.Fatal("Could not get modem3gpp object: ", err)
-	}
 	if setInitialAttachAPNValueInModemManager != nil {
-		if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, setInitialAttachAPNValueInModemManager); err != nil {
+		if err := modem.SetInitialEpsBearerSettings(ctx, setInitialAttachAPNValueInModemManager); err != nil {
 			s.Fatal("Failed to set initial EPS bearer settings: ", err)
 		}
 	}

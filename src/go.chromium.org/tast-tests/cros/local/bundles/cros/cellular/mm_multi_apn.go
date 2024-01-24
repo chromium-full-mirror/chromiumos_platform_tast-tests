@@ -37,19 +37,11 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create Modem: ", err)
 	}
-	modem3gpp, err := modem.GetModem3gpp(ctx)
-	if err != nil {
-		s.Fatal("Could not get modem3gpp object: ", err)
-	}
-	simpleModem, err := modem.GetSimpleModem(ctx)
-	if err != nil {
-		s.Fatal("Could not get simplemodem object: ", err)
-	}
 	// Clear the attach APN to use the default attach APN
-	if err := modemmanager.SetInitialEpsBearerSettings(ctx, modem3gpp, map[string]interface{}{"apn": ""}); err != nil {
+	if err := modem.SetInitialEpsBearerSettings(ctx, map[string]interface{}{"apn": ""}); err != nil {
 		testing.ContextLog(ctx, "Failed to clear the initial EPS bearer settings: ", err)
 	}
-	if err := modemmanager.EnsureRegistered(ctx, modem, simpleModem); err != nil {
+	if err := modem.EnsureRegistered(ctx); err != nil {
 		s.Fatal("Modem not registered: ", err)
 	}
 	operatorID, err := modem.GetOperatorIdentifier(ctx)
@@ -66,7 +58,7 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Second)
 	defer func(ctx context.Context) {
 		s.Log("Disconnect")
-		if err := simpleModem.Call(ctx, mmconst.ModemDisconnect, dbus.ObjectPath("/")).Err; err != nil {
+		if err := modem.DisconnectAll(ctx); err != nil {
 			testing.ContextLog(ctx, "Modem disconnect failed with: ", err)
 		}
 		// Restart ModemManager, since te multiplex feature is still experimental in ChromeOS.
@@ -95,7 +87,7 @@ func MMMultiApn(ctx context.Context, s *testing.State) {
 		mmApnInfo[mmconst.BearerPropertyMultiplex] = mmconst.BearerMultiplexSupportRequested
 		testing.ContextLogf(ctx, "Creating connection number: %d with APN: %q", len(bearerPaths)+1, mmApnInfo)
 		mmApnInfo[mmconst.BearerPropertyApnType] = mmconst.BearerAPNTypeDefault
-		path, err := modemmanager.Connect(ctx, simpleModem, mmApnInfo)
+		path, err := modem.Connect(ctx, mmApnInfo)
 		if err != nil {
 			s.Fatal("Modem connect failed with error: ", err)
 		}
