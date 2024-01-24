@@ -79,7 +79,6 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 	username := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnUsername]
 	password := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnPassword]
 	ipType := ossettings.GetUIStringForIPType(serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoApnIPType])
-	userFriendlyApnName := serviceLastGoodAPN[shillconst.DevicePropertyCellularAPNInfoUserFriendlyApnName]
 
 	// Add default-only APN.
 	if err := mdp.CreateCustomAPN(ctx, &ossettings.ApnConfig{
@@ -119,7 +118,7 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, userFriendlyApnName, ""); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
 		s.Fatal("Failed to verify connected UI: ", err)
 	}
 
@@ -137,7 +136,7 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 		s.Fatal("Failed to verify error toast is showing after attempting to disable default APN: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, userFriendlyApnName, ""); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
 		s.Fatal("Failed to verify connected UI: ", err)
 	}
 
@@ -154,7 +153,7 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 		s.Fatal("Failed to verify error toast is showing after attempting to delete default APN: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, userFriendlyApnName, ""); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
 		s.Fatal("Failed to verify connected UI: ", err)
 	}
 
@@ -221,7 +220,7 @@ func CustomDefaultAttachApnDisableEnableBehavior(ctx context.Context, s *testing
 		s.Fatal("Failed to ensure successful connection: ", err)
 	}
 
-	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, userFriendlyApnName, ""); err != nil {
+	if err := mdp.VerifyAPNSubpageConnectedApnUI(ctx, tconn, cr, apnName, ""); err != nil {
 		s.Fatal("Failed to verify connected UI: ", err)
 	}
 
