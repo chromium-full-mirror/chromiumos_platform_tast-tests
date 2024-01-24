@@ -22,7 +22,7 @@ import (
 )
 
 type apConfig struct {
-	router           int
+	router           wificell.RouterIdx
 	apOpts           []hap.Option
 	secConf          security.ConfigFactory
 	expectedSecurity string

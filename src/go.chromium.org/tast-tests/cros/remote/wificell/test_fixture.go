@@ -136,6 +136,15 @@ const (
 	PeerDUT1 DutIdx = 1
 )
 
+// RouterIdx is the type used for router index in TestFixture.routers.
+type RouterIdx int
+
+// Known RouterIdx values.
+const (
+	// DefaultRouter is the RouterIdx of the default router.
+	DefaultRouter RouterIdx = 0
+)
+
 // Other miscellaneous constants.
 const (
 	// The allowed packets loss percentage for the ping command.
@@ -388,8 +397,8 @@ func (tf *TestFixture) initializePcapRouter(ctx, daemonCtx context.Context) erro
 		if len(tf.routers) == 0 {
 			return errors.New("fixture option UseFirstRouterAsPcap is enabled, but there are no routers")
 		}
-		routerPcap := tf.routers[0]
-		testing.ContextLogf(ctx, "Fixture option UseFirstRouterAsPcap is enabled, using router[0] %q as pcap", routerPcap.object.RouterName())
+		routerPcap := tf.routers[DefaultRouter]
+		testing.ContextLogf(ctx, "Fixture option UseFirstRouterAsPcap is enabled, using router[%d] %q as pcap", DefaultRouter, routerPcap.object.RouterName())
 		tf.pcap = routerPcap
 		tf.pcapIsRouter = true
 	} else if pcapTarget == "" {
@@ -397,11 +406,11 @@ func (tf *TestFixture) initializePcapRouter(ctx, daemonCtx context.Context) erro
 		defaultPcapTarget, err := tf.resolveCompanionHostname(utils.CompanionSuffixPcap)
 		if err != nil {
 			testing.ContextLog(ctx, "No pcap target specified and failed to produce a valid default pcap target hostname based off of the dut hostname: ", err)
-			testing.ContextLog(ctx, "Falling back to using router[0] as pcap")
+			testing.ContextLogf(ctx, "Falling back to using router[%d] as pcap", DefaultRouter)
 			if len(tf.routers) == 0 {
-				return errors.New("failed to fallback to using router[0] as pcap: no routers are configured")
+				return errors.Errorf("failed to fallback to using router[%d] as pcap: no routers are configured", DefaultRouter)
 			}
-			tf.pcap = tf.routers[0]
+			tf.pcap = tf.routers[DefaultRouter]
 			tf.pcapIsRouter = true
 		} else {
 			testing.ContextLogf(ctx, "Using default pcap target %q", defaultPcapTarget)
@@ -430,16 +439,16 @@ func (tf *TestFixture) initializePcapRouter(ctx, daemonCtx context.Context) erro
 		var err error
 		pcapRouterHost, err := tf.connectCompanion(ctx, pcapTarget, false /* no retry when DNS not found */)
 		if err != nil {
-			// We want to fall back to using router[0] as pcap iff the default
+			// We want to fall back to using router[DefaultRouter] as pcap iff the default
 			// pcap hostname is invalid. Fail here if it's not the case.
 			if !usingDefaultPcapTarget || !tf.errIsInvalidHost(err) {
 				return errors.Wrap(err, "failed to connect to pcap")
 			}
-			testing.ContextLogf(ctx, "Failed to connect to default pcap target %q, falling back to using router[0] as pcap", pcapTarget)
+			testing.ContextLogf(ctx, "Failed to connect to default pcap target %q, falling back to using router[%d] as pcap", pcapTarget, DefaultRouter)
 			if len(tf.routers) == 0 {
-				return errors.New("failed to fallback to using router[0] as pcap: no routers are configured")
+				return errors.Errorf("failed to fallback to using router[%d] as pcap: no routers are configured", DefaultRouter)
 			}
-			tf.pcap = tf.routers[0]
+			tf.pcap = tf.routers[DefaultRouter]
 			tf.pcapIsRouter = true
 		} else {
 			rd := &routerData{
@@ -476,8 +485,8 @@ func (tf *TestFixture) initializeAttenuator(ctx context.Context) error {
 	}
 	testing.ContextLog(ctx, "Opening Attenuator: ", tf.options.AttenuatorTarget)
 	var err error
-	// router[0] should always be present, thus we use it as a proxy.
-	tf.attenuator, err = attenuator.Open(ctx, tf.options.AttenuatorTarget, tf.routers[0].host)
+	// routers[DefaultRouter] should always be present, thus we use it as a proxy.
+	tf.attenuator, err = attenuator.Open(ctx, tf.options.AttenuatorTarget, tf.routers[DefaultRouter].host)
 	if err != nil {
 		return errors.Wrap(err, "failed to open attenuator")
 	}
@@ -862,11 +871,11 @@ func (tf *TestFixture) UniqueAPName() string {
 
 // ConfigureAPOnRouterID is an extended version of ConfigureAP, allowing to choose router
 // to establish the AP on.
-func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx int, ops []hostapd.Option, fac security.ConfigFactory, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
+func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx RouterIdx, ops []hostapd.Option, fac security.ConfigFactory, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "tf.ConfigureAP")
 	defer st.End()
 
-	if len(tf.routers) <= idx {
+	if len(tf.routers) <= int(idx) {
 		return nil, errors.Errorf("router index (%d) out of range [0, %d)", idx, len(tf.routers))
 	}
 
@@ -920,7 +929,7 @@ func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx int, ops [
 // Note that after getting an APIface, ap, the caller should defer tf.DeconfigAP(ctx, ap) and
 // use tf.ReserveForClose(ctx, ap) to reserve time for the deferred call.
 func (tf *TestFixture) ConfigureAP(ctx context.Context, ops []hostapd.Option, fac security.ConfigFactory) (ret *APIface, retErr error) {
-	return tf.ConfigureAPOnRouterID(ctx, 0, ops, fac, false, false)
+	return tf.ConfigureAPOnRouterID(ctx, DefaultRouter, ops, fac, false, false)
 }
 
 // ReserveForDeconfigAP returns a shorter ctx and cancel function for tf.DeconfigAP().
@@ -2313,25 +2322,25 @@ func (tf *TestFixture) APConn() *ssh.Conn {
 	if len(tf.routers) == 0 {
 		return nil
 	}
-	return tf.routers[0].host
+	return tf.routers[DefaultRouter].host
 }
 
 // APConnByID returns connection object to the AP.
-func (tf *TestFixture) APConnByID(routerID int) *ssh.Conn {
-	if len(tf.routers) <= routerID {
+func (tf *TestFixture) APConnByID(idx RouterIdx) *ssh.Conn {
+	if len(tf.routers) <= int(idx) {
 		return nil
 	}
-	return tf.routers[routerID].host
+	return tf.routers[idx].host
 }
 
 // RouterByID returns the respective router object in the fixture.
-func (tf *TestFixture) RouterByID(idx int) router.Base {
+func (tf *TestFixture) RouterByID(idx RouterIdx) router.Base {
 	return tf.routers[idx].object
 }
 
 // Router returns the router with id 0 in the fixture as the generic router.Base.
 func (tf *TestFixture) Router() router.Base {
-	return tf.RouterByID(0)
+	return tf.RouterByID(DefaultRouter)
 }
 
 // StandardRouter returns the Router as a router.Standard.

@@ -17,7 +17,7 @@ import (
 // handles error, returns deconfig function and provide channel frequency the AP is configured for.
 // Requires s.FixtValue() to return *wificell.TextFixture.
 // Calls s.Fatal in case of any error during setup.
-func ConfigureAP(ctx context.Context, s *testing.State, apParams []hostapd.Option, routerIdx int,
+func ConfigureAP(ctx context.Context, s *testing.State, apParams []hostapd.Option, routerIdx wificell.RouterIdx,
 	secConfFac security.ConfigFactory) (ap *wificell.APIface, freq int, deconfig func(context.Context, *wificell.APIface) error) {
 
 	tf := s.FixtValue().(*wificell.TestFixture)

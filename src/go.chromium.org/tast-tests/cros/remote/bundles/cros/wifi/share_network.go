@@ -54,7 +54,7 @@ const (
 type shareNetworkTestNetwork struct {
 	*wificell.APIface
 	configs     *shareNetworkTestNetworkConfigs
-	routerID    int
+	routerID    wificell.RouterIdx
 	joinRequest *wifi.JoinWifiRequest
 }
 
