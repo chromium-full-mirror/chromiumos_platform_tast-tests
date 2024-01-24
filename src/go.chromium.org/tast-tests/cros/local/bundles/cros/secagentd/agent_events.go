@@ -17,7 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	rep "go.chromium.org/chromiumos/reporting"
-	xdr "chromiumos/xdr/secagentd"
+	xdr "go.chromium.org/chromiumos/xdr/secagentd"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdcommon"

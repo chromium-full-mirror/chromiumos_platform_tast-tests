@@ -5,12 +5,12 @@
 package secagentd
 
 import (
-	xdr "chromiumos/xdr/secagentd"
 	"context"
 	"strconv"
 	"time"
 
 	rep "go.chromium.org/chromiumos/reporting"
+	xdr "go.chromium.org/chromiumos/xdr/secagentd"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdcommon"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"

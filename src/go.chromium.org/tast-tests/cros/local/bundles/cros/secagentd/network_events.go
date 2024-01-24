@@ -13,9 +13,8 @@ import (
 	"strings"
 	"time"
 
-	xdr "chromiumos/xdr/secagentd"
-
 	rep "go.chromium.org/chromiumos/reporting"
+	xdr "go.chromium.org/chromiumos/xdr/secagentd"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"

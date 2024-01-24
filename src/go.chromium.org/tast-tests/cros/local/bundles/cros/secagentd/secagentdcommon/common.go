@@ -10,7 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
-	xdr "chromiumos/xdr/secagentd"
+	xdr "go.chromium.org/chromiumos/xdr/secagentd"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
