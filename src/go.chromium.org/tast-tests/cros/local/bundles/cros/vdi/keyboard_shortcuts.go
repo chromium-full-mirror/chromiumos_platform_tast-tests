@@ -34,7 +34,7 @@ func init() {
 		Contacts: []string{
 			"pwa-commercial@google.com",
 			"kamilszarek@google.com", // VDI testing infrastructure owner
-			"laurila@google.com",     // Test author
+			"giovax@google.com",      // Test owner
 		},
 		BugComponent: "b:1198148", // ChromeOS > Software > Commercial (Enterprise) > App Platforms > Virtualization
 		Attr:         []string{},
