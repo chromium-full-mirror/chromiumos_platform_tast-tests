@@ -63,6 +63,10 @@
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 1"
   },
+  "rex-CH3c6d": {
+    "bus_info": "pci:pci0000:00",
+    "out_entity": "Intel IPU6 BE SOC capture 1"
+  },
   "rex-KC6977": {
     "bus_info": "pci:pci0000:00",
     "out_entity": "Intel IPU6 BE SOC capture 0"
