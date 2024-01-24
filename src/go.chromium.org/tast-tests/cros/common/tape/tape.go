@@ -27,7 +27,7 @@ import (
 const tapeURL = "https://tape-307412.ey.r.appspot.com/"
 const tapeAudience = "770216225211-ihjn20dlehf94m9l4l5h0b0iilvd1vhc.apps.googleusercontent.com"
 const callTimeout = 30 * time.Second
-const requestAccountTimeout = 10 * time.Second
+const requestAccountTimeout = 1 * time.Minute
 const deprovisionTimeout = 1 * time.Minute
 
 // client is created with NewClient and holds a *http.Client struct with an oauth token
@@ -109,10 +109,14 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 			testing.ContextLog(ctx, "Failed to send request: ", err)
 			continue
 		}
+		// Do not retry when the server is overloaded.
+		if response.StatusCode != 503 {
+			break
+		}
 		// Check if the call was successful.
 		if response.StatusCode != 200 {
 			testing.ContextLogf(ctx, "%s at %s returned %s", method, endpoint, response.Status)
-			testing.Sleep(ctx, 5*time.Second) // GoBigSleepLint: wait a few seconds before the retry as we just spam the server otherwise.
+			testing.Sleep(ctx, 15*time.Second) // GoBigSleepLint: wait a few seconds before the retry as we just spam the server otherwise.
 			continue
 		}
 		break
