@@ -167,8 +167,8 @@ func init() {
 			Val:       testMetadata{name: "bloonchipper/test-static_if.bin"},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
-			Name:      "bloonchipper_stm32f_rtc",
-			Val:       testMetadata{name: "bloonchipper/test-stm32f_rtc.bin"},
+			Name:      "bloonchipper_rtc_stm32f4",
+			Val:       testMetadata{name: "bloonchipper/test-rtc_stm32f4.bin"},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_timer_dos",
