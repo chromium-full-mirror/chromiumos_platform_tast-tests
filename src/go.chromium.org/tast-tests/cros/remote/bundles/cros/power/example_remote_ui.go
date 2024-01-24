@@ -38,7 +38,8 @@ func init() {
 			"tast.cros.ui.ConnService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      2 * time.Minute,
+		Timeout:      5 * time.Minute,
+		Attr:         []string{"group:power", "power_daily"},
 	})
 }
 
