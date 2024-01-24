@@ -44,7 +44,7 @@ var PNPTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 60 * time
 var minPowerTestOptions = powersetup.PowerTestOptions{
 	Wifi:               powersetup.DisableWifiInterfaces,
 	NightLight:         powersetup.DisableNightLight,
-	DarkTheme:          powersetup.EnableDarkTheme,
+	DarkTheme:          powersetup.EnableLightTheme,
 	UI:                 powersetup.DoNotChangeUI,
 	Ramfs:              powersetup.DoNotSetupRamfs,
 	Powerd:             powersetup.DisablePowerd,
@@ -232,7 +232,7 @@ func PowerEstimationRoutine(ctx context.Context, w work, browserType browser.Typ
 	defer rec.Close(cleanupCtx)
 
 	testing.ContextLog(ctx, "[Cool Down Phase]")
-	if err := rec.Cooldown(ctx); err != nil {
+	if err := power.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "cooldown failed")
 	}
 
