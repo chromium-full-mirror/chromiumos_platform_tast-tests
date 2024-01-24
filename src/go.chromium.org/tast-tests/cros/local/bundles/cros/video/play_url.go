@@ -40,7 +40,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PlayURL,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Plays video in Chrome by navigating to a given URL, and verifies it plays.",
+		Desc:         "Plays video in Chrome by navigating to a given URL, and verifies it plays",
 		Contacts: []string{
 			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org",
@@ -179,6 +179,12 @@ func PlayURL(ctx context.Context, s *testing.State) {
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
+
+	// See e.g. [1] for readyState details.
+	// [1] https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
+	if err := conn.WaitForExprWithTimeout(ctx, videoElement+".readyState > 2", samplingInterval); err != nil {
+		s.Fatal("Video failed to start playing: ", err)
+	}
 
 	// Make sure |videoElement| is playing every so often.
 	previousPlayTime := -1.0
