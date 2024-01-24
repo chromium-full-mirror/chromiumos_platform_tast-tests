@@ -431,6 +431,9 @@ var (
 
 	// MoreActionsButton is the finder for the more actions button of a known network.
 	MoreActionsButton = nodewith.NameStartingWith(MoreActionsButtonNamePrefix).Role(role.Button)
+
+	// PasspointSubscriptionTitle is the finder for the tile of passpoint subscription in Known Networks page.
+	PasspointSubscriptionTitle = nodewith.Name("Passpoint subscriptions").Role(role.StaticText)
 )
 
 // MoreActionsButtonNamePrefix is the name prefix of MoreActionsButton.
