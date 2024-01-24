@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 var revenUcmlessCards = map[string]bool{
@@ -34,11 +33,7 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		Timeout:      1 * time.Minute,
-		HardwareDeps: hwdep.D(
-			// TODO(b/231276793): eve hotword broken.
-			hwdep.SkipOnModel("eve"),
-		),
-		Fixture: fixture.CrasStopped,
+		Fixture:      fixture.CrasStopped,
 		Params: []testing.Param{
 			{
 				Name: "section_verb",
