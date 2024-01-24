@@ -36,6 +36,13 @@ func V4L2StatefulDecodeArgs(ctx context.Context, filename string) (command []str
 	return
 }
 
+// V4L2StatefulDecodeArgsQ08C is a variant of V4L2StatefulDecodeArgs that forces the capture format to be Q08C.
+func V4L2StatefulDecodeArgsQ08C(ctx context.Context, filename string) []string {
+	var command = V4L2StatefulDecodeArgs(ctx, filename)
+	command = append(command, "--capture_fmt=Q08C")
+	return command
+}
+
 // V4L2StatelessDecodeArgs provides the arguments to use with the stateless decoding binary exe for v4l2.
 func V4L2StatelessDecodeArgs(ctx context.Context, filename string) (command []string) {
 	// TODO(stevecho): md5 support has to be added

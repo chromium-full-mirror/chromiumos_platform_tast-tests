@@ -2726,6 +2726,19 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 			},
 			{
+				Name: "v4l2_q08c",
+				Val: platformDecodingParams{
+					filenames:          []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf", "test_vectors/vp8/vp80-00-comprehensive-001.ivf", "test_vectors/h264/baseline/AUD_MW_E.h264", "test_vectors/h264/main/CABA1_SVA_B.h264"},
+					decoder:            "v4l2_stateful_decoder",
+					decoderArgsBuilder: platform.V4L2StatefulDecodeArgsQ08C,
+				},
+				Timeout:           10 * time.Minute,
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding(), hwdep.GPUVendor("qualcomm")),
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_h264_1080_30", "autotest-capability:hw_dec_vp8_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
+				ExtraData:         []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf", "test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf.json", "test_vectors/vp8/vp80-00-comprehensive-001.ivf", "test_vectors/vp8/vp80-00-comprehensive-001.ivf.json", "test_vectors/h264/baseline/AUD_MW_E.h264", "test_vectors/h264/baseline/AUD_MW_E.h264.json", "test_vectors/h264/main/CABA1_SVA_B.h264", "test_vectors/h264/main/CABA1_SVA_B.h264.json"},
+				ExtraAttr:         []string{"graphics_video_platformdecoding"},
+			},
+			{
 				Name: "v4l2_stateless_av1",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/av1/8-bit/00000527.ivf", "test_vectors/av1/8-bit/00000535.ivf", "test_vectors/av1/8-bit/00000548.ivf", "test_vectors/av1/8-bit/48_delayed.ivf", "test_vectors/av1/8-bit/av1-1-b8-02-allintra.ivf", "test_vectors/av1/8-bit/frames_refs_short_signaling.ivf", "test_vectors/av1/8-bit/non_uniform_tiling.ivf", "test_vectors/av1/8-bit/test-25fps-192x288-only-tile-cols-is-power-of-2.ivf", "test_vectors/av1/8-bit/test-25fps-192x288-only-tile-rows-is-power-of-2.ivf", "test_vectors/av1/8-bit/test-25fps-192x288-tile-rows-3-tile-cols-3.ivf"},

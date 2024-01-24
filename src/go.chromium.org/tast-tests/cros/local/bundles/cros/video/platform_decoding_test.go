@@ -1182,6 +1182,14 @@ var vp8Files = map[string][]string{
 	},
 }
 
+// Software Q08C conversion is expensive, so we only run this on a representative sub-sample of our test vectors.
+var q08cFiles = []string{
+	"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf",
+	"test_vectors/vp8/vp80-00-comprehensive-001.ivf",
+	"test_vectors/h264/baseline/AUD_MW_E.h264",
+	"test_vectors/h264/main/CABA1_SVA_B.h264",
+}
+
 func genExtraData(videoFiles []string) []string {
 	tf := make([]string, 0, 2*len(videoFiles))
 	for _, file := range videoFiles {
@@ -1555,6 +1563,18 @@ func TestPlatformDecodingParams(t *testing.T) {
 			params = append(params, param)
 		}
 	}
+
+	params = append(params, paramData{
+		Name:               "v4l2_q08c",
+		Decoder:            "v4l2_stateful_decoder",
+		DecoderArgsBuilder: "platform.V4L2StatefulDecodeArgsQ08C",
+		Files:              q08cFiles,
+		Timeout:            defaultTimeout,
+		HardwareDeps:       "hwdep.SupportsV4L2StatefulVideoDecoding(), hwdep.GPUVendor(\"qualcomm\")",
+		SoftwareDeps:       []string{"v4l2_codec", caps.HWDecodeH264, caps.HWDecodeVP8, caps.HWDecodeVP9},
+		Metadata:           genExtraData(q08cFiles),
+		Attr:               []string{"graphics_video_platformdecoding"},
+	})
 
 	// Generate V4L2 Stateless AV1 tests.
 	// There are no V4L2 Stateful decoders that support AV1.  Once there are the AV1 tests can be moved into the general V4L2 generator loop.
