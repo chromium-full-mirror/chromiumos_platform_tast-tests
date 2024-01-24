@@ -1085,13 +1085,6 @@ func (s *Servo) SetPDRole(ctx context.Context, newRole PDRoleValue) error {
 		return nil
 	}
 
-	// If the current value is already the intended value,
-	// then don't bother resetting.
-	if currentRole == newRole {
-		testing.ContextLogf(ctx, "Skipping setting %q to %q, because that is the current value", PDRole, newRole)
-		return nil
-	}
-
 	return s.SetString(ctx, PDRole, string(newRole))
 }
 
