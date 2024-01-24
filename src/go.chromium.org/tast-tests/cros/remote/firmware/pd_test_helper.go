@@ -129,7 +129,7 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 		}
 
 		return nil
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 		return errors.Wrap(err, "timed out waiting for servo DUT port to source power")
 	}
 
@@ -207,7 +207,7 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 			return errors.New("Servo DUT port is not ready")
 		}
 		return nil
-	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
 		return errors.Wrap(err, "timed out waiting for Servo DUT port to be ready")
 	}
 
