@@ -28,7 +28,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_p"},
 		}, {
 			Name:              "container_r",
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_container_r"},
 		}},
 	})
