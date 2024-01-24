@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	hibernateVarCycles = "cycles"
+	hibernateVarCycles     = "cycles"
 	hibernateCyclesDefault = 1
 )
 

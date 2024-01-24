@@ -36,9 +36,9 @@ func init() {
 		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"hibernate", "qemu"},
-		Timeout: 10 * time.Minute,
-		Vars:    []string{hibernate.VarEmail, hibernate.VarPassword, hibernateVarCycleID, hibernate.VarSimulateMemPressureMB},
-		VarDeps: []string{tape.ServiceAccountVar},
+		Timeout:      10 * time.Minute,
+		Vars:         []string{hibernate.VarEmail, hibernate.VarPassword, hibernateVarCycleID, hibernate.VarSimulateMemPressureMB},
+		VarDeps:      []string{tape.ServiceAccountVar},
 		Params: []testing.Param{{
 			Name: "hibernate_to_shutdown",
 			Val:  hibernateParams{mode: hibernateToShutdown},
