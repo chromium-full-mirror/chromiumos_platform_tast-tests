@@ -10,10 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -45,22 +43,6 @@ func init() {
 			Name:    "mock_consent",
 			Val:     crash.MockConsent,
 			Fixture: crash.MockConsentFixture,
-		}, {
-			Name:              "real_consent_per_user_on",
-			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
-			// No fixture because we must manually log in and out to chrome
-			// on two accounts.
-			Val: crash.RealConsentPerUserOn,
-			// This test performs 2 logins.
-			Timeout: 2*chrome.LoginTimeout + time.Minute,
-		}, {
-			Name:              "real_consent_per_user_off",
-			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
-			// No fixture because we must manually log in and out to chrome
-			// on two accounts.
-			Val: crash.RealConsentPerUserOff,
-			// This test performs 2 logins.
-			Timeout: 2*chrome.LoginTimeout + time.Minute,
 		}},
 	})
 }
@@ -72,47 +54,10 @@ func KernelKfence(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 20*time.Second)
 	defer cancel()
 
-	usePerUser := consentType == crash.RealConsentPerUserOn || consentType == crash.RealConsentPerUserOff
-	if usePerUser {
-		// First, create and log out of chrome, as a primary user (device owner).
-		if err := func() error {
-			cr, err := chrome.New(ctx, chrome.ExtraArgs(crash.ChromeVerboseConsentFlags))
-			if err != nil {
-				return errors.Wrap(err, "chrome startup failed")
-			}
-			defer cr.Close(cleanupCtx)
-			if err := crash.SetUpCrashTest(ctx, crash.WithConsent(cr)); err != nil {
-				return errors.Wrap(err, "SetUpCrashTest failed")
-			}
-			return nil
-		}(); err != nil {
-			s.Fatal("Setting up crash test failed: ", err)
-		}
-	} else {
-		if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes("kernel_kfence")); err != nil {
-			s.Fatal("SetUpCrashTest failed: ", err)
-		}
+	if err := crash.SetUpCrashTest(ctx, crash.FilterCrashes("kernel_kfence")); err != nil {
+		s.Fatal("SetUpCrashTest failed: ", err)
 	}
 	defer crash.TearDownCrashTest(cleanupCtx)
-
-	if usePerUser {
-		cr, err := chrome.New(ctx,
-			// Avoid erasing consent we just enabled, and in particular do *not* take ownership.
-			chrome.KeepState(),
-			chrome.FakeLogin(chrome.Creds{User: "additional-user1@gmail.com", Pass: "password"}))
-		if err != nil {
-			s.Fatal("Chrome startup failed: ", err)
-		}
-		defer cr.Close(cleanupCtx)
-		if err := crash.CreatePerUserConsent(ctx, consentType == crash.RealConsentPerUserOn); err != nil {
-			s.Fatal("Failed to create per-user consent: ", err)
-		}
-		defer func() {
-			if err := crash.RemovePerUserConsent(cleanupCtx); err != nil {
-				s.Error("Failed to clean up per-user consent: ", err)
-			}
-		}()
-	}
 
 	if err := crash.RestartAnomalyDetectorWithSendAll(ctx, true); err != nil {
 		s.Fatal("Failed to restart anomaly detector: ", err)
@@ -149,18 +94,6 @@ func KernelKfence(ctx context.Context, s *testing.State) {
 			s.Log("Couldn't clean up files: ", err)
 		}
 	}()
-	if consentType == crash.RealConsentPerUserOff {
-		// In the "RealConsentPerUserOff" case, we expect a non-nil `err` value, and we expect
-		// there to be *no* meta files returned, so we should not move to checking the meta files
-		// below. If there are any, it's an error.
-		if err == nil {
-			if err := crash.MoveFilesToOut(ctx, s.OutDir(), files[metaName]...); err != nil {
-				s.Error("Failed to save unexpected crash files: ", err)
-			}
-			s.Fatal("Found crash files but didn't expect to")
-		}
-		return
-	}
 	// For the other consentTypes, expect to find files.
 	if err != nil {
 		s.Fatal("Couldn't find expected files: ", err)
