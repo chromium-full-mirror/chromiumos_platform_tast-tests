@@ -43,7 +43,7 @@ var OdfsUnpackedLocation = testing.RegisterVarString(
 )
 
 func init() {
-	var opts = []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync", "--vmodule=cloud_upload*=3")}
+	var opts = []chrome.Option{chrome.EnableFeatures("UploadOfficeToCloud"), chrome.ExtraArgs("--disable-sync", "--vmodule=cloud_upload*=3", "--extension-force-channel=dev")}
 
 	testing.AddFixture(&testing.Fixture{
 		Name:     "onedrive",

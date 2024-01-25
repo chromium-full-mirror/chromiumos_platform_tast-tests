@@ -95,7 +95,7 @@ func OdfsAutomatedIntegration(ctx context.Context, s *testing.State) {
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.EnableFeatures("UploadOfficeToCloud"),
-		chrome.ExtraArgs("--disable-sync", "--vmodule=cloud_upload*=3"),
+		chrome.ExtraArgs("--disable-sync", "--vmodule=cloud_upload*=3", "--extension-force-channel=dev"),
 	}
 	if isOdfsDev {
 		opts = append(opts, chrome.UnpackedExtension(odfsDevPath))
