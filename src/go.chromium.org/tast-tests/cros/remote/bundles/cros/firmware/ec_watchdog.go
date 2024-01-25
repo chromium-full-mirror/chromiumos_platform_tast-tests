@@ -12,6 +12,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/framework/protocol"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -32,6 +34,18 @@ func init() {
 		Requirements: []string{"sys-fw-0022-v02"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
+}
+
+func isPanicOnWatchdogWarningEnabled(dutFeatures *protocol.DUTFeatures) (bool, error) {
+	satisfied, _, err := hwdep.ECBuildConfigOptions("PANIC_ON_WATCHDOG_WARNING", "PLATFORM_EC_PANIC_ON_WATCHDOG_WARNING").Satisfied(dutFeatures.GetHardware())
+	if err != nil {
+		return false, errors.Wrap(err, "failed to check PANIC_ON_WATCHDOG_WARNING")
+	}
+	if !satisfied {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func ECWatchdog(ctx context.Context, s *testing.State) {
@@ -58,6 +72,11 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
+	}
+
+	panicOnWatchdogWarning, err := isPanicOnWatchdogWarningEnabled(s.Features(""))
+	if err != nil {
+		s.Log("Unable to determine if panic on watchdog warning is enabled")
 	}
 
 	// If panicInfo already contains a watchdog, force a divide zero panic to clear it
@@ -133,10 +152,10 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to fetch current panicinfo: ", err)
 	}
 	if watchdogPanicReason.MatchString(panicInfo) {
-		s.Fatal("Unexpected watchdog panicinfo caused by short wait")
+		s.Fatal("Unexpected watchdog caused by short wait")
 	}
 	if watchdogWarnPanicReason.MatchString(panicInfo) {
-		s.Fatal("Unexpected watchdog warning caused by watchdog warning")
+		s.Fatal("Unexpected watchdog warning caused by short wait")
 	}
 
 	// Watchdog warning test
@@ -146,7 +165,11 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Invalid watchdogWarnDelay")
 	}
 	cmd = fmt.Sprintf("waitms %d", watchdogWarnDelay.Milliseconds())
-	s.Logf("Watchdog warning delay %q, expect warning, but no panic or reboot", cmd)
+	if panicOnWatchdogWarning {
+		s.Logf("Watchdog warning delay %q, expect panic and reboot", cmd)
+	} else {
+		s.Logf("Watchdog warning delay %q, expect warning, but no panic or reboot", cmd)
+	}
 	err = h.Servo.RunECCommand(ctx, cmd)
 	if err != nil {
 		s.Fatal("Failed to send watchdog timer command to EC: ", err)
@@ -163,24 +186,34 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 
-	if newBootID, err = h.Reporter.BootID(ctx); err != nil {
+	newBootID, err = h.Reporter.BootID(ctx)
+	if err != nil {
 		s.Fatal("Failed to fetch current boot ID: ", err)
 	}
-	if newBootID != oldBootID {
-		s.Fatal("Unexpected device reboot caused by watchdog warning")
-	}
-
 	panicInfo, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetPanicInfo(ctx)
 	if err != nil {
 		s.Fatal("Failed to fetch current panicinfo: ", err)
 	}
-	if watchdogPanicReason.MatchString(panicInfo) {
-		s.Fatal("Unexpected watchdog panicinfo caused by watchdog warning")
-	}
-	if watchdogWarnPanicReason.MatchString(panicInfo) {
-		s.Log("Watchdog warning found in panicinfo (expected)")
+
+	if panicOnWatchdogWarning {
+		if newBootID == oldBootID {
+			s.Fatal("Watchdog warning failed to trigger expected reboot, old boot ID is the same as new boot ID")
+		}
+		if !watchdogPanicReason.MatchString(panicInfo) {
+			s.Fatal("Watchdog panic reason missing in panicinfo")
+		}
 	} else {
-		s.Log("Watchdog warning not found in panicinfo (unexpected, but not a failure)")
+		if newBootID != oldBootID {
+			s.Fatal("Watchdog warning caused unexpected reboot, old boot ID is not the same as new boot ID")
+		}
+		if watchdogPanicReason.MatchString(panicInfo) {
+			s.Fatal("Unexpected watchdog panic caused by watchdog warning")
+		}
+		if watchdogWarnPanicReason.MatchString(panicInfo) {
+			s.Log("Watchdog warning found in panicinfo (expected)")
+		} else {
+			s.Log("Watchdog warning not found in panicinfo (unexpected, but not a failure)")
+		}
 	}
 
 	// Watchdog panic test
