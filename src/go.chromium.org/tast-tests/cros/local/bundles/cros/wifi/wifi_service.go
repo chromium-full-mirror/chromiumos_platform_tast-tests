@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/dropdown"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -148,12 +149,39 @@ func joinWifiSetSecurity(tconn *chrome.TestConn, ui *uiauto.Context, kb *input.K
 			setTextField(ui, kb, identityTextField, "test"),
 		)
 	}
+	var setAsSharedAction uiauto.Action
+	switch req.ShareWithOtherUsers {
+	case wifi.JoinWifiRequest_Default:
+		setAsSharedAction = func(ctx context.Context) error { return nil }
+	case wifi.JoinWifiRequest_TurnOn, wifi.JoinWifiRequest_TurnOff:
+		expected := checked.False
+		if req.ShareWithOtherUsers == wifi.JoinWifiRequest_TurnOn {
+			expected = checked.True
+		}
+		toggleButton := nodewith.Name("Allow other users of this device to use this network").Role(role.ToggleButton).Ancestor(joinWiFiNetworkDialogRoot)
+		setAsSharedAction = func(ctx context.Context) error {
+			if err := uiauto.Combine("make visiable and wait until the node is stable",
+				ui.EnsureFocused(toggleButton),
+				ui.WaitForLocation(toggleButton),
+			)(ctx); err != nil {
+				return err
+			}
+
+			if info, err := ui.Info(ctx, toggleButton); err != nil {
+				return errors.Wrap(err, "failed to get node info")
+			} else if info.Checked != expected {
+				return ui.DoDefault(toggleButton)(ctx)
+			}
+			return nil
+		}
+	}
 
 	securityComboBox := nodewith.Name("Security").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
 	connectButton := nodewith.NameContaining("Connect").Role(role.Button).Ancestor(joinWiFiNetworkDialogRoot)
 	return uiauto.Combine("set security and connect to wifi "+req.Ssid,
 		dropdown.SelectDropDownOption(tconn, securityComboBox, securityOptionName),
 		authenticateAction,
+		setAsSharedAction,
 		ui.LeftClick(connectButton),
 	)
 }

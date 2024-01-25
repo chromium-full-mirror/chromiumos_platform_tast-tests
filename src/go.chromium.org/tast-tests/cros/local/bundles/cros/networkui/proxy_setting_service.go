@@ -238,20 +238,26 @@ func (s *ProxySettingsService) fetchFromCrosNetworkConfig(ctx context.Context, c
 			return nil, errors.Wrapf(err, "failed to get %q network managed properties", target.Name())
 		}
 
-		if managedProperties.ProxySettings.Type.ActiveValue == "Direct" {
+		switch proxyConnectType := managedProperties.ProxySettings.Type.ActiveValue; proxyConnectType {
+		// The default of proxy settings is "Direct Internet Connection",
+		// it won't display any settings if the settings hasn't been changed,
+		// however, it will display as "Direct" if switched from another settings.
+		case "", "Direct":
 			result.ProxyConnectionType = networkui.ProxyConnectionType_DirectInternetConnection
-			return result, nil
+		case "Manual":
+			result.ProxyConnectionType = networkui.ProxyConnectionType_ManualProxyConfiguration
+
+			result.HttpHost = managedProperties.ProxySettings.Manual.HTTPProxy.Host.ActiveValue
+			result.HttpPort = strconv.Itoa(managedProperties.ProxySettings.Manual.HTTPProxy.Port.ActiveValue)
+
+			result.HttpsHost = managedProperties.ProxySettings.Manual.SecureHTTPProxy.Host.ActiveValue
+			result.HttpsPort = strconv.Itoa(managedProperties.ProxySettings.Manual.SecureHTTPProxy.Port.ActiveValue)
+
+			result.SocksHost = managedProperties.ProxySettings.Manual.Socks.Host.ActiveValue
+			result.SocksPort = strconv.Itoa(managedProperties.ProxySettings.Manual.Socks.Port.ActiveValue)
+		default:
+			return nil, errors.Errorf("unsupported proxy type %v", proxyConnectType)
 		}
-		result.ProxyConnectionType = networkui.ProxyConnectionType_ManualProxyConfiguration
-
-		result.HttpHost = managedProperties.ProxySettings.Manual.HTTPProxy.Host.ActiveValue
-		result.HttpPort = strconv.Itoa(managedProperties.ProxySettings.Manual.HTTPProxy.Port.ActiveValue)
-
-		result.HttpsHost = managedProperties.ProxySettings.Manual.SecureHTTPProxy.Host.ActiveValue
-		result.HttpsPort = strconv.Itoa(managedProperties.ProxySettings.Manual.SecureHTTPProxy.Port.ActiveValue)
-
-		result.SocksHost = managedProperties.ProxySettings.Manual.Socks.Host.ActiveValue
-		result.SocksPort = strconv.Itoa(managedProperties.ProxySettings.Manual.Socks.Port.ActiveValue)
 
 		return result, nil
 	}
