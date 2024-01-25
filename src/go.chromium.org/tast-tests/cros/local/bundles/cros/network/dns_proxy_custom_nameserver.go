@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/multivm"
@@ -44,14 +45,21 @@ func DNSProxyCustomNameserver(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	// Hide unused ethernet to avoid ARC's limitation.
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create shill client: ", err)
 	}
 
+	// Hide unused ethernet to avoid ARC's maximum number of ethernet
+	// limitation.
+	restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
+	if err != nil {
+		s.Fatal("Failed to hide unused ethernet: ", err)
+	}
+	defer restoreEthernet(cleanupCtx)
+
 	// Disable the physical ethernet so that the only Ethernet service
-	// available is the veth service created below.
+	// active is the veth service created below.
 	if enableFunc, err := m.DisableTechnologyForTesting(ctx, shill.TechnologyEthernet); err != nil {
 		s.Fatal("Unable to disable Ethernet: ", err)
 	} else if enableFunc != nil {
