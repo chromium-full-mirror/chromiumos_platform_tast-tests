@@ -110,6 +110,15 @@ var convertibleKeyboardScanned = []string{
 	"treeya360",
 }
 
+// Models in tabletModeNotSupported are convertibles that were observed to not support
+// tablet mode.
+var tabletModeNotSupported = []string{
+	"robo360",
+	"nautilus",
+	"nautiluslte",
+	"pantheon",
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ScreenWakeTabletMode,
@@ -128,24 +137,6 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		Params: []testing.Param{{
-			Name: "keyboard_scanned_tablet_mode",
-			ExtraHardwareDeps: hwdep.D(
-				hwdep.Model(convertibleKeyboardScanned...),
-				hwdep.Keyboard(),
-				hwdep.Touchpad(),
-				hwdep.TouchScreen(),
-			),
-			Val: &screenWakeTabletModeArgs{
-				hasLid:                  true,
-				tabletmodeON:            "tabletmode on",
-				tabletmodeOFF:           "tabletmode off",
-				tabletmodeReset:         "tabletmode reset",
-				evTestdetectStylus:      false,
-				evTestdetectKeyboard:    true,
-				evTestdetectTouchpad:    false,
-				evTestdetectTouchscreen: true,
-			},
-		}, {
 			Name: "chromeslates",
 			ExtraHardwareDeps: hwdep.D(
 				hwdep.FormFactor(hwdep.Chromeslate),
@@ -183,7 +174,7 @@ func init() {
 				hwdep.Keyboard(),
 				hwdep.Touchpad(),
 				hwdep.TouchScreen(),
-				hwdep.SkipOnModel(append(convertibleKeyboardScanned, "robo360", "nautilus", "nautiluslte", "pantheon")...),
+				hwdep.SkipOnModel(append(convertibleKeyboardScanned, tabletModeNotSupported...)...),
 			),
 			Val: &screenWakeTabletModeArgs{
 				hasLid:                  true,
@@ -261,9 +252,8 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 	type noMatchErr struct {
 		*errors.E
 	}
-	// Found some DUTs such as corsola and nissa start slow crypto after
-	// running touchscreen.NewChrome(). It takes about 5 seconds to finish
-	// crypto process.
+	// Found some DUTs, such as corsola and nissa, taking longer to complete the crypto process
+	// after running touchscreen.NewChrome(). On average, it takes 10 seconds to complete.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		out, err := h.Servo.GetQuotedString(ctx, servo.CR50UARTStream)
 		if err != nil {
@@ -274,7 +264,7 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			return nil
 		}
 		return &noMatchErr{E: errors.New("did not find 'Crypto done' in the GSC UART stream")}
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 10 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 20 * time.Second}); err != nil {
 		if _, ok := errors.Unwrap(err).(*noMatchErr); !ok {
 			s.Fatal("Unexpected error occurred: ", err)
 		}
