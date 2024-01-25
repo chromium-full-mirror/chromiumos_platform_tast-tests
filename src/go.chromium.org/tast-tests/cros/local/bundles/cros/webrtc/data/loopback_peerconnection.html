@@ -1,21 +1,30 @@
 <!DOCTYPE html>
 <html>
-<head><title>RTCPeerConnection Loopback test</title></head>
+<head>
+  <title>RTCPeerConnection Loopback test</title>
+</head>
+<style>
+  video {
+    max-width: 100%;
+    max-height: 100%;
+  }
+</style>
+
 <body>
   <canvas id='canvas' width=10 height=10></canvas>
   <div id="container">
-    <div>
-      <video id="remoteVideo" autoplay muted style="max-width:100%;max-height:100%"></video>
-    </div>
+    <video id="remoteVideo0" autoplay muted></video>
   </div>
-<script src="canvas_animation.js"></script>
-<script src="loopback_peerconnection.js"></script>
-<script src="third_party/blackframe.js"></script>
-<script src="third_party/munge_sdp.js"></script>
-<script src="third_party/sdp/sdp.js"></script>
-<script src="third_party/simulcast/simulcast.js"></script>
-<script src="third_party/ssim.js"></script>
-<script>
-</script>
+  <script src="canvas_animation.js"></script>
+  <script src="loopback_peerconnection.js"></script>
+  <script src="loopback_peerconnection_util.js"></script>
+  <script src="third_party/blackframe.js"></script>
+  <script src="third_party/munge_sdp.js"></script>
+  <script src="third_party/sdp/sdp.js"></script>
+  <script src="third_party/simulcast/simulcast.js"></script>
+  <script src="third_party/ssim.js"></script>
+  <script>
+  </script>
 </body>
+
 </html>

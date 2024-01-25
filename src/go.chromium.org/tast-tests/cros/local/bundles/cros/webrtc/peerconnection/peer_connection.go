@@ -375,6 +375,7 @@ func DataFiles() []string {
 	return []string{
 		"canvas_animation.js",
 		"loopback_peerconnection.js",
+		"loopback_peerconnection_util.js",
 		"third_party/blackframe.js",
 		"third_party/munge_sdp.js",
 		"third_party/sdp/sdp.js",

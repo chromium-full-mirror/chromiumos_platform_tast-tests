@@ -2,30 +2,92 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-let localPeerConnection = new RTCPeerConnection();
-let remotePeerConnection = new RTCPeerConnection();
+let remotePeerConnection;
+let localPeerConnection;
 
-async function start(
-  profile, width, height, simulcasts, svcScalabilityMode, displayMediaType) {
-  let constraints = {audio : false,
-                     video : {
-                       width : width,
-                       height : height,
-                       framerate: 30,
-                     }
-                    };
+async function getStream(width, height, displayMediaType) {
+  let constraints = {
+    audio: false,
+    video: {
+      width: width,
+      height: height,
+      framerate: 30,
+    },
+  };
   if (displayMediaType !== '') {
     constraints.video.displaySurface = displayMediaType;
-    constraints.selfBrowserSurface = "include";
+    constraints.selfBrowserSurface = 'include';
   }
 
-  localPeerConnection.onicecandidate = e =>
-      remotePeerConnection.addIceCandidate(e.candidate);
-  remotePeerConnection.onicecandidate = e =>
-      localPeerConnection.addIceCandidate(e.candidate);
+  let stream;
+  if (constraints.video.displaySurface) {
+    stream = await navigator.mediaDevices.getDisplayMedia(constraints);
+    constraints.framerate = { min: 30, max: 30 };
+    stream.getVideoTracks()[0].applyConstraints(constraints);
+  } else {
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+  }
+  return stream;
+}
+
+async function createStreamAndPCs(
+  width,
+  height,
+  svcScalabilityMode,
+  displayMediaType
+) {
+  const isSmodeEnc = svcScalabilityMode.startsWith('S');
+  let localPC = new RTCPeerConnection({ encodedInsertableStreams: isSmodeEnc });
+  let remotePC = new RTCPeerConnection({
+    encodedInsertableStreams: isSmodeEnc,
+  });
+
+  return {
+    stream: await getStream(width, height, displayMediaType),
+    localPC: localPC,
+    remotePC: remotePC,
+  };
+}
+
+async function start(
+  profile,
+  width,
+  height,
+  simulcasts,
+  svcScalabilityMode,
+  displayMediaType
+) {
+  let { stream, localPC, remotePC } = await createStreamAndPCs(
+    width,
+    height,
+    svcScalabilityMode,
+    displayMediaType
+  );
+
+  let rids = [];
+  let init = {
+    // Prefer resolution even at the cost of visual quality to avoid falling
+    // down to SW video encoding, see b/181320567 or crbug.com/1179020.
+    degradationPreference: 'maintain-resolution',
+    streams: [stream],
+  };
+  if (simulcasts > 1) {
+    for (let i = 0; i < simulcasts; i++) {
+      rids.push(i);
+    }
+    init.sendEncodings = rids.map((i) => {
+      return { rid: i, scaleResolutionDownBy: 2 ** (rids.length - (i + 1)) };
+    });
+  } else if (svcScalabilityMode !== '') {
+    // TODO: Decode the top spatial layer only in LxTx_KEY.
+    init.sendEncodings = [{ scalabilityMode: svcScalabilityMode }];
+  }
+  localPC.addTransceiver(stream.getVideoTracks()[0], init);
+  remotePC.addTransceiver('video');
+
   const onTrack = new Promise((resolve, reject) => {
-    remotePeerConnection.ontrack = e => {
-      const remoteVideo = document.getElementById('remoteVideo');
+    remotePC.ontrack = (e) => {
+      const remoteVideo = document.getElementById('remoteVideo0');
       remoteVideo.srcObject = e.streams[0];
       resolve();
     };
@@ -33,194 +95,11 @@ async function start(
 
   // |targetBitrate| uses a conservative 0.05 bits per pixel (bpp) estimate.
   const targetBitrate = width * height * 30 /*fps*/ * 0.05;
-
-  if (simulcasts > 1) {
-    await runLoopbackPeerConnectionWithSimulcast(constraints, simulcasts,
-                                                 targetBitrate);
-  } else if (svcScalabilityMode !== '') {
-    await runLoopbackPeerConnectionWithSVC(
-        constraints, svcScalabilityMode, profile, targetBitrate);
-  } else {
-    await runLoopbackPeerConnection(constraints, profile, targetBitrate);
-  }
+  await connect(localPC, remotePC, profile, targetBitrate, rids);
   await onTrack;
-}
 
-async function runLoopbackPeerConnection(constraints, profile, targetBitrate) {
-  let stream;
-  if (constraints.video.displaySurface) {
-    stream = await navigator.mediaDevices.getDisplayMedia(constraints);
-    constraints.framerate = {min:30, max:30};
-    stream.getVideoTracks()[0].applyConstraints(constraints);
-  } else {
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
-  }
-  localPeerConnection.addTransceiver(stream.getVideoTracks()[0], {
-    // Prefer resolution even at the cost of visual quality to avoid falling
-    // down to SW video encoding, see b/181320567 or crbug.com/1179020.
-    degradationPreference: 'maintain-resolution',
-    streams : [ stream ],
-  });
-
-  const offer = await localPeerConnection.createOffer();
-  if (profile) {
-    offer.sdp = setSdpDefaultVideoCodec(offer.sdp, profile, false, '');
-  }
-  await localPeerConnection.setLocalDescription(offer);
-  await remotePeerConnection.setRemoteDescription(
-      localPeerConnection.localDescription);
-
-  const answer = await remotePeerConnection.createAnswer();
-  answer.sdp = appendStartBitrateToSDP(answer.sdp, profile, targetBitrate);
-  await remotePeerConnection.setLocalDescription(answer);
-  await localPeerConnection.setRemoteDescription(
-      remotePeerConnection.localDescription);
-}
-
-async function runLoopbackPeerConnectionWithSimulcast(constraints, simulcasts,
-                                                      targetBitrate) {
-  rids = [];
-  for (let i = 0; i < simulcasts; i++) {
-    rids.push(i);
-  }
-
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
-  localPeerConnection.addTransceiver(stream.getVideoTracks()[0], {
-    // Prefer resolution even at the cost of visual quality to avoid falling
-    // down to SW video encoding, see b/181320567 or crbug.com/1179020.
-    degradationPreference: 'maintain-resolution',
-    streams : [ stream ],
-    // Smaller id sending stream has a smaller resolutin.
-    sendEncodings: rids.map(i => {
-      return {'rid': i, 'scaleResolutionDownBy': (2 ** (rids.length - (i+1)))};
-    }),
-  });
-
-  const offer = await localPeerConnection.createOffer();
-  await localPeerConnection.setLocalDescription(offer);
-  await remotePeerConnection.setRemoteDescription({
-    type : 'offer',
-    sdp : swapRidAndMidExtensionsInSimulcastOffer(offer, rids),
-  });
-
-  const answer = await remotePeerConnection.createAnswer();
-  answer.sdp = appendStartBitrateToSDP(answer.sdp, 'VP8', targetBitrate);
-  await remotePeerConnection.setLocalDescription(answer);
-  await localPeerConnection.setRemoteDescription({
-    type : 'answer',
-    sdp : swapRidAndMidExtensionsInSimulcastAnswer(
-        answer, localPeerConnection.localDescription, rids),
-  });
-}
-
-async function runLoopbackPeerConnectionWithSVC(
-    constraints, svcScalabilityMode, profile, targetBitrate) {
-  let stream;
-  if (constraints.video.displaySurface) {
-    stream = await navigator.mediaDevices.getDisplayMedia(constraints);
-    constraints.framerate = {min:30, max:30};
-    stream.getVideoTracks()[0].applyConstraints(constraints);
-  } else {
-    stream = await navigator.mediaDevices.getUserMedia(constraints);
-  }
-  localPeerConnection.addTransceiver(stream.getVideoTracks()[0], {
-    // Prefer resolution even at the cost of visual quality to avoid falling
-    // down to SW video encoding, see b/181320567 or crbug.com/1179020.
-    degradationPreference: 'maintain-resolution',
-    streams : [ stream ],
-    sendEncodings : [{"scalabilityMode": svcScalabilityMode}]
-  });
-
-  const offer = await localPeerConnection.createOffer();
-  if (profile) {
-    offer.sdp = setSdpDefaultVideoCodec(offer.sdp, profile, false, '');
-  }
-  await localPeerConnection.setLocalDescription(offer);
-  await remotePeerConnection.setRemoteDescription(
-      localPeerConnection.localDescription);
-
-  const answer = await remotePeerConnection.createAnswer();
-  answer.sdp = appendStartBitrateToSDP(answer.sdp, profile, targetBitrate);
-  await remotePeerConnection.setLocalDescription(answer);
-  await localPeerConnection.setRemoteDescription(
-      remotePeerConnection.localDescription);
-}
-
-// Returns true if the video frame being displayed is considered "black".
-// Specifying |width| or |height| smaller than the feeding |remoteVideo| can be
-// used for speeding up the calculation by downscaling.
-function isBlackVideoFrame(width = 1280, height = 720) {
-  const context = new OffscreenCanvas(width, height).getContext('2d');
-
-  const remoteVideo = document.getElementById('remoteVideo');
-  context.drawImage(remoteVideo, 0, 0, width, height);
-  const imageData = context.getImageData(0, 0, width, height);
-  return isBlackFrame(imageData.data, imageData.data.length);
-}
-
-const IDENTICAL_FRAME_SSIM_THRESHOLD = 0.99;
-// Returns true if the previous video frame is too similar to the current video
-// frame, implying that the video feed is frozen. The similarity is calculated
-// using ssim() and comparing with the IDENTICAL_FRAME_SSIM_THRESHOLD.
-// Specifying |width| or |height| smaller than the feeding |remoteVideo| can be
-// used for speeding up the calculation by downscaling.
-function isFrozenVideoFrame(width = 1280, height = 720) {
-  const context = new OffscreenCanvas(width, height).getContext('2d');
-
-  const remoteVideo = document.getElementById('remoteVideo');
-  context.drawImage(remoteVideo, 0, 0, width, height);
-  const imageData = context.getImageData(0, 0, width, height);
-
-  if (isFrozenVideoFrame.previousImageData == null) {
-    isFrozenVideoFrame.previousImageData = imageData;
-    return false;
-  }
-
-  const ssim = new Ssim();
-  const ssimValue =
-      ssim.calculate(imageData.data, isFrozenVideoFrame.previousImageData.data)
-  isFrozenVideoFrame.previousImageData = imageData;
-  return ssimValue > IDENTICAL_FRAME_SSIM_THRESHOLD;
-}
-
-// Transforms the "container" <div> that holds the real time <video> into a
-// |dimension| x |dimension| grid, and fills it with |videoURL| <video>s.
-// Reusing the same URL being played back should not affect the test since each
-// <video> will need to decode and play independently from the others.
-function makeVideoGrid(dimension, videoURL) {
-  // Find the |container| and make it a |dimension| x |dimension| grid; repeat()
-  // allows for automatically ordering sub-grids into |dimension| columns, see
-  // https://developer.mozilla.org/en-US/docs/Web/CSS/grid-template-columns
-  const container = document.getElementById('container');
-  container.style.display = 'grid';
-  container.style.gridTemplateColumns = 'repeat(' + dimension + ', 1fr)';
-
-  // Fill the grid with <video>s. Note that there is already one <video> in the
-  // grid for the remote RTCPeerConnection stream feed.
-  const numExtraVideosInGrid = dimension * dimension - 1;
-  for (let i = 0; i < numExtraVideosInGrid; i++) {
-    const video = document.createElement('video');
-    video.src = videoURL;
-    video.style.maxWidth = '100%';
-    video.autoplay = true;
-    video.muted = true;
-    video.loop = true;
-    const div = document.createElement('div');
-    div.appendChild(video);
-    container.appendChild(div);
-  }
-}
-
-// Appends a 'a=fmtp:bla x-google-start-bitrate=foo' statement to |sdp|, where
-// 'bla' is the SDP id for |profile| and 'foo' is the |startBitrate| in Kbps;
-// this statement is needed to prevent RTCPeerConnections from dropping
-// resolution to keep a by-default low start bitrate.
-function appendStartBitrateToSDP(sdp, profile, startBitrate) {
-  const codec_id = findRtpmapId(splitSdpLines(sdp), profile);
-  if (codec_id) {
-    const targetBitrateKbpsAsInt = Math.trunc(startBitrate / 1000);
-    sdp += `a=fmtp:${codec_id} ` +
-        `x-google-start-bitrate=${targetBitrateKbpsAsInt}\r\n`;
-  }
-  return sdp;
+  // Set to global peer connection variables so that the golang test code is
+  // able to query it.
+  localPeerConnection = localPC;
+  remotePeerConnection = remotePC;
 }
