@@ -455,6 +455,11 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	}
 
 	if _, err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
+		out, topCmdErr := testexec.CommandContext(ctx, "top", "-n1", "-b").Output(testexec.DumpLogOnError)
+		if topCmdErr == nil {
+			s.Log("Saving `top` results to top.txt")
+			os.WriteFile(filepath.Join(s.OutDir(), "top.txt"), []byte(out), 0644)
+		}
 		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 
