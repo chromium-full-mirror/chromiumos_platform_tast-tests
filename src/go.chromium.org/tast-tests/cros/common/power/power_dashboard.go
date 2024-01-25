@@ -734,7 +734,7 @@ func tagTimelineWithCheckpoints(values *perf.Values, checkpoints *perf.Checkpoin
 			tagsEmpty = false
 			for tag := range started {
 				checkpointTags[i] = append(checkpointTags[i], tag)
-				if !strings.HasPrefix(tag, "loop") {
+				if !strings.HasPrefix(tag, "loop") && !strings.HasPrefix(tag, "_") {
 					visible++
 				}
 			}

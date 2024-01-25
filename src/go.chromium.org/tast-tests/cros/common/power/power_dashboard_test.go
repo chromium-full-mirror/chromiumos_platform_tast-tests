@@ -243,3 +243,23 @@ func TestValuesWithNoData(t *testing.T) {
 		t.Fatal("Checkpoints should generate nil but instead generated tags: ", tags)
 	}
 }
+
+func TestInvisibleCheckpointTags(t *testing.T) {
+	p := initializeValues()
+
+	c := perf.NewCheckpoints()
+	work1 := perf.NewSection(time.UnixMilli(work1StartMs))
+	work1.SetEnd(time.UnixMilli(work1EndMs))
+	c.AddSectionForTesting("loop1", work1)
+	work2 := perf.NewSection(time.UnixMilli(work2StartMs))
+	work2.SetEnd(time.UnixMilli(work2EndMs))
+	c.AddSectionForTesting("_work2", work2)
+
+	tags, err := tagTimelineWithCheckpoints(p, c)
+	if err != nil {
+		t.Fatal("Fail to tag Timeline Values with Checkpoints: ", err)
+	}
+	example := [][]string{{"none"}, {"loop1", "none"}, {"loop1", "_work2", "none"}, {"loop1", "none"}, {"none"}}
+
+	compareTags(t, tags, example)
+}
