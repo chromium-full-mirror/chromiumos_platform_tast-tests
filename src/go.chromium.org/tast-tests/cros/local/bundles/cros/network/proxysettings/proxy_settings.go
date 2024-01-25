@@ -111,8 +111,17 @@ func ExpandProxySettingsSection(ctx context.Context, tconn *chrome.TestConn) err
 	return uiauto.IfSuccessThen(
 		settings.WaitUntilExists(ossettings.ShowProxySettingsButton.Collapsed()),
 		uiauto.Combine("expand 'Proxy' section",
-			settings.LeftClick(ossettings.ShowProxySettingsButton),
-			settings.WaitForLocation(ossettings.ProxyDropDownMenu), // Wait for the Proxy section is expanded.
+			settings.MakeVisible(ossettings.ShowProxySettingsButton),
+			settings.WaitUntilExists(ossettings.ShowProxySettingsButton.Visible()),
+			settings.LeftClickUntil(
+				// Expand 'Proxy' section.
+				ossettings.ShowProxySettingsButton,
+				settings.WithTimeout(5*time.Second).WaitUntilExists(ossettings.ShowProxySettingsButton.Expanded()),
+			),
+			settings.MakeVisible(ossettings.ProxyDropDownMenu),
+			settings.WaitUntilExists(ossettings.ProxyDropDownMenu.Visible()),
+			// Wait for the Proxy section to be stable.
+			settings.WithTimeout(5*time.Second).WaitForLocation(ossettings.ProxyDropDownMenu),
 		),
 	)(ctx)
 }
@@ -446,7 +455,11 @@ func (m *Manager) ManualConfigContent(ctx context.Context, tconn *chrome.TestCon
 	proxy := &Config{Protocol: protocol}
 
 	ui := uiauto.New(tconn)
-	if err := ui.WaitUntilExists(ossettings.ProxyDropDownMenu)(ctx); err != nil {
+	if err := uiauto.Combine("wait for drop down menu and make it visible",
+		ui.WaitUntilExists(ossettings.ProxyDropDownMenu),
+		ui.MakeVisible(ossettings.ProxyDropDownMenu),
+		ui.WaitUntilExists(ossettings.ProxyDropDownMenu.Visible()),
+	)(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to wait until drop down menu exists")
 	}
 
@@ -503,6 +516,8 @@ func (m *Manager) IsUseSameProxyToggleOptionEnabled(ctx context.Context, tconn *
 func setConnectionType(ctx context.Context, ui *uiauto.Context, connectionType ConnectionType) error {
 	option := nodewith.Name(string(connectionType)).Role(role.ListBoxOption)
 	return uiauto.Combine(fmt.Sprintf("setup proxy to %q", connectionType),
+		ui.MakeVisible(ossettings.ProxyDropDownMenu),
+		ui.WaitUntilExists(ossettings.ProxyDropDownMenu.Visible()),
 		ui.LeftClickUntil(ossettings.ProxyDropDownMenu, ui.WithTimeout(3*time.Second).WaitUntilExists(option)),
 		ui.LeftClick(option),
 		ui.WaitUntilGone(option),
