@@ -327,8 +327,13 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 	var exist bool
 	// Verify if firmware dump is generated after firmware dump trigger
 	exist, e = checkIfDumpFileExists(ctx, dumpPath, s, policyVal)
-	if e != nil && firmwareDumpExpectedByPolicy(policyVal) {
+	if e != nil {
 		s.Fatal("Firmware dump file not generated error: ", e)
+	}
+
+	// Fail if no firmware dump is generated even when allowed by policy.
+	if !exist && firmwareDumpExpectedByPolicy(policyVal) {
+		s.Fatal("Firmware dump file not generated")
 	}
 
 	if exist {
