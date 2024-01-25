@@ -23,6 +23,10 @@ import (
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 )
 
+const (
+	initTimePNPGoogleMeet = 1 * time.Minute
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PNPGoogleMeet,
@@ -33,7 +37,7 @@ func init() {
 		VarDeps:      []string{"ui.bond_credentials"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
 		SoftwareDeps: []string{"chrome"},
-		Timeout:      1*time.Minute + pnp.PNPTimeParams.Total + power.RecorderTimeout,
+		Timeout:      initTimePNPGoogleMeet + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:              "ash",
 			Fixture:           pnp.StablePowerAshGAIA,
@@ -58,14 +62,13 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	if err := pnp.Cooldown(ctx); err != nil {
+		s.Fatal("Failed to run pnp cooldown routine: ", err)
+	}
+
+	testing.ContextLog(ctx, "[Start Work Phase]")
 	browserType := s.FixtValue().(powersetup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
-
-	rec := power.NewRecorder(ctx, pnp.PNPTimeParams.Interval, s.OutDir(), s.TestName())
-	defer rec.Close(cleanupCtx)
-	if err := rec.Cooldown(ctx); err != nil {
-		s.Error("Cooldown failed: ", err)
-	}
 
 	testing.ContextLog(ctx, "Opening Meet")
 	conn, br, cleanup, err := browserfixt.SetUpWithURL(ctx, cr, browserType, chrome.NewTabURL)
@@ -143,22 +146,10 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
 
-	testing.ContextLog(ctx, "Letting things settle for 5 seconds")
-	// GoBigSleepLint: Allow power and effects to stabilize before taking metrics.
-	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
-		s.Fatal("Failed to let things settle: ", err)
+	if err := pnp.WarmUp(ctx); err != nil {
+		s.Fatal("Failed to run pnp warm up routine: ", err)
 	}
-
-	if err := rec.Start(ctx); err != nil {
-		s.Fatal("Cannot start collecting power metrics: ", err)
-	}
-
-	// GoBigSleepLint: Collecting power metrics.
-	if err := testing.Sleep(ctx, pnp.PNPTimeParams.Total); err != nil {
-		s.Fatal("Failed to sleep: ", err)
-	}
-
-	if err := rec.Finish(ctx); err != nil {
-		s.Error("Cannot finish collecting power metrics: ", err)
+	if err := pnp.MeasurePower(ctx, cleanupCtx, s.OutDir(), s.TestName()); err != nil {
+		s.Fatal("Failed to run pnp power measuring routine: ", err)
 	}
 }

@@ -17,7 +17,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -36,6 +35,8 @@ const (
 	cameraService = "cameraService"
 
 	fakeHALImageInput = "generic-person-office.jpg"
+
+	pnpWarmUpTime = 15 * time.Second
 )
 
 // PNPTimeParams provide the probing frequency and total times.
@@ -219,39 +220,32 @@ func (f *fakeHALFixture) PreTest(ctx context.Context, s *testing.FixtTestState) 
 
 func (f *fakeHALFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 
-type work func(ctx context.Context, browserType browser.Type, cr *chrome.Chrome) ([]action.Action, error)
-
-// PowerEstimationRoutine provides a workflow for PNP.
-func PowerEstimationRoutine(ctx context.Context, w work, browserType browser.Type, cr *chrome.Chrome, outDir, testName string) error {
-	// Reserve some time for the cleanup, even if it fails due to ctx timeout.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	rec := power.NewRecorder(ctx, PNPTimeParams.Interval, outDir, testName)
-	defer rec.Close(cleanupCtx)
-
+// Cooldown should be run before loading the work for cooldown phase.
+func Cooldown(ctx context.Context) error {
 	testing.ContextLog(ctx, "[Cool Down Phase]")
 	if err := power.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "cooldown failed")
 	}
 
-	testing.ContextLog(ctx, "[Start Work Phase]")
-	cleanupFuncs, err := w(ctx, browserType, cr)
-	for _, cleanupFunc := range cleanupFuncs {
-		defer cleanupFunc(cleanupCtx)
-	}
-	if err != nil {
-		return errors.Wrap(err, "failed to start the work")
-	}
+	return nil
+}
 
-	testing.ContextLog(ctx, "[Warm Up Phase] Start warming up for ", 15*time.Second)
+// WarmUp should be run immediately after the work is loaded for warm up phase.
+func WarmUp(ctx context.Context) error {
+	testing.ContextLog(ctx, "[Warm Up Phase] Start warming up for ", pnpWarmUpTime)
 	// GoBigSleepLint: Warming up.
-	if err := testing.Sleep(ctx, 15*time.Second); err != nil {
+	if err := testing.Sleep(ctx, pnpWarmUpTime); err != nil {
 		return errors.Wrap(err, "failed to sleep to warm up")
 	}
+	return nil
+}
 
+// MeasurePower records the power and saves the data.
+func MeasurePower(ctx, cleanupCtx context.Context, outDir, testName string) error {
 	testing.ContextLog(ctx, "[Record Phase] Start recording trace for ", PNPTimeParams.Total)
+	rec := power.NewRecorder(ctx, PNPTimeParams.Interval, outDir, testName)
+	defer rec.Close(cleanupCtx)
+
 	if err := rec.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}

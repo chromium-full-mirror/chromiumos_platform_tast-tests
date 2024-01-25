@@ -19,12 +19,17 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
-	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	initTimePNPDirectOffUSBCameraPower               = 1 * time.Minute
+	traceTimePNPDirectOffUSBCameraPower              = 20 * time.Minute
+	traceTimePerResolutionPNPDirectOffUSBCameraPower = 20 * time.Second
 )
 
 type captureMetadata struct {
@@ -45,7 +50,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:camera_dependent"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
 		Fixture:      pnp.StablePowerLacrosGAIA,
-		Timeout:      10 * time.Minute,
+		Timeout:      initTimePNPDirectOffUSBCameraPower + traceTimePNPDirectOffUSBCameraPower + power.RecorderTimeout,
 	})
 }
 
@@ -106,7 +111,7 @@ func parseYavtaEnumFormats(ctx context.Context, videoNode string) ([]captureMeta
 }
 
 func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
-	// Reserve some time to cleanup, even if it fails due to ctx timeout.
+	// Reserve some time for the cleanup, even if it fails due to ctx timeout.
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
@@ -134,8 +139,11 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 	}
 
 	perfValue := perf.NewValues()
-	cpu.Cooldown(ctx)
+	if err := pnp.Cooldown(ctx); err != nil {
+		s.Fatal("Failed to run pnp cooldown routine: ", err)
+	}
 
+	testing.ContextLog(ctx, "[Start Work Phase]")
 	for _, videoNode := range usbCameraList {
 		captureMetadatas, err := parseYavtaEnumFormats(ctx, videoNode)
 		if err != nil {
@@ -169,17 +177,22 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 				videoNode)
 			s.Log("Run command: ", cmd)
 
-			if err := perfTimeline.StartRecording(ctx); err != nil {
-				s.Fatal("Failed to start recording: ", err)
-			}
-
 			err := cmd.Start()
 			if err != nil {
 				s.Fatal("Failed to run yavta to capture frames: ", err)
 			}
 
+			if err := pnp.WarmUp(ctx); err != nil {
+				s.Fatal("Failed to run pnp warm up routine: ", err)
+			}
+
+			testing.ContextLog(ctx, "[Record Phase] Start recording trace for ", traceTimePerResolutionPNPDirectOffUSBCameraPower)
+			if err := perfTimeline.StartRecording(ctx); err != nil {
+				s.Fatal("Failed to start recording: ", err)
+			}
+
 			// GoBigSleepLint: Collecting power metrics.
-			if err := testing.Sleep(ctx, 20*time.Second); err != nil {
+			if err := testing.Sleep(ctx, traceTimePerResolutionPNPDirectOffUSBCameraPower); err != nil {
 				s.Fatal("Failed to sleep: ", err)
 			}
 			subPerfValue, err := perfTimeline.StopRecording(ctx)

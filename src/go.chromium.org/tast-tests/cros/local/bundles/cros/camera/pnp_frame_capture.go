@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
+	"go.chromium.org/tast-tests/cros/local/power"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -28,9 +29,10 @@ import (
 )
 
 const (
-	traceBin           = "/usr/local/share/camera/tracing/bin/trace.py"
-	traceQueryJSONFile = "trace_query.json"
-	traceTime          = 20 * time.Second
+	traceBin                 = "/usr/local/share/camera/tracing/bin/trace.py"
+	traceQueryJSONFile       = "trace_query.json"
+	traceTimePNPFrameCapture = 20 * time.Second
+	initTimePNPFrameCapture  = 1 * time.Minute
 )
 
 type functionMetric struct {
@@ -72,7 +74,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinCamera, "chrome", "camera_app"},
 		Fixture:      pnp.StablePowerLacrosGAIA,
-		Timeout:      1*time.Minute + traceTime,
+		Timeout:      initTimePNPFrameCapture + traceTimePNPFrameCapture + power.RecorderTimeout,
 	})
 }
 
@@ -160,6 +162,11 @@ func PNPFrameCapture(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	if err := pnp.Cooldown(ctx); err != nil {
+		s.Fatal("Failed to run pnp cooldown routine: ", err)
+	}
+
+	testing.ContextLog(ctx, "[Start Work Phase]")
 	cr := s.FixtValue().(powersetup.PowerUIFixtureData).Cr
 
 	// Start Perfetto.
@@ -209,9 +216,9 @@ func PNPFrameCapture(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enter full screen of CCA: ", err)
 	}
 
-	s.Log("Start recording trace for ", traceTime)
+	testing.ContextLog(ctx, "[Record Phase] Start recording trace for ", traceTimePNPFrameCapture)
 	// GoBigSleepLint: Collect power metrics.
-	if err := testing.Sleep(ctx, traceTime); err != nil {
+	if err := testing.Sleep(ctx, traceTimePNPFrameCapture); err != nil {
 		s.Fatal("Failed to sleep: ", err)
 	}
 }
