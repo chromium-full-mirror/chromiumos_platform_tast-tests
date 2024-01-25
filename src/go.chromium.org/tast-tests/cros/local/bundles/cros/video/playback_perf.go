@@ -8,10 +8,14 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/playback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -2010,5 +2014,31 @@ func PlaybackPerf(ctx context.Context, s *testing.State) {
 		return
 	}
 	defer cleanup(ctx)
+
+	// Set shelf to auto-hide.
+	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get primary display info: ", err)
+	}
+	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
+	if err != nil {
+		s.Fatal("Failed to get shelf behavior: ", err)
+	}
+	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide); err != nil {
+		s.Fatal("Failed to set shelf behavior to Never Auto Hide: ", err)
+	}
+	defer ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, origShelfBehavior)
+
+	vl, err := logging.NewVideoLogger()
+	if err != nil {
+		s.Fatal("Failed to set values for verbose logging")
+	}
+	defer vl.Close()
+
+	if err := crastestclient.Mute(ctx); err != nil {
+		s.Fatal("Failed to mute device: ", err)
+	}
+	defer crastestclient.Unmute(ctx)
+
 	playback.RunTest(ctx, s, tconn, testOpt)
 }

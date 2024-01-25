@@ -22,18 +22,16 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
-	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 
@@ -64,6 +62,12 @@ const (
 
 	// Video Element in the page to play a video.
 	videoElement = "document.getElementsByTagName('video')[0]"
+
+	// SuspendSystemTimeout is the timeout to do a single suspend, chrome reconnection, and additional checks.
+	// SuspendSystem usually finishes within 10 seconds. Give it 30 seconds max to finish suspend/resume cycle.
+	SuspendSystemTimeout = 30 * time.Second
+	// SuspendSystemInterval is the interval between each suspendSystem call.
+	SuspendSystemInterval = 15 * time.Second
 )
 
 type contextSwitchStat struct {
@@ -105,59 +109,31 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Set up the browser for testing.
-	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), config.BrowserType)
+	s.Log("Starting playback")
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	url := server.URL + "/video.html"
+	conn, br, browserCleanup, err := browserfixt.SetUpWithURL(ctx, cr, config.BrowserType, url)
 	if err != nil {
-		s.Fatal("Failed to initialize test: ", err)
-	}
-	defer lacros.CloseLacros(cleanupCtx, l)
-	var br *browser.Browser
-	switch config.BrowserType {
-	case browser.TypeAsh:
-		br = cr.Browser()
-	case browser.TypeLacros:
-		br = l.Browser()
+		s.Fatal("Failed to setup browser: ", err)
 	}
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to browser test API: ", err)
 	}
-	// Set shelf to auto-hide.
-	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
-	if err != nil {
-		s.Fatal("Failed to get primary display info: ", err)
-	}
-	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
-	if err != nil {
-		s.Fatal("Failed to get shelf behavior: ", err)
-	}
-	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide); err != nil {
-		s.Fatal("Failed to set shelf behavior to Never Auto Hide: ", err)
-	}
-	defer ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
-
-	vl, err := logging.NewVideoLogger()
-	if err != nil {
-		s.Fatal("Failed to set values for verbose logging")
-	}
-	defer vl.Close()
-
-	if err := crastestclient.Mute(ctx); err != nil {
-		s.Fatal("Failed to mute device: ", err)
-	}
-	defer crastestclient.Unmute(ctx)
-
-	s.Log("Starting playback")
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
-
-	url := server.URL + "/video.html"
-	conn, err := cs.NewConn(ctx, url)
-	if err != nil {
-		s.Fatal("Failed to open video page: ", err)
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(cleanupCtx)
+	defer browserCleanup(cleanupCtx)
+	// Close the tab and release the resource.
+	defer func(ctx context.Context) {
+		// Connection maybe tampered (e.g. suspend/resume) and we need to re-establish connection.
+		conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
+		if err != nil {
+			s.Fatal("Failed to reconnect to browser")
+		}
+		conn.CloseTarget(ctx)
+		conn.Close()
+	}(cleanupCtx)
 
 	observer, err := conn.GetMediaPropertiesChangedObserver(ctx)
 	if err != nil {
@@ -211,7 +187,6 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 	if err := conn.WaitForExpr(ctx, videoElement+".currentTime > 1"); err != nil {
 		s.Fatal("Failed waiting for video to advance playback: ", err)
 	}
-
 	isPlatform, decoderName, err := devtools.GetVideoDecoder(ctx, observer, url)
 	if err != nil {
 		s.Fatal("Failed to parse Media DevTools: ", err)
@@ -243,7 +218,7 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 	// Test video playback continuously after system goes through suspend/resume cycle.
 	if config.SuspendResume {
 		s.Logf("Playing %v video while performancing system suspend/resume", config.Duration)
-		if err := suspendResume(ctx, cr, config.Duration, s.TestName()); err != nil {
+		if err := suspendResume(ctx, cr, config, s.TestName()); err != nil {
 			s.Fatal("Video playback failed: ", err)
 		}
 	}
@@ -267,8 +242,29 @@ func getPlayingTime(ctx context.Context, conn *chrome.Conn) (float64, error) {
 	return curTime, nil
 }
 
+func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) (*chrome.Conn, error) {
+	// Reconnect to Chrome.
+	testing.ContextLog(ctx, "Reconnect to browser connection")
+	if err := cr.Reconnect(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to reconnect to Chrome")
+	}
+	// Reconnect to browser.
+	br, _, err := browserfixt.Connect(ctx, cr, browserType)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to reconnect to browser")
+	}
+	conn, err := br.NewConnForTarget(ctx, func(t *chrome.Target) bool {
+		return strings.HasSuffix(t.URL, "video.html")
+	})
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to establish browser connection")
+	}
+	testing.ContextLog(ctx, "Browser connection is established")
+	return conn, nil
+}
+
 // suspendSystem suspends the system and checks the validity of syslog and video after system resumes.
-func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader, testName string) error {
+func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader, config Config, testName string) error {
 	// Check syslog for GPU hangs and decoding errors before we start suspend/resume.
 	if err := graphics.CheckSysLog(ctx, testName, reader); err != nil {
 		return errors.Wrap(err, "syslog signature found")
@@ -281,16 +277,7 @@ func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader
 	if match := regexp.MustCompile(`(?m)^(Suspend failed.*)$`).FindSubmatch(out); len(match) > 0 {
 		return errors.Errorf("suspend_stress_test failed: %v", string(match[1]))
 	}
-	// Reconnect to Chrome.
-	if err := cr.Reconnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to reconnect to Chrome")
-	}
-	conn, err := cr.NewConnForTarget(ctx, func(t *chrome.Target) bool {
-		return strings.HasSuffix(t.URL, "video.html")
-	})
-	if err != nil {
-		return errors.Wrap(err, "failed to establish Chrome connection")
-	}
+	conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
 	// Check |currentTime| variable is changing.
 	originalPlayingTime, err := getPlayingTime(ctx, conn)
 	if err != nil {
@@ -316,7 +303,7 @@ func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader
 }
 
 // suspendResume tests video playback continuity after system goes through suspend/resume cycle.
-func suspendResume(ctx context.Context, cr *chrome.Chrome, duration time.Duration, testName string) (resultErr error) {
+func suspendResume(ctx context.Context, cr *chrome.Chrome, config Config, testName string) (resultErr error) {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	errChan := make(chan error)
@@ -338,12 +325,18 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, duration time.Duratio
 				testing.ContextLogf(ctx, "Executing [%v] suspend ", i)
 			}
 
-			if err := suspendSystem(ctx, cr, reader, testName); err != nil {
+			suspendCtx, cancel := context.WithTimeout(ctx, SuspendSystemTimeout)
+			defer cancel()
+			if err := suspendSystem(suspendCtx, cr, reader, config, testName); err != nil {
 				errChan <- errors.Wrapf(err, "suspend [%v] failed", i)
 				return
 			}
+			if suspendCtx.Err() != nil {
+				errChan <- errors.Wrapf(err, "suspend/resume cycle took more than %v", SuspendSystemTimeout)
+				return
+			}
 			// GoBigSleepLint: Add a suspend intervals so video can progress.
-			if err := testing.Sleep(ctx, 15*time.Second); err != nil {
+			if err := testing.Sleep(ctx, SuspendSystemInterval); err != nil {
 				errChan <- errors.Wrap(err, "failed to sleep after suspend")
 				return
 			}
@@ -357,7 +350,7 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, duration time.Duratio
 	case <-ctx.Done():
 		quit <- true
 		return ctx.Err()
-	case <-time.After(duration):
+	case <-time.After(config.Duration):
 		testing.ContextLog(ctx, "playback duration hit, stopping suspend_resume loop")
 		quit <- true
 	}

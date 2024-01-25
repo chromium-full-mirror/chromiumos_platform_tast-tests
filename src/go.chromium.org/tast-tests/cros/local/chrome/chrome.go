@@ -151,6 +151,7 @@ var prePackages = []string{
 	"go.chromium.org/tast-tests/cros/local/graphics",
 	"go.chromium.org/tast-tests/cros/local/kioskmode/fixtures",
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt",
+	"go.chromium.org/tast-tests/cros/local/media/pre",
 	"go.chromium.org/tast-tests/cros/local/multivm",
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures",
 	"go.chromium.org/tast-tests/cros/local/policyutil/pre",
