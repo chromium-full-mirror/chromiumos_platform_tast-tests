@@ -102,6 +102,9 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		// Disconnect Charger.
 		s.Log("Stopping power supply")
 		if err := firmware.PollToSetChargerStatus(ctx, h, false); err != nil {
+			if h.RPM != nil {
+				return errors.Wrap(err, "failed to remove charger using rpm")
+			}
 			return errors.Wrap(err, "failed to remove charger")
 		}
 		s.Log("Charger is removed")
@@ -149,7 +152,7 @@ func BootBatteryCutoff(ctx context.Context, s *testing.State) {
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 6*time.Minute)
 		defer cancelWaitConnect()
 
-		if err := h.WaitConnect(waitConnectCtx); err != nil {
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 			if wakeByAC && errors.Is(err, context.DeadlineExceeded) {
 				return &reconnectErr{E: errors.New("timed out reconnecting DUT. Attempting a press on power button")}
 			}
