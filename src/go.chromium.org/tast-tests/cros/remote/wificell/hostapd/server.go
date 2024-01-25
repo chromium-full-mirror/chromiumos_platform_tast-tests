@@ -59,9 +59,8 @@ func KillAll(ctx context.Context, host *ssh.Conn) error {
 type Server struct {
 	host            *ssh.Conn
 	name            string
-	iface           string
+	ifaces          []*Iface
 	workDir         string
-	conf            *Config
 	environmentVars map[string]string
 
 	cmd        *ssh.Cmd
@@ -76,19 +75,27 @@ type Server struct {
 // After getting a Server instance, s, the caller should call s.Close() at the end, and use the
 // shortened ctx (provided by s.ReserveForClose()) before s.Close() to reserve time for it to run.
 func StartServer(ctx context.Context, host *ssh.Conn, name, iface, workDir string, config *Config, environmentVars map[string]string) (server *Server, retErr error) {
-	ctx, st := timing.Start(ctx, "hostapd.StartServer")
+	return StartServerOnIface(ctx, host, name, workDir, []*Iface{&Iface{iface, config}}, environmentVars)
+}
+
+// StartServerOnIface creates a new Server object and runs hostapd on multiple interfaces specified by
+// ifaces of the given host. workDir is the dir on host for the server to put temporary files.
+// name is the identifier used for log filenames in OutDir.
+// After getting a Server instance, s, the caller should call s.Close() at the end, and use the
+// shortened ctx (provided by s.ReserveForClose()) before s.Close() to reserve time for it to run.
+func StartServerOnIface(ctx context.Context, host *ssh.Conn, name, workDir string, ifaces []*Iface, environmentVars map[string]string) (server *Server, retErr error) {
+	ctx, st := timing.Start(ctx, "hostapd.StartServerOnIface")
 	defer st.End()
 
-	// Copying the struct config, because hostapd is keeping a *Config pointer from the caller.
+	// Copying the slice ifaces, because hostapd is keeping a *Config pointer from the caller.
 	// That could cause a problem if the caller assumes it's read-only.
-	hostapdConfigCopy := *config
+	hostapdIfaceCopy := ifaces
 
 	s := &Server{
 		host:            host,
 		name:            name,
-		iface:           iface,
+		ifaces:          hostapdIfaceCopy,
 		workDir:         workDir,
-		conf:            &hostapdConfigCopy,
 		environmentVars: environmentVars,
 	}
 	// Clean up on error.
@@ -109,19 +116,36 @@ func StartServer(ctx context.Context, host *ssh.Conn, name, iface, workDir strin
 }
 
 // filename returns a filename for s to store different type of information.
-// suffix can be the type of stored information. e.g. conf, stdout, stderr ...
+// suffix can be the type of stored information. e.g. stdout, stderr ...
 func (s *Server) filename(suffix string) string {
-	return fmt.Sprintf("hostapd-%s-%s.%s", s.name, s.iface, suffix)
+	ifaceNames := strings.Join(s.Interfaces(), "-")
+	return fmt.Sprintf("hostapd-%s-%s.%s", s.name, ifaceNames, suffix)
 }
 
-// confPathServer returns the path of s's config file.
+// filenameIface returns a filename for ifaceName of s to store different type of information.
+// suffix can be the type of stored information. e.g. conf ...
+func (s *Server) filenameIface(ifaceName, suffix string) string {
+	return fmt.Sprintf("hostapd-%s-%s.%s", s.name, ifaceName, suffix)
+}
+
+// confPathServer returns the path of s's default iface config file.
 func (s *Server) confPathServer() string {
-	return path.Join(s.workDir, s.filename("conf"))
+	return path.Join(s.workDir, s.filenameIface(s.ifaces[0].name, "conf"))
 }
 
-// confPathOutDir returns the path of the stored config file under OutDir.
+// confPathServerIface returns the path of s's ifaceName config file.
+func (s *Server) confPathServerIface(ifaceName string) string {
+	return path.Join(s.workDir, s.filenameIface(ifaceName, "conf"))
+}
+
+// confPathOutDir returns the path of the default iface's stored config file under OutDir.
 func (s *Server) confPathOutDir() string {
-	return s.filename("conf")
+	return s.filenameIface(s.ifaces[0].name, "conf")
+}
+
+// confPathOutDirIface returns the path of ifaceName's stored config file under OutDir.
+func (s *Server) confPathOutDirIface(ifaceName string) string {
+	return s.filenameIface(ifaceName, "conf")
 }
 
 // ctrlPath returns the path of s's control socket.
@@ -139,30 +163,31 @@ func (s *Server) stderrFilename() string {
 	return s.filename("stderr")
 }
 
-// initConfig writes a hostapd config file.
+// initConfig writes hostapd config files of all ifaces.
 func (s *Server) initConfig(ctx context.Context) error {
 	ctx, st := timing.Start(ctx, "initConfig")
 	defer st.End()
 
 	// Build the config.
-	conf, err := s.conf.Format(s.iface, s.ctrlPath())
-	if err != nil {
-		return err
-	}
+	for _, iface := range s.ifaces {
+		conf, err := iface.FormatConfig(s.ctrlPath())
+		if err != nil {
+			return err
+		}
+		// Write the config to local log.
+		outDirConfFile, err := fileutil.PrepareOutDirFile(ctx, s.confPathOutDirIface(iface.name))
+		if err != nil {
+			return errors.Wrapf(err, "failed to prepare local hostapd config file copy %q", s.confPathOutDirIface(iface.name))
+		}
+		_, err = outDirConfFile.WriteString(conf)
+		if err != nil {
+			return errors.Wrapf(err, "failed to write local hostapd config file copy %q", s.confPathOutDirIface(iface.name))
+		}
 
-	// Write the config to local log.
-	outDirConfFile, err := fileutil.PrepareOutDirFile(ctx, s.confPathOutDir())
-	if err != nil {
-		return errors.Wrapf(err, "failed to prepare local hostapd config file copy %q", s.confPathOutDir())
-	}
-	_, err = outDirConfFile.WriteString(conf)
-	if err != nil {
-		return errors.Wrapf(err, "failed to write local hostapd config file copy %q", s.confPathOutDir())
-	}
-
-	// Write the config to server.
-	if err := linuxssh.WriteFile(ctx, s.host, s.confPathServer(), []byte(conf), 0644); err != nil {
-		return errors.Wrap(err, "failed to write config")
+		// Write the config to server.
+		if err := linuxssh.WriteFile(ctx, s.host, s.confPathServerIface(iface.name), []byte(conf), 0644); err != nil {
+			return errors.Wrapf(err, "failed to write config for iface %s", iface.name)
+		}
 	}
 	return nil
 }
@@ -181,10 +206,12 @@ func (s *Server) start(fullCtx context.Context) (retErr error) {
 	ctx, cancel := s.ReserveForClose(fullCtx)
 	defer cancel()
 
-	if s.conf.SpectrumManagement {
-		testing.ContextLogf(ctx, "Starting hostapd %s on interface %s (Note: With SpectrumManagement on this will take longer due to the regulatory DFS Channel Availability Check Time)", s.name, s.iface)
-	} else {
-		testing.ContextLogf(ctx, "Starting hostapd %s on interface %s", s.name, s.iface)
+	for _, iface := range s.ifaces {
+		if iface.conf.SpectrumManagement {
+			testing.ContextLogf(ctx, "Starting hostapd %s on interface %s (Note: With SpectrumManagement on this will take longer due to the regulatory DFS Channel Availability Check Time)", s.name, iface.name)
+		} else {
+			testing.ContextLogf(ctx, "Starting hostapd %s on interface %s", s.name, iface.name)
+		}
 	}
 
 	// Run hostapd command with any set environment variables.
@@ -192,9 +219,10 @@ func (s *Server) start(fullCtx context.Context) (retErr error) {
 	for key, value := range s.environmentVars {
 		commands = append(commands, fmt.Sprintf("%s=%q", key, value))
 	}
-	commands = append(commands, []string{
-		hostapdCmd, "-dd", "-t", "-K", shutil.Escape(s.confPathServer()),
-	}...)
+	commands = append(commands, []string{hostapdCmd, "-dd", "-t", "-K"}...)
+	for _, iface := range s.ifaces {
+		commands = append(commands, shutil.Escape(s.confPathServerIface(iface.name)))
+	}
 	cmd := s.host.CommandContext(ctx, "sh", "-c", strings.Join(commands, " "))
 
 	// Prepare stdout/stderr log files.
@@ -293,18 +321,26 @@ func (s *Server) Close(ctx context.Context) error {
 	if s.stderrFile != nil {
 		_ = s.stderrFile.Close()
 	}
-	if err := s.host.CommandContext(ctx, "rm", configPath).Run(); err != nil {
-		return errors.Wrapf(err, "failed to remove hostapd config at %q", configPath)
+	for _, iface := range s.ifaces {
+		if err := s.host.CommandContext(ctx, "rm", shutil.Escape(s.confPathServerIface(iface.name))).Run(); err != nil {
+			return errors.Wrapf(err, "failed to remove hostapd config at %q", configPath)
+		}
 	}
 	return nil
 }
 
 // hostapdCLI is a helper function for running hostapd_cli command to control
-// this Server.
+// this Server default interface.
 func (s *Server) hostapdCLI(ctx context.Context, args ...string) (string, error) {
+	return s.hostapdCLIIface(ctx, s.Interface(), args...)
+}
+
+// hostapdCLIIface is a helper function for running hostapd_cli command to control
+// this Server interface ifaceName.
+func (s *Server) hostapdCLIIface(ctx context.Context, ifaceName string, args ...string) (string, error) {
 	fullArgs := append([]string{
 		"-p" + s.ctrlPath(),
-		"-i" + s.Interface(),
+		"-i" + ifaceName,
 	}, args...)
 	raw, err := s.host.CommandContext(ctx, hostapdCLI, fullArgs...).Output()
 	if err != nil {
@@ -315,7 +351,7 @@ func (s *Server) hostapdCLI(ctx context.Context, args ...string) (string, error)
 
 // DeauthClient deauthenticates the client with specified MAC address.
 func (s *Server) DeauthClient(ctx context.Context, clientMAC string) error {
-	if err := s.host.CommandContext(ctx, hostapdCLI, fmt.Sprintf("-p%s", s.ctrlPath()), "deauthenticate", clientMAC).Run(); err != nil {
+	if _, err := s.hostapdCLI(ctx, "deauthenticate", clientMAC); err != nil {
 		return errors.Wrapf(err, "failed to deauthenticate client with MAC address %s", clientMAC)
 	}
 
@@ -492,9 +528,18 @@ func (s *Server) Set(ctx context.Context, prop Property, val string) error {
 	return nil
 }
 
-// Interface returns the interface used by the hostapd.
+// Interface returns the name of the default interface used by the hostapd.
 func (s *Server) Interface() string {
-	return s.iface
+	return s.ifaces[0].name
+}
+
+// Interfaces returns the names of the all the interfaces used by the hostapd.
+func (s *Server) Interfaces() []string {
+	var ifaceNames []string
+	for _, iface := range s.ifaces {
+		ifaceNames = append(ifaceNames, iface.name)
+	}
+	return ifaceNames
 }
 
 // Name returns the name used by the hostapd.
@@ -502,10 +547,31 @@ func (s *Server) Name() string {
 	return s.name
 }
 
-// Config returns the config used by the hostapd.
-// NOTE: Caller should not modify the returned object.
+// Config returns a copy of the config of the default interface used by the hostapd.
 func (s *Server) Config() *Config {
-	return s.conf
+	config := *s.ifaces[0].conf
+	return &config
+}
+
+// Configs returns a copy of the configs of all the interfaces used by the hostapd.
+func (s *Server) Configs() []*Config {
+	var configs []*Config
+	for _, iface := range s.ifaces {
+		config := *iface.conf
+		configs = append(configs, &config)
+	}
+	return configs
+}
+
+// IfaceConfig returns a copy of the config of ifaceName used by the hostapd.
+func (s *Server) IfaceConfig(ifaceName string) *Config {
+	for _, iface := range s.ifaces {
+		if iface.name == ifaceName {
+			config := *iface.conf
+			return &config
+		}
+	}
+	return nil
 }
 
 // CSOption is the function signature used to specify options of CSA command.
@@ -549,13 +615,13 @@ func (s *Server) StartChannelSwitch(ctx context.Context, csCount, csChannel int,
 	// Wait for the AP to change channel.
 	iwr := iw.NewRemoteRunner(s.host)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		chConfig, err := iwr.RadioConfig(ctx, s.iface)
+		chConfig, err := iwr.RadioConfig(ctx, s.Interface())
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to get the radio configuration"))
 		}
 		if chConfig.Number == csChannel {
 			// Update hostapd channel.
-			s.conf.Channel = csChannel
+			s.Config().Channel = csChannel
 			return nil
 		}
 		return errors.Errorf("failed to switch to the alternate channel %d", csChannel)

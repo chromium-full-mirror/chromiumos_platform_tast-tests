@@ -59,7 +59,7 @@ const (
 type APIface struct {
 	router    supportedRouter
 	name      string
-	iface     string
+	ifaces    []string
 	subnetIdx byte
 
 	hostapd    *hostapd.Server
@@ -73,6 +73,12 @@ type APIface struct {
 // NOTE: Caller should not modify the returned object.
 func (h *APIface) Config() *hostapd.Config {
 	return h.hostapd.Config()
+}
+
+// Configs return the configs of hostapd.
+// NOTE: Caller should not modify the returned object.
+func (h *APIface) Configs() []*hostapd.Config {
+	return h.hostapd.Configs()
 }
 
 // subnetIP returns 192.168.$subnetIdx.$suffix IP.
@@ -95,9 +101,14 @@ func (h *APIface) ServerIP() net.IP {
 	return h.subnetIP(254)
 }
 
-// Interface returns the interface the service runs on.
+// Interface returns the default interface the service runs on.
 func (h *APIface) Interface() string {
-	return h.iface
+	return h.ifaces[0]
+}
+
+// Interfaces returns all the interfaces the service runs on.
+func (h *APIface) Interfaces() []string {
+	return h.ifaces
 }
 
 // ServerSubnet returns the subnet whose ip has been masked.
@@ -110,7 +121,7 @@ func (h *APIface) ServerSubnet() *net.IPNet {
 // StartAPIface starts the service.
 // After started, the caller should call h.Stop() at the end, and use the shortened ctx
 // (provided by h.ReserveForStop()) before h.Stop() to reserve time for h.Stop() to run.
-func StartAPIface(ctx context.Context, r router.Base, name string, conf *hostapd.Config, enableDNS, enableHTTP bool) (_ *APIface, retErr error) {
+func StartAPIface(ctx context.Context, r router.Base, name string, enableDNS, enableHTTP bool, confs ...*hostapd.Config) (_ *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "StartAPIface")
 	defer st.End()
 
@@ -124,7 +135,7 @@ func StartAPIface(ctx context.Context, r router.Base, name string, conf *hostapd
 		return nil, errors.New("router type must support Hostapd and DHCP")
 	}
 
-	h.hostapd, err = h.router.StartHostapd(ctx, name, conf)
+	h.hostapd, err = h.router.StartHostapd(ctx, name, confs...)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +148,7 @@ func StartAPIface(ctx context.Context, r router.Base, name string, conf *hostapd
 	}(ctx)
 	ctx, cancel := h.hostapd.ReserveForClose(ctx)
 	defer cancel()
-	h.iface = h.hostapd.Interface()
+	h.ifaces = h.hostapd.Interfaces()
 
 	h.subnetIdx, err = reserveSubnetIdx()
 	if err != nil {
@@ -158,13 +169,13 @@ func StartAPIface(ctx context.Context, r router.Base, name string, conf *hostapd
 		dnsOpt.ResolveHostToIP = h.ServerIP()
 	}
 
-	h.dhcpd, err = h.router.StartDHCP(ctx, name, h.iface, h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), dnsOpt)
+	h.dhcpd, err = h.router.StartDHCP(ctx, name, h.Interface(), h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), dnsOpt)
 	if err != nil {
 		return nil, err
 	}
 
 	if enableHTTP {
-		h.httpServer, err = h.router.StartHTTP(ctx, name, h.iface, httpRedirectURL, httpPort, http.StatusFound)
+		h.httpServer, err = h.router.StartHTTP(ctx, name, h.Interface(), httpRedirectURL, httpPort, http.StatusFound)
 		if err != nil {
 			return nil, err
 		}
@@ -269,7 +280,7 @@ func (h *APIface) ChangeSubnetIdx(ctx context.Context) (retErr error) {
 	}()
 	testing.ContextLogf(ctx, "changing AP subnet index from %d to %d", oldIdx, newIdx)
 
-	h.dhcpd, err = h.router.StartDHCP(ctx, h.name, h.iface, h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), nil)
+	h.dhcpd, err = h.router.StartDHCP(ctx, h.name, h.Interface(), h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), nil)
 	if err != nil {
 		return errors.Wrap(err, "failed to start dhcp server")
 	}
