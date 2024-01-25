@@ -92,17 +92,22 @@ func ChangePasswordFailure(ctx context.Context, s *testing.State) {
 		}
 		defer oobeConn.Close()
 
-		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#gaia-password-changed').hidden", 20*time.Second); err != nil {
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#enter-old-password').hidden", 20*time.Second); err != nil {
 			s.Fatal("Failed to wait for the gaia password changed screen: ", err)
 		}
-		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#gaia-password-changed').$.oldPasswordInput.value = '%s'", fakeCreds.Pass), nil); err != nil {
+		if err := oobeConn.Eval(ctx, fmt.Sprintf("document.querySelector('#enter-old-password').$.oldPasswordInput.value = '%s'", fakeCreds.Pass), nil); err != nil {
 			s.Fatal("Failed to enter old password: ", err)
 		}
-		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.forgotPasswordButton.click()", nil); err != nil {
+		if err := oobeConn.Eval(ctx, "document.querySelector('#enter-old-password').$.forgotPasswordButton.click()", nil); err != nil {
 			s.Fatal("Failed to click on forgot password link: ", err)
 		}
-		if err := oobeConn.Eval(ctx, "document.querySelector('#gaia-password-changed').$.proceedAnyway.click()", nil); err != nil {
-			s.Fatal("Failed to click proceed anyway button: ", err)
+
+		if err := oobeConn.WaitForExprFailOnErrWithTimeout(ctx, "!document.querySelector('#local-data-loss-warning').hidden", 20*time.Second); err != nil {
+			s.Fatal("Failed to wait for the local data loss warning: ", err)
+		}
+
+		if err := oobeConn.Eval(ctx, "document.querySelector('#local-data-loss-warning').$.proceedRemove.click()", nil); err != nil {
+			s.Fatal("Failed to click reset button: ", err)
 		}
 		if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
 			// This is not fatal because sometimes it fails because Oobe shutdowns too fast after the call - which produces error.
