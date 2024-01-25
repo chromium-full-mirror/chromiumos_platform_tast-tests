@@ -210,7 +210,7 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 	var charging string
 
 	// Get battery info from EC, retry in case output is corrupted/interrupted.
-	out, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "battery 3", []string{`bat.*(?:\> |ec\:\~\$)`})
+	out, err := h.Servo.RunECCommandGetOutputNoConsoleLogs(ctx, "battery 2", []string{`bat.*(?:\> |ec\:\~\$)`})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get 'battery' output from ec console")
 	}
@@ -283,11 +283,14 @@ func GetECBatteryStatus(ctx context.Context, h *Helper) (*ECBatteryState, error)
 
 	displayMatch := reDisplay.FindStringSubmatch(fullOutput)
 	if displayMatch == nil {
-		return nil, errors.Errorf("failed to parse display percent in output: %s", fullOutput)
-	}
-	display, err = strconv.ParseFloat(displayMatch[1], 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse displayed charge as float")
+		// Some models don't hae a specific "display" charge value reported by the EC.
+		// If this is the case, use the reported charge % instead.
+		display = charge
+	} else {
+		display, err = strconv.ParseFloat(displayMatch[1], 64)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse displayed charge as float")
+		}
 	}
 
 	state := &ECBatteryState{
