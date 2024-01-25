@@ -44,8 +44,9 @@ func ChromeOSAvailableMetrics(ctx context.Context, p *perf.Values, suffix string
 	)
 	p.Set(
 		perf.Metric{
-			Name: fmt.Sprintf("chromeos_available%s", suffix),
-			Unit: "MiB",
+			Name:      fmt.Sprintf("chromeos_available%s", suffix),
+			Unit:      "MiB",
+			Direction: perf.BiggerIsBetter,
 		},
 		float64(available)/KiB,
 	)
