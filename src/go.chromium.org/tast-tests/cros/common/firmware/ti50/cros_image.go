@@ -30,7 +30,7 @@ var (
 	// Regex to check if access denied shows up in the command output
 	accessDeniedRE = regexp.MustCompile(`(?i)access denied`)
 	// Regex to extract CCD states and resolve `Default` states to their true states.
-	capDefaultRE = regexp.MustCompile(`(?:\s\s([A-Za-z1-9]+)\s+[Y-]\s0=Default\s\(([A-Za-z]+)\)|\s\s([A-Za-z1-9]+)\s+[Y-]\s[01]=([A-Za-z]+))`)
+	capDefaultRE = regexp.MustCompile(`(?:\s\s([A-Za-z1-9]+)\s+[Y\-]\s0=Default\s\(([A-Za-z]+)\)|\s\s([A-Za-z1-9]+)\s+[Y\-]\s[0-3]=([A-Za-z]+))`)
 	// Regex to extract CCD State flags
 	consoleCCDStateRE = regexp.MustCompile("State: ([A-Za-z]+)")
 	// Regex to extract commands from help output
@@ -67,6 +67,8 @@ const (
 	UartGscTxAPRx     CCDCap = "UartGscTxAPRx"
 	UartGscRxECTx     CCDCap = "UartGscRxECTx"
 	UartGscTxECRx     CCDCap = "UartGscTxECRx"
+	UartGscRxFpmcuTx  CCDCap = "UartGscRxFpmcuTx"
+	UartGscTxFpmcuRx  CCDCap = "UartGscTxFpmcuRx"
 	FlashAP           CCDCap = "FlashAP"
 	FlashEC           CCDCap = "FlashEC"
 	OverrideWP        CCDCap = "OverrideWP"
@@ -77,6 +79,7 @@ const (
 	OpenNoTPMWipe     CCDCap = "OpenNoTPMWipe"
 	OpenNoLongPP      CCDCap = "OpenNoLongPP"
 	BatteryBypassPP   CCDCap = "BatteryBypassPP"
+	UpdateNoTPMWipe   CCDCap = "UpdateNoTPMWipe" // Cr50 only
 	Unused            CCDCap = "Unused"
 	I2C               CCDCap = "I2C"
 	FlashRead         CCDCap = "FlashRead"
@@ -253,23 +256,34 @@ func (i *CrOSImage) CCDResetFactory(ctx context.Context) error {
 // CCD capability states. Capabilities that are in their default states will be
 // reported as their true states.
 func (i *CrOSImage) GetCCDCapabilities(ctx context.Context) (map[CCDCap]CCDCapState, error) {
-	var out map[CCDCap]CCDCapState
-
 	output, err := i.safeCommand(ctx, "ccd")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to execute ccd open")
 	}
 
-	matches := capDefaultRE.FindAllStringSubmatch(output, -1)
+	return matchCCDCapabilities(output)
+}
+
+func matchCCDCapabilities(s string) (map[CCDCap]CCDCapState, error) {
+	var out map[CCDCap]CCDCapState
+
+	matches := capDefaultRE.FindAllStringSubmatch(s, -1)
 	if matches == nil {
 		return nil, errors.New("failed to parse ccd output")
 	}
 
 	// Map regex result to typed result
 	out = make(map[CCDCap]CCDCapState)
-	for i := 1; i < len(matches); i++ {
-		cap := CCDCap(matches[i][1])
-		state := CCDCapState(matches[i][2])
+	for i := 0; i < len(matches); i++ {
+		var cap CCDCap
+		var state CCDCapState
+		if matches[i][1] != "" {
+			cap = CCDCap(matches[i][1])
+			state = CCDCapState(matches[i][2])
+		} else {
+			cap = CCDCap(matches[i][3])
+			state = CCDCapState(matches[i][4])
+		}
 		out[cap] = state
 	}
 
