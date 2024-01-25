@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"os"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension/dep"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -23,6 +25,7 @@ func init() {
 		// ChromeOS > Software > Commercial (Enterprise) > OEM Services.
 		BugComponent: "b:1256717",
 		Attr:         []string{"group:telemetry_extension_hw"},
+		HardwareDeps: dep.HPModels(),
 		Params: []testing.Param{
 			{
 				Name: "activate_date",
