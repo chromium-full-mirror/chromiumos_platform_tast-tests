@@ -12,7 +12,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"google.golang.org/protobuf/testing/protocmp"
 
-	kp "chromiumos/system_api/kerberos_proto"
+	kp "go.chromium.org/chromiumos/system_api/kerberos_proto"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ad/kerberos"
 	"go.chromium.org/tast/core/testing"
 )

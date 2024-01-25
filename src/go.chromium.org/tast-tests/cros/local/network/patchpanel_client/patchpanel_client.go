@@ -12,7 +12,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	pp "chromiumos/system_api/patchpanel_proto"
+	pp "go.chromium.org/chromiumos/system_api/patchpanel_proto"
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"

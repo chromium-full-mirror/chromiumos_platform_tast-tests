@@ -11,8 +11,8 @@ import (
 	"math/rand"
 	"time"
 
-	cpb "chromiumos/system_api/cryptohome_proto"
-	uda "chromiumos/system_api/user_data_auth_proto"
+	cpb "go.chromium.org/chromiumos/system_api/cryptohome_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"

@@ -16,8 +16,8 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	spb "chromiumos/system_api/seneschal_proto"   // protobufs for seneschal
-	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
+	spb "go.chromium.org/chromiumos/system_api/seneschal_proto"   // protobufs for seneschal
+	cpb "go.chromium.org/chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 

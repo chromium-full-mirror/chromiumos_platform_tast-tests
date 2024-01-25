@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 	"time"
 
-	ppb "chromiumos/system_api/printscanmgr_proto"
+	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/fake"

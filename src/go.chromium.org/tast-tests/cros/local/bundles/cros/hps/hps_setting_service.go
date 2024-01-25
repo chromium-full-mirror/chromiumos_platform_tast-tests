@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc"
 	durationpb "google.golang.org/protobuf/types/known/durationpb"
 
-	"chromiumos/system_api/hps_proto"
+	"go.chromium.org/chromiumos/system_api/hps_proto"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"

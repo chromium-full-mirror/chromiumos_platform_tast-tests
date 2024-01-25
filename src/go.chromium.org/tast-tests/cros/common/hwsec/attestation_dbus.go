@@ -7,7 +7,7 @@ package hwsec
 import (
 	"context"
 
-	apb "chromiumos/system_api/attestation_proto"
+	apb "go.chromium.org/chromiumos/system_api/attestation_proto"
 )
 
 // AttestationDBus is an interface of attestation D-Bus client.

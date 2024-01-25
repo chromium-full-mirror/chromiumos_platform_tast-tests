@@ -11,7 +11,7 @@ import (
 	"os"
 	"path/filepath"
 
-	lpb "chromiumos/system_api/lorgnette_proto"
+	lpb "go.chromium.org/chromiumos/system_api/lorgnette_proto"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/printer/usbprintertests"

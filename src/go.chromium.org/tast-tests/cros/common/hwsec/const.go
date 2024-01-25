@@ -7,7 +7,7 @@ package hwsec
 import (
 	"time"
 
-	apb "chromiumos/system_api/attestation_proto"
+	apb "go.chromium.org/chromiumos/system_api/attestation_proto"
 )
 
 // VAType indicates the type VA server, of which the possible value are default and test; see the const definition below.

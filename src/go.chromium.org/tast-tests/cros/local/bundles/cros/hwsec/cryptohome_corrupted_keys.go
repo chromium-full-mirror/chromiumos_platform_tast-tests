@@ -8,7 +8,7 @@ import (
 	"context"
 	"os"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/util"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"

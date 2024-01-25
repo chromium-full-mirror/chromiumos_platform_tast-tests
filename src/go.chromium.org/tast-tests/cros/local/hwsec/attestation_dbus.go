@@ -9,7 +9,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	apb "chromiumos/system_api/attestation_proto"
+	apb "go.chromium.org/chromiumos/system_api/attestation_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 )

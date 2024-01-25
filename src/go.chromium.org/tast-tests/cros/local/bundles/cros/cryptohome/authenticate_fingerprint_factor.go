@@ -7,8 +7,8 @@ package cryptohome
 import (
 	"context"
 
-	biod "chromiumos/system_api/biod_messages_proto"
-	uda "chromiumos/system_api/user_data_auth_proto"
+	biod "go.chromium.org/chromiumos/system_api/biod_messages_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"

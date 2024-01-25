@@ -13,7 +13,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	pmpb "chromiumos/system_api/power_manager_proto"
+	pmpb "go.chromium.org/chromiumos/system_api/power_manager_proto"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"

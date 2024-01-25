@@ -7,7 +7,7 @@ package ownership
 
 import (
 	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
-	lm "chromiumos/system_api/login_manager_proto"
+	lm "go.chromium.org/chromiumos/system_api/login_manager_proto"
 )
 
 // BuildTestSettings returns the ChromeDeviceSettingsProto instance which

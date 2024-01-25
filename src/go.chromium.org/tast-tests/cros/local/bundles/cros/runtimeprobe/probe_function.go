@@ -14,7 +14,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	rppb "chromiumos/system_api/runtime_probe_proto"
+	rppb "go.chromium.org/chromiumos/system_api/runtime_probe_proto"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe/fixture"

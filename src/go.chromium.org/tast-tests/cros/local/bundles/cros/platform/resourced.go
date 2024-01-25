@@ -13,7 +13,7 @@ import (
 	"strings"
 	"time"
 
-	rmpb "chromiumos/system_api/resource_manager_proto"
+	rmpb "go.chromium.org/chromiumos/system_api/resource_manager_proto"
 
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/resourced"

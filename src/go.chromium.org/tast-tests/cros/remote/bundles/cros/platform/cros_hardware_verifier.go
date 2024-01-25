@@ -25,7 +25,7 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 
 	hvpb "go.chromium.org/chromiumos/hardware_verifier"
-	rppb "chromiumos/system_api/runtime_probe_proto"
+	rppb "go.chromium.org/chromiumos/system_api/runtime_probe_proto"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"

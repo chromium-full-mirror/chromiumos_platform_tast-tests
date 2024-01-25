@@ -10,7 +10,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"

@@ -8,7 +8,7 @@ import (
 	"context"
 	"regexp"
 
-	lpb "chromiumos/system_api/lorgnette_proto"
+	lpb "go.chromium.org/chromiumos/system_api/lorgnette_proto"
 
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast-tests/cros/local/scanner/lorgnette"

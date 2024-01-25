@@ -13,7 +13,7 @@ import (
 	"github.com/godbus/dbus/v5/introspect"
 	"github.com/golang/protobuf/proto"
 
-	pb "chromiumos/system_api/ml_proto"
+	pb "go.chromium.org/chromiumos/system_api/ml_proto"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

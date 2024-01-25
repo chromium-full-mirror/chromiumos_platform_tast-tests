@@ -14,7 +14,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	cpb "chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
+	cpb "go.chromium.org/chromiumos/system_api/vm_cicerone_proto" // protobufs for container management
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"

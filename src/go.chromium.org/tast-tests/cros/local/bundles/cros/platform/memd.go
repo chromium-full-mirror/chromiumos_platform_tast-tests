@@ -15,7 +15,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	metrics_event "chromiumos/system_api/metrics_event_proto"
+	metrics_event "go.chromium.org/chromiumos/system_api/metrics_event_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"

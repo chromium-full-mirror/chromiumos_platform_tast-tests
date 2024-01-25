@@ -21,7 +21,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	tmpb "chromiumos/system_api/tpm_manager_proto"
+	tmpb "go.chromium.org/chromiumos/system_api/tpm_manager_proto"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"

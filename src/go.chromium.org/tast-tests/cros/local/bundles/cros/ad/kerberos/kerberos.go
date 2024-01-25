@@ -12,7 +12,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	kp "chromiumos/system_api/kerberos_proto"
+	kp "go.chromium.org/chromiumos/system_api/kerberos_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"

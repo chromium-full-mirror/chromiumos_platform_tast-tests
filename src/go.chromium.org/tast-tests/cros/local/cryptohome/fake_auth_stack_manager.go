@@ -18,7 +18,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	messages "chromiumos/system_api/biod_messages_proto"
+	messages "go.chromium.org/chromiumos/system_api/biod_messages_proto"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

@@ -18,7 +18,7 @@ import (
 	"syscall"
 	"time"
 
-	pp "chromiumos/system_api/patchpanel_proto"
+	pp "go.chromium.org/chromiumos/system_api/patchpanel_proto"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"

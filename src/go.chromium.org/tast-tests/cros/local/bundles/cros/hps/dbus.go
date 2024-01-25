@@ -9,7 +9,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	pb "chromiumos/system_api/hps_proto"
+	pb "go.chromium.org/chromiumos/system_api/hps_proto"
 	"go.chromium.org/tast-tests/cros/common/hps/hpsutil"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"

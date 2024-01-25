@@ -15,7 +15,7 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 	cryptohomecommon "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	hwsecremote "go.chromium.org/tast-tests/cros/remote/hwsec"

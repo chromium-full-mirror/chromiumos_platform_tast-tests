@@ -7,7 +7,7 @@
 package hwsec
 
 import (
-	attestation_proto "chromiumos/system_api/attestation_proto"
+	attestation_proto "go.chromium.org/chromiumos/system_api/attestation_proto"
 	context "context"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"

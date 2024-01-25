@@ -10,7 +10,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	cpb "chromiumos/system_api/plugin_vm_service_proto"
+	cpb "go.chromium.org/chromiumos/system_api/plugin_vm_service_proto"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
 	"go.chromium.org/tast-tests/cros/common/policy"

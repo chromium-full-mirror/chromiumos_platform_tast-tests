@@ -15,8 +15,8 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	cpb "chromiumos/system_api/vm_cicerone_proto"   // protobufs for container management
-	vmpb "chromiumos/system_api/vm_concierge_proto" // protobufs for VM management
+	cpb "go.chromium.org/chromiumos/system_api/vm_cicerone_proto"   // protobufs for container management
+	vmpb "go.chromium.org/chromiumos/system_api/vm_concierge_proto" // protobufs for VM management
 
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"

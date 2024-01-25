@@ -11,7 +11,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	lpb "chromiumos/system_api/lorgnette_proto"
+	lpb "go.chromium.org/chromiumos/system_api/lorgnette_proto"
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"

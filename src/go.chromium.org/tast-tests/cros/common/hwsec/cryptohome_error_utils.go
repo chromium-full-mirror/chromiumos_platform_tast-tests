@@ -5,7 +5,7 @@
 package hwsec
 
 import (
-	uda "chromiumos/system_api/user_data_auth_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 	"go.chromium.org/tast/core/errors"
 )
 

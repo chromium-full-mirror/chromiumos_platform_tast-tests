@@ -8,7 +8,7 @@ import (
 	"context"
 	"os"
 
-	ppb "chromiumos/system_api/printscanmgr_proto"
+	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
 
 	"go.chromium.org/tast-tests/cros/local/printscanmgr"
 	"go.chromium.org/tast/core/testing"

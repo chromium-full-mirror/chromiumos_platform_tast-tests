@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	pmpb "chromiumos/system_api/power_manager_proto"
+	pmpb "go.chromium.org/chromiumos/system_api/power_manager_proto"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"

@@ -19,7 +19,7 @@ import (
 	"golang.org/x/crypto/pkcs12"
 
 	"go.chromium.org/chromiumos/policy/chromium/policy/enterprise_management_proto"
-	lm "chromiumos/system_api/login_manager_proto"
+	lm "go.chromium.org/chromiumos/system_api/login_manager_proto"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"

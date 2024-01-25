@@ -12,7 +12,7 @@ import (
 
 	"github.com/golang/protobuf/proto"
 
-	featuredpb "chromiumos/system_api/featured_proto"
+	featuredpb "go.chromium.org/chromiumos/system_api/featured_proto"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"

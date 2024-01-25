@@ -8,7 +8,7 @@ import (
 	"context"
 	"io/ioutil"
 
-	ppb "chromiumos/system_api/printscanmgr_proto"
+	ppb "go.chromium.org/chromiumos/system_api/printscanmgr_proto"
 
 	"go.chromium.org/tast-tests/cros/local/printing/printer"
 	"go.chromium.org/tast-tests/cros/local/printscanmgr"

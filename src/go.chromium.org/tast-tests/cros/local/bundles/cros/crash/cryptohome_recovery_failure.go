@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	recoverytool "go.chromium.org/tast-tests/cros/common/cryptohome"
 	"go.chromium.org/tast-tests/cros/common/hwsec"

@@ -8,7 +8,7 @@ import (
 	"context"
 	"encoding/hex"
 
-	apb "chromiumos/system_api/attestation_proto"
+	apb "go.chromium.org/chromiumos/system_api/attestation_proto"
 
 	"go.chromium.org/tast/core/errors"
 )

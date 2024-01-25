@@ -12,7 +12,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	cpb "chromiumos/system_api/cryptohome_proto"
+	cpb "go.chromium.org/chromiumos/system_api/cryptohome_proto"
 	"go.chromium.org/tast/core/errors"
 )
 

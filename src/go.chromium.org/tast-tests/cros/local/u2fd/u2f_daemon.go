@@ -11,7 +11,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/proto"
 
-	u2f "chromiumos/system_api/u2f_proto"
+	u2f "go.chromium.org/chromiumos/system_api/u2f_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"

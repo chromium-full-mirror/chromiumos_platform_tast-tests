@@ -9,7 +9,7 @@ import (
 	"encoding/hex"
 	"time"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	cryptochrome "go.chromium.org/tast-tests/cros/local/cryptohome/chrome"

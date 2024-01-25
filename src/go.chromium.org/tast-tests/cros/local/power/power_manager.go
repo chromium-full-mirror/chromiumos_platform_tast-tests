@@ -10,7 +10,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	pmpb "chromiumos/system_api/power_manager_proto"
+	pmpb "go.chromium.org/chromiumos/system_api/power_manager_proto"
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"

@@ -8,7 +8,7 @@ import (
 	"context"
 	"time"
 
-	dlcp "chromiumos/system_api/dlcservice_proto"
+	dlcp "go.chromium.org/chromiumos/system_api/dlcservice_proto"
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/dlc"

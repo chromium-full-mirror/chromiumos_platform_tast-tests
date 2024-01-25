@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	spb "chromiumos/system_api/stack_sampled_metrics_status_proto"
+	spb "go.chromium.org/chromiumos/system_api/stack_sampled_metrics_status_proto"
 
 	"github.com/golang/protobuf/proto"
 	"go.chromium.org/tast-tests/cros/common/fixture"

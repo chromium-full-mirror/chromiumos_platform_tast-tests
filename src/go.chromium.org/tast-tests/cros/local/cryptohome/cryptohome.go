@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	uda "chromiumos/system_api/user_data_auth_proto"
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"

@@ -9,7 +9,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	apb "chromiumos/system_api/attestation_proto"
+	apb "go.chromium.org/chromiumos/system_api/attestation_proto"
 	"go.chromium.org/tast-tests/cros/local/hwsec"
 	hwsecpb "go.chromium.org/tast-tests/cros/services/cros/hwsec"
 	"go.chromium.org/tast/core/errors"

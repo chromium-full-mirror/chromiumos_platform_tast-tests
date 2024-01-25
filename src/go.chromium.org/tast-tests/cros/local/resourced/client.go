@@ -10,7 +10,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
-	rmpb "chromiumos/system_api/resource_manager_proto"
+	rmpb "go.chromium.org/chromiumos/system_api/resource_manager_proto"
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"

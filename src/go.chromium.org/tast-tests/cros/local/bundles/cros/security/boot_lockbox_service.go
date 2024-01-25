@@ -12,7 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	cpb "chromiumos/system_api/bootlockbox_proto"
+	cpb "go.chromium.org/chromiumos/system_api/bootlockbox_proto"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/services/cros/security"

@@ -16,7 +16,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 
-	"chromiumos/system_api/dlcservice_proto"
+	"go.chromium.org/chromiumos/system_api/dlcservice_proto"
 )
 
 func init() {
