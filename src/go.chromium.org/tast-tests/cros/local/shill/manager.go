@@ -585,6 +585,20 @@ func (m *Manager) PushTestProfile(ctx context.Context) (func(ctx context.Context
 	}, nil
 }
 
+// GetBlockedDevices returns the list of all the devices blocked using
+// --devices-blocked command line switch.
+func (m *Manager) GetBlockedDevices(ctx context.Context) ([]string, error) {
+	prop, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get properties")
+	}
+	devices, err := prop.GetStrings(shillconst.ManagerPropertyBlockedDevices)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to get property: %s", shillconst.ManagerPropertyBlockedDevices)
+	}
+	return devices, nil
+}
+
 // ClaimInterface assigns the ownership of "intf" to the specified "claimer".
 // The claimer will prevent Shill to manage the device (see shill/doc/manager-api.txt).
 func (m *Manager) ClaimInterface(ctx context.Context, claimer, intf string) error {

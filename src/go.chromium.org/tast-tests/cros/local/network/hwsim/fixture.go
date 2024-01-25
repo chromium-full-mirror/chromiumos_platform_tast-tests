@@ -7,7 +7,10 @@ package hwsim
 
 import (
 	"context"
+	"net"
 	"time"
+
+	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -178,7 +181,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 
 	// Load the simulation driver (mac80211_hwsim)
-	ifaces, err := load(ctx, ifaceCount)
+	hwsimIfaces, err := load(ctx, ifaceCount)
 	if err != nil {
 		s.Fatal("Failed to load Wi-Fi simulation driver: ", err)
 	}
@@ -190,24 +193,10 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		}
 	}(ctx)
 
-	// Wait for all the new interfaces to be managed by Shill.
-	// TODO(b/235259730): remove the timeout and find a way to know the number
-	// of interfaces expected to be managed by Shill.
-	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
-		s.Fatal("Failed to wait for Shill to manage interfaces")
-	}
-
-	// Obtain the list of Wi-Fi interfaces managed by Shill.
-	wm, err := shill.NewWifiManager(ctx, f.m)
+	// Get the list of Wi-Fi interfaces managed by Shill.
+	shillIfaces, err := f.getShillManagedInterfaces(ctx, hwsimIfaces)
 	if err != nil {
-		s.Fatal("Failed to create Wi-Fi manager: ", err)
-	}
-	shillIfaces, err := wm.Interfaces(ctx)
-	if err != nil {
-		s.Fatal("Failed to obtain Wi-Fi interfaces from Shill: ", err)
-	}
-	if len(ifaces) == 0 {
-		s.Fatal("Shill has no Wi-Fi interfaces")
+		s.Fatal("Failed to obtain Shill managed interfaces: ", err)
 	}
 
 	// Keep track of managed interfaces
@@ -222,7 +211,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Use the other interfaces as test access points.
 	var apIfaces []string
 	var claimedIfaces []string
-	for _, iface := range ifaces {
+	for _, iface := range hwsimIfaces {
 		if iface.Name == clientIface {
 			// The client interface cannot be used as access point and will
 			// continue to be managed by Shill.
@@ -297,4 +286,48 @@ func (f *fixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 func (f *fixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+// getShillManagedInterfaces provides the list of Wi-Fi interfaces managed, ie
+// the Wi-Fi interfaces owned and not blocked.
+func (f *fixture) getShillManagedInterfaces(ctx context.Context, hwsimIfaces []net.Interface) ([]string, error) {
+	// Get the list of interfaces already blocked in Shill.
+	blockedDevices, err := f.m.GetBlockedDevices(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Build a list of the interfaces expected to be managed by Shill.
+	var expectedIfaces []string
+	for _, iface := range hwsimIfaces {
+		if !slices.Contains(blockedDevices, iface.Name) {
+			expectedIfaces = append(expectedIfaces, iface.Name)
+		}
+	}
+
+	// Obtain the list of Wi-Fi interfaces managed by Shill.
+	wm, err := shill.NewWifiManager(ctx, f.m)
+	if err != nil {
+		return nil, err
+	}
+	// Wait for Shill to own all the hwsim interfaces, except the blocked one.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		shillIfaces, err := wm.Interfaces(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to obtain Wi-Fi interfaces from Shill")
+		}
+		for _, iface := range expectedIfaces {
+			if !slices.Contains(shillIfaces, iface) {
+				return errors.Errorf("interface %s missing", iface)
+			}
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  shillIfaceTimeout,
+		Interval: time.Second,
+	}); err != nil {
+		return nil, err
+	}
+
+	return expectedIfaces, nil
 }

@@ -132,6 +132,7 @@ const (
 	ManagerPropertyDefaultTechnology                  = "DefaultTechnology"
 	ManagerPropertyTetheringConfig                    = "TetheringConfig"
 	ManagerPropertyEnableDHCPQos                      = "EnableDHCPQoS"
+	ManagerPropertyBlockedDevices                     = "BlockedDevices"
 )
 
 // Service property names defined in dbus-constants.h .
