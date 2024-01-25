@@ -225,10 +225,13 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
-		Val: []simpleConnectParamsVal{{APOpts: `
-			ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
-		`}},
+		Val: []simpleConnectParamsVal{{
+			Doc: []string{"TODO(b/320513468): Investigate why the VHT center channel is needed in the AP configuration, so the DUT can connect to the HE 80MHz channel."},
+			APOpts: `
+				ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+				ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+			`},
+		},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
@@ -238,10 +241,13 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Doc: append(simpleConnectDocPref("an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use HE WiFi standard."),
-		Val: []simpleConnectParamsVal{{APOpts: `
-			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-			ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
-		`}},
+		Val: []simpleConnectParamsVal{{
+			Doc: []string{"TODO(b/320513468): Investigate why the VHT center channel is needed in the AP configuration, so the DUT can connect to the HE 80MHz channel."},
+			APOpts: `
+				ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+				ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+			`},
+		},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
