@@ -132,15 +132,13 @@ func PNPGoogleMeet(ctx context.Context, s *testing.State) {
 		gm.EnterFullScreen,
 		gm.MuteIfMicAvailable,
 		gm.ChangeSettings(
-			// TODO(esker): There are some settings currently in Google Meet
-			// currently not in ChromeOS but in MacOS and gLinux, such as
-			// "Video Restore" and "Framing." Make sure these effects are
-			// disabled when they are rolled out to ChromeOS.
-			gm.SetAdjustVideoLighting(false),
 			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 			gm.SetReceiveResolution(googlemeet.ResolutionHD720P),
 		),
-		gm.ApplyVideoEffects(gm.SetEffect(googlemeet.NoEffect)),
+		// TODO(esker): Make sure to disable all video effect. And there are some
+		// settings currently in Google Meet currently not in ChromeOS but in MacOS
+		// and gLinux, such as "Video Restore" and "Framing." Make sure these
+		// effects are disabled when they are rolled out to ChromeOS.
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)
 	}
