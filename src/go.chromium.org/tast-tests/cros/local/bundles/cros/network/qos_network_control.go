@@ -305,7 +305,7 @@ func checkPacketsMarks(ctx context.Context, packets chan *capture.Packet, client
 			if p.DHCPv4 != nil && p.IPv4.DstIP.Equal(net.IPv4bcast) {
 				// All DHCP emitted by the DUT are expected to be marked with DSCP 48.
 				if !qos.HasDSCP(p, dscpNetworkControl) {
-					return errors.Errorf("DHCPv4 packet marked with DSCP %d", p.DSCP())
+					return errors.Errorf("DHCPv4 packet marked with wrong DSCP: %s", p)
 				}
 				switch getDHCPMsgType(p) {
 				case layers.DHCPMsgTypeDiscover:
