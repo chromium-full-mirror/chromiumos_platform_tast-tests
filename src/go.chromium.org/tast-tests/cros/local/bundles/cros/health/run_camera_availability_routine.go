@@ -10,6 +10,7 @@ import (
 	"context"
 
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -60,6 +61,10 @@ func buildCameraAvailabilityRoutineArgs(params cameraAvailabilityTestParams) fun
 
 func RunCameraAvailabilityRoutine(ctx context.Context, s *testing.State) {
 	params := s.Param().(cameraAvailabilityTestParams)
+
+	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
+		s.Fatal("Failed to ensure the cros-camera service is running: ", err)
+	}
 
 	config := croshealthd.RoutineTestingConfigV2{
 		ArgsBuilder:    buildCameraAvailabilityRoutineArgs(params),
