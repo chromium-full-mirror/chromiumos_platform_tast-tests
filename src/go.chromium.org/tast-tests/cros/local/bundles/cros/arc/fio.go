@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -161,17 +162,17 @@ func init() {
 		}, {
 			Name: "download",
 			Val: fioTestParams{
-				directory: "/storage/emulated/0/Download",
-				readJobs:  defaultFioReadJobs,
-				writeJobs: defaultFioWriteJobs,
+				directory:              "/storage/emulated/0/Download",
+				readJobs:               defaultFioReadJobs,
+				writeJobs:              defaultFioWriteJobs,
 				needsARCSystemServices: true,
 			},
 		}, {
 			Name: "emulated",
 			Val: fioTestParams{
-				directory: "/storage/emulated/0/Documents",
-				readJobs:  defaultFioReadJobs,
-				writeJobs: defaultFioWriteJobs,
+				directory:              "/storage/emulated/0/Documents",
+				readJobs:               defaultFioReadJobs,
+				writeJobs:              defaultFioWriteJobs,
 				needsARCSystemServices: true,
 			},
 		}},
@@ -185,6 +186,13 @@ func Fio(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
+
+	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics
+	multicastCleanup, err := setup.DisableMulticastSetup(ctx)
+	if err != nil {
+		s.Fatal("Could not disable multicast: ", err)
+	}
+	defer multicastCleanup(cleanupCtx)
 
 	// Enable adb root on user builds, and remove --serial to disable
 	// virtio-console. This needs to be done before starting ARCVM.
@@ -332,7 +340,7 @@ func configureAndRunFioJob(ctx context.Context, a *arc.ARC, params fioTestParams
 
 	fioOpts := []string{
 		jobFilePath,
-		"--runtime=60",  // Run up to 1 minute.
+		"--runtime=60", // Run up to 1 minute.
 		"--output=" + fioOutputGuest,
 		"--output-format=json",
 	}
@@ -495,7 +503,7 @@ func summarizeResults(results []jobResult) string {
 	}
 
 	resultLog := fmt.Sprintf("IoBytes = %d KiB, Bandwidth = %d KiBps",
-		totalIoBytes, int(bwSum / float64(len(results))))
+		totalIoBytes, int(bwSum/float64(len(results))))
 	if len(results) > 1 {
 		resultLog += fmt.Sprintf(" (avg of [%s])", strings.Join(bws, ","))
 	}
