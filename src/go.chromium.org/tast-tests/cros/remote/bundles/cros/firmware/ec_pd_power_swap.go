@@ -112,14 +112,17 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
+		s.Fatal("Failed to configure Servo for PD testing: ", err)
+	}
+
 	if testParams.Shutdown {
+		if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
+			s.Fatal("Could not set servo power role to Sink: ", err)
+		}
 		if err := firmware.ShutdownDUT(ctx, h); err != nil {
 			s.Fatal("Could not shut down DUT: ", err)
 		}
-	}
-
-	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
-		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 
 	if dualRole, err := h.Servo.GetDUTDualRoleState(ctx, servo.PDPortUnderTest); dualRole != servo.USBPdDualRoleOn {
