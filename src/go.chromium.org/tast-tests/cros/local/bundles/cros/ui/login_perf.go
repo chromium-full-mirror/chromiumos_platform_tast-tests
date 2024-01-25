@@ -80,6 +80,7 @@ type loginPerfTestParam struct {
 	bt                 browser.Type     // browser.{TypeAsh/TypeLacros}
 	lacrosSelection    lacros.Selection // lacros.{Omaha,Rootfs}
 	preloadLacros      bool             // Whether to enable LacrosLaunchAtLoginScreen feature
+	forkZygotes        bool             // Whether to fork Zygotes at login screen when preloadLacros is true
 	dropCaches         bool             // Whether to drop block caches before starting test.
 	sleepAtLoginScreen time.Duration    // Test will sleep at the login screen for the specified duration.
 }
@@ -113,6 +114,7 @@ func init() {
 				browser.TypeAsh,
 				lacros.NotSelected,
 				false, // preloadLacros
+				false, // forkZygotes
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
 			},
@@ -127,6 +129,7 @@ func init() {
 				browser.TypeAsh,
 				lacros.NotSelected,
 				false,           // preloadLacros
+				false,           // forkZygotes
 				false,           // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
 			},
@@ -141,6 +144,7 @@ func init() {
 				browser.TypeAsh,
 				lacros.NotSelected,
 				false, // preloadLacros
+				false, // forkZygotes
 				true,  // dropCaches
 				0,     // sleepAtLoginScreen
 			},
@@ -156,6 +160,7 @@ func init() {
 				browser.TypeLacros,
 				lacros.Rootfs,
 				false, // preloadLacros
+				false, // forkZygotes
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
 			},
@@ -171,6 +176,7 @@ func init() {
 				browser.TypeLacros,
 				lacros.Rootfs,
 				false, // preloadLacros
+				false, // forkZygotes
 				true,  // dropCaches
 				0,     // sleepAtLoginScreen
 			},
@@ -186,6 +192,7 @@ func init() {
 				browser.TypeLacros,
 				lacros.Rootfs,
 				true,            // preloadLacros
+				false,           // forkZygotes
 				false,           // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
 			},
@@ -201,6 +208,7 @@ func init() {
 				browser.TypeLacros,
 				lacros.Rootfs,
 				true,            // preloadLacros
+				false,           // forkZygotes
 				true,            // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
 			},
@@ -216,6 +224,7 @@ func init() {
 				browser.TypeLacros,
 				lacros.Rootfs,
 				true,  // preloadLacros
+				false, // forkZygotes
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
 			},
@@ -231,6 +240,7 @@ func init() {
 				browser.TypeLacros,
 				lacros.Rootfs,
 				true,            // preloadLacros
+				false,           // forkZygotes
 				false,           // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
 			},
@@ -245,9 +255,10 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true, // preloadLacros
-				true, // dropCaches
-				0,    // sleepAtLoginScreen
+				true,  // preloadLacros
+				false, // forkZygotes
+				true,  // dropCaches
+				0,     // sleepAtLoginScreen
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot_delay_login",
@@ -261,6 +272,23 @@ func init() {
 				browser.TypeLacros,
 				lacros.Rootfs,
 				true,            // preloadLacros
+				false,           // forkZygotes
+				true,            // dropCaches
+				5 * time.Second, // sleepAtLoginScreen
+			},
+		}, {
+			Name:              "lacros_chrome_root_fs_only_enable_preload_fork_zygotes_cold_boot_delay_login",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           40 * time.Minute,
+			Val: loginPerfTestParam{
+				[]int{2, 8},
+				[]string{noarc, arcenabled},
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				true,            // preloadLacros
+				true,            // forkZygotes
 				true,            // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
 			},
@@ -278,6 +306,7 @@ func init() {
 				browser.TypeLacros,
 				lacros.Omaha,
 				false, // preloadLacros
+				false, // forkZygotes
 				false, // dropCaches
 				0,     // sleepAtLoginScreen
 			},
@@ -330,7 +359,9 @@ func loginPerfStartToLoginScreen(
 	}
 	if testConfig.param.preloadLacros {
 		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
-		options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
+		if testConfig.param.forkZygotes {
+			options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
+		}
 		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
 		s.Log("loginPerfStartToLoginScreen: Enabling LacrosLaunchAtLoginScreen feature")
 	} else {
@@ -642,6 +673,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	lacrosConfig *lacrosfixt.Config,
 	loginPool string,
 	preloadLacros bool,
+	forkZygotes bool,
 ) (
 	retCreds chrome.Creds,
 	retErr error,
@@ -676,7 +708,9 @@ func initializeLoginPerfTest(ctx context.Context,
 	}
 	if preloadLacros {
 		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
-		options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
+		if forkZygotes {
+			options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
+		}
 		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
 		testing.ContextLog(ctx, "initializeLoginPerfTest: Enabling LacrosLaunchAtLoginScreen feature")
 	} else {
@@ -1018,6 +1052,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 		lacrosCfg,
 		s.RequiredVar("ui.gaiaPoolDefault"),
 		param.preloadLacros,
+		param.forkZygotes,
 	)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
