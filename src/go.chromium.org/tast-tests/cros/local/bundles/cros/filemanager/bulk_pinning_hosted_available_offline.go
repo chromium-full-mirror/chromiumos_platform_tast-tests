@@ -47,9 +47,10 @@ func init() {
 			"drivefs",
 		},
 		Attr: []string{
-			"group:cbx",
-			"cbx_feature_enabled",
-			"cbx_unstable",
+			// Disabled by TORA.  See: b/306691071
+			// "group:cbx",
+			// "cbx_feature_enabled",
+			// "cbx_unstable",
 		},
 		TestBedDeps: []string{tbdep.Cbx(true)},
 		SearchFlags: []*testing.StringPair{{
