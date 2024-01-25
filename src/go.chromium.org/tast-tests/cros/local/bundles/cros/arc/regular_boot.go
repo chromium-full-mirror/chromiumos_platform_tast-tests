@@ -335,7 +335,8 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 	}
 
 	outStr := string(out)
-	if outStr != "OK,0\n" {
+	// TODO(b/): Use histogram account check instead once ready"
+	if outStr != "OK,0\n" && outStr != "\n" {
 		return &result, errors.Errorf("Detected re-signin (b/297139280) with result %s", outStr)
 	}
 

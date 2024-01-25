@@ -176,7 +176,6 @@ func init() {
 // measuredValues stores measured times in milliseconds.
 type measuredValues struct {
 	playStoreShownTime float64
-	accountCheckTime   float64
 	checkinTime        float64
 	networkWaitTime    float64
 	signInTime         float64
@@ -274,7 +273,6 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 
 	errorCount := 0
 	var playStoreShownTimes []float64
-	var accountCheckTimes []float64
 	var checkinTimes []float64
 	var networkWaitTimes []float64
 	var signInTimes []float64
@@ -319,7 +317,6 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		}
 
 		playStoreShownTimes = append(playStoreShownTimes, v.playStoreShownTime)
-		accountCheckTimes = append(accountCheckTimes, v.accountCheckTime)
 		checkinTimes = append(checkinTimes, v.checkinTime)
 		networkWaitTimes = append(networkWaitTimes, v.networkWaitTime)
 		signInTimes = append(signInTimes, v.signInTime)
@@ -383,7 +380,6 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 	}
 
 	reportResult("play_store_shown_time", playStoreShownTimes)
-	reportResult("account_check_time", accountCheckTimes)
 	reportResult("checkin_time", checkinTimes)
 	reportResult("network_wait_time", networkWaitTimes)
 	reportResult("sign_in_time", signInTimes)
@@ -515,9 +511,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	if v.signInTime, err = readResultProp(ctx, a, "dev.arc.accountsignin.result"); err != nil {
 		return v, err
 	}
-	if v.accountCheckTime, err = readResultProp(ctx, a, "dev.arc.accountcheck.result"); err != nil {
-		return v, err
-	}
+
 	if v.networkWaitTime, err = readResultProp(ctx, a, "dev.arc.networkwait.result"); err != nil {
 		return v, err
 	}
