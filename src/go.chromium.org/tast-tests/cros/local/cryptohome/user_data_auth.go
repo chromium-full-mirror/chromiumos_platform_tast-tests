@@ -143,7 +143,7 @@ func parseAuthEnrollmentProgress(sig *dbus.Signal) (*FingerprintEnrollmentSignal
 	res := &FingerprintEnrollmentSignal{}
 	res.ScanResult = authEnrollment.ScanResult.GetFingerprintResult()
 	res.Done = authEnrollment.Done
-	res.PercentComplete = authEnrollment.GetFingerprintProgress().PercentComplete
+	res.PercentComplete = authEnrollment.GetFingerprintProgress().GetPercentComplete()
 	return res, nil
 }
 
