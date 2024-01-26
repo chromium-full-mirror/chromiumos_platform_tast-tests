@@ -94,9 +94,10 @@ func UIOtaLongSms(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse cellular user creds: ", err)
 	}
 	uiHelper, err := cellular.NewUIHelper(ctx, gaiaCreds.User, gaiaCreds.Pass)
-
+	if uiHelper != nil && uiHelper.Tconn != nil {
+		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
+	}
 	if err != nil {
-		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
 		s.Fatal("Failed to create cellular.NewUiHelper: ", err)
 	}
 
@@ -124,14 +125,12 @@ func UIOtaLongSms(ctx context.Context, s *testing.State) {
 	s.Log("After finding messages tab")
 	err = uiHelper.SendMessage(ctx, phoneNumber, messageToSend)
 	if err != nil {
-		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
 		s.Fatal("Failed to send message: ", err)
 	}
 
 	s.Log("Check for Long SMS message")
 	err = uiHelper.ValidateMessage(ctx, messageToSend)
 	if err != nil {
-		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
 		s.Fatal("Failed validation of message: ", err)
 	}
 
@@ -143,7 +142,6 @@ func UIOtaLongSms(ctx context.Context, s *testing.State) {
 		kb.AccelAction("Ctrl+X"),
 		uiHelper.UI.WaitUntilGone(alertDialog),
 	)(ctx); err != nil {
-		faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
 		s.Fatal("Failed to click on notification  dialog: ", err)
 	}
 
