@@ -59,6 +59,7 @@ const (
 	l1t3      streamType = "L1T3"
 	l2t3key   streamType = "L2T3_KEY"
 	l3t3key   streamType = "L3T3_KEY"
+	s3t3      streamType = "S3T3"
 	simulcast streamType = "simulcast"
 )
 
@@ -158,7 +159,7 @@ func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl)
 			return true
 		}
 
-	case l2t3key, l3t3key:
+	case l2t3key, l3t3key, s3t3:
 		if codec != "vp9" {
 			// Spatial layer encoding is supported only in vp9.
 			return true
@@ -172,7 +173,7 @@ func skipTest(codec string, stream streamType, enc encoderImpl, dec decoderImpl)
 	return false
 }
 
-func toFixture(enc encoderImpl, dec decoderImpl) string {
+func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 	switch enc {
 	case swEnc:
 		switch dec {
@@ -188,11 +189,17 @@ func toFixture(enc encoderImpl, dec decoderImpl) string {
 		case swDec:
 			panic("we don't test hardware encoding + software decoding")
 		case hwDec:
+			if stream == s3t3 {
+				return "chromeVideoWithFakeWebcamAndHWSModeEncoding"
+			}
 			return "chromeVideoWithFakeWebcam"
 		case oopVD:
 			return "chromeVideoOOPVDWithFakeWebcam"
 		}
 	case oopVE:
+		if stream == s3t3 {
+			panic("we don't test OOP-VE + S-mode encoding")
+		}
 		switch dec {
 		case swDec:
 			panic("we don't test OOP-VE + software decoding")
@@ -209,7 +216,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 	var sourceDatas []rtcPerfTestSourceData
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		for _, resolution := range []graphics.Size{k720p, k1080p} {
-			for _, stream := range []streamType{vanilla, l1t3, l2t3key, l3t3key, simulcast} {
+			for _, stream := range []streamType{vanilla, l1t3, l2t3key, l3t3key, s3t3, simulcast} {
 				for _, enc := range []encoderImpl{swEnc, hwEnc} {
 					for _, dec := range []decoderImpl{swDec, hwDec} {
 						if skipTest(codec, stream, enc, dec) {
@@ -244,7 +251,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 							Name:         fmt.Sprintf("%s_%dp%s_%s_%s", codec, resolution.Height, streamTypeStr, enc, dec),
 							ParamData:    paramData,
 							SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
-							Fixture:      toFixture(enc, dec),
+							Fixture:      toFixture(enc, dec, stream),
 						}
 						if dec == hwDec &&
 							(stream == l2t3key || stream == l3t3key) {
@@ -347,7 +354,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 				Name:         fmt.Sprintf("%s_720p_%s_%s", codec, enc, dec),
 				ParamData:    paramData,
 				SoftwareDeps: softwareCodecsDeps(codec, enc, dec),
-				Fixture:      toFixture(enc, dec),
+				Fixture:      toFixture(enc, dec, vanilla),
 			}
 			sourceDatas = append(sourceDatas, sourceData)
 		}

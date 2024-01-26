@@ -541,6 +541,7 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.ExtraArgs("--disable-accelerated-video-decode"),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
 			}, nil
@@ -559,6 +560,7 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
 			}, nil
 		}),

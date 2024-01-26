@@ -113,18 +113,34 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 			return errors.Wrap(err, "fail in drawCanvasAlternatingColours")
 		}
 	}
-	if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
-		return errors.Wrap(err, "establishing connection")
-	}
 
 	if params.VideoGridDimension > 1 {
 		if err := conn.Call(ctx, nil, "makeVideoGrid", params.VideoGridDimension, videoURL); err != nil {
 			return errors.Wrap(err, "javascript error")
 		}
 	}
+	if isSMode(params.Svc) {
+		if err := conn.Call(ctx, nil, "startSMode", params.Profile, params.StreamWidth, params.StreamHeight, params.Svc); err != nil {
+			return errors.Wrap(err, "error establishing connection")
+		}
 
-	if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(0), validateFrame, p); err != nil {
-		return errors.Wrap(err, "failed to measure")
+		numStreams, err := numSModeLayers(params.Svc)
+		if err != nil {
+			return err
+		}
+		// Collect the performance of only the decoder for the largest resolution stream.
+		// TODO(bugs.webrtc.org/15795): After each decoder decodes different
+		// resolution stream from each eother, collect all the decoders' performance.
+		if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(numStreams-1), validateFrame, p); err != nil {
+			return errors.Wrap(err, "failed to measure")
+		}
+	} else {
+		if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
+			return errors.Wrap(err, "error establishing connection")
+		}
+		if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(0), validateFrame, p); err != nil {
+			return errors.Wrap(err, "failed to measure")
+		}
 	}
 
 	if err := verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs); err != nil {
@@ -194,9 +210,9 @@ func encoderResolutions(width, height, simulcasts int, svc string) ([]graphics.S
 		switch svc[:2] {
 		case "L1":
 			streams = 1
-		case "L2":
+		case "L2", "S2":
 			streams = 2
-		case "L3":
+		case "L3", "S3":
 			streams = 3
 		default:
 			return nil, errors.Errorf("unknown SVC = %s", svc)
