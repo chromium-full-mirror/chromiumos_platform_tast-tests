@@ -123,11 +123,11 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		}
 	}
 
-	if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport, validateFrame, p); err != nil {
+	if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(0), validateFrame, p); err != nil {
 		return errors.Wrap(err, "failed to measure")
 	}
 
-	if err := verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.SimulcastHWEncs); err != nil {
+	if err := verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs); err != nil {
 		return err
 	}
 

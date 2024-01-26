@@ -7,6 +7,7 @@ package peerconnection
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"regexp"
@@ -101,36 +102,56 @@ type RTCTestParams struct {
 	TraceChromeEvents                     bool
 }
 
-// readRTCReport reads an RTCStat report of the given typ from the specified peer connection.
+// readRTCReport returns a function to read WebRTC stats for an |id| decoder and encoder.
+// |id| is an integer rating from 0 to N-1, where N is the number of spatial layers.
 // Since there are multiple outbound-rtp in the case of simulcast, the stat is selected whose frame height is the largest.
+// TODO(b/322436617): Verify all the decoders in simulcast.
 // The out can be an arbitrary struct whose members are 'json' tagged, so that they will be filled.
-func readRTCReport(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error {
-	// Decode: localPeerConnection, "outbound-rtp"
-	// Encode: remotePeerConnection, "inbound-rtp"
-	isRemote := false
-	typ := "outbound-rtp"
-	if decode {
-		isRemote = true
-		typ = "inbound-rtp"
+func readRTCReport(id int) webrtc.ReadRTCReportFunc {
+	return func(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error {
+		// Decode: remotePeerConnection, "inbound-rtp"
+		// Encode: localPeerConnection, "outbound-rtp"
+		var peerConnection string
+		var staticType string
+		if decode {
+			peerConnection = fmt.Sprintf("testVisible.remotePeerConnections[%d]", id)
+			staticType = "inbound-rtp"
+		} else {
+			peerConnection = fmt.Sprintf("testVisible.localPeerConnections[%d]", id)
+			staticType = "outbound-rtp"
+		}
+
+		return conn.Call(ctx, out, fmt.Sprintf(`async() => {
+			const peerConnection = %s;
+			const stats = await peerConnection.getStats(null);
+			if (stats == null) {
+			  throw new Error("getStats() failed");
+			}
+			var R = null;
+			for (const [_, report] of stats) {
+			  if (report['type'] === '%s' &&
+			      (!R || R['frameHeight'] < report['frameHeight'])) {
+			    R = report;
+			  }
+			}
+			if (R !== null) {
+			  return R;
+			}
+			throw new Error("Stat not found");
+			}`, peerConnection, staticType))
 	}
-	return conn.Call(ctx, out, `async(isRemote, type) => {
-	  const peerConnection = isRemote ? remotePeerConnection : localPeerConnection;
-	  const stats = await peerConnection.getStats(null);
-	  if (stats == null) {
-	    throw new Error("getStats() failed");
-	  }
-	  var R = null;
-	  for (const [_, report] of stats) {
-	    if (report['type'] === type &&
-	       (!R || R['frameHeight'] < report['frameHeight'])) {
-	      R = report;
-	    }
-	  }
-	  if (R !== null) {
-	    return R;
-	  }
-	  throw new Error("Stat not found");
-	}`, isRemote, typ)
+}
+
+func isSMode(scalabilityMode string) bool {
+	return strings.HasPrefix(scalabilityMode, "S")
+}
+
+func numSModeLayers(scalabilityMode string) (int, error) {
+	numLayers, err := strconv.Atoi(string(scalabilityMode[1]))
+	if err != nil {
+		return 0, errors.Wrapf(err, "failed to get the numbner of layers in s-mode encoding: %s", scalabilityMode)
+	}
+	return numLayers, nil
 }
 
 // RunRTCPeerConnection launches a loopback RTCPeerConnection and inspects that the
@@ -186,8 +207,14 @@ func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chr
 		return errors.Wrap(err, "timed out waiting for page loading")
 	}
 
-	if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
-		return errors.Wrap(err, "error establishing connection")
+	if isSMode(params.Svc) {
+		if err := conn.Call(ctx, nil, "startSMode", params.Profile, params.StreamWidth, params.StreamHeight, params.Svc); err != nil {
+			return errors.Wrap(err, "error establishing connection")
+		}
+	} else {
+		if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
+			return errors.Wrap(err, "error establishing connection")
+		}
 	}
 
 	if params.VerifyOutOfProcessVideoEncodingIsUsed {
@@ -197,46 +224,68 @@ func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chr
 	}
 
 	return verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode,
-		params.VerifyEncoderMode, params.SimulcastHWEncs)
+		params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs)
 }
 
 func verifyCodecImplementation(ctx context.Context,
 	conn *chrome.Conn, verifyDecoderMode VerifyDecoderMode,
 	verifyEncoderMode VerifyEncoderMode,
+	scalabilityMode string,
 	simulcastHWEncs []bool) error {
-	if err := verifyDecoderImplementation(ctx, conn, verifyDecoderMode); err != nil {
+	if err := verifyDecoderImplementation(ctx, conn, verifyDecoderMode, scalabilityMode); err != nil {
 		return err
 	}
-	if err := verifyEncoderImplementation(ctx, conn, verifyEncoderMode, simulcastHWEncs); err != nil {
+	if err := verifyEncoderImplementation(ctx, conn, verifyEncoderMode, scalabilityMode, simulcastHWEncs); err != nil {
 		return err
 	}
 	return nil
 }
 
-func verifyDecoderImplementation(ctx context.Context, conn *chrome.Conn, verifyDecoderMode VerifyDecoderMode) error {
+func verifyDecoderImplementation(ctx context.Context, conn *chrome.Conn, verifyDecoderMode VerifyDecoderMode, scalabilityMode string) error {
 	if verifyDecoderMode == NoVerifyDecoderMode {
 		return nil
 	}
 
-	decImplName, hwDecoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, true, readRTCReport)
-	if err != nil {
-		return errors.Wrap(err, "failed to get decoder implementation name")
+	numDecoders := 1
+	// TODO(b/322436617): Verify all the decoders in simulcast and non S-mode SVC encoding.
+	if isSMode(scalabilityMode) {
+		var err error
+		numDecoders, err = numSModeLayers(scalabilityMode)
+		if err != nil {
+			return err
+		}
 	}
-	if verifyDecoderMode == VerifyHWDecoderUsed && !hwDecoderUsed {
-		return errors.Errorf("hardware decode accelerator wasn't used, got %s", decImplName)
-	}
-	if verifyDecoderMode == VerifySWDecoderUsed && hwDecoderUsed {
-		return errors.Errorf("software decode wasn't used, got %s", decImplName)
+	for i := 0; i < numDecoders; i++ {
+		decImplName, hwDecoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, true, readRTCReport(i))
+		if err != nil {
+			return errors.Wrapf(err, "failed to get decoder implementation name for remotePeerConnections[%d]", i)
+		}
+		if verifyDecoderMode == VerifyHWDecoderUsed && !hwDecoderUsed {
+			return errors.Errorf("hardware decode accelerator wasn't used, got %s for remotePeerConnections[%d]", decImplName, i)
+		}
+		if verifyDecoderMode == VerifySWDecoderUsed && hwDecoderUsed {
+			return errors.Errorf("software decode wasn't used, got %s for localPeerConnections[%d]", decImplName, i)
+		}
 	}
 	return nil
 }
 
-func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyEncoderMode VerifyEncoderMode, simulcastHWEncs []bool) error {
+func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyEncoderMode VerifyEncoderMode, scalabilityMode string, simulcastHWEncs []bool) error {
 	if verifyEncoderMode == NoVerifyEncoderMode {
 		return nil
 	}
 
-	encImplName, hwEncoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, false, readRTCReport)
+	id := 0
+	if isSMode(scalabilityMode) {
+		numStreams, err := numSModeLayers(scalabilityMode)
+		if err != nil {
+			return err
+		}
+		// The main local peer connection in S mode encoding is set to
+		// testVisible.localPeerConnections[numStreams - 1].
+		id = numStreams - 1
+	}
+	encImplName, hwEncoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, false, readRTCReport(id))
 	if err != nil {
 		return errors.Wrap(err, "failed to get encoder implementation name")
 	}

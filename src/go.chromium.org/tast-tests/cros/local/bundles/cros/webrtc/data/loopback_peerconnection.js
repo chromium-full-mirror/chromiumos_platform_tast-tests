@@ -2,8 +2,19 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-let remotePeerConnection;
-let localPeerConnection;
+// TestVisible holds JS variables to be queried by the tast test code.
+class TestVisible {
+  constructor() {
+    this.localPeerConnections = [];
+    this.remotePeerConnections = [];
+  }
+  setPeerConnections(localPCs, remotePCs) {
+    this.localPeerConnections = localPCs;
+    this.remotePeerConnections = remotePCs;
+  }
+}
+
+let testVisible = new TestVisible;
 
 async function getStream(width, height, displayMediaType) {
   let constraints = {
@@ -36,10 +47,10 @@ async function createStreamAndPCs(
   svcScalabilityMode,
   displayMediaType
 ) {
-  const isSmodeEnc = svcScalabilityMode.startsWith('S');
-  let localPC = new RTCPeerConnection({ encodedInsertableStreams: isSmodeEnc });
+  const isSModeEnc = svcScalabilityMode.startsWith('S');
+  let localPC = new RTCPeerConnection({ encodedInsertableStreams: isSModeEnc });
   let remotePC = new RTCPeerConnection({
-    encodedInsertableStreams: isSmodeEnc,
+    encodedInsertableStreams: isSModeEnc,
   });
 
   return {
@@ -98,8 +109,119 @@ async function start(
   await connect(localPC, remotePC, profile, targetBitrate, rids);
   await onTrack;
 
-  // Set to global peer connection variables so that the golang test code is
-  // able to query it.
-  localPeerConnection = localPC;
-  remotePeerConnection = remotePC;
+  testVisible.setPeerConnections([localPC], [remotePC]);
+}
+
+async function startSMode(profile, width, height, svcScalabilityMode) {
+  let { stream, localPC, remotePC } = await createStreamAndPCs(
+    width,
+    height,
+    svcScalabilityMode,
+    ''
+  );
+  let localPCTransceiver = localPC.addTransceiver(stream.getVideoTracks()[0], {
+    // Prefer resolution even at the cost of visual quality to avoid falling
+    // down to SW video encoding, see b/181320567 or crbug.com/1179020.
+    degradationPreference: 'maintain-resolution',
+    streams: [stream],
+    sendEncodings: [{ scalabilityMode: svcScalabilityMode }],
+  });
+  // TODO(crbug.com/1513866): Remove this header extension setting.
+  setUpHeaderExtension(localPCTransceiver);
+  let localPCStream = localPCTransceiver.sender.createEncodedStreams();
+
+  const numStreams = parseInt(svcScalabilityMode[1]);
+  let localPCs = new Array(numStreams);
+  let remotePCs = new Array(numStreams);
+  let remoteVideoIds = new Array(numStreams);
+  let clonedLocalPCWriters = new Array(numStreams - 1);
+
+  for (let i = 0; i < numStreams; i++) {
+    remoteVideoIds[i] = 'remoteVideo' + i;
+    if (i > 0) {
+      let videoElement = document.createElement('video');
+      videoElement.id = remoteVideoIds[i];
+      videoElement.autoplay = true;
+      videoElement.muted = true;
+      document.getElementById('container').append(videoElement);
+    }
+  }
+
+  for (let i = 0; i < numStreams - 1; i++) {
+    const clonedLocalPC = new RTCPeerConnection({
+      encodedInsertableStreams: true,
+    });
+    let clonedLocalPCTransceiver = clonedLocalPC.addTransceiver('video');
+    // TODO(crbug.com/1513866): Remove this header extension setting.
+    setUpHeaderExtension(clonedLocalPCTransceiver);
+    let clonedLocalPCWriter = clonedLocalPCTransceiver.sender
+      .createEncodedStreams()
+      .writable.getWriter();
+    localPCs[i] = clonedLocalPC;
+    clonedLocalPCWriters[i] = clonedLocalPCWriter;
+    remotePCs[i] = new RTCPeerConnection({ encodedInsertableStreams: true });
+  }
+  localPCs[numStreams - 1] = localPC;
+  remotePCs[numStreams - 1] = remotePC;
+
+  const topSpatialLayerIndex = numStreams - 1;
+  let onTracks = new Array(numStreams);
+  for (let i = 0; i < numStreams; i++) {
+    const onTrack = new Promise((resolve, reject) => {
+      remotePCs[i].ontrack = (e) => {
+        let remoteVideo = document.getElementById('remoteVideo' + i);
+        remoteVideo.srcObject = new MediaStream([e.track]);
+        let receiver = e.receiver;
+        let receiverStream = receiver.createEncodedStreams();
+        receiverStream.readable
+          .pipeThrough(
+            new TransformStream({
+              transform(frame, controller) {
+                const metadata = frame.getMetadata();
+                // TODO(bugs.webrtc.org/15795): Set the marker bit of RtcPacket
+                // and RemotePC[i] decodes frames whose spatial indices are i.
+                if (metadata.spatialIndex == topSpatialLayerIndex) {
+                  controller.enqueue(frame);
+                }
+              },
+            })
+          )
+          .pipeTo(receiverStream.writable);
+        resolve();
+      };
+    });
+    onTracks[i] = onTrack;
+  }
+
+  let ssrcs = new Array(numStreams - 1);
+  for (let i = 0; i < numStreams; i++) {
+    const ssrc = await connect(localPCs[i], remotePCs[i], profile, 0, []);
+    if (i < ssrcs.length) {
+      ssrcs[i] = ssrc;
+    }
+  }
+
+  localPCStream.readable
+    .pipeThrough(
+      new TransformStream({
+        transform(frame, controller) {
+          const metadata = frame.getMetadata();
+          for (let i = 0; i < ssrcs.length; i++) {
+            const clonedFrame = structuredClone(frame);
+            const modifiedMetadata = structuredClone(metadata);
+            modifiedMetadata.synchronizationSource = ssrcs[i];
+            clonedFrame.setMetadata(modifiedMetadata);
+            clonedLocalPCWriters[i].write(clonedFrame);
+          }
+          controller.enqueue(frame);
+        },
+      })
+    )
+    .pipeTo(localPCStream.writable);
+
+  for (let i = 0; i < onTracks.length; i++) {
+    await onTracks[i];
+  }
+
+  testVisible.setPeerConnections(localPCs, remotePCs);
 }

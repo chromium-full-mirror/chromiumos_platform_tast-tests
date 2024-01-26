@@ -107,6 +107,20 @@ async function connect(localPC, remotePC, profile, targetBitrate, rids) {
   return obtainSsrcFromMid(localPC.localDescription, 0);
 }
 
+// trans
+function setUpHeaderExtension(transceiver) {
+  const DependencyDescriptorURI =
+    'http://www.webrtc.org/experiments/rtp-hdrext/generic-frame-descriptor-00';
+  let headerExtensions = transceiver.getHeaderExtensionsToNegotiate();
+  headerExtensions = headerExtensions.map((ext) => {
+    if (ext.uri == DependencyDescriptorURI) {
+      ext.direction = 'sendrecv';
+    }
+    return ext;
+  });
+  transceiver.setHeaderExtensionsToNegotiate(headerExtensions);
+}
+
 // Returns true if the video frame being displayed is considered "black".
 // Specifying |width| or |height| smaller than the feeding |remoteVideo| can be
 // used for speeding up the calculation by downscaling.
