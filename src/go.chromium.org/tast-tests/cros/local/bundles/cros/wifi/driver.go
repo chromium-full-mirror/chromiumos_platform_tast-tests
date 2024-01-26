@@ -132,6 +132,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.4":  "wireless/ath/ath10k/ath10k_snoc.ko",
 		"5.10": "wireless/ath/ath10k/ath10k_snoc.ko",
 		"5.15": "wireless/ath/ath10k/ath10k_snoc.ko",
+		"6.6":  "wireless/ath/ath10k/ath10k_snoc.ko",
 	},
 	wlan.QualcommWCN6750: {
 		"5.15": "wireless/ath/ath11k/ath11k_ahb.ko",
