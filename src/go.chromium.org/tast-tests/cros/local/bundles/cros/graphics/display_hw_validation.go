@@ -214,6 +214,15 @@ func init() {
 				ExtraRequirements: []string{"vid-out-0001-v01", "vid-out-0002-v03"},
 			},
 			{
+				Name: "kms_sysfs_edid_timing",
+				Val: graphics.IgtTest{
+					Exe: "kms_sysfs_edid_timing",
+				},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_weekly"},
+				ExtraRequirements: []string{"disp-xface-0001-v01"},
+			},
+			{
 				Name: "testdisplay",
 				Val: graphics.IgtTest{
 					Exe: "testdisplay",
