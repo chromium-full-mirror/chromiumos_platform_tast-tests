@@ -57,11 +57,12 @@ func KillAll(ctx context.Context, host *ssh.Conn) error {
 
 // Server controls a hostapd on router.
 type Server struct {
-	host    *ssh.Conn
-	name    string
-	iface   string
-	workDir string
-	conf    *Config
+	host            *ssh.Conn
+	name            string
+	iface           string
+	workDir         string
+	conf            *Config
+	environmentVars map[string]string
 
 	cmd        *ssh.Cmd
 	wg         sync.WaitGroup
@@ -74,7 +75,7 @@ type Server struct {
 // name is the identifier used for log filenames in OutDir.
 // After getting a Server instance, s, the caller should call s.Close() at the end, and use the
 // shortened ctx (provided by s.ReserveForClose()) before s.Close() to reserve time for it to run.
-func StartServer(ctx context.Context, host *ssh.Conn, name, iface, workDir string, config *Config) (server *Server, retErr error) {
+func StartServer(ctx context.Context, host *ssh.Conn, name, iface, workDir string, config *Config, environmentVars map[string]string) (server *Server, retErr error) {
 	ctx, st := timing.Start(ctx, "hostapd.StartServer")
 	defer st.End()
 
@@ -83,11 +84,12 @@ func StartServer(ctx context.Context, host *ssh.Conn, name, iface, workDir strin
 	hostapdConfigCopy := *config
 
 	s := &Server{
-		host:    host,
-		name:    name,
-		iface:   iface,
-		workDir: workDir,
-		conf:    &hostapdConfigCopy,
+		host:            host,
+		name:            name,
+		iface:           iface,
+		workDir:         workDir,
+		conf:            &hostapdConfigCopy,
+		environmentVars: environmentVars,
 	}
 	// Clean up on error.
 	defer func() {
@@ -187,7 +189,7 @@ func (s *Server) start(fullCtx context.Context) (retErr error) {
 
 	// Run hostapd command with any set environment variables.
 	var commands []string
-	for key, value := range s.conf.EnvironmentVars {
+	for key, value := range s.environmentVars {
 		commands = append(commands, fmt.Sprintf("%s=%q", key, value))
 	}
 	commands = append(commands, []string{

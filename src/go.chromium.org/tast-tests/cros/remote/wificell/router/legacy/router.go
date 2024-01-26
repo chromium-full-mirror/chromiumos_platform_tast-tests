@@ -441,14 +441,9 @@ func (r *Router) startHostapdOnIface(ctx context.Context, iface, name string, co
 	defer st.End()
 
 	// TODO(crbug.com/1047146): Remove this env addition part after we drop the old crypto like MD5.
-	if _, isSet := conf.EnvironmentVars[envKeyOpenSslConf]; !isSet {
-		conf.EnvironmentVars[envKeyOpenSslConf] = "/etc/ssl/openssl.cnf.compat"
-	}
-	if _, isSet := conf.EnvironmentVars[envKeyOpenSslChromiumSkipTrustedPurposeCheck]; !isSet {
-		conf.EnvironmentVars[envKeyOpenSslChromiumSkipTrustedPurposeCheck] = "1"
-	}
+	environmentVars := map[string]string{envKeyOpenSslConf: "/etc/ssl/openssl.cnf.compat", envKeyOpenSslChromiumSkipTrustedPurposeCheck: "1"}
 
-	hs, err := hostapd.StartServer(ctx, r.host, name, iface, r.workDir(), conf)
+	hs, err := hostapd.StartServer(ctx, r.host, name, iface, r.workDir(), conf, environmentVars)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start hostapd server")
 	}

@@ -732,21 +732,13 @@ func Realms(r ...NAIRealm) Option {
 	}
 }
 
-// EnvironmentVars returns an Option which sets the env vars map in hostapd config.
-func EnvironmentVars(envVars map[string]string) Option {
-	return func(c *Config) {
-		c.EnvironmentVars = envVars
-	}
-}
-
 // NewConfig creates a Config with given options.
 // Default value of Ssid is a random generated string with prefix "TAST_TEST_" and total length 30.
 func NewConfig(ops ...Option) (*Config, error) {
 	// Default config.
 	conf := &Config{
-		SSID:            RandomSSID("TAST_TEST_"),
-		SecurityConfig:  &base.Config{},
-		EnvironmentVars: map[string]string{},
+		SSID:           RandomSSID("TAST_TEST_"),
+		SecurityConfig: &base.Config{},
 	}
 	for _, op := range ops {
 		op(conf)
@@ -812,7 +804,6 @@ type Config struct {
 	RoamingConsortiums []string
 	DomainNames        []string
 	Realms             []NAIRealm
-	EnvironmentVars    map[string]string
 }
 
 // Format composes a hostapd.conf based on the given Config, iface and ctrlPath.

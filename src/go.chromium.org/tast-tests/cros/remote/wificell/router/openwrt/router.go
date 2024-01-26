@@ -546,7 +546,7 @@ func (r *Router) startHostapdOnIface(ctx context.Context, iface, name string, co
 	ctx, st := timing.Start(ctx, "router.startHostapdOnIface")
 	defer st.End()
 
-	hs, err := hostapd.StartServer(ctx, r.host, name, iface, r.workDir(), conf)
+	hs, err := hostapd.StartServer(ctx, r.host, name, iface, r.workDir(), conf, map[string]string{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start hostapd server")
 	}
