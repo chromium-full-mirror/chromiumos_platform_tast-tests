@@ -22,7 +22,7 @@ import (
 )
 
 type recoveryTestParams struct {
-	iterations int
+	connectivityCheck bool
 }
 
 func init() {
@@ -38,14 +38,14 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeL850, cellularconst.ModemTypeSC7280)),
 		SoftwareDeps: []string{"modemfwd"},
 		Params: []testing.Param{{
-			Name: "stress",
-			Val: recoveryTestParams{
-				iterations: 3,
-			},
-		}, {
 			Name: "",
 			Val: recoveryTestParams{
-				iterations: 1,
+				connectivityCheck: false,
+			},
+		}, {
+			Name: "connectivity_check",
+			Val: recoveryTestParams{
+				connectivityCheck: true,
 			},
 		}},
 	})
@@ -103,54 +103,57 @@ func ModemfwdRecovery(ctx context.Context, s *testing.State) {
 	}
 	devPort := "/dev/" + primaryPort
 
-	// Ensure initial connectivity
 	helper := s.FixtValue().(*cellular.FixtData).Helper
-	if _, err := helper.Connect(ctx); err != nil {
-		s.Fatal("Failed to connect to cellular service: ", err)
+
+	// Ensure initial connectivity
+	if params.connectivityCheck {
+		if _, err := helper.Connect(ctx); err != nil {
+			s.Fatal("Failed to connect to cellular service (precondition): ", err)
+		}
 	}
 
-	for i := 0; i < params.iterations; i++ {
-		s.Logf("Iteration %d", i)
-		start := time.Now()
+	start := time.Now()
 
-		// Emulate broken communications to modem by freezing mbim-proxy. Wait
-		// until primary port goes away, indicating the kernel driver has torn
-		// down its state as part of recovery procedure.
-		if err := testexec.CommandContext(ctx, "killall", "-STOP", "mbim-proxy").Run(); err != nil {
-			s.Fatal("Failed to halt mbim-proxy: ", err)
-		}
-		if err := waitForFileState(ctx, devPort, false, MaxRecoveryTime); err != nil {
-			// Clean up our broken mbim-proxy before we abort the test
-			if err := testexec.CommandContext(ctx, "killall", "-CONT", "mbim-proxy").Run(); err != nil {
-				s.Log("Failed to bring back mbim-proxy: ", err)
-			}
-			s.Fatal("Modem didn't go away as expected")
-		}
-
-		// While modem is recovering, resume mbim-proxy to allow seamless
-		// communication once the modem comes back. Wait for primary port to
-		// come back, indicating the kernel driver has re-initialized.
+	// Emulate broken communications to modem by freezing mbim-proxy. Wait
+	// until primary port goes away, indicating the kernel driver has torn
+	// down its state as part of recovery procedure.
+	if err := testexec.CommandContext(ctx, "killall", "-STOP", "mbim-proxy").Run(); err != nil {
+		s.Fatal("Failed to halt mbim-proxy: ", err)
+	}
+	if err := waitForFileState(ctx, devPort, false, MaxRecoveryTime); err != nil {
+		// Clean up our broken mbim-proxy before we abort the test
 		if err := testexec.CommandContext(ctx, "killall", "-CONT", "mbim-proxy").Run(); err != nil {
-			s.Fatal("Failed to bring back mbim-proxy: ", err)
+			s.Log("Failed to bring back mbim-proxy: ", err)
 		}
-		if err := waitForFileState(ctx, devPort, true, MaxRecoveryTime); err != nil {
-			s.Fatal("Modem didn't come back as expected")
-		}
+		s.Fatal("Modem didn't go away as expected")
+	}
 
-		if err := helper.EnsureEnabled(ctx); err != nil {
-			s.Fatal("Failed to find default Cellular Service: ", err)
-		}
+	// While modem is recovering, resume mbim-proxy to allow seamless
+	// communication once the modem comes back. Wait for primary port to
+	// come back, indicating the kernel driver has re-initialized.
+	if err := testexec.CommandContext(ctx, "killall", "-CONT", "mbim-proxy").Run(); err != nil {
+		s.Fatal("Failed to bring back mbim-proxy: ", err)
+	}
+	if err := waitForFileState(ctx, devPort, true, MaxRecoveryTime); err != nil {
+		s.Fatal("Modem didn't come back as expected")
+	}
+
+	if err := helper.EnsureEnabled(ctx); err != nil {
+		s.Fatal("Failed to find default Cellular Service: ", err)
+	}
+
+	perfValues.Append(perf.Metric{
+		Name:      "cellular_recovery_time",
+		Unit:      "seconds",
+		Direction: perf.SmallerIsBetter,
+		Multiple:  true,
+	}, time.Since(start).Seconds())
+
+	if params.connectivityCheck {
 		// Ensure connectivity after recovery
 		if _, err := helper.Connect(ctx); err != nil {
 			s.Fatal("Failed to connect to cellular service: ", err)
 		}
-
-		perfValues.Append(perf.Metric{
-			Name:      "cellular_recovery_time",
-			Unit:      "seconds",
-			Direction: perf.SmallerIsBetter,
-			Multiple:  true,
-		}, time.Since(start).Seconds())
 	}
 
 	if err := perfValues.Save(s.OutDir()); err != nil {
