@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -38,6 +39,7 @@ func init() {
 		BugComponent: "b:1401297", // ChromeOS > Platform > Technologies > RTC
 		// TODO(hiroh): Look for a suite
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
+		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Data:         webrtc.TestFiles(),
 		Params: []testing.Param{
 			{

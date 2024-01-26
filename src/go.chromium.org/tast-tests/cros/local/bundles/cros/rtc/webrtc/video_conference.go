@@ -165,8 +165,11 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
 	}
+	if err := conn.Eval(ctx, "VC.startCamera()", nil); err != nil {
+		return errors.Wrap(err, "failed starting camera")
+	}
 	if err := conn.Eval(ctx, "VC.micOn()", nil); err != nil {
-		return errors.Wrap(err, "failed start camera and mic")
+		return errors.Wrap(err, "failed starting mic")
 	}
 	if err := conn.Eval(ctx, "VC.showCameraPreview()", nil); err != nil {
 		return errors.Wrap(err, "failed showing camera preview")
