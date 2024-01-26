@@ -59,13 +59,16 @@ class VideoConference {
       video: {
         width: { ideal: 1920, max: 1920, min: 1280 },
         height: { ideal: 1080, max: 1080, min: 720 },
+        aspectRatio: { exact: 1.77778 },
         frameRate: 30,
+        facingMode: { exact: 'user' },
       },
     };
     if (audio) {
       constraints.audio = {
         echoCancellation: true,
         autoGainControl: true,
+        noiseSuppression: true,
       };
     }
 
