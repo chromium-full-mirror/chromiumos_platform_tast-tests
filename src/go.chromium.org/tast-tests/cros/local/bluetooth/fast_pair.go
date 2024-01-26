@@ -18,6 +18,10 @@ const (
 	// pair notification. It only shows up for signed in users.
 	NotificationIDFastPairSubsequentPair = "cros_fast_pair_discovery_subsequent_notification_id"
 
+	// NotificationIDFastPairRetroactivePair is the ID of the fast pair retroactive
+	// pair notification. It only shows up for signed in users.
+	NotificationIDFastPairRetroactivePair = "cros_fast_pair_associate_account_notification_id"
+
 	// NotificationIDFastPairPairing is the ID of the fast pair notification
 	// displayed when pairing is in progress.
 	NotificationIDFastPairPairing = "cros_fast_pair_pairing_notification_id"

@@ -59,12 +59,18 @@ func (bui *BtUIService) PairWithFastPairNotification(ctx context.Context, reques
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
 
-	// The Initial and Subsequent scenarios have slightly different notifications.
+	// The Initial, Subsequent, and Retroactive scenarios have slightly different notifications and buttons.
 	expectedNotificationID := ""
+	buttonName := ""
 	if request.Protocol == pb.FastPairProtocol_FAST_PAIR_PROTOCOL_INITIAL {
 		expectedNotificationID = bluetooth.NotificationIDFastPairDiscoveryUser
+		buttonName = "Connect"
 	} else if request.Protocol == pb.FastPairProtocol_FAST_PAIR_PROTOCOL_SUBSEQUENT {
 		expectedNotificationID = bluetooth.NotificationIDFastPairSubsequentPair
+		buttonName = "Connect"
+	} else if request.Protocol == pb.FastPairProtocol_FAST_PAIR_PROTOCOL_RETROACTIVE {
+		expectedNotificationID = bluetooth.NotificationIDFastPairRetroactivePair
+		buttonName = "Save"
 	} else {
 		return nil, errors.New("wrong protocol requested; only initial and subsequent scenarios are supported")
 	}
@@ -81,12 +87,18 @@ func (bui *BtUIService) PairWithFastPairNotification(ctx context.Context, reques
 		return nil, errors.Wrap(err, "failed to wait for fast pair discovery notification to appear")
 	}
 
-	// Click the connect button on the notification.
+	// Click the connect (initial/subsequent) or save (retroactive) button on the notification.
 	testing.ContextLog(ctx, "Starting fast pair pairing process")
-	connectBtn := nodewith.Role(role.Button).Name("Connect")
+	connectBtn := nodewith.Role(role.Button).Name(buttonName)
 	ac := uiauto.New(tConn)
 	if err := ac.DoDefault(connectBtn)(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to click connect button on fast pair discovery notification")
+		return nil, errors.Wrapf(err, "failed to click %q button on fast pair discovery notification", buttonName)
+	}
+
+	// For retroactive pair, there's no more expected notifications
+	if request.Protocol == pb.FastPairProtocol_FAST_PAIR_PROTOCOL_RETROACTIVE {
+		testing.ContextLog(ctx, "Completed fast pair save process")
+		return &emptypb.Empty{}, nil
 	}
 
 	// Wait for pairing notification to appear and disappear.

@@ -943,6 +943,7 @@ func init() {
 			EnableFeatures: []string{
 				chromeFeatureFastPair,
 				chromeFeatureFastPairSavedDevices,
+				chromeFeatureFastPairHID,
 			},
 			DisableFeatures:        []string{},
 			LoginMode:              ui.LoginMode_LOGIN_MODE_GAIA_LOGIN,

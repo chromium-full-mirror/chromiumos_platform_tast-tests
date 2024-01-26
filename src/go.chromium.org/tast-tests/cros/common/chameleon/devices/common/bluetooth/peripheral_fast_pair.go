@@ -26,6 +26,10 @@ type FastPairPeripheral interface {
 	// AddAccountKey calls the Chameleond RPC method of the same name.
 	// Adds an account key to the Fast Pair GATT service.
 	AddAccountKey(ctx context.Context, accountKey []byte) error
+
+	// SetAdvertiseNameAndHID calls the Chameleond RPC method of the same name.
+	// Adds name and HID UUID to device advertisement.
+	SetAdvertiseNameAndHID(ctx context.Context, enabled bool) error
 }
 
 // CommonFastPairPeripheral is a base implementation of FastPairPeripheral that
@@ -54,4 +58,10 @@ func (c *CommonFastPairPeripheral) SetAntispoofingKeyPem(ctx context.Context, ke
 // This implements FastPairPeripheral.AddAccountKey, see that for more details.
 func (c *CommonFastPairPeripheral) AddAccountKey(ctx context.Context, accountKey []byte) error {
 	return c.RPC("AddAccountKey").Args(accountKey).Call(ctx)
+}
+
+// SetAdvertiseNameAndHID calls the Chameleond RPC method of the same name.
+// This implements FastPairPeripheral.SetAdvertiseNameAndHID, see that for more details.
+func (c *CommonFastPairPeripheral) SetAdvertiseNameAndHID(ctx context.Context, enabled bool) error {
+	return c.RPC("SetAdvertiseNameAndHID").Args(enabled).Call(ctx)
 }
