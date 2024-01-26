@@ -42,6 +42,7 @@ func init() {
 		BugComponent: "b:188154",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "drm_trace"},
+		Timeout:      4 * time.Minute + upstart.UIRestartTimeout + 2 * chrome.LoginTimeout,
 		Params: []testing.Param{
 			{
 				Name:              "stable",
