@@ -1093,7 +1093,8 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			switch arcMode {
 			case noarc:
 			case arcenabled:
-				arcOpt = []chrome.Option{chrome.ARCEnabled()}
+				arcOpt = []chrome.Option{chrome.ARCEnabled(),
+					chrome.DisableFeatures("ArcExternalStorageAccess")}
 			default:
 				s.Fatal("Unknown arcMode value=", arcMode)
 			}
