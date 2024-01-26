@@ -27,7 +27,7 @@ var nonpreciousGBBFlags []pb.GBBFlag
 func init() {
 	for _, v := range pb.GBBFlag_value {
 		allGBBFlags = append(allGBBFlags, pb.GBBFlag(v))
-		if pb.GBBFlag(v) != pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC {
+		if pb.GBBFlag(v) != pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC && pb.GBBFlag(v) != pb.GBBFlag_RUNNING_FAFT {
 			nonpreciousGBBFlags = append(nonpreciousGBBFlags, pb.GBBFlag(v))
 		}
 	}
@@ -47,7 +47,7 @@ func NonpreciousGBBFlags() []pb.GBBFlag {
 
 // FAFTGBBFlags returns the flags that faft sets before starting a test.
 func FAFTGBBFlags() []pb.GBBFlag {
-	return []pb.GBBFlag{pb.GBBFlag_RUNNING_FAFT}
+	return []pb.GBBFlag{}
 }
 
 // RebootRequiredGBBFlags returns flags that require a DUT reboot after they are changed.
