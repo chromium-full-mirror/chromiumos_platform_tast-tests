@@ -2,69 +2,89 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package graphics
+package webrtc
 
 import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"path"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/testing"
 )
 
+type videoPlaybackDelayParams struct {
+	profile     string
+	browserType browser.Type
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         WebRTCVideoPlaybackDelay,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		Func:         VideoPlaybackDelay,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Runs a webrtc playback-only connection to get performance numbers",
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Contacts: []string{
 			"chromeos-gfx@google.com",
 			"mcasas@chromium.org",
 		},
-		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		SoftwareDeps: []string{"chrome", "no_qemu"},
+		Data:         []string{"webrtc_video_display_perf_test.html", "third_party/munge_sdp.js"},
 		Params: []testing.Param{{
 			Name:              "vp8",
-			Val:               "VP8",
+			Val:               videoPlaybackDelayParams{profile: "VP8", browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
+			Fixture:           "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
 		}, {
 			Name:              "vp9",
-			Val:               "VP9",
+			Val:               videoPlaybackDelayParams{profile: "VP9", browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
+			Fixture:           "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
 		}, {
 			Name:              "h264",
-			Val:               "H264",
+			Val:               videoPlaybackDelayParams{profile: "H264", browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
+			Fixture:           "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
+		}, {
+			Name:              "vp8_lacros",
+			Val:               videoPlaybackDelayParams{profile: "VP8", browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
+		}, {
+			Name:              "vp9_lacros",
+			Val:               videoPlaybackDelayParams{profile: "VP9", browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
+		}, {
+			Name:              "h264_lacros",
+			Val:               videoPlaybackDelayParams{profile: "H264", browserType: browser.TypeLacros},
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "lacros"},
+			Fixture:           "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
 		}},
-		Data:    []string{"webrtc_video_display_perf_test.html", "third_party/munge_sdp.js"},
-		Fixture: "gpuWatchDog",
 	})
 }
 
-func WebRTCVideoPlaybackDelay(ctx context.Context, s *testing.State) {
+func VideoPlaybackDelay(ctx context.Context, s *testing.State) {
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
 	defer server.Close()
-	testURL := server.URL + "/" + "webrtc_video_display_perf_test.html"
+	testURL := path.Join(server.URL, "webrtc_video_display_perf_test.html")
 
-	cr, err := chrome.New(ctx, chrome.ExtraArgs(
-		"--autoplay-policy=no-user-gesture-required",
-		"--disable-rtc-smoothness-algorithm",
-		"--use-fake-device-for-media-stream=fps=60",
-		"--use-fake-ui-for-media-stream",
-	))
+	testOpt := s.Param().(videoPlaybackDelayParams)
+	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), testOpt.browserType)
 	if err != nil {
-		s.Fatal("Failed to create Chrome: ", err)
+		s.Fatal("Failed to initialize test: ", err)
 	}
-	defer cr.Close(ctx)
+	defer lacros.CloseLacros(ctx, l)
 
-	conn, err := cr.NewConn(ctx, testURL)
+	conn, err := cs.NewConn(ctx, testURL)
 	if err != nil {
 		s.Fatalf("Failed to open %s: %v", testURL, err)
 	}
@@ -80,13 +100,25 @@ func WebRTCVideoPlaybackDelay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
 
+	var br *browser.Browser
+	switch testOpt.browserType {
+	case browser.TypeAsh:
+		br = cr.Browser()
+	case browser.TypeLacros:
+		br = l.Browser()
+	}
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API: ", err)
+	}
+
 	const presentationsHistogramName = "Media.VideoFrameSubmitter"
-	initPresentationHistogram, err := metrics.GetHistogram(ctx, tconn, presentationsHistogramName)
+	initPresentationHistogram, err := metrics.GetHistogram(ctx, bTconn, presentationsHistogramName)
 	if err != nil {
 		s.Fatal("Failed to get initial histogram: ", err)
 	}
 	const decodeHistogramName = "Media.MojoVideoDecoder.Decode"
-	initDecodeHistogram, err := metrics.GetHistogram(ctx, tconn, decodeHistogramName)
+	initDecodeHistogram, err := metrics.GetHistogram(ctx, bTconn, decodeHistogramName)
 	if err != nil {
 		s.Fatal("Failed to get initial histogram: ", err)
 	}
@@ -96,7 +128,7 @@ func WebRTCVideoPlaybackDelay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get initial histogram: ", err)
 	}
 
-	profile := s.Param().(string)
+	profile := testOpt.profile
 	if err := conn.Call(ctx, nil, `(profile) => new Promise(async (resolve, reject) => {
 		  let pc1 = new RTCPeerConnection();
 		  let pc2 = new RTCPeerConnection();
@@ -131,20 +163,20 @@ func WebRTCVideoPlaybackDelay(ctx context.Context, s *testing.State) {
 		s.Fatal("RTCPeerConnection establishment failed: ", err)
 	}
 
-	// There's no easy way to count the amount of frames played back by a <video>
-	// element, so let the connection roll with a timeout. At the expected 30-60
-	// fps, we need tens of seconds to accumulate a couple of hundred frames to
-	// make the histograms significant.
 	const playbackTime = 20 * time.Second
+	// GoBigSleepLint: There's no easy way to count the amount of frames played back
+	// by a <video> element, so let the connection roll with a timeout. At the
+	// expected 30-60 fps, we need tens of seconds to accumulate a couple of hundred
+	// frames to make the histograms significant.
 	if err := testing.Sleep(ctx, playbackTime); err != nil {
 		s.Fatal("Error while waiting for playback delay perf collection: ", err)
 	}
 
 	perfValues := perf.NewValues()
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, presentationsHistogramName, initPresentationHistogram, perfValues, "tast_graphics_webrtc_video_playback_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, bTconn, presentationsHistogramName, initPresentationHistogram, perfValues, "tast_graphics_webrtc_video_playback_delay"); err != nil {
 		s.Fatal("Failed to calculate Presentation perf metric: ", err)
 	}
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, decodeHistogramName, initDecodeHistogram, perfValues, "tast_graphics_webrtc_video_decode_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, bTconn, decodeHistogramName, initDecodeHistogram, perfValues, "tast_graphics_webrtc_video_decode_delay"); err != nil {
 		s.Fatal("Failed to calculate Decode perf metric: ", err)
 	}
 	if err := graphics.UpdatePerfMetricFromHistogram(ctx, tconn, platformDecodeHistogramName, initPlatformDecodeHistogramName, perfValues, "tast_graphics_webrtc_platform_video_decode_delay"); err != nil {

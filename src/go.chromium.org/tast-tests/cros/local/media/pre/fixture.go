@@ -568,6 +568,41 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoWithFakeWebcamAndZeroLatencyRtc",
+		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeFakeWebcam60fpsArgs...),
+				chrome.ExtraArgs("--disable-rtc-smoothness-algorithm"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeVideoLacrosWithFakeWebcamAndZeroLatencyRtc",
+		Desc:     "Similar to chromeVideo fixture but supplementing it with the use of a fake video/audio capture device (a.k.a. 'fake webcam'), see https://webrtc.org/testing/, and the webrtc rendering smoothness algorithm disabled (lacros)",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
+				chrome.ExtraArgs(chromeVideoArgs...),
+				chrome.LacrosExtraArgs(chromeVideoArgs...),
+				chrome.ExtraArgs(chromeFakeWebcam60fpsArgs...),
+				chrome.LacrosExtraArgs(chromeBypassPermissionsArgs...),
+				chrome.LacrosExtraArgs("--disable-rtc-smoothness-algorithm"))).Opts()
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeScreenCapture",
 		Desc:     "Logged into a user session with flag so that Chrome always picks the entire screen for getDisplayMedia(), bypassing the picker UI",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
@@ -1086,6 +1121,12 @@ var chromeSuppressNotificationsArgs = []string{
 var chromeFakeWebcamArgs = []string{
 	// Use a fake media capture device instead of live webcam(s)/microphone(s).
 	"--use-fake-device-for-media-stream",
+	// Avoid the need to grant camera/microphone permissions.
+	"--use-fake-ui-for-media-stream"}
+
+var chromeFakeWebcam60fpsArgs = []string{
+	// Use a fake media capture device with 60fps instead of live webcam(s)/microphone(s).
+	"--use-fake-device-for-media-stream=fps=60",
 	// Avoid the need to grant camera/microphone permissions.
 	"--use-fake-ui-for-media-stream"}
 
