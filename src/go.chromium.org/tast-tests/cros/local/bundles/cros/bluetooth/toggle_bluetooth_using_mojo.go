@@ -28,11 +28,11 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothMojoJSObjectWithBlueZ",
-			ExtraAttr: []string{"bluetooth_flaky"},
+			ExtraAttr: []string{"bluetooth_sa"},
 		}, {
 			Name:              "floss_enabled",
 			Fixture:           "bluetoothMojoJSObjectWithFloss",
-			ExtraAttr:         []string{"bluetooth_floss_flaky"},
+			ExtraAttr:         []string{"bluetooth_floss"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}},
 	})

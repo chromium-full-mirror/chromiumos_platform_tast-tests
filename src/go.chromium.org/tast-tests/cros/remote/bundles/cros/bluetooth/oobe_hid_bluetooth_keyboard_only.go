@@ -58,14 +58,14 @@ func init() {
 				Name:              "floss_enabled_keyboard",
 				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				ExtraAttr:         []string{"bluetooth_floss"},
 				Val:               cbt.DeviceTypeKeyboard,
 			},
 			{
 				Name:              "floss_enabled_le_keyboard",
 				Fixture:           "chromeOobeWith1BTPeerFlossEnabled",
 				ExtraSoftwareDeps: []string{"bluetooth_floss"},
-				ExtraAttr:         []string{"bluetooth_floss_flaky"},
+				ExtraAttr:         []string{"bluetooth_floss"},
 				Val:               cbt.DeviceTypeLEKeyboard,
 			},
 			{

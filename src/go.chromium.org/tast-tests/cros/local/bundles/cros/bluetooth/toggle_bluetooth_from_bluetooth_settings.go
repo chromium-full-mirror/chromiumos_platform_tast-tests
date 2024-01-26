@@ -38,7 +38,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothEnabledWithBlueZ",
-			ExtraAttr: []string{"bluetooth_flaky", "group:intel-gating"},
+			ExtraAttr: []string{"bluetooth_sa", "group:intel-gating"},
 		}, {
 			Name:              "floss_enabled",
 			Fixture:           "bluetoothEnabledWithFloss",

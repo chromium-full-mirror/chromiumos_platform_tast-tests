@@ -63,7 +63,7 @@ func init() {
 			"chadduffin@chromium.org",
 		},
 		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
+		Attr:         []string{"group:wificell"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: append(
 			wifiutil.JoinWifiServiceNames,
@@ -85,6 +85,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
 				},
+				ExtraAttr: []string{"wificell_e2e"},
 			}, {
 				Name: "logged_in_open_wpa",
 				Val: &handlePassphrasesParam{
@@ -92,6 +93,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
 				},
+				ExtraAttr: []string{"wificell_e2e"},
 			}, {
 				Name: "oobe_hidden_wpa",
 				Val: &handlePassphrasesParam{
@@ -99,6 +101,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi")), hostapd.Hidden()},
 				},
+				ExtraAttr: []string{"wificell_e2e_unstable"},
 			}, {
 				Name: "oobe_open_wpa",
 				Val: &handlePassphrasesParam{
@@ -106,6 +109,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA), wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
 				},
+				ExtraAttr: []string{"wificell_e2e_unstable"},
 			}, {
 				Name: "logged_in_hidden_wpa2",
 				Val: &handlePassphrasesParam{
@@ -113,6 +117,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
 				},
+				ExtraAttr: []string{"wificell_e2e"},
 			}, {
 				Name: "logged_in_open_wpa2",
 				Val: &handlePassphrasesParam{
@@ -120,6 +125,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
 				},
+				ExtraAttr: []string{"wificell_e2e"},
 			}, {
 				Name: "oobe_hidden_wpa2",
 				Val: &handlePassphrasesParam{
@@ -127,6 +133,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Hidden_WiFi_")), hostapd.Hidden()},
 				},
+				ExtraAttr: []string{"wificell_e2e_unstable"},
 			}, {
 				Name: "oobe_open_wpa2",
 				Val: &handlePassphrasesParam{
@@ -134,6 +141,7 @@ func init() {
 					securityConfig: wpa.NewConfigFactory(correctPassphrase, wpa.Mode(wpa.ModePureWPA2), wpa.Ciphers2(wpa.CipherTKIP, wpa.CipherCCMP)),
 					apOption:       []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("Open_WiFi_"))},
 				},
+				ExtraAttr: []string{"wificell_e2e_unstable"},
 			},
 		},
 		Fixture: wificell.FixtureID(wificell.TFFeaturesNone),
