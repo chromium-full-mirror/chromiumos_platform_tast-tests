@@ -35,6 +35,9 @@ type txMeas struct {
 	FrameWidth      float64 `json:"frameWidth"`
 	FrameHeight     float64 `json:"frameHeight"`
 	FramesPerSecond float64 `json:"framesPerSecond"`
+	Encoder         string  `json:"encoderImplementation"`
+	Active          bool    `json:"active"`
+	ScalabiltyMode  string  `json:"scalabilityMode"`
 }
 
 // WebRTC Stats collected on the receiver side.
@@ -86,13 +89,13 @@ func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
 		// keep the original aspect ratio.
 		if displayCapture {
 			if int(txm.FrameHeight) != streamHeight && int(txm.FrameWidth) != streamWidth {
-				return errors.Errorf("still waiting for tx width to reach %d or tx height to reach %d, current: %.0fx%.0f",
-					streamWidth, streamHeight, txm.FrameWidth, txm.FrameHeight)
+				return errors.Errorf("still waiting for tx width to reach %d or tx height to reach %d, current: %.0fx%.0f, txm=%v",
+					streamWidth, streamHeight, txm.FrameWidth, txm.FrameHeight, txm)
 			}
 		} else {
 			if int(txm.FrameHeight) != streamHeight || int(txm.FrameWidth) != streamWidth {
-				return errors.Errorf("still waiting for tx resolution to reach %dx%d, current: %.0fx%.0f",
-					streamWidth, streamHeight, txm.FrameWidth, txm.FrameHeight)
+				return errors.Errorf("still waiting for tx resolution to reach %dx%d, current: %.0fx%.0f, txm=%v",
+					streamWidth, streamHeight, txm.FrameWidth, txm.FrameHeight, txm)
 			}
 		}
 		testing.ContextLogf(ctx, "tx resolution: %.0fx%.0f", txm.FrameWidth, txm.FrameHeight)
