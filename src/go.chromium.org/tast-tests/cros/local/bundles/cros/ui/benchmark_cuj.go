@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/benchmarkcuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast/core/testing"
@@ -46,20 +45,6 @@ func init() {
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
-			},
-			{
-				Name:              "speedometer_local_image_search",
-				ExtraAttr:         []string{"group:cuj"},
-				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
-				Timeout:           defaultTimeout,
-				Fixture:           "loggedInToCUJUserWithLauncherImageSearchWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-					ImageSearch:   true,
-				},
-				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
 			},
 			{
 				Name:      "lacros_speedometer",

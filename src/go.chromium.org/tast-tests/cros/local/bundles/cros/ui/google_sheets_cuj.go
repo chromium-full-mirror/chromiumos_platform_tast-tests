@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/googlesheetscuj"
 	"go.chromium.org/tast/core/testing"
@@ -71,16 +70,6 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
-			},
-			{
-				Name:              "local_image_search",
-				ExtraSoftwareDeps: []string{"ondevice_image_content_annotation"},
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-					ImageSearch: true,
-				},
-				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
-				Fixture:   "loggedInToCUJUserWithLauncherImageSearch",
 			},
 		},
 	})

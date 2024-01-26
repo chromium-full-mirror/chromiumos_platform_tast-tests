@@ -218,31 +218,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithLauncherImageSearch",
-		Desc: "The main fixture used for UI CUJ tests with launcher image search",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"xiyuan@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeAsh,
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures(
-					"ProductivityLauncherImageSearch",
-					"LauncherImageSearch",
-					"LauncherImageSearchOcr",
-					"LauncherImageSearchIca"),
-			}},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
 	// loggedInToCUJUserARCSupported fixture is similar to loggedInToCUJUser
 	// but uses "chrome.ARCSupported" flag instead of "chrome.ARCEnabled". When
 	// a test needs to open any ARC windows or use the Play Store, this fixture
@@ -1073,30 +1048,6 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeLacros},
-		Parent:          "prepareForCUJWithoutCooldown",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithLauncherImageSearchWithoutCooldown",
-		Desc: "CUJ fixture that skips CPU cooldown and has launcher image search",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"xiyuan@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			bt: browser.TypeAsh,
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures(
-					"ProductivityLauncherImageSearch",
-					"LauncherImageSearch",
-					"LauncherImageSearchOcr",
-					"LauncherImageSearchIca"),
-			}},
 		Parent:          "prepareForCUJWithoutCooldown",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,

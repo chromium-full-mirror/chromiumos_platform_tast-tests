@@ -14,10 +14,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
@@ -36,7 +34,6 @@ type BenchmarkTest struct {
 	BenchmarkInfo benchmarkInfo
 	RecorderMode  cujrecorder.RecorderMode
 	RunOnBattery  bool
-	ImageSearch   bool
 }
 
 // Score holds values for a single metric along with their improvement direction.
@@ -141,22 +138,6 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		if testParam.ImageSearch {
-			// Get file base path.
-			user := cr.NormalizedUser()
-			testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
-			cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, imageCopyRepeatTimes)
-			if err != nil {
-				s.Fatal("Failed to prepare image search files: ", err)
-			}
-			defer cleanup()
-
-			// GoBigSleepLint: Wait to let the image indexing start.
-			if err := testing.Sleep(ctx, 2*time.Minute); err != nil {
-				s.Fatal("Failed to sleep: ", err)
-			}
-		}
-
 		s.Logf("Running %s", benchmarkParam.name)
 		return benchmarkParam.benchmarkRun(ctx, benchmarkConn, ac, params)
 	}); err != nil {

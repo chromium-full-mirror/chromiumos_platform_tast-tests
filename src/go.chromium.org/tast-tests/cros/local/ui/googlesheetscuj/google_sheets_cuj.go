@@ -20,7 +20,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
@@ -38,7 +37,6 @@ import (
 // TestParam is the test parameters for GoogleSheetsCUJ.
 type TestParam struct {
 	BrowserType browser.Type
-	ImageSearch bool
 }
 
 // Run opens up a Google Sheets file, and use mousewheel/trackpad/keypress to
@@ -158,17 +156,6 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
 		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
-	}
-
-	if testParam.ImageSearch {
-		// Get file base path.
-		user := cr.NormalizedUser()
-		testPicturePath := s.DataPath(launcher.ImageSearchPowerTestPictureName)
-		cleanup, err := cuj.PrepareImageSearchFiles(ctx, user, testPicturePath, imageCopyRepeatTimes)
-		if err != nil {
-			s.Fatal("Failed to prepare image search files: ", err)
-		}
-		defer cleanup()
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
