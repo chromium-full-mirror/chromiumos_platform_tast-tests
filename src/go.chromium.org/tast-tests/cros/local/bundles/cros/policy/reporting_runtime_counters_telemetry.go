@@ -35,11 +35,11 @@ func init() {
 		Desc:         "Verify runtime counters telemetry is reported when DeviceReportRuntimeCounters is on",
 		Contacts: []string{
 			"cros-reporting-team@google.com",
-			"xuhong@chromium.org", // Test author
+			"albertojuarez@google.com",
 		},
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "vpd"},
 		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{

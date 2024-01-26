@@ -30,7 +30,7 @@ func init() {
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "vpd"},
 		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting", "group:hw_agnostic"},
 		VarDeps:      []string{"erpserver.key_id", "erpserver.public_key", "erpserver.private_key", "erpserver.signature"},
 		Fixture:      fixture.FakeDMSEnrolled,

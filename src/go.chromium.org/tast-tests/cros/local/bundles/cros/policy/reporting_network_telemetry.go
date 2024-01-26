@@ -39,7 +39,7 @@ func init() {
 		},
 		Timeout:      10 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "vpd"},
 		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting", "group:hw_agnostic"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{
