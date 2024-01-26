@@ -6,6 +6,7 @@ package hwsec
 
 import (
 	"context"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -14,9 +15,54 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-func (h *CmdHelper) pathExists(ctx context.Context, path string) bool {
-	_, err := h.cmdRunner.Run(ctx, "stat", path)
+var defaultBackupDirs = []string{
+	"/home/.shadow/",
+	"/home/chronos/",
+	"/var/lib/device_management/",
+	"/var/lib/devicesettings/",
+	"/var/lib/tpm_manager/",
+	"/var/lib/bootlockbox/",
+	"/var/lib/cryptohome/",
+	"/var/lib/chaps/",
+	"/var/lib/oobe_config_restore/",
+	"/var/lib/u2f/",
+	"/var/lib/vtpm/",
+	"/mnt/stateful_partition/unencrypted/tpm_manager/",
+	"/mnt/stateful_partition/unencrypted/preserve/",
+}
+
+var defaultBackupFiles = []string{
+	"/var/lib/public_mount_salt",
+	"/var/lib/system_salt",
+}
+
+// Skip packing the "mount" directories, since the file systems it's
+// used for don't allow taking snapshots. E.g., ext4 fscrypt complains
+// "Required key not available" when trying to read encrypted files.
+var defaultIgnorePaths = []string{
+	"/home/.shadow/*/mount",
+}
+
+func (h *CmdHelper) pathExistsInTar(ctx context.Context, tar, dataPath string) bool {
+	// We want to use relative path here.
+	dataPath = strings.TrimPrefix(dataPath, "/")
+	_, err := h.cmdRunner.Run(ctx, "/bin/tar", "--list", "--file", tar, dataPath)
 	return err == nil
+}
+
+func (h *CmdHelper) cleanupExistingDir(ctx context.Context, tar, path string) error {
+	if h.pathExistsInTar(ctx, tar, path) {
+		// Clean dir content. (note that deleting the directory itself may fail).
+		visiblePath := filepath.Join(path, "*")
+		if err := h.RemoveAll(ctx, visiblePath); err != nil {
+			return errors.Wrapf(err, "failed to remove old %v data", visiblePath)
+		}
+		hiddenPath := filepath.Join(path, ".*")
+		if err := h.RemoveAll(ctx, hiddenPath); err != nil {
+			return errors.Wrapf(err, "failed to remove old %v data", hiddenPath)
+		}
+	}
+	return nil
 }
 
 func (h *CmdHelper) runCmdOrFailWithOut(ctx context.Context, cmd string, args ...string) error {
@@ -47,12 +93,13 @@ func (h *CmdHelper) compressData(ctx context.Context, dst string, paths, ignoreP
 	// Use the "tar" program as it takes care of recursive packing,
 	// preserving ownership, permissions and SELinux attributes.
 	args := append([]string{
-		"--acls",    // save the ACLs to the archive
-		"--create",  // create a new archive
-		"--gzip",    // filter the archive through gzip
-		"--selinux", // save the SELinux context to the archive
-		"--xattrs",  // save the user/root xattrs to the archive
-		"--file",    // write to the file specified in the next argument
+		"--acls",               // save the ACLs to the archive
+		"--create",             // create a new archive
+		"--gzip",               // filter the archive through gzip
+		"--selinux",            // save the SELinux context to the archive
+		"--xattrs",             // save the user/root xattrs to the archive
+		"--ignore-failed-read", // Ignore the read failure
+		"--file",               // write to the file specified in the next argument
 		dst})
 	for _, p := range ignorePaths {
 		// Exclude the specified patterns from archiving.
@@ -78,26 +125,14 @@ func (h *CmdHelper) SaveLoginData(ctx context.Context, archivePath string, inclu
 	defer cancel()
 	defer h.ensureDaemons(cleanupCtx, includeTpm)
 
-	paths := []string{
-		"/home/.shadow",
-		"/home/chronos",
-	}
+	var paths = []string{}
+	paths = append(paths, defaultBackupDirs...)
+	paths = append(paths, defaultBackupFiles...)
 	if includeTpm {
 		paths = append(paths, "/mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip")
 	}
 
-	// Starting from R119, we started storing install_attributes.pb inside /var/lib/device_management/
-	if h.pathExists(ctx, "/var/lib/device_management") {
-		paths = append(paths, "/var/lib/device_management")
-	}
-
-	// Skip packing the "mount" directories, since the file systems it's
-	// used for don't allow taking snapshots. E.g., ext4 fscrypt complains
-	// "Required key not available" when trying to read encrypted files.
-	ignorePaths := []string{
-		"/home/.shadow/*/mount",
-	}
-	if err := h.compressData(ctx, archivePath, paths, ignorePaths); err != nil {
+	if err := h.compressData(ctx, archivePath, paths, defaultIgnorePaths); err != nil {
 		return errors.Wrap(err, "failed to compress the cryptohome data")
 	}
 	return nil
@@ -116,21 +151,15 @@ func (h *CmdHelper) LoadLoginData(ctx context.Context, archivePath string, inclu
 		defer h.ensureDaemons(cleanupCtx, includeTpm)
 	}
 
-	// Remove the `/home/.shadow` first to prevent any unexpected file remaining.
-	if err := h.RemoveAll(ctx, "/home/.shadow"); err != nil {
-		return errors.Wrap(err, "failed to remove old /home/.shadow data")
+	for _, path := range defaultBackupDirs {
+		if err := h.cleanupExistingDir(ctx, archivePath, path); err != nil {
+			return errors.Wrapf(err, "failed to cleanup %v data", path)
+		}
 	}
-	// Clean up `/home/chronos` as well (note that deleting this directory itself would fail).
-	if err := h.RemoveAll(ctx, "/home/chronos/*"); err != nil {
-		return errors.Wrap(err, "failed to remove old /home/chronos/* data")
-	}
-	if err := h.RemoveAll(ctx, "/home/chronos/.*"); err != nil {
-		return errors.Wrap(err, "failed to remove old /home/chronos/.* data")
-	}
-	// Clean up `/var/lib/device_management` if exists
-	if h.pathExists(ctx, "/var/lib/device_management") {
-		if err := h.RemoveAll(ctx, "/var/lib/device_management/*"); err != nil {
-			return errors.Wrap(err, "failed to remove old /var/lib/device_management data")
+
+	for _, path := range defaultBackupFiles {
+		if err := h.RemoveAll(ctx, path); err != nil {
+			return errors.Wrapf(err, "failed to remove %v", path)
 		}
 	}
 
