@@ -695,6 +695,29 @@ func (m *Modem) EnsureConnectState(ctx context.Context, expectedConnected bool) 
 	return nil
 }
 
+// WaitUntilRegistered polls for simple modem property m3gpp-registration-state until the modem is
+// in registered state. This function does not check for preconditions, and will run until the modem
+// is registered or it times out.
+func (m *Modem) WaitUntilRegistered(ctx context.Context, timeout time.Duration) error {
+	// poll for expected modem state
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		isRegistered, err := m.IsRegistered(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to fetch registration state")
+		}
+		if !isRegistered {
+			return errors.New("modem not registered")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  timeout,
+		Interval: 1 * time.Second,
+	}); err != nil {
+		return errors.Wrap(err, "failed to verify modem registration state")
+	}
+	return nil
+}
+
 // EnsureRegistered polls for simple modem property m3gpp-registration-state.
 func (m *Modem) EnsureRegistered(ctx context.Context) error {
 	if isPowered, err := m.IsPowered(ctx); err != nil {
@@ -707,23 +730,7 @@ func (m *Modem) EnsureRegistered(ctx context.Context) error {
 	} else if !isEnabled {
 		return errors.New("modem not enabled")
 	}
-	// poll for expected modem state
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		isRegistered, err := m.IsRegistered(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to fetch reigstration state")
-		}
-		if !isRegistered {
-			return errors.New("modem not registered")
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  120 * time.Second,
-		Interval: 1 * time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "failed to verify modem registration state")
-	}
-	return nil
+	return m.WaitUntilRegistered(ctx, 120*time.Second)
 }
 
 // Connect calls the connect function on simple modem D-Bus and returns the bearer path if it connects successfully.
