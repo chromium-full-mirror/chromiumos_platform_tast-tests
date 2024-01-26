@@ -32,6 +32,7 @@ type WrappedEncryptedData struct {
 	LockUnlockEvent    *LockUnlockEvent    `json:"lockUnlockEvent"`
 	LoginLogoutEvent   *LoginLogoutEvent   `json:"loginLogoutEvent"`
 	AddRemoveUserEvent *AddRemoveUserEvent `json:"addRemoveUserEvent"`
+	LogUploadEvent     *LogUploadEvent     `json:"logUploadEvent"`
 }
 
 // DlpPolicyEvent mirrors the dlpPolicyEvent JSON field.
@@ -92,6 +93,36 @@ type LoginEvent struct{}
 
 // LogoutEvent mirrors the logoutEvent JSON field.
 type LogoutEvent struct{}
+
+// LogUploadEvent mirrors the logUploadEvent JSON field.
+type LogUploadEvent struct {
+	UploadSettings       *UploadSettings `json:"uploadSettings"`
+	UploadTracker        *UploadTracker  `json:"uploadTracker"`
+	CommandID            *string         `json:"commandId"`
+	CommandResultPayload *string         `json:"commandResultPayload"`
+}
+
+// UploadSettings is a struct representation of message based on components/reporting/proto/synced/upload_tracker.proto.
+type UploadSettings struct {
+	OriginPath       *string `json:"originPath"`
+	RetryCount       *string `json:"retryCount"`
+	UploadParameters *string `json:"uploadParameters"`
+}
+
+// UploadTracker is a struct representation of message based on components/reporting/proto/synced/upload_tracker.proto.
+type UploadTracker struct {
+	Status           *StatusProto `json:"status"`
+	Total            *string      `json:"total"`
+	Uploaded         *string      `json:"uploaded"`
+	SessionToken     *string      `json:"sessionToken"`
+	AccessParameters *string      `json:"accessParameters"`
+}
+
+// StatusProto is a struct representation of components/reporting/proto/synced/status.proto.
+type StatusProto struct {
+	Code         *string `json:"code"`
+	ErrorMessage *string `json:"errorMessage"`
+}
 
 // MetricData mirrors the metricData JSON field.
 type MetricData struct {
