@@ -67,7 +67,7 @@ func ECDHShortKey(ctx context.Context, s *testing.State) {
 
 	defer func() {
 		if _, err := testexec.CommandContext(ctx, "trunks_client", "--key_unload", "--handle="+handle).Output(); err != nil {
-			s.Errorf("Failed to unload key handle 0x%x with error: %v",
+			s.Errorf("Failed to unload key handle 0x%s with error: %v",
 				handle, err)
 		}
 	}()
