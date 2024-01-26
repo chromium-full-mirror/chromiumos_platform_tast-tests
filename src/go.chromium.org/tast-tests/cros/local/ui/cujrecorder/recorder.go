@@ -1197,7 +1197,9 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 	// Create batteryDischarge with both discharge and ignoreErr set to true.
 	// Only discharge for CUJ tests, since they are the only test that run for
 	// long enough for the power test to give meaningful values.
-	batteryDischarge := setup.NewBatteryDischarge(r.options.Mode == CUJ || r.options.RunOnBattery, true, dischargeThreshold)
+	batteryDischarge := setup.NewBatteryDischarge(
+		strings.ToLower(keepCharging.Value()) != "true" && (r.options.Mode == CUJ || r.options.RunOnBattery),
+		true, dischargeThreshold)
 
 	var err error
 	setupCleanup, err := setup.PowerTest(ctx, r.tconn, powerTestOptions, batteryDischarge)

@@ -24,6 +24,13 @@ var skipPowerTest = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to skip the power test for the Recorder",
 )
 
+// keepCharging keeps the test device charging during the test.
+var keepCharging = testing.RegisterVarString(
+	"cujrecorder.keepCharging",
+	"",
+	"A boolean string (true/false) signifying whether to keep charging during the test",
+)
+
 // screenRecord enables the screen recorder for the Recorder.
 var screenRecord = testing.RegisterVarString(
 	"cujrecorder.record",

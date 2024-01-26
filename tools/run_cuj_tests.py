@@ -126,6 +126,7 @@ Before running this script:
 import argparse
 import datetime
 import getpass
+import io
 import json
 import logging
 import math
@@ -148,7 +149,6 @@ PROJECT_ID = "cros-perfmetrics-cuj"
 DEFAULT_BUCKET_NAME = "cros-performance-sheriff"
 THIS_FILE = Path(__file__).resolve()
 CHROMEOS_CHECKOUT_PATH = THIS_FILE.parent.parent.parent.parent.parent
-LATEST_TEST_DIR_PATH = CHROMEOS_CHECKOUT_PATH / "out/tmp/tast/results/latest"
 DEFAULT_SSH_LOCAL_PORT = 2222
 
 
@@ -247,9 +247,6 @@ def upload_local_directory_to_gcs(
         if entry.is_file():
             blob = bucket.blob(remote_path)
             blob.upload_from_filename(entry)
-            logging.info(
-                "[Cloud] Uploaded to gs://%s/%s", bucket.name, remote_path
-            )
         else:
             upload_local_directory_to_gcs(
                 entry,
@@ -296,34 +293,97 @@ def flash_image(image: str, local_port: int, dut: str):
         start_ssh_tunnel(dut, local_port)
 
 
-def run_tast_tests(local_port: int, tests: list) -> None:
+def reboot_dut(dut: str):
+    reboot_dut_command = [
+        "ssh",
+        f"root@{dut}",
+        "reboot",
+    ]
+    logging.info("[DUT] Rebooting root@%s...", dut)
+    subprocess.run(
+        reboot_dut_command,
+        check=False,
+    )
+
+
+def run_tast_tests(
+    local_port: int,
+    tests: list,
+    results_dir: str = None,
+    bundle: str = None,
+    vars: list = [],
+) -> Path:
     """Run `tests` on DUT"""
-    logging.info("[Tast] Running tests {tests}...")
+    logging.info(f"[Tast] Running tests {tests}...")
     tast_run_command = [
         "cros_sdk",
         "tast",
         "run",
         "--build=false",
-        f"localhost:{local_port}",
     ]
+    if vars:
+        for var in vars:
+            tast_run_command.append(f"-var={var}")
+    if bundle:
+        tast_run_command.append(f"-buildbundle={bundle}")
+    if results_dir:
+        time_string = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+        tast_run_command.append(f"-resultsdir={results_dir}/{time_string}")
+    tast_run_command.append(f"localhost:{local_port}")
+
     tast_run_command.extend(tests)
     logging.info(tast_run_command)
-    subprocess.run(
+    process = subprocess.run(
         tast_run_command,
+        stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         cwd=CHROMEOS_CHECKOUT_PATH,
         check=True,
     )
+    tests_results_dir = re.findall(
+        "Results saved to \/(.*)",
+        io.BytesIO(process.stdout).readlines()[-1].decode("utf-8"),
+    )[0]
+    return CHROMEOS_CHECKOUT_PATH / "out" / tests_results_dir
 
 
-def write_local_dut_info() -> None:
+def check_cpu_usage(dut: str, timeout: int = 60, interval: int = 1) -> None:
+    logging.info("[DUT] Checking DUT's current cpu usage")
+    top_command = [
+        "ssh",
+        "-tt",
+        f"root@{dut}",
+        "top",
+        "-b",
+        "-n",
+        "1",
+    ]
+
+    start = datetime.datetime.now()
+    end = start + datetime.timedelta(seconds=timeout)
+    cpu_usage = ""
+    while datetime.datetime.now() < end:
+        process = subprocess.run(
+            top_command,
+            stdout=subprocess.PIPE,
+            stdin=subprocess.PIPE,
+        )
+        matches = re.findall(
+            "%Cpu\(s\):(.*)\\n", process.stdout.decode("utf-8")
+        )
+        if len(matches) >= 1:
+            cpu_usage = matches[0].strip()
+            break
+        time.sleep(interval)
+    logging.info(f"[DUT] DUT's current cpu usage is: {cpu_usage}")
+
+
+def write_local_dut_info(results_dir: Path) -> str:
     """Write DUT information to a json file"""
     #  Get the number of days since the Unix epoch.
     days_since_epoch = int(time.time() / 86400)
 
-    with open(
-        LATEST_TEST_DIR_PATH / "dut-info.txt", "r", encoding="utf-8"
-    ) as dutinfo:
+    with open(results_dir / "dut-info.txt", "r", encoding="utf-8") as dutinfo:
         dutinfo_text = dutinfo.read()
 
     product = re.findall('model: "(.*)"', dutinfo_text)[0].strip().lower()
@@ -335,7 +395,7 @@ def write_local_dut_info() -> None:
     )
 
     with open(
-        LATEST_TEST_DIR_PATH / "system_logs/lscpu.txt", "r", encoding="utf-8"
+        results_dir / "system_logs/lscpu.txt", "r", encoding="utf-8"
     ) as lscpu:
         lspu_text = lscpu.read()
 
@@ -347,7 +407,7 @@ def write_local_dut_info() -> None:
     sku = "_".join(cpu_model.split() + [f"{memory_gb}GB"])
 
     with open(
-        LATEST_TEST_DIR_PATH / "system_logs/lsb-release", "r", encoding="utf-8"
+        results_dir / "system_logs/lsb-release", "r", encoding="utf-8"
     ) as lsb_release:
         lsb_release_text = lsb_release.read()
 
@@ -374,7 +434,7 @@ def write_local_dut_info() -> None:
     )
 
     with open(
-        LATEST_TEST_DIR_PATH / "system_logs/hostname.txt", "r", encoding="utf-8"
+        results_dir / "system_logs/hostname.txt", "r", encoding="utf-8"
     ) as hostname:
         hostname_text = hostname.readlines()[-1]
 
@@ -382,7 +442,7 @@ def write_local_dut_info() -> None:
 
     local_dut_info = {
         "event_date": days_since_epoch,
-        "sku": sku,
+        "sku": f"{product}_{sku}",
         "product": product,
         "board": board,
         "milestone": milestone,
@@ -397,21 +457,28 @@ def write_local_dut_info() -> None:
 
     local_dut_info_json = json.dumps(local_dut_info, indent=4)
     with open(
-        LATEST_TEST_DIR_PATH / "local_dut_info.txt", "w", encoding="utf-8"
+        results_dir / "local_dut_info.txt", "w", encoding="utf-8"
     ) as local_dut_info_file:
         local_dut_info_file.write(local_dut_info_json)
 
+    return product
 
-def upload_latest_tests_results(username: str, bucket_name: str) -> None:
+
+def upload_latest_tests_results(
+    username: str, bucket_name: str, dut_model: str, results_dir: Path
+) -> None:
     """Upload the latest tests results to Google Cloud bucket `bucket_name`"""
     credentials, _ = google.auth.default()
     client = storage.Client(credentials=credentials, project=PROJECT_ID)
     bucket = client.get_bucket(bucket_name)
-    local_directory_path = LATEST_TEST_DIR_PATH
+    local_directory_path = results_dir
     local_directory_realpath = os.path.realpath(local_directory_path)
-    test_run_id = f"{os.path.basename(local_directory_realpath)}-{username}"
+    test_run_id = (
+        f"{os.path.basename(local_directory_realpath)}-{username}-{dut_model}"
+    )
     today_date_string = datetime.datetime.today().strftime("%Y-%m-%d")
     gcs_folder_path = f"{today_date_string}/{test_run_id}"
+    logging.info("[Cloud] Uploading to gs://%s/...", gcs_folder_path)
     upload_local_directory_to_gcs(local_directory_path, bucket, gcs_folder_path)
 
 
@@ -420,7 +487,7 @@ def parse_arguments(argv) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--dut",
-        nargs="?",
+        nargs=1,
         type=str,
         help=(
             "If set, a SSH tunnel will be opened at port --local-port;"
@@ -469,6 +536,56 @@ def parse_arguments(argv) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--local",
+        action="store_true",
+        help=(
+            "If set, the results will only be in local and"
+            "not uploaded to the Google Cloud."
+        ),
+    )
+    parser.add_argument(
+        "--repeat",
+        nargs="?",
+        type=int,
+        default=1,
+        help=(
+            "If set, `tast run` will be repeated for --repeat times,"
+            " default is 1 (no repeat)."
+        ),
+    )
+    parser.add_argument(
+        "--cooldown",
+        nargs="?",
+        type=int,
+        default=0,
+        help=(
+            "If set, sleep for --cooldown seconds before running `tast run`,"
+            " default is 0."
+        ),
+    )
+    parser.add_argument(
+        "--reboot",
+        action="store_true",
+        help=("If set, the dut will be rebooted before running `tast run`."),
+    )
+    parser.add_argument(
+        "--vars",
+        nargs="+",
+        help="Tast runtime variables.",
+    )
+    parser.add_argument(
+        "--bundle",
+        nargs="?",
+        type=str,
+        help=("Tast test bundle name."),
+    )
+    parser.add_argument(
+        "--results-dir",
+        nargs="?",
+        type=str,
+        help=("Directory for test results."),
+    )
+    parser.add_argument(
         "patterns",
         nargs=argparse.REMAINDER,
         type=str,
@@ -487,40 +604,61 @@ def main(argv) -> Optional[int]:
 
     logging.basicConfig(format="%(asctime)s %(message)s", level=logging.INFO)
     username = getpass.getuser()
-    logging.info("[User] %s starts run_cuj_tests.py...\n", username)
+    logging.info("[User] %s starts run_cuj_tests.py...", username)
 
     try:
-        if opts.dut:
-            kill_ssh_tunnel(opts.local_port)
-            start_ssh_tunnel(opts.dut, opts.local_port)
+        if opts.reboot:
+            reboot_dut(opts.dut[0])
+            logging.info("[DUT] Waiting 60 seconds for DUT to reboot")
+            time.sleep(60)
+            start_ssh_tunnel(opts.dut[0], opts.local_port)
+        if opts.cooldown > 0:
+            logging.info(
+                "[DUT] Waiting %s seconds for DUT to cooldown", opts.cooldown
+            )
+            time.sleep(opts.cooldown)
+
+        check_cpu_usage(opts.dut[0])
+        kill_ssh_tunnel(opts.local_port)
+        start_ssh_tunnel(opts.dut[0], opts.local_port)
 
         if opts.image:
-            flash_image(opts.image, opts.local_port, opts.dut)
+            flash_image(opts.image, opts.local_port, opts.dut[0])
         else:
             logging.info("[Flash] Not flashing image")
 
-        run_tast_tests(opts.local_port, opts.patterns)
+        for i in range(opts.repeat):
+            logging.info(f"[Tast] #{i+1} Running tests {opts.patterns}...")
+            results_dir_path = run_tast_tests(
+                opts.local_port,
+                opts.patterns,
+                opts.results_dir,
+                opts.bundle,
+                opts.vars,
+            )
+            dut_model = write_local_dut_info(results_dir_path)
 
-        write_local_dut_info()
+            if not opts.local:
+                if not opts.upload:
+                    while True:
+                        user_input = input(
+                            "[Cloud] Are you sure to upload test results to the bucket"
+                            f" {opts.bucket_name}?(y/n):"
+                        ).lower()
+                        if user_input == "y":
+                            upload = True
+                            break
+                        elif user_input == "n":
+                            break
+                        else:
+                            logging.info("Enter y or n")
+                if opts.upload or upload:
+                    upload_latest_tests_results(
+                        username, opts.bucket_name, dut_model, results_dir_path
+                    )
 
-        if not opts.upload:
-            while True:
-                user_input = input(
-                    "[Cloud] Are you sure to upload test results to the bucket"
-                    f" {opts.bucket_name}?(y/n):"
-                ).lower()
-                if user_input == "y":
-                    upload = True
-                    break
-                elif user_input == "n":
-                    break
-                else:
-                    logging.info("Enter y or n")
-        if opts.upload or upload:
-            upload_latest_tests_results(username, opts.bucket_name)
     finally:
-        if opts.dut:
-            kill_ssh_tunnel(opts.local_port)
+        kill_ssh_tunnel(opts.local_port)
 
 
 if __name__ == "__main__":
