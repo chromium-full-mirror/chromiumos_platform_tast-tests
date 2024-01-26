@@ -68,7 +68,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         NearbyShareSend,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Installs ARC share test app and share text/file to Nearby Share via Sharesheet",
+		Desc:         "Installs ARC share test app and share text/file to Quick Share (previously known as Nearby Share) via Sharesheet",
 		Contacts: []string{
 			"arc-app-dev@google.com",
 			"alanding@chromium.org",
@@ -548,8 +548,7 @@ func init() {
 // directory is cleaned after sharing is completed.
 func NearbyShareSend(ctx context.Context, s *testing.State) {
 	const (
-		nearbyChipLabel    = "Nearby"
-		nearbySharingTitle = "Nearby Share"
+		nearbySharingTitle = "Quick Share"
 
 		// Class name of text view.
 		textViewClassName = "android.widget.TextView"
@@ -648,8 +647,7 @@ func NearbyShareSend(ctx context.Context, s *testing.State) {
 	nearbyText := nearbySharingTitle
 	nearbyClass := textViewClassName
 	if vmEnabled {
-		// For R, Nearby Share is using a chip button.
-		nearbyText = nearbyChipLabel
+		// For R+, Nearby Share is using a chip button.
 		nearbyClass = buttonClassName
 	}
 
