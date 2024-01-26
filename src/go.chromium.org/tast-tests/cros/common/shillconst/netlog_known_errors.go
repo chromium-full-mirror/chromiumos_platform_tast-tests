@@ -24,6 +24,7 @@ func InitializeAllowedEntries() []AllowedEntry {
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for the default service.*", 0},
 		{"dnsproxyd", "client.cc", ".*Device .* connection state for .* is unknown.*", 0},
 		{"dnsproxyd", "dbus_method_invoker.h", ".*CallMethodAndBlockWithTimeout.*", 0},
+		{"dnsproxyd", "proxy.cc", ".*The name org\\.chromium\\.flimflam was not provided by any \\.service files.*", 0},
 		{"dnsproxyd", "object_proxy.cc", ".*The name org\\.chromium\\.flimflam was not provided by any \\.service files.*", 0},
 		{"ModemManager", "", ".*SIM is missing and SIM hot swap is configured, but ports are not opened.*", 0},
 		{"patchpaneld", "dbus_method_invoker.h", ".*CallMethodAndBlockWithTimeout.*", 0},
