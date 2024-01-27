@@ -21,6 +21,7 @@ import (
 
 const (
 	touchLogFileName = "touch_logs.csv"
+	lowBatteryLevel  = 10
 )
 
 func init() {
@@ -72,6 +73,21 @@ func (svc *StylusEvtestCaptureService) StartStylusDataCapture(ctx context.Contex
 	err = stopCaptureProcesses(evtestCmd, awkCmd)
 	if err != nil {
 		return nil, err
+	}
+
+	// The battery level is not updated until the stylus physically touches the DUT.
+	// Therefore the battery level check has to occur after the motion has been completed.
+	stylusHasBattery, batteryLevel, err := input.FindPhysicalStylusBatteryLevel(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if stylusHasBattery {
+		testing.ContextLogf(ctx, "Current stylus battery: %v%%", batteryLevel)
+		// Fail all tests with a battery level below the low battery threshold.
+		// 10% was chosen as the low battery threshold, however this was mostly arbitrary.
+		if batteryLevel < lowBatteryLevel {
+			return nil, errors.Errorf("stylus battery is %v%%, this is below the low battery threshold(%v%%)", batteryLevel, lowBatteryLevel)
+		}
 	}
 
 	fileInfo, err := os.Stat(touchLogFilePath)

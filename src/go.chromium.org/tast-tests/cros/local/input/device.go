@@ -39,9 +39,10 @@ var bitsRegexp = regexp.MustCompile(`^B: ([A-Z]+)=([0-9a-f ]+)$`)
 
 // devInfo contains information about a device.
 type devInfo struct {
-	name string // descriptive name, e.g. "AT Translated Set 2 keyboard"
-	phys string // physical path, e.g. "isa0060/serio0/input0"
-	path string // path to event device, e.g. "/dev/input/event3"
+	name  string // descriptive name, e.g. "AT Translated Set 2 keyboard"
+	phys  string // physical path, e.g. "isa0060/serio0/input0"
+	path  string // path to event device, e.g. "/dev/input/event3"
+	sysfs string // full /sys/devices path, e.g. "/devices/platform/AMDI0010:00/i2c-0/i2c-GDIX0000:00/0018:27C6:0ED1.0001/input/input11"
 
 	bits map[string]*big.Int // bitfields keyed by group name, e.g. "EV" or "KEY"
 
@@ -149,6 +150,7 @@ func (di *devInfo) parseLine(line, root string) error {
 		if di.path, err = getDevicePath(dir, root); err != nil {
 			return errors.Wrapf(err, "didn't find device in %v", dir)
 		}
+		di.sysfs = ms[1]
 	} else if ms = bitsRegexp.FindStringSubmatch(line); ms != nil {
 		var str string
 		// Bitfields are specified as space-separated 32- or 64-bit hex values

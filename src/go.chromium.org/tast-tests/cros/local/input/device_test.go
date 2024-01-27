@@ -84,6 +84,7 @@ func TestReadDevices(t *testing.T) {
 				name:  "Lid Switch",
 				path:  filepath.Join(deviceDir, "event0"),
 				phys:  "PNP0C0D/button/input0",
+				sysfs: "/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0C0D:00/input/input0",
 				devID: devID{0x19, 0x0, 0x5, 0x0},
 			},
 			bits: map[string]string{
@@ -98,6 +99,7 @@ func TestReadDevices(t *testing.T) {
 				name:  "AT Translated Set 2 keyboard",
 				path:  filepath.Join(deviceDir, "event2"),
 				phys:  "isa0060/serio0/input0",
+				sysfs: "/devices/platform/i8042/serio0/input/input3",
 				devID: devID{0x11, 0x1, 0x1, 0xab83},
 			},
 			bits: map[string]string{
@@ -114,6 +116,7 @@ func TestReadDevices(t *testing.T) {
 				name:  "Atmel maXTouch Touchscreen",
 				path:  filepath.Join(deviceDir, "event7"),
 				phys:  "i2c-6-004b/input0",
+				sysfs: "/devices/pci0000:00/0000:00:15.0/i2c_designware.0/i2c-6/i2c-ATML0001:00/input/input7",
 				devID: devID{0x18, 0x0, 0x0, 0x0},
 			},
 			bits: map[string]string{
