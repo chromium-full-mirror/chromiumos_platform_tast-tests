@@ -140,6 +140,7 @@ type RoInfo struct {
 type RwInfo struct {
 	Empty   bool
 	Active  bool
+	Debug   bool
 	Version string
 	Branch  GscBranch
 }
@@ -155,6 +156,7 @@ type BidInfo struct {
 // BuildInfo contains information about the firmware currently running.
 type BuildInfo struct {
 	Branch GscBranch
+	Debug  bool
 }
 
 // CrOSImage interacts with a board running ti50.
@@ -472,7 +474,7 @@ func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
 		slotStr = "B"
 	}
 
-	verRE := regexp.MustCompile(`RW_` + slotStr + `:\s+([\s|*])\s(([0-9.]+)/(` + verRWGSCStrRE + `)|Empty)`)
+	verRE := regexp.MustCompile(`RW_` + slotStr + `:\s+([\s|*])\s(([0-9.]+)(/DBG)?/(` + verRWGSCStrRE + `)|Empty)`)
 	matches := verRE.FindStringSubmatch(s)
 
 	// Manually figure out how many matches we got since `regexp` only returns
@@ -486,22 +488,22 @@ func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
 
 	ret := RwInfo{}
 	if numMatches == 3 {
-		ret.Active = false
 		ret.Empty = true
 		return ret, nil
-	} else if numMatches == 7 {
-		ret.Empty = false
+	} else if numMatches >= 7 {
 		if matches[1] == "*" {
 			ret.Active = true
-		} else {
-			ret.Active = false
 		}
 		ret.Version = matches[3]
 
-		if matches[5] != "" {
-			ret.Branch = getBranch(matches[5])
+		if matches[6] != "" {
+			ret.Branch = getBranch(matches[6])
 		} else {
-			ret.Branch = getBranch(matches[7])
+			ret.Branch = getBranch(matches[8])
+		}
+
+		if numMatches == 8 {
+			ret.Debug = true
 		}
 
 		return ret, nil
@@ -559,15 +561,18 @@ func matchBidInfo(s string, slot GscSlot) (BidInfo, error) {
 func matchBuildInfo(s string) (BuildInfo, error) {
 	ret := BuildInfo{}
 
-	buildRE := regexp.MustCompile(`Build:\s+([0-9.]+/` + verRWCr50StrRE + `|` + verRWTi50StrRE + `)`)
+	buildRE := regexp.MustCompile(`Build:\s+([0-9.]+(/DBG)?/` + verRWCr50StrRE + `|` + verRWTi50StrRE + `)`)
 	matches := buildRE.FindStringSubmatch(s)
-	if len(matches) != 6 {
+	if len(matches) != 7 {
 		return ret, errors.New("regex failed to extract build info from: " + s)
 	}
-	if matches[2] != "" {
-		ret.Branch = getBranch(matches[2])
+	if matches[3] != "" {
+		ret.Branch = getBranch(matches[3])
 	} else {
-		ret.Branch = getBranch(matches[4])
+		ret.Branch = getBranch(matches[5])
+	}
+	if matches[2] != "" {
+		ret.Debug = true
 	}
 
 	return ret, nil
