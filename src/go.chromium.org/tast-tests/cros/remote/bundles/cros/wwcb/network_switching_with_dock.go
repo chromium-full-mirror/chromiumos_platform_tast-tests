@@ -22,9 +22,14 @@ func init() {
 		Desc:         "Test wired network when connecting/disconnecting over a Dock",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"DockingID", "ExtDispID1", "EthernetID", "wwcbIPPowerIp"},
+		Params: []testing.Param{
+			{
+				Name:      "smoke",
+				ExtraAttr: []string{"pasit_fast"},
+			}},
 	})
 }
 
