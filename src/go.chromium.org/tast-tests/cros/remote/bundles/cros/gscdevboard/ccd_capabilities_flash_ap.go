@@ -6,6 +6,7 @@ package gscdevboard
 
 import (
 	"context"
+	"reflect"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
@@ -83,7 +84,9 @@ func CCDCapabilitiesFlashAP(ctx context.Context, s *testing.State) {
 	// Enable the AP SPI bridge
 	defer b.GscUsbSpiBridge(ctx, ti50.DisableSpiBridge)
 	err := b.GscUsbSpiBridge(ctx, ti50.EnableApSpiBridge)
-	if userParams.expectSpiAvailableWhenCCDLocked {
+	// We always expect our SPI bridge enable call to succeed if on Cr50. On
+	// Ti50, this call fails if the SPI bridge is unavailable.
+	if userParams.expectSpiAvailableWhenCCDLocked || b.TestbedType == ti50.GscH1Shield {
 		if err != nil {
 			s.Error("Failed to enable the AP SPI bridge when we expected success: ", err)
 		}
@@ -104,9 +107,19 @@ func CCDCapabilitiesFlashAP(ctx context.Context, s *testing.State) {
 			s.Error("Expected SPI bridge response of 8B, but got ", response)
 		}
 	} else {
-		// We get a USB error if the bridge is disabled
-		if err == nil {
-			s.Error("Expected SPI interface to be disabled, but was able to successfully transact")
+		// Handle Cr50 and Ti50 differently
+		if b.TestbedType == ti50.GscH1Shield {
+			// On Cr50, we get a Response Start Packet containing a SPI bridge disabled error
+			expected := []byte{0x05, 0x00, 0x05, 0x00}
+			if !reflect.DeepEqual(response, expected) {
+				s.Error("Expected a Response Start Packet containing a SPI bridge disabled error, but got ", response)
+			}
+		} else {
+			// On Ti50, we get a USB error if the bridge is disabled
+			if err == nil {
+				s.Error("Expected SPI interface to be disabled, but was able to successfully transact")
+			}
 		}
+
 	}
 }
