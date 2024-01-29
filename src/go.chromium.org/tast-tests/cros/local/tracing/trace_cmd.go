@@ -5,8 +5,10 @@
 package tracing
 
 import (
+	"bytes"
 	"context"
 	"os"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -33,6 +35,10 @@ import (
 //	  }
 func RunTraceCmd(ctx context.Context, outPath string) (cleanupFunc func(), collectFunc func(context.Context) error, err error) {
 	traceCmd := testexec.CommandContext(ctx, "trace-cmd", "record", "-e", "syscalls", "-b", "15000", "-o", outPath)
+	stdout := bytes.Buffer{}
+	stderr := bytes.Buffer{}
+	traceCmd.Stdout = &stdout
+	traceCmd.Stderr = &stderr
 	if err = traceCmd.Start(); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to start trace-cmd on the host")
 	}
@@ -45,7 +51,10 @@ func RunTraceCmd(ctx context.Context, outPath string) (cleanupFunc func(), colle
 			return errors.Wrap(err, "failed to kill trace-cmd")
 		}
 		if err := traceCmd.Wait(); err != nil {
-			return errors.Wrap(err, "failed to wait trace-cmd")
+			return errors.Wrapf(err, "failed to wait or trace-cmd exited with error. stdout: %q, stderr: %q", stdout.String(), stderr.String())
+		}
+		if strings.Contains(stdout.String(), "events lost") {
+			return errors.Errorf("trace-cmd lost events. Try increasing the buffer size of trace-cmd with -b option. stdout: %q, stderr: %q", stdout.String(), stderr.String())
 		}
 		if _, err := os.Stat(outPath); err != nil {
 			return errors.Wrapf(err, "trace-cmd didn't produce data at %s", outPath)
