@@ -69,6 +69,7 @@ func init() {
 				consent:    crash_service.SetUpCrashTestRequest_MOCK_CONSENT,
 				panicCmd:   kernelSoftLockupCmd,
 				goodSig:    kernelSoftLockupSig,
+				goodKcrash: kernelSoftLockupKcrash,
 				execName:   "kernel",
 				earlyCrash: false,
 			},
@@ -161,8 +162,16 @@ echo HUNG_TASK > /sys/kernel/debug/provoke-crash/DIRECT
 `
 const kernelHungTaskSig = "kernel-\\(HANG\\)-lkdtm_HUNG_TASK-[[:xdigit:]]{8}"
 
+// Although we expect lkdtm_SOFTLOCKUP to be in the signature, we don't require
+// it. We just require it to be in the kcrash file somewhere. The problem is
+// that sometimes softirq functions can be on the stack atop lkdtm_SOFTLOCKUP
+// and thus the "top" function is not lkdtm_SOFTLOCKUP. It would be nice if
+// we could fix the kernel not to do that because it makes our crash signatures
+// not as good (the softirq actually didn't have anything to do with the
+// softlockup in this case), but for now we'll accept it.
 const kernelSoftLockupCmd = "echo SOFTLOCKUP > /sys/kernel/debug/provoke-crash/DIRECT"
-const kernelSoftLockupSig = "kernel-\\(SOFTLOCKUP\\)-lkdtm_SOFTLOCKUP-[[:xdigit:]]{8}"
+const kernelSoftLockupSig = "kernel-\\(SOFTLOCKUP\\)-.*-[[:xdigit:]]{8}"
+const kernelSoftLockupKcrash = "lkdtm_SOFTLOCKUP"
 
 // Although we expect lkdtm_HARDLOCKUP to be in the signature, we don't require
 // it. We just require it to be in the kcrash file somewhere. The problem is
