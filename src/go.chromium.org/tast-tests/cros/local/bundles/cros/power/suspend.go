@@ -11,6 +11,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
+)
+
+var (
+	// These models are affected by an issue where reads done via
+	// /dev/drm_dp_aux1 cause fwupd to not be freezeable when the kernel is
+	// suspending the device. b/319036849
+	filteredModels = []string{"tentacool", "tentacruel", "elm", "hana", "homestar", "quackingstick", "wormdingler", "kingoftown", "lazor", "limozeen", "pazquel", "pompom"}
 )
 
 func init() {
@@ -24,6 +32,16 @@ func init() {
 		BugComponent: "b:1361410",
 		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      4 * time.Minute,
+		// TODO(b/319036849): when the issues with these devices are resolved, remove parameterised
+		// versions of this test and also remove the hwdeps - this should be run on all devices
+		Params: []testing.Param{
+			{
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(filteredModels...)),
+			}, {
+				Name:              "unstable",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(filteredModels...)),
+			},
+		},
 	})
 }
 
