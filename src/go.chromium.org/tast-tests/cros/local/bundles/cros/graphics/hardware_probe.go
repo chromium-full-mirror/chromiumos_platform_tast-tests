@@ -28,7 +28,7 @@ func init() {
 		}, {
 			Name:      "verify",
 			Val:       true,
-			ExtraAttr: []string{"group:criticalstaging", "informational"},
+			ExtraAttr: []string{"group:cq-medium", "group:crosbolt", "crosbolt_fsi_check"},
 		}},
 	})
 }
