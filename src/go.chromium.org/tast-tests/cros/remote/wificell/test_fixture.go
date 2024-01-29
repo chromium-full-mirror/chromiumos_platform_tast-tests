@@ -220,7 +220,7 @@ type TestFixture struct {
 	p2pClientNetID     int
 
 	apID              int
-	seederIface       *APIface
+	seederIfaces      []*APIface
 	capturers         map[*APIface]*pcap.Capturer
 	tetheringCapturer *pcap.Capturer
 	useWpaCliAPI      bool
@@ -2049,31 +2049,53 @@ func (tf *TestFixture) UseWpaCliAPI(enable bool) {
 	tf.useWpaCliAPI = enable
 }
 
-// SeedRegdomain sets up AP which broadcasts country information, so that all self-managed devices in the wificell get their regdomain seeded.
+// SeedRegdomain sets up AP which broadcasts country information, so that all
+// self-managed devices in the wificell get their regdomain seeded.
+// It sets up 2 APs on routers[0] and 1 AP on pcap, routers[0] cannot be reused as
+// the pcap, otherwise the AP on pcap reuses the one of the other 2 interfaces and fail.
 func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
-	// One AP is enough for all testcases.
-	ssid := hostapd.RandomSSID("SUPPORT_SSID")
-	apIface, err := tf.ConfigureAPOnRouterID(ctx, 0, []hostapd.Option{
-		hostapd.Mode(hostapd.Mode80211a),
-		hostapd.Channel(48),
-		hostapd.SSID(ssid),
-		hostapd.SpectrumManagement()}, nil, false, false)
-	if err != nil {
-		return errors.Wrap(err, "failed to configure AP")
+	startSeedingAP := func(ctx context.Context, r *routerData, channel int) error {
+		name := tf.UniqueAPName()
+		ops := []hostapd.Option{
+			hostapd.Mode(hostapd.Mode80211nPure), ap.HTCaps(ap.HTCapHT20),
+			hostapd.Channel(channel), hostapd.SSID(hostapd.RandomSSID("SUPPORT_SSID_")),
+			hostapd.SpectrumManagement()}
+		config, err := hostapd.NewConfig(ops...)
+		if err != nil {
+			return err
+		}
+		ap, err := StartAPIface(ctx, r.object, name, config, false, false)
+		if err != nil {
+			return errors.Wrap(err, "failed to start APIface")
+		}
+		tf.aps[ap] = struct{}{}
+		tf.seederIfaces = append(tf.seederIfaces, ap)
+		return nil
 	}
-	tf.seederIface = apIface
+	// Intel WiFi such as AC7265 requires at least 3 APs to seed the regulatory domain, see b/313936485 for context.
+	if err := startSeedingAP(ctx, tf.routers[0], 1); err != nil {
+		return err
+	}
+	if err := startSeedingAP(ctx, tf.routers[0], 40); err != nil {
+		return err
+	}
+	if err := startSeedingAP(ctx, tf.pcap, 48); err != nil {
+		return err
+	}
 	return nil
 }
 
 // DeconfigSeedingAP deconfigures AP broadcasting the regulatory domain.
 func (tf *TestFixture) DeconfigSeedingAP(ctx context.Context) error {
-	if tf.seederIface == nil {
+	if tf.seederIfaces == nil {
 		return nil
 	}
-	if err := tf.DeconfigAP(ctx, tf.seederIface); err != nil {
-		return errors.Wrap(err, "failed to deconfig AP")
+	for _, seederIface := range tf.seederIfaces {
+		if err := tf.DeconfigAP(ctx, seederIface); err != nil {
+			return errors.Wrap(err, "failed to deconfig AP")
+		}
 	}
-	tf.seederIface = nil
+	tf.seederIfaces = nil
 	return nil
 }
 
