@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"strconv"
 	"time"
 
@@ -470,6 +471,10 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 
 	// Trigger the optional services one by one.
 	for _, service := range services {
+		// Only run domain_reliability on amd64 due to mitmproxy limitation.
+		if runtime.GOARCH != "amd64" && service.name == "domain_reliability" {
+			continue
+		}
 		s.Run(ctx, service.name, func(ctx context.Context, s *testing.State) {
 			params := networkrequestmonitor.OptionalServiceParams{
 				Chrome:        cr,

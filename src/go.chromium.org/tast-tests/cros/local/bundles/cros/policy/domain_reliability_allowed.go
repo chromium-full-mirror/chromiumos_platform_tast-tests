@@ -38,7 +38,7 @@ func init() {
 			"alexwchen@google.com",
 		},
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "amd64"},
 		Attr:         []string{"group:golden_tier"},
 		Data:         []string{"domain_reliability_500_requests.py"},
 		Timeout:      10 * time.Minute,
