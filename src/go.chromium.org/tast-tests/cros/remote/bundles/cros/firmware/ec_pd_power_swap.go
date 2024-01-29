@@ -91,6 +91,7 @@ const (
 func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	var curPowerRole string
 	var nowPowerRole string
+	var powerSwapSupported bool
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -130,6 +131,9 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 			s.Fatal("Get DualRole failed: ", err)
 		}
 		testing.ContextLog(ctx, "Power Swap support not advertised by DUT")
+		powerSwapSupported = false
+	} else {
+		powerSwapSupported = true
 	}
 
 	if pdState, err := h.Servo.GetDUTPDState(ctx); err != nil {
@@ -141,24 +145,43 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 	}
 
 	if err := h.Servo.SendPowerSwapRequest(ctx); err != nil {
-		s.Fatal("Send Power Swap failed: ", err)
+		if powerSwapSupported {
+			s.Fatal("Send Power Swap failed: ", err)
+		}
 	}
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
+	if powerSwapSupported {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
+				testing.ContextLogf(ctx, "PD state after: %#v", pdState)
+				testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
+				nowPowerRole = string(pdState.PowerRole)
+				if curPowerRole == nowPowerRole {
+					return errors.Wrap(err, "failed to switch power role")
+				}
+			} else {
+				return errors.Wrap(err, "failed to get PD state")
+			}
+
+			return nil
+		}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
+			s.Fatal("Expected PD power swap: ", err)
+		}
+	} else {
+		// GoBigSleepLint: Check power role after timeout and confirm no power swap occurs
+		if err := testing.Sleep(ctx, pdStatePollTimeout); err != nil {
+			s.Fatal("Failed to sleep: ", err)
+		}
 		if pdState, err := h.Servo.GetDUTPDState(ctx); err == nil {
 			testing.ContextLogf(ctx, "PD state after: %#v", pdState)
 			testing.ContextLog(ctx, "PD Role after: ", pdState.PowerRole)
 			nowPowerRole = string(pdState.PowerRole)
-			if curPowerRole == nowPowerRole {
-				return errors.Wrap(err, "failed to switch power role")
+			if curPowerRole != nowPowerRole {
+				s.Fatal("Unexpected power role swap: ", err)
 			}
 		} else {
-			return errors.Wrap(err, "failed to get PD state")
+			s.Fatal("Failed to get PD state: ", err)
 		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: pdStatePollTimeout, Interval: pdStatePollInterval}); err != nil {
-		s.Fatal("Expected PD power swap: ", err)
 	}
 
 	if err := h.Servo.RestorePDPort(ctx); err != nil {
