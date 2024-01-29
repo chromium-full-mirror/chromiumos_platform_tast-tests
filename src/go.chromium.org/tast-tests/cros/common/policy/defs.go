@@ -980,37 +980,6 @@ func (p *DefaultSearchProviderSuggestURL) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 46. DefaultSearchProviderIconURL
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type DefaultSearchProviderIconURL struct {
-	Stat Status
-	Val  string
-}
-
-func (p *DefaultSearchProviderIconURL) Name() string          { return "DefaultSearchProviderIconURL" }
-func (p *DefaultSearchProviderIconURL) Scope() Scope          { return ScopeUser }
-func (p *DefaultSearchProviderIconURL) Status() Status        { return p.Stat }
-func (p *DefaultSearchProviderIconURL) UntypedV() interface{} { return p.Val }
-func (p *DefaultSearchProviderIconURL) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *DefaultSearchProviderIconURL) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *DefaultSearchProviderIconURL) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 47. DefaultSearchProviderEncodings
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -21333,36 +21302,6 @@ func (p *WebHidAllowDevicesWithHidUsagesForUrls) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 956. SecondaryGoogleAccountUsage
-// ****************************************************************************
-type SecondaryGoogleAccountUsage struct {
-	Stat Status
-	Val  string
-}
-
-func (p *SecondaryGoogleAccountUsage) Name() string          { return "SecondaryGoogleAccountUsage" }
-func (p *SecondaryGoogleAccountUsage) Scope() Scope          { return ScopeUser }
-func (p *SecondaryGoogleAccountUsage) Status() Status        { return p.Stat }
-func (p *SecondaryGoogleAccountUsage) UntypedV() interface{} { return p.Val }
-func (p *SecondaryGoogleAccountUsage) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as string", m)
-	}
-	return v, nil
-}
-func (p *SecondaryGoogleAccountUsage) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *SecondaryGoogleAccountUsage) Equal(iface interface{}) bool {
-	v, ok := iface.(string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 957. DeviceEncryptedReportingPipelineEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -24022,38 +23961,6 @@ func (p *ExtensionUnpublishedAvailability) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1073. ChromeAppsWebViewPermissiveBehaviorAllowed
-// ****************************************************************************
-type ChromeAppsWebViewPermissiveBehaviorAllowed struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *ChromeAppsWebViewPermissiveBehaviorAllowed) Name() string {
-	return "ChromeAppsWebViewPermissiveBehaviorAllowed"
-}
-func (p *ChromeAppsWebViewPermissiveBehaviorAllowed) Scope() Scope          { return ScopeUser }
-func (p *ChromeAppsWebViewPermissiveBehaviorAllowed) Status() Status        { return p.Stat }
-func (p *ChromeAppsWebViewPermissiveBehaviorAllowed) UntypedV() interface{} { return p.Val }
-func (p *ChromeAppsWebViewPermissiveBehaviorAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *ChromeAppsWebViewPermissiveBehaviorAllowed) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *ChromeAppsWebViewPermissiveBehaviorAllowed) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1074. ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrls
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -24791,7 +24698,6 @@ func (p *ShowDisplaySizeScreenEnabled) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1100. EssentialSearchEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type EssentialSearchEnabled struct {
 	Stat Status
@@ -25095,6 +25001,39 @@ func (p *RSAKeyUsageForLocalAnchorsEnabled) SetProto(m *protoreflect.Message) {
 	SetUserProto(m, p.Name(), p.Val)
 }
 func (p *RSAKeyUsageForLocalAnchorsEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1111. BeforeunloadEventCancelByPreventDefaultEnabled
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type BeforeunloadEventCancelByPreventDefaultEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Name() string {
+	return "BeforeunloadEventCancelByPreventDefaultEnabled"
+}
+func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Scope() Scope          { return ScopeUser }
+func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Status() Status        { return p.Stat }
+func (p *BeforeunloadEventCancelByPreventDefaultEnabled) UntypedV() interface{} { return p.Val }
+func (p *BeforeunloadEventCancelByPreventDefaultEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *BeforeunloadEventCancelByPreventDefaultEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *BeforeunloadEventCancelByPreventDefaultEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
 	if !ok {
 		return ok
@@ -25914,7 +25853,6 @@ func (p *ForcePermissionPolicyUnloadDefaultEnabled) Equal(iface interface{}) boo
 // ****************************************************************************
 // 1138. ReportWebsiteActivityAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ReportWebsiteActivityAllowlist struct {
 	Stat Status
@@ -25946,7 +25884,6 @@ func (p *ReportWebsiteActivityAllowlist) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1139. ReportWebsiteTelemetryAllowlist
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ReportWebsiteTelemetryAllowlist struct {
 	Stat Status
@@ -25978,7 +25915,6 @@ func (p *ReportWebsiteTelemetryAllowlist) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1140. ReportWebsiteTelemetryCollectionRateMs
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ReportWebsiteTelemetryCollectionRateMs struct {
 	Stat Status
@@ -26074,7 +26010,6 @@ func (p *BlockTruncatedCookies) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1143. ReportWebsiteTelemetry
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ReportWebsiteTelemetry struct {
 	Stat Status
@@ -26139,7 +26074,6 @@ func (p *CompressionDictionaryTransportEnabled) Equal(iface interface{}) bool {
 // 1145. MicrosoftOfficeCloudUpload
 // This policy has a default value of disallowed.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type MicrosoftOfficeCloudUpload struct {
 	Stat Status
@@ -26172,7 +26106,6 @@ func (p *MicrosoftOfficeCloudUpload) Equal(iface interface{}) bool {
 // 1146. GoogleWorkspaceCloudUpload
 // This policy has a default value of disallowed.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type GoogleWorkspaceCloudUpload struct {
 	Stat Status
@@ -26237,7 +26170,6 @@ func (p *ShortcutCustomizationAllowed) Equal(iface interface{}) bool {
 // 1148. MicrosoftOneDriveMount
 // This policy has a default value of disallowed.
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type MicrosoftOneDriveMount struct {
 	Stat Status
@@ -26500,15 +26432,62 @@ type DataControlsRules struct {
 }
 
 type DataControlsRulesValue struct {
+	And          []*RefDataControlsCondition           `json:"and,omitempty"`
 	Description  string                                `json:"description"`
 	Destinations *DataControlsRulesValueDestinations   `json:"destinations"`
 	Name         string                                `json:"name"`
+	Not          *DataControlsRulesValueNot            `json:"not"`
+	Or           []*DataControlsRulesValueOr           `json:"or,omitempty"`
 	Restrictions []*DataControlsRulesValueRestrictions `json:"restrictions,omitempty"`
 	RuleId       string                                `json:"rule_id"`
 	Sources      *DataControlsRulesValueSources        `json:"sources"`
 }
 
 type DataControlsRulesValueDestinations struct {
+	Incognito    bool     `json:"incognito"`
+	OsClipboard  bool     `json:"os_clipboard"`
+	OtherProfile bool     `json:"other_profile"`
+	Urls         []string `json:"urls,omitempty"`
+}
+
+type DataControlsRulesValueNot struct {
+	And          []*RefDataControlsCondition            `json:"and,omitempty"`
+	Destinations *DataControlsRulesValueNotDestinations `json:"destinations"`
+	Not          *RefDataControlsCondition              `json:"not"`
+	Or           []*RefDataControlsCondition            `json:"or,omitempty"`
+	Sources      *DataControlsRulesValueNotSources      `json:"sources"`
+}
+
+type DataControlsRulesValueNotDestinations struct {
+	Incognito    bool     `json:"incognito"`
+	OsClipboard  bool     `json:"os_clipboard"`
+	OtherProfile bool     `json:"other_profile"`
+	Urls         []string `json:"urls,omitempty"`
+}
+
+type DataControlsRulesValueNotSources struct {
+	Incognito    bool     `json:"incognito"`
+	OsClipboard  bool     `json:"os_clipboard"`
+	OtherProfile bool     `json:"other_profile"`
+	Urls         []string `json:"urls,omitempty"`
+}
+
+type DataControlsRulesValueOr struct {
+	And          []*RefDataControlsCondition           `json:"and,omitempty"`
+	Destinations *DataControlsRulesValueOrDestinations `json:"destinations"`
+	Not          *RefDataControlsCondition             `json:"not"`
+	Or           []*RefDataControlsCondition           `json:"or,omitempty"`
+	Sources      *DataControlsRulesValueOrSources      `json:"sources"`
+}
+
+type DataControlsRulesValueOrDestinations struct {
+	Incognito    bool     `json:"incognito"`
+	OsClipboard  bool     `json:"os_clipboard"`
+	OtherProfile bool     `json:"other_profile"`
+	Urls         []string `json:"urls,omitempty"`
+}
+
+type DataControlsRulesValueOrSources struct {
 	Incognito    bool     `json:"incognito"`
 	OsClipboard  bool     `json:"os_clipboard"`
 	OtherProfile bool     `json:"other_profile"`
@@ -26589,39 +26568,6 @@ func (p *DeviceEphemeralNetworkPoliciesEnabled) Equal(iface interface{}) bool {
 }
 
 // ****************************************************************************
-// 1163. PPAPISharedImagesForVideoDecoderAllowed
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type PPAPISharedImagesForVideoDecoderAllowed struct {
-	Stat Status
-	Val  bool
-}
-
-func (p *PPAPISharedImagesForVideoDecoderAllowed) Name() string {
-	return "PPAPISharedImagesForVideoDecoderAllowed"
-}
-func (p *PPAPISharedImagesForVideoDecoderAllowed) Scope() Scope          { return ScopeUser }
-func (p *PPAPISharedImagesForVideoDecoderAllowed) Status() Status        { return p.Stat }
-func (p *PPAPISharedImagesForVideoDecoderAllowed) UntypedV() interface{} { return p.Val }
-func (p *PPAPISharedImagesForVideoDecoderAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v bool
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as bool", m)
-	}
-	return v, nil
-}
-func (p *PPAPISharedImagesForVideoDecoderAllowed) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *PPAPISharedImagesForVideoDecoderAllowed) Equal(iface interface{}) bool {
-	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1165. RelatedWebsiteSetsEnabled
 // This policy can be modified without rebooting.
 // ****************************************************************************
@@ -26646,37 +26592,6 @@ func (p *RelatedWebsiteSetsEnabled) SetProto(m *protoreflect.Message) {
 }
 func (p *RelatedWebsiteSetsEnabled) Equal(iface interface{}) bool {
 	v, ok := iface.(bool)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1166. DeviceExtendedFkeysModifier
-// This policy can be modified without rebooting.
-// ****************************************************************************
-type DeviceExtendedFkeysModifier struct {
-	Stat Status
-	Val  int
-}
-
-func (p *DeviceExtendedFkeysModifier) Name() string          { return "DeviceExtendedFkeysModifier" }
-func (p *DeviceExtendedFkeysModifier) Scope() Scope          { return ScopeDevice }
-func (p *DeviceExtendedFkeysModifier) Status() Status        { return p.Stat }
-func (p *DeviceExtendedFkeysModifier) UntypedV() interface{} { return p.Val }
-func (p *DeviceExtendedFkeysModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v int
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as int", m)
-	}
-	return v, nil
-}
-func (p *DeviceExtendedFkeysModifier) SetProto(m *protoreflect.Message) {
-	SetDeviceProto(m, "extended_fkeys_modifier", "modifier", p.Val)
-}
-func (p *DeviceExtendedFkeysModifier) Equal(iface interface{}) bool {
-	v, ok := iface.(int)
 	if !ok {
 		return ok
 	}
@@ -26926,7 +26841,6 @@ func (p *UserFeedbackWithLowLevelDebugDataAllowed) Equal(iface interface{}) bool
 // 1174. MicrosoftOneDriveAccountRestrictions
 // This policy has a default value of ['organizations'].
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type MicrosoftOneDriveAccountRestrictions struct {
 	Stat Status
@@ -27190,6 +27104,7 @@ func (p *DeviceHardwareVideoDecodingEnabled) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1186. TabOrganizerSettings
+// This policy has a default value of 2.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type TabOrganizerSettings struct {
@@ -27221,6 +27136,7 @@ func (p *TabOrganizerSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1187. HelpMeWriteSettings
+// This policy has a default value of 2.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type HelpMeWriteSettings struct {
@@ -27252,6 +27168,7 @@ func (p *HelpMeWriteSettings) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 1188. CreateThemesSettings
+// This policy has a default value of 2.
 // This policy can be modified without rebooting.
 // ****************************************************************************
 type CreateThemesSettings struct {
@@ -27306,6 +27223,390 @@ func (p *AlwaysOnVpnPreConnectUrlAllowlist) SetProto(m *protoreflect.Message) {
 }
 func (p *AlwaysOnVpnPreConnectUrlAllowlist) Equal(iface interface{}) bool {
 	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1194. DeviceLoginScreenTouchVirtualKeyboardEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceLoginScreenTouchVirtualKeyboardEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceLoginScreenTouchVirtualKeyboardEnabled) Name() string {
+	return "DeviceLoginScreenTouchVirtualKeyboardEnabled"
+}
+func (p *DeviceLoginScreenTouchVirtualKeyboardEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceLoginScreenTouchVirtualKeyboardEnabled) Status() Status        { return p.Stat }
+func (p *DeviceLoginScreenTouchVirtualKeyboardEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceLoginScreenTouchVirtualKeyboardEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceLoginScreenTouchVirtualKeyboardEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceLoginScreenTouchVirtualKeyboardEnabled", "value", p.Val)
+}
+func (p *DeviceLoginScreenTouchVirtualKeyboardEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1195. DeviceExtendedAutoUpdateEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceExtendedAutoUpdateEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *DeviceExtendedAutoUpdateEnabled) Name() string          { return "DeviceExtendedAutoUpdateEnabled" }
+func (p *DeviceExtendedAutoUpdateEnabled) Scope() Scope          { return ScopeDevice }
+func (p *DeviceExtendedAutoUpdateEnabled) Status() Status        { return p.Stat }
+func (p *DeviceExtendedAutoUpdateEnabled) UntypedV() interface{} { return p.Val }
+func (p *DeviceExtendedAutoUpdateEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *DeviceExtendedAutoUpdateEnabled) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceExtendedAutoUpdateEnabled", "value", p.Val)
+}
+func (p *DeviceExtendedAutoUpdateEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1197. FloatingSsoEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type FloatingSsoEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *FloatingSsoEnabled) Name() string          { return "FloatingSsoEnabled" }
+func (p *FloatingSsoEnabled) Scope() Scope          { return ScopeUser }
+func (p *FloatingSsoEnabled) Status() Status        { return p.Stat }
+func (p *FloatingSsoEnabled) UntypedV() interface{} { return p.Val }
+func (p *FloatingSsoEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *FloatingSsoEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *FloatingSsoEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1198. FloatingSsoDomainBlocklist
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type FloatingSsoDomainBlocklist struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *FloatingSsoDomainBlocklist) Name() string          { return "FloatingSsoDomainBlocklist" }
+func (p *FloatingSsoDomainBlocklist) Scope() Scope          { return ScopeUser }
+func (p *FloatingSsoDomainBlocklist) Status() Status        { return p.Stat }
+func (p *FloatingSsoDomainBlocklist) UntypedV() interface{} { return p.Val }
+func (p *FloatingSsoDomainBlocklist) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *FloatingSsoDomainBlocklist) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *FloatingSsoDomainBlocklist) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1199. FloatingSsoDomainBlocklistExceptions
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type FloatingSsoDomainBlocklistExceptions struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *FloatingSsoDomainBlocklistExceptions) Name() string {
+	return "FloatingSsoDomainBlocklistExceptions"
+}
+func (p *FloatingSsoDomainBlocklistExceptions) Scope() Scope          { return ScopeUser }
+func (p *FloatingSsoDomainBlocklistExceptions) Status() Status        { return p.Stat }
+func (p *FloatingSsoDomainBlocklistExceptions) UntypedV() interface{} { return p.Val }
+func (p *FloatingSsoDomainBlocklistExceptions) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *FloatingSsoDomainBlocklistExceptions) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *FloatingSsoDomainBlocklistExceptions) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1200. F11KeyModifier
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type F11KeyModifier struct {
+	Stat Status
+	Val  int
+}
+
+func (p *F11KeyModifier) Name() string          { return "F11KeyModifier" }
+func (p *F11KeyModifier) Scope() Scope          { return ScopeUser }
+func (p *F11KeyModifier) Status() Status        { return p.Stat }
+func (p *F11KeyModifier) UntypedV() interface{} { return p.Val }
+func (p *F11KeyModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *F11KeyModifier) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *F11KeyModifier) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1201. F12KeyModifier
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type F12KeyModifier struct {
+	Stat Status
+	Val  int
+}
+
+func (p *F12KeyModifier) Name() string          { return "F12KeyModifier" }
+func (p *F12KeyModifier) Scope() Scope          { return ScopeUser }
+func (p *F12KeyModifier) Status() Status        { return p.Stat }
+func (p *F12KeyModifier) UntypedV() interface{} { return p.Val }
+func (p *F12KeyModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *F12KeyModifier) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *F12KeyModifier) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1202. VirtualKeyboardSmartVisibilityEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type VirtualKeyboardSmartVisibilityEnabled struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *VirtualKeyboardSmartVisibilityEnabled) Name() string {
+	return "VirtualKeyboardSmartVisibilityEnabled"
+}
+func (p *VirtualKeyboardSmartVisibilityEnabled) Scope() Scope          { return ScopeUser }
+func (p *VirtualKeyboardSmartVisibilityEnabled) Status() Status        { return p.Stat }
+func (p *VirtualKeyboardSmartVisibilityEnabled) UntypedV() interface{} { return p.Val }
+func (p *VirtualKeyboardSmartVisibilityEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *VirtualKeyboardSmartVisibilityEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *VirtualKeyboardSmartVisibilityEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1204. DeleteKeyModifier
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DeleteKeyModifier struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DeleteKeyModifier) Name() string          { return "DeleteKeyModifier" }
+func (p *DeleteKeyModifier) Scope() Scope          { return ScopeUser }
+func (p *DeleteKeyModifier) Status() Status        { return p.Stat }
+func (p *DeleteKeyModifier) UntypedV() interface{} { return p.Val }
+func (p *DeleteKeyModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DeleteKeyModifier) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DeleteKeyModifier) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1205. HomeAndEndKeysModifier
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type HomeAndEndKeysModifier struct {
+	Stat Status
+	Val  int
+}
+
+func (p *HomeAndEndKeysModifier) Name() string          { return "HomeAndEndKeysModifier" }
+func (p *HomeAndEndKeysModifier) Scope() Scope          { return ScopeUser }
+func (p *HomeAndEndKeysModifier) Status() Status        { return p.Stat }
+func (p *HomeAndEndKeysModifier) UntypedV() interface{} { return p.Val }
+func (p *HomeAndEndKeysModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *HomeAndEndKeysModifier) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *HomeAndEndKeysModifier) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1206. PageUpAndPageDownKeysModifier
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type PageUpAndPageDownKeysModifier struct {
+	Stat Status
+	Val  int
+}
+
+func (p *PageUpAndPageDownKeysModifier) Name() string          { return "PageUpAndPageDownKeysModifier" }
+func (p *PageUpAndPageDownKeysModifier) Scope() Scope          { return ScopeUser }
+func (p *PageUpAndPageDownKeysModifier) Status() Status        { return p.Stat }
+func (p *PageUpAndPageDownKeysModifier) UntypedV() interface{} { return p.Val }
+func (p *PageUpAndPageDownKeysModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *PageUpAndPageDownKeysModifier) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *PageUpAndPageDownKeysModifier) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1207. InsertKeyModifier
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type InsertKeyModifier struct {
+	Stat Status
+	Val  int
+}
+
+func (p *InsertKeyModifier) Name() string          { return "InsertKeyModifier" }
+func (p *InsertKeyModifier) Scope() Scope          { return ScopeUser }
+func (p *InsertKeyModifier) Status() Status        { return p.Stat }
+func (p *InsertKeyModifier) UntypedV() interface{} { return p.Val }
+func (p *InsertKeyModifier) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *InsertKeyModifier) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *InsertKeyModifier) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
 	if !ok {
 		return ok
 	}
@@ -27381,8 +27682,6 @@ func newByName(name string) (Policy, error) {
 		return &DefaultSearchProviderSearchURL{}, nil
 	case "DefaultSearchProviderSuggestURL":
 		return &DefaultSearchProviderSuggestURL{}, nil
-	case "DefaultSearchProviderIconURL":
-		return &DefaultSearchProviderIconURL{}, nil
 	case "DefaultSearchProviderEncodings":
 		return &DefaultSearchProviderEncodings{}, nil
 	case "DefaultCookiesSetting":
@@ -28629,8 +28928,6 @@ func newByName(name string) (Policy, error) {
 		return &WebHidAllowDevicesForUrls{}, nil
 	case "WebHidAllowDevicesWithHidUsagesForUrls":
 		return &WebHidAllowDevicesWithHidUsagesForUrls{}, nil
-	case "SecondaryGoogleAccountUsage":
-		return &SecondaryGoogleAccountUsage{}, nil
 	case "DeviceEncryptedReportingPipelineEnabled":
 		return &DeviceEncryptedReportingPipelineEnabled{}, nil
 	case "IsolatedAppsDeveloperModeAllowed":
@@ -28795,8 +29092,6 @@ func newByName(name string) (Policy, error) {
 		return &WindowManagementBlockedForUrls{}, nil
 	case "ExtensionUnpublishedAvailability":
 		return &ExtensionUnpublishedAvailability{}, nil
-	case "ChromeAppsWebViewPermissiveBehaviorAllowed":
-		return &ChromeAppsWebViewPermissiveBehaviorAllowed{}, nil
 	case "ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrls":
 		return &ExtensionExtendedBackgroundLifetimeForPortConnectionsToUrls{}, nil
 	case "DeviceActivityHeartbeatEnabled":
@@ -28861,6 +29156,8 @@ func newByName(name string) (Policy, error) {
 		return &DataUrlInSvgUseEnabled{}, nil
 	case "RSAKeyUsageForLocalAnchorsEnabled":
 		return &RSAKeyUsageForLocalAnchorsEnabled{}, nil
+	case "BeforeunloadEventCancelByPreventDefaultEnabled":
+		return &BeforeunloadEventCancelByPreventDefaultEnabled{}, nil
 	case "PolicyTestPageEnabled":
 		return &PolicyTestPageEnabled{}, nil
 	case "UrlKeyedMetricsAllowed":
@@ -28951,12 +29248,8 @@ func newByName(name string) (Policy, error) {
 		return &DataControlsRules{}, nil
 	case "DeviceEphemeralNetworkPoliciesEnabled":
 		return &DeviceEphemeralNetworkPoliciesEnabled{}, nil
-	case "PPAPISharedImagesForVideoDecoderAllowed":
-		return &PPAPISharedImagesForVideoDecoderAllowed{}, nil
 	case "RelatedWebsiteSetsEnabled":
 		return &RelatedWebsiteSetsEnabled{}, nil
-	case "DeviceExtendedFkeysModifier":
-		return &DeviceExtendedFkeysModifier{}, nil
 	case "UnaffiliatedDeviceArcAllowed":
 		return &UnaffiliatedDeviceArcAllowed{}, nil
 	case "RelatedWebsiteSetsOverrides":
@@ -28995,6 +29288,30 @@ func newByName(name string) (Policy, error) {
 		return &CreateThemesSettings{}, nil
 	case "AlwaysOnVpnPreConnectUrlAllowlist":
 		return &AlwaysOnVpnPreConnectUrlAllowlist{}, nil
+	case "DeviceLoginScreenTouchVirtualKeyboardEnabled":
+		return &DeviceLoginScreenTouchVirtualKeyboardEnabled{}, nil
+	case "DeviceExtendedAutoUpdateEnabled":
+		return &DeviceExtendedAutoUpdateEnabled{}, nil
+	case "FloatingSsoEnabled":
+		return &FloatingSsoEnabled{}, nil
+	case "FloatingSsoDomainBlocklist":
+		return &FloatingSsoDomainBlocklist{}, nil
+	case "FloatingSsoDomainBlocklistExceptions":
+		return &FloatingSsoDomainBlocklistExceptions{}, nil
+	case "F11KeyModifier":
+		return &F11KeyModifier{}, nil
+	case "F12KeyModifier":
+		return &F12KeyModifier{}, nil
+	case "VirtualKeyboardSmartVisibilityEnabled":
+		return &VirtualKeyboardSmartVisibilityEnabled{}, nil
+	case "DeleteKeyModifier":
+		return &DeleteKeyModifier{}, nil
+	case "HomeAndEndKeysModifier":
+		return &HomeAndEndKeysModifier{}, nil
+	case "PageUpAndPageDownKeysModifier":
+		return &PageUpAndPageDownKeysModifier{}, nil
+	case "InsertKeyModifier":
+		return &InsertKeyModifier{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
@@ -29013,6 +29330,28 @@ type RefDisallowedTimeInterval struct {
 type RefDayPercentagePair struct {
 	Days       int `json:"days"`
 	Percentage int `json:"percentage"`
+}
+
+type RefDataControlsCondition struct {
+	And          []*RefDataControlsCondition           `json:"and,omitempty"`
+	Destinations *RefDataControlsConditionDestinations `json:"destinations"`
+	Not          *RefDataControlsCondition             `json:"not"`
+	Or           []*RefDataControlsCondition           `json:"or,omitempty"`
+	Sources      *RefDataControlsConditionSources      `json:"sources"`
+}
+
+type RefDataControlsConditionDestinations struct {
+	Incognito    bool     `json:"incognito"`
+	OsClipboard  bool     `json:"os_clipboard"`
+	OtherProfile bool     `json:"other_profile"`
+	Urls         []string `json:"urls,omitempty"`
+}
+
+type RefDataControlsConditionSources struct {
+	Incognito    bool     `json:"incognito"`
+	OsClipboard  bool     `json:"os_clipboard"`
+	OtherProfile bool     `json:"other_profile"`
+	Urls         []string `json:"urls,omitempty"`
 }
 
 type RefWeeklyTimeIntervals struct {
