@@ -138,6 +138,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	},
 	wlan.QualcommWCN6855: {
 		"5.10": "wireless/ath/ath11k/ath11k_pci.ko",
+		"6.6":  "wireless/ath/ath11k/ath11k_pci.ko",
 	},
 	wlan.Marvell88w8897SDIO: {
 		"3.8":  "wireless/mwifiex/mwifiex_sdio.ko",
@@ -177,6 +178,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	},
 	wlan.Realtek8852APCIE: {
 		"5.10": "wireless/realtek/rtw89/rtw89_8852ae.ko",
+		"6.6":  "wireless/realtek/rtw89/rtw89_8852ae.ko",
 	},
 	wlan.Realtek8852CPCIE: {
 		"5.10": "wireless/realtek/rtw89/rtw89_8852ce.ko",
