@@ -65,7 +65,7 @@ func (s *ProxySettingsService) ResetConnectionType(ctx context.Context, req *net
 	if err := manager.LaunchAndPrepare(ctx, cr, tconn, target); err != nil {
 		return &emptypb.Empty{}, err
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_reset_connection_type")
 
 	return &emptypb.Empty{}, manager.SetDirectConnection(ctx, uiauto.New(tconn))
@@ -94,7 +94,7 @@ func (s *ProxySettingsService) SetProxySettings(ctx context.Context, req *networ
 	if err := manager.LaunchAndPrepare(ctx, cr, tconn, target); err != nil {
 		return &emptypb.Empty{}, err
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_setup_proxy")
 
 	switch configs.ProxyConnectionType {
@@ -147,7 +147,7 @@ func (s *ProxySettingsService) fetchFromOSSettings(ctx context.Context, cr *chro
 	if err := manager.Launch(ctx, cr, tconn, target); err != nil {
 		return nil, err
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_fetch")
 
 	ui := uiauto.New(tconn)
@@ -278,7 +278,7 @@ func (s *ProxySettingsService) SetException(ctx context.Context, req *network.Se
 	if err := manager.LaunchAndPrepare(ctx, cr, tconn, target); err != nil {
 		return &emptypb.Empty{}, err
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_set_exception")
 
 	ui := uiauto.New(tconn)
@@ -316,7 +316,7 @@ func (s *ProxySettingsService) FetchException(ctx context.Context, req *network.
 	if err := manager.Launch(ctx, cr, tconn, target); err != nil {
 		return nil, err
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_fetch_exception")
 
 	ui := uiauto.New(tconn)
@@ -355,7 +355,7 @@ func (s *ProxySettingsService) AllowProxiesForSharedNetwork(ctx context.Context,
 	if err := manager.Launch(ctx, cr, tconn, target); err != nil {
 		return nil, err
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_allow_proxies_for_shared_network")
 
 	if err := proxysettings.AllowProxiesForSharedNetwork(ctx, tconn, req.Allow); err != nil {
@@ -381,7 +381,7 @@ func (s *ProxySettingsService) IsProxySettingsRestricted(ctx context.Context, re
 	if err := manager.Launch(ctx, cr, tconn, target); err != nil {
 		return nil, err
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "ui_dump_is_proxy_restricted")
 
 	settings := ossettings.New(tconn)

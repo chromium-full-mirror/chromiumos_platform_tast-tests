@@ -164,14 +164,18 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 		return &emptypb.Empty{}, err
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	const pageShortURL = "knownNetworks"
 	condition := res.ui.Exists(nodewith.NameContaining("Known Networks").Role(role.Heading).Ancestor(ossettings.WindowFinder))
 	settings, err := ossettings.LaunchAtPageURL(ctx, res.tconn, res.cr, pageShortURL, condition)
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS Settings and navigate to the specific page")
 	}
-	defer settings.Close(ctx)
-	defer s.dumpUITreeWithScreenshotOnError(ctx, func() bool { return retErr != nil }, "known_networks_controls")
+	defer settings.Close(cleanupCtx)
+	defer s.dumpUITreeWithScreenshotOnError(cleanupCtx, func() bool { return retErr != nil }, "known_networks_controls")
 
 	for _, ssid := range req.Ssids {
 		networkItem := nodewith.Name(ssid).Role(role.Link)

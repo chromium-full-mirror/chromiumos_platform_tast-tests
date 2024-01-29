@@ -15,7 +15,9 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -30,6 +32,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Protocol represents the type of proxy protocols.
@@ -231,7 +234,7 @@ func (m *Manager) LaunchAndPrepare(ctx context.Context, cr *chrome.Chrome, tconn
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
-			m.Close(ctx)
+			m.Close(ctx, cr, tconn)
 		}
 	}(cleanupCtx)
 
@@ -294,7 +297,7 @@ func (m *Manager) Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.T
 }
 
 // Close closes the proxy-settings page.
-func (m *Manager) Close(ctx context.Context) error {
+func (m *Manager) Close(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	if m.dialogConn != nil {
 		if err := m.dialogConn.CloseTarget(ctx); err != nil {
 			return errors.Wrap(err, "failed to close proxy settings dialog")
@@ -304,7 +307,7 @@ func (m *Manager) Close(ctx context.Context) error {
 		}
 		m.dialogConn = nil
 	}
-	return nil
+	return m.waitForProxySettingsClosed(ctx, cr, tconn)
 }
 
 // launchProxySettingsFromQuickSettings launches the proxy settings dialog for a specified network from the QuickSettings.
@@ -376,6 +379,26 @@ func (m *Manager) waitForProxySettingsOpened(cr *chrome.Chrome, tconn *chrome.Te
 		m.dialogConn = conn
 
 		return nil
+	}
+}
+
+func (m *Manager) waitForProxySettingsClosed(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
+	switch m.loginState {
+	case LoggedIn:
+		return ash.WaitForAppClosed(ctx, tconn, apps.Settings.ID)
+	case OOBE, SignInScreen:
+		return testing.Poll(ctx, func(ctx context.Context) error {
+			targets, err := cr.FindTargets(ctx, chrome.MatchTargetURL("chrome://internet-detail-dialog/"))
+			if err != nil {
+				return errors.Wrap(err, "failed to find targets")
+			}
+			if len(targets) != 0 {
+				return errors.New("proxy settings dialog still exists")
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second})
+	default:
+		return errors.New("unexpected login state")
 	}
 }
 

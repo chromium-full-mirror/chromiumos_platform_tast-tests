@@ -159,7 +159,7 @@ func ProxyRetain(ctx context.Context, s *testing.State) {
 			if err := proxyManager.LaunchAndPrepare(ctx, cr, resources.tconn, proxysettings.Ethernet()); err != nil {
 				s.Fatal("Failed to launch proxy settings instance: ", err)
 			}
-			defer proxyManager.Close(cleanupCtx)
+			defer proxyManager.Close(cleanupCtx, cr, resources.tconn)
 
 			// Verify proxy values.
 			for _, pv := range proxyValues {
@@ -244,7 +244,7 @@ func (t *retainAfterLoginTest) preparationAtLoginScreen(ctx context.Context, res
 	if err := proxyManager.LaunchAndPrepare(ctx, cr, res.tconn, proxysettings.Ethernet()); err != nil {
 		return errors.Wrap(err, "failed to launch proxy settings instance")
 	}
-	defer proxyManager.Close(cleanupCtx)
+	defer proxyManager.Close(cleanupCtx, cr, res.tconn)
 
 	if err := proxyManager.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
 		return errors.Wrap(err, "failed to set proxy fields")
@@ -282,7 +282,7 @@ func (t *retainAcrossUsersTest) preparationAfterLoggedIn(ctx context.Context, re
 	if err := proxyManager.LaunchAndPrepare(ctx, cr, res.tconn, proxysettings.Ethernet()); err != nil {
 		return errors.Wrap(err, "failed to launch proxy settings instance")
 	}
-	defer proxyManager.Close(cleanupCtx)
+	defer proxyManager.Close(cleanupCtx, cr, res.tconn)
 
 	if err := proxyManager.SetManualConfig(ctx, res.tconn, res.kb, pvs); err != nil {
 		return errors.Wrap(err, "failed to set proxy fields")

@@ -253,7 +253,7 @@ func verifyProxySettingsAvailability(ctx context.Context, cr *chrome.Chrome, tco
 		if err := manager.Launch(ctx, cr, tconn, proxysettings.VPN(vpnName)); err != nil {
 			return errors.Wrap(err, "failed to launch proxy settings instance")
 		}
-		defer manager.Close(cleanupCtx)
+		defer manager.Close(cleanupCtx, cr, tconn)
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, cr, "proxy_settings_for_vpn")
 
 		return manager.SetManualConfig(ctx, tconn, kb, proxyValues)
@@ -265,7 +265,7 @@ func verifyProxySettingsAvailability(ctx context.Context, cr *chrome.Chrome, tco
 	if err := manager.Launch(ctx, cr, tconn, proxysettings.VPN(vpnName)); err != nil {
 		return errors.Wrap(err, "failed to launch proxy settings instance")
 	}
-	defer manager.Close(cleanupCtx)
+	defer manager.Close(cleanupCtx, cr, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, cr, "proxy_settings_for_vpn_after_reopen")
 
 	for _, pv := range proxyValues {

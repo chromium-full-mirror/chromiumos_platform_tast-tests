@@ -9,20 +9,20 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/rpc"
-	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/emptypb"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -36,19 +36,19 @@ func init() {
 		// This test requires fetch proxy configs from a web page (CrosNetworkConfig),
 		// however, that page isn't available in lacros, only ash-Chrome is able to browse the page,
 		// therefore the lacros variant is not needed.
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify that proxy settings can be set for shared or non-shared network",
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that proxy settings can be set for shared or non-shared network",
 		Contacts: []string{
 			// "cros-connectivity@google.com",
 			// "chromeos-connectivity-engprod@google.com",
 			"edgar.chang@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
-		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
+		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		LifeCycleStage: testing.LifeCycleInDevelopment,
+		Attr:           []string{"group:wificell", "wificell_e2e_unstable"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.wifi.WifiService",
