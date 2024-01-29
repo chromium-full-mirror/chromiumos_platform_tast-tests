@@ -26,7 +26,7 @@ func init() {
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 		// TODO(b/243048705): skip the test on faulty flash
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnCameraUSBModule("0408:3028", "0408:4021", "05c8:03f4")),
-		Fixture:      "chromeLoggedIn",
+		Fixture:      "chromeNotLoggedIn",
 	})
 }
 
