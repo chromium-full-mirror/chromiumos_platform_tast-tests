@@ -356,6 +356,27 @@ func UnmountRemovableMedia(ctx context.Context, d *dut.DUT) error {
 	return nil
 }
 
+// ListBlockDevices creates a list of block devices on the DUT matching "/dev/sdX".
+func ListBlockDevices(ctx context.Context, d *dut.DUT) ([]string, error) {
+	var ret []string
+
+	paths, err := d.Conn().CommandContext(ctx, "ls", "/dev").Output()
+	if err != nil {
+		return ret, errors.Wrap(err, "failed to list devices")
+	}
+
+	blockdevRe := regexp.MustCompile(`sd[a-z]$`)
+	for _, path := range strings.Split(string(paths), "\n") {
+		if !blockdevRe.Match([]byte(path)) {
+			continue
+		}
+
+		ret = append(ret, path)
+	}
+
+	return ret, nil
+}
+
 // Usb3GetExternalStorageList returns a list of currently connected external USB storage devices
 // based on the removable property and interface classes. The returned value is an array of
 // strings containing each devices address (example: "3-2.1.3").
