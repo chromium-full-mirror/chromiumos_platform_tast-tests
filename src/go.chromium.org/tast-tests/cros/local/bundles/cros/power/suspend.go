@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/testing"
@@ -37,9 +38,15 @@ func init() {
 		Params: []testing.Param{
 			{
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(filteredModels...)),
+				Val:               "fwupd_nochange",
 			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(filteredModels...)),
+				Val:               "fwupd_nochange",
+			}, {
+				Name:              "nofwupd",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(filteredModels...)),
+				Val:               "fwupd_off",
 			},
 		},
 	})
@@ -50,6 +57,17 @@ func init() {
 // indefinitely, causing the test infrastucture to mark the test as failed.
 // TODO: add different kinds of suspend test, including stress test
 func Suspend(ctx context.Context, s *testing.State) {
+	if s.Param().(string) == "fwupd_off" {
+		// Sometimes fwupd may end up being stuck in a lengthy transfer from a device making it non-
+		// suspendable. Stop fwupd before trying the suspend so this doesn't happen.
+		startFwupdFn, err := setup.DisableServiceIfExists(ctx, "fwupd")
+		if err != nil {
+			s.Fatal("Failed to stop fwupd: ", err)
+		}
+		if startFwupdFn != nil {
+			defer startFwupdFn(ctx)
+		}
+	}
 	_, err := suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second)
 	if err != nil {
 		s.Fatal("Failed to suspend: ", err)
