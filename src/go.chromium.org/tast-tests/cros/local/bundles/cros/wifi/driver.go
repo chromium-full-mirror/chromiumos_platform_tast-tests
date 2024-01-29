@@ -44,17 +44,19 @@ var expectedFlexWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.Intel8265: {
 		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
 		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
-		"6.1":  "wireless/intel/iwlwifi/iwlwifi.ko",
+		"6.6":  "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel9000: {
 		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
 		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
 		"6.1":  "wireless/intel/iwlwifi/iwlwifi.ko",
+		"6.6":  "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelAX201: {
 		"5.10": "wireless/intel/iwlwifi/iwlwifi.ko",
 		"5.15": "wireless/intel/iwlwifi/iwlwifi.ko",
 		"6.1":  "wireless/intel/iwlwifi/iwlwifi.ko",
+		"6.6":  "wireless/intel/iwlwifi/iwlwifi.ko",
 	},
 }
 
