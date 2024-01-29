@@ -104,14 +104,17 @@ func (h *CmdHelper) SaveLoginData(ctx context.Context, archivePath string, inclu
 }
 
 // LoadLoginData loads the login data from compressed file.
-func (h *CmdHelper) LoadLoginData(ctx context.Context, archivePath string, includeTpm bool) error {
+func (h *CmdHelper) LoadLoginData(ctx context.Context, archivePath string, includeTpm, resumeDaemons bool) error {
 	if err := h.stopDaemons(ctx, includeTpm); err != nil {
 		return err
 	}
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
-	defer cancel()
-	defer h.ensureDaemons(cleanupCtx, includeTpm)
+	var cancel context.CancelFunc
+	if resumeDaemons {
+		cleanupCtx := ctx
+		ctx, cancel = ctxutil.Shorten(ctx, 20*time.Second)
+		defer cancel()
+		defer h.ensureDaemons(cleanupCtx, includeTpm)
+	}
 
 	// Remove the `/home/.shadow` first to prevent any unexpected file remaining.
 	if err := h.RemoveAll(ctx, "/home/.shadow"); err != nil {

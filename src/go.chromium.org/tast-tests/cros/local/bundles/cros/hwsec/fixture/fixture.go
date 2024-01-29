@@ -1369,7 +1369,7 @@ func (f *backupFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interf
 	f.webauthnServer = u2fd.NewWebAuthnHTTPServer(ctx, s.DataFileSystem())
 	f.cleanup = func(ctx context.Context) error {
 		// Load back the origin login data after the test.
-		if err := helper.LoadLoginData(ctx, backupPath, true /*includeTpm*/); err != nil {
+		if err := helper.LoadLoginData(ctx, backupPath, true /*includeTpm*/, true /*resumeDaemos*/); err != nil {
 			return errors.Wrap(err, "failed to load login data")
 		}
 		if err := os.RemoveAll(tmpDir); err != nil {
@@ -1454,7 +1454,7 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 		s.Fatal("Failed to read json: ", err)
 	}
 
-	if err := helper.LoadLoginData(ctx, dataPath, true /*includeTpm*/); err != nil {
+	if err := helper.LoadLoginData(ctx, dataPath, true /*includeTpm*/, true /*resumeDaemos*/); err != nil {
 		s.Fatal("Failed to load login data: ", err)
 	}
 
@@ -1480,7 +1480,7 @@ func (f *crossVersionFixtImpl) Reset(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create hwsec local helper")
 	}
-	if err := helper.LoadLoginData(ctx, f.dataPath, true /*includeTpm*/); err != nil {
+	if err := helper.LoadLoginData(ctx, f.dataPath, true /*includeTpm*/, true /*resumeDaemos*/); err != nil {
 		return errors.Wrap(err, "failed to load login data")
 	}
 	return nil

@@ -176,7 +176,7 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 	}
 
 	// Restore the login data.
-	if err := helper.LoadLoginData(ctx, dataPath, false /*includeTpm*/); err != nil {
+	if err := helper.LoadLoginData(ctx, dataPath, false /*includeTpm*/, true /*resumeDaemos*/); err != nil {
 		s.Fatal("Failed to restore login data: ", err)
 	}
 
