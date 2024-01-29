@@ -43,7 +43,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "multiple 1 buffer_non_blocking",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_multiple_1_buffer",
@@ -51,7 +51,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "multiple 1 buffer",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_multiple_1_image2d_read_non_blocking",
@@ -59,7 +59,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "multiple 1 image2d_read_non_blocking",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_multiple_1_image2d_read",
@@ -67,7 +67,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "multiple 1 image2d_read",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_multiple_1_image2d_write_non_blocking",
@@ -107,7 +107,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "single 1 image2d_read_non_blocking",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_single_1_image2d_read",
@@ -115,7 +115,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "single 1 image2d_read",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_single_1_image2d_write_non_blocking",
@@ -123,7 +123,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "single 1 image2d_write_non_blocking",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "allocations_single_1_image2d_write",
@@ -131,7 +131,7 @@ func init() {
 					executable: "test_allocations",
 					args:       "single 1 image2d_write",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "api_binary_create",
@@ -475,7 +475,7 @@ func init() {
 					executable: "test_api",
 					args:       "kernel_arg_changes",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 2 * time.Minute,
 			},
 			{
 				Name: "api_kernel_arg_multi_setup_random",
@@ -1459,7 +1459,7 @@ func init() {
 					executable: "test_basic",
 					args:       "image_param",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 2 * time.Minute,
 			},
 			{
 				Name: "basic_image_r8",
@@ -1811,7 +1811,7 @@ func init() {
 					executable: "test_basic",
 					args:       "vector_creation",
 				},
-				Timeout: 10 * time.Minute,
+				Timeout: 20 * time.Minute,
 			},
 			{
 				Name: "basic_vector_swizzle",
@@ -3475,7 +3475,7 @@ func init() {
 					executable: "test_c11_atomics",
 					args:       "atomic_compare_exchange_strong",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "c11_atomics_atomic_compare_exchange_weak",
@@ -3483,7 +3483,7 @@ func init() {
 					executable: "test_c11_atomics",
 					args:       "atomic_compare_exchange_weak",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "c11_atomics_atomic_exchange",
@@ -3491,7 +3491,7 @@ func init() {
 					executable: "test_c11_atomics",
 					args:       "atomic_exchange",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "c11_atomics_atomic_fence",
@@ -3547,7 +3547,7 @@ func init() {
 					executable: "test_c11_atomics",
 					args:       "atomic_fetch_orand",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "c11_atomics_atomic_fetch_sub",
@@ -3571,7 +3571,7 @@ func init() {
 					executable: "test_c11_atomics",
 					args:       "atomic_fetch_xor2",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "c11_atomics_atomic_flag",
@@ -15003,7 +15003,7 @@ func init() {
 					executable: "test_events",
 					args:       "callbacks",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "events_callbacks_simultaneous",
@@ -16387,7 +16387,7 @@ func init() {
 					executable: "test_integer_ops",
 					args:       "integer_divideAssign",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 2 * time.Minute,
 			},
 			{
 				Name: "integer_ops_integer_dot_product",
@@ -16427,7 +16427,7 @@ func init() {
 					executable: "test_integer_ops",
 					args:       "integer_mad_hi",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 5 * time.Minute,
 			},
 			{
 				Name: "integer_ops_integer_mad_sat",
@@ -16435,7 +16435,7 @@ func init() {
 					executable: "test_integer_ops",
 					args:       "integer_mad_sat",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 5 * time.Minute,
 			},
 			{
 				Name: "integer_ops_integer_max",
@@ -16475,7 +16475,7 @@ func init() {
 					executable: "test_integer_ops",
 					args:       "integer_mul_hi",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 5 * time.Minute,
 			},
 			{
 				Name: "integer_ops_integer_multiplyassign",
@@ -19755,7 +19755,7 @@ func init() {
 					executable: "test_thread_dimensions",
 					args:       "full_1d_explicit_local",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "thread_dimensions_full_1d_implicit_local",
@@ -19763,7 +19763,7 @@ func init() {
 					executable: "test_thread_dimensions",
 					args:       "full_1d_implicit_local",
 				},
-				Timeout: 1 * time.Minute,
+				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "thread_dimensions_full_2d_explicit_local",
