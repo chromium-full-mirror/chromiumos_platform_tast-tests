@@ -47,6 +47,11 @@ func init() {
 			{
 				Name:              "full",
 				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/full.json",
+				ExtraRequirements: []string{"pwr-batLife-0009-v03", "pwr-batLife-0010-v03", "pwr-batLife-0011-v03", "pwr-batLife-0012-v01"},
+			},
+			{
+				Name:              "browsingheavy",
+				Val:               "https://storage.googleapis.com/chromiumos-test-assets-public/tast/cros/power/powerqual-config/browsing_heavy.json",
 				ExtraRequirements: []string{"pwr-batLife-0009-v03"},
 			},
 			{
