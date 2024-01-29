@@ -350,7 +350,7 @@ func waitUntilWindowStable(ctx context.Context, tconn *chrome.TestConn, resizeAp
 		// Play Store app will pop up a delegate window for a few seconds, so we need to wait until it disappears automatically.
 		// Otherwise, it will reduce or impact UI performance(such as freezing window elements) on low-end DUTs.
 		if windows, err := ash.FindAllWindows(ctx, tconn, func(w *ash.Window) bool {
-			return w.IsVisible || w.IsFrameVisible
+			return w.IsVisible
 		}); err != nil {
 			return errors.Wrap(err, "failed to get active window")
 		} else if len(windows) != 1 {
