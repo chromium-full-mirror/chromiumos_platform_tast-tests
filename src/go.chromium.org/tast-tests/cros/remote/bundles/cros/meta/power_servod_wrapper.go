@@ -190,6 +190,12 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to charge battery: ", err)
 	}
 
+	// Get info from gRPC client immediately, to avoid expiring.
+	devInfo, oneTimeMetrics, err := localDUTInfo(ctx, client)
+	if err != nil {
+		s.Error("Failed to get local DUT info: ", err)
+	}
+
 	// Disable charging.
 	if _, err := s.DUT().Conn().CommandContext(ctx, "ectool", "chargeoverride", "dontcharge").Output(); err != nil {
 		s.Fatal("Unable to disable charging: ", err)
@@ -239,11 +245,6 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 
 	if err = servoResult.Save(s.OutDir()); err != nil {
 		s.Fatal("Failed to save perf data for crosbolt: ", err)
-	}
-
-	devInfo, oneTimeMetrics, err := localDUTInfo(ctx, client)
-	if err != nil {
-		s.Fatal("Failed to get local DUT info: ", err)
 	}
 
 	// TODO(b/317462603): servod data from the remote side can interact with

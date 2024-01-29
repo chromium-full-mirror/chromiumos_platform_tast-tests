@@ -28,9 +28,9 @@ Each hardware can measure:
     > Note: INA chips (without built-in accumulators) are not supported in
     `PowerServodWrapper` right now.
 
-1. A running instance of `servod`, with its host and port provided.
+2. A running instance of `servod`, with its host and port provided.
 
-2. The workstation (or where the Tast test is run from) should be in same
+3. The workstation (or where the Tast test is run from) should be in same
 timezone with the DUT.
 
 If you are looking to get a CPD/Sweetberry reworked onto a device, or more info about
