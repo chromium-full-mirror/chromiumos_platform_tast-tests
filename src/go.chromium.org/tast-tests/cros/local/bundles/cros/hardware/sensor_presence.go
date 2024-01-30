@@ -20,8 +20,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-sensors-eng@google.com",
 			"gwendal@chromium.org",
-			"mathewk@chromium.org", // Test author
-			"jettrink@chromium.org",
 		},
 		SoftwareDeps: []string{"unibuild"},
 		Attr:         []string{"group:mainline", "informational"},
