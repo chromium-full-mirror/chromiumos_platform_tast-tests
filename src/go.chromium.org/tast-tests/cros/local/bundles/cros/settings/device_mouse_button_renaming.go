@@ -29,7 +29,6 @@ func init() {
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"dpad@google.com",
-			"bhattacharyaar@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Mouse
 		BugComponent: "b:241965717",

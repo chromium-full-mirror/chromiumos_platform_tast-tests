@@ -31,7 +31,6 @@ func init() {
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"jimmyxgong@google.com",
-			"bhattacharyaar@google.com",
 		},
 		// ChromeOS > Software > System Services > Peripherals > Shortcuts
 		BugComponent: "b:1131848",
