@@ -73,6 +73,8 @@ const (
 	arcenabled = "arcenabled"
 )
 
+var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
+
 type loginPerfTestParam struct {
 	windows            []int            // List of number of session restored windows.
 	arcmodes           []string         // List of ARC modes to test.
@@ -672,7 +674,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	browserType browser.Type,
 	lacrosConfig *lacrosfixt.Config,
 	loginPool string,
-	preloadLacros bool,
+	preloadLacros,
 	forkZygotes bool,
 ) (
 	retCreds chrome.Creds,
@@ -697,7 +699,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	// Only enable arc if it's supported.
 	if arc.Supported() {
 		// We enable ARC initially to fully initialize it.
-		options = append(options, chrome.ARCSupported())
+		options = append(options, chrome.ARCSupported(), disableARCSyncOption)
 	}
 	if browserType == browser.TypeLacros {
 		defaultOpts, err := lacrosConfig.Opts()
@@ -1094,7 +1096,8 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			case noarc:
 			case arcenabled:
 				arcOpt = []chrome.Option{chrome.ARCEnabled(),
-					chrome.DisableFeatures("ArcExternalStorageAccess")}
+					chrome.DisableFeatures("ArcExternalStorageAccess"),
+					disableARCSyncOption}
 			default:
 				s.Fatal("Unknown arcMode value=", arcMode)
 			}
