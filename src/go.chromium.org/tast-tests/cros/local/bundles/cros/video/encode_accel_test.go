@@ -19,8 +19,12 @@ import (
 
 func toProfile(codec string) string {
 	switch codec {
-	case "h264":
+	case "h264baseline":
 		return "videotype.H264BaselineProf"
+	case "h264main":
+		return "videotype.H264MainProf"
+	case "h264high":
+		return "videotype.H264HighProf"
 	case "vp8":
 		return "videotype.VP8Prof"
 	case "vp9":
@@ -35,7 +39,7 @@ func toProfile(codec string) string {
 func encodeSoftwareDeps(codec string, height int, vbr bool) []string {
 	var deps []string
 	switch codec {
-	case "h264":
+	case "h264baseline", "h264main", "h264high":
 		if height > 1080 {
 			deps = append(deps, caps.HWEncodeH264_4K)
 		} else {
@@ -64,7 +68,7 @@ func encodeSoftwareDeps(codec string, height int, vbr bool) []string {
 	}
 
 	if vbr {
-		if codec == "h264" {
+		if strings.HasPrefix(codec, "h264") {
 			deps = append(deps, caps.HWEncodeH264VBR)
 		} else {
 			panic(fmt.Sprintf("No vbr test is intended for %s", codec))
@@ -88,7 +92,25 @@ func encodeSoftwareDeps(codec string, height int, vbr bool) []string {
 
 func psnrThreshold(codec string, height int) float32 {
 	psnrThresholdTable := map[string]map[int]float32{
-		"h264": {
+		"h264baseline": {
+			180:  31.8,
+			270:  30.0,
+			360:  33.3,
+			720:  36.0,
+			1080: 35.0,
+			2160: 34.5,
+		},
+		// The thresholds of h264 main and h264 high are now the same as "h264baseline".
+		// TODO(b/322891349): Update these thresholds based on video.EncodeAccelPerf results.
+		"h264main": {
+			180:  31.8,
+			270:  30.0,
+			360:  33.3,
+			720:  36.0,
+			1080: 35.0,
+			2160: 34.5,
+		},
+		"h264high": {
 			180:  31.8,
 			270:  30.0,
 			360:  33.3,
@@ -136,7 +158,19 @@ func psnrThreshold(codec string, height int) float32 {
 
 func psnrThresholdSVC(codec string, height int, svcMode string) float32 {
 	psnrThresholdSVCTable := map[string]map[int]map[string]float32{
-		"h264": {
+		"h264baseline": {
+			720: {
+				"l1t2": 35.0,
+				"l1t3": 34.0,
+			},
+		},
+		"h264main": {
+			720: {
+				"l1t2": 35.0,
+				"l1t3": 34.0,
+			},
+		},
+		"h264high": {
 			720: {
 				"l1t2": 35.0,
 				"l1t3": 34.0,
@@ -213,9 +247,9 @@ func TestEncodeAccelParams(t *testing.T) {
 
 	var params []encodeAccelParam
 	// Standard cases.
-	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
+	for _, codec := range []string{"h264baseline", "h264main", "h264high", "vp8", "vp9", "av1"} {
 		for _, height := range basicHeights {
-			if codec == "h264" && height == 135 {
+			if strings.HasPrefix(codec, "h264") && height == 135 {
 				continue
 			}
 			webMFile := testVideos[height]
@@ -240,7 +274,9 @@ func TestEncodeAccelParams(t *testing.T) {
 		svcModes []string
 	}
 	for _, p := range []svcParam{
-		{"h264", 720, []string{"l1t2", "l1t3"}},
+		{"h264baseline", 720, []string{"l1t2", "l1t3"}},
+		{"h264main", 720, []string{"l1t2", "l1t3"}},
+		{"h264high", 720, []string{"l1t2", "l1t3"}},
 		{"vp8", 720, []string{"l1t2", "l1t3"}},
 		{"vp8", 1080, []string{"l1t2", "l1t3"}},
 		{"vp9", 540, []string{"l2t3_key", "l3t3_key", "s2t3"}},
@@ -267,27 +303,29 @@ func TestEncodeAccelParams(t *testing.T) {
 
 	// VBR cases
 	for _, svcMode := range []string{"", "l1t2", "l1t3"} {
-		codec := "h264"
-		height := 720
-		webMFile := testVideos[height]
-		webMJSONFile := webMFile + ".json"
-		deps := encodeSoftwareDeps(codec, height, true)
-		var svcModeStr string
-		if svcMode != "" {
-			svcModeStr = "_" + svcMode
-			deps = append(deps, "vaapi")
+		for _, codec := range []string{"h264baseline", "h264main", "h264high"} {
+
+			height := 720
+			webMFile := testVideos[height]
+			webMJSONFile := webMFile + ".json"
+			deps := encodeSoftwareDeps(codec, height, true)
+			var svcModeStr string
+			if svcMode != "" {
+				svcModeStr = "_" + svcMode
+				deps = append(deps, "vaapi")
+			}
+			param := encodeAccelParam{
+				Name:              fmt.Sprintf("%s_720p%s_vbr", codec, svcModeStr),
+				WebMName:          webMFile,
+				Profile:           toProfile(codec),
+				PSNRThreshold:     psnrThreshold(codec, height),
+				SVCMode:           strings.ToUpper(svcMode),
+				BitrateMode:       "vbr",
+				ExtraSoftwareDeps: deps,
+				ExtraData:         []string{webMFile, webMJSONFile},
+			}
+			params = append(params, param)
 		}
-		param := encodeAccelParam{
-			Name:              fmt.Sprintf("%s_720p%s_vbr", codec, svcModeStr),
-			WebMName:          webMFile,
-			Profile:           toProfile(codec),
-			PSNRThreshold:     psnrThreshold(codec, height),
-			SVCMode:           strings.ToUpper(svcMode),
-			BitrateMode:       "vbr",
-			ExtraSoftwareDeps: deps,
-			ExtraData:         []string{webMFile, webMJSONFile},
-		}
-		params = append(params, param)
 	}
 	code := genparams.Template(t, `{{ range . }}{
 			Name: {{ .Name | fmt }},

@@ -30,7 +30,9 @@ const (
 func toCodecStr(profile videotype.CodecProfile) string {
 	switch profile {
 	case videotype.H264BaselineProf:
-		return "h264"
+		return "h264baseline"
+	case videotype.H264MainProf:
+		return "h264main"
 	case videotype.H264HighProf:
 		return "h264high"
 	case videotype.VP8Prof:
@@ -48,6 +50,8 @@ func toProfileStr(profile videotype.CodecProfile) string {
 	switch profile {
 	case videotype.H264BaselineProf:
 		return "videotype.H264BaselineProf"
+	case videotype.H264MainProf:
+		return "videotype.H264MainProf"
 	case videotype.H264HighProf:
 		return "videotype.H264HighProf"
 	case videotype.VP8Prof:
@@ -64,7 +68,7 @@ func toProfileStr(profile videotype.CodecProfile) string {
 func encodePerfSoftwareDeps(profile videotype.CodecProfile, height int, vbr bool) []string {
 	var deps []string
 	switch profile {
-	case videotype.H264BaselineProf, videotype.H264HighProf:
+	case videotype.H264BaselineProf, videotype.H264MainProf, videotype.H264HighProf:
 		if height > 1080 {
 			deps = append(deps, caps.HWEncodeH264_4K)
 		} else {
@@ -213,7 +217,8 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 
 	var params []encodeAccelPerfParam
 	for _, testVideo := range testVideos {
-		for _, profile := range []videotype.CodecProfile{videotype.H264BaselineProf,
+		for _, profile := range []videotype.CodecProfile{
+			videotype.H264BaselineProf, videotype.H264MainProf, videotype.H264HighProf,
 			videotype.VP8Prof, videotype.VP9Prof, videotype.AV1MainProf} {
 			for _, height := range testVideo.heights {
 				if height == 540 && profile != videotype.VP9Prof {
@@ -243,6 +248,8 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		lifeOfProcess,
 		scWebBrowsing,
 	} {
+		// We don't run h264 profiles because our hardware encoders don't behave
+		// differently between screen contents and camera contents.
 		for _, profile := range []videotype.CodecProfile{videotype.VP8Prof, videotype.VP9Prof, videotype.AV1MainProf} {
 			height := 1080
 			webMFile, webMJSONFile := webMAndJSONFile(title, height)
@@ -315,7 +322,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 	// VBR encoding.
 	for _, height := range []int{720, 1080, 2160} {
 		title := fallOut4
-		profile := videotype.H264BaselineProf
+		profile := videotype.H264HighProf
 		webMFile, webMJSONFile := webMAndJSONFile(title, height)
 		param := encodeAccelPerfParam{
 			Name:         fmt.Sprintf("%s_%dp_vbr_%s", toCodecStr(profile), height, title),
@@ -332,7 +339,7 @@ func TestEncodeAccelPerfParams(t *testing.T) {
 		params = append(params, param)
 	}
 	// VBR encoding: H264 high profile and high bitrates.
-	for _, multiplier := range []int{1, 2, 4, 6, 8} {
+	for _, multiplier := range []int{2, 4, 6, 8} {
 		title := fallOut4
 		height := 1080
 		webMFile, webMJSONFile := webMAndJSONFile(title, height)
