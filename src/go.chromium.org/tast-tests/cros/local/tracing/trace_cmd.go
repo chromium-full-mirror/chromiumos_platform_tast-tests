@@ -24,7 +24,7 @@ import (
 // Otherwise, trace-cmd may keep running even after the test exits. So,
 // cleanupFunc is supposed to be called with defer like the following example:
 //
-//	  cleanupFunc, collectFunc, err := tracing.RunTraceCmd(ctx, "/path/to/trace.dat")
+//	  cleanupFunc, collectFunc, err := tracing.RunTraceCmd(ctx, "/path/to/trace.dat", []string{"syscalls"})
 //	  if err != nil {
 //		   s.Fatal("Failed to start trace-cmd", err)
 //	  }
@@ -33,8 +33,12 @@ import (
 //	  if err != collectFunc(ctx) {
 //	    s.Fatal("Failed to collect trace.dat", err)
 //	  }
-func RunTraceCmd(ctx context.Context, outPath string) (cleanupFunc func(), collectFunc func(context.Context) error, err error) {
-	traceCmd := testexec.CommandContext(ctx, "trace-cmd", "record", "-e", "syscalls", "-b", "15000", "-o", outPath)
+func RunTraceCmd(ctx context.Context, outPath string, events []string) (cleanupFunc func(), collectFunc func(context.Context) error, err error) {
+	args := []string{"record", "-b", "15000", "-o", outPath}
+	for _, e := range events {
+		args = append(args, "-e", e)
+	}
+	traceCmd := testexec.CommandContext(ctx, "trace-cmd", args...)
 	stdout := bytes.Buffer{}
 	stderr := bytes.Buffer{}
 	traceCmd.Stdout = &stdout

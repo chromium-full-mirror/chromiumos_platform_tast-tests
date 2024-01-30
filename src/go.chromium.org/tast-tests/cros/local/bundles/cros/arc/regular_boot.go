@@ -6,8 +6,10 @@ package arc
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -22,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -44,6 +47,8 @@ const (
 	bootAttemptCountVarName = "arc.RegularBoot.bootAttemptCount"
 	// maxDailureCountVarName is the name of the variable to specify the number of allowed failed iterations.
 	maxFailureCountVarName = "arc.RegularBoot.maxFailureCount"
+	// traceCmdEventsVarName is the name of the variable to specify events for trace-cmd to collect.
+	traceCmdEventsVarName = "arc.RegularBoot.traceCmdEvents"
 )
 
 var bootAttemptCountVar = testing.RegisterVarString(
@@ -56,6 +61,12 @@ var maxFailureCountVar = testing.RegisterVarString(
 	maxFailureCountVarName,
 	"2",
 	"The number of failed iterations allowed.",
+)
+
+var traceCmdEventsVar = testing.RegisterVarString(
+	traceCmdEventsVarName,
+	"",
+	"Comma-separated events to enable trace-cmd and to ask it to record. (e.g. 'syscalls,sched:*')",
 )
 
 func init() {
@@ -122,6 +133,10 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatalf("Invalid %v value: %v", maxFailureCountVarName, maxFailureCountVar.Value())
 	}
+	var traceCmdEvents []string
+	if traceCmdEventsVar.Value() != "" {
+		traceCmdEvents = strings.Split(traceCmdEventsVar.Value(), ",")
+	}
 
 	successCount := 0
 	failureCount := 0
@@ -129,7 +144,7 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 	for successCount < iterationCount {
 		s.Logf("Running ARC regular boot iteration #%d out of %d",
 			successCount+1, iterationCount)
-		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs, successCount, failureCount)
+		bootMetrics, err := performArcRegularBoot(ctx, s.OutDir(), creds, params.chromeArgs, successCount, failureCount, traceCmdEvents)
 		if err != nil {
 			failureCount++
 			if failureCount > maxFailureCount {
@@ -220,7 +235,7 @@ func performArcInitialBoot(ctx context.Context, credPool string, chromeArgs []st
 // represents here the overhead from tast Chrome login implementation.
 // This also resets system caches before login to simulate scenario when user uses Chromebook after
 // reboot.
-func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds, chromeArgs []string, successCount, failureCount int) (retResult *bootMetrics, retErr error) {
+func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Creds, chromeArgs []string, successCount, failureCount int, traceCmdEvents []string) (retResult *bootMetrics, retErr error) {
 	// Use custom cooling config that is bit relaxed from default implementation
 	// in order to reduce failure rate especially on AMD low-end devices.
 	coolDownConfig := cpu.CoolDownConfig{
@@ -267,6 +282,19 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		return &result, errors.Wrap(err, "failed to create test connection")
 	}
 
+	var collectFunc func(ctx context.Context) error
+	if len(traceCmdEvents) > 0 {
+		outPath := filepath.Join(testDir, fmt.Sprintf("%d-trace.dat", successCount))
+		var cleanupFunc func()
+		var err error
+
+		cleanupFunc, collectFunc, err = tracing.RunTraceCmd(ctx, outPath, traceCmdEvents)
+		if err != nil {
+			return &result, errors.Wrap(err, "failed to start trace-cmd")
+		}
+		defer cleanupFunc()
+	}
+
 	testing.ContextLog(ctx, "Starting Play Store window deferred")
 	if err := apps.Launch(ctx, tconn, apps.PlayStore.ID); err != nil {
 		return &result, errors.Wrap(err, "failed to launch Play Store")
@@ -281,6 +309,13 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 	result.diskStats, err = diskstats.CollectDiskStats(ctx)
 	if err != nil {
 		return &result, errors.Wrap(err, "failed to read disk stats")
+	}
+
+	// Stop trace-cmd.
+	if collectFunc != nil {
+		if err := collectFunc(ctx); err != nil {
+			return &result, errors.Wrap(err, "failed to stop trace-cmd")
+		}
 	}
 
 	a, err := arc.New(ctx, testDir, cr.NormalizedUser())

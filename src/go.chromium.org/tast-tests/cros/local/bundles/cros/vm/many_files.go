@@ -12,7 +12,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -32,10 +31,10 @@ import (
 
 const runManyFiles string = "run-manyfiles.py"
 
-var enableTraceCmdVar = testing.RegisterVarString(
-	"vm.ManyFiles.enableTraceCmd",
-	"false",
-	"Run 'trace-cmd record' for each test case on the host.",
+var traceCmdEventsVar = testing.RegisterVarString(
+	"vm.ManyFiles.traceCmdEvents",
+	"",
+	"Comma-separated events to enable trace-cmd and to ask it to record. (e.g. 'syscalls,sched:*')",
 )
 
 type manyFilesParams struct {
@@ -237,14 +236,14 @@ func init() {
 	})
 }
 
-func runOneTestCase(ctx context.Context, toGuest *os.File, reader *bufio.Reader, testCase, outDir string, enableTraceCmd bool) error {
+func runOneTestCase(ctx context.Context, toGuest *os.File, reader *bufio.Reader, testCase, outDir string, traceCmdEvents []string) error {
 	var collectFunc func(ctx context.Context) error
-	if enableTraceCmd {
+	if len(traceCmdEvents) > 0 {
 		outPath := filepath.Join(outDir, fmt.Sprintf("%s-trace.dat", strings.TrimSuffix(testCase, "()")))
 		cleanupFunc := func() {}
 		var err error
 
-		cleanupFunc, collectFunc, err = tracing.RunTraceCmd(ctx, outPath)
+		cleanupFunc, collectFunc, err = tracing.RunTraceCmd(ctx, outPath, traceCmdEvents)
 		if err != nil {
 			return errors.Wrap(err, "failed to start trace-cmd")
 		}
@@ -387,9 +386,9 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	}
 	reader := bufio.NewReaderSize(fromGuest, 4096)
 
-	enableTraceCmd, err := strconv.ParseBool(enableTraceCmdVar.Value())
-	if err != nil {
-		s.Fatalf("Failed to parse enableTraceCmdVar %v: %v", enableTraceCmdVar.Value(), err)
+	var traceCmdEvents []string
+	if traceCmdEventsVar.Value() != "" {
+		traceCmdEvents = strings.Split(traceCmdEventsVar.Value(), ",")
 	}
 
 	for {
@@ -422,7 +421,7 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		if err := runOneTestCase(ctx, toGuest, reader, testCase, s.OutDir(), enableTraceCmd); err != nil {
+		if err := runOneTestCase(ctx, toGuest, reader, testCase, s.OutDir(), traceCmdEvents); err != nil {
 			s.Errorf("Failed test on %s : %v", testCase, err)
 		}
 	}
