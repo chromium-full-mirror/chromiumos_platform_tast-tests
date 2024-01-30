@@ -222,8 +222,8 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		turnTabletModeOn  bool
 		tabletModeCmd     string
 	}{
-		{args.formFactor, args.canDoTabletSwitch, true, args.tabletModeOn},
 		{args.formFactor, args.canDoTabletSwitch, false, args.tabletModeOff},
+		{args.formFactor, args.canDoTabletSwitch, true, args.tabletModeOn},
 	} {
 		// Switch DUT to tablet mode, then back to clamshell mode, for convertibles and detachables.
 		msg, err := switchDUTMode(ctx, h, tc.canDoTabletSwitch, tc.turnTabletModeOn, tc.tabletModeCmd, ecTool)
