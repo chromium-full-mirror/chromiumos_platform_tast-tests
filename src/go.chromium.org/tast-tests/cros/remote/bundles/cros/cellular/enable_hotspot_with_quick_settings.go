@@ -2,14 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package hotspot
+package cellular
 
 import (
 	"context"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast-tests/cros/remote/bundles/cros/hotspot/hotspotutil"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/cellular/hotspotutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/quicksettings"
