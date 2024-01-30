@@ -282,7 +282,6 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 			matcher := func(t *target.Info) bool {
 				return strings.Contains(t.URL, slidesURL)
 			}
-			br := cr.Browser()
 			slidesConn, err = br.NewConnForTarget(ctx, matcher)
 			if err != nil {
 				return errors.Wrap(err, "failed to reconnect to Google Slides tab")
