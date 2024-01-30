@@ -31,6 +31,7 @@ import (
 )
 
 type roamFTparam struct {
+	apOpts     []hostapd.Option
 	secConfFac security.ConfigFactory
 	mixed      bool
 }
@@ -84,7 +85,37 @@ func init() {
 				),
 				mixed: true,
 			},
-		}},
+		}, {
+			Name:              "sae",
+			ExtraSoftwareDeps: []string{"wpa3_sae"},
+			// TODO: b/323077686 - Stabilize wifi.RoamFT.sae and wpa3_eap tests
+			ExtraAttr: []string{"wificell_unstable"},
+			Val: roamFTparam{
+				apOpts: []hostapd.Option{
+					hostapd.PMF(hostapd.PMFRequired),
+				},
+				secConfFac: wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.ModePureWPA3),
+					wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModePure),
+				),
+			},
+		}, {
+			Name:              "mixed_sae",
+			ExtraSoftwareDeps: []string{"wpa3_sae"},
+			// TODO: b/323077686 - Stabilize wifi.RoamFT.sae and wpa3_eap tests
+			ExtraAttr: []string{"wificell_unstable"},
+			Val: roamFTparam{
+				apOpts: []hostapd.Option{
+					hostapd.PMF(hostapd.PMFRequired),
+				},
+				secConfFac: wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.ModePureWPA3),
+					wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModeMixed),
+				),
+				mixed: true,
+			},
+		},
+		},
 	})
 }
 
@@ -130,7 +161,7 @@ func RoamFT(ctx context.Context, s *testing.State) {
 	}
 
 	// runOnce sets up the network environment as mentioned above, and verifies the DUT is able to roam between the APs iff expectedFailure is not set.
-	runOnce := func(ctx context.Context, secConfFac security.ConfigFactory, expectedFailure bool) {
+	runOnce := func(ctx context.Context, apOpts []hostapd.Option, secConfFac security.ConfigFactory, expectedFailure bool) {
 		var cancel context.CancelFunc
 		var err error
 
@@ -163,6 +194,7 @@ func RoamFT(ctx context.Context, s *testing.State) {
 			hostapd.R1KHs(fmt.Sprintf("%s %s %s", mac1, mac1, key1)),
 			hostapd.Bridge(br[0]), hostapd.SecurityConfig(ap0SecConf),
 		}
+		ap0Ops = append(ap0Ops, apOpts...)
 		ap0Conf, err := hostapd.NewConfig(ap0Ops...)
 		if err != nil {
 			s.Fatal("Failed to generate the hostapd config for AP0: ", err)
@@ -179,6 +211,7 @@ func RoamFT(ctx context.Context, s *testing.State) {
 			hostapd.R1KHs(fmt.Sprintf("%s %s %s", mac0, mac0, key0)),
 			hostapd.Bridge(br[1]), hostapd.SecurityConfig(ap1SecConf),
 		}
+		ap1Ops = append(ap1Ops, apOpts...)
 		ap1Conf, err := hostapd.NewConfig(ap1Ops...)
 		if err != nil {
 			s.Fatal("Failed to generate the hostapd config for AP1: ", err)
@@ -385,10 +418,10 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn on the global FT property: ", err)
 	}
 	// Expect failure if we are running pure FT test and the DUT is not supporting SME.
-	runOnce(ctx, param.secConfFac, !param.mixed && !hasFTSupport(ctx))
+	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed && !hasFTSupport(ctx))
 	// Run the test without global FT. It should pass iff we configured the AP in mixed mode.
 	if _, err := tf.WifiClient().SetGlobalFTProperty(ctx, &wifi.SetGlobalFTPropertyRequest{Enabled: false}); err != nil {
 		s.Fatal("Failed to turn off the global FT property: ", err)
 	}
-	runOnce(ctx, param.secConfFac, !param.mixed)
+	runOnce(ctx, param.apOpts, param.secConfFac, !param.mixed)
 }
