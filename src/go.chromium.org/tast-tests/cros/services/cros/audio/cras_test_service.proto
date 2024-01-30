@@ -1,0 +1,22 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.audio;
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/audio";
+
+// PostDSPOption enumerates the different options for the --post_dsp flag.
+enum PostDSPOption {
+  // Record from post-mix, pre-DSP loopback device
+  POST_DSP_OPTION_POST_MIX_PRE_DSP = 0;
+
+  // Record from post-DSP loopback device.
+  POST_DSP_OPTION_POST_DSP = 1;
+
+  // Record from post-DSP loopback device padded with silence in the beginning
+  // to simulate delay in real HW mic.
+  POST_DSP_OPTION_POST_DSP_PADDED = 2;
+}
