@@ -57,6 +57,10 @@ func PhysicalKeyboardAlphanumeric(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Keyboard device: ", err)
 	}
 	defer kb.Close(ctx)
+	topRow, err := input.KeyboardTopRowLayout(ctx, kb)
+	if err != nil {
+		s.Fatal("Failed to obtain the top-row layout: ", err)
+	}
 
 	devPath, err := deviceCheck(ctx)
 	if err != nil {
@@ -69,16 +73,6 @@ func PhysicalKeyboardAlphanumeric(ctx context.Context, s *testing.State) {
 	defer cmd.Wait()
 	defer cmd.Kill()
 	testKeyMap := map[string]string{
-		"back":           "KEY_BACK",
-		"refresh":        "KEY_REFRESH",
-		"scale":          "KEY_SCALE",
-		"brightnessdown": "KEY_BRIGHTNESSDOWN",
-		"brightnessup":   "KEY_BRIGHTNESSUP",
-		"mute":           "KEY_MUTE",
-		"volumedown":     "KEY_VOLUMEDOWN",
-		"volumeup":       "KEY_VOLUMEUP",
-		"esc":            "KEY_ESC",
-
 		"1":  "KEY_1",
 		"2":  "KEY_2",
 		"3":  "KEY_3",
@@ -140,9 +134,21 @@ func PhysicalKeyboardAlphanumeric(ctx context.Context, s *testing.State) {
 	scannerTouchscreen := bufio.NewScanner(stdout)
 
 	for key, keycode := range testKeyMap {
-
 		if err := verifyKeyPress(ctx, kb, scannerTouchscreen, key, keycode); err != nil {
 			s.Fatalf("Failed to verify key press %s: %v", key, err)
+		}
+	}
+
+	topRowKeys := []string{topRow.BrowserBack, topRow.BrowserForward,
+		topRow.BrowserRefresh, topRow.ZoomToggle, topRow.SelectTask,
+		topRow.Screenshot, topRow.BrightnessDown, topRow.BrightnessUp,
+		topRow.MediaPlayPause, topRow.VolumeMute, topRow.VolumeDown,
+		topRow.VolumeUp, topRow.MediaLaunchApp}
+	for _, key := range topRowKeys {
+		if key != "" {
+			if err := kb.Accel(ctx, key); err != nil {
+				s.Fatalf("Failed to press key %q: %v", key, err)
+			}
 		}
 	}
 
@@ -176,7 +182,7 @@ func PhysicalKeyboardAlphanumeric(ctx context.Context, s *testing.State) {
 
 	for _, key := range keyCombinations {
 		if err := kb.Accel(ctx, key); err != nil {
-			s.Fatalf("Failed to press combination key  %s: %v", key, err)
+			s.Fatalf("Failed to press combination key %s: %v", key, err)
 		}
 	}
 }
