@@ -34,7 +34,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/tracing"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -52,6 +51,7 @@ type histogramType int
 const (
 	countHistogram histogramType = iota
 	enumHistogram
+	cumulativeHistogram
 )
 
 const (
@@ -146,6 +146,14 @@ func NewLatencyMetricConfig(histogramName string) MetricConfig {
 	return MetricConfig{histogramName: histogramName, unit: "ms", direction: perf.SmallerIsBetter, bootAndShutdown: false, histogramType: countHistogram}
 }
 
+// NewCumulativeMetricConfig creates a new MetricConfig instance for cumulative
+// metrics with a given histogram name. These cumulative metrics have the
+// cumulativeHistogram type, and thus the value reported is the value of the
+// max histogram bucket reported.
+func NewCumulativeMetricConfig(histogramName, unit string, direction perf.Direction) MetricConfig {
+	return MetricConfig{histogramName: histogramName, unit: unit, direction: direction, bootAndShutdown: false, histogramType: cumulativeHistogram}
+}
+
 // NewCustomMetricConfig creates a new MetricConfig for the given histogram
 // name, unit, and direction. The data are reported as-is but
 // not aggregated with other histograms.
@@ -225,6 +233,16 @@ func (rec *record) saveMetric(pv *perf.Values, name string) {
 		}
 	case countHistogram:
 		fallthrough
+	case cumulativeHistogram:
+		var maxValue int64
+		if len(rec.Buckets) != 0 {
+			maxValue = rec.Buckets[len(rec.Buckets)-1].Min
+		}
+		pv.Set(perf.Metric{
+			Name:      name,
+			Unit:      rec.config.unit,
+			Direction: rec.config.direction,
+		}, float64(maxValue))
 	default:
 		// If rec.config.histogramType is not set,
 		// treat it as count histograms by default.
@@ -1950,15 +1968,13 @@ func addExtraChromeTraceCategories(
 	categoriesReg := regexp.MustCompile(`included_categories\\":\[(.*)\]`)
 	subMatches := categoriesReg.FindAllStringSubmatch(configStr, -1)
 	if len(subMatches) != 2 {
-		return nil, "", errors.Errorf(
-			"expect 2 chrome data sources org.chromium.trace_event and org.chromium.trace_metadata, but found %v sources",
+		return nil, "", errors.Errorf("expect 2 chrome data sources org.chromium.trace_event and org.chromium.trace_metadata, but found %v sources",
 			len(subMatches))
 	}
 	// Ensure the 2 matches from `org.chromium.trace_event` and
 	// `org.chromium.trace_metadata` are exactly the same.
 	if subMatches[0][1] != subMatches[1][1] {
-		return nil, "", errors.Errorf(
-			"%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[1][1])
+		return nil, "", errors.Errorf("%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[1][1])
 	}
 	categoriesStr := subMatches[0][1]
 	newCategories := strings.Split(extraCategories, ",")
