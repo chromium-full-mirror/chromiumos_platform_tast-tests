@@ -114,7 +114,8 @@ func MigrateManagedUnselectedApn(ctx context.Context, s *testing.State) {
 	}
 
 	cellularONC := &policy.ONCCellular{
-		ICCID: iccid,
+		ICCID:       iccid,
+		SMDPAddress: "LPA:1$test.com$test", // an installed cellular network is expected to have a SMDPAddress or SMDSAddress
 	}
 
 	deviceProfileServiceGUID := "Cellular-Managed"
