@@ -89,7 +89,7 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
-		SoftwareDeps: []string{"chrome", "diagnostics"},
+		SoftwareDeps: []string{"diagnostics"},
 		Fixture:      "crosHealthdRunning",
 		Params: []testing.Param{{
 			Val: busInfoTestParams{
