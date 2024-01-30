@@ -288,14 +288,11 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "failed to type username")
 	}
 
-	// On some devices, the text field for the password might be hidden by the bottom bar.
-	if err := m.ScrollDown(); err != nil {
-		return errors.Wrap(err, "failed to scroll down")
-	}
-
 	// On some devices, the save button might be hidden by the bottom bar.
-	if err := m.ScrollDown(); err != nil {
-		return errors.Wrap(err, "failed to scroll down")
+	for i := 0; i < 4; i++ {
+		if err := m.ScrollDown(); err != nil {
+			return errors.Wrap(err, "failed to scroll down")
+		}
 	}
 
 	if err := ui.DoubleClick(UsernameInput)(ctx); err != nil {
