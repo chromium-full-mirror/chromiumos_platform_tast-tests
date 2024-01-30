@@ -239,6 +239,7 @@ type addBotsOptions struct {
 	sendVP9         bool
 	audio           bool
 	audioFilePath   string
+	videoFilePath   string
 	video           bool
 }
 
@@ -252,6 +253,17 @@ func WithAudio(audioFilePath string) AddBotsOption {
 	return func(opts *addBotsOptions) {
 		opts.audio = true
 		opts.audioFilePath = audioFilePath
+	}
+}
+
+// WithDefaultVideo enables CUJ to use a fixed bot to avoid UMA variations caused by
+// random video
+func WithDefaultVideo(videoFilePath string) AddBotsOption {
+	if videoFilePath == "" {
+		panic("WithDefaultVideo does not allow empty string")
+	}
+	return func(opts *addBotsOptions) {
+		opts.videoFilePath = videoFilePath
 	}
 }
 
@@ -308,6 +320,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		audio:           false,
 		audioFilePath:   ExampleAudioFile,
 		video:           true,
+		videoFilePath:   "",
 	}
 	for _, opt := range opts {
 		opt(&options)
@@ -326,6 +339,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 		},
 		"media_options": map[string]interface{}{
 			"audio_file_path":  options.audioFilePath,
+			"video_file_path":  options.videoFilePath,
 			"mute_audio":       !options.audio,
 			"video_fps":        options.sendFPS,
 			"mute_video":       !options.video,
@@ -339,7 +353,7 @@ func (c *Client) AddBots(ctx context.Context, meetingCode string, numBots int, t
 			"conference_code": meetingCode,
 		},
 		"bot_type":                           "MEETINGS",
-		"use_random_video_file_for_playback": true,
+		"use_random_video_file_for_playback": (options.videoFilePath == ""),
 	}
 	resp := addBotsResponse{}
 	if err := c.sendWithRetry(ctx, http.MethodPost, c.endpoint+"/v1/conference/"+meetingCode+"/bots:add", req, &resp, longerSendTimeout); err != nil {
