@@ -6,9 +6,11 @@ package telemetryextension
 
 import (
 	"context"
+	"os"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/telemetryextension/fixture"
+	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -64,7 +66,41 @@ func APIPermission(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get response from Telemetry extension service worker: ", err)
 	} else {
 		if !supported {
-			s.Fatal("Not supported models should raise unauthorized error")
+			var crosconfigVendor, vpdVendor, dmiVendor string
+			if got, err := crosconfig.Get(ctx, "/branding", "oem-name"); err != nil {
+				if crosconfig.IsNotFound(err) {
+					crosconfigVendor = "(missing)"
+				} else {
+					crosconfigVendor = "(error)"
+					s.Log("Failed to get OEM name from CrOSConfig: ", err)
+				}
+			} else {
+				crosconfigVendor = got
+			}
+
+			if got, err := os.ReadFile("/sys/firmware/vpd/ro/oem_name"); err != nil {
+				if os.IsNotExist(err) {
+					vpdVendor = "(missing)"
+				} else {
+					vpdVendor = "(error)"
+					s.Log("Failed to get OEM name from VPD field: ", err)
+				}
+			} else {
+				vpdVendor = string(got)
+			}
+
+			if got, err := os.ReadFile("/sys/devices/virtual/dmi/id/sys_vendor"); err != nil {
+				if os.IsNotExist(err) {
+					dmiVendor = "(missing)"
+				} else {
+					dmiVendor = "(error)"
+					s.Log("Failed to get OEM name from DMI: ", err)
+				}
+			} else {
+				dmiVendor = string(got)
+			}
+
+			s.Fatalf("Unsupported models should raise unauthorized error; vendor in cros_config=%v, vpd=%v, dmi=%v", crosconfigVendor, vpdVendor, dmiVendor)
 		}
 	}
 }
