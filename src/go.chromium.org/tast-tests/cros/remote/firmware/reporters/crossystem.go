@@ -6,6 +6,7 @@ package reporters
 
 import (
 	"context"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -19,6 +20,7 @@ type CrossystemParam string
 const (
 	CrossystemParamBackupNvramRequest CrossystemParam = "backup_nvram_request"
 	CrossystemParamDevBootUsb         CrossystemParam = "dev_boot_usb"
+	CrossystemParamDevBootSignedOnly  CrossystemParam = "dev_boot_signed_only"
 	CrossystemParamDevDefaultBoot     CrossystemParam = "dev_default_boot"
 	CrossystemParamDevBootAltfw       CrossystemParam = "dev_boot_altfw"
 	CrossystemParamDevswBoot          CrossystemParam = "devsw_boot"
@@ -89,6 +91,14 @@ func (r *Reporter) CrossystemParam(ctx context.Context, param CrossystemParam) (
 		return "", err
 	}
 	return string(res), nil
+}
+
+// CrossystemSetParam sets the value of the param with crossystem param=value.
+func (r *Reporter) CrossystemSetParam(ctx context.Context, param CrossystemParam, value string) error {
+	if _, err := r.CommandOutput(ctx, "crossystem", fmt.Sprintf("%v=%s", param, value)); err != nil {
+		return err
+	}
+	return nil
 }
 
 // parseCrossystemOutput converts lines of crossystem output to a map.
