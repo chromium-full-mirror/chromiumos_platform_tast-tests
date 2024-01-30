@@ -16,9 +16,9 @@ remap_entity_by_name:
 - id: 31
   name: ipu3-cio2 3
 - id: 37
-  name: imx258 8-001a
+  name_regex: imx258 [0-9]+-001a
 - id: 39
-  name: dw9807 8-000c
+  name_regex: dw9807 [0-9]+-000c
 media_ctl:
   info:
     driver: ipu3-cio2

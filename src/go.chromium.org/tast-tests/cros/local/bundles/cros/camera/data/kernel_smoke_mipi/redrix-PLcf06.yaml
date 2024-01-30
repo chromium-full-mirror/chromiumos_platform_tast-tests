@@ -68,7 +68,7 @@ remap_entity_by_name:
 - id: 148
   name: Intel IPU6 CSI2 BE capture
 - id: 298
-  name: hi556 11-0020
+  name_regex: hi556 [0-9]+-0020
 media_ctl:
   info:
     driver: intel-ipu6-isys

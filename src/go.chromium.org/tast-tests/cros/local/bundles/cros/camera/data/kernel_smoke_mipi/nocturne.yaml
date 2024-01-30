@@ -16,11 +16,11 @@ remap_entity_by_name:
 - id: 31
   name: ipu3-cio2 3
 - id: 37
-  name: imx319 2-0010
+  name_regex: imx319 [0-9]+-0010
 - id: 39
-  name: imx355 3-001a
+  name_regex: imx355 [0-9]+-001a
 - id: 41
-  name: ak7375 3-000c
+  name_regex: ak7375 [0-9]+-000c
 media_ctl:
   info:
     driver: ipu3-cio2
