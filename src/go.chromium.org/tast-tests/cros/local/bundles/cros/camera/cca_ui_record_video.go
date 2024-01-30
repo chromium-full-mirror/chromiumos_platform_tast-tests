@@ -404,17 +404,7 @@ func testPauseResume(ctx context.Context, app *cca.App) error {
 // checking the number of key frames in the recorded video. It is expected that
 // the video recorded for |recordTime| will have at least |minKeyFrames|.
 func testVideoSeekability(ctx context.Context, app *cca.App) error {
-	// TODO(b/311108293): Specifically set video resolution for external camera
-	// (Fake HAL), since it is not correctly set by default (1080p).
-	facing, err := app.GetFacing(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to check camera facing")
-	}
-	if facing == cca.FacingExternal {
-		if err := app.ChooseVideoResolution(ctx, cca.FacingExternal, cca.Resolution{Width: 1920, Height: 1080}); err != nil {
-			return err
-		}
-	}
+	// TODO(kamchonlathorn): Check if current video resolution is not smaller than 480p.
 
 	// By default, the video should have a key frame for every 100 frames, which
 	// is around every 4 seconds for 30 fps video. So, we expect at least 3 key

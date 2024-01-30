@@ -1585,6 +1585,7 @@ func (a *App) SwitchTo60FPS(ctx context.Context) error {
 // ChooseVideoResolution switches to the specified video resolution for the
 // camera with the specified facing.
 func (a *App) ChooseVideoResolution(ctx context.Context, facing Facing, resolution Resolution) error {
+	// TODO(kamchonlathorn): Skip configuring if the current video resolution matches the requested one.
 	return a.TriggerConfiguration(ctx, func() error {
 		if err := a.conn.Call(ctx, nil, "CCATest.chooseVideoResolution", facing, resolution); err != nil {
 			return errors.Wrapf(err, "failed to switch video resolution to %v on camera facing %v", resolution, facing)
@@ -1595,17 +1596,17 @@ func (a *App) ChooseVideoResolution(ctx context.Context, facing Facing, resoluti
 
 // GalleryButtonCoverURL gets the cover URL of the gallery button.
 func (a *App) GalleryButtonCoverURL(ctx context.Context) (string, error) {
-  var supportGetGalleryButtonCoverURL bool
-  if err := a.conn.Eval(ctx, "CCATest.getGalleryButtonCoverURL !== undefined", &supportGetGalleryButtonCoverURL); err != nil {
-    return "", err
-  }
-  // TODO(pihsun): Remove this once Chrome is uprev to the newer version.
-  if !supportGetGalleryButtonCoverURL {
-    return a.AttributeWithIndex(ctx, GalleryButtonCover, 0, "src")
-  }
-  var url string
-  if err := a.conn.Call(ctx, &url, "CCATest.getGalleryButtonCoverURL"); err != nil {
-    return "", err
-  }
-  return url, nil
+	var supportGetGalleryButtonCoverURL bool
+	if err := a.conn.Eval(ctx, "CCATest.getGalleryButtonCoverURL !== undefined", &supportGetGalleryButtonCoverURL); err != nil {
+		return "", err
+	}
+	// TODO(pihsun): Remove this once Chrome is uprev to the newer version.
+	if !supportGetGalleryButtonCoverURL {
+		return a.AttributeWithIndex(ctx, GalleryButtonCover, 0, "src")
+	}
+	var url string
+	if err := a.conn.Call(ctx, &url, "CCATest.getGalleryButtonCoverURL"); err != nil {
+		return "", err
+	}
+	return url, nil
 }
