@@ -217,6 +217,15 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			Unit:      "minute",
 			Direction: perf.SmallerIsBetter,
 		}, minutesBatteryLifeTestedTotal)
+		for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
+			if value, ok := r.otherInfo[key].(float64); ok {
+				pv.Set(perf.Metric{
+					Name:      p.Name + "." + key,
+					Unit:      power.GeneralPerfMetricTypeUnit,
+					Direction: perf.BiggerIsBetter,
+				}, value)
+			}
+		}
 
 		// Persona local perf values that will be used to generate power log.
 		pvLocal := perf.NewValues()
