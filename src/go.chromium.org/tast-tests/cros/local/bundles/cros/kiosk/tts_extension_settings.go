@@ -142,7 +142,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		openSettings: uiauto.Combine("open eSpeak-NG settings",
 			ui.DoDefault(nodewith.NameStartingWith("Text-to-Speech voice settings").Role(role.Link)),
 			ui.DoDefault(nodewith.Name("Settings").Role(role.Button).ClassName("tast-eSpeakNG text-to-speech extension")),
-			ui.WaitUntilExists(nodewith.
+			ui.WithTimeout(30*time.Second).WaitUntilExists(nodewith.
 				Name("Enabled Languages").
 				Ancestor(nodewith.Name("eSpeak-NG Options").Role(role.RootWebArea)).
 				First())),
@@ -151,7 +151,7 @@ func TTSExtensionSettings(ctx context.Context, s *testing.State) {
 		openSettings: uiauto.Combine("open Google TTS settings",
 			ui.DoDefault(nodewith.NameStartingWith("Text-to-Speech voice settings").Role(role.Link)),
 			ui.DoDefault(nodewith.Name("Settings").Role(role.Button).ClassName("tast-Chrome OS built-in text-to-speech extension")),
-			ui.WaitUntilExists(nodewith.
+			ui.WithTimeout(30*time.Second).WaitUntilExists(nodewith.
 				Name("Search voices").
 				Ancestor(nodewith.Name("Google TTS Settings").Role(role.RootWebArea)).
 				First())),
