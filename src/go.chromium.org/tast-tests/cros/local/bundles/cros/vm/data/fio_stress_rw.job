@@ -5,7 +5,6 @@
 [fio_stress_rw]
 numjobs=8
 group_reporting=1
-time_based
 
 readwrite=randrw
 rwmixwrite=70

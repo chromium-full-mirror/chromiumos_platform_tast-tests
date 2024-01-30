@@ -5,6 +5,7 @@
 package vm
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"io/ioutil"
@@ -15,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/guestconn"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/storage"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/disk"
@@ -23,7 +25,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const runFio string = "run-fio.sh"
+const runFio string = "run-fio.py"
 
 type param struct {
 	kind string
@@ -38,7 +40,7 @@ func init() {
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
-		Data:         []string{runFio},
+		Data:         []string{runFio, guestconn.LibFile},
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
 		// Specify guest kernel(if not provided use termina dlc)
 		Vars:    []string{"vm.Fio.kernelPath"},
@@ -430,7 +432,7 @@ func Fio(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a temporary directory on the encrypted file system on `/home/root/${user hash}/`.
-	// This directory will be accessed by FIO.
+	// This directory will be accessed by FIO process.
 	username := data.Chrome.NormalizedUser()
 	rootCryptDir, err := cryptohome.SystemPath(ctx, username)
 	if err != nil {
@@ -458,10 +460,15 @@ func Fio(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	scriptArgs := []string{
+		"--kind",
 		opt.Kind,
+		"--src",
 		opt.Tag,
+		"--mount-point",
 		td,
+		"--output",
 		fioOutput,
+		"--job-file",
 		s.DataPath(job),
 	}
 
@@ -486,6 +493,12 @@ func Fio(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to construct crosvm command: ", err)
 	}
 
+	// Use FIFO files as the guest's serial device.
+	toGuestFIFO, fromGuestFIFO, err := guestconn.CreateGuestConn(td, ps)
+	if err != nil {
+		s.Fatal("Failed to create guest connection: ", err)
+	}
+
 	// Increase the max open file limit as the benchmark creates a lot of files.
 	args := append([]string{"--nofile=262144", "crosvm"}, ps.ToArgs()...)
 
@@ -500,16 +513,41 @@ func Fio(ctx context.Context, s *testing.State) {
 	cmd.Stdout = output
 	cmd.Stderr = output
 
-	// Drop host caches before starting crosvm
+	if err := cmd.Start(); err != nil {
+		s.Fatal("Failed to run crosvm: ", err)
+	}
+
+	// Open the FIFO files.
+	toGuest, fromGuest, cleanUp, err := guestconn.OpenGuestConn(ctx, toGuestFIFO, fromGuestFIFO)
+	defer cleanUp(cleanupCtx)
+	if err != nil {
+		s.Fatal("Failed to open guest connection: ", err)
+	}
+	reader := bufio.NewReaderSize(fromGuest, 4096)
+
+	// Wait for the guest to create the file and drop cache
+	_, err = guestconn.WaitForPrefix(reader, []string{guestconn.PrefixReady})
+	if err != nil {
+		s.Fatal("Failed to wait for 'READY': ", err)
+	}
+
+	// Drop host caches
 	if err := disk.DropCaches(ctx); err != nil {
 		s.Fatal("Failed to drop caches: ", err)
 	}
 
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to run crosvm: ", err)
+	// Send the signal to the guest to start the fio benchmark.
+	if _, err := toGuest.WriteString(guestconn.Run); err != nil {
+		s.Fatal("Failed to write a message to toGuestFIFO: ", err)
 	}
 
-	buf, err := ioutil.ReadFile(fioOutput)
+	// Wait for the guest to finish the fio benchmark.
+	_, err = guestconn.WaitForPrefix(reader, []string{guestconn.Complete})
+	if err != nil {
+		s.Fatal("Failed to wait for 'COMPLETE': ", err)
+	}
+
+	buf, err := os.ReadFile(fioOutput)
 	if err != nil {
 		s.Fatal("Failed to read fio results: ", err)
 	}

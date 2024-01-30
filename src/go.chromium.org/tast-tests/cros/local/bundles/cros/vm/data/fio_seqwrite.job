@@ -3,7 +3,6 @@
 ; found in the LICENSE file.
 
 [fio_seq_write]
-time_based
 
 readwrite=write
 

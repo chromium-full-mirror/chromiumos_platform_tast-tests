@@ -3,7 +3,6 @@
 ; found in the LICENSE file.
 
 [fio_rand_read_write]
-time_based
 
 readwrite=randrw
 randrepeat=0
