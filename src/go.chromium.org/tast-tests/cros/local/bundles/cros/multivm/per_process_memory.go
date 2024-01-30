@@ -306,20 +306,33 @@ func generateResultsChart(resultFiles []string, outdir string) error {
 		// Multiple processes can have the same name, so we add them up first.
 		runResultsMap := make(map[string]uint64)
 		for _, r := range rollups {
+			processName := r.Command
+			// Android HAL process names contain HAL version after `@` in
+			// suffix which is not allowed in crosbolt metric name
+			// (e.g. `@6.0-service-arc`). Let's remove the version.
+			processName = strings.Split(processName, "@")[0]
+			// Replace other illegal metric name characters with `_`.
+			processName = illegalChars.ReplaceAllString(processName, "_")
+
 			for k, v := range r.Rollup {
-				// Only output PSS and swap PSS to crosbolt dashboard.
+				// Only output Pss values to crosbolt.
 				if k != "Pss" && k != "SwapPss" {
 					continue
 				}
-				processName := r.Command
-				// Android HAL process names contain HAL version after `@` in
-				// suffix which is not allowed in crosbolt metric name
-				// (e.g. `@6.0-service-arc`). Let's remove the version.
-				processName = strings.Split(processName, "@")[0]
-				// Replace other illegal metric name characters with `_`.
-				processName = illegalChars.ReplaceAllString(processName, "_")
 
-				name := prefix + processName + "_" + k
+				// Adding the median of Pss and the median of SwapPss will not
+				// result in the same value as the median of Pss+SwapPss.
+				// Therefore we calculate the sum of them here to get accurate
+				// median TotalPss.
+				name := fmt.Sprintf("%s%s_TotalPss", prefix, processName)
+				runResultsMap[name] += v
+
+				// In addition to TotalPss, also output Pss to crosbolt.
+				if k != "Pss" {
+					continue
+				}
+
+				name = fmt.Sprintf("%s%s_Pss", prefix, processName)
 				runResultsMap[name] += v
 			}
 		}
