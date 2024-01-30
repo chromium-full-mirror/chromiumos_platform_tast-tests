@@ -246,7 +246,7 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 			return errors.Wrap(err, "failed to cold reset dut")
 		}
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, waitConnectOpt...); err != nil {
 			return errors.Wrap(err, "failed to reconnect to DUT")
