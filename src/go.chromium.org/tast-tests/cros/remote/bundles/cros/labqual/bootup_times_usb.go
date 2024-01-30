@@ -268,8 +268,10 @@ func BootupTimesUSB(ctx context.Context, s *testing.State) {
 }
 
 func recoveryRequirePDSink(ctx context.Context, h *firmware.Helper, s *testing.State) (bool, error) {
-	if _, err := h.CheckPowerSupplyDeviceStates(ctx); err != nil {
+	if expectBattery, err := h.CheckBatteryAvailable(ctx); err != nil {
 		return false, errors.Wrap(err, "could not determine battery state")
+	} else if !expectBattery {
+		return false, nil
 	}
 
 	if connType, err := h.Servo.GetDUTConnectionType(ctx); err != nil {
