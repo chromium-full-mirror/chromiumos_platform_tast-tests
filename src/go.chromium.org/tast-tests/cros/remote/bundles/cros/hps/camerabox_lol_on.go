@@ -38,7 +38,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-hps-swe@google.com",
 			"eunicesun@google.com",
-			"mblsha@google.com",
 		},
 		BugComponent: "b:1140302",
 		Attr:         []string{"group:camerabox", "group:hps", "hps_perbuild"},

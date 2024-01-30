@@ -33,7 +33,6 @@ func init() {
 		Desc: "The hpsd service is configured to use latest (i.e. ToT, unreleased) firmware",
 		Contacts: []string{
 			"dcallagh@google.com",
-			"mblsha@google.com",
 			"chromeos-hps-swe@google.com",
 		},
 		Impl: &hpsdCustomFirmwareFixture{
