@@ -29,7 +29,6 @@ func init() {
 		Desc:         "Checking if SharedArrayBuffer is available in non-cross-origin-isolated contexts depending on the value of this policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"cmfcmf@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},

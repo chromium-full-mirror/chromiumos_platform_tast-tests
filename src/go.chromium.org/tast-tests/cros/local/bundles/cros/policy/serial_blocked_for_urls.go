@@ -31,7 +31,6 @@ func init() {
 		Desc:         "Tests the behavior of the SerialBlockedForUrls policy by checking that it correctly configures access to the serial port selection prompt",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"cmfcmf@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},

@@ -28,7 +28,6 @@ func init() {
 		Desc:         "Checking if file system writes are blocked depending on the value of this policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"cmfcmf@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},

@@ -26,7 +26,6 @@ func init() {
 		Desc:         "Verify behavior of ForceYouTubeRestrict policy on Managed Guest Session",
 		Contacts: []string{
 			"cros-edu-eng@google.com",
-			"cmfcmf@google.com", // Test author
 		},
 		BugComponent: "b:1363915", // ChromeOS Server Projects > Enterprise Management > Edu Features > Tast tests
 		SoftwareDeps: []string{"reboot", "chrome"},

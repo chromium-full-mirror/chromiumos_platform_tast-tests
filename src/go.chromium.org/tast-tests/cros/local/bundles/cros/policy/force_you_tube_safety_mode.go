@@ -29,7 +29,6 @@ func init() {
 		Desc:         "Test the behavior of deprecated ForceYouTubeSafetyMode policy: check if YouTube safe search is enabled based on the value of the policy",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"cmfcmf@google.com", // Test author
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
