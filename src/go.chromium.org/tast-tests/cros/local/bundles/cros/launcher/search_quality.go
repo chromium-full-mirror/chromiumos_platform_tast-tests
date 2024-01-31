@@ -25,6 +25,8 @@ import (
 // 17, sunny, Canberra ACT
 // 17, mostly cloudy, see more forcase for Canberra
 const weatherPattern = `(?i)^\d+,\s*.*(?:sunny|clear|cloudy|showers|rain|thunderstorms|overcast|haze|fog|mist|drizzle|snow|sleet|windy).*\bCanberra\b`
+const rotateScreenPattern = `^Rotate screen.*Shortcuts.*`
+const capsLockPattern = "^Turn on/off Caps Lock.*Shortcuts.*"
 
 // searchQualityTestCase struct encapsulates parameters for test.
 type searchQualityTestCase struct {
@@ -78,8 +80,8 @@ func init() {
 				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "caps lock",
-					useRegex:       false,
-					expectedResult: "Turn Caps Lock on and off, Shortcuts",
+					useRegex:       true,
+					expectedResult: capsLockPattern,
 					category:       "Answer Card",
 				},
 				ExtraAttr: []string{"group:hw_agnostic"},
@@ -89,8 +91,8 @@ func init() {
 				Fixture: fixture.NormalLauncherSearch,
 				Val: searchQualityTestCase{
 					query:          "screen rotate",
-					useRegex:       false,
-					expectedResult: "Rotate screen 90 degrees, Shortcuts",
+					useRegex:       true,
+					expectedResult: rotateScreenPattern,
 					category:       "Answer Card",
 				},
 				ExtraAttr: []string{"group:hw_agnostic"},
