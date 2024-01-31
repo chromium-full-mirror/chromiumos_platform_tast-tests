@@ -143,6 +143,15 @@ func LaunchAppFromSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to launch Settings page: ", err)
 	}
 
+	// Scroll the entry into view.
+	if err := uiauto.Combine("click entry",
+		ui.WithTimeout(20*time.Second).WaitUntilExists(entryFinder),
+		ui.MakeVisible(entryFinder),
+		ui.LeftClick(entryFinder),
+	)(ctx); err != nil {
+		s.Fatal("Failed to click entry: ", err)
+	}
+
 	if err := ui.LeftClick(entryFinder)(ctx); err != nil {
 		s.Fatal("Failed to click entry: ", err)
 	}
