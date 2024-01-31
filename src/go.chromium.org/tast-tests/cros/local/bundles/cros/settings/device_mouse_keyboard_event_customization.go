@@ -33,7 +33,6 @@ func init() {
 		},
 		// ChromeOS > Software > Fundamentals > Peripherals > Mouse
 		BugComponent: "b:1131847",
-		Fixture:      "chromeLoggedInWithInputDeviceSettingsSplit",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      time.Minute,
@@ -43,11 +42,17 @@ func init() {
 // DeviceMouseKeyboardEventCustomization tests mouse scroll acceleration
 // enablement and scrolling speed slider.
 func DeviceMouseKeyboardEventCustomization(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
 	defer cancel()
+
+	s.Log("Setting up chrome")
+	cr, err := chrome.New(ctx, chrome.EnableFeatures(
+		"InputDeviceSettingsSplit", "PeripheralCustomization"))
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {

@@ -34,7 +34,6 @@ func init() {
 		},
 		// ChromeOS > Software > Fundamentals > Peripherals > Mouse
 		BugComponent: "b:1131847",
-		Fixture:      "chromeLoggedInWithInputDeviceSettingsSplit",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2*chrome.GAIALoginTimeout + userutil.TakingOwnershipTimeout + time.Minute,
@@ -43,11 +42,17 @@ func init() {
 
 // DeviceMouseActionCustomization tests the mapping of different action to a mouse button.
 func DeviceMouseActionCustomization(ctx context.Context, s *testing.State) {
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 6*time.Second)
 	defer cancel()
+
+	s.Log("Setting up chrome")
+	cr, err := chrome.New(ctx, chrome.EnableFeatures(
+		"InputDeviceSettingsSplit", "PeripheralCustomization"))
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
