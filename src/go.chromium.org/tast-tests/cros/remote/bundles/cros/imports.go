@@ -58,7 +58,6 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/uwb"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/vm"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi"
-	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wilco"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb"
 
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/factory/fixture"
