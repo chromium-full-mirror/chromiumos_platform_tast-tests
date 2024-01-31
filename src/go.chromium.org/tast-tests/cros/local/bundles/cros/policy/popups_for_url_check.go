@@ -43,7 +43,6 @@ func init() {
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"snijhara@google.com", // Test author
-			"gabormagda@google.com",
 			"alexanderhartl@google.com",
 		},
 		BugComponent: "b:1263917",
