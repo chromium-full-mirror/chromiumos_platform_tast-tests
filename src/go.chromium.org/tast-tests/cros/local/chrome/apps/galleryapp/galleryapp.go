@@ -8,27 +8,43 @@ package galleryapp
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/mafredri/cdp/protocol/target"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-// RootFinder is the main window of Gallery app.
-var RootFinder = nodewith.NameStartingWith(apps.Gallery.Name).HasClass("BrowserFrame").Role(role.Window).First()
+var (
+	// RootFinder is the main window of Gallery app.
+	RootFinder = nodewith.NameStartingWith(apps.Gallery.Name).HasClass("BrowserFrame").Role(role.Window).First()
 
-// DialogFinder is the finder of popup dialog in Gallery app.
-var DialogFinder = nodewith.Role(role.AlertDialog).Ancestor(RootFinder)
+	// DialogFinder is the finder of popup dialog in Gallery app.
+	DialogFinder = nodewith.Role(role.AlertDialog).Ancestor(RootFinder)
 
-// openImageButtonFinder is the finder of 'Open image' button on zero state page.
-var openImageButtonFinder = nodewith.Role(role.Button).Name("Open image").Ancestor(RootFinder)
+	// openImageButtonFinder is the finder of 'Open image' button on zero state page.
+	openImageButtonFinder = nodewith.Role(role.Button).Name("Open image").Ancestor(RootFinder)
+
+	// infoButton is the finder of 'Info' button in Gallery app.
+	infoButton = nodewith.Name("Info").Role(role.ToggleButton).Ancestor(RootFinder)
+
+	// dateModifiedText is the finder of 'Date modified' text in Gallery app.
+	dateModifiedText = nodewith.Name("Date modified").Role(role.StaticText).Ancestor(RootFinder)
+
+	// longUITimeout is the timeout for large file loading UI.
+	longUITimeout = 2 * time.Minute
+)
 
 const (
 	mediaSelector    string = `document.querySelector("video,audio")`
@@ -43,6 +59,21 @@ type Gallery struct {
 	conn  *chrome.Conn
 	tconn *chrome.TestConn
 	ui    *uiauto.Context
+}
+
+// Launch launches the Gallery app and returns an instance of the Gallery app.
+func Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (*Gallery, error) {
+	// Launch the Gallery App.
+	if err := apps.Launch(ctx, tconn, apps.Gallery.ID); err != nil {
+		return nil, errors.Wrap(err, "failed to launch Gallery")
+	}
+
+	testing.ContextLog(ctx, "Wait for Gallery shown in shelf")
+	if err := ash.WaitForApp(ctx, tconn, apps.Gallery.ID, time.Minute); err != nil {
+		return nil, errors.Wrap(err, "failed to check Gallery in shelf")
+	}
+
+	return ConnectToApp(ctx, cr, tconn)
 }
 
 // ConnectToApp connects to the Gallery app and returns an instance of the Gallery app.
@@ -247,4 +278,155 @@ func (g *Gallery) RandomSeek(ctx context.Context) error {
 	// Wait until video play to around expect time to verify random seek is complete.
 	expr := fmt.Sprintf(`%[1]s.currentTime > %[2]f+2 && %[1]s.currentTime < %[2]f+5`, mediaSelector, expectTime)
 	return g.conn.WaitForExprFailOnErrWithTimeout(ctx, expr, 5*time.Second)
+}
+
+// OpenInfo returns a function that opens data info for image, audio and video.
+func (g *Gallery) OpenInfo() uiauto.Action {
+	ui := g.ui
+	return uiauto.IfSuccessThen(ui.Gone(dateModifiedText),
+		uiauto.NamedAction("open info",
+			ui.LeftClickUntil(infoButton,
+				ui.WithTimeout(3*time.Second).WaitUntilExists(dateModifiedText)),
+		))
+}
+
+// CloseInfo returns a function that closes data info for image, audio and video.
+func (g *Gallery) CloseInfo() uiauto.Action {
+	ui := g.ui
+	return uiauto.IfSuccessThen(ui.Exists(dateModifiedText),
+		uiauto.NamedAction("close info",
+			ui.LeftClickUntil(infoButton,
+				ui.WithTimeout(3*time.Second).WaitUntilGone(dateModifiedText)),
+		))
+}
+
+// MaximizeWindow returns a function that maximizes Gallery window.
+func (g *Gallery) MaximizeWindow() uiauto.Action {
+	return func(ctx context.Context) error {
+		galleryWindow, err := ash.WaitForAnyWindowWithTitle(ctx, g.tconn, apps.Gallery.Name)
+		if err != nil {
+			return errors.Wrap(err, "failed to find the Gallery window")
+		}
+		if err := galleryWindow.ActivateWindow(ctx, g.tconn); err != nil {
+			return errors.Wrap(err, "failed to activate the Gallery window")
+		}
+		if err := ash.SetWindowStateAndWait(ctx, g.tconn, galleryWindow.ID, ash.WindowStateMaximized); err != nil {
+			return errors.Wrap(err, "failed to maximized the Gallery window")
+		}
+		return nil
+	}
+}
+
+// Save returns a function that clicks 'Save' button and waits for the
+// file saved.
+func (g *Gallery) Save() uiauto.Action {
+	ui := g.ui
+	saveButton := nodewith.Name("Save").Role(role.Button).Ancestor(RootFinder).Focusable()
+	savingText := nodewith.Name("Saving…").Role(role.StaticText).Ancestor(RootFinder).First()
+	savedText := nodewith.Name("Saved").Role(role.StaticText).Ancestor(RootFinder).First()
+	return uiauto.NamedCombine("save file",
+		ui.LeftClick(saveButton),
+		ui.WaitUntilAnyExists(savingText, savedText),
+		ui.WithTimeout(longUITimeout).WaitUntilGone(savingText),
+		ui.WaitUntilExists(savedText),
+	)
+}
+
+// WaitUntilSpinnerGone returns a function that waits until the spinner
+// gone.
+func (g *Gallery) WaitUntilSpinnerGone() uiauto.Action {
+	spinner := nodewith.HasClass("mdc-circular-progress__spinner-layer").Ancestor(RootFinder)
+	return uiauto.IfSuccessThen(
+		g.ui.WithTimeout(3*time.Second).WaitUntilExists(spinner),
+		g.ui.WithTimeout(longUITimeout).WaitUntilGone(spinner),
+	)
+}
+
+// Done returns a function that clicks 'Done' button and waits until the
+// done button gone.
+func (g *Gallery) Done() uiauto.Action {
+	ui := g.ui
+	doneButton := nodewith.Name("Done").Role(role.Button).Ancestor(RootFinder).Focusable()
+	return uiauto.NamedCombine("click done button",
+		ui.LeftClick(doneButton),
+		ui.WaitUntilGone(doneButton),
+	)
+}
+
+// WaitForGalleryQuiescence returns a function that waits for the Gallery to be quiesce.
+func (g *Gallery) WaitForGalleryQuiescence(cr *chrome.Chrome) uiauto.Action {
+	return func(ctx context.Context) error {
+		// TODO(b/204528998): Change back to chrome://media-app once the
+		// underlying issue is solved so we won't hit the race condition.
+		const url = "chrome-untrusted://media-app"
+		matcher := func(t *target.Info) bool {
+			return strings.Contains(t.URL, url)
+		}
+		connCtx, cancel := ctxutil.Shorten(ctx, longUITimeout)
+		defer cancel()
+
+		conn, err := cr.NewConnForTarget(connCtx, matcher)
+		if err != nil {
+			return errors.Wrapf(err, "failed to find URL %s", url)
+		}
+
+		if err := webutil.WaitForQuiescence(ctx, conn, longUITimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for Gallery to quiesce")
+		}
+		return nil
+	}
+}
+
+// WaitNameChanged waits for file name changed and returns the file name of
+// the image or audio or video.
+func (g *Gallery) WaitNameChanged(ctx context.Context, currentName string) (fileName string, err error) {
+	nameFinder := nodewith.Role(role.StaticText).Ancestor(RootFinder)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if g.ui.Exists(imageFinder)(ctx) == nil {
+			nameFinder = imageFinder
+		}
+		nodes, err := g.ui.NodesInfo(ctx, nameFinder)
+		if err != nil {
+			return errors.Wrap(err, "failed to find name node")
+		}
+		fileName = nodes[0].Name
+		if currentName != fileName {
+			return nil
+		}
+		return errors.Wrap(err, "file name hasn't changed")
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 5 * time.Second}); err != nil {
+		return fileName, err
+	}
+	return fileName, nil
+}
+
+// draw returns a function that draws a pattern through points.
+func (g *Gallery) draw(canvas *nodewith.Finder, points []coords.Point) uiauto.Action {
+	return func(ctx context.Context) error {
+		tconn := g.tconn
+		canvasBounds, err := g.ui.ImmediateLocation(ctx, canvas)
+		if err != nil {
+			return errors.Wrap(err, "failed to get the canvas location")
+		}
+		isPressed := false
+		for _, point := range points {
+			location := coords.NewPoint(
+				canvasBounds.CenterX()+point.X,
+				canvasBounds.CenterY()+point.Y,
+			)
+			if err := mouse.Move(tconn, location, 200*time.Millisecond)(ctx); err != nil {
+				return errors.Wrap(err, "failed to move mouse")
+			}
+			if !isPressed {
+				isPressed = true
+				if err := mouse.Press(tconn, mouse.LeftButton)(ctx); err != nil {
+					return errors.Wrap(err, "failed to press mouse")
+				}
+			}
+		}
+		if err := mouse.Release(tconn, mouse.LeftButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to release mouse")
+		}
+		return nil
+	}
 }
