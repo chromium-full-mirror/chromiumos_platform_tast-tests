@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
@@ -19,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
@@ -54,25 +52,6 @@ func init() {
 	})
 }
 
-const shellScript = `ectool echash start rw
-until ectool echash | grep 'done' ; do : ; done
-echo -n "BEFORE "
-ectool echash | grep "hash:"
-set -x
-flashrom -p ec -w "$1"
-echo "FLASHROM EXIT: $?"
-set +x
-ectool echash start rw
-until ectool echash | grep 'done' ; do : ; done
-echo -n "AFTER "
-ectool echash | grep "hash:"
-reboot
-`
-
-var flashromExitCodeRe = regexp.MustCompile(`FLASHROM EXIT: (-?\d+)`)
-var hashBeforeRe = regexp.MustCompile(`BEFORE hash:\s*(\S+)`)
-var hashAfterRe = regexp.MustCompile(`AFTER hash:\s*(\S+)`)
-
 func SoftwareSync(ctx context.Context, s *testing.State) {
 	cleanupContext := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
@@ -89,26 +68,17 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating mode switcher: ", err)
 	}
 
-	out, err := h.DUT.Conn().CommandContext(ctx, "mktemp", "-d", "-p", "/usr/local/tmp", "-t", "fwimgXXXXXX").Output(ssh.DumpLogOnError)
+	backupState, err := firmware.BackupECFirmware(ctx, h)
 	if err != nil {
-		s.Fatal("Failed creating remote temp dir: ", err)
+		s.Fatal("Failed to backup: ", err)
 	}
-	remoteTempDir := strings.TrimSuffix(string(out), "\n")
 	defer func() {
-		err := h.DUT.Conn().CommandContext(cleanupContext, "rm", "-rf", remoteTempDir).Run(ssh.DumpLogOnError)
+		err := backupState.Close(cleanupContext, h)
 		if err != nil {
-			s.Fatal("Failed deleting remote temp dir: ", err)
+			s.Fatal("Failed to cleanup EC backup: ", err)
 		}
 	}()
-	s.Log("Backup EC firmware")
-	if err := h.DUT.Conn().CommandContext(ctx, "flashrom", "-p", "ec", "-r", fmt.Sprintf("%s/ec_backup.bin", remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed taking ec backup: ", err)
-	}
-	if err := linuxssh.WriteFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/flash.sh", remoteTempDir), []byte(shellScript), 0755); err != nil {
-		s.Fatal("Failed to write flash script: ", err)
-	}
 
-	shouldRestoreFirmware := false
 	testing.ContextLog(ctx, "Get intial GBB flags")
 	oldGBBFlags, err := fwCommon.GetGBBFlags(ctx, h.DUT)
 	if err != nil {
@@ -119,13 +89,11 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 		if _, err := fwCommon.ClearAndSetGBBFlags(cleanupContext, h.DUT, oldGBBFlags); err != nil {
 			s.Fatal("Failed to set gbb flag: ", err)
 		}
-		if shouldRestoreFirmware {
-			restoreFirmware(cleanupContext, s, h, remoteTempDir, &shouldRestoreFirmware)
-		}
 	}()
 
 	s.Log("Check DISABLE_EC_SOFTWARE_SYNC GBB flag is not set, if it is, clear it")
 	if fwCommon.GBBFlagsContains(oldGBBFlags, pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC) {
+		backupState.ShouldRestoreFirmware = true
 		testing.ContextLog(ctx, "Clearing GBB flag DISABLE_EC_SOFTWARE_SYNC")
 		req := pb.GBBFlagsState{Clear: []pb.GBBFlag{pb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
 
@@ -145,57 +113,25 @@ func SoftwareSync(ctx context.Context, s *testing.State) {
 
 	checkActiveCopyRW(ctx, s, h.Servo)
 	s.Log("Corrupt the EC section: ", bios.RWFWIDImageSection)
-	bootID, err := h.Reporter.BootID(ctx)
-	if err != nil {
-		s.Error("Failed to get bootid: ", err)
-	}
-	if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", fmt.Sprintf("%s/ec_backup.bin", remoteTempDir), fmt.Sprintf("%s:%s/fwid.good", bios.RWFWIDImageSection, remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "futility", "dump_fmap", "-x", fmt.Sprintf("%s/ec_backup.bin", backupState.RemoteTempDir()), fmt.Sprintf("%s:%s/fwid.good", bios.RWFWIDImageSection, backupState.RemoteTempDir())).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed extracting fwid.good: ", err)
 	}
-	if err := linuxssh.WriteFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/fwid.bad", remoteTempDir), []byte("invalid_version"), 0644); err != nil {
+	if err := linuxssh.WriteFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/fwid.bad", backupState.RemoteTempDir()), []byte("invalid_version"), 0644); err != nil {
 		s.Fatal("Failed to write fwid.bad: ", err)
 	}
-	if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-c", "-r", fmt.Sprintf("%s/fwid.good", remoteTempDir), fmt.Sprintf("%s/fwid.bad", remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "truncate", "-c", "-r", fmt.Sprintf("%s/fwid.good", backupState.RemoteTempDir()), fmt.Sprintf("%s/fwid.bad", backupState.RemoteTempDir())).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed padding fwid.bad: ", err)
 	}
-	if err := h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/ec_corrupt.bin", remoteTempDir), fmt.Sprintf("%s/ec_backup.bin", remoteTempDir), fmt.Sprintf("%s:%s/fwid.bad", bios.RWFWIDImageSection, remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
+	if err := h.DUT.Conn().CommandContext(ctx, "futility", "load_fmap", "-o", fmt.Sprintf("%s/ec_corrupt.bin", backupState.RemoteTempDir()), fmt.Sprintf("%s/ec_backup.bin", backupState.RemoteTempDir()), fmt.Sprintf("%s:%s/fwid.bad", bios.RWFWIDImageSection, backupState.RemoteTempDir())).Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Failed writing ec_corrupt.bin: ", err)
 	}
-	shouldRestoreFirmware = true
-	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", fmt.Sprintf("stdbuf -oL nohup '%[1]s/flash.sh' '%[1]s/ec_corrupt.bin' &>'%[1]s/corrupt.log' & exit", remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
-		s.Error("Failed running flash.sh: ", err)
-	}
-	h.CloseRPCConnection(ctx)
-
-	s.Log("Wait for reboot")
-	if err := waitForReboot(ctx, bootID, h); err != nil {
-		s.Error("DUT didn't reboot: ", err)
-	}
-
-	var ecHashBefore []byte
-	out, err = linuxssh.ReadFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/corrupt.log", remoteTempDir))
+	ecHashBefore, ecHashCorrupt, err := backupState.Flash(ctx, h, fmt.Sprintf("%s/ec_corrupt.bin", backupState.RemoteTempDir()))
 	if err != nil {
-		s.Fatal("Failed to read corrupt.log: ", err)
+		s.Fatal("Failed to corrupt ec: ", err)
 	}
-	m := flashromExitCodeRe.FindSubmatch(out)
-	if m == nil || string(m[1]) != "0" {
-		s.Error("flashrom failed: ", string(out))
-	}
-	m = hashBeforeRe.FindSubmatch(out)
-	if m == nil {
-		s.Error("Failed to get hash before flash: ", string(out))
-	} else {
-		ecHashBefore = m[1]
-	}
-	m = hashAfterRe.FindSubmatch(out)
-	if m == nil {
-		s.Error("Failed to get hash after flash: ", string(out))
-	} else {
-		ecHashCorrupt := m[1]
-		s.Logf("Checking that EC hash changed %q != %q", ecHashBefore, ecHashCorrupt)
-		if bytes.Equal(ecHashCorrupt, ecHashBefore) {
-			s.Fatalf("Flash failed, hash before == hash after: %s", string(out))
-		}
+	s.Logf("Checking that EC hash changed %q != %q", ecHashBefore, ecHashCorrupt)
+	if bytes.Equal(ecHashCorrupt, ecHashBefore) {
+		s.Fatalf("Flash failed, hash before == hash after: %s", string(ecHashCorrupt))
 	}
 
 	s.Log("Expect EC in RW and RW is restored")
@@ -245,55 +181,6 @@ func checkActiveCopyRW(ctx context.Context, s *testing.State, srvo *servo.Servo)
 	if !strings.HasPrefix(activeCopy, "RW") {
 		s.Fatalf("EC active copy incorrect, got %q want RW", activeCopy)
 	}
-}
-
-func waitForReboot(ctx context.Context, bootID string, h *firmware.Helper) error {
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		if err := h.WaitConnect(ctx); err != nil {
-			return errors.Wrap(err, "failed to connect")
-		}
-
-		newBootID, err := h.Reporter.BootID(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get boot id")
-		}
-
-		if newBootID == bootID {
-			return errors.New("Boot id didn't change")
-		}
-
-		return nil
-	}, &testing.PollOptions{
-		Timeout:  2 * time.Minute,
-		Interval: 2 * time.Second,
-	})
-}
-
-func restoreFirmware(ctx context.Context, s *testing.State, h *firmware.Helper, remoteTempDir string, shouldRestoreFirmware *bool) {
-	s.Log("Restoring EC firmware")
-	bootID, err := h.Reporter.BootID(ctx)
-	if err != nil {
-		s.Error("Failed to get bootid: ", err)
-	}
-
-	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", fmt.Sprintf("stdbuf -oL -eL nohup '%[1]s/flash.sh' '%[1]s/ec_backup.bin' &>'%[1]s/restore.log' & exit", remoteTempDir)).Run(ssh.DumpLogOnError); err != nil {
-		s.Error("Failed running ec restore: ", err)
-	}
-	h.CloseRPCConnection(ctx)
-
-	s.Log("Wait for reboot")
-	if err := waitForReboot(ctx, bootID, h); err != nil {
-		s.Error("DUT didn't reboot: ", err)
-	}
-	if out, err := linuxssh.ReadFile(ctx, h.DUT.Conn(), fmt.Sprintf("%s/restore.log", remoteTempDir)); err != nil {
-		s.Error("Failed to read restore.log: ", err)
-	} else {
-		m := flashromExitCodeRe.FindSubmatch(out)
-		if m == nil || string(m[1]) != "0" {
-			s.Error("flashrom failed: ", string(out))
-		}
-	}
-	*shouldRestoreFirmware = false
 }
 
 const hashCommand = "ectool echash | grep hash: | sed \"s/hash:\\s\\+//\""
