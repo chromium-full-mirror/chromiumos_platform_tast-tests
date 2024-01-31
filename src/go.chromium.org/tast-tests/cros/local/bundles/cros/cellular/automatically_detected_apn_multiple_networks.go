@@ -35,7 +35,7 @@ func init() {
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_dual_active"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "cellular",
+		Fixture:      "cellularResetShillProfileOnPostTest",
 		Timeout:      9 * time.Minute,
 	})
 }
@@ -137,13 +137,8 @@ func AutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *testing.St
 		s.Fatal("Failed to wait until refresh profile complete: ", err)
 	}
 
-	secondCellularRowBtn := nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(cellularRow.Nth(1)).Focusable()
-
-	if err := uiauto.Combine("Go to details page of second cellular network",
-		mdp.WaitUntilExists(secondCellularRowBtn),
-		mdp.LeftClick(secondCellularRowBtn),
-	)(ctx); err != nil {
-		s.Fatal("Failed to go to details page of second cellular network: ", err)
+	if err := ossettings.GoToFirstInactiveNetworkDetails(ctx, tconn); err != nil {
+		s.Fatal("Failed to go to disconnected network details: ", err)
 	}
 
 	if err := connectAndVerify(ctx, ui, s, tconn); err != nil {
@@ -179,13 +174,8 @@ func AutomaticallyDetectedApnMultipleNetworks(ctx context.Context, s *testing.St
 		s.Fatal("Failed to go back to mobile data page: ", err)
 	}
 
-	secondCellularRowBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Ancestor(cellularRow.Nth(1)).Focusable()
-
-	if err := uiauto.Combine("Go to details page of second cellular network",
-		mdp.WaitUntilExists(secondCellularRowBtn),
-		mdp.LeftClick(secondCellularRowBtn),
-	)(ctx); err != nil {
-		s.Fatal("Failed to go to details page of second cellular network: ", err)
+	if err := ossettings.GoToFirstInactiveNetworkDetails(ctx, tconn); err != nil {
+		s.Fatal("Failed to go to inactive network details: ", err)
 	}
 
 	if err := connectAndVerify(ctx, ui, s, tconn); err != nil {
