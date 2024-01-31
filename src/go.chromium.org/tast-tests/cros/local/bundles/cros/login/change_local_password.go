@@ -64,6 +64,7 @@ func ChangeLocalPassword(ctx context.Context, s *testing.State) {
 			// We don't need to provide Gaia password, as the local password will be
 			// used instead.
 			chrome.FakeLogin(chrome.Creds{User: username, Pass: ""}),
+			chrome.ExtraArgs("--disable-first-run-ui"),
 		)
 		if err != nil {
 			s.Fatal("Failed to setup user: ", err)
