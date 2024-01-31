@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Showing errors of failed attempts in enrolled fixture",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"gabormagda@google.com", // Test author
+			"vsavu@google.com", // Test owner
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Params: []testing.Param{{

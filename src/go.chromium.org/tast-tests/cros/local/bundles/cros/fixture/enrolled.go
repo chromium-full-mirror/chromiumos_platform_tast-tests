@@ -19,7 +19,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",
-			"gabormagda@google.com", // Test author
 		},
 		BugComponent: "b:1111632", // ChromeOS > Software > Commercial (Enterprise) > Remote Management > Enrollment
 		Params: []testing.Param{{
