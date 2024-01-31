@@ -119,10 +119,10 @@ func init() {
 				// Network: open HE80 802.11ax.
 				Name: "he80",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80)},
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80)},
 					powerSave: false, shouldTputRequired: false,
 				}, {
-					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80)},
+					apOpts:    []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80)},
 					powerSave: false, shouldTputRequired: false,
 				}},
 				ExtraAttr:         []string{"wificell_openwrt"},
@@ -134,11 +134,11 @@ func init() {
 				// Network: WPA2/WPA3 mixed and PMF enabled HE80 802.11ax.
 				Name: "he80_pmf",
 				Val: []networkWifiPerfTestCase{{
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(44), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(42), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
 				}, {
-					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
+					apOpts:     []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC), ap.VHTCaps(ap.VHTCapSGI80, ap.VHTCapRXLDPC, ap.VHTCapMaxAMPDULenExp6), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos", wpa.Mode(wpa.ModeMixedWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave:  false, shouldTputRequired: false,
 				}},
