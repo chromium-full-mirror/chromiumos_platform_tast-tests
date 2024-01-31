@@ -107,9 +107,9 @@ func UnlockPinLockedSim(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn).WithTimeout(5 * time.Minute)
 
 	goNavigateToMobileData := func() {
-		mobileDataLinkNode := nodewith.HasClass("cr-title-text").Name("Mobile data").Role(role.Heading)
+		mobileDataLinkNode := nodewith.Name("Mobile data").Role(role.Heading)
 		if err := settings.NavigateToPageURL(ctx, cr, "networks?type=Cellular", ui.WaitUntilExists(mobileDataLinkNode)); err != nil {
-			s.Fatal("Failed to navigate to mobile data page 1")
+			s.Fatal("Failed to navigate to mobile data page 1: ", err)
 		}
 	}
 
