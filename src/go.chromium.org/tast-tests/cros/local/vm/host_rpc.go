@@ -11,8 +11,8 @@ import (
 	"github.com/mdlayher/vsock"
 	"google.golang.org/grpc"
 
-	vmrpc "chromiumos/vm_tools/vm_rpc"
-	vmtools "chromiumos/vm_tools/vm_tools_proto"
+	vmrpc "go.chromium.org/chromiumos/vm_tools/vm_rpc"
+	vmtools "go.chromium.org/chromiumos/vm_tools/vm_tools_proto"
 	"go.chromium.org/tast/core/errors"
 )
 
