@@ -43,13 +43,6 @@ func ECEvent(ctx context.Context, s *testing.State) {
 		0x07, 0x00, 0x13, 0x00, 0x00, 0x00, 0x01, 0x00,
 		0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x05, 0x00}
 
-	// We need exclusive access to |eventReadPath|, so ensure that
-	// wilco_dtc_supportd that controls it is shut down. No need to restart
-	// it when we're done.
-	if err := wilco.StopSupportd(ctx); err != nil {
-		s.Fatal("Unable to stop wilco_dtc_supportd: ", err)
-	}
-
 	// Before we start the test, clear the queue of events to ensure there are
 	// no stale events.
 	if err := wilco.ClearECEventQueue(ctx); err != nil {
