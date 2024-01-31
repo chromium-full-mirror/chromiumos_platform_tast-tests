@@ -33,6 +33,9 @@ const (
 	// The number of pending console request and responses we can have pending a tast read before
 	// running out of space.
 	consoleQueueSize = 10000
+
+	// Number of times to attempt start session due to operation failures (ex:  ott communication errors)
+	startSessionTrys = 3
 )
 
 var (
@@ -134,14 +137,21 @@ func (a *DUTControlAndreiboard) StartSession(ctx context.Context, gpioStrap ti50
 
 	req.GpioStrap = string(gpioStrap)
 
-	resp, err := a.client.StartSession(ctx, req)
-	if err != nil {
-		return errors.Wrap(err, "StartSession request")
+	var resp *dutcontrol.StartSessionResponse
+	for i := 0; i < startSessionTrys; i++ {
+		testing.ContextLogf(ctx, "StartSession attempt %d/%d", i+1, startSessionTrys)
+		resp, err = a.client.StartSession(ctx, req)
+		if err != nil {
+			err = errors.Wrap(err, "StartSession request")
+			return
+		}
+		if resp.Err == "" {
+			return
+		}
+		err = errors.Errorf("StartSession operation failed: %s", resp.Err)
+		testing.ContextLogf(ctx, "StartSession attempt %d/%d: %v", i+1, startSessionTrys, err)
 	}
-	if resp.Err != "" {
-		return errors.Errorf("StartSession operation failed: %s", resp.Err)
-	}
-	return nil
+	return
 }
 
 // EndSession will tear down host emulation (probably do nothing for devboards).
