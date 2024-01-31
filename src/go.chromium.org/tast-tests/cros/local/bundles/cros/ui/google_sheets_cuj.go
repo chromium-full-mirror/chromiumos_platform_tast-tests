@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/googlesheetscuj"
@@ -82,51 +81,6 @@ func init() {
 				},
 				ExtraData: []string{launcher.ImageSearchPowerTestPictureName},
 				Fixture:   "loggedInToCUJUserWithLauncherImageSearch",
-			},
-			{
-				Name: "blt_50mb",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MB",
-			},
-			{
-				Name: "blt_1gb",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
-			},
-			{
-				Name: "blt_2gb",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
-			},
-			{
-				Name: "blt_3gb",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
-			},
-			{
-				Name: "blt_4gb",
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
 			},
 		},
 	})
