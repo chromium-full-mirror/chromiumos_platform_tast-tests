@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
+	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -97,6 +98,31 @@ func CheckNumInstalledProfiles(ctx context.Context, euicc *EUICC, expected int) 
 	}
 	if len(installedProfiles) != expected {
 		return errors.Errorf("unexpected number of installed profiles, got: %d, want: %d", len(installedProfiles), expected)
+	}
+	return nil
+}
+
+// InstallProfile installs provided profile
+func InstallProfile(ctx context.Context, euicc *EUICC, profile Profile) error {
+	activationCode, err := profile.ActivationCode(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get activation code")
+	}
+	confirmationCode := ""
+	response := euicc.Call(ctx, hermesconst.EuiccMethodInstallProfileFromActivationCode, activationCode, confirmationCode)
+	if response.Err != nil {
+		return errors.Wrapf(response.Err, "failed to install profile with code: %s", activationCode)
+	}
+	if len(response.Body) != 1 {
+		return errors.Errorf("InstallProfile resulted in incorrect response len: %d", len(response.Body))
+	}
+	return nil
+}
+
+// UninstallProfile uninstalls provided profile
+func UninstallProfile(ctx context.Context, euicc *EUICC, profile Profile) error {
+	if response := euicc.Call(ctx, hermesconst.EuiccMethodUninstallProfile, profile.DBusObject.ObjectPath()); response.Err != nil {
+		return errors.Wrap(response.Err, "failed to uninstall profile")
 	}
 	return nil
 }

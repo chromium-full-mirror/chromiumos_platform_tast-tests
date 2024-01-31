@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/stork"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -85,10 +84,10 @@ func HermesSMDS(ctx context.Context, s *testing.State) {
 	for _, profile := range pendingProfiles {
 		s.Logf("Pending profile %s", profile.String())
 		if testVal == "install" {
-			if err := installProfile(ctx, s, euicc, profile); err != nil {
+			if err := hermes.InstallProfile(ctx, euicc, profile); err != nil {
 				s.Fatalf("Failed to install profile %q: %v", profile.String(), err)
 			}
-			if err := uninstallProfile(ctx, s, euicc, profile); err != nil {
+			if err := hermes.UninstallProfile(ctx, euicc, profile); err != nil {
 				s.Fatalf("Failed to uninstall profile %q: %v", profile.String(), err)
 			}
 		} else {
@@ -101,29 +100,4 @@ func HermesSMDS(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
-}
-
-func installProfile(ctx context.Context, s *testing.State, euicc *hermes.EUICC, profile hermes.Profile) error {
-	s.Logf("Installing profile %s", profile.String())
-	activationCode, err := profile.ActivationCode(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get activation code")
-	}
-	confirmationCode := ""
-	response := euicc.Call(ctx, hermesconst.EuiccMethodInstallProfileFromActivationCode, activationCode, confirmationCode)
-	if response.Err != nil {
-		return errors.Wrapf(response.Err, "failed to install profile with code: %s", activationCode)
-	}
-	if len(response.Body) != 1 {
-		return errors.Errorf("InstallProfile resulted in incorrect response len: %d", len(response.Body))
-	}
-	return nil
-}
-
-func uninstallProfile(ctx context.Context, s *testing.State, euicc *hermes.EUICC, profile hermes.Profile) error {
-	s.Logf("Uninstalling profile %s", profile.String())
-	if response := euicc.Call(ctx, hermesconst.EuiccMethodUninstallProfile, profile.DBusObject.ObjectPath()); response.Err != nil {
-		return errors.Wrap(response.Err, "failed to uninstall profile")
-	}
-	return nil
 }
