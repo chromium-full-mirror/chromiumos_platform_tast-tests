@@ -20,9 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Example test for updating to an older version using Nebraska and test images",
 		Contacts: []string{
-			"cros-engprod-muc@google.com",
 			"chromeos-commercial-remote-management@google.com",
-			"gabormagda@google.com", // Test author
+			"mpolzer@google.com", // Test owner
 		},
 		BugComponent: "b:1170223", // ChromeOS > Software > Commercial (Enterprise) > EngProd
 		Attr:         []string{},  // Manual execution only.
