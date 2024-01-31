@@ -692,6 +692,9 @@ const (
 func (h DevboardHelper) ReadGscTotalMilliAmps(ctx context.Context) float32 {
 	// This implementation works for the Dauntless shield, and will have to be adapted for
 	// other current sensing chips and power rails on other shields.
+	if h.TestbedType == ti50.GscOTShield {
+		return 0
+	}
 	output, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", "INA", "raw-write-read", "--hexdata=01", "-n2")
 	if err != nil {
 		h.Fatalf("i2c error: %s", err)

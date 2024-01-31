@@ -142,7 +142,7 @@ const (
 	// https://docs.google.com/spreadsheets/d/1youX_Yh2A6-Zd2T98ShjH_O8M9CZexDB9DCHpegNMvE
 	GscDTAndreiboard TestbedType = "gsc_dt_ab"
 
-	// GscDTShield is a small board on top of HyperDebug.
+	// GscDTShield is a small DT board on top of HyperDebug.
 	GscDTShield TestbedType = "gsc_dt_shield"
 
 	// GscOpentitanCw310Fpga is a ChipWhisperer 310 FPGA board connected via ribbon cables to
@@ -152,11 +152,14 @@ const (
 	// GscHostEmulation is not a physical testbed, but an emulation on a Linux host computer.
 	GscHostEmulation TestbedType = "gsc_he"
 
-	// GscH1Shield is a small board on top of HyperDebug.
+	// GscH1Shield is a small H1 board on top of HyperDebug.
 	GscH1Shield TestbedType = "gsc_h1_shield"
+
+	// GscOTShield is a small OpenTitan board on top of HyperDebug.
+	GscOTShield TestbedType = "gsc_ot_shield"
 )
 
 // AllTestbedTypes returns all the possible testbed types.
 func AllTestbedTypes() []TestbedType {
-	return []TestbedType{GscDTAndreiboard, GscOpentitanCw310Fpga, GscHostEmulation}
+	return []TestbedType{GscDTAndreiboard, GscDTShield, GscOpentitanCw310Fpga, GscHostEmulation, GscH1Shield, GscOTShield}
 }

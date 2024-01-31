@@ -202,7 +202,12 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50CcdModeL, true)
 	b.ResetWithStraps(ctx, testParams.servoMicroStrapping, ti50.CcdDisconnected, testParams.tpmStrapping)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
-	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
+	var gpioMonitor utils.GpioMonitorSession
+	if b.TestbedType == ti50.GscOTShield {
+		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
+	} else {
+		gpioMonitor = b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
+	}
 
 	logCurrent(ctx, s, b, pv, "Awake")
 
