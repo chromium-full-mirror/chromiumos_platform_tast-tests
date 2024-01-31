@@ -27,8 +27,8 @@ type gamingAppParams struct {
 const (
 	gamingAppPrepareTimeout = 10 * time.Minute
 
-	asphalt8PlayTime     = 30 * time.Minute
-	superTuxKartPlayTime = 60 * time.Minute
+	asphalt8PlayTime     = 60 * time.Minute
+	superTuxKartPlayTime = 30 * time.Minute
 
 	asphalt8Timeout     = gamingAppPrepareTimeout + asphalt8PlayTime + power.RecorderTimeout
 	superTuxKartTimeout = gamingAppPrepareTimeout + superTuxKartPlayTime + power.RecorderTimeout
