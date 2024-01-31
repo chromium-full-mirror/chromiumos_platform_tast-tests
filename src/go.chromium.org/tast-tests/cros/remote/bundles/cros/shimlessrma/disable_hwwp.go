@@ -177,7 +177,15 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
-	// Restart will dispose resources, so don't dispose resources explicitly.
+
+	if err := uiHelper.DeviceInformationPageOperation(ctx); err != nil {
+		s.Fatal("Fail to complete Device Information page operations: ", err)
+	}
+
+	// Always bypass calibration in this test. We have another test just for calibration.
+	if err := uiHelper.BypassCalibration(ctx); err != nil {
+		s.Fatal("Fail to bypass calibration after firmware installation: ", err)
+	}
 
 	// faft-cr50-pool cannot update firmware from USB.
 	// Since we already run Manual test case (removal battery) in skylab and install firmware from USB,
@@ -197,6 +205,14 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Error("Fail to sleep: ", err)
 	}
 
+	if err := firmwareHelper.Servo.RunCR50Command(ctx, "bpforce follow_batt_pres atboot"); err != nil {
+		s.Fatal("Fail to connect battery: ", err)
+	}
+
+	if err := firmwareHelper.Servo.SetFWWPState(ctx, servo.FWWPStateOn); err != nil {
+		s.Fatal("Fail to enable HWWP: ", err)
+	}
+
 	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
@@ -209,13 +225,8 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 		s.Log("Fail to set USB Mux state: ", err)
 	}
 
-	// Always bypass calibration in this test. We have another test just for calibration.
-	if err := uiHelper.BypassCalibration(ctx); err != nil {
-		s.Fatal("Fail to bypass calibration after firmware installation: ", err)
-	}
-
-	// GoBigSleepLint: Wait for reboot start.
-	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
+	// GoBigSleepLint: Wait for provisioning and finalizing.
+	if err := testing.Sleep(ctx, rmaweb.WaitForProvisionAndFinalize); err != nil {
 		s.Error("Fail to sleep: ", err)
 	}
 
@@ -223,24 +234,7 @@ func DisableHWWP(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Fail to initialize RMA Helper: ", err)
 	}
-	// Restart will dispose resources, so don't dispose resources explicitly.
 
-	if err := action.Combine("navigate to Device Provision page",
-		uiHelper.DeviceInformationPageOperation,
-		uiHelper.DeviceProvisionPageOperation,
-	)(ctx); err != nil {
-		s.Fatal("Fail to navigate to Device Provision page: ", err)
-	}
-
-	// GoBigSleepLint: Another reboot after provisioning
-	if err := testing.Sleep(ctx, rmaweb.WaitForRebootStart); err != nil {
-		s.Error("Fail to sleep: ", err)
-	}
-
-	uiHelper, err = rmaweb.NewUIHelper(ctx, dut, firmwareHelper, s.RPCHint(), key, true)
-	if err != nil {
-		s.Fatal("Fail to initialize RMA Helper: ", err)
-	}
 	defer uiHelper.DisposeResource(cleanupCtx)
 
 	storeLogFlag := rmaweb.NotStoreLog

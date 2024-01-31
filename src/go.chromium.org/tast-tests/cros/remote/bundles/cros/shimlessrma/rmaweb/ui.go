@@ -53,6 +53,10 @@ const (
 	// WaitForRebootStart indicates the time to wait before reboot starting.
 	WaitForRebootStart = 10 * time.Second
 
+	// WaitForProvisionAndFinalize indicates the time to wait for Shimless RMA finishing
+	// provisioning and finalizing.
+	WaitForProvisionAndFinalize = 30 * time.Second
+
 	// StoreLog indicates that log will be stored into usb during test.
 	StoreLog StoreLogFlag = true
 
@@ -208,14 +212,6 @@ func (uiHelper *UIHelper) DeviceInformationPageOperation(ctx context.Context) er
 	return action.Combine("device Information page operation",
 		uiHelper.waitForPageToLoad("Please confirm device information", timeInSecondToLoadPage),
 		uiHelper.clickButton("Next"),
-	)(ctx)
-}
-
-// DeviceProvisionPageOperation handles all operations on device provisioning Page.
-func (uiHelper *UIHelper) DeviceProvisionPageOperation(ctx context.Context) error {
-	return action.Combine("device Provision page operation",
-		uiHelper.waitForPageToLoad("Provisioning the device…", timeInSecondToLoadPage),
-		uiHelper.connectBatteryByCr50(),
 	)(ctx)
 }
 
@@ -393,11 +389,9 @@ func (uiHelper *UIHelper) BypassCalibration(ctx context.Context) error {
 	// GoBigSleepLint: This sleep is important since we need to wait for RMAD to update state
 	// file completed.
 	testing.Sleep(ctx, stateFileUpdateTime)
-	if _, err := uiHelper.Client.BypassCalibration(ctx, &empty.Empty{}); err != nil {
-		return err
-	}
+	_, err := uiHelper.Client.BypassCalibration(ctx, &empty.Empty{})
 
-	return uiHelper.Dut.Reboot(ctx)
+	return err
 }
 
 // WaitForFirmwareInstallation will trigger and wait for firmware installation.
