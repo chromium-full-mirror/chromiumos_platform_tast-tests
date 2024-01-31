@@ -158,13 +158,14 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get crossystem fwid: ", err)
 	}
-	re := regexp.MustCompile(`Google_([a-z-A-Z]*)\.(\d*\.\d*.\d*)`)
+	re := regexp.MustCompile(`Google_([a-z-A-Z_]*)\.(\d*\.\d*.\d*)`)
 	match := re.FindStringSubmatch(initialRwFwid)
 	if len(match) != 3 {
 		s.Fatalf("Unexpected fw id format from crossystem %v, got: %s", reporters.CrossystemParamFwid, initialRwFwid)
 	}
 	fwidModel := strings.ToLower(match[1])
 	initialRwFwid = match[2]
+	s.Logf("FWID Model : %s", fwidModel)
 
 	// Get the RO firmware version ID available on the DUT.
 	initialROFwid, err := firmware.GetFwVersion(ctx, h, reporters.CrossystemParamRoFwid)
@@ -225,7 +226,7 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 			dutFileMap[fmt.Sprintf("%s/%s", tmpDir, ecBinToFlash)] = fmt.Sprintf("%s/%s", tmpFwDir, firmware.MonitorFileToFlash)
 		}
 
-		s.Log("Cpoying files to dut")
+		s.Log("Copying files to dut")
 		if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(), dutFileMap, linuxssh.PreserveSymlinks); err != nil {
 			s.Fatal("Failed to copy files to dut: ", err)
 		}
