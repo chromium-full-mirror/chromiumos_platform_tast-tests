@@ -35,8 +35,8 @@ func init() {
 func FwupdDetectRTD2142(ctx context.Context, s *testing.State) {
 	const (
 		expectedDeviceName       = "RTD2142"
-		expectedDeviceInstanceID = `I2C\NAME_10EC2142:00`
-		expectedDeviceGUID       = "15cb53a3-3217-5949-87ac-2e5cce94e15b"
+		expectedDeviceInstanceID = `I2C\NAME_10EC2142:00&FAMILY_Google_Hatch`
+		expectedDeviceGUID       = "d02db69e-478f-5598-86f2-60bb5e026461"
 		expectedPlugin           = "realtek_mst"
 	)
 

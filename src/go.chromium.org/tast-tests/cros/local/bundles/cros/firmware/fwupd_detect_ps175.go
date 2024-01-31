@@ -36,8 +36,8 @@ func init() {
 func FwupdDetectPS175(ctx context.Context, s *testing.State) {
 	const (
 		expectedDeviceName       = "PS175"
-		expectedDeviceInstanceID = `I2C\NAME_1AF80175:00`
-		expectedDeviceGUID       = "c146ccc9-58b6-517c-97f6-9c55a0bd39d3"
+		expectedDeviceInstanceID = `I2C\NAME_1AF80175:00&FAMILY_Google_Hatch`
+		expectedDeviceGUID       = "9ab8df43-7b30-5c6f-b1f3-db7d6d7d5606"
 		expectedPlugin           = "parade_lspcon"
 	)
 
