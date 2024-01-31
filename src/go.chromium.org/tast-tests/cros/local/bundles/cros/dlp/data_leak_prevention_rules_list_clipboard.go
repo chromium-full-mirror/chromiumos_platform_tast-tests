@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -142,11 +141,10 @@ func init() {
 	})
 }
 
-// waitForDialog waits for a 2nd exo surface to appear. On Lacros the 'bubble' is retrievable before it is visible / clickable. This checks for a unnamed surface being visible (the browser surface is named).
+// waitForDialog waits for a 2nd exo surface to appear. On Lacros the 'bubble' is retrievable before it is visible / clickable.
 func waitForDialog(ctx context.Context, s *testing.State, ui *uiauto.Context, browserType browser.Type) {
 	if browserType == browser.TypeLacros {
-		regex, _ := regexp.Compile("ExoShellSurface-.*")
-		if err := ui.WaitUntilExists(nodewith.ClassNameRegex(regex).Name("").Visible())(ctx); err != nil {
+		if err := ui.WaitUntilExists(nodewith.ClassName("ClipboardDlpBubble").Visible())(ctx); err != nil {
 			s.Fatal("Failed to wait for dialog: ", err)
 		}
 	}
