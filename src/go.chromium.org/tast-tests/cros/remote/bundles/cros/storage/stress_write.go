@@ -14,6 +14,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	fullBenchmarkTime  = 300
+	quickBenchmarkTime = 30
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: StressWrite,
@@ -26,19 +31,28 @@ func init() {
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.USBDevModeWithReinstall,
-		Timeout:      450 * time.Minute,
 		Requirements: []string{
 			tdreq.StorageStable, tdreq.StorageEndurancePerf,
 		},
 		Params: []testing.Param{
 			{
-				ExtraAttr:    []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				Val:       fullBenchmarkTime,
+				Timeout:   fullBenchmarkTime * 1.5 * time.Minute,
+				ExtraAttr: []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 			}, {
-				Name: "iteration_2",
-				ExtraAttr:    []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:      "iteration_2",
+				Val:       fullBenchmarkTime,
+				Timeout:   fullBenchmarkTime * 1.5 * time.Minute,
+				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
 			}, {
-				Name: "iteration_3",
-				ExtraAttr:    []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:      "iteration_3",
+				Val:       fullBenchmarkTime,
+				Timeout:   fullBenchmarkTime * 1.5 * time.Minute,
+				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+			}, {
+				Name:    "quick",
+				Val:     quickBenchmarkTime,
+				Timeout: quickBenchmarkTime * 1.5 * time.Minute,
 			},
 		},
 	})
@@ -60,6 +74,9 @@ func StressWrite(ctx context.Context, s *testing.State) {
 		WithResultWriter(resultWriter).
 		WithDisk(disk)
 
+	benchTime := s.Param().(int)
+	stressTime := benchTime * 60
+
 	// Get initial performance results
 	// GoBigSleepLint: Provide some idle time before measuring storage performance.
 	if err := testing.Sleep(ctx, 5*time.Minute); err != nil {
@@ -68,7 +85,7 @@ func StressWrite(ctx context.Context, s *testing.State) {
 
 	for _, job := range []string{"seq_write", "seq_read", "4k_write", "4k_read"} {
 		err = configBase.
-			WithRunTimeSec(300).
+			WithRunTimeSec(benchTime).
 			WithJobFromFile(s.DataPath(job)).
 			Run(ctx, s.DUT())
 		if err != nil {
@@ -79,9 +96,10 @@ func StressWrite(ctx context.Context, s *testing.State) {
 	util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 
 	// Stress the device, verifying data along the way
-	s.Log("Starting 64k_stress workload, will run for 5 hours")
+	duration := stressTime / 60
+	s.Logf("Starting 64k_stress workload, will run for %d minutes", duration)
 	err = configBase.
-		WithRunTimeSec(18000).
+		WithRunTimeSec(stressTime).
 		WithJobFromFile(s.DataPath("64k_stress")).
 		Run(ctx, s.DUT())
 	if err != nil {
@@ -98,7 +116,7 @@ func StressWrite(ctx context.Context, s *testing.State) {
 
 	for _, job := range []string{"seq_write", "seq_read", "4k_write", "4k_read"} {
 		err = configBase.
-			WithRunTimeSec(300).
+			WithRunTimeSec(benchTime).
 			WithJobFromFile(s.DataPath(job)).
 			Run(ctx, s.DUT())
 		if err != nil {
