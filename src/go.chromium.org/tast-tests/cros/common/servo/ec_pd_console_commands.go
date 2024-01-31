@@ -114,7 +114,7 @@ func (s *Servo) DUTPDPort() int {
 }
 
 const (
-	pdStatePollTimeout  time.Duration = 10 * time.Second
+	pdStatePollTimeout  time.Duration = 20 * time.Second
 	pdStatePollInterval time.Duration = 500 * time.Millisecond
 )
 
