@@ -206,6 +206,19 @@ func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app 
 				return errors.Wrap(err, "failed to find SSID in a dialog")
 			}
 
+			visibleButton := nodewith.Role(role.Button).ClassName("icon-visibility")
+			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(visibleButton)(ctx); err != nil {
+				return errors.Wrap(err, "failed to find the password visibility button")
+			}
+			if err := ui.LeftClick(visibleButton)(ctx); err != nil {
+				return errors.Wrap(err, "failed to left click of the password visibility button")
+			}
+
+			passwordFinder := nodewith.Role(role.StaticText).Name(testParams.wifiConfig.password)
+			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(passwordFinder)(ctx); err != nil {
+				return errors.Wrap(err, "failed to find password in a dialog")
+			}
+
 			connectButton := nodewith.Role(role.Button).Name("Connect")
 			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(connectButton)(ctx); err != nil {
 				return errors.Wrap(err, "failed to find the network connection button")
