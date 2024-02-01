@@ -48,6 +48,7 @@ func init() {
 		Fixture:      "virtualUsbPrinterModulesLoadedWithArcBooted",
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		Params: []testing.Param{{
+			Name:              "container_p",
 			Val:               "arc_print_ippusb_golden.pwg",
 			ExtraSoftwareDeps: []string{"android_p"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("elm", "hana", "kevin", "scarlet")),
@@ -61,10 +62,16 @@ func init() {
 			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
-			Name:              "vm",
+			Name:              "vm_r",
 			Val:               "arc_print_vm_ippusb_golden.pwg",
 			ExtraAttr:         []string{"informational"},
-			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraSoftwareDeps: []string{"android_vm_r"},
+			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
+		}, {
+			Name:              "vm_t",
+			Val:               "arc_print_vm_ippusb_golden.pwg",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"android_vm_t"},
 			ExtraData:         []string{"arc_print_vm_ippusb_golden.pwg"},
 		}},
 	})
