@@ -20,16 +20,9 @@ func init() {
 		Contacts:     []string{"arc-core@google.com"},
 		// ChromeOS > Software > ARC++ > Core
 		BugComponent: "b:488493",
-		// TODO(yusukes,ricardoq): ARCVM does not need the test. Remove this once we retire ARC container.
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "android_container"},
 		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline"},
-		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			Name:              "container_r",
-			ExtraSoftwareDeps: []string{"android_container_r"},
-		}},
 	})
 }
 
