@@ -612,7 +612,11 @@ func verifyMigratedFileAttributes(ctx context.Context, s *testing.State, usernam
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, username)
+	diskPath, err := arc.GetVirtioBlkDataDiskPath(ctx, username)
+	if err != nil || diskPath == "" {
+		s.Fatal("Failed to get disk path for virtio-blk /data: ", err)
+	}
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, username, diskPath)
 	if err != nil {
 		s.Fatal("Failed to make Android /data directory available on host: ", err)
 	}

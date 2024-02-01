@@ -877,15 +877,27 @@ func (a *ARC) saveANRIfExists(ctx context.Context) error {
 		return nil
 	}
 
-	cleanupFunc, err := MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, a.chromeUsername)
+	// If disk image of ARCVM virtio-blk /data exists, mount it on host's
+	// /home/root/<hash>/android-data/data to allow host-side access to ANR directory.
+	diskPath, err := GetVirtioBlkDataDiskPath(ctx, a.chromeUsername)
 	if err != nil {
-		return err
+		testing.ContextLog(ctx, "Failed to check if virtio-blk /data is enabled: ", err)
+	} else if diskPath != "" {
+		// Flush any guest-side pending writes to the disk image before mounting it.
+		if err := BootstrapCommand(ctx, "/system/bin/sync").Run(testexec.DumpLogOnError); err != nil {
+			testing.ContextLog(ctx, "Failed to call sync on guest: ", err)
+		}
+
+		cleanupFunc, err := MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, a.chromeUsername, diskPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to mount virtio-blk /data on host")
+		}
+		defer cleanupFunc(ctx)
 	}
-	defer cleanupFunc(ctx)
 
 	androidDataDir, err := AndroidDataDir(ctx, a.chromeUsername)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "failed to get android-data dir")
 	}
 
 	androidANRDir := filepath.Join(androidDataDir, "/data/anr")
@@ -894,13 +906,14 @@ func (a *ARC) saveANRIfExists(ctx context.Context) error {
 		// No ANR directory, do nothing.
 		return nil
 	} else if err != nil {
-		return err
+		return errors.Wrap(err, "failed to stat Android's /data/anr")
 	}
 
 	targetDir := filepath.Join(a.outDir, "anr")
 	if err := filepath.Walk(androidANRDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			return err
+			testing.ContextLogf(ctx, "Failed to access %q to save ANR file: %s", path, err)
+			return nil
 		}
 		if info.IsDir() {
 			return nil
@@ -908,22 +921,29 @@ func (a *ARC) saveANRIfExists(ctx context.Context) error {
 
 		relpath, err := filepath.Rel(androidANRDir, path)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "failed to get relative path to /data/anr")
 		}
 
 		if _, ok := a.savedANRFiles[relpath]; ok {
 			// Already copied this file in other session.
 			return nil
 		}
-		a.savedANRFiles[relpath] = struct{}{}
 
 		testing.ContextLogf(ctx, "Saving ANR file %q", relpath)
 		if err := os.MkdirAll(targetDir, 0755); err != nil {
-			return err
+			testing.ContextLogf(ctx, "Failed to prepare target directory %q to save ANR files: %s", relpath, err)
+			return nil
 		}
-		return fsutil.CopyFile(path, filepath.Join(targetDir, relpath))
+
+		if err := fsutil.CopyFile(path, filepath.Join(targetDir, relpath)); err != nil {
+			testing.ContextLogf(ctx, "Failed to copy ANR file %q", relpath)
+			return nil
+		}
+
+		a.savedANRFiles[relpath] = struct{}{}
+		return nil
 	}); err != nil {
-		return err
+		return errors.Wrap(err, "failed to walk ANR directory")
 	}
 
 	return nil

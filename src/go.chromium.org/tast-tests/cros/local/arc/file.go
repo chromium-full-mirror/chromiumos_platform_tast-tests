@@ -217,13 +217,14 @@ func PollBreakIfNotEUCLEANOnVirtioBlkData(ctx context.Context, inErr error) erro
 //		return nil
 //	}, pollOptions)
 func PollWithReadOnlyAndroidData(ctx context.Context, user string, fn func(context.Context) error, pollopt *testing.PollOptions) error {
-	virtioBlkDataEnabled, err := IsVirtioBlkDataEnabled(ctx)
+	diskPath, err := GetVirtioBlkDataDiskPath(ctx, user)
 	if err != nil {
-		return errors.Wrap(err, "failed to check if virtio-blk /data is enabled")
+		return errors.Wrap(err, "failed to get disk path of virtio-blk /data")
 	}
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		if virtioBlkDataEnabled {
+		// virtio-blk /data should be enabled if |diskPath| is not empty.
+		if diskPath != "" {
 			// Before mounting the virtio-blk disk image, run sync on the Android side to ensure
 			// that the disk image is up-to-date.
 			if err := BootstrapCommand(ctx, "/system/bin/sync").Run(testexec.DumpLogOnError); err != nil {
@@ -233,7 +234,7 @@ func PollWithReadOnlyAndroidData(ctx context.Context, user string, fn func(conte
 
 			// Mount and unmount the disk image on every iteration of testing.Poll to ensure that
 			// the Android-side changes are reflected on the host side.
-			cleanupFunc, err := MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, user)
+			cleanupFunc, err := MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, user, diskPath)
 			if err != nil {
 				return testing.PollBreak(err)
 			}
@@ -242,6 +243,37 @@ func PollWithReadOnlyAndroidData(ctx context.Context, user string, fn func(conte
 
 		return fn(ctx)
 	}, pollopt)
+}
+
+// GetVirtioBlkDataDiskPath returns an existing path to the disk image of virtio-blk /data
+// (crosvm disk image or LVM volume) for the given user. Returns an empty string with a nil error
+// if no disk image is found in the candidate paths.
+func GetVirtioBlkDataDiskPath(ctx context.Context, user string) (string, error) {
+	rootCryptDir, err := cryptohome.SystemPath(ctx, user)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get cryptohome root dir")
+	}
+
+	userHash, err := cryptohome.UserHash(ctx, user)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get user hash")
+	}
+
+	// virtio-blk disk exists at one of these paths.
+	crosvmDiskPath := filepath.Join(rootCryptDir, "crosvm/YXJjdm0=.img")
+	lvmVolumePath := filepath.Join("/dev/mapper/vm", fmt.Sprintf("dmcrypt-%s-arcvm", userHash[0:8]))
+
+	diskPath := ""
+	for _, path := range []string{crosvmDiskPath, lvmVolumePath} {
+		if _, err := os.Stat(path); err == nil {
+			diskPath = path
+			break
+		} else if !os.IsNotExist(err) {
+			return "", errors.Wrapf(err, "failed to stat %q", path)
+		}
+	}
+
+	return diskPath, nil
 }
 
 // MountVirtioBlkDataDiskImageReadOnlyIfUsed first checks if ARCVM virtio-blk /data is used
@@ -266,36 +298,20 @@ func MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx context.Context, user string)
 	if err := BootstrapCommand(ctx, "/system/bin/sync").Run(testexec.DumpLogOnError); err != nil {
 		return nil, errors.Wrap(err, "failed to call sync on guest")
 	}
-	return MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, user)
+
+	diskPath, err := GetVirtioBlkDataDiskPath(ctx, user)
+	if err != nil || diskPath == "" {
+		return nil, errors.Wrap(err, "failed to get disk image path of /data")
+	}
+	return MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, user, diskPath)
 }
 
-// MountVirtioBlkDataDiskImageReadOnlyWithoutSync finds the path to the virtio-blk disk image
-// and mounts the disk on the host's /home/root/<hash>/android-data/data as read-only.
-func MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx context.Context, user string) (func(context.Context), error) {
-
+// MountVirtioBlkDataDiskImageReadOnlyWithoutSync mounts |diskPath|, a disk image of virtio-blk
+// /data, on the host's /home/root/<hash>/android-data/data as read-only.
+func MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx context.Context, user, diskPath string) (func(context.Context), error) {
 	rootCryptDir, err := cryptohome.SystemPath(ctx, user)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get cryptohome root dir")
-	}
-
-	userHash, err := cryptohome.UserHash(ctx, user)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get user hash")
-	}
-
-	// virtio-blk disk exists at one of these paths.
-	crosvmDiskPath := filepath.Join(rootCryptDir, "crosvm/YXJjdm0=.img")
-	lvmDiskPath := filepath.Join("/dev/mapper/vm", fmt.Sprintf("dmcrypt-%s-arcvm", userHash[0:8]))
-
-	diskPath := ""
-	for _, path := range []string{crosvmDiskPath, lvmDiskPath} {
-		if _, err := os.Stat(path); err == nil {
-			diskPath = path
-			break
-		}
-	}
-	if diskPath == "" {
-		return nil, errors.Errorf("neither of [%s, %s] exists", crosvmDiskPath, lvmDiskPath)
 	}
 
 	// Mount virtio-blk disk image.
