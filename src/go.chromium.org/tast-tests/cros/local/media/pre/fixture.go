@@ -1066,12 +1066,21 @@ func init() {
 					"--arc-availability=none",
 					// Disable firmware update to stop chrome from executing fwupd that restarts powerd.
 					"--disable-features=FirmwareUpdaterApp",
+					// Avoid the need to grant camera/microphone permissions.
+					"--auto-accept-camera-and-microphone-capture",
+					// Chrome automatically selects a tab page whose title contains "test".
+					"--auto-select-tab-capture-source-by-title=test",
+					// --disable-sync disables test account info sync, eg. Wi-Fi credentials,
+					// so that each test run does not remember info from last test run.
+					"--disable-sync",
+					// Allow 2 windows side by side.
+					"--force-tablet-mode=clamshell",
 				}...),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
-				// Avoid the need to grant camera/microphone permissions.
-				chrome.ExtraArgs("--auto-accept-camera-and-microphone-capture"),
-				// Chrome automatically selects a tab page whose title contains "test".
-				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
+				chrome.EnableFeatures(
+					// Prefer using constant frame rate for camera streaming.
+					"PreferConstantFrameRate",
+				),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
