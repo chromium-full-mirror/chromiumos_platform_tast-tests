@@ -101,9 +101,14 @@ func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUT
 	s.Log("Testlab disabled. Enabling now")
 	gpioSet(ctx, s, b, ti50.GpioTi50ChassisOpen, true)
 
-	out = runCommand(ctx, s, i, "ccd open")
-	if !ccdOpened.MatchString(out) {
-		s.Fatal("CCD did not open, but got instead: ", out)
+	runCommand(ctx, s, i, "ccd open")
+
+	isOpen, err := i.IsCCDOpen(ctx)
+	if err != nil {
+		s.Fatal("Error checking CCD level: ", err)
+	}
+	if !isOpen {
+		s.Fatal("Did not Open ccd")
 	}
 
 	// Reset to clear chip factory mode to allow testlab enable.
@@ -146,7 +151,7 @@ func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 
 	// We can keep the same session that the parent created, but the UART connection must be
 	// closed before going into the main test code
-	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second)
+	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second*5)
 	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
 	defer i.Close(ctx)
 
