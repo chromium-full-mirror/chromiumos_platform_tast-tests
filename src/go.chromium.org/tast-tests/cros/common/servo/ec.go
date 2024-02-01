@@ -282,6 +282,8 @@ func (s *Servo) CheckUnresponsiveEC(ctx context.Context) error {
 
 // TabletModeCmdUnsupportedErr is the error returned by
 // RunTabletModeCommandGetOutput when the ec command is found unsupported.
+// To detect this error, use something like:
+// if _, ok := err.(*TabletModeCmdUnsupportedErr); ok {}
 type TabletModeCmdUnsupportedErr struct {
 	*errors.E
 }
