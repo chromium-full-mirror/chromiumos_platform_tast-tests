@@ -11,16 +11,17 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/media/devtools"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
-	crosAppspotH264VanillaURL            = "http://crosvideo.appspot.com/?codec=h264&resolution=720&loop=true&mute=true"
-	crosAppspotVP9VanillaURL             = "http://crosvideo.appspot.com/?codec=vp9&resolution=720&loop=true&mute=true"
-	crosAppspotH264ChangingResolutionURL = "http://crosvideo.appspot.com/?codec=h264&cycle=true&loop=true&mute=true"
-	crosAppspotVP9ChangingResolutionURL  = "http://crosvideo.appspot.com/?codec=vp9&cycle=true&loop=true&mute=true"
+	crosAppspotH264VanillaURL            = "https://crosvideo.appspot.com/?codec=h264&resolution=720&loop=true&mute=true"
+	crosAppspotVP9VanillaURL             = "https://crosvideo.appspot.com/?codec=vp9&resolution=720&loop=true&mute=true"
+	crosAppspotH264ChangingResolutionURL = "https://crosvideo.appspot.com/?codec=h264&cycle=true&loop=true&mute=true"
+	crosAppspotVP9ChangingResolutionURL  = "https://crosvideo.appspot.com/?codec=vp9&cycle=true&loop=true&mute=true"
 
 	// Whatever URL this test navigates to, it should have an element with id
 	// "video", to monitor its |currentTime| attribute.
@@ -180,10 +181,23 @@ func PlayURL(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
 
+	observer, err := conn.GetMediaPropertiesChangedObserver(ctx)
+	if err != nil {
+		s.Fatal("Failed to retrieve DevTools Media messages: ", err)
+	}
+
 	// See e.g. [1] for readyState details.
 	// [1] https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
 	if err := conn.WaitForExprWithTimeout(ctx, videoElement+".readyState > 2", samplingInterval); err != nil {
 		s.Fatal("Video failed to start playing: ", err)
+	}
+
+	isPlatform, _, err := devtools.GetVideoDecoder(ctx, observer, testOpt.url)
+	if err != nil {
+		s.Fatal("Failed to parse Media DevTools: ", err)
+	}
+	if !isPlatform {
+		s.Fatal("Hardware decoding accelerator was expected but wasn't used")
 	}
 
 	// Make sure |videoElement| is playing every so often.

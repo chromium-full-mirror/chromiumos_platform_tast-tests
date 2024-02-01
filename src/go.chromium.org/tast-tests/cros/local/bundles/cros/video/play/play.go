@@ -279,9 +279,9 @@ func seekVideoRepeatedly(ctx context.Context, conn *chrome.Conn, outDir string, 
 	return nil
 }
 
-// playSeekVideo invokes loadVideo() then plays the video referenced by videoFile
-// while repeatedly and randomly seeking into it numSeeks. It returns an error if
-// seeking did not succeed for some reason.
+// playSeekVideo plays the video referenced by videoFile while repeatedly and
+// randomly seeking into it numSeeks. It returns an error if seeking did not
+// succeed for some reason.
 // videoFile is the file name which is played and seeked there.
 // baseURL is the base URL which serves video playback testing webpage.
 func playSeekVideo(ctx context.Context, cs ash.ConnSource, videoFile, baseURL, outDir string, numSeeks int) error {
@@ -289,27 +289,32 @@ func playSeekVideo(ctx context.Context, cs ash.ConnSource, videoFile, baseURL, o
 	defer st.End()
 
 	// Establish a connection to a video play page
-	conn, err := loadPage(ctx, cs, baseURL+"/video.html")
+	url := baseURL + "/video.html"
+	conn, err := loadPage(ctx, cs, url)
 	if err != nil {
 		return err
 	}
 	defer conn.Close()
 	defer conn.CloseTarget(ctx)
 
+	observer, err := conn.GetMediaPropertiesChangedObserver(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to retrieve DevTools Media messages")
+	}
+
 	if err := conn.Call(ctx, nil, "playRepeatedly", videoFile); err != nil {
 		return err
 	}
 
-	// Wait until videoElement has advanced so that chrome:media-internals has
-	// time to fill in their fields.
-	if err := conn.WaitForExpr(ctx, "document.getElementsByTagName('video')[0].currentTime > 1"); err != nil {
-		return errors.Wrap(err, "failed waiting for video to advance playback")
+	isPlatform, _, err := devtools.GetVideoDecoder(ctx, observer, url)
+	if err != nil {
+		return errors.Wrap(err, "failed to parse Media DevTools")
+	}
+	if !isPlatform {
+		return errors.New("hardware decoding accelerator was expected but wasn't used")
 	}
 
-	if err := seekVideoRepeatedly(ctx, conn, outDir, numSeeks); err != nil {
-		return err
-	}
-	return nil
+	return seekVideoRepeatedly(ctx, conn, outDir, numSeeks)
 }
 
 // ColorDistance returns the maximum absolute difference between each component of a and b.
