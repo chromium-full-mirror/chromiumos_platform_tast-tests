@@ -38,10 +38,7 @@ func init() {
 		Attr:         []string{"group:mainline"},
 		Pre:          arc.Booted(),
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_p"},
-		}, {
-			Name:              "container_r",
-			ExtraSoftwareDeps: []string{"android_container_r"},
+			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
