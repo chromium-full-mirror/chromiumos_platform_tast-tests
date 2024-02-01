@@ -27,13 +27,20 @@ func init() {
 		BugComponent: "b:1263090", // ChromeOS > Software > OOBE
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "group:cq-medium"},
 		SoftwareDeps: []string{"chrome", "non_meets_device"},
-		Fixture:      fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		Params: []testing.Param{{
-			Name: "fieldtrial_testing_config_on",
+			Name: "fieldtrial_testing_config_on_without_fixture",
 			Val:  chrome.FieldTrialConfigEnable,
 		}, {
-			Name: "fieldtrial_testing_config_off",
+			Name: "fieldtrial_testing_config_off_without_fixture",
 			Val:  chrome.FieldTrialConfigDisable,
+		}, {
+			Name:    "fieldtrial_testing_config_on_with_fixture",
+			Val:     chrome.FieldTrialConfigEnable,
+			Fixture: fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
+		}, {
+			Name:    "fieldtrial_testing_config_off_with_fixture",
+			Val:     chrome.FieldTrialConfigDisable,
+			Fixture: fixture.UpdateEngine, // Ensure to update engine status is idle and to reset between tests (b/263421799).
 		}},
 	})
 }
