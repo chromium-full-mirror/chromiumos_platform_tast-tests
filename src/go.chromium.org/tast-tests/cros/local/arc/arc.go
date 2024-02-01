@@ -537,6 +537,10 @@ func (a *ARC) cleanUpLogcatFile() error {
 // VMEnabled returns true if ChromeOS is running ARCVM.
 func VMEnabled() (bool, error) {
 	installType, ok := Type()
+	// installType is zero when ARC is disabled.
+	if installType == 0 {
+		return false, nil
+	}
 	if !ok {
 		return false, errors.New("failed to get installation type")
 	}

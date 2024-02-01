@@ -56,8 +56,9 @@ func init() {
 		Timeout:      cuj.CPUStablizationTimeout + idleDuration,
 
 		Params: []testing.Param{{
-			Val:     idlePerfTest{testType: testTypeARC},
-			Fixture: "arcBootedRestricted",
+			Val:               idlePerfTest{testType: testTypeARC},
+			Fixture:           "arcBootedRestricted",
+			ExtraSoftwareDeps: []string{"arc"},
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"lacros"},
