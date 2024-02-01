@@ -104,6 +104,8 @@ const (
 	SimLockNetworkSelectionSpnMatchProfileID = "50053"
 	// SimLockVzwProfileID Verizon profile id in the production sim lock portal
 	SimLockVzwProfileID = "50045"
+	// SimLockTMoProfileID TMobile profile id in the production sim lock portal
+	SimLockTMoProfileID = "50063"
 	// SimLockExcludeVzwProfileID Test profile to exclude Verizon MCC/MNCs in production sim lock portal
 	SimLockExcludeVzwProfileID = "50048"
 )
