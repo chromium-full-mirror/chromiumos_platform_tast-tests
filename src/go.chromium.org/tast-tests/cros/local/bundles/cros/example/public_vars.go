@@ -14,7 +14,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PublicVars,
 		Desc:         "Public variables",
-		Contacts:     []string{"tast-core@google.com", "oka@chromium.org"},
+		Contacts:     []string{"tast-core@google.com", "seewaifu@google.com"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		// example.PublicVars.foo is defined in tast-tests/vars/example.PublicVars.yaml

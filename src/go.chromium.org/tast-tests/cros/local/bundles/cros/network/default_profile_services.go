@@ -25,7 +25,6 @@ func init() {
 		Contacts: []string{
 			"cros-networking@google.com",
 			"stevenjb@chromium.org", // Connectivity team
-			"oka@chromium.org",      // Tast port author
 		},
 		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("winky")), // b/182293895: winky DUTs are having USB Ethernet issues that surface during `restart shill`

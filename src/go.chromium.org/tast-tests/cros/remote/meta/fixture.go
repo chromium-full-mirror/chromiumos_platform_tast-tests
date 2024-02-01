@@ -24,7 +24,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "metaRemoteDataFilesFixture",
 		Desc:     "Demonstrate how to use data files in fixtures",
-		Contacts: []string{"tast-owner@google.com", "oka@chromium.org"},
+		Contacts: []string{"tast-owner@google.com", "seewaifu@google.com"},
 		Data: []string{
 			"fixture_data_internal.txt",
 			"fixture_data_external.txt",

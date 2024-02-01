@@ -28,7 +28,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeLoggedIn,
 		Desc:     "Logged into a user session",
-		Contacts: []string{"nya@chromium.org", "oka@chromium.org"},
+		Contacts: []string{"nya@chromium.org", "seewaifu@google.com"},
 		Impl: NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]Option, error) {
 			return nil, nil
 		}),

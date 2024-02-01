@@ -29,7 +29,6 @@ func init() {
 			"chromeos-gfx@google.com",
 			"andrescj@chromium.org",
 			"pwang@chromium.org",
-			"oka@chromium.org", // Tast port
 		},
 		SoftwareDeps: []string{"no_qemu"},
 		Vars:         []string{"keepState", "ui.gaiaPoolDefault"},
