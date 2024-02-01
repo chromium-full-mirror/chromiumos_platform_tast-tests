@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
+	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/media/webrtc"
@@ -303,9 +304,37 @@ func chromeLatencyMetrics(hists []*metrics.Histogram) (*perf.Values, error) {
 	return p, nil
 }
 
+// setupDisplayEnv sets up the display environment for the same state.
+// The display is landscape-primary and the shelf is auto-hidden.
+// The returned func resets the shelf settings and is to be called at last.
+func setupDisplayEnv(ctx context.Context, tconn *chrome.TestConn) (func(context.Context), error) {
+	// Rotate the display to landscape-primary.
+	if _, err := display.GetInternalInfo(ctx, tconn); err == nil {
+		if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
+			return nil, errors.Wrap(err, "failed to set display to landscape-primary orientation")
+		}
+	}
+	// Set shelf to auto-hide.
+	dispInfo, err := display.GetPrimaryInfo(ctx, tconn)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get primary display info")
+	}
+	origShelfBehavior, err := ash.GetShelfBehavior(ctx, tconn, dispInfo.ID)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get shelf behavior")
+	}
+	if err := ash.SetShelfBehavior(ctx, tconn, dispInfo.ID, ash.ShelfBehaviorAlwaysAutoHide); err != nil {
+		return nil, errors.Wrap(err, "failed to set shelf behavior to Auto Hide")
+	}
+	return func(cleanupCtx context.Context) {
+		ash.SetShelfBehavior(cleanupCtx, tconn, dispInfo.ID, origShelfBehavior)
+	}, nil
+}
+
 // prepareWindowView maximizes the video conference window if only the window exists, or
 // snap windows of the video conference window and the presentation/text window.
 func prepareWindowView(ctx context.Context, tconn *chrome.TestConn, newWinTitle string) error {
+
 	vcWin, err := ash.WaitForAnyWindowWithTitle(ctx, tconn, vcTitle)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the video conference window")
@@ -339,11 +368,6 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test API")
-	}
-	if _, err := display.GetInternalInfo(ctx, tconn); err == nil {
-		if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to set display to landscape-primary orientation")
-		}
 	}
 
 	closeCtx := ctx
@@ -387,8 +411,18 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 		}
 	}
 
+	resetDisplay, err := setupDisplayEnv(ctx, tconn)
+	if err != nil {
+		return err
+	}
+	defer resetDisplay(closeCtx)
+
 	if err := prepareWindowView(ctx, tconn, newWinTitle); err != nil {
 		return err
+	}
+
+	if err := cpu.Cooldown(ctx); err != nil {
+		return errors.Wrap(err, "failed waiting for CPU to cool down")
 	}
 
 	if params.Step {
