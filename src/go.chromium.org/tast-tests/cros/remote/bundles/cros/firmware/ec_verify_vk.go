@@ -313,6 +313,9 @@ func switchDUTMode(ctx context.Context, h *firmware.Helper, canDoTabletSwitch, t
 	testing.ContextLogf(ctx, "Running EC command %s to change DUT's tablet mode state", tabletModeCmd)
 	out, err := h.Servo.RunTabletModeCommandGetOutput(ctx, tabletModeCmd)
 	if err != nil {
+		if _, ok := err.(*servo.TabletModeCmdUnsupportedErr); !ok {
+			return "", errors.Wrap(err, "failed to set DUT tablet mode state")
+		}
 		testing.ContextLogf(ctx, "Failed to set DUT tablet mode state, and got: %v. Attempting to set tablet_mode_angle with ectool instead", err)
 		if err := forceTabletModeAngle(ctx); err != nil {
 			return "", errors.Wrap(err, "failed to set DUT tablet mode state")
