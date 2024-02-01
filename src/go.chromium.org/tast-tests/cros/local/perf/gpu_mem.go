@@ -64,6 +64,7 @@ func (ds *GPUDataSource) Start(ctx context.Context) error {
 		}
 		recorders[bt] = recorder
 
+		// GoBigSleepLint: Add a delay for collecting histogram.
 		if err := testing.Sleep(ctx, time.Second); err != nil {
 			return err
 		}

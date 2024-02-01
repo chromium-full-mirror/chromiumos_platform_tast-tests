@@ -171,7 +171,7 @@ func waitMoveCursor(ctx context.Context, mw *input.MouseEventWriter, d time.Dura
 		} else {
 			mw.Move(-5, -5)
 		}
-		// Sleeps briefly after each cursor move.
+		// GoBigSleepLint: Sleeps briefly after each cursor move.
 		if err := testing.Sleep(ctx, sleepTime); err != nil {
 			return errors.Wrap(err, "sleep timeout")
 		}
