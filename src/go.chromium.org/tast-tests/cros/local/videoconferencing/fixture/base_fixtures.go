@@ -52,7 +52,6 @@ const (
 var vcOpts = []chrome.Option{
 	chrome.EnableFeatures("CrosPrivacyHub"),
 	chrome.EnableFeatures("VideoConference"),
-	chrome.EnableFeatures("CrOSLateBootAudioFlexibleLoopback"),
 	chrome.EnableFeatures("SystemLiveCaption"),
 	chrome.EnableFeatures("FeatureManagementVideoConference"),
 	chrome.EnableFeatures("ShowLiveCaptionInVideoConferenceTray"),

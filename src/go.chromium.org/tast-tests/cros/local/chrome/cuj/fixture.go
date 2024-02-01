@@ -745,7 +745,6 @@ func init() {
 				chrome.EnableFeatures(
 					"PreferConstantFrameRate",
 					"CrOSLateBootAudioAPNoiseCancellation",
-					"CrOSLateBootAudioFlexibleLoopback",
 					"ShowLiveCaptionInVideoConferenceTray",
 					"SystemLiveCaption",
 					"VideoConference",
@@ -778,7 +777,6 @@ func init() {
 				chrome.EnableFeatures(
 					"PreferConstantFrameRate",
 					"CrOSLateBootAudioAPNoiseCancellation",
-					"CrOSLateBootAudioFlexibleLoopback",
 					"ShowLiveCaptionInVideoConferenceTray",
 					"SystemLiveCaption",
 					"VideoConference",
