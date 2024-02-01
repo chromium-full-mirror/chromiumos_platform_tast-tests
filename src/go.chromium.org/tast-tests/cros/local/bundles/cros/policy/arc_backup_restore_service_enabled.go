@@ -27,8 +27,8 @@ func init() {
 			"arc-commercial@google.com",
 			"mhasank@chromium.org",
 		},
-		// ChromeOS > Software > ARC++ > Commercial
-		BugComponent: "b:157100",
+		// ChromeOS > Software > ARC++ > Commercial > Tast Tests
+		BugComponent: "b:1487630",
 		SoftwareDeps: []string{"chrome"},
 		// TODO(http://b/172073846): Test showed flakiness in the past. If
 		// keeps failing it should be fixed or removed.
