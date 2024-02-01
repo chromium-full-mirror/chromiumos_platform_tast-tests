@@ -4,7 +4,10 @@
 
 android_apk("ArcNotificationTest") {
   manifest = "AndroidManifest.xml"
-  source_dirs = ["src"]
-  resource_dirs = ["res"]
-  target_sdk_version = "25"
+  source_dirs = [ "src" ]
+  resource_dirs = [ "res" ]
+
+  # TODO(b/323115785): Update the target sdk to 33+ which requires the explicit
+  # permission handling.
+  target_sdk_version = "32"
 }
