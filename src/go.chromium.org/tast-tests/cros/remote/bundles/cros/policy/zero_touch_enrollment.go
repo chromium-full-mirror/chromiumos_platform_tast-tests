@@ -6,7 +6,9 @@ package policy
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -20,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	ps "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/exec"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
@@ -89,21 +92,9 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	customerID := s.RequiredVar(param.CustomerID)
 	batchKey := s.RequiredVar(param.BatchKey)
 
-	// The block below pre-provisions the device for the next run.
-	bodyCommand := fmt.Sprintf("{\"requests\": [ {\"preProvisionedDevice\":{serialNumber:\"%s\",hardwareModel:\"%s\",devicePreProvisioningToken:\"%s\",attestedDeviceId:\"%s\",customer_id:\"%s\"}}]}", serialNumber, hardwareModel, deviceProvisionToken, serialNumber, customerID)
-	urlWithBatchKey := fmt.Sprintf("https://chromecommercial.googleapis.com/v1/preProvisionedDevices:batchCreate?key=%s", batchKey)
-	body := strings.NewReader(bodyCommand)
-	req, err := http.NewRequest("POST", urlWithBatchKey, body)
-	if err != nil {
-		s.Fatal("Failed to create pre-provision request: ", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
+	if err := preProvisionDevice(ctx, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey); err != nil {
 		s.Fatal("Failed to pre-provision device: ", err)
 	}
-	defer resp.Body.Close()
 
 	dutConn := s.DUT().Conn()
 	// Getting the date for 1 month ago, this is needed for the RLZ command below.
@@ -168,4 +159,45 @@ func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to zero touch enroll using chrome: ", err)
 	}
 	defer pc.StopChrome(cleanupCtx, &empty.Empty{})
+}
+
+func preProvisionDevice(ctx context.Context, serialNumber, hardwareModel, deviceProvisionToken, customerID, batchKey string) error {
+	// Prepare and issue a request.
+	bodyCommand := fmt.Sprintf("{\"requests\": [ {\"preProvisionedDevice\":{serialNumber:\"%s\",hardwareModel:\"%s\",devicePreProvisioningToken:\"%s\",attestedDeviceId:\"%s\",customer_id:\"%s\"}}]}", serialNumber, hardwareModel, deviceProvisionToken, serialNumber, customerID)
+	urlWithBatchKey := fmt.Sprintf("https://chromecommercial.googleapis.com/v1/preProvisionedDevices:batchCreate?key=%s", batchKey)
+	body := strings.NewReader(bodyCommand)
+	req, err := http.NewRequest("POST", urlWithBatchKey, body)
+	if err != nil {
+		return errors.Wrap(err, "failed to create request")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return errors.Wrap(err, "failed to issue request")
+	}
+	defer resp.Body.Close()
+
+	// Validate response.
+	respBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Wrap(err, "failed to read response")
+	}
+	type preProvisionResponse struct {
+		PreProvisionedDevice interface{}
+		Status               interface{}
+	}
+	type preProvisionResponseList struct {
+		Responses []preProvisionResponse
+	}
+	var parsedResponse preProvisionResponseList
+	if err := json.Unmarshal(respBytes, &parsedResponse); err != nil {
+		return errors.Wrap(err, "failed to parse response")
+	}
+	if len(parsedResponse.Responses) != 1 ||
+		parsedResponse.Responses[0].Status != nil ||
+		parsedResponse.Responses[0].PreProvisionedDevice == nil {
+		return errors.Errorf("unsuccessful response: %s", string(respBytes))
+	}
+	testing.ContextLog(ctx, "Succesfully pre-provisioned device")
+	return nil
 }
