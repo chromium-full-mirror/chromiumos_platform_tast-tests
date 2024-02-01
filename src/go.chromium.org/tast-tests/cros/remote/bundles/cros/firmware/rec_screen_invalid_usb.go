@@ -36,7 +36,7 @@ func init() {
 
 func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	var chargerRemoved bool
+	var removeServoCharger bool
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -52,20 +52,20 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 		// The dut might have booted from the usb.
 		// Reboot the machine from main disk before
 		// restoring the usb device.
-		s.Log("Rebooting the DUT with cold reset")
-		if err := resetDUT(ctx, h); err != nil {
+		s.Log("Rebooting the DUT")
+		if err := resetDUT(ctx, h, removeServoCharger); err != nil {
 			s.Fatal("Failed to cold reset the DUT: ", err)
 		}
 		if err := h.RestoreUSBKey(ctx); err != nil {
 			s.Fatal("Failed to restore the USB: ", err)
 		}
-		if chargerRemoved {
+		if removeServoCharger {
 			if err := h.SetDUTPower(ctx, true); err != nil {
 				s.Fatal("Failed to connect charger: ", err)
 			}
-			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 90*time.Second)
 			defer cancelWaitConnect()
-			if err := h.WaitConnect(waitConnectCtx); err != nil {
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 				s.Fatal("Failed to reconnect to the DUT: ", err)
 			}
 		}
@@ -81,20 +81,9 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	// We saw that setting servo_pd_role:snk helps some machines
 	// to boot the USB in recovery mode.
 	if batteryExists && supportPDRole {
-		if err := h.SetDUTPower(ctx, false); err != nil {
-			s.Fatal("Failed to remove charger: ", err)
-		}
-		if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
-			s.Fatal("Failed to remove watchdog for ccd: ", err)
-		}
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 1*time.Minute)
-		defer cancelWaitConnect()
-		if err = h.WaitConnect(waitConnectCtx); err != nil {
-			s.Fatal("Failed to reconnect to the DUT: ", err)
-		}
-		chargerRemoved = true
+		removeServoCharger = true
 	}
-	if err := bootToNoGoodScreen(ctx, h); err != nil {
+	if err := bootToNoGoodScreen(ctx, h, removeServoCharger); err != nil {
 		s.Fatal("Failed to traverse NoGood screen: ", err)
 	}
 	s.Log("Powering off the USB")
@@ -127,7 +116,7 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	}
 }
 
-func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
+func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper, removeServoCharger bool) error {
 	ms, err := firmware.NewModeSwitcher(ctx, h)
 	if err != nil {
 		return errors.Wrap(err, "failed to create mode switcher")
@@ -142,6 +131,11 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Waiting for DUT to reach the firmware screen")
 	if err := h.WaitFirmwareScreen(ctx, h.Config.FirmwareScreenRecMode); err != nil {
 		return errors.Wrap(err, "failed to get to firmware screen")
+	}
+	if removeServoCharger {
+		if err := h.SetDUTPower(ctx, false); err != nil {
+			return errors.Wrap(err, "failed to remove charger")
+		}
 	}
 	if h.Config.ModeSwitcherType == firmware.MenuSwitcher {
 		menuNavigator, err := firmware.NewMenuNavigator(ctx, h)
@@ -197,15 +191,29 @@ func bootToNoGoodScreen(ctx context.Context, h *firmware.Helper) error {
 	return nil
 }
 
-func resetDUT(ctx context.Context, h *firmware.Helper) error {
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		return errors.Wrap(err, "failed to send cold reset command")
-	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-	defer cancelWaitConnect()
+func resetDUT(ctx context.Context, h *firmware.Helper, removeServoCharger bool) error {
+	if h.DUT.Connected(ctx) && removeServoCharger {
+		// Applying cold reset with the function h.Servo.SetPowerState could lead to the
+		// 'EC: No data was sent from the pty' error. Call a reboot command instead.
+		testing.ContextLog(ctx, "Rebooting the DUT")
+		if err := h.DUT.Conn().CommandContext(ctx, "reboot").Run(); err != nil && !errors.As(err, &context.DeadlineExceeded) {
+			return errors.Wrap(err, "failed to run reboot command")
+		}
+		waitUnreachableCtx, cancelWaitUnreachable := context.WithTimeout(ctx, 10*time.Second)
+		defer cancelWaitUnreachable()
+		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
+			return errors.Wrap(err, "failed to wait for DUT to be unreachable after reboot")
+		}
+		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+		defer cancelWaitConnect()
 
-	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-		return errors.Wrap(err, "failed to reconnect to the DUT")
+		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+			return errors.Wrap(err, "failed to reconnect to the DUT")
+		}
+	} else {
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			return errors.Wrap(err, "failed to ensure DUT is booted")
+		}
 	}
 	return nil
 }
