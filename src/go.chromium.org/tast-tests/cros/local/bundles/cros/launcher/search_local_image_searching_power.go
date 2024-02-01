@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -37,6 +38,7 @@ func init() {
 		BugComponent: "b:1281467",
 		Timeout:      20*time.Minute + power.RecorderTimeout,
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 		Params: []testing.Param{
 			{
 				Name:    "enable",
