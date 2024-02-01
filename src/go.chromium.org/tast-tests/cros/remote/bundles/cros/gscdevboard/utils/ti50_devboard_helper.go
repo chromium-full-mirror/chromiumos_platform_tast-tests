@@ -449,12 +449,13 @@ func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImag
 
 	tpmHandle := h.Tpm(ctx, bus)
 
-	// Try reading DidVid a few times until Ti50 is ready.
-	const maxDidVidAttempts = 3
+	// Try reading DidVid a few times until Ti50 or Cr50 is ready.
+	const maxDidVidAttempts = 6
 	expectedDidVidValue := h.GscProperties().ExpectedDidVidValue()
 	for r := 1; r <= maxDidVidAttempts; r++ {
 		// Avoid using tpmHandle.ReadRegister(), as doing so would instantly fail the test
 		// in case of timeout or other errors, instead directly call lower-level method.
+		testing.ContextLogf(ctx, "TPM DID_VID verification attempt %d/%d", r, maxDidVidAttempts)
 		didVid, err := tpmHandle.OpenTitanToolTpmCommand("read-register", string(ti50.TpmRegDidVid))
 		if err != nil {
 			if r == maxDidVidAttempts {
