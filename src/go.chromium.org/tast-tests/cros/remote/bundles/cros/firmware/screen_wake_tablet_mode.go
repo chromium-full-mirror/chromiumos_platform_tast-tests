@@ -456,8 +456,8 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 			basestateNotFound  = `Command 'basestate' not found or ambiguous`
 			basestateStatus    = `\[\S+ base state: (attached|detached)\]`
 			bdStatus           = `\[\S+ BD forced (connected|disconnected|reset)\]`
-			lidAccel           = `\[\S+ Lid Accel ODR:(?i)[^\n\r]*(?i)(1|0)\S+]`
-			eventStatus        = `\[\S+ event set (?i)[^\n\r]*]`
+			lidAccel           = `\[\S+ Lid Accel ODR:[^\n\r]*(1|0)\S+]`
+			eventStatus        = `\[\S+ event set [^\n\r]*]`
 			tabletModeReset    = `\[\S+ (clamshell mode|tablet mode)\]`
 			checkTabletMode    = `(` + tabletmodeNotFound + `|` + tabletmodeStatus + `|` + basestateNotFound +
 				`|` + basestateStatus + `|` + bdStatus + `|` + lidAccel + `|` + eventStatus + `|` + tabletModeReset + `)`

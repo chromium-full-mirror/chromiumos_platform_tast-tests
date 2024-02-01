@@ -45,13 +45,13 @@ const (
 // Pattern expression for RunCommandGetOutput.
 const (
 	reKBBacklight        string = `Keyboard backlight: (\d+)\%`
-	reCheckKBLight       string = `Keyboard backlight: \d+\%|Command 'kblight' not found or ambiguous.`
+	reCheckKBLight       string = `Keyboard backlight: \d+\%|Command 'kblight' not found or ambiguous`
 	reTabletmodeNotFound string = `Command 'tabletmode' not found or ambiguous`
 	reBasestateNotFound  string = `Command 'basestate' not found or ambiguous`
 	reTabletmodeStatus   string = `\[\S+ tablet mode\s?(enabled|disabled)?|clamshell mode\]`
 	reBasestateStatus    string = `\[\S+ base state: (attached|detached)\]`
 	reBdStatus           string = `\[\S+ BD forced (connected|disconnected)\]`
-	reLidAccel           string = `\[\S+ Lid Accel ODR:(?i)[^\n\r]*(?i)(1|0)\S+]`
+	reLidAccel           string = `\[\S+ Lid Accel ODR:[^\n\r]*(1|0)\S+]`
 	reVupBtnPressed      string = `\[\S+ Button \'Volume Up\' was pressed(.|\n)*buttons: 2\]`
 	reVupBtnReleased     string = `\[\S+ Button \'Volume Up\' was released(.|\n)*buttons: 0\]`
 	reVdownBtnPressed    string = `\[\S+ Button \'Volume Down\' was pressed(.|\n)*buttons: 4\]`
