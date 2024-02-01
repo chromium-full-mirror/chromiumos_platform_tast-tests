@@ -686,15 +686,28 @@ const (
 
 	// DauntlessShieldShuntOhms is the resistance of the shunt resistor.
 	DauntlessShieldShuntOhms = 0.5
+
+	// Pac195xShuntLsbVolts represents "one count" of the least significant bit of the shunt
+	// measuring port of PAC195x.  See https://www.microchip.com/en-us/product/pac1954
+	Pac195xShuntLsbVolts = 0.0000015
+
+	// OpenTitanShieldShuntOhms is the resistance of the shunt resistor.
+	OpenTitanShieldShuntOhms = 0.5
 )
 
 // ReadGscTotalMilliAmps measures the current consumed by the GSC across all power rails.
 func (h DevboardHelper) ReadGscTotalMilliAmps(ctx context.Context) float32 {
-	// This implementation works for the Dauntless shield, and will have to be adapted for
-	// other current sensing chips and power rails on other shields.
-	if h.TestbedType == ti50.GscOTShield {
-		return 0
+	if h.TestbedType == ti50.GscDTShield {
+		return h.readGscTotalMilliAmpsDtShield(ctx)
+	} else if h.TestbedType == ti50.GscOTShield {
+		return h.readGscTotalMilliAmpsOtShield(ctx)
+	} else {
+		h.Fatalf("current measurement not implemented for: %s", h.TestbedType)
+		return 0.0
 	}
+}
+
+func (h DevboardHelper) readGscTotalMilliAmpsDtShield(ctx context.Context) float32 {
 	output, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", "INA", "raw-write-read", "--hexdata=01", "-n2")
 	if err != nil {
 		h.Fatalf("i2c error: %s", err)
@@ -704,4 +717,22 @@ func (h DevboardHelper) ReadGscTotalMilliAmps(ctx context.Context) float32 {
 		h.Fatalf("decoding response '%s' from INA231: %v", output["hexdata"].(string), err)
 	}
 	return float32(reading) * Ina231ShuntLsbVolts / DauntlessShieldShuntOhms * 1000.0
+}
+
+func (h DevboardHelper) readGscTotalMilliAmpsOtShield(ctx context.Context) float32 {
+	// Tell the chip to present snapshot of measurement values in its registers.
+	_, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", "PAC1", "raw-write", "--hexdata=1f")
+	if err != nil {
+		h.Fatalf("i2c error: %s", err)
+	}
+	// Read Vsense channel three
+	output, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", "PAC1", "raw-write-read", "--hexdata=0d", "-n2")
+	if err != nil {
+		h.Fatalf("i2c error: %s", err)
+	}
+	reading, err := strconv.ParseUint(output["hexdata"].(string), 16, 64)
+	if err != nil {
+		h.Fatalf("decoding response '%s' from INA231: %v", output["hexdata"].(string), err)
+	}
+	return float32(reading) * Pac195xShuntLsbVolts / OpenTitanShieldShuntOhms * 1000.0
 }
