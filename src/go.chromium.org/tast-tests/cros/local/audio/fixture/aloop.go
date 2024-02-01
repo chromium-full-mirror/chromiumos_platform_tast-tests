@@ -84,7 +84,7 @@ SectionDevice."Loopback Capture".0 {
 
 // AloopLoadedFixture is a fixture to load snd-aloop kernel module.
 // Take note that this fixture doesn't select the output/input node.
-// We need to call internal.SelectIODevices to select the output/input node
+// We need to call audio.SelectIODevices to select the output/input node
 // via D-Bus, or SetupLoopback to select the output/input node via Quick Settings UI.
 type AloopLoadedFixture struct {
 	// Channels of the aloop device. 0 to not change the existing configuration.

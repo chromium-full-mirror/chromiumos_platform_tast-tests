@@ -94,6 +94,17 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
+				Name: "4p_present_noise_cancellation",
+				Val: webrtc.VCTestParams{
+					NumPeople:         4,
+					Present:           true,
+					NoiseCancellation: true,
+				},
+				Fixture:   "chromeRTCPerf",
+				Timeout:   5 * time.Minute,
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
 				Name: "4p_text",
 				Val: webrtc.VCTestParams{
 					NumPeople: 4,

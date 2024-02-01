@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -25,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/media/webrtc"
@@ -59,6 +61,8 @@ type VCTestParams struct {
 	// If Trace is true, then perfetto tracing is executed and the tracing
 	// result is saved in the result directory.
 	Trace bool
+	// If NoiseCancellation is true, enable input noise cancellation on the platform.
+	NoiseCancellation bool
 }
 
 const (
@@ -376,6 +380,10 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Second)
 	defer cancel()
 
+	if err := setUpAudio(ctx, params); err != nil {
+		return errors.Wrap(err, "setUpAudio")
+	}
+
 	r := power.NewRecorder(ctx, powerInterval, s.OutDir(), s.TestName())
 	defer r.Close(closeCtx)
 
@@ -429,6 +437,29 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 		return runStep(ctx, conn, r)
 	}
 	return runNonStep(ctx, s, tconn, conn, r, params)
+}
+
+// setUpAudio configures the audio server according to p.
+func setUpAudio(ctx context.Context, p VCTestParams) error {
+	if p.NoiseCancellation {
+		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
+			return errors.Wrap(err, "cannot install nc-ap-dlc")
+		}
+	}
+	cras, err := audio.RestartCras(ctx)
+	if err != nil {
+		return errors.Wrap(err, "cannot restart CRAS")
+	}
+
+	if err := audio.SelectIODevices(ctx, cras, "INTERNAL_MIC", "INTERNAL_SPEAKER"); err != nil {
+		return errors.Wrap(err, "audio.SelectIODevices")
+	}
+
+	if err := cras.SetNoiseCancellationEnabled(ctx, p.NoiseCancellation); err != nil {
+		return errors.Wrap(err, "cras.SetNoiseCancellationEnabled")
+	}
+
+	return nil
 }
 
 // RunVideoConference runs a video conference using WebRTC API and measures the

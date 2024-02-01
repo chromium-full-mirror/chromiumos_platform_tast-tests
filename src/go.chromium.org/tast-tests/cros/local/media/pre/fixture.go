@@ -1059,7 +1059,7 @@ func init() {
 		Contacts: []string{"chromeos-rtc@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
-				chrome.ExtraArgs([]string{
+				chrome.ExtraArgs(
 					// Do not show message center notifications.
 					"--suppress-message-center-popups",
 					// Disable ARC++.
@@ -1075,11 +1075,15 @@ func init() {
 					"--disable-sync",
 					// Allow 2 windows side by side.
 					"--force-tablet-mode=clamshell",
-				}...),
+					// Do not attempt to change audio server settings.
+					"--use-fake-cras-audio-client-for-dbus",
+				),
 				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 				chrome.EnableFeatures(
 					// Prefer using constant frame rate for camera streaming.
 					"PreferConstantFrameRate",
+					// Make noise cancellation available.
+					"CrOSLateBootAudioAPNoiseCancellation",
 				),
 			}, nil
 		}),

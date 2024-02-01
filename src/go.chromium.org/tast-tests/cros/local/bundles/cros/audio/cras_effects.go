@@ -555,7 +555,7 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("resetNCState failed: ", err)
 	}
 
-	if err := internal.SelectIODevices(ctx, cras, param.inputDevice, param.outputDevice); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, param.inputDevice, param.outputDevice); err != nil {
 		s.Fatal("Failed to select IO devices: ", err)
 	}
 	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {

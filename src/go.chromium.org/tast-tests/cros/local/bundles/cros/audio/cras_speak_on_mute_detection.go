@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -221,7 +220,7 @@ func CrasSpeakOnMuteDetection(ctx context.Context, s *testing.State) {
 	if err := cras.SetSpeakOnMuteDetection(ctx, param.featureEnabled); err != nil {
 		s.Fatal("Cannot enable speak-on-mute detection: ", err)
 	}
-	if err := internal.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
 		s.Fatal("Cannot select IO devices: ", err)
 	}
 

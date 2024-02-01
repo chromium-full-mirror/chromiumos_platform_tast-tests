@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/data"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -146,7 +145,7 @@ func CrasSpeakOnMuteDetectionTransitions(ctx context.Context, s *testing.State) 
 		s.Fatal("Cannot connect to CRAS: ", err)
 	}
 
-	if err := internal.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
+	if err := audio.SelectIODevices(ctx, cras, "ALSA_LOOPBACK", "ALSA_LOOPBACK"); err != nil {
 		s.Fatal("Cannot select ALSA loopback: ", err)
 	}
 
