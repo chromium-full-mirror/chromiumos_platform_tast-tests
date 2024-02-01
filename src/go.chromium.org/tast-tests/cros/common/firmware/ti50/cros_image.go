@@ -318,7 +318,7 @@ func (i *CrOSImage) SetCCDCapability(ctx context.Context, capability CCDCap, sta
 // is expected to reboot. Note that this does not detect if reboot was not performed because
 // CCD wasn't open.
 func (i *CrOSImage) SendConsoleRebootCmd(ctx context.Context) error {
-	if err := i.WriteSerial(ctx, []byte("reboot")); err != nil {
+	if err := i.WriteSerial(ctx, []byte("reboot\r")); err != nil {
 		return err
 	}
 	return nil
@@ -417,6 +417,16 @@ func (i *CrOSImage) SysrstPulse(ctx context.Context) error {
 // must have been previously enabled
 func (i *CrOSImage) TestlabOpen(ctx context.Context) error {
 	return i.runCommand(ctx, "ccd testlab open")
+}
+
+// SetWp uses `wp` to set the current write protect value
+func (i *CrOSImage) SetWp(ctx context.Context, enabled bool) error {
+	return i.runCommand(ctx, "wp "+strconv.FormatBool(enabled))
+}
+
+// SetWpAtBoot uses `wp` to set the current and atboot write protect value
+func (i *CrOSImage) SetWpAtBoot(ctx context.Context, enabled bool) error {
+	return i.runCommand(ctx, "wp "+strconv.FormatBool(enabled)+" atboot")
 }
 
 // GetCCDLevel uses the `ccd` GSC console command to get the current CCD level

@@ -95,6 +95,7 @@ const (
 type whichPin string
 
 var (
+	whichPinWPSense      whichPin = "0000000000000004"
 	whichPinPltRstL      whichPin = "0000000000000800"
 	whichPinEcPacketMode whichPin = "0000000001000000"
 	whichPinLidOpen      whichPin = "0000000002000000"
@@ -256,6 +257,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50EcRstL, true)
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, false)
 	b.GpioSet(ctx, ti50.GpioTi50CcdModeL, true)
+	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
 	b.ResetWithStraps(ctx, testParams.servoMicroStrapping, ti50.CcdDisconnected, testParams.tpmStrapping)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	var gpioMonitor utils.GpioMonitorSession
@@ -303,6 +305,13 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
+	s.Log("Simulating WP_SENSE_L de-assert pulse event")
+	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, true)
+	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinWPSense, "WP_SENSE_L de-assert event") {
+		verifyDeepSleep(ctx, s, i, th)
+	}
+
 	s.Logf("Simulating SuzyQ inserted, wait %s", waitForNoSleep)
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
@@ -331,6 +340,18 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinEcPacketMode, "EC_PACKET_MODE") {
 		verifyDeepSleep(ctx, s, i, th)
 	}
+
+	s.Log("Setting WP enabled at boot to prevent wp dirty state. Reset GSC to clear dirty WP state")
+	// Pause the gpio monitor since we are about to reboot the GSC on purpose.
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	th.MustSucceed(i.TestlabOpen(ctx), "testlab open")
+	th.MustSucceed(i.SetWpAtBoot(ctx, true), "Enable WP at boot")
+	th.MustSucceed(i.SendConsoleRebootCmd(ctx), "GSC reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	// Clear the last gpio monitor events since we expect GSC to reset EC from above commands
+	b.GpioMonitorRead(ctx, gpioMonitor)
+	s.Log("Waiting for sleep with AP off")
+	th.MustSucceed(i.WaitUntilDeepSleep(ctx, time.Minute), "Ti50 did not sleep when AP off")
 
 	s.Log("Simulating AP booting")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
@@ -431,6 +452,18 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 		s.Log("Waiting for sleep with AP on")
 		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
 	}
+
+	s.Logf("Simulating WP_SENSE_L de-assert pulse event, wait %s", waitForNoSleep)
+	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, true)
+	b.GpioSet(ctx, ti50.GpioTi50WriteProtectSenseL, false)
+	verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinWPSense, "WP_SENSE_L pulse")
+	// Need to clear an WP dirty state that would cause extra GSC reboots
+	th.MustSucceed(i.SendConsoleRebootCmd(ctx), "GSC reboot")
+	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
+	// Clear the last gpio monitor events since we expect GSC to reset EC from above commands
+	b.GpioMonitorRead(ctx, gpioMonitor)
+	s.Log("Waiting for sleep with AP on")
+	th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
 
 	s.Log("Simulating AP powering off")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
