@@ -381,7 +381,7 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	if err := unix.Mkfifo(fromGuestFIFO, 0666); err != nil {
 		s.Fatal("Failed to make outputput fifo: ", err)
 	}
-	vm.SerialIO(toGuestFIFO, fromGuestFIFO)(ps)
+	vm.SerialIO(toGuestFIFO, fromGuestFIFO, vm.OtherSerial)(ps)
 
 	// Increase the max open file limit as the benchmark creates a lot of files.
 	args := append([]string{"--nofile=262144", "crosvm"}, ps.ToArgs()...)

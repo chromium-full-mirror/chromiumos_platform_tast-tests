@@ -29,14 +29,14 @@ type Crosvm struct {
 
 // SharedDirParam holds parameters for a shared directory.
 type SharedDirParam struct {
-	Src       string
-	Tag       string
-	FsType    string
-	Cache     string
-	Timeout   uint
-	Writeback bool
-	DAX       bool
-	CaseFold  bool
+	Src             string
+	Tag             string
+	FsType          string
+	Cache           string
+	Timeout         uint
+	Writeback       bool
+	DAX             bool
+	CaseFold        bool
 	NegativeTimeout uint
 }
 
@@ -44,10 +44,21 @@ func (p *SharedDirParam) toArg() string {
 	return fmt.Sprintf("%s:%s:type=%s:cache=%s:timeout=%d:writeback=%t:dax=%t:ascii_casefold=%t:negative_timeout=%d", p.Src, p.Tag, p.FsType, p.Cache, p.Timeout, p.Writeback, p.DAX, p.CaseFold, p.NegativeTimeout)
 }
 
-// SerialIOPath contains file names used for serial input and output.
-type SerialIOPath struct {
+// SerialType is a type of a serial device.
+type SerialType int
+
+const (
+	// GuestConsole is a serial device for the guest console and earlycon.
+	GuestConsole SerialType = iota
+	// OtherSerial is a serial device that doesn't work as either guest console or earlycon.
+	OtherSerial
+)
+
+// SerialIOParam contains parameters for serial devices including such as input/output file names.
+type SerialIOParam struct {
 	ToGuest string
 	ToHost  string
+	Type    SerialType
 }
 
 // NetOption contains option for set up virtio net
@@ -71,7 +82,7 @@ type CrosvmParams struct {
 	socketPath     string           // path to the VM control socket
 	kernelArgs     []string         // string arguments to be passed to the VM kernel
 	sharedDirs     []SharedDirParam // array of configuration of a directory to be shared with the VM
-	serialIO       []SerialIOPath   // paths to files used for serial input and output
+	serialIO       []SerialIOParam  // paths to files used for serial input and output
 	vhostUserNet   []string         // paths to sockets that vhost-user-net devices will use
 	disableSandbox bool             // whether or not the sandbox is disabled
 	netOptions     []NetOption      // net option for virtio-net
@@ -137,15 +148,17 @@ func SharedDir(param SharedDirParam) Option {
 }
 
 // SerialIO sets files used for serial input and output.
-func SerialIO(toGuest, toHost string) Option {
+func SerialIO(toGuest, toHost string, typ SerialType) Option {
 	return func(p *CrosvmParams) {
-		p.serialIO = append(p.serialIO, SerialIOPath{ToGuest: toGuest, ToHost: toHost})
+		p.serialIO = append(p.serialIO, SerialIOParam{ToGuest: toGuest, ToHost: toHost, Type: typ})
 	}
 }
 
 // SerialOutput sets a file that serial log will be written.
 func SerialOutput(path string) Option {
-	return SerialIO("", path)
+	// Use this serial output for guest console and earlycon, assuming this function
+	// is called only once per VM.
+	return SerialIO("", path, GuestConsole)
 }
 
 // VhostUserNet sets a socket to be used by a vhost-user net device.
@@ -253,17 +266,22 @@ func (p *CrosvmParams) ToArgs() []string {
 		args = append(args, "--shared-dir", param.toArg())
 	}
 
-	for idx, pipes := range p.serialIO {
+	for idx, param := range p.serialIO {
 		input := ""
-		if pipes.ToGuest != "" {
-			input = fmt.Sprintf(",input=%s", pipes.ToGuest)
+		if param.ToGuest != "" {
+			input = fmt.Sprintf(",input=%s", param.ToGuest)
 		}
 		output := ""
-		if pipes.ToHost != "" {
-			output = fmt.Sprintf(",path=%s", pipes.ToHost)
+		if param.ToHost != "" {
+			output = fmt.Sprintf(",path=%s", param.ToHost)
 		}
 
-		args = append(args, "--serial", fmt.Sprintf("type=file,num=%d%s%s", idx+1, input, output))
+		guestCon := false
+		if param.Type == GuestConsole {
+			guestCon = true
+		}
+
+		args = append(args, "--serial", fmt.Sprintf("type=file,num=%d%s%s,console=%t,earlycon=%t", idx+1, input, output, guestCon, guestCon))
 	}
 
 	if p.disableSandbox {
