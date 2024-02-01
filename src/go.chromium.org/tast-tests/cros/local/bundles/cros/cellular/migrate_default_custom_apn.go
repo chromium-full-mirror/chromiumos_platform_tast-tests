@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,7 +31,7 @@ func init() {
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_amari_callbox"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "cellular",
+		Fixture:      "cellularResetShillProfileOnPostTest",
 		Timeout:      10 * time.Minute,
 	})
 }
@@ -92,24 +91,25 @@ func MigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 		}
 
 		isAttach := false
+		username := ""
+		password := ""
+
 		for _, apnType := range apn.APNTypes {
 			if apnType == shillconst.DevicePropertyCellularAPNInfoApnTypeIA {
 				isAttach = true
 			}
 		}
-		if err := ossettings.EnterPreRevampOtherAPNDetails(ctx, tconn, validAPNToMigrate, "", "", isAttach); err != nil {
+
+		if savedUsername := apn.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnUsername]; savedUsername != nil {
+			username = fmt.Sprintf("%v", savedUsername)
+		}
+
+		if savedPassword := apn.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnPassword]; savedPassword != nil {
+			password = fmt.Sprintf("%v", savedPassword)
+		}
+
+		if err := ossettings.EnterPreRevampOtherAPNDetails(ctx, tconn, validAPNToMigrate, username, password, isAttach); err != nil {
 			s.Fatal("Failed to enter custom APN: ", err)
-		}
-
-		m, err := input.Mouse(ctx)
-		if err != nil {
-			s.Fatal("Failed to get mouse: ", err)
-		}
-		defer m.Close(ctx)
-
-		// Connect status may not be in the view, scroll up.
-		if err := m.ScrollUp(); err != nil {
-			s.Fatal("Failed to scroll up: ", err)
 		}
 
 		ui := uiauto.New(tconn)
@@ -118,14 +118,21 @@ func MigrateDefaultCustomApn(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify Connected: ", err)
 		}
 
+		if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(ossettings.DisconnectButton.Focusable())(ctx); err != nil {
+			s.Fatal("Failed to verify Disconnect button appears after APN details changed: ", err)
+		}
+
 		// Disconnect from the network and attempt a connect to ensure the custom APN is used.
-		if err := ui.EnsureExistsFor(ossettings.DisconnectButton, 5*time.Second)(ctx); err == nil {
+		if err := ui.EnsureExistsFor(ossettings.DisconnectButton.Focusable(), 5*time.Second)(ctx); err != nil {
 			if err := uiauto.Combine("Disconnect and re-connect",
-				ui.LeftClickUntil(ossettings.DisconnectButton,
-					ui.EnsureGoneFor(ossettings.DisconnectButton, 5*time.Second)),
-				ui.WithTimeout(15*time.Second).WaitUntilExists(ossettings.ConnectButton),
+				ui.ScrollToVisible(ossettings.DisconnectButton.Focusable()),
+				ui.LeftClickUntil(ossettings.DisconnectButton.Focusable(),
+					ui.EnsureGoneFor(ossettings.DisconnectButton.Focusable(), 5*time.Second)),
+				ui.WithTimeout(10*time.Second).WaitUntilExists(ossettings.ConnectButton.Focusable()),
+				ui.EnsureExistsFor(ossettings.ConnectButton.Focusable(), 5*time.Second),
 				ui.LeftClick(ossettings.ConnectButton),
-				ui.WithTimeout(15*time.Second).WaitUntilExists(ossettings.ConnectedStatus),
+				ui.WithTimeout(10*time.Second).WaitUntilExists(ossettings.ConnectedStatus),
+				ui.EnsureExistsFor(ossettings.DisconnectButton.Focusable(), 5*time.Second),
 			)(ctx); err != nil {
 				s.Fatal("Failed to disconnect and re-connect: ", err)
 			}

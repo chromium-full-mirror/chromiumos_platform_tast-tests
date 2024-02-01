@@ -288,11 +288,8 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "failed to type username")
 	}
 
-	// On some devices, the save button might be hidden by the bottom bar.
-	for i := 0; i < 4; i++ {
-		if err := m.ScrollDown(); err != nil {
-			return errors.Wrap(err, "failed to scroll down")
-		}
+	if err := ui.ScrollToVisible(SaveButton)(ctx); err != nil {
+		return errors.Wrap(err, "did not scroll far enough down to Save button")
 	}
 
 	if err := ui.DoubleClick(UsernameInput)(ctx); err != nil {
@@ -320,8 +317,12 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 		}
 	}
 
-	if err := ui.LeftClick(SaveButton)(ctx); err != nil {
+	if err := ui.LeftClick(SaveButton.Focusable())(ctx); err != nil {
 		return errors.Wrap(err, "failed to click save button")
+	}
+
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(SaveButton.Focusable())(ctx); err != nil {
+		return errors.Wrap(err, "Save button failed to become/remain focusable after modifying custom APN")
 	}
 
 	return nil
