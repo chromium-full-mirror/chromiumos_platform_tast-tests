@@ -19,12 +19,9 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: DiskErrors,
-		Desc: "Checks disk error messages in dmesg",
-		Contacts: []string{
-			"nya@chromium.org",
-			"tast-core@google.com",
-		},
+		Func:         DiskErrors,
+		Desc:         "Checks disk error messages in dmesg",
+		Contacts:     []string{"tast-core@google.com"},
 		BugComponent: "b:575445", // Chrome Operations > Fleet > Operations > Repairs
 		Attr:         []string{"group:mainline"},
 		Timeout:      time.Minute,
