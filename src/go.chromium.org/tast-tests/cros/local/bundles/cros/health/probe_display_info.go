@@ -229,49 +229,70 @@ func compareUintPointer[T uint8 | uint16 | uint32](got *T, want T, field string)
 }
 
 func modetestConnectorInfo(ctx context.Context, column modetestConnectorColumn) (string, error) {
-	// Example output of "modetest -c" (partially):
-	// id      encoder status          name            size (mm)       modes   encoders
-	// 71      70      connected       eDP-1           290x190         1       70
-	//
-	// We'll try to get the line that contains "eDP" string first, and get the value at |column| index.
-	cmd := "modetest -c | grep -E 'DSI|eDP' | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
-	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", err
+	var data string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Example output of "modetest -c" (partially):
+		// id      encoder status          name            size (mm)       modes   encoders
+		// 71      70      connected       eDP-1           290x190         1       70
+		//
+		// We'll try to get the line that contains "eDP" string first, and get the value at |column| index.
+		cmd := "modetest -c | grep -E 'DSI|eDP' | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+		b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+		if err != nil {
+			return err
+		}
+		data = strings.TrimRight(string(b), "\n")
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "can't get connector info in 10 seconds")
 	}
 
-	return strings.TrimRight(string(b), "\n"), nil
+	return data, nil
 }
 
 func modetestEncoderInfo(ctx context.Context, encoderID string, column modetestEncoderColumn) (string, error) {
-	// Example output of "modetest -e" (partially):
-	// id      crtc    type    possible crtcs  possible clones
-	// 70      41      TMDS    0x00000007      0x00000001
-	//
-	// We'll try to get the line that starts with |encoderID| first, and get the value for crtc ID at column 2.
-	cmd := "modetest -e | grep ^" + encoderID + " | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
-	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", err
+	var data string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Example output of "modetest -e" (partially):
+		// id      crtc    type    possible crtcs  possible clones
+		// 70      41      TMDS    0x00000007      0x00000001
+		//
+		// We'll try to get the line that starts with |encoderID| first, and get the value for crtc ID at column 2.
+		cmd := "modetest -e | grep ^" + encoderID + " | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+		b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+		if err != nil {
+			return err
+		}
+		data = strings.TrimRight(string(b), "\n")
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "can't get encoder info in 10 seconds")
 	}
 
-	return strings.TrimRight(string(b), "\n"), nil
+	return data, nil
 }
 
 func modetestCrtcInfo(ctx context.Context, crtcID string, column modetestModeInfoColumn) (string, error) {
-	// Example output of "modetest -p" (partially):
-	// id      fb      pos     size
-	// 41      97      (0,0)   (1920x1280)
-	//   #0 1920x1280 60.00 1920 1944 1992 2080 1280 1286 1303 1320 164740 flags: nhsync, nvsync; type: preferred, driver
-	//
-	// We'll try to get the line that starts with |crtcID| first, get the following line as details info, and get the value at |column| index.
-	cmd := "modetest -p | grep ^" + crtcID + " -A 1 | sed '1d' | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
-	b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return "", err
+	var data string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Example output of "modetest -p" (partially):
+		// id      fb      pos     size
+		// 41      97      (0,0)   (1920x1280)
+		//   #0 1920x1280 60.00 1920 1944 1992 2080 1280 1286 1303 1320 164740 flags: nhsync, nvsync; type: preferred, driver
+		//
+		// We'll try to get the line that starts with |crtcID| first, get the following line as details info, and get the value at |column| index.
+		cmd := "modetest -p | grep ^" + crtcID + " -A 1 | sed '1d' | gawk -e '{print $" + strconv.Itoa(int(column)) + "}'"
+		b, err := testexec.CommandContext(ctx, "sh", "-c", cmd).Output(testexec.DumpLogOnError)
+		if err != nil {
+			return err
+		}
+		data = strings.TrimRight(string(b), "\n")
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "can't get crtc info in 10 seconds")
 	}
 
-	return strings.TrimRight(string(b), "\n"), nil
+	return data, nil
 }
 
 func modetestModeInfoFallbackVersion(ctx context.Context, column modetestModeInfoColumn) (string, error) {
