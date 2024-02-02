@@ -90,7 +90,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 		name:  ti50.UartEC,
 		magic: ecMagic,
 		ccd:   b.CcdSerialInterface(ti50.UartEC, time.Second),
-		uart:  b.PhysicalUart(ti50.UartEC, time.Second),
+		uart:  b.PhysicalUart(ti50.UartEC),
 	})
 
 	// Set up the AP console.
@@ -98,7 +98,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 		name:  ti50.UartAP,
 		magic: apMagic,
 		ccd:   b.CcdSerialInterface(ti50.UartAP, time.Second),
-		uart:  b.PhysicalUart(ti50.UartAP, time.Second),
+		uart:  b.PhysicalUart(ti50.UartAP),
 	})
 
 	// Set up the FPMCU console on chips that support it.
@@ -107,7 +107,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 			name:  ti50.UartFPMCU,
 			magic: fpmcuMagic,
 			ccd:   b.CcdSerialInterface(ti50.UartFPMCU, time.Second),
-			uart:  b.PhysicalUart(ti50.UartFPMCU, time.Second),
+			uart:  b.PhysicalUart(ti50.UartFPMCU),
 		})
 	}
 

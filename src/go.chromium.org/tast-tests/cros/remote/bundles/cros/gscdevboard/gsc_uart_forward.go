@@ -106,7 +106,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 }
 
 func testForwarding(ctx context.Context, s *testing.State, b utils.DevboardHelper, th utils.FirmwareTestingHelper, r *rand.Rand, port ti50.UartName, expectUartToUsb, expectUsbToUart bool, caseStr string) {
-	uart := b.PhysicalUart(port, time.Second)
+	uart := b.PhysicalUart(port)
 	ccd := b.CcdSerialInterface(port, time.Second)
 	th.MustSucceed(ccd.Open(ctx), "Failed to open %s ccd", port)
 	defer ccd.Close(ctx)

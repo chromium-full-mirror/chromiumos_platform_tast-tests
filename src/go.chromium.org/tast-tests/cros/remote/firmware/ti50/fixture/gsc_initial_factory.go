@@ -86,7 +86,7 @@ func (c *initialFactoryImpl) eraseInfoPage(ctx context.Context, s *testing.FixtT
 	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start EFI session")
 	defer b.EndSession(ctx)
 
-	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second)
+	gscConsole := b.PhysicalUart(ti50.UartConsole)
 	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
 	defer i.Close(ctx)
 
@@ -110,7 +110,7 @@ func (c *initialFactoryImpl) eraseAPROVerificationSettings(ctx context.Context, 
 	mustSucceed(s, b.StartSession(ctx, ti50.StrapReset), "Start ap ro erase session")
 	defer b.EndSession(ctx)
 
-	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second)
+	gscConsole := b.PhysicalUart(ti50.UartConsole)
 	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
 	defer i.Close(ctx)
 

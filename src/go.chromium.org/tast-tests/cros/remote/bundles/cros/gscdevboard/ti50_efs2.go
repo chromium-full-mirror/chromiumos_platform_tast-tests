@@ -35,7 +35,7 @@ func init() {
 func Ti50EFS2(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
-	ecUart := b.PhysicalUart(ti50.UartEC, time.Second)
+	ecUart := b.PhysicalUart(ti50.UartEC)
 	th.MustSucceed(ecUart.Open(ctx), "Open EC UART")
 	defer ecUart.Close(ctx)
 

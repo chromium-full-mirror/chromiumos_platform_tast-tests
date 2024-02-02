@@ -435,7 +435,11 @@ func (a *DUTControlAndreiboard) RunTcgTests(ctx context.Context, outdir, testSui
 }
 
 // PhysicalUart opens a handle for communication to/from a physical UART on the chip under test.
-func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName, readTimeout time.Duration) common.SerialChannel {
+func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName) common.SerialChannel {
+	readTimeout := common.UartTimeoutDefault
+	if name == common.UartConsole {
+		readTimeout = common.UartConsoleTimeout
+	}
 	uartOpener := &DUTControlRawUARTPortOpener{
 		Client:      a.client,
 		Uart:        string(name),

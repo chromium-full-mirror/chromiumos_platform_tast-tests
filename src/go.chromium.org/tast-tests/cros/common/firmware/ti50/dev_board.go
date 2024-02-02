@@ -43,8 +43,12 @@ const (
 type UartName string
 
 const (
+	// UartTimeoutDefault sets the default uart timeout. Timeout if the console doesn't send output for 1 second
+	UartTimeoutDefault time.Duration = time.Second
 	// UartConsole represents the GSC console
 	UartConsole UartName = "console"
+	// UartConsoleTimeout sets the GSC console timeout. Timeout if the console doesn't send output for 5 seconds
+	UartConsoleTimeout time.Duration = time.Second * 5
 	// UartAP represents the AP UART
 	UartAP UartName = "AP"
 	// UartEC represents the EC UART
@@ -77,7 +81,7 @@ type DevBoard interface {
 	// Executes TCG tests.
 	RunTcgTests(ctx context.Context, outdir, testSuite string) error
 	// PhysicalUart allows reading/writing data to a physical UART of the GSC under test.
-	PhysicalUart(name UartName, readTimeout time.Duration) SerialChannel
+	PhysicalUart(name UartName) SerialChannel
 	// CcdSerialInterface allows reading/writing data to a USB interface provided by the GSC under test, which implements the "serial" USB class.
 	CcdSerialInterface(name UartName, readTimeout time.Duration) SerialChannel
 	// CCDFlashromRead reads the SPI flash chip via CCD.

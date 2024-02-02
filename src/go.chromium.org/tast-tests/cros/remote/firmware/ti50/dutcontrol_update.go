@@ -47,7 +47,7 @@ func (b *DUTControlAndreiboard) DirectUpdate(ctx context.Context, imagePath stri
 // Rollback performs rollback by flashing to debug image, then running rollback command on the debug image.
 // The GSC UART must be closed before calling this method since it opens it to issue commands to the board.
 func (b *DUTControlAndreiboard) Rollback(ctx context.Context) error {
-	gscConsole := b.PhysicalUart(common.UartConsole, time.Second)
+	gscConsole := b.PhysicalUart(common.UartConsole)
 
 	i, err := common.OpenCrOSImage(ctx, gscConsole)
 	if err != nil {
@@ -160,7 +160,7 @@ func (b *DUTControlAndreiboard) UpdateOnce(ctx context.Context, imagePath string
 // CheckEqualConsoleVersions ensures that both slots have the same version as reported
 // with the "version" command.  GSC console must be closed before call.
 func (b *DUTControlAndreiboard) CheckEqualConsoleVersions(ctx context.Context) error {
-	gscConsole := b.PhysicalUart(common.UartConsole, time.Second)
+	gscConsole := b.PhysicalUart(common.UartConsole)
 
 	i, err := common.OpenCrOSImage(ctx, gscConsole)
 	if err != nil {

@@ -42,7 +42,7 @@ func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
 	// 6. Undefine space.
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 	b := utils.NewDevboardHelper(s)
-	ecUart := b.PhysicalUart(ti50.UartEC, time.Second)
+	ecUart := b.PhysicalUart(ti50.UartEC)
 	th.MustSucceed(ecUart.Open(ctx), "Open EC UART")
 	defer ecUart.Close(ctx)
 

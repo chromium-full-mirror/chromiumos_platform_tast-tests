@@ -151,7 +151,7 @@ func (c *ccdOpenImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 
 	// We can keep the same session that the parent created, but the UART connection must be
 	// closed before going into the main test code
-	gscConsole := b.PhysicalUart(ti50.UartConsole, time.Second*5)
+	gscConsole := b.PhysicalUart(ti50.UartConsole)
 	i := ti50.MustOpenCrOSImage(ctx, gscConsole, s)
 	defer i.Close(ctx)
 

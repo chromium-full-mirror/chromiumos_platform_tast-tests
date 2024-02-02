@@ -222,7 +222,7 @@ type DevboardHelper struct {
 func NewDevboardHelper(s *testing.State) DevboardHelper {
 	f := s.FixtValue().(*fixture.Value)
 	b := f.DevBoard()
-	gscConsole := b.PhysicalUart(ti50.UartConsole, 5*time.Second)
+	gscConsole := b.PhysicalUart(ti50.UartConsole)
 	return DevboardHelper{b, gscConsole, s, f.TestbedProperties.TestbedType}
 }
 
