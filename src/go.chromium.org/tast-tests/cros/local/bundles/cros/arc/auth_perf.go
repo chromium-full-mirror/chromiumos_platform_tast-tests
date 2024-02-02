@@ -30,7 +30,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
@@ -47,6 +49,8 @@ type testParam struct {
 	useMultipleWorkersBlock bool
 	// Whether to use O_DIRECT on /data
 	useODirectDataDisk bool
+	// Whether to enable Perfetto tracing
+	tracingEnabled bool
 }
 
 const (
@@ -163,6 +167,17 @@ func init() {
 				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--enable-features=ArcSwitchToKeyMintOnT,ArcSwitchToKeyMintOnTOverride"},
+			},
+		}, {
+			// TODO(b/318405975): Remove this after collecting some traces for debugging.
+			Name:              "unmanaged_vm_perfetto",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Platform("dedede")),
+			ExtraData:         []string{"perfetto_config.pbtxt"},
+			Val: testParam{
+				browserType:       browser.TypeAsh,
+				maxErrorBootCount: 1,
+				tracingEnabled:    true,
 			},
 		}},
 		VarDeps: []string{
@@ -287,7 +302,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		s.Logf("Running ARC opt-in iteration #%d out of %d",
 			len(playStoreShownTimes)+1, successBootCount)
 
-		v, err := bootARC(ctx, s, cr, tconn)
+		v, err := bootARC(ctx, s, cr, tconn, param.tracingEnabled)
 		logcatName := ""
 		if err == nil {
 			// Append Play Store shown time in ms for quick reference.
@@ -437,7 +452,7 @@ func coolDownConfig() cpu.CoolDownConfig {
 
 // bootARC performs one ARC boot iteration, opt-out and opt-in again.
 // It calculates the time when the Play Store appears and set of ARC auth times.
-func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *chrome.TestConn) (measuredValues, error) {
+func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *chrome.TestConn, tracingEnabled bool) (measuredValues, error) {
 	var v measuredValues
 
 	// Opt out.
@@ -455,13 +470,28 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		return v, err
 	}
 
+	var sess *tracing.Session
+	if tracingEnabled {
+		hostTraceOut := filepath.Join(s.OutDir(), fmt.Sprintf("host_perfetto.trace"))
+		var err error
+		sess, err = tracing.StartSession(ctx, s.DataPath("perfetto_config.pbtxt"), tracing.WithTraceDataPath(hostTraceOut), tracing.WithCompression())
+		if err != nil {
+			s.Fatal("Failed to start tracing: ", err)
+		}
+	}
 	if _, err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
-		out, topCmdErr := testexec.CommandContext(ctx, "top", "-n1", "-b").Output(testexec.DumpLogOnError)
+		if tracingEnabled {
+			sess.Stop()
+		}
+		out, topCmdErr := testexec.CommandContext(ctx, "top", "-n1", "-b", "-H", "-c", "-w").Output(testexec.DumpLogOnError)
 		if topCmdErr == nil {
 			s.Log("Saving `top` results to top.txt")
 			os.WriteFile(filepath.Join(s.OutDir(), "top.txt"), []byte(out), 0644)
 		}
 		s.Fatal("Failed to wait until CPU is stabilized: ", err)
+	}
+	if tracingEnabled {
+		sess.Stop()
 	}
 
 	energyBefore, err := power.NewRAPLSnapshot()
