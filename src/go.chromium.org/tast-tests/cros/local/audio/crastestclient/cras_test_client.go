@@ -58,21 +58,33 @@ func crasTestClientCommand(ctx context.Context, mode cmdMode, file string, dev, 
 }
 
 // PlaybackFileCommand creates a cras_test_client playback-from-file command.
+//
+// Deprecated: Call "cras_tests playback" instead.
+// See go/cras_test_client_deprecation.
 func PlaybackFileCommand(ctx context.Context, file string, duration, channels, rate int) *testexec.Cmd {
 	return crasTestClientCommand(ctx, playbackMode, file, defaultDevice, duration, channels, blockSize(rate), rate)
 }
 
 // PlaybackCommand creates a cras_test_client playback command.
+//
+// Deprecated: Call "cras_tests playback" instead.
+// See go/cras_test_client_deprecation.
 func PlaybackCommand(ctx context.Context, duration, blocksize int) *testexec.Cmd {
 	return crasTestClientCommand(ctx, playbackMode, "/dev/zero", defaultDevice, duration, 2, blocksize, 48000)
 }
 
 // CaptureFileCommand creates a cras_test_client capture-to-file command.
+//
+// Deprecated: Call "cras_tests capture" instead.
+// See go/cras_test_client_deprecation.
 func CaptureFileCommand(ctx context.Context, file string, duration, channels, rate int) *testexec.Cmd {
 	return crasTestClientCommand(ctx, captureMode, file, defaultDevice, duration, channels, blockSize(rate), rate)
 }
 
 // CaptureCommand creates a cras_test_client capture command.
+//
+// Deprecated: Call "cras_tests capture" instead.
+// See go/cras_test_client_deprecation.
 func CaptureCommand(ctx context.Context, duration, blocksize int) *testexec.Cmd {
 	return crasTestClientCommand(ctx, captureMode, "/dev/null", defaultDevice, duration, 2, blocksize, 48000)
 }

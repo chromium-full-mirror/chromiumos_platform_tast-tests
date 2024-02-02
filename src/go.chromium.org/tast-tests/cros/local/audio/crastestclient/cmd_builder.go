@@ -49,6 +49,9 @@ type CmdBuilder struct {
 }
 
 // NewCmdBuilder creates a new CmdBuilder with reasonable argument defaults set.
+//
+// Deprecated: Use cras_tests with testexec.CommandContext instead.
+// See go/cras_test_client_deprecation.
 func NewCmdBuilder() *CmdBuilder {
 	return &CmdBuilder{
 		channels:   2,
