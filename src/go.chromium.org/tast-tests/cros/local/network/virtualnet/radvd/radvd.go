@@ -23,8 +23,7 @@ import (
 
 const confTemplate = `
 interface {{.ifname}} {
-	MinRtrAdvInterval 3;
-	MaxRtrAdvInterval 4;
+	UnicastOnly on;
 	AdvSendAdvert on;
 	AdvManagedFlag on;
 	prefix {{.prefix}} {};
