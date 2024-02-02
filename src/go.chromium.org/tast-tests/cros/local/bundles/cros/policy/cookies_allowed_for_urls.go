@@ -29,7 +29,6 @@ func init() {
 		Desc:         "Check that the CookiesAllowedForUrls policy allows setting cookies only on the given sites",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"nikitapodguzov@chromium.org", // Test author
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
