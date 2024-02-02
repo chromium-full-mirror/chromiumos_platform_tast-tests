@@ -552,3 +552,9 @@ func (c *cryptohomeBinary) getRecoverableKeyStores(ctx context.Context, username
 	args := []string{"--output-format=binary-protobuf", "--action=get_recoverable_key_stores", "--user=" + username}
 	return c.call(ctx, args...)
 }
+
+// isPinWeaverPkEstablishmentBlocked returns the responses by calling "cryptohome --action=is_pw_pk_establishment_blocked".
+func (c *cryptohomeBinary) isPinWeaverPkEstablishmentBlocked(ctx context.Context) ([]byte, error) {
+	args := []string{"--action=is_pw_pk_establishment_blocked"}
+	return c.call(ctx, args...)
+}

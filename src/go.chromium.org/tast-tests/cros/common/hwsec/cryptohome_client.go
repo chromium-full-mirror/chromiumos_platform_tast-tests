@@ -1346,3 +1346,12 @@ func (u *CryptohomeClient) GetRecoverableKeyStores(ctx context.Context, username
 
 	return reply, nil
 }
+
+// IsPinWeaverPkEstablishmentBlocked checks whether PinWeaver PK establishment is blocked now.
+func (u *CryptohomeClient) IsPinWeaverPkEstablishmentBlocked(ctx context.Context) (bool, error) {
+	binaryMsg, err := u.binary.isPinWeaverPkEstablishmentBlocked(ctx)
+	if err != nil {
+		return false, errors.Wrap(err, "IsPinWeaverPkEstablishmentBlocked failed")
+	}
+	return strings.Contains(string(binaryMsg), "true"), nil
+}

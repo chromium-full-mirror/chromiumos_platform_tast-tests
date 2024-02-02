@@ -40,8 +40,8 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
 		// This needs to be run after a fresh reboot because PinWeaver's trust-on-first-use
 		// protocol is only allowed before a user is logged-in in a boot cycle. Previous tests might
-		// have logged-in a user so we need to reboot.
-		Fixture: "rebootFixture",
+		// have logged-in a user so we might need to reboot.
+		Fixture: "rebootIfPwBlockedFixture",
 		Timeout: 5 * time.Minute,
 	})
 }

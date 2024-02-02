@@ -16,9 +16,6 @@ import (
 const (
 	// Well known dbus name for biod.
 	dbusName = "org.chromium.BiometricsDaemon"
-	// Static point on the ecdh p256 curve for TPM initialization.
-	pointX = "3037d0359236fefb563c30e5c388db97f80c806282b4201d37f75e70f4e9a893"
-	pointY = "e865c0b9db57b41835006bb3d57e09117c86df1b208cefae5f73f44fc19d363f"
 
 	fakeBiometricsFixtureName = "fakeBiometricsFixture"
 )
@@ -35,10 +32,9 @@ func init() {
 		ResetTimeout:    fixtureResetTimeout,
 		TearDownTimeout: fixtureTearDownTimeout,
 		Impl:            &biometricsFixtureImpl{},
-		// This fixture needs to be set up after a fresh reboot because PinWeaver's trust-on-first-use
-		// protocol is only allowed before a user is logged-in in a boot cycle. Previous tests might
-		// have logged-in a user so the test needs a clean boot.
-		Parent: "rebootFixture",
+		// This fixture needs to be set up after establishing the PinWeaver pairing key because the
+		// protocol won't work without it.
+		Parent: "establishPwPairingKeyFixture",
 	})
 }
 
@@ -62,14 +58,6 @@ func (f *biometricsFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState)
 	daemonController := helper.DaemonController()
 	if err := daemonController.TryStop(ctx, hwsec.BiometricsDaemon); err != nil {
 		s.Fatal("Failed to stop biod: ", err)
-	}
-
-	// Initialize TPM with a biometrics daemon key pair exchange.
-	// The key pair used here is irrelevant of actual tests with fake biometrics daemon.
-	// TODO(b/289097233): Use the cmd exit code to only accept a successful or repetitive initialization.
-	// TODO(b/247670662): Abstract this away with a new cmd helper to correctly parse the cli response.
-	if _, err := helper.CmdRunner().Run(ctx, "pinweaver_client", "generate_ba_pk", "0", pointX, pointY); err != nil {
-		s.Fatal("Failed to initialize pinweaver: ", err)
 	}
 
 	// Start the fake auth stack manager that listens on the biod dbus connection.
