@@ -122,15 +122,11 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			mp.SetOutDir(s.OutDir())
 			mp.SetScriptPath(s.DataPath("domain_reliability_500_requests.py"))
 
-			if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
-				s.Fatal("Failed to launch and apply proxy: ", err)
-			}
-			defer cr.CleanupProxy(cleanupCtx)
-
 			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
-					PolicySetting: key}); err != nil {
+					PolicySetting: key,
+					Proxy:         mp}); err != nil {
 				s.Fatal("Failed to trigger and verify domain reliability: ", err)
 			}
 

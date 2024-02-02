@@ -58,16 +58,23 @@ func TestCases() map[networkrequestmonitor.PolicySetting]TestCase {
 // reporting when allowed by policy.
 // It is triggered by block images.google.com and return 500 error.
 func TriggerDomainReliabilityAllowed(ctx context.Context, params networkrequestmonitor.OptionalServiceParams) (err error) {
+	// Reserve 15 seconds for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
 	cr := params.Chrome
+	mp := params.Proxy
+
+	if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
+		return errors.Wrap(err, "failed to launch and apply proxy")
+	}
+	defer cr.CleanupProxy(cleanupCtx)
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		errors.Wrap(err, "failed to create Test API connection")
 	}
-
-	// Reserve 10 seconds for cleanup.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
 
 	// Open new tab and navigate to domainReliabilityTestURL.
 	keyboard, err := input.VirtualKeyboard(ctx)

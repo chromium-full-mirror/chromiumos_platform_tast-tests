@@ -40,6 +40,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/netexport"
@@ -306,6 +307,8 @@ func dataFiles() []string {
 	for _, serviceFiles := range dataFileLists {
 		dataFiles = append(dataFiles, serviceFiles...)
 	}
+
+	dataFiles = append(dataFiles, "domain_reliability_500_requests.py")
 	return dataFiles
 }
 
@@ -481,6 +484,15 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 				Browser:       br,
 				Server:        server,
 				PolicySetting: tcs.PolicyStatus}
+
+			if service.name == "domain_reliability" {
+				mp := mitmproxy.New()
+				mp.SetOutDir(s.OutDir())
+				mp.SetScriptPath(s.DataPath("domain_reliability_500_requests.py"))
+
+				params.Proxy = mp
+			}
+
 			if err := service.trigger(ctx, params); err != nil {
 				s.Fatalf("Failed to trigger %v: %v", service.name, err)
 			}
