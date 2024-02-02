@@ -23,8 +23,15 @@ const MotionmarkWPRRecordFixture = "loggedInToCUJUserWPRMotionmarkRecord"
 // MotionmarkWPRReplayFixture is a WPR-based fixture for running Motionmark benchmark.
 const MotionmarkWPRReplayFixture = "loggedInToCUJUserWPRMotionmarkReplay"
 
+// KrakenWPRRecordFixture is a WPR-based fixture for recording Kraken benchmark source.
+const KrakenWPRRecordFixture = "loggedInToCUJUserWPRKrakenRecord"
+
+// KrakenWPRReplayFixture is a WPR-based fixture for running Kraken benchmark.
+const KrakenWPRReplayFixture = "loggedInToCUJUserWPRKrakenReplay"
+
 const speedometerArchive = "ui.BenchmarkCUJ.speedometer.wprgo"
 const motionmarkArchive = "ui.BenchmarkCUJ.motionmark.wprgo"
+const krakenArchive = "ui.BenchmarkCUJ.kraken.wprgo"
 
 func init() {
 	// As a workaround for lack of parametrized fixtures (see b/285970864) add
@@ -71,4 +78,24 @@ func init() {
 		browser.TypeAsh,
 		wpr.Replay,
 		motionmarkArchive))
+	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
+		KrakenWPRRecordFixture,
+		"WPR Record fixture for Kraken",
+		[]string{
+			"cros-sw-perf@google.com",
+			"skardach@google.com",
+		},
+		browser.TypeAsh,
+		wpr.Record,
+		krakenArchive))
+	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
+		KrakenWPRReplayFixture,
+		"WPR Replay fixture for Kraken",
+		[]string{
+			"cros-sw-perf@google.com",
+			"skardach@google.com",
+		},
+		browser.TypeAsh,
+		wpr.Replay,
+		krakenArchive))
 }

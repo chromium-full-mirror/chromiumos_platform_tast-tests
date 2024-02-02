@@ -422,6 +422,29 @@ func init() {
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 			},
+			{
+				Name:      "kraken_wpr",
+				Timeout:   defaultTimeout,
+				Fixture:   benchmarkcuj.KrakenWPRReplayFixture,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				// This is a helper test for recording the WPR archive for kraken_wpr.
+				// Resulting archive will be located in /tmp/
+				Name:    "kraken_wpr_record",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.KrakenWPRRecordFixture,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.KrakenInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
 		},
 	})
 }
