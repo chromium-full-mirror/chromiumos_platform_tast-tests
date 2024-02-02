@@ -48,8 +48,7 @@ func init() {
 		},
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
-			ExtraAttr: []string{"group:criticalstaging"},
-			Val:       param{isAddPersonFlow: false, usePreprod: false},
+			Val: param{isAddPersonFlow: false, usePreprod: false},
 		}, {
 			Name: "add_person_flow",
 			Val:  param{isAddPersonFlow: true, usePreprod: false},
