@@ -34,11 +34,22 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
 		Fixture:      "cellularTestESIM",
-		Timeout:      9 * time.Minute,
+		Params: []testing.Param{
+			{
+				Name: "",
+				Val:  true,
+			},
+			{
+				Name: "smds_support_disabled",
+				Val:  false,
+			},
+		},
+		Timeout: 9 * time.Minute,
 	})
 }
 
 func ESimInstallBadActivationCode(ctx context.Context, s *testing.State) {
+	enableSmdsSupport := s.Param().(bool)
 	euicc, slot, err := hermes.GetEUICC(ctx, true)
 	if err != nil {
 		s.Fatal("Failed to get test euicc: ", err)
@@ -63,6 +74,11 @@ func ESimInstallBadActivationCode(ctx context.Context, s *testing.State) {
 	if slot == 1 {
 		s.Log("Append CellularUseSecondEuicc feature flag")
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CellularUseSecondEuicc"))
+	}
+	if enableSmdsSupport {
+		chromeOpts = append(chromeOpts, chrome.EnableFeatures("SmdsSupport"))
+	} else {
+		chromeOpts = append(chromeOpts, chrome.DisableFeatures("SmdsSupport"))
 	}
 
 	cr, err := chrome.New(ctx, chromeOpts...)

@@ -223,6 +223,9 @@ var ActiveCellularBtn = nodewith.HasClass("subpage-arrow").Role(role.Button).Anc
 // APNSubpageButton is the finder for the button on the details view of a cellular network that navigates to the APN details view for the network.
 var APNSubpageButton = nodewith.NameContaining("Access point name").Role(role.Link).First()
 
+// DialogEntryHeader is the finder for the profile discovery page in add new cellular network dialog.
+var DialogEntryHeader = nodewith.NameContaining("Automatically scan for available eSIM profiles?").Role(role.Heading).Focusable()
+
 // Elements in "Cellular detail page"
 var (
 	// MoreActionsBtn is the finder for the more actions button on an eSIM profile detail view.
