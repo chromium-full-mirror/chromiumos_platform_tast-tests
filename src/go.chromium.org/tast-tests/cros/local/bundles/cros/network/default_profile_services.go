@@ -21,7 +21,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DefaultProfileServices,
 		Desc:         "Checks configured services persist across shill reboot",
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Contacts: []string{
 			"cros-networking@google.com",
 			"stevenjb@chromium.org", // Connectivity team

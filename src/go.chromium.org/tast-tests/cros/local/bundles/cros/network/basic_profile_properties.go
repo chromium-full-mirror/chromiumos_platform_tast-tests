@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         BasicProfileProperties,
 		Desc:         "Test that shill's DBus properties for profiles work",
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Contacts: []string{
 			"cros-networking@google.com",
 		},

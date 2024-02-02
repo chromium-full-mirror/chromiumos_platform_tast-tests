@@ -42,8 +42,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if multicast forwarder works correctly with Android multicast lock and Android interactive state on ARC",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "wifi"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,

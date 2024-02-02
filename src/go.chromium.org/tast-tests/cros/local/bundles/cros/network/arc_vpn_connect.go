@@ -21,7 +21,7 @@ func init() {
 		Func:         ARCVPNConnect,
 		Desc:         "Host VPN is mirrored with ARC VPN properly",
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "vpnEnvWithArcBooted",
 		SoftwareDeps: []string{"arc"},

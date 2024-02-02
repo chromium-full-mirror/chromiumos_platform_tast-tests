@@ -26,8 +26,8 @@ func init() {
 		Func:     PasspointForgetNetwork,
 		Desc:     "Checks if Passpoint credentials are removed after removing a Passpoint network",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFiWithChromeLoggedInWithPasspoint",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "chrome"},

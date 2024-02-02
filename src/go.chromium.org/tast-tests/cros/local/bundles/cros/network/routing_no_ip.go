@@ -20,8 +20,8 @@ func init() {
 		Func:     RoutingNoIP,
 		Desc:     "Verify the shill and routing behavior that there is a new network but no IP is provided on it",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

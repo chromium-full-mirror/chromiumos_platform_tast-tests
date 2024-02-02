@@ -25,8 +25,8 @@ func init() {
 		Func:     ResolvConfLowerPriorityConfigUpdate,
 		Desc:     "Verify resolv.conf is not updated on lower priority network configuration update",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{

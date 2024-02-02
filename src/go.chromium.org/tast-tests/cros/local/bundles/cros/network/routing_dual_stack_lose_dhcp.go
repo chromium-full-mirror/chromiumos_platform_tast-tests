@@ -22,8 +22,8 @@ func init() {
 		Func:     RoutingDualStackLoseDHCP,
 		Desc:     "Verify the shill behavior in the scenario that DHCP fails to renew on a dual-stack network",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Timeout:      3 * time.Minute,

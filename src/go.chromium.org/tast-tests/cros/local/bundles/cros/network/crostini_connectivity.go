@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks IPv4 and IPv6 connectivity inside penguin container",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		HardwareDeps: crostini.CrostiniMinDiskSize,

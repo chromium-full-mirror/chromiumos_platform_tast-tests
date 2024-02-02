@@ -54,8 +54,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks if ARC QoS App monitor works correctly",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome", "wifi", "arc", "no_android_p"},
 		Timeout:      10 * time.Minute,

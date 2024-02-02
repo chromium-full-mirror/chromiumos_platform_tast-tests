@@ -45,8 +45,8 @@ func init() {
 		Func:     VPNConnect,
 		Desc:     "Ensure that we can connect to a VPN under different configurations",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		// We use different fixtures in different tests, based on whether they need
 		// certificates or not. The following configurations are covered by

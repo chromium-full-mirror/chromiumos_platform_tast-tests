@@ -26,7 +26,7 @@ func init() {
 		Func:         AlwaysOnVPNRouting,
 		Desc:         "Host VPN client can be configured as always-on VPN and connected automatically",
 		Contacts:     []string{"cros-networking@google.com", "chuweih@google.com"},
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "vpnEnv",
 		LacrosStatus: testing.LacrosVariantUnneeded,

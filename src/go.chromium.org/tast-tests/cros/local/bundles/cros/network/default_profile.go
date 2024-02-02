@@ -25,7 +25,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DefaultProfile,
 		Desc:         "Checks shill's default network profile",
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Contacts: []string{
 			"cros-networking@google.com",
 			"stevenjb@chromium.org", // Connectivity team

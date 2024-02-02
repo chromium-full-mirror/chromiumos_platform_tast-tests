@@ -21,7 +21,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks IPv4 and IPv6 connectivity inside Bruschetta VM",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com", "clumptini@google.com"},
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,

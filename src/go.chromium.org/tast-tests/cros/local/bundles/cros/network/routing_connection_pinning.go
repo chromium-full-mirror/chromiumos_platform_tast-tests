@@ -23,8 +23,8 @@ func init() {
 		Func:     RoutingConnectionPinning,
 		Desc:     "Verify the connection pinning functionality in routing",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})

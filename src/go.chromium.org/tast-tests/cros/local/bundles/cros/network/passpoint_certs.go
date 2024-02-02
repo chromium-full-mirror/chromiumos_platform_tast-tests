@@ -27,8 +27,8 @@ func init() {
 		Func:     PasspointCerts,
 		Desc:     "Passpoint network certificates provisioning and removal tests",
 		Contacts: []string{"cros-networking@google.com", "jasongustaman@google.com", "damiendejean@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Fixture:      "arcBootedWithPasspoint",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"wifi", "chrome", "arc"},

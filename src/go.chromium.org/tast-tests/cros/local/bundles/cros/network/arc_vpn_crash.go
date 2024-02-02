@@ -21,7 +21,7 @@ func init() {
 		Func:         ARCVPNCrash,
 		Desc:         "When ARC VPN crashes, host VPN is still reachable in ARC",
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "vpnEnvWithArcBooted",
 		Params: []testing.Param{{

@@ -33,8 +33,8 @@ func init() {
 		Func:     ShillTethering,
 		Desc:     "Verify the behavior of the tethering feature",
 		Contacts: []string{"cros-networking@google.com", "akahuang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

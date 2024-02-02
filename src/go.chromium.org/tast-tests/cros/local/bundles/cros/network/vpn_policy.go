@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test that VPN can correctly be configured from device and user policy",
 		Contacts:     []string{"cros-networking@google.com", "taoyl@google.com"},
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		SoftwareDeps: []string{"reboot", "chrome"},
 		Attr: []string{
 			"group:golden_tier",

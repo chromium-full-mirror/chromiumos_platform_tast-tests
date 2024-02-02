@@ -24,8 +24,8 @@ func init() {
 		Func:     RoutingFallthrough,
 		Desc:     "Verify the fall-through behavior for one IP family when the primary network is only configured with another family",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{

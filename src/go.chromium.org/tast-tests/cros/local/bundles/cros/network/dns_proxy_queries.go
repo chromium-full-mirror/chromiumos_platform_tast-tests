@@ -21,8 +21,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Ensure that DNS queries are successful",
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium", "group:network", "network_cq"},
 		SoftwareDeps: []string{"chrome", "no_kernel_upstream"},
 		Timeout:      1 * time.Minute,

@@ -25,8 +25,8 @@ func init() {
 		Func:     QosWebRTC,
 		Desc:     "Test QoS marks are correctly set on WebRTC packets",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Fixture:      "shillSimulatedWiFi",
 		Attr:         []string{"group:mainline", "informational"},
 		// TODO(b/317282580#comment2): Remove `no_kernel_upstream` once

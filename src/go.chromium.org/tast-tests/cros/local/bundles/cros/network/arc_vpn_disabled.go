@@ -21,7 +21,7 @@ func init() {
 		Func:         ARCVPNDisabled,
 		Desc:         "ARC VPN doesn't start when flag is off",
 		Contacts:     []string{"cros-networking@google.com", "cassiewang@google.com"},
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "vpnEnvWithArcBooted",
 		SoftwareDeps: []string{"arc"},

@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ConfigureServiceForProfile,
 		Desc:         "Test ConfigureServiceForProfile D-Bus method",
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Contacts: []string{
 			"cros-networking@google.com",
 			"matthewmwang@chromium.org",

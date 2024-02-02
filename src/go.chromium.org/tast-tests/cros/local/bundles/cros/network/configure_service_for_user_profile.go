@@ -21,7 +21,7 @@ func init() {
 		Func:         ConfigureServiceForUserProfile,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that we can configure a WiFi network for a user profile (guest or normal)",
-		BugComponent: "b:156085",
+		BugComponent: "b:1493959",
 		Contacts: []string{
 			"cros-networking@google.com",
 			"stevenjb@chromium.org",

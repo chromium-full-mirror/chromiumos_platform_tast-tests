@@ -29,8 +29,8 @@ func init() {
 		Func:     WireguardCrosh,
 		Desc:     "Verify using wireguard command in crosh to manage a wireguard setrvice",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:network", "network_platform"},
 		SoftwareDeps: []string{"wireguard"},
 		LacrosStatus: testing.LacrosVariantUnneeded,

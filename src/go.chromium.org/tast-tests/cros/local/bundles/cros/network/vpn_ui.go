@@ -43,8 +43,8 @@ func init() {
 			"edgar.chang@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "vpnEnvWithCertsAndChromeLoggedIn",

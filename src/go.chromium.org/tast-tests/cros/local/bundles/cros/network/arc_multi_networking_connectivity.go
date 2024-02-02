@@ -27,8 +27,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks connectivity while multi-networking is enabled",
 		Contacts:     []string{"cros-networking@google.com", "jasongustaman@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:cq-medium"},
 		// "no_qemu" disables the test on betty (this test is not compatible with the qemu virtual network setup).
 		SoftwareDeps: []string{"chrome", "arc", "no_qemu"},

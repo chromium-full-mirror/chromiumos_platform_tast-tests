@@ -19,8 +19,8 @@ func init() {
 		Func:     RoutingHighPriority,
 		Desc:     "Verify the routing semantics in the case that there is a dual-stack network and then another network with higher priority shows up",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
-		// ChromeOS > Platform > System > Networking
-		BugComponent: "b:156085",
+		// ChromeOS > Platform > System > Networking > Continuous Maintenance
+		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "group:network", "network_cq"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
