@@ -226,13 +226,21 @@ func NewDevboardHelper(s *testing.State) DevboardHelper {
 	return DevboardHelper{b, gscConsole, s, f.TestbedProperties.TestbedType}
 }
 
-// GscProperties returns an object that can be queried about varios aspects of the GSC currently
+// GscProperties returns an object that can be queried about various aspects of the GSC currently
 // under test.
 func (h DevboardHelper) GscProperties() GscProperties {
-	if h.TestbedType == ti50.GscH1Shield {
+	switch h.TestbedType {
+	case ti50.GscH1Shield:
 		return &gscCr50{}
+	case ti50.GscOpentitanCw310Fpga:
+		return &gscOT{}
+	case ti50.GscOTShield:
+		return &gscOT{}
+	case ti50.GscHostEmulation:
+		return &gscHE{}
+	default:
+		return &gscDT{}
 	}
-	return &gscTi50{}
 }
 
 // GpioSet sets a well-defined gpio to a value, and if there are any errors, set a fatal
@@ -413,9 +421,15 @@ func (h DevboardHelper) Tpm(ctx context.Context, bus ti50.TpmBus) *TpmHelper {
 	return &TpmHelper{ti50.NewTpmHandle(ctx, h, bus), h}
 }
 
-// ResetAndTpmStartup resets the board with I2C or SPI TPM strap, reads TpmRegDidVid, then sends
+// ResetAndTpmStartup resets the board with preferred TPM bus, then reads TpmRegDidVid, then sends
 // tpm2.Startup command.
-func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImage, bus ti50.TpmBus, straps ...ti50.GpioStrap) *TpmHelper {
+func (h DevboardHelper) ResetAndTpmStartup(ctx context.Context, i *ti50.CrOSImage, straps ...ti50.GpioStrap) *TpmHelper {
+	return h.ResetAndTpmStartupForBus(ctx, i, h.GscProperties().PreferredTPMBus(), straps...)
+}
+
+// ResetAndTpmStartupForBus resets the board specified TPM bus strap, then reads TpmRegDidVid, then
+// sends tpm2.Startup command.
+func (h DevboardHelper) ResetAndTpmStartupForBus(ctx context.Context, i *ti50.CrOSImage, bus ti50.TpmBus, straps ...ti50.GpioStrap) *TpmHelper {
 	var busConfig ti50.GpioStrap
 	switch bus {
 	case ti50.TpmBusSpi:

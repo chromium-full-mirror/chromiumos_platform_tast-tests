@@ -78,7 +78,7 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	s.Log("(Re)starting ti50")
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusI2c, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)

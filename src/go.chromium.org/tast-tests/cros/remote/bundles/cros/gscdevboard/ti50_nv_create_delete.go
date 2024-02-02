@@ -41,7 +41,7 @@ func Ti50NVCreateDelete(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 	err := tpm.TpmvCommitNvmem()
 	if err != nil {
 		s.Fatal("Failed to enable Nvmem writes: ", err)

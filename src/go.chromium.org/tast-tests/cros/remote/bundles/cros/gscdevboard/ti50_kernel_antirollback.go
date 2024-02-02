@@ -49,7 +49,7 @@ func Ti50KernelAntirollback(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 	th.MustSucceed(tpm.TpmvCommitNvmem(), "Failed to enable Nvmem writes.")
 
 	// Undefine to ensure we're starting clean.

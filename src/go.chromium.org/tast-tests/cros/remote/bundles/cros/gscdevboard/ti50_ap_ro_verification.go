@@ -120,7 +120,7 @@ func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	th.MustSucceed(i.SetCCDCapability(ctx, ti50.AllowUnverifiedRO, ti50.CapAlways), "Set AllowUnverifiedRo to always")
 
 	// Ensure there is no FWMP file
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi)
+	tpm := b.ResetAndTpmStartup(ctx, i)
 	attr := ti50.FwmpAttr()
 	tpm.NvUndefineSpace(attr)
 	th.MustSucceed(tpm.TpmvCommitNvmem(), "NVCommit")
@@ -151,7 +151,7 @@ func verifyBadImage(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	verifySystemInReset(ctx, s, b, i, false, "AP RO verification failed after bypass")
 
 	s.Log("Create FWMP file that blocks CCD open (and bypass keycombo)")
-	tpm = b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi)
+	tpm = b.ResetAndTpmStartup(ctx, i)
 	writeBlockingFWMPFile(ctx, s, b, tpm)
 	defer tpm.NvUndefineSpace(attr)
 

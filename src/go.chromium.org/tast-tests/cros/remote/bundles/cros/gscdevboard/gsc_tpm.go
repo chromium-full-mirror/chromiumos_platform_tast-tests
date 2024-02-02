@@ -43,7 +43,7 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	tpmHandle := b.ResetAndTpmStartup(ctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
+	tpmHandle := b.ResetAndTpmStartupForBus(ctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	// Read boot mode as a simple check of vendor command.
 	bm, err := tpmHandle.TpmvGetBootMode()

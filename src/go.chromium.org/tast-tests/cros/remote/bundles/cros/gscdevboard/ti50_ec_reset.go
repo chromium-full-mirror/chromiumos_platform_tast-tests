@@ -96,7 +96,7 @@ func verifyEcRestOnGscReset(ctx context.Context, s *testing.State, b utils.Devbo
 func verifyEcResetOnTpmvRebootCmd(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
 	s.Log("Verify EC reset on GSC reboot TPMV command")
 
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.FfClamshell)
 
 	s.Log("Start gpio monitoring")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)

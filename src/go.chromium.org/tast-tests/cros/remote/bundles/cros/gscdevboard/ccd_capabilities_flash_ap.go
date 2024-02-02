@@ -62,7 +62,7 @@ func CCDCapabilitiesFlashAP(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	_ = b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
+	_ = b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	// Set capabilities into their correct states
 	if err := i.CCDOpen(ctx); err != nil {

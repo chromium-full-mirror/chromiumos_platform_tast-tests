@@ -42,7 +42,7 @@ func Ti50EFS2(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	tpm := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
+	tpm := b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	// Undefine the space to ensure we are in a good state. Not a failure if doesn't work.
 	attr := ti50.KernelAttr()

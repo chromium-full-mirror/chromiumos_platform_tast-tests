@@ -35,7 +35,7 @@ func CCDCapabilitiesOpenDefaultValues(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	// Reset and open CCD
-	_ = b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
+	_ = b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 	if err := i.CCDOpen(ctx); err != nil {
 		s.Fatal("Failed to open CCD")
 	}

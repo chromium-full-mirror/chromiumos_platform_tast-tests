@@ -61,7 +61,7 @@ func CCDCapabilitiesRebootECAP(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 
 	s.Log("Resetting GSC and starting up")
-	_ = b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdSuzyQ, ti50.FfClamshell)
+	_ = b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	if err := i.CCDOpen(ctx); err != nil {
 		s.Fatal("Failed to open CCD to test RebootECAP cap: ", err)

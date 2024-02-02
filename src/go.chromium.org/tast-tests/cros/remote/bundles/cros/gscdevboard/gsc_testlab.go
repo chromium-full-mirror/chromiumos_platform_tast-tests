@@ -68,8 +68,7 @@ func GSCTestlab(ctx context.Context, s *testing.State) {
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
 
 	s.Log("(Re)starting GSC")
-	// Set some known straps. It doesn't really matter which type of tpm the GSC enables
-	b.ResetAndTpmStartup(ctx, i, ti50.TpmBusI2c, ti50.CcdSuzyQ, ti50.FfClamshell)
+	b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	th.MustSucceed(i.CCDLock(ctx), "Lock CCD")
 	// Verify testlab mode can't be changed when ccd is locked

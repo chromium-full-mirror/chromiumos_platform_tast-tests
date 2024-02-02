@@ -35,7 +35,7 @@ func GSCTPMSPICorners(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	tpmHandle := b.ResetAndTpmStartup(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
+	tpmHandle := b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
 
 	// Perform irregular SPI TPM transaction, ask for content of status register, but never
 	// read the bytes.
