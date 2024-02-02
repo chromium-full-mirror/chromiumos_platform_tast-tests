@@ -284,9 +284,10 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
 	}, {
-		Name:              "80211axe40",
-		Fixture:           defaultFixture,
-		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz."),
+		Name:    "80211axe40",
+		Fixture: defaultFixture,
+		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz."),
+			"TODO(b/323591821) Enable setting channel width to 40MHz on 6GHz channels."),
 		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{APOpts: `
@@ -342,7 +343,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{APOpts: `
 					ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+					ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
 					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
 			SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
@@ -360,7 +361,7 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{APOpts: `
 					ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+					ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
 					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
 			SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
@@ -400,7 +401,8 @@ func simpleConnect80211be() []*simpleConnectParams {
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-			ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+			ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 		`}},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}, {
@@ -411,7 +413,8 @@ func simpleConnect80211be() []*simpleConnectParams {
 			"The router is forced to use EHT WiFi standard."),
 		Val: []simpleConnectParamsVal{{APOpts: `
 			ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-			ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+			ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 		`}},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}}

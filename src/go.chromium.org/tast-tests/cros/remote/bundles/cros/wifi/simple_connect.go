@@ -283,6 +283,7 @@ func init() {
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz.
+				// TODO(b/323591821) Enable setting channel width to 40MHz on 6GHz channels.
 				Name:              "80211axe40",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr:         []string{"wificell_unstable"},
@@ -344,7 +345,7 @@ func init() {
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
 						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
@@ -363,7 +364,7 @@ func init() {
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
 						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
@@ -404,7 +405,8 @@ func init() {
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 					},
 				}},
 				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -417,7 +419,8 @@ func init() {
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
 						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 					},
 				}},
 				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
