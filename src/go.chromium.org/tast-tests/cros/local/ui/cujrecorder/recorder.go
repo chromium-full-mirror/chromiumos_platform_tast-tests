@@ -231,18 +231,18 @@ func (rec *record) saveMetric(pv *perf.Values, name string) {
 				Unit: "count",
 			}, float64(bucket.Count))
 		}
-	case countHistogram:
-		fallthrough
 	case cumulativeHistogram:
 		var maxValue int64
 		if len(rec.Buckets) != 0 {
 			maxValue = rec.Buckets[len(rec.Buckets)-1].Min
 		}
 		pv.Set(perf.Metric{
-			Name:      name,
+			Name:      name + ".Max",
 			Unit:      rec.config.unit,
 			Direction: rec.config.direction,
 		}, float64(maxValue))
+	case countHistogram:
+		fallthrough
 	default:
 		// If rec.config.histogramType is not set,
 		// treat it as count histograms by default.
