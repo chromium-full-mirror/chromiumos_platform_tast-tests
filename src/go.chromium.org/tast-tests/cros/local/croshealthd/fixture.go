@@ -107,7 +107,6 @@ func init() {
 		Desc: "The croshealthd daemon is running and with no user logged in",
 		Contacts: []string{
 			"cros-tdm-tpe-eng@google.com", // Team mailing list
-			"xuhong@chromium.org",         // Fixture maintainer
 		},
 		SetUpTimeout:    30 * time.Second,
 		ResetTimeout:    5 * time.Second,

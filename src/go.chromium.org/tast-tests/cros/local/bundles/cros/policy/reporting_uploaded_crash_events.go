@@ -35,7 +35,6 @@ func init() {
 		Desc:         "Verify uploaded fatal crash events are reported when policy ReportDeviceCrashReportInfo is on",
 		Contacts: []string{
 			"cros-reporting-team@google.com",
-			"xuhong@chromium.org", // Test author
 		},
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

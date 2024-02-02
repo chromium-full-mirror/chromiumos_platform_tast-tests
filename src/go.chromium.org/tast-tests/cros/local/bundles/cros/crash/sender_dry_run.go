@@ -25,7 +25,6 @@ func init() {
 			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
-			"xuhong@chromium.org",
 		},
 		// ChromeOS > Data > Engineering > Crash Reporting
 		BugComponent: "b:1032705",
