@@ -35,8 +35,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test the various orientations of an ARC activity window surface",
 		Contacts:     []string{"arc-framework+tast@google.com", "lpique@google.com", "yhanada@chromium.org"},
-		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
-		BugComponent: "b:537221",
+		// ChromeOS > Software > ARC++ > Graphics
+		BugComponent: "b:516668",
 		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "android_vm"},
 		Fixture:      "arcBooted",
