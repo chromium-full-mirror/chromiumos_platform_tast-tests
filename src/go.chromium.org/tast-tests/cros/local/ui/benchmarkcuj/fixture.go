@@ -17,7 +17,14 @@ const SpeedometerWPRRecordFixture = "loggedInToCUJUserWPRSpeedometerRecord"
 // SpeedometerWPRReplayFixture is a WPR-based fixture for running Speedometer2.1 benchmark.
 const SpeedometerWPRReplayFixture = "loggedInToCUJUserWPRSpeedometerReplay"
 
+// MotionmarkWPRRecordFixture is a WPR-based fixture for recording Motionmark benchmark source.
+const MotionmarkWPRRecordFixture = "loggedInToCUJUserWPRMotionmarkRecord"
+
+// MotionmarkWPRReplayFixture is a WPR-based fixture for running Motionmark benchmark.
+const MotionmarkWPRReplayFixture = "loggedInToCUJUserWPRMotionmarkReplay"
+
 const speedometerArchive = "ui.BenchmarkCUJ.speedometer.wprgo"
+const motionmarkArchive = "ui.BenchmarkCUJ.motionmark.wprgo"
 
 func init() {
 	// As a workaround for lack of parametrized fixtures (see b/285970864) add
@@ -44,4 +51,24 @@ func init() {
 		browser.TypeAsh,
 		wpr.Replay,
 		speedometerArchive))
+	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
+		MotionmarkWPRRecordFixture,
+		"WPR Record fixture for Motionmark",
+		[]string{
+			"cros-sw-perf@google.com",
+			"skardach@google.com",
+		},
+		browser.TypeAsh,
+		wpr.Record,
+		motionmarkArchive))
+	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
+		MotionmarkWPRReplayFixture,
+		"WPR Replay fixture for Motionmark",
+		[]string{
+			"cros-sw-perf@google.com",
+			"skardach@google.com",
+		},
+		browser.TypeAsh,
+		wpr.Replay,
+		motionmarkArchive))
 }

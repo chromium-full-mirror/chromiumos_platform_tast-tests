@@ -399,6 +399,29 @@ func init() {
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 			},
+			{
+				Name:      "motionmark_wpr",
+				Timeout:   defaultTimeout,
+				Fixture:   benchmarkcuj.MotionmarkWPRReplayFixture,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				// This is a helper test for recording the WPR archive for motionmark_wpr.
+				// Resulting archive will be located in /tmp/
+				Name:    "motionmark_wpr_record",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.MotionmarkWPRRecordFixture,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
 		},
 	})
 }
