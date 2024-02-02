@@ -24,7 +24,6 @@ func init() {
 		Desc:         "Verifies whether the ephemeral_users_enabled policy is set on the device or not",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"ultrotter@google.com",
 			"antrim@google.com",
 			"emaxx@google.com",
 		},

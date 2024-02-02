@@ -31,7 +31,6 @@ func init() {
 		Desc:         "Behavior of AllowScreenLock policy, checking whether the screen can be locked after setting the policy",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"ultrotter@google.com",
 			"antrim@google.com",
 			"emaxx@google.com",
 		},

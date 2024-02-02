@@ -36,7 +36,6 @@ func init() {
 		Desc:         "Behavior of ChromeOsLockOnIdleSuspend policy, checking the correspoding toggle button states (restriction and checked) and the lock screen after the lid is closed",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"ultrotter@google.com",
 			"antrim@google.com",
 			"emaxx@google.com",
 		},
