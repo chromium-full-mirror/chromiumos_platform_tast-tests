@@ -445,6 +445,29 @@ func init() {
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 			},
+			{
+				Name:      "octane_wpr",
+				Timeout:   defaultTimeout,
+				Fixture:   benchmarkcuj.OctaneWPRReplayFixture,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.OctaneInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				// This is a helper test for recording the WPR archive for octane_wpr.
+				// Resulting archive will be located in /tmp/
+				Name:    "octane_wpr_record",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.OctaneWPRRecordFixture,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.OctaneInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
 		},
 	})
 }

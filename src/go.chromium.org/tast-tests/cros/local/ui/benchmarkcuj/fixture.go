@@ -29,9 +29,16 @@ const KrakenWPRRecordFixture = "loggedInToCUJUserWPRKrakenRecord"
 // KrakenWPRReplayFixture is a WPR-based fixture for running Kraken benchmark.
 const KrakenWPRReplayFixture = "loggedInToCUJUserWPRKrakenReplay"
 
+// OctaneWPRRecordFixture is a WPR-based fixture for recording Octane benchmark source.
+const OctaneWPRRecordFixture = "loggedInToCUJUserWPROctaneRecord"
+
+// OctaneWPRReplayFixture is a WPR-based fixture for running Octane benchmark.
+const OctaneWPRReplayFixture = "loggedInToCUJUserWPROctaneReplay"
+
 const speedometerArchive = "ui.BenchmarkCUJ.speedometer.wprgo"
 const motionmarkArchive = "ui.BenchmarkCUJ.motionmark.wprgo"
 const krakenArchive = "ui.BenchmarkCUJ.kraken.wprgo"
+const octaneArchive = "ui.BenchmarkCUJ.octane.wprgo"
 
 func init() {
 	// As a workaround for lack of parametrized fixtures (see b/285970864) add
@@ -98,4 +105,24 @@ func init() {
 		browser.TypeAsh,
 		wpr.Replay,
 		krakenArchive))
+	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
+		OctaneWPRRecordFixture,
+		"WPR Record fixture for Octane",
+		[]string{
+			"cros-sw-perf@google.com",
+			"skardach@google.com",
+		},
+		browser.TypeAsh,
+		wpr.Record,
+		octaneArchive))
+	testing.AddFixture(cuj.NewWPRLoggedInToCUJUserWithoutCooldownFixture(
+		OctaneWPRReplayFixture,
+		"WPR Replay fixture for Octane",
+		[]string{
+			"cros-sw-perf@google.com",
+			"skardach@google.com",
+		},
+		browser.TypeAsh,
+		wpr.Replay,
+		octaneArchive))
 }
