@@ -16,10 +16,10 @@ var OneDeviceConnectedMessage = &ui.Finder{
 	},
 }
 
-// NoDeviceConnectedMessage is the finder of the "On, no devices connected" message in hotspot detailed view.
+// NoDeviceConnectedMessage is the finder of the "No devices connected" message in hotspot detailed view.
 var NoDeviceConnectedMessage = &ui.Finder{
 	NodeWiths: []*ui.NodeWith{
-		{Value: &ui.NodeWith_Name{Name: "On, no devices connected"}},
+		{Value: &ui.NodeWith_Name{Name: "No devices connected"}},
 		{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_STATIC_TEXT}},
 	},
 }
