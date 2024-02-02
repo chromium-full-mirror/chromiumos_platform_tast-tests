@@ -21,7 +21,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"bhartmire@google.com",
 		},
-		BugComponent: "b:230401333",
+		BugComponent: "b:1108889",
 		Attr:         []string{"group:cross-device", "cross-device_crossdevice"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      2 * time.Minute,
