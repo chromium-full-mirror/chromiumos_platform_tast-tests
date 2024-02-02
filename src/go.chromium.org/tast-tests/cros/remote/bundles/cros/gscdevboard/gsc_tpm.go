@@ -24,15 +24,18 @@ func init() {
 			"aluo@chromium.org",        // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCOpenCCD,
+		Attr: []string{"group:gsc",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield",
+			"gsc_image_ti50",
+			"gsc_nightly"},
+		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "spi",
 			Val:  ti50.TpmBusSpi,
 		}, {
 			Name:      "i2c",
 			Val:       ti50.TpmBusI2c,
-			ExtraAttr: []string{"gsc_ot_fpga_cw310"},
+			ExtraAttr: []string{"gsc_ot_fpga_cw310", "gsc_ot_shield"},
 		}},
 	})
 }
