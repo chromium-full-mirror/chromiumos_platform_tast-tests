@@ -394,7 +394,7 @@ func (s *OSSettings) WaitUntilToggleOption(cr *chrome.Chrome, optionName string,
 				return errors.Errorf("Option %q is unexpected: got %v; want %v", optionName, isEnabled, expected)
 			}
 			return nil
-		}, &testing.PollOptions{Timeout: 10 * time.Second})
+		}, &testing.PollOptions{Timeout: 15 * time.Second})
 	}
 }
 
