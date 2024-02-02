@@ -137,8 +137,8 @@ func New(ctx context.Context, mode Mode, archive string, scripts []string) (*WPR
 	proc := testexec.CommandContext(ctx, "wpr", m,
 		fmt.Sprintf("--http_port=%d", httpPort),
 		fmt.Sprintf("--https_port=%d", httpsPort),
-		"--https_cert_file=/usr/local/share/wpr/wpr_cert.pem",
-		"--https_key_file=/usr/local/share/wpr/wpr_key.pem",
+		"--https_cert_file=/usr/local/share/wpr/wpr_cert.pem,/usr/local/share/wpr/ecdsa_cert.pem",
+		"--https_key_file=/usr/local/share/wpr/wpr_key.pem,/usr/local/share/wpr/ecdsa_key.pem",
 		scriptsArg,
 		archive)
 
