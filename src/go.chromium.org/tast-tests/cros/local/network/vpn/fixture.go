@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -156,7 +155,8 @@ type CertVals struct {
 func installUserCert(ctx context.Context, certStore *netcertstore.Store) (CertVals, error) {
 	slot := fmt.Sprintf("%d", certStore.UserToken.Slot)
 	pin := certStore.UserToken.Pin
-	clientCred := certificate.TestCert1().ClientCred
+	cert := certificate.TestCert1()
+	clientCred := cert.ClientCred
 	id, err := certStore.InstallCertKeyPair(ctx, clientCred.PrivateKey, clientCred.Cert)
 	return CertVals{id, slot, pin}, err
 }
