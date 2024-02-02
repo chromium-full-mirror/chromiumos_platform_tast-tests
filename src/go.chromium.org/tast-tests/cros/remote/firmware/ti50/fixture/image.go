@@ -96,6 +96,11 @@ var (
 	reTestbedTypeParts = regexp.MustCompile(`gsc_([[:alnum:]]*)`)
 )
 
+// AllTi50TestbedTypes returns all the testbed types that use ti50 images.
+func AllTi50TestbedTypes() []ti50.TestbedType {
+	return []ti50.TestbedType{ti50.GscDTAndreiboard, ti50.GscDTShield, ti50.GscOpentitanCw310Fpga, ti50.GscHostEmulation, ti50.GscOTShield}
+}
+
 // AllTi50ImageTypes returns all the ti50 image types.
 func AllTi50ImageTypes() []ImageType {
 	return []ImageType{SystemImage, SystemTestAutoImage, SystemTestAuto2Image}
@@ -207,7 +212,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			}
 			iv.configPaths = []string{downloadedJSON}
 		}
-	// For inputURL that is empty, use existing image
+		// For inputURL that is empty, use existing image
 	} else if inputURL == "" {
 		// Absence of BuildURL argument.  This instructs tast to not flash any image to
 		// the devboard, but run the test against the code already running.  This works
@@ -216,7 +221,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		// ti50/common based on the information from devboardservice and the type of image
 		// declared on the test case.
 		testing.ContextLogf(ctx, "-var=%s= not provided, assuming the devboard has a %s image", BuildURL, imageType)
-	// For inputURL that is a local path, may need to extract compressed archive
+		// For inputURL that is a local path, may need to extract compressed archive
 	} else {
 		img, err := os.Stat(inputURL)
 		if err != nil {
@@ -224,8 +229,8 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		}
 		// Disallow directories
 		if img.IsDir() {
-			return nil , errors.New("-var=" + BuildURL + " must be a file: " + inputURL)
-		// Extract tbz2 archive
+			return nil, errors.New("-var=" + BuildURL + " must be a file: " + inputURL)
+			// Extract tbz2 archive
 		} else if strings.HasSuffix(inputURL, ".tbz2") {
 			chip := testbedTypeToChip(testbedProperties.TestbedType)
 			if chip != "h1" {
@@ -260,7 +265,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 
 // findLatestCompletedTi50PostsubmitBuildURL finds the most recent build with the full set of image artifacts.
 func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context) (string, error) {
-	builds, err := gsLs(ctx, "builds for tot", gsPrefix + postSubmitArtifactsBuilder)
+	builds, err := gsLs(ctx, "builds for tot", gsPrefix+postSubmitArtifactsBuilder)
 	if err != nil {
 		return "", err
 	}
@@ -287,12 +292,17 @@ func findLatestCompletedTi50PostsubmitBuildURL(ctx context.Context) (string, err
 Loop:
 	for i := len(builds) - 1; i >= 0; i-- {
 		build := builds[i]
-		for _, boardType := range ti50.AllTestbedTypes() {
+		scannedDirs := make(map[string]bool)
+		for _, boardType := range AllTi50TestbedTypes() {
 			for _, imageType := range AllTi50ImageTypes() {
 				dir, err := ti50ImageDirectory(boardType, imageType)
 				if err != nil {
 					return "", err
 				}
+				if _, ok := scannedDirs[dir]; ok {
+					continue
+				}
+				scannedDirs[dir] = true
 				artifactsDir := build + filepath.Join("tast", dir) + "/"
 
 				for _, g := range []string{tastImageGlob, tastConfigGlob} {
@@ -390,13 +400,13 @@ func cmd(ctx context.Context, desc, cmd string, args ...string) (string, error) 
 
 // gsURLExists retruns whether a gs URL is valid.
 func gsURLExists(ctx context.Context, url string) bool {
-	_, err := cmd(ctx, url + " exists?", "gsutil", "ls", url)
+	_, err := cmd(ctx, url+" exists?", "gsutil", "ls", url)
 	return err == nil
 }
 
 // gsLs finds urls matching expr and returns them as a list
 func gsLs(ctx context.Context, desc, expr string) ([]string, error) {
-	output, err := cmd(ctx, "Listing " + desc, "gsutil", "ls", expr)
+	output, err := cmd(ctx, "Listing "+desc, "gsutil", "ls", expr)
 	if err != nil {
 		return nil, errors.Wrap(err, "listing "+desc)
 	}
@@ -408,16 +418,18 @@ func ti50ImageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 	n := ti50ImageTypeToProject(i)
 
 	switch t {
-	case "gsc_dt_ab":
+	case ti50.GscDTAndreiboard:
 		fallthrough
-	case "gsc_dt_shield":
+	case ti50.GscDTShield:
 		return "andreiboard-" + n, nil
-	case "gsc_ot_fpga_cw310":
+	case ti50.GscOTShield:
+		fallthrough
+	case ti50.GscOpentitanCw310Fpga:
 		return "opentitan-" + n, nil
-	case "gsc_he":
+	case ti50.GscHostEmulation:
 		return "host_emulation-" + n, nil
 	default:
-		return "", errors.New("unknown testbed type: " + string(t))
+		return "", errors.New("unknown ti50 testbed type: " + string(t))
 	}
 }
 
@@ -430,10 +442,10 @@ func ti50ImageTypeToProject(i ImageType) string {
 }
 
 func testbedTypeToChip(testbedType ti50.TestbedType) string {
-        m := reTestbedTypeParts.FindStringSubmatch(string(testbedType))
-        if m == nil {
+	m := reTestbedTypeParts.FindStringSubmatch(string(testbedType))
+	if m == nil {
 		return ""
-        }
+	}
 	return m[1]
 }
 
@@ -442,9 +454,9 @@ func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, image
 	var fw, c string
 
 	c = testbedTypeToChip(testbedType)
-        if c == "" {
+	if c == "" {
 		s.Fatal("Unable to determine chip from testbedType: ", testbedType)
-        }
+	}
 
 	switch imageType {
 	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image:

@@ -133,7 +133,6 @@ type ApFlashInfo struct {
 }
 
 // TestbedType represents a kind of testbed, including which GSC devboard, debugger and wiring.
-// Please update AllTestbedTypes() after editing.
 type TestbedType string
 
 const (
@@ -158,8 +157,3 @@ const (
 	// GscOTShield is a small OpenTitan board on top of HyperDebug.
 	GscOTShield TestbedType = "gsc_ot_shield"
 )
-
-// AllTestbedTypes returns all the possible testbed types.
-func AllTestbedTypes() []TestbedType {
-	return []TestbedType{GscDTAndreiboard, GscDTShield, GscOpentitanCw310Fpga, GscHostEmulation, GscH1Shield, GscOTShield}
-}
