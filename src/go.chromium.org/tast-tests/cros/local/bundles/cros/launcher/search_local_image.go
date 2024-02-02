@@ -40,9 +40,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that use local image search with different feature flags and search for a local image",
 		Contacts: []string{
-			"ml-service-team@google.com",
-			"dgrebenyuk@google.org",
-			"ypitsishin@google.org",
+			"launcher-search-notify@google.com",
+			"dgrebenyuk@google.com",
+			"ypitsishin@google.com",
 		},
 		BugComponent: "b:280365665",
 		Attr:         []string{"group:mainline"},

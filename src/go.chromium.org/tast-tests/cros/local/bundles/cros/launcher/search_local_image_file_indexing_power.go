@@ -27,8 +27,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded, // Image search won't interact with Chrome browser.
 		Desc:         "Checks launcher image search power usage",
 		Contacts: []string{
-			"ml-service-team@google.com",
-			"xiuwen@google.org",
+			"launcher-search-notify@google.com",
+			"xiuwen@google.com",
 		},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{launcher.ImageSearchPowerTestPictureName},
