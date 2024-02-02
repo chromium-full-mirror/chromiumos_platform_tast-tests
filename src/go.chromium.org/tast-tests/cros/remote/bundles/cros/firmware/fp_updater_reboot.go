@@ -29,14 +29,16 @@ import (
 )
 
 const (
-	latestLog     = "/var/log/biod/bio_fw_updater.LATEST"
-	previousLog   = "/var/log/biod/bio_fw_updater.PREVIOUS"
-	successString = "The update was successful."
+	latestLog           = "/var/log/biod/bio_fw_updater.LATEST"
+	previousLog         = "/var/log/biod/bio_fw_updater.PREVIOUS"
+	successString       = "The update was successful."
+	splashsuccessString = "Successfully launched update splash screen."
+	noUpdateString      = "Update was not necessary."
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: FpUpdater,
+		Func: FpUpdaterReboot,
 		Desc: "Checks that the fingerprint firmware updater succeeds when an update is needed",
 		Contacts: []string{
 			"chromeos-fingerprint@google.com",
@@ -44,7 +46,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Services > Fingerprint
 		BugComponent: "b:782045",
-		Attr:         []string{"group:mainline", "group:fingerprint-cq", "group:fingerprint-release"},
+		Attr:         []string{"group:fingerprint-cq", "group:fingerprint-release"},
 		Timeout:      9 * time.Minute,
 		SoftwareDeps: []string{"biometrics_daemon"},
 		HardwareDeps: hwdep.D(hwdep.Fingerprint()),
@@ -118,7 +120,7 @@ func flashOldRWFirmware(ctx context.Context, s *testing.State, d *rpcdut.RPCDUT)
 	return nil
 }
 
-func FpUpdater(ctx context.Context, s *testing.State) {
+func FpUpdaterReboot(ctx context.Context, s *testing.State) {
 	d, err := rpcdut.NewRPCDUT(ctx, s.DUT(), s.RPCHint())
 	if err != nil {
 		s.Fatal("Failed to connect RPCDUT: ", err)
@@ -163,9 +165,9 @@ func FpUpdater(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to flash outdated RW firmware: ", err)
 	}
 
-	testing.ContextLog(ctx, "Invoking fp updater")
-	if err := d.Conn().CommandContext(ctx, "bio_fw_updater").Run(); err != nil {
-		s.Fatal("Failed to execute bio_fw_updater: ", err)
+	testing.ContextLog(ctx, "Rebooting dut to invoke fp updater")
+	if err := d.Reboot(ctx); err != nil {
+		s.Fatal("Failed to reboot dut: ", err)
 	}
 
 	fpUpdaterService := firmware.NewFpUpdaterServiceClient(d.RPC().Conn)
@@ -193,10 +195,13 @@ func FpUpdater(ctx context.Context, s *testing.State) {
 		s.Error("Failed to write previous updater log to file: ", err)
 	}
 
-	if !strings.Contains(latest, successString) {
+	// Update will happen in bio_fw_updater.PREVIOUS because dut reboots after update.
+	if !strings.Contains(previous, successString) {
 		s.Fatal("Updater did not succeed, please check output dir")
 	}
-
+	if !strings.Contains(previous, splashsuccessString) {
+		s.Fatal("Splash screen did not launch, please check output dir")
+	}
 	buildRWVersion, err := fingerprint.GetBuildRWFirmwareVersion(ctx, d, t.FirmwareFile().FilePath)
 	if err != nil {
 		s.Fatal("Failed to query build RW version: ", err)
@@ -209,5 +214,10 @@ func FpUpdater(ctx context.Context, s *testing.State) {
 
 	if runningRWVersion != buildRWVersion {
 		s.Fatalf("Running RW version %s, want %s", runningRWVersion, buildRWVersion)
+	}
+
+	// bio_fw_updater.LATEST should not have required an update.
+	if !strings.Contains(latest, noUpdateString) {
+		s.Fatal("Updater unexpectedly required an update, please check output dir")
 	}
 }
