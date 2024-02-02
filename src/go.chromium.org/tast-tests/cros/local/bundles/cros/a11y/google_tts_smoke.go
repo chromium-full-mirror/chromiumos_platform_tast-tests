@@ -30,7 +30,7 @@ func init() {
 			"chromeos-a11y-eng@google.com", // Mailing list
 			"akihiroota@chromium.org",      // Test author
 		},
-		BugComponent: "b:1272895",
+		BugComponent: "b:1279189",
 		Attr:         []string{"group:mainline", "informational"},
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},

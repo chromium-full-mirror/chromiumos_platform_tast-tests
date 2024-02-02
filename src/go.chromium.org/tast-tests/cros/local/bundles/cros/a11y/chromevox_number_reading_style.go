@@ -19,14 +19,13 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChromevoxNumberReadingStyle,
-		LacrosStatus: testing.LacrosVariantExists, // TODO(b:268196299): The ChromeVox options page will migrate to ChromeOS settings, so this test will need to be updated when the above bug is closed.
+		LacrosStatus: testing.LacrosVariantExists, // TODO(b:268196299): The ChromeVox options page will migrate to ChromeOS settings, so this test will need to be updated and re-enabled when the above bug is closed.
 		Desc:         "Verifies ChromeVox honors its setting to read numbers as words or as digits",
 		Contacts: []string{
 			"chromeos-a11y-eng@google.com", // Mailing list
-			"josiahk@chromium.org",         // Test author
+			"akihiroota@chromium.org",
 		},
 		BugComponent: "b:1272895",
-		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Fixture: "chromeLoggedIn",
