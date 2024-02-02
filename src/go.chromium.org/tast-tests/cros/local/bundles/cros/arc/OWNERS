@@ -3,5 +3,8 @@ set noparent
 # ARC++ team
 include /src/go.chromium.org/tast-tests/cros/local/arc/OWNERS
 
+# Paper I/O team owns printing
+per-file print.go=file:chromiumos/owners:v1:/printscan/OWNERS.printscan
+
 # Tast team for bulk/emergencies
 include /OWNERS.tast
