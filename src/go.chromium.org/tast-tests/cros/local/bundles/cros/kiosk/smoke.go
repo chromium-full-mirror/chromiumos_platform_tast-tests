@@ -107,6 +107,7 @@ func init() {
 				Name:             "ash_auto_webapp",
 				Val:              smokeTestParam{isLacros: false, autoLaunch: true, isWebApp: true},
 				ExtraSearchFlags: []*testing.StringPair{&launchWebKioskFeature, &autoLaunchKioskFeature},
+				ExtraAttr:        []string{"group:on_flex"},
 			},
 			{
 				Name:             "lacros_manual_chromeapp",
