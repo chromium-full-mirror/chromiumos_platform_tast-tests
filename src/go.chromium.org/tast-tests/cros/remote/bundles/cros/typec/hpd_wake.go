@@ -29,7 +29,7 @@ func init() {
 		Contacts: []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
 		// ChromeOS > Platform > Technologies > USB
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "typec_mcci"},
 		HardwareDeps: hwdep.D(hwdep.ECFeatureTypecCmd(), hwdep.ChromeEC()),
 		Vars:         []string{"typec.McciSerial"},
 	})
