@@ -41,6 +41,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
+	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
@@ -1734,6 +1735,7 @@ func (f FixtureData) Chrome() *chrome.Chrome { return f.chrome }
 type loggedInToCUJUserFixture struct {
 	cr              *chrome.Chrome
 	arc             *arc.ARC
+	wr              *wpr.WPR
 	origRunningPkgs map[string]struct{}
 	logMarker       *logsaver.Marker
 	keepState       bool
@@ -1756,6 +1758,38 @@ type loggedInToCUJUserFixture struct {
 	// mlbenchmarkDataDirectory describes whether to create data directory for mlbenchmark.
 	mlbenchmarkDataDirectory bool
 	enableBSM                bool
+	// If other than -1, indicates a WPR mode to work in using wprArchive.
+	wprMode    wpr.Mode
+	wprArchive string
+}
+
+// NewWPRLoggedInToCUJUserWithoutCooldownFixture returns a newly created fixture object with WPR parameters
+// set. This is a workaround for customizing the WPR behavior prior to b/285970864 implementation.
+// Note that if mode is not wpr.Record, fixture will assume that the WPR archive is an external Data,
+// in the s.DataPath(), otherwise the recorded archive will be put in the /tmp directory.
+func NewWPRLoggedInToCUJUserWithoutCooldownFixture(name, desc string, contacts []string, bt browser.Type, mode wpr.Mode, archive string) *testing.Fixture {
+	var data []string
+	if mode != wpr.Record {
+		data = append(data, archive)
+	}
+	return &testing.Fixture{
+		Name:     name,
+		Desc:     desc,
+		Contacts: contacts,
+		Impl: &loggedInToCUJUserFixture{
+			bt:         bt,
+			wprMode:    mode,
+			wprArchive: archive,
+		},
+		Data:            data,
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	}
 }
 
 func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -1779,8 +1813,23 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 			s.Fatal("Failed to obtain login credentials: ", err)
 		}
 		opts := []chrome.Option{
-			chrome.GAIALogin(creds),
 			chrome.ExtraArgs("--disable-sync", "--disable-drive-fs-for-testing"),
+		}
+		// Enable WPR mode. Do not use GAIA login as replay won't connect to real servers.
+		if f.wprArchive != "" {
+			wprCtx := s.FixtContext()
+			archive := filepath.Join("/tmp", f.wprArchive)
+			if f.wprMode != wpr.Record {
+				archive = s.DataPath(f.wprArchive)
+			}
+			f.wr, err = wpr.New(wprCtx, f.wprMode, archive, []string{""})
+			if err != nil {
+				s.Fatal("Failed to initialize WPR: ", err)
+			}
+			s.Log("Using FakeLogin due to WPR")
+			opts = append(opts, f.wr.ChromeOptions...)
+		} else {
+			opts = append(opts, chrome.GAIALogin(creds))
 		}
 		if f.keepState {
 			opts = append(opts, chrome.KeepState())
@@ -1902,6 +1951,11 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 		if !setupCompleted && f.fdms != nil {
 			f.fdms.Stop(ctx)
 			f.fdms = nil
+		}
+		if !setupCompleted && f.wr != nil {
+			if err := f.wr.Close(ctx); err != nil {
+				s.Error("Failed to close WPR: ", err)
+			}
 		}
 		if cr != nil {
 			chrome.Unlock()
@@ -2178,6 +2232,12 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 
 	if err := f.cr.Close(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to close Chrome connection: ", err)
+	}
+
+	if f.wr != nil {
+		if err := f.wr.Close(ctx); err != nil {
+			testing.ContextLog(ctx, "Failed to close WPR: ", err)
+		}
 	}
 
 	if f.fdms != nil {

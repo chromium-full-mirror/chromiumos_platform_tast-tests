@@ -375,6 +375,30 @@ func init() {
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 			},
+			// WPR variants.
+			{
+				Name:      "speedometer_wpr",
+				Timeout:   defaultTimeout,
+				Fixture:   benchmarkcuj.SpeedometerWPRReplayFixture,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				// This is a helper test for recording the WPR archive for speedometer_wpr.
+				// Resulting archive will be located in /tmp/
+				Name:    "speedometer_wpr_record",
+				Timeout: defaultTimeout,
+				Fixture: benchmarkcuj.SpeedometerWPRRecordFixture,
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
 		},
 	})
 }
