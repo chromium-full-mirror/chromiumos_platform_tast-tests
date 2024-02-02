@@ -40,10 +40,12 @@ func init() {
 		Func:         ValidateFirmwareDumpGeneration,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Trigger firmware dump and ensure it exists if allowed by policy",
-		Contacts:     []string{"kuabhs@google.com", "chromeos-wifi-champs@google.com"},
+		Contacts: []string{
+			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
+		},
 		// ChromeOS > Platform > Connectivity > WiFi
 		BugComponent:    "b:893827",
-		Attr:            []string{"group:mainline", "informational", "group:wificell", "wificell_func", "wificell_unstable"},
+		Attr:            []string{"group:mainline", "informational", "group:wificell", "wificell_func"},
 		SoftwareDeps:    []string{"chrome", "fbpreprocessord"},
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel()),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc},
