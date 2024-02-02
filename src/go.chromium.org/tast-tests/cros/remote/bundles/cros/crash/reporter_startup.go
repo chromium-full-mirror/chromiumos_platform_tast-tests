@@ -30,8 +30,8 @@ func init() {
 		Desc:         "Verifies crash reporter after reboot",
 		Contacts: []string{
 			"cros-telemetry@google.com",
-			"domlaskowski@chromium.org", // Original autotest author
-			"yamaguchi@chromium.org",    // Tast port author
+			"yamaguchi@chromium.org",
+			"arc-performance@google.com",
 		},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational"},

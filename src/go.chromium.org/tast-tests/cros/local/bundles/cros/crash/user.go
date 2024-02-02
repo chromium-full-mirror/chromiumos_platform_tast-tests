@@ -44,8 +44,8 @@ func init() {
 		Desc:         "Verifies crash reporting for user processes",
 		Contacts: []string{
 			"cros-telemetry@google.com",
-			"domlaskowski@chromium.org", // Original autotest author
-			"yamaguchi@chromium.org",    // Tast port author
+			"yamaguchi@chromium.org",
+			"arc-performance@google.com",
 		},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
