@@ -52,7 +52,7 @@ func init() {
 		Func:         CsmeFwUpdate,
 		Desc:         "Verifies that CSME RW firmware can be upgraded or downgraded using chromeos-firmwareupdate --mode=recovery",
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
-		BugComponent: "b:270200529", // ChromeOS > Platform > System > Firmware > FAFT > Infra
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		ServiceDeps:  []string{"tast.cros.firmware.BiosService"},
 		HardwareDeps: hwdep.D(hwdep.CPUSocFamily("intel")),
 		SoftwareDeps: []string{"csme_update"},

@@ -18,7 +18,7 @@ func init() {
 		Func:         WarmResetKey,
 		Desc:         "Test to verify that a warm reset can be performed by key combination: Alt+Volume Up+r (sysrq_r)",
 		Contacts:     []string{"digehlot@google.com", "chromeos-firmware@google.com"},
-		BugComponent: "b:281859363", // ChromeOS > Platform > System > Firmware > AP
+		BugComponent: "b:167186", // ChromeOS > Platform > baseOS > Firmware > AP
 		Attr:         []string{"group:firmware", "firmware_unstable"},
 		Fixture:      fixture.NormalMode,
 	})

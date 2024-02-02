@@ -23,7 +23,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-faft@google.com", // Owning team list
 		},
-		BugComponent: "b:194910842", // ChromeOS > Platform > Enablement > Firmware > FAFT
+		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		Vars:         []string{"servo"},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnFormFactor(hwdep.Chromebox)),
