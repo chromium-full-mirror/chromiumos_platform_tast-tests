@@ -518,15 +518,15 @@ func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error
 // ConfigureServiceWithProps calls ConfigureService on shill Manager to create
 // (or update) a service with props, and return a shill.Service object for this
 // service.
-func ConfigureServiceWithProps(ctx context.Context, props map[string]interface{}) (*shill.Service, error) {
+func ConfigureServiceWithProps(ctx context.Context, props *ShillProperties) (*shill.Service, error) {
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed creating shill manager proxy")
 	}
 
-	servicePath, err := m.ConfigureService(ctx, props)
+	servicePath, err := m.ConfigureService(ctx, props.GetPropertiesMap())
 	if err != nil {
-		return nil, errors.Wrapf(err, "unable to configure the service for the VPN properties %v", props)
+		return nil, errors.Wrapf(err, "unable to configure the service for the VPN properties %v", props.GetPropertiesMap())
 	}
 
 	return shill.NewService(ctx, servicePath)
@@ -553,11 +553,11 @@ func ConfigureService(ctx context.Context, server, secondServer *Server) (*shill
 // so the service created here can be updated later by CreateProperties() or
 // ConfigureService().
 func GenerateWireGuardKey(ctx context.Context) (string, error) {
-	propsMap, err := createWireGuardProperties(nil, nil)
+	props, err := createWireGuardProperties(nil, nil)
 	if err != nil {
 		return "", err
 	}
-	svc, err := ConfigureServiceWithProps(ctx, propsMap)
+	svc, err := ConfigureServiceWithProps(ctx, props)
 	if err != nil {
 		return "", err
 	}
@@ -586,7 +586,7 @@ func GenerateWireGuardKey(ctx context.Context) (string, error) {
 // CreateProperties returns a dict which contains the D-Bus property values of a
 // VPN service to connect to the given server. secondServer is only for
 // WireGuard.
-func CreateProperties(server, secondServer *Server) (map[string]interface{}, error) {
+func CreateProperties(server, secondServer *Server) (*ShillProperties, error) {
 	if server == nil {
 		return nil, errors.New("server must not be nil")
 	}
@@ -596,7 +596,7 @@ func CreateProperties(server, secondServer *Server) (map[string]interface{}, err
 		return nil, errors.New("second server should only be set for wireguard")
 	}
 
-	properties, err := func() (map[string]interface{}, error) {
+	properties, err := func() (*ShillProperties, error) {
 		switch vpnType {
 		case TypeIKEv2:
 			return createIKEv2Properties(server)
@@ -616,11 +616,11 @@ func CreateProperties(server, secondServer *Server) (map[string]interface{}, err
 
 	if server != nil {
 		config := server.Config
-		properties["Metered"] = config.Metered
-		staticIPConfig, ok := properties["StaticIPConfig"].(map[string]interface{})
+		properties.raw["Metered"] = config.Metered
+		staticIPConfig, ok := properties.raw["StaticIPConfig"].(map[string]interface{})
 		if !ok {
 			staticIPConfig = make(map[string]interface{})
-			properties["StaticIPConfig"] = staticIPConfig
+			properties.raw["StaticIPConfig"] = staticIPConfig
 		}
 		staticIPConfig["Mtu"] = config.MTU
 		staticIPConfig["SearchDomains"] = config.SearchDomains
@@ -629,7 +629,7 @@ func CreateProperties(server, secondServer *Server) (map[string]interface{}, err
 	return properties, nil
 }
 
-func createL2TPIPsecProperties(server *Server) (map[string]interface{}, error) {
+func createL2TPIPsecProperties(server *Server) (*ShillProperties, error) {
 	config := &server.Config
 	properties := map[string]interface{}{
 		"Provider.Host":      server.UnderlayIP,
@@ -658,10 +658,10 @@ func createL2TPIPsecProperties(server *Server) (map[string]interface{}, error) {
 		properties["L2TPIPsec.XauthPassword"] = xauthPassword
 	}
 
-	return properties, nil
+	return &ShillProperties{raw: properties}, nil
 }
 
-func createIKEv2Properties(server *Server) (map[string]interface{}, error) {
+func createIKEv2Properties(server *Server) (*ShillProperties, error) {
 	config := &server.Config
 	properties := map[string]interface{}{
 		"Name":          "test-ikev2-vpn",
@@ -692,10 +692,10 @@ func createIKEv2Properties(server *Server) (map[string]interface{}, error) {
 		return nil, errors.Errorf("unexpected auth type %s for IKEv2", config.IPsecAuthType)
 	}
 
-	return properties, nil
+	return &ShillProperties{raw: properties}, nil
 }
 
-func createOpenVPNProperties(server *Server) (map[string]interface{}, error) {
+func createOpenVPNProperties(server *Server) (*ShillProperties, error) {
 	config := &server.Config
 	properties := map[string]interface{}{
 		"Name":                  "test-vpn-openvpn",
@@ -740,10 +740,10 @@ func createOpenVPNProperties(server *Server) (map[string]interface{}, error) {
 		}
 	}
 
-	return properties, nil
+	return &ShillProperties{raw: properties}, nil
 }
 
-func createWireGuardProperties(server, secondServer *Server) (map[string]interface{}, error) {
+func createWireGuardProperties(server, secondServer *Server) (*ShillProperties, error) {
 	// Check if the two servers have the compatible configs.
 	if server != nil && secondServer != nil {
 		c1 := &server.Config
@@ -841,10 +841,43 @@ func createWireGuardProperties(server, secondServer *Server) (map[string]interfa
 		properties["WireGuard.PrivateKey"] = server.Config.wgClientKeyPair.private
 	}
 
-	return properties, nil
+	return &ShillProperties{raw: properties}, nil
 }
 
 // Service gets service of this connection.
 func (c *Connection) Service() *shill.Service {
 	return c.service
+}
+
+// ShillProperties holds the properties of a VPN network for shill.
+type ShillProperties struct {
+	raw map[string]interface{}
+}
+
+// GetPropertiesMap returns the raw properties map.
+func (s *ShillProperties) GetPropertiesMap() map[string]interface{} { return s.raw }
+
+// SetPropertiesMap sets the raw properties map.
+func (s *ShillProperties) SetPropertiesMap(props map[string]interface{}) { s.raw = props }
+
+// GetString returns the property of a specific key in string.
+func (s *ShillProperties) GetString(key string) string { return s.raw[key].(string) }
+
+// Get returns the property of a specific key.
+func (s *ShillProperties) Get(key string) interface{} { return s.raw[key] }
+
+// IPsecAuthType infers IPsecAuthType AuthType from the properties map.
+func (s *ShillProperties) IPsecAuthType() (IPsecAuthType, error) {
+	for authType, keys := range map[IPsecAuthType][]string{
+		AuthTypePSK:  {"L2TPIPsec.PSK", "IKEv2.PSK"},
+		AuthTypeCert: {"L2TPIPsec.ClientCertID", "IKEv2.ClientCertID"},
+		AuthTypeEAP:  {"EAP.EAP"},
+	} {
+		for _, key := range keys {
+			if _, ok := s.raw[key]; ok {
+				return authType, nil
+			}
+		}
+	}
+	return 0, errors.New(`the properties map does not contain the information of "IPsecAuthType"`)
 }

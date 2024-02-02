@@ -287,10 +287,11 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	}()
 
 	// Create shill property dict to connect to server.
-	props, err := vpn.CreateProperties(server, nil /*secondServer*/)
+	properties, err := vpn.CreateProperties(server, nil /*secondServer*/)
 	if err != nil {
 		s.Fatal("Failed to create VPN properties: ", err)
 	}
+	props := properties.GetPropertiesMap()
 
 	// Modify the dict according to the test case.
 	if tc.ipsecXauthMissingUser {
@@ -313,7 +314,8 @@ func VPNConnect(ctx context.Context, s *testing.State) {
 	}
 
 	// Configure the service.
-	service, err := vpn.ConfigureServiceWithProps(ctx, props)
+	properties.SetPropertiesMap(props)
+	service, err := vpn.ConfigureServiceWithProps(ctx, properties)
 	if err != nil {
 		s.Fatal("Failed to configure VPN service: ", err)
 	}

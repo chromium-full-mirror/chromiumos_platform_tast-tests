@@ -156,10 +156,10 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to generate properties dict: ", err)
 		}
-		clientIPs := strings.Join(properties["WireGuard.IPAddress"].([]string), ",")
+		clientIPs := strings.Join(properties.Get("WireGuard.IPAddress").([]string), ",")
 		execWGCmd("set", wgSvcName, "local-ip", clientIPs, "dns", dnsServer)
 
-		peerProps := properties["WireGuard.Peers"].([]map[string]string)
+		peerProps := properties.Get("WireGuard.Peers").([]map[string]string)
 		if len(peerProps) != 2 {
 			s.Fatalf("Unexpected generated properties: len(peerProps)=%v, want 2", len(peerProps))
 		}

@@ -145,8 +145,17 @@ type FixtureEnv struct {
 	ARC      *arc.ARC
 }
 
+// Chrome implements the HasChrome interface.
+func (f FixtureEnv) Chrome() *chrome.Chrome {
+	if f.Cr == nil {
+		panic("Chrome is called with nil chrome instance")
+	}
+	return f.Cr
+}
+
 // CertVals contains the required values to setup a cert-based VPN service.
 type CertVals struct {
+	certificate.CertStore
 	id   string
 	slot string
 	pin  string
@@ -158,7 +167,7 @@ func installUserCert(ctx context.Context, certStore *netcertstore.Store) (CertVa
 	cert := certificate.TestCert1()
 	clientCred := cert.ClientCred
 	id, err := certStore.InstallCertKeyPair(ctx, clientCred.PrivateKey, clientCred.Cert)
-	return CertVals{id, slot, pin}, err
+	return CertVals{cert, id, slot, pin}, err
 }
 
 func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
