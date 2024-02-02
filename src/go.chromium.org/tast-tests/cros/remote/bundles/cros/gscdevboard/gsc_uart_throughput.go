@@ -82,6 +82,8 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 
 	// Simulate the AP processor being turned on, in order to enable AP forwarding.
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+	// Wait until CCD USB shows up.
+	b.WaitUntilCCDConnected(ctx)
 
 	// Set up the EC console.
 	consoles = append(consoles, consoleChannel{
