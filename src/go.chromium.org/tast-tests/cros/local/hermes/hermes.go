@@ -35,6 +35,17 @@ func WaitForHermesIdle(ctx context.Context, timeout time.Duration) error {
 	return nil
 }
 
+// WaitForChromeESIMCache waits for Chrome's eSIM cache to exist
+func WaitForChromeESIMCache(ctx context.Context, timeout time.Duration) error {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		_, err := ioutil.ReadFile("/home/chronos/Local State")
+		return err
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		return errors.Wrap(err, "unable to read Chrome eSIM cache (b/269175859)")
+	}
+	return nil
+}
+
 func waitForHermesIdleHelper(ctx context.Context) error {
 	euiccPaths, err := GetEUICCPaths(ctx)
 	if err != nil {
@@ -51,7 +62,7 @@ func waitForHermesIdleHelper(ctx context.Context) error {
 func ensureEUICCSRefreshed(euiccPaths []dbus.ObjectPath) error {
 	jsonBytes, err := ioutil.ReadFile("/home/chronos/Local State")
 	if err != nil {
-		return errors.Wrap(err, "unable to read Chrome state")
+		return errors.Wrap(err, "unable to read Chrome eSIM cache (b/269175859)")
 	}
 
 	var localState map[string]interface{}
