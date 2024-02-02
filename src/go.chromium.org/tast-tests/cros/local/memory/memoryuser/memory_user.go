@@ -233,7 +233,7 @@ func initChrome(ctx context.Context, p *RunParameters, te *TestEnv) error {
 	}
 
 	if p.WPRArchivePath != "" {
-		te.wpr, err = wpr.New(ctx, p.WPRMode, p.WPRArchivePath)
+		te.wpr, err = wpr.New(ctx, p.WPRMode, p.WPRArchivePath, nil)
 		if err != nil {
 			return errors.Wrap(err, "cannot start WPR")
 		}

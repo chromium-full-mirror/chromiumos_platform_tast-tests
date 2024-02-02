@@ -191,7 +191,7 @@ func (p *preImpl) prepareLocal(ctx context.Context, s *testing.PreState) interfa
 		// Use s.PreCtx() to create WPR instance because the WPR process
 		// needs live beyond the |ctx| associated with Prepare stage.
 		var err error
-		if p.wpr, err = New(s.PreCtx(), p.mode, archive); err != nil {
+		if p.wpr, err = New(s.PreCtx(), p.mode, archive, nil); err != nil {
 			s.Fatal("Failed to start WPR: ", err)
 		}
 	}()

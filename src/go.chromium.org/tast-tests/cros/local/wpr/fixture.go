@@ -47,7 +47,7 @@ func NewFixture(wprAchiveName string, mode Mode) testing.FixtureImpl {
 func (f *fixtImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	// Use fixture scoped context so that the WPR server isn't killed early.
 	var err error
-	f.wpr, err = New(s.FixtContext(), f.mode, s.DataPath(f.archiveName))
+	f.wpr, err = New(s.FixtContext(), f.mode, s.DataPath(f.archiveName), nil)
 	if err != nil {
 		s.Fatal("Cannot start WPR: ", err)
 	}

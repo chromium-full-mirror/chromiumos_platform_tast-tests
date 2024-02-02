@@ -11,6 +11,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 
 	"golang.org/x/sys/unix"
@@ -102,7 +103,16 @@ func waitForServerSocket(ctx context.Context, addr string, server *testexec.Cmd)
 
 // New starts a WPR process and prepares chrome.Options to configure Chrome
 // to send all web traffic through the WPR process.
-func New(ctx context.Context, mode Mode, archive string) (*WPR, error) {
+// The ctx specifies the context throughout the WPR will be active. When this
+// context finishes, so will WPR. Mode defines whether WPR should record or
+// replay. If it is recording, then the archive will specify the location of
+// the output file to save the recording to. Otherwise it is a file WPR should
+// use to provide replay data. The scripts is a list of JavaScripts that WPR
+// should inject into each page. By default this will include a WPR-included
+// script for deterministic Math.random and time simulation. Providing any
+// list will override this default so if it also has to be injected, caller
+// should add '/usr/local/share/wpr/deterministic.js' to their list.
+func New(ctx context.Context, mode Mode, archive string, scripts []string) (*WPR, error) {
 	ports, err := availableTCPPorts(2)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot allocate WPR ports")
@@ -119,12 +129,17 @@ func New(ctx context.Context, mode Mode, archive string) (*WPR, error) {
 		return nil, errors.Errorf("unknown WPR mode %q", mode)
 	}
 	testing.ContextLog(ctx, "Using WPR archive ", archive)
+	// Override the default script injection
+	scriptsArg := "--inject_scripts=/usr/local/share/wpr/deterministic.js"
+	if scripts != nil {
+		scriptsArg = "--inject_scripts=" + strings.Join(scripts, ",")
+	}
 	proc := testexec.CommandContext(ctx, "wpr", m,
 		fmt.Sprintf("--http_port=%d", httpPort),
 		fmt.Sprintf("--https_port=%d", httpsPort),
 		"--https_cert_file=/usr/local/share/wpr/wpr_cert.pem",
 		"--https_key_file=/usr/local/share/wpr/wpr_key.pem",
-		"--inject_scripts=/usr/local/share/wpr/deterministic.js",
+		scriptsArg,
 		archive)
 
 	if err := proc.Start(); err != nil {

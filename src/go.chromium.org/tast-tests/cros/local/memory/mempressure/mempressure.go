@@ -979,7 +979,7 @@ func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages bool
 	var opts []chrome.Option
 	var err error
 
-	te.wpr, err = wpr.New(ctx, wpr.Replay, archive)
+	te.wpr, err = wpr.New(ctx, wpr.Replay, archive, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "cannot start WPR")
 	}
