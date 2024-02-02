@@ -39,7 +39,8 @@ func init() {
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
 		Data:         []string{"manifest.json", "background.js", "scan.css", "scan.html", "scan.js", "scan_escl_ipp_source.jpg", "scan_escl_ipp_golden.png"},
-		SoftwareDeps: []string{"chrome"},
+		// TODO(b/311454704): Remove cups dependency when USE flag is created.
+		SoftwareDeps: []string{"chrome", "cups"},
 		Attr: []string{
 			"group:mainline",
 			"group:paper-io",
