@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 
 	"go.chromium.org/tast-tests/cros/common/network/diag"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
@@ -35,6 +36,7 @@ func init() {
 		Attr:         []string{"group:wificell_roam", "wificell_roam_perf"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters | wificell.TFFeaturesAttenuator),
+		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
 		Timeout:      time.Minute * 2,
 	})
 }

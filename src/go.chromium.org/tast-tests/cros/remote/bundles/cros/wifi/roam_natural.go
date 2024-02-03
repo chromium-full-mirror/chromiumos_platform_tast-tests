@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
@@ -89,6 +90,7 @@ func init() {
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters | wificell.TFFeaturesAttenuator),
+		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
 		Timeout:      time.Minute * 60,
 		Params: []testing.Param{
 			{
