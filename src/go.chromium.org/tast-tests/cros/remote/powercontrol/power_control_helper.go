@@ -80,12 +80,20 @@ func ValidatePrevSleepState(ctx context.Context, dut *dut.DUT, sleepStateValue i
 	}, &testing.PollOptions{Timeout: 1 * time.Minute, Interval: 1 * time.Second})
 }
 
-// ShutdownAndWaitForPowerState verifies powerState(S5 or G3) after shutdown.
-func ShutdownAndWaitForPowerState(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT, powerState string) error {
+// Shutdown sends shutdown command to DUT.
+func Shutdown(ctx context.Context, dut *dut.DUT) error {
 	powerOffCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	if err := dut.Conn().CommandContext(powerOffCtx, "shutdown", "-h", "now").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return errors.Wrap(err, "failed to execute shutdown command")
+	}
+	return nil
+}
+
+// ShutdownAndWaitForPowerState verifies powerState(S5 or G3) after shutdown.
+func ShutdownAndWaitForPowerState(ctx context.Context, pxy *servo.Proxy, dut *dut.DUT, powerState string) error {
+	if err := Shutdown(ctx, dut); err != nil {
+		return err
 	}
 	sdCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()

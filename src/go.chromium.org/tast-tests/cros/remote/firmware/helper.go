@@ -2001,3 +2001,24 @@ func (h *Helper) SaveEventLog(ctx context.Context, saveLogPath string) error {
 	}
 	return nil
 }
+
+// GetECConsoleOutputWithComment returns EC console output with a comment message added.
+func (h *Helper) GetECConsoleOutputWithComment(ctx context.Context, comment string) (string, error) {
+	// Send invalid command to EC just so the message appears in the console output.
+	if err := h.Servo.RunECCommand(ctx, "comment "+comment); err != nil {
+		return "", errors.Wrap(err, "failed to send ec comment")
+	}
+	var output strings.Builder
+	keepPollingErr := errors.New("keep polling")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := h.Servo.GetQuotedString(ctx, servo.ECUARTStream)
+		output.WriteString(out)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read EC output"))
+		}
+		return keepPollingErr
+	}, &testing.PollOptions{Interval: 100 * time.Millisecond, Timeout: 500 * time.Millisecond}); !errors.Is(err, keepPollingErr) {
+		return "", errors.Wrap(err, "failed to read EC output")
+	}
+	return output.String(), nil
+}
