@@ -1495,6 +1495,20 @@ func init() {
 				},
 			},
 			{
+				Name:              "hevc_files_from_bugs_321622872",
+				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
+				ExtraSoftwareDeps: []string{caps.HWDecodeHEVC, "proprietary_codecs"},
+				ExtraData:         appendJSONFiles([]string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"}),
+				Timeout:           calculateTestTimeout([]string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"}, "hevc_files_from_bugs_321622872"),
+				Val: chromeStackDecoderVerificationTestParam{
+					videoFiles:      []string{"test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc"},
+					validatorType:   decoding.MD5,
+					mustFail:        false,
+					enabledFeatures: []string{},
+				},
+			},
+			{
 				Name:              "v4l2_flat_vp8_comprehensive",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),

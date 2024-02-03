@@ -38,6 +38,10 @@ var av1FilesFromBugs = map[string]string{
 	"235138734": "test_vectors/av1/files_from_bugs/b_235138734_test-25fps-one-to-four-tiles.av1.ivf",
 }
 
+var h265FilesFromBugs = map[string]string{
+	"321622872": "test_vectors/hevc/files_from_bugs/b_321622872__bands_across_screen_4k.hevc",
+}
+
 type paramData struct {
 	Name         string
 	SoftwareDeps string
@@ -367,6 +371,13 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		SoftwareDeps:  `[]string{caps.HWDecodeAV1}`,
 		ValidatorType: "decoding.MD5",
 	}, av1FilesFromBugs)...)
+	params = append(params, genFilesFromBugs(paramData{
+		Name:          "hevc_files_from_bugs",
+		Attr:          perBuildAttrs,
+		HardwareDeps:  "hwdep.D(hwdep.SkipGPUFamily(\"rogue\"))",
+		SoftwareDeps:  `[]string{caps.HWDecodeHEVC, "proprietary_codecs"}`,
+		ValidatorType: "decoding.MD5",
+	}, h265FilesFromBugs)...)
 
 	// V4L2FlatStatefulVideoDecoder VPx tests.
 	params = append(params, []paramData{{
