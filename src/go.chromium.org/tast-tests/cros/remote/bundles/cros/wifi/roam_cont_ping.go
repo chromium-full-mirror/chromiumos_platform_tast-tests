@@ -11,6 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/ping"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpaeap"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
@@ -49,9 +50,10 @@ func init() {
 		// A single DHCP server sharing same address pool for clients
 		// connected to either AP is needed, so that a setup with bridges
 		// and veths is used.
-		Fixture: wificell.FixtureID(wificell.TFFeaturesBridgeAndVeth | wificell.TFFeaturesCapture),
-		Timeout: time.Minute * 5, // The average test time doubled.
-		Vars:    []string{"wifi.RoamContPing.rounds"},
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesBridgeAndVeth | wificell.TFFeaturesCapture),
+		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
+		Timeout:      time.Minute * 5, // The average test time doubled.
+		Vars:         []string{"wifi.RoamContPing.rounds"},
 		Params: []testing.Param{{
 			Name: "none",
 			Val: wifiutil.ContParam{
