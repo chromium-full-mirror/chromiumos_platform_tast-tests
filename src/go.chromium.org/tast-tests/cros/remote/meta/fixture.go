@@ -58,6 +58,29 @@ func init() {
 		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
 		Impl:     remoteSetupFailureFixture{},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaRemoteParamFixture",
+		Desc:     "Test tast parameterized fixture",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
+		Impl:     remoteParamFixture{},
+		Params: []testing.FixtureParam{
+			{
+				Val: remoteParamVal{},
+			},
+			{
+				Name: "a",
+				Val:  remoteParamVal{featureA: true},
+			},
+			{
+				Name: "b",
+				Val:  remoteParamVal{featureB: true},
+			},
+			{
+				Name: "ab",
+				Val:  remoteParamVal{featureA: true, featureB: true},
+			},
+		},
+	})
 }
 
 type fixtSerializedStringFixture struct{}
@@ -155,3 +178,27 @@ func (remoteSetupFailureFixture) PreTest(ctx context.Context, s *testing.FixtTes
 }
 func (remoteSetupFailureFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 func (remoteSetupFailureFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
+
+type remoteParamVal struct {
+	featureA bool
+	featureB bool
+}
+type remoteParamFixture struct{}
+
+func (remoteParamFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	val := s.Param().(remoteParamVal)
+	features := []string{meta.RemoteFeature}
+	if val.featureA {
+		features = append(features, meta.RemoteFeatureA)
+	}
+	if val.featureB {
+		features = append(features, meta.RemoteFeatureB)
+	}
+	return features
+}
+func (remoteParamFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (remoteParamFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (remoteParamFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (remoteParamFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}

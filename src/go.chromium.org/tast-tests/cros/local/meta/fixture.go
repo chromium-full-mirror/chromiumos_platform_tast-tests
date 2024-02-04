@@ -7,6 +7,7 @@ package meta
 
 import (
 	"context"
+	"fmt"
 	"path/filepath"
 	"reflect"
 
@@ -67,6 +68,13 @@ func init() {
 		Desc:     "Test tast fixture failures",
 		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
 		Impl:     localSetupFailureFixture{},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaLocalParamFixture",
+		Desc:     "Test tast parameterized fixture",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
+		Impl:     localParamFixture{},
+		Params:   genParams(),
 	})
 }
 
@@ -222,3 +230,94 @@ func (localSetupFailureFixture) PreTest(ctx context.Context, s *testing.FixtTest
 }
 func (localSetupFailureFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 func (localSetupFailureFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
+
+type localParamVal struct {
+	featureA bool
+	featureB bool
+}
+type remoteParamFixture struct{}
+
+type localParamFixture struct{}
+
+func (localParamFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var v []string
+	// Since the parent fixture is from a different bundle, ParentFillValue is used.
+	// If the fixture is from the same bundle, ParentValue can be used, too.
+	if err := s.ParentFillValue(&v); err != nil {
+		s.Fatal("Failed to get remote parent string value in Setup: ", err)
+	}
+	val := s.Param().(localParamVal)
+	features := []string{meta.LocalFeature}
+	if val.featureA {
+		features = append(features, meta.LocalFeatureA)
+	}
+	if val.featureB {
+		features = append(features, meta.LocalFeatureB)
+	}
+	features = append(features, v...)
+	return features
+}
+func (localParamFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (localParamFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (localParamFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (localParamFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
+
+const (
+	// BaseFeature is a feature mask for a parameterized factory fixture example.
+	BaseFeature = iota
+	// FeatureA is a feature mask for a parameterized factory fixture example.
+	FeatureA = 1 << iota
+	// FeatureB is a feature mask for a parameterized factory fixture example.
+	FeatureB = 1 << iota
+)
+
+// supportedFeatures provide a mapping between the supported feature combinations
+// and the parent fixtures.
+var supportedFeatures = map[uint32]string{
+	BaseFeature:         "metaRemoteParamFixture",
+	FeatureA:            "metaRemoteParamFixture.a",
+	FeatureB:            "metaRemoteParamFixture.b",
+	FeatureA | FeatureB: "metaRemoteParamFixture.ab",
+}
+
+// genParams generates all supported parameters of localParamFixture.
+func genParams() (params []testing.FixtureParam) {
+	for features := range supportedFeatures {
+		params = append(params, paramFixtureFactory(features))
+	}
+	return params
+}
+
+// paramFixtureFactory returns a parameterized fixture of localParamFixture.
+func paramFixtureFactory(features uint32) testing.FixtureParam {
+	val := localParamVal{
+		featureA: (features & FeatureA) != 0,
+		featureB: (features & FeatureB) != 0,
+	}
+
+	parent, ok := supportedFeatures[features]
+	if !ok {
+		panic(fmt.Sprintf("unsupported feature mask: %x", features))
+	}
+
+	return testing.FixtureParam{
+		Name:   paramName(features),
+		Val:    val,
+		Parent: parent,
+	}
+}
+
+// ParamFixtureName returns a parameterized fixture of localParamFixture.
+func ParamFixtureName(features uint32) string {
+	_, ok := supportedFeatures[features]
+	if !ok {
+		panic(fmt.Sprintf("unsupported feature mask: %x", features))
+	}
+	return fmt.Sprintf("metaLocalParamFixture.%s", paramName(features))
+}
+
+func paramName(features uint32) string {
+	return fmt.Sprintf("f_%x", features)
+}
