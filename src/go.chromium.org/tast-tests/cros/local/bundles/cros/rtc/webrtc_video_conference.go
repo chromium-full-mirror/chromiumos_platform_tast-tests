@@ -33,7 +33,7 @@ func init() {
 			"rtc.WebRTCVideoConference.Trace",
 		},
 		Contacts: []string{
-			"hiroh@google.com", // Test Author.
+			"hiroh@chromium.org", // Test Author.
 			"chromeos-rtc@google.com",
 		},
 		BugComponent: "b:1401297", // ChromeOS > Platform > Technologies > RTC
