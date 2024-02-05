@@ -9,11 +9,13 @@ import (
 	"fmt"
 	"math/rand"
 	"regexp"
+	"runtime/pprof"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/adb"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -108,6 +110,9 @@ const logcatTimeParamLayout = "2006-01-02 15:04:05.000"
 // lmkdObserverLogcatTimeout is the timeout used for a single call to logcat.
 const lmkdObserverLogcatTimeout = 15 * time.Second
 
+// lmkdObserverLogcatInterval is the time between calls to logcat.
+const lmkdObserverLogcatInterval = 15 * time.Second
+
 func logcatWithTimeout(ctx context.Context, a *arc.ARC, linesSince time.Time, timeout time.Duration) ([]string, error) {
 	// Logcat can sometimes hang even after the passed context has closed.
 	logcatCtx, logcatCtxCancel := context.WithTimeout(ctx, timeout)
@@ -160,6 +165,7 @@ func (o *LmkdObserver) observe(ctx context.Context, a *arc.ARC) {
 	var kills []*LmkdKillInfo
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		testing.ContextLog(ctx, "LmkdObserver calling logcat asynchronously")
 		// Logcat can take many minutes only to eventually fail anyways when
 		// called under high memory pressure, even if the memory pressure is later
 		// removed. Long timeouts here can cause LmkdObserver.Close to fail;
@@ -170,6 +176,7 @@ func (o *LmkdObserver) observe(ctx context.Context, a *arc.ARC) {
 			testing.ContextLog(ctx, "LmkdObserver logcat failed: ", err)
 			return err
 		}
+		testing.ContextLog(ctx, "LmkdObserver logcat call completed successfully")
 
 		for _, line := range lines {
 			if strings.Contains(line, o.doneString) {
@@ -197,10 +204,40 @@ func (o *LmkdObserver) observe(ctx context.Context, a *arc.ARC) {
 		}
 
 		return errors.New("still observing logcat")
-	}, nil); err != nil {
+	}, &testing.PollOptions{Interval: lmkdObserverLogcatInterval}); err != nil {
 		o.errChan <- err
 	} else {
 		o.resChan <- kills
+	}
+}
+
+func logProcesses(ctx context.Context) {
+	out, err := testexec.CommandContext(ctx, "ps", "aux").Output()
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to run ps to debug logcat hangs: ", err)
+		return
+	}
+	testing.ContextLog(ctx, "Log ps output to help debug logcat hangs")
+	for _, line := range strings.Split(string(out), "\n") {
+		testing.ContextLogf(ctx, "%q", line)
+	}
+}
+
+type stringWriter struct {
+	buffer string
+}
+
+func (sw *stringWriter) Write(p []byte) (n int, err error) {
+	sw.buffer += string(p)
+	return len(p), nil
+}
+
+func logGoroutines(ctx context.Context) {
+	sw := &stringWriter{""}
+	pprof.Lookup("goroutine").WriteTo(sw, 1)
+	testing.ContextLog(ctx, "Log goroutines to help debug logcat hangs")
+	for _, line := range strings.Split(sw.buffer, "\n") {
+		testing.ContextLog(ctx, line)
 	}
 }
 
@@ -221,6 +258,10 @@ func (o *LmkdObserver) Close(ctx context.Context, a *arc.ARC) ([]*LmkdKillInfo, 
 	defer cancel()
 	select {
 	case <-closeCtx.Done():
+		// TODO(cwd): Remove this logging once we figure out why we get timeouts
+		// from logcat.
+		logProcesses(ctx)
+		logGoroutines(ctx)
 		return nil, errors.Errorf("timed out waiting for LmkdObserver to observe %q, didObserverExit: %t", o.doneString, o.didObserverExit)
 	case err := <-o.errChan:
 		return nil, err

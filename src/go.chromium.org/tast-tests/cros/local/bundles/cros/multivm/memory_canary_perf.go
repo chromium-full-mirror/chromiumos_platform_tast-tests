@@ -278,6 +278,12 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		if err != nil {
 			return err
 		}
+		if psi.Host == nil {
+			return errors.New("no PSI results from host")
+		}
+		if psi.Arc == nil {
+			return errors.New("no PSI results from ARC")
+		}
 		if psi.Arc.Some.Avg10 > psiLowThreshold || psi.Host.Some.Avg10 > psiLowThreshold {
 			testing.ContextLogf(ctx, "psi some avg10 arc=%f host=%f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10)
 			return errors.Errorf("psi some avg10 arc=%.2f host=%.2f above threshold=%.2f", psi.Arc.Some.Avg10, psi.Host.Some.Avg10, psiLowThreshold)

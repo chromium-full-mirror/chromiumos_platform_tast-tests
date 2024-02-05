@@ -53,10 +53,20 @@ func openTabCanaries(ctx context.Context, allocMiB int, ratio float32, br *brows
 	if err := protTab.Run(ctx, br); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run protected background tab canary")
 	}
-	failed = false
+	protTabAlive := true
+	bgTabAlive := true
 	stillAlive := func(ctx context.Context) bool {
-		return protTab.StillAlive(ctx, br) || bgTab.StillAlive(ctx, br)
+		if protTabAlive && !protTab.StillAlive(ctx, br) {
+			testing.ContextLog(ctx, "Protected background tab canary discard detected")
+			protTabAlive = false
+		}
+		if bgTabAlive && !bgTab.StillAlive(ctx, br) {
+			testing.ContextLog(ctx, "Background tab canary discard detected")
+			bgTabAlive = false
+		}
+		return protTabAlive || bgTabAlive
 	}
+	failed = false
 	return closer, stillAlive, nil
 }
 
@@ -112,10 +122,26 @@ func openAppCanaries(ctx context.Context, allocMiB int, ratio float32, tconn *ch
 	if err := fgApp.Run(ctx, a, tconn); err != nil {
 		return nil, nil, errors.Wrap(err, "failed to run foreground app canary")
 	}
-	failed = false
+
+	fgAppAlive := true
+	percAppAlive := true
+	cacheAppAlive := true
 	stillAlive := func(ctx context.Context) bool {
-		return fgApp.StillAlive(ctx, a) || percApp.StillAlive(ctx, a) || cacheApp.StillAlive(ctx, a)
+		if fgAppAlive && !fgApp.StillAlive(ctx, a) {
+			testing.ContextLog(ctx, "Foreground app canary kill detected")
+			fgAppAlive = false
+		}
+		if percAppAlive && !percApp.StillAlive(ctx, a) {
+			testing.ContextLog(ctx, "Perceptible app canary kill detected")
+			percAppAlive = false
+		}
+		if cacheAppAlive && !cacheApp.StillAlive(ctx, a) {
+			testing.ContextLog(ctx, "Cached app kill canary detected")
+			cacheAppAlive = false
+		}
+		return fgAppAlive || percAppAlive || cacheAppAlive
 	}
+	failed = false
 	return closer, stillAlive, nil
 }
 
