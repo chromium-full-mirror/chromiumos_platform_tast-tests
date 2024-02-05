@@ -46,7 +46,9 @@ var (
 	verRWTi50StrRE = `ti50_common_([a-z]+)\S*:(\S+)`
 	verRWGSCStrRE  = verRWCr50StrRE + `|` + verRWTi50StrRE
 	// GSC board properties
-	brdPropRE = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
+	brdPropRE          = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
+	gettimeDeepSleepRE = regexp.MustCompile(`deep sleep:.*= ([0-9\.]*) `)
+	gettimeColdResetRE = regexp.MustCompile(`reset:.*= ([0-9\.]*) `)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -745,4 +747,49 @@ func (i *CrOSImage) GetBoardPropertiesTPMBus(ctx context.Context) (TpmBus, error
 	default:
 		return TpmBusInvalid, errors.Errorf("unrecognized brdprop value: 0x%08x", brdprop)
 	}
+}
+
+// GSCTime contains the time since cold reset and the time since deep sleep reset
+type GSCTime struct {
+	// coldReset is the time since a cold reset (ex power-on, hard, security)
+	coldResetTime time.Duration
+	// dsTime is the time since deep sleep or any other reset.
+	dsTime time.Duration
+}
+
+// extractGSCTime extracts the time since deep sleep and cold reset from the gettime output
+func extractGSCTime(out string) (GSCTime, error) {
+	ret := GSCTime{}
+
+	// Find the deep sleep time
+	m := gettimeDeepSleepRE.FindStringSubmatch(out)
+	if m == nil {
+		return ret, errors.New("failed to find deep sleep time in gettime output")
+	}
+	t, err := strconv.ParseFloat(m[1], 64)
+	if err != nil {
+		return ret, err
+	}
+	ret.dsTime = time.Duration(t * float64(time.Second))
+
+	// Find the cold reset time
+	m = gettimeColdResetRE.FindStringSubmatch(out)
+	if m == nil {
+		return ret, errors.New("failed to find cold reset time in gettime output")
+	}
+	t, err = strconv.ParseFloat(m[1], 64)
+	if err != nil {
+		return ret, err
+	}
+	ret.coldResetTime = time.Duration(t * float64(time.Second))
+	return ret, nil
+}
+
+// Gettime runs the gettime command and extracts the system time information
+func (i *CrOSImage) Gettime(ctx context.Context) (GSCTime, error) {
+	output, err := i.Command(ctx, "gettime")
+	if err != nil {
+		return GSCTime{}, errors.Wrap(err, "failed to run GSC gettime command")
+	}
+	return extractGSCTime(output)
 }

@@ -369,3 +369,42 @@ func testGetCCDCapabilities(t *testing.T, input string, expected map[CCDCap]CCDC
 		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", output, expected)
 	}
 }
+func TestGettimeDT(t *testing.T) {
+	input := `
+		gettime
+		Time: 0x0000000000a6ec69 = 10939.000 s
+		Since reset: 0x0000000000a6ec69 = 10939.497 s
+		Since deep sleep: 0x0000000000004a68 = 19.048 s
+`
+	expected := GSCTime{
+		coldResetTime: 10939497000000,
+		dsTime:        19048000000,
+	}
+
+	testExtractGSCTime(t, input, expected)
+}
+
+func TestGettimeH1(t *testing.T) {
+	// These hex values do not match the base 10 value. They don't matter.
+	input := `
+		Time: 0x0000000000b98f67 = 67.890 s
+		Since reset: 0x0000000000abcde = 12345.678 s
+		Since deep sleep: 0x0000000000ade606 = 1.000 s
+`
+	expected := GSCTime{
+		coldResetTime: 12345678000000,
+		dsTime:        1000000000,
+	}
+
+	testExtractGSCTime(t, input, expected)
+}
+
+func testExtractGSCTime(t *testing.T, input string, expected GSCTime) {
+	out, err := extractGSCTime(input)
+	if err != nil {
+		t.Fatal("error processing gettime info:", err)
+	}
+	if out != expected {
+		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", out, expected)
+	}
+}
