@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -76,6 +77,8 @@ func BundlingNotifications(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to connect to test API")
 	}
+
+	uia := uiauto.New(tconn).WithTimeout(5 * time.Second)
 
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
@@ -148,6 +151,19 @@ func BundlingNotifications(ctx context.Context, s *testing.State) {
 	// Closing all notifications ensures that the notification center closes.
 	defer ash.CloseNotifications(cleanupCtx, tconn)
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, s.HasError, res.cr, "verify_notification")
+
+	sdkVer, err := arc.SDKVersion()
+	if err != nil {
+		s.Fatal("Failed to get SDKVersion: ", err)
+	}
+	// In ARC-T and later, grouped notifications are collapsed by default.
+	if sdkVer >= arc.SDKT {
+		mousePC := pointer.NewMouse(tconn)
+		defer mousePC.Close(ctx)
+		if err := arc.ClickNotificationExpandButtonAndWaitForAnimation(ctx, uia, mousePC); err != nil {
+			s.Fatal("Failed to click the expand button to expand: ", err)
+		}
+	}
 
 	groupedNotificationBounds, err := notificationBounds(ctx, res)
 	if err != nil {
