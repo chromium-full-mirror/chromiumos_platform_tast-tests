@@ -32,8 +32,8 @@ func init() {
 			"cros-peripherals@google.com",
 			"dpad@google.com",
 		},
-		// ChromeOS > Software > System Services > Peripherals > Mouse
-		BugComponent: "b:241965717",
+		// ChromeOS > Software > Fundamentals > Peripherals > Mouse
+		BugComponent: "b:1131847",
 		Fixture:      "chromeLoggedInWithInputDeviceSettingsSplit",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
