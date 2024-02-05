@@ -184,7 +184,9 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := h.Servo.RestorePDPort(ctx); err != nil {
-		s.Fatal("Failed to restore PD: ", err)
+	if powerSwapSupported {
+		if err := h.Servo.RestorePDPort(ctx); err != nil {
+			s.Fatal("Failed to restore PD: ", err)
+		}
 	}
 }
