@@ -16,7 +16,7 @@ let elapsedTime = 0;
 // milliseconds.
 async function startRecordingForResult(codecMime, width, height, recordDurationMs) {
   const stream = await navigator.mediaDevices.getUserMedia(
-    {audio: true, video: {width: width, height: height}});
+    {audio: false, video: {width: width, height: height}});
 
   document.getElementById('video').srcObject = stream;
   const mimeType = 'video/webm; codecs=' + codecMime;
