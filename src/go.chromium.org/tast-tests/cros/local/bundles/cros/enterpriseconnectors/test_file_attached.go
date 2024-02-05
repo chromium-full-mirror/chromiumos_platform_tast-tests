@@ -314,6 +314,8 @@ func testFileAttachedForBrowserAndFile(
 	defer dconn.Close()
 	defer dconn.CloseTarget(cleanupCtx)
 
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error_file_input_page")
+
 	// Create file at test directory of MyFiles.
 	testFileLocation := filepath.Join(testDirPath, ulFileName)
 	if _, err := os.Stat(testFileLocation); os.IsNotExist(err) {
@@ -415,7 +417,7 @@ func verifyUIForFileAttached(
 	if !testParams.AllowsImmediateDelivery && testParams.ScansEnabled {
 		if shouldBlockUpload {
 			// Check that a blocked verdict is shown.
-			blockedLabelTextFinder := nodewith.Role(role.StaticText).HasClass("Label").Ancestor(scanningDialogFinder()).NameContaining(params.UlBlockLabel)
+			blockedLabelTextFinder := nodewith.Role(role.StaticText).Ancestor(scanningDialogFinder()).NameContaining(params.UlBlockLabel).First()
 			if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(blockedLabelTextFinder)(ctx); err != nil {
 				s.Fatal("Did not show scan blocked message: ", err)
 			}

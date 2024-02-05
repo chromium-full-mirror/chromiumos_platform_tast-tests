@@ -90,6 +90,7 @@ func DeviceTrustInsessionByod(ctx context.Context, s *testing.State) {
 		chrome.GAIALogin(chrome.Creds{User: tapeAccount.Username, Pass: tapeAccount.Password}),
 		chrome.EnableFeatures(devicetrust.DeviceTrustFeature),
 		chrome.EnableFeatures(deviceTrustFeatureByod),
+		chrome.ExtraArgs("--disable-search-engine-choice-screen"),
 	)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)

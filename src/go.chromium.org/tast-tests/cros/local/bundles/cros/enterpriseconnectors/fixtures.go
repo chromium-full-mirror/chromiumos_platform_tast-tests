@@ -146,6 +146,7 @@ func CreateFixture(user, pw string) testing.FixtureImpl {
 				chrome.GAIALogin(chrome.Creds{User: username, Pass: password}),
 				chrome.ProdPolicy(),
 				chrome.EnableFeatures("FileTransferEnterpriseConnector", "FileTransferEnterpriseConnectorUI", "NewFilesPolicyUX"),
+				chrome.ExtraArgs("--disable-search-engine-choice-screen"),
 			),
 		).Opts()
 	})

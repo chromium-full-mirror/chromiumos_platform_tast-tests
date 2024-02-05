@@ -250,6 +250,8 @@ func TestDownload(ctx context.Context, s *testing.State) {
 			defer dconn.Close()
 			defer dconn.CloseTarget(cleanupCtx)
 
+			defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "dump_on_error_file_download_page")
+
 			// Close all prior notifications.
 			if err := ash.CloseNotifications(ctx, tconnAsh); err != nil {
 				s.Fatal("Failed to close notifications: ", err)
