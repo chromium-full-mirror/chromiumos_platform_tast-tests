@@ -30,7 +30,7 @@ func init() {
 		SoftwareDeps: []string{"chrome", "lacros"},
 		// cpu.WaitUntilStabilized is called multiple times (at least twice) on GpuCUJ,
 		// so it‘s safer to add twice the CPUStablizationTimeout to the test timeout.
-		Timeout: 20*time.Minute + cuj.CPUStablizationTimeout*2,
+		Timeout: 25*time.Minute + cuj.CPUStablizationTimeout*2,
 		Data:    []string{"video.html", "continuous_scroll_60fps.html", "gradient_color_60fps.html", "webgl_small_60fps.html", "bbb_1080p60_yuv.vp9.webm"},
 		Params: []testing.Param{{
 			Name: "maximized",

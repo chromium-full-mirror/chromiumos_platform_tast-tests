@@ -325,6 +325,8 @@ func runLacrosTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation
 	}
 
 	cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+	// Reduce the timeout to avoid test timeouts.
+	cooldownConfig.PollTimeout = 2 * time.Minute
 	if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
 		testing.ContextLog(ctx, "Failed to wait for CPU to stabilize: ", err)
 	}
@@ -361,6 +363,8 @@ func runLacrosTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation
 
 func runCrosTest(ctx context.Context, cr *chrome.Chrome, invoc *testInvocation) error {
 	cooldownConfig := cpu.DefaultCoolDownConfig(cpu.CoolDownPreserveUI)
+	// Reduce the timeout to avoid test timeouts.
+	cooldownConfig.PollTimeout = 2 * time.Minute
 	if _, err := cpu.WaitUntilStabilized(ctx, cooldownConfig); err != nil {
 		testing.ContextLog(ctx, "Failed to wait for CPU to stabilize: ", err)
 	}
