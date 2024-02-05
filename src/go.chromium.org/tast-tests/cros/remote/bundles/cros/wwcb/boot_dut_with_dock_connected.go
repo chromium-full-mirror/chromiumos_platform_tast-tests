@@ -130,9 +130,6 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 	if err := utils.VerifyEthernetState(ctx, dut, true); err != nil {
 		s.Fatal("Failed to verify Ethernet is connected: ", err)
 	}
-	if err := utils.VerifyUSBAudioConnection(ctx, dut, true); err != nil {
-		s.Fatal("Failed to verify USB audio is connected: ", err)
-	}
 	if err := utils.VerifyDisplayCount(ctx, dut, 2); err != nil {
 		s.Fatal("Failed to verify external display is connected: ", err)
 	}

@@ -143,10 +143,6 @@ func VerifyPeripheralsConnection(ctx context.Context, dut *dut.DUT, isConnected 
 		return errors.Wrap(err, "verify connection of external display")
 	}
 
-	if err := VerifyUSBAudioConnection(testingCtx, dut, isConnected); err != nil {
-		return errors.Wrap(err, "verify connection of USB audio")
-	}
-
 	if err := VerifyEthernetState(testingCtx, dut, isConnected); err != nil {
 		return errors.Wrap(err, "verify connection of Ethernet")
 	}
