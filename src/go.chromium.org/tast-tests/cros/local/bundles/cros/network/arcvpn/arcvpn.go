@@ -9,11 +9,13 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -28,11 +30,13 @@ const (
 // These need to stay in sync with
 // //platform/tast-tests/android/ArcVpnTest/src/org/chromium/arc/testapp/arcvpn/ArcTestVpnService.java
 const (
-	VPNTestAppAPK       = "ArcVpnTest.apk"
-	VPNTestAppPkg       = "org.chromium.arc.testapp.arcvpn"
-	VPNTestAppSvc       = "org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
-	VPNTestAppBroadcast = "org.chromium.arc.testapp.arcvpn.LAUNCH_VPN"
-	TunIP               = "192.168.2.2"
+	VPNTestAppAPK               = "ArcVpnTest.apk"
+	VPNTestAppPkg               = "org.chromium.arc.testapp.arcvpn"
+	VPNTestAppSvc               = "org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
+	VPNTestAppBroadcast         = "org.chromium.arc.testapp.arcvpn.LAUNCH_VPN"
+	VPNTestAppSetupSocketIntent = "org.chromium.arc.testapp.arcvpn.SETUP_SOCKET"
+	VPNTestAppSendMessageIntent = "org.chromium.arc.testapp.arcvpn.SEND_MESSAGE"
+	TunIP                       = "192.168.2.2"
 )
 
 // SetUpHostVPN create the host VPN server, but does not initiate a connection.
@@ -122,6 +126,42 @@ func ForceStopARCVPN(ctx context.Context, a *arc.ARC) error {
 
 	if err := WaitForARCServiceState(ctx, a, FacadeVPNPkg, FacadeVPNSvc, false); err != nil {
 		return errors.Wrapf(err, "failed to stop %s", FacadeVPNSvc)
+	}
+	return nil
+}
+
+// SetupSocket sets up a socket using given address and port of the remote peer
+// we want to connect to, and protocol of the socket. This setup only works
+// with WiFi and only when there is one WiFi network in ARC. Do not support
+// Ethernet now because it's common that there are multiple Ethernet networks
+// on DUT with virtualnet package, and we don't have a easy way to determine
+// which Ethernet we should use in ARC now.
+// When called multiple times in one test, the older socket will be replaced by
+// newly setup socket for sending messages.
+func SetupSocket(ctx context.Context, a *arc.ARC, family l4server.Family, address string, port int) error {
+	if family == l4server.TCP6 || family == l4server.TCP4 {
+		family = l4server.TCP
+	}
+	if family == l4server.UDP4 || family == l4server.UDP6 {
+		family = l4server.UDP
+	}
+
+	if _, err := a.BroadcastIntent(ctx,
+		VPNTestAppSetupSocketIntent,
+		"--es", "proto", family.String(),
+		"--es", "address", address,
+		"--ei", "port", strconv.Itoa(port)); err != nil {
+		return errors.Wrap(err, "setup socket failed")
+	}
+	return nil
+}
+
+// SendMessage sends out a message via the latest setup socket.
+func SendMessage(ctx context.Context, a *arc.ARC, message string) error {
+	if _, err := a.BroadcastIntent(ctx,
+		VPNTestAppSendMessageIntent,
+		"--es", "message", message); err != nil {
+		return errors.Wrap(err, "send message failed")
 	}
 	return nil
 }

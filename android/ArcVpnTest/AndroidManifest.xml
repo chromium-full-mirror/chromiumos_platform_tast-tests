@@ -7,6 +7,8 @@
           package="org.chromium.arc.testapp.arcvpn">
   <!-- Otherwise the system will kill the service. -->
   <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
   <application>
     <service android:name="org.chromium.arc.testapp.arcvpn.ArcTestVpnService"
