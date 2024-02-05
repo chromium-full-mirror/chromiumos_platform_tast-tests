@@ -28,7 +28,7 @@ func init() {
 			"chromeos-camera-eng@google.com",
 			"ribalda@chromium.org",
 		},
-		BugComponent: "b:1093480", // ChromeOS > Platform > Technologies > Camera > Kernel
+		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
 		Attr:         []string{"group:mainline", "group:camera-stability"},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},

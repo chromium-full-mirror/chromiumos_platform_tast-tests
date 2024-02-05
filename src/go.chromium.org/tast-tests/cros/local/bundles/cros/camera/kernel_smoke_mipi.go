@@ -73,8 +73,12 @@ func init() {
 		Func:         KernelSmokeMIPI,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Smoke test for MIPI Camera Kernel Drivers",
-		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
-		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
+		Contacts: []string{
+			"chromeos-camera-kernel@google.com",
+			"chromeos-camera-eng@google.com",
+			"hidenorik@chromium.org",
+		},
+		BugComponent: "b:1481072", // ChromeOS > Platform > Technologies > Camera > Kernel
 		Attr:         []string{"group:mainline", "informational", "group:camera-stability", "group:camera-kernelnext", "group:camera_dependent"},
 		SoftwareDeps: []string{caps.BuiltinMIPICamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(unsupportedModel...)),
