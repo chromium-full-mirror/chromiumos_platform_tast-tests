@@ -43,8 +43,10 @@ func init() {
 		Data:         webrtc.TestFiles(),
 		Params: []testing.Param{
 			{
-				Name:    "custom",
-				Val:     webrtc.VCTestParams{},
+				Name: "custom",
+				Val: webrtc.VCTestParams{
+					NumPeople: 2,
+				},
 				Fixture: "chromeRTCPerf",
 				Timeout: 5 * time.Minute,
 			},
@@ -183,7 +185,7 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		if params.NumPeople <= 1 {
-			s.Fatal("Invalid parameters. The number of people cannot be less than 2 if Step is false")
+			s.Fatal("Invalid parameters. The number of people cannot be less than 2")
 		}
 	}
 
