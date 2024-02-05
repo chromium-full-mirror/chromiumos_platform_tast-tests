@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -249,6 +250,10 @@ func runPowerButtonDiag(ctx context.Context, args []string) (string, error) {
 	defer releasePowerButton(powerButtonEventWriter)
 	defer powerButtonEventWriter.Close()
 
+	// Connect to the power_manager D-Bus service.
+	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+		return "", errors.Wrap(err, "failed to ensure the powerd service is running")
+	}
 	obj, err := dbusutil.NewDBusObject(ctx, "org.chromium.PowerManager", "org.chromium.PowerManager", "/org/chromium/PowerManager")
 	if err != nil {
 		return "", errors.Wrap(err, "failed to connect to PowerManager D-Bus service")
