@@ -384,6 +384,12 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 		return errors.Wrap(err, "setUpAudio")
 	}
 
+	resetDisplay, err := setupDisplayEnv(ctx, tconn)
+	if err != nil {
+		return err
+	}
+	defer resetDisplay(closeCtx)
+
 	r := power.NewRecorder(ctx, powerInterval, s.OutDir(), s.TestName())
 	defer r.Close(closeCtx)
 
@@ -399,6 +405,7 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	}
 
 	var newWinTitle string
+	var newWinStartUp func() error
 	if params.Present || params.Text || params.Mouse {
 		// Opens a new window for presentation or text input.
 		newWinConn, err := cr.NewConn(ctx, newWinURL, browser.WithNewWindow())
@@ -417,13 +424,13 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 		if err := newWinConn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
 			return errors.Wrap(err, "timed out waiting for page loading")
 		}
-	}
 
-	resetDisplay, err := setupDisplayEnv(ctx, tconn)
-	if err != nil {
-		return err
+		if newWinTitle == presentTitle {
+			newWinStartUp = func() error {
+				return newWinConn.Eval(ctx, "drawCanvasAlternatingColours(1280, 720, 30)", nil)
+			}
+		}
 	}
-	defer resetDisplay(closeCtx)
 
 	if err := prepareWindowView(ctx, tconn, newWinTitle); err != nil {
 		return err
@@ -432,7 +439,11 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	if err := cpu.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "failed waiting for CPU to cool down")
 	}
-
+	if newWinStartUp != nil {
+		if err := newWinStartUp(); err != nil {
+			return errors.Wrap(err, "failed to start the presentation window")
+		}
+	}
 	if params.Step {
 		return runStep(ctx, conn, r)
 	}
