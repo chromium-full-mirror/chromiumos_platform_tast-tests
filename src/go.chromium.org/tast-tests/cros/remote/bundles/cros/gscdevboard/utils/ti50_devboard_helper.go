@@ -312,6 +312,41 @@ func (h DevboardHelper) Reset(ctx context.Context) {
 	h.ResetWithStraps(ctx)
 }
 
+type bitbangingOutput struct {
+	Samples map[string]string `json:"samples"`
+}
+
+// GpioBitbang controls given set of GPIO pins with precise timing
+func (h DevboardHelper) GpioBitbang(ctx context.Context, clock, waveform string, gpios ...ti50.GpioName) map[string]map[ti50.GpioName]bool {
+	args := make([]string, len(gpios)+5)
+	args[0] = "bitbang"
+	args[1] = "--clock"
+	args[2] = clock
+	args[3] = "-s"
+	args[4] = waveform
+	for i := range gpios {
+		args[i+5] = string(gpios[i])
+	}
+	startOutput, err := h.PlainCommand(ctx, "gpio", args...)
+	if err != nil {
+		h.Fatalf("failed to preform gpio bit-banging: %s. %s", args, err)
+	}
+
+	output := bitbangingOutput{}
+	if err := json.Unmarshal(startOutput, &output); err != nil {
+		h.Fatalf("failed to parse start gpio monitoring output: %s. %s", string(startOutput), err)
+	}
+	result := make(map[string]map[ti50.GpioName]bool, 16)
+	for label, levels := range output.Samples {
+		sample := make(map[ti50.GpioName]bool, len(gpios))
+		for i := 0; i < len(gpios); i++ {
+			sample[gpios[i]] = levels[i] == '1'
+		}
+		result[label] = sample
+	}
+	return result
+}
+
 type initialLevels struct {
 	Name  ti50.GpioName `json:"signal_name"`
 	Value bool          `json:"value"`

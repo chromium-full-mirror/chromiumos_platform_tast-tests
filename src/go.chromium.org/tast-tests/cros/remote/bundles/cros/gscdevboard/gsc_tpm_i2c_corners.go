@@ -98,6 +98,13 @@ func GSCTPMI2CCorners(ctx context.Context, s *testing.State) {
 	gpioMonitor.Save(ctx, events, "i2c.vcd")
 }
 
+const (
+	startCondition = "11 01 00 "
+	addr50         = "11 10 01 00 11 10 01 00 01 00 01 00 01 00 "
+	directionRead  = "11 10 "
+	directionWrite = "01 00 "
+)
+
 // testWedgedAddrAck performs an irregular I2C transaction: Addressing the GSC, but then
 // simulating that the AP resets and loses its state in the middle of clocking, while the GSC was
 // acking the address (keeping the SDA line low, preventing the AP from issuing "start" condition,
@@ -106,19 +113,19 @@ func testWedgedAddrAck(ctx context.Context, b utils.DevboardHelper, tpmHandle *u
 	prepareBitbanging(ctx, b, tpmHandle, s)
 	defer doneBitbanging(ctx, b, s)
 
-	// Start condition
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, false)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
+	// Generate address byte, without falling edge on last clock pulse.
+	// Each pair of binary digits corresponds to a value of the two GPIOs (SDA and SCL), in
+	// the order they are listed.
+	samples := b.GpioBitbang(ctx, "100 kHz",
+		startCondition+addr50+directionRead+
+			"11 'ack' 11", // Ack bit (to be pulled low by device)
+		ti50.GpioTi50DeviceI2cSda, ti50.GpioTi50DeviceI2cScl)
 
-	// 7 bits of address 0x50
-	sendI2cAddress(ctx, b, 0x50)
+	// Check that TPM device pulled SDA low at time when sampled.
+	if samples["ack"][ti50.GpioTi50DeviceI2cSda] != false {
+		s.Error("TPM device did not ack")
+	}
 
-	// Read mode
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
-
-	// ACK
 	verifyUnwedge(ctx, b, s, "Address ack")
 }
 
@@ -130,33 +137,18 @@ func testWedgedData(ctx context.Context, b utils.DevboardHelper, tpmHandle *util
 	prepareBitbanging(ctx, b, tpmHandle, s)
 	defer doneBitbanging(ctx, b, s)
 
-	// Start condition
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, false)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
+	samples := b.GpioBitbang(ctx, "100 kHz",
+		startCondition+addr50+directionRead+
+			"11 'ack' 10"+ // Ack bit (to be pulled low by device)
+			"11 'data' 11", // First data bit, leave clock hanging
+		ti50.GpioTi50DeviceI2cSda, ti50.GpioTi50DeviceI2cScl)
 
-	// 7 bits of address 0x50
-	sendI2cAddress(ctx, b, 0x50)
-
-	// Read mode
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
-
-	// ACK
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != false {
-		s.Error("No ack")
+	// Check that TPM device pulled SDA low at time when sampled.
+	if samples["ack"][ti50.GpioTi50DeviceI2cSda] != false {
+		s.Error("TPM device did not ack")
 	}
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
-
-	// Now look for the first zero bit in the data from the GSC.  (We are reading DID_VID
-	// register, and knows that the first byte will contain bits of value zero.)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	for b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) {
-		b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
-
-		b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
+	if samples["data"][ti50.GpioTi50DeviceI2cSda] != false {
+		s.Error("TPM device did not pull SDA low at MSB of first data byte")
 	}
 
 	verifyUnwedge(ctx, b, s, "Data read")
@@ -170,32 +162,20 @@ func testWedgedDataAck(ctx context.Context, b utils.DevboardHelper, tpmHandle *u
 	prepareBitbanging(ctx, b, tpmHandle, s)
 	defer doneBitbanging(ctx, b, s)
 
-	// Start condition
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, false)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
+	samples := b.GpioBitbang(ctx, "100 kHz",
+		startCondition+addr50+directionWrite+
+			"11 'addr_ack' 10 "+ // Ack bit (to be pulled low by device)
+			"11 10 11 10 11 10 11 10 11 10 11 10 11 10 11 10 "+ // 8 data bits
+			"11 'data_ack' 11", // Ack bit, leave clock hanging
 
-	// 7 bits of address 0x50
-	sendI2cAddress(ctx, b, 0x50)
+		ti50.GpioTi50DeviceI2cSda, ti50.GpioTi50DeviceI2cScl)
 
-	// Write mode
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, false)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
-
-	// Address ACK
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != false {
-		s.Error("No ack")
+	// Check that TPM device pulled SDA low at time when sampled.
+	if samples["addr_ack"][ti50.GpioTi50DeviceI2cSda] != false {
+		s.Error("TPM device did not ack its address")
 	}
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
-
-	for i := 0; i < 8; i++ {
-		b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
-		if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != true {
-			s.Error("Unexpected driving of SDA by GSC")
-		}
-		b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, false)
+	if samples["data_ack"][ti50.GpioTi50DeviceI2cSda] != false {
+		s.Error("TPM device did not ack data byte")
 	}
 
 	// Data byte ACK
@@ -241,8 +221,6 @@ func sendI2cAddress(ctx context.Context, b utils.DevboardHelper, addr int) {
 }
 
 func verifyUnwedge(ctx context.Context, b utils.DevboardHelper, s *testing.State, testcase string) {
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cSda, true)
-	b.GpioSet(ctx, ti50.GpioTi50DeviceI2cScl, true)
 	testTime := time.Now()
 
 	if b.GpioGet(ctx, ti50.GpioTi50DeviceI2cSda) != false {
