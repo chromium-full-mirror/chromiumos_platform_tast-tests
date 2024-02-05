@@ -84,7 +84,7 @@ func SavedFileToDefaultFolder(ctx context.Context, s *testing.State) {
 
 	containerFolderPath := driveFsClient.MyDrivePath(filepath.Join("Screencast recordings", screencastInfo.Name))
 	mediaFile := filepath.Join(containerFolderPath, fmt.Sprintf("%s.webm", screencastInfo.Name))
-	metadataFile := filepath.Join(containerFolderPath, fmt.Sprintf("%s.projector", screencastInfo.Name))
+	metadataFile := filepath.Join(containerFolderPath, fmt.Sprintf("%s.screencast", screencastInfo.Name))
 	thumbnailFile := filepath.Join(containerFolderPath, "thumbnail.png")
 	for _, screencastFile := range []string{mediaFile, metadataFile, thumbnailFile} {
 		if _, err := os.Stat(screencastFile); err != nil {
