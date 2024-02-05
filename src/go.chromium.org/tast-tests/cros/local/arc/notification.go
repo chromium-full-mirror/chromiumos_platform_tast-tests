@@ -6,9 +6,40 @@ package arc
 
 import (
 	"context"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
+	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast/core/errors"
 )
+
+var (
+	// ArcNotificationContentView is the class name of ArcNotificationContentView.
+	ArcNotificationContentView = nodewith.HasClass("ArcNotificationContentView")
+)
+
+// ClickNotificationExpandButtonAndWaitForAnimation clicks the expand button and waits for its animation.
+func ClickNotificationExpandButtonAndWaitForAnimation(ctx context.Context, ui *uiauto.Context, mousePC pointer.Context) error {
+	bounds, err := ui.Location(ctx, ArcNotificationContentView)
+	if err != nil {
+		return errors.Wrap(err, "failed to get the notification bounds")
+	}
+
+	// TODO(b/224685870): Use UIAutomator to get the button position dynamically when it supports multi-display.
+	expandButtonOffset := coords.NewPoint(-28, 44)
+	if err := mousePC.ClickAt(bounds.TopRight().Add(expandButtonOffset))(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the notification")
+	}
+
+	// Wait until animation finished.
+	if err := ui.WithInterval(2 * time.Second).WaitForLocation(ArcNotificationContentView)(ctx); err != nil {
+		return errors.Wrap(err, "the notification did not stop animating")
+	}
+
+	return nil
+}
 
 // EnsureNotificationPermission grants the notification permission if needed.
 func EnsureNotificationPermission(ctx context.Context, a *ARC, packageName string) error {

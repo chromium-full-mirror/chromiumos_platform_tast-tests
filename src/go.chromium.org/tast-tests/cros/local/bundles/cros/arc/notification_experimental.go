@@ -49,8 +49,7 @@ const (
 )
 
 var (
-	arcNotificationContentView = nodewith.HasClass("ArcNotificationContentView")
-	arcNotificationSurface     = nodewith.HasClass("ArcNotificationSurface")
+	arcNotificationSurface = nodewith.HasClass("ArcNotificationSurface")
 )
 
 func init() {
@@ -82,7 +81,7 @@ func init() {
 }
 
 func closeNotification(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, mousePC, touchPC pointer.Context, close closeMethod) error {
-	notificationBounds, err := ui.Location(ctx, arcNotificationContentView)
+	notificationBounds, err := ui.Location(ctx, arc.ArcNotificationContentView)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the notification bounds")
 	}
@@ -127,39 +126,19 @@ func composeNotification(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC
 	return notification, nil
 }
 
-func clickExpandButtonAndWaitForAnimation(ctx context.Context, ui *uiauto.Context, mousePC pointer.Context) error {
-	bounds, err := ui.Location(ctx, arcNotificationContentView)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the notification bounds")
-	}
-
-	// TODO(b/224685870): Use UIAutomator to get the button position dynamically when it supports multi-display.
-	expandButtonOffset := coords.NewPoint(-28, 44)
-	if err := mousePC.ClickAt(bounds.TopRight().Add(expandButtonOffset))(ctx); err != nil {
-		return errors.Wrap(err, "failed to click the notification")
-	}
-
-	// Wait until animation finished.
-	if err := ui.WithInterval(2 * time.Second).WaitForLocation(arcNotificationContentView)(ctx); err != nil {
-		return errors.Wrap(err, "the notification did not stop animating")
-	}
-
-	return nil
-}
-
 // testExpandButton verifies the notification bounds should be "toggled" (i.e., be changed and reverted) by clicking the expand button twice.
 // Here we're not interested whether the notification is expanded/collapsed by default which is the Android framework's decision.
 func testExpandButton(ctx context.Context, ui *uiauto.Context, mousePC pointer.Context) error {
-	initialBounds, err := ui.Location(ctx, arcNotificationContentView)
+	initialBounds, err := ui.Location(ctx, arc.ArcNotificationContentView)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the notification bounds")
 	}
 
-	if err := clickExpandButtonAndWaitForAnimation(ctx, ui, mousePC); err != nil {
+	if err := arc.ClickNotificationExpandButtonAndWaitForAnimation(ctx, ui, mousePC); err != nil {
 		return errors.Wrap(err, "failed to click the expand button to collapse")
 	}
 
-	changedBounds, err := ui.Location(ctx, arcNotificationContentView)
+	changedBounds, err := ui.Location(ctx, arc.ArcNotificationContentView)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the notification bounds")
 	}
@@ -171,11 +150,11 @@ func testExpandButton(ctx context.Context, ui *uiauto.Context, mousePC pointer.C
 		return errors.Wrapf(err, "changed height is the same as initial height unexpectedly: got %v", changedBounds.Height)
 	}
 
-	if err := clickExpandButtonAndWaitForAnimation(ctx, ui, mousePC); err != nil {
+	if err := arc.ClickNotificationExpandButtonAndWaitForAnimation(ctx, ui, mousePC); err != nil {
 		return errors.Wrap(err, "failed to click the expand button to expand")
 	}
 
-	revertedBounds, err := ui.Location(ctx, arcNotificationContentView)
+	revertedBounds, err := ui.Location(ctx, arc.ArcNotificationContentView)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the notification bounds")
 	}
@@ -204,7 +183,7 @@ func testExpandNotification(ctx, cleanupCtx context.Context, tconn *chrome.TestC
 	}
 
 	// Wait until animation finished.
-	if err := ui.WithInterval(2 * time.Second).WaitForLocation(arcNotificationContentView)(ctx); err != nil {
+	if err := ui.WithInterval(2 * time.Second).WaitForLocation(arc.ArcNotificationContentView)(ctx); err != nil {
 		return errors.Wrap(err, "the notification did not stop animating")
 	}
 
@@ -232,7 +211,7 @@ func testCloseNotification(ctx, cleanupCtx context.Context, tconn *chrome.TestCo
 	}
 
 	// Wait until animation finished.
-	if err := ui.WithInterval(2 * time.Second).WaitForLocation(arcNotificationContentView)(ctx); err != nil {
+	if err := ui.WithInterval(2 * time.Second).WaitForLocation(arc.ArcNotificationContentView)(ctx); err != nil {
 		return errors.Wrap(err, "the notification did not stop animating")
 	}
 
