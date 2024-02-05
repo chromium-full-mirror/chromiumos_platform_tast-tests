@@ -46,40 +46,40 @@ func init() {
 				// Verifies that DUT can connect to AP and p2p client on 2GHz band on different channels.
 				Name: "different_channel_2ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(2462)},
-					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(6), ap.HTCaps(ap.HTCapHT20)},
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(2462)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}},
 			}, {
 				// Verifies that DUT can connect to AP and p2p client on 5GHz band on different channels.
 				Name: "different_channel_5ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(5180)},
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(5180)},
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
 				}},
 			}, {
 				// Verifies that DUT can connect to AP and p2p client on same channel on the 2GHz band.
 				Name: "same_channel_2ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(2462)},
-					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(11), ap.HTCaps(ap.HTCapHT20)},
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(2462)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}},
 			}, {
 				// Verifies that DUT can connect to AP and p2p client on same channel on the 5GHz band.
 				Name: "same_channel_5ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(5180)},
-					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(5240)},
+					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
 				}},
 			}, {
 				// Verifies that DUT can connect to AP and p2p client on different bands.
 				Name: "different_bands",
 				Val: []p2pConcurrencyTestcase{{
 					printableName: "P2P GO connection on 5GHz band and Infra AP connection on 2.4GHz band",
-					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(5180)},
-					apOpts:        []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(11), ap.HTCaps(ap.HTCapHT20)},
+					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(5180)},
+					apOpts:        []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}, {
 					printableName: "P2P GO connection on 2.4GHz band and Infra AP connection on 5GHz band",
-					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOMode(group_owner.PhyModeHT40), group_owner.SetP2PGOFreq(2462)},
+					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(2462)},
 					apOpts:        []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
 				}},
 			},
@@ -112,8 +112,8 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 
 	P2PGOIsConfigured := false
 	P2PClientIsConfigured := false
-	P2PIPRouteIsConfigured := false
 	configureP2PConnection := func(ctx context.Context, options []group_owner.P2PGOOption) {
+		s.Log("P2PConcurrencyFunc: Configure P2P connection")
 		successfulRun := false
 		if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, options...); err != nil {
 			s.Fatal("Failed to configure the p2p group owner (GO): ", err)
@@ -124,52 +124,22 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 				if err := tf.P2PDeconfigureGO(ctx); err != nil {
 					s.Error("Failed to deconfigure the p2p group owner (GO): ", err)
 				}
+				P2PGOIsConfigured = false
 			}
 		}(ctx)
 		ctx, cancel := tf.ReserveForDeconfigP2P(ctx)
 		defer cancel()
-		if err := tf.P2PConfigureClient(ctx, wificell.P2PDeviceCompanionDUT); err != nil {
-			s.Fatal("Failed to configure the p2p client: ", err)
-		}
-		P2PClientIsConfigured = true
-		defer func(ctx context.Context) {
-			if P2PClientIsConfigured && !successfulRun {
-				if err := tf.P2PDeconfigureClient(ctx); err != nil {
-					s.Error("Failed to deconfigure the p2p client: ", err)
-				}
-			}
-		}(ctx)
-		ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
-		defer cancel()
-		if err := tf.P2PConnect(ctx); err != nil {
+		if err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT); err != nil {
 			s.Fatal("Failed to connect the p2p client to the p2p group owner (GO) network: ", err)
 		}
-		if err := tf.P2PAddIPRoute(ctx); err != nil {
-			s.Fatal("Failed to route the IP addresses in the p2p group owner (GO) and the p2p client: ", err)
-		}
-		P2PIPRouteIsConfigured = true
-		defer func(ctx context.Context) {
-			if P2PIPRouteIsConfigured && !successfulRun {
-				if err := tf.P2PDeleteIPRoute(ctx); err != nil {
-					s.Error("Failed to delete the IP routing in the p2p group owner and p2p client: ", err)
-				}
-			}
-		}(ctx)
-		ctx, cancel = tf.ReserveForDeleteIPRoute(ctx)
-		defer cancel()
+		P2PClientIsConfigured = true
 		successfulRun = true
 	}
 
 	deconfigureP2PConnection := func(ctx context.Context) {
-		s.Log("Deconfigure P2P connection")
-		if P2PIPRouteIsConfigured {
-			if err := tf.P2PDeleteIPRoute(ctx); err != nil {
-				s.Error("Failed to delete the IP routing in the p2p group owner and p2p client: ", err)
-			}
-			P2PIPRouteIsConfigured = false
-		}
+		s.Log("P2PConcurrencyFunc: Deconfigure P2P connection")
 		if P2PClientIsConfigured {
-			if err := tf.P2PDeconfigureClient(ctx); err != nil {
+			if err := tf.P2PDisconnect(ctx); err != nil {
 				s.Error("Failed to deconfigure the p2p client: ", err)
 			}
 			P2PClientIsConfigured = false
@@ -187,6 +157,7 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	APIsConnected := false
 	var currAP *wificell.APIface
 	configureInfraWiFiConnection := func(ctx context.Context, options []ap.Option) {
+		s.Log("P2PConcurrencyFunc: Configure INFRA connection")
 		successfulRun := false
 		ap, err := tf.ConfigureAP(ctx, options, nil)
 		if err != nil {
@@ -199,6 +170,7 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 				if err := tf.DeconfigAP(ctx, ap); err != nil {
 					s.Error("Failed to deconfig AP: ", err)
 				}
+				APIsConfigured = false
 			}
 		}(ctx)
 		ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap)
@@ -213,6 +185,7 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 				if err := tf.CleanDisconnectWifi(ctx); err != nil {
 					s.Error("Failed to disconnect WiFi: ", err)
 				}
+				APIsConnected = false
 			}
 		}(ctx)
 		ctx, cancel = tf.ReserveForDisconnect(ctx)
@@ -221,6 +194,7 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	}
 
 	deconfigureInfraWiFiConnection := func(ctx context.Context) {
+		s.Log("P2PConcurrencyFunc: Deconfigure INFRA connection")
 		if APIsConnected {
 			s.Log("Deconfigure the Infra WiFi connection")
 			if err := tf.CleanDisconnectWifi(ctx); err != nil {
@@ -237,18 +211,18 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 	}
 
 	verifyP2PConnection := func(ctx context.Context) {
-		s.Log("Verifying the P2P connection")
+		s.Log("P2PConcurrencyFunc: Verifying the P2P connection")
 		if err := tf.P2PAssertPingFromGO(ctx); err != nil {
 			s.Fatal("Failed to ping the p2p client from the p2p group owner (GO): ", err)
 		}
 		if err := tf.P2PAssertPingFromClient(ctx); err != nil {
-			s.Fatal("Failed to ping p2p group onwer (GO) from the p2p client: ", err)
+			s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
 		}
 	}
 
 	verifyInfraWiFiConnection := func(ctx context.Context) {
-		s.Log("Verifying the Infra WiFi connection")
-		if err := tf.VerifyConnection(ctx, currAP); err != nil {
+		s.Log("P2PConcurrencyFunc: Verifying the Infra WiFi connection")
+		if err := tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, currAP); err != nil {
 			s.Fatal("Failed to verify connection: ", err)
 		}
 	}
@@ -286,7 +260,6 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 		ctx, cancel = ctxutil.Shorten(ctx, 10*time.Second)
 		defer cancel()
 		configureP2PConnection(ctx, tc.p2pOpts)
-		defer deconfigureP2PConnection(ctxDeconfigP2PConn)
 
 		// Verify both the P2P and Infra WiFi connections.
 		verifyP2PConnection(ctx)

@@ -6,15 +6,26 @@ package wpacli
 
 import (
 	"context"
+	"net"
 	"strconv"
+	"time"
 
+	"go.chromium.org/tast-tests/cros/common/network/ip"
+	"go.chromium.org/tast-tests/cros/common/utils"
+
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-// setP2PGOAddConf contains the optional information for "p2p_group_add" function.
+const (
+	p2pDefaultFreq int = 2462
+)
+
+// setP2PGOAddConf contains the optional information for "p2pGroupAdd" function.
 type setP2PGroupAddConf struct {
-	freq int
-	mode PhyMode
+	freq      int
+	networkID int
 }
 
 // P2PGOOption is a function signature that modifies P2PGroupAdd.
@@ -27,43 +38,49 @@ func SetP2PGOFreq(f int) P2PGOOption {
 	}
 }
 
-// SetP2PGOMode returns a P2PGroupAddOption which sets the mode.
-func SetP2PGOMode(m PhyMode) P2PGOOption {
+// NetworkID returns a P2PGroupAddOption which sets the NetworkID of the group.
+func NetworkID(id int) P2PGOOption {
 	return func(c *setP2PGroupAddConf) {
-		c.mode = m
+		c.networkID = id
 	}
 }
 
-// P2PGroupAdd add a new P2P group (local end as GO).
-func (r *Runner) P2PGroupAdd(ctx context.Context, ops ...P2PGOOption) error {
+// p2pGroupAdd add a new P2P group. It does either of two things:
+// If networkID is not present in ops, it creates new P2P group and becomes GO.
+// If networkID is present in ops, it connects to the existing P2P group.
+func (r *Runner) p2pGroupAdd(ctx context.Context, ops ...P2PGOOption) error {
 	conf := &setP2PGroupAddConf{
-		freq: 2462,        // Default 2462 MHz.
-		mode: PhyModeHT40, // Default ht40.
+		networkID: -1,
 	}
 	for _, op := range ops {
 		op(conf)
 	}
-	return r.run(ctx, "OK", "p2p_group_add", "freq="+strconv.Itoa(conf.freq), string(conf.mode))
+
+	cmd := []string{"p2p_group_add"}
+	// The "persistent" parameter works counterintuitively: if it's omitted,
+	// the group is created as GO, if it's present the group is created in the Client mode.
+	if conf.networkID != -1 {
+		cmd = append(cmd, "persistent="+strconv.Itoa(conf.networkID))
+	}
+	if conf.freq > 0 {
+		cmd = append(cmd, "freq="+strconv.Itoa(conf.freq))
+	}
+
+	return r.run(ctx, "OK", cmd...)
 }
 
-// P2PGroupAddPersistent connects to a P2P GO device.
-func (r *Runner) P2PGroupAddPersistent(ctx context.Context) error {
-	// persistent=0: Specify a restart of a persistent group (connect to an existing persistent group).
-	return r.run(ctx, "OK", "p2p_group_add", "persistent=0")
-}
-
-// P2PGroupRemove removes P2P group interface (local end as GO).
-func (r *Runner) P2PGroupRemove(ctx context.Context, iface string) error {
+// p2pGroupRemove removes P2P group interface (local end as GO).
+func (r *Runner) p2pGroupRemove(ctx context.Context, iface string) error {
 	return r.run(ctx, "OK", "p2p_group_remove", iface)
 }
 
-// P2PFlush flush P2P state.
-func (r *Runner) P2PFlush(ctx context.Context) error {
+// p2pFlush flush P2P state.
+func (r *Runner) p2pFlush(ctx context.Context) error {
 	return r.run(ctx, "OK", "p2p_flush")
 }
 
-// P2PAddGONetwork adds the GO network in the client device.
-func (r *Runner) P2PAddGONetwork(ctx context.Context, ssid, passphrase string) (int, error) {
+// p2pAddNetwork adds the GO network in the client device.
+func (r *Runner) p2pAddNetwork(ctx context.Context, ssid, passphrase string) (int, error) {
 	successfulRun := false
 	networkID, err := r.addNetwork(ctx)
 	if err != nil {
@@ -76,10 +93,10 @@ func (r *Runner) P2PAddGONetwork(ctx context.Context, ssid, passphrase string) (
 			}
 		}
 	}(ctx)
-	if err := r.setNetwork(ctx, networkID, "ssid", strconv.Quote(ssid)); err != nil {
+	if err := r.setNetwork(ctx, networkID, "ssid", strconv.Quote(string(ssid))); err != nil {
 		return -1, err
 	}
-	if err := r.setNetwork(ctx, networkID, "psk", strconv.Quote(passphrase)); err != nil {
+	if err := r.setNetwork(ctx, networkID, "psk", strconv.Quote(string(passphrase))); err != nil {
 		return -1, err
 	}
 	// disabled=2: Indicate special network block use as a P2P persistent group information.
@@ -89,4 +106,180 @@ func (r *Runner) P2PAddGONetwork(ctx context.Context, ssid, passphrase string) (
 	successfulRun = true
 
 	return networkID, nil
+}
+
+// p2pGroupStartedWait waits for the group and returns group configuration.
+func (r *Runner) p2pGroupStartedWait(ctx context.Context, wpaMonitor *WPAMonitor) (
+	p2pGOIface, p2pGroupSSID, p2pGroupPassphrase string, _ error) {
+	const waitForP2PGroupStartedTimeout = 30 * time.Second
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		event, err := wpaMonitor.WaitForEvent(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to wait for P2PGroupStartedEvent"))
+		}
+		if event == nil { // timeout
+			return testing.PollBreak(errors.New("timed out waiting for P2PGroupStartedEvent"))
+		}
+		if evt, ok := event.(*P2PGroupStartedEvent); ok {
+			testing.ContextLogf(ctx, "New event: {%v} received", evt)
+			p2pGOIface = evt.IfaceName
+			p2pGroupSSID = evt.SSID
+			p2pGroupPassphrase = evt.Passphrase
+			return nil
+		}
+
+		return errors.New("no P2PGroupStartedEvent found")
+	}, &testing.PollOptions{Timeout: waitForP2PGroupStartedTimeout}); err != nil {
+		return "", "", "", err
+	}
+	return p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, nil
+}
+
+// P2PGroupCreate brings up an auto-provisioned WiFi Direct group and assumes its ownership
+// (makes the host GO).
+func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...P2PGOOption) (iface,
+	ssid, key string, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 45*time.Second)
+	defer cancel()
+
+	const wpaMonitorStopTimeout = 5 * time.Second
+	wpaMonitor := r.NewWPAMonitor()
+	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, wpaMonitorStopTimeout)
+	if err != nil {
+		return "", "", "", errors.Wrap(err, "failed to start wpa monitor")
+	}
+	defer stop()
+
+	// Add a P2P group owner (GO).
+	if err := r.p2pGroupAdd(ctx, ops...); err != nil {
+		return "", "", "", err
+	}
+
+	p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, err := r.p2pGroupStartedWait(ctx, wpaMonitor)
+	if err != nil {
+		return "", "", "", err
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			retErr = errors.Join(retErr, r.p2pFlush(ctx))
+			retErr = errors.Join(retErr, r.p2pGroupRemove(ctx, p2pGOIface))
+		}
+	}(cleanupCtx)
+
+	if err := ipr.SetLinkUp(ctx, p2pGOIface); err != nil {
+		return "", "", "", err
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			retErr = errors.Join(retErr, ipr.SetLinkDown(ctx, p2pGOIface))
+		}
+	}(cleanupCtx)
+
+	if err := ipr.AddIP(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
+		return "", "", "", err
+	}
+
+	testing.ContextLogf(ctx, "P2P Group owner (GO) %s: Configured on %s", p2pGroupSSID, p2pGOIface)
+
+	return p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, nil
+}
+
+// P2PGroupConnect connects to an existing P2P Group.
+func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
+	ssid, key string, ops ...P2PGOOption) (iface string, netID int, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if err := r.DiscoverNetwork(timeoutCtx, string(ssid)); err != nil {
+		return "", -1, err
+	}
+
+	const wpaMonitorStopTimeout = 5 * time.Second
+	wpaMonitor := r.NewWPAMonitor()
+	stop, timeoutCtx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, wpaMonitorStopTimeout)
+	if err != nil {
+		return "", -1, errors.Wrap(err, "failed to start wpa monitor")
+	}
+	defer stop()
+
+	networkID, err := r.p2pAddNetwork(timeoutCtx, ssid, key)
+	if err != nil {
+		return "", -1, err
+	}
+	ops = append(ops, NetworkID(networkID))
+
+	// Add a p2p group owner (GO).
+	if err := r.p2pGroupAdd(timeoutCtx, ops...); err != nil {
+		return "", -1, err
+	}
+
+	p2pClientIface, p2pGroupSSID, p2pGroupPassphrase, err := r.p2pGroupStartedWait(timeoutCtx, wpaMonitor)
+	if err != nil {
+		return "", -1, err
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			// Best-effort cleanup.
+			retErr = errors.Join(retErr, r.p2pFlush(ctx))
+			retErr = errors.Join(retErr, r.p2pGroupRemove(ctx, p2pClientIface))
+		}
+	}(cleanupCtx)
+
+	if p2pGroupSSID != string(ssid) || p2pGroupPassphrase != string(key) {
+		return "", -1, errors.Errorf("P2P Group brought up with a different parameters, got (%q/%q), want (%q/%q)",
+			p2pGroupSSID, p2pGroupPassphrase, string(ssid), string(key))
+	}
+
+	if err := ipr.SetLinkUp(timeoutCtx, p2pClientIface); err != nil {
+		return "", -1, err
+	}
+	defer func(ctx context.Context) {
+		if retErr != nil {
+			retErr = errors.Join(retErr, ipr.SetLinkDown(ctx, p2pClientIface))
+		}
+	}(cleanupCtx)
+
+	if err := ipr.AddIP(timeoutCtx, p2pClientIface, net.ParseIP(utils.P2PClientIPAddress), 24); err != nil {
+		return "", -1, err
+	}
+
+	testing.ContextLogf(timeoutCtx, "P2P Group client (GO) %s: Connected", p2pGroupSSID)
+
+	return p2pClientIface, networkID, nil
+}
+
+// P2PGroupDelete lets GO tear down the WiFi Direct group.
+func (r *Runner) P2PGroupDelete(ctx context.Context, ipr *ip.Runner,
+	iface string) (retErr error) {
+	retErr = errors.Join(retErr, ipr.DeleteIP(ctx, iface, net.ParseIP(utils.P2PGOIPAddress), 24))
+	retErr = errors.Join(retErr, r.p2pGroupRemove(ctx, iface))
+	retErr = errors.Join(retErr, r.p2pFlush(ctx))
+
+	if retErr == nil {
+		testing.ContextLog(ctx, "P2P Group owner (GO): Deconfigured")
+	}
+	return
+}
+
+// P2PGroupDisconnect Disconnects client from the WiFi Direct group.
+func (r *Runner) P2PGroupDisconnect(ctx context.Context, ipr *ip.Runner,
+	iface string, netID int) (retErr error) {
+	retErr = errors.Join(retErr, ipr.DeleteIP(ctx, iface, net.ParseIP(utils.P2PClientIPAddress), 24))
+	retErr = errors.Join(retErr, ipr.SetLinkDown(ctx, iface))
+	retErr = errors.Join(retErr, r.p2pGroupRemove(ctx, iface))
+	retErr = errors.Join(retErr, r.p2pFlush(ctx))
+	retErr = errors.Join(retErr, r.RemoveNetwork(ctx, netID))
+
+	if retErr == nil {
+		testing.ContextLog(ctx, "P2P Client: Deconfigured")
+	}
+	return
 }

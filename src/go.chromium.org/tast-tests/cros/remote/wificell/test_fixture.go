@@ -106,13 +106,6 @@ const (
 	WifiUIServiceName = "tast.cros.wifi.WifiService"
 )
 
-// TODO(b/232150137): Using a different subnet than other ip addrs in Tast.
-// Move all hardcoded ip addresses to one file to avoid collision.
-const (
-	p2pGOIPAddress     string = "192.160.0.1"
-	p2pClientIPAddress string = "192.160.0.2"
-)
-
 // P2PDevice is used as p2p device type.
 type P2PDevice int32
 
@@ -213,8 +206,8 @@ type TestFixture struct {
 	attenuator   *attenuator.Attenuator
 
 	// The following parameters (with prefix p2p*) are used with P2P tests.
-	p2pGO              *dut.DUT
-	p2pClient          *dut.DUT
+	p2pGO              *dutData
+	p2pClient          *dutData
 	p2pGOIface         string
 	p2pGroupSSID       string
 	p2pGroupPassphrase string
@@ -1669,196 +1662,75 @@ func (tf *TestFixture) WaitWifiConnected(ctx context.Context, dutIdx DutIdx, gui
 	return nil
 }
 
-// P2PDeviceConn returns the P2P device ssh connection.
-func (tf *TestFixture) P2PDeviceConn(ctx context.Context, device P2PDevice) (*dut.DUT, error) {
+// P2PDevice returns device data object respective to the device ID.
+func (tf *TestFixture) P2PDevice(ctx context.Context, device P2PDevice) (*dutData, error) {
 	switch device {
 	case P2PDeviceDUT:
-		return tf.duts[DefaultDUT].dut, nil
+		return tf.duts[DefaultDUT], nil
 	case P2PDeviceCompanionDUT:
-		return tf.duts[PeerDUT1].dut, nil
+		return tf.duts[PeerDUT1], nil
 	}
 	return nil, errors.Errorf("unexpected P2P device type: %d", device)
 }
 
 // P2PConfigureGO configures the DUT as a p2p group owner (GO).
 func (tf *TestFixture) P2PConfigureGO(ctx context.Context, device P2PDevice, ops ...wpacli.P2PGOOption) error {
-	// This function removes any existing P2P interfaces before adding the
-	// group owner. After that, the function waits for the p2p group owner
-	// interface to be available. The GO interface name, network SSID and
-	// passpharse are saved.
-
 	var err error
-	if tf.p2pGO, err = tf.P2PDeviceConn(ctx, device); err != nil {
+	if tf.p2pGO, err = tf.P2PDevice(ctx, device); err != nil {
 		return err
 	}
 
-	wpar := remotewpacli.NewRemoteRunner(tf.p2pGO.Conn())
-	ipr := remoteip.NewRemoteRunner(tf.p2pGO.Conn())
+	wpar := remotewpacli.NewRemoteRunner(tf.p2pGO.dut.Conn())
+	ipr := remoteip.NewRemoteRunner(tf.p2pGO.dut.Conn())
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
-	const wpaMonitorStopTimeout = 5 * time.Second
-	wpaMonitor := wpar.NewWPAMonitor()
-	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, wpaMonitorStopTimeout)
+	// Make sure seeder BSSID is available in scan before asking to configure P2P.
+	// This should set regdomain, which otherwise may cause test flakes.
+	// Other tests are usually starting from scan anyway.
+	if err := wpar.DiscoverNetwork(ctx, tf.seederSSID); err != nil {
+		return err
+	}
+
+	p2pGOIface, ssid, key, err := wpar.P2PGroupCreate(ctx, ipr, ops...)
 	if err != nil {
-		return errors.Wrap(err, "failed to start wpa monitor")
-	}
-	defer stop()
-
-	// Add a p2p group owner (GO).
-	if err := wpar.P2PGroupAdd(ctx, ops...); err != nil {
-		return err
+		return errors.Wrap(err, "failed to create P2P Group")
 	}
 
-	const waitForP2PGroupStartedTimeout = 10 * time.Second
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		event, err := wpaMonitor.WaitForEvent(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to wait for P2PGroupStartedEvent"))
-		}
-		if event == nil { // timeout
-			return testing.PollBreak(errors.New("timed out waiting for P2PGroupStartedEvent"))
-		}
-		if p2pGroupStartedEvent, p2pGroupStartedSuccess := event.(*wpacli.P2PGroupStartedEvent); p2pGroupStartedSuccess {
-			tf.p2pGOIface = p2pGroupStartedEvent.IfaceName
-			tf.p2pGroupSSID = p2pGroupStartedEvent.SSID
-			tf.p2pGroupPassphrase = p2pGroupStartedEvent.Passphrase
-			return nil
-		}
+	tf.p2pGOIface = p2pGOIface
+	tf.p2pGroupSSID = ssid
+	tf.p2pGroupPassphrase = key
 
-		return errors.New("no P2PGroupStartedEvent found")
-	}, &testing.PollOptions{Timeout: waitForP2PGroupStartedTimeout}); err != nil {
-		return err
-	}
-
-	if err := ipr.SetLinkUp(ctx, tf.p2pGOIface); err != nil {
-		return err
-	}
-	if err := ipr.AddIP(ctx, tf.p2pGOIface, net.ParseIP(p2pGOIPAddress), 24); err != nil {
-		return err
-	}
 	testing.ContextLog(ctx, "P2P Group owner (GO): Configured")
 
 	return nil
 }
 
-// P2PConfigureClient configures the companion DUT as a p2p client.
-func (tf *TestFixture) P2PConfigureClient(ctx context.Context, device P2PDevice) error {
-	// This function scans for the p2p group owner network using tf.p2pGroupSSID
-	// and adds the network in the client device (companion DUT).
-
-	var err error
-	if tf.p2pClient, err = tf.P2PDeviceConn(ctx, device); err != nil {
-		return err
-	}
-
-	wpar := remotewpacli.NewRemoteRunner(tf.p2pClient.Conn())
-
-	if err := wpar.DiscoverNetwork(ctx, tf.p2pGroupSSID); err != nil {
-		return err
-	}
-	tf.p2pClientNetID, err = wpar.P2PAddGONetwork(ctx, tf.p2pGroupSSID, tf.p2pGroupPassphrase)
-	if err != nil {
-		return err
-	}
-	testing.ContextLog(ctx, "P2P Client: Configured")
-
-	return nil
-}
-
 // P2PConnect connects the p2p client to the p2p group owner (GO) network and waits for the service to be connected.
-func (tf *TestFixture) P2PConnect(ctx context.Context) error {
-	wpar := remotewpacli.NewRemoteRunner(tf.p2pClient.Conn())
-	ipr := remoteip.NewRemoteRunner(tf.p2pClient.Conn())
+func (tf *TestFixture) P2PConnect(ctx context.Context, device P2PDevice, ops ...wpacli.P2PGOOption) error {
+	var err error
+	if tf.p2pClient, err = tf.P2PDevice(ctx, device); err != nil {
+		return err
+	}
+	wpar := remotewpacli.NewRemoteRunner(tf.p2pClient.dut.Conn())
+	ipr := remoteip.NewRemoteRunner(tf.p2pClient.dut.Conn())
 
-	timeoutCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
-	defer cancel()
-	const wpaMonitorStopTimeout = 5 * time.Second
-	wpaMonitor := wpar.NewWPAMonitor()
-	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, wpaMonitorStopTimeout)
+	p2pClientIface, p2pClientNetID, err := wpar.P2PGroupConnect(ctx, ipr, tf.p2pGroupSSID, tf.p2pGroupPassphrase, ops...)
 	if err != nil {
-		return errors.Wrap(err, "failed to start wpa monitor")
+		return errors.Wrap(err, "failed to create P2P Group")
 	}
-	defer stop()
-
-	if err := wpar.P2PGroupAddPersistent(ctx); err != nil {
-		return err
-	}
-
-	const waitForP2PGroupStartedTimeout = 10 * time.Second
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		event, err := wpaMonitor.WaitForEvent(ctx)
-		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to wait for P2PGroupStartedEvent"))
-		}
-		if event == nil { // timeout
-			return testing.PollBreak(errors.New("timed out waiting for P2PGroupStartedEvent"))
-		}
-		if p2pGroupStartedEvent, p2pGroupStartedSuccess := event.(*wpacli.P2PGroupStartedEvent); p2pGroupStartedSuccess {
-			tf.p2pClientIface = p2pGroupStartedEvent.IfaceName
-			return nil
-		}
-
-		return errors.New("no P2PGroupStartedEvent found")
-	}, &testing.PollOptions{Timeout: waitForP2PGroupStartedTimeout}); err != nil {
-		return err
-	}
-
-	if err := ipr.SetLinkUp(ctx, tf.p2pClientIface); err != nil {
-		return err
-	}
-	if err := ipr.AddIP(ctx, tf.p2pClientIface, net.ParseIP(p2pClientIPAddress), 24); err != nil {
-		return err
-	}
+	tf.p2pClientIface = p2pClientIface
+	tf.p2pClientNetID = p2pClientNetID
 
 	testing.ContextLog(ctx, "The p2p client is connected to the p2p group owner (GO) network")
-
-	return nil
-}
-
-// P2PAddIPRoute routes the ip addresses for the p2p group owner (GO) and p2p client.
-func (tf *TestFixture) P2PAddIPRoute(ctx context.Context) error {
-	iprDUT := remoteip.NewRemoteRunner(tf.p2pGO.Conn())
-	iprPeer := remoteip.NewRemoteRunner(tf.p2pClient.Conn())
-
-	if err := iprDUT.RouteIP(ctx, tf.p2pGOIface, net.ParseIP(p2pClientIPAddress)); err != nil {
-		return err
-	}
-	if err := iprPeer.RouteIP(ctx, tf.p2pClientIface, net.ParseIP(p2pGOIPAddress)); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// P2PDeleteIPRoute deletes the ip routing for the p2p group owner (GO) and p2p client.
-func (tf *TestFixture) P2PDeleteIPRoute(ctx context.Context) error {
-	iprDUT := remoteip.NewRemoteRunner(tf.p2pGO.Conn())
-	iprPeer := remoteip.NewRemoteRunner(tf.p2pClient.Conn())
-
-	if err := iprDUT.DeleteIPRoute(ctx, tf.p2pGOIface, net.ParseIP(p2pGOIPAddress)); err != nil {
-		return err
-	}
-	if err := iprPeer.DeleteIPRoute(ctx, tf.p2pClientIface, net.ParseIP(p2pClientIPAddress)); err != nil {
-		return err
-	}
-	if err := iprDUT.DeleteIP(ctx, tf.p2pGOIface, net.ParseIP(p2pGOIPAddress), 24); err != nil {
-		return err
-	}
-	if err := iprPeer.DeleteIP(ctx, tf.p2pClientIface, net.ParseIP(p2pClientIPAddress), 24); err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // P2PAssertPingFromGO pings the p2p client from the group owner (GO) device.
 func (tf *TestFixture) P2PAssertPingFromGO(ctx context.Context, opts ...ping.Option) error {
-	pr := remoteping.NewRemoteRunner(tf.p2pGO.Conn())
+	pr := remoteping.NewRemoteRunner(tf.p2pGO.dut.Conn())
 
-	opts = append(opts, ping.BindAddress(true), ping.SourceIface(tf.p2pGOIface))
+	opts = append(opts, ping.Interval(0.1), ping.BindAddress(true), ping.SourceIface(tf.p2pGOIface))
 	testing.ContextLog(ctx, "Ping p2p client from p2p group owner (GO)")
-	res, err := pr.Ping(ctx, p2pClientIPAddress, opts...)
+	res, err := pr.Ping(ctx, utils.P2PClientIPAddress, opts...)
 	if err != nil {
 		return err
 	}
@@ -1872,11 +1744,11 @@ func (tf *TestFixture) P2PAssertPingFromGO(ctx context.Context, opts ...ping.Opt
 
 // P2PAssertPingFromClient pings the p2p group owner (GO) from the p2p client device.
 func (tf *TestFixture) P2PAssertPingFromClient(ctx context.Context, opts ...ping.Option) error {
-	pr := remoteping.NewRemoteRunner(tf.p2pClient.Conn())
+	pr := remoteping.NewRemoteRunner(tf.p2pClient.dut.Conn())
 
-	opts = append(opts, ping.BindAddress(true), ping.SourceIface(tf.p2pClientIface))
+	opts = append(opts, ping.Interval(0.1), ping.BindAddress(true), ping.SourceIface(tf.p2pClientIface))
 	testing.ContextLog(ctx, "Ping p2p group owner (GO) from p2p client")
-	res, err := pr.Ping(ctx, p2pGOIPAddress, opts...)
+	res, err := pr.Ping(ctx, utils.P2PGOIPAddress, opts...)
 	if err != nil {
 		return err
 	}
@@ -1894,7 +1766,7 @@ func (tf *TestFixture) P2PPerf(ctx context.Context) (*iperf.Result, error) {
 	var p2pGOFirewallParams = []firewall.RuleOption{
 		firewall.OptionWait(5),
 		firewall.OptionAppendRule(firewall.InputChain),
-		firewall.OptionSource(p2pGOIPAddress),
+		firewall.OptionSource(utils.P2PGOIPAddress),
 		firewall.OptionProto(firewall.L4ProtoTCP),
 		firewall.OptionMatch(firewall.L4ProtoTCP),
 		firewall.OptionJumpTarget(firewall.TargetAccept),
@@ -1904,14 +1776,14 @@ func (tf *TestFixture) P2PPerf(ctx context.Context) (*iperf.Result, error) {
 	var p2pClientFirewallParams = []firewall.RuleOption{
 		firewall.OptionWait(5),
 		firewall.OptionAppendRule(firewall.InputChain),
-		firewall.OptionSource(p2pClientIPAddress),
+		firewall.OptionSource(utils.P2PClientIPAddress),
 		firewall.OptionProto(firewall.L4ProtoTCP),
 		firewall.OptionMatch(firewall.L4ProtoTCP),
 		firewall.OptionJumpTarget(firewall.TargetAccept),
 	}
 
-	firewallRunnerGO := remotefirewall.NewRemoteRunner(tf.p2pGO.Conn())
-	firewallRunnerClient := remotefirewall.NewRemoteRunner(tf.p2pClient.Conn())
+	firewallRunnerGO := remotefirewall.NewRemoteRunner(tf.p2pGO.dut.Conn())
+	firewallRunnerClient := remotefirewall.NewRemoteRunner(tf.p2pClient.dut.Conn())
 	if err := firewallRunnerGO.ExecuteCommand(ctx, p2pGOFirewallParams...); err != nil {
 		return nil, errors.Wrap(err, "failed to set P2P GO iptable rule")
 	}
@@ -1920,18 +1792,18 @@ func (tf *TestFixture) P2PPerf(ctx context.Context) (*iperf.Result, error) {
 	}
 
 	// Configuring the p2p GO as an iperf server and the p2p client as an iperf client.
-	p2pIperfConfig, err := iperf.NewConfig(iperf.ProtocolTCP, p2pClientIPAddress, p2pGOIPAddress, []iperf.ConfigOption{}...)
+	p2pIperfConfig, err := iperf.NewConfig(iperf.ProtocolTCP, utils.P2PClientIPAddress, utils.P2PGOIPAddress, []iperf.ConfigOption{}...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to configure iperf on the p2p link")
 	}
 
-	client, err := iperf.NewRemoteClient(ctx, tf.p2pClient.Conn())
+	client, err := iperf.NewRemoteClient(ctx, tf.p2pClient.dut.Conn())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed ot create Iperf client")
 	}
 	defer client.Close(ctx)
 
-	server, err := iperf.NewRemoteServer(ctx, tf.p2pGO.Conn())
+	server, err := iperf.NewRemoteServer(ctx, tf.p2pGO.dut.Conn())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed ot create Iperf server")
 	}
@@ -2018,48 +1890,31 @@ func (tf *TestFixture) SAPPerf(ctx context.Context, protocol iperf.Protocol, rev
 }
 
 // P2PDeconfigureGO deconfigures the p2p group owner (GO).
-func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) error {
-	iface, err := tf.DUTWifiClient(DefaultDUT).Interface(ctx)
+func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) (ret error) {
+	iface, err := tf.p2pGO.wifiClient.Interface(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to get the WiFi interface")
+		return errors.Wrap(err, "failed to get the P2P GO WiFi interface")
 	}
-	wpa := remotewpacli.NewRemoteRunnerOnIface(tf.p2pGO.Conn(), iface)
 
-	if err := wpa.P2PGroupRemove(ctx, tf.p2pGOIface); err != nil {
-		return err
+	wpar := remotewpacli.NewRemoteRunnerOnIface(tf.p2pGO.dut.Conn(), iface)
+	ipr := remoteip.NewRemoteRunner(tf.p2pGO.dut.Conn())
+	if err := wpar.P2PGroupDelete(ctx, ipr, tf.p2pGOIface); err != nil {
+		ret = errors.Join(ret, err)
 	}
-	if err := wpa.P2PFlush(ctx); err != nil {
-		return err
-	}
-	testing.ContextLog(ctx, "P2P Group owner (GO): Deconfigured")
 
-	return nil
+	return ret
 }
 
-// P2PDeconfigureClient deconfigures the p2p client.
-func (tf *TestFixture) P2PDeconfigureClient(ctx context.Context) error {
-	var firstErr error
-
-	iface, err := tf.DUTWifiClient(PeerDUT1).Interface(ctx)
+// P2PDisconnect disconnects and deconfigures the p2p client.
+func (tf *TestFixture) P2PDisconnect(ctx context.Context) (ret error) {
+	iface, err := tf.p2pClient.wifiClient.Interface(ctx)
 	if err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to get the WiFi interface"))
-	}
-	wpa := remotewpacli.NewRemoteRunnerOnIface(tf.p2pClient.Conn(), iface)
-
-	if err := wpa.P2PGroupRemove(ctx, tf.p2pClientIface); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, err)
-	}
-	if err := wpa.RemoveNetwork(ctx, tf.p2pClientNetID); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, err)
-	}
-	if err := wpa.P2PFlush(ctx); err != nil {
-		utils.CollectFirstErr(ctx, &firstErr, err)
-	}
-	if firstErr == nil {
-		testing.ContextLog(ctx, "P2P Client: Deconfigured")
+		return errors.Wrap(err, "failed to get the P2P Client WiFi interface")
 	}
 
-	return firstErr
+	wpar := remotewpacli.NewRemoteRunnerOnIface(tf.p2pClient.dut.Conn(), iface)
+	ipr := remoteip.NewRemoteRunner(tf.p2pClient.dut.Conn())
+	return wpar.P2PGroupDisconnect(ctx, ipr, tf.p2pClientIface, tf.p2pClientNetID)
 }
 
 // P2PGOIface returns the p2p GO interface name.
@@ -2069,17 +1924,12 @@ func (tf *TestFixture) P2PGOIface() string {
 
 // P2PGOConn returns connection object to the p2pGO.
 func (tf *TestFixture) P2PGOConn() *ssh.Conn {
-	return tf.p2pGO.Conn()
+	return tf.p2pGO.dut.Conn()
 }
 
 // ReserveForDeconfigP2P returns a shorter ctx and cancel function for tf.P2PDeconfigureGO() or tf.P2PDeconfigureClient().
 func (tf *TestFixture) ReserveForDeconfigP2P(ctx context.Context) (context.Context, context.CancelFunc) {
-	return ctxutil.Shorten(ctx, 10*time.Second)
-}
-
-// ReserveForDeleteIPRoute returns a shorter ctx and cancel function for tf.P2PDeleteIPRoute().
-func (tf *TestFixture) ReserveForDeleteIPRoute(ctx context.Context) (context.Context, context.CancelFunc) {
-	return ctxutil.Shorten(ctx, 2*time.Second)
+	return ctxutil.Shorten(ctx, 12*time.Second)
 }
 
 // UseWpaCliAPI sets up test fixture to use wpa_cli API for extra configuration.

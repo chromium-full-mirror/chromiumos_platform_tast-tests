@@ -59,30 +59,15 @@ func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 	ctx, cancel := tf.ReserveForDeconfigP2P(ctx)
 	defer cancel()
 
-	if err := tf.P2PConfigureClient(ctx, wificell.P2PDeviceCompanionDUT); err != nil {
-		s.Fatal("Failed to configure the p2p client: ", err)
+	if err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT); err != nil {
+		s.Fatal("Failed to connect the p2p client to the p2p group owner (GO) network: ", err)
 	}
 	defer func(ctx context.Context) {
-		if err := tf.P2PDeconfigureClient(ctx); err != nil {
+		if err := tf.P2PDisconnect(ctx); err != nil {
 			s.Error("Failed to deconfigure the p2p client: ", err)
 		}
 	}(ctx)
 	ctx, cancel = tf.ReserveForDeconfigP2P(ctx)
-	defer cancel()
-
-	if err := tf.P2PConnect(ctx); err != nil {
-		s.Fatal("Failed to connect the p2p client to the p2p group owner (GO) network: ", err)
-	}
-
-	if err := tf.P2PAddIPRoute(ctx); err != nil {
-		s.Fatal("Failed to route the IP addresses in the p2p group owner (GO) and the p2p client: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := tf.P2PDeleteIPRoute(ctx); err != nil {
-			s.Error("Failed to delete the IP routing in the p2p group owner and p2p client: ", err)
-		}
-	}(ctx)
-	ctx, cancel = tf.ReserveForDeleteIPRoute(ctx)
 	defer cancel()
 
 	if err := tf.P2PAssertPingFromGO(ctx); err != nil {
@@ -90,6 +75,6 @@ func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 	}
 
 	if err := tf.P2PAssertPingFromClient(ctx); err != nil {
-		s.Fatal("Failed to ping p2p group onwer (GO) from the p2p client: ", err)
+		s.Fatal("Failed to ping p2p group owner (GO) from the p2p client: ", err)
 	}
 }

@@ -577,7 +577,7 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 				if deadline, ok := ctx.Deadline(); !ok {
 					s.Fatal("Missing deadline for context: ", ctx)
 				} else if diff := deadline.Sub(time.Now()); diff < enrollmentRunTimeout {
-					s.Fatalf("Not enought time to perform setup and enrollment: have %s; need %s", diff, enrollmentRunTimeout)
+					s.Fatalf("Not enough time to perform setup and enrollment: have %s; need %s", diff, enrollmentRunTimeout)
 				}
 
 				s.Logf("Attempting enrollment, try %d/%d", tries, enrollRetry)
