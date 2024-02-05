@@ -52,7 +52,7 @@ func init() {
 func SSHFSPerf(ctx context.Context, s *testing.State) {
 	const (
 		numberOfIterations = 10
-		fileSize           = 1024 * 1024 * 1024
+		fileSize           = 1024 * 1024 * 128
 	)
 	cr := s.FixtValue().(crostini.FixtureData).Chrome
 	cont := s.FixtValue().(crostini.FixtureData).Cont
@@ -90,7 +90,7 @@ func SSHFSPerf(ctx context.Context, s *testing.State) {
 	avgThroughput := float64(fileSize) / float64(avgTime.Microseconds())
 
 	pv.Set(perf.Metric{
-		Name:      "guest_to_host_throughput",
+		Name:      "guest_to_host_throughput_128mb",
 		Unit:      "bytesPerSecond",
 		Direction: perf.BiggerIsBetter,
 	}, avgThroughput*1000000)
