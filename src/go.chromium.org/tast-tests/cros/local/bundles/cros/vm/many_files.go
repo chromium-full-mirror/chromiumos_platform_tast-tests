@@ -16,17 +16,15 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/sys/unix"
-
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/dlc"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/guestconn"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/vm/storage"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/tracing"
-	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -56,7 +54,7 @@ func init() {
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
-		Data:         []string{runManyFiles},
+		Data:         []string{runManyFiles, guestconn.LibFile},
 		SoftwareDeps: []string{"vm_host", "chrome"},
 		Vars: []string{
 			// Specify guest kernel (if not provided use termina dlc)
@@ -239,23 +237,6 @@ func init() {
 	})
 }
 
-// waitForPrefix reads line from reader until the line starts with one of
-// items in expectedPrefixes.
-func waitForPrefix(reader *bufio.Reader, prefixes []string) (string, error) {
-	for {
-		line, err := reader.ReadString('\n')
-		if err != nil {
-			return "", errors.Wrap(err, "failed to read line")
-		}
-
-		for _, pre := range prefixes {
-			if strings.HasPrefix(line, pre) {
-				return line, nil
-			}
-		}
-	}
-}
-
 func runOneTestCase(ctx context.Context, toGuest *os.File, reader *bufio.Reader, testCase, outDir string, enableTraceCmd bool) error {
 	var collectFunc func(ctx context.Context) error
 	if enableTraceCmd {
@@ -271,10 +252,10 @@ func runOneTestCase(ctx context.Context, toGuest *os.File, reader *bufio.Reader,
 	}
 
 	testing.ContextLog(ctx, "Start test case: ", testCase)
-	if _, err := toGuest.WriteString(fmt.Sprintf("RUN\n")); err != nil {
+	if _, err := toGuest.WriteString(guestconn.Run); err != nil {
 		return errors.Wrap(err, "failed to write a message to toGuestFIFO")
 	}
-	if _, err := waitForPrefix(reader, []string{"END"}); err != nil {
+	if _, err := guestconn.WaitForPrefix(reader, []string{guestconn.End}); err != nil {
 		return errors.Wrap(err, "failed to wait for END")
 	}
 	testing.ContextLog(ctx, "Finished test case: ", testCase)
@@ -373,15 +354,10 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	}
 
 	// Use FIFO files as the guest's serial device.
-	toGuestFIFO := filepath.Join(td, "input.fifo")
-	if err := unix.Mkfifo(toGuestFIFO, 0666); err != nil {
-		s.Fatal("Failed to make input fifo: ", err)
+	toGuestFIFO, fromGuestFIFO, err := guestconn.CreateGuestConn(td, ps)
+	if err != nil {
+		s.Fatal("Failed to create guest connection: ", err)
 	}
-	fromGuestFIFO := filepath.Join(td, "output.fifo")
-	if err := unix.Mkfifo(fromGuestFIFO, 0666); err != nil {
-		s.Fatal("Failed to make outputput fifo: ", err)
-	}
-	vm.SerialIO(toGuestFIFO, fromGuestFIFO, vm.OtherSerial)(ps)
 
 	// Increase the max open file limit as the benchmark creates a lot of files.
 	args := append([]string{"--nofile=262144", "crosvm"}, ps.ToArgs()...)
@@ -404,28 +380,10 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run crosvm: ", err)
 	}
 
-	toGuest, err := os.OpenFile(toGuestFIFO, os.O_WRONLY, 0755)
+	toGuest, fromGuest, cleanUp, err := guestconn.OpenGuestConn(ctx, toGuestFIFO, fromGuestFIFO)
+	defer cleanUp(cleanupCtx)
 	if err != nil {
-		s.Fatal("Failed to open guest input")
-	}
-	defer toGuest.Close()
-
-	// Prepare the deadline for the FIFO files.
-	deadline, ok := ctx.Deadline()
-	if !ok {
-		s.Fatal("No deadline is set to the context")
-	}
-	if err = toGuest.SetDeadline(deadline); err != nil {
-		s.Fatal("Failed to set deadline for FIFO file to the guest")
-	}
-
-	fromGuest, err := os.Open(fromGuestFIFO)
-	if err != nil {
-		s.Fatal("Failed to open guest output")
-	}
-	defer fromGuest.Close()
-	if err = fromGuest.SetDeadline(deadline); err != nil {
-		s.Fatal("Failed to set deadline for FIFO file to the guest")
+		s.Fatal("Failed to open guest connection: ", err)
 	}
 	reader := bufio.NewReaderSize(fromGuest, 4096)
 
@@ -434,20 +392,14 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to parse enableTraceCmdVar %v: %v", enableTraceCmdVar.Value(), err)
 	}
 
-	const (
-		prefixReady       = "READY:"
-		prefixReadyNoDrop = "READY_NO_DROP:"
-		prefixComplete    = "COMPLETE"
-	)
-
 	for {
 		// Waiting for the guest sending messages with special prefixes.
-		line, err := waitForPrefix(reader, []string{prefixReady, prefixReadyNoDrop, prefixComplete})
+		line, err := guestconn.WaitForPrefix(reader, []string{guestconn.PrefixReady, guestconn.PrefixReadyNoDrop, guestconn.Complete})
 		if err != nil {
 			s.Fatal("Failed to wait for 'READY' or 'COMPLETE': ", err)
 		}
 		// "COMPLETE" means that the all test cases completed
-		if strings.HasPrefix(line, prefixComplete) {
+		if strings.HasPrefix(line, guestconn.Complete) {
 			s.Log("All the guest test cases are completed")
 			break
 		}
@@ -455,11 +407,11 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 		trimed := strings.TrimRight(line, " \r\n")
 		var testCase string
 		dropCaches := true
-		if strings.HasPrefix(trimed, prefixReadyNoDrop) {
+		if strings.HasPrefix(trimed, guestconn.PrefixReadyNoDrop) {
 			dropCaches = false
-			testCase = strings.TrimPrefix(trimed, prefixReadyNoDrop)
+			testCase = strings.TrimPrefix(trimed, guestconn.PrefixReadyNoDrop)
 		} else {
-			testCase = strings.TrimPrefix(trimed, prefixReady)
+			testCase = strings.TrimPrefix(trimed, guestconn.PrefixReady)
 		}
 		s.Logf("Guest is ready for test case %q", testCase)
 
