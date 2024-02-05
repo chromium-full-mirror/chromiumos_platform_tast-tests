@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Can successfully start and cancel the Shimless RMA app",
 		Contacts: []string{
-			"cros-shimless-tpe-eng@google.com",
+			"chromeos-shimless-eng@google.com",
 			"chenghan@google.com",
 			"jeffulin@google.com",
 		},
