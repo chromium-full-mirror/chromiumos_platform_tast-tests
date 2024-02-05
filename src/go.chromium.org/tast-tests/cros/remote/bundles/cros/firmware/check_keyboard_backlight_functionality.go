@@ -204,10 +204,15 @@ func checkKBLightWhenLidClosedOpen(ctx context.Context, h *firmware.Helper, dut 
 		return errors.Wrap(err, "failed to wait for DUT to become unreachable")
 	}
 
+	// Ensure DUT reaches G3, S3 or S0ix before attempting to open the lid.
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, 1*time.Minute, "G3", "S3", "S0ix"); err != nil {
+		return errors.Wrap(err, "failed to wait for DUT to reach G3, S3 or S0ix power state")
+	}
+
 	if err := h.Servo.OpenLid(ctx); err != nil {
 		return err
 	}
-	waitConnectCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	waitConnectCtx, cancel := context.WithTimeout(ctx, 90*time.Second)
 	defer cancel()
 	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		return errors.Wrap(err, "failed to reconnect to dut")
