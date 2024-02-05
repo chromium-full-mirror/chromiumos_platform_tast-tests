@@ -52,50 +52,32 @@ func validateFrame(ctx context.Context, conn *chrome.Conn, width, height int) er
 	return nil
 }
 
-// peerConnectionPerf opens a WebRTC Loopback connection and streams while collecting
-// statistics. If videoGridDimension is larger than 1, then the real time <video>
-// is plugged into a videoGridDimension x videoGridDimension grid with copies
-// of videoURL being played, similar to a mosaic video call.
-func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
-	s *testing.State, loopbackURL, videoURL string, params RTCTestParams, p *perf.Values) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
-	}
-
-	// Reserve one second for closing tab.
-	shortCtx, cancel := ctxutil.Shorten(ctx, time.Second)
-	defer cancel()
-
-	// The page repeatedly plays a loopback video stream.
-	// To stop it, we defer conn.CloseTarget() to close the tab.
-	conn, err := cs.NewConn(shortCtx, loopbackURL)
-	if err != nil {
-		return errors.Wrapf(err, "failed to open %s", loopbackURL)
-	}
-	defer conn.Close()
-	defer conn.CloseTarget(ctx)
-
+// setupRTCPeerConnectionTest sets up the test page, |videoURL| and waits until
+// CPU is ready for the performance test, it fixes the display to landscape-primary
+// and maximizes the browser window. When the browser is not suitable for display capture
+// test (e.g. the monitor is too small), it returns false in the first value to indicate
+// that the test should be skipped.
+func setupRTCPeerConnectionTest(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn, params RTCTestParams, videoURL string) (bool, error) {
 	// For consistency across test runs, let's try to put the UI in a known state:
 	// rotate the display to landscape-primary and maximize the browser window
 	// (setupCapture() maximizes the window).
 	if _, err := display.GetInternalInfo(ctx, tconn); err == nil {
 		if err = graphics.RotateDisplayToLandscapePrimary(ctx, tconn); err != nil {
-			return errors.Wrap(err, "failed to set display to landscape-primary orientation")
+			return false, errors.Wrap(err, "failed to set display to landscape-primary orientation")
 		}
 	}
 	if canCapture, err := setupCapture(ctx, conn, tconn, params.DisplayMediaType, params.StreamWidth, params.StreamHeight); err != nil {
-		return errors.Wrap(err, "failed to setup capture")
+		return false, errors.Wrap(err, "failed to setup capture")
 	} else if !canCapture {
-		return nil
+		return false, nil
 	}
 
 	if err := conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
-		return errors.Wrap(err, "timed out waiting for page loading")
+		return false, errors.Wrap(err, "timed out waiting for page loading")
 	}
 
 	if err := cpu.Cooldown(ctx); err != nil {
-		return errors.Wrap(err, "failed waiting for CPU to cool down")
+		return false, errors.Wrap(err, "failed waiting for CPU to cool down")
 	}
 
 	if params.DisplayMediaType != "" {
@@ -110,20 +92,41 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 			canvasChangeFPS = 40
 		)
 		if err := conn.Call(ctx, nil, "drawCanvasAlternatingColours", canvasWidth, canvasHeight, canvasChangeFPS); err != nil {
-			return errors.Wrap(err, "fail in drawCanvasAlternatingColours")
+			return false, errors.Wrap(err, "fail in drawCanvasAlternatingColours")
 		}
 	}
 
 	if params.VideoGridDimension > 1 {
 		if err := conn.Call(ctx, nil, "makeVideoGrid", params.VideoGridDimension, videoURL); err != nil {
-			return errors.Wrap(err, "javascript error")
+			return false, errors.Wrap(err, "javascript error")
 		}
 	}
+	return true, nil
+}
+
+// runPeerConnectionAndVerifyImplementation kicks off the RTC PeerConnection.
+// It verifies the implementation of the running video decoders and encoders are
+// expected ones.
+func runPeerConnectionAndVerifyImplementation(ctx context.Context, conn *chrome.Conn, params RTCTestParams) error {
 	if isSMode(params.Svc) {
 		if err := conn.Call(ctx, nil, "startSMode", params.Profile, params.StreamWidth, params.StreamHeight, params.Svc); err != nil {
 			return errors.Wrap(err, "error establishing connection")
 		}
 
+	} else {
+		if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
+			return errors.Wrap(err, "error establishing connection")
+		}
+	}
+
+	return verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs)
+}
+
+// measurePerformance measures the webrtc stats and system performance, and records
+// the results to the perf.Values.
+func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn, tconn *chrome.TestConn, params RTCTestParams, p *perf.Values) error {
+	pcID := 0
+	if isSMode(params.Svc) {
 		numStreams, err := numSModeLayers(params.Svc)
 		if err != nil {
 			return err
@@ -131,20 +134,11 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		// Collect the performance of only the decoder for the largest resolution stream.
 		// TODO(bugs.webrtc.org/15795): After each decoder decodes different
 		// resolution stream from each eother, collect all the decoders' performance.
-		if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(numStreams-1), validateFrame, p); err != nil {
-			return errors.Wrap(err, "failed to measure")
-		}
-	} else {
-		if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
-			return errors.Wrap(err, "error establishing connection")
-		}
-		if err := webrtc.MeasureRTCStats(shortCtx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(0), validateFrame, p); err != nil {
-			return errors.Wrap(err, "failed to measure")
-		}
+		pcID = numStreams - 1
 	}
 
-	if err := verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs); err != nil {
-		return err
+	if err := webrtc.MeasureRTCStats(ctx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(pcID), validateFrame, p); err != nil {
+		return errors.Wrap(err, "failed to measure RTCStats")
 	}
 
 	var gpuErr, i915IRQErr, cStateErr, cpuErr, batErr error
@@ -194,6 +188,47 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 	}
 	if traceErr := measureChromeTraceEvents(ctx, s, resolutions, p); traceErr != nil {
 		return errors.Wrap(traceErr, "failed to measure decoding/encoding chrome trace events")
+	}
+
+	return nil
+}
+
+// peerConnectionPerf opens a WebRTC Loopback connection and streams while collecting
+// statistics. If |params.videoGridDimension| is larger than 1, then the real time <video>
+// is plugged into a |params.videoGridDimension| x |params.videoGridDimension| grid with copies
+// of videoURL being played, similar to a mosaic video call.
+func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
+	s *testing.State, loopbackURL, videoURL string, params RTCTestParams, p *perf.Values) error {
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to test API")
+	}
+
+	// Reserve one second for closing tab.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	defer cancel()
+
+	// The page repeatedly plays a loopback video stream.
+	// To stop it, we defer conn.CloseTarget() to close the tab.
+	conn, err := cs.NewConn(ctx, loopbackURL)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open %s", loopbackURL)
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
+
+	canCapture, err := setupRTCPeerConnectionTest(ctx, conn, tconn, params, videoURL)
+	if err != nil || !canCapture {
+		return err
+	}
+
+	if err := runPeerConnectionAndVerifyImplementation(ctx, conn, params); err != nil {
+		return err
+	}
+
+	if err := measurePerformance(ctx, s, conn, tconn, params, p); err != nil {
+		return err
 	}
 
 	testing.ContextLogf(ctx, "Metric: %+v", p)
