@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
-			"ashpakov@google.com",
+			"mattlui@google.com",
 		},
 		Attr:         []string{"group:mtp_cq", "group:mtp"},
 		SoftwareDeps: []string{"chrome"},

@@ -29,7 +29,8 @@ func init() {
 		Desc:         "Verify keyboard can emulate input and still works after reattaching",
 		Contacts: []string{
 			"chromeos-engprod-syd@google.com",
-			"ashpakov@google.com",
+			"mattlui@google.com",
+			"alvinjia@google.com",
 		},
 		BugComponent: "b:1103568", // ChromeOS -> EngProd -> Developer
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

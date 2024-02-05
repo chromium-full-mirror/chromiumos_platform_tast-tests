@@ -24,7 +24,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         TconnServiceGRPC,
 		Desc:         "Check basic functionalities of UI TconnService",
-		Contacts:     []string{"chromeos-engprod-syd@google.com", "msta@google.com"},
+		Contacts: []string{
+			"chromeos-engprod-syd@google.com",
+			"mattlui@google.com",
+			"alvinjia@google.com",
+		},
 		BugComponent: "b:1103568",
 		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},

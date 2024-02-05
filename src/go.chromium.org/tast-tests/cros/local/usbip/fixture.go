@@ -24,7 +24,11 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "usbipModulesLoaded",
 		Desc:            "Kernel modules necessary for `usbip` loaded",
-		Contacts:        []string{"chromeos-engprod-syd@google.com", "ashpakov@google.com"},
+		Contacts:        []string{
+			"chromeos-engprod-syd@google.com",
+			"mattlui@google.com",
+			"alvinjia@google.com",
+		},
 		Impl:            &LoadModuleFixture{},
 		SetUpTimeout:    UsbipModulesLoadedTimeout,
 		TearDownTimeout: UsbipModulesLoadedTimeout,
@@ -34,7 +38,11 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "usbipServer",
 		Desc:            "A running USBIP server for device emulation",
-		Contacts:        []string{"chromeos-engprod-syd@google.com", "ashpakov@google.com"},
+		Contacts:        []string{
+			"chromeos-engprod-syd@google.com",
+			"mattlui@google.com",
+			"alvinjia@google.com",
+		},
 		Impl:            &ServerFixture{},
 		Parent:          "usbipModulesLoaded",
 		SetUpTimeout:    UsbipServerTimeout,

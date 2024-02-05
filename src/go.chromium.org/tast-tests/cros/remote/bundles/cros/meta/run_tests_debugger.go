@@ -31,7 +31,11 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RunTestsDebugger,
 		Desc:         "Verifies that Tast can run with a debugger attached",
-		Contacts:     []string{"tast-core@google.com", "msta@google.com"},
+		Contacts: []string{
+			"tast-core@google.com",
+			"mattlui@google.com",
+			"alvinjia@google.com",
+		},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		// Though the debugger should work on all x86 boards, testing it with a VM
 		// and a single board should be sufficient, since it's not a hardware
