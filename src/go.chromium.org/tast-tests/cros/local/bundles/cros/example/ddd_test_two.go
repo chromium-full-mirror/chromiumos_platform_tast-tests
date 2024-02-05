@@ -15,7 +15,7 @@ func init() {
 		Func:            DDDTestTwo,
 		Desc:            "Example for 3D expression. Always passes",
 		Contacts:        []string{"chromeos-test-platform-team@google.com", "dbeckett@google.com"},
-		BugComponent:    "b:296602715", // ChromeOS > Infra > Test Scheduling
+		BugComponent:    "b:1139413", // ChromeOS > Infra > Test Scheduling
 		Attr:            []string{"group:ddd_test_group"},
 		VariantCategory: `{"name": "HWID:touchpad_field_vendor_id:distinct_values"}`,
 	})
