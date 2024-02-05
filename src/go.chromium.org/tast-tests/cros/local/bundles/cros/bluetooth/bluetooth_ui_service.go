@@ -571,7 +571,7 @@ func (bui *BtUIService) RenameBluetoothDevice(ctx context.Context, req *pb.Renam
 		kb.TypeAction(req.GetCustomName()),
 		settings.LeftClick(nodewith.Name("Done").Role(role.Button).Ancestor(deviceNameDialog)),
 		settings.WaitUntilGone(deviceNameDialog),
-		settings.WaitUntilExists(nodewith.Name(req.GetCustomName()).Role(role.Heading).HasClass("cr-title-text")),
+		settings.WaitUntilExists(nodewith.Name(req.GetCustomName()).Role(role.Heading).First()),
 	)(ctx)
 }
 
