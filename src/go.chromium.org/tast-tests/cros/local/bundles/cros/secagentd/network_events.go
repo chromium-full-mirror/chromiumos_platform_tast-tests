@@ -13,8 +13,9 @@ import (
 	"strings"
 	"time"
 
-	rep "go.chromium.org/chromiumos/reporting"
 	xdr "chromiumos/xdr/secagentd"
+
+	rep "go.chromium.org/chromiumos/reporting"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -22,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdupstart"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
@@ -34,7 +34,7 @@ import (
 )
 
 type networkProtocolDetails struct {
-	senderCmd         *testexec.Cmd
+	senderCmds        []*testexec.Cmd
 	receiverCmd       *testexec.Cmd
 	protocol          xdr.NetworkProtocol
 	expectedDirection xdr.NetworkFlow_Direction
@@ -45,8 +45,9 @@ type networkProtocolDetails struct {
 type networkType string
 
 type networkTypeParams struct {
-	protocol networkType
-	family   l4server.Family
+	protocol     networkType
+	family       l4server.Family
+	processCount uint
 }
 
 type server struct {
@@ -83,37 +84,83 @@ func init() {
 			// hence it might not not necessary to separate as an individual test.
 			Name: "icmp",
 			Val: networkTypeParams{
-				protocol: icmp,
-				family:   l4server.TCP4,
+				protocol:     icmp,
+				family:       l4server.TCP4,
+				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "tcp",
 			Val: networkTypeParams{
-				protocol: tcp,
-				family:   l4server.TCP4,
+				protocol:     tcp,
+				family:       l4server.TCP4,
+				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "tcp_v6",
 			Val: networkTypeParams{
-				protocol: tcpV6,
-				family:   l4server.TCP6,
+				protocol:     tcpV6,
+				family:       l4server.TCP6,
+				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "udp",
 			Val: networkTypeParams{
-				protocol: udp,
-				family:   l4server.UDP4,
+				protocol:     udp,
+				family:       l4server.UDP4,
+				processCount: 1,
 			},
 			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "udp_v6",
 			Val: networkTypeParams{
-				protocol: udpV6,
-				family:   l4server.UDP6,
+				protocol:     udpV6,
+				family:       l4server.UDP6,
+				processCount: 1,
 			},
+			ExtraAttr: []string{"group:mainline", "informational"},
+		}, {
+			Name: "relaxed_icmp",
+			Val: networkTypeParams{
+				protocol:     icmp,
+				family:       l4server.TCP4,
+				processCount: 100,
+			},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+		}, {
+			Name: "relaxed_tcp",
+			Val: networkTypeParams{
+				protocol:     tcp,
+				family:       l4server.TCP4,
+				processCount: 100,
+			},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+		}, {
+			Name: "relaxed_tcp_v6",
+			Val: networkTypeParams{
+				protocol:     tcpV6,
+				family:       l4server.TCP6,
+				processCount: 100,
+			},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+		}, {
+			Name: "relaxed_udp",
+			Val: networkTypeParams{
+				protocol:     udp,
+				family:       l4server.UDP4,
+				processCount: 100,
+			},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+		}, {
+			Name: "relaxed_udp_v6",
+			Val: networkTypeParams{
+				protocol:     udpV6,
+				family:       l4server.UDP6,
+				processCount: 100,
+			},
+			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 		}},
 	})
 }
@@ -148,13 +195,6 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Log("Unable to clear the kernel trace file: ", err)
 	}
 
-	// Restart chrome with the network event feature.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("CrOSLateBootSecagentdXDRNetworkEvents"))
-	if err != nil {
-		s.Fatal("Failed to restart chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
 	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
@@ -166,17 +206,18 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to restart secagentd: ", err)
 	}
 
+	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
+		s.Fatal("Failed to verify secagentd is ready to test: ", err)
+	}
+
 	stop, err := secagentddbusmonitor.SetupDbusMonitor(ctx, agentPid)
 	if err != nil {
 		s.Fatal("Failed to setup dbus monitoring: ", err)
 	}
 
-	if err := secagentdprocfsscraper.WaitForBpfMaps(ctx, agentPid); err != nil {
-		s.Fatal("Failed to verify secagentd is ready to test: ", err)
-	}
-
 	netType := s.Param().(networkTypeParams).protocol
 	netFam := s.Param().(networkTypeParams).family
+	processCount := s.Param().(networkTypeParams).processCount
 	var svr *server
 	var testEnv *routing.SimpleNetworkEnv
 	var port = ""
@@ -196,11 +237,12 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	}(cleanupCtx)
 
 	// Get details of sender.
-	details, err := getNetworkProtocolDetails(ctx, netType, addrStr, port)
+	details, err := getNetworkProtocolDetails(ctx, netType, addrStr, port, processCount)
 	if err != nil {
 		s.Fatal("Fail to get NetworkProtocolDetails: ", err)
 	}
-	senderCmd := details.senderCmd
+
+	senderCmds := details.senderCmds
 	receiverCmd := details.receiverCmd
 
 	if receiverCmd != nil {
@@ -208,21 +250,25 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 			s.Fatalf("Error starting %q: %v ", receiverCmd, err)
 		}
 	}
-	cmdStdin, err := senderCmd.StdinPipe()
-	if err != nil {
-		s.Fatalf("Unable to attach to the pipe of %q:%v", senderCmd.String(), err)
-	}
 
-	if err := senderCmd.Start(); err != nil {
-		s.Fatalf("Error starting %q: %v ", senderCmd, err)
+	cmdPids := make(map[uint64]bool)
+	pidText := ""
+	for _, cmd := range senderCmds {
+		stdin, err := cmd.StdinPipe()
+		if err != nil {
+			s.Fatalf("Unable to attach to the pipe of %q:%v", cmd.String(), err)
+		}
+		if err := cmd.Start(); err != nil {
+			s.Fatalf("Error starting %q: %v ", senderCmds, err)
+		}
+		stdin.Write([]byte(details.pipeInText))
+		pid := uint64(cmd.Process.Pid)
+		cmdPids[pid] = true
+		pidText += strconv.FormatUint(pid, 10) + ","
+		stdin.Close()
 	}
-	if details.pipeInText != "" {
-		cmdStdin.Write([]byte(details.pipeInText))
-	}
-
-	cmdStdin.Close()
-	cmdPid := uint64(senderCmd.Process.Pid)
-	s.Logf("Pid is %d", cmdPid)
+	pidText = strings.TrimSuffix(pidText, ",")
+	s.Logf("pids=[%s]", pidText)
 
 	// Wait for the current batch to be flushed.
 	// GoBigSleepLint: Using poll here doesn't make sense. There is no particular
@@ -234,12 +280,16 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep: ", err)
 	}
 
-	if err := senderCmd.Kill(); err != nil {
-		s.Fatalf("Failed to kill %q: %v", senderCmd, err)
+	for _, cmd := range senderCmds {
+		if err := cmd.Kill(); err != nil {
+			s.Fatalf("Failed to kill %q: %v", senderCmds, err)
+		}
 	}
-	// Don't check the error here because it will likely just say
-	// "signal: Killed"
-	senderCmd.Wait()
+	for _, cmd := range senderCmds {
+		// Don't check the error here because it will likely just say
+		// "signal: Killed"
+		cmd.Wait()
+	}
 
 	if receiverCmd != nil {
 		if err := receiverCmd.Kill(); err != nil {
@@ -256,7 +306,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	s.Logf("secagentd enqueued %d events", len(calledMethods))
 
 	badRemoteAddress := false
-	foundMatch := false
+	matchCount := 0
 	var failedFields []string
 
 	for _, method := range calledMethods {
@@ -291,13 +341,21 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 				}
 			}
 
+			pidFound := false
 			for _, flow := range bFlows {
 				failedFields = nil
+				pidFound = false
 				if localAddress[flow.NetworkFlow.GetRemoteIp()] {
 					s.Log("Detected an event flow that has a local ip address as its remote address:", flow.NetworkFlow.String())
 					badRemoteAddress = true
 				}
-				if flow.GetProcess() != nil && flow.GetProcess().GetCanonicalPid() == cmdPid {
+				if flow.GetProcess() != nil {
+					if _, ok := cmdPids[flow.GetProcess().GetCanonicalPid()]; ok {
+						pidFound = true
+						delete(cmdPids, flow.GetProcess().GetCanonicalPid())
+					}
+				}
+				if pidFound {
 					if *flow.NetworkFlow.Protocol != details.protocol {
 						failedFields = append(failedFields, fmt.Sprintf("Protocol=%s expected %s", *flow.NetworkFlow.Protocol, details.protocol))
 					}
@@ -308,27 +366,22 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 						failedFields = append(failedFields, fmt.Sprintf("Direction=%s expected %s", flow.NetworkFlow.Direction.String(), details.expectedDirection.String()))
 					}
 					if len(failedFields) == 0 {
-						s.Logf("%s found, matches all expectations", flow.String())
-						foundMatch = true
-						break
+						matchCount++
 					} else {
 						s.Logf("Match failure:%s :%s", strings.Join(failedFields, ","), flow)
-
 					}
 				}
 			}
-		}
-		if foundMatch {
-			break
 		}
 	}
 	if badRemoteAddress {
 		s.Error("Found one or more flows where the remote address in the flow is the same as a local ip address")
 	}
-	if !foundMatch {
-		s.Errorf("Could not find a network flow event that matches expectations pid:%d remote IP Address:%s protocol:%s direction:%s",
-			cmdPid, details.ipAddr, details.protocol.String(), details.expectedDirection.String())
+	if matchCount == 0 {
+		s.Errorf("Could not find a network flow event that matches expectations pid:%s remote IP Address:%s protocol:%s direction:%s",
+			pidText, details.ipAddr, details.protocol.String(), details.expectedDirection.String())
 	}
+	s.Logf("Matched %d/%d", matchCount, processCount)
 }
 
 func setupL4server(ctx context.Context, network networkType, networkFam l4server.Family) (*routing.SimpleNetworkEnv, *server, error) {
@@ -399,14 +452,19 @@ func setupL4server(ctx context.Context, network networkType, networkFam l4server
 	return testEnv, svr, nil
 }
 
-func getNetworkProtocolDetails(ctx context.Context, network networkType, externIP, externPort string) (networkProtocolDetails, error) {
+func getNetworkProtocolDetails(ctx context.Context, network networkType,
+	externIP, externPort string, count uint) (networkProtocolDetails, error) {
 	const ncCmd = "/usr/local/bin/nc"
+
 	switch network {
 	case icmp:
 		ipAddr := externIP
-		cmd := testexec.CommandContext(ctx, "/bin/ping", ipAddr)
+		var cmd []*testexec.Cmd
+		for i := uint(0); i < count; i++ {
+			cmd = append(cmd, testexec.CommandContext(ctx, "/bin/ping", ipAddr))
+		}
 		return networkProtocolDetails{
-			senderCmd:         cmd,
+			senderCmds:        cmd,
 			receiverCmd:       nil,
 			protocol:          xdr.NetworkProtocol_ICMP,
 			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN,
@@ -414,9 +472,12 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType, externI
 			pipeInText:        "",
 		}, nil
 	case tcp:
-		cmd := testexec.CommandContext(ctx, ncCmd, "-v", externIP, externPort)
+		var cmd []*testexec.Cmd
+		for i := uint(0); i < count; i++ {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-v", externIP, externPort))
+		}
 		return networkProtocolDetails{
-			senderCmd:         cmd,
+			senderCmds:        cmd,
 			receiverCmd:       nil,
 			protocol:          xdr.NetworkProtocol_TCP,
 			expectedDirection: xdr.NetworkFlow_OUTGOING,
@@ -424,9 +485,12 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType, externI
 			pipeInText:        "Hello, TCP",
 		}, nil
 	case tcpV6:
-		senderCmd := testexec.CommandContext(ctx, ncCmd, "-6", externIP, externPort)
+		var cmd []*testexec.Cmd
+		for i := uint(0); i < count; i++ {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-6", externIP, externPort))
+		}
 		return networkProtocolDetails{
-			senderCmd:         senderCmd,
+			senderCmds:        cmd,
 			receiverCmd:       nil,
 			protocol:          xdr.NetworkProtocol_TCP,
 			expectedDirection: xdr.NetworkFlow_OUTGOING,
@@ -434,9 +498,12 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType, externI
 			pipeInText:        "Hello TCPv6",
 		}, nil
 	case udp:
-		senderCmd := testexec.CommandContext(ctx, ncCmd, "-u", externIP, externPort)
+		var cmd []*testexec.Cmd
+		for i := uint(0); i < count; i++ {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-u", externIP, externPort))
+		}
 		return networkProtocolDetails{
-			senderCmd:         senderCmd,
+			senderCmds:        cmd,
 			receiverCmd:       nil,
 			protocol:          xdr.NetworkProtocol_UDP,
 			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN,
@@ -444,9 +511,12 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType, externI
 			pipeInText:        "Hello UDP",
 		}, nil
 	case udpV6:
-		senderCmd := testexec.CommandContext(ctx, ncCmd, "-6", "-u", externIP, externPort)
+		var cmd []*testexec.Cmd
+		for i := uint(0); i < count; i++ {
+			cmd = append(cmd, testexec.CommandContext(ctx, ncCmd, "-6", "-u", externIP, externPort))
+		}
 		return networkProtocolDetails{
-			senderCmd:         senderCmd,
+			senderCmds:        cmd,
 			receiverCmd:       nil,
 			protocol:          xdr.NetworkProtocol_UDP,
 			expectedDirection: xdr.NetworkFlow_OUTGOING,
