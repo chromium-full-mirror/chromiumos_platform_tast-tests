@@ -28,7 +28,7 @@ func init() {
 		Desc:         "In clamshell and tablet modes, verify peripherals connected via docking station while re-plug in and flip the dock station",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
@@ -40,6 +40,10 @@ func init() {
 		}, {
 			Name: "tablet_mode",
 			Val:  true,
+		}, {
+			Name:      "smoke",
+			ExtraAttr: []string{"pasit_fast"},
+			Val:       true,
 		}},
 	})
 }
