@@ -38,6 +38,10 @@ func init() {
 // verifies that network name is displayed correctly in Settings.
 func PSimNetworkName(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx)
+	if err != nil {
+		s.Fatal("Failed to create a new instance of Chrome: ", err)
+	}
+
 	helper, err := cellular.NewHelper(ctx)
 	if err != nil {
 		s.Fatal("Failed to create cellular.Helper: ", err)
