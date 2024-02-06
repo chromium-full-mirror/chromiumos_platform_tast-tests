@@ -38,7 +38,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable", "firmware_ccd"},
+		Attr:         []string{"group:firmware", "firmware_ccd"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
@@ -49,17 +49,22 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
-			Name:    "ac_on_suspend",
-			Timeout: 15 * time.Minute,
-			Val:     acStateDuringSuspend,
+			Name:      "ac_on_suspend",
+			Timeout:   25 * time.Minute,
+			Val:       acStateDuringSuspend,
+			ExtraAttr: []string{"firmware_unstable"},
 		}, {
-			Name:    "discharge",
-			Timeout: 70 * time.Minute,
-			Val:     voltageOnDischarge,
+			Name:              "discharge",
+			Timeout:           70 * time.Minute,
+			Val:               voltageOnDischarge,
+			ExtraAttr:         []string{"firmware_ec"},
+			ExtraRequirements: []string{"sys-fw-0022-v02"},
 		}, {
-			Name:    "full_charge",
-			Timeout: 120 * time.Minute,
-			Val:     statusOnFullCharge,
+			Name:              "full_charge",
+			Timeout:           120 * time.Minute,
+			Val:               statusOnFullCharge,
+			ExtraAttr:         []string{"firmware_ec"},
+			ExtraRequirements: []string{"sys-fw-0022-v02"},
 		},
 		},
 	})
