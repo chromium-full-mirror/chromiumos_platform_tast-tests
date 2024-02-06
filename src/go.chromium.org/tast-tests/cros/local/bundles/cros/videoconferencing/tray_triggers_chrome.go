@@ -53,7 +53,7 @@ func init() {
 		Desc:         "Checks VC tray can be triggered on Chrome apps",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      6 * time.Minute,

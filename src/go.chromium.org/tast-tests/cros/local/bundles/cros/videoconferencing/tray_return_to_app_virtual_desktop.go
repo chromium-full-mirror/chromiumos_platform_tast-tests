@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Checks VC tray returns to app in a virtual desktop",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:187682",
 		Timeout:      3 * time.Minute,

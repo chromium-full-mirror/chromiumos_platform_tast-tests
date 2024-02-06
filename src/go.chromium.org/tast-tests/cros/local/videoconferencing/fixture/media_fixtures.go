@@ -110,7 +110,7 @@ func init() {
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -127,7 +127,7 @@ func init() {
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled without the screen recorder",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixtureNoScreenRecorder(halCameraWithPlatformEffectsEnabled),
@@ -144,7 +144,7 @@ func init() {
 		Desc: "A fixture with fake user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
@@ -161,7 +161,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -178,7 +178,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -195,7 +195,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects enabled  without the screen recorder",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixtureNoScreenRecorder(halCameraWithPlatformEffectsEnabled),
@@ -212,7 +212,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in using fake HAL camera with platform effects disabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsDisabled),
@@ -229,7 +229,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in clamshell mode using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -246,7 +246,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in tablet mode using fake media devices with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -263,7 +263,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in Lacros using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -280,7 +280,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in Lacros clamshell mode using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -297,7 +297,7 @@ func init() {
 		Desc: "A fixture with gaia user logged in Lacros tablet mode using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -314,7 +314,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in and ARC booted using fake HAL camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            []string{fakeHALImageInput},
 		Impl:            mediaSetupFixture(halCameraWithPlatformEffectsEnabled),
@@ -331,7 +331,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in and ARC booted using internal camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
 		Parent:          gaiaLoggedInARC,
@@ -347,7 +347,7 @@ func init() {
 		Desc: "A fixture with no user logged in using internal camera with platform effects enabled",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
 		Parent:          noLoggedIn,
@@ -363,7 +363,7 @@ func init() {
 		Desc: "A fixture with fake user logged in and fake VC extension installed",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
 		Parent:          baseLoggedInWithFakeVCExtension,
@@ -379,7 +379,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            mediaSetupFixture(internalCameraWithPlatformEffectsEnabled),
 		Parent:          baseLoggedInLacrosWithFakeVCExtension,

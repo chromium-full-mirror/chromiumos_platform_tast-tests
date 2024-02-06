@@ -80,7 +80,7 @@ func init() {
 		Desc: "A fixture with fake user logged in",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            baseSetupFixture(browser.TypeAsh, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
@@ -96,7 +96,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -115,7 +115,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in forcing clamshell mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Parent: fixture.AloopLoaded{Channels: 2}.Instance(),
 		Vars:   []string{"ui.gaiaPoolDefault"},
@@ -137,7 +137,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in forcing tablet mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -159,7 +159,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Impl:            baseSetupFixture(browser.TypeLacros, nil),
 		Parent:          fixture.AloopLoaded{Channels: 2}.Instance(),
@@ -175,7 +175,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in Lacros",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -196,7 +196,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in Lacros in clamshell mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -218,7 +218,7 @@ func init() {
 		Desc: "A fixture with GAIA user logged in Lacros in tablet mode",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Vars: []string{"ui.gaiaPoolDefault"},
 		Impl: baseSetupFixture(browser.TypeLacros, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -240,7 +240,7 @@ func init() {
 		Desc: "A fixture with no user logged in",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Impl: baseSetupFixture(browser.TypeAsh, func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{chrome.NoLogin()}, nil
@@ -258,7 +258,7 @@ func init() {
 		Desc: "A fixture with fake user logged in and fake VC extension installed",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            fakeVCExtensionFiles,
 		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeAsh, nil),
@@ -275,7 +275,7 @@ func init() {
 		Desc: "A fixture with fake user logged in Lacros and fake VC extension installed",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"shengjun@google.com",
+			"xiuwen@google.com",
 		},
 		Data:            fakeVCExtensionFiles,
 		Impl:            baseSetupFixtureWithFakeExtension(browser.TypeLacros, nil),
