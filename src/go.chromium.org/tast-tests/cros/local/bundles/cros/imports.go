@@ -59,7 +59,6 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/hammerd"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/hardware"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/health"
-	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/hibernate"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/holdingspace"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/hps"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec"
