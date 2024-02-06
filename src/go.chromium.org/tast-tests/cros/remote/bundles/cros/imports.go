@@ -49,6 +49,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/secagentd"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/security"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/shimlessrma"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/statefulmigration"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/storage"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/syzcorpus"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/syzkaller"
