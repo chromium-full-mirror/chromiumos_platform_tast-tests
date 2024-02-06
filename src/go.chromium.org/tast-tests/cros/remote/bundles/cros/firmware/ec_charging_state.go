@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -74,8 +73,6 @@ const (
 	fullBatteryPercent     = 95.0
 	targetDischargePercent = 93.0
 	fullChargePollTimeout  = 110 * time.Minute
-	dischargePollTimeout   = 60 * time.Minute
-	chargePollInterval     = 1 * time.Second
 	// alarmMask is a mask ignoring expected battery alarms like terminate charge and over charged.
 	alarmMask = (0xFF00 & ^firmware.ECTerminateChargeAlarm & ^firmware.ECOverChargedAlarm)
 )
@@ -142,7 +139,7 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 		// ----------- Test #3: Check discharges the DUT then checks its voltages -----------
 		// Disable Charge Limit for this test, since it messes with detecting if the
 		// battery is correctly charging while plugged in.
-		if err := testChargingVoltagesAfterDischarge(ctx, h); err != nil {
+		if err := firmware.TestChargingVoltagesAfterDischarge(ctx, h, targetDischargePercent); err != nil {
 			s.Fatal("Failed checking voltages after discharge test: ", err)
 		}
 	case statusOnFullCharge:
@@ -222,71 +219,6 @@ func testDisconnectChargerAfterSuspend(ctx context.Context, h *firmware.Helper) 
 
 	if err := compareKernelAndECBatteryStatus(ctx, h, battery); err != nil {
 		return errors.Wrap(err, "kernel and EC battery state mismatch")
-	}
-
-	return nil
-}
-
-func testChargingVoltagesAfterDischarge(ctx context.Context, h *firmware.Helper) error {
-	battery, err := firmware.GetECBatteryStatus(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to get ec battery state")
-	}
-
-	if battery.Charge > targetDischargePercent {
-		testing.ContextLog(ctx, "Disconnecting charger")
-		if err := firmware.PollToSetChargerStatus(ctx, h, false); err != nil {
-			return errors.Wrap(err, "failed to disconnect charger")
-		}
-
-		// As the firmware test with bootModeNormal does not receive
-		// browser services on its initialization, we cannot easily
-		// use Chrome for battery drain procedure. Instead, we can
-		// simply spawn stress-ng (which seems to be available in
-		// base rootfs) for specified amount of time.
-		// See also battery_service.go:DrainBattery
-
-		script := "cd /usr/local/bin; stress-ng --cpu 32 --timeout 1m"
-
-		testing.ContextLog(ctx, "Initiating battery discharging")
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			testing.ContextLog(ctx, "Stressing CPU to discharge battery")
-			cmd := h.DUT.Conn().CommandContext(ctx, "sh", "-c", script)
-			if out, err := cmd.Output(ssh.DumpLogOnError); err != nil {
-				err := errors.Wrapf(err, "failed to discharge battery using CPU stress, got output: %v", string(out))
-				testing.PollBreak(err)
-			}
-
-			battery, err := firmware.GetECBatteryStatus(ctx, h)
-			if err != nil {
-				testing.ContextLog(ctx, "Failed to get battery state: ", err)
-				return errors.Wrap(err, "failed to get battery state")
-			}
-			if battery.Charge > targetDischargePercent {
-				testing.ContextLogf(ctx, "Current charge: %v, target: %v", battery.Charge, targetDischargePercent)
-				return errors.Errorf("Not enough battery discharged: %v, want %v", battery.Charge, targetDischargePercent)
-			}
-
-			return nil
-			// poll at 1s since the stress script will block progress for 1 minute
-		}, &testing.PollOptions{Timeout: dischargePollTimeout, Interval: chargePollInterval}); err != nil {
-			return errors.Wrap(err, "failed to discharge battery")
-		}
-	}
-
-	testing.ContextLog(ctx, "Reconnecting charger")
-	if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
-		return errors.Wrap(err, "failed to connect charger")
-	}
-
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := firmware.CheckChargingState(ctx, h); err != nil {
-			return errors.Wrap(err, "failed to verify expected charging voltages")
-		}
-
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
-		return err
 	}
 
 	return nil
