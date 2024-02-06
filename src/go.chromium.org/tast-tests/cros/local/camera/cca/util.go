@@ -16,13 +16,13 @@ import (
 
 	"github.com/abema/go-mp4"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/audio"
-	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 )
 
 type actionFunc func(ctx context.Context) error
@@ -169,11 +169,11 @@ func VideoDurationFromHeader(ctx context.Context, path string) (time.Duration, e
 	return duration, nil
 }
 
-// BaseVideoFPS returns the base frame rate of the video, guessed from the video's time base and each frame's timer ticks (see https://github.com/FFmpeg/FFmpeg/blob/release/5.1/libavformat/avformat.h#L1099).
-func BaseVideoFPS(ctx context.Context, path string) (float64, error) {
-	output, err := videoInfo(ctx, "stream=r_frame_rate", path)
+// AverageVideoFPS returns the average frame rate of a video by dividing the total number of frames by the duration in seconds.
+func AverageVideoFPS(ctx context.Context, path string) (float64, error) {
+	output, err := videoInfo(ctx, "stream=avg_frame_rate", path)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to get info of base video FPS")
+		return 0, errors.Wrap(err, "failed to get info of average video FPS")
 	}
 	return parseFraction(output)
 }
@@ -181,7 +181,7 @@ func BaseVideoFPS(ctx context.Context, path string) (float64, error) {
 func parseFraction(fraction string) (float64, error) {
 	parts := strings.Split(fraction, "/")
 	if len(parts) != 2 {
-		return 0, errors.New("invalid faction format")
+		return 0, errors.New("invalid fraction format")
 	}
 
 	numerator, err := strconv.ParseFloat(parts[0], 64)

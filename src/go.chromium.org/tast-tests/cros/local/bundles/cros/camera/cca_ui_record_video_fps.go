@@ -38,15 +38,9 @@ func CCAUIRecordVideoFPS(ctx context.Context, s *testing.State) {
 		Cameras: []testutil.FakeCameraConfig{
 			{ID: 1, Connected: true, SupportedFormats: []*testutil.FakeCameraFormatsConfig{
 				{
-					Width:      1920,
-					Height:     1080,
-					FrameRates: []int{30, 60},
-				},
-				// TODO(b/311148660): We need at least two resolutions to set FPS from UI.
-				{
 					Width:      640,
 					Height:     360,
-					FrameRates: []int{30},
+					FrameRates: []int{30, 60},
 				},
 			}},
 		},
@@ -94,7 +88,7 @@ func recordVideoWithFPS(ctx context.Context, app *cca.App, targetFPS, fpsToleran
 		return errors.Wrap(err, "failed to get file path")
 	}
 
-	fps, err := cca.BaseVideoFPS(ctx, path)
+	fps, err := cca.AverageVideoFPS(ctx, path)
 	if err != nil {
 		return errors.Wrap(err, "failed to get FPS")
 	} else if math.Abs(fps-targetFPS) > fpsTolerance {
