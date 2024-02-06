@@ -185,3 +185,11 @@ func (b *BatteryService) PowerSettingInIdleMode(ctx context.Context, req *empty.
 	}
 	return &empty.Empty{}, nil
 }
+
+func (b *BatteryService) DisableBatteryCharging(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	return &empty.Empty{}, setup.DisableBatteryCharging(ctx)
+}
+
+func (b *BatteryService) AllowBatteryCharging(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
+	return &empty.Empty{}, setup.AllowBatteryCharging(ctx)
+}

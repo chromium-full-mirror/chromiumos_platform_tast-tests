@@ -16,6 +16,7 @@ import (
 	ps "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	rp "go.chromium.org/tast-tests/cros/remote/power"
+	sp "go.chromium.org/tast-tests/cros/services/cros/power"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 
@@ -111,8 +112,9 @@ func init() {
 				ExtraAttr: []string{"group:power", "power_cpd"},
 			},
 		},
-		Vars:        []string{"servo", "subtest"},
-		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService"},
+		Vars: []string{"servo", "subtest"},
+		ServiceDeps: []string{"tast.common.power.powerpb.LocalInfoService",
+			"tast.cros.power.BatteryService"},
 	})
 }
 
@@ -184,28 +186,29 @@ func PowerServodWrapper(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
 	}
 	defer cl.Close(ctx)
-	client := ps.NewLocalInfoServiceClient(cl.Conn)
+	localInfoClient := ps.NewLocalInfoServiceClient(cl.Conn)
 
-	if err := rp.ChargeBattery(ctx, chargeTarget, client); err != nil {
+	if err := rp.ChargeBattery(ctx, chargeTarget, localInfoClient); err != nil {
 		s.Fatal("Failed to charge battery: ", err)
 	}
 
 	// Get info from gRPC client immediately, to avoid expiring.
-	devInfo, oneTimeMetrics, err := localDUTInfo(ctx, client)
+	devInfo, oneTimeMetrics, err := localDUTInfo(ctx, localInfoClient)
 	if err != nil {
 		s.Error("Failed to get local DUT info: ", err)
 	}
 
-	// Disable charging.
-	if _, err := s.DUT().Conn().CommandContext(ctx, "ectool", "chargeoverride", "dontcharge").Output(); err != nil {
+	s.Log("Disabling AC charging")
+	batteryClient := sp.NewBatteryServiceClient(cl.Conn)
+	if _, err := batteryClient.DisableBatteryCharging(ctx, &empty.Empty{}); err != nil {
 		s.Fatal("Unable to disable charging: ", err)
 	}
 
 	defer func() {
 		// Enable charging.
-		// TODO: b/303548068 - Sync CC with setup_battery.go.
-		if _, err := s.DUT().Conn().CommandContext(cleanupCtx, "ectool", "chargeoverride", "off").Output(); err != nil {
-			s.Fatal(cleanupCtx, "Unable to enable charging: ", err)
+		s.Log("Re-enabling AC charging")
+		if _, err := batteryClient.AllowBatteryCharging(cleanupCtx, &empty.Empty{}); err != nil {
+			s.Fatal("Unable to enable charging: ", err)
 		}
 	}()
 

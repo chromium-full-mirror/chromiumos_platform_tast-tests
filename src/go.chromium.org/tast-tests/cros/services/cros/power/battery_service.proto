@@ -14,22 +14,29 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/power";
 service BatteryService {
   // New logs into a Chrome session as a fake user. Close must be called later
   // to clean up the associated resources.
-  rpc New (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc New(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // Close releases the resources obtained by New.
-  rpc Close (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // DrainBattery drains DUT battery to specific percentage.
-  rpc DrainBattery (BatteryRequest) returns (google.protobuf.Empty) {}
+  rpc DrainBattery(BatteryRequest) returns (google.protobuf.Empty) {}
 
   // StopChargeLimit temporarily sets Charge Limit on the DUT to off. Original
   // setting will be restored on Close.
-  rpc StopChargeLimit (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc StopChargeLimit(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // PowerSettingInIdleMode provides power settings required during IDLE mode.
-  rpc PowerSettingInIdleMode (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc PowerSettingInIdleMode(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // DisableBatteryCharging
+  rpc DisableBatteryCharging(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
+  // AllowBatteryCharging
+  rpc AllowBatteryCharging(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 }
 
-message BatteryRequest {
-    float maxPercentage = 1;
-  }
+message BatteryRequest { float maxPercentage = 1; }
