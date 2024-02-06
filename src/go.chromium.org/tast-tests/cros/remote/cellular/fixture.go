@@ -59,6 +59,15 @@ func init() {
 		TearDownTimeout: 3 * time.Minute,
 		Vars:            []string{"skipReboot"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "cellularDUTCheckRemote",
+		Desc:     "Remote cellular dut check test fixture that reboots during setup",
+		Contacts: []string{},
+		// Just reboot in SetUp since there shouldn't be any side effects to these tests.
+		Impl:         newFixture(true, false),
+		SetUpTimeout: 3 * time.Minute,
+		Vars:         []string{"skipReboot"},
+	})
 }
 func newFixture(rebootOnSetup, rebootOnTeardown bool) *fixture {
 	return &fixture{

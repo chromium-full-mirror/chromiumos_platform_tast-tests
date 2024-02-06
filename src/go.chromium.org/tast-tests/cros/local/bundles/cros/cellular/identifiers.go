@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -22,9 +21,9 @@ func init() {
 		Desc:         "Verifies that a modem returns valid identifiers",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_run_isolated", "cellular_cq", "cellular_dut_check"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq"},
+		Fixture:      "cellularDUTCheckLocal",
 		Timeout:      4 * time.Minute,
-		Fixture:      "cellular",
 	})
 }
 
