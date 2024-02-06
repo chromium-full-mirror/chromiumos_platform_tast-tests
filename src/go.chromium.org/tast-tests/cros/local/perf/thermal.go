@@ -13,7 +13,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -34,7 +34,7 @@ func NewThermalDataSource() *thermalDataSource {
 
 // Setup implements perf.TimelineDatasource.Setup.
 func (ds *thermalDataSource) Setup(ctx context.Context, prefix, intervalName string) error {
-	thermalSensors, err := power.ListSysfsThermalSensors(ctx)
+	thermalSensors, err := metrics.ListSysfsThermalSensors(ctx)
 	if err != nil {
 		return err
 	}

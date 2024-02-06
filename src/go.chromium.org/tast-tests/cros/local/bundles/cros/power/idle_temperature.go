@@ -10,7 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -29,7 +29,7 @@ func init() {
 }
 
 func IdleTemperature(ctx context.Context, s *testing.State) {
-	thermal := power.NewSysfsThermalMetrics()
+	thermal := metrics.NewSysfsThermalMetrics()
 	thermal.Setup(ctx, "", "")
 
 	// GoBigSleepLint: First wait for CPU idle. This is the same timeout

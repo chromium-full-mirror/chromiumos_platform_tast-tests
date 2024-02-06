@@ -12,7 +12,7 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -45,13 +45,13 @@ func CaptureDeviceSnapshot(ctx context.Context, prefix string) (*perf.Values, er
 	}
 
 	var batteryCapacity float64
-	batteryPath, err := power.SysfsBatteryPath(ctx)
+	batteryPath, err := metrics.SysfsBatteryPath(ctx)
 	if err != nil {
 		// Skip reporting battery capacity on devices that might not have a
 		// battery, like Chromeboxes.
 		testing.ContextLog(ctx, "Skipping reporting initial battery percentage: ", err)
 	} else {
-		batteryCapacity, err = power.ReadBatteryCapacity(ctx, batteryPath)
+		batteryCapacity, err = metrics.ReadBatteryCapacity(ctx, batteryPath)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to read battery capacity")
 		}

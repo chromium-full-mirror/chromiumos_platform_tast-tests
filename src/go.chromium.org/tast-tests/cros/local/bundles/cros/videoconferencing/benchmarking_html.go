@@ -208,13 +208,6 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 
-	// Take initial power snapshot.
-	powerStart := time.Now()
-	raplEnergyBefore, err := power.NewRAPLSnapshot()
-	if err != nil {
-		testing.ContextLog(ctx, "RAPL Energy status is not available for this board: ", err)
-	}
-
 	memoryChannel := make(chan effects.PeakMemoryResult)
 	go effects.ReadMaxMemoryUsage(ctx, memoryChannel, testDuration, metricInterval)
 
@@ -227,14 +220,6 @@ func BenchmarkingHTML(ctx context.Context, s *testing.State) {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 
-	// TODO: Remove manual power metric collection
-	powerEnd := time.Now()
-	powerDuration := int(powerEnd.Sub(powerStart).Seconds())
-	if raplEnergyBefore != nil {
-		if effects.ReportPowerDiffMetrics(ctx, p, raplEnergyBefore, powerDuration) != nil {
-			s.Error("Failed to report power metrics: ", err)
-		}
-	}
 	if err = effects.ReportMemoryMetrics(ctx, p, memoryChannel); err != nil {
 		s.Error("Failed to report memory metrics: ", err)
 	}

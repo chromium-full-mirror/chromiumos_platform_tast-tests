@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 )
 
@@ -122,8 +123,8 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 	//   }
 	// }
 	r.RegisterMetrics(
-		power.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
-		power.NewHistogramAverageMetrics(bTconn, []string{"EventLatency.MousePressed.TotalLatency"}),
+		pm.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
+		pm.NewHistogramAverageMetrics(bTconn, []string{"EventLatency.MousePressed.TotalLatency"}),
 	)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)

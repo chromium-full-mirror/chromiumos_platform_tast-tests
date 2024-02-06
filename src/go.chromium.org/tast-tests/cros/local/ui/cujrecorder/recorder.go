@@ -31,6 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	perfSrc "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast-tests/cros/local/tracing"
@@ -1111,10 +1112,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		var powerTestMetrics []perf.TimelineDatasource
 		if util.ChromeECInfo(ctx) != nil {
 			testing.ContextLog(ctx, "Device has ChromeEC")
-			powerTestMetrics = power.TestMetrics()
+			powerTestMetrics = pm.TestMetrics()
 		} else {
 			testing.ContextLog(ctx, "Device has no ChromeEC")
-			powerTestMetrics = power.TestMetricsWithoutBatteryInfo()
+			powerTestMetrics = pm.TestMetricsWithoutBatteryInfo()
 		}
 		r.powerTimeline, err = perf.NewTimeline(ctx,
 			powerTestMetrics,
@@ -1245,7 +1246,7 @@ func (r *Recorder) setUpPowerTest(ctx context.Context) (func(ctx context.Context
 
 	// Check options.FailOnDischargeErr after the deferred function is set.
 	if batteryDischargeErr != nil && r.options.FailOnDischargeErr &&
-		!errors.Is(batteryDischargeErr, power.ErrNoBattery) {
+		!errors.Is(batteryDischargeErr, pm.ErrNoBattery) {
 		if err := cleanup(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to clean up power test: ", err)
 		}

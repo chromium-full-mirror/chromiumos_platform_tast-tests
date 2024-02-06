@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+// Package metrics contains functions related to power metric measurement.
+package metrics
 
 import (
 	"go.chromium.org/tast-tests/cros/common/perf"

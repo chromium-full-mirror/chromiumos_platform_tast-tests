@@ -11,6 +11,7 @@ import (
 	"path"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -69,18 +70,18 @@ func NewCoolingDevice(ctx context.Context, devPath string) (*CoolingDevice, erro
 		return nil, errors.New("cooling device " + devPath + " does not exist")
 	}
 
-	maxState, err := readInt64(ctx, path.Join(devPath, "max_state"))
+	maxState, err := util.ReadInt64(ctx, path.Join(devPath, "max_state"))
 	if err != nil {
 		return nil, errors.New("failed to read max_state for cooling device " + devPath)
 	}
 
 	curStatePath := path.Join(devPath, "cur_state")
-	_, err = readInt64(ctx, curStatePath)
+	_, err = util.ReadInt64(ctx, curStatePath)
 	if err != nil {
 		return nil, errors.New("failed to read cur_state for cooling device " + devPath)
 	}
 
-	devTypeString, err := readFirstLine(ctx, path.Join(devPath, "type"))
+	devTypeString, err := util.ReadFirstLine(ctx, path.Join(devPath, "type"))
 	if err != nil {
 		return nil, errors.New("failed to read type for cooling device " + devPath)
 	}
@@ -122,7 +123,7 @@ func NewCoolingDevice(ctx context.Context, devPath string) (*CoolingDevice, erro
 
 // GetThermalState returns ThermalState derived from the sysfs reading.
 func (c *CoolingDevice) GetThermalState(ctx context.Context) (ThermalState, error) {
-	curState, err := readInt64(ctx, c.CurStatePath)
+	curState, err := util.ReadInt64(ctx, c.CurStatePath)
 	if err != nil {
 		return ThermalStateUnknown, errors.New("failed to read " + c.CurStatePath)
 	}

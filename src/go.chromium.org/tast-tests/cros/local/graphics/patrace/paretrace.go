@@ -20,7 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -119,7 +119,7 @@ func RunTrace(ctx context.Context, preData arc.PreData, apkFile, traceFile, outD
 	}
 	defer d.Close(ctx)
 
-	metrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Interval(tPowerSnapshotInterval))
+	metrics, err := perf.NewTimeline(ctx, metrics.TestMetrics(), perf.Interval(tPowerSnapshotInterval))
 	if err != nil {
 		return errors.Wrap(err, "failed to build metrics")
 	}

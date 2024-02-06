@@ -11,6 +11,7 @@ import (
 
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/testing"
@@ -48,15 +49,15 @@ func GetDeviceInfo(ctx context.Context, args ...OptionalRecorderArg) *pb.DeviceI
 		ScreenRefreshRate:        util.GetScreenRefreshRate(ctx),
 	}
 
-	if path, err := SysfsBatteryPath(ctx); err == nil {
-		if val, err := LowBatteryShutdownPercent(ctx); err == nil {
+	if path, err := metrics.SysfsBatteryPath(ctx); err == nil {
+		if val, err := metrics.LowBatteryShutdownPercent(ctx); err == nil {
 			devInfo.BatteryShutdownPercent = new(float64)
 			*devInfo.BatteryShutdownPercent = val
 		} else {
 			testing.ContextLog(ctx, "Invalid battery_shutdown_percent: ", err)
 		}
 
-		if val, err := ReadBatteryDesignEnergySize(ctx, path); err == nil {
+		if val, err := metrics.ReadBatteryDesignEnergySize(ctx, path); err == nil {
 			devInfo.BatterySize = new(float64)
 			*devInfo.BatterySize = val
 		} else {

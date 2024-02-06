@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package metrics
 
 import (
 	"context"
@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -65,11 +66,11 @@ func computeCpuidleStateFiles(ctx context.Context) (map[string][]cpuidleTimeFile
 				continue
 			}
 
-			stateName, err := readFirstLine(ctx, path.Join(cpuDir, cpuidle.Name(), "name"))
+			stateName, err := util.ReadFirstLine(ctx, path.Join(cpuDir, cpuidle.Name(), "name"))
 			if err != nil {
 				return nil, 0, errors.Wrap(err, "failed to read cpuidle name")
 			}
-			latency, err := readFirstLine(ctx, path.Join(cpuDir, cpuidle.Name(), "latency"))
+			latency, err := util.ReadFirstLine(ctx, path.Join(cpuDir, cpuidle.Name(), "latency"))
 			if err != nil {
 				return nil, 0, errors.Wrap(err, "failed to read cpuidle latency")
 			}

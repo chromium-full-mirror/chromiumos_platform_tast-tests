@@ -13,7 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/async"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
@@ -56,7 +56,7 @@ type BatteryInfoTracker struct {
 // track a no-op. If skipPollingPower is set, then energy usage will be
 // estimated based on the beginning and end energy readings from the battery.
 func NewBatteryInfoTracker(ctx context.Context, skipPollingPower bool, metricPrefix string) (*BatteryInfoTracker, error) {
-	batteryPath, err := power.SysfsBatteryPath(ctx)
+	batteryPath, err := metrics.SysfsBatteryPath(ctx)
 	if err != nil {
 		// Some devices (e.g. chromeboxes) do not have the battery, but that's fine
 		// for now.
@@ -71,20 +71,20 @@ func NewBatteryInfoTracker(ctx context.Context, skipPollingPower bool, metricPre
 		return nil, nil
 	}
 
-	chargeFullDesign, err := power.ReadBatteryProperty(ctx, batteryPath, "charge_full_design")
+	chargeFullDesign, err := metrics.ReadBatteryProperty(ctx, batteryPath, "charge_full_design")
 	if err != nil {
 		return nil, err
 	}
-	voltageMinDesign, err := power.ReadBatteryProperty(ctx, batteryPath, "voltage_min_design")
+	voltageMinDesign, err := metrics.ReadBatteryProperty(ctx, batteryPath, "voltage_min_design")
 	if err != nil {
 		return nil, err
 	}
-	voltageMaxDesign, err := power.ReadBatteryProperty(ctx, batteryPath, "voltage_max_design")
+	voltageMaxDesign, err := metrics.ReadBatteryProperty(ctx, batteryPath, "voltage_max_design")
 	if err != nil {
 		// Change to raise error if voltageMaxDesign is later used.
 		testing.ContextLog(ctx, "Battery does not have field: voltage_max_design")
 	}
-	cycleCount, err := power.ReadBatteryIntProperty(ctx, batteryPath, "cycle_count")
+	cycleCount, err := metrics.ReadBatteryIntProperty(ctx, batteryPath, "cycle_count")
 	if err != nil {
 		// Change to raise error if cycleCount is later used.
 		testing.ContextLog(ctx, "Battery does not have field: cycle_count")
@@ -135,15 +135,15 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 		return errors.New("Battery info tracker already started")
 	}
 
-	chargeNow, err := power.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
+	chargeNow, err := metrics.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
 	if err != nil {
 		return err
 	}
-	capacityNow, err := power.ReadBatteryCapacity(ctx, t.batteryPath)
+	capacityNow, err := metrics.ReadBatteryCapacity(ctx, t.batteryPath)
 	if err != nil {
 		return err
 	}
-	energyNow, err := power.ReadBatteryEnergy(ctx, t.batteryPath)
+	energyNow, err := metrics.ReadBatteryEnergy(ctx, t.batteryPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read start battery energy")
 	}
@@ -171,7 +171,7 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 				close(t.collectingErr)
 				return
 			case <-ticker.C:
-				watt, err := power.ReadSystemPower(ctx, t.batteryPath)
+				watt, err := metrics.ReadSystemPower(ctx, t.batteryPath)
 				if err != nil {
 					t.collectingErr <- errors.Wrapf(err, "failed to read system power from %q", t.batteryPath)
 					return
@@ -180,7 +180,7 @@ func (t *BatteryInfoTracker) Start(ctx context.Context, timeZero time.Time) erro
 				t.energy += watt * tNew.Sub(tOld).Seconds()
 				tOld = tNew
 
-				chargeLeft, err := power.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
+				chargeLeft, err := metrics.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
 				if err != nil {
 					t.collectingErr <- errors.Wrapf(err, "failed to read system property from %q", t.batteryPath)
 					return
@@ -213,15 +213,15 @@ func (t *BatteryInfoTracker) Stop(ctx context.Context) error {
 		return errors.New("Battery info tracker has not started")
 	}
 
-	chargeNow, err := power.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
+	chargeNow, err := metrics.ReadBatteryProperty(ctx, t.batteryPath, "charge_now")
 	if err != nil {
 		return err
 	}
-	capacityNow, err := power.ReadBatteryCapacity(ctx, t.batteryPath)
+	capacityNow, err := metrics.ReadBatteryCapacity(ctx, t.batteryPath)
 	if err != nil {
 		return err
 	}
-	energyNow, err := power.ReadBatteryEnergy(ctx, t.batteryPath)
+	energyNow, err := metrics.ReadBatteryEnergy(ctx, t.batteryPath)
 	if err != nil {
 		return errors.Wrap(err, "failed to read battery energy")
 	}
@@ -245,7 +245,7 @@ func (t *BatteryInfoTracker) Stop(ctx context.Context) error {
 	select {
 	case err := <-t.collectingErr:
 		if err != nil {
-			// On boards like `drallion`, power.ReadSystemPower(ctx) could occasionally
+			// On boards like `drallion`, metrics.ReadSystemPower(ctx) could occasionally
 			// fail. Record the error to skip reporting battery info for such boards.
 			testing.ContextLog(ctx, "Energy collecting routine returned error: ", err)
 			testing.ContextLog(ctx, "Battery info will not be reported")

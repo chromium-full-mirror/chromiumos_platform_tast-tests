@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package metrics
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -73,7 +74,7 @@ func MapStringToBatteryStatus(statusStr string) (BatteryStatus, bool) {
 
 // ReadBatteryStatus returns the current battery status.
 func ReadBatteryStatus(ctx context.Context, devPath string) (BatteryStatus, error) {
-	statusStr, err := readFirstLine(ctx, path.Join(devPath, "status"))
+	statusStr, err := util.ReadFirstLine(ctx, path.Join(devPath, "status"))
 	if err != nil {
 		return BatteryStatusUnknown, errors.Errorf("%v lacks status attribute", devPath)
 	}
@@ -105,9 +106,9 @@ func ReadBatteryChargeNow(ctx context.Context, devPath string) (float64, error) 
 			// Return an invalid value.
 			return 0, err
 		}
-		voltage, err := readFloat64(ctx, path.Join(devPath, "voltage_min_design"))
+		voltage, err := util.ReadFloat64(ctx, path.Join(devPath, "voltage_min_design"))
 		if err != nil {
-			voltage, err = readFloat64(ctx, path.Join(devPath, "voltage_now"))
+			voltage, err = util.ReadFloat64(ctx, path.Join(devPath, "voltage_now"))
 			if err != nil {
 				return 0., errors.Wrap(err, "failed to read both voltage_min_design and voltage_now")
 			}
@@ -185,9 +186,9 @@ func ReadBatteryEnergy(ctx context.Context, devPath string) (float64, error) {
 			return 0, errors.Wrapf(err, "failed to read energy from %v", devPath)
 		}
 
-		voltage, err := readFloat64(ctx, path.Join(devPath, "voltage_min_design"))
+		voltage, err := util.ReadFloat64(ctx, path.Join(devPath, "voltage_min_design"))
 		if err != nil {
-			voltage, err = readFloat64(ctx, path.Join(devPath, "voltage_now"))
+			voltage, err = util.ReadFloat64(ctx, path.Join(devPath, "voltage_now"))
 			if err != nil {
 				return 0., errors.Wrap(err, "failed to read both voltage_min_design and voltage_now")
 			}
@@ -203,11 +204,11 @@ func ReadBatteryEnergy(ctx context.Context, devPath string) (float64, error) {
 // If reading these attributes fails, this function returns non-nil error,
 // otherwise returns power consumption of the battery.
 func ReadSystemPower(ctx context.Context, devPath string) (float64, error) {
-	supplyVoltage, err := readFloat64(ctx, path.Join(devPath, "voltage_now"))
+	supplyVoltage, err := util.ReadFloat64(ctx, path.Join(devPath, "voltage_now"))
 	if err != nil {
 		return 0., errors.Wrap(err, "failed to read voltage_now")
 	}
-	supplyCurrent, err := readFloat64(ctx, path.Join(devPath, "current_now"))
+	supplyCurrent, err := util.ReadFloat64(ctx, path.Join(devPath, "current_now"))
 	if err != nil {
 		return 0., errors.Wrap(err, "failed to read current_now")
 	}
@@ -316,7 +317,7 @@ func ReadBatteryChargeSize(ctx context.Context, devPath string) (float64, error)
 // battery path, and return a float value.
 // The given file content should be an integer, and error will be returned otherwise.
 func ReadBatteryProperty(ctx context.Context, devPath, property string) (float64, error) {
-	content, err := readInt64(ctx, path.Join(devPath, property))
+	content, err := util.ReadInt64(ctx, path.Join(devPath, property))
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to read property %v from %v", property, devPath)
 	}
@@ -326,7 +327,7 @@ func ReadBatteryProperty(ctx context.Context, devPath, property string) (float64
 // ReadBatteryIntProperty reads the battery property file content from the given
 // battery path, and return an int value.
 func ReadBatteryIntProperty(ctx context.Context, devPath, property string) (int64, error) {
-	content, err := readInt64(ctx, path.Join(devPath, property))
+	content, err := util.ReadInt64(ctx, path.Join(devPath, property))
 	if err != nil {
 		return 0, errors.Wrapf(err, "failed to read property %v from %v", property, devPath)
 	}
@@ -346,7 +347,7 @@ func ListSysfsBatteryPaths(ctx context.Context) ([]string, error) {
 	var batteryPaths []string
 	for _, file := range files {
 		devPath := path.Join(sysfsPowerSupplyPath, file.Name())
-		supplyType, err := readFirstLine(ctx, path.Join(devPath, "type"))
+		supplyType, err := util.ReadFirstLine(ctx, path.Join(devPath, "type"))
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to read type of %v", devPath)
 		}
@@ -354,7 +355,7 @@ func ListSysfsBatteryPaths(ctx context.Context) ([]string, error) {
 			testing.ContextLogf(ctx, "%v is not a Battery", devPath)
 			continue
 		}
-		supplyScope, err := readFirstLine(ctx, path.Join(devPath, "scope"))
+		supplyScope, err := util.ReadFirstLine(ctx, path.Join(devPath, "scope"))
 		if err != nil && !os.IsNotExist(err) {
 			// Ignore NotExist error since /sys/class/power_supply/*/scope may not exist
 			return nil, errors.Wrapf(err, "failed to read scope of %v", devPath)

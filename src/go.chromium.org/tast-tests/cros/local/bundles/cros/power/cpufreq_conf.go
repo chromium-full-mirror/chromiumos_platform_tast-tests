@@ -11,7 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	localpower "go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -87,15 +87,15 @@ func CpufreqConf(ctx context.Context, s *testing.State) {
 	}
 
 	testChargeGovernor := func(charging bool, expectedGovernor string) error {
-		batteryPath, err := localpower.SysfsBatteryPath(ctx)
+		batteryPath, err := metrics.SysfsBatteryPath(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get battery path")
 		}
-		status, err := localpower.ReadBatteryStatus(ctx, batteryPath)
+		status, err := metrics.ReadBatteryStatus(ctx, batteryPath)
 		if err != nil {
 			return errors.Wrap(err, "failed to read battery status")
 		}
-		if (status != localpower.BatteryStatusDischarging) == charging {
+		if (status != metrics.BatteryStatusDischarging) == charging {
 			s.Logf("Charging status %q doesn't match charging=%t; not checking governor %q", status, charging, expectedGovernor)
 			return nil
 		}

@@ -27,7 +27,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/input"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -124,7 +124,7 @@ func ChromePIPEnergyAndPower(ctx context.Context, s *testing.State) {
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close(ctx)
 
-	timeline, err := perf.NewTimeline(ctx, power.TestMetrics())
+	timeline, err := perf.NewTimeline(ctx, metrics.TestMetrics())
 	if err != nil {
 		s.Fatal("Failed to build metrics: ", err)
 	}
@@ -248,6 +248,7 @@ func ChromePIPEnergyAndPower(ctx context.Context, s *testing.State) {
 	}
 
 	const timelineDuration = time.Minute
+	// GoBigSleepLint: sleep to let the device idle.
 	if err := testing.Sleep(ctx, timelineDuration); err != nil {
 		s.Fatalf("Failed to wait %v: %v", timelineDuration, err)
 	}

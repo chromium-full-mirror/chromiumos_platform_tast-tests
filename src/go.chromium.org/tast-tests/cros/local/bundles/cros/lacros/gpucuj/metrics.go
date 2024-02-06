@@ -19,7 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
-	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -479,10 +479,10 @@ func runHistogram(ctx context.Context, tconn *chrome.TestConn, tracer traceable,
 	}
 	sort.Strings(keys)
 
-	thermal := power.NewSysfsThermalMetrics()
+	thermal := pm.NewSysfsThermalMetrics()
 	thermal.Setup(ctx, "", "") // No prefix, we use our own naming scheme.
 
-	rapl, err := power.NewRAPLSnapshot()
+	rapl, err := pm.NewRAPLSnapshot()
 	if err != nil {
 		return errors.Wrap(err, "failed to get RAPL snapshot")
 	}
@@ -510,7 +510,7 @@ func runHistogram(ctx context.Context, tconn *chrome.TestConn, tracer traceable,
 	}
 
 	// `rapl` could be nil when not supported.
-	var raplv *power.RAPLValues
+	var raplv *pm.RAPLValues
 	if rapl != nil {
 		rd, err := rapl.DiffWithCurrentRAPL()
 		if err != nil {

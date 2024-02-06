@@ -28,7 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/testing"
@@ -195,7 +195,7 @@ type measuredValues struct {
 	networkWaitTime    float64
 	signInTime         float64
 	bootTime           float64
-	energyUsage        *power.RAPLValues
+	energyUsage        *metrics.RAPLValues
 	appKills           *arc.AppKills
 	diskStats          diskstats.DiskStatMap
 }
@@ -294,7 +294,7 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 	var networkWaitTimes []float64
 	var signInTimes []float64
 	var bootTimes []float64
-	var energyUsage []*power.RAPLValues
+	var energyUsage []*metrics.RAPLValues
 	var appKills []*arc.AppKills
 	var diskStats []diskstats.DiskStatMap
 
@@ -494,7 +494,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		sess.Stop()
 	}
 
-	energyBefore, err := power.NewRAPLSnapshot()
+	energyBefore, err := metrics.NewRAPLSnapshot()
 	if err != nil {
 		s.Error("Energy status is not available for this board")
 	}

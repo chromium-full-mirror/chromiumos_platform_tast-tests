@@ -13,7 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/audio"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -199,7 +199,7 @@ func PowerAudioPlaybackPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("CPU failed to cool down: ", err)
 	}
 
-	powerMetrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Interval(measureDuration))
+	powerMetrics, err := perf.NewTimeline(ctx, metrics.TestMetrics(), perf.Interval(measureDuration))
 	if err != nil {
 		s.Fatal("Failed to build metrics: ", err)
 	}

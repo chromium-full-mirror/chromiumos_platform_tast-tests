@@ -20,7 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/video/videovars"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/media/encoding"
-	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -952,7 +952,7 @@ func PlatformEncoding(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to construct the command line: ", err)
 	}
 
-	energy, raplErr := power.NewRAPLSnapshot()
+	energy, raplErr := pm.NewRAPLSnapshot()
 	if raplErr != nil || energy == nil {
 		s.Log("Energy consumption is not available for this board")
 	}
@@ -967,7 +967,7 @@ func PlatformEncoding(ctx context.Context, s *testing.State) {
 	}
 
 	timeDelta := time.Now().Sub(startTime)
-	var energyDiff *power.RAPLValues
+	var energyDiff *pm.RAPLValues
 	var energyErr error
 	if raplErr == nil && energy != nil {
 		if energyDiff, energyErr = energy.DiffWithCurrentRAPL(); energyErr != nil {

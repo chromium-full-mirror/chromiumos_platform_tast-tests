@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast-tests/cros/local/screenshot"
@@ -289,7 +290,7 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		testName:     testName,
 		optionalArgs: args,
 
-		dataSources: TestMetrics(),
+		dataSources: metrics.TestMetrics(),
 		isRecording: false,
 	}
 }

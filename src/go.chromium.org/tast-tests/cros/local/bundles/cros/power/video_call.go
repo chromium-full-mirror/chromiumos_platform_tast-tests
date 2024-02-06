@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 )
 
@@ -151,9 +152,9 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
 	r.RegisterMetrics(
-		power.NewVideoFpsMetrics(videoConn),
-		power.NewWebRTCMetrics(videoConn),
-		power.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
+		pm.NewVideoFpsMetrics(videoConn),
+		pm.NewWebRTCMetrics(videoConn),
+		pm.NewHistogramMetrics(bTconn, []string{"EventLatency.KeyPressed.TotalLatency"}),
 	)
 
 	if err := r.Cooldown(ctx); err != nil {

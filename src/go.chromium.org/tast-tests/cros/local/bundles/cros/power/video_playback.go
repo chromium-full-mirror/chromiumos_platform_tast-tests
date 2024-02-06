@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -431,7 +432,7 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
-	r.RegisterMetrics(power.NewVideoFpsMetrics(conn))
+	r.RegisterMetrics(pm.NewVideoFpsMetrics(conn))
 
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)

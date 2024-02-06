@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package metrics
 
 import (
 	"context"
@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,13 +38,13 @@ func ListSysfsThermalSensors(ctx context.Context) (map[string]string, error) {
 		}
 
 		devPath := path.Join(sysfsThermalPath, file.Name())
-		_, err := readInt64(ctx, path.Join(devPath, "temp"))
+		_, err := util.ReadInt64(ctx, path.Join(devPath, "temp"))
 		if err != nil {
 			testing.ContextLogf(ctx, "%v is not readable", devPath)
 			continue
 		}
 
-		name, err := readFirstLine(ctx, path.Join(devPath, "type"))
+		name, err := util.ReadFirstLine(ctx, path.Join(devPath, "type"))
 		if err != nil {
 			testing.ContextLogf(ctx, "%v is not readable", devPath)
 			continue
@@ -100,7 +101,7 @@ func (b *SysfsThermalMetrics) Setup(ctx context.Context, prefix, intervalName st
 
 		// Check if temperature sensor reading is enabled before creating the metric.
 		tempFile := path.Join(sensorPath, "temp")
-		if _, err := readInt64(ctx, tempFile); err == nil {
+		if _, err := util.ReadInt64(ctx, tempFile); err == nil {
 			perfMetric := perf.Metric{
 				Name:      prefix + cp.ThermalMetricType + metricName,
 				Unit:      cp.ThermalMetricTypeUnit,
@@ -128,7 +129,7 @@ func (b *SysfsThermalMetrics) SnapshotValues(ctx context.Context) (map[perf.Metr
 
 	for _, metric := range b.metrics {
 		tempFile := path.Join(metric.path, "temp")
-		temp, err := readInt64(ctx, tempFile)
+		temp, err := util.ReadInt64(ctx, tempFile)
 		if err != nil {
 			// Append an unrealistic number (-40C).
 			temp = -40.0

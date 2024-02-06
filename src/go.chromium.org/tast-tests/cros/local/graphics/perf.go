@@ -27,6 +27,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/media/cpu"
 	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
+
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
@@ -36,7 +38,7 @@ import (
 // errorOnNonDischarging returns a proper error when the battery is not discharging.
 // If no discharging is expected, then returns nil.
 func errorOnNonDischarging(ctx context.Context, status *pb.Status) error {
-	if _, err := power.SysfsBatteryPath(ctx); err != nil {
+	if _, err := pm.SysfsBatteryPath(ctx); err != nil {
 		testing.ContextLog(ctx, "This device doesn't have a battery, skip collecting power consumption")
 		return nil
 	}
@@ -655,9 +657,9 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 		return errorOnNonDischarging(ctx, status)
 	}
 
-	// We don't use power.SysfsBatteryMetrics because we want to reject zero
+	// We don't use pm.SysfsBatteryMetrics because we want to reject zero
 	// readings below.
-	battery, err := power.SysfsBatteryPath(ctx)
+	battery, err := pm.SysfsBatteryPath(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to find a battery")
 	}
@@ -678,7 +680,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 			return errors.Wrap(err, "error sleeping")
 		}
 
-		power, err := power.ReadSystemPower(ctx, battery)
+		power, err := pm.ReadSystemPower(ctx, battery)
 		if err != nil {
 			return err
 		}
@@ -730,9 +732,9 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 		return errorOnNonDischarging(ctx, status)
 	}
 
-	// We don't use power.SysfsBatteryMetrics because we want to reject zero
+	// We don't use pm.SysfsBatteryMetrics because we want to reject zero
 	// readings below.
-	battery, err := power.SysfsBatteryPath(ctx)
+	battery, err := pm.SysfsBatteryPath(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to find a battery")
 	}
@@ -773,7 +775,7 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 			return errors.Wrap(err, "error sleeping")
 		}
 
-		power, err := power.ReadSystemPower(ctx, battery)
+		power, err := pm.ReadSystemPower(ctx, battery)
 		if err != nil {
 			return err
 		}

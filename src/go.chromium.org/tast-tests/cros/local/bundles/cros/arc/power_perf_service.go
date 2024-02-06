@@ -18,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	arcpb "go.chromium.org/tast-tests/cros/services/cros/arc"
 
@@ -118,15 +118,15 @@ func (c *PowerPerfService) Setup(ctx context.Context, _ *emptypb.Empty) (*emptyp
 	c.appendCleanup(cleanupPower)
 
 	discharge := false
-	if batteryPath, err := power.SysfsBatteryPath(ctx); err == nil {
+	if batteryPath, err := pm.SysfsBatteryPath(ctx); err == nil {
 		discharge = true
 		// There is a battery, make sure it's charged before starting the test.
 		testing.ContextLog(ctx, "Waiting for battery to charge")
-		if err := power.WaitForCharge(ctx, batteryPath, 0.75, 30*time.Minute); err != nil {
+		if err := pm.WaitForCharge(ctx, batteryPath, 0.75, 30*time.Minute); err != nil {
 			return nil, err
 		}
 		testing.ContextLog(ctx, "Battery now charged")
-	} else if errors.Is(err, power.ErrNoBattery) {
+	} else if errors.Is(err, pm.ErrNoBattery) {
 		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
 		testing.ContextLog(ctx, "Unable to find battery, do not force discharge: ", err)
 	} else {
@@ -165,9 +165,9 @@ func (c *PowerPerfService) StartMeasurement(ctx context.Context, _ *emptypb.Empt
 	}
 
 	c.metrics = []perf.TimelineDatasource{
-		power.NewCpuidleStateMetrics(),
-		power.NewPackageCStatesMetrics(),
-		power.NewRAPLPowerMetrics(),
+		pm.NewCpuidleStateMetrics(),
+		pm.NewPackageCStatesMetrics(),
+		pm.NewRAPLPowerMetrics(),
 	}
 	for _, metric := range c.metrics {
 		if err := metric.Setup(ctx, "", ""); err != nil {

@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -245,7 +245,7 @@ func bootARCCachePerf(ctx context.Context, s *testing.State, mode cacheMode) (ti
 		return 0, 0, errors.Wrap(err, "failed to wait CPU cool down")
 	}
 
-	energyBefore, err := power.NewRAPLSnapshot()
+	energyBefore, err := metrics.NewRAPLSnapshot()
 	if err != nil {
 		s.Log("Energy status is not available for this board")
 	}

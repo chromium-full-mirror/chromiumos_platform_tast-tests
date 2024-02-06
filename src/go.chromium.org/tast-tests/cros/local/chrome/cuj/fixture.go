@@ -37,6 +37,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/mlbenchmark"
 	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -1521,16 +1522,16 @@ func chargeBatteryCapacity(ctx context.Context, minimumBatteryCapacity float64, 
 	if err := setup.AllowBatteryCharging(ctx); err != nil {
 		return err
 	}
-	devPath, err := power.SysfsBatteryPath(ctx)
+	devPath, err := pm.SysfsBatteryPath(ctx)
 	if err != nil {
 		return err
 	}
-	lowBatteryShutdownPercent, err := power.LowBatteryShutdownPercent(ctx)
+	lowBatteryShutdownPercent, err := pm.LowBatteryShutdownPercent(ctx)
 	if err != nil {
 		return err
 	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		capacity, err := power.ReadBatteryCapacity(ctx, devPath)
+		capacity, err := pm.ReadBatteryCapacity(ctx, devPath)
 		if err != nil {
 			return errors.Wrap(err, "failed to get battery capacity")
 		}
@@ -1553,7 +1554,7 @@ func ChargeBatteryCapacityBeforePowerTest(ctx context.Context) error {
 		// Wait for battery to be charged.
 		err := chargeBatteryCapacity(ctx, minimumBatteryCapacity, chargeBatteryTestPollOpt)
 		if err != nil {
-			if errors.Is(err, power.ErrNoBattery) {
+			if errors.Is(err, pm.ErrNoBattery) {
 				return errors.Wrap(err, "battery not found")
 			}
 			return errors.Wrap(err, "battery failed to be charged to minimum level")

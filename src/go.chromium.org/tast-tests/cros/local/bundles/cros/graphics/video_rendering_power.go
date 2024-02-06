@@ -16,7 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -142,7 +142,7 @@ func VideoRenderingPower(ctx context.Context, s *testing.State) {
 	// Setup up the metrics for recording.
 	metrics, err := perf.NewTimeline(
 		ctx,
-		power.TestMetrics(),
+		metrics.TestMetrics(),
 		perf.Interval(checkInterval),
 	)
 	if err != nil {

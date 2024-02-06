@@ -15,7 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -189,7 +189,7 @@ func ReportMemoryMetrics(ctx context.Context, p *perf.Values, memoryChannel chan
 }
 
 // ReportPowerDiffMetrics reports changes since initial rapl snapshot.
-func ReportPowerDiffMetrics(ctx context.Context, p *perf.Values, raplEnergyBefore *power.RAPLSnapshot, testDuration int) error {
+func ReportPowerDiffMetrics(ctx context.Context, p *perf.Values, raplEnergyBefore *metrics.RAPLSnapshot, testDuration int) error {
 	energyDiff, err := raplEnergyBefore.DiffWithCurrentRAPL()
 	if err != nil {
 		return errors.Wrap(err, "failed to get RAPL power usage difference")

@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -129,7 +130,7 @@ func PNPDirectOffUSBCameraPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get usb camera list: ", err)
 	}
 
-	perfTimeline, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Interval(2*time.Second))
+	perfTimeline, err := perf.NewTimeline(ctx, metrics.TestMetrics(), perf.Interval(2*time.Second))
 	if err != nil {
 		s.Fatal("Failed to build metrics timeline: ", err)
 	}

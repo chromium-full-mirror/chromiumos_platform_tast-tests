@@ -11,7 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -57,9 +57,9 @@ func SetupCheck(ctx context.Context, s *testing.State) {
 	defer cleanup(cleanupCtx)
 
 	discharge := false
-	if _, err := power.SysfsBatteryPath(ctx); err == nil {
+	if _, err := pm.SysfsBatteryPath(ctx); err == nil {
 		discharge = true
-	} else if errors.Is(err, power.ErrNoBattery) {
+	} else if errors.Is(err, pm.ErrNoBattery) {
 		// If it's ErrNoBattery, leave dischargeMode at NoBatteryDischarge.
 		testing.ContextLog(ctx, "Unable to find battery, do not force discharge: ", err)
 	} else {

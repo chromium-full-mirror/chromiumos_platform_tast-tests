@@ -15,7 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/camera/arcapp"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	powersetup "go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -198,7 +198,7 @@ func testPreview(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn,
 		return errors.Wrap(err, "failed to set fps")
 	}
 
-	powerMetrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Prefix(prefixPreview), perf.Interval(iterationDuration))
+	powerMetrics, err := perf.NewTimeline(ctx, pm.TestMetrics(), perf.Prefix(prefixPreview), perf.Interval(iterationDuration))
 	if err != nil {
 		return errors.Wrap(err, "failed to build metrics")
 	}
@@ -283,7 +283,7 @@ func testRecording(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 		return errors.Wrap(err, "failed to set fps")
 	}
 
-	powerMetrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Prefix(prefixRecording), perf.Interval(iterationDuration))
+	powerMetrics, err := perf.NewTimeline(ctx, pm.TestMetrics(), perf.Prefix(prefixRecording), perf.Interval(iterationDuration))
 	if err != nil {
 		return errors.Wrap(err, "failed to build metrics")
 	}

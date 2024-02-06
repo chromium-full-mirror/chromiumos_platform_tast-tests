@@ -21,7 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/disk"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -141,7 +141,7 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 		return 0, errors.Wrap(err, "failed to install apk app")
 	}
 
-	metrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Prefix(config.Prefix+"_"), perf.Interval(tPowerSnapshotInterval))
+	metrics, err := perf.NewTimeline(ctx, metrics.TestMetrics(), perf.Prefix(config.Prefix+"_"), perf.Interval(tPowerSnapshotInterval))
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to build metrics")
 	}

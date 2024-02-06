@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package util
 
 import (
 	"bufio"
@@ -15,10 +15,10 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// readFirstLine reads the first line from a file.
+// ReadFirstLine reads the first line from a file.
 // Line feed character will be removed to ease converting the string
 // into other types.
-func readFirstLine(ctx context.Context, filePath string) (string, error) {
+func ReadFirstLine(ctx context.Context, filePath string) (string, error) {
 	var result string
 	err := action.Retry(3, func(ctx context.Context) error {
 		file, err := os.Open(filePath)
@@ -40,18 +40,18 @@ func readFirstLine(ctx context.Context, filePath string) (string, error) {
 	return result, err
 }
 
-// readFloat64 reads a line from a file and converts it into float64.
-func readFloat64(ctx context.Context, filePath string) (float64, error) {
-	str, err := readFirstLine(ctx, filePath)
+// ReadFloat64 reads a line from a file and converts it into float64.
+func ReadFloat64(ctx context.Context, filePath string) (float64, error) {
+	str, err := ReadFirstLine(ctx, filePath)
 	if err != nil {
 		return 0., err
 	}
 	return strconv.ParseFloat(str, 64)
 }
 
-// readInt64 reads a line from a file and converts it into int64.
-func readInt64(ctx context.Context, filePath string) (int64, error) {
-	str, err := readFirstLine(ctx, filePath)
+// ReadInt64 reads a line from a file and converts it into int64.
+func ReadInt64(ctx context.Context, filePath string) (int64, error) {
+	str, err := ReadFirstLine(ctx, filePath)
 	if err != nil {
 		return 0, err
 	}

@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/encoding"
 	"go.chromium.org/tast-tests/cros/local/media/videotype"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -196,7 +197,7 @@ func PowerVideoEncodePerf(ctx context.Context, s *testing.State) {
 	}
 
 	// Setup test metrics.
-	metrics, err := perf.NewTimeline(ctx, power.TestMetrics(), perf.Interval(pvepIterationDuration))
+	metrics, err := perf.NewTimeline(ctx, metrics.TestMetrics(), perf.Interval(pvepIterationDuration))
 	if err != nil {
 		s.Fatal("Failed to build metrics: ", err)
 	}

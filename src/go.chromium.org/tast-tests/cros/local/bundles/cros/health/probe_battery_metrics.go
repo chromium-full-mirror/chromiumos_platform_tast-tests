@@ -12,6 +12,8 @@ import (
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -130,7 +132,7 @@ func validateBatteryData(ctx context.Context, battery *batteryInfo) error {
 	}
 
 	// Battery status changes from time to time, so we only check if the status string is expected or not.
-	_, ok := power.MapStringToBatteryStatus(battery.Status)
+	_, ok := metrics.MapStringToBatteryStatus(battery.Status)
 	if !ok {
 		return errors.Errorf("status %v is not expected", battery.Status)
 	}

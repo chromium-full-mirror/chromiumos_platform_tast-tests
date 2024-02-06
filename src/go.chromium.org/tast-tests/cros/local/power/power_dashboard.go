@@ -10,6 +10,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
 
 	"go.chromium.org/tast/core/errors"
@@ -27,8 +28,8 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 		BacklightNonlinearPercent: nonlinear,
 	}
 
-	if batteryPath, err := SysfsBatteryPath(ctx); err == nil {
-		batteryDesignSize, err := ReadBatteryChargeDesignSize(ctx, batteryPath)
+	if batteryPath, err := pm.SysfsBatteryPath(ctx); err == nil {
+		batteryDesignSize, err := pm.ReadBatteryChargeDesignSize(ctx, batteryPath)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to get battery charge design size: ", err)
 		} else {
@@ -36,7 +37,7 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 			*metrics.BatteryChargeDesignSize = batteryDesignSize
 		}
 
-		batterySize, err := ReadBatteryChargeSize(ctx, batteryPath)
+		batterySize, err := pm.ReadBatteryChargeSize(ctx, batteryPath)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to get battery charge size: ", err)
 		} else {
@@ -44,7 +45,7 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 			*metrics.BatteryChargeSize = batterySize
 		}
 
-		batteryEnergySize, err := ReadBatteryDesignEnergySize(ctx, batteryPath)
+		batteryEnergySize, err := pm.ReadBatteryDesignEnergySize(ctx, batteryPath)
 		if err != nil {
 			testing.ContextLog(ctx, "Failed to get battery design energy size: ", err)
 		} else {
@@ -53,7 +54,7 @@ func CollectOneTimeMetrics(ctx context.Context) *pb.OneTimeMetrics {
 		}
 	}
 
-	lowBatteryShutdownPercent, err := LowBatteryShutdownPercent(ctx)
+	lowBatteryShutdownPercent, err := pm.LowBatteryShutdownPercent(ctx)
 	if err != nil {
 		testing.ContextLog(ctx, "Failed to read low battery shut down percent: ", err)
 	} else {

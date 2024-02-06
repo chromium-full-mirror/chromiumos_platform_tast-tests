@@ -13,8 +13,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -52,28 +52,28 @@ func setChargeState(ctx context.Context, s chargeState) error {
 // SetBatteryDischarge forces the battery to discharge. This will fail if the
 // remaining battery charge is lower than lowBatteryCutoff.
 func SetBatteryDischarge(ctx context.Context, expectedMaxCapacityDischarge float64) (CleanupCallback, error) {
-	shutdownCutoff, err := power.LowBatteryShutdownPercent(ctx)
+	shutdownCutoff, err := metrics.LowBatteryShutdownPercent(ctx)
 	if err != nil {
 		return nil, err
 	}
 	lowBatteryCutoff := shutdownCutoff + expectedMaxCapacityDischarge
-	devPath, err := power.SysfsBatteryPath(ctx)
+	devPath, err := metrics.SysfsBatteryPath(ctx)
 	if err != nil {
 		return nil, err
 	}
-	capacity, err := power.ReadBatteryCapacity(ctx, devPath)
+	capacity, err := metrics.ReadBatteryCapacity(ctx, devPath)
 	if err != nil {
 		return nil, err
 	}
-	energy, err := power.ReadBatteryEnergy(ctx, devPath)
+	energy, err := metrics.ReadBatteryEnergy(ctx, devPath)
 	if err != nil {
 		return nil, err
 	}
-	status, err := power.ReadBatteryStatus(ctx, devPath)
+	status, err := metrics.ReadBatteryStatus(ctx, devPath)
 	if err != nil {
 		return nil, err
 	}
-	if status == power.BatteryStatusDischarging {
+	if status == metrics.BatteryStatusDischarging {
 		testing.ContextLog(ctx, "WARNING Battery is already discharging")
 	}
 
@@ -94,11 +94,11 @@ func SetBatteryDischarge(ctx context.Context, expectedMaxCapacityDischarge float
 	return func(ctx context.Context) error {
 		dischargePercent := 0.0
 		dischargeWh := 0.0
-		capacityAfterTest, err := power.ReadBatteryCapacity(ctx, devPath)
+		capacityAfterTest, err := metrics.ReadBatteryCapacity(ctx, devPath)
 		if err == nil {
 			dischargePercent = capacity - capacityAfterTest
 		}
-		energyAfterTest, err := power.ReadBatteryEnergy(ctx, devPath)
+		energyAfterTest, err := metrics.ReadBatteryEnergy(ctx, devPath)
 		if err == nil {
 			dischargeWh = energy - energyAfterTest
 		}

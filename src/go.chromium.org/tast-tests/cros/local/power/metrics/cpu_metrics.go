@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package power
+package metrics
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
+	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -66,7 +67,7 @@ func (c *ProcfsCPUMetrics) Start(ctx context.Context) error {
 // Therefore, a reported CPU load value of 1.0 indicates 100% CPU usage on all
 // CPUs.
 func readJiffies(ctx context.Context) (CPUUsageJiffies, error) {
-	line, err := readFirstLine(ctx, "/proc/stat")
+	line, err := util.ReadFirstLine(ctx, "/proc/stat")
 	if err != nil {
 		return CPUUsageJiffies{}, err
 	}
