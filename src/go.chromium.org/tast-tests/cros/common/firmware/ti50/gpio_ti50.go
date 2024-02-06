@@ -139,4 +139,8 @@ const (
 	// I2cTi50Smbus is one of the I2C busses on which Ti50 is host, (should use alias, waiting
 	// for OpenTitanTool support).
 	I2cTi50Smbus I2cBusName = "I2C3"
+	// I2cPAC1Bus is the I2C bus for the PAC195x chip.
+	I2cPAC1Bus I2cBusName = "PAC1"
+	// I2cPAC2Bus is the I2C bus for the second PAC195x chip on the OpenTitanShield.
+	I2cPAC2Bus I2cBusName = "PAC2"
 )

@@ -708,6 +708,32 @@ const (
 
 	// OpenTitanShieldShuntOhms is the resistance of the shunt resistor.
 	OpenTitanShieldShuntOhms = 0.5
+
+	// H1ShieldShuntOhms is the resistance of the shunt resistor.
+	H1ShieldShuntOhms = 0.5
+)
+
+// PACAddr is the hex string of the 8-bit PAC195x address.
+type PACAddr string
+
+const (
+	// PACVSense1 is the address for Vsense1.
+	PACVSense1 PACAddr = "0b"
+
+	// PACVSense2 is the address for Vsense2.
+	PACVSense2 PACAddr = "0c"
+
+	// PACVSense3 is the address for Vsense3.
+	PACVSense3 PACAddr = "0d"
+
+	// PACVSense4 is the address for Vsense4.
+	PACVSense4 PACAddr = "0e"
+
+	// OpenTitanVCC The Open Titan Shield uses Vsense3 to measure VCC power.
+	OpenTitanVCC PACAddr = PACVSense3
+
+	// H1VDDIOM The H1 Shield uses Vsense3 to measure VDDIOM power.
+	H1VDDIOM PACAddr = PACVSense3
 )
 
 // ReadGscTotalMilliAmps measures the current consumed by the GSC across all power rails.
@@ -716,6 +742,8 @@ func (h DevboardHelper) ReadGscTotalMilliAmps(ctx context.Context) float32 {
 		return h.readGscTotalMilliAmpsDtShield(ctx)
 	} else if h.TestbedType == ti50.GscOTShield {
 		return h.readGscTotalMilliAmpsOtShield(ctx)
+	} else if h.TestbedType == ti50.GscH1Shield {
+		return h.readGscTotalMilliAmpsH1Shield(ctx)
 	} else {
 		h.Fatalf("current measurement not implemented for: %s", h.TestbedType)
 		return 0.0
@@ -734,14 +762,14 @@ func (h DevboardHelper) readGscTotalMilliAmpsDtShield(ctx context.Context) float
 	return float32(reading) * Ina231ShuntLsbVolts / DauntlessShieldShuntOhms * 1000.0
 }
 
-func (h DevboardHelper) readGscTotalMilliAmpsOtShield(ctx context.Context) float32 {
+func (h DevboardHelper) readGscTotalMilliAmpsPac195x(ctx context.Context, bus ti50.I2cBusName, addr PACAddr, shuntOhms float32) float32 {
 	// Tell the chip to present snapshot of measurement values in its registers.
-	_, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", "PAC1", "raw-write", "--hexdata=1f")
+	_, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", string(bus), "raw-write", "--hexdata=1f")
 	if err != nil {
 		h.Fatalf("i2c error: %s", err)
 	}
-	// Read Vsense channel three
-	output, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", "PAC1", "raw-write-read", "--hexdata=0d", "-n2")
+	// Read the specified Vsense address.
+	output, err := h.OpenTitanToolCommand(ctx, "i2c", "--bus", string(bus), "raw-write-read", "--hexdata="+string(addr), "-n2")
 	if err != nil {
 		h.Fatalf("i2c error: %s", err)
 	}
@@ -749,5 +777,13 @@ func (h DevboardHelper) readGscTotalMilliAmpsOtShield(ctx context.Context) float
 	if err != nil {
 		h.Fatalf("decoding response '%s' from INA231: %v", output["hexdata"].(string), err)
 	}
-	return float32(reading) * Pac195xShuntLsbVolts / OpenTitanShieldShuntOhms * 1000.0
+	return float32(reading) * Pac195xShuntLsbVolts / shuntOhms * 1000.0
+}
+
+func (h DevboardHelper) readGscTotalMilliAmpsOtShield(ctx context.Context) float32 {
+	return h.readGscTotalMilliAmpsPac195x(ctx, ti50.I2cPAC1Bus, OpenTitanVCC, OpenTitanShieldShuntOhms)
+}
+
+func (h DevboardHelper) readGscTotalMilliAmpsH1Shield(ctx context.Context) float32 {
+	return h.readGscTotalMilliAmpsPac195x(ctx, ti50.I2cPAC1Bus, H1VDDIOM, H1ShieldShuntOhms)
 }
