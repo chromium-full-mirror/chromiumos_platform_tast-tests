@@ -15,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
+	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast-tests/cros/services/cros/inputs"
 	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
@@ -26,7 +27,8 @@ import (
 )
 
 type bootupTimes struct {
-	bootType string
+	bootType   string
+	tabletMode bool
 }
 
 const (
@@ -53,24 +55,35 @@ func init() {
 		Vars: []string{"servo",
 			"platform.BootupTimes.bootTime",
 			"platform.BootupTimes.cbmemTimeout",
-			"platform.mode", // Optional. Expecting "tablet". By default platform.mode will be "clamshell".
 		},
 		Params: []testing.Param{{
 			Name:      "reboot",
 			Val:       bootupTimes{bootType: reboot},
 			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
+		}, {
+			Name:      "reboot_tablet_mode",
+			Val:       bootupTimes{bootType: reboot, tabletMode: true},
+			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
-			Name:    "vt2_reboot",
-			Val:     bootupTimes{bootType: vt2Reboot},
-			Timeout: 5 * time.Minute,
+			Name:      "vt2_reboot",
+			Val:       bootupTimes{bootType: vt2Reboot},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
-			Name:    "lid_close_open",
-			Val:     bootupTimes{bootType: lidCloseOpen},
-			Timeout: 5 * time.Minute,
+			Name:      "lid_close_open",
+			Val:       bootupTimes{bootType: lidCloseOpen},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
 			Name:      "power_button",
 			Val:       bootupTimes{bootType: powerButton},
+			Timeout:   5 * time.Minute,
+			ExtraAttr: []string{"group:intel-nda"},
+		}, {
+			Name:      "power_button_tablet_mode",
+			Val:       bootupTimes{bootType: powerButton, tabletMode: true},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
@@ -78,11 +91,13 @@ func init() {
 			Val:               bootupTimes{bootType: bootFromS5},
 			Timeout:           5 * time.Minute,
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+			ExtraAttr:         []string{"group:intel-nda"},
 		}, {
 			Name:              "refresh_power",
 			Val:               bootupTimes{bootType: refreshPower},
 			Timeout:           5 * time.Minute,
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
+			ExtraAttr:         []string{"group:intel-nda"},
 		}},
 	})
 }
@@ -124,28 +139,15 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 	}
 	defer pxy.Close(ctx)
 
-	// Get the initial tablet_mode_angle settings to restore at the end of test.
-	re := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
-	out, err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output()
-	if err != nil {
-		s.Fatal("Failed to retrieve tablet_mode_angle settings: ", err)
-	}
-	m := re.FindSubmatch(out)
-	if len(m) != 3 {
-		s.Fatalf("Failed to get initial tablet_mode_angle settings: got submatches %+v", m)
-	}
-	initLidAngle := m[1]
-	initHys := m[2]
-
-	defaultMode := "clamshell"
-	if mode, ok := s.Var("platform.mode"); ok {
-		defaultMode = mode
+	tmc := &tabletmode.ConvertibleModeControl{}
+	if err := tmc.InitControl(ctx, dut); err != nil {
+		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
 
-	if defaultMode == "tablet" {
-		// Set tabletModeAngle to 0 to force the DUT into tablet mode.
+	if btType.tabletMode {
+		// Force DUT into tablet mode.
 		testing.ContextLog(ctx, "Put DUT into tablet mode")
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(); err != nil {
+		if err := tmc.ForceTabletMode(ctx); err != nil {
 			s.Fatal("Failed to set DUT into tablet mode: ", err)
 		}
 	}
@@ -175,8 +177,9 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 	}
 	// Stop tlsdated, that makes sure nobody will touch the RTC anymore, and also creates a sync-rtc bootstat file.
 	if err := dut.Conn().CommandContext(ctx, "stop", "tlsdated").Run(); err != nil {
-		s.Fatal("Failed to stop tlsdated")
+		s.Fatal("Failed to stop tlsdated: ", err)
 	}
+	defer dut.Conn().CommandContext(ctx, "start", "tlsdated").Run()
 
 	// Undo the effect of enabling bootchart. This cleanup can also be performed (becomes a no-op) if bootchart is not enabled.
 	defer func() {
@@ -194,8 +197,9 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 			s.Log("Error in disabling bootchart: ", err)
 		}
 
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", string(initLidAngle), string(initHys)).Run(); err != nil {
-			s.Fatal("Failed to restore tablet_mode_angle to the original settings: ", err)
+		testing.ContextLog(ctx, "Resetting tabletmode")
+		if err := tmc.Reset(ctx); err != nil {
+			s.Fatal("Failed to restore tabletmode to the original settings: ", err)
 		}
 
 	}()
@@ -203,7 +207,7 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 	// Cleanup.
 	defer func(ctx context.Context) {
 		s.Log("Performing clean up")
-		if err := powerNormalPress(ctx, dut, pxy); err != nil {
+		if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
 			s.Error("Failed to press power button: ", err)
 		}
 	}(ctx)
@@ -234,7 +238,7 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to open lid: ", err)
 		}
 		if err := dut.WaitConnect(ctx); err != nil {
-			if err := powerNormalPress(ctx, dut, pxy); err != nil {
+			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
 				s.Fatal("Failed to press power button: ", err)
 			}
 		}
@@ -249,7 +253,7 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		if err := dut.WaitUnreachable(ctx); err != nil {
 			s.Fatal("Failed to shutdown: ", err)
 		}
-		if err := powerNormalPress(ctx, dut, pxy); err != nil {
+		if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
 			s.Fatal("Failed to press power button: ", err)
 		}
 	} else if btType.bootType == bootFromS5 {
@@ -258,8 +262,9 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		}
 		// Use the ec command here instead of power_key, because servo sleeps before the command returns
 		if err := pxy.Servo().RunECCommand(ctx, "powerbtn 8500"); err != nil {
-			s.Fatal("Unable to power off: ", err)
+			s.Fatal("Failed to press power button: ", err)
 		}
+
 		if err := waitForS0State(ctx, pxy); err != nil {
 			s.Fatal("Failed to wait for S0 state: ", err)
 		}
@@ -278,7 +283,7 @@ func BootupTimes(ctx context.Context, s *testing.State) {
 		}
 
 		if err := dut.WaitUnreachable(ctx); err != nil {
-			if err := powerNormalPress(ctx, dut, pxy); err != nil {
+			if err := powercontrol.PowerOntoDUT(ctx, pxy, dut); err != nil {
 				s.Fatal("Failed to press power button: ", err)
 			}
 		}
@@ -343,14 +348,32 @@ func verifyCBMem(ctx context.Context, dut *dut.DUT, cbmemTimeout float64) error 
 	if err != nil {
 		return errors.Wrap(err, "failed to execute cbmem command")
 	}
+	timeStampPattern := regexp.MustCompile(`timestamp\s+([\d,]+)`)
+
+	timeStampMatch := timeStampPattern.FindStringSubmatch(string(cbmemOutput))
+	timeStampValue := ""
+	if len(timeStampMatch) > 1 {
+		timeStampValue = strings.Replace(timeStampMatch[1], ",", "", -1)
+	}
+	timeStamp, err := strconv.ParseFloat(timeStampValue, 8)
+	if err != nil {
+		return errors.Wrap(err, "failed to convert string value to floating point value")
+	}
+	timeStamp = timeStamp / 1000000
+
 	cbmemPattern := regexp.MustCompile(`Total Time: (.*)`)
 	match := cbmemPattern.FindStringSubmatch(string(cbmemOutput))
 	cbmemTotalTime := ""
 	if len(match) > 1 {
 		cbmemTotalTime = strings.Replace(match[1], ",", "", -1)
 	}
-	cbmemTime, _ := strconv.ParseFloat(cbmemTotalTime, 8)
-	cbmemTime = cbmemTime / 1000000
+	totalCbmemTime, err := strconv.ParseFloat(cbmemTotalTime, 8)
+	if err != nil {
+		return errors.Wrap(err, "failed to convert string value to floating point value")
+	}
+	totalCbmemTime = totalCbmemTime / 1000000
+
+	cbmemTime := totalCbmemTime - timeStamp
 	if cbmemTime > cbmemTimeout {
 		return errors.Wrapf(err, "failed to validate cbmem time, actual cbmem time is more than expected cbmem time, want %v; got %v", cbmemTimeout, cbmemTime)
 	}
@@ -375,32 +398,13 @@ func getBootPerf(ctx context.Context, dut *dut.DUT, rpcHint *testing.RPCHint, bt
 	return nil
 }
 
-// powerNormalPress wakes up DUT by normal pressing power button.
-func powerNormalPress(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error {
-	testing.ContextLog(ctx, "Waking up DUT")
-	if !dut.Connected(ctx) {
-		testing.ContextLog(ctx, "Power Normal Pressing")
-		waitCtx, cancel := context.WithTimeout(ctx, time.Minute)
-		defer cancel()
-		if err := pxy.Servo().KeypressWithDuration(ctx, servo.PowerKey, servo.DurPress); err != nil {
-			return errors.Wrap(err, "failed to power normal press")
-		}
-		if err := dut.WaitConnect(waitCtx); err != nil {
-			return errors.Wrap(err, "failed to wait connect DUT")
-		}
-	} else {
-		testing.ContextLog(ctx, "DUT is UP")
-	}
-	return nil
-}
-
 // waitForS0State waits for S0 power state
 func waitForS0State(ctx context.Context, pxy *servo.Proxy) (retErr error) {
 	var leftoverLines string
-	readyForPowerOn := regexp.MustCompile(`power state 1 = S5`)
-	tooLateToPowerOn := regexp.MustCompile(`power state 0 = G3`)
-	powerOnFinished := regexp.MustCompile(`power state 3 = S0`)
-	powerButtonPressFinished := regexp.MustCompile(`PB task 0 = idle`)
+	readyForPowerOn := regexp.MustCompile(`power state \d = S5`)
+	tooLateToPowerOn := regexp.MustCompile(`power state \d = G3`)
+	powerOnFinished := regexp.MustCompile(`power state \d = S0`)
+	powerButtonPressFinished := regexp.MustCompile(`PB task \d = idle`)
 	didPowerOn := false
 	hitS5 := false
 	donePowerOff := false
@@ -427,36 +431,37 @@ func waitForS0State(ctx context.Context, pxy *servo.Proxy) (retErr error) {
 			lines = lines[:crlfIdx+2]
 		}
 
-		for _, l := range strings.Split(lines, "\r\n") {
-			testing.ContextLogf(ctx, "%q", l)
-			if readyForPowerOn.MatchString(l) && !didPowerOn {
-				testing.ContextLogf(ctx, "Found S5: %q", l)
-				hitS5 = true
-			}
-			if powerButtonPressFinished.MatchString(l) && !didPowerOn {
-				testing.ContextLogf(ctx, "Found power button release: %q", l)
-				donePowerOff = true
-			}
-			// If the long press above is done, and we've seen S5, then do a short press to power on.
-			if hitS5 && donePowerOff && !didPowerOn {
-				testing.ContextLog(ctx, "Pressing power button")
-				if err := pxy.Servo().SetString(ctx, servo.ECUARTCmd, "powerbtn 200"); err != nil {
-					return testing.PollBreak(err)
-				}
-				didPowerOn = true
-			}
+		l := lines
+		if readyForPowerOn.MatchString(l) && !didPowerOn {
+			testing.ContextLogf(ctx, "Found S5: %q", l)
+			hitS5 = true
+		}
 
-			if tooLateToPowerOn.MatchString(l) && !didPowerOn {
-				testing.ContextLogf(ctx, "Found G3: %q", l)
-				return errors.New("power state reached G3, power button pressed too late")
+		if powerButtonPressFinished.MatchString(l) && !didPowerOn {
+			testing.ContextLogf(ctx, "Found power button release: %q", l)
+			donePowerOff = true
+		}
+		// If the long press above is done, and we've seen S5, then do a short press to power on.
+		if hitS5 && donePowerOff && !didPowerOn {
+			testing.ContextLog(ctx, "Pressing power button")
+			if err := pxy.Servo().SetString(ctx, servo.ECUARTCmd, "powerbtn 200"); err != nil {
+				return testing.PollBreak(err)
 			}
-			if powerOnFinished.MatchString(l) && didPowerOn {
-				testing.ContextLogf(ctx, "Found S0: %q", l)
-				return nil
-			}
+			didPowerOn = true
+		}
+		if tooLateToPowerOn.MatchString(l) && !didPowerOn {
+			testing.ContextLogf(ctx, "Found G3: %q", l)
+			return errors.New("power state reached G3, power button pressed too late")
+		}
+		if powerOnFinished.MatchString(l) && didPowerOn {
+			testing.ContextLogf(ctx, "Found S0: %q", l)
+			return nil
+		}
+		if !hitS5 || !donePowerOff {
+			return errors.New("failed to hit s5 state")
 		}
 		return nil
-	}, &testing.PollOptions{Interval: 200 * time.Millisecond, Timeout: time.Minute}); err != nil {
+	}, &testing.PollOptions{Interval: time.Millisecond * 200, Timeout: time.Minute}); err != nil {
 		return errors.Wrap(err, "EC output parsing failed")
 	}
 	return nil

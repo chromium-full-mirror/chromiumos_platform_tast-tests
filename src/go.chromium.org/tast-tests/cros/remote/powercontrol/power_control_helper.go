@@ -64,18 +64,20 @@ func IsPrevSleepStateAvailable(ctx context.Context, dut *dut.DUT) (bool, error) 
 func ValidatePrevSleepState(ctx context.Context, dut *dut.DUT, sleepStateValue int) error {
 	// Command to check previous sleep state.
 	const cmd = "cbmem -c | grep 'prev_sleep_state' | tail -1"
-	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
-	if err != nil {
-		return errors.Wrapf(err, "failed to execute %q command", cmd)
-	}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		out, err := dut.Conn().CommandContext(ctx, "sh", "-c", cmd).Output()
+		if err != nil {
+			return errors.Wrapf(err, "failed to execute %q command", cmd)
+		}
 
-	got := strings.TrimSpace(string(out))
-	want := fmt.Sprintf("prev_sleep_state %d", sleepStateValue)
+		got := strings.TrimSpace(string(out))
+		want := fmt.Sprintf("prev_sleep_state %d", sleepStateValue)
 
-	if !strings.Contains(got, want) {
-		return errors.Errorf("unexpected sleep state = got %q, want %q", got, want)
-	}
-	return nil
+		if !strings.Contains(got, want) {
+			return errors.Errorf("unexpected sleep state = got %q, want %q", got, want)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 1 * time.Minute, Interval: 1 * time.Second})
 }
 
 // ShutdownAndWaitForPowerState verifies powerState(S5 or G3) after shutdown.
