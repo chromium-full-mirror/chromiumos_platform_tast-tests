@@ -22,8 +22,8 @@ func init() {
 		Desc:           "Verifies that host has network connectivity via cellular interface",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:        "cellular",
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Fixture:        "cellularStressLocal",
 		Timeout:        4 * time.Minute,
 	})
 }

@@ -23,8 +23,8 @@ func init() {
 		Desc:           "Verifies that the modem can be rebooted using GPIO",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_run_isolated"},
-		Fixture:        "cellular",
+		Attr:           []string{"group:cellular", "cellular_sim_active"},
+		Fixture:        "cellularStressLocal",
 		SoftwareDeps:   []string{"modemfwd"},
 		HardwareDeps:   hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeFM350)),
 		Timeout:        3 * time.Minute,
