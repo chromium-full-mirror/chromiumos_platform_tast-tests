@@ -484,6 +484,7 @@ func testGetCCDCapabilities(t *testing.T, input string, expected map[CCDCap]CCDC
 		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", output, expected)
 	}
 }
+
 func TestGettimeDT(t *testing.T) {
 	input := `
 		gettime
@@ -734,5 +735,42 @@ func testMatchRmaChallenge(t *testing.T, input, expected string) {
 	}
 	if out != expected {
 		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", out, expected)
+	}
+}
+
+func TestH1ChipDetectDetachable1(t *testing.T) {
+	input := `cr50 B2-C`
+	expected := SKUH1Clamshell
+	testFindH1ChipSKU(t, input, expected)
+}
+
+func TestH1ChipDetectDetachable2(t *testing.T) {
+	input := `cr50 B2-D`
+	expected := SKUH1Detachable
+	testFindH1ChipSKU(t, input, expected)
+}
+func TestH1ChipDetectDetachable3(t *testing.T) {
+	input := `
+Reset flags: 0x00000140 (hibernate wake-pin)
+Reset count: 1
+Chip:        g cr50 B2-C
+RO keyid:    0xaa66150f
+RW keyid:    0x87b73b67
+DEV_ID:      0x00000000 0x00000000
+Rollback:    1/1/2 4/4/4
+TPM MODE:    enabled (0)
+Key Ladder:  prod
+`
+	expected := SKUH1Clamshell
+	testFindH1ChipSKU(t, input, expected)
+}
+
+func testFindH1ChipSKU(t *testing.T, input string, expected ChipSKU) {
+	chip, err := FindH1ChipSKU(input)
+	if err != nil {
+		t.Fatal("error processing input:", err)
+	}
+	if expected != chip {
+		t.Fatalf("chip mismatch:\ngot      %v\nexpected %v", chip, expected)
 	}
 }

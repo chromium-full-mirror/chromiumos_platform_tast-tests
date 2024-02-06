@@ -59,6 +59,8 @@ var (
 	usbAdcCc2RE   = regexp.MustCompile(`ADC: CC2 = ([0-9]+) mV`)
 	// RMA regex
 	rmaAuthChallengeRE = regexp.MustCompile(`([A-Z0-9]{80})|(RMA Auth error)|(Must wait)`)
+	// Regex to find the chip type in H1 sysinfo output
+	h1SysinfoChipRE = regexp.MustCompile(`cr50 B2-(D|C)`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -965,4 +967,36 @@ func matchRmaChallenge(s string) (string, error) {
 	}
 
 	return "", errors.New("regex failed to process rma auth matches from: " + s)
+}
+
+// FindH1ChipSKU finds the chip sku in the sysinfo output
+func FindH1ChipSKU(output string) (ChipSKU, error) {
+	matches := h1SysinfoChipRE.FindStringSubmatch(output)
+	if matches == nil {
+		return "", errors.New("Unable to find chip type in sysinfo output")
+	}
+	if matches[1] == "D" {
+		return SKUH1Detachable, nil
+	}
+	return SKUH1Clamshell, nil
+}
+
+// ChipSKU contains possible CCD levels.
+type ChipSKU string
+
+// Possible CCD levels.
+const (
+	// SKUH1Detachable is the sysinfo string used for H1 Detachable chips
+	SKUH1Detachable ChipSKU = "H1-D"
+	// SKUH1Clamshell is the sysinfo string used for H1 Clamshell chips
+	SKUH1Clamshell ChipSKU = "H1-C"
+)
+
+// GetH1ChipSKU returns the chip sku from sysinfo
+func (i *CrOSImage) GetH1ChipSKU(ctx context.Context) (ChipSKU, error) {
+	output, err := i.Command(ctx, "sysinfo")
+	if err != nil {
+		return "", err
+	}
+	return FindH1ChipSKU(output)
 }
