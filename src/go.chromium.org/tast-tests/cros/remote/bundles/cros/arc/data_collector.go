@@ -741,6 +741,8 @@ func DataCollector(ctx context.Context, s *testing.State) {
 				s.Fatal("Cannot parse argument 'arc.DataCollector.skipGmscore' of type bool: ", err)
 			}
 			if skipGmsCore {
+				// GMS Core caches generation is required to use dev caches.
+				useDevCaches = false
 				break
 			}
 		}
