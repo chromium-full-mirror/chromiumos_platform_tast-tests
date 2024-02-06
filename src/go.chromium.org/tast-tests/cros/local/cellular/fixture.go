@@ -99,6 +99,18 @@ func init() {
 		Impl:            newCellularFixture(),
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularE2ELocal",
+		Desc:            "Cellular e2e fixture that reboots to help enforce isolation",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Parent:          "cellularE2ERemote",
+		Impl:            newCellularFixture(),
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularTestESIM",
 		Desc:            "Cellular tests are safe to run with a Test SIM",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
@@ -267,6 +279,7 @@ func init() {
 		PreTestTimeout:  4 * time.Minute,
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
+		Parent:          "cellularE2ERemote",
 		Impl:            newCellularFixture().setHasChrome(true),
 	})
 }

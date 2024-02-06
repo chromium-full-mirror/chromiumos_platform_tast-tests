@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/netconfig"
 	"go.chromium.org/tast-tests/cros/local/shill"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -27,9 +26,9 @@ func init() {
 		Contacts:       []string{"cros-network-health-team@google.com", "chromeos-cellular-team@google.com", "shijinabraham@google.com"},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Fixture:        "cellularE2ELocal",
 		Timeout:        10 * time.Minute,
-		Fixture:        "cellular",
 	})
 }
 
