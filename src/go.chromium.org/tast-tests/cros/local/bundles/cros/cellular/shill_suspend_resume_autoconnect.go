@@ -31,8 +31,8 @@ func init() {
 		Desc:           "Verifies that cellular maintains autoconnect state around Suspend/Resume",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "danielwinkler@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_suspend", "cellular_run_isolated"},
-		Fixture:        "cellular",
+		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
+		Fixture:        "cellularSuspendLocal",
 		Timeout:        4 * time.Minute,
 		// TODO(b/217106877): Skip on herobrine as S/R is unstable
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("herobrine")),
