@@ -81,7 +81,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				consent:     crash.RealConsent,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -159,7 +159,7 @@ func init() {
 				browserType: browser.TypeLacros,
 				consent:     crash.RealConsent,
 			},
-			ExtraAttr:         []string{"group:mainline", "informational"},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"crashpad", "metrics_consent", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
