@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // CCDLevel contains possible CCD levels.
@@ -657,39 +656,27 @@ func matchVersionInfo(s string) (VersionCommandInfo, error) {
 
 // WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement.
 func (i *CrOSImage) WaitUntilNormalSleep(ctx context.Context, timeout time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: timeout}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.ReadSerialSubmatch(ctx, normalSleep)
-		return err
-	}, &pOpts)
+	_, err := i.WaitUntilMatch(ctx, normalSleep, timeout)
+	return err
 }
 
 // WaitUntilDeepSleep waits until gsc goes into deep sleep via monitoring print statement.
 func (i *CrOSImage) WaitUntilDeepSleep(ctx context.Context, timeout time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: timeout}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.ReadSerialSubmatch(ctx, deepSleep)
-		return err
-	}, &pOpts)
+	_, err := i.WaitUntilMatch(ctx, deepSleep, timeout)
+	return err
 }
 
 // WaitUntilAnySleep waits until gsc goes into deep or normal sleep via monitoring print statement.
 func (i *CrOSImage) WaitUntilAnySleep(ctx context.Context, timeout time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: timeout}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.ReadSerialSubmatch(ctx, anySleep)
-		return err
-	}, &pOpts)
+	_, err := i.WaitUntilMatch(ctx, anySleep, timeout)
+	return err
 }
 
 // WaitUntilRoBoot waits until initial RO console messages are printed which happens right after
 // reboot or deep sleep resume.
 func (i *CrOSImage) WaitUntilRoBoot(ctx context.Context, timeout time.Duration) error {
-	pOpts := testing.PollOptions{Timeout: timeout}
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		_, err := i.ReadSerialSubmatch(ctx, roBoot)
-		return err
-	}, &pOpts)
+	_, err := i.WaitUntilMatch(ctx, roBoot, timeout)
+	return err
 }
 
 // StartTestlabEnable starts the testlab enable process that will require power button pushes.
