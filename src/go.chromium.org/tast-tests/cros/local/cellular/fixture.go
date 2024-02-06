@@ -117,6 +117,19 @@ func init() {
 		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularHotspotLocal",
+		Desc:            "Cellular hotspot fixture that reboots to help enforce isolation",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "jstanko@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Parent:          "cellularHotspotRemote",
+		Impl:            newCellularFixture(),
+		Vars:            []string{"autotest_host_info_labels"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularTestESIM",
 		Desc:            "Cellular tests are safe to run with a Test SIM",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},

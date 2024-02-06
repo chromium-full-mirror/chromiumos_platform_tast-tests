@@ -38,7 +38,7 @@ func init() {
 			"jiajunz@google.com",
 		},
 		BugComponent: "b:1281224", // ChromeOS > Software > System Services > Connectivity > Hotspot
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated", "cellular_hotspot", "cellular_carrier_dependent"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_carrier_dependent"},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		SoftwareDeps: []string{"chrome", "hotspot"},
 		Fixture:      "cellularWithFakeDMSEnrolled",
