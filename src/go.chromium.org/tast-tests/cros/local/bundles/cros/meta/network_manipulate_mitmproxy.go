@@ -31,7 +31,6 @@ func init() {
 		Desc:         "Verifies that manipulating network traffic with mitmproxy",
 		Contacts: []string{
 			"yanghenry@google.com",
-			"shengjun@google.com",
 		},
 		BugComponent: "b:1359643", // ChromeOS > EngProd > Software > Trust & Safety
 		SoftwareDeps: []string{"chrome"},

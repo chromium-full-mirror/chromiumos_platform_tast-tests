@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Verifies that network requests go through local proxy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
-			"shengjun@google.com",
+			"yanghenry@google.com",
 			"donnadionne@google.com",
 		},
 		BugComponent: "b:1129862", // ChromeOS > Privacy > DPChromeOS > DPChromeOS Engineering
