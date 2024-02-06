@@ -101,8 +101,7 @@ func init() {
 		Name: AnyVK,
 		Desc: "Any mode with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(notForced, true, false, browser.TypeAsh),
@@ -116,8 +115,7 @@ func init() {
 		Name: AnyVKInGuest,
 		Desc: "Any mode in guest login with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(notForced, true, false, browser.TypeAsh, guestLogin),
@@ -161,8 +159,7 @@ func init() {
 		Name: ClamshellVK,
 		Desc: "Clamshell mode with A11y VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeAsh),
@@ -176,8 +173,7 @@ func init() {
 		Name: ClamshellVKRestart,
 		Desc: "Clamshell mode with A11y VK enabled, restarting chrome session for every test",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, true, true, browser.TypeAsh),
@@ -191,8 +187,7 @@ func init() {
 		Name: ClamshellNonVK,
 		Desc: "Clamshell mode with VK disabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, emojiPickerGifSupport),
@@ -207,7 +202,7 @@ func init() {
 		Desc: "Clamshell mode with VK disabled and stereo aloop loaded",
 		Contacts: []string{
 			"essential-inputs-team@google.com",
-			"alvinjia@google.com",
+			"xiuwen@google.com",
 		},
 		Impl: inputsFixture(clamshellMode, false, false, browser.TypeAsh, autocorrectToggle, emojiPickerGifSupport),
 		// Need aloop for route playback to capture.
@@ -222,8 +217,7 @@ func init() {
 		Name: ClamshellNonVKRestart,
 		Desc: "Clamshell mode with VK disabled, restarting chrome session for every test",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeAsh),
@@ -251,8 +245,7 @@ func init() {
 		Name: ClamshellNonVKWithMultiwordSuggest,
 		Desc: "Clamshell mode with VK disabled and multiword suggest",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, assistMultiWord),
@@ -266,8 +259,7 @@ func init() {
 		Name: ClamshellNonVKWithOrca,
 		Desc: "Clamshell mode with VK disabled and Orca enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeAsh, orca),
@@ -324,8 +316,7 @@ func init() {
 		Name: ClamshellNonVKInGuest,
 		Desc: "Clamshell mode in guest login with VK disabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeAsh, guestLogin, emojiPickerGifSupport),
@@ -339,8 +330,7 @@ func init() {
 		Name: TabletVK,
 		Desc: "Tablet mode with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(tabletMode, true, false, browser.TypeAsh),
@@ -354,8 +344,7 @@ func init() {
 		Name: TabletVKStereoAloopLoaded,
 		Desc: "Tablet mode with VK enabled and stereo aloop loaded",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl: inputsFixture(tabletMode, true, false, browser.TypeAsh),
@@ -371,8 +360,7 @@ func init() {
 		Name: TabletVKRestart,
 		Desc: "Tablet mode with VK enabled, restarting chrome session for every test",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(tabletMode, true, true, browser.TypeAsh),
@@ -386,8 +374,7 @@ func init() {
 		Name: TabletVKInGuest,
 		Desc: "Tablet mode in guest login with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(tabletMode, true, false, browser.TypeAsh, guestLogin),
@@ -431,8 +418,7 @@ func init() {
 		Name: LacrosAnyVK,
 		Desc: "Lacros variant: any mode with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(notForced, true, false, browser.TypeLacros),
@@ -446,8 +432,7 @@ func init() {
 		Name: LacrosAnyVKInGuest,
 		Desc: "Lacros variant: any mode in guest login with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(notForced, true, false, browser.TypeLacros, guestLogin),
@@ -461,8 +446,7 @@ func init() {
 		Name: LacrosClamshellVK,
 		Desc: "Lacros variant: clamshell mode with A11y VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, true, false, browser.TypeLacros),
@@ -476,8 +460,7 @@ func init() {
 		Name: LacrosClamshellNonVK,
 		Desc: "Lacros variant: clamshell mode with VK disabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, emojiPickerGifSupport),
@@ -492,7 +475,7 @@ func init() {
 		Desc: "Lacros variant: clamshell mode with VK disabled and stereo aloop loaded",
 		Contacts: []string{
 			"essential-inputs-team@google.com",
-			"alvinjia@google.com",
+			"xiuwen@google.com",
 		},
 		Impl: inputsFixture(clamshellMode, false, false, browser.TypeLacros, autocorrectToggle, emojiPickerGifSupport),
 		// Need aloop for route playback to capture.
@@ -507,8 +490,7 @@ func init() {
 		Name: LacrosClamshellNonVKRestart,
 		Desc: "Lacros variant: clamshell mode with VK disabled, restarting chrome session for every test",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeLacros),
@@ -536,8 +518,7 @@ func init() {
 		Name: LacrosClamshellNonVKWithMultiwordSuggest,
 		Desc: "Lacros variant: clamshell mode with VK disabled and multiword suggest",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, assistMultiWord),
@@ -551,8 +532,7 @@ func init() {
 		Name: LacrosClamshellNonVKWithOrca,
 		Desc: "Lacros variant: clamshell mode with VK disabled and Orca enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, true, browser.TypeLacros, orca),
@@ -566,8 +546,7 @@ func init() {
 		Name: LacrosClamshellNonVKWithDiacriticsOnPKLongpress,
 		Desc: "Lacros variant: clamshell mode with VK disabled and diacritics on PK longpress",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, diacriticsOnPhysicalKeyboardLongpress),
@@ -595,8 +574,7 @@ func init() {
 		Name: LacrosClamshellNonVKInGuest,
 		Desc: "Lacros variant: clamshell mode in guest login with VK disabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(clamshellMode, false, false, browser.TypeLacros, guestLogin, emojiPickerGifSupport),
@@ -610,8 +588,7 @@ func init() {
 		Name: LacrosTabletVK,
 		Desc: "Lacros variant: tablet mode with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(tabletMode, true, false, browser.TypeLacros),
@@ -625,8 +602,7 @@ func init() {
 		Name: LacrosTabletVKStereoAloopLoaded,
 		Desc: "Lacros variant: tablet mode with VK enabled and stereo aloop loaded",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl: inputsFixture(tabletMode, true, false, browser.TypeLacros),
@@ -642,8 +618,7 @@ func init() {
 		Name: LacrosTabletVKInGuest,
 		Desc: "Lacros variant: tablet mode in guest login with VK enabled",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(tabletMode, true, false, browser.TypeLacros, guestLogin),
@@ -657,8 +632,7 @@ func init() {
 		Name: LacrosTabletVKRestart,
 		Desc: "Lacros variant: tablet mode with VK enabled restarting chrome session for every test",
 		Contacts: []string{
-			"alvinjia@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 			"essential-inputs-team@google.com",
 		},
 		Impl:            inputsFixture(tabletMode, true, true, browser.TypeLacros),

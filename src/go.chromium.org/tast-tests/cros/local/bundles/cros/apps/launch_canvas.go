@@ -30,7 +30,7 @@ func init() {
 		Attr:         []string{"group:mainline" /* TODO(b/266507106): fix the test for L1 betty. "group:hw_agnostic" */},
 		Contacts: []string{
 			"blick-swe@google.com",
-			"shengjun@chromium.org",
+			"xiuwen@google.com",
 		},
 		BugComponent: "b:385726",
 		Timeout:      5 * time.Minute,
