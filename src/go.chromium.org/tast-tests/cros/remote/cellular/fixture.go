@@ -68,6 +68,15 @@ func init() {
 		SetUpTimeout: 3 * time.Minute,
 		Vars:         []string{"skipReboot"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularAutoconnectRemote",
+		Desc:            "Remote cellular autoconnect test fixture that reboots in setup and teardown to help enforce isolation",
+		Contacts:        []string{},
+		Impl:            newFixture(true, true),
+		SetUpTimeout:    3 * time.Minute,
+		TearDownTimeout: 3 * time.Minute,
+		Vars:            []string{"skipReboot"},
+	})
 }
 func newFixture(rebootOnSetup, rebootOnTeardown bool) *fixture {
 	return &fixture{
