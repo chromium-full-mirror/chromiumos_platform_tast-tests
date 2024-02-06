@@ -19,6 +19,7 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -155,9 +156,7 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Turn all emulated keyboards off prior to
-	// testing the virtual keyboard, and record their initial
-	// states for restoration later.
+	// Record initial states of all emulated keyboards for restoration later.
 	var initUSBKBState, initDefaultKBState bool
 	for kb, state := range map[servo.OnOffControl]bool{
 		servo.USBKeyboard:  initUSBKBState,
@@ -167,10 +166,6 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		state, err = h.Servo.GetOnOff(ctx, kb)
 		if err != nil {
 			s.Fatalf("Failed to get state for %s: %v", kb, err)
-		}
-		s.Logf("Disabling %s", kb)
-		if err := h.Servo.SetOnOff(ctx, kb, servo.Off); err != nil {
-			s.Fatalf("Failed to set %s off: %v", kb, err)
 		}
 		defer func(restoreVal bool, ctrl servo.OnOffControl) {
 			var onoff servo.OnOffValue
@@ -261,6 +256,33 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}
+		// Turn all emulated keyboards off prior to testing the virtual
+		// keyboard.
+		for _, kb := range []servo.OnOffControl{servo.USBKeyboard, servo.InitKeyboard} {
+			if err := testing.Poll(ctx, func(ctx context.Context) error {
+				s.Logf("Setting %s to %s", kb, servo.Off)
+				if err := h.Servo.SetOnOff(ctx, kb, servo.Off); err != nil {
+					return errors.Wrapf(err, "failed to set %s to %s", kb, servo.Off)
+				}
+				keyboardOff, err := h.Servo.GetOnOff(ctx, kb)
+				if err != nil {
+					return errors.Wrapf(err, "failed to get %s", kb)
+				}
+				if keyboardOff != false {
+					return errors.Errorf("got unexpected %s value: %t", kb, keyboardOff)
+				}
+				return nil
+			}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
+				s.Fatalf("Failed to set %s to %s: %v", kb, servo.Off, err)
+			}
+		}
+		// Document the output of keyboard path and lsusb for debugging purposes.
+		if err := recordKeyboards(ctx, h, filepath.Join(s.OutDir(), "keyboards.txt")); err != nil {
+			s.Fatal("Failed to record keyboard info: ", err)
+		}
+		if err := recordUSBDevices(ctx, h, filepath.Join(s.OutDir(), "lsusb.txt")); err != nil {
+			s.Fatal("Failed to record lsusb: ", err)
+		}
 		if err := verifyVK(); err != nil {
 			_, ok := err.(*verifyVkErr)
 			if tc.turnTabletModeOn && ok {
@@ -275,11 +297,6 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 				if err := verifyVK(); err != nil {
 					s.Fatal("Failed to verify on-screen keyboard: ", err)
 				}
-			}
-			// If vk did not pop-up, document the output of lsusb for debugging
-			// purposes, and to check if any keyboards were enabled.
-			if err := recordUSBDevices(ctx, h, filepath.Join(s.OutDir(), "lsusb.txt")); err != nil {
-				s.Fatal("Failed to record lsusb: ", err)
 			}
 			s.Fatal("Failed to verify virtual keyboard, but passed with on-screen keyboard enabled: ", err)
 		}
@@ -358,6 +375,18 @@ func recordUSBDevices(ctx context.Context, h *firmware.Helper, destPath string) 
 	output, err := h.DUT.Conn().CommandContext(ctx, "lsusb").Output()
 	if err != nil {
 		return errors.Wrap(err, "running lsusb")
+	}
+	if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
+		return errors.Wrap(err, "failed to write")
+	}
+	return nil
+}
+
+func recordKeyboards(ctx context.Context, h *firmware.Helper, destPath string) error {
+	keyboardInfo := `ls -l /dev/input/by-path/*-kbd`
+	output, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", keyboardInfo).Output(ssh.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "running ls -l")
 	}
 	if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
 		return errors.Wrap(err, "failed to write")
