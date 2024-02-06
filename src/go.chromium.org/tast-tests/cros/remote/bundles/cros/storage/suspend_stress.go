@@ -74,7 +74,6 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 		cmd := "lsof -p " + pidFio + " -p " + pidSuspend + " +r 1 &>/dev/null"
 		out, err := util.RunCmdWithStringOutputSilent(ctx, s.DUT(), "bash", "-c", cmd)
 		if err != nil {
@@ -85,6 +84,8 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}, &testing.PollOptions{Timeout: 7 * time.Hour}); err != nil {
 		s.Fatal("Timed out listening for pid done: ", err)
 	}
+
+	util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 
 	if err = util.CheckSuspendStressResults(ctx, s.DUT()); err != nil {
 		s.Fatal("Suspend failure: ", err)
