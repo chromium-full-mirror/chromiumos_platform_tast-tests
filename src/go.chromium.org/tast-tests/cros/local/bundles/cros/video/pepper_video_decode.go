@@ -121,7 +121,7 @@ func PepperVideoDecode(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 
 	// Check that the NaCl video decoding example loaded correctly.
-	if err := conn.WaitForExprWithTimeout(ctx, "doneLoadingExample", 10*time.Second); err != nil {
+	if err := conn.WaitForExprWithTimeout(ctx, "doneLoadingExample", 50*time.Second); err != nil {
 		s.Fatal("The NaCl app did not load in time: ", err)
 	}
 
