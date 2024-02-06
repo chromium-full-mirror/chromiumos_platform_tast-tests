@@ -18,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50FWMP,
+		Func:    GSCFWMP,
 		Desc:    "Verifies various FWMP enforcement for GSC",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -26,12 +26,13 @@ func init() {
 			"jettrink@chromium.org",    // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 	})
 }
 
-func Ti50FWMP(ctx context.Context, s *testing.State) {
+// GSCFWMP verifies the FWMP can force write protect to be enabled
+func GSCFWMP(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
