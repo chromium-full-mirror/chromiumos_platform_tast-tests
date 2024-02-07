@@ -57,6 +57,8 @@ type Credentials struct {
 	CertID string
 	// KeyID is the identifier of the client private key in the store.
 	KeyID string
+	// This is used to hold the expiration time for the subscription
+	ExpirationTime string
 }
 
 // FQDN returns the fully qualified domain name of the service provider.
@@ -86,6 +88,7 @@ func (pc *Credentials) ToShillProperties() (map[string]interface{}, error) {
 		shillconst.PasspointCredentialsPropertyMeteredOverride:    false,
 		shillconst.PasspointCredentialsPropertyAndroidPackageName: testPackageName,
 		shillconst.ServicePropertyEAPCACertPEM:                    []string{TestCerts.CACred.Cert},
+		shillconst.PasspointCredentialsPropertyExpirationTime:     pc.ExpirationTime,
 	}
 
 	switch pc.Auth {

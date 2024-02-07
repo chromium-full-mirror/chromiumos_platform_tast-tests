@@ -423,6 +423,7 @@ const (
 	PasspointCredentialsPropertyRoamingConsortia   = "RoamingConsortia"
 	PasspointCredentialsPropertyMeteredOverride    = "MeteredOverride"
 	PasspointCredentialsPropertyAndroidPackageName = "AndroidPackageName"
+	PasspointCredentialsPropertyExpirationTime     = "ExpirationTimeMilliseconds"
 )
 
 // Default ICCID when ICCID is unknown. Defined in dbus-constants.h
