@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/meetcuj"
 	"go.chromium.org/tast/core/testing"
@@ -335,95 +334,6 @@ func init() {
 				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 			},
 			{
-				Name:    "docs_blt_50mb",
-				Timeout: meetcuj.DefaultTestTimeout,
-				Val: meetcuj.MeetTest{
-					Bots:        []int{1, 3, 15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					Effects:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad50MB",
-			},
-			{
-				Name:    "docs_blt_1gb",
-				Timeout: meetcuj.DefaultTestTimeout,
-				Val: meetcuj.MeetTest{
-					Bots:        []int{1, 3, 15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					Effects:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad1GB",
-			},
-			{
-				Name:    "docs_blt_2gb",
-				Timeout: meetcuj.DefaultTestTimeout,
-				Val: meetcuj.MeetTest{
-					Bots:        []int{1, 3, 15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					Effects:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad2GB",
-			},
-			{
-				Name:    "docs_blt_3gb",
-				Timeout: meetcuj.DefaultTestTimeout,
-				Val: meetcuj.MeetTest{
-					Bots:        []int{1, 3, 15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					Effects:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad3GB",
-			},
-			{
-				Name:    "docs_blt_4gb",
-				Timeout: meetcuj.DefaultTestTimeout,
-				Val: meetcuj.MeetTest{
-					Bots:        []int{1, 3, 15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					Effects:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithBackgroundLoad4GB",
-			}, {
 				Name:    "docs_battery_saver",
 				Timeout: meetcuj.DefaultTestTimeout,
 				Val: meetcuj.MeetTest{
