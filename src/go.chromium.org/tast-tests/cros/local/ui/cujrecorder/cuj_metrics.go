@@ -26,6 +26,7 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		// Smoothness.
 		NewCustomMetricConfig("Ash.Smoothness.PercentDroppedFrames_1sWindow.InSession2", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Smoothness.MaxPercentDroppedFrames_1sWindow", "percent", perf.SmallerIsBetter),
+		NewCustomMetricConfig("Graphics.Smoothness.Jank3.AllSequences", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Exo.Smoothness.DidNotProduceToFrameArrival", "microseconds", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Exo.Smoothness.PercentDidNotProduceFrame", "percent", perf.SmallerIsBetter),
 		NewCustomMetricConfig("Graphics.Exo.Smoothness.PercentFrameDiscarded", "percent", perf.SmallerIsBetter),
