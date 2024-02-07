@@ -31,7 +31,7 @@ func init() {
 		BugComponent: "b:167224",
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		SoftwareDeps: []string{"factory_flow", "gsc"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		Timeout:      3 * time.Minute,
 	})
 }
