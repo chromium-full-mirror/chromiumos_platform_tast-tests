@@ -30,7 +30,7 @@ func init() {
 		Contacts: []string{
 			"chrome-permissions-team@google.com",
 		},
-		BugComponent: "crbug:Internals>Permissions>Model",
+		BugComponent: "b:1456817",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
