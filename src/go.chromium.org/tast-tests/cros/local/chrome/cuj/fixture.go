@@ -704,31 +704,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
-	// TODO(crbug/1410581): Remove this variant when done with testing.
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithMainThreadCompositingPriority",
-		Desc: "CUJ test fixture with the MainThreadCompositingPriority feature enabled",
-		Contacts: []string{
-			"youssefesmat@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Data: docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("MainThreadCompositingPriority", "PreferConstantFrameRate"),
-				chrome.ExtraArgs(webRTCEventLogCommandFlag),
-			},
-			bt:          browser.TypeAsh,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 		Desc: "CUJ test fixture with WebRTC event logging and VC platform effects enabled",

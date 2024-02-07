@@ -453,24 +453,6 @@ func init() {
 				Fixture: "loggedInToCUJUserEnterpriseWithWebRTCEventLogging",
 			},
 
-			// TODO(crbug/1410581): Consider deprecating this test once
-			// analysis on 49p_maincompositing is complete.
-			{
-				Name:      "49p",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:        []int{48},
-					Layout:      googlemeet.TiledLayout,
-					Cam:         true,
-					ZoomOut:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-				// The list of targeted models which SPERA team uses to analyze.
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
-			},
-
 			// Experimental Variants. These variants should only be run on
 			// the minimized list of devices, and are running an A/B test for
 			// particular feature.
@@ -491,40 +473,6 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
-				// 16p_present_notes_split variant with
-				// MainThreadCompositingPriority enabled.
-				// TODO(crbug/1410581): Remove this variant when done with testing.
-				Name:      "16p_present_notes_split_maincompositing",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:        []int{15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
-			}, {
-				// 49p variant with MainThreadCompositingPriority feature enabled.
-				// TODO(crbug/1410581): Remove this variant when done with testing.
-				Name:      "49p_maincompositing",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:        []int{48},
-					Layout:      googlemeet.TiledLayout,
-					Cam:         true,
-					ZoomOut:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithMainThreadCompositingPriority",
-				// Same target models as in the 49p variant.
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
 			}, {
 				Name:      "16p_present_notes_split_field_trials",
 				Timeout:   meetcuj.DefaultTestTimeout,
@@ -771,6 +719,20 @@ func init() {
 				},
 				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:    "49p",
+				Timeout: meetcuj.DefaultTestTimeout,
+				Val: meetcuj.MeetTest{
+					Bots:        []int{48},
+					Layout:      googlemeet.TiledLayout,
+					Cam:         true,
+					ZoomOut:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
+				// The list of targeted models which SPERA team uses to analyze.
+				ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "magpie", "lazor", "tomato", "volet")),
 			},
 		},
 	})
