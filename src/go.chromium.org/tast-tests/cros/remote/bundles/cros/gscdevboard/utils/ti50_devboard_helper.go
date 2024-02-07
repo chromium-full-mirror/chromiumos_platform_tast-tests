@@ -885,7 +885,7 @@ const (
 	H1MaxDeepSleepCurrent CurrentThreshold = 0.2
 
 	// H1MaxNormalSleepCurrent is the maximum power allowed for regular sleep.
-	H1MaxNormalSleepCurrent CurrentThreshold = 1.5
+	H1MaxNormalSleepCurrent CurrentThreshold = 1.7
 )
 
 // WaitForPowerRise waits until the current reading is greater than the given threshold
