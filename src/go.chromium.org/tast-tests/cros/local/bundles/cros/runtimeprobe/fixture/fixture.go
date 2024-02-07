@@ -7,6 +7,7 @@ package fixture
 
 import (
 	"context"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +21,8 @@ import (
 
 // Fixture names.
 const (
-	DecryptProbeConfig = "decryptProbeConfig"
+	DecryptProbeConfig     = "decryptProbeConfig"
+	probeConfigStatefulDir = "/usr/local/etc/runtime_probe/"
 )
 
 func init() {
@@ -46,26 +48,7 @@ func modelName(ctx context.Context) (string, error) {
 	return string(out), nil
 }
 
-func backupProbeConfig(s *testing.FixtState, model string) error {
-	probeConfigDir := filepath.Join("/usr/local/etc/runtime_probe/", model)
-	probeConfigPath := filepath.Join(probeConfigDir, "probe_config.json")
-	probeConfigBackupPath := filepath.Join(probeConfigDir, "probe_config.json.bak")
-	if _, err := os.Stat(probeConfigPath); err != nil {
-		if errors.Is(err, os.ErrNotExist) {
-			return nil
-		}
-		return err
-	}
-	if err := os.Rename(probeConfigPath, probeConfigBackupPath); err != nil {
-		return err
-	}
-	s.Log("Backup probe config to ", probeConfigBackupPath)
-	return nil
-}
-
-func decryptProbeConfig(ctx context.Context, s *testing.FixtState, model string) error {
-	probeConfigDir := filepath.Join("/usr/local/etc/runtime_probe/", model)
-	probeConfigPath := filepath.Join(probeConfigDir, "probe_config.json")
+func decryptProbeConfig(ctx context.Context, s *testing.FixtState, model string) (string, error) {
 	probeConfigEncryptedPath := ""
 	configRoots := []string{
 		"/usr/local/",
@@ -79,72 +62,85 @@ func decryptProbeConfig(ctx context.Context, s *testing.FixtState, model string)
 		probeConfigEncryptedPath = ""
 	}
 	if probeConfigEncryptedPath == "" {
-		return errors.New("cannot find encrypted probe configs")
+		return "", errors.New("cannot find encrypted probe configs")
 	}
 	s.Log("Found encrypted probe config: ", probeConfigEncryptedPath)
 
-	if err := os.MkdirAll(probeConfigDir, 0755); err != nil {
-		return errors.Wrapf(err, "failed to create probe config directory: %s", probeConfigDir)
-	}
-
 	keys, ok := s.Var("runtimeprobe.ProbeFunction.keys")
 	if !ok {
-		return errors.New("failed to read variable: runtimeprobe.ProbeFunction.keys")
+		return "", errors.New("failed to read variable: runtimeprobe.ProbeFunction.keys")
 	}
 
+	tempProbeConfig, err := os.CreateTemp("", "probe_config-*.json")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create temp probe config")
+	}
+	tempProbeConfig.Close()
+	tempProbeConfigPath := tempProbeConfig.Name()
 	decrypted := false
 	for keyIndex, key := range strings.Split(keys, "\n") {
-		cmd := testexec.CommandContext(ctx, "openssl", "aes-256-cbc", "-d", "-pbkdf2", "-base64", "-in", probeConfigEncryptedPath, "-out", probeConfigPath, "-pass", "env:RUNTIME_PROBE_CONFIG_KEY")
+		cmd := testexec.CommandContext(ctx, "openssl", "aes-256-cbc", "-d", "-pbkdf2", "-base64", "-in", probeConfigEncryptedPath, "-out", tempProbeConfigPath, "-pass", "env:RUNTIME_PROBE_CONFIG_KEY")
 		cmd.Env = append(os.Environ(), "RUNTIME_PROBE_CONFIG_KEY="+key)
 		if _, err := cmd.Output(); err == nil {
 			decrypted = true
-			s.Logf("decrypt success with runtimeprobe.ProbeFunction.keys[%d]", keyIndex)
+			s.Logf("Decrypt success with runtimeprobe.ProbeFunction.keys[%d]", keyIndex)
 			break
 		}
 	}
 	if !decrypted {
-		os.Remove(probeConfigPath)
-		return errors.New("failed to decrypt with openssl. Incorrect key?")
+		os.Remove(tempProbeConfigPath)
+		return "", errors.New("failed to decrypt with openssl. Incorrect key?")
 	}
-	if err := os.Chmod(probeConfigPath, 0644); err != nil {
-		os.Remove(probeConfigPath)
-		return errors.Wrap(err, "failed to chmod for probe config")
+	if err := os.Chmod(tempProbeConfigPath, 0644); err != nil {
+		os.Remove(tempProbeConfigPath)
+		return "", errors.Wrap(err, "failed to chmod for probe config")
 	}
-	s.Log("Decrypt probe config to ", probeConfigPath)
-	return nil
+	s.Log("Decrypt probe config to ", tempProbeConfigPath)
+	return tempProbeConfigPath, nil
 }
 
-func restoreProbeConfig(s *testing.FixtState, model string) {
-	probeConfigDir := filepath.Join("/usr/local/etc/runtime_probe/", model)
-	probeConfigPath := filepath.Join(probeConfigDir, "probe_config.json")
-	os.Remove(probeConfigPath)
-	if err := os.Rename(filepath.Join(probeConfigDir, "probe_config.json.bak"), probeConfigPath); err == nil {
-		s.Log("Restore probe config to ", probeConfigPath)
-	}
+type decryptProbeConfigFixture struct {
+	probeConfigBackupDir string
 }
-
-type decryptProbeConfigFixture struct{}
 
 func (f *decryptProbeConfigFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	model, err := modelName(ctx)
 	if err != nil {
 		s.Fatal("Failed to get model name: ", err)
 	}
-	if err := backupProbeConfig(s, model); err != nil {
-		s.Fatal("Failed to backup probe config: ", err)
-	}
-	if err := decryptProbeConfig(ctx, s, model); err != nil {
+
+	tempDecryptProbeConfig, err := decryptProbeConfig(ctx, s, model)
+	if err != nil {
 		s.Fatal("Failed to decrypt probe config: ", err)
 	}
+	defer os.Remove(tempDecryptProbeConfig)
+
+	tempDir, err := os.MkdirTemp("", "runtimeprobe-")
+	if err != nil {
+		s.Fatal("Failed to create temp directory: ", err)
+	}
+	f.probeConfigBackupDir = filepath.Join(tempDir, "bak/")
+	if err := os.Rename(probeConfigStatefulDir, f.probeConfigBackupDir); err == nil {
+		s.Log("Backup probe config to ", f.probeConfigBackupDir)
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		s.Fatal("Failed to backup probe config directory: ", err)
+	}
+	probeConfigDir := filepath.Join(probeConfigStatefulDir, model)
+	if err := os.MkdirAll(probeConfigDir, 0755); err != nil {
+		s.Fatal("Failed to create probe config directory: ", err)
+	}
+	os.Rename(tempDecryptProbeConfig, filepath.Join(probeConfigDir, "probe_config.json"))
 	return nil
 }
 
 func (f *decryptProbeConfigFixture) TearDown(ctx context.Context, s *testing.FixtState) {
-	model, err := modelName(ctx)
-	if err != nil {
-		s.Fatal("Failed to get model name: ", err)
+	os.RemoveAll(probeConfigStatefulDir)
+	if f.probeConfigBackupDir != "" {
+		if err := os.Rename(f.probeConfigBackupDir, probeConfigStatefulDir); err == nil {
+			s.Log("Restore probe config from ", f.probeConfigBackupDir)
+		}
+		os.RemoveAll(filepath.Join(f.probeConfigBackupDir, ".."))
 	}
-	restoreProbeConfig(s, model)
 }
 
 func (f *decryptProbeConfigFixture) Reset(ctx context.Context) error                        { return nil }
