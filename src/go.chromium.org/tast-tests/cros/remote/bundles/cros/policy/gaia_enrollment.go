@@ -144,7 +144,7 @@ func GAIAEnrollment(ctx context.Context, s *testing.State) {
 	// deprovisioning before enrolling.
 	defer func(ctx context.Context) {
 		if err := tapeClient.DeprovisionHelper(cleanupCtx, cl, acc.CustomerID, acc.OrgUnitPath); err != nil {
-			s.Fatal("Failed to deprovision device: ", err)
+			s.Error("Failed to deprovision device: ", err)
 		}
 	}(cleanupCtx)
 
