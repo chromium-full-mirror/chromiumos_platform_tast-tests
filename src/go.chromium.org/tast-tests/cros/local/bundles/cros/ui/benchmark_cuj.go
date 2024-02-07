@@ -185,31 +185,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "partial_low_end_mode_speedometer",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-			},
-			{
 				Name:    "battery_saver_motionmark",
 				Timeout: defaultTimeout,
 				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-				},
-			},
-			{
-				Name:      "partial_low_end_mode_motionmark",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
 					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,

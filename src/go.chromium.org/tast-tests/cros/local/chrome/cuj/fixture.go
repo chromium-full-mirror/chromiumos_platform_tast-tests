@@ -680,30 +680,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
-	// TODO(b/302044966): Remove this fixture and all associated tests when low end mode has been properly analyzed.
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
-		Desc: "CUJ test fixture with the PartialLowEndModeOnMidRangeDevices feature enabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Data: docsBlockerFiles,
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("PartialLowEndModeOnMidRangeDevices"),
-			},
-			bt:          browser.TypeAsh,
-			docsBlocker: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithVCEffects",
 		Desc: "CUJ test fixture with WebRTC event logging and VC platform effects enabled",

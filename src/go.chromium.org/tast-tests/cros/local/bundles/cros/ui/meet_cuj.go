@@ -301,23 +301,6 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:      "docs_partial_low_end_mode",
-				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Val: meetcuj.MeetTest{
-					Bots:        []int{1, 3, 15},
-					Layout:      googlemeet.TiledLayout,
-					Present:     true,
-					Docs:        true,
-					Split:       true,
-					Cam:         true,
-					ZoomOut:     true,
-					Effects:     true,
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
-			},
-			{
 				Name:    "docs_blt_50mb",
 				Timeout: meetcuj.DefaultTestTimeout,
 				Val: meetcuj.MeetTest{

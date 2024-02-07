@@ -54,13 +54,7 @@ func init() {
 			Val:               browser.TypeLacros,
 			Fixture:           "loggedInToCUJUserLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
-		},
-			{
-				Name:      "partial_low_end_mode",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
-			}},
+		}},
 	})
 }
 

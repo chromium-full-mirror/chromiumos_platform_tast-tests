@@ -63,14 +63,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithBatterySaver",
 			},
-			{
-				Name:      "partial_low_end_mode",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: googlesheetscuj.TestParam{
-					BrowserType: browser.TypeAsh,
-				},
-				Fixture: "loggedInToCUJUserWithPartialLowEndModeOnMidRangeDevices",
-			},
 		},
 	})
 }
