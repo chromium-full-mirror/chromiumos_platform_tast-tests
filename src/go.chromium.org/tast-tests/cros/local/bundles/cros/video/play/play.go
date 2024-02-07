@@ -66,7 +66,7 @@ const (
 // This is how long we need to wait before taking a screenshot in the
 // TestPlayAndScreenshot case. This is necessary to ensure the video is on the screen
 // and to let the "Press Esc to exit full screen" message disappear.
-const delayToScreenshot = 7 * time.Second
+const delayToScreenshot = 10 * time.Second
 
 // MSEDataFiles returns a list of required files for tests that play MSE videos.
 func MSEDataFiles() []string {
@@ -564,7 +564,8 @@ func TestPlayAndScreenshot(ctx context.Context, s *testing.State, tconn *chrome.
 		return errors.Wrapf(err, "failed to play %v", filename)
 	}
 
-	// TODO(andrescj): this sleep is here to wait prior to taking the screenshot to make sure the video
+	// TODO(andrescj):
+	// GoBigSleepLint: this sleep is here to wait prior to taking the screenshot to make sure the video
 	// is on the screen and to let the "Press Esc to exit full screen" message disappear. This is to
 	// make sure the video is the only thing on the screen and thus minimize the excuses Chrome would
 	// have to not promote it to a HW overlay. Poll instead for two conditions:
