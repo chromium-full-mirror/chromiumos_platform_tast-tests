@@ -110,7 +110,7 @@ func (c *client) sendRequestWithTimeout(ctx context.Context, method, endpoint st
 			continue
 		}
 		// Do not retry when the server is overloaded.
-		if response.StatusCode != 503 {
+		if response.StatusCode == 503 {
 			break
 		}
 		// Check if the call was successful.
