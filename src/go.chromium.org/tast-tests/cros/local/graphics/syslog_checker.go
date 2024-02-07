@@ -51,6 +51,9 @@ var (
 
 	// kernelSplatsHandler tries to analysis informative messages from a kernel splats.
 	kernelSplatsHandler = func(ctx context.Context, reader *syslog.Reader) string {
+		// Only checks for kernel Warning and Error.
+		reader.UpdateFilter(syslog.Severities(syslog.Warning, syslog.Err), syslog.Program("kernel"))
+
 		// x86: Skip over the code segment register to capture the text after the colon.
 		// arm: look for pc and capture text after colon.
 		x86RIPRegex := regexp.MustCompile(`RIP:\s+[0-9a-f]+:(.+)`)

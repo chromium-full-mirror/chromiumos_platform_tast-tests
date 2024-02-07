@@ -313,6 +313,17 @@ func NewReader(ctx context.Context, opts ...Option) (r *Reader, retErr error) {
 	}, nil
 }
 
+// UpdateFilter updates the filters of the given reader.
+func (r *Reader) UpdateFilter(opts ...Option) {
+	o := options{
+		path: MessageFile,
+	}
+	for _, opt := range opts {
+		opt(&o)
+	}
+	r.filters = o.filters
+}
+
 // Close closes the Reader.
 func (r *Reader) Close() error {
 	return r.lineReader.Close()
