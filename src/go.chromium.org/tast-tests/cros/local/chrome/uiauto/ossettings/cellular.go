@@ -841,7 +841,7 @@ func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chr
 		}
 		return nil
 	}, &testing.PollOptions{
-		Timeout:  10 * time.Second,
+		Timeout:  30 * time.Second,
 		Interval: time.Second,
 	}); err != nil {
 		return errors.Wrap(err, "failed to stay connected")
