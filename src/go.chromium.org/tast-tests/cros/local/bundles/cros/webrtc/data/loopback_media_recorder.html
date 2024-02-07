@@ -39,7 +39,7 @@ async function startRecordingForResult(codecMime, width, height, recordDurationM
 // Recording result will not be available until calling stopRecording().
 async function startRecording(codecMime, width, height) {
   const stream = await navigator.mediaDevices.getUserMedia(
-    {audio: true,video: {width: width, height: height}});
+    {audio: false, video: {width: width, height: height}});
 
   document.getElementById('video').srcObject = stream;
   const mimeType = 'video/webm; codecs=' + codecMime;
