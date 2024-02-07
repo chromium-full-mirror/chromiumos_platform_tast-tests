@@ -20,6 +20,7 @@
             android:label="@string/title_activity_test_input"
             android:name=".TestInputActivity">
             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.TEST_INPUT" />
                 <category android:name="android.intent.category.CATEGORY_DEFAULT" />
             </intent-filter>
@@ -28,6 +29,7 @@
             android:label="@string/title_activity_test_output"
             android:name=".TestOutputActivity">
             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.TEST_OUTPUT" />
                 <category android:name="android.intent.category.CATEGORY_DEFAULT" />
             </intent-filter>
@@ -36,6 +38,7 @@
             android:label="@string/title_activity_test_aec"
             android:name=".TestAECEffectActivity">
             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.TEST_AEC" />
                 <category android:name="android.intent.category.CATEGORY_DEFAULT" />
             </intent-filter>
@@ -44,6 +47,7 @@
             android:label="@string/title_activity_test_perf_playback"
             android:name=".PlaybackPerformanceActivity">
             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.PERF_PLAYBACK" />
                 <category android:name="android.intent.category.CATEGORY_DEFAULT" />
             </intent-filter>
@@ -52,6 +56,7 @@
             android:label="@string/title_activity_test_output_sine"
             android:name=".TestOutputSineActivity">
             <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.TEST_SINE" />
                 <category android:name="android.intent.category.CATEGORY_DEFAULT" />
             </intent-filter>
