@@ -110,6 +110,26 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 
 	tf := s.FixtValue().(*wificell.TestFixture)
 
+	ctx, restoreBgAndFg, err := tf.DUTWifiClient(wificell.DefaultDUT).TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
+	ctx, restoreBgAndFgPeer, err := tf.DUTWifiClient(wificell.PeerDUT1).TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFgPeer(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
 	P2PGOIsConfigured := false
 	P2PClientIsConfigured := false
 	configureP2PConnection := func(ctx context.Context, options []group_owner.P2PGOOption) {

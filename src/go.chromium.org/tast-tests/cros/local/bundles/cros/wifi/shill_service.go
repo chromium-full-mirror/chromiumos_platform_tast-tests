@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
@@ -82,7 +83,8 @@ var dhcpFirewallParams = []firewall.RuleOption{
 
 // ShillService implements tast.cros.wifi.Shill gRPC service.
 type ShillService struct {
-	s *testing.ServiceState
+	s      *testing.ServiceState
+	method wifi.InvokeMethodEnum
 }
 
 // cleanUpUsbmon cleans up usbmon files and processes, if any.
@@ -3089,22 +3091,105 @@ func (s *ShillService) WatchDarkResume(_ *empty.Empty, sender wifi.ShillService_
 
 // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
 func (s *ShillService) P2PGroupCreate(ctx context.Context, request *wifi.P2PGroupCreateRequest) (ret *wifi.P2PGroupCreateResponse, retErr error) {
+	s.method = request.Method
+	switch s.method {
+	case wifi.InvokeMethodEnum_WPA_CLI:
+		return s.p2pGroupCreateWPACLI(ctx, request)
+	}
 	return nil, errors.New("Not implemented yet")
 }
 
 // P2PGroupDelete deletes the existing WiFi Direct Group.
 func (s *ShillService) P2PGroupDelete(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (ret *wifi.P2PGroupDeleteResponse, retErr error) {
+	// Use invoke method given during P2PGroupCreate.
+	switch s.method {
+	case wifi.InvokeMethodEnum_WPA_CLI:
+		return s.p2pGroupDeleteWPACLI(ctx, request)
+	}
 	return nil, errors.New("Not implemented yet")
 }
 
 // P2PGroupConnect handles connection to the existing WiFi Direct Group.
 func (s *ShillService) P2PGroupConnect(ctx context.Context, request *wifi.P2PGroupConnectRequest) (ret *wifi.P2PGroupConnectResponse, retErr error) {
+	s.method = request.Method
+	switch s.method {
+	case wifi.InvokeMethodEnum_WPA_CLI:
+		return s.p2pGroupConnectWPACLI(ctx, request)
+	}
 	return nil, errors.New("Not implemented yet")
 }
 
 // P2PGroupDisconnect handles disconnection from the existing WiFi Direct Group.
 func (s *ShillService) P2PGroupDisconnect(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (ret *wifi.P2PGroupDisconnectResponse, retErr error) {
+	// Use invoke method given during P2PGroupConnect.
+	switch s.method {
+	case wifi.InvokeMethodEnum_WPA_CLI:
+		return s.p2pGroupDisconnectWPACLI(ctx, request)
+	}
 	return nil, errors.New("Not implemented yet")
+}
+
+// p2pGroupCreateWPACLI uses WPA CLI to create WiFi Direct Group and take its ownership.
+func (s *ShillService) p2pGroupCreateWPACLI(ctx context.Context, request *wifi.P2PGroupCreateRequest) (ret *wifi.P2PGroupCreateResponse, retErr error) {
+	ipr := ip.NewLocalRunner()
+	wpar := localwpacli.NewLocalRunner()
+
+	var options []wpacli.P2PGOOption
+	if request.Data.Freq > 0 {
+		options = append(options, wpacli.SetP2PGOFreq(int(request.Data.Freq)))
+	}
+	// Ignore other options, not supported by WPA CLI yet.
+	iface, ssid, key, err := wpar.P2PGroupCreate(ctx, ipr, options...)
+	if err != nil {
+		return &wifi.P2PGroupCreateResponse{}, err
+	}
+	ret = &wifi.P2PGroupCreateResponse{
+		Id:     iface,
+		IfName: iface, // For wpa_cli this is the same.
+		Data:   &wifi.P2PData{Ssid: ssid, Key: key},
+	}
+	return
+}
+
+// p2pGroupDeleteWPACLI uses WPA CLI to delete the existing WiFi Direct Group.
+func (s *ShillService) p2pGroupDeleteWPACLI(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (ret *wifi.P2PGroupDeleteResponse, retErr error) {
+	ipr := ip.NewLocalRunner()
+	wlan0Iface, _ := s.GetInterface(ctx, &empty.Empty{})
+	wpar := localwpacli.NewLocalRunnerOnIface(wlan0Iface.Name)
+
+	if err := wpar.P2PGroupDelete(ctx, ipr, request.Id); err != nil {
+		retErr = errors.Join(retErr, err)
+	}
+	ret = &wifi.P2PGroupDeleteResponse{}
+	return
+}
+
+// p2pGroupConnectWPACLI uses WPA CLI to handle connection to the existing WiFi Direct Group.
+func (s *ShillService) p2pGroupConnectWPACLI(ctx context.Context, request *wifi.P2PGroupConnectRequest) (ret *wifi.P2PGroupConnectResponse, retErr error) {
+	ipr := ip.NewLocalRunner()
+	wpar := localwpacli.NewLocalRunner()
+
+	p2pClientIface, p2pClientNetID, err := wpar.P2PGroupConnect(ctx, ipr,
+		request.Data.Ssid, request.Data.Key, wpacli.SetP2PGOFreq(int(request.Data.Freq)))
+	if err != nil {
+		return &wifi.P2PGroupConnectResponse{}, err
+	}
+
+	ret = &wifi.P2PGroupConnectResponse{
+		Id:        p2pClientIface,
+		IfName:    p2pClientIface, // For wpa_cli this is the same.
+		NetworkId: int32(p2pClientNetID)}
+	return
+}
+
+// p2pGroupDisconnectWPACLI uses WPA CLI to handle disconnection from the existing WiFi Direct Group.
+func (s *ShillService) p2pGroupDisconnectWPACLI(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (ret *wifi.P2PGroupDisconnectResponse, retErr error) {
+	ipr := ip.NewLocalRunner()
+	wlanIface, _ := s.GetInterface(ctx, &empty.Empty{})
+	wpar := localwpacli.NewLocalRunnerOnIface(wlanIface.Name)
+	retErr = wpar.P2PGroupDisconnect(ctx, ipr, request.Id, int(request.NetworkId))
+	ret = &wifi.P2PGroupDisconnectResponse{}
+	return
 }
 
 // StartTethering attempts to start a tethering session.

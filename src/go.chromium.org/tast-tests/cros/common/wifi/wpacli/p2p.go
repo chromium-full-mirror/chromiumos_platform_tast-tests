@@ -45,6 +45,15 @@ func NetworkID(id int) P2PGOOption {
 	}
 }
 
+// GetP2PFreq returns frequency encoded in the set of P2PGOOption elements.
+func GetP2PFreq(ops ...P2PGOOption) int {
+	conf := &setP2PGroupAddConf{}
+	for _, op := range ops {
+		op(conf)
+	}
+	return conf.freq
+}
+
 // p2pGroupAdd add a new P2P group. It does either of two things:
 // If networkID is not present in ops, it creates new P2P group and becomes GO.
 // If networkID is present in ops, it connects to the existing P2P group.

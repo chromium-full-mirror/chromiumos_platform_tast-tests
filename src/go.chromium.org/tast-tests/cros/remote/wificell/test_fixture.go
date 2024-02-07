@@ -32,7 +32,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/hwsec"
 	remotefirewall "go.chromium.org/tast-tests/cros/remote/network/firewall"
-	remoteip "go.chromium.org/tast-tests/cros/remote/network/ip"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
 	remoteping "go.chromium.org/tast-tests/cros/remote/network/ping"
 	remotearping "go.chromium.org/tast-tests/cros/remote/wifi/arping"
@@ -208,11 +207,13 @@ type TestFixture struct {
 	// The following parameters (with prefix p2p*) are used with P2P tests.
 	p2pGO              *dutData
 	p2pClient          *dutData
-	p2pGOIface         string
+	p2pGOID            string
+	p2pGOIfName        string
 	p2pGroupSSID       string
 	p2pGroupPassphrase string
-	p2pClientIface     string
-	p2pClientNetID     int
+	p2pClientID        string
+	p2pClientIfName    string
+	p2pClientNetID     int32
 
 	apID              int
 	seederIfaces      []*APIface
@@ -1674,7 +1675,6 @@ func (tf *TestFixture) P2PConfigureGO(ctx context.Context, device P2PDevice, ops
 	}
 
 	wpar := remotewpacli.NewRemoteRunner(tf.p2pGO.dut.Conn())
-	ipr := remoteip.NewRemoteRunner(tf.p2pGO.dut.Conn())
 
 	// Make sure seeder BSSID is available in scan before asking to configure P2P.
 	// This should set regdomain, which otherwise may cause test flakes.
@@ -1683,18 +1683,32 @@ func (tf *TestFixture) P2PConfigureGO(ctx context.Context, device P2PDevice, ops
 		return err
 	}
 
-	p2pGOIface, ssid, key, err := wpar.P2PGroupCreate(ctx, ipr, ops...)
-	if err != nil {
-		return errors.Wrap(err, "failed to create P2P Group")
+	request := &wifi.P2PGroupCreateRequest{
+		Data: &wifi.P2PData{
+			Freq: uint32(wpacli.GetP2PFreq(ops...)),
+		},
 	}
-
-	tf.p2pGOIface = p2pGOIface
-	tf.p2pGroupSSID = ssid
-	tf.p2pGroupPassphrase = key
+	resp, err := tf.p2pGO.wifiClient.P2PGroupCreate(ctx, request)
+	if err != nil {
+		return err
+	}
+	tf.p2pGOID = resp.Id
+	tf.p2pGOIfName = resp.IfName
+	tf.p2pGroupSSID = resp.Data.Ssid
+	tf.p2pGroupPassphrase = resp.Data.Key
 
 	testing.ContextLog(ctx, "P2P Group owner (GO): Configured")
 
 	return nil
+}
+
+// P2PDeconfigureGO deconfigures the p2p group owner (GO).
+func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) (err error) {
+	request := &wifi.P2PGroupDeleteRequest{
+		Id: tf.p2pGOID,
+	}
+	_, err = tf.p2pGO.wifiClient.P2PGroupDelete(ctx, request)
+	return
 }
 
 // P2PConnect connects the p2p client to the p2p group owner (GO) network and waits for the service to be connected.
@@ -1703,25 +1717,41 @@ func (tf *TestFixture) P2PConnect(ctx context.Context, device P2PDevice, ops ...
 	if tf.p2pClient, err = tf.P2PDevice(ctx, device); err != nil {
 		return err
 	}
-	wpar := remotewpacli.NewRemoteRunner(tf.p2pClient.dut.Conn())
-	ipr := remoteip.NewRemoteRunner(tf.p2pClient.dut.Conn())
 
-	p2pClientIface, p2pClientNetID, err := wpar.P2PGroupConnect(ctx, ipr, tf.p2pGroupSSID, tf.p2pGroupPassphrase, ops...)
-	if err != nil {
-		return errors.Wrap(err, "failed to create P2P Group")
+	request := &wifi.P2PGroupConnectRequest{
+		Data: &wifi.P2PData{
+			Freq: uint32(wpacli.GetP2PFreq(ops...)),
+			Ssid: tf.p2pGroupSSID,
+			Key:  tf.p2pGroupPassphrase,
+		},
 	}
-	tf.p2pClientIface = p2pClientIface
-	tf.p2pClientNetID = p2pClientNetID
+	resp, err := tf.p2pClient.wifiClient.P2PGroupConnect(ctx, request)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to P2P Group")
+	}
+	tf.p2pClientID = resp.Id
+	tf.p2pClientIfName = resp.IfName
+	tf.p2pClientNetID = resp.NetworkId
 
 	testing.ContextLog(ctx, "The p2p client is connected to the p2p group owner (GO) network")
 	return nil
+}
+
+// P2PDisconnect disconnects and deconfigures the p2p client.
+func (tf *TestFixture) P2PDisconnect(ctx context.Context) (err error) {
+	request := &wifi.P2PGroupDisconnectRequest{
+		Id:        tf.p2pClientID,
+		NetworkId: tf.p2pClientNetID,
+	}
+	_, err = tf.p2pClient.wifiClient.P2PGroupDisconnect(ctx, request)
+	return
 }
 
 // P2PAssertPingFromGO pings the p2p client from the group owner (GO) device.
 func (tf *TestFixture) P2PAssertPingFromGO(ctx context.Context, opts ...ping.Option) error {
 	pr := remoteping.NewRemoteRunner(tf.p2pGO.dut.Conn())
 
-	opts = append(opts, ping.Interval(0.1), ping.BindAddress(true), ping.SourceIface(tf.p2pGOIface))
+	opts = append(opts, ping.Interval(0.1), ping.BindAddress(true), ping.SourceIface(tf.p2pGOIfName))
 	testing.ContextLog(ctx, "Ping p2p client from p2p group owner (GO)")
 	res, err := pr.Ping(ctx, utils.P2PClientIPAddress, opts...)
 	if err != nil {
@@ -1739,7 +1769,7 @@ func (tf *TestFixture) P2PAssertPingFromGO(ctx context.Context, opts ...ping.Opt
 func (tf *TestFixture) P2PAssertPingFromClient(ctx context.Context, opts ...ping.Option) error {
 	pr := remoteping.NewRemoteRunner(tf.p2pClient.dut.Conn())
 
-	opts = append(opts, ping.Interval(0.1), ping.BindAddress(true), ping.SourceIface(tf.p2pClientIface))
+	opts = append(opts, ping.Interval(0.1), ping.BindAddress(true), ping.SourceIface(tf.p2pClientIfName))
 	testing.ContextLog(ctx, "Ping p2p group owner (GO) from p2p client")
 	res, err := pr.Ping(ctx, utils.P2PGOIPAddress, opts...)
 	if err != nil {
@@ -1882,37 +1912,9 @@ func (tf *TestFixture) SAPPerf(ctx context.Context, protocol iperf.Protocol, rev
 	return finalResult, nil
 }
 
-// P2PDeconfigureGO deconfigures the p2p group owner (GO).
-func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) (ret error) {
-	iface, err := tf.p2pGO.wifiClient.Interface(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the P2P GO WiFi interface")
-	}
-
-	wpar := remotewpacli.NewRemoteRunnerOnIface(tf.p2pGO.dut.Conn(), iface)
-	ipr := remoteip.NewRemoteRunner(tf.p2pGO.dut.Conn())
-	if err := wpar.P2PGroupDelete(ctx, ipr, tf.p2pGOIface); err != nil {
-		ret = errors.Join(ret, err)
-	}
-
-	return ret
-}
-
-// P2PDisconnect disconnects and deconfigures the p2p client.
-func (tf *TestFixture) P2PDisconnect(ctx context.Context) (ret error) {
-	iface, err := tf.p2pClient.wifiClient.Interface(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get the P2P Client WiFi interface")
-	}
-
-	wpar := remotewpacli.NewRemoteRunnerOnIface(tf.p2pClient.dut.Conn(), iface)
-	ipr := remoteip.NewRemoteRunner(tf.p2pClient.dut.Conn())
-	return wpar.P2PGroupDisconnect(ctx, ipr, tf.p2pClientIface, tf.p2pClientNetID)
-}
-
 // P2PGOIface returns the p2p GO interface name.
 func (tf *TestFixture) P2PGOIface() string {
-	return tf.p2pGOIface
+	return tf.p2pGOIfName
 }
 
 // P2PGOConn returns connection object to the p2pGO.
