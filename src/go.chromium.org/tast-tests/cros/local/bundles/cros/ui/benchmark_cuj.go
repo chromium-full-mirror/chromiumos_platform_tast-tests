@@ -355,45 +355,6 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GBWithoutCooldown",
 			},
-			// TODO(b/301007255) Remove these tests. These are EU Benchmark
-			// tests that will only run for a couple builds to get data for all
-			// of our devices.
-			{
-				Name:      "speedometer_battery",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-					RunOnBattery:  true,
-				},
-			},
-			{
-				Name:      "motionmark_battery",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-					RunOnBattery:  true,
-				},
-			},
-			{
-				Name:      "kraken_battery",
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithoutCooldown",
-				Val: benchmarkcuj.BenchmarkTest{
-					BrowserType:   browser.TypeAsh,
-					BenchmarkInfo: benchmarkcuj.KrakenInfo,
-					RecorderMode:  cujrecorder.Benchmark,
-					RunOnBattery:  true,
-				},
-			},
 		},
 	})
 }
