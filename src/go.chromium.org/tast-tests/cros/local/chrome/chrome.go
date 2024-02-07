@@ -353,8 +353,10 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 			return
 		}
 
-		if err := c.CleanupProxy(ctx); err != nil {
-			testing.ContextLog(ctx, "Failed to cleanup proxy: ", err)
+		if c != nil {
+			if err := c.CleanupProxy(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to cleanup proxy: ", err)
+			}
 		}
 
 		ctx, st := timing.Start(ctx, "save_minidumps")
