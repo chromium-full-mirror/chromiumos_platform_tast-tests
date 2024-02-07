@@ -268,7 +268,9 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to Chrome: ", err)
 	}
 	defer func() {
-		cr.Close(ctx)
+		if cr != nil {
+			cr.Close(ctx)
+		}
 	}()
 
 	errorCount := 0
@@ -307,12 +309,11 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 			}
 
 			cr.Close(ctx)
+			cr = nil
 			cr, tconn, err = createChrome(ctx, gaia, param)
 			if err != nil {
 				s.Fatal("Failed to re-connect to Chrome: ", err)
 			}
-			defer cr.Close(ctx)
-
 			continue
 		}
 
