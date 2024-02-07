@@ -26,7 +26,7 @@ func init() {
 		Contacts: []string{
 			"net-dev@chromium.org",
 		},
-		BugComponent: "crbug:Internals>Network",
+		BugComponent: "b:1456527",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Fixture:      fixture.ChromePolicyLoggedIn,
