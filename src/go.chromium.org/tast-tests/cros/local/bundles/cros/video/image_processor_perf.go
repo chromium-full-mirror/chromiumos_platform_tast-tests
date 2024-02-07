@@ -15,7 +15,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	mediacpu "go.chromium.org/tast-tests/cros/local/media/cpu"
-	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
@@ -59,9 +58,6 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	dataDirectory := filepath.Dir(s.DataPath("images/puppets-1280x720.nv12.yuv"))
 	const imageProcessorPerfTestBin = "image_processor_perf_test"
 
-	testArgs := []string{fmt.Sprintf("--source_directory=%s", dataDirectory),
-		logging.ChromeVmoduleFlag()}
-
 	exec := filepath.Join(chrome.BinTestDir, imageProcessorPerfTestBin)
 	logfile := filepath.Join(s.OutDir(),
 		fmt.Sprintf("output_%s_%d.txt", filepath.Base(exec), time.Now().Unix()))
@@ -70,7 +66,7 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 	gtestFilter := gtest.Filter(testName)
 	t := gtest.New(exec, gtest.Logfile(logfile),
 		gtestFilter,
-		gtest.ExtraArgs(testArgs...),
+		gtest.ExtraArgs("--source_directory="+dataDirectory, "--output_directory="+s.OutDir()),
 		gtest.UID(int(sysutil.ChronosUID)))
 
 	command, err := t.Args()
@@ -101,7 +97,7 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 		exec,
 		gtest.Logfile(filepath.Join(s.OutDir(), exec+".log")),
 		gtestFilter,
-		gtest.ExtraArgs(testArgs...),
+		gtest.ExtraArgs("--source_directory="+dataDirectory, "--output_directory="+s.OutDir()),
 	))
 	if err != nil {
 		s.Error("No additional information is available for this failure")
