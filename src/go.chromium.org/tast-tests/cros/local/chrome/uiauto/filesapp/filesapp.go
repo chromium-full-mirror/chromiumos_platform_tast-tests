@@ -655,13 +655,21 @@ func (f *FilesApp) ToggleAvailableOfflineForFile(fileName string) uiauto.Action 
 	)
 }
 
-// DragAndDropFile selects the specified file and does a drag and drop to the specified point.
+// DragAndDropFile selects the specified file and does a drag and drop to the
+// specified point.
 func (f *FilesApp) DragAndDropFile(fileName string, dropPoint coords.Point, kb *input.KeyboardEventWriter) uiauto.Action {
 	return f.DragAndDropFiles([]string{fileName}, dropPoint, kb)
 }
 
-// DragAndDropFiles selects the list of file(s) and drags and drops the file(s) to the specified point.
+// DragAndDropFiles selects the list of file(s) and drags and drops the file(s)
+// to the specified point.
 func (f *FilesApp) DragAndDropFiles(listFileNames []string, dropPoint coords.Point, kb *input.KeyboardEventWriter) uiauto.Action {
+	return f.DragAndDropFilesWithTimeout(listFileNames, dropPoint, kb, time.Second)
+}
+
+// DragAndDropFilesWithTimeout selects the list of file(s) and drags and drops
+// the file(s) to the specified point within the drag time.
+func (f *FilesApp) DragAndDropFilesWithTimeout(listFileNames []string, dropPoint coords.Point, kb *input.KeyboardEventWriter, dragTime time.Duration) uiauto.Action {
 	return func(ctx context.Context) error {
 		// Clicking on a file is not enough as the clicks can be too quick for FileInfo
 		// to be added to the drop event, this leads to an empty event. Clicking the
@@ -678,7 +686,7 @@ func (f *FilesApp) DragAndDropFiles(listFileNames []string, dropPoint coords.Poi
 			return errors.Wrap(err, "failed to find the location for the file")
 		}
 
-		return mouse.Drag(f.tconn, srcPoint.CenterPoint(), dropPoint, time.Second)(ctx)
+		return mouse.Drag(f.tconn, srcPoint.CenterPoint(), dropPoint, dragTime)(ctx)
 	}
 }
 
