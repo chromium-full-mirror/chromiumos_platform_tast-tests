@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -144,17 +145,16 @@ func LaunchAppFromSettings(ctx context.Context, s *testing.State) {
 	}
 
 	// Scroll the entry into view.
+	kb, err := input.Keyboard(ctx)
 	if err := uiauto.Combine("click entry",
-		ui.WithTimeout(20*time.Second).WaitUntilExists(entryFinder),
-		ui.MakeVisible(entryFinder),
+		// Scroll down once to make sure the entry is fully in view and clickable.
+		kb.AccelAction("Down"),
+		uiauto.Sleep(time.Second),
 		ui.LeftClick(entryFinder),
 	)(ctx); err != nil {
 		s.Fatal("Failed to click entry: ", err)
 	}
-
-	if err := ui.LeftClick(entryFinder)(ctx); err != nil {
-		s.Fatal("Failed to click entry: ", err)
-	}
+	defer kb.Close(ctx)
 
 	err = ash.WaitForApp(ctx, tconn, params.appID, time.Minute)
 	if err != nil {
