@@ -30,7 +30,7 @@ func init() {
 		Contacts: []string{
 			"ml-service-team@google.com",
 			"amoylan@chromium.org",
-			"chenjh@google.com",
+			"chenjih@google.com",
 		},
 		Fixture: "powerAsh",
 		// Software > Machine Intelligence > libsoda & ChromeOS Live Caption.
