@@ -48,6 +48,23 @@ func isPanicOnWatchdogWarningEnabled(dutFeatures *protocol.DUTFeatures) (bool, e
 	return true, nil
 }
 
+// getPanicInfo attempts to get panicinfo upto 3 times before giving up,
+// since EC communication can be flaky on some boards (e.g. Asurada).
+func getPanicInfo(ctx context.Context, s *testing.State, h *firmware.Helper) (string, error) {
+	var err error
+	const retryCount = 3
+	for i := 0; i < retryCount; i++ {
+		panicInfo, err := firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetPanicInfo(ctx)
+		if err == nil {
+			return panicInfo, nil
+		}
+		s.Logf("Failed to fetch panicinfo: %v, retrying", err)
+		// GoBigSleepLint: Wait for EC communication to settle
+		testing.Sleep(ctx, 100*time.Millisecond)
+	}
+	return "", errors.Wrapf(err, "failed to fetch panicinfo after %d retries", retryCount)
+}
+
 func ECWatchdog(ctx context.Context, s *testing.State) {
 	const (
 		// Delay of EC power on.
@@ -79,12 +96,12 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		s.Log("Unable to determine if panic on watchdog warning is enabled")
 	}
 
-	// If panicInfo already contains a watchdog, force a divide zero panic to clear it
-	panicInfo, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetPanicInfo(ctx)
+	// If panicInfo already contains a watchdog or is corrupt, force a divide zero panic to clear it
+	panicInfo, err = getPanicInfo(ctx, s, h)
 	if err != nil {
-		s.Fatal("Failed to fetch current panicinfo: ", err)
+		s.Log("Failed to fetch current panicinfo, attempt to clear")
 	}
-	if watchdogPanicReason.MatchString(panicInfo) || watchdogWarnPanicReason.MatchString(panicInfo) {
+	if err != nil || watchdogPanicReason.MatchString(panicInfo) || watchdogWarnPanicReason.MatchString(panicInfo) {
 		s.Log("Force a divide by zero panic to clear existing watchdog panicinfo")
 		// Force a div zero panic to clear any existing watchdog
 		if err := h.Servo.RunECCommand(ctx, "crash divzero"); err != nil {
@@ -100,7 +117,7 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 		if err = h.DUT.WaitConnect(ctx); err != nil {
 			s.Fatal("Failed to reconnect to DUT: ", err)
 		}
-		if panicInfo, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetPanicInfo(ctx); err != nil {
+		if panicInfo, err = getPanicInfo(ctx, s, h); err != nil {
 			s.Fatal("Failed to fetch current panicinfo: ", err)
 		}
 		if watchdogPanicReason.MatchString(panicInfo) || watchdogWarnPanicReason.MatchString(panicInfo) {
@@ -147,7 +164,7 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	if newBootID != oldBootID {
 		s.Fatal("Unexpected device reboot")
 	}
-	panicInfo, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetPanicInfo(ctx)
+	panicInfo, err = getPanicInfo(ctx, s, h)
 	if err != nil {
 		s.Fatal("Failed to fetch current panicinfo: ", err)
 	}
@@ -190,7 +207,7 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to fetch current boot ID: ", err)
 	}
-	panicInfo, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetPanicInfo(ctx)
+	panicInfo, err = getPanicInfo(ctx, s, h)
 	if err != nil {
 		s.Fatal("Failed to fetch current panicinfo: ", err)
 	}
@@ -241,7 +258,7 @@ func ECWatchdog(ctx context.Context, s *testing.State) {
 	if newBootID == oldBootID {
 		s.Fatal("Failed to reboot trigger watchdog reset, old boot ID is the same as new boot ID")
 	}
-	panicInfo, err = firmware.NewECTool(h.DUT, firmware.ECToolNameMain).GetPanicInfo(ctx)
+	panicInfo, err = getPanicInfo(ctx, s, h)
 	if err != nil {
 		s.Fatal("Failed to fetch current panicinfo: ", err)
 	}
