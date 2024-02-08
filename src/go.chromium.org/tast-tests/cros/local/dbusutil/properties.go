@@ -6,6 +6,7 @@ package dbusutil
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/godbus/dbus/v5"
 
@@ -60,6 +61,30 @@ func (p *Properties) GetMap(prop string) (*Properties, error) {
 		return nil, errors.Errorf("property %s is not a map: %q", prop, value)
 	}
 	return NewProperties(ret), nil
+}
+
+// GetMaps returns the property value as array of nested sets of properties.
+func (p *Properties) GetMaps(prop string) ([]*Properties, error) {
+	value, err := p.Get(prop)
+	if err != nil {
+		return nil, err
+	}
+	// array{dict} doesn't want to capture as []map[string]interface{}, we need to capture it as
+	// []map[string]dbus.Variant and repack it.
+	arr, ok := value.([](map[string]dbus.Variant))
+	if !ok {
+		return nil, errors.Errorf("property %s is not a slice: %q is of type %q", prop, value, reflect.TypeOf(value))
+	}
+
+	result := make([]*Properties, len(arr))
+	for i, el := range arr {
+		rep := make(map[string]interface{}, len(el))
+		for k, v := range el {
+			rep[k] = v.Value()
+		}
+		result[i] = NewProperties(rep)
+	}
+	return result, nil
 }
 
 // GetStruct returns the property value representing a dbus struct of the type (*)

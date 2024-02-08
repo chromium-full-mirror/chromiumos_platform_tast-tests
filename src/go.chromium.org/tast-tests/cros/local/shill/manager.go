@@ -1084,3 +1084,67 @@ func (m *Manager) SetWiFiRequestScanType(ctx context.Context, scanType string) e
 	}
 	return nil
 }
+
+// CreateP2PGroup creates a P2P group with the specified config with this device as the group owner.
+func (m *Manager) CreateP2PGroup(ctx context.Context, props map[string]interface{}) (*dbusutil.Properties, error) {
+	var result map[string]interface{}
+	if err := m.Call(ctx, "CreateP2PGroup", props).Store(&result); err != nil {
+		return nil, err
+	}
+	return dbusutil.NewProperties(result), nil
+}
+
+// ConnectToP2PGroup starts a P2P connection with a P2P group with the specified config.
+func (m *Manager) ConnectToP2PGroup(ctx context.Context, props map[string]interface{}) (*dbusutil.Properties, error) {
+	var result map[string]interface{}
+	if err := m.Call(ctx, "ConnectToP2PGroup", props).Store(&result); err != nil {
+		return nil, err
+	}
+	return dbusutil.NewProperties(result), nil
+}
+
+// DestroyP2PGroup destroys the P2P group with the specified shill_id.
+func (m *Manager) DestroyP2PGroup(ctx context.Context, shillID uint32) (*dbusutil.Properties, error) {
+	var result map[string]interface{}
+	if err := m.Call(ctx, "DestroyP2PGroup", shillID).Store(&result); err != nil {
+		return nil, err
+	}
+	return dbusutil.NewProperties(result), nil
+}
+
+// DisconnectFromP2PGroup disconnects the P2P client with the specified shill_id from it's P2P group.
+func (m *Manager) DisconnectFromP2PGroup(ctx context.Context, shillID uint32) (*dbusutil.Properties, error) {
+	var result map[string]interface{}
+	if err := m.Call(ctx, "DisconnectFromP2PGroup", shillID).Store(&result); err != nil {
+		return nil, err
+	}
+	return dbusutil.NewProperties(result), nil
+}
+
+// P2PCapabilities is a property that indicates the hardware capabilities
+// and state information for P2P operation on the platform.
+func (m *Manager) P2PCapabilities(ctx context.Context) (*dbusutil.Properties, error) {
+	prop, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get properties")
+	}
+	return prop.GetMap("P2PCapabilities")
+}
+
+// P2PClientInfos is a list of all P2P Clients data that are active on the platform.
+func (m *Manager) P2PClientInfos(ctx context.Context) ([]*dbusutil.Properties, error) {
+	prop, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get properties")
+	}
+	return prop.GetMaps("P2PClientInfos")
+}
+
+// P2PGroupInfos is a list of all P2P Groups created on the platform.
+func (m *Manager) P2PGroupInfos(ctx context.Context) ([]*dbusutil.Properties, error) {
+	prop, err := m.GetProperties(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get properties")
+	}
+	return prop.GetMaps("P2PGroupInfos")
+}

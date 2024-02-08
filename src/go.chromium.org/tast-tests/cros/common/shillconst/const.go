@@ -132,6 +132,10 @@ const (
 	ManagerPropertyTetheringConfig                    = "TetheringConfig"
 	ManagerPropertyEnableDHCPQos                      = "EnableDHCPQoS"
 	ManagerPropertyBlockedDevices                     = "BlockedDevices"
+	ManagerPropertyP2PAllowed                         = "P2PAllowed"
+	ManagerPropertyP2PCapabilities                    = "P2PCapabilities"
+	ManagerPropertyP2PGroupInfos                      = "P2PGroupInfos"
+	ManagerPropertyP2PClientInfos                     = "P2PClientInfos"
 )
 
 // Service property names defined in dbus-constants.h .
@@ -539,4 +543,169 @@ const (
 	WiFiRequestScanTypeActive  = "active"
 	WiFiRequestScanTypeDefault = "default"
 	WiFiRequestScanTypePassive = "passive"
+)
+
+// P2P device state values
+const (
+	P2PDeviceStateUninitialized       = "uninitialized"
+	P2PDeviceStateReady               = "ready"
+	P2PDeviceStateClientAssociating   = "client_associating"
+	P2PDeviceStateClientConfiguring   = "client_configuring"
+	P2PDeviceStateClientConnected     = "client_connected"
+	P2PDeviceStateClientDisconnecting = "client_disconnecting"
+	P2PDeviceStateGOStarting          = "go_starting"
+	P2PDeviceStateGOConfiguring       = "go_configuring"
+	P2PDeviceStateGOActive            = "go_active"
+	P2PDeviceStateGOStopping          = "go_stopping"
+)
+
+// Manager kP2PCapabilitiesProperty dictionary key names.
+const (
+	P2PCapabilitiesP2PSupportedProperty      = "P2PSupported"
+	P2PCapabilitiesGroupReadinessProperty    = "GroupReadiness"
+	P2PCapabilitiesClientReadinessProperty   = "ClientReadiness"
+	P2PCapabilitiesSupportedChannelsProperty = "SupportedChannels"
+	P2PCapabilitiesPreferredChannelsProperty = "PreferredChannels"
+)
+
+// kP2PCapabilitiesGroupReadinessProperty values
+const (
+	P2PCapabilitiesGroupReadinessReady    = "ready"
+	P2PCapabilitiesGroupReadinessNotReady = "not_ready"
+)
+
+// kP2PCapabilitiesClientReadinessProperty values
+const (
+	P2PCapabilitiesClientReadinessReady    = "ready"
+	P2PCapabilitiesClientReadinessNotReady = "not_ready"
+)
+
+// Manager kP2PGroupInfosProperty dictionary key names.
+const (
+	P2PGroupInfoShillIDProperty     = "shill_id"
+	P2PGroupInfoStateProperty       = "state"
+	P2PGroupInfoSSIDProperty        = "ssid"
+	P2PGroupInfoPassphraseProperty  = "passphrase"
+	P2PGroupInfoBSSIDProperty       = "bssid"
+	P2PGroupInfoIPv4AddressProperty = "ipv4_address"
+	P2PGroupInfoIPv6AddressProperty = "ipv6_address"
+	P2PGroupInfoMACAddressProperty  = "mac_address"
+	P2PGroupInfoFrequencyProperty   = "frequency"
+	P2PGroupInfoClientsProperty     = "clients"
+)
+
+// kP2PGroupInfoStateProperty values
+const (
+	P2PGroupInfoStateIdle        = "idle"
+	P2PGroupInfoStateStarting    = "starting"
+	P2PGroupInfoStateConfiguring = "configuring"
+	P2PGroupInfoStateActive      = "active"
+	P2PGroupInfoStateStopping    = "stopping"
+)
+
+// Manager kP2PGroupInfoClientsProperty dictionary key names
+const (
+	P2PGroupInfoClientMACAddressProperty  = "mac_address"
+	P2PGroupInfoClientIPv4AddressProperty = "ipv4_address"
+	P2PGroupInfoClientIPv6AddressProperty = "ipv6_address"
+	P2PGroupInfoClientHostnameProperty    = "hostname"
+	P2PGroupInfoClientVendorClassProperty = "vendor_class"
+)
+
+// Manager kP2PClientInfoProperty dictionary key names.
+const (
+	P2PClientInfoShillIDProperty     = "shill_id"
+	P2PClientInfoStateProperty       = "state"
+	P2PClientInfoSSIDProperty        = "ssid"
+	P2PClientInfoPassphraseProperty  = "passphrase"
+	P2PClientInfoGroupBSSIDProperty  = "group_bssid"
+	P2PClientInfoIPv4AddressProperty = "ipv4_address"
+	P2PClientInfoIPv6AddressProperty = "ipv6_address"
+	P2PClientInfoMACAddressProperty  = "mac_address"
+	P2PClientInfoFrequencyProperty   = "frequency"
+	P2PClientInfoGroupOwnerProperty  = "group_owner"
+)
+
+// kP2PClientInfoStateProperty values
+const (
+	P2PClientInfoStateIdle          = "idle"
+	P2PClientInfoStateAssociating   = "associating"
+	P2PClientInfoStateConfiguring   = "configuring"
+	P2PClientInfoStateConnected     = "connected"
+	P2PClientInfoStateDisconnecting = "disconnecting"
+)
+
+// Manager kP2PClientInfoGroupOwnerProperty dictionary key names
+const (
+	P2PClientInfoGroupOwnerMACAddressProperty  = "mac_address"
+	P2PClientInfoGroupOwnerIPv4AddressProperty = "ipv4_address"
+	P2PClientInfoGroupOwnerIPv6AddressProperty = "ipv6_address"
+	P2PClientInfoGroupOwnerHostnameProperty    = "hostname"
+	P2PClientInfoGroupOwnerVendorClassProperty = "vendor_class"
+)
+
+// Manager CreateP2PGroup and ConnectToP2PGroup dictionary argument key names
+const (
+	P2PDeviceSSID       = "ssid"
+	P2PDevicePassphrase = "passphrase"
+	P2PDeviceFrequency  = "frequency"
+	P2PDeviceBSSID      = "bssid"
+	P2PDevicePriority   = "priority"
+)
+
+// P2P result dictionary key names
+const (
+	P2PDeviceShillID = "shill_id"
+	P2PResultCode    = "result_code"
+)
+
+// Manager CreateP2PGroup result values
+const (
+	CreateP2PGroupResultSuccess                 = "success"
+	CreateP2PGroupResultNotAllowed              = "not_allowed"
+	CreateP2PGroupResultNotSupported            = "not_supported"
+	CreateP2PGroupResultConcurrencyNotSupported = "concurrency_not_supported"
+	CreateP2PGroupResultTimeout                 = "timeout"
+	CreateP2PGroupResultFrequencyNotSupported   = "frequency_not_supported"
+	CreateP2PGroupResultBadSSID                 = "bad_ssid"
+	CreateP2PGroupResultOperationInProgress     = "operation_in_progress"
+	CreateP2PGroupResultOperationFailed         = "operation_failed"
+)
+
+// Manager ConnectToP2PGroup result values
+const (
+	ConnectToP2PGroupResultSuccess                 = "success"
+	ConnectToP2PGroupResultNotAllowed              = "not_allowed"
+	ConnectToP2PGroupResultNotSupported            = "not_supported"
+	ConnectToP2PGroupResultConcurrencyNotSupported = "concurrency_not_supported"
+	ConnectToP2PGroupResultTimeout                 = "timeout"
+	ConnectToP2PGroupResultAuthFailure             = "auth_failure"
+	ConnectToP2PGroupResultFrequencyNotSupported   = "frequency_not_supported"
+	ConnectToP2PGroupResultGroupNotFound           = "group_not_found"
+	ConnectToP2PGroupResultAlreadyConnected        = "already_connected"
+	ConnectToP2PGroupResultInvalidArguments        = "invalid_arguments"
+	ConnectToP2PGroupResultOperationInProgress     = "operation_in_progress"
+	ConnectToP2PGroupResultOperationFailed         = "operation_failed"
+)
+
+// Manager DestroyP2PGroup result values
+const (
+	DestroyP2PGroupResultSuccess             = "success"
+	DestroyP2PGroupResultNotAllowed          = "not_allowed"
+	DestroyP2PGroupResultNotSupported        = "not_supported"
+	DestroyP2PGroupResultTimeout             = "timeout"
+	DestroyP2PGroupResultNoGroup             = "no_group"
+	DestroyP2PGroupResultOperationInProgress = "operation_in_progress"
+	DestroyP2PGroupResultOperationFailed     = "operation_failed"
+)
+
+// Manager DisconnectFromP2PGroup result values
+const (
+	DisconnectFromP2PGroupResultSuccess             = "success"
+	DisconnectFromP2PGroupResultNotAllowed          = "not_allowed"
+	DisconnectFromP2PGroupResultNotSupported        = "not_supported"
+	DisconnectFromP2PGroupResultTimeout             = "timeout"
+	DisconnectFromP2PGroupResultNotConnected        = "not_connected"
+	DisconnectFromP2PGroupResultOperationInProgress = "operation_in_progress"
+	DisconnectFromP2PGroupResultOperationFailed     = "operation_failed"
 )
