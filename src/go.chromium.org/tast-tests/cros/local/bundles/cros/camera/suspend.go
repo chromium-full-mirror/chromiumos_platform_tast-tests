@@ -43,7 +43,7 @@ func Suspend(ctx context.Context, s *testing.State) {
 	defer cr.Close(ctx)
 
 	// Leave some time for cr.Close.
-	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
+	ctx, cancel := ctxutil.Shorten(ctx, chrome.ResetTimeout)
 	defer cancel()
 
 	err = testutil.WaitForCameraSocket(ctx)
