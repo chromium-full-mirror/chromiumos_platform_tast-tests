@@ -29,7 +29,7 @@ func init() {
 			"lacros-team@google.com",
 			"mxcai@google.com",
 		},
-		BugComponent: "crbug:UI>Browser>WebAppInstalls>ChromeOS",
+		BugComponent: "b:1389084",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		Params: []testing.Param{

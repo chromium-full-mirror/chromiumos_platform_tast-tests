@@ -36,7 +36,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 		},
-		BugComponent: "crbug:Platform>Apps>Foundation>Sharesheet",
+		BugComponent: "b:1203766",
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      7 * time.Minute,
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

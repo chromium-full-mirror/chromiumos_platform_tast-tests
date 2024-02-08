@@ -29,7 +29,7 @@ func init() {
 			"chromeos-apps-foundation-team@google.com",
 			"vpao@google.com",
 		},
-		BugComponent: "crbug:Platform>Apps>Foundation>AppService",
+		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{

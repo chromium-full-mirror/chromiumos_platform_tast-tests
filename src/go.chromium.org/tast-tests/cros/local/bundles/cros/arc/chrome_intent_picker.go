@@ -30,7 +30,7 @@ func init() {
 			"chromeos-apps-foundation-team@google.com",
 			"mxcai@chromium.org",
 		},
-		BugComponent: "crbug:Platform>Apps>Foundation>Intents",
+		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
