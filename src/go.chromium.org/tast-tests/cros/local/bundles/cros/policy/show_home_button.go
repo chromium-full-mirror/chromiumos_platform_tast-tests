@@ -34,7 +34,7 @@ func init() {
 			"dpenning@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "crbug:UI>Browser>Core",
+		BugComponent: "b:1457393",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
