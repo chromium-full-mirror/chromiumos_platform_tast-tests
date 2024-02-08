@@ -410,23 +410,3 @@ func (f *fixture) cleanUp(ctx context.Context, s *testing.FixtState) {
 		f.cr = nil
 	}
 }
-
-// getRefreshTokenForAccount returns the matching refresh token for the
-// supplied account. The tokens are stored in a multi line strings as key value
-// pairs separated by a ':' character.
-func getRefreshTokenForAccount(account, refreshTokens string) (string, error) {
-	for i, line := range strings.Split(refreshTokens, "\n") {
-		line = strings.TrimSpace(line)
-		if len(line) == 0 || strings.HasPrefix(line, "#") {
-			continue
-		}
-		ps := strings.SplitN(line, ":", 2)
-		if len(ps) != 2 {
-			return "", errors.Errorf("failed to parse refresh token list: line %d: does not contain a colon", i+1)
-		}
-		if ps[0] == account {
-			return ps[1], nil
-		}
-	}
-	return "", errors.Errorf("failed to retrieve account token for %q", account)
-}
