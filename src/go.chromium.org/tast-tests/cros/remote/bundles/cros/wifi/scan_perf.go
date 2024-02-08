@@ -66,7 +66,7 @@ func init() {
 			wificell.ShillServiceName,
 			wificell.BluetoothServiceName,
 		},
-		Vars:         []string{"router"},
+		Vars:         []string{"router", "pcap"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
 		Params: []testing.Param{
@@ -153,6 +153,10 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	if router, ok := s.Var("router"); ok && router != "" {
 		tfOps.PrimaryRouterTargets(router)
 	}
+	if pcap, ok := s.Var("pcap"); ok && pcap != "" {
+		tfOps.PcapRouterTarget(pcap)
+	}
+	tfOps.EnablePacketCapture(true)
 	// TODO(b/279663413): Tests should not manually initialize the wifi test fixture class.
 	tf, err := wificell.NewTestFixture(ctx, ctx, tfOps.Build())
 	if err != nil {
