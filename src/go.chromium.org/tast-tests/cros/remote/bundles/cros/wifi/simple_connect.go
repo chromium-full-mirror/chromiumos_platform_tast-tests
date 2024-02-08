@@ -383,7 +383,8 @@ func init() {
 						ap.EHTChWidth(ap.EHTChWidth20Or40),
 					},
 				}},
-				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11be network on channel 157 with a channel width of 40MHz.
 				Name:      "80211beeht40",
@@ -395,7 +396,8 @@ func init() {
 						ap.EHTChWidth(ap.EHTChWidth20Or40),
 					},
 				}},
-				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11be network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz.
 				Name:      "80211beeht80mixed",
@@ -408,7 +410,8 @@ func init() {
 						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 					},
 				}},
-				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
 				// Verifies that DUT can connect to an open 802.11be network on channel 157 with center channel of 155 and channel width of 80MHz.
 				// The router is forced to use EHT WiFi standard.
@@ -422,7 +425,8 @@ func init() {
 						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 					},
 				}},
-				ExtraTestBedDeps: []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
 				// Verifies that DUT can connect to an OWE network on 2.4GHz.
 				Name:    "owe",

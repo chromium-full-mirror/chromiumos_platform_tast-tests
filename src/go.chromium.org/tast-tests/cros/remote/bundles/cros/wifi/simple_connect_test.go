@@ -382,6 +382,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 			ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 			ap.EHTChWidth(ap.EHTChWidth20Or40),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}, {
 		Name:      "80211beeht40",
@@ -392,6 +393,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 			ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
 			ap.EHTChWidth(ap.EHTChWidth20Or40),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}, {
 		Name:      "80211beeht80mixed",
@@ -403,6 +405,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
 			ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}, {
 		Name:      "80211beeht80pure",
@@ -415,6 +418,7 @@ func simpleConnect80211be() []*simpleConnectParams {
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
 			ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
 		`}},
+		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}}
 }
