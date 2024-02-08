@@ -20,6 +20,8 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// Status holds power supply information reported by powerd's dump_power_status
+// tool.
 type Status struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
