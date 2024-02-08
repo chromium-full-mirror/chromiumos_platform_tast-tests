@@ -163,7 +163,6 @@ func (c *RemoteServer) FetchResult(ctx context.Context, config *Config) (*Result
 func getServerArguments(config *Config) []string {
 	res := []string{
 		"-s",
-		"-x", "C",
 		"-y", "c",
 		"-B", config.ServerIP,
 		"-p", strconv.Itoa(config.Port),

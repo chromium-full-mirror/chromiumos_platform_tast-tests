@@ -44,10 +44,12 @@ const (
 )
 
 var iperfProtocolMap = map[TestType]iperf.Protocol{
-	TestTypeTCPTx: iperf.ProtocolTCP,
-	TestTypeTCPRx: iperf.ProtocolTCP,
-	TestTypeUDPTx: iperf.ProtocolUDP,
-	TestTypeUDPRx: iperf.ProtocolUDP,
+	TestTypeTCPTx:            iperf.ProtocolTCP,
+	TestTypeTCPRx:            iperf.ProtocolTCP,
+	TestTypeUDPTx:            iperf.ProtocolUDP,
+	TestTypeUDPRx:            iperf.ProtocolUDP,
+	TestTypeTCPBidirectional: iperf.ProtocolTCP,
+	TestTypeUDPBidirectional: iperf.ProtocolUDP,
 }
 
 // TestManager is a helper class that manages running different types of iperf and netperf tests.
@@ -144,23 +146,40 @@ func (p *TestManager) Config(testType TestType, testTime time.Duration) (*iperf.
 	if testTime > 0 {
 		options = append(options, iperf.TestTimeOption(testTime))
 	}
+
 	iperfTestType, ok := iperfProtocolMap[testType]
 	if !ok {
 		return nil, errors.Errorf("failed to find the iperf protocol for %s", testType)
 	}
-	if testType == TestTypeTCPTx || testType == TestTypeUDPTx {
+
+	switch testType {
+	case TestTypeTCPBidirectional:
+		// TCP bidirectional results reported by the client seem to be less reliable
+		// than server which still align with netperf and iperf3 results.
+		// Only use 2 ports with bidirectional since we end up with 2x as many threads.
+		options = append(options, iperf.BidirectionalOption(true),
+			iperf.FetchServerResultsOption(true), iperf.PortCountOption(2))
+		// For bidirectional, use DUT as the client since we're interested in the results
+		// from the DUT's perspective.
 		return iperf.NewConfig(iperfTestType, p.testDevIPAdd, p.peerDevIPAdd, options...)
-	}
-	if testType == TestTypeTCPRx || testType == TestTypeUDPRx {
+	case TestTypeUDPBidirectional:
+		// Just run single threaded for UDP, otherwise we see very high losses and inaccurate results.
+		options = append(options, iperf.BidirectionalOption(true), iperf.PortCountOption(1))
+		return iperf.NewConfig(iperfTestType, p.testDevIPAdd, p.peerDevIPAdd, options...)
+	case TestTypeTCPTx, TestTypeUDPTx:
+		return iperf.NewConfig(iperfTestType, p.testDevIPAdd, p.peerDevIPAdd, options...)
+	case TestTypeTCPRx, TestTypeUDPRx:
 		return iperf.NewConfig(iperfTestType, p.peerDevIPAdd, p.testDevIPAdd, options...)
+	default:
+		return nil, errors.Errorf("Test type %s is not supported by this test", testType)
 	}
-	return nil, errors.Errorf("Test type %s is not supported by this test", testType)
 }
 
 // Session returns an iperf or netperf session based on the useIperf value and type of test.
 func (p *TestManager) Session(ctx context.Context, testType TestType) (*iperf.Session, error) {
 	var err error
-	if testType == TestTypeTCPTx || testType == TestTypeUDPTx {
+	switch testType {
+	case TestTypeTCPTx, TestTypeUDPTx, TestTypeTCPBidirectional, TestTypeUDPBidirectional:
 		p.iperfClient, err = iperf.NewRemoteClient(ctx, p.testDev)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create Iperf client")
@@ -170,8 +189,7 @@ func (p *TestManager) Session(ctx context.Context, testType TestType) (*iperf.Se
 			return nil, errors.Wrap(err, "failed to create Iperf server")
 		}
 		return iperf.NewSession(p.iperfClient, p.iperfServer), nil
-	}
-	if testType == TestTypeTCPRx || testType == TestTypeUDPRx {
+	case TestTypeTCPRx, TestTypeUDPRx:
 		p.iperfClient, err = iperf.NewRemoteClient(ctx, p.peerDev)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create Iperf client")
@@ -181,8 +199,9 @@ func (p *TestManager) Session(ctx context.Context, testType TestType) (*iperf.Se
 			return nil, errors.Wrap(err, "failed ot create Iperf server")
 		}
 		return iperf.NewSession(p.iperfClient, p.iperfServer), nil
+	default:
+		return nil, errors.Errorf("Test type %s is not supported by this test", testType)
 	}
-	return nil, errors.Errorf("Test type %s is not supported by this test", testType)
 }
 
 // Close deconfigures all connections and routing.

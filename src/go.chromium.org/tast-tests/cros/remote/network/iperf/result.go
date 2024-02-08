@@ -15,6 +15,8 @@ import (
 )
 
 const (
+	localAddrIndex      = 1
+	localPortIndex      = 2
 	logIDIndex          = 5
 	intervalIndex       = 6
 	dataTransferedIndex = 7
@@ -27,15 +29,32 @@ const (
 
 // Result represents an aggregated set of Iperf results.
 type Result struct {
-	Duration     time.Duration
-	Throughput   BitRate
-	PercentLoss  float64
-	StdDeviation BitRate
-	Jitter       []time.Duration
+	Duration       time.Duration
+	Throughput     BitRate
+	ClientToServer BitRate
+	ServerToClient BitRate
+	PercentLoss    float64
+	StdDeviation   BitRate
+	Jitter         []time.Duration
+}
+
+func isClientToServer(localAddr, localPort string, config *Config) bool {
+	// If local address and port match then this data is traveling from client to server.
+	// E.g. if port and address both correspond to the server.
+	if localAddr == config.ServerIP && localPort == strconv.Itoa(config.Port) {
+		return true
+	} else if localAddr == config.ClientIP && localPort != strconv.Itoa(config.Port) {
+		return true
+	}
+
+	// If port and address are mismatched, then this is data traveling in the “reverse” direction.
+	return false
 }
 
 func newResultFromOutput(ctx context.Context, output string, config *Config) (*Result, error) {
-	var totalByteCount float64
+	var totalThroughput float64
+	var totalClientToServer float64
+	var totalServerToClient float64
 	var totalDuration float64
 	var totalLoss float64
 	var totalJitter []time.Duration
@@ -52,7 +71,7 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 		}
 
 		// ignore summary lines
-		if logID, err := strconv.Atoi(fields[logIDIndex]); err != nil || logID == -1 {
+		if logID, err := strconv.Atoi(fields[logIDIndex]); err != nil || logID < 0 {
 			continue
 		}
 
@@ -85,9 +104,17 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 		}
 
 		totalDuration += duration
-		totalByteCount += byteCount
+		totalThroughput += byteCount / duration
 		totalLoss += loss
 		totalJitter = append(totalJitter, time.Duration(jitter*float64(time.Millisecond)))
+
+		localAddr := fields[localAddrIndex]
+		localPort := fields[localPortIndex]
+		if isClientToServer(localAddr, localPort, config) {
+			totalClientToServer += byteCount / duration
+		} else {
+			totalServerToClient += byteCount / duration
+		}
 
 		count++
 	}
@@ -104,7 +131,7 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 			}
 
 			// ignore summary lines
-			if logID, err := strconv.Atoi(fields[logIDIndex]); err != nil || logID == -1 {
+			if logID, err := strconv.Atoi(fields[logIDIndex]); err != nil || logID < 0 {
 				continue
 			}
 
@@ -121,15 +148,25 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 			}
 
 			totalDuration += duration
-			totalByteCount += byteCount
+			totalThroughput += byteCount / duration
+
+			localAddr := fields[localAddrIndex]
+			localPort := fields[localPortIndex]
+			if isClientToServer(localAddr, localPort, config) {
+				totalClientToServer += byteCount / duration
+			} else {
+				totalServerToClient += byteCount / duration
+			}
 
 			count++
 		}
 	}
 
+	averageDuration := totalDuration
 	expectedCount := config.PortCount
-	if config.Bidirectional && config.Protocol != ProtocolUDP {
+	if config.Bidirectional {
 		expectedCount *= 2
+		averageDuration /= 2
 	}
 
 	if count != expectedCount {
@@ -140,13 +177,16 @@ func newResultFromOutput(ctx context.Context, output string, config *Config) (*R
 		return nil, errors.Wrapf(allErrors, "invalid total duration: got %f, want > 0.0", totalDuration)
 	}
 
-	totalDuration = totalDuration / float64(config.PortCount)
+	// Get the total duration for each port.
+	averageDuration = averageDuration / float64(config.PortCount)
 	return &Result{
-		Duration:    time.Duration(totalDuration / float64(count)),
-		PercentLoss: totalLoss / float64(count),
-		Throughput:  8 * BitRate(totalByteCount/totalDuration),
-		Jitter:      totalJitter,
-	}, allErrors
+		Duration:       time.Duration(averageDuration),
+		PercentLoss:    totalLoss / float64(count),
+		Throughput:     8 * BitRate(totalThroughput),
+		ClientToServer: 8 * BitRate(totalClientToServer),
+		ServerToClient: 8 * BitRate(totalServerToClient),
+		Jitter:         totalJitter,
+	}, nil
 }
 
 // parseInterval returns the duration from an Iperf interval or -1 if it was unable to parse.
@@ -166,7 +206,12 @@ func parseInterval(interval string) (float64, error) {
 		return 0, errors.Errorf("unable to parse duration end: %v", bounds[1])
 	}
 
-	return end - start, nil
+	duration := end - start
+	if duration == 0 {
+		return 0, errors.Errorf("parsed interval is empty: %s", interval)
+	}
+
+	return duration, nil
 }
 
 // NewResultFromHistory returns the average from a set of results.
@@ -178,6 +223,8 @@ func NewResultFromHistory(samples []*Result) (*Result, error) {
 
 	var totalDuration time.Duration
 	var meanThroughput float64
+	var meanClientToServer float64
+	var meanServerToClient float64
 	var meanLoss float64
 	var jitter []time.Duration
 	var stdDev float64
@@ -185,6 +232,8 @@ func NewResultFromHistory(samples []*Result) (*Result, error) {
 	for _, sample := range samples {
 		totalDuration += sample.Duration
 		meanThroughput += float64(sample.Throughput) / float64(count)
+		meanServerToClient += float64(sample.ServerToClient) / float64(count)
+		meanClientToServer += float64(sample.ClientToServer) / float64(count)
 		meanLoss += sample.PercentLoss / float64(count)
 		jitter = append(jitter, sample.Jitter...)
 	}
@@ -196,10 +245,12 @@ func NewResultFromHistory(samples []*Result) (*Result, error) {
 	stdDev = math.Sqrt(stdDev / float64(count))
 
 	return &Result{
-		Duration:     totalDuration,
-		Throughput:   BitRate(meanThroughput),
-		PercentLoss:  meanLoss,
-		Jitter:       jitter,
-		StdDeviation: BitRate(stdDev),
+		Duration:       totalDuration,
+		Throughput:     BitRate(meanThroughput),
+		ClientToServer: BitRate(meanClientToServer),
+		ServerToClient: BitRate(meanServerToClient),
+		PercentLoss:    meanLoss,
+		Jitter:         jitter,
+		StdDeviation:   BitRate(stdDev),
 	}, nil
 }

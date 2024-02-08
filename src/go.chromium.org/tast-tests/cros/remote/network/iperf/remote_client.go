@@ -100,7 +100,6 @@ func getClientArguments(config *Config) []string {
 		"-B", config.ClientIP,
 		"-b", strconv.FormatFloat(float64(config.MaxBandwidth), 'f', -1, 64),
 		"-p", strconv.Itoa(config.Port),
-		"-x", "C",
 		"-y", "c",
 		"-P", strconv.Itoa(config.PortCount),
 		"-t", strconv.Itoa(int(config.TestTime / time.Second)),

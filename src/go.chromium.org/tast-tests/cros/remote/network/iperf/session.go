@@ -52,6 +52,12 @@ func (s *Session) Run(ctx context.Context, config *Config) (*Result, History, er
 		}
 
 		testing.ContextLogf(ctx, "Completed Iperf measurement, throughput: %f Mbit/s loss: %v", result.Throughput/Mbps, result.PercentLoss)
+
+		if config.Bidirectional {
+			testing.ContextLogf(ctx, "Client->server: %f Mbit/s", result.ClientToServer/Mbps)
+			testing.ContextLogf(ctx, "Server->client: %f Mbit/s", result.ServerToClient/Mbps)
+		}
+
 		history = append(history, result)
 		if len(history) < minMeasurementSamples {
 			continue
@@ -73,5 +79,9 @@ func (s *Session) Run(ctx context.Context, config *Config) (*Result, History, er
 	testing.ContextLogf(ctx, "Took averaged measurement %f +/- %f Mbit/s",
 		finalResult.Throughput/Mbps, finalResult.StdDeviation/Mbps)
 
+	if config.Bidirectional {
+		testing.ContextLogf(ctx, "Client->server: %f Mbit/s", finalResult.ClientToServer/Mbps)
+		testing.ContextLogf(ctx, "Server->client: %f Mbit/s", finalResult.ServerToClient/Mbps)
+	}
 	return finalResult, history, nil
 }
