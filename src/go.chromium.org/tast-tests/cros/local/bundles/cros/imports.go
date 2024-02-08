@@ -79,6 +79,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/login"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/loginapi"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/logs"
+	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/mahi"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/media"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/meet"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/memory"

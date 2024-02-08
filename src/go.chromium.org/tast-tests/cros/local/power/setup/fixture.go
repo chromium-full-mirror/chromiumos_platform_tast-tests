@@ -91,12 +91,16 @@ const (
 	// Protected video playback
 	PowerAshProtectedVideo    = "powerAshProtectedVideo"
 	PowerLacrosProtectedVideo = "powerLacrosProtectedVideo"
+
+	// Mahi
+	PowerAshMahi = "powerAshMahi"
 )
 
 // PowerFixtureOptions describes options used by the fixture only.
 type PowerFixtureOptions struct {
 	BrowserType      browser.Type
 	BrowserExtraOpts []chrome.Option
+	ExtraOptsFunc    chrome.OptionsCallback
 	EnableGAIALogin  bool
 	EnableARC        bool
 	EnableHDR        bool
@@ -942,6 +946,36 @@ func init() {
 		PreTestTimeout:  PreTestTimeout,
 		PostTestTimeout: PostTestTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:         PowerAshMahi,
+		Desc:         "Fixture with mahi flags enabled and feature key provided",
+		BugComponent: "b:1551116",
+		Contacts: []string{
+			"alanlxl@google.com",
+			"chenjih@google.com",
+			"thanhdng@google.com",
+		},
+		Impl: NewPowerUIFixture(PowerTestOptions{
+			NightLight:         DisableNightLight,
+			DarkTheme:          EnableLightTheme,
+			KeyboardBrightness: SetKbBrightnessToZero,
+		}, PowerFixtureOptions{
+			BrowserType: browser.TypeAsh,
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("Mahi"),
+			},
+			ExtraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{chrome.ExtraArgs("--mahi-feature-key=" + s.RequiredVar("mahi.featureTestKey"))}, nil
+			},
+		}),
+		SetUpTimeout:    SetUpTimeout,
+		ResetTimeout:    ResetTimeout,
+		TearDownTimeout: TearDownTimeout,
+		PreTestTimeout:  PreTestTimeout,
+		PostTestTimeout: PostTestTimeout,
+		Vars:            []string{"mahi.featureTestKey"},
+	})
 }
 
 type powerSetUpFixture struct {
@@ -1191,6 +1225,14 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 
 	if f.powerFixtureOption.EnableHDR {
 		opts = append(opts, chrome.EnableHDR())
+	}
+
+	if f.powerFixtureOption.ExtraOptsFunc != nil {
+		extraOpts, err := f.powerFixtureOption.ExtraOptsFunc(ctx, s)
+		if err != nil {
+			s.Fatal("Failed to get extra options: ", err)
+		}
+		opts = append(opts, extraOpts...)
 	}
 
 	// Apply PowerFixtureOptions feature command-line overrides.
