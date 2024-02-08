@@ -67,6 +67,7 @@ func Regulatory(ctx context.Context, s *testing.State) {
 		wlan.Intel22560,
 		wlan.IntelAX203,
 		wlan.IntelAX211,
+		wlan.IntelBE200,
 		wlan.QualcommWCN6855,
 		wlan.QualcommWCN6750,
 	}
