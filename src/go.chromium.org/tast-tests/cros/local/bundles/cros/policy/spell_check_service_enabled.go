@@ -37,7 +37,7 @@ func init() {
 			"dp-chromeos-eng@google.com",
 			"megjablon@google.com",
 		},
-		BugComponent: "crbug:UI>Browser>Language>Spellcheck",
+		BugComponent: "b:1457550",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Timeout:      3 * time.Minute,
