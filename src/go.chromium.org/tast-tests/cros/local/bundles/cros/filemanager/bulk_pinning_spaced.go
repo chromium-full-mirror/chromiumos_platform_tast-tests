@@ -6,17 +6,18 @@ package filemanager
 
 import (
 	"context"
+	"os"
 	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/filemanager"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -53,7 +54,6 @@ func init() {
 func BulkPinningSpaced(ctx context.Context, s *testing.State) {
 	fixt := s.FixtValue().(*drivefs.FixtureData)
 	driveFsClient := fixt.DriveFs
-	apiClient := fixt.APIClient
 	tconn := fixt.TestAPIConn
 
 	// Give the Drive API enough time to remove the file.
@@ -81,17 +81,14 @@ func BulkPinningSpaced(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start watching Drivefs logs for pattern: ", err)
 	}
 
-	// Create a file at the Drivefs root directory.
-	fileName := filemanager.GenerateTestFileName("spaced") + ".txt"
-	existingFileID, err := bulkpinning.CreateTestFile(ctx, apiClient, driveFsClient, s.DataPath("test_1KB.txt"), fileName)
-	if err != nil {
-		s.Fatal("Failed to create a test file: ", err)
+	// Create a random file locally
+	testFileName := filemanager.GenerateTestFileName(s.TestName() + ".txt")
+	testFilePath := driveFsClient.MyDrivePath(testFileName)
+	if err := fsutil.CopyFile(s.DataPath("test_1KB.txt"), testFilePath); err != nil {
+		s.Fatal("Failed to copy test file: ", err)
 	}
-	defer func() {
-		if err := apiClient.RemoveFileByID(cleanupCtx, existingFileID); err != nil {
-			s.Log("Failed to remove file by ID: ", err)
-		}
-	}()
+	// Cleanup: Remove the file locally
+	defer os.Remove(testFilePath)
 
 	// Verify that spaced has been called by Drivefs.
 	select {
