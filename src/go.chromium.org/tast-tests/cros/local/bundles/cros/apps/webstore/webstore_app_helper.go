@@ -136,11 +136,13 @@ func UpgradeWebstoreApp(ctx context.Context, cr *chrome.Chrome, tconn *chrome.Te
 	} else if !a {
 		return errors.New("main tab is not activated")
 	}
-	if err := ui.RetryUntil(ui.LeftClick(tabButton), ui.Exists(upgraded))(ctx); err != nil {
-		return errors.Wrap(err, "failed to find UI element")
-	}
-	if err := ui.LeftClick(closeButton)(ctx); err != nil {
-		return errors.Wrap(err, "failed to close the window")
+	if app.WebTab != "" {
+		if err := ui.RetryUntil(ui.LeftClick(tabButton), ui.Exists(upgraded))(ctx); err != nil {
+			return errors.Wrap(err, "failed to find UI element")
+		}
+		if err := ui.LeftClick(closeButton)(ctx); err != nil {
+			return errors.Wrap(err, "failed to close the window")
+		}
 	}
 	return nil
 }
