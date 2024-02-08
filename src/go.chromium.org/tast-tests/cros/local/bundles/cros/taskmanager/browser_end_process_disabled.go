@@ -26,7 +26,7 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 			"afakhry@google.com",
 		},
-		BugComponent: "crbug:UI>TaskManager",
+		BugComponent: "b:1457613",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		Fixture:      "chromeLoggedIn",
 	})
