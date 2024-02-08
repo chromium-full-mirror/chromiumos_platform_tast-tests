@@ -42,7 +42,7 @@ const ecWebsiteKeyFileName = "ec_cert_settings_page_website_key.key"
 // is used to create a client and website certificates.
 // Chrome will need to import it to trust that the website certificate is valid.
 // Website server will need to use it to trust that the client certificate is valid.
-const rootCertFileName = "cert_settings_page_root_cert.crt"
+const rootCertFileName = "cert_settings_page_root_cert.pem"
 const ecRootCertFileName = "ec_cert_settings_page_root_cert.crt"
 
 // clientCertFileName is name of file for the client certificate and key that will
@@ -333,15 +333,15 @@ func checkCertInSystemSettings(ctx context.Context, s *testing.State,
 }
 
 // deleteClientCert uses the Chrome's cert settings page to delete the client cert.
-func deleteClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := utils.DeleteClientCert(ctx, ui, clientOrg); err != nil {
+func deleteClientCert(ctx context.Context, s *testing.State, ui *uiauto.Context, ignoreErrors bool) {
+	if err := utils.DeleteClientCert(ctx, ui, clientOrg); err != nil && !ignoreErrors {
 		s.Fatal("Failed to delete client certificate: ", err)
 	}
 }
 
 // deleteCACert selects and deletes specific CA certificate on CA tab.
-func deleteCACert(ctx context.Context, s *testing.State, ui *uiauto.Context) {
-	if err := utils.DeleteCACert(ctx, ui, caCertName, caOrg); err != nil {
+func deleteCACert(ctx context.Context, s *testing.State, ui *uiauto.Context, ignoreErrors bool) {
+	if err := utils.DeleteCACert(ctx, ui, caCertName, caOrg); err != nil && !ignoreErrors {
 		s.Fatal("Failed to delete CA certificate: ", err)
 	}
 }
@@ -404,6 +404,11 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	// Copy all required for test certificates to Download.
 	prepareCertificates(s, downloadsPath)
 
+	// Try to delete certs from the certificates manager at the end of test.
+	// This will clean device in case test has failed early.
+	defer deleteClientCert(ctx, s, ui, true /*ignoreErrors*/)
+	defer deleteCACert(ctx, s, ui, true /*ignoreErrors*/)
+
 	// Try opening a website without any certs, that should fail with a CA error.
 	createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
@@ -436,7 +441,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	// Delete and add certificates back, there should be no errors.
 	{
 		// Delete the client cert and check that now the website rejects the connection.
-		deleteClientCert(ctx, s, ui)
+		deleteClientCert(ctx, s, ui, false /*ignoreErrors*/)
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
 
 		// Import a client certs again and open the website, it should succeed.
@@ -445,7 +450,7 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 		createAndUseWebsite(ctx, s, browser, ui, kb, true /*expectCertPopup*/, pageLoadedRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
-		deleteCACert(ctx, s, ui)
+		deleteCACert(ctx, s, ui, false /*ignoreErrors*/)
 		waitForClientCert(ctx, s)
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 
@@ -465,11 +470,11 @@ func CertSettingsPage(ctx context.Context, s *testing.State) {
 	// Clean certificates should have no errors.
 	{
 		// Delete the client cert and check that now the website rejects the connection.
-		deleteClientCert(ctx, s, ui)
+		deleteClientCert(ctx, s, ui, false /*ignoreErrors*/)
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, connectionErrorRegex)
 
 		// Delete the CA cert and check that Chrome gets the CA error again.
-		deleteCACert(ctx, s, ui)
+		deleteCACert(ctx, s, ui, false /*ignoreErrors*/)
 		createAndUseWebsite(ctx, s, browser, ui, kb, false /*expectCertPopup*/, caInvalidErrorRegex)
 	}
 }
