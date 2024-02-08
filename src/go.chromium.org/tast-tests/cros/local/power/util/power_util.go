@@ -681,3 +681,16 @@ func SupportChromeEC() bool {
 	}
 	return true
 }
+
+// ArcVersion returns the Android version running in ARC.
+func ArcVersion() int32 {
+	arcVersionString := GetBoardProperty("CHROMEOS_ARC_ANDROID_SDK_VERSION")
+	if arcVersionString == "" {
+		return -1
+	}
+	arcVersion, err := strconv.Atoi(arcVersionString)
+	if err != nil {
+		return -1
+	}
+	return int32(arcVersion)
+}

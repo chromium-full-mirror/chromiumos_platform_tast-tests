@@ -30,6 +30,7 @@ func FormatDeviceInfoForPowerLog(devInfo *pb.DeviceInfo) map[string]interface{} 
 		"firmware":  devInfo.GetFirmwareVersion(),
 		"ec":        devInfo.GetEcVersion(),
 		"kernel":    devInfo.GetKernelVersion(),
+		"arc":       devInfo.GetArcVersion(),
 	}
 
 	if devInfo.ChromeosChannel != nil {

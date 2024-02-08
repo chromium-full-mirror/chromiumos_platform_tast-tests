@@ -34,4 +34,5 @@ message DeviceInfo {
   int32 screen_refresh_rate = 27;
   optional double battery_shutdown_percent = 28;
   optional double battery_size = 29;
+  int32 arc_version = 30;
 }

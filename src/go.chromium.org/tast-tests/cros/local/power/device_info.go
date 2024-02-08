@@ -47,6 +47,7 @@ func GetDeviceInfo(ctx context.Context, args ...OptionalRecorderArg) *pb.DeviceI
 		StorageType:              util.GetStorageType(ctx),
 		ScreenSize:               util.GetScreenSize(ctx),
 		ScreenRefreshRate:        util.GetScreenRefreshRate(ctx),
+		ArcVersion:               util.ArcVersion(),
 	}
 
 	if path, err := metrics.SysfsBatteryPath(ctx); err == nil {

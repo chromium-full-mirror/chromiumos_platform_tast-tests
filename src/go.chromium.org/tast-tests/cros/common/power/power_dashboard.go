@@ -534,7 +534,7 @@ func createPowerLogFromPowerDict(ctx context.Context, testName string, powerDict
 	// record test start time. Use the timestamp at time of power_log creation
 	// as an approximate.
 	powerLogDict := map[string]interface{}{
-		"format_version": 7,
+		"format_version": 8,
 		"timestamp":      float64(start.UnixNano()) / 1000000000.0,
 		"test":           testName,
 		"dut":            FormatDeviceInfoForPowerLog(devInfo),
