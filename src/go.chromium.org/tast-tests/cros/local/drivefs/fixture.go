@@ -30,6 +30,29 @@ var (
 	driveAPIScopes = []string{"https://www.googleapis.com/auth/drive"}
 )
 
+// CliKey represents a top level CLI argument passed to DriveFS, these will be
+// added to the `command_line_args` file as --CliKey=key:value.
+type CliKey string
+
+const (
+	// CliKeyFeatures represents the --features flag.
+	CliKeyFeatures CliKey = "features"
+	// CliKeyModuleLogLevel represents the --module_log_level flag.
+	CliKeyModuleLogLevel CliKey = "module_log_level"
+)
+
+// CliArgsMap takes a map of maps which will be interpreted as command line
+// options passed to DriveFS. For example, the following map:
+//
+//	CliArgsMap{
+//		"features": {
+//			"switchblade_dss": "true",
+//		},
+//	}
+//
+// will create the command line args: --features=switchblade_dss:true
+type CliArgsMap = map[CliKey]map[string]string
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            "driveFsStarted",
@@ -94,11 +117,35 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     "driveFsStartedBulkPinningEnabledWithCurlLogLevelFine",
+		Desc:     "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
+		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Impl: &fixture{
+			drivefsOptions: CliArgsMap{
+				CliKeyModuleLogLevel: {
+					"curl_api": "LOG_FINE",
+				},
+			},
+			enableBulkPinning: true,
+			bt:                browser.TypeAsh,
+		},
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: chrome.ResetTimeout + DriveFsSetupAndTearDownTimeout,
+		Vars: []string{
+			"drivefs.accountPool",
+			"drivefs.extensionClientID",
+		},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     "driveFsStartedWithNativeMessaging",
 		Desc:     "Ensures DriveFS is mounted and the bidirectional messaging functionality is enabled",
 		Contacts: []string{"austinct@chromium.org", "chromeos-files-syd@chromium.org"},
-		Impl: &fixture{drivefsOptions: map[string]string{
-			"switchblade_dss": "true",
+		Impl: &fixture{drivefsOptions: CliArgsMap{
+			CliKeyFeatures: {
+				"switchblade_dss": "true",
+			},
 		}, bt: browser.TypeAsh},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -113,8 +160,10 @@ func init() {
 		Name:     "driveFsStartedWithNativeMessagingLacros",
 		Desc:     "Lacros variant of driveFsStartedWithNativeMessaging",
 		Contacts: []string{"austinct@chromium.org", "chromeos-files-syd@chromium.org"},
-		Impl: &fixture{drivefsOptions: map[string]string{
-			"switchblade_dss": "true",
+		Impl: &fixture{drivefsOptions: CliArgsMap{
+			CliKeyFeatures: {
+				"switchblade_dss": "true",
+			},
 		}, bt: browser.TypeLacros},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -131,8 +180,10 @@ func init() {
 		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl: &fixture{
 			enableBulkPinning: true,
-			drivefsOptions: map[string]string{
-				"switchblade_dss": "true",
+			drivefsOptions: CliArgsMap{
+				CliKeyFeatures: {
+					"switchblade_dss": "true",
+				},
 			}, bt: browser.TypeLacros},
 		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
 		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
@@ -204,7 +255,7 @@ type fixture struct {
 	APIClient         *APIClient
 	driveFs           *DriveFs
 	chromeOptions     []chrome.Option
-	drivefsOptions    map[string]string
+	drivefsOptions    CliArgsMap
 	bt                browser.Type
 	enableBulkPinning bool
 }
@@ -282,12 +333,16 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	f.mountPath = f.driveFs.MountPath()
 
 	if len(f.drivefsOptions) > 0 {
-		var options []string
-		for flag, value := range f.drivefsOptions {
-			options = append(options, fmt.Sprintf("%s:%s", flag, value))
+		var cliArgs []string
+		for arg, values := range f.drivefsOptions {
+			var options []string
+			for flag, value := range values {
+				options = append(options, fmt.Sprintf("%s:%s", flag, value))
+			}
+			cliArgs = append(cliArgs, fmt.Sprintf("--%s=%s", arg, strings.Join(options, ",")))
 		}
-		cliArgs := fmt.Sprintf("--features=%s", strings.Join(options, ","))
-		if err := f.driveFs.WriteCommandLineFlags(cliArgs); err != nil {
+
+		if err := f.driveFs.WriteCommandLineFlags(strings.Join(cliArgs, " ")); err != nil {
 			s.Fatal("Failed to write command line args: ", err)
 		}
 		if err := f.driveFs.Restart(ctx); err != nil {
