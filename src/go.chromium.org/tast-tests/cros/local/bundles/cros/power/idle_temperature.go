@@ -19,7 +19,7 @@ func init() {
 		Func:         IdleTemperature,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Collects data on the idle temperature of devices",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com", "edcourtney@chromium.org"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
@@ -32,7 +32,8 @@ func IdleTemperature(ctx context.Context, s *testing.State) {
 	thermal := power.NewSysfsThermalMetrics()
 	thermal.Setup(ctx, "", "")
 
-	// First wait for CPU idle. This is the same timeout WaitUntilCoolDown uses by default.
+	// GoBigSleepLint: First wait for CPU idle. This is the same timeout
+	// WaitUntilCoolDown uses by default.
 	testing.Sleep(ctx, 300*time.Second)
 
 	// Grab the temperature.

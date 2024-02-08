@@ -14,7 +14,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Reboot,
 		Desc:         "Verifies that system comes back after rebooting",
-		BugComponent: "b:167191",
+		BugComponent: "b:1361410",
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		SoftwareDeps: []string{"reboot", "no_qemu"},
 		Attr:         []string{"group:mainline", "group:labqual"},

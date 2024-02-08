@@ -20,7 +20,7 @@ func init() {
 		Func:         PowerQualV2,
 		Desc:         "Run power test cases based on the given configuration",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Power
 		Contacts:     []string{"chromeos-platform-power@google.com"},
 		Vars: []string{
 			// Optional. If given, it overrides the default URL.

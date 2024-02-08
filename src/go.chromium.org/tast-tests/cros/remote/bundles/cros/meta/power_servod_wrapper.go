@@ -56,7 +56,7 @@ func init() {
 		Func:         PowerServodWrapper,
 		Desc:         "Runs test while capturing power data using servod",
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		BugComponent: "b:167191", // ChromeOS > Platform > System > Power
+		BugComponent: "b:1361410", // ChromeOS > Platform > System > Power
 		Contacts:     []string{"cros-pe-pnp@google.com", "zhaon@google.com", "khwon@google.com"},
 		Timeout:      24 * time.Hour, // Depends on subtest, so set maximum value here.
 		Params: []testing.Param{
