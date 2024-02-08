@@ -35,7 +35,7 @@ func init() {
 			"chrome-views@google.com",
 			"elainechien@google.com",
 		},
-		BugComponent: "crbug:UI>Browser",
+		BugComponent: "b:1457469",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
