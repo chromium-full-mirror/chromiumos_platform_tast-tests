@@ -68,17 +68,18 @@ func (gm *GoogleMeet) SetLeaveEmptyCalls(value bool) action.Action {
 	)
 }
 
-// SetAdjustVideoLighting sets the option of "Adjust video lighting" in "Video" Tab.
+// SetAdjustVideoLighting sets the option of "Adjust video lighting" in "Video"
+// Tab. Requires that the video effects pane is open.
 func (gm *GoogleMeet) SetAdjustVideoLighting(value bool) action.Action {
-	finder := nodewith.Name("Adjust video lighting").Role(role.Switch).Ancestor(settingsDialog)
-	actionDesc := `set "Adjust video lighting" to false`
-	if value {
-		actionDesc = `set "Adjust video lighting" to true`
-	}
+	appearanceTabFinder := nodewith.Name("Appearance").Role(role.Tab)
+	backgroundsTabFinder := nodewith.Name("Backgrounds").Role(role.Tab)
+	finder := nodewith.Name("Adjust video lighting").Role(role.Switch)
 
-	return uiauto.Combine(actionDesc,
-		gm.ui.DoDefault(videoSettingsTabButton),
+	return uiauto.Combine(
+		fmt.Sprintf("set \"Adjust video lighting\" to %t", value),
+		gm.ui.DoDefault(appearanceTabFinder),
 		gm.setToggleValue(finder, value),
+		gm.ui.DoDefault(backgroundsTabFinder),
 	)
 }
 
@@ -203,14 +204,16 @@ func (gm *GoogleMeet) SetEffect(effectOption EffectOption) action.Action {
 		gm.setToggleValue(effectButton, true))
 }
 
-// SetEffectBlur sets the option of video effects & blur.
-func (gm *GoogleMeet) SetEffectBlur(value bool) action.Action {
-	blurButtonName := NoEffect
-	if value {
-		blurButtonName = BlurEffect
-	}
-
-	return gm.SetEffect(blurButtonName)
+// SetBackgroundBlur enables/disables the background blur effect. Requires that
+// the video effects pane is open.
+func (gm *GoogleMeet) SetBackgroundBlur(value bool) action.Action {
+	finder := nodewith.Name("Blur your background").Role(role.ToggleButton)
+	backgroundsTabFinder := nodewith.Name("Backgrounds").Role(role.Tab)
+	return uiauto.Combine(
+		fmt.Sprintf("set \"Blur your background\" to %t", value),
+		gm.ui.DoDefault(backgroundsTabFinder),
+		gm.setToggleValue(finder, value),
+	)
 }
 
 // SetEffectOnJoinPage sets the option of video effects on the join page.

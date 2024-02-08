@@ -315,10 +315,12 @@ func BenchmarkingMeet(ctx context.Context, s *testing.State) {
 		gm.SwitchCaptions(param.appLiveCaptions),
 		gm.ChangeSettings(
 			gm.SetLeaveEmptyCalls(false),
-			gm.SetAdjustVideoLighting(param.appRelight),
 			gm.SetSendResolution(googlemeet.ResolutionHD720P),
 		),
-		gm.ApplyVideoEffects(gm.SetEffectBlur(param.appBlur)),
+		gm.ApplyVideoEffects(
+			gm.SetBackgroundBlur(param.appBlur),
+			gm.SetAdjustVideoLighting(param.appRelight),
+		),
 		gm.EnterFullScreen,
 	)(ctx); err != nil {
 		s.Fatal("Failed to configure Meet: ", err)
