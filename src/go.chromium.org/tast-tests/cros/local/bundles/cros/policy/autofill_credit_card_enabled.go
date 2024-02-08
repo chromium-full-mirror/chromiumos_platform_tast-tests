@@ -50,7 +50,7 @@ func init() {
 			"chrome-autofill@google.com", // Feature owner
 			"dp-chromeos-eng@google.com",
 		},
-		BugComponent: "crbug:UI>Browser>Autofill",
+		BugComponent: "b:1456764",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{
