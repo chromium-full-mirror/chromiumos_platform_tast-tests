@@ -36,7 +36,7 @@ func init() {
 			"chrome-desktop-search@google.com",
 			"jdonnelly@google.com",
 		},
-		BugComponent: "crbug:UI>Browser>Omnibox",
+		BugComponent: "b:1457180",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:hw_agnostic"},
 		Params: []testing.Param{{

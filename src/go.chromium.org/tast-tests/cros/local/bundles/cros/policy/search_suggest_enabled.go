@@ -35,7 +35,7 @@ func init() {
 			"jdonnelly@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
-		BugComponent: "crbug:UI>Browser>Omnibox",
+		BugComponent: "b:1457180",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:golden_tier", "group:mainline", "informational", "group:hw_agnostic"},
 		Params: []testing.Param{{
