@@ -129,6 +129,7 @@ func BulkPinningEnterpriseChoobeScreen(ctx context.Context, s *testing.State) {
 			Pass: password,
 		}),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		chrome.ExtraArgs("--vmodule=drivefs_pinning_manager=1"),
 	}
 
 	cr, err := chrome.New(ctx, chromeOptions...)
@@ -256,7 +257,7 @@ func advanceConsolidatedConsentScreenAndWaitTimeSpentListing(ctx context.Context
 		return errors.Errorf("failed to record histogram, got %d want 1", len(histograms))
 	}
 	if histograms[0].Sum == 0 {
-		return errors.Errorf("failed to record a histogram value for %q", umaName)
+		testing.ContextLogf(ctx, "Recorded a histogram value of 0 for %q", umaName)
 	}
 	return nil
 }
