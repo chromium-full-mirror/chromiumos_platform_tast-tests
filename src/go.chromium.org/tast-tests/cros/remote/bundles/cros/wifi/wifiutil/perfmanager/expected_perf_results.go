@@ -313,6 +313,16 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 				ap.ChWidth80:  ExpectedTput{200, 400},
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
 		},
 		TestTypeTCPRx: {
 			ap.Mode80211nPure: {
@@ -338,6 +348,16 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 				ap.ChWidth80:  ExpectedTput{200, 400},
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
 		},
 		TestTypeTCPBidirectional: {
 			ap.Mode80211nPure: {
@@ -360,6 +380,16 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},
 			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
 				ap.ChWidth80:  ExpectedTput{0, 0},
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},
@@ -389,6 +419,16 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 				ap.ChWidth80:  ExpectedTput{347, 500},
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
 		},
 		TestTypeUDPRx: {
 			ap.Mode80211nPure: {
@@ -414,6 +454,16 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 				ap.ChWidth80:  ExpectedTput{347, 500},
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
 		},
 		TestTypeUDPBidirectional: {
 			ap.Mode80211nPure: {
@@ -436,6 +486,16 @@ var expectedThroughputWiFi = map[routerSupport.RouterType]map[TestType]map[ap.Mo
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},
 			ap.Mode80211axMixed: {
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211bePure: {
+				ap.ChWidth20:  ExpectedTput{0, 0},
+				ap.ChWidth40:  ExpectedTput{0, 0},
+				ap.ChWidth80:  ExpectedTput{0, 0},
+				ap.ChWidth160: ExpectedTput{0, 0},
+			},
+			ap.Mode80211beMixed: {
 				ap.ChWidth80:  ExpectedTput{0, 0},
 				ap.ChWidth160: ExpectedTput{0, 0},
 			},

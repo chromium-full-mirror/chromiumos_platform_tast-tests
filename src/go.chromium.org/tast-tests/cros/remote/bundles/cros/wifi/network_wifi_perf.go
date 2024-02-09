@@ -147,7 +147,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiTputHE80TCPTx, tdreq.WiFiTputHE80TCPRx, tdreq.WiFiTputHE80TCPRxTx, tdreq.WiFiTputHE80UDPTx, tdreq.WiFiTputHE80UDPRx, tdreq.WiFiTputHE80UDPRxTx},
 			},
-			// TODO(b/323903848) Stabilize WiFi 6E performance tests
+			// TODO(b/323903848) Stabilize WiFi 6E/7 performance tests
 			{
 				// Network: WPA3-SAE ("pure") HE20 802.11axe.
 				Name: "he20_6ghz",
@@ -229,6 +229,59 @@ func init() {
 				}},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
+			},
+			{
+				// Network: open EHT20 802.11be.
+				Name: "eht20",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20), ap.EHTChWidth(ap.EHTChWidth20Or40),
+					},
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+			},
+			{
+				// Network: open EHT40 802.11be.
+				Name: "eht40",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
+						ap.EHTChWidth(ap.EHTChWidth20Or40),
+					},
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+			},
+			{
+				// Network: open "pure" EHT80 802.11be.
+				Name: "eht80_pure",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+					},
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+			},
+			{
+				// Network: open "mixed" EHT80 802.11be.
+				Name: "eht80_mixed",
+				Val: []networkWifiPerfTestCase{{
+					apOpts: []ap.Option{
+						ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+					},
+					powerSave: false, shouldTputRequired: false,
+				}},
+				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
 			{
 				// Network: open HT20 802.11n.
