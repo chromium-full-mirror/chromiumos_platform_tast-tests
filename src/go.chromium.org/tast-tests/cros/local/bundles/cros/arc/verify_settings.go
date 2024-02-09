@@ -73,7 +73,7 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 		s.Log("Failed to create ScreenRecorder: ", err)
 	}
 
-	defer uiauto.ScreenRecorderStopSaveRelease(ctx, screenRecorder, filepath.Join(s.OutDir(), "VeriySettings.webm"))
+	defer uiauto.ScreenRecorderStopSaveRelease(ctx, screenRecorder, filepath.Join(s.OutDir(), "VerifySettings.webm"))
 
 	if screenRecorder != nil {
 		screenRecorder.Start(ctx, tconn)
@@ -115,7 +115,7 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) error {
 	const (
 		scrollClassName = "android.widget.ScrollView"
-		locationID      = "com.android.settings:id/switch_widget"
+		locationID      = "android:id/switch_widget"
 	)
 
 	// Scroll until system is visible.
@@ -162,7 +162,7 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	buildNumber := arcDevice.Object(androidui.ClassName("android.widget.TextView"), androidui.TextMatches("(?i)build number"), androidui.Enabled(true))
 	// On T and potentially other Android flavors, `buildNumber` can be found at the end of the menu, scrolling on a best effort capacity.
 	if err := scrollLayout.WaitForExists(ctx, timeoutUI); err == nil {
-		scrollLayout.ScrollTo(ctx, buildNumber);
+		scrollLayout.ScrollTo(ctx, buildNumber)
 	}
 
 	if err := buildNumber.WaitForExists(ctx, timeoutUI); err != nil {
@@ -239,7 +239,7 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 	// locationStatus will check for toggle On/Off
 	locationStatus, err := arcDevice.Object(androidui.ID(locationID)).IsChecked(ctx)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "Use location toggle cannot be found")
 	}
 	locationToggle := arcDevice.Object(androidui.ID(locationID))
 
@@ -277,7 +277,6 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
 	const backupID = "android:id/switch_widget"
 	const oldBackupID = "com.google.android.gms:id/switchWidget"
-	backupToggle := arcDevice.Object(androidui.ID(backupID))
 
 	// Turn on backup in case if it is off which is the expectation for this test.
 	backupToggleOn := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Turn on"), androidui.Enabled(true))
@@ -287,7 +286,16 @@ func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
 		return errors.Wrap(err, "failed to click Turn on button")
 	}
 
+	// Dismiss Google photos backup step.
+	photosSkip := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Skip"), androidui.Enabled(true))
+	if err := photosSkip.WaitForExists(ctx, time.Second*10); err != nil {
+		testing.ContextLog(ctx, "Skip button is not there")
+	} else if err := photosSkip.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click Skip button")
+	}
+
 	oldBackupUI := false
+	backupToggle := arcDevice.Object(androidui.ID(backupID))
 	// backupStatus will check for toggle on/off.
 	backupStatus, err := arcDevice.Object(androidui.ID(backupID)).IsChecked(ctx)
 	if err != nil {
@@ -321,10 +329,16 @@ func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
 			return errors.Wrap(err, "failed to click backup toggle in Old UI")
 		}
 	} else {
+		// It's ok to be lax on the checks here as we have confirmed once that the UI we need exists.
 		backupToggleOn := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Turn on"), androidui.Enabled(true))
 		if err := backupToggleOn.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click backup toggle New UI")
 		}
+		photosSkip := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Skip"), androidui.Enabled(true))
+		if err := photosSkip.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click Skip button in New UI")
+		}
+
 	}
 
 	if oldBackupUI {
