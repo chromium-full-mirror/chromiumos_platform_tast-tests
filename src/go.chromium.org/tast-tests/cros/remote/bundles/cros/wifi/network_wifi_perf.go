@@ -164,10 +164,8 @@ func init() {
 			{
 				// Network: WPA3-SAE ("pure") HE40 802.11axe.
 				Name: "he40_6ghz",
-				// TODO(b/323591821) Enable setting channel width to 40MHz on
-				// 6GHz channels.
 				Val: []networkWifiPerfTestCase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC),
+					apOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
 						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),

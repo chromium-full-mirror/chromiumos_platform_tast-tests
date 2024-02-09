@@ -284,14 +284,13 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport6E, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E},
 	}, {
-		Name:    "80211axe40",
-		Fixture: defaultFixture,
-		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz."),
-			"TODO(b/323591821) Enable setting channel width to 40MHz on 6GHz channels."),
+		Name:              "80211axe40",
+		Fixture:           defaultFixture,
+		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz."),
 		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Val: []simpleConnectParamsVal{{APOpts: `
-				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC),
+				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
 				ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
 			SecConfFac: `wpa.NewConfigFactory("chromeos",
 				wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,

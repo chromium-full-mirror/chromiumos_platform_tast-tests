@@ -283,14 +283,13 @@ func init() {
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E"},
 			}, {
 				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz.
-				// TODO(b/323591821) Enable setting channel width to 40MHz on 6GHz channels.
 				Name:              "80211axe40",
 				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
 					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC),
+						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
 						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
 					secConfFac: wpa.NewConfigFactory("chromeos",
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
