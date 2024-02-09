@@ -31,8 +31,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Drag test for GIO menu entry, button group, and actions",
 		Contacts:     []string{"arc-app-dev@google.com", "pjlee@google.com", "cuicuiruan@google.com"},
-		// ChromeOS > Software > ARC++ > Framework > Gaming
-		BugComponent: "b:767470",
+		// ChromeOS > Software > ARC++ > Gaming
+		BugComponent: "b:1373988",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "arcBootedWithInputOverlayAlphaV2",
