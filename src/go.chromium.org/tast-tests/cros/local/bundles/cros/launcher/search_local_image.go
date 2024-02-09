@@ -44,7 +44,7 @@ func init() {
 			"dgrebenyuk@google.com",
 			"ypitsishin@google.com",
 		},
-		BugComponent: "b:280365665",
+		BugComponent: "b:1281467",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{localPictureName},
