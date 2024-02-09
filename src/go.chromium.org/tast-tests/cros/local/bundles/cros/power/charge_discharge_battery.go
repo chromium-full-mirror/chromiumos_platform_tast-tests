@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ChargeDischargeBattery,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test that battery can be charged or discharged to a certain range",
+		Desc:         "This test is used to charge battery to a certain range before running other (power) tests",
 		BugComponent: "b:1361410", // ChromeOS > Platform > System > Core Power
 		Contacts:     []string{"chromeos-platform-power@google.com", "jingmuli@google.com"},
 		HardwareDeps: hwdep.D(
@@ -69,60 +69,60 @@ func init() {
 				IsPowerQual:           false},
 			Timeout: 5 * time.Hour,
 		}, {
-			Name: "power_qual_prep_97_browsing",
+			Name: "power_qual_prep_80_browsing",
 			Val: power.ChargeParams{
-				MinChargePercentage:   96.0,
-				MaxChargePercentage:   97.0,
+				MinChargePercentage:   78.0,
+				MaxChargePercentage:   80.0,
 				DischargeOnCompletion: true,
 				IsCustomized:          false,
 				IsPowerQual:           false,
 			},
 			Timeout: 3 * time.Hour,
 		}, {
-			Name: "power_qual_prep_92_browsing_heavy",
+			Name: "power_qual_prep_75_browsing_heavy",
 			Val: power.ChargeParams{
-				MinChargePercentage:   91.0,
-				MaxChargePercentage:   92.0,
+				MinChargePercentage:   73.0,
+				MaxChargePercentage:   75.0,
 				DischargeOnCompletion: true,
 				IsCustomized:          false,
 				IsPowerQual:           false,
 			},
 			Timeout: 3 * time.Hour,
 		}, {
-			Name: "power_qual_prep_85_vpb_vp9",
+			Name: "power_qual_prep_68_vpb_vp9",
 			Val: power.ChargeParams{
-				MinChargePercentage:   84.0,
-				MaxChargePercentage:   85.0,
+				MinChargePercentage:   66.0,
+				MaxChargePercentage:   68.0,
 				DischargeOnCompletion: true,
 				IsCustomized:          false,
 				IsPowerQual:           false,
 			},
 			Timeout: 3 * time.Hour,
 		}, {
-			Name: "power_qual_prep_78_vpb_h264",
+			Name: "power_qual_prep_61_vpb_h264",
 			Val: power.ChargeParams{
-				MinChargePercentage:   77.0,
-				MaxChargePercentage:   78.0,
+				MinChargePercentage:   59.0,
+				MaxChargePercentage:   61.0,
 				DischargeOnCompletion: true,
 				IsCustomized:          false,
 				IsPowerQual:           false,
 			},
 			Timeout: 3 * time.Hour,
 		}, {
-			Name: "power_qual_prep_70_vc",
+			Name: "power_qual_prep_53_vc",
 			Val: power.ChargeParams{
-				MinChargePercentage:   69.0,
-				MaxChargePercentage:   70.0,
+				MinChargePercentage:   51.0,
+				MaxChargePercentage:   53.0,
 				DischargeOnCompletion: true,
 				IsCustomized:          false,
 				IsPowerQual:           false,
 			},
 			Timeout: 3 * time.Hour,
 		}, {
-			Name: "power_qual_prep_35_65_arc",
+			Name: "power_qual_prep_35_55_arc",
 			Val: power.ChargeParams{
 				MinChargePercentage:   35.0,
-				MaxChargePercentage:   65.0,
+				MaxChargePercentage:   55.0,
 				DischargeOnCompletion: true,
 				IsCustomized:          false,
 				IsPowerQual:           false,
