@@ -357,7 +357,7 @@ func init() {
 				DisplayMediaType:  peerconnection.CaptureMonitor,
 				BrowserType:       browser.TypeAsh,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeScreenCapture",
 		}, {
@@ -397,7 +397,7 @@ func init() {
 				DisplayMediaType:  peerconnection.CaptureMonitor,
 				BrowserType:       browser.TypeAsh,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs"},
 			Fixture:           "chromeZeroCopyScreenCapture",
 		}, {
@@ -536,7 +536,7 @@ func init() {
 				DisplayMediaType:  peerconnection.CaptureMonitor,
 				BrowserType:       browser.TypeAsh,
 			},
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},
 			Fixture:           "chromeScreenCapture",
 		}, {

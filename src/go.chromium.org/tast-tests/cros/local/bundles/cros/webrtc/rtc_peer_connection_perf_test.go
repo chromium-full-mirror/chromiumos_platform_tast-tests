@@ -322,7 +322,7 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 					Fixture:      captureFixtureMap[captureSource][zeroCopy],
 				}
 				if captureSource == peerconnection.CaptureMonitor {
-					sourceData.HardwareDeps = "hwdep.InternalDisplay()"
+					sourceData.HardwareDeps = "hwdep.InternalDisplay(), hwdep.NoExternalDisplay()"
 				}
 				sourceDatas = append(sourceDatas, sourceData)
 			}

@@ -46,7 +46,7 @@ func init() {
 			Name:              "monitor",
 			Val:               getDisplayMediaTestParams{surfaceType: "monitor", browserType: browser.TypeAsh},
 			Fixture:           "chromeScreenCapture",
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 		}, {
 			Name:    "window",
 			Val:     getDisplayMediaTestParams{surfaceType: "window", browserType: browser.TypeAsh},
@@ -59,7 +59,7 @@ func init() {
 			Name:              "monitor_zero_copy",
 			Val:               getDisplayMediaTestParams{surfaceType: "monitor", browserType: browser.TypeAsh},
 			Fixture:           "chromeZeroCopyScreenCapture",
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 		}, {
 			Name:    "window_zero_copy",
 			Val:     getDisplayMediaTestParams{surfaceType: "window", browserType: browser.TypeAsh},
@@ -72,7 +72,7 @@ func init() {
 			Name:              "monitor_lacros",
 			Val:               getDisplayMediaTestParams{surfaceType: "monitor", browserType: browser.TypeLacros},
 			Fixture:           "chromeScreenCaptureLacros",
-			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay()),
+			ExtraHardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.NoExternalDisplay()),
 			ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:              "window_lacros",
