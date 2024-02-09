@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
+	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -61,10 +61,9 @@ func ShillSuspendResumePersistEnabled(ctx context.Context, s *testing.State) {
 	}
 
 	// Request suspend for 10 seconds
-	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=10").Run(); err != nil {
-		s.Fatal("Failed to perform system suspend (precondition): ", err)
+	if _, err := suspend.ForDuration(ctx, 10*time.Second); err != nil {
+		s.Fatal("The powerd_dbus_suspend failed to properly suspend: ", err)
 	}
-
 	// Verify enabled setting persisted
 	if err := helper.Device.WaitForProperty(ctx, shillconst.DevicePropertyPowered, params.enabledState, shillconst.DefaultTimeout); err != nil {
 		s.Fatal("Failed to set enabled to ", params.enabledState, ": ", err)
