@@ -21,7 +21,7 @@ func init() {
 		Func: SenderOld,
 		Desc: "Check that old minidump crashes are uploaded",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"nya@chromium.org", // ported to Tast

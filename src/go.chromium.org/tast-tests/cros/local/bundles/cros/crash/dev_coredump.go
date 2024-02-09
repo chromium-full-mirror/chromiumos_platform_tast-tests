@@ -23,7 +23,7 @@ func init() {
 		Func: DevCoredump,
 		Desc: "Verify device coredumps are handled as expected",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@google.com",
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},

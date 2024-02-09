@@ -24,7 +24,7 @@ func init() {
 		Func:         Histograms,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the client computed crash severity and product group data are being reported to the appropriate UMA histogram",
-		Contacts:     []string{"cros-telemetry@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com"},
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},

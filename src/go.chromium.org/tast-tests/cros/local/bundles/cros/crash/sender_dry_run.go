@@ -22,7 +22,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Basic test to check that dry run mode prints uploads.log entries",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"xuhong@chromium.org",

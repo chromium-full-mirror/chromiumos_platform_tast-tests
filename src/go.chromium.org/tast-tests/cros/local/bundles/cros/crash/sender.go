@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Basic test to check that minidump crashes are uploaded",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"nya@chromium.org", // ported to Tast
@@ -42,8 +42,8 @@ func init() {
 			Name:    "mock_consent_fieldtrial_testing_config_off",
 			Fixture: crash.MockConsentFieldTrialConfigDisable,
 		}, {
-			Name:      "mock_consent_fieldtrial_testing_config_on",
-			Fixture:   crash.MockConsentFieldTrialConfigEnable,
+			Name:    "mock_consent_fieldtrial_testing_config_on",
+			Fixture: crash.MockConsentFieldTrialConfigEnable,
 		}},
 	})
 }

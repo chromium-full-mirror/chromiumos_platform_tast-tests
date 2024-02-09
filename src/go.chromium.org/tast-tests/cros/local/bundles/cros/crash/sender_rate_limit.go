@@ -20,7 +20,7 @@ func init() {
 		Func: SenderRateLimit,
 		Desc: "Check that crash_sender enforces the daily limit of crash report upload",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"nya@chromium.org", // ported to Tast

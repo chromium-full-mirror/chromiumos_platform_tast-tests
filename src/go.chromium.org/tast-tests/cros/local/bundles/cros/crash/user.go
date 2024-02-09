@@ -43,7 +43,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies crash reporting for user processes",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"yamaguchi@chromium.org",
 			"arc-performance@google.com",
 		},

@@ -28,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Basic test to check that crash_sender runs on login",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
 		},

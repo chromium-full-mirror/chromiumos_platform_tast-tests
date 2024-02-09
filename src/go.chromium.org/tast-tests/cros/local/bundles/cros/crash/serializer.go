@@ -25,7 +25,7 @@ func init() {
 		Func: Serializer,
 		Desc: "Basic test to check that minidump crashes are serialized",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 		},
 		BugComponent: "b:1032705",

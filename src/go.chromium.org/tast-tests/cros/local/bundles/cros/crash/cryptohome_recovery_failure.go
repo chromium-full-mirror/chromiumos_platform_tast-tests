@@ -27,7 +27,7 @@ func init() {
 		Func: CryptohomeRecoveryFailure,
 		Desc: "Verify cryptohome recovery failures are logged as expected",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"anastasiian@chromium.org",
 		},
 		BugComponent: "b:1032705",

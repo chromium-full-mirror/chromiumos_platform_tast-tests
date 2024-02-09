@@ -19,7 +19,7 @@ func init() {
 		Func: SenderLock,
 		Desc: "Check that only one crash_sender runs at a time",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"nya@chromium.org", // ported to Tast

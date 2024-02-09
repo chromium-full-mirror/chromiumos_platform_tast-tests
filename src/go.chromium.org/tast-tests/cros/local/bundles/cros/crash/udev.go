@@ -27,7 +27,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Udev,
 		Desc:         "Verify udev triggered crash works as expected",
-		Contacts:     []string{"cros-telemetry@google.com", "yamaguchi@chromium.org", "iby@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "yamaguchi@chromium.org", "iby@chromium.org"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 	})

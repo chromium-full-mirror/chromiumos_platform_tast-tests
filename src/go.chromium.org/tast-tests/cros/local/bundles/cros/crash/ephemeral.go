@@ -32,7 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify ephemeral crash collection worked as expected",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"sarthakkukreti@google.com",
 			"chromeos-storage@google.com"},
 		BugComponent: "b:1032705",

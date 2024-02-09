@@ -19,7 +19,7 @@ func init() {
 		Func: SenderKcrash,
 		Desc: "Check that kernel crash dumps are uploaded",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"nya@chromium.org", // ported to Tast

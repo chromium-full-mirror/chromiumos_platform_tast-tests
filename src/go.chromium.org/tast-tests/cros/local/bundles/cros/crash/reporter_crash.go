@@ -27,7 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies crash_reporter itself crashing is captured through anomaly detector",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1032705",

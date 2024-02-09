@@ -23,7 +23,7 @@ func init() {
 		Func: MountVaultFailure,
 		Desc: "Verify the error from login failure is properly recorded",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"zuan@google.com",
 			"cros-hwsec@google.com",
 		},

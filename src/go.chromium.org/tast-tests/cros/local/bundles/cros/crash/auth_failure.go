@@ -34,7 +34,7 @@ func init() {
 		Func: AuthFailure,
 		Desc: "Verify auth failures are logged as expected",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"cros-hwsec@google.com",
 			"chingkang@google.com",
 		},

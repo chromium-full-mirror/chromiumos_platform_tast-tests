@@ -26,7 +26,7 @@ func init() {
 		Func:         Consent,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify consent can be set and unset",
-		Contacts:     []string{"cros-telemetry@google.com", "mutexlox@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "mutexlox@google.com"},
 		BugComponent: "b:1032705", // ChromeOS > Data > Engineering > Crash Reporting
 		Attr:         []string{"group:mainline", "informational"},
 		// tpm1 is not common and requires a reboot for clearing ownership, which would make the test more complex

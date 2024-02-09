@@ -39,7 +39,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         KernelIwlwifiError,
 		Desc:         "Verify kernel iwlwifi errors are logged as expected",
-		Contacts:     []string{"cros-telemetry@google.com", "arowa@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "arowa@google.com"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func"},
 		SoftwareDeps: []string{"wifi"},

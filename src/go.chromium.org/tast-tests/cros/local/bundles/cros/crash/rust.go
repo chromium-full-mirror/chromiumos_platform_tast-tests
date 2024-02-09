@@ -21,7 +21,7 @@ func init() {
 		Func: Rust,
 		Desc: "Test the crash signature of rust binaries using the memfd panic handler",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"allenwebb@chromium.org",
 		},
 		BugComponent: "b:1032705",

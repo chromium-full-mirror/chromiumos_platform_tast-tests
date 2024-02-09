@@ -26,7 +26,7 @@ func init() {
 		Func:         SelinuxViolation,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify selinux violations are logged as expected",
-		Contacts:     []string{"cros-telemetry@google.com", "mutexlox@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "mutexlox@google.com"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"selinux"},
