@@ -94,7 +94,7 @@ func init() {
 		Desc:         "Test night light mode with dock and change color temperature from cooler to warmer",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp"},
 		ServiceDeps: []string{
@@ -104,6 +104,11 @@ func init() {
 			"tast.cros.wwcb.DisplayService",
 			"tast.cros.inputs.KeyboardService",
 		},
+		Params: []testing.Param{
+			{
+				Name:      "smoke",
+				ExtraAttr: []string{"pasit_full"},
+			}},
 	})
 }
 func NightLightViaDock(ctx context.Context, s *testing.State) {

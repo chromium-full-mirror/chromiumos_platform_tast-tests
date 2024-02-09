@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Shutdown DUT then check both screens on DUT & external display to become dark by camera connecting to the host",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1"},
 		ServiceDeps: []string{
@@ -41,6 +41,11 @@ func init() {
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
 		},
+		Params: []testing.Param{
+			{
+				Name:      "smoke",
+				ExtraAttr: []string{"pasit_full"},
+			}},
 	})
 }
 
