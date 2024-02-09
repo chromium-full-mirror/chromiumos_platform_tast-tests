@@ -22,7 +22,7 @@ const (
 
 	// sumOfTestDuration is the total sum of the tests timeout.
 	// The actual video playback time should be *(playback.SuspendSystemInterval/(playback.SuspendSystemTimeout+playback.SuspendSystemInterval))
-	sumOfTestDuration = 60 * time.Minute
+	sumOfTestDuration = 120 * time.Minute
 )
 
 type playbackStressParam struct {
@@ -92,7 +92,7 @@ func TestPlaybackStressConfig(t *testing.T) {
 	}))
 
 	var testParams []playbackStressParam
-	codecs := []string{"h264"}
+	codecs := []string{"h264", "hevc", "vp8", "vp9", "av1"}
 	resolutions := []int{720, 1080}
 	for _, codec := range codecs {
 		for _, resolution := range resolutions {
