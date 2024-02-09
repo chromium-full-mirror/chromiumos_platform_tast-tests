@@ -1103,7 +1103,7 @@ func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
 		case VHTChWidth80Plus80:
 			width = ChWidth80Plus80
 		default:
-			if c.HTCaps == HTCapHT20 {
+			if c.HTCaps&HTCapHT20 > 0 {
 				width = ChWidth20
 			} else {
 				width = ChWidth40
@@ -1129,7 +1129,11 @@ func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
 		case HEChWidth80Plus80:
 			width = ChWidth80Plus80
 		default:
-			width = ChWidth40
+			if c.HTCaps&HTCapHT20 > 0 {
+				width = ChWidth20
+			} else {
+				width = ChWidth40
+			}
 		}
 	} else if c.is80211be() {
 		mode = ModeEHT
@@ -1145,7 +1149,11 @@ func (c *Config) ChannelWidthAndMode() (ChWidthEnum, string) {
 		case EHTChWidth160Plus160:
 			width = ChWidth160Plus160
 		default:
-			width = ChWidth40
+			if c.HTCaps&HTCapHT20 > 0 {
+				width = ChWidth20
+			} else {
+				width = ChWidth40
+			}
 		}
 	} else {
 		return ChWidthUnknown, "11" + string(c.Mode)
