@@ -72,21 +72,38 @@ var (
 	reBoot       *regexp.Regexp = regexp.MustCompile(`Ravn4|([0-9a-fA-F]{8})`)
 	reResetType  *regexp.Regexp = regexp.MustCompile(`Reset Type: ([0-9a-zA-Z_]*)[\r\n]`)
 	reWakeSource *regexp.Regexp = regexp.MustCompile(`Wake source: 0x([0-9a-fA-F]{8})`)
+	reWhichPin   *regexp.Regexp = regexp.MustCompile(`Which pin: 0x([0-9a-zA-Z_]*)[\r\n]`)
 	reConsole    *regexp.Regexp = regexp.MustCompile(`Console is enabled`)
 	// Time to wait to ensure GSC did not go to sleep. This should be longer
 	// than to longest sleep delay in hil/pmu.rs
 	waitForNoSleep = 70 * time.Second
 )
 
+type wakeSource string
+
 const (
-	wakeSourceGpio  = "80000001"
-	wakeSourceRbox  = "80000004"
-	wakeSourceAdc   = "80000008"
-	wakeSourceUart1 = "80000010"
-	wakeSourceUart2 = "80000020"
-	wakeSourceUart3 = "80000040"
-	wakeSourceUart4 = "80000080"
-	wakeSourceUart5 = "80000100"
+	wakeSourceGpio  wakeSource = "00000001"
+	wakeSourceRbox  wakeSource = "00000004"
+	wakeSourceAdc   wakeSource = "00000008"
+	wakeSourceUart1 wakeSource = "00000010"
+	wakeSourceUart2 wakeSource = "00000020"
+	wakeSourceUart3 wakeSource = "00000040"
+	wakeSourceUart4 wakeSource = "00000080"
+	wakeSourceUart5 wakeSource = "00000100"
+)
+
+type whichPin string
+
+var (
+	whichPinPltRstL      whichPin = "0000000000000800"
+	whichPinEcPacketMode whichPin = "0000000001000000"
+	whichPinLidOpen      whichPin = "0000000002000000"
+	whichPinGscUart      whichPin = "0000010000000000"
+	whichPinCcdMode      whichPin = "0000080000000000"
+
+	whichPinTpmSpi whichPin = "0200000000000000"
+	whichPinTpmI2C whichPin = "0000000000000003"
+	whichPinTpmBus whichPin = "set_after_test_start"
 )
 
 func logCurrent(ctx context.Context, s *testing.State, b utils.DevboardHelper, pv *perf.Values, label string) {
@@ -118,14 +135,33 @@ func verifyDeepSleep(ctx context.Context, s *testing.State, i *ti50.CrOSImage, t
 // Aside from reporting any unexpected behavior through `s.Error`, the return value will be true
 // only if Ti50 did wake up, which is useful for the top-level test script to know which state
 // Ti50 is in, in case it wants to continue testing other aspects.
-func verifyNormalWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession, expected, trigger string) bool {
+func verifyNormalWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession, expected wakeSource, expectedGpio *whichPin, trigger string) bool {
 	wakeMatch, err := b.ReadSerialSubmatch(ctx, reWakeSource)
 	if err != nil {
 		s.Errorf("Waking on %s: Unable to recognize wake source", trigger)
 		return false
 	}
-	if string(wakeMatch[1]) != expected {
+	if string(wakeMatch[1]) != string(expected) {
 		s.Errorf("Waking on %s: Unexpected wake mask: got %s, expected %s", trigger, wakeMatch[1], expected)
+	}
+	// Verify GPIO wake source if specified
+	if expectedGpio != nil {
+		// Sent a newline without reading output to ensure that the which pin regex
+		// will match since there is no guarantee anything will be written to the
+		// GSC console after the which pin line, so there might not be a trailing
+		// newline to match (and we need that newline to bound the hex string).
+		if err := i.WriteSerial(ctx, []byte("\n")); err != nil {
+			s.Fatal("Could not write to serial: ", err)
+			return false
+		}
+		whichPinMatch, err := b.ReadSerialSubmatch(ctx, reWhichPin)
+		if err != nil {
+			s.Errorf("Waking on %s: Unable to recognize which pin source", trigger)
+			return true
+		}
+		if string(whichPinMatch[1]) != string(*expectedGpio) {
+			s.Errorf("Waking on %s: Unexpected which pin mask: got %s, expected %s", trigger, whichPinMatch[1], *expectedGpio)
+		}
 	}
 	if err := i.WaitUntilBooted(ctx); err != nil {
 		s.Error("Ti50 did not wake up by ", trigger)
@@ -141,7 +177,7 @@ func verifyNormalWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage
 // Aside from reporting any unexpected behavior through `s.Error`, the return value will be true
 // only if Ti50 did wake up, which is useful for the top-level test script to know which state
 // Ti50 is in, in case it wants to continue testing other aspects.
-func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession, expected, trigger string) bool {
+func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession, expectedWake wakeSource, expectedGpio *whichPin, trigger string) bool {
 	_, err := b.ReadSerialSubmatch(ctx, reBoot)
 	if err != nil {
 		s.Error("Ti50 did not wake up by ", trigger)
@@ -158,9 +194,22 @@ func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 			s.Errorf("Waking on %s: Unable to recognize wake source", trigger)
 			return true
 		}
-		if string(wakeMatch[1]) != expected {
-			s.Errorf("Waking on %s: Unexpected wake mask: got %s, expected %s", trigger, wakeMatch[1], expected)
+		if string(wakeMatch[1]) != string(expectedWake) {
+			s.Errorf("Waking on %s: Unexpected wake mask: got %s, expected %s", trigger, wakeMatch[1], expectedWake)
 		}
+
+		// Verify GPIO wake source if specified
+		if expectedGpio != nil {
+			whichPinMatch, err := b.ReadSerialSubmatch(ctx, reWhichPin)
+			if err != nil {
+				s.Errorf("Waking on %s: Unable to recognize which pin source", trigger)
+				return true
+			}
+			if string(whichPinMatch[1]) != string(*expectedGpio) {
+				s.Errorf("Waking on %s: Unexpected which pin mask: got %s, expected %s", trigger, whichPinMatch[1], *expectedGpio)
+			}
+		}
+
 	} else {
 		s.Errorf("Waking on %s: Unexpected reset type: got %q, expected %q", trigger, string(resetMatch[1]), "Wake")
 	}
@@ -194,6 +243,13 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 	pv := perf.NewValues()
 
+	// Set the correct TPM wake up pins based on test parameters
+	if testParams.tpmStrapping == ti50.TpmI2c {
+		whichPinTpmBus = whichPinTpmI2C
+	} else if testParams.tpmStrapping == ti50.TpmSpi {
+		whichPinTpmBus = whichPinTpmSpi
+	}
+
 	s.Log("Restarting ti50 with appropriate straps")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.GpioSet(ctx, ti50.GpioTi50LidOpen, false)
@@ -217,19 +273,19 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	s.Log("Simulating power button press")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceRbox, "Power Button") {
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceRbox, nil, "Power Button") {
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
 	s.Log("Simulating lid low-to-high event")
 	b.GpioSet(ctx, ti50.GpioTi50LidOpen, true)
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "Lid low-to-high event") {
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinLidOpen, "Lid low-to-high event") {
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
 	s.Logf("Simulating EC packet mode, wait %s", waitForNoSleep)
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, true)
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "EC packet mode") {
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinEcPacketMode, "EC packet mode") {
 		if err := i.WaitUntilAnySleep(ctx, waitForNoSleep); err == nil {
 			s.Error("Ti50 went to sleep while EC packet mode asserted")
 		}
@@ -239,7 +295,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Logf("Simulating CCD_MODE asserted, wait %s", waitForNoSleep)
 	b.GpioSet(ctx, ti50.GpioTi50CcdModeL, false)
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "CCD_MODE asserted") {
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinCcdMode, "CCD_MODE asserted") {
 		if err := i.WaitUntilAnySleep(ctx, waitForNoSleep); err == nil {
 			s.Error("Ti50 went to sleep while CCD_MODE asserted")
 		}
@@ -249,7 +305,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Logf("Simulating SuzyQ inserted, wait %s", waitForNoSleep)
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, "CCD connection") {
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
 		logCurrent(ctx, s, b, pv, "Awake_CCD")
 		if err := i.WaitUntilAnySleep(ctx, waitForNoSleep); err == nil {
 			s.Error("Ti50 went to sleep while SuzyQ connected")
@@ -265,20 +321,20 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Log("Simulating serial console input")
 	th.MustSucceed(b.WriteSerial(ctx, []byte("hello\r")), "Serial write")
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "console input") {
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinGscUart, "console input") {
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
 	s.Log("Simulating EC_PACKET_MODE toggle")
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, true)
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, false)
-	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "EC_PACKET_MODE") {
+	if verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinEcPacketMode, "EC_PACKET_MODE") {
 		verifyDeepSleep(ctx, s, i, th)
 	}
 
 	s.Log("Simulating AP booting")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
-	if !verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "PltRstL") {
+	if !verifyDeepWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinPltRstL, "PltRstL") {
 		s.Fatal("Could not get Ti50 into 'AP on' mode, preventing further testing")
 	}
 	logCurrent(ctx, s, b, pv, "Awake_AP")
@@ -299,14 +355,14 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	if !bytes.Equal(didVid, expectedDidVidValue) {
 		s.Error("Unexpected TPM DID_VID immediately after wakeup: ", didVid)
 	}
-	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "AP TPM request") {
+	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinTpmBus, "AP TPM request") {
 		s.Log("Waiting for sleep with AP on")
 		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
 	}
 
 	s.Logf("Simulating EC packet mode, wait %s", waitForNoSleep)
 	b.GpioSet(ctx, ti50.GpioTi50EcPacketMode, true)
-	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "EC packet mode") {
+	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinEcPacketMode, "EC packet mode") {
 		if err := i.WaitUntilAnySleep(ctx, waitForNoSleep); err == nil {
 			s.Error("Ti50 went to sleep while in EC packet mode")
 		}
@@ -335,7 +391,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Logf("Simulating CCD_MODE asserted, wait %s", waitForNoSleep)
 	b.GpioSet(ctx, ti50.GpioTi50CcdModeL, false)
-	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "CCD_MODE asserted") {
+	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinCcdMode, "CCD_MODE asserted") {
 		if err := i.WaitUntilAnySleep(ctx, waitForNoSleep); err == nil {
 			s.Error("Ti50 went to sleep while CCD_MODE asserted")
 		}
@@ -350,7 +406,7 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Logf("Simulating SuzyQ inserted, wait %s", waitForNoSleep)
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
-	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, "CCD connection") {
+	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceAdc, nil, "CCD connection") {
 		logCurrent(ctx, s, b, pv, "Awake_AP_CCD")
 		if err := i.WaitUntilAnySleep(ctx, waitForNoSleep); err == nil {
 			s.Error("Ti50 went to sleep while SuzyQ connected")
@@ -371,14 +427,14 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 
 	s.Log("Simulating serial console input")
 	th.MustSucceed(b.WriteSerial(ctx, []byte("hello\r")), "Serial write")
-	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "serial console input") {
+	if verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinGscUart, "serial console input") {
 		s.Log("Waiting for sleep with AP on")
 		th.MustSucceed(i.WaitUntilNormalSleep(ctx, time.Minute), "Sleep when AP on")
 	}
 
 	s.Log("Simulating AP powering off")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	if !verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, "PltRstL") {
+	if !verifyNormalWakeup(ctx, s, i, b, gpioMonitor, wakeSourceGpio, &whichPinPltRstL, "PltRstL") {
 		s.Fatal("Could not get Ti50 out of 'AP on' mode, preventing further testing")
 	}
 	verifyDeepSleep(ctx, s, i, th)
