@@ -273,6 +273,10 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 	}
 	defer m.Close(ctx)
 
+	if err := ui.ScrollToVisible(AccessPointNameInput)(ctx); err != nil {
+		return errors.Wrap(err, "did not scroll far enough down to apn input")
+	}
+
 	if err := ui.DoubleClick(AccessPointNameInput)(ctx); err != nil {
 		return errors.Wrap(err, "could not click APN input")
 	}
@@ -285,11 +289,11 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 	}
 
 	if err := kb.Type(ctx, apn); err != nil {
-		return errors.Wrap(err, "failed to type username")
+		return errors.Wrap(err, "failed to type apn input")
 	}
 
-	if err := ui.ScrollToVisible(SaveButton)(ctx); err != nil {
-		return errors.Wrap(err, "did not scroll far enough down to Save button")
+	if err := ui.ScrollToVisible(UsernameInput)(ctx); err != nil {
+		return errors.Wrap(err, "did not scroll far enough down to username input")
 	}
 
 	if err := ui.DoubleClick(UsernameInput)(ctx); err != nil {
@@ -300,12 +304,19 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "failed to type username")
 	}
 
+	if err := ui.ScrollToVisible(PasswordInput)(ctx); err != nil {
+		return errors.Wrap(err, "did not scroll far enough down to password input")
+	}
+
 	if err := ui.DoubleClick(PasswordInput)(ctx); err != nil {
 		return errors.Wrap(err, "could not click password input")
 	}
-
 	if err := kb.Type(ctx, password); err != nil {
 		return errors.Wrap(err, "failed to type password")
+	}
+
+	if err := ui.ScrollToVisible(AttachAPNToggle)(ctx); err != nil {
+		return errors.Wrap(err, "did not scroll far enough down to attach toggle")
 	}
 
 	settings := New(tconn)
@@ -315,6 +326,10 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 		if ui.LeftClick(AttachAPNToggle)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click attach APN toggle")
 		}
+	}
+
+	if err := ui.ScrollToVisible(SaveButton)(ctx); err != nil {
+		return errors.Wrap(err, "did not scroll far enough down to Save button")
 	}
 
 	if err := ui.LeftClick(SaveButton.Focusable())(ctx); err != nil {
