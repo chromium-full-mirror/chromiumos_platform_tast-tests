@@ -25,7 +25,7 @@ func init() {
 			"jhorwich@google.com",
 			// Telemetry
 			"mutexlox@google.com",
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 		},
 		BugComponent: "b:153255",
 		Attr:         []string{"group:mainline", "informational"},
