@@ -48,7 +48,7 @@ func init() {
 			"drmasquatch@google.com",
 			// Telemetry
 			"mutexlox@google.com",
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 		},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		Attr:         []string{"group:mainline"},

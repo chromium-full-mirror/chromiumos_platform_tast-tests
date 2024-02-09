@@ -34,7 +34,7 @@ func init() {
 			"clumptini+oncall@google.com",
 			// Monitoring and forensics
 			"mutexlox@google.com",
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 		},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		Attr:         []string{"group:mainline"},
