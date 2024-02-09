@@ -17,7 +17,7 @@ func init() {
 		Func: CheckDiskSpace,
 		Desc: "Checks that sufficient space is available in the root filesystem",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"chromeos-performance-eng@google.com",
 		},
 		BugComponent: "b:885467",

@@ -30,7 +30,7 @@ func init() {
 		Func:         ReportDiskUsage,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Reports available disk space in the root filesystem",
-		Contacts:     []string{"cros-telemetry@google.com", "ejcaruso@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:1175318", // ChromeOS > Data > Engineering > Image Size
 		// chromeos-assets is not available on devices without Chrome, require chrome
 		SoftwareDeps: []string{"chrome"},
