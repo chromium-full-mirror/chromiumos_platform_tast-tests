@@ -12,9 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/storage"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/ash"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cws"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -29,7 +26,6 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Data:         []string{"fsp_extension/manifest.json", "fsp_extension/service-worker.js"},
 		Params: []testing.Param{
 			{
@@ -52,12 +48,10 @@ func Fsp(ctx context.Context, s *testing.State) {
 		fileContent = "Roses are red."
 	)
 
-	// GAIA login is required to use Chrome Web Store.
 	cr, err := chrome.New(
 		ctx,
 		chrome.ARCEnabled(),
 		chrome.UnRestrictARCCPU(),
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.UnpackedExtension(filepath.Dir(s.DataPath("fsp_extension/manifest.json"))),
 	)
 	if err != nil {
@@ -77,18 +71,6 @@ func Fsp(ctx context.Context, s *testing.State) {
 	}
 	defer d.Close(ctx)
 
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Creating test API connection failed: ", err)
-	}
-
-	// Ensure the existence of Text app. This is because TestFilesAppIntegration expects that
-	// there is at least one app (other than ArcFileEditorTest, the Android app installed in
-	// TestFilesAppIntegration) that can open a text file.
-	if err := installTextAppIfNotInstalled(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to ensure the existence of Text app: ", err)
-	}
-
 	config := storage.TestConfig{
 		DirName:     fspMountName,
 		FileName:    filename,
@@ -99,23 +81,4 @@ func Fsp(ctx context.Context, s *testing.State) {
 	if err := storage.TestFilesAppIntegration(ctx, a, cr, d, config); err != nil {
 		s.Fatal("Failed to open file with Android app: ", err)
 	}
-}
-
-func installTextAppIfNotInstalled(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
-	const (
-		textAppName = "Text"
-		textAppURL  = "https://chrome.google.com/webstore/detail/text/mmfbcljfglbokpmkimbfghdkjmjhdgbg"
-		textAppID   = "mmfbcljfglbokpmkimbfghdkjmjhdgbg"
-	)
-
-	installed, err := ash.ChromeAppInstalled(ctx, tconn, textAppID)
-	if err != nil {
-		return errors.Wrap(err, "failed to check the existence of Text app")
-	}
-	if installed {
-		return nil
-	}
-	testing.ContextLog(ctx, "Installing the missing Text app")
-	textApp := cws.App{Name: textAppName, URL: textAppURL}
-	return cws.InstallApp(ctx, cr.Browser(), tconn, textApp)
 }
