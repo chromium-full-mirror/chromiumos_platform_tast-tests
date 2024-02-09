@@ -7,7 +7,6 @@ package uwb
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"strings"
 	"time"
 
@@ -73,19 +72,23 @@ func (f *mixedPeerRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState
 	fixtData := &FixtData{}
 
 	//Set mainHost in FixtData
-	mainHostName, ok := s.Var("uwb.mainHost")
-	if ok != true {
-		s.Fatal("mainHost variable not provided, this variable should be the unique DUT name of the main DUT being tested")
+	if mainHostName, ok := s.Var("uwb.mainHost"); ok {
+		fixtData.MainHost = mainHostName
+	} else {
+		fixtData.MainHost = s.DUT().HostName()
 	}
-	fixtData.MainHost = mainHostName
 
 	//Set crosHosts in FixtData
-	crosHostsNames, ok := s.Var("uwb.crosHosts")
-	if ok != true {
-		s.Fatal("crosHosts variable not provided, this variable should be a comma separated list of the unique DUT names of the companion DUTs being tested")
+	if crosHostsNames, ok := s.Var("uwb.crosHosts"); ok {
+		fixtData.CrosHosts = strings.Split(crosHostsNames, ",")
+	} else {
+		// We only support 1x1 setups now. So just get the name of the other CrOS
+		// companion DUT that's there until we need to expand.
+		fixtData.CrosHosts = make([]string, len(s.CompanionDUTs()))
+		for _, dut := range s.CompanionDUTs() {
+			fixtData.CrosHosts = append(fixtData.CrosHosts, dut.HostName())
+		}
 	}
-	crosHostsList := strings.Split(crosHostsNames, ",")
-	fixtData.CrosHosts = crosHostsList
 
 	//main Cros DUT setup
 	svc, err := remoteDUTSetUp(ctx, s, s.DUT())
@@ -100,12 +103,10 @@ func (f *mixedPeerRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState
 	}}
 
 	//other Cros DUT setups
-	for i := 1; i <= len(crosHostsList); i++ {
-		dutRole := "cd" + strconv.Itoa(i)
-		dut := s.CompanionDUT(dutRole)
+	for role, dut := range s.CompanionDUTs() {
 		svc, err := remoteDUTSetUp(ctx, s, dut)
 		if err != nil {
-			s.Fatal(dutRole+" set up error: ", err)
+			s.Fatal(role+" set up error: ", err)
 		}
 		fixtData.CrosClients = append(fixtData.CrosClients, svc)
 
