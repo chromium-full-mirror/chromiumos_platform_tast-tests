@@ -151,13 +151,13 @@ func init() {
 		}, {
 			Name: "invalidredirect",
 			Val: &healthCaptivePortalHTTPParams{
-				serviceState:         shillconst.ServiceStatePortalSuspected,
+				serviceState:         shillconst.ServiceStateNoConnectivity,
 				httpResponseHandler:  captiveportalconsts.RedirectHandler(""),
 				httpsResponseHandler: nil,
 				oncSource:            "",
 				checkPortal:          true,
 				networkState:         health.NetworkStatePortal,
-				portalState:          health.PortalStatePortal,
+				portalState:          health.PortalStateNoInternet,
 			},
 		}, {
 			Name: "empty200answer",
