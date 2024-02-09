@@ -1,17 +1,22 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright 2024 The ChromiumOS Authors
+     Use of this source code is governed by a BSD-style license that can be
+     found in the LICENSE file.
+-->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.chromium.arc.testapp.inputoverlay">
+          package="org.chromium.arc.testapp.inputoverlay">
 
-    <uses-feature android:name="android.hardware.type.pc" android:required="false"/>
-    <application
-        android:allowBackup="false"
-        android:label="ARC Input Overlay Test">
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-    </application>
+  <uses-feature android:name="android.hardware.type.pc"
+                android:required="false" />
+  <application android:allowBackup="false"
+               android:appCategory="game"
+               android:label="ARCInputOverlayTest">
+    <activity android:name=".MainActivity">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+  </application>
 
 </manifest>
