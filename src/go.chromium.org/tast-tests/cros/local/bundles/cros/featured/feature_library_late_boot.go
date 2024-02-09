@@ -40,8 +40,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify features are enabled/disabled as expected and parameters are unchanged",
 		Contacts: []string{
-			"cros-telemetry@google.com",
-			"kendraketsui@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1096648",

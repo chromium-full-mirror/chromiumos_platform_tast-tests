@@ -28,8 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that active field trials in early boot are recorded as active in UMA",
 		Contacts: []string{
-			"cros-telemetry@google.com",
-			"kendraketsui@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1096648", // ChromeOS > Data > Engineering > Experimentation
