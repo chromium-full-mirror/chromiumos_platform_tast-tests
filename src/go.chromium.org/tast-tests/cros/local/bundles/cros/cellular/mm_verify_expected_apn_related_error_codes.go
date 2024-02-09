@@ -36,11 +36,12 @@ func init() {
 		Desc:           "Verifies that Modem Manager reports the correct error codes for multiple APN related issues",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
+		Attr:           []string{"group:cellular", "cellular_amari_callbox"},
 		Fixture:        "cellularModemManager",
 		Params: []testing.Param{{
-			Name: "ip",
-			Val:  verifyExpectedApnRelatedErrorCodesTestParam{ipErrors},
+			Name:      "ip",
+			Val:       verifyExpectedApnRelatedErrorCodesTestParam{ipErrors},
+			ExtraAttr: []string{"cellular_unstable"},
 		}, {
 			Name: "authentication",
 			Val:  verifyExpectedApnRelatedErrorCodesTestParam{authenticationErrors},
