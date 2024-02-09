@@ -27,7 +27,7 @@ func init() {
 		Desc: "Verifies that device coredumps are not empty",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:mainline", "group:wificell", "wificell_func", "group:labqual"},
