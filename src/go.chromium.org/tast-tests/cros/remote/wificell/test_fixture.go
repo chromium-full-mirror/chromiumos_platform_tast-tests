@@ -1684,6 +1684,7 @@ func (tf *TestFixture) P2PConfigureGO(ctx context.Context, device P2PDevice, ops
 	}
 
 	request := &wifi.P2PGroupCreateRequest{
+		Method: wifi.InvokeMethodEnum_SHILL_API,
 		Data: &wifi.P2PData{
 			Freq: uint32(wpacli.GetP2PFreq(ops...)),
 		},
@@ -1719,6 +1720,7 @@ func (tf *TestFixture) P2PConnect(ctx context.Context, device P2PDevice, ops ...
 	}
 
 	request := &wifi.P2PGroupConnectRequest{
+		Method: wifi.InvokeMethodEnum_SHILL_API,
 		Data: &wifi.P2PData{
 			Freq: uint32(wpacli.GetP2PFreq(ops...)),
 			Ssid: tf.p2pGroupSSID,

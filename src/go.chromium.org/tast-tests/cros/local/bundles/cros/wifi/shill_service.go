@@ -20,6 +20,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 	"github.com/golang/protobuf/ptypes/empty"
+	"golang.org/x/exp/slices"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 
@@ -3089,7 +3090,7 @@ func (s *ShillService) WatchDarkResume(_ *empty.Empty, sender wifi.ShillService_
 	}
 }
 
-// logErrorStacks logs returned error stacks.
+// logErrorStacks logs returned error stack traces.
 // The main issue with handling errors in RPC handlers is that they return
 // over RPC only error cause, not the full stack trace.
 func logErrorStacks(ctx context.Context, retErr *error) {
@@ -3108,6 +3109,8 @@ func (s *ShillService) P2PGroupCreate(ctx context.Context, request *wifi.P2PGrou
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
 		return s.p2pGroupCreateWPACLI(ctx, request)
+	case wifi.InvokeMethodEnum_SHILL_API:
+		return s.p2pGroupCreateShillAPI(ctx, request)
 	}
 	return nil, errors.New("Not implemented yet")
 }
@@ -3122,6 +3125,8 @@ func (s *ShillService) P2PGroupDelete(ctx context.Context, request *wifi.P2PGrou
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
 		return s.p2pGroupDeleteWPACLI(ctx, request)
+	case wifi.InvokeMethodEnum_SHILL_API:
+		return s.p2pGroupDeleteShillAPI(ctx, request)
 	}
 	return nil, errors.New("Not implemented yet")
 }
@@ -3136,6 +3141,8 @@ func (s *ShillService) P2PGroupConnect(ctx context.Context, request *wifi.P2PGro
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
 		return s.p2pGroupConnectWPACLI(ctx, request)
+	case wifi.InvokeMethodEnum_SHILL_API:
+		return s.p2pGroupConnectShillAPI(ctx, request)
 	}
 	return nil, errors.New("Not implemented yet")
 }
@@ -3150,12 +3157,15 @@ func (s *ShillService) P2PGroupDisconnect(ctx context.Context, request *wifi.P2P
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
 		return s.p2pGroupDisconnectWPACLI(ctx, request)
+	case wifi.InvokeMethodEnum_SHILL_API:
+		return s.p2pGroupDisconnectShillAPI(ctx, request)
 	}
 	return nil, errors.New("Not implemented yet")
 }
 
 // p2pGroupCreateWPACLI uses WPA CLI to create WiFi Direct Group and take its ownership.
-func (s *ShillService) p2pGroupCreateWPACLI(ctx context.Context, request *wifi.P2PGroupCreateRequest) (ret *wifi.P2PGroupCreateResponse, retErr error) {
+func (s *ShillService) p2pGroupCreateWPACLI(ctx context.Context, request *wifi.P2PGroupCreateRequest) (
+	ret *wifi.P2PGroupCreateResponse, retErr error) {
 	ipr := ip.NewLocalRunner()
 	wpar := localwpacli.NewLocalRunner()
 
@@ -3177,7 +3187,8 @@ func (s *ShillService) p2pGroupCreateWPACLI(ctx context.Context, request *wifi.P
 }
 
 // p2pGroupDeleteWPACLI uses WPA CLI to delete the existing WiFi Direct Group.
-func (s *ShillService) p2pGroupDeleteWPACLI(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (ret *wifi.P2PGroupDeleteResponse, retErr error) {
+func (s *ShillService) p2pGroupDeleteWPACLI(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (
+	ret *wifi.P2PGroupDeleteResponse, retErr error) {
 	ipr := ip.NewLocalRunner()
 	wlan0Iface, _ := s.GetInterface(ctx, &empty.Empty{})
 	wpar := localwpacli.NewLocalRunnerOnIface(wlan0Iface.Name)
@@ -3190,7 +3201,8 @@ func (s *ShillService) p2pGroupDeleteWPACLI(ctx context.Context, request *wifi.P
 }
 
 // p2pGroupConnectWPACLI uses WPA CLI to handle connection to the existing WiFi Direct Group.
-func (s *ShillService) p2pGroupConnectWPACLI(ctx context.Context, request *wifi.P2PGroupConnectRequest) (ret *wifi.P2PGroupConnectResponse, retErr error) {
+func (s *ShillService) p2pGroupConnectWPACLI(ctx context.Context, request *wifi.P2PGroupConnectRequest) (
+	ret *wifi.P2PGroupConnectResponse, retErr error) {
 	ipr := ip.NewLocalRunner()
 	wpar := localwpacli.NewLocalRunner()
 
@@ -3208,13 +3220,404 @@ func (s *ShillService) p2pGroupConnectWPACLI(ctx context.Context, request *wifi.
 }
 
 // p2pGroupDisconnectWPACLI uses WPA CLI to handle disconnection from the existing WiFi Direct Group.
-func (s *ShillService) p2pGroupDisconnectWPACLI(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (ret *wifi.P2PGroupDisconnectResponse, retErr error) {
+func (s *ShillService) p2pGroupDisconnectWPACLI(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (
+	ret *wifi.P2PGroupDisconnectResponse, retErr error) {
 	ipr := ip.NewLocalRunner()
 	wlanIface, _ := s.GetInterface(ctx, &empty.Empty{})
 	wpar := localwpacli.NewLocalRunnerOnIface(wlanIface.Name)
 	retErr = wpar.P2PGroupDisconnect(ctx, ipr, request.Id, int(request.NetworkId))
 	ret = &wifi.P2PGroupDisconnectResponse{}
 	return
+}
+
+// p2pGroupCreateShillAPI uses shill API to create WiFi Direct Group and take its ownership.
+func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi.P2PGroupCreateRequest) (
+	ret *wifi.P2PGroupCreateResponse, retErr error) {
+	cleanupCtx := ctx
+	const cleanupMargin = 3 * time.Second
+	ctx, cancel := ctxutil.Shorten(ctx, cleanupMargin)
+	defer cancel()
+
+	testing.ContextLog(ctx, "Attempting to create WiFi Direct Group via shill with config: ", request)
+
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill manager proxy")
+	}
+
+	if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, true); err != nil {
+		return nil, errors.Wrap(err, "failed to set P2PAllowed")
+	}
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
+		}
+		if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, false); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed disable P2P"))
+		}
+	}(cleanupCtx)
+
+	props := map[string]interface{}{
+		shillconst.P2PDeviceFrequency: request.Data.Freq,
+	}
+
+	// Only now we can create the group.
+	result, err := manager.CreateP2PGroup(ctx, props)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request to create P2P group")
+	}
+	status, err := result.Get(shillconst.P2PResultCode)
+	if err != nil {
+		return nil, errors.Wrap(err, "result code not found in response")
+	}
+	if status != shillconst.CreateP2PGroupResultSuccess {
+		return nil, errors.Errorf("failed to create P2PGroup (%v)", status)
+	}
+	shillIDobj, err := result.Get(shillconst.P2PDeviceShillID)
+	if err != nil {
+		return nil, errors.Wrap(err, "result code not found in response")
+	}
+	shillID := shillIDobj.(uint32)
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
+		}
+		if _, err := manager.DestroyP2PGroup(ctx, shillID); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete P2P"))
+		}
+	}(cleanupCtx)
+
+	// Check if the group is active.
+	p2pGOSsid, p2pGOKey, p2pGOFreq, err := waitForP2PGroupActive(ctx, manager, shillID)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO(b/327688693): pull the interface name straight from dbus once this gets implemented in shill.
+	p2pGOIface, err := findP2PIface(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// TODO(b/295056306) Currently L3 is not yet configured by shill.
+	// This should be removed once shill implementation is ready.
+	ipr := ip.NewLocalRunner()
+	if err := ipr.AddIP(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
+		return nil, err
+	}
+
+	testing.ContextLogf(ctx, "P2P Group owner (GO) %s: Configured on %s", p2pGOSsid, p2pGOIface)
+	ret = &wifi.P2PGroupCreateResponse{
+		Id:     strconv.Itoa(int(shillID)),
+		IfName: p2pGOIface,
+		Data: &wifi.P2PData{
+			Ssid: p2pGOSsid,
+			Key:  p2pGOKey,
+			Freq: uint32(p2pGOFreq)},
+	}
+	return
+}
+
+// p2pGroupDeleteShillAPI uses shill API to delete the existing WiFi Direct Group.
+func (s *ShillService) p2pGroupDeleteShillAPI(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (
+	ret *wifi.P2PGroupDeleteResponse, retErr error) {
+	p2pGOIface, err := findP2PIface(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// TODO(b/295056306) Currently L3 is not yet configured by shill.
+	// This should be removed once shill implementation is ready.
+	ipr := ip.NewLocalRunner()
+	if err := ipr.DeleteIP(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete IP Address"))
+	}
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to create shill manager proxy"))
+		// No further cleanup possible without manager.
+		return
+	}
+	shillID, err := strconv.Atoi(request.Id)
+	if err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to convert shiilID"))
+	}
+	if _, err := manager.DestroyP2PGroup(ctx, uint32(shillID)); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete P2P"))
+	}
+	if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, false); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed disable P2P"))
+	}
+	ret = &wifi.P2PGroupDeleteResponse{}
+	return
+}
+
+// p2pGroupConnectShillAPI uses shill API to handle connection to the existing WiFi Direct Group.
+func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wifi.P2PGroupConnectRequest) (
+	ret *wifi.P2PGroupConnectResponse, retErr error) {
+	cleanupCtx := ctx
+	const cleanupMargin = 3 * time.Second
+	ctx, cancel := ctxutil.Shorten(ctx, cleanupMargin)
+	defer cancel()
+
+	ctx, st := timing.Start(ctx, "wifi_service.P2PGroupConnect")
+	defer st.End()
+	testing.ContextLog(ctx, "Attempting to connect to WiFi Direct Group via shill with config: ", request)
+
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create shill manager proxy")
+	}
+
+	if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, true); err != nil {
+		return nil, errors.Wrap(err, "failed to set P2PAllowed")
+	}
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
+		}
+		if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, false); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed disable P2P"))
+		}
+	}(cleanupCtx)
+
+	props := map[string]interface{}{
+		shillconst.P2PDeviceSSID:       string(request.Data.Ssid),
+		shillconst.P2PDevicePassphrase: string(request.Data.Key),
+		shillconst.P2PDeviceFrequency:  request.Data.Freq,
+	}
+
+	// Only now we can create the group.
+	result, err := manager.ConnectToP2PGroup(ctx, props)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to request to create P2P group")
+	}
+	status, err := result.Get(shillconst.P2PResultCode)
+	if err != nil {
+		return nil, errors.Wrap(err, "result code not found in response")
+	}
+	if status != shillconst.CreateP2PGroupResultSuccess {
+		return nil, errors.Errorf("failed to create P2PGroup (%v)", status)
+	}
+	shillIDobj, err := result.Get(shillconst.P2PDeviceShillID)
+	if err != nil {
+		return nil, errors.Wrap(err, "result code not found in response")
+	}
+	shillID := shillIDobj.(uint32)
+	defer func(ctx context.Context) {
+		if retErr == nil {
+			return
+		}
+		if _, err := manager.DisconnectFromP2PGroup(ctx, shillID); err != nil {
+			retErr = errors.Join(retErr, errors.Wrap(err, "failed to disconnect from P2P group"))
+		}
+	}(cleanupCtx)
+
+	// Check if the group is connected.
+	ssid, key, freq, err := waitForP2PClientConnected(ctx, manager, shillID)
+	if err != nil {
+		return nil, err
+	}
+	if ssid != string(request.Data.Ssid) {
+		return nil, errors.Errorf("p2p client connected to wrong ssid, got %q want %q", ssid, string(request.Data.Ssid))
+	}
+	if key != string(request.Data.Key) {
+		return nil, errors.Errorf("p2p client connected but key mismatch, got %q want %q", key, string(request.Data.Key))
+	}
+	if request.Data.Freq != 0 && freq != int(request.Data.Freq) {
+		return nil, errors.Errorf("p2p client connected but freq mismatch, got %v want %v", freq, request.Data.Freq)
+	}
+
+	// TODO(b/327688693): pull the interface name straight from dbus once this gets implemented in shill.
+	p2pClientIface, err := findP2PIface(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// TODO(b/327034803) Currently L3 is not yet configured by shill.
+	// This should be removed once shill implementation is ready.
+	ipr := ip.NewLocalRunner()
+	if err := ipr.AddIP(ctx, p2pClientIface, net.ParseIP(utils.P2PClientIPAddress), 24); err != nil {
+		return nil, err
+	}
+
+	testing.ContextLogf(ctx, "P2P Client: Connected to %s on %s", ssid, p2pClientIface)
+	ret = &wifi.P2PGroupConnectResponse{
+		Id:     strconv.Itoa(int(shillID)),
+		IfName: p2pClientIface,
+	}
+	return
+}
+
+// p2pGroupDisconnectShillAPI uses shill API to handle disconnection from the existing WiFi Direct Group.
+func (s *ShillService) p2pGroupDisconnectShillAPI(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (
+	ret *wifi.P2PGroupDisconnectResponse, retErr error) {
+	p2pClientIface, err := findP2PIface(ctx)
+	if err != nil {
+		return nil, err
+	}
+	// TODO(b/327034803) Currently L3 is not yet configured by shill.
+	// This should be removed once shill implementation is ready.
+	ipr := ip.NewLocalRunner()
+	if err := ipr.DeleteIP(ctx, p2pClientIface, net.ParseIP(utils.P2PClientIPAddress), 24); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete IP Address"))
+	}
+	manager, err := shill.NewManager(ctx)
+	if err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to create shill manager proxy"))
+		// No further cleanup possible without manager.
+		return
+	}
+	shillID, err := strconv.Atoi(request.Id)
+	if err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to convert shillID"))
+	}
+	if _, err := manager.DisconnectFromP2PGroup(ctx, uint32(shillID)); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete P2P"))
+	}
+	if err := manager.SetProperty(ctx, shillconst.ManagerPropertyP2PAllowed, false); err != nil {
+		retErr = errors.Join(retErr, errors.Wrap(err, "failed disable P2P"))
+	}
+	ret = &wifi.P2PGroupDisconnectResponse{}
+	return
+}
+
+// waitForP2PGroupActive polls P2PGroupInfos until the status is correct.
+func waitForP2PGroupActive(ctx context.Context, manager *shill.Manager, shillID uint32) (
+	p2pGOSsid, p2pGOKey string, p2pGOFreq int, retErr error) {
+	const waitForP2PGroupStartedTimeout = 30 * time.Second
+	const waitForP2PGroupStartedInterval = 500 * time.Millisecond
+	var groupInfo *dbusutil.Properties
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		groupInfos, err := manager.P2PGroupInfos(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get P2P Group info"))
+		}
+
+		// Look for groupInfo entry with particular shillID.
+		for _, groupInfo = range groupInfos {
+			testing.ContextLog(ctx, "Received P2P group info: ", groupInfo)
+
+			id, err := groupInfo.Get(shillconst.P2PGroupInfoShillIDProperty)
+			if err != nil {
+				return errors.Wrap(err, "shill id not found in properties")
+			}
+			sid, ok := id.(uint32)
+			if !ok {
+				return errors.Errorf("failed to convert %v to uint32", sid)
+			}
+			if shillID != sid {
+				continue
+			}
+			// Now check if the status is correct.
+			state, err := groupInfo.Get(shillconst.P2PGroupInfoStateProperty)
+			if err != nil {
+				return errors.Wrap(err, "state not found in properties")
+			}
+			if state.(string) != shillconst.P2PGroupInfoStateActive {
+				return errors.Errorf("bad P2P group state, got %s, want %s",
+					state.(string), shillconst.P2PGroupInfoStateActive)
+			}
+			return nil // Success.
+		}
+		return errors.Errorf("Group with shillId=%v, not found in groupInfos", shillID)
+
+	}, &testing.PollOptions{
+		Timeout:  waitForP2PGroupStartedTimeout,
+		Interval: waitForP2PGroupStartedInterval,
+	}); err != nil {
+		return "", "", 0, err
+	}
+
+	ssid, err := groupInfo.Get(shillconst.P2PGroupInfoSSIDProperty)
+	if err != nil {
+		return "", "", 0, errors.Wrap(err, "ssid not found in properties")
+	}
+	key, err := groupInfo.Get(shillconst.P2PGroupInfoPassphraseProperty)
+	if err != nil {
+		return "", "", 0, errors.Wrap(err, "passphrase not found in properties")
+	}
+	freq, err := groupInfo.Get(shillconst.P2PGroupInfoFrequencyProperty)
+	if err != nil {
+		return "", "", 0, errors.Wrap(err, "frequency not found in properties")
+	}
+
+	p2pGOSsid = ssid.(string)
+	p2pGOKey = key.(string)
+	p2pGOFreq = int(freq.(int32))
+	return
+}
+
+// waitForP2PClientConnected polls P2PClientInfos until the status is correct.
+func waitForP2PClientConnected(ctx context.Context, manager *shill.Manager, shillID uint32) (
+	p2pGOSsid, p2pGOKey string, p2pGOFreq int, retErr error) {
+	const waitForP2PClientConnectedTimeout = 30 * time.Second
+	const waitForP2PClientConnectedInterval = 500 * time.Millisecond
+	var clientInfo *dbusutil.Properties
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		clientInfos, err := manager.P2PClientInfos(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get P2P Client info"))
+		}
+		for _, clientInfo = range clientInfos {
+			testing.ContextLog(ctx, "Received P2P client info: ", clientInfo)
+
+			id, err := clientInfo.Get(shillconst.P2PClientInfoShillIDProperty)
+			if err != nil {
+				return errors.Wrap(err, "shill id not found in properties")
+			}
+			sid, ok := id.(uint32)
+			if !ok {
+				return errors.Errorf("failed to convert %v to uint32", sid)
+			}
+			if shillID != sid {
+				continue
+			}
+
+			state, err := clientInfo.Get(shillconst.P2PClientInfoStateProperty)
+			if err != nil {
+				return errors.Wrap(err, "state not found in properties")
+			}
+			if state.(string) != shillconst.P2PClientInfoStateConnected {
+				return errors.Errorf("bad P2P client state, got %s, want %s",
+					state.(string), shillconst.P2PClientInfoStateConnected)
+			}
+		}
+		return nil
+
+	}, &testing.PollOptions{
+		Timeout:  waitForP2PClientConnectedTimeout,
+		Interval: waitForP2PClientConnectedInterval,
+	}); err != nil {
+		return "", "", 0, err
+	}
+
+	ssid, err := clientInfo.Get(shillconst.P2PClientInfoSSIDProperty)
+	if err != nil {
+		return "", "", 0, errors.Wrap(err, "ssid not found in properties")
+	}
+	key, err := clientInfo.Get(shillconst.P2PClientInfoPassphraseProperty)
+	if err != nil {
+		return "", "", 0, errors.Wrap(err, "passphrase not found in properties")
+	}
+	freq, err := clientInfo.Get(shillconst.P2PClientInfoFrequencyProperty)
+	if err != nil {
+		return "", "", 0, errors.Wrap(err, "frequency not found in properties")
+	}
+
+	p2pGOSsid = ssid.(string)
+	p2pGOKey = key.(string)
+	p2pGOFreq = int(freq.(int32))
+	return
+}
+
+func findP2PIface(ctx context.Context) (string, error) {
+	ifaces, err := net.Interfaces()
+	if err != nil {
+		return "", err
+	}
+	index := slices.IndexFunc(ifaces, func(i net.Interface) bool { return strings.HasPrefix(i.Name, "p2p") })
+	if index == -1 {
+		return "", errors.Errorf("p2p interface not found in %+v", ifaces)
+	}
+	return ifaces[index].Name, nil
 }
 
 // StartTethering attempts to start a tethering session.
