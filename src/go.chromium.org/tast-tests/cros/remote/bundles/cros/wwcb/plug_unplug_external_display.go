@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Plug in the external display then play video to check the external display is functional by the camera connecting to the host, then unplug the external display",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
-		Attr:         []string{"group:wwcb"},
+		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"servo", "DockingID", "ExtDispID1"},
 		ServiceDeps: []string{
@@ -40,6 +40,11 @@ func init() {
 			"tast.cros.wwcb.DisplayService",
 		},
 		Data: []string{utils.VideoFile},
+		Params: []testing.Param{
+			{
+				Name:      "smoke",
+				ExtraAttr: []string{"pasit_full"},
+			}},
 	})
 }
 
