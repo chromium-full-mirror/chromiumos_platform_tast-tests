@@ -15,6 +15,7 @@ import (
 	"sort"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/local/testenv/provision"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,14 +38,6 @@ type entries map[string]entry
 
 // label is an identifier added to each line of the entries modified by HostsUpdater.
 const label = "#testenv-hosts-override="
-
-// Marker files that let the infra to repair or reprovision a DUT when exists (specifically when a change made in tests becomes unrecoverable)
-const (
-	provisionFailedFilePath = "/mnt/stateful_partition/unencrypted/provision_failed"
-	forceProvisionFilePath  = "/mnt/stateful_partition/.force_provision"
-)
-
-var provisionMarkers = []string{provisionFailedFilePath, forceProvisionFilePath}
 
 // Resolver is a wrapper interface for the net package. Useful for dependency injection in testing.
 type Resolver interface {
@@ -145,11 +138,7 @@ func (h *HostsUpdater) Redirect(ctx context.Context, rules map[string]string) (e
 	}
 	// Safeguard: Leave marker files, so the infra could force repair or provision a DUT if cleanup fails.
 	if isDUT() {
-		for _, f := range provisionMarkers {
-			if err := os.WriteFile(f, nil, 0644); err != nil {
-				return nil, errors.Wrapf(err, "failed to force provision: %v", f)
-			}
-		}
+		provision.Marker.Acquire()
 	}
 	return modified, nil
 }
@@ -161,15 +150,7 @@ func (h *HostsUpdater) Cleanup(ctx context.Context) (retErr error) {
 		if !isDUT() || retErr != nil {
 			return
 		}
-		for _, f := range provisionMarkers {
-			if _, err := os.Stat(f); err != nil {
-				return
-			}
-			if err := os.Remove(f); err != nil {
-				retErr = errors.Wrapf(err, "failed to remove the marker: %v", f)
-				return
-			}
-		}
+		provision.Marker.Release()
 		testing.ContextLog(ctx, "HostsUpdater: Removed provision marker files")
 	}(ctx)
 

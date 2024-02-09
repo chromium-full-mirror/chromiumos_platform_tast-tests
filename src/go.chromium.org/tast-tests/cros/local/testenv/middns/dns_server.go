@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/testenv/provision"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -100,8 +101,9 @@ func (s *DNSServer) Start(ctx context.Context, hostmap []FromTo) (retErr error) 
 	defer pidFile.Close()
 	s.pidFileName = pidFile.Name()
 
-	// Start the DNS server
+	// Start the DNS server using dnsmasq with the configuration
 	s.HasStarted = true
+	provision.Marker.Acquire()
 	defer func() {
 		if retErr != nil {
 			s.Stop(ctx)
@@ -175,9 +177,12 @@ func (s *DNSServer) Stop(ctx context.Context) error {
 	}
 
 	if err != nil {
+		// If there is an unrecoverable error even after reboot,
+		// don't remove the marker file so the infra can attempt to repair a DUT.
 		testing.ContextLog(ctx, "DNS server stopped with error: ", err)
 		return err
 	}
+	provision.Marker.Release()
 	testing.ContextLog(ctx, "DNS server stopped successfully")
 	return nil
 }

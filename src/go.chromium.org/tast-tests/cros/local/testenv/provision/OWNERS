@@ -3,8 +3,5 @@ set noparent
 # ChromeOS EngProd UFO testing
 include /src/go.chromium.org/tast-tests/cros/local/testenv/OWNERS
 
-# Platform networking team
-include /src/go.chromium.org/tast-tests/cros/common/network/OWNERS
-
 # Tast team for bulk/emergencies
 include /OWNERS.tast
