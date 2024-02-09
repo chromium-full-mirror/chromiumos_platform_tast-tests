@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
+	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -226,6 +227,15 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize test: ", err)
 	}
 	defer lacros.CloseLacros(ctx, l)
+	graphics.DisableSysLogCheck(s.TestName(),
+		// Disable SysLogCheck for mediatek driver error because it is expected
+		// that the driver fails decoding VP9 k-SVC and falls back to the
+		// software decoder on MediaTek devices.
+		graphics.SysLogMediatekVideoErrors,
+		// Kernel splat happens on MediaTek 5.10+ due to the driver bug.
+		// TODO(b/323065063): Remove this after the driver fixed.
+		graphics.SysLogKernelSplats,
+	)
 
 	if err := webrtc.RunVideoConference(ctx, cr, s, params); err != nil {
 		s.Fatal("RunVideoConference failed: ", err)
