@@ -39,7 +39,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check that stack-sampled metrics work",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"iby@chromium.org",
 		},
 		BugComponent: "b:1087262",

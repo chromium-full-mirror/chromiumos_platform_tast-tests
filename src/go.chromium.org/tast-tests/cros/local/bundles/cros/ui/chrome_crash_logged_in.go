@@ -37,7 +37,7 @@ func init() {
 		Func:         ChromeCrashLoggedIn,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that Chrome writes crash dumps while logged in",
-		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "iby@chromium.org"},
 		BugComponent: "b:1032705",
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{

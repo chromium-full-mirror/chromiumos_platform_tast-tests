@@ -60,7 +60,7 @@ func init() {
 		Func:         ChromeCrashEarly,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that if Chrome crashes before crashpad is initialized, the user collector collects the crash",
-		Contacts:     []string{"cros-telemetry@google.com", "iby@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "iby@chromium.org"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "crashpad"},
