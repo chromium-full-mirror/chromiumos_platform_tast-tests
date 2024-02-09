@@ -23,7 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the rust bindings reports histograms to Chrome",
 		Contacts: []string{
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"vovoy@chromium.org",
 		},
 		BugComponent: "b:1087262", // ChromeOS > Data > Engineering > Metrics
