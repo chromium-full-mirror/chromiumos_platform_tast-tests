@@ -77,6 +77,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"5.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel9000: {
 		"4.14": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
@@ -98,6 +99,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.4":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.Intel22560: {
 		"4.19": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
@@ -105,6 +107,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 		"6.1":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelAX203: {
 		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
@@ -180,6 +183,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.10": "wireless/realtek/rtw88/rtw88_8822ce.ko",
 		"5.15": "wireless/realtek/rtw88/rtw88_8822ce.ko",
 		"6.1":  "wireless/realtek/rtw88/rtw88_8822ce.ko",
+		"6.6":  "wireless/realtek/rtw88/rtw88_8822ce.ko",
 	},
 	wlan.Realtek8852APCIE: {
 		"5.10": "wireless/realtek/rtw89/rtw89_8852ae.ko",
@@ -194,6 +198,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 		"5.10": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 		"5.15": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 		"6.1":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+		"6.6":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 	},
 	wlan.MediaTekMT7921SDIO: {
 		"5.10": "wireless/mediatek/mt76/mt7921/mt7921s.ko",
