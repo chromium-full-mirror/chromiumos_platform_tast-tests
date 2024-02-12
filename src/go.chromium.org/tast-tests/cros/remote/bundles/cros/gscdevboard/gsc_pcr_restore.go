@@ -35,7 +35,7 @@ func init() {
 			"granaghan@google.com",     // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
+		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_image_ti50", "gsc_nightly"},
 		Fixture:      fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "state_state_sleep",
@@ -160,7 +160,7 @@ func GSCPCRRestore(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	if testParams.sleep {
 		s.Log("Waiting for Ti50 to go into deep sleep")
-		th.MustSucceed(i.WaitUntilDeepSleep(ctx, 2*time.Minute), "Ti50 did not sleep when AP off")
+		th.MustSucceed(b.WaitUntilDeepSleep(ctx, i, 2*time.Minute), "Ti50 did not sleep when AP off")
 	}
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
 	if testParams.sleep {
@@ -168,6 +168,12 @@ func GSCPCRRestore(ctx context.Context, s *testing.State) {
 			s.Error("Ti50 did not wake up: ", err)
 		}
 	}
+
+	b.WaitForTpm(ctx, tpm)
+
+	// Run ccdstate and brdprop so the output is available for debugging.
+	i.Command(ctx, "ccdstate")
+	i.Command(ctx, "brdprop")
 
 	startup := tpm2.Startup{
 		StartupType: testParams.startupType,
