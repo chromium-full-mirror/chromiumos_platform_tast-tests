@@ -64,6 +64,7 @@ func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
 	s.Log("Resetting GSC and starting up")
 	b.GpioSet(ctx, ti50.GpioTi50ChassisOpen, true)
 	_ = b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
+	b.WaitUntilCCDConnected(ctx)
 
 	if err := i.CCDOpen(ctx); err != nil {
 		s.Fatal("Failed to open CCD")
