@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/typecutils"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -21,25 +20,10 @@ func init() {
 		Desc:         "Checks USB Type C mode switch behaviour with a Thunderbolt dock during suspend/resume",
 		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "typec_lab"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"ui.signinProfileTestExtensionManifestKey"},
 		Data:         []string{"testcert.p12"},
-		Params: []testing.Param{
-			// For running manually.
-			{
-				Name:      "manual",
-				ExtraAttr: []string{"typec_lab"},
-				Val:       false,
-			},
-			// For automated testing.
-			{
-				Name:      "smoke",
-				ExtraAttr: []string{"group:mainline", "informational"},
-				// Only run on the devices currently supporting USB4/Thunderbolt.
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel")),
-				Val:               true,
-			}},
 	})
 }
 
@@ -60,11 +44,6 @@ func ModeSuspend(ctx context.Context, s *testing.State) {
 	port, err := typecutils.CheckPortsForTBTPartner(ctx)
 	if err != nil {
 		s.Fatal("Failed to determine TBT device from PD identity: ", err)
-	}
-
-	// Return early for smoke testing (CQ).
-	if s.Param().(bool) {
-		return
 	}
 
 	if port == -1 {

@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/typecutils"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -21,24 +20,10 @@ func init() {
 		Desc:         "Checks USB Type C mode switch behaviour on login",
 		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "typec_lab"},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Data:         []string{"testcert.p12"},
-		Params: []testing.Param{
-			// For running manually.
-			{
-				Name:      "manual",
-				ExtraAttr: []string{"typec_lab"},
-				Val:       false,
-			},
-			// For automated testing.
-			{
-				Name:              "smoke",
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel")),
-				Val:               true,
-			}},
 	})
 }
 
@@ -58,11 +43,6 @@ func ModeSwitch(ctx context.Context, s *testing.State) {
 	port, err := typecutils.CheckPortsForTBTPartner(ctx)
 	if err != nil {
 		s.Fatal("Couldn't determine TBT device from PD identity: ", err)
-	}
-
-	// Return early for smoke testing (CQ).
-	if smoke := s.Param().(bool); smoke {
-		return
 	}
 
 	if port == -1 {

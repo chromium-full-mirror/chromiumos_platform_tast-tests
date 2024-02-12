@@ -14,7 +14,6 @@ import (
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // The maximum number of USB Type C ports that a Chromebook supports.
@@ -27,24 +26,10 @@ func init() {
 		Desc:         "Demonstrates USB Type C mode selection after reboot",
 		Contacts:     []string{"chromeos-usb@google.com", "pmalani@chromium.org"},
 		BugComponent: "b:958036",
-		Attr:         []string{"group:typec"},
+		Attr:         []string{"group:typec", "typec_lab"},
 		SoftwareDeps: []string{"tpm2", "reboot", "chrome"},
 		ServiceDeps:  []string{"tast.cros.typec.Service"},
 		Data:         []string{"testcert.p12"},
-		Params: []testing.Param{
-			// For running manually.
-			{
-				Name:      "manual",
-				ExtraAttr: []string{"typec_lab"},
-				Val:       false,
-			},
-			// For automated testing.
-			{
-				Name:              "smoke",
-				ExtraAttr:         []string{"group:mainline", "informational"},
-				ExtraHardwareDeps: hwdep.D(hwdep.Model("volteer", "voxel")),
-				Val:               true,
-			}},
 	})
 }
 
@@ -69,11 +54,6 @@ func ModeReboot(ctx context.Context, s *testing.State) {
 	present, err := checkPortsForTBTPartner(ctx, d)
 	if err != nil {
 		s.Log("Couldn't find TBT device from PD identity: ", err)
-		return
-	}
-
-	// Return early for smoke testing (CQ).
-	if smoke := s.Param().(bool); smoke {
 		return
 	}
 
