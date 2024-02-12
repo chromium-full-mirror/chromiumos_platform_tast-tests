@@ -98,6 +98,7 @@ var (
 			`GPU reset`,
 			`IB test failed on gfx`,         // kernel 5.x, b/307550145
 			`failed testing IB on GFX ring`, // kernel 4.x, b/307550145
+			`No more free UVD handles!`,     // grunt b/266003084
 			`VRAM is lost`,
 			// mediatek
 			`mtk-mdp.*: cmdq timeout`,
