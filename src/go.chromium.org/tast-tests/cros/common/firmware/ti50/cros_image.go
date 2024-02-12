@@ -48,6 +48,10 @@ var (
 	brdPropRE          = regexp.MustCompile(`properties = 0x([0-9a-fA-F]+)`)
 	gettimeDeepSleepRE = regexp.MustCompile(`deep sleep:.*= ([0-9\.]*) `)
 	gettimeColdResetRE = regexp.MustCompile(`reset:.*= ([0-9\.]*) `)
+	// USB ADC info regex
+	usbAdcStateRE = regexp.MustCompile(`(PHY [AB])|ADC: (disconnected)|connected: ([\S]+)`)
+	usbAdcCc1RE   = regexp.MustCompile(`ADC: CC1 = ([0-9]+) mV`)
+	usbAdcCc2RE   = regexp.MustCompile(`ADC: CC2 = ([0-9]+) mV`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -779,4 +783,94 @@ func (i *CrOSImage) Gettime(ctx context.Context) (GSCTime, error) {
 		return GSCTime{}, errors.Wrap(err, "failed to run GSC gettime command")
 	}
 	return extractGSCTime(output)
+}
+
+// UsbDeviceLinkState contains all possible USB link states the GSC can detect.
+type UsbDeviceLinkState uint
+
+// USB device link states
+const (
+	UsbDisconnected UsbDeviceLinkState = iota
+	SuzyQConnected
+	SuzyQFlippedConnected
+	ServoConnected
+	ServoFlippedConnected
+	ServoSink1Connected
+	ServoSink2Connected
+	ServoSink3Connected
+)
+
+// UsbAdcInfo contains information about the connected USB device and raw voltages
+// read from the ADC.
+type UsbAdcInfo struct {
+	// UsbDeviceLinkState is the current state of the USB device link.
+	State UsbDeviceLinkState
+	// cc1Mv is the USB-C configuration channel 1 voltage.
+	Cc1Mv uint
+	// cc2Mv is the USB-C configuration channel 2 voltage.
+	Cc2Mv uint
+}
+
+// GetUsbAdcInfo extracts the USB ADC information from `usb` command.
+func (i *CrOSImage) GetUsbAdcInfo(ctx context.Context) (UsbAdcInfo, error) {
+	output, err := i.Command(ctx, "usb")
+	if err != nil {
+		return UsbAdcInfo{}, errors.Wrap(err, "failed to run GSC `usb` command")
+	}
+	return matchUsbAdcInfo(output)
+}
+
+func matchUsbAdcInfo(s string) (UsbAdcInfo, error) {
+	ret := UsbAdcInfo{}
+	stateMatches := usbAdcStateRE.FindStringSubmatch(s)
+	if len(stateMatches) != 4 {
+		return ret, errors.New("regex failed to get correct matches from usb adc state from: " + s)
+	}
+
+	if stateMatches[1] != "" {
+		return ret, errors.New("H1 does not support ADC readings")
+	} else if stateMatches[2] == "disconnected" {
+		ret.State = UsbDisconnected
+	} else {
+		switch stateMatches[3] {
+		case "SuzyQ":
+			ret.State = SuzyQConnected
+		case "SuzyQFlipped":
+			ret.State = SuzyQFlippedConnected
+		case "Servo-src(Rp1A5/Rp3A0)":
+			ret.State = ServoConnected
+		case "Servo-src(Rp3A0/Rp1A5)":
+			ret.State = ServoFlippedConnected
+		case "Servo-snk(dut:RpUSB)":
+			ret.State = ServoSink1Connected
+		case "Servo-snk(dut:Rp1A5)":
+			ret.State = ServoSink2Connected
+		case "Servo-snk(dut:Rp3A0)":
+			ret.State = ServoSink3Connected
+		default:
+			return ret, errors.New("regex failed to extract usb adc connected state from: " + s)
+		}
+	}
+
+	cc1Match := usbAdcCc1RE.FindStringSubmatch(s)
+	if len(cc1Match) != 2 {
+		return ret, errors.New("regex failed to extract usb adc cc1 from: " + s)
+	}
+	cc1, err := strconv.ParseUint(cc1Match[1], 10, 32)
+	if err != nil {
+		return ret, errors.New("failed to parse cc1 as a uint: " + cc1Match[1])
+	}
+	ret.Cc1Mv = uint(cc1)
+
+	cc2Match := usbAdcCc2RE.FindStringSubmatch(s)
+	if len(cc2Match) != 2 {
+		return ret, errors.New("regex failed to extract usb adc cc2 from: " + s)
+	}
+	cc2, err := strconv.ParseUint(cc2Match[1], 10, 32)
+	if err != nil {
+		return ret, errors.New("failed to parse cc2 as a uint: " + cc2Match[1])
+	}
+	ret.Cc2Mv = uint(cc2)
+
+	return ret, nil
 }

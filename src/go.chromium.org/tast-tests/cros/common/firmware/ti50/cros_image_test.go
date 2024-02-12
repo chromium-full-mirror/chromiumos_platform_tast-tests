@@ -408,3 +408,147 @@ func testExtractGSCTime(t *testing.T, input string, expected GSCTime) {
 		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", out, expected)
 	}
 }
+
+func TestUsbAdcInfoCr50(t *testing.T) {
+	input := `PHY A`
+	_, err := matchUsbAdcInfo(input)
+	if err == nil {
+		t.Fatal("expected match failure")
+	}
+
+	input = `PHY B`
+	_, err = matchUsbAdcInfo(input)
+	if err == nil {
+		t.Fatal("expected match failure")
+	}
+}
+
+func TestUsbAdcInfoDisconnected(t *testing.T) {
+	input := `
+ADC: disconnected
+ADC: CC1 = 54 mV
+ADC: CC2 = 53 mV
+`
+	expected := UsbAdcInfo{
+		State: UsbDisconnected,
+		Cc1Mv: 54,
+		Cc2Mv: 53,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func TestUsbAdcInfoSuzyQ(t *testing.T) {
+	input := `
+ADC: connected: SuzyQ
+ADC: CC1 = 928 mV
+ADC: CC2 = 497 mV
+`
+	expected := UsbAdcInfo{
+		State: SuzyQConnected,
+		Cc1Mv: 928,
+		Cc2Mv: 497,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func TestUsbAdcInfoSuzyQFlipped(t *testing.T) {
+	input := `
+ADC: connected: SuzyQFlipped
+ADC: CC1 = 500 mV
+ADC: CC2 = 928 mV
+`
+	expected := UsbAdcInfo{
+		State: SuzyQFlippedConnected,
+		Cc1Mv: 500,
+		Cc2Mv: 928,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func TestUsbAdcInfoServo(t *testing.T) {
+	input := `
+ADC: connected: Servo-src(Rp1A5/Rp3A0)
+ADC: CC1 = 1706 mV
+ADC: CC2 = 928 mV
+`
+	expected := UsbAdcInfo{
+		State: ServoConnected,
+		Cc1Mv: 1706,
+		Cc2Mv: 928,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func TestUsbAdcInfoServoFlipped(t *testing.T) {
+	input := `
+ADC: connected: Servo-src(Rp3A0/Rp1A5)
+ADC: CC1 = 931 mV
+ADC: CC2 = 1706 mV
+	`
+	expected := UsbAdcInfo{
+		State: ServoFlippedConnected,
+		Cc1Mv: 931,
+		Cc2Mv: 1706,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func TestUsbAdcInfoServoSink1(t *testing.T) {
+	input := `
+ADC: connected: Servo-snk(dut:RpUSB)
+ADC: CC1 = 539 mV
+ADC: CC2 = 536 mV
+	`
+	expected := UsbAdcInfo{
+		State: ServoSink1Connected,
+		Cc1Mv: 539,
+		Cc2Mv: 536,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func TestUsbAdcInfoServoSink2(t *testing.T) {
+	input := `
+ADC: connected: Servo-snk(dut:Rp1A5)
+ADC: CC1 = 1009 mV
+ADC: CC2 = 1008 mV
+	`
+	expected := UsbAdcInfo{
+		State: ServoSink2Connected,
+		Cc1Mv: 1009,
+		Cc2Mv: 1008,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func TestUsbAdcInfoServoSink3(t *testing.T) {
+	input := `
+ADC: connected: Servo-snk(dut:Rp3A0)
+ADC: CC1 = 1827 mV
+ADC: CC2 = 1828 mV
+	`
+	expected := UsbAdcInfo{
+		State: ServoSink3Connected,
+		Cc1Mv: 1827,
+		Cc2Mv: 1828,
+	}
+
+	testMatchUsbAdcInfo(t, input, expected)
+}
+
+func testMatchUsbAdcInfo(t *testing.T, input string, expected UsbAdcInfo) {
+	out, err := matchUsbAdcInfo(input)
+	if err != nil {
+		t.Fatal("error processing USB ADC info:", err)
+	}
+	if out != expected {
+		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", out, expected)
+	}
+}
