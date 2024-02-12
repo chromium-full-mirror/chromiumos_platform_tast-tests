@@ -477,7 +477,7 @@ func init() {
 			ExtraData: []string{"bear-320x240.vp9.webm"},
 			Fixture:   "chromeVideo",
 		}, {
-			Name: "h264_hw_v4l2_flat_stateful",
+			Name: "h264_hw_v4l2_flat",
 			Val: playParams{
 				fileName:    "bear-320x240.h264.mp4",
 				videoType:   play.NormalVideo,
@@ -490,7 +490,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
 			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 		}, {
-			Name: "vp8_hw_v4l2_flat_stateful",
+			Name: "vp8_hw_v4l2_flat",
 			Val: playParams{
 				fileName:    "bear-320x240.vp8.webm",
 				videoType:   play.NormalVideo,
@@ -503,7 +503,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
 			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 		}, {
-			Name: "vp9_hw_v4l2_flat_stateful",
+			Name: "vp9_hw_v4l2_flat",
 			Val: playParams{
 				fileName:    "bear-320x240.vp9.webm",
 				videoType:   play.NormalVideo,

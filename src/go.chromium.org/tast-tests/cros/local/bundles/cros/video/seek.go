@@ -254,7 +254,7 @@ func init() {
 			Timeout:           20 * time.Minute,
 			Fixture:           "chromeVideo",
 		}, {
-			Name: "h264_v4l2_flat_stateful",
+			Name: "h264_v4l2_flat",
 			Val: seekTest{
 				filename:    "720_h264.mp4",
 				numSeeks:    25,
@@ -266,7 +266,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
 		}, {
-			Name: "vp9_v4l2_flat_stateful",
+			Name: "vp9_v4l2_flat",
 			Val: seekTest{
 				filename:    "720_vp9.webm",
 				numSeeks:    25,

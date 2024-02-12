@@ -940,7 +940,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_1080p_60fps_hw_v4l2_flat_stateful",
+				Name: "h264_1080p_60fps_hw_v4l2_flat",
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
@@ -956,7 +956,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp8_1080p_60fps_hw_v4l2_flat_stateful",
+				Name: "vp8_1080p_60fps_hw_v4l2_flat",
 				Val: playback.Config{
 					FileName:        "perf/vp8/1080p_60fps_600frames.vp8.webm",
 					DecoderType:     0,
@@ -972,7 +972,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp9_1080p_60fps_hw_v4l2_flat_stateful",
+				Name: "vp9_1080p_60fps_hw_v4l2_flat",
 				Val: playback.Config{
 					FileName:        "perf/vp9/1080p_60fps_600frames.vp9.webm",
 					DecoderType:     0,
@@ -988,7 +988,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp9_2160p_60fps_hw_v4l2_flat_stateful",
+				Name: "vp9_2160p_60fps_hw_v4l2_flat",
 				Val: playback.Config{
 					FileName:        "perf/vp9/2160p_60fps_600frames.vp9.webm",
 					DecoderType:     0,
@@ -1925,7 +1925,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_1080p_30fps_hw_v4l2_flat_stateful_long",
+				Name: "h264_1080p_30fps_hw_v4l2_flat_long",
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.mp4",
 					DecoderType:     0,
@@ -1943,7 +1943,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp8_1080p_30fps_hw_v4l2_flat_stateful_long",
+				Name: "vp8_1080p_30fps_hw_v4l2_flat_long",
 				Val: playback.Config{
 					FileName:        "crosvideo/1080_vp8.webm",
 					DecoderType:     0,
@@ -1961,7 +1961,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp9_1080p_30fps_hw_v4l2_flat_stateful_long",
+				Name: "vp9_1080p_30fps_hw_v4l2_flat_long",
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.webm",
 					DecoderType:     0,
