@@ -102,8 +102,12 @@ func CCDCapabilitiesOpenFromUSB(ctx context.Context, s *testing.State) {
 
 	// Try to reopen using `gsctool`, tpmv command over USB, ignore error and
 	// output
-	// TODO(b/240149504): Support Cr50 here
-	_, _ = b.GSCToolCommand(ctx, "", "-D", "--ccd_open")
+	// DT uses the -D arg. H1 does not.
+	chipArg := "-D"
+	if b.TestbedType == ti50.GscH1Shield {
+		chipArg = ""
+	}
+	_, _ = b.GSCToolCommand(ctx, "", chipArg, "--ccd_open")
 	ccdIsOpen, err = i.IsCCDOpen(ctx)
 	if err != nil {
 		s.Fatal("Failed to determine if CCD is open")
