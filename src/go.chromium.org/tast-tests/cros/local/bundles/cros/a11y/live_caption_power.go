@@ -81,9 +81,11 @@ func LiveCaptionPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to toggle on live caption: ", err)
 	}
 
-	// Wait until dlc libsoda and libsoda-model-en-us are installed.
-	if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
-		s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
+	if useLiveCaption {
+		// Wait until dlc libsoda and libsoda-model-en-us are installed.
+		if err := testing.Poll(ctx, a11y.VerifySodaInstalled, &testing.PollOptions{Timeout: 2 * time.Minute, Interval: 10 * time.Second}); err != nil {
+			s.Fatal("Failed to wait for libsoda dlc to be installed: ", err)
+		}
 	}
 
 	// Open the test page and play the audio.
