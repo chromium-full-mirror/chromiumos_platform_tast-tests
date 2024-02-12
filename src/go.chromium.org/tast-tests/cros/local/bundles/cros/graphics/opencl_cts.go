@@ -20084,6 +20084,9 @@ func OpenclCts(ctx context.Context, s *testing.State) {
 	if s.TestName() == "graphics.OpenclCts.api_null_buffer_arg" {
 		os.Setenv("CLVK_PHYSICAL_ADDRESSING", "1")
 		os.Setenv("CLVK_SPIRV_ARCH", "spir64")
+	} else {
+		os.Setenv("CLVK_PHYSICAL_ADDRESSING", "0")
+		os.Setenv("CLVK_SPIRV_ARCH", "spir")
 	}
 
 	// Geminilake are really slow run all tests in wimpy to avoid timeouts.
