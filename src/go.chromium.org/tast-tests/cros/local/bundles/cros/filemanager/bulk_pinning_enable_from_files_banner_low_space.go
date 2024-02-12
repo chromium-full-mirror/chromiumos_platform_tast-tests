@@ -6,18 +6,16 @@ package filemanager
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
-	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -70,17 +68,11 @@ func BulkPinningEnableFromFilesBannerLowSpace(ctx context.Context, s *testing.St
 	defer cancel()
 	defer driveFsClient.SaveLogsOnError(cleanupCtx, s.HasError)
 
-	// Fill the disk until there is minimal free space available. Bulk pinning
-	// should not be able to toggle on at this point.
-	fillFile, err := disk.FillUntil(cleanup.UserHome, cleanup.MinimalFreeSpace)
+	diskCleanup, err := bulkpinning.FillDiskUntilNotEnoughSpace(ctx)
 	if err != nil {
-		s.Fatal("Failed to fill disk space: ", err)
+		s.Fatal("Failed to fill the users cryptohome to minimal free space: ", err)
 	}
-	defer func() {
-		if err := os.Remove(fillFile); err != nil {
-			s.Errorf("Failed to remove fill file %s: %v", fillFile, err)
-		}
-	}()
+	defer diskCleanup()
 
 	files, err := filesapp.Launch(ctx, tconn)
 	if err != nil {

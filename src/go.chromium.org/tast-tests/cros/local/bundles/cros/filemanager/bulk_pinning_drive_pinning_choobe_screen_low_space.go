@@ -6,15 +6,13 @@ package filemanager
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/bulkpinning"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
-	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
-	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast-tests/cros/local/drivefs"
 	"go.chromium.org/tast-tests/cros/local/oobe"
 
@@ -95,17 +93,11 @@ func BulkPinningDrivePinningChoobeScreenLowSpace(ctx context.Context, s *testing
 	}
 	defer dfs.SaveLogsOnError(cleanupCtx, s.HasError)
 
-	// Fill the disk until there is minimal free space (currently 512MiB) available.
-	// Bulk pinning should not be able to toggle on at this point.
-	fillFile, err := disk.FillUntil("/home/chronos/user/GCache/v2", cleanup.MinimalFreeSpace)
+	diskCleanup, err := bulkpinning.FillDiskUntilNotEnoughSpace(ctx)
 	if err != nil {
-		s.Fatal("Failed to fill disk space: ", err)
+		s.Fatal("Failed to fill the users cryptohome to minimal free space: ", err)
 	}
-	defer func() {
-		if err := os.Remove(fillFile); err != nil {
-			s.Logf("Failed to remove fill file %s: %v", fillFile, err)
-		}
-	}()
+	defer diskCleanup()
 
 	// Wait for the `CHOOBEScreenStage` UMA to get emitted, it finishes with the
 	// integer "7" which maps to the `kNotEnoughSpace` stage.
