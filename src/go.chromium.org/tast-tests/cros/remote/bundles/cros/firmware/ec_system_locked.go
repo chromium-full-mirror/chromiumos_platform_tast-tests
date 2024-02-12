@@ -16,6 +16,8 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// If this test fails, check that CONFIG_SYSTEM_UNLOCKED is disabled.
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: ECSystemLocked,
