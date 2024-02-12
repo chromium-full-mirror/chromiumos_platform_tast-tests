@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/config"
 	"go.chromium.org/tast-tests/cros/local/chrome/internal/driver"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -33,6 +34,10 @@ var ErrNeedNewSession = errors.New("Chrome restarted; need a new session")
 // in which case errNeedNewSession is returned.
 // Also performs enterprise enrollment before login when requested.
 func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	switch cfg.EnrollMode() {
 	case config.NoEnroll:
 		// Nothing to do.
@@ -56,6 +61,17 @@ func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error 
 	case config.NoLogin:
 		return nil
 	case config.FakeLogin, config.GAIALogin, config.SAMLLogin:
+		signals, err := cryptohome.NewLoginSignals(ctx)
+		if err != nil {
+			testing.ContextLog(ctx, "Failed to create login signals")
+		} else {
+			defer func(ctx context.Context) {
+				if err := signals.Close(cleanupCtx); err != nil {
+					testing.ContextLog(ctx, "Failed to cleanup signals: ", err)
+				}
+			}(cleanupCtx)
+		}
+
 		if err := loginUser(ctx, cfg, sess); err != nil {
 			return err
 		}
@@ -64,7 +80,7 @@ func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error 
 			return nil
 		}
 
-		if err := FinishUserLogin(ctx, cfg, sess); err != nil {
+		if err := FinishUserLogin(ctx, cfg, sess, signals); err != nil {
 			return errors.Wrap(err, "failed to finish user login")
 		}
 
@@ -82,11 +98,12 @@ func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error 
 }
 
 // FinishUserLogin handles the necessary steps after a successful login.
-func FinishUserLogin(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
+func FinishUserLogin(ctx context.Context, cfg *config.Config, sess *driver.Session, signals *cryptohome.LoginSignals) error {
 	if cfg.WaitForCryptohome() {
 		if err := waitForCryptohome(ctx, cfg); err != nil {
-			return errors.Wrap(err, "waiting for cryptohome failed")
+			return errors.Wrapf(err, "waiting for cryptohome failed, %s", signals.ErrorMessage(ctx))
 		}
+
 	}
 
 	if cfg.SkipOOBEAfterLogin() {

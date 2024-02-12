@@ -83,7 +83,7 @@ const (
 	// Login timeout shorter than this amount would be extended
 	// to ensure the Chrome has enough time to perform login.
 	// See b/269211070 for more information.
-	MinLoginTimeout = 4 * time.Minute
+	MinLoginTimeout = 4*time.Minute + 10*time.Second
 
 	// tryReuseSessionTimeout is the maximum amount of time that Chrome is expected to take to perform
 	// session reuse checking. Chrome will connect to the existing Chrome instance, obtained the
@@ -320,7 +320,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	}
 	// b/211032595: Sometimes, vm test requires longer timeout.
 	// b/269211070: Sometimes, gaia login requires a longer timeout.
-	// Make sure the timeout to be at least 4 minutes.
+	// Make sure the timeout to be at least 4 minutes and 10 sec.
 	if timeout < MinLoginTimeout {
 		timeout = MinLoginTimeout
 	}
@@ -883,7 +883,7 @@ func (c *Chrome) ContinueLogin(ctx context.Context) error {
 
 // FinishUserLogin handles the necessary steps after a successful login (e.g. during SAML login tests).
 func (c *Chrome) FinishUserLogin(ctx context.Context) error {
-	return login.FinishUserLogin(ctx, &c.cfg, c.sess)
+	return login.FinishUserLogin(ctx, &c.cfg, c.sess, nil)
 }
 
 // IsTargetAvailable checks if there is any matched target.
