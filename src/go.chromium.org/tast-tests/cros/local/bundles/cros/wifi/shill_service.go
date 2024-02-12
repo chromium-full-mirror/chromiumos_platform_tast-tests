@@ -3089,8 +3089,21 @@ func (s *ShillService) WatchDarkResume(_ *empty.Empty, sender wifi.ShillService_
 	}
 }
 
+// logErrorStacks logs returned error stacks.
+// The main issue with handling errors in RPC handlers is that they return
+// over RPC only error cause, not the full stack trace.
+func logErrorStacks(ctx context.Context, retErr *error) {
+	if *retErr != nil {
+		testing.ContextLogf(ctx, "Errors enountered while handling RPC call: %+v", *retErr)
+	}
+}
+
 // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
 func (s *ShillService) P2PGroupCreate(ctx context.Context, request *wifi.P2PGroupCreateRequest) (ret *wifi.P2PGroupCreateResponse, retErr error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	defer logErrorStacks(ctx, &retErr)
+
 	s.method = request.Method
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
@@ -3101,6 +3114,10 @@ func (s *ShillService) P2PGroupCreate(ctx context.Context, request *wifi.P2PGrou
 
 // P2PGroupDelete deletes the existing WiFi Direct Group.
 func (s *ShillService) P2PGroupDelete(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (ret *wifi.P2PGroupDeleteResponse, retErr error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	defer logErrorStacks(ctx, &retErr)
+
 	// Use invoke method given during P2PGroupCreate.
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
@@ -3111,6 +3128,10 @@ func (s *ShillService) P2PGroupDelete(ctx context.Context, request *wifi.P2PGrou
 
 // P2PGroupConnect handles connection to the existing WiFi Direct Group.
 func (s *ShillService) P2PGroupConnect(ctx context.Context, request *wifi.P2PGroupConnectRequest) (ret *wifi.P2PGroupConnectResponse, retErr error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	defer logErrorStacks(ctx, &retErr)
+
 	s.method = request.Method
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
@@ -3121,6 +3142,10 @@ func (s *ShillService) P2PGroupConnect(ctx context.Context, request *wifi.P2PGro
 
 // P2PGroupDisconnect handles disconnection from the existing WiFi Direct Group.
 func (s *ShillService) P2PGroupDisconnect(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (ret *wifi.P2PGroupDisconnectResponse, retErr error) {
+	ctx, cancel := reserveForReturn(ctx)
+	defer cancel()
+	defer logErrorStacks(ctx, &retErr)
+
 	// Use invoke method given during P2PGroupConnect.
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
