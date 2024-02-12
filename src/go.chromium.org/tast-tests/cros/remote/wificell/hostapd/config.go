@@ -940,7 +940,10 @@ func (c *Config) Format(iface, ctrlPath string) (string, error) {
 		}
 	}
 
-	configure("ieee80211w", strconv.Itoa(int(c.PMF)))
+	// If HostapdConfig has provided "ieee80211w" then do not overwrite it.
+	if _, ok := securityConf["ieee80211w"]; !ok {
+		configure("ieee80211w", strconv.Itoa(int(c.PMF)))
+	}
 
 	if c.Bridge != "" {
 		configure("bridge", c.Bridge)
