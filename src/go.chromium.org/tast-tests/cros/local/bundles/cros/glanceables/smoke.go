@@ -43,6 +43,7 @@ func init() {
 		Desc:         "Tests the basic ui elements for glanceables",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
+			"amitrokhin@google.com",
 			"anasalazar@google.com",
 			"tbarzic@google.com",
 			"chromeos-sw-engprod@google.com",
