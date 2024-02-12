@@ -433,7 +433,9 @@ func simpleConnectOWE() []*simpleConnectParams {
 			SecConfFac:       "owe.NewConfigFactory(owe.ModePureOWE)",
 			ExpectedSecurity: "shillconst.SecurityOWE",
 		}},
-		ExtraRequirements: []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
+		ExtraHardwareDepsDoc: []string{"Skip Marvell WiFi since they do not support OWE."},
+		ExtraHardwareDeps:    `hwdep.D(hwdep.WifiNotMarvell())`,
+		ExtraRequirements:    []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
 	}}
 }
 

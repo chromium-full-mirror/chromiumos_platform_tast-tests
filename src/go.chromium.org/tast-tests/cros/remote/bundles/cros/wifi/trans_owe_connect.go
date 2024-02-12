@@ -17,7 +17,12 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type transOweConnectTestcase struct {
+	expectedEncryption bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -34,6 +39,22 @@ func init() {
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
 		Requirements:    []string{tdreq.WiFiGenSupportWiFi},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+		Params: []testing.Param{
+			{
+				Val: transOweConnectTestcase{
+					expectedEncryption: true,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				ExtraRequirements: []string{tdreq.WiFiSecSupportOWE, tdreq.WiFiCertOWE},
+			}, {
+				// Marvell chips do not support OWE so they should fall back to the public endpoint.
+				Name: "expect_public",
+				Val: transOweConnectTestcase{
+					expectedEncryption: false,
+				},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiMarvell()),
+			},
+		},
 	})
 }
 
@@ -144,8 +165,15 @@ func TransOweConnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get service properties: ", err)
 	}
 	s.Log("Connected with Security: ", srvcResp.Wifi.Security)
-	if srvcResp.Wifi.Bssid != bssOwe.String() {
-		s.Fatalf("Wrong BSS: got %s, want %s", srvcResp.Wifi.Bssid, bssOwe.String())
+	expectedEncryption := s.Param().(transOweConnectTestcase).expectedEncryption
+	var expectedBssid string
+	if expectedEncryption {
+		expectedBssid = bssOwe.String()
+	} else {
+		expectedBssid = bssOpen.String()
+	}
+	if srvcResp.Wifi.Bssid != expectedBssid {
+		s.Fatalf("Wrong BSS: got %s, want %s", srvcResp.Wifi.Bssid, expectedBssid)
 	}
 	if srvcResp.Wifi.Security != expectedSecurity {
 		s.Fatalf("Wrong service security: got %s, want %s", srvcResp.Wifi.Security, expectedSecurity)

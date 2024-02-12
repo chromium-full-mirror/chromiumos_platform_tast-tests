@@ -436,6 +436,8 @@ func init() {
 					secConfFac:       owe.NewConfigFactory(owe.ModePureOWE),
 					expectedSecurity: shillconst.SecurityOWE,
 				}},
+				// Skip Marvell WiFi since they do not support OWE.
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 				ExtraRequirements: []string{"wifi-sec-0008-v02", "wifi-cert-0004-v02"},
 			}, {
 				// Verifies that DUT can connect to a hidden network on 2.4GHz channel.

@@ -15,6 +15,7 @@ import (
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type apConf struct {
@@ -40,6 +41,7 @@ func init() {
 		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		ServiceDeps:     []string{wificell.ShillServiceName},
 		Fixture:         wificell.FixtureID(wificell.TFFeaturesCapture),
+		HardwareDeps:    hwdep.D(hwdep.WifiNotMarvell()),
 		Requirements:    []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiGenSupportPMF, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 	})
