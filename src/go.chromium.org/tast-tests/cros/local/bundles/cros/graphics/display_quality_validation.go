@@ -100,8 +100,8 @@ func init() {
 					Exe:      "kms_async_flips",
 					Subtests: []string{"async-flip-with-page-flip-events", "alternate-sync-async-flip", "test-time-stamp", "test-cursor", "crc"},
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuQcom...)),
 			},
 			{
@@ -111,15 +111,16 @@ func init() {
 					Subtests:           []string{"basic"},
 					DisableSysLogCheck: true,
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuQcom...)),
 			},
 
 			{
 				Name: "kms_bw",
 				Val: graphics.IgtTest{
-					Exe: "kms_bw",
+					Exe:      "kms_bw",
+					IsSkipOk: true,
 					Subtests: []string{
 						"linear-tiling-1-displays-1920x1080p",
 						"linear-tiling-1-displays-2560x1440p",

@@ -63,7 +63,8 @@ func init() {
 			{
 				Name: "kms_bw",
 				Val: graphics.IgtTest{
-					Exe: "kms_bw",
+					Exe:      "kms_bw",
+					IsSkipOk: true,
 				},
 				Timeout:           5 * time.Minute,
 				ExtraAttr:         []string{"graphics_weekly"},

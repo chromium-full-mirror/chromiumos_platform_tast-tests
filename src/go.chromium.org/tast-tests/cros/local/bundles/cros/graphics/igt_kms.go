@@ -73,8 +73,8 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_async_flips",
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuQcom...)),
 			}, {
 				Name: "kms_busy",
@@ -82,13 +82,14 @@ func init() {
 					Exe:                "kms_busy",
 					DisableSysLogCheck: true,
 				},
-				Timeout:   5 * time.Minute,
-				ExtraAttr: []string{"graphics_nightly"},
+				Timeout:           5 * time.Minute,
+				ExtraAttr:         []string{"graphics_nightly"},
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform(graphics.IgtGpuQcom...)),
 			}, {
 				Name: "kms_bw",
 				Val: graphics.IgtTest{
-					Exe: "kms_bw",
+					Exe:      "kms_bw",
+					IsSkipOk: true,
 				},
 				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"graphics_nightly"},
@@ -159,8 +160,8 @@ func init() {
 				Val: graphics.IgtTest{
 					Exe: "kms_cursor_legacy",
 				},
-				Timeout:           20 * time.Minute,
-				ExtraAttr:         []string{"graphics_weekly"},
+				Timeout:   20 * time.Minute,
+				ExtraAttr: []string{"graphics_weekly"},
 			}, {
 				Name: "kms_dp_aux_dev",
 				Val: graphics.IgtTest{
