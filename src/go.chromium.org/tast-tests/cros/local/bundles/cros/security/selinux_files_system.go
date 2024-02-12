@@ -224,8 +224,12 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/var/lib/dbus", Context: "cros_var_lib_dbus", Recursive: true},
 		{Path: "/var/lib/dhcpcd", Context: "cros_var_lib_shill", Recursive: true},
 		{Path: "/var/lib/dlcservice", Context: "cros_var_lib_dlcservice", Recursive: true},
-		{Path: "/var/lib/metrics", Context: "cros_metrics_file", Recursive: true, Filter: selinux.IgnorePathButNotContents("/var/lib/metrics/uma-events")},
+		{Path: "/var/lib/metrics", Context: "cros_metrics_file", Recursive: true, Filter: selinux.IgnorePathsButNotContents([]string{
+			"/var/lib/metrics/uma-events",
+			"/var/lib/metrics/uma-events.d",
+		})},
 		{Path: "/var/lib/metrics/uma-events", Context: "cros_metrics_uma_events_file"},
+		{Path: "/var/lib/metrics/uma-events.d", Context: "cros_metrics_uma_events_dir"},
 		{Path: "/var/lib/power_manager", Context: "cros_var_lib_power_manager", Recursive: true},
 		{Path: "/var/lib/shill", Context: "cros_var_lib_shill", Recursive: true},
 		{Path: "/var/lib/update_engine", Context: "cros_var_lib_update_engine", Recursive: true},

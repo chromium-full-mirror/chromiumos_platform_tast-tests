@@ -38,7 +38,10 @@ func CheckStatefulFiles(ctx context.Context, outDir string) []error {
 		// These files/directories do not currently pass the general Unix permissions check.
 		// TODO(b/306477467) Figure out why these files have relaxed permissions.
 		NewPattern(Path("encrypted/var/cache/fwupd/fwupd/fwupdtool"), SkipPermCheck()),
+		// The below two files are used by metrics-library to allow all processes to
+		// communicate metrics to chrome.
 		NewPattern(Path("encrypted/var/lib/metrics/uma-events"), SkipPermCheck()),
+		NewPattern(Path("encrypted/var/lib/metrics/uma-events.d"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/metrics/structured/events"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/metrics/structured/keys"), SkipPermCheck()),
 		NewPattern(Path("encrypted/var/lib/bluetooth/bluetooth-daemon.current"), SkipPermCheck()),
