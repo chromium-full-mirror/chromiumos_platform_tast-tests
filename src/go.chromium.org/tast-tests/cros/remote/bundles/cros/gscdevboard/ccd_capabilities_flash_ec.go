@@ -59,6 +59,7 @@ func CCDCapabilitiesFlashEC(ctx context.Context, s *testing.State) {
 	userParams := s.Param().(cCDCapabilitiesFlashEC)
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
+	defer i.Close(ctx)
 
 	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	_ = b.ResetAndTpmStartup(ctx, i, ti50.CcdSuzyQ, ti50.FfClamshell)
