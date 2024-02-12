@@ -787,3 +787,75 @@ func (h DevboardHelper) readGscTotalMilliAmpsOtShield(ctx context.Context) float
 func (h DevboardHelper) readGscTotalMilliAmpsH1Shield(ctx context.Context) float32 {
 	return h.readGscTotalMilliAmpsPac195x(ctx, ti50.I2cPAC1Bus, H1VDDIOM, H1ShieldShuntOhms)
 }
+
+// CurrentThreshold is the current threshold in milliAmps for different chip power states.
+type CurrentThreshold float32
+
+const (
+	// H1MaxDeepSleepCurrent is the maximum power allowed for deep sleep.
+	H1MaxDeepSleepCurrent CurrentThreshold = 0.2
+
+	// H1MaxNormalSleepCurrent is the maximum power allowed for regular sleep.
+	H1MaxNormalSleepCurrent CurrentThreshold = 1.5
+)
+
+// WaitForPowerRise waits until the current reading is greater than the given threshold
+func (h DevboardHelper) WaitForPowerRise(ctx context.Context, threshold CurrentThreshold, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Interval: time.Second, Timeout: timeout}
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		c := h.ReadGscTotalMilliAmps(ctx)
+		testing.ContextLogf(ctx, "%f: %f mA", threshold, c)
+		if c > float32(threshold) {
+			return nil
+		}
+		return errors.Errorf("%f is below %f", c, threshold)
+	}, &pOpts)
+	if err != nil {
+		return errors.Errorf("GSC did not rise over %f: %s", threshold, err)
+	}
+	return nil
+}
+
+// WaitForPowerDrop waits until the current reading is less than the given threshold
+func (h DevboardHelper) WaitForPowerDrop(ctx context.Context, threshold CurrentThreshold, timeout time.Duration) error {
+	pOpts := testing.PollOptions{Interval: time.Second, Timeout: timeout}
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		c := h.ReadGscTotalMilliAmps(ctx)
+		testing.ContextLogf(ctx, "%f: %f mA", threshold, c)
+		if c < float32(threshold) {
+			return nil
+		}
+		return errors.Errorf("%f is above %f", c, threshold)
+	}, &pOpts)
+	if err != nil {
+		return errors.Errorf("GSC did not drop below %f: %s", threshold, err)
+	}
+	return nil
+}
+
+// WaitUntilNormalSleep waits until gsc goes into deep sleep via monitoring print statement or waiting for the power to drop.
+func (h DevboardHelper) WaitUntilNormalSleep(ctx context.Context, i *ti50.CrOSImage, timeout time.Duration) error {
+	// H1 does not support checking sleep from the console. Use a power drop to detect sleep.
+	if h.TestbedType == ti50.GscH1Shield {
+		return h.WaitForPowerDrop(ctx, H1MaxNormalSleepCurrent, timeout)
+	}
+	return i.WaitUntilNormalSleep(ctx, timeout)
+}
+
+// WaitUntilDeepSleep waits until gsc goes into deep sleep via monitoring print statement or waiting for the power to drop.
+func (h DevboardHelper) WaitUntilDeepSleep(ctx context.Context, i *ti50.CrOSImage, timeout time.Duration) error {
+	// H1 does not support checking deep sleep from the console. Use a power drop to detect deep sleep.
+	if h.TestbedType == ti50.GscH1Shield {
+		return h.WaitForPowerDrop(ctx, H1MaxDeepSleepCurrent, timeout)
+	}
+	return i.WaitUntilDeepSleep(ctx, timeout)
+}
+
+// WaitUntilAnySleep waits until gsc goes into deep or normal sleep via monitoring print statement or waiting for the power to drop.
+func (h DevboardHelper) WaitUntilAnySleep(ctx context.Context, i *ti50.CrOSImage, timeout time.Duration) error {
+	// H1 does not support checking sleep from the console. Use a power drop to detect sleep.
+	if h.TestbedType == ti50.GscH1Shield {
+		return h.WaitForPowerDrop(ctx, H1MaxNormalSleepCurrent, timeout)
+	}
+	return i.WaitUntilAnySleep(ctx, timeout)
+}
