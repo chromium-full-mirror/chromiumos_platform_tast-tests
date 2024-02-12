@@ -19,7 +19,13 @@ var (
 	// These models are affected by an issue where reads done via
 	// /dev/drm_dp_aux1 cause fwupd to not be freezeable when the kernel is
 	// suspending the device. b/319036849
-	filteredModels = []string{"tentacool", "tentacruel", "elm", "hana", "homestar", "quackingstick", "wormdingler", "kingoftown", "lazor", "limozeen", "pazquel", "pompom"}
+	nofwupdFilteredModels = []string{"tentacool", "tentacruel", "elm", "hana", "homestar", "quackingstick", "wormdingler", "kingoftown", "lazor", "limozeen", "pazquel", "pompom"}
+
+	// These nami models are filtered out because Nami/sona seems to be unstable
+	// when suspending. b/324533891
+	namiFilteredModels = []string{"sona"}
+
+	allFilteredModels = append(nofwupdFilteredModels, namiFilteredModels...)
 )
 
 func init() {
@@ -37,15 +43,15 @@ func init() {
 		// versions of this test and also remove the hwdeps - this should be run on all devices
 		Params: []testing.Param{
 			{
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(filteredModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(allFilteredModels...)),
 				Val:               "fwupd_nochange",
 			}, {
 				Name:              "unstable",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(filteredModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(allFilteredModels...)),
 				Val:               "fwupd_nochange",
 			}, {
 				Name:              "nofwupd",
-				ExtraHardwareDeps: hwdep.D(hwdep.Model(filteredModels...)),
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(nofwupdFilteredModels...)),
 				Val:               "fwupd_off",
 			},
 		},
