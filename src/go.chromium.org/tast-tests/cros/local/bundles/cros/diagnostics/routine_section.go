@@ -26,7 +26,6 @@ func init() {
 		Contacts: []string{
 			"cros-peripherals@google.com",
 			"ashleydp@google.com",
-			"zentaro@google.com",
 			"menghuan@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

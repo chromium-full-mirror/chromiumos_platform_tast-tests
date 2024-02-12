@@ -31,7 +31,6 @@ func init() {
 			"jeff.lin@cienet.com",
 			"xliu@cienet.com",
 			"ashleydp@google.com",
-			"zentaro@google.com",
 		},
 		Fixture:      "diagnosticsPrepForInputDiagnostics",
 		Attr:         []string{"group:mainline", "informational"},

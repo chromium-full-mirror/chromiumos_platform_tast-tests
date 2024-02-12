@@ -25,7 +25,6 @@ func init() {
 			"cros-peripherals@google.com",
 			"dpad@google.com",
 			"ashleydp@google.com",
-			"zentaro@google.com",
 		},
 		Fixture:      "diagnosticsPrepForInputDiagnostics",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

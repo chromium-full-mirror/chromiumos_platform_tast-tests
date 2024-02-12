@@ -34,7 +34,6 @@ func init() {
 			"jeff.lin@cienet.com",
 			"xliu@cienet.com",
 			"ashleydp@google.com",
-			"zentaro@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
