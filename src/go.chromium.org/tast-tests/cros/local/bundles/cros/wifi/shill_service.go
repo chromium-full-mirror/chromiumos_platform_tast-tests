@@ -3100,67 +3100,95 @@ func logErrorStacks(ctx context.Context, retErr *error) {
 }
 
 // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
-func (s *ShillService) P2PGroupCreate(ctx context.Context, request *wifi.P2PGroupCreateRequest) (ret *wifi.P2PGroupCreateResponse, retErr error) {
+func (s *ShillService) P2PGroupCreate(ctx context.Context, request *wifi.P2PGroupCreateRequest) (
+	ret *wifi.P2PGroupCreateResponse, retErr error) {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 	defer logErrorStacks(ctx, &retErr)
+	startTime := time.Now()
 
 	s.method = request.Method
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
-		return s.p2pGroupCreateWPACLI(ctx, request)
+		ret, retErr = s.p2pGroupCreateWPACLI(ctx, request)
 	case wifi.InvokeMethodEnum_SHILL_API:
-		return s.p2pGroupCreateShillAPI(ctx, request)
+		ret, retErr = s.p2pGroupCreateShillAPI(ctx, request)
+	default:
+		retErr = errors.Errorf("Invoke method %q not implemented yet", s.method)
 	}
-	return nil, errors.New("Not implemented yet")
+	if ret != nil {
+		ret.ExecutionTime = durationpb.New(time.Since(startTime))
+	}
+	return
 }
 
 // P2PGroupDelete deletes the existing WiFi Direct Group.
-func (s *ShillService) P2PGroupDelete(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (ret *wifi.P2PGroupDeleteResponse, retErr error) {
+func (s *ShillService) P2PGroupDelete(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (
+	ret *wifi.P2PGroupDeleteResponse, retErr error) {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 	defer logErrorStacks(ctx, &retErr)
+	startTime := time.Now()
 
 	// Use invoke method given during P2PGroupCreate.
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
-		return s.p2pGroupDeleteWPACLI(ctx, request)
+		ret, retErr = s.p2pGroupDeleteWPACLI(ctx, request)
 	case wifi.InvokeMethodEnum_SHILL_API:
-		return s.p2pGroupDeleteShillAPI(ctx, request)
+		ret, retErr = s.p2pGroupDeleteShillAPI(ctx, request)
+	default:
+		retErr = errors.Errorf("Invoke method %q not implemented yet", s.method)
 	}
-	return nil, errors.New("Not implemented yet")
+	if ret != nil {
+		ret.ExecutionTime = durationpb.New(time.Since(startTime))
+	}
+	return
 }
 
 // P2PGroupConnect handles connection to the existing WiFi Direct Group.
-func (s *ShillService) P2PGroupConnect(ctx context.Context, request *wifi.P2PGroupConnectRequest) (ret *wifi.P2PGroupConnectResponse, retErr error) {
+func (s *ShillService) P2PGroupConnect(ctx context.Context, request *wifi.P2PGroupConnectRequest) (
+	ret *wifi.P2PGroupConnectResponse, retErr error) {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 	defer logErrorStacks(ctx, &retErr)
+	startTime := time.Now()
 
 	s.method = request.Method
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
-		return s.p2pGroupConnectWPACLI(ctx, request)
+		ret, retErr = s.p2pGroupConnectWPACLI(ctx, request)
 	case wifi.InvokeMethodEnum_SHILL_API:
-		return s.p2pGroupConnectShillAPI(ctx, request)
+		ret, retErr = s.p2pGroupConnectShillAPI(ctx, request)
+	default:
+		retErr = errors.Errorf("Invoke method %q not implemented yet", s.method)
 	}
-	return nil, errors.New("Not implemented yet")
+	if ret != nil {
+		ret.ExecutionTime = durationpb.New(time.Since(startTime))
+	}
+	return
 }
 
 // P2PGroupDisconnect handles disconnection from the existing WiFi Direct Group.
-func (s *ShillService) P2PGroupDisconnect(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (ret *wifi.P2PGroupDisconnectResponse, retErr error) {
+func (s *ShillService) P2PGroupDisconnect(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (
+	ret *wifi.P2PGroupDisconnectResponse, retErr error) {
 	ctx, cancel := reserveForReturn(ctx)
 	defer cancel()
 	defer logErrorStacks(ctx, &retErr)
+	startTime := time.Now()
 
 	// Use invoke method given during P2PGroupConnect.
 	switch s.method {
 	case wifi.InvokeMethodEnum_WPA_CLI:
-		return s.p2pGroupDisconnectWPACLI(ctx, request)
+		ret, retErr = s.p2pGroupDisconnectWPACLI(ctx, request)
 	case wifi.InvokeMethodEnum_SHILL_API:
-		return s.p2pGroupDisconnectShillAPI(ctx, request)
+		ret, retErr = s.p2pGroupDisconnectShillAPI(ctx, request)
+	default:
+		retErr = errors.Errorf("Invoke method %q not implemented yet", s.method)
 	}
-	return nil, errors.New("Not implemented yet")
+	if ret != nil {
+		ret.ExecutionTime = durationpb.New(time.Since(startTime))
+	}
+	return
 }
 
 // p2pGroupCreateWPACLI uses WPA CLI to create WiFi Direct Group and take its ownership.

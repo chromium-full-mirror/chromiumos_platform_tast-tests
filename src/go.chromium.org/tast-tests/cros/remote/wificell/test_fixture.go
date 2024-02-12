@@ -1697,9 +1697,8 @@ func (tf *TestFixture) P2PConfigureGO(ctx context.Context, device P2PDevice, ops
 	tf.p2pGOIfName = resp.IfName
 	tf.p2pGroupSSID = resp.Data.Ssid
 	tf.p2pGroupPassphrase = resp.Data.Key
-
-	testing.ContextLog(ctx, "P2P Group owner (GO): Configured")
-
+	testing.ContextLogf(ctx, "P2P Group owner (GO): Configured in %vms",
+		resp.ExecutionTime.AsDuration().Milliseconds())
 	return nil
 }
 
@@ -1708,7 +1707,11 @@ func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) (err error) {
 	request := &wifi.P2PGroupDeleteRequest{
 		Id: tf.p2pGOID,
 	}
-	_, err = tf.p2pGO.wifiClient.P2PGroupDelete(ctx, request)
+	resp, err := tf.p2pGO.wifiClient.P2PGroupDelete(ctx, request)
+	if err == nil {
+		testing.ContextLogf(ctx, "P2P Group owner (GO): Deconfigured in %vms",
+			resp.ExecutionTime.AsDuration().Milliseconds())
+	}
 	return
 }
 
@@ -1735,7 +1738,8 @@ func (tf *TestFixture) P2PConnect(ctx context.Context, device P2PDevice, ops ...
 	tf.p2pClientIfName = resp.IfName
 	tf.p2pClientNetID = resp.NetworkId
 
-	testing.ContextLog(ctx, "The p2p client is connected to the p2p group owner (GO) network")
+	testing.ContextLogf(ctx, "The p2p client connected to the p2p group owner (GO) network in %vms",
+		resp.ExecutionTime.AsDuration().Milliseconds())
 	return nil
 }
 
@@ -1745,7 +1749,11 @@ func (tf *TestFixture) P2PDisconnect(ctx context.Context) (err error) {
 		Id:        tf.p2pClientID,
 		NetworkId: tf.p2pClientNetID,
 	}
-	_, err = tf.p2pClient.wifiClient.P2PGroupDisconnect(ctx, request)
+	resp, err := tf.p2pClient.wifiClient.P2PGroupDisconnect(ctx, request)
+	if err == nil {
+		testing.ContextLogf(ctx, "The p2p client disconnected from the p2p group owner (GO) network in %vms",
+			resp.ExecutionTime.AsDuration().Milliseconds())
+	}
 	return
 }
 
