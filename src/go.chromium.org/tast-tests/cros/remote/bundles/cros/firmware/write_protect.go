@@ -374,7 +374,8 @@ func testWPOverReboot(ctx context.Context, h *firmware.Helper, target wpTarget, 
 	}
 
 	if target == targetEC {
-		// This covers the firmware_ECSystemLocked test.
+		// This covers the firmware.ECSystemLocked test.
+		// TODO(b/194910918): Decide if we should delete firmware.ECSystemLocked in favor of this test.
 		testing.ContextLog(ctx, "Expect sysinfo to show ec is locked")
 		if out, err := h.Servo.RunECCommandGetOutput(ctx, "sysinfo", []string{`Flags:\s*(\S+)\s`}); err != nil {
 			return errors.Wrap(err, "failed to get sysinfo")
