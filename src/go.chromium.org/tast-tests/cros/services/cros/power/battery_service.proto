@@ -19,8 +19,9 @@ service BatteryService {
   // Close releases the resources obtained by New.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  // DrainBattery drains DUT battery to specific percentage.
-  rpc DrainBattery(BatteryRequest) returns (google.protobuf.Empty) {}
+  // PrepareBattery drains or charges DUT battery to a specific percentage
+  // range.
+  rpc PrepareBattery(BatteryRequest) returns (google.protobuf.Empty) {}
 
   // StopChargeLimit temporarily sets Charge Limit on the DUT to off. Original
   // setting will be restored on Close.
@@ -39,4 +40,8 @@ service BatteryService {
       returns (google.protobuf.Empty) {}
 }
 
-message BatteryRequest { float maxPercentage = 1; }
+message BatteryRequest {
+  float maxPercentage = 1;
+  float minPercentage = 2;
+  bool dischargeOnCompletion = 3;
+}

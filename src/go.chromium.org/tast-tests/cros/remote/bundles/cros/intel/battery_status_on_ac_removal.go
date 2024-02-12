@@ -151,8 +151,16 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 			if err := h.SetDUTPower(ctx, false); err != nil {
 				s.Fatal("Failed to remove charger: ", err)
 			}
-			request := power.BatteryRequest{MaxPercentage: float32(targetDischarge)}
-			if _, err := client.DrainBattery(ctx, &request); err != nil {
+			minPercentage := float32(targetDischarge - 1)
+			if minPercentage < 0 {
+				minPercentage = 0.0
+			}
+			request := power.BatteryRequest{
+				MinPercentage:         minPercentage,
+				MaxPercentage:         float32(targetDischarge),
+				DischargeOnCompletion: true,
+			}
+			if _, err := client.PrepareBattery(ctx, &request); err != nil {
 				s.Fatal("Failed to drain battery: ", err)
 			}
 
@@ -221,8 +229,12 @@ func BatteryStatusOnACRemoval(ctx context.Context, s *testing.State) {
 
 		// Discharging DUT for 3%.
 		s.Logf("Discharging DUT till %d%%", targetDischarge)
-		request := power.BatteryRequest{MaxPercentage: float32(targetDischarge)}
-		if _, err := client.DrainBattery(ctx, &request); err != nil {
+		request := power.BatteryRequest{
+			MinPercentage:         float32(targetDischarge),
+			MaxPercentage:         float32(targetDischarge),
+			DischargeOnCompletion: true,
+		}
+		if _, err := client.PrepareBattery(ctx, &request); err != nil {
 			s.Fatal("Failed to drain battery: ", err)
 		}
 

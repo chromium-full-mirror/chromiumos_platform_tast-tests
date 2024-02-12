@@ -110,8 +110,16 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 		if err := h.SetDUTPower(ctx, false); err != nil {
 			s.Fatal("Failed to remove charger: ", err)
 		}
-		request := power.BatteryRequest{MaxPercentage: requiredBatteryPercent}
-		if _, err := client.DrainBattery(ctx, &request); err != nil {
+		minPercentage := float32(requiredBatteryPercent - 1)
+		if minPercentage < 0 {
+			minPercentage = 0
+		}
+		request := power.BatteryRequest{
+			MinPercentage:         minPercentage,
+			MaxPercentage:         requiredBatteryPercent,
+			DischargeOnCompletion: true,
+		}
+		if _, err := client.PrepareBattery(ctx, &request); err != nil {
 			s.Fatal("Failed to drain battery: ", err)
 		}
 	}
