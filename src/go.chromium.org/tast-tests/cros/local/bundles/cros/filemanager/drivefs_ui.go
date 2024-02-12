@@ -9,7 +9,6 @@ import (
 	"os"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -40,13 +39,12 @@ func init() {
 			"group:mainline",
 		},
 		Params: []testing.Param{{
-			Name: "fieldtrial_testing_config_off",
-			Val:  chrome.FieldTrialConfigDisable,
+			Name:    "fieldtrial_testing_config_off",
+			Fixture: "driveFsStartedFieldTrialDisabled",
 		}, {
-			Name: "fieldtrial_testing_config_on",
-			Val:  chrome.FieldTrialConfigEnable,
+			Name:    "fieldtrial_testing_config_on",
+			Fixture: "driveFsStartedFieldTrialEnabled",
 		}},
-		Fixture: "driveFsStarted",
 		Timeout: 5 * time.Minute,
 	})
 }

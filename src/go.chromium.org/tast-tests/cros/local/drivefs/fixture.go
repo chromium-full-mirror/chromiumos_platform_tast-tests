@@ -69,6 +69,34 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:            "driveFsStartedFieldTrialEnabled",
+		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client with the field trial enabled flag supplied",
+		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Impl:            &fixture{bt: browser.TypeAsh, fieldTrial: chrome.FieldTrialConfigEnable},
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: time.Hour,
+		Vars: []string{
+			"drivefs.accountPool",
+			"drivefs.extensionClientID",
+		},
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "driveFsStartedFieldTrialDisabled",
+		Desc:            "Ensures DriveFS is mounted and provides an authenticated Drive API Client with the field trial disabled flag supplied",
+		Contacts:        []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
+		Impl:            &fixture{bt: browser.TypeAsh, fieldTrial: chrome.FieldTrialConfigDisable},
+		SetUpTimeout:    chrome.GAIALoginTimeout + DriveFsSetupAndTearDownTimeout,
+		ResetTimeout:    DriveFsSetupAndTearDownTimeout,
+		TearDownTimeout: time.Hour,
+		Vars: []string{
+			"drivefs.accountPool",
+			"drivefs.extensionClientID",
+		},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:            "driveFsStartedLacros",
 		Desc:            "Lacros variant of driveFsStarted",
 		Contacts:        []string{"chromeos-files-syd@chromium.org"},
@@ -258,6 +286,7 @@ type fixture struct {
 	drivefsOptions    CliArgsMap
 	bt                browser.Type
 	enableBulkPinning bool
+	fieldTrial        chrome.FieldTrialConfigMode
 }
 
 func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -302,6 +331,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			chrome.GAIALoginPool(s.RequiredVar("drivefs.accountPool")),
 			chrome.ExtraArgs("--get-access-token-for-test"),
 			chrome.ARCDisabled(),
+			chrome.FieldTrialConfig(f.fieldTrial),
 		)
 		if f.bt == browser.TypeLacros {
 			var err error
