@@ -1,1 +1,3 @@
 include /src/go.chromium.org/tast-tests/cros/common/a11y/OWNERS
+
+per-file live_caption*=chenjih@google.com, amoylan@chromium.org
