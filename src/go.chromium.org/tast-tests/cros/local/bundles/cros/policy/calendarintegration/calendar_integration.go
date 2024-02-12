@@ -87,7 +87,7 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 
 	calendarView := nodewith.HasClass("CalendarView").First()
 	mainHeaderTriView := nodewith.HasClass("TriView").Ancestor(calendarView).Nth(0)
-	mainHeaderContainer := nodewith.HasClass("RelayoutView").Ancestor(mainHeaderTriView).Nth(1)
+	mainHeaderContainer := nodewith.HasClass("SizeRangeLayout").Ancestor(mainHeaderTriView).Nth(1)
 	mainHeader := nodewith.Name("Calendar").HasClass("Label").Ancestor(mainHeaderContainer)
 
 	if err := ui.WaitUntilExists(mainHeader)(ctx); err != nil {
@@ -158,7 +158,7 @@ func TriggerCalendarIntegration(ctx context.Context, params networkrequestmonito
 	}
 
 	didFindManagedIcon := false
-	rightHeaderContainer := nodewith.HasClass("RelayoutView").Ancestor(mainHeaderTriView).Nth(2)
+	rightHeaderContainer := nodewith.HasClass("SizeRangeLayout").Ancestor(mainHeaderTriView).Nth(2)
 	managedIcon := nodewith.Name("Disabled by admin").HasClass("IconButton").Ancestor(rightHeaderContainer)
 	if found, err := ui.IsNodeFound(ctx, managedIcon); err != nil {
 		return errors.Wrap(err, "failed to check for managed icon in calendar tray")
