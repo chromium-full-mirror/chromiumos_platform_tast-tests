@@ -6,8 +6,11 @@ package firmware
 
 import (
 	"bufio"
+	"bytes"
 	"context"
+	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -147,9 +150,89 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 			"<alt_l>":  "KEY_LEFTALT",
 			"<esc>":    "KEY_ESC",
 			"<tab>":    "KEY_TAB",
-			// Remove F5~F7 as on vivaldi we allow different top row arrangement, see b/303609153.
-			" ": "KEY_SPACE",
+			" ":        "KEY_SPACE",
 		}
+		// Run ectool to get vivaldi keys (requires OS >= R123-15775.0.0)
+		out, err := h.DUT.Conn().CommandContext(ctx, "ectool", "kbgetconfig").CombinedOutput()
+		if err != nil {
+			// Host command not implemented: EC result 1 (INVALID_COMMAND)
+			// Vivaldi keyboard not enabled: EC result 2 (ERROR)
+			if strings.Contains(string(out), "EC result 1 (INVALID_COMMAND)") || strings.Contains(string(out), "EC result 2 (ERROR)") {
+				// This is a legacy device
+				s.Log("Testing legacy keys: F5, F6, F7")
+				testKeyMap["<f5>"] = "KEY_F5"
+				testKeyMap["<f6>"] = "KEY_F6"
+				testKeyMap["<f7>"] = "KEY_F7"
+			} else {
+				s.Fatalf("ectool kbgetconfig failed: %v, %s", err, string(out))
+			}
+		} else {
+			// Servo can't press F11+, see src/third_party/hdctools/servo/drv/keyboard_handlers.py
+			s.Log("Testing vivaldi keys F1-F10")
+			sc := bufio.NewScanner(bytes.NewReader(out))
+			re := regexp.MustCompile(`^\s*(\d+): (\S[^\(]*) \(`)
+			for sc.Scan() {
+				m := re.FindStringSubmatch(sc.Text())
+				if m != nil {
+					idx, err := strconv.Atoi(m[1])
+					if err != nil {
+						s.Fatalf("Failed to parse %q in %q", m[1], sc.Text())
+					}
+					key := fmt.Sprintf("<f%d>", idx+1)
+					if idx >= 10 {
+						s.Logf("%s: %s IGNORED", key, m[2])
+						continue
+					}
+
+					// From src/third_party/coreboot/src/acpi/acpigen_ps2_keybd.c
+					switch m[2] {
+					case "Back":
+						testKeyMap[key] = "KEY_BACK"
+					case "Refresh":
+						testKeyMap[key] = "KEY_REFRESH"
+					case "Forward":
+						testKeyMap[key] = "KEY_FORWARD"
+					case "Fullscreen":
+						testKeyMap[key] = "KEY_ZOOM"
+					case "Overview":
+						testKeyMap[key] = "KEY_SCALE"
+					case "Brightness Down":
+						testKeyMap[key] = "KEY_BRIGHTNESSDOWN"
+					case "Brightness Up":
+						testKeyMap[key] = "KEY_BRIGHTNESSUP"
+					case "Volume Mute":
+						testKeyMap[key] = "KEY_MUTE"
+					case "Volume Down":
+						testKeyMap[key] = "KEY_VOLUMEDOWN"
+					case "Volume Up":
+						testKeyMap[key] = "KEY_VOLUMEUP"
+					case "Snapshot":
+						testKeyMap[key] = "KEY_SYSRQ"
+					case "Privacy Screen Toggle":
+						testKeyMap[key] = "KEY_PRIVACY_SCREEN_TOGGLE"
+					case "Keyboard Backlight Down":
+						testKeyMap[key] = "KEY_KBDILLUMDOWN"
+					case "Keyboard Backlight Up":
+						testKeyMap[key] = "KEY_KBDILLUMUP"
+					case "Play/Pause":
+						testKeyMap[key] = "KEY_PLAYPAUSE"
+					case "Next Track":
+						testKeyMap[key] = "KEY_NEXTSONG"
+					case "Previous Track":
+						testKeyMap[key] = "KEY_PREVIOUSSONG"
+					case "Keyboard Backlight Toggle":
+						testKeyMap[key] = "KEY_KBDILLUMTOGGLE"
+					case "Microphone Mute":
+						testKeyMap[key] = "KEY_MICMUTE"
+					case "Menu":
+						testKeyMap[key] = "KEY_CONTROLPANEL"
+					default:
+						s.Logf("%s: %s IGNORED", key, m[2])
+					}
+				}
+			}
+		}
+
 		keyPressFunc = func(ctx context.Context, key string) error {
 			if err := h.Servo.PressKey(ctx, key, servo.Dur(keyPressDur)); err != nil {
 				return errors.Wrap(err, "failed to type key")
@@ -201,7 +284,8 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 
 func readKeyPress(ctx context.Context, h *firmware.Helper, scanner *bufio.Scanner, key, keyCode string,
 	keyPress func(context.Context, string) error) error {
-	regex := `Event.*time.*code\s(\d*)\s\(` + keyCode + `\)`
+	// Event: time 1707783159.027244, type 1 (EV_KEY), code 15 (KEY_TAB), value 0
+	regex := `Event.*time.*code\s(\d*)\s\((KEY_[^\)]*)\).* value 0`
 	expMatch := regexp.MustCompile(regex)
 
 	text := make(chan string)
@@ -222,9 +306,13 @@ func readKeyPress(ctx context.Context, h *firmware.Helper, scanner *bufio.Scanne
 		case <-time.After(typeTimeout):
 			return errors.New("did not detect keycode within expected time")
 		case out := <-text:
+			testing.ContextVLogf(ctx, "evtest: %s", out)
 			if match := expMatch.FindStringSubmatch(out); match != nil {
-				testing.ContextLogf(ctx, "key pressed detected in %s: %v", time.Since(start)-keyPressDur, match)
-				return nil
+				if match[2] == keyCode {
+					testing.ContextLogf(ctx, "key pressed detected in %s: %v", time.Since(start)-keyPressDur, match[2])
+					return nil
+				}
+				testing.ContextLogf(ctx, "Unexpected key pressed: %s", match[2])
 			}
 		}
 	}
