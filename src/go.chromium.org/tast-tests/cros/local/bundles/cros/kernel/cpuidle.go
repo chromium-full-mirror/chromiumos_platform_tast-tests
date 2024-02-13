@@ -23,7 +23,7 @@ func init() {
 			"swboyd@chromium.org",
 		},
 		BugComponent: "b:167279",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
 		SoftwareDeps: []string{"cpuidle_teo"},
 	})
 }
@@ -63,7 +63,13 @@ func Cpuidle(ctx context.Context, s *testing.State) {
 	case "aarch64":
 		expectedGovernor = "teo"
 	case "x86_64":
-		expectedGovernor = "menu"
+		if ver.Is(5, 4) {
+			// TODO(b/242076627, b/243714307): x86 + kernel 5.4 is still using TEO.
+			expectedGovernor = "teo"
+		} else {
+			// Most x86 should be using Menu (b/242076627).
+			expectedGovernor = "menu"
+		}
 	default:
 		s.Fatal("Unexpected architecture: ", arch)
 	}
