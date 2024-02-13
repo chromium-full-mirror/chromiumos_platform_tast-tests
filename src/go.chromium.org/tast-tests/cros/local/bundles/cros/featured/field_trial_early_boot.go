@@ -32,7 +32,7 @@ func init() {
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1096648", // ChromeOS > Data > Engineering > Experimentation
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      chrome.MinLoginTimeout + 60*time.Second,
 		Params: []testing.Param{{
