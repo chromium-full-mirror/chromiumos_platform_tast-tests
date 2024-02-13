@@ -1169,6 +1169,7 @@ func openedAppIconFinder(ctx context.Context, tconn *chrome.TestConn, name strin
 
 	appClosed := false
 	nth := 0
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
 	for _, item := range items {
 		if item.Title == name {
 			if item.Status == ash.ShelfItemClosed {
@@ -1177,7 +1178,7 @@ func openedAppIconFinder(ctx context.Context, tconn *chrome.TestConn, name strin
 				continue
 			}
 			// APP is found and not closed.
-			return nodewith.ClassName("ash/ShelfAppButton").Name(item.Title).Nth(nth), item.AppID, nil
+			return nodewith.ClassNameRegex(shelfAppButtonRegex).Name(item.Title).Nth(nth), item.AppID, nil
 		}
 	}
 

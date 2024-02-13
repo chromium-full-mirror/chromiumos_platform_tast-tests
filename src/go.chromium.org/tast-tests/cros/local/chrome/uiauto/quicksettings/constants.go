@@ -7,6 +7,7 @@ package quicksettings
 import (
 	"regexp"
 
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
@@ -22,7 +23,7 @@ var NBSWarningLabel = nodewith.Role(role.StaticText).NameStartingWith("Your Chro
 var SystemTray = nodewith.HasClass("UnifiedSystemTray")
 
 // StatusAreaWidget is the finder to find the control widgets.
-var StatusAreaWidget = nodewith.Role(role.Pane).HasClass("ash/StatusAreaWidgetDelegate")
+var StatusAreaWidget = nodewith.Role(role.Pane).ClassNameRegex(regexp.MustCompile(ash.StatusAreaClassNameRegex))
 
 // FeatureTileAccessibility is the finder for the "Accessibility" feature tile.
 var FeatureTileAccessibility = nodewith.HasClass("FeatureTile").NameContaining("accessibility")

@@ -6,6 +6,7 @@ package policy
 
 import (
 	"context"
+	"regexp"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -13,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -63,7 +65,8 @@ func PinnedLauncherApps(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassName("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassNameRegex(shelfAppButtonRegex)
 	unpinContextMenuItem := nodewith.Name("Unpin").ClassName("MenuItemView")
 	if err := uiauto.Combine("check unpin option is not present for pinned app",
 		ui.RightClick(filesAppShelfButton),

@@ -6,6 +6,7 @@ package wmp
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
@@ -282,7 +283,8 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassName("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassNameRegex(shelfAppButtonRegex)
 	newWindowContextMenuItem := nodewith.Name(newWindowText).ClassName(newWindowClassName)
 	if err := uiauto.Combine("click new window context menu item",
 		ui.WaitUntilExists(filesAppShelfButton),

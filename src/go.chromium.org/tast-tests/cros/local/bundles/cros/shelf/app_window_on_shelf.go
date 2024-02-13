@@ -7,6 +7,7 @@ package shelf
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -131,7 +132,8 @@ func AppWindowOnShelf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open app in a new window for the first time: ", err)
 	}
 
-	appItemOnShelf := nodewith.NameContaining("fake app").ClassName("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	appItemOnShelf := nodewith.NameContaining("fake app").ClassNameRegex(shelfAppButtonRegex)
 	if err := ui.WaitUntilExists(appItemOnShelf)(ctx); err != nil {
 		s.Fatal("The chrome app is not opened in a new window with an icon on shelf: ", err)
 	}

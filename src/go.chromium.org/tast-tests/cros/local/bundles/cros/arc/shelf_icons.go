@@ -8,6 +8,7 @@ import (
 	"context"
 	"image"
 	"image/color"
+	"regexp"
 	"time"
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
@@ -116,7 +117,8 @@ func ShelfIcons(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find root: ", err)
 	}
 
-	button := nodewith.ClassName("ash/ShelfAppButton").Name("ArcShelfIconTest")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	button := nodewith.ClassNameRegex(shelfAppButtonRegex).Name("ArcShelfIconTest")
 	buttons, err := ui.NodesInfo(ctx, button)
 	if err != nil {
 		s.Fatal("Failed to find shelf button: ", err)

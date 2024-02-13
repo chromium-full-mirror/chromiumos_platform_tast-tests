@@ -8,6 +8,7 @@ package ash
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"sort"
 	"time"
 
@@ -40,8 +41,17 @@ const (
 	// ShelfBehaviorInvalid represents an invalid state.
 	ShelfBehaviorInvalid = "invalid"
 
-	// ShelfIconClassName is the class name of the node of the apps on shelf.
-	ShelfIconClassName = "ash/ShelfAppButton"
+	// ShelfAppButtonClassNameRegex is a regex string that matches the class name of the apps on the shelf.
+	// It's a regex because the class is being renamed from "ash/ShelfAppButton" to "ShelfAppButton" and we
+	// want to match both the old name and the new name.
+	// TODO(b/325086848): Switch to "ShelfAppButton" after Chrome renames the button.
+	ShelfAppButtonClassNameRegex = "^(ash/)?ShelfAppButton$"
+
+	// StatusAreaClassNameRegex is a regex string that matches the class name of the status tray area.
+	// It's a regex because the class is being renamed from "ash/StatusAreaWidgetDelegate" to
+	// "StatusAreaWidgetDelegate" and we want to match both the old name and the new name.
+	// TODO(b/325086848): Switch to "StatusAreaWidgetDelegate" after Chrome renames the class.
+	StatusAreaClassNameRegex = "^(ash/)?StatusAreaWidgetDelegate$"
 )
 
 // ScrollArrowVisibility represents the visibility states of shelf scroll arrows.
@@ -748,8 +758,9 @@ func VerifyPinnedAppIndices(ctx context.Context, tconn *chrome.TestConn, expecte
 // ShelfAppBoundsForNames returns the screen bounds of the apps specified by appNames.
 func ShelfAppBoundsForNames(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Context, appNames []string) ([]*coords.Rect, error) {
 	boundsArray := make([]*coords.Rect, len(appNames))
+	shelfAppButtonRegex := regexp.MustCompile(ShelfAppButtonClassNameRegex)
 	for index, appName := range appNames {
-		appButton := nodewith.ClassName(ShelfIconClassName).Name(appName)
+		appButton := nodewith.ClassNameRegex(shelfAppButtonRegex).Name(appName)
 		bounds, err := ui.Location(ctx, appButton)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to get bounds for %s", appName)
@@ -1088,7 +1099,8 @@ func LaunchAppFromShelf(ctx context.Context, tconn *chrome.TestConn, appName, ap
 	if err := ShowHotseat(ctx, tconn); err != nil {
 		return errors.Wrap(err, "failed to show hot seat")
 	}
-	shelfIcon := nodewith.Name(appName).ClassName(ShelfIconClassName).First()
+	shelfAppButtonRegex := regexp.MustCompile(ShelfAppButtonClassNameRegex)
+	shelfIcon := nodewith.Name(appName).ClassNameRegex(shelfAppButtonRegex).First()
 	if err := uiauto.New(tconn).WithTimeout(10 * time.Second).DoDefault(shelfIcon)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to launch app %q", appName)
 	}
@@ -1129,7 +1141,8 @@ func ShowHotseat(ctx context.Context, tconn *chrome.TestConn) error {
 // The parameter appName should be the name of the app which is same as the value stored in apps.App.Name.
 func UpdateAppPinFromShelf(ctx context.Context, tconn *chrome.TestConn, appName string, pin bool) error {
 	// Find the icon from shelf.
-	icon := nodewith.Name(appName).ClassName(ShelfIconClassName)
+	shelfAppButtonRegex := regexp.MustCompile(ShelfAppButtonClassNameRegex)
+	icon := nodewith.Name(appName).ClassNameRegex(shelfAppButtonRegex)
 
 	var action string
 	if pin {
@@ -1178,9 +1191,10 @@ func UpdateAppPinFromHotseat(ctx context.Context, tconn *chrome.TestConn, appNam
 		action = "Unpin"
 	}
 
+	shelfAppButtonRegex := regexp.MustCompile(ShelfAppButtonClassNameRegex)
 	return uiauto.Combine(
 		"open the menu and tap the "+action+" menu",
-		tc.LongPress(nodewith.Name(appName).ClassName(ShelfIconClassName)),
+		tc.LongPress(nodewith.Name(appName).ClassNameRegex(shelfAppButtonRegex)),
 		tc.Tap(nodewith.Name(action).ClassName("MenuItemView")),
 	)(ctx)
 }
@@ -1252,7 +1266,8 @@ func ShowHotseatAction(tconn *chrome.TestConn) uiauto.Action {
 
 // RightClickApp returns a function that right clicks the given app's icon on the shelf.
 func RightClickApp(tconn *chrome.TestConn, appName string) uiauto.Action {
-	appOnShelf := nodewith.Name(appName).Role(role.Button).ClassName(ShelfIconClassName)
+	shelfAppButtonRegex := regexp.MustCompile(ShelfAppButtonClassNameRegex)
+	appOnShelf := nodewith.Name(appName).Role(role.Button).ClassNameRegex(shelfAppButtonRegex)
 	return uiauto.Combine(fmt.Sprintf("right click %s icon on the shelf", appName),
 		ShowHotseatAction(tconn),
 		uiauto.New(tconn).RightClick(appOnShelf))
@@ -1260,7 +1275,8 @@ func RightClickApp(tconn *chrome.TestConn, appName string) uiauto.Action {
 
 // DoDefaultApp returns a function that clicks the given app's icon on the shelf.
 func DoDefaultApp(tconn *chrome.TestConn, appName string) uiauto.Action {
-	appOnShelf := nodewith.Name(appName).Role(role.Button).ClassName(ShelfIconClassName)
+	shelfAppButtonRegex := regexp.MustCompile(ShelfAppButtonClassNameRegex)
+	appOnShelf := nodewith.Name(appName).Role(role.Button).ClassNameRegex(shelfAppButtonRegex)
 	return uiauto.Combine(fmt.Sprintf("left click %s icon on the shelf", appName),
 		ShowHotseatAction(tconn),
 		uiauto.New(tconn).DoDefault(appOnShelf))

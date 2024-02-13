@@ -6,6 +6,7 @@ package osinstall
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -135,8 +137,8 @@ func (svc *osInstallService) RunOsInstall(ctx context.Context, req *empty.Empty)
 func (svc *osInstallService) ShutDown(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	ui := svc.ui
 	// Open the status tray.
-	statusTray := "ash/StatusAreaWidgetDelegate"
-	statusTrayNode := nodewith.HasClass(statusTray).Role(role.Pane)
+	statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
+	statusTrayNode := nodewith.ClassNameRegex(statusAreaRegex).Role(role.Pane)
 	if err := ui.WaitUntilExists(statusTrayNode)(ctx); err != nil {
 		svc.DumpUITree(ctx)
 		return nil, err

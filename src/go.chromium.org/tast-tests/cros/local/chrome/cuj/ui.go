@@ -253,7 +253,8 @@ func LaunchAppFromHotseat(ctx context.Context, tconn *chrome.TestConn, appName s
 // It will only look for the icon locate on internal display.
 func appIconFinder(appName string, appOtherPossibleNames ...string) *nodewith.Finder {
 	internalDisplay := nodewith.ClassName("RootWindow-0").Role(role.Window)
-	finder := nodewith.ClassName("ash/ShelfAppButton").Ancestor(internalDisplay)
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	finder := nodewith.ClassNameRegex(shelfAppButtonRegex).Ancestor(internalDisplay)
 
 	if len(appOtherPossibleNames) == 0 {
 		return finder.Name(appName)

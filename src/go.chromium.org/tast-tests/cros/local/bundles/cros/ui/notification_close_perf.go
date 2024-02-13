@@ -7,6 +7,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/notification"
@@ -141,7 +142,8 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 	}
 
 	automationController := uiauto.New(atconn)
-	statusArea := nodewith.ClassName("ash/StatusAreaWidgetDelegate")
+	statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
+	statusArea := nodewith.ClassNameRegex(statusAreaRegex)
 	collapseButton := nodewith.ClassName("CollapseButton")
 
 	// Ensure no notifications currently exist.

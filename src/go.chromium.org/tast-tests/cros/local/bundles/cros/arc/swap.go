@@ -6,12 +6,14 @@ package arc
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/arc/vm"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -73,7 +75,8 @@ func Swap(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	appButton := nodewith.Name(swap.AppName).ClassName("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	appButton := nodewith.Name(swap.AppName).ClassNameRegex(shelfAppButtonRegex)
 	if err := uiauto.Combine("minimize ARC window",
 		ui.WaitUntilExists(appButton),
 		ui.LeftClick(appButton))(ctx); err != nil {

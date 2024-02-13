@@ -6,10 +6,12 @@ package lockscreen
 
 import (
 	"context"
+	"regexp"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
@@ -88,7 +90,8 @@ func DisplayProperTimeFormat(ctx context.Context, s *testing.State) {
 
 			// Ensure the status area is visible.
 			ui := uiauto.New(tconn)
-			statusArea := nodewith.ClassName("ash/StatusAreaWidgetDelegate")
+			statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
+			statusArea := nodewith.ClassNameRegex(statusAreaRegex)
 			if err := ui.WaitUntilExists(statusArea)(ctx); err != nil {
 				s.Fatal("Failed to find status area widget: ", err)
 			}

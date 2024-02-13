@@ -6,6 +6,7 @@ package intel
 
 import (
 	"context"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/intel/brightness"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -94,7 +96,8 @@ func InputbrightnessUI(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 
 			// Find the Status tray node and click to open it.
-			statusTrayToggler := nodewith.ClassName("ash/StatusAreaWidgetDelegate")
+			statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
+			statusTrayToggler := nodewith.ClassNameRegex(statusAreaRegex)
 			if err := uiauto.Combine("find and click the status tray",
 				ui.LeftClick(statusTrayToggler),
 			)(ctx); err != nil {

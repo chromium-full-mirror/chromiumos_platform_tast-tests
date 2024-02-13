@@ -6,6 +6,7 @@ package arc
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -13,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -92,7 +94,8 @@ func LauncherApps(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	appButton := nodewith.Name(appName).ClassName("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	appButton := nodewith.Name(appName).ClassNameRegex(shelfAppButtonRegex)
 	if err := ui.WaitUntilExists(appButton)(ctx); err != nil {
 		s.Fatal("Failed to find app in Shelf: ", err)
 	}

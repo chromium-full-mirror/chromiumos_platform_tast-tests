@@ -6,12 +6,14 @@ package enterprisecuj
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
 	cx "go.chromium.org/tast-tests/cros/local/bundles/cros/spera/enterprisecuj/citrix"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -174,7 +176,8 @@ func (c *ContactCenterScenario) Run(ctx context.Context, tconn *chrome.TestConn,
 	}
 	switchToCitrixWorkspace := func(ctx context.Context) error {
 		ui := uiauto.New(tconn)
-		workspaceShelfButton := nodewith.NameContaining("VDA").ClassName("ash/ShelfAppButton").Role(role.Button)
+		shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+		workspaceShelfButton := nodewith.NameContaining("VDA").ClassNameRegex(shelfAppButtonRegex).Role(role.Button)
 		nodeInfo, err := ui.Info(ctx, workspaceShelfButton)
 		if err != nil {
 			return errors.Wrap(err, "failed to get info for workspace shelf button")

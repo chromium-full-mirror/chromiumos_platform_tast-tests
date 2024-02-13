@@ -95,13 +95,14 @@ func TouchBasicsCheck(ctx context.Context, s *testing.State) {
 
 	scannerTouchscreen := bufio.NewScanner(stdout)
 
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
 	nodes := []*nodewith.Finder{
 		nodewith.Name("New Tab").Role(role.Button),
 		nodewith.Name("Minimize").ClassName("FrameCaptionButton").Role(role.Button),
-		nodewith.Name(chromeApp.Name).Role(role.Button).ClassName("ash/ShelfAppButton").First(),
+		nodewith.Name(chromeApp.Name).Role(role.Button).ClassNameRegex(shelfAppButtonRegex).First(),
 		nodewith.Name("Maximize").ClassName("FrameSizeButton").Role(role.Button),
 		nodewith.Name("Close").Role(role.Button).First(),
-		nodewith.Name(chromeApp.Name).Role(role.Button).ClassName("ash/ShelfAppButton").First(),
+		nodewith.Name(chromeApp.Name).Role(role.Button).ClassNameRegex(shelfAppButtonRegex).First(),
 		nodewith.Name("Restore").ClassName("FrameSizeButton").Role(role.Button),
 	}
 

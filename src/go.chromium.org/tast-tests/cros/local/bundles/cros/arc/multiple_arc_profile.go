@@ -7,6 +7,7 @@ package arc
 import (
 	"context"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/arc/playstore"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/launcher"
@@ -127,7 +129,8 @@ func MultipleArcProfile(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	chatButton := nodewith.Name(apps.Chat.Name).ClassName("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	chatButton := nodewith.Name(apps.Chat.Name).ClassNameRegex(shelfAppButtonRegex)
 	if err := ui.WaitUntilExists(chatButton)(ctx); err != nil {
 		s.Fatal("Failed to find Google Chat in Shelf: ", err)
 	}

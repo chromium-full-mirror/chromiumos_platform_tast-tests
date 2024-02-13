@@ -6,6 +6,7 @@ package shelf
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -157,7 +158,8 @@ func VerifyShelfAlignment(ctx context.Context, s *testing.State) {
 	if err := ui.WaitForLocation(shelfInstance)(ctx); err != nil {
 		s.Fatal("Failed to wait for the shelf to be idle when the shelf alignment is ShelfAlignmentBottom: ", err)
 	}
-	appIcon := nodewith.ClassName(ash.ShelfIconClassName).Role(role.Button).Nth(0)
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	appIcon := nodewith.ClassNameRegex(shelfAppButtonRegex).Role(role.Button).Nth(0)
 	if err := ui.WaitForLocation(appIcon)(ctx); err != nil {
 		s.Fatal("Failed to wait for the first shelf app icon to be idle when the shelf alignment is ShelfAlignmentBottom: ", err)
 	}

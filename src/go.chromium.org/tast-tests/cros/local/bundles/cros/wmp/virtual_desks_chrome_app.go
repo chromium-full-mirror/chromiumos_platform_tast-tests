@@ -6,6 +6,7 @@ package wmp
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -187,7 +188,8 @@ func VirtualDesksChromeApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify the desk of the app: ", err)
 	}
 
-	TestPWABtn := nodewith.ClassName("ash/ShelfAppButton").Name("Test PWA")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	TestPWABtn := nodewith.ClassNameRegex(shelfAppButtonRegex).Name("Test PWA")
 
 	ws, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {

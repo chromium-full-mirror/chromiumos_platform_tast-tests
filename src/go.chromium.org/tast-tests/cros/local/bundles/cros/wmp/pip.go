@@ -8,6 +8,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -35,7 +36,6 @@ import (
 const (
 	arcPipTestPkgName   = "org.chromium.arc.testapp.pictureinpicture"
 	arcPipAppName       = "ArcPipTest"
-	shelfIconClassName  = "ash/ShelfAppButton"
 	tuckHandleClassName = "TuckHandleWidget"
 )
 
@@ -303,7 +303,7 @@ func testPipDoubleTapToResize(ctx context.Context, tconn *chrome.TestConn, ac *u
 	beforeBounds := window.BoundsInRoot
 	// Target the upper part of the PiP window so we don't click on any button accidentally.
 	clickPoint := beforeBounds.CenterPoint().Sub(coords.NewPoint(0, beforeBounds.Height/4))
-	if err := mouse.DoubleClick(tconn, clickPoint, 100 * time.Millisecond)(ctx); err != nil {
+	if err := mouse.DoubleClick(tconn, clickPoint, 100*time.Millisecond)(ctx); err != nil {
 		return errors.Wrap(err, "failed to double-click PiP")
 	}
 
@@ -497,7 +497,8 @@ func testPipExpandViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *
 // expandPipViaShelfIcon expands the PiP window by pressing the shelf icon of the app.
 // Note that this behavior is currently supported only by ARC PiP.
 func expandPipViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
-	pipShelfIcon := nodewith.Name(arcPipAppName).HasClass(shelfIconClassName)
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	pipShelfIcon := nodewith.Name(arcPipAppName).ClassNameRegex(shelfAppButtonRegex)
 	if err := ac.WithTimeout(10 * time.Second).LeftClick(pipShelfIcon)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to click on the shelf icon of %s", arcPipAppName)
 	}

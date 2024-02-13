@@ -6,10 +6,12 @@ package citrix
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	crApps "go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -182,7 +184,8 @@ func (c *Connector) ReplaceDetector(d *uidetection.Context) {
 func (c *Connector) CleanUpSession(ctx context.Context) error {
 	testing.ContextLog(ctx, "Citrix: open Connection Center and focus on it")
 	ui := uiauto.New(c.tconn)
-	vdiAppShelfButton := nodewith.Name(crApps.Citrix.Name).HasClass("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	vdiAppShelfButton := nodewith.Name(crApps.Citrix.Name).ClassNameRegex(shelfAppButtonRegex)
 	connectorCenterContextMenuItem := nodewith.Name("Connection Center").HasClass("MenuItemView")
 	if err := uiauto.Combine("open Connector Center on VDI app",
 		ui.RightClick(vdiAppShelfButton),

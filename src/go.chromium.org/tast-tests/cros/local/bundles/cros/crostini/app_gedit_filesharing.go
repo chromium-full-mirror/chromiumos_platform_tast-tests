@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -128,7 +129,8 @@ func AppGeditFilesharing(ctx context.Context, s *testing.State) {
 	defer filesApp.Close(cleanupCtx)
 
 	geditWindow := nodewith.NameContaining(tmpFilename).Role(role.Window).First()
-	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassName("ash/ShelfAppButton")
+	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
+	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassNameRegex(shelfAppButtonRegex)
 	ui := uiauto.New(tconn)
 	ud := uidetection.NewDefault(tconn)
 
