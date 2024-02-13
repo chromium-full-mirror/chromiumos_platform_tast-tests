@@ -27,8 +27,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantNeeded,
 		Desc:         "Checks if the isolated web apps can be installed for the MGS",
 		Contacts: []string{
-			"pwa-commercial@google.com",
-			"peletskyi@google.com", // Test author
+			"iwa-team@google.com",
 		},
 		BugComponent: "b:1168200", // Chrome > Isolated Web Apps
 		SoftwareDeps: []string{"reboot", "chrome"},
