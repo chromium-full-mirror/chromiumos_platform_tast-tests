@@ -20,14 +20,14 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           MojoCellularGetDeviceStateListSimInfos,
+		Func:           MojoGetDeviceStateListSimInfos,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Ensure that CrosNetworkConfig.DeviceStateProperties.sim_infos matches the properties in Shill ",
 		Contacts:       []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "khegde@google.com"},
 		BugComponent:   "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps:   []string{"chrome"},
-		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
+		Attr:           []string{"group:cellular", "cellular_sim_active", "cellular_e2e"},
 		Timeout:        10 * time.Minute,
 		Fixture:        "cellular",
 	})
@@ -44,7 +44,7 @@ func getCellularDevices(deviceState []types.DeviceStateProperties) []types.Devic
 	return result
 }
 
-func MojoCellularGetDeviceStateListSimInfos(ctx context.Context, s *testing.State) {
+func MojoGetDeviceStateListSimInfos(ctx context.Context, s *testing.State) {
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

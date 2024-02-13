@@ -24,7 +24,7 @@ func init() {
 			"jstanko@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_test_esim"},
+		Attr:         []string{"group:cellular", "cellular_sim_test_esim"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "chromeLoggedInWithMojoTestEuicc",
 		Timeout:      5 * time.Minute,
