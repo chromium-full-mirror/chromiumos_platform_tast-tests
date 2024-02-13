@@ -75,13 +75,17 @@ func SetUpLogicVolume(ctx context.Context, lvName string) (lvPath string, cleanU
 		return "", func(_ context.Context) {}, errors.Wrap(err, "failed to get volume group name")
 	}
 
+	if len(out) == 0 {
+		return "", func(_ context.Context) {}, errors.New("there is no volume group")
+	}
+
 	vgName := strings.TrimSpace(string(out))
 	thinpool := vgName + "/thinpool"
 	lvPath = filepath.Join("/dev/mapper/", vgName+"-"+lvName)
 
 	// Create a logic volume in thinpool
 	if err := testexec.CommandContext(ctx, "lvcreate", "-V8G", "-T", thinpool, "-n", lvName).Run(); err != nil {
-		return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create logical volume")
+		return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create logical volume on "+thinpool)
 	}
 
 	cleanUp = func(ctx context.Context) {
