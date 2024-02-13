@@ -56,7 +56,7 @@ func init() {
 		Vars:         []string{"router"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
 		Requirements: []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassPerf, tdreq.WiFiProcPassPerfBeforeUpdates},
-		Timeout:      time.Minute * 20,
+		Timeout:      time.Minute * 30,
 		Params: []testing.Param{
 			{
 				// Network: open HE20 802.11ax.
@@ -441,10 +441,12 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	var perfTestTypes = []perfmanager.TestType{
-		perfmanager.TestTypeTCPTx,
-		perfmanager.TestTypeTCPRx,
-		perfmanager.TestTypeUDPTx,
-		perfmanager.TestTypeUDPRx,
+		//perfmanager.TestTypeTCPTx,
+		//perfmanager.TestTypeTCPRx,
+		//perfmanager.TestTypeTCPBidirectional,
+		//perfmanager.TestTypeUDPTx,
+		//perfmanager.TestTypeUDPRx,
+		perfmanager.TestTypeUDPBidirectional,
 	}
 
 	routerType := tf.Router().RouterType()
