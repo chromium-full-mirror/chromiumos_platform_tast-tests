@@ -38,7 +38,8 @@ func init() {
 			"crisguerrero@chromium.org",
 		},
 		BugComponent: "b:1031231",
-		Attr:         []string{"group:hw_agnostic", "group:mainline", "informational"},
+		SoftwareDeps: []string{"vpd"}, // Do not run on VM. Test needs NVRAM flash storage to work.
+		Attr:         []string{"group:mainline", "informational"},
 		Timeout:      4 * time.Minute,
 		Fixture:      fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		Params: []testing.Param{{
