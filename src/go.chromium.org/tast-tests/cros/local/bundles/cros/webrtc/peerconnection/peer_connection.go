@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/logging"
 	"go.chromium.org/tast-tests/cros/local/media/oop"
 	"go.chromium.org/tast-tests/cros/local/media/webrtc"
-	"go.chromium.org/tast-tests/cros/local/power/util"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -390,23 +389,10 @@ func setupCapture(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn
 		testing.ContextLogf(ctx, "%s resolution: %dx%d (pixel ratio=%.3f)", captureSource, width, height, pixelRatio)
 	} else if dm == CaptureMonitor {
 		captureSource = "monitor"
-		screenRes := util.GetScreenResolution(ctx)
-		testing.ContextLog(ctx, "Screen resolution: ", screenRes)
-		if screenRes == "" {
-			return false, errors.New("failed to get screen resolution")
-		}
-		screenWH := strings.Split(screenRes, "x")
-		if len(screenWH) != 2 {
-			return false, errors.Errorf("failed to split resolution by 'x': %v", screenRes)
-		}
 		var err error
-		width, err = strconv.Atoi(screenWH[0])
+		width, height, err = displayResolution(ctx)
 		if err != nil {
-			return false, errors.Wrapf(err, "failed to convert to int: %s", screenWH[0])
-		}
-		height, err = strconv.Atoi(screenWH[1])
-		if err != nil {
-			return false, errors.Wrapf(err, "failed to convert to int: %s", screenWH[1])
+			return false, errors.Wrap(err, "failed to get screen resolution")
 		}
 	}
 
@@ -416,6 +402,24 @@ func setupCapture(ctx context.Context, conn *chrome.Conn, tconn *chrome.TestConn
 	}
 
 	return true, nil
+}
+
+// displayResolution gets the resolution of the primary connected display.
+func displayResolution(ctx context.Context) (width, height int, err error) {
+	displays, err := graphics.ModetestConnectedDisplays(ctx)
+	if err != nil {
+		return -1, -1, err
+	}
+	if len(displays) == 0 {
+		return -1, -1, errors.New("no connected display, please add hwdep.InternalDisplay() to HardwareDeps")
+	}
+	if len(displays) > 1 {
+		return -1, -1, errors.New("multiple displays are connected, please add hwdep.NoExternalDisplay() to HardwareDeps")
+	}
+	d := displays[0]
+	width = int(d.Crtc.Width)
+	height = int(d.Crtc.Height)
+	return width, height, nil
 }
 
 // DataFiles returns a list of required files that tests that use this package
