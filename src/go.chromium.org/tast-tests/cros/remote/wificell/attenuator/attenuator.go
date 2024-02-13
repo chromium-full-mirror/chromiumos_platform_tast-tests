@@ -174,10 +174,10 @@ func (a *Attenuator) SetAttenuation(ctx context.Context, channel int, val float6
 // In case freq is not present in fixedAttenuations, we use a value
 // from a nearby channel as an approximation.
 func (a *Attenuator) approximateFrequency(ctx context.Context, channel, freq int) int {
-	minOffset := math.MaxInt64
+	var minOffset int64 = math.MaxInt64
 	approxFreq := 0
 	for definedFreq := range a.fixedAttenuations[channel] {
-		offset := int(math.Abs(float64(definedFreq - freq)))
+		offset := int64(math.Abs(float64(definedFreq - freq)))
 		if offset < minOffset {
 			minOffset = offset
 			approxFreq = definedFreq
