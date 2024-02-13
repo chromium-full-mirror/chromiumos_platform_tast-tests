@@ -534,21 +534,12 @@ func AddESimWithActivationCode(ctx context.Context, tconn *chrome.TestConn, acti
 	}
 	defer kb.Close(ctx)
 
-	// TODO(b/281904820): Update to expect the |DialogEntryHeader| to exist after SM-DS Support launches.
-	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(DialogEntryHeader)(ctx); err == nil {
-		var manualEntryLink = nodewith.Name("manually").Role(role.StaticText).Linked()
-		if err := ui.LeftClick(manualEntryLink)(ctx); err != nil {
-			return errors.Wrap(err, "failed to skip SM-DS discovery")
-		}
-	} else {
-		// TODO(b/281904820): Remove the entire else block after SM-DS Support launches.
-		var setupNewProfile = nodewith.NameContaining("Set up new profile").Role(role.Button).Focusable()
-		// 2 minute is the timeout that we used in production code for loading pending profiles.
-		if err := ui.WithTimeout(2 * time.Minute).WaitUntilExists(setupNewProfile)(ctx); err == nil {
-			// There are pending profiles, opt to set up a new profile instead.
-			if err := ui.LeftClick(setupNewProfile)(ctx); err != nil {
-				return errors.Wrap(err, "failed to click set up new profile button")
-			}
+	var setupNewProfile = nodewith.NameContaining("Set up new profile").Role(role.Button).Focusable()
+	// 2 minute is the timeout that we used in production code for loading pending profiles.
+	if err := ui.WithTimeout(2 * time.Minute).WaitUntilExists(setupNewProfile)(ctx); err == nil {
+		// There are pending profiles, opt to set up a new profile instead.
+		if err := ui.LeftClick(setupNewProfile)(ctx); err != nil {
+			return errors.Wrap(err, "failed to click set up new profile button")
 		}
 	}
 
