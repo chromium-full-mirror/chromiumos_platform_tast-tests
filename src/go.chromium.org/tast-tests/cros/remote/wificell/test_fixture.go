@@ -160,8 +160,11 @@ const (
 	// It could take up to 5 minutes to reboot a DUT, especially for low-end devices.
 	DUTRebootTimeout = 5 * time.Minute
 
-	// ChromeFeatureHotspot is the name of the hotspot feature flag
+	// ChromeFeatureHotspot is the name of the hotspot feature flag.
 	ChromeFeatureHotspot = "Hotspot"
+
+	// ChromeFeatureExperimentalHotspot is the name of the hotspot experimental functionality flag.
+	ChromeFeatureExperimentalHotspot = "TetheringExperimentalFunctionality"
 )
 
 // bridgeVeth holds all variables related to bridges and veth on a router.

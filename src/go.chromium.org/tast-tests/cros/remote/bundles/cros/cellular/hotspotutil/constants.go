@@ -31,3 +31,6 @@ var HotspotSwitch = &ui.Finder{
 		{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_SWITCH}},
 	},
 }
+
+// CellularModels is a list of models that support cellular network in cross_device_multi_cb_wifi pool.
+var CellularModels = []string{"crota", "redrix", "anahera", "kracko"}

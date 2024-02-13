@@ -43,7 +43,7 @@ func init() {
 			wificell.CellularServiceName,
 			wificell.ShillServiceName,
 		},
-		HardwareDeps: hwdep.D(hwdep.WifiSAP(), hwdep.Cellular(), hwdep.Model("crota")),
+		HardwareDeps: hwdep.D(hwdep.WifiSAP(), hwdep.Cellular(), hwdep.Model(hotspotutil.CellularModels...)),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCellular),
 		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
@@ -70,7 +70,7 @@ func EnableHotspotWithQuickSettings(ctx context.Context, s *testing.State) {
 	defer cr.Close(cleanupCtx, &emptypb.Empty{})
 
 	if _, err := cr.New(ctx, &ui.NewRequest{
-		EnableFeatures: []string{wificell.ChromeFeatureHotspot},
+		EnableFeatures: []string{wificell.ChromeFeatureHotspot, wificell.ChromeFeatureExperimentalHotspot},
 	}); err != nil {
 		s.Fatal("Failed to start Chrome with hotspot flag enabled: ", err)
 	}
