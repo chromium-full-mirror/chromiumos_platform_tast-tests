@@ -1140,6 +1140,9 @@ var chromeVideoArgs = []string{
 	// Ignore the list of blocked per-GPU functionality (e.g. VP8 accelerated
 	// decoding on Intel Jasper Lake).
 	"--disable-gpu-driver-bug-workarounds",
+	// Enable hardware encoders frame drop in WebRTC.
+	// TODO(b/324998907): Remove this once the feature is enabled by default.
+	"--enable-features=WebRTCHardwareVideoEncoderFrameDrop",
 }
 
 var chromeBypassPermissionsArgs = []string{
