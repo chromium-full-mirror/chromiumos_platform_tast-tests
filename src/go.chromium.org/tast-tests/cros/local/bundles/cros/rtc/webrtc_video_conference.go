@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -42,6 +43,9 @@ func init() {
 		SoftwareDeps: []string{"chrome", caps.BuiltinCamera},
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Data:         webrtc.TestFiles(),
+		// Extends the default time out by power.RecorderTimeout in order to
+		// mitigate the failure of uploading power test metrics to power dashboard.
+		Timeout: 5*time.Minute + power.RecorderTimeout,
 		Params: []testing.Param{
 			{
 				Name: "custom",
@@ -49,7 +53,6 @@ func init() {
 					NumPeople: 2,
 				},
 				Fixture: "chromeRTCPerf",
-				Timeout: 5 * time.Minute,
 			},
 			{
 				Name: "step",
@@ -57,7 +60,6 @@ func init() {
 					Step: true,
 				},
 				Fixture: "chromeRTCPerf",
-				Timeout: 10 * time.Minute,
 			},
 			{
 				Name: "2p",
@@ -65,7 +67,6 @@ func init() {
 					NumPeople: 2,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -74,7 +75,6 @@ func init() {
 					NumPeople: 4,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -83,7 +83,6 @@ func init() {
 					NumPeople: 9,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -93,7 +92,6 @@ func init() {
 					Present:   true,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -104,7 +102,6 @@ func init() {
 					NoiseCancellation: true,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -114,7 +111,6 @@ func init() {
 					Text:      true,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -125,7 +121,6 @@ func init() {
 					Text:      true,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -135,7 +130,6 @@ func init() {
 					Mouse:     true,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -146,7 +140,6 @@ func init() {
 					Present:   true,
 				},
 				Fixture:   "chromeRTCPerf",
-				Timeout:   5 * time.Minute,
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
