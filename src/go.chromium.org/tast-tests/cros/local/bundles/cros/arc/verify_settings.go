@@ -115,7 +115,8 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) error {
 	const (
 		scrollClassName = "android.widget.ScrollView"
-		locationID      = "android:id/switch_widget"
+		locationIDT     = "android:id/switch_widget"
+		locationIDPreT  = "com.android.settings:id/switch_widget"
 	)
 
 	// Scroll until system is visible.
@@ -234,6 +235,16 @@ func checkAndroidSettings(ctx context.Context, arcDevice *androidui.Device) erro
 
 	if err := location.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click Location")
+	}
+
+	// Location preference is build with different UI elements based on Android version.
+	version, err := arc.SDKVersion()
+	if err != nil {
+		return errors.Wrap(err, "failed to get ARC version")
+	}
+	locationID := locationIDPreT
+	if version >= arc.SDKT {
+		locationID = locationIDT
 	}
 
 	// locationStatus will check for toggle On/Off
