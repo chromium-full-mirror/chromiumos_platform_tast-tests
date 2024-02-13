@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/ui/cliprectperf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -38,9 +39,20 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      10 * time.Minute,
 		Fixture:      "lacros",
-		Params: []testing.Param{{
-			Name: "video",
-		},
+		Params: []testing.Param{
+			{
+				Name: "video",
+				Val: cliprectperf.ClipRectParam{
+					Variant: "video",
+				},
+			},
+			{
+				// Number of videos that would be played during the test.
+				Name: "multi_video",
+				Val: cliprectperf.ClipRectParam{
+					Variant: "multi_video",
+				},
+			},
 		},
 	})
 }
@@ -69,6 +81,18 @@ func ClipRectPerf(ctx context.Context, s *testing.State) {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API connection: ", err)
+	}
+
+	// Maximize browser window.
+	ws, err := ash.GetAllWindows(ctx, tconn)
+	if err != nil {
+		s.Fatal("Failed to get windows: ", err)
+	}
+	if wsCount := len(ws); wsCount != 1 {
+		s.Fatalf("Unexepcted window count; got %d, expected 1", wsCount)
+	}
+	if err := ash.SetWindowStateAndWait(ctx, tconn, ws[0].ID, ash.WindowStateMaximized); err != nil {
+		s.Fatal("Failed to maximize window: ", err)
 	}
 
 	bTconn, err := br.TestAPIConn(ctx)
@@ -102,17 +126,13 @@ func ClipRectPerf(ctx context.Context, s *testing.State) {
 	pc := pointer.NewMouse(tconn)
 	defer pc.Close(closeCtx)
 
-	// Set the margin so only half of video is present, simulating clipping.
-	if err := videoConn.Eval(ctx, `
-		toggleVideo("buck1080p60_h264.mp4");
-		let v = document.getElementById("buck1080p60_h264.mp4");
-		v.style="width: 1024px; height: 576px; clear:both;";
-		v.muted = true;
-		let videoBound = v.getBoundingClientRect();
-		let pxToHalf = videoBound.top + (videoBound.height / 2);
-		document.body.style.marginTop = String(-pxToHalf) + "px";
-		`, nil); err != nil {
-		s.Fatal("Failed to clip video: ", err)
+	// Set the page to the desired state.
+	script, err := cliprectperf.GetScript(s.Param().(cliprectperf.ClipRectParam).Variant)
+	if err != nil {
+		s.Fatal("Failed to get setup script: ", err)
+	}
+	if err := videoConn.Eval(ctx, script, nil); err != nil {
+		s.Fatal("Failed to set up the page: ", err)
 	}
 
 	videoWindow, err := ash.GetActiveWindow(ctx, tconn)
@@ -127,7 +147,9 @@ func ClipRectPerf(ctx context.Context, s *testing.State) {
 
 		// Play the video.
 		if err := videoConn.Eval(ctx, `
-			document.getElementById("buck1080p60_h264.mp4").play();
+			for (const v of vids) {
+				v.play();
+			}
 		`, nil); err != nil {
 			return errors.Wrap(err, "failed to play video")
 		}
@@ -142,37 +164,40 @@ func ClipRectPerf(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to conduct performance test: ", err)
 	}
 
-	var droppedFrames int
+	frameCounts := make(map[string]float64)
 	if err := videoConn.Eval(ctx, `
-		document.getElementById("buck1080p60_h264.mp4").webkitDroppedFrameCount;
-	`, &droppedFrames); err != nil {
-		s.Fatal("Failed to get dropped frames count: ", err)
+	new Promise(resolve => {
+		let frameMap = new Map();
+
+		let droppedFrames = 0;
+		let decodedFrames = 0;
+		let count = 1;
+		for (const v of vids) {
+			let name = "video" + String(count);
+			let dropped = v.webkitDroppedFrameCount;
+			let decoded = v.webkitDecodedFrameCount;
+			droppedFrames += v.webkitDroppedFrameCount;
+			decodedFrames += v.webkitDecodedFrameCount;
+			frameMap["DroppedFrames." + name] = dropped;
+			frameMap["DecodedFrames." + name] = decoded;
+			frameMap["PercentDroppedFrames." + name] = dropped/ decoded;
+			count += 1;
+		}
+		frameMap["DroppedFrames.total"] = droppedFrames;
+		frameMap["DecodedFrames.total"] = decodedFrames;
+		frameMap["PercentDroppedFrames.total"] = droppedFrames / decodedFrames;
+		resolve(frameMap);
+	})`, &frameCounts); err != nil {
+		s.Fatal("Failed to get frame metrics: ", err)
 	}
 
-	var decodedFrames int
-	if err := videoConn.Eval(ctx, `
-		document.getElementById("buck1080p60_h264.mp4").webkitDecodedFrameCount;
-	`, &decodedFrames); err != nil {
-		s.Fatal("Failed to get decoded frames counts: ", err)
+	for metric, value := range frameCounts {
+		pv.Set(perf.Metric{
+			Name:      "Video." + metric,
+			Unit:      "frames",
+			Direction: perf.SmallerIsBetter,
+		}, float64(value))
 	}
-
-	pv.Set(perf.Metric{
-		Name:      "Video.DroppedFrames",
-		Unit:      "frames",
-		Direction: perf.SmallerIsBetter,
-	}, float64(droppedFrames))
-
-	pv.Set(perf.Metric{
-		Name:      "Video.DecodedFrames",
-		Unit:      "frames",
-		Direction: perf.SmallerIsBetter,
-	}, float64(decodedFrames))
-
-	pv.Set(perf.Metric{
-		Name:      "Video.PercentDroppedFrames",
-		Unit:      "percent",
-		Direction: perf.SmallerIsBetter,
-	}, float64(droppedFrames)/float64(decodedFrames))
 
 	if err := recorder.Record(ctx, pv); err != nil {
 		s.Fatal("Failed to report: ", err)
