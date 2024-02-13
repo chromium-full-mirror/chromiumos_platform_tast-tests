@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
+	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -516,6 +517,16 @@ func (f *mediaFixtureImpl) PreTest(ctx context.Context, s *testing.FixtTestState
 
 	if !f.disableScreenRecorder {
 		f.recorder = uiauto.CreateAndStartScreenRecorder(ctx, f.tconn)
+	}
+
+	// Clean up lacros browser b:324957897
+	isAppRunning, err := ash.AppRunning(ctx, f.tconn, apps.Lacros.ID)
+	if err != nil {
+		s.Logf("Failed to check app %s running", apps.Lacros.ID)
+	}
+
+	if isAppRunning {
+		apps.Close(ctx, f.tconn, apps.Lacros.ID)
 	}
 }
 
