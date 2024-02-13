@@ -9,7 +9,6 @@ import (
 	"net"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/dnsmasq"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
@@ -33,10 +32,8 @@ type SimpleNetworkEnv struct {
 	hasIPv4DNS bool
 	hasIPv6DNS bool
 
-	// resetProfile indicates whether a test profile is pushed during setup.
-	resetProfile bool
+	resetCheckPortalList func(ctx context.Context)
 
-	popTestProfile func(ctx context.Context)
 	// Manager wraps the Manager D-Bus object in shill.
 	Manager *shill.Manager
 	// Pool is the subnet pool used in this test.
@@ -62,16 +59,7 @@ const (
 func NewSimpleNetworkEnv(ipv4, ipv6, dnsv4, dnsv6 bool) *SimpleNetworkEnv {
 	return &SimpleNetworkEnv{
 		hasIPv4: ipv4, hasIPv6: ipv6, hasIPv4DNS: dnsv4, hasIPv6DNS: dnsv6,
-		resetProfile: true, Pool: subnet.NewPool(),
-	}
-}
-
-// NewSimpleNetworkEnvWithoutResetProfile creates a simple network test environment object
-// without resetting profile.
-func NewSimpleNetworkEnvWithoutResetProfile(ipv4, ipv6, dnsv4, dnsv6 bool) *SimpleNetworkEnv {
-	return &SimpleNetworkEnv{
-		hasIPv4: ipv4, hasIPv6: ipv6, hasIPv4DNS: dnsv4, hasIPv6DNS: dnsv6,
-		resetProfile: false, Pool: subnet.NewPool(),
+		Pool: subnet.NewPool(),
 	}
 }
 
@@ -98,18 +86,10 @@ func (e *SimpleNetworkEnv) SetUp(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create manager proxy")
 	}
-	if e.resetProfile {
-		if err := e.Manager.PopAllUserProfiles(ctx); err != nil {
-			return errors.Wrap(err, "failed to pop all user profile in shill")
-		}
-		e.popTestProfile, err = e.Manager.PushTestProfile(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to push test profile in shill")
-		}
-	}
 
 	testing.ContextLog(ctx, "Disabling portal detection on ethernet")
-	if err := e.Manager.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
+	e.resetCheckPortalList, err = e.Manager.SetPortalDetectionWithRestore(ctx, "wifi,cellular")
+	if err != nil {
 		return errors.Wrap(err, "failed to disable portal detection on ethernet")
 	}
 	testing.ContextLog(ctx, "Resetting ethernet ephemeral priority")
@@ -211,8 +191,9 @@ func (e *SimpleNetworkEnv) TearDown(ctx context.Context) error {
 		}
 	}
 
-	if e.resetProfile {
-		e.popTestProfile(ctx)
+	if e.resetCheckPortalList != nil {
+		e.resetCheckPortalList(ctx)
 	}
+
 	return lastErr
 }

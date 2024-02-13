@@ -29,9 +29,7 @@ import (
 // The test network is configured according to the needs in a test and used to
 // simulate different network environments.
 type TestEnv struct {
-	// resetProfile indicates whether a test profile is pushed during setup.
-	resetProfile   bool
-	popTestProfile func(ctx context.Context)
+	resetCheckPortalList func(ctx context.Context)
 
 	// Manager wraps the Manager D-Bus object in shill.
 	Manager *shill.Manager
@@ -76,13 +74,7 @@ const (
 
 // NewTestEnv creates a new TestEnv object for routing tests.
 func NewTestEnv() *TestEnv {
-	return &TestEnv{resetProfile: true, Pool: subnet.NewPool()}
-}
-
-// NewTestEnvWithoutResetProfile creates a new TestEnv object for routing tests,
-// without resetting profile.
-func NewTestEnvWithoutResetProfile() *TestEnv {
-	return &TestEnv{resetProfile: false, Pool: subnet.NewPool()}
+	return &TestEnv{Pool: subnet.NewPool()}
 }
 
 // SetUp configures shill and brings up the base network.
@@ -109,23 +101,9 @@ func (e *TestEnv) SetUp(ctx context.Context) error {
 		return errors.Wrap(err, "failed to create manager proxy")
 	}
 
-	if e.resetProfile {
-		if err := e.Manager.PopAllUserProfiles(ctx); err != nil {
-			return errors.Wrap(err, "failed to pop all user profile in shill")
-		}
-
-		// Push a test profile to guarantee that all changes related to shill
-		// profile will be undone:
-		// 1) after the test if the test ends normally;
-		// 2) when restarting shill if a crash happened in the test.
-		e.popTestProfile, err = e.Manager.PushTestProfile(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to push test profile in shill")
-		}
-	}
-
 	testing.ContextLog(ctx, "Disabling portal detection on ethernet")
-	if err := e.Manager.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
+	e.resetCheckPortalList, err = e.Manager.SetPortalDetectionWithRestore(ctx, "wifi,cellular")
+	if err != nil {
 		return errors.Wrap(err, "failed to disable portal detection on ethernet")
 	}
 	testing.ContextLog(ctx, "Resetting ethernet ephemeral priority")
@@ -195,8 +173,8 @@ func (e *TestEnv) TearDown(ctx context.Context) error {
 		}
 	}
 
-	if e.popTestProfile != nil {
-		e.popTestProfile(ctx)
+	if e.resetCheckPortalList != nil {
+		e.resetCheckPortalList(ctx)
 	}
 
 	return lastErr

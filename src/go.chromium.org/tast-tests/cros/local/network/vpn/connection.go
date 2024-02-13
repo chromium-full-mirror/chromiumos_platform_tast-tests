@@ -503,7 +503,7 @@ func (c *Connection) Cleanup(ctx context.Context) error {
 
 func (c *Connection) startServer(ctx context.Context, env *virtualnet.Env) error {
 	if env == nil {
-		c.routingEnv = routing.NewTestEnvWithoutResetProfile()
+		c.routingEnv = routing.NewTestEnv()
 		if err := c.routingEnv.SetUp(ctx); err != nil {
 			return errors.Wrap(err, "failed to setup routing env")
 		}

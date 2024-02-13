@@ -74,7 +74,7 @@ func ARCIPv6Connectivity(ctx context.Context, s *testing.State) {
 	defer restoreEthernet(cleanupCtx)
 
 	// Set up test topology
-	testEnv := routing.NewSimpleNetworkEnvWithoutResetProfile(!v6only, true, !v6only, true)
+	testEnv := routing.NewSimpleNetworkEnv(!v6only, true, !v6only, true)
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
 	}

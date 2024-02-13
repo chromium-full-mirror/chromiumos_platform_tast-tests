@@ -38,6 +38,14 @@ func RoutingIPv4StaticWithDHCP(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	// This test changes static IP configure, push a test profile to avoid
+	// polluting default profile by any chance.
+	popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
+	if err != nil {
+		s.Fatal("Failed to push test profile: ", err)
+	}
+	defer popFunc(cleanupCtx)
+
 	testEnv := routing.NewTestEnv()
 	if err := testEnv.SetUp(ctx); err != nil {
 		s.Fatal("Failed to set up routing test env: ", err)
