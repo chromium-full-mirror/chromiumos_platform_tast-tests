@@ -141,12 +141,17 @@ func setup3WayIPConfig(ctx context.Context, dutConn, routerConn, pcapConn *ssh.C
 }
 
 // Config returns iperf or netperf config based on the useIperf value and type of test.
-func (p *TestManager) Config(testType TestType, testTime time.Duration) (*iperf.Config, error) {
+func (p *TestManager) Config(routerType routerSupport.RouterType, testType TestType, testTime time.Duration) (*iperf.Config, error) {
 	var options []iperf.ConfigOption
 	if testTime > 0 {
 		options = append(options, iperf.TestTimeOption(testTime))
 	}
-
+	// TODO(b/271490937): wifi_perf_openwrt: UDP TX perf numbers are low on
+	// openwrt. Overwrite the num_ports for UDP_TX on openwrt since it's the
+	// only viable workaround to improve the Tput in such case.
+	if testType == TestTypeUDPTx && routerType == routerSupport.OpenWrtT {
+		options = append(options, iperf.PortCountOption(1))
+	}
 	iperfTestType, ok := iperfProtocolMap[testType]
 	if !ok {
 		return nil, errors.Errorf("failed to find the iperf protocol for %s", testType)

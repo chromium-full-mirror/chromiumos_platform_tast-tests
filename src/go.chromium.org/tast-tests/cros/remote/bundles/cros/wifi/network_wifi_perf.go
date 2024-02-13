@@ -639,7 +639,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 		doRun := func(ctx context.Context) error {
 			for _, testType := range perfTestTypes {
 				s.Logf("Performing [[ %s ]]", testType)
-				config, err := manager.Config(testType, 0)
+				config, err := manager.Config(routerType, testType, 0)
 				if err != nil {
 					return errors.Wrapf(err, "failed to get the iperf/netperf configuration for test type %s", testType)
 				}
