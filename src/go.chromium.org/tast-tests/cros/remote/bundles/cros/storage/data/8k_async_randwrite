@@ -1,0 +1,23 @@
+# Copyright 2024 The ChromiumOS Authors
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# The job name in brackets must match the name of this file.
+# The fio_parser.py prefixes the output fields with this job name.
+# The hardware_StorageFio.py uses the name of the file as the job name,
+# and thus the two must match.
+[8k_async_randwrite]
+
+bs=8k
+
+loops=1
+randrepeat=1
+do_verify=1
+verify=md5
+verify_dump=1
+
+readwrite=randwrite
+iodepth=1
+ioengine=libaio
+random_generator=tausworthe
+norandommap

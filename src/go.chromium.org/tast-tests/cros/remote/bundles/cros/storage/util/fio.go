@@ -32,6 +32,7 @@ var (
 		"surfing",
 		"suspend_stress",
 		"64k_stress",
+		"8k_async_randwrite",
 	}
 )
 
@@ -51,6 +52,9 @@ type TestConfig struct {
 
 	// RunTimeSec represents the run time of the test
 	RunTimeSec int
+
+	// VerifyOnly indicates whether we should only verify the data of the last invocation.
+	VerifyOnly bool
 
 	// ResultWriter references the result processing object.
 	ResultWriter *FioResultWriter
@@ -83,6 +87,10 @@ func (t TestConfig) fioArgList() []string {
 
 	if t.RunTimeSec != 0 {
 		result = append(result, "--runtime="+strconv.Itoa(t.RunTimeSec)+"s")
+	}
+
+	if t.VerifyOnly == true {
+		result = append(result, "--verify_only")
 	}
 
 	return result
@@ -120,6 +128,12 @@ func (t TestConfig) WithSize(size int) TestConfig {
 // WithRunTimeSec sets RunTimeSec in TestConfig.
 func (t TestConfig) WithRunTimeSec(runtime int) TestConfig {
 	t.RunTimeSec = runtime
+	return t
+}
+
+// WithVerifyOnly sets VerifyOnly in TestConfig.
+func (t TestConfig) WithVerifyOnly(option bool) TestConfig {
+	t.VerifyOnly = option
 	return t
 }
 
