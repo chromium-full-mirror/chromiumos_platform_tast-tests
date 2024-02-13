@@ -691,6 +691,7 @@ func (f *powerSetUpFixture) Reset(ctx context.Context) error {
 
 type powerNoUIFixture struct {
 	powerTestOptions *PowerTestOptions
+	logRecorder      *power.LogRecorder
 	cleanup          func(context.Context) error
 }
 
@@ -732,9 +733,19 @@ func (f *powerNoUIFixture) Reset(ctx context.Context) error {
 }
 
 func (f *powerNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	f.logRecorder = power.NewLogRecorder(s.OutDir())
+
+	if err := f.logRecorder.Start(); err != nil {
+		s.Error("Failed to start log recorder: ", err)
+	}
 }
 
 func (f *powerNoUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if err := f.logRecorder.Stop(); err != nil {
+		s.Error("Failed to stop log recorder: ", err)
+	}
+
+	f.logRecorder = nil
 }
 
 type powerMetricsNoUIFixture struct {
@@ -811,6 +822,7 @@ type powerUIFixture struct {
 	cr          *chrome.Chrome
 	arc         *arc.ARC
 	arcSnapshot *arc.Snapshot
+	logRecorder *power.LogRecorder
 	cleanup     func(context.Context) error
 }
 
@@ -977,9 +989,19 @@ func (f *powerUIFixture) Reset(ctx context.Context) error {
 }
 
 func (f *powerUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	f.logRecorder = power.NewLogRecorder(s.OutDir())
+
+	if err := f.logRecorder.Start(); err != nil {
+		s.Error("Failed to start log recorder: ", err)
+	}
 }
 
 func (f *powerUIFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	if err := f.logRecorder.Stop(); err != nil {
+		s.Error("Failed to stop log recorder: ", err)
+	}
+	f.logRecorder = nil
+
 	if f.arc != nil {
 		if err := f.arc.SaveLogFiles(ctx); err != nil {
 			s.Log("Failed to save ARC-related log files: ", err)
