@@ -79,22 +79,31 @@ func SetUpLogicVolume(ctx context.Context, lvName string) (lvPath string, cleanU
 		return "", func(_ context.Context) {}, errors.New("there is no volume group")
 	}
 
-	vgName := strings.TrimSpace(string(out))
-	thinpool := vgName + "/thinpool"
-	lvPath = filepath.Join("/dev/mapper/", vgName+"-"+lvName)
+	vgNames := strings.Split(string(out), "\n")
+	for _, vgName := range vgNames {
+		vgName = strings.TrimSpace(string(vgName))
+		thinpool := vgName + "/thinpool"
+		lvPath = filepath.Join("/dev/mapper/", vgName+"-"+lvName)
 
-	// Create a logic volume in thinpool
-	if err := testexec.CommandContext(ctx, "lvcreate", "-V8G", "-T", thinpool, "-n", lvName).Run(); err != nil {
-		return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create logical volume on "+thinpool)
-	}
-
-	cleanUp = func(ctx context.Context) {
-		if err := testexec.CommandContext(ctx, "lvremove", "-y", lvPath).Run(); err != nil {
-			testing.ContextLog(ctx, "Failed to remove logical volume: ", err)
+		// Check if there the logic volume contains thinpool
+		if err := testexec.CommandContext(ctx, "lvdisplay", "-v", thinpool).Run(); err != nil {
+			continue
 		}
+		// Create a logic volume in thinpool
+		if err := testexec.CommandContext(ctx, "lvcreate", "-V8G", "-T", thinpool, "-n", lvName).Run(); err != nil {
+			return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create logical volume on "+thinpool)
+		}
+
+		cleanUp = func(ctx context.Context) {
+			if err := testexec.CommandContext(ctx, "lvremove", "-y", lvPath).Run(); err != nil {
+				testing.ContextLog(ctx, "Failed to remove logical volume: ", err)
+			}
+		}
+
+		return lvPath, cleanUp, nil
 	}
 
-	return lvPath, cleanUp, nil
+	return "", func(_ context.Context) {}, errors.New("failed to create a logical volume")
 }
 
 // SetUpBlockFile creates a 8G file and returns the file path
