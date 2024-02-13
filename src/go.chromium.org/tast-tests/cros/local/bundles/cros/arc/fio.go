@@ -146,13 +146,6 @@ func init() {
 				writeJobs: defaultFioWriteJobs,
 			},
 		}, {
-			Name: "data_media_android_data",
-			Val: fioTestParams{
-				directory: "/data/media/0/Android/data",
-				readJobs:  defaultFioReadJobs,
-				writeJobs: defaultFioWriteJobs,
-			},
-		}, {
 			Name: "data_media_download",
 			Val: fioTestParams{
 				directory: "/data/media/0/Download",
