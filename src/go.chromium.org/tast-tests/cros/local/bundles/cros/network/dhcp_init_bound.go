@@ -51,12 +51,6 @@ func DHCPInitBound(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create shill manager proxy: ", err)
 	}
 
-	popFunc, err := m.PushTestProfile(ctx)
-	if err != nil {
-		s.Fatal("Failed to install the test profile: ", err)
-	}
-	defer popFunc(cleanupCtx)
-
 	simWiFi := s.FixtValue().(*hwsim.ShillSimulatedWiFi)
 	pool := subnet.NewPool()
 	wifi, err := virtualnet.CreateWifiRouterEnv(ctx, simWiFi.AP[0], m, pool, virtualnet.EnvOptions{})

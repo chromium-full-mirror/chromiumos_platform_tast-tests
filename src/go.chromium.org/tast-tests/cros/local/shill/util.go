@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func waitForOnline(ctx context.Context, timeout time.Duration) error {
@@ -44,4 +46,35 @@ func WaitForOnline(ctx context.Context) error {
 // to reset the device and connect to the network.
 func WaitForOnlineAfterResume(ctx context.Context) error {
 	return waitForOnline(ctx, 3*time.Minute)
+}
+
+// LogOutUserAndPushTestProfile will log out user if the user is logged in, and
+// push a test profile to shill and return a clean up function to pop up this
+// profile. This function is helpful if the test may pollute the profile and not
+// easy to do the cleanup at the end of the test. Caveats:
+//   - This function won't help if the property is written to default profile
+//     (platform2/shill/default_profile.h).
+//   - This function may restart Chrome.
+func LogOutUserAndPushTestProfile(ctx context.Context) (func(context.Context), error) {
+	m, err := NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to shill manager")
+	}
+
+	// If there are still multiple profiles, it very likely means that there is a
+	// user logged in. In this case, the following PushProfile() will fail since a
+	// non-default global profile cannot be pushed on top of a user profile. Do a
+	// UI restart here to make sure that there is no user profile.
+	paths, err := m.ProfilePaths(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get current profiles")
+	}
+	if len(paths) > 1 {
+		testing.ContextLog(ctx, "Restarting UI since PushTestProfile requires that Chrome is not logged in")
+		if err := upstart.RestartJob(ctx, "ui"); err != nil {
+			return nil, errors.Wrap(err, "failed to restart ui")
+		}
+	}
+
+	return m.PushTestProfile(ctx)
 }

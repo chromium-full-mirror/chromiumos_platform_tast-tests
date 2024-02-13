@@ -87,7 +87,7 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	}
 
 	// Set up an test profile and pop it out on stack after test is finished.
-	popFunc, err := m.PushTestProfile(ctx)
+	popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
 	if err != nil {
 		s.Fatal("Failed to push test profile: ", err)
 	}

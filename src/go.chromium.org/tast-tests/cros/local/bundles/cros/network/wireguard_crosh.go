@@ -42,15 +42,16 @@ func WireguardCrosh(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
 
-	m, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to create shill manager proxy: ", err)
-	}
-	popProfile, err := m.PushTestProfile(ctx)
+	popProfile, err := shill.LogOutUserAndPushTestProfile(ctx)
 	if err != nil {
 		s.Fatal("Failed to push test profile: ", err)
 	}
 	defer popProfile(cleanupCtx)
+
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to create shill manager proxy: ", err)
+	}
 	networkEnv, err := vpn.CreateNetworkTopology(ctx)
 	if err != nil {
 		s.Fatal("Failed to create network topology for VPN tests: ", err)

@@ -561,8 +561,9 @@ func (m *Manager) RemoveTestProfile(ctx context.Context) error {
 // PushTestProfile creates and pushes a Shill profile for testing.
 // The profile is not a user profile so it will not be reloaded if Shill crashes
 // or the DUT restarts, making it safe to save changes to it while testing.
-// Assumes that there are no user profiles loaded (otherwise the test profile will be ignored).
+// Requires that there are no user profiles loaded (otherwise error will be returned).
 // Returns a function that should be deferred to pop and remove the profile.
+// Consider use LogOutUserAndPushTestProfile() instead.
 func (m *Manager) PushTestProfile(ctx context.Context) (func(ctx context.Context), error) {
 	if err := m.RemoveTestProfile(ctx); err != nil {
 		return nil, err
