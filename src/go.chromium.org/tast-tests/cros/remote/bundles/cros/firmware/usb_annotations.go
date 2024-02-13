@@ -29,8 +29,8 @@ func init() {
 			"drmasquatch@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: when stable, move to firmware_ec
-		Attr: []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level2"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		// Based on known un-annotated platforms that might not be updated.
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform(unannotatedPlatforms...), hwdep.X86()),
 	})
@@ -85,13 +85,7 @@ func USBAnnotations(ctx context.Context, s *testing.State) {
 //		"zork",
 //	}
 var unannotatedPlatforms = []string{
-	"bob",
 	"elm",
-	"fievel",
 	"hana",
-	"herobrine",
-	"kevin",
-	"kevin64",
 	"oak",
-	"tiger",
 }
