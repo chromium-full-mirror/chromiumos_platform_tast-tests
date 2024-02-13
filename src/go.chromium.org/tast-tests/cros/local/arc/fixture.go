@@ -532,6 +532,31 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	// arcBootedWithGameDashboard is a fixture similar to arcBooted but
+	// with the dropdown panel flag enabled.
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+			chrome.ExtraArgs("--enable-features=DropdownPanel"),
+		}, nil
+	}
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithGameDashboard",
+		Desc: "ARC is booted with the game dashboard flag enabled",
+		Contacts: []string{
+			"arc-app-dev@google.com",
+			"pjlee@google.com",
+			"cuicuiruan@google.com",
+		},
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
