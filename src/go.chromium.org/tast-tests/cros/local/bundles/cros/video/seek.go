@@ -264,7 +264,7 @@ func init() {
 			ExtraData:         []string{"720_h264.mp4"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
-			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			Fixture:           "chromeVideoWithV4L2FlatDecoder",
 		}, {
 			Name: "vp9_v4l2_flat",
 			Val: seekTest{
@@ -276,7 +276,7 @@ func init() {
 			ExtraData:         []string{"720_vp9.webm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
-			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			Fixture:           "chromeVideoWithV4L2FlatDecoder",
 		}},
 	})
 }

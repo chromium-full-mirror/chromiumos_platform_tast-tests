@@ -488,7 +488,7 @@ func init() {
 			ExtraData:         []string{"bear-320x240.h264.mp4"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs", "v4l2_codec"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
-			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			Fixture:           "chromeVideoWithV4L2FlatDecoder",
 		}, {
 			Name: "vp8_hw_v4l2_flat",
 			Val: playParams{
@@ -501,7 +501,7 @@ func init() {
 			ExtraData:         []string{"bear-320x240.vp8.webm"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
-			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			Fixture:           "chromeVideoWithV4L2FlatDecoder",
 		}, {
 			Name: "vp9_hw_v4l2_flat",
 			Val: playParams{
@@ -514,7 +514,7 @@ func init() {
 			ExtraData:         []string{"bear-320x240.vp9.webm"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
-			Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+			Fixture:           "chromeVideoWithV4L2FlatDecoder",
 		}},
 	})
 }

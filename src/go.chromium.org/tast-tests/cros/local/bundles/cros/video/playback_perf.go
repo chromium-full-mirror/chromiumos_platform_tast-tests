@@ -953,7 +953,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -969,7 +969,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/vp8/1080p_60fps_600frames.vp8.webm"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -985,7 +985,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/vp9/1080p_60fps_600frames.vp9.webm"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1001,7 +1001,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_2160_60", "v4l2_codec"},
 				ExtraData:         []string{"perf/vp9/2160p_60fps_600frames.vp9.webm"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1940,7 +1940,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "v4l2_codec"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1958,7 +1958,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30", "v4l2_codec"},
 				ExtraData:         []string{"crosvideo/1080_vp8.webm"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -1976,7 +1976,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "v4l2_codec"},
 				ExtraData:         []string{"crosvideo/1080.webm"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 		},

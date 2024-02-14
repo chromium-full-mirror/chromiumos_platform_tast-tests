@@ -83,7 +83,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -96,7 +96,7 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -133,7 +133,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWDecodeH264},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 			{
@@ -146,7 +146,7 @@ func init() {
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
 				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
-				Fixture:           "chromeVideoWithV4L2FlatStatefulDecoder",
+				Fixture:           "chromeVideoWithV4L2FlatDecoder",
 				Timeout:           5 * time.Minute,
 			},
 		},

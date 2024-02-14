@@ -1057,13 +1057,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithV4L2FlatStatefulDecoder",
+		Name:     "chromeVideoWithV4L2FlatDecoder",
 		Desc:     "Similar to chromeVideo fixture but enabling V4L2 Flat stateful decoder",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.EnableFeatures("V4L2FlatStatefulVideoDecoder"),
+				chrome.EnableFeatures("V4L2FlatVideoDecoder"),
 				chrome.EnableFeatures("UseChromeOSDirectVideoDecoder"),
 			}, nil
 		}),
