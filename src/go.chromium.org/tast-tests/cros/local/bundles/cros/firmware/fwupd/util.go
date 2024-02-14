@@ -26,6 +26,18 @@ const ReleaseURI = "https://storage.googleapis.com/chromeos-localmirror/lvfs/tes
 // It takes Brya about 3 minutes for the state to change from fully charged to discharging.
 const ChargingStateTimeout = 10 * time.Minute
 
+// FakeWebcamDeviceID is the DeviceID of the Fakecam installed on test devices
+const FakeWebcamDeviceID string = "08d460be0f1f9f128413f816022a6439e0078018"
+
+// FakeWebcamGUID is the GUID of the Fakecam installed on test devices
+const FakeWebcamGUID string = "b585990a-003e-5270-89d5-3705a17f9a43"
+
+// FakeWebcamName is the name of the Fakecam installed on test devices
+const FakeWebcamName string = "Integrated Webcam™"
+
+// FakeWebcamVersion is the version of the Fakecam installed on test devices
+const FakeWebcamVersion string = "1.2.2"
+
 const (
 	// This is a string that appears when the computer is discharging.
 	dischargeString = `uint32 [0-9]\s+uint32 2`
@@ -112,8 +124,8 @@ func SetFwupdChargingState(ctx context.Context, charge bool) (setup.CleanupCallb
 // Names are aligned with dbus properties for reflections below.
 // See https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums-private.h
 type Device struct {
-	Guid          []string
-	DeviceId      string
+	Guid          []string // NOLINT
+	DeviceId      string   // NOLINT
 	Name          string
 	InstanceIds   []string
 	Plugin        string
@@ -130,6 +142,8 @@ const (
 	DbusPath = "/"
 	// DbusInterface interface
 	DbusInterface = "org.freedesktop.fwupd"
+	// GetDevicesMethod - Method name to get devices
+	GetDevicesMethod = ".GetDevices"
 )
 
 func inspectDevice(ctx context.Context, rawDevice map[string]dbus.Variant) (device *Device, err error) {
@@ -161,8 +175,8 @@ func getDevices() ([]map[string]dbus.Variant, error) {
 
 	fwupd := conn.Object(DbusName, DbusPath)
 
-	if err = fwupd.Call(DbusInterface+".GetDevices", 0).Store(&devices); err != nil {
-		return nil, errors.Wrap(err, "failed to call GetDevices")
+	if err = fwupd.Call(DbusInterface+GetDevicesMethod, 0).Store(&devices); err != nil {
+		return nil, errors.Wrap(err, "failed to call "+GetDevicesMethod)
 	}
 
 	return devices, nil

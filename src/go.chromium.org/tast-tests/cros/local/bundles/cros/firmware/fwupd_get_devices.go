@@ -6,11 +6,8 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
-	"path/filepath"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast/core/shutil"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/firmware/fwupd"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,15 +27,25 @@ func init() {
 	})
 }
 
-// FwupdGetDevices runs the fwupdmgr utility and verifies that it
-// detects devices in the system.
+// FwupdGetDevices makes the dbus call `GetDevices` and searches through them to
+// find a specific fake device.
 func FwupdGetDevices(ctx context.Context, s *testing.State) {
-	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "get-devices", "--show-all")
-	output, err := cmd.Output(testexec.DumpLogOnError)
+	fwupdVersion, err := fwupd.Version(ctx)
 	if err != nil {
-		s.Errorf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
+		s.Fatal("Unable to get FWUPD version: ", err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "fwupdmgr.txt"), output, 0644); err != nil {
-		s.Error("Failed dumping fwupdmgr output: ", err)
+	s.Log("FWUPD version detected: ", fwupdVersion)
+
+	// Get device using DeviceID
+	var device *fwupd.Device
+	device, err = fwupd.DeviceByID(ctx, fwupd.FakeWebcamDeviceID)
+	if err != nil {
+		s.Fatal("Failed to detect expected device using DeviceID: ", err)
+	}
+	if device.Name != fwupd.FakeWebcamName {
+		s.Fatalf("Detected device name: %s is different from expected device name: %s", device.Name, fwupd.FakeWebcamName)
+	}
+	if device.Version != fwupd.FakeWebcamVersion {
+		s.Fatalf("Detected device version: %s is different from expected device version: %s", device.Version, fwupd.FakeWebcamVersion)
 	}
 }
