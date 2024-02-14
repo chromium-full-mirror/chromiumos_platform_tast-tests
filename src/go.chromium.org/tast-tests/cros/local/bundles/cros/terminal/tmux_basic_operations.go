@@ -88,7 +88,7 @@ func TmuxBasicOperations(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("open new tmux tab",
-		ui.LeftClick(nodewith.ClassName("NewTabButton")),
+		ui.LeftClick(nodewith.ClassName("TabStripControlButton")),
 		ui.WaitUntilExists(terminalapp.SSHPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 2 /*tmuxTabs*/),
 	)(ctx); err != nil {

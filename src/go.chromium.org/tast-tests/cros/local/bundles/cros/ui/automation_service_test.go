@@ -80,7 +80,7 @@ func TestToFinder(t *gotesting.T) {
 		}, nodewith.Root()},
 		{&pb.Finder{
 			NodeWiths: []*pb.NodeWith{
-				{Value: &pb.NodeWith_HasClass{HasClass: "NewTabButton"}},
+				{Value: &pb.NodeWith_HasClass{HasClass: "TabStripControlButton"}},
 				{Value: &pb.NodeWith_Role{Role: pb.Role_ROLE_BUTTON}},
 				{Value: &pb.NodeWith_Visible{}},
 				{Value: &pb.NodeWith_Onscreen{}},
@@ -94,7 +94,7 @@ func TestToFinder(t *gotesting.T) {
 					},
 				}},
 			},
-		}, nodewith.HasClass("NewTabButton").Role(role.Button).Visible().Onscreen().
+		}, nodewith.HasClass("TabStripControlButton").Role(role.Button).Visible().Onscreen().
 			First().Ancestor(nodewith.Role(role.Window).HasClass("BrowserFrame"))},
 	} {
 		got, err := toFinder(tc.f1)
@@ -124,7 +124,7 @@ func TestToFinderRootError(t *gotesting.T) {
 func TestToFinderAncestorError(t *gotesting.T) {
 	f := &pb.Finder{
 		NodeWiths: []*pb.NodeWith{
-			{Value: &pb.NodeWith_HasClass{HasClass: "NewTabButton"}},
+			{Value: &pb.NodeWith_HasClass{HasClass: "TabStripControlButton"}},
 			{Value: &pb.NodeWith_Ancestor{
 				Ancestor: &pb.Finder{
 					NodeWiths: []*pb.NodeWith{

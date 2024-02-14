@@ -82,9 +82,9 @@ func TmuxManageTabs(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("open two new tmux tabs and check list windows",
-		ui.LeftClick(nodewith.ClassName("NewTabButton")),
+		ui.LeftClick(nodewith.ClassName("TabStripControlButton")),
 		ui.WaitUntilExists(terminalapp.SSHPrompt),
-		ui.LeftClick(nodewith.ClassName("NewTabButton")),
+		ui.LeftClick(nodewith.ClassName("TabStripControlButton")),
 		ui.WaitUntilExists(terminalapp.SSHPrompt),
 		ta.WaitForTabsCount(2 /*nonTmuxTabs*/, 3 /*tmuxTabs*/),
 		// Switch back to the controlling tab.

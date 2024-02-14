@@ -20,4 +20,4 @@ var ExtensionsToolbarButton = nodewith.Name("Extensions").Role(role.PopUpButton)
 var ExtensionPopupRootView = nodewith.Role(role.WebView).HasClass("ExtensionViewViews").First()
 
 // NewTabButton represents the "+" button in tab list to create a new tab page.
-var NewTabButton = nodewith.Name("New Tab").Role(role.Button).HasClass("NewTabButton")
+var NewTabButton = nodewith.Name("New Tab").Role(role.Button).HasClass("TabStripControlButton")

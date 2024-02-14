@@ -108,7 +108,7 @@ func Smoke(ctx context.Context, s *testing.State) {
 		name   string
 		finder *nodewith.Finder
 	}{
-		{"Browser: New Tab", nodewith.HasClass("NewTabButton").Role(role.Button).Ancestor(topLevelWindow).First()},
+		{"Browser: New Tab", nodewith.HasClass("TabStripControlButton").Role(role.Button).Ancestor(topLevelWindow).First()},
 		{"Browser: Tab Close", nodewith.HasClass("TabCloseButton").Role(role.Button).Ancestor(topLevelWindow).First()},
 		{"Browser: Minimize", nodewith.HasClass("FrameCaptionButton").Name("Minimize").Role(role.Button).Ancestor(topLevelWindow)},
 		{"Browser: Close", nodewith.HasClass("FrameCaptionButton").Name("Close").Role(role.Button).Ancestor(topLevelWindow)},

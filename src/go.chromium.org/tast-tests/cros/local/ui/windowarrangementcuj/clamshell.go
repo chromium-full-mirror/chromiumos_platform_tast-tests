@@ -131,7 +131,7 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 	}
 
 	// Drag window.
-	newTabButton := nodewith.Name("New Tab").HasClass("NewTabButton").Role(role.Button)
+	newTabButton := nodewith.Name("New Tab").HasClass("TabStripControlButton").Role(role.Button)
 	newTabButtonRect, err := ui.Location(ctx, newTabButton)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the location of the new tab button")

@@ -297,6 +297,9 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	// TODO(b/281865378): Remove once InputDeviceSettingsSplit flag is enabled by default in Chromium.
 	opts = append(opts, EnableFeatures("InputDeviceSettingsSplit"))
 
+	// TODO(crbug.com/325107262): ChromeRefresh2023 can be removed after uprev 123.0.0.6301.
+	opts = append(opts, EnableFeatures("ChromeRefresh2023"), LacrosEnableFeatures("ChromeRefresh2023"))
+
 	opts = append(opts, ExtraArgs("--cryptohome-ignore-cleanup-ownership-for-testing"))
 
 	cfg, err := config.NewConfig(opts)

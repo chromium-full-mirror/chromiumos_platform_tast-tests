@@ -83,8 +83,8 @@ func CloseTerminalTabsAndWindow(ctx context.Context, s *testing.State) {
 	}
 
 	if err := uiauto.Combine("open two new tabs",
-		ui.LeftClickUntil(nodewith.ClassName("NewTabButton"), terminalApp.WaitForPrompt()),
-		ui.LeftClickUntil(nodewith.ClassName("NewTabButton"), terminalApp.WaitForPrompt()),
+		ui.LeftClickUntil(nodewith.ClassName("TabStripControlButton"), terminalApp.WaitForPrompt()),
+		ui.LeftClickUntil(nodewith.ClassName("TabStripControlButton"), terminalApp.WaitForPrompt()),
 		terminalApp.WaitForTabsCount(4 /*nonTmuxTabs*/, 0 /*tmuxTabs*/),
 	)(ctx); err != nil {
 		s.Fatal("Failed to open new tabs: ", err)
