@@ -56,7 +56,8 @@ func (c *ccdOpenImpl) Reset(ctx context.Context) error {
 	return nil
 }
 
-// EnsureFWMPDisabled ensures that FWMP is removed
+// EnsureFWMPDisabled ensures that FWMP is removed. Note this may change
+// the straps for the TPM bus.
 func EnsureFWMPDisabled(ctx context.Context, s TestingState, b *remoteTi50.DUTControlAndreiboard, i *ti50.CrOSImage) {
 	out := runCommand(ctx, s, i, "ccd")
 	if !strings.Contains(out, "fwmp_lock") {
@@ -64,13 +65,25 @@ func EnsureFWMPDisabled(ctx context.Context, s TestingState, b *remoteTi50.DUTCo
 	}
 	s.Log("FWMP currently enabled. Removing FWMP")
 
-	s.Log("Restarting ti50 with CCD, SPI, and Clamshell straps and AP on to remove FWMP")
-	gpioApplyStrap(ctx, s, b, ti50.CcdSuzyQ, ti50.StrapForCcdOpenFixture)
-	gpioSet(ctx, s, b, ti50.GpioTi50PltRstL, true)
+	// We always use I2C since all devboard support this. We also do not have
+	// access to the GscProperties.PreferredTPMBus at this layer.
+	s.Log("Restarting ti50 with CCD, I2C, and Clamshell straps to remove FWMP")
+	gpioApplyStrap(ctx, s, b, ti50.CcdSuzyQ, ti50.TpmI2c, ti50.ApOff, ti50.FfClamshell)
 	mustSucceed(s, b.Reset(ctx), "Reset board")
 	mustSucceed(s, i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 
-	tpm := ti50.NewTpmHandle(ctx, b, ti50.TpmBusSpi)
+	gpioApplyStrap(ctx, s, b, ti50.ApOnI2c)
+
+	// Poll on the TPM bus until DID_VID is ready. If it doesn't become ready
+	// then the next command will throw an error.
+	tpm := ti50.NewTpmHandle(ctx, b, ti50.TpmBusI2c)
+	const maxDidVidAttempts = 6
+	for r := 1; r <= maxDidVidAttempts; r++ {
+		if _, err := tpm.OpenTitanToolTpmCommand("read-register", string(ti50.TpmRegDidVid)); err == nil {
+			// Bus is ready
+			break
+		}
+	}
 
 	// Startup, Undefined, then Commit changes
 	startup := tpm2.Startup{StartupType: tpm2.TPMSUClear}
@@ -85,11 +98,12 @@ func EnsureFWMPDisabled(ctx context.Context, s TestingState, b *remoteTi50.DUTCo
 	}
 
 	// Turn AP back off
-	gpioSet(ctx, s, b, ti50.GpioTi50PltRstL, false)
+	gpioApplyStrap(ctx, s, b, ti50.ApOff)
 	s.Log("FWMP space removed")
 }
 
-// EnsureTestLabEnabled ensures that testlab mode is open
+// EnsureTestLabEnabled ensures that testlab mode is open. Note this may change
+// the straps for the TPM bus.
 func EnsureTestLabEnabled(ctx context.Context, s TestingState, b *remoteTi50.DUTControlAndreiboard, i *ti50.CrOSImage) {
 	EnsureFWMPDisabled(ctx, s, b, i)
 
