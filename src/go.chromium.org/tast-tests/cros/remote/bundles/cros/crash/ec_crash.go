@@ -31,7 +31,7 @@ func init() {
 		Desc: "Verify artificial EC crash creates crash files",
 		Contacts: []string{
 			"chromeos-faft@google.com",
-			"cros-telemetry@google.com",
+			"chromeos-data-eng@google.com",
 			"robbarnes@google.com",
 			"mutexlox@chromium.org",
 		},

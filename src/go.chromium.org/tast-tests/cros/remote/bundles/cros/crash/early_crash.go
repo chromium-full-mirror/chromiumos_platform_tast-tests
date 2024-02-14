@@ -25,7 +25,7 @@ func init() {
 		Func:         EarlyCrash,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify artificial early crash creates crash files",
-		Contacts:     []string{"cros-telemetry@google.com", "mutexlox@chromium.org"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "mutexlox@chromium.org"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"reboot"},

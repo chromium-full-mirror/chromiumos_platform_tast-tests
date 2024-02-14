@@ -28,8 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify data store exists after featured restarts and boot attempts field incremented",
 		Contacts: []string{
-			"cros-telemetry@google.com",
-			"kendraketsui@google.com",
+			"chromeos-data-eng@google.com",
 			"mutexlox@google.com",
 		},
 		BugComponent: "b:1096648",
