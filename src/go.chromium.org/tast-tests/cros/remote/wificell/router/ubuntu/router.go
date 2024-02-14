@@ -46,18 +46,17 @@ var logsToCollect = []string{
 
 // Router is used to control the Ubuntu wireless router and stores state of the router.
 type Router struct {
-	host           *ssh.Conn
-	name           string
-	routerType     support.RouterType
-	board          string
-	phys           map[int]*iw.Phy // map from phy idx to iw.Phy.
-	im             *common.IfaceManager
-	nextBridgeID   int
-	nextVethID     int
-	iwr            *iw.Runner
-	ipr            *ip.Runner
-	logCollectors  map[string]*log.TailCollector // map from log path to its collector.
-	reservedNetDev []*iw.NetDev
+	host          *ssh.Conn
+	name          string
+	routerType    support.RouterType
+	board         string
+	phys          map[int]*iw.Phy // map from phy idx to iw.Phy.
+	im            *common.IfaceManager
+	nextBridgeID  int
+	nextVethID    int
+	iwr           *iw.Runner
+	ipr           *ip.Runner
+	logCollectors map[string]*log.TailCollector // map from log path to its collector.
 }
 
 // NewRouter prepares initial test AP state (e.g., initializing wiphy/wdev).
@@ -117,11 +116,6 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 	if err := common.RemoveAllVethIfaces(shortCtx, r.ipr); err != nil {
 		r.Close(shortCtx)
 		return nil, err
-	}
-
-	err = r.createReservedNetDevs(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create the reserved interface")
 	}
 
 	killHostapdDhcp := func() {
@@ -280,11 +274,9 @@ func (r *Router) netDev(ctx context.Context, channel, opClass int, t iw.IfType) 
 // netDevWithPhyID finds an available interface on phy#phyID and with given type.
 func (r *Router) netDevWithPhyID(ctx context.Context, phyID int, t iw.IfType) (*iw.NetDev, error) {
 	// First check if there's an available interface on target phy.
-	if reserved := r.reservedInterface(ctx, phyID); reserved != nil {
-		for _, nd := range r.im.Available {
-			if nd.PhyNum == phyID && nd.IfType == t && nd.IfName != reserved.IfName {
-				return nd, nil
-			}
+	for _, nd := range r.im.Available {
+		if nd.PhyNum == phyID && nd.IfType == t {
+			return nd, nil
 		}
 	}
 	// No available interface on phy, create one.
@@ -307,63 +299,6 @@ func (r *Router) monitorOnInterface(ctx context.Context, iface string) (*iw.NetD
 	}
 	phyID := ndev.PhyNum
 	return r.netDevWithPhyID(ctx, phyID, iw.IfTypeMonitor)
-}
-
-// createReservedNetDevs creates a reserved interface on each phy to keep the regdomain config.
-func (r *Router) createReservedNetDevs(ctx context.Context) error {
-	for phyID := range r.phys {
-		nd, err := r.netDevWithPhyID(ctx, phyID, iw.IfTypeManaged)
-		if err != nil {
-			return err
-		}
-		reservedIface := nd.IfName
-		r.im.SetAvailable(reservedIface)
-		r.reservedNetDev = append(r.reservedNetDev, nd)
-	}
-	n := len(r.reservedNetDev)
-	if n < 2 {
-		return nil
-	}
-	seedRegDomain := func(ctx context.Context, supportNd, apPhyNd *iw.NetDev) error {
-		ssid := hostapd.RandomSSID("RESERVED_SSID")
-		config, err := hostapd.NewConfig(
-			hostapd.Mode(hostapd.Mode80211g),
-			hostapd.Channel(1),
-			hostapd.SSID(ssid),
-			hostapd.SpectrumManagement())
-		if err != nil {
-			return err
-		}
-		nd, err := r.netDevWithPhyID(ctx, apPhyNd.PhyNum, iw.IfTypeManaged)
-		if err != nil {
-			return err
-		}
-		apIface := nd.IfName
-		h, err := r.startHostapdOnIface(ctx, apIface, "hostapd-"+apIface, config)
-		if err != nil {
-			return err
-		}
-		defer func(ctx context.Context) {
-			if err := r.StopHostapd(ctx, h); err != nil {
-				errors.Wrapf(err, "failed to stop the hostapd server on the reserved interface %s", apIface)
-			}
-		}(ctx)
-		ctx, cancel := h.ReserveForClose(ctx)
-		defer cancel()
-		if err != nil {
-			return errors.Wrapf(err, "failed to configure AP on the reserved interface %s", apIface)
-		}
-		if _, err := r.iwr.TimedScan(ctx, supportNd.IfName, nil, nil); err != nil {
-			return errors.Wrap(err, "failed to scan on the reserved interface")
-		}
-		return nil
-	}
-	for i := 0; i < n; i++ {
-		if err := seedRegDomain(ctx, r.reservedNetDev[i], r.reservedNetDev[(i+1)%n]); err != nil {
-			return err
-		}
-	}
-	return nil
 }
 
 // StartHostapd starts the hostapd server.
@@ -518,13 +453,6 @@ func (r *Router) StartCapture(ctx context.Context, name string, ch, opClass int,
 
 	if !shared {
 		// The interface is not shared, set up frequency and bandwidth.
-		// Turn down the reserved interface first, otherwise the monitor interface can not be used as capturer.
-		if reserved := r.reservedInterface(ctx, nd.PhyNum); reserved != nil {
-			r.ipr.SetLinkDown(ctx, reserved.IfName)
-		}
-		// The regdomain is reset after reserved interface is turned down.
-		// The frequency of the monitor interface can be set to 6 GHz before the regdomain is reset.
-		// This could be flaky on 6 GHz channels due to the race condition.
 		if err := r.iwr.SetFreq(ctx, iface, freq, freqOps...); err != nil {
 			return nil, errors.Wrapf(err, "failed to set frequency for interface %s", iface)
 		}
@@ -649,16 +577,6 @@ func (r *Router) SetAPIfaceDown(ctx context.Context, iface string) error {
 // MAC returns the MAC address of iface on this router.
 func (r *Router) MAC(ctx context.Context, iface string) (net.HardwareAddr, error) {
 	return r.ipr.MAC(ctx, iface)
-}
-
-// reservedInterface returns the reserved interface on phy.
-func (r *Router) reservedInterface(ctx context.Context, phyID int) *iw.NetDev {
-	for _, reserved := range r.reservedNetDev {
-		if reserved.PhyNum == phyID {
-			return reserved
-		}
-	}
-	return nil
 }
 
 // HostIsUbuntuRouter determines whether the remote host is a Ubuntu router.
