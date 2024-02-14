@@ -6,9 +6,12 @@ package network
 
 import (
 	"context"
+	"math/rand"
+	"net"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -80,4 +83,23 @@ func blockChromeTraffic(ctx context.Context, ipcmd executableCmd) (func(cleanupC
 		resumeChromeCommand := testexec.CommandContext(cleanupCtx, string(ipcmd), append([]string{"-t", "filter", "-D"}, blockArgs...)...)
 		return resumeChromeCommand.Run(testexec.DumpLogOnError)
 	}, nil
+}
+
+// UnusedOrRandomPort returns an unused port if possible, or a random one if not.
+func UnusedOrRandomPort(ctx context.Context, fam l4server.Family) int {
+	rport := func(err error) int {
+		testing.ContextLog(ctx, "Failed to query unused port - generating one randomly, good luck: ", err)
+		return 10000 + rand.Intn(50000)
+	}
+
+	addr, err := net.ResolveUDPAddr(fam.String(), "localhost:0")
+	if err != nil {
+		return rport(err)
+	}
+	c, err := net.ListenUDP(fam.String(), addr)
+	if err != nil {
+		return rport(err)
+	}
+	defer c.Close()
+	return c.LocalAddr().(*net.UDPAddr).Port
 }

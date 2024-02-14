@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/vpn"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	"go.chromium.org/tast-tests/cros/local/network"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
@@ -398,7 +399,7 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 	} else {
 		addr = addrs.IPv4Addr
 	}
-	port := unusedOrRandomPort(ctx, fam)
+	port := network.UnusedOrRandomPort(ctx, fam)
 	udp := l4server.New(fam, port, l4server.WithAddr(addr.String()), l4server.WithMsgHandler(l4server.Reflector()))
 	if err := rt.StartServer(ctx, fam.String(), udp); err != nil {
 		return nil, errors.Wrapf(err, "failed to start %s server", fam)
@@ -411,24 +412,6 @@ func setup(ctx context.Context, mgr *shill.Manager, pool *subnet.Pool, fam l4ser
 	}
 	rt = nil
 	return svr, nil
-}
-
-func unusedOrRandomPort(ctx context.Context, fam l4server.Family) int {
-	rport := func(err error) int {
-		testing.ContextLog(ctx, "Failed to query unused port - generating one randomly, good luck: ", err)
-		return 10000 + rand.Intn(50000)
-	}
-
-	addr, err := net.ResolveUDPAddr(fam.String(), "localhost:0")
-	if err != nil {
-		return rport(err)
-	}
-	c, err := net.ListenUDP(fam.String(), addr)
-	if err != nil {
-		return rport(err)
-	}
-	defer c.Close()
-	return c.LocalAddr().(*net.UDPAddr).Port
 }
 
 func txrx(ctx context.Context, svr *server, msg, usr string) error {
@@ -452,7 +435,7 @@ func txrx(ctx context.Context, svr *server, msg, usr string) error {
 		"|",
 		"socat",
 		"-",
-		fmt.Sprintf("%v:%v,sp=%v,reuseaddr", svr.fam.String(), svr.dst(), unusedOrRandomPort(ctx, svr.fam)),
+		fmt.Sprintf("%v:%v,sp=%v,reuseaddr", svr.fam.String(), svr.dst(), network.UnusedOrRandomPort(ctx, svr.fam)),
 	}
 	cmd := testexec.CommandContext(ctx, "bash", "-c", strings.Join(args, " "))
 	cmd.Cmd.SysProcAttr = &syscall.SysProcAttr{
