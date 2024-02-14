@@ -893,10 +893,11 @@ func (a *ARC) saveANRIfExists(ctx context.Context) error {
 		}
 
 		cleanupFunc, err := MountVirtioBlkDataDiskImageReadOnlyWithoutSync(ctx, a.chromeUsername, diskPath)
-		if err != nil {
-			return errors.Wrap(err, "failed to mount virtio-blk /data on host")
+		if err == nil {
+			defer cleanupFunc(ctx)
+		} else {
+			testing.ContextLogf(ctx, "Failed to mount virtio-blk /data %q on host: %s", diskPath, err)
 		}
-		defer cleanupFunc(ctx)
 	}
 
 	androidDataDir, err := AndroidDataDir(ctx, a.chromeUsername)
