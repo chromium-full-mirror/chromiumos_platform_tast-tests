@@ -30,7 +30,7 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel(
 			// AMD devices before skyrim don't have the separate signed AMDFW section.
 			// grunt
-			"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya",
+			"aleena", "barla", "careena", "kasumi", "kasumi360", "liara", "treeya", "treeya360",
 			// guybrush
 			"dewatt", "nipperkin",
 			// zork
