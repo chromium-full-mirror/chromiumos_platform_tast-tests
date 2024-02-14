@@ -32,6 +32,8 @@ type KeyboardEventWriter struct {
 	dev               string              // path to underlying device in /dev/input
 	topRowLayoutType  TopRowLayoutType    // layout type of the top row of the keyboard
 	topRowScanCodeMap map[EventCode]int32 // map to map between EventCodes and the scan code for top row keys. only initializd when topRowLayoutType is LayoutCustom.
+	// AdditionDelay10msIncrementCounter is global such that test can directly access this variable to add delay after type.
+	AdditionDelay10msIncrementCounter int // addition delay after type in the 10ms increment.
 }
 
 var nextVirtKbdNum = 1 // appended to virtual keyboard device name
@@ -261,6 +263,15 @@ func (kw *KeyboardEventWriter) Type(ctx context.Context, s string) error {
 		}
 
 		kw.sleepAfterType(ctx, &firstErr)
+
+		if kw.AdditionDelay10msIncrementCounter != 0 {
+			delay := time.Duration(10 * kw.AdditionDelay10msIncrementCounter)
+			// GoBigSleepLint: For low end devices, more delay may be need to avoid
+			// overlapping of character.
+			if err := testing.Sleep(ctx, delay*time.Millisecond); err != nil {
+				return errors.Wrapf(err, "failed to sleep for %v", delay*time.Millisecond)
+			}
+		}
 	}
 
 	return firstErr
