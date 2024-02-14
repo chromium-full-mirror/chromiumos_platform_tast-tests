@@ -21,7 +21,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		BugComponent: "b:1339922",
+		BugComponent: "b:1029735",
 		Func:         LogRotate,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests to run log_rotator",
