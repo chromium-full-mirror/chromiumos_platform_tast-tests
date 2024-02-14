@@ -387,7 +387,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp8ComprehensiveFiles",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp8_inter",
 		Attr:            perBuildAttrs,
@@ -395,7 +395,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp8InterFiles",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp8_inter_multi_coeff",
 		Attr:            perBuildAttrs,
@@ -403,7 +403,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp8InterMultiCoeffFiles",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp8_inter_segment",
 		Attr:            perBuildAttrs,
@@ -411,7 +411,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp8InterSegmentFiles",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp8_intra",
 		Attr:            perBuildAttrs,
@@ -419,7 +419,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp8IntraFiles",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp8_intra_multi_coeff",
 		Attr:            perBuildAttrs,
@@ -427,7 +427,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp8IntraMultiCoeffSegmentFiles",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp8_intra_segment",
 		Attr:            perBuildAttrs,
@@ -435,7 +435,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp8IntraSegmentFiles",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp9_0_group1_buf",
 		Attr:            perBuildAttrs,
@@ -443,7 +443,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp90Group1Buf",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp9_0_group1_gf_dist",
 		Attr:            perBuildAttrs,
@@ -451,7 +451,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp90Group1GfDist",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp9_0_group1_odd_size",
 		Attr:            perBuildAttrs,
@@ -459,7 +459,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp90Group1OddSize",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_vp9_0_group1_sub8x8",
 		Attr:            perBuildAttrs,
@@ -467,7 +467,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "vp90Group1Sub8x8",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_h264_main",
 		Attr:            perBuildAttrs,
@@ -475,7 +475,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "h264Files[\"main\"]",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_h264_baseline",
 		Attr:            perBuildAttrs,
@@ -483,7 +483,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "h264Files[\"baseline\"]",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_h264_high",
 		Attr:            perBuildAttrs,
@@ -491,7 +491,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "h264Files[\"high\"]",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	}, {
 		Name:            "v4l2_flat_h264_first_mb_in_slice",
 		Attr:            perBuildAttrs,
@@ -499,7 +499,7 @@ func TestChromeStackDecoderVerificationParams(t *testing.T) {
 		HardwareDeps:    "hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding())",
 		VideoFiles:      "h264Files[\"first_mb_in_slice\"]",
 		ValidatorType:   "decoding.MD5",
-		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder"},
+		EnabledFeatures: []string{"V4L2FlatStatefulVideoDecoder", "V4L2FlatVideoDecoder"},
 	},
 	// TODO(b/189500115): Add v4l2_flat_p9_0_group1_frm_resize/sub8x8_sf.
 	}...)
