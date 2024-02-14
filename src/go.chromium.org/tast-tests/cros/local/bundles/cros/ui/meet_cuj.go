@@ -41,6 +41,13 @@ func init() {
 		Vars: []string{
 			"mute",
 			"ui.MeetCUJ.doc",
+
+			// Parsable test duration, like 10m or 60s, to run the Meet call.
+			// Values can be added over 10 minutes, but this duration flag
+			// is only supported up to 10 minutes, given that internal timeouts
+			// might start to fail once the value becomes too high. Test time
+			// defaults to 10 minutes.
+			"ui.MeetCUJ.duration",
 		},
 		VarDeps: []string{
 			"ui.MeetCUJ.bond_credentials",

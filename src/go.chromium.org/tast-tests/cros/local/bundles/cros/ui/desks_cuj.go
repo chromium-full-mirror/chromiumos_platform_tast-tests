@@ -27,7 +27,16 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
-		Timeout:      30 * time.Minute,
+		Vars: []string{
+			// Parsable test duration, like 10m or 60s, to run the test. This
+			// duration is split into 3 sections, where each of the 3 sections
+			// of the test gets a third of the total run time. The overall test
+			// timeout is still 30 minutes, so command-line test durations must
+			// still run in less than that total time. Test time defaults to
+			// 10 minutes.
+			"ui.DesksCUJ.duration",
+		},
+		Timeout: 30 * time.Minute,
 		Params: []testing.Param{
 			{
 				Val:     browser.TypeAsh,

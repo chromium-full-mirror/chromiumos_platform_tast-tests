@@ -180,6 +180,15 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	if meet.Duration != 0 {
 		meetTimeout = meet.Duration
 	}
+
+	if testDuration, ok := s.Var("ui.MeetCUJ.duration"); ok {
+		var err error
+		meetTimeout, err = time.ParseDuration(testDuration)
+		if err != nil {
+			s.Fatalf("Failed to parse command-line arg ui.MeetCUJ.duration=%q: %v", testDuration, err)
+		}
+	}
+
 	s.Log("Run meeting for ", meetTimeout)
 
 	// Shorten context to allow for cleanup. Reserve one minute in case of power

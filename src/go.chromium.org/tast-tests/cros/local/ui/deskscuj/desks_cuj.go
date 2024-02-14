@@ -34,10 +34,19 @@ import (
 // Run runs the desks CUJ by opening up 4 different desks and switching
 // between them using various workflows.
 func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *perf.Values {
+	deskCUJTestDuration := 10 * time.Minute
+	if testDuration, ok := s.Var("ui.DesksCUJ.duration"); ok {
+		var err error
+		deskCUJTestDuration, err = time.ParseDuration(testDuration)
+		if err != nil {
+			s.Fatalf("Failed to parse command-line arg ui.DesksCUJ.duration=%q: %v", testDuration, err)
+		}
+	}
+
 	// deskSwitchingDuration is how long we should run each workflow for.
 	// To have the full test run in 10 minutes,  we want to have each of
 	// the 3 workflows run in 10/3 minutes.
-	const deskSwitchingDuration = time.Minute * 10 / 3
+	var deskSwitchingDuration = deskCUJTestDuration / 3
 
 	// Reserve ten seconds for cleanup.
 	cleanupCtx := ctx
