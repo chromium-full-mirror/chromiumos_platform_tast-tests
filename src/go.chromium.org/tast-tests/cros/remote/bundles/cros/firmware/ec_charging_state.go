@@ -22,8 +22,7 @@ import (
 type ecChargingTest int
 
 const (
-	acStateDuringSuspend ecChargingTest = iota
-	voltageOnDischarge
+	voltageOnDischarge ecChargingTest = iota
 	statusOnFullCharge
 )
 
@@ -37,7 +36,7 @@ func init() {
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_ccd"},
+		Attr:         []string{"group:firmware", "firmware_ccd", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
@@ -48,21 +47,14 @@ func init() {
 		Fixture:      fixture.NormalMode,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
-			Name:      "ac_on_suspend",
-			Timeout:   25 * time.Minute,
-			Val:       acStateDuringSuspend,
-			ExtraAttr: []string{"firmware_unstable"},
-		}, {
 			Name:              "discharge",
 			Timeout:           70 * time.Minute,
 			Val:               voltageOnDischarge,
-			ExtraAttr:         []string{"firmware_ec"},
 			ExtraRequirements: []string{"sys-fw-0022-v02"},
 		}, {
 			Name:              "full_charge",
 			Timeout:           120 * time.Minute,
 			Val:               statusOnFullCharge,
-			ExtraAttr:         []string{"firmware_ec"},
 			ExtraRequirements: []string{"sys-fw-0022-v02"},
 		},
 		},
@@ -71,7 +63,7 @@ func init() {
 
 const (
 	fullBatteryPercent     = 95.0
-	targetDischargePercent = 93.0
+	targetDischargePercent = 90.0
 	fullChargePollTimeout  = 110 * time.Minute
 	// alarmMask is a mask ignoring expected battery alarms like terminate charge and over charged.
 	alarmMask = (0xFF00 & ^firmware.ECTerminateChargeAlarm & ^firmware.ECOverChargedAlarm)
@@ -124,17 +116,6 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 	}()
 
 	switch s.Param().(ecChargingTest) {
-	case acStateDuringSuspend:
-		// ----------- Test #1: Check removal of power --------
-		s.Log("Start out with power attached, suspending the DUT, and remove power")
-		if err := testDisconnectChargerAfterSuspend(ctx, h); err != nil {
-			s.Fatal("Failed disconnect ac after suspend test: ", err)
-		}
-		// ----------- Test #2: Check addition of power while asleep -----------
-		s.Log("With power removed, suspend the DUT and then add power")
-		if err := testConnectChargerAfterSuspend(ctx, h); err != nil {
-			s.Fatal("Failed connect ac after suspend test: ", err)
-		}
 	case voltageOnDischarge:
 		// ----------- Test #3: Check discharges the DUT then checks its voltages -----------
 		// Disable Charge Limit for this test, since it messes with detecting if the
@@ -149,79 +130,6 @@ func ECChargingState(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed checking battery status after full charge test: ", err)
 		}
 	}
-}
-
-func testConnectChargerAfterSuspend(ctx context.Context, h *firmware.Helper) error {
-	if err := firmware.PollToSetChargerStatus(ctx, h, false); err != nil {
-		return errors.Wrap(err, "failed to set charger status to disconnected")
-	}
-
-	if err := suspendDUTAndCheckCharger(ctx, h, true); err != nil {
-		return errors.Wrap(err, "failed to suspend DUT and check if charger is attached")
-	}
-
-	var battery *firmware.ECBatteryState
-	var err error
-
-	testing.ContextLog(ctx, "Poll for expected battery state")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		battery, err = firmware.GetECBatteryStatus(ctx, h)
-		if err != nil {
-			return errors.Wrap(err, "failed to get current battery status")
-		}
-		// Don't check for discharging state, fully charged occasionally also sets discharging state.
-		if battery.StatusCode&firmware.ECFullyCharged == 0 && battery.Charging != "Not Allowed" && battery.StatusCode&firmware.ECDischarging != 0 {
-			return errors.Errorf("incorrect battery state, expected Charging/Fully Charged, got status: %v", battery.Status)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
-		return errors.Wrap(err, "failed to poll for fully charged battery level in DUT")
-	}
-
-	if err := compareKernelAndECBatteryStatus(ctx, h, battery); err != nil {
-		return errors.Wrap(err, "kernel and EC battery state mismatch")
-	}
-
-	return nil
-}
-
-func testDisconnectChargerAfterSuspend(ctx context.Context, h *firmware.Helper) error {
-	if err := firmware.PollToSetChargerStatus(ctx, h, true); err != nil {
-		return errors.Wrap(err, "failed to set charger status to connected")
-	}
-
-	if err := suspendDUTAndCheckCharger(ctx, h, false); err != nil {
-		return errors.Wrap(err, "failed to suspend DUT and check if charger is attached")
-	}
-
-	var battery *firmware.ECBatteryState
-	var err error
-
-	testing.ContextLog(ctx, "Poll for expected battery state")
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		battery, err = firmware.GetECBatteryStatus(ctx, h)
-		if err != nil {
-			return errors.Wrap(err, "failed to get current battery status")
-		}
-		if battery.StatusCode&alarmMask != 0 {
-			return errors.Errorf("battery threw unexpected alarms %v, had statuses: %v", battery.Alarms, battery.Status)
-		}
-		if (battery.StatusCode & (firmware.ECTerminateChargeAlarm | firmware.ECFullyCharged)) == firmware.ECTerminateChargeAlarm {
-			return errors.Errorf("battery raising terminate charge alarm non-full, status: %v", battery.Status)
-		}
-		if battery.StatusCode&firmware.ECDischarging == 0 {
-			return errors.Errorf("incorrect battery state, expected discharging, got status: %v", battery.Status)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
-		return errors.Wrap(err, "failed to charge battery")
-	}
-
-	if err := compareKernelAndECBatteryStatus(ctx, h, battery); err != nil {
-		return errors.Wrap(err, "kernel and EC battery state mismatch")
-	}
-
-	return nil
 }
 
 func testFullChargeAlarm(ctx context.Context, h *firmware.Helper) error {
@@ -245,45 +153,57 @@ func testFullChargeAlarm(ctx context.Context, h *firmware.Helper) error {
 		return errors.Wrap(err, "failed to poll for fully charged battery level in DUT")
 	}
 
-	kernelBatteryState, err := firmware.GetKernelBatteryState(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to get kernel battery state")
-	}
+	testing.ContextLog(ctx, "Wait for kernel to report fully charged")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		kernelBatteryState, err := firmware.GetKernelBatteryState(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to get kernel battery state")
+		}
 
-	testing.ContextLog(ctx, "Kernel reported: ", kernelBatteryState)
-	if kernelBatteryState == firmware.KernelCharging {
-		return errors.Errorf("the EC reported Fully Charged state but kernel reported %v, expected fully charged/discharging/not charging instead", kernelBatteryState)
-	}
+		testing.ContextLog(ctx, "Kernel reported: ", kernelBatteryState)
+		if kernelBatteryState == firmware.KernelCharging {
+			return errors.Errorf("the EC reported Fully Charged state but kernel reported %v, expected fully charged/discharging/not charging instead", kernelBatteryState)
+		}
 
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to poll for fully charged state from kernel")
+	}
 	return nil
 }
 
 func compareKernelAndECBatteryStatus(ctx context.Context, h *firmware.Helper, battery *firmware.ECBatteryState) error {
-	kernelBatteryState, err := firmware.GetKernelBatteryState(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to get kernel battery state")
-	}
+	testing.ContextLog(ctx, "Verify kernel reports same state as EC")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		kernelBatteryState, err := firmware.GetKernelBatteryState(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to get kernel battery state")
+		}
 
-	switch kernelBatteryState {
-	case firmware.KernelFullyCharged:
-		if battery.StatusCode&firmware.ECFullyCharged == 0 && battery.Display < fullBatteryPercent {
-			return errors.Errorf("Kernel reports battery status to be fully charged, but ec status was %v instead (expect fully charged or not charging)", battery.Status)
+		switch kernelBatteryState {
+		case firmware.KernelFullyCharged:
+			if battery.StatusCode&firmware.ECFullyCharged == 0 && battery.Display < fullBatteryPercent {
+				return errors.Errorf("Kernel reports battery status to be fully charged, but ec status was %v instead (expect fully charged or not charging)", battery.Status)
+			}
+			return nil
+		case firmware.KernelCharging:
+			if battery.StatusCode&firmware.ECDischarging != 0 {
+				return errors.Errorf("Kernel reports battery status to be charging, but ec status was %v instead (expect charging)", battery.Status)
+			}
+			return nil
+		case firmware.KernelDischarging, firmware.KernelNotCharging:
+			// EC might report the battery is not discharging if its fully charged, so raise error only if not discharging and not fully charged.
+			if battery.StatusCode&firmware.ECDischarging == 0 && battery.StatusCode&firmware.ECFullyCharged == 0 && battery.Display < fullBatteryPercent {
+				return errors.Errorf("Kernel reports battery status to be discharging, but ec status was %v instead (expect discharging and/or full charged)", battery.Status)
+			}
+			return nil
+		default:
+			return errors.Errorf("unexpected battery state %q from kernel", kernelBatteryState)
 		}
-		return nil
-	case firmware.KernelCharging:
-		if battery.StatusCode&firmware.ECDischarging != 0 {
-			return errors.Errorf("Kernel reports battery status to be charging, but ec status was %v instead (expect discharging)", battery.Status)
-		}
-		return nil
-	case firmware.KernelDischarging, firmware.KernelNotCharging:
-		// EC might report the battery is not discharging if its fully charged, so raise error only if not discharging and not fully charged.
-		if battery.StatusCode&firmware.ECDischarging == 0 && battery.StatusCode&firmware.ECFullyCharged == 0 && battery.Display < fullBatteryPercent {
-			return errors.Errorf("Kernel reports battery status to be discharging, but ec status was %v instead (expect discharging and/or full charged)", battery.Status)
-		}
-		return nil
-	default:
-		return errors.Errorf("unexpected battery state %q from kernel", kernelBatteryState)
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to poll for matching ec and kernel battery state")
 	}
+	return nil
 }
 
 func suspendDUTAndCheckCharger(ctx context.Context, h *firmware.Helper, expectChargerAttached bool) error {

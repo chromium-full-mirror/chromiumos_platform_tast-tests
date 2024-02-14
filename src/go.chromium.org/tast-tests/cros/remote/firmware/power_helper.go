@@ -14,15 +14,15 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
-        "go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
 const (
-        fullBatteryPercent     = 95.0
-        fullChargePollTimeout  = 110 * time.Minute
-        dischargePollTimeout   = 60 * time.Minute
-        chargePollInterval     = 1 * time.Second
+	fullBatteryPercent    = 95.0
+	fullChargePollTimeout = 110 * time.Minute
+	dischargePollTimeout  = 60 * time.Minute
+	chargePollInterval    = 1 * time.Second
 )
 
 // BootDutViaPowerPress performs power button normal press to power on DUT via servo.
@@ -40,10 +40,21 @@ func BootDutViaPowerPress(ctx context.Context, h *Helper, dut *dut.DUT) error {
 	}, &testing.PollOptions{Timeout: 2 * time.Minute})
 }
 
+// TestChargingVoltagesAfterDischarge verifies charging voltages are in expected ranges after discharging to a certain level.
 func TestChargingVoltagesAfterDischarge(ctx context.Context, h *Helper, percentBattDischargeLevel float64) error {
-	battery, err := GetECBatteryStatus(ctx, h)
-	if err != nil {
-		return errors.Wrap(err, "failed to get ec battery state")
+
+	var battery *ECBatteryState
+	var err error
+
+	testing.ContextLog(ctx, "Poll for battery state")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		battery, err = GetECBatteryStatus(ctx, h)
+		if err != nil {
+			return errors.Wrap(err, "failed to get current battery status")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: time.Second}); err != nil {
+		return errors.Wrap(err, "failed to poll for battery status from EC")
 	}
 
 	if battery.Charge > percentBattDischargeLevel {
@@ -104,4 +115,3 @@ func TestChargingVoltagesAfterDischarge(ctx context.Context, h *Helper, percentB
 
 	return nil
 }
-
