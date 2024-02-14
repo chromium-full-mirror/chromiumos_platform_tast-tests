@@ -1511,7 +1511,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_comprehensive",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8ComprehensiveFiles),
 				Timeout:           calculateTestTimeout(vp8ComprehensiveFiles, "v4l2_flat_vp8_comprehensive"),
@@ -1525,7 +1525,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_inter",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterFiles),
 				Timeout:           calculateTestTimeout(vp8InterFiles, "v4l2_flat_vp8_inter"),
@@ -1539,7 +1539,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_inter_multi_coeff",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterMultiCoeffFiles),
 				Timeout:           calculateTestTimeout(vp8InterMultiCoeffFiles, "v4l2_flat_vp8_inter_multi_coeff"),
@@ -1553,7 +1553,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_inter_segment",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8InterSegmentFiles),
 				Timeout:           calculateTestTimeout(vp8InterSegmentFiles, "v4l2_flat_vp8_inter_segment"),
@@ -1567,7 +1567,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_intra",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraFiles),
 				Timeout:           calculateTestTimeout(vp8IntraFiles, "v4l2_flat_vp8_intra"),
@@ -1581,7 +1581,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_intra_multi_coeff",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraMultiCoeffSegmentFiles),
 				Timeout:           calculateTestTimeout(vp8IntraMultiCoeffSegmentFiles, "v4l2_flat_vp8_intra_multi_coeff"),
@@ -1595,7 +1595,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp8_intra_segment",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp8IntraSegmentFiles),
 				Timeout:           calculateTestTimeout(vp8IntraSegmentFiles, "v4l2_flat_vp8_intra_segment"),
@@ -1609,7 +1609,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_buf",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1Buf),
 				Timeout:           calculateTestTimeout(vp90Group1Buf, "v4l2_flat_vp9_0_group1_buf"),
@@ -1623,7 +1623,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_gf_dist",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1GfDist),
 				Timeout:           calculateTestTimeout(vp90Group1GfDist, "v4l2_flat_vp9_0_group1_gf_dist"),
@@ -1637,7 +1637,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_odd_size",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1OddSize),
 				Timeout:           calculateTestTimeout(vp90Group1OddSize, "v4l2_flat_vp9_0_group1_odd_size"),
@@ -1651,7 +1651,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_vp9_0_group1_sub8x8",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(vp90Group1Sub8x8),
 				Timeout:           calculateTestTimeout(vp90Group1Sub8x8, "v4l2_flat_vp9_0_group1_sub8x8"),
@@ -1665,7 +1665,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_main",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["main"]),
 				Timeout:           calculateTestTimeout(h264Files["main"], "v4l2_flat_h264_main"),
@@ -1679,7 +1679,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_baseline",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["baseline"]),
 				Timeout:           calculateTestTimeout(h264Files["baseline"], "v4l2_flat_h264_baseline"),
@@ -1693,7 +1693,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_high",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["high"]),
 				Timeout:           calculateTestTimeout(h264Files["high"], "v4l2_flat_h264_high"),
@@ -1707,7 +1707,7 @@ func init() {
 			{
 				Name:              "v4l2_flat_h264_first_mb_in_slice",
 				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatStatefulVideoDecoding()),
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2FlatVideoDecoding()),
 				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "v4l2_codec"},
 				ExtraData:         appendJSONFiles(h264Files["first_mb_in_slice"]),
 				Timeout:           calculateTestTimeout(h264Files["first_mb_in_slice"], "v4l2_flat_h264_first_mb_in_slice"),

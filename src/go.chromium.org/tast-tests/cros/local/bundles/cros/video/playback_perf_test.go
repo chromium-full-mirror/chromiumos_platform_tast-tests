@@ -307,7 +307,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
 			"v4l2_flat_long", "chromeVideoWithV4L2FlatStatefulDecoder",
 			[]string{"v4l2_codec"})
-		param.HardwareDeps = "hwdep.SupportsV4L2FlatStatefulVideoDecoding()"
+		param.HardwareDeps = "hwdep.SupportsV4L2FlatVideoDecoding()"
 		param.MeasureRoughness = true
 		param.Duration = measurementDurationLong
 		params = append(params, param)
