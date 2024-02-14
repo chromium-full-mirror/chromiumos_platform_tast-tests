@@ -6,6 +6,7 @@
 package comm
 
 import (
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -59,6 +60,7 @@ type SystemInfo struct {
 // PowerTestVars struct contains all runtime variables used by tests that interact with
 // the graphics_Power test via IPC
 type PowerTestVars struct {
+	IsValid              bool   `json:"IsValid,bool"`
 	ResultDir            string `json:"ResultDir,string"`
 	SignalRunningFile    string `json:"SignalRunningFile,string"`
 	SignalCheckpointFile string `json:"SignalCheckpointFile,string"`
@@ -66,13 +68,22 @@ type PowerTestVars struct {
 
 // GetPowerTestVars populates a PowerTestVars struct with all of the dynamically defined variable
 // values by querying the testing.State
-func GetPowerTestVars(s *testing.State) PowerTestVars {
-	vars := PowerTestVars{
-		ResultDir:            s.RequiredVar("PowerTest.resultDir"),
-		SignalRunningFile:    s.RequiredVar("PowerTest.signalRunningFile"),
-		SignalCheckpointFile: s.RequiredVar("PowerTest.signalCheckpointFile"),
+func GetPowerTestVars(s *testing.State) (*PowerTestVars, error) {
+	resultDir, _ := s.Var("PowerTest.resultDir")
+	signalRunningFile, _ := s.Var("PowerTest.signalRunningFile")
+	signalCheckpointFile, _ := s.Var("PowerTest.signalCheckpointFile")
+	isValid := resultDir != "" && signalRunningFile != "" && signalCheckpointFile != ""
+	if !isValid {
+		if resultDir != "" || signalRunningFile != "" || signalCheckpointFile != "" {
+			return nil, errors.New("either all or none of PowerTest.{resultDir, signalRunningFile, signalCheckpointFile} must be provided")
+		}
 	}
-	return vars
+	return &PowerTestVars{
+		IsValid:              isValid,
+		ResultDir:            resultDir,
+		SignalRunningFile:    signalRunningFile,
+		SignalCheckpointFile: signalCheckpointFile,
+	}, nil
 }
 
 // TestVars struct contains all runtime variables that are consumed by the TraceReplay

@@ -59,7 +59,11 @@ func TraceReplayCrostiniSetup(ctx context.Context, s *testing.State, resizeDiskB
 
 	var pTestVars *comm.TestVars
 	if config.ExtendedDuration > 0 {
-		pTestVars = &comm.TestVars{PowerTestVars: comm.GetPowerTestVars(s)}
+		ptv, err := comm.GetPowerTestVars(s)
+		if err != nil {
+			s.Fatalf("Failed to get PowerTestVars: %s", err)
+		}
+		pTestVars = &comm.TestVars{PowerTestVars: *ptv}
 	}
 
 	if err := trace.RunTraceReplayTest(ctx, s.OutDir(), s.CloudStorage(), &guest, &config, pTestVars); err != nil {

@@ -685,9 +685,11 @@ func RunTraceReplayTest(ctx context.Context, resultDir string, cloudStorage *tes
 	}
 
 	var gpi *graphicsPowerInterface
-	if group.ExtendedDuration > 0 {
-		gpi = &graphicsPowerInterface{signalRunningFile: testVars.PowerTestVars.SignalRunningFile, signalCheckpointFile: testVars.PowerTestVars.SignalCheckpointFile}
-
+	if group.ExtendedDuration > 0 && testVars.PowerTestVars.IsValid {
+		gpi = &graphicsPowerInterface{
+			signalRunningFile:    testVars.PowerTestVars.SignalRunningFile,
+			signalCheckpointFile: testVars.PowerTestVars.SignalCheckpointFile,
+		}
 	}
 
 	serverAddr := fmt.Sprintf("%s:%d", outboundIP, fileServerPort)
