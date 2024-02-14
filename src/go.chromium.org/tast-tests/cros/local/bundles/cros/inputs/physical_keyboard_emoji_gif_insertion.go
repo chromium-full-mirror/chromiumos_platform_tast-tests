@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that we can search and insert GIFs (from emoji picker)",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
-		BugComponent: "b:286002546",
+		BugComponent: "b:95887",
 		Attr:         []string{"group:input-tools", "group:mainline", "group:input-tools-upstream", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "chrome_internal"},
 		HardwareDeps: hwdep.D(hwdep.Model(pre.StableModels...), hwdep.SkipOnModel("kefka")),
