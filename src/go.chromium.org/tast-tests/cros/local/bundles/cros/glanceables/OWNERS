@@ -1,0 +1,8 @@
+set noparent
+
+amitrokhin@google.com
+anasalazar@google.com
+tbarzic@google.com
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
