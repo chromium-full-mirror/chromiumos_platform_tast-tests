@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -32,6 +31,7 @@ var (
 	showNotificationsPromptFinder = nodewith.NameContaining("Show notifications").HasClass("RootView").Role(role.AlertDialog)
 	avPermPromptFinder            = nodewith.NameRegex(regexp.MustCompile(".*Use your (microphone|camera).*")).HasClass("RootView").Role(role.AlertDialog).First()
 	avMeetPermPromptReg           = regexp.MustCompile("(see|hear) you in the meeting")
+	captionDialogFinder           = nodewith.Name("Caption languages & translation").Role(role.Dialog).First()
 	avMeetPermPromptFinder        = nodewith.NameRegex(avMeetPermPromptReg).Role(role.Dialog).First()
 	leaveSitePromptFinder         = nodewith.Name("Leave site?").ClassName("RootView").Role(role.Dialog).First()
 )
@@ -72,6 +72,13 @@ var AllowMicrophoneAndCameraPermissionPrompt = Prompt{
 	// Possible ancestors are |avPermPromptFinder| and |avMeetPermPromptFinder|.
 	// So use First() instead of Ancestor().
 	ClearButtonFinder: AllowAVButtonFinder.First(),
+}
+
+// AllowCaptionPrompt represents the browser prompt to notify caption & translation.
+var AllowCaptionPrompt = Prompt{
+	Name:              "Caption languages & translation",
+	PromptFinder:      captionDialogFinder,
+	ClearButtonFinder: GotItButtonFinder.Ancestor(captionDialogFinder),
 }
 
 // LeaveSitePrompt represents the browser prompt to request permission for leaving site.
