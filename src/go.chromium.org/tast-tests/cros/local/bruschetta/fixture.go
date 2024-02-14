@@ -56,6 +56,9 @@ const (
 	BruschettaFixtureClamshell = "bruschettaReferenceVMClamshell"
 	// BruschettaFixtureWithLacros is the name of the fixture with lacros.
 	BruschettaFixtureWithLacros = "bruschettaReferenceVMWithLacros"
+	// BruschettaFixtureWithFieldtrialConfig is the name of the fixture with ash
+	// and fieldtrial config enabled.
+	BruschettaFixtureWithFieldtrialConfig = "bruschettaReferenceVMWithFieldtrialConfig"
 
 	defaultVMName = "bru"
 
@@ -103,6 +106,18 @@ func init() {
 		TearDownTimeout: uninstallationTimeout,
 		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
 		Parent:          fixture.LacrosPolicyLoggedInBruschetta,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            BruschettaFixtureWithFieldtrialConfig,
+		Desc:            "Set up reference VM with fieldtrial config enabled",
+		Contacts:        []string{"davidmunro@google.com", "clumptini+oncall@google.com"},
+		Impl:            &bruschettaFixture{},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Data:            []string{referenceVMInstaller, referenceVMInstallerHash, referenceVMPflash, referenceVMPflashHash},
+		Parent:          fixture.ChromePolicyLoggedInBruschettaWithFieldtrialConfig,
 	})
 }
 

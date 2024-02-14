@@ -45,6 +45,8 @@ const (
 	ChromePolicyLoggedInFilesUXEnabled = "chromePolicyLoggedInFilesUXEnabled"
 	// ChromePolicyLoggedInBruschetta is a fixture name.
 	ChromePolicyLoggedInBruschetta = "chromePolicyLoggedInBruschetta"
+	// ChromePolicyLoggedInBruschettaWithFieldtrialConfig is a fixture name.
+	ChromePolicyLoggedInBruschettaWithFieldtrialConfig = "chromePolicyLoggedInBruschettaWithFieldtrialConfig"
 	// ChromeEnrolledLoggedIn is a fixture name.
 	ChromeEnrolledLoggedIn = "chromeEnrolledLoggedIn"
 	// ChromeUpdateEngineEnrolledLoggedIn is a fixture name.

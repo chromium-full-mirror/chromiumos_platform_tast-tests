@@ -163,6 +163,27 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
+		Name:     fixture.ChromePolicyLoggedInBruschettaWithFieldtrialConfig,
+		Desc:     "Logged into a user session with Bruschetta support and fieldtrial config enabled",
+		Contacts: []string{"clumptini+oncall@google.com"},
+		Impl: &policyChromeFixture{
+			extraOptsFunc: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+				return []chrome.Option{
+					chrome.EnableFeatures("Bruschetta"),
+					chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable),
+					// Don't show time-of-day wallpapers. We want a solid color for screenshots.
+					chrome.DisableFeatures("FeatureManagementTimeOfDayWallpaper"),
+				}, nil
+			},
+		},
+		SetUpTimeout:    chrome.ManagedUserLoginTimeout + cleanupTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		PostTestTimeout: 15 * time.Second,
+		Parent:          fixture.FakeDMS,
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name:     fixture.ChromeEnrolledLoggedIn,
 		Desc:     "Logged into a user session with enrollment",
 		Contacts: []string{"vsavu@google.com", "chromeos-commercial-remote-management@google.com"},

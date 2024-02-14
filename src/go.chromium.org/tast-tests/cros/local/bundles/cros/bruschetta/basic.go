@@ -23,7 +23,16 @@ func init() {
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
 		BugComponent: "b:658562", // ChromeOS > Software > GuestOS
-		Fixture:      bruschetta.BruschettaFixture,
+		Params: []testing.Param{
+			{
+				Name:    "",
+				Fixture: bruschetta.BruschettaFixture,
+			}, {
+				Name:      "with_fieldtrial_config",
+				Fixture:   bruschetta.BruschettaFixtureWithFieldtrialConfig,
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
+			},
+		},
 	})
 }
 
