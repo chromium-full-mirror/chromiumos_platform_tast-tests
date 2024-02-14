@@ -167,6 +167,9 @@ func CUJAnyChromeCommonMetricConfigs() []MetricConfig {
 		NewMemoryMetricConfig("Memory.Gpu.PrivateMemoryFootprint", "MB"),
 		NewMemoryMetricConfig("Memory.Total.TileMemory", "MB"),
 		NewMemoryMetricConfig("Memory.Experimental.Gpu2.SharedImages", "MB"),
+		NewMemoryMetricConfig("Memory.Experimental.Gpu2.SharedImages.NonExo", "MB"),
+		NewMemoryMetricConfig("Memory.Experimental.Gpu2.GpuMemory", "MB"),
+		NewMemoryMetricConfig("Memory.Experimental.Gpu2.GpuMemoryNonExo", "MB"),
 	)
 }
 
