@@ -219,6 +219,25 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserDisableARC",
+		Desc: "The main fixture used for UI CUJ tests with ARC disabled",
+		Contacts: []string{
+			"cros-sw-perf@google.com",
+			"ramsaroop@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:         browser.TypeAsh,
+			disableARC: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	// loggedInToCUJUserARCSupported fixture is similar to loggedInToCUJUser
 	// but uses "chrome.ARCSupported" flag instead of "chrome.ARCEnabled". When
 	// a test needs to open any ARC windows or use the Play Store, this fixture
@@ -623,6 +642,31 @@ func init() {
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
 			bt:          browser.TypeAsh,
+			docsBlocker: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingDisableARC",
+		Desc: "CUJ test fixture with WebRTC event logging with ARC disabled",
+		Contacts: []string{
+			"cros-sw-perf@google.com",
+			"ramsaroop@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:          browser.TypeAsh,
+			disableARC:  true,
 			docsBlocker: true,
 		},
 		Parent:          "prepareForCUJ",
