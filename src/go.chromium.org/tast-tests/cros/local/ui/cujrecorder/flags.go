@@ -31,6 +31,14 @@ var keepCharging = testing.RegisterVarString(
 	"A boolean string (true/false) signifying whether to keep charging during the test",
 )
 
+// chromeosFlexTesting disable Memory Tracker and do not collect histogram on
+// BootTime.Total2 as these features are not currently supported on Flex.
+var chromeosFlexTesting = testing.RegisterVarString(
+	"cujrecorder.chromeosFlexTesting",
+	"",
+	"A boolean string (true/false) signifying whether to disable memory tracker and skip BootTime.Total2 for the Recorder",
+)
+
 // screenRecord enables the screen recorder for the Recorder.
 var screenRecord = testing.RegisterVarString(
 	"cujrecorder.record",

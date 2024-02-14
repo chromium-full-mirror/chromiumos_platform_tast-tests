@@ -340,6 +340,8 @@ type Recorder struct {
 	annotationCount int
 
 	takingSnapshot bool
+
+	chromeosFlexTesting bool
 }
 
 // RecorderMode specifies which mode to run the recorder in. Each mode
@@ -613,12 +615,13 @@ func NewRecorderWithTestConn(ctx context.Context, tconn *chrome.TestConn, cr *ch
 		tconns[browser.TypeLacros] = bTconn
 	}
 	r := &Recorder{
-		cr:       cr,
-		tconn:    tconn,
-		tconns:   tconns,
-		arc:      a,
-		options:  options,
-		sessions: make(map[string]*tracing.Session),
+		cr:                  cr,
+		tconn:               tconn,
+		tconns:              tconns,
+		arc:                 a,
+		options:             options,
+		sessions:            make(map[string]*tracing.Session),
+		chromeosFlexTesting: strings.ToLower(chromeosFlexTesting.Value()) == "true",
 	}
 
 	// Perf and CUJ tests both include the TPS timeline, which requires the
@@ -671,7 +674,9 @@ func (r *Recorder) Reset(ctx context.Context) error {
 			return errors.Wrap(err, "failed to create ZramInfoTracker")
 		}
 
-		r.memInfoTracker = perfSrc.NewMemoryTracker(r.arc)
+		if r.chromeosFlexTesting != true {
+			r.memInfoTracker = perfSrc.NewMemoryTracker(r.arc)
+		}
 
 		r.loginEventRecorder = perfSrc.NewLoginEventRecorder(tpsMetricPrefix)
 
@@ -984,7 +989,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 	// fullPowerTestCleanup cleans up both the normal power setup,
 	// as well as any changes to the power state (display always on or off).
 	fullPowerTestCleanup := func(ctx context.Context) error {
-		firstErr := powerTestCleanup(ctx)
+		var firstErr error
+		if powerTestCleanup != nil {
+			firstErr = powerTestCleanup(ctx)
+		}
 		if err := powerStateCleanup(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to reset power state: ", err)
 			if firstErr == nil {
@@ -1147,8 +1155,10 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 
 		// memInfoTracker tracks more expensive memory metrics, and thus is
 		// polled significantly less frequently.
-		if err := r.memInfoTracker.Start(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to start recording memory data")
+		if r.memInfoTracker != nil {
+			if err := r.memInfoTracker.Start(ctx); err != nil {
+				return nil, errors.Wrap(err, "failed to start recording memory data")
+			}
 		}
 
 		if r.powertopRecorder != nil {
@@ -1307,7 +1317,7 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 			return errors.Wrap(err, "failed to get boot and shutdown metric names")
 		}
 
-		if len(bootAndShutdownMetrics) > 0 {
+		if r.chromeosFlexTesting != true && len(bootAndShutdownMetrics) > 0 {
 			// Some BootTime.* metrics are only reported once after
 			// a reboot. We forced them to be reported again after
 			// the recorder started, but ChromeOS metrics are
