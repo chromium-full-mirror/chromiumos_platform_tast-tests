@@ -26,8 +26,8 @@ func VerifyFakeEnv(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to set up the fake env: ", err)
 	}
-	if err := env.SetUp(ctx); err != nil {
+	if err := env.Start(ctx); err != nil {
 		s.Fatal("Failed to turn up the fake env: ", err)
 	}
-	defer env.TearDown(ctx)
+	defer env.Close(ctx)
 }

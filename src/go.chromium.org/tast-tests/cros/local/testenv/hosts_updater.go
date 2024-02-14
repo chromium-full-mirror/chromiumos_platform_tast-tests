@@ -84,9 +84,9 @@ func (r defaultResolver) LookupHost(hostname string) ([]string, error) {
 	return []string{valid}, nil
 }
 
-// newHostsUpdater creates a HostsUpdater. Callers should defer call Cleanup to reset any override entries after use.
-// Callers should defer call a returned function to reset any override entries after use.
-func newHostsUpdater(ctx context.Context) (*HostsUpdater, func(context.Context) error, error) {
+// NewHostsUpdater creates a HostsUpdater. Callers should defer call Cleanup to reset any override entries after use.
+// Callers should defer call Cleanup to clean up any override entries after use.
+func NewHostsUpdater(ctx context.Context) (*HostsUpdater, error) {
 	return newHostsUpdaterInternal(ctx, "/etc/hosts", true, true, defaultResolver{resolved: make(map[string]string)})
 }
 
@@ -96,44 +96,39 @@ func newHostsUpdater(ctx context.Context) (*HostsUpdater, func(context.Context) 
 //	reset - true (default) to clear any override entries before update
 //	failIfNotDUT - true (default) to ensure that it runs on a DUT
 //	resolver - defaultResolver (default) or a local IP resolver that implements the Resolver interface
-func newHostsUpdaterInternal(ctx context.Context, hostsfile string, reset, failIfNotDUT bool, resolver Resolver) (*HostsUpdater, func(context.Context) error, error) {
+func newHostsUpdaterInternal(ctx context.Context, hostsfile string, reset, failIfNotDUT bool, resolver Resolver) (*HostsUpdater, error) {
 	// Safeguard: This should only be run on a DUT, not a host machine.
 	if failIfNotDUT && !isDUT() {
-		return nil, nil, errors.New("testenv should be run locally only on a DUT")
+		return nil, errors.New("testenv should be run locally only on a DUT")
 	}
 
 	h := &HostsUpdater{hostsfile: hostsfile, resolver: resolver}
-	if !reset {
-		return h, h.Reset, nil
+	if reset {
+		if err := h.Cleanup(ctx); err != nil {
+			return nil, errors.Wrap(err, "failed to clean up host overrides before update")
+		}
 	}
-	if err := h.Reset(ctx); err != nil {
-		return nil, nil, errors.Wrap(err, "failed to clean up host overrides before update")
-	}
-	return h, h.Reset, nil
+	return h, nil
 }
 
-// Override updates /etc/hosts to add a route rule for the given pairs of
-// "from" and "to" hosts. It allows tests to point to target hosts in the local
-// test environments.
-func (h *HostsUpdater) Override(ctx context.Context, rules ...fromTo) (entries, error) {
+// Redirect updates /etc/hosts for redirection for the given map of (original => destination) hosts.
+// It allows tests to point to target hosts in the local test environments.
+func (h *HostsUpdater) Redirect(ctx context.Context, rules map[string]string) (entries, error) {
 	modified, base, err := h.readHosts()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read the hosts for override")
+		return nil, errors.Wrap(err, "failed to read the hosts for redirection")
 	}
-
-	for _, r := range rules {
-		from := r.from.hostname
-		to := r.to.hostname
-		if from == to {
-			return nil, errors.Errorf("from:to should not be the same: %v", r.from.label)
+	for from, to := range rules {
+		if from == to || to == "#" {
+			testing.ContextLog(ctx, "Found bypassing redirect for: ", from)
 		}
 		// Avoid overriding the same host more than once.
 		if val, ok := modified[from]; ok && val.hostname == to {
-			return nil, errors.Wrapf(err, "already overridden for %v => %v", r.from.label, r.to.label)
+			return nil, errors.Wrapf(err, "already redirected from %v", from)
 		}
 		addrs, err := h.resolver.LookupHost(to)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to look up the target: %v", r.from.label)
+			return nil, errors.Wrapf(err, "failed to look up the target: %v", from)
 		}
 		modified[from] = entry{
 			hostname: to,
@@ -141,12 +136,12 @@ func (h *HostsUpdater) Override(ctx context.Context, rules ...fromTo) (entries, 
 		}
 	}
 	if len(modified) == 0 {
-		return nil, errors.New("None to override")
+		return nil, errors.New("None to redirect")
 	}
 
-	testing.ContextLogf(ctx, "HostsUpdater: Override %v hosts", len(modified))
+	testing.ContextLogf(ctx, "HostsUpdater: Redirect %v hosts", len(modified))
 	if err := h.writeHosts(modified, base); err != nil {
-		return nil, errors.Wrap(err, "failed to override hosts")
+		return nil, errors.Wrap(err, "failed to redirect hosts")
 	}
 	// Safeguard: Leave marker files, so the infra could force repair or provision a DUT if cleanup fails.
 	if isDUT() {
@@ -159,8 +154,8 @@ func (h *HostsUpdater) Override(ctx context.Context, rules ...fromTo) (entries, 
 	return modified, nil
 }
 
-// Reset clears all the host overrides.
-func (h *HostsUpdater) Reset(ctx context.Context) (retErr error) {
+// Cleanup clears up all the host redirects.
+func (h *HostsUpdater) Cleanup(ctx context.Context) (retErr error) {
 	// Safeguard: Delete the marker files when the cleanup succeeded.
 	defer func(ctx context.Context) {
 		if !isDUT() || retErr != nil {
@@ -175,21 +170,21 @@ func (h *HostsUpdater) Reset(ctx context.Context) (retErr error) {
 				return
 			}
 		}
-		testing.ContextLog(ctx, "HostsUpdater: Reset deleted provision marker files")
+		testing.ContextLog(ctx, "HostsUpdater: Removed provision marker files")
 	}(ctx)
 
 	modified, base, err := h.readHosts()
 	if err != nil {
-		return errors.Wrap(err, "failed to read the host file to reset")
+		return errors.Wrap(err, "failed to read the host file to cleanup")
 	}
 	if len(modified) == 0 {
 		return nil
 	}
-	testing.ContextLogf(ctx, "HostsUpdater: Reset removing %v modifled entries", len(modified))
+	testing.ContextLogf(ctx, "HostsUpdater: Close removing %v modifled entries", len(modified))
 	// Write only the base lines for reset.
 	err = h.writeHosts(entries{}, base)
 	if err != nil {
-		return errors.Wrap(err, "failed to write the host file for reset")
+		return errors.Wrap(err, "failed to write the host file for cleanup")
 	}
 	return nil
 }

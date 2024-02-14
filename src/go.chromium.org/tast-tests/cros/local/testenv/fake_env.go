@@ -17,36 +17,30 @@ var (
 		"testenv.FakeEnv.HostMap",
 		"",
 		"A map of fake host names keyed by labels")
-
-	fakeRouteRulesVar = testing.RegisterVarString(
-		"testenv.FakeEnv.RouteRules",
-		"",
-		"A map of fake host route rules")
 )
 
 // FakeEnv is a fake environment used to test the interfaces of Env.
 type FakeEnv struct {
-	*baseEnv
+	*BaseEnv
 }
 
 // NewFakeEnv creates a FakeEnv instance.
 func NewFakeEnv(ctx context.Context) (Env, error) {
-	e, err := newBaseEnv(ctx,
-		Fake, fakeHostMapVar.Value(), fakeRouteRulesVar.Value())
+	base, err := NewBase(ctx, Fake, HostMap(fakeHostMapVar.Value()))
 	if err != nil {
 		return nil, err
 	}
-	return &FakeEnv{baseEnv: e}, nil
+	return &FakeEnv{BaseEnv: base}, nil
 }
 
-// SetUp sets up the fake environment.
-func (p *FakeEnv) SetUp(ctx context.Context) error {
-	testing.ContextLogf(ctx, "Setting up %v env with hosts: %v", p.name, p.registry.hostMap)
+// Start starts the fake environment.
+func (e *FakeEnv) Start(ctx context.Context) error {
+	testing.ContextLogf(ctx, "Setting up %v env with hosts: %v", e.Name, e.hostMap)
 	return nil
 }
 
-// TearDown cleans up any changes made to set up the fake environment.
-func (p *FakeEnv) TearDown(ctx context.Context) error {
-	testing.ContextLogf(ctx, "Tearing down %v env", p.name)
+// Stop cleans up any changes made to set up the fake environment.
+func (e *FakeEnv) Stop(ctx context.Context) error {
+	testing.ContextLogf(ctx, "Stopping %v env", e.Name)
 	return nil
 }

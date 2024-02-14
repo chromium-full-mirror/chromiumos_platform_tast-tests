@@ -10,150 +10,149 @@ import (
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
-// hostRegistry contains a map of labels to hostnames.
-// Label must be suffixed with the valid env name (eg, -preprod, -prod)
-// It will be initialized with a predefined .yaml data file.
-type hostRegistry struct {
-	hostMap map[string]string
+// Env is a thin layer that provides user-facing interfaces that are to be commonly used to start and close the test environment.
+// This can manage the lifecycle of the underlying servers (eg, the middle-layer DNS or proxy server)
+// and configure them with various options for HTTP/S redirection or network verification.
+type Env interface {
+	// Start is called to start the servers for the configurations passed in to the New* methods.
+	// Once started, it can't be restarted with a new configuration for now but closing and starting will do the trick when needed to reload the configuration.
+	Start(context.Context) error
+	// Close is called to stop the servers and release the resources used when the test environment is no longer needed.
+	// It's a caller's responsibility to call Close after use.
+	Close(context.Context) error
 }
 
-func newHostRegistry(ctx context.Context, hostsJSON string) (*hostRegistry, error) {
+// BaseEnv is a base struct of Env that is partly implemented that will be useful for a concrete Env to use for their own implementation of Env.
+type BaseEnv struct {
+	Env
+	Name string
+
+	// Env vars that are defined in the data file that should be passed in when BaseEnv is initialized.
+	vars map[string]interface{}
+
+	// Runtime configs set by Options
+	hostMap     map[string]string // A map of (host aliases => host names), eg {"example-prod": "www.example.com", "example-preprod": "preprod.example.com"}
+	redirectMap map[string]string // A map of (original hosts => destination hosts), eg {"example-prod": "example-preprod"}
+
+	// DNS configs
+	shouldRedirect bool
+	hostsUpdater   *HostsUpdater
+
+	cleanups []func(context.Context) error // will be called in a reverse order during Close
+}
+
+// NewBase creates a new base test environment and configures it with the given options.
+func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error) {
+	b := &BaseEnv{
+		Name:        name,
+		vars:        make(map[string]interface{}),
+		hostMap:     make(map[string]string),
+		redirectMap: make(map[string]string),
+	}
+
+	// Parse options and configure the BaseEnv with them
+	for _, opt := range opts {
+		if err := opt(b); err != nil {
+			return nil, err
+		}
+	}
+	// Parse the host alias map
+	if val, ok := b.vars[hostMapVar]; ok {
+		hostMap, err := parseHostMap(ctx, val.(string))
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to parse HostMap env var")
+		}
+		b.hostMap = hostMap
+	}
+
+	// Resolve host alias to host name to pass in to the DNS for redirection
+	if val, ok := b.vars[redirectMapVar]; ok {
+		if len(b.hostMap) == 0 {
+			return nil, errors.Errorf("var %v needs the host (%v) to be defined first", redirectMapVar, hostMapVar)
+		}
+		resolved := map[string]string{}
+		for from, to := range val.(map[string]string) {
+			resolvedFrom, ok := b.hostMap[from]
+			if !ok {
+				return nil, errors.Errorf("host alias not found: %v (undefined in yaml?)", from)
+			}
+			resolvedTo := "#" // "#" means bypassing redirect
+			if to != "#" {
+				// If not bypassed, read the destination host from the map
+				resolvedTo, ok = b.hostMap[to]
+				if !ok {
+					return nil, errors.Errorf("host alias not found: %v (undefined in yaml?)", to)
+				}
+			}
+			resolved[resolvedFrom] = resolvedTo
+		}
+		b.redirectMap = resolved
+		b.shouldRedirect = len(b.redirectMap) > 0
+	}
+
+	// Configure redirection for the given hosts using the updater
+	if b.shouldRedirect {
+		hostsUpdater, err := NewHostsUpdater(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to init /etc/hosts updater")
+		}
+		b.cleanups = append(b.cleanups, hostsUpdater.Cleanup)
+		b.hostsUpdater = hostsUpdater
+	}
+	return b, nil
+}
+
+// Start starts the necessary servers with the configurations to set up the test environment.
+func (b *BaseEnv) Start(ctx context.Context) error {
+	if b.shouldRedirect && b.hostsUpdater != nil {
+		if _, err := b.hostsUpdater.Redirect(ctx, b.redirectMap); err != nil {
+			return errors.Wrap(err, "failed to override hosts in /etc/hosts")
+		}
+	}
+	return nil
+}
+
+// Close stops the running servers and cleans up any resources used to set up this environment.
+// It should be safe to call Close more than once.
+func (b *BaseEnv) Close(ctx context.Context) error {
+	defer func() {
+		// Run cleanups in a reverse order, so LIFO (last in first out) for deferred cleanup in the queue.
+		for i := len(b.cleanups) - 1; i >= 0; i-- {
+			if err := b.cleanups[i](ctx); err != nil {
+				testing.ContextLog(ctx, "logging cleanup failure: ", err)
+			}
+		}
+		b.cleanups = []func(context.Context) error{}
+	}()
+
+	return nil
+}
+
+// parseHostMap reads a given JSON to get a map of host aliases to names.
+// Host alias must be suffixed with the valid env name (eg, "-preprod", "-prod")
+func parseHostMap(ctx context.Context, hostsJSON string) (map[string]string, error) {
 	if hostsJSON == "" {
 		return nil, errors.New("hostsJSON can't be empty")
 	}
 	// Lowercase the JSON string for easy comparison
 	hostsJSON = strings.ToLower(hostsJSON)
 
-	hr := &hostRegistry{}
-	if err := json.Unmarshal([]byte(hostsJSON), &hr.hostMap); err != nil {
+	ret := make(map[string]string)
+	if err := json.Unmarshal([]byte(hostsJSON), &ret); err != nil {
 		return nil, errors.Wrap(err, "failed to decode hosts in json")
 	}
 
 	// Check the validity.
-	for label, hostname := range hr.hostMap {
-		if !isValidLabel(label) {
-			return nil, errors.Errorf("invalid label: %v", label)
+	for alias, hostname := range ret {
+		if !isValidAlias(alias) {
+			return nil, errors.Errorf("invalid alias: %v", alias)
 		}
 		if !isValidHostname(hostname) {
-			return nil, errors.Errorf("invalid hostname associated with label: %v", label)
+			return nil, errors.Errorf("invalid hostname associated with alias: %v", alias)
 		}
 	}
-	return hr, nil
-}
-
-// routeRules contains a map of rules that is used to route traffic from one host to another, usually in preprod.
-// Label is used to specify route info instead of hostname directly.
-// It will be initialized with a predefined .yaml data file.
-// eg, {"default": [{from: "foobarbaz-prod", to: "foobarbaz-preprod"}, ...], ...}
-type routeRules struct {
-	rules map[string][]struct {
-		From string `json:"from"`
-		To   string `json:"to"`
-	}
-}
-
-func newRouteRules(ctx context.Context, rulesJSON string) (*routeRules, error) {
-	if rulesJSON == "" {
-		return nil, errors.New("rulesJSON can't be empty")
-	}
-	// Lowercase the JSON string for easy comparison
-	rulesJSON = strings.ToLower(rulesJSON)
-
-	hrr := &routeRules{}
-	if err := json.Unmarshal([]byte(rulesJSON), &hrr.rules); err != nil {
-		return nil, errors.Wrap(err, "failed to decode rules in json")
-	}
-
-	// Check the validity.
-	for _ /*rulename*/, r := range hrr.rules {
-		for _, fromTo := range r {
-			if !isValidLabel(fromTo.From) || !isValidLabel(fromTo.To) {
-				return nil, errors.Errorf("invalid label: %v", fromTo)
-			}
-		}
-	}
-	return hrr, nil
-}
-
-// Env provides the user-facing interfaces that are to be commonly used to turn
-// up or down the test environments.
-// It encapsutes handling the host registry and the rules to hide details and
-// make the common use case as simple as possible.
-type Env interface {
-	SetUp(context.Context) error
-	TearDown(context.Context) error
-}
-
-type baseEnv struct {
-	Env
-	name     string
-	registry *hostRegistry
-	route    *routeRules
-}
-
-func newBaseEnv(ctx context.Context, name, hostsJSON, rulesJSON string) (*baseEnv, error) {
-	registry, err := newHostRegistry(ctx, hostsJSON)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init the host registry")
-	}
-	route, err := newRouteRules(ctx, rulesJSON)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to init the host route rules")
-	}
-	return &baseEnv{
-		name:     name,
-		registry: registry,
-		route:    route,
-	}, nil
-}
-
-// SetUp is an abstract interface that should be implemented in a concrete Env struct.
-func (baseEnv) SetUp(context.Context) error {
-	return errors.New("SetUp should be implemented in concrete Env")
-}
-
-// TearDown is an abstract interface that should be implemented in a concrete Env struct.
-func (baseEnv) TearDown(ctx context.Context) error {
-	return errors.New("TearDown should be implemented in concrete Env")
-}
-
-// hostInfo contains info about a host to be passed to the env setup.
-type hostInfo struct {
-	hostname string // host name, don't expose in the log. eg, "foo.bar.baz"
-	label    string // label, should have the env name as a suffix. eg, "foobarbaz-preprod"
-}
-
-// fromTo is a pair of (from, to) of host info
-type fromTo struct {
-	from hostInfo
-	to   hostInfo
-}
-
-// destRules returns a list of the rules pointing to hosts in the given environment.
-func (e baseEnv) destRules(ctx context.Context) ([]fromTo, error) {
-	// Consider adding a new rule name other than "default" when needed for certain scenarios. The var .yaml file should be updated accordingly.
-	const defaultRuleName = "default"
-	labels, ok := e.route.rules[defaultRuleName]
-	if !ok {
-		return nil, errors.Errorf("no route rules found for %v env with name: %v", e.name, defaultRuleName)
-	}
-
-	var dests []fromTo
-	for _, label := range labels {
-		// Find the rule that has a suffix that matches the current environment.
-		if !strings.HasSuffix(string(label.To), "-"+e.name) {
-			continue
-		}
-		dest := fromTo{
-			from: hostInfo{hostname: e.registry.hostMap[label.From], label: label.From},
-			to:   hostInfo{hostname: e.registry.hostMap[label.To], label: label.To},
-		}
-		dests = append(dests, dest)
-	}
-	if len(dests) == 0 {
-		return nil, errors.Errorf("no route rules point to %v env as destination", e.name)
-	}
-	return dests, nil
+	return ret, nil
 }

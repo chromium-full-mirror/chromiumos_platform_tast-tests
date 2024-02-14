@@ -39,13 +39,13 @@ func isValidHostname(hostname string) bool {
 	return re.MatchString(hostname)
 }
 
-// isValidLabel checks that label is suffixed with the valid env name.
-func isValidLabel(label string) bool {
-	if label == "" {
+// isValidAlias checks that alias is suffixed with the valid env name.
+func isValidAlias(alias string) bool {
+	if alias == "" {
 		return false
 	}
 	for _, e := range ValidEnvs {
-		if strings.HasSuffix(label, "-"+e) {
+		if strings.HasSuffix(alias, "-"+e) {
 			return true
 		}
 	}

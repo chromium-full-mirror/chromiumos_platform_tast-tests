@@ -76,16 +76,23 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Second*10)
 	defer cancel()
 
-	// Run against Google frontend in the given environment.
+	// Run against the preprod of Google frontend in the given environment.
 	if s.Param().(param).usePreprod {
-		env, err := testenv.NewPreprodEnv(ctx)
+		env, err := testenv.NewPreprodEnv(ctx,
+			testenv.RedirectMap(map[string]string{
+				"gaia-prod":      "gfe-preprod",
+				"play-prod":      "gfe-preprod",
+				"policies-prod":  "gfe-preprod",
+				"recovery-prod":  "gfe-preprod",
+				"websearch-prod": "gfe-preprod",
+			}))
 		if err != nil {
 			s.Fatal("Failed to init the preprod env: ", err)
 		}
-		if err := env.SetUp(ctx); err != nil {
+		if err := env.Start(ctx); err != nil {
 			s.Fatal("Failed to set up the preprod env: ", err)
 		}
-		defer env.TearDown(cleanupCtx)
+		defer env.Close(cleanupCtx)
 	}
 
 	isAddPersonFlow := s.Param().(param).isAddPersonFlow
