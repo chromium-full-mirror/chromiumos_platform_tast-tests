@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/hermes"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -33,7 +33,7 @@ func init() {
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_suspend", "cellular_run_isolated"},
 		Fixture:        "cellular",
-		Timeout:        2 * time.Minute,
+		Timeout:        4 * time.Minute,
 		// TODO(b/217106877): Skip on herobrine as S/R is unstable
 		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("herobrine")),
 		SoftwareDeps: []string{"chrome"},
@@ -70,8 +70,12 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
-	if err := hermes.WaitForHermesIdle(ctx, 120*time.Second); err != nil {
-		testing.ContextLog(ctx, "Could not confirm if Hermes is idle: ", err)
+	if err := hermes.WaitForChromeESIMCache(ctx, 2*time.Second); err != nil {
+		s.Log("Modem may got inhibited after resume")
+	} else {
+		if err := hermes.WaitForHermesIdle(ctx, 120*time.Second); err != nil {
+			testing.ContextLog(ctx, "Could not confirm if Hermes is idle: ", err)
+		}
 	}
 
 	// Disable Ethernet and/or WiFi if present and defer re-enabling.
@@ -95,18 +99,19 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 		ctx = newCtx
 	}
 
-	// Enable and get service to set autoconnect based on test parameters.
-	if _, err := helper.Enable(ctx); err != nil {
-		s.Fatal("Failed to enable modem: ", err)
-	}
-
+	// Get service to set autoconnect based on test parameters.
 	if _, err := helper.SetServiceAutoConnect(ctx, params.autoconnectState); err != nil {
 		s.Fatal("Failed to enable AutoConnect: ", err)
 	}
 
 	// Request suspend for 10 seconds.
-	if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=10").Run(); err != nil {
+	if err := power.SuspendAndResume(ctx, cr, 10*time.Second); err != nil {
 		s.Fatal("Failed to perform system suspend (precondition): ", err)
+	}
+
+	// Try to re-login in case it is logged out after resume
+	if _, err = cr.TestAPIConn(ctx); err != nil {
+		s.Fatal("Failed to establish the Test API connection: ", err)
 	}
 
 	if err := helper.WaitForEnabledState(ctx, true); err != nil {

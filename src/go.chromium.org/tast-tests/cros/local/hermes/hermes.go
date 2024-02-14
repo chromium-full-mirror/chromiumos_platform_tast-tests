@@ -16,6 +16,7 @@ import (
 	"github.com/godbus/dbus/v5"
 	"go.chromium.org/tast-tests/cros/common/hermesconst"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -27,6 +28,9 @@ const (
 
 // WaitForHermesIdle waits for Chrome to refresh installed profiles before returning.
 func WaitForHermesIdle(ctx context.Context, timeout time.Duration) error {
+	if !upstart.JobExists(ctx, JobName) {
+		return nil
+	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		return waitForHermesIdleHelper(ctx)
 	}, &testing.PollOptions{Timeout: timeout}); err != nil {
@@ -37,6 +41,9 @@ func WaitForHermesIdle(ctx context.Context, timeout time.Duration) error {
 
 // WaitForChromeESIMCache waits for Chrome's eSIM cache to exist
 func WaitForChromeESIMCache(ctx context.Context, timeout time.Duration) error {
+	if !upstart.JobExists(ctx, JobName) {
+		return nil
+	}
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		_, err := ioutil.ReadFile("/home/chronos/Local State")
 		return err
