@@ -38,9 +38,11 @@ var (
 	adjustCameraFraming     = nodewith.NameStartingWith("Toggle Camera framing").Role(role.ToggleButton).Ancestor(panelSection)
 	noiseCancellationButton = nodewith.NameStartingWith("Toggle Noise cancellation").Role(role.ToggleButton).Ancestor(panelSection)
 
-	bgBlurOffButton   = nodewith.NameContaining("Off").Role(role.ToggleButton).Ancestor(panelSection)
-	bgBlurLightButton = nodewith.NameContaining("Light").Role(role.ToggleButton).Ancestor(panelSection)
-	bgBlurFullButton  = nodewith.NameContaining("Full").Role(role.ToggleButton).Ancestor(panelSection)
+	bgBlurOffButton            = nodewith.NameContaining("Off").Role(role.ToggleButton).Ancestor(panelSection)
+	bgBlurLightButton          = nodewith.NameContaining("Light").Role(role.ToggleButton).Ancestor(panelSection)
+	bgBlurFullButton           = nodewith.NameContaining("Full").Role(role.ToggleButton).Ancestor(panelSection)
+	bgBlurImageButton          = nodewith.NameContaining("Image").Role(role.ToggleButton).Ancestor(panelSection)
+	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.Button).First()
 
 	showAppsButton = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(panelSection)
 )
@@ -133,6 +135,7 @@ const (
 	BackgroundBlurOff BackgroundBlurLevel = iota
 	BackgroundBlurLight
 	BackgroundBlurFull
+	BackgroundBlurImage
 )
 
 // SetBackgroundBlur selects desired background blur option.
@@ -144,6 +147,8 @@ func (vcTray VCTray) SetBackgroundBlur(blurLevel BackgroundBlurLevel) action.Act
 		return vcTray.ui.DoDefault(bgBlurFullButton)
 	case BackgroundBlurOff:
 		return vcTray.ui.DoDefault(bgBlurOffButton)
+	case BackgroundBlurImage:
+		return uiauto.Combine("ApplyBackgroundReplaceFromUi", vcTray.ui.DoDefault(bgBlurImageButton), vcTray.ui.DoDefault(firstBackgroundImageButton))
 	default:
 		return func(context.Context) error {
 			return errors.Errorf("background blur level %q is not supported", blurLevel)

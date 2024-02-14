@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/ctxutil"
@@ -22,6 +23,9 @@ const (
 
 	// LoggedInAndBenchmarkSetupFixture is a fixture which logs in using test user and sets up a DUT for power measurements.
 	LoggedInAndBenchmarkSetupFixture = "loggedInAndBenchmarkSetupFixture"
+
+	// PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder is a fixture used for power measurements with standard power api.
+	PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "powerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
 )
 
 var keepWifiVar = testing.RegisterVarString(
@@ -62,6 +66,33 @@ func init() {
 		SetUpTimeout:    2 * time.Minute,
 		ResetTimeout:    30 * time.Second,
 		TearDownTimeout: 30 * time.Second,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
+		Desc: "Log in with a fake powerloadtest user, setup power, disable wifi and screen recorder",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"xiuwen@chromium.org",
+		},
+		Impl: setup.NewPowerUIFixture(setup.PowerTestOptions{
+			NightLight:         setup.DisableNightLight,
+			DarkTheme:          setup.EnableLightTheme,
+			KeyboardBrightness: setup.SetKbBrightnessToZero,
+			Wifi:               setup.DisableWifiInterfaces,
+		}, setup.PowerFixtureOptions{
+			BrowserType:     browser.TypeAsh,
+			EnableGAIALogin: true,
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("VCBackgroundReplace"),
+			},
+		}),
+		Parent:          LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
+		SetUpTimeout:    chrome.GAIALoginTimeout + setup.SetUpTimeout,
+		ResetTimeout:    setup.ResetTimeout,
+		TearDownTimeout: setup.TearDownTimeout,
+		PreTestTimeout:  setup.PreTestTimeout,
+		PostTestTimeout: setup.PostTestTimeout,
 	})
 }
 
