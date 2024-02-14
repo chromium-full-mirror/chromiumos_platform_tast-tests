@@ -34,6 +34,7 @@ type BenchmarkTest struct {
 	BenchmarkInfo benchmarkInfo
 	RecorderMode  cujrecorder.RecorderMode
 	RunOnBattery  bool
+	SkipCooldown  bool
 }
 
 // Score holds values for a single metric along with their improvement direction.
@@ -108,7 +109,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
 		Mode:              testParam.RecorderMode,
-		CooldownBeforeRun: true,
+		CooldownBeforeRun: !testParam.SkipCooldown,
 		RunOnBattery:      testParam.RunOnBattery,
 	})
 

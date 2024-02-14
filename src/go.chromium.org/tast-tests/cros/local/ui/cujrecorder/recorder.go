@@ -955,7 +955,7 @@ func (r *Recorder) startRecording(ctx context.Context) (runCtx context.Context, 
 		testing.ContextLog(ctx, "Skipping cooldown because cujrecorder.isLocalVar is set")
 	}
 
-	if !skipCooldown && (r.options.CooldownBeforeRun || r.options.Mode == Benchmark) {
+	if !skipCooldown && r.options.CooldownBeforeRun {
 		WaitForCPUStabilization(ctx)
 	}
 
