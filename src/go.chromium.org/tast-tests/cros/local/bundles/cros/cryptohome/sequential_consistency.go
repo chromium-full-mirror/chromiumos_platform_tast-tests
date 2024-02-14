@@ -40,7 +40,7 @@ func init() {
 		Desc:         "Checks that different processes don't have inconsistent views of cryptohome",
 		Contacts:     []string{"iby@chromium.org", "cryptohome-core@google.com"},
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Pre:          chrome.LoggedIn(),
