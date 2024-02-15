@@ -220,6 +220,29 @@ func readDevices(root string) (infos []*devInfo, err error) {
 	return infos, nil
 }
 
+// DevInfo is a public version of devInfo to allow other packages to also look
+// up what input devices are available. The Name field contains the device's
+// name, and the Path field contains the filesystem path to the device that can
+// be opened and read from.
+type DevInfo struct {
+	Name string
+	Path string
+}
+
+// ReadInputDevices is a public version of readDevices to allow other packages
+// to get a list of all the input devices and some basic information for each.
+func ReadInputDevices(root string) ([]DevInfo, error) {
+	devInfos, err := readDevices(root)
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't readDevices")
+	}
+	var infos []DevInfo
+	for _, di := range devInfos {
+		infos = append(infos, DevInfo{Name: di.name, Path: di.path})
+	}
+	return infos, nil
+}
+
 // getDevicePath iterates over the entries in sysdir, a sysfs device dir (e.g.
 // "/sys/devices/platform/i8042/serio1/input/input3"), looking for a event dir (e.g. "event3"), and returns the
 // corresponding device in /dev/input (e.g. "/dev/input/event3").

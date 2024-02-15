@@ -5,14 +5,25 @@
 package power
 
 import (
+	"bufio"
 	"context"
+	"io/ioutil"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"syscall"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
+
+	"golang.org/x/sys/unix"
 )
 
 var (
@@ -58,6 +69,93 @@ func init() {
 	})
 }
 
+func startEvtestLog(ctx context.Context, path string) (func() (string, error), error) {
+	cmd := testexec.CommandContext(ctx, "evtest", path)
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create evtest stdout pipe for "+path)
+	}
+	if err := cmd.Start(); err != nil {
+		return nil, errors.Wrap(err, "failed to start evtest "+path)
+	}
+	testing.ContextLogf(ctx, "started evtest %s", path)
+
+	resultChannel := make(chan string)
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		var lines []string
+		testing.ContextLogf(ctx, "started soaking output of evtest %s", path)
+		for scanner.Scan() {
+			lines = append(lines, scanner.Text())
+		}
+		testing.ContextLogf(ctx, "end of output for evtest %s", path)
+		resultChannel <- strings.Join(lines, "\n")
+	}()
+
+	stopCallback := func() (string, error) {
+		if err := cmd.Kill(); err != nil {
+			testing.ContextLogf(ctx, "Error killing evtest %s: %v", path, err)
+		}
+		testing.ContextLogf(ctx, "killed evtest %s", path)
+		if err := cmd.Wait(); err != nil {
+			status := cmd.ProcessState.Sys().(syscall.WaitStatus)
+			signaled := status.Signaled()
+			signal := status.Signal()
+			// Expect it to be killed.
+			if !signaled || signal != unix.SIGKILL {
+				return "", errors.Wrap(err, "evtest "+path+" not finished by expected SIGKILL")
+			}
+		}
+
+		select {
+		case output := <-resultChannel:
+			testing.ContextLogf(ctx, "received output for evtest %s", path)
+			return output, nil
+		case <-ctx.Done():
+			return "", errors.Wrap(ctx.Err(), "failed waiting for evtest "+path)
+		}
+	}
+
+	return stopCallback, nil
+}
+
+func startEvTestLogging(ctx context.Context, s *testing.State) (func(), error) {
+	infos, err := input.ReadInputDevices("")
+	if err != nil {
+		return nil, errors.Wrap(err, "couldn't ReadInputDevices")
+	}
+
+	stopCallbacks := make(map[string]func() (string, error))
+
+	for _, info := range infos {
+		cb, err := startEvtestLog(ctx, info.Path)
+		if err != nil {
+			testing.ContextLog(ctx, "Couldn't startEvTestLog: ", err)
+			continue
+		}
+		stopCallbacks[info.Name+" @ "+info.Path] = cb
+	}
+
+	stopCallback := func() {
+		var i int = 0
+		for name, stopCb := range stopCallbacks {
+			output, err := stopCb()
+			if err != nil {
+				testing.ContextLogf(ctx, "Error with %s stop callback: %v", name, err)
+				continue
+			}
+			filename := "evtest" + strconv.Itoa(i) + ".txt"
+			i = i + 1
+			testing.ContextLogf(ctx, "Writing evtest output for %s to %s", name, filename)
+			if err := ioutil.WriteFile(filepath.Join(s.OutDir(), filename), []byte(output), 0644); err != nil {
+				testing.ContextLogf(ctx, "Failed to write %s: %v", filename, err)
+			}
+		}
+	}
+
+	return stopCallback, nil
+}
+
 // Suspend suspends the DUT and wakes again. If the suspend fails, an
 // error is returned. If the resume fails, the DUT may stay suspended
 // indefinitely, causing the test infrastucture to mark the test as failed.
@@ -74,7 +172,14 @@ func Suspend(ctx context.Context, s *testing.State) {
 			defer startFwupdFn(ctx)
 		}
 	}
-	_, err := suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second)
+
+	stopEvtest, err := startEvTestLogging(ctx, s)
+	if err != nil {
+		s.Fatal("Couldn't startEvTestLogging")
+	}
+	defer stopEvtest()
+
+	_, err = suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second)
 	if err != nil {
 		s.Fatal("Failed to suspend: ", err)
 	}

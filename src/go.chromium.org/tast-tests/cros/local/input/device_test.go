@@ -13,13 +13,8 @@ import (
 	"go.chromium.org/tast/core/testutil"
 )
 
-func TestReadDevices(t *testing.T) {
-	td := testutil.TempDir(t)
-	defer os.RemoveAll(td)
-
-	// This data will be parsed incorrectly if readDevices is called in a 32-bit userspace,
-	// but we currently only support running unit tests in a 64-bit userspace: https://crbug.com/918213
-	if err := testutil.WriteFiles(td, map[string]string{
+var (
+	validDeviceData = map[string]string{
 		procDevices: `
 I: Bus=0019 Vendor=0000 Product=0005 Version=0000
 N: Name="Lid Switch"
@@ -60,7 +55,16 @@ B: ABS=e61800001000003`,
 		filepath.Join(deviceDir, "event0"): "",
 		filepath.Join(deviceDir, "event2"): "",
 		filepath.Join(deviceDir, "event7"): "",
-	}); err != nil {
+	}
+)
+
+func TestReadDevices(t *testing.T) {
+	td := testutil.TempDir(t)
+	defer os.RemoveAll(td)
+
+	// This data will be parsed incorrectly if readDevices is called in a 32-bit userspace,
+	// but we currently only support running unit tests in a 64-bit userspace: https://crbug.com/918213
+	if err := testutil.WriteFiles(td, validDeviceData); err != nil {
 		t.Fatal(err)
 	}
 
@@ -169,5 +173,53 @@ S: Sysfs=/devices/bogus`, // missing path
 	// readDevices should return the error that was encountered when trying to parse the sysfs line.
 	if _, err := readDevices(td); err == nil {
 		t.Fatalf("readDevices(%q) didn't report expected error", td)
+	}
+}
+
+func TestReadInputDevices(t *testing.T) {
+	td := testutil.TempDir(t)
+	defer os.RemoveAll(td)
+
+	// This data will be parsed incorrectly if readDevices is called in a 32-bit userspace,
+	// but we currently only support running unit tests in a 64-bit userspace: https://crbug.com/918213
+	if err := testutil.WriteFiles(td, validDeviceData); err != nil {
+		t.Fatal(err)
+	}
+
+	infos, err := ReadInputDevices(td)
+	if err != nil {
+		t.Fatalf("readDevices(%q) failed: %v", td, err)
+	}
+
+	expectations := []struct {
+		name string
+		path string
+	}{
+		{
+			name: "Lid Switch",
+			path: filepath.Join(deviceDir, "event0"),
+		},
+		{
+			name: "AT Translated Set 2 keyboard",
+			path: filepath.Join(deviceDir, "event2"),
+		},
+		{
+			name: "Atmel maXTouch Touchscreen",
+			path: filepath.Join(deviceDir, "event7"),
+		},
+	}
+
+	if len(infos) != len(expectations) {
+		t.Fatalf("ReadInputDevices(%q) = %+v; wanted %d devices", td, infos, len(expectations))
+	}
+	for i, exp := range expectations {
+		info := infos[i]
+
+		if exp.name != info.Name {
+			t.Errorf("info %d name %q doesn't match expected %q", i, info.Name, exp.name)
+		}
+		if exp.path != info.Path {
+			t.Errorf("info %d path %q doesn't match expected %q", i, info.Path, exp.path)
+		}
 	}
 }
