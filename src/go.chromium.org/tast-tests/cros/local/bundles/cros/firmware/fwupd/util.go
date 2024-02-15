@@ -35,6 +35,9 @@ const FakeWebcamGUID string = "b585990a-003e-5270-89d5-3705a17f9a43"
 // FakeWebcamName is the name of the Fakecam installed on test devices
 const FakeWebcamName string = "Integrated Webcam™"
 
+// FakeWebcamReleaseName is the name of all the releases of the Fakecam installed on test devices
+const FakeWebcamReleaseName string = "FakeDevice"
+
 // FakeWebcamVersion is the version of the Fakecam installed on test devices
 const FakeWebcamVersion string = "1.2.2"
 
@@ -135,6 +138,18 @@ type Device struct {
 	VersionFormat uint32
 }
 
+// Release represents a release of a hardware device supported by fwupd.
+// Names are aligned with dbus properties for reflections below.
+// See https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums-private.h
+//
+// More values exist but for the purpose of these tests we only need these
+// values.
+type Release struct {
+	Name       string
+	TrustFlags uint64
+	Version    string
+}
+
 const (
 	// DbusName bus
 	DbusName = "org.freedesktop.fwupd"
@@ -143,7 +158,16 @@ const (
 	// DbusInterface interface
 	DbusInterface = "org.freedesktop.fwupd"
 	// GetDevicesMethod - Method name to get devices
-	GetDevicesMethod = ".GetDevices"
+	GetDevicesMethod = "GetDevices"
+	// GetReleasesMethod - Method name to get releases
+	GetReleasesMethod = "GetReleases"
+	// GetUpgradesMethod - Method name to get updates
+	GetUpgradesMethod = "GetUpgrades"
+
+	// TrustedReportsReleaseFlagBit (9th bit) represents Trusted Reports value
+	// in TrustFlags of the Release struct
+	// Defined here: https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums.h
+	TrustedReportsReleaseFlagBit = 1 << 8
 )
 
 func inspectDevice(ctx context.Context, rawDevice map[string]dbus.Variant) (device *Device, err error) {
@@ -165,6 +189,25 @@ func inspectDevice(ctx context.Context, rawDevice map[string]dbus.Variant) (devi
 	return device, err
 }
 
+func inspectRelease(ctx context.Context, rawRelease map[string]dbus.Variant) (release *Release, err error) {
+	testing.ContextLog(ctx, "Inspecting release: ", rawRelease)
+	release = new(Release)
+	relst := reflect.ValueOf(release).Elem()
+	if !relst.CanAddr() {
+		return nil, errors.New("cannot assign to the item passed, item must be a pointer in order to assign")
+	}
+
+	for i := 0; i < relst.NumField(); i++ {
+		name := relst.Type().Field(i).Name
+		if value, ok := rawRelease[name]; ok {
+			fieldT := reflect.ValueOf(release).Elem().Field(i)
+			fieldT.Set(reflect.ValueOf(value.Value()))
+		}
+	}
+
+	return release, err
+}
+
 func getDevices() ([]map[string]dbus.Variant, error) {
 	var devices []map[string]dbus.Variant
 	// Don't close the shared connection.
@@ -175,11 +218,29 @@ func getDevices() ([]map[string]dbus.Variant, error) {
 
 	fwupd := conn.Object(DbusName, DbusPath)
 
-	if err = fwupd.Call(DbusInterface+GetDevicesMethod, 0).Store(&devices); err != nil {
+	if err = fwupd.Call(DbusInterface+"."+GetDevicesMethod, 0).Store(&devices); err != nil {
 		return nil, errors.Wrap(err, "failed to call "+GetDevicesMethod)
 	}
 
 	return devices, nil
+}
+
+// getReleases returns the list of releases from the given device id;
+func getReleases(ctx context.Context, deviceID string) ([]map[string]dbus.Variant, error) {
+	var releases []map[string]dbus.Variant
+	// Don't close the shared connection.
+	conn, err := dbusutil.SystemBus()
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to system bus")
+	}
+
+	fwupd := conn.Object(DbusName, DbusPath)
+
+	if err = fwupd.Call(DbusInterface+"."+GetReleasesMethod, 0, deviceID).Store(&releases); err != nil {
+		return nil, errors.Wrap(err, "failed to call "+GetReleasesMethod)
+	}
+
+	return releases, nil
 }
 
 // DeviceByGUID returns a fwupd Device as known to fwupd that has a GUID
@@ -283,4 +344,22 @@ func Version(ctx context.Context) (string, error) {
 	}
 
 	return version.String(), nil
+}
+
+// ReleasesForDeviceID returns the Releases available for the given DeviceID
+func ReleasesForDeviceID(ctx context.Context, deviceID string) (releases []*Release, err error) {
+	rawReleases, err := getReleases(ctx, deviceID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rawRelease := range rawReleases {
+		release, err := inspectRelease(ctx, rawRelease)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to inspect the release: %s", rawRelease)
+		}
+		releases = append(releases, release)
+	}
+
+	return releases, nil
 }
