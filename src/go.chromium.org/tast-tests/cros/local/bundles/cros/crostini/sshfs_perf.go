@@ -92,7 +92,7 @@ func SSHFSPerf(ctx context.Context, s *testing.State) {
 	avgThroughput := float64(fileSize) / float64(avgTime.Microseconds())
 
 	pv.Set(perf.Metric{
-		Name:      "guest_to_host_throughput_128mb",
+		Name:      "guest_to_host_throughput_128mb_2",
 		Unit:      "bytesPerSecond",
 		Direction: perf.BiggerIsBetter,
 	}, avgThroughput*1000000)
@@ -137,7 +137,7 @@ func dropGuestCaches(ctx context.Context, cont *vm.Container) error {
 		return errors.Wrap(err, "failed to sync on guest")
 	}
 
-	cmd = cont.VM.Command(ctx, "echo", "3", ">", "/proc/sys/vm/drop_caches")
+	cmd = cont.VM.CommandAsRoot(ctx, "/bin/bash", "-c", `echo 3 > /proc/sys/vm/drop_caches`)
 	_, err = cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		return errors.Wrap(err, "failed to drop guest caches")

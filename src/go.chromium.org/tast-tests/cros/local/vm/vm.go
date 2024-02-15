@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -233,17 +234,28 @@ func (vm *VM) StartLxd(ctx context.Context) error {
 	}
 }
 
-// Command returns a testexec.Cmd with a vsh command that will run in this VM.
-func (vm *VM) Command(ctx context.Context, vshArgs ...string) *testexec.Cmd {
-	args := append([]string{"--vm_name=" + vm.name,
-		"--owner_id=" + vm.Concierge.ownerID,
-		"--"},
-		vshArgs...)
+func (vm *VM) command(ctx context.Context, root bool, vshArgs ...string) *testexec.Cmd {
+	args := []string{"--cid=" + strconv.FormatInt(vm.ContextID, 10)}
+	if root {
+		args = append(args, "--user=root")
+	}
+	args = append(args, "--")
+	args = append(args, vshArgs...)
 	cmd := testexec.CommandContext(ctx, "vsh", args...)
 	// Add an empty buffer for stdin to force allocating a pipe. vsh uses
 	// epoll internally and generates a warning (EPERM) if stdin is /dev/null.
 	cmd.Stdin = &bytes.Buffer{}
 	return cmd
+}
+
+// Command returns a testexec.Cmd with a vsh command that will run in this VM.
+func (vm *VM) Command(ctx context.Context, vshArgs ...string) *testexec.Cmd {
+	return vm.command(ctx, false, vshArgs...)
+}
+
+// CommandAsRoot returns a testexec.Cmd with a vsh command that will run as root in this VM.
+func (vm *VM) CommandAsRoot(ctx context.Context, vshArgs ...string) *testexec.Cmd {
+	return vm.command(ctx, true, vshArgs...)
 }
 
 func (vm *VM) makeLXCCommand(ctx context.Context, lxcArgs ...string) *testexec.Cmd {
