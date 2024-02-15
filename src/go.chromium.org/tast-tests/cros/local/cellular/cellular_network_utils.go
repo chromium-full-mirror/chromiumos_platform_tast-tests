@@ -22,7 +22,7 @@ import (
 const (
 	pingTimeout      = 60 * time.Second
 	curlTimeout      = 60 * time.Second
-	defaultInterval  = 10 * time.Second
+	defaultInterval  = 300 * time.Millisecond
 	speedtestTimeout = 2 * time.Minute
 	googleDotComIPv6 = "ipv6.google.com"
 	googleDotComIPv4 = "ipv4.google.com"
@@ -89,6 +89,7 @@ func verifyIPConnectivityUsingCurl(ctx context.Context, cmd func(context.Context
 	testing.ContextLogf(ctx, "Verify IP%s connectivity using curl to: %s", ipType, addr)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if out, err := cmd(ctx, "curl", "-v", ipType, addr).CombinedOutput(); err != nil {
+			testing.ContextLog(ctx, "Failed to run curl : ", err)
 			logOutputToFile(ctx, string(out), "curl"+ipType+".txt")
 			return errors.Wrapf(err, "failed to run curl -v %s %s", ipType, addr)
 		}
