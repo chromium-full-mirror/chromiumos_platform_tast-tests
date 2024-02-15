@@ -10,6 +10,8 @@ import (
 
 	arcui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
@@ -90,15 +92,15 @@ func AppManagement(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
-	if err := osSettings.LeftClick(nodewith.Name("Manage permissions"))(ctx); err != nil {
-		s.Fatal("Failed to open ARC settings: ", err)
-	}
-
 	s.Run(ctx, "Verify default state", func(ctx context.Context, s *testing.State) {
 		if err := verifyPermissionState(ctx, osSettings, defaultPermissionState()); err != nil {
 			s.Fatal("Failed to verify default state: ", err)
 		}
 	})
+
+	if err := osSettings.LeftClickUntil(nodewith.Name("Manage permissions"), waitForPermissionController(ctx, tconn))(ctx); err != nil {
+		s.Fatal("Failed to open ARC settings: ", err)
+	}
 
 	s.Run(ctx, "Verify storage behavior", func(ctx context.Context, s *testing.State) {
 		if err := changeAndVerifyStoragePermissions(ctx, osSettings, uiAutomator); err != nil {
@@ -111,6 +113,17 @@ func AppManagement(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to verify behavior of non-storage permissions: ", err)
 		}
 	})
+}
+
+func waitForPermissionController(ctx context.Context, tconn *chrome.TestConn) func(ctx context.Context) error {
+	const permissionControllerPackage = "com.google.android.permissioncontroller"
+	return func(ctx context.Context) error {
+
+		if _, err := ash.GetARCAppWindowInfo(ctx, tconn, permissionControllerPackage); err != nil {
+			return err
+		}
+		return nil
+	}
 }
 
 func changeAndVerifyStoragePermissions(ctx context.Context, osSettings *ossettings.OSSettings, d *arcui.Device) error {
