@@ -128,6 +128,10 @@ func (e *TestEnv) SetUp(ctx context.Context) error {
 	if err := e.Manager.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
 		return errors.Wrap(err, "failed to disable portal detection on ethernet")
 	}
+	testing.ContextLog(ctx, "Resetting ethernet ephemeral priority")
+	if err := virtualnet.ResetEthernetEphemeralPriority(ctx, e.Manager); err != nil {
+		return errors.Wrap(err, "failed to reset ethernet ephemeral priority")
+	}
 
 	opts := virtualnet.EnvOptions{
 		Priority:   BasePriority,
