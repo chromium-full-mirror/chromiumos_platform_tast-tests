@@ -5,6 +5,7 @@
 package memory
 
 import (
+	"archive/zip"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -623,4 +624,88 @@ func rootArcADBDevice(ctx context.Context) (*adb.Device, error) {
 	}
 
 	return adbDevice, nil
+}
+
+// SaveRawSmaps saves a zip archive containing a copy of `/proc/{pid}/smaps` for
+// all processes in `smapsRollup`, which can be used to calculate memory used by
+// individual libraries. Additionally, it also collects `cmdline` and `comm` to
+// identify processes. If `hasArc“ is true, it will save smaps files from ARC
+// as well.
+func SaveRawSmaps(ctx context.Context, outdir, suffix string, smapsRollup *FullSmapsRollup, hasArc bool) error {
+	filesToCollect := []string{"smaps", "cmdline", "comm"}
+
+	zipPath := path.Join(outdir, fmt.Sprintf("raw_smaps%s.zip", suffix))
+	zipFile, err := os.OpenFile(zipPath, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		return errors.Wrap(err, "failed to open zip file for write")
+	}
+	defer zipFile.Close()
+
+	zipWriter := zip.NewWriter(zipFile)
+	defer zipWriter.Close()
+
+	// Merge all host processes into a single slice for iterating.
+	var allHostRollups []*NamedSmapsRollup
+	allHostRollups = append(allHostRollups, smapsRollup.HostRollups...)
+	for _, r := range smapsRollup.CrosVMRollups {
+		allHostRollups = append(allHostRollups, r.Rollups...)
+	}
+
+	for _, s := range allHostRollups {
+		for _, f := range filesToCollect {
+			smapsPath := fmt.Sprintf("/proc/%d/%s", s.Pid, f)
+			smapsContent, err := os.ReadFile(smapsPath)
+			if err != nil {
+				testing.ContextLogf(ctx, "Failed to read %s: %v", smapsPath, err)
+				continue
+			}
+
+			fileName := fmt.Sprintf("host/%d/%s", s.Pid, f)
+			if err := writeDataToZip(zipWriter, fileName, smapsContent); err != nil {
+				return errors.Wrap(err, "failed to write data to zip")
+			}
+		}
+	}
+
+	if !hasArc {
+		return nil
+	}
+
+	d, err := rootArcADBDevice(ctx)
+	if err != nil {
+		return errors.Wrap(err, "unable to get root ADB device")
+	}
+
+	for _, s := range smapsRollup.ARCVMRollups {
+		for _, f := range filesToCollect {
+			smapsPath := fmt.Sprintf("/proc/%d/%s", s.Pid, f)
+			smapsContent, err := d.ReadFile(ctx, smapsPath)
+			if err != nil {
+				testing.ContextLogf(ctx, "Failed to read %s from ARC: %v", smapsPath, err)
+				continue
+			}
+
+			fileName := fmt.Sprintf("arc/%d/%s", s.Pid, f)
+			if err := writeDataToZip(zipWriter, fileName, smapsContent); err != nil {
+				return errors.Wrap(err, "failed to write data to zip")
+			}
+		}
+	}
+
+	return nil
+}
+
+// writeDataToZip writes data stored in a byte slice into a new file in a zip
+// archive.
+func writeDataToZip(zip *zip.Writer, fileName string, data []byte) error {
+	fileInZip, err := zip.Create(fileName)
+	if err != nil {
+		return errors.Wrapf(err, "failed to create %s in zip", fileName)
+	}
+
+	if _, err := fileInZip.Write(data); err != nil {
+		return errors.Wrapf(err, "failed to write %s", fileName)
+	}
+
+	return nil
 }

@@ -145,8 +145,10 @@ func PerProcessMemory(ctx context.Context, s *testing.State) {
 			ExtraMetrics: make(map[string]uint64),
 		}
 
+		runSuffix := fmt.Sprintf("_%d", run)
+
 		if a != nil {
-			extra, err := extraArcMemoryMetrics(ctx, a, s.OutDir(), fmt.Sprintf("_%d", run))
+			extra, err := extraArcMemoryMetrics(ctx, a, s.OutDir(), runSuffix)
 			if err != nil {
 				s.Fatal("Failed to get ARCVM extra memory metrics: ", err)
 			}
@@ -155,7 +157,7 @@ func PerProcessMemory(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		extraHostMetrics, err := extraHostMemoryMetrics(ctx, s.OutDir(), fmt.Sprintf("_%d", run))
+		extraHostMetrics, err := extraHostMemoryMetrics(ctx, s.OutDir(), runSuffix)
 		if err != nil {
 			s.Fatal("Failed to fetch extra host metrics: ", err)
 		}
@@ -173,6 +175,10 @@ func PerProcessMemory(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to save json: ", err)
 		}
 		resultFiles = append(resultFiles, resultFile)
+
+		if err := memory.SaveRawSmaps(ctx, s.OutDir(), runSuffix, smapsRollup, a != nil); err != nil {
+			s.Fatal("Failed to dump raw smaps: ", err)
+		}
 
 		if err := m.Deactivate(ctx); err != nil {
 			s.Fatal("Failed to deactivate state: ", err)
