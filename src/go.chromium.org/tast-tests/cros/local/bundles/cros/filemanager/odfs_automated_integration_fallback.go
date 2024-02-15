@@ -43,9 +43,8 @@ func init() {
 			"chrome_internal",
 		},
 		Attr: []string{
-			"group:mainline",
 			"group:hw_agnostic",
-			"informational",
+			"group:golden_tier",
 		},
 		VarDeps: []string{
 			"onedrive.accountPool",
