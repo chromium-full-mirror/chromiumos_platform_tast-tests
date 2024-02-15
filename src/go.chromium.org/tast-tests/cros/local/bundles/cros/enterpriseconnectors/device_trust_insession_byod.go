@@ -43,7 +43,10 @@ func init() {
 			"chrome_internal",
 		},
 		Vars: []string{"tape.service_account_key"},
-		Attr: []string{"group:golden_tier"},
+		Attr: []string{
+			"group:golden_tier",
+			"group:hardware",
+		},
 		Params: []testing.Param{{
 			Name: "host_allowed",
 			Val: deviceTrustParams{

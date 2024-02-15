@@ -34,6 +34,7 @@ func init() {
 		Desc:         "Checks that Device Trust is working insession with a fake IdP",
 		Contacts: []string{
 			"cbe-device-trust-eng@google.com",
+			"cros-3pidp@google.com",
 			"lmasopust@google.com",
 			"rodmartin@google.com",
 		},
@@ -49,7 +50,8 @@ func init() {
 			"tast.cros.graphics.ScreenshotService",
 		},
 		Attr: []string{
-			"group:mainline", "informational",
+			"group:golden_tier",
+			"group:hardware",
 		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
