@@ -164,14 +164,14 @@ func (d *Device) OutputLogcatGrep(ctx context.Context, grepArg string) ([]byte, 
 type LogcatTimestamp string
 
 // LogcatTimestampPattern is the regexp for matching a logcat timestamp string of the form MM-DD hh:mm:ss.mmm
-var LogcatTimestampPattern = regexp.MustCompile(`\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{1,3}`)
+var LogcatTimestampPattern = regexp.MustCompile(`\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}\.\d{1,3}`)
 
 // LogcatTimestampLong is a logcat-formatted timestamp string:
 // YYYYY-MM-DD hh:mm:ss.xxx ex: 06-15 17:03:00.887
 type LogcatTimestampLong string
 
 // LogcatTimestampLongPattern is the regexp for matching a logcat timestamp string of the form YYYY-MM-DD hh:mm:ss.mmm
-var LogcatTimestampLongPattern = regexp.MustCompile(`\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}.\d{1,3}`)
+var LogcatTimestampLongPattern = regexp.MustCompile(`\d{4}-\d{1,2}-\d{1,2} \d{1,2}:\d{1,2}:\d{1,2}\.\d{1,3}`)
 
 // LatestLogcatTimestamp gets the timestamp of the latest logcat entry.
 // This can be used as a marker to get logcat entries that only happen after
