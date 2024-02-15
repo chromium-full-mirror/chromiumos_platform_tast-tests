@@ -34,6 +34,7 @@ func init() {
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kodama")), // b/324981613
 		Data:         getdisplaymedia.DataFiles(),
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_nightly"},
 		// Set the larger timeout than the default one (i.e. 2 minutes)
