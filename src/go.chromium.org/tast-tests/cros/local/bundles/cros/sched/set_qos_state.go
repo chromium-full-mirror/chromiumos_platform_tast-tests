@@ -21,8 +21,8 @@ import (
 const (
 	normalCPUCgroupProcessesFile     = "/sys/fs/cgroup/cpu/resourced/normal/cgroup.procs"
 	backgroundCPUCgroupProcessesFile = "/sys/fs/cgroup/cpu/resourced/background/cgroup.procs"
-	allCPUSetCgroupThreadsFile       = "/sys/fs/cgroup/cpuset/chrome/urgent/tasks"
-	efficientCPUSetCgroupThreadsFile = "/sys/fs/cgroup/cpuset/chrome/non-urgent/tasks"
+	allCPUSetCgroupThreadsFile       = "/sys/fs/cgroup/cpuset/resourced/all/tasks"
+	efficientCPUSetCgroupThreadsFile = "/sys/fs/cgroup/cpuset/resourced/efficient/tasks"
 )
 
 func init() {
