@@ -49,16 +49,16 @@ func DHCPRebootNAK(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
+	if err != nil {
+		s.Fatal("Failed to push test profile: ", err)
+	}
+	defer popFunc(cleanupCtx)
+
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
-
-	popFunc, err := manager.PushTestProfile(ctx)
-	if err != nil {
-		s.Fatal("Failed to install the test profile: ", err)
-	}
-	defer popFunc(cleanupCtx)
 
 	// Prepare the environment.
 	simWiFi := s.FixtValue().(*hwsim.ShillSimulatedWiFi)
