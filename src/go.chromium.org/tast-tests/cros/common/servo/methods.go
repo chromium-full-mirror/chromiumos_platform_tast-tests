@@ -5,6 +5,7 @@
 package servo
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"regexp"
@@ -1036,12 +1037,34 @@ func (s *Servo) SetPowerState(ctx context.Context, value PowerStateValue) (retEr
 	return s.SetStringTimeout(ctx, PowerState, string(value), 30*time.Second)
 }
 
+var srcCapsRe = regexp.MustCompile(`^\d+:`)
+
 // GetPDAdapterSrcCaps gets the attached charger's source caps
 func (s *Servo) GetPDAdapterSrcCaps(ctx context.Context) ([]string, error) {
+	// The ada_srccaps servo control is flaky, just make the console command ourselves.
 	var value []string
 
-	if err := s.xmlrpc.Run(ctx, xmlrpc.NewCall("get", PDAdapterSrcCaps), &value); err != nil {
-		return value, errors.Wrapf(err, "getting value for servo control %q", PDAdapterSrcCaps)
+	if err := s.RunServoCommand(ctx, "chan save"); err != nil {
+		return nil, errors.Wrap(err, "servo console command failed")
+	}
+	if err := s.RunServoCommand(ctx, "chan 0"); err != nil {
+		return nil, errors.Wrap(err, "servo console command failed")
+	}
+	defer s.RunServoCommand(ctx, "chan restore")
+	// Run command on the servo console
+	cmdOutput, err := s.RunServoCommandGetOutput(ctx, "ada_srccaps", []string{`ada_srccaps.*> `})
+	if err != nil {
+		return nil, errors.Wrap(err, "ada_srccaps failed")
+	}
+
+	sc := bufio.NewScanner(strings.NewReader(cmdOutput[0][0]))
+	for sc.Scan() {
+		if srcCapsRe.MatchString(sc.Text()) {
+			value = append(value, sc.Text())
+		}
+	}
+	if len(value) == 0 {
+		return nil, errors.Errorf("ada_srccaps returned no srccaps: %q", cmdOutput[0][0])
 	}
 
 	return value, nil
