@@ -23,9 +23,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Take a fullscreen, partial or window screen shot by pressing the 'Screen capture' button in the quick settings and verify the existence of the screenshot",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wms@google.com",
 			"chromeos-sw-engprod@google.com",
-			"michelefan@chromium.org",
 		},
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",

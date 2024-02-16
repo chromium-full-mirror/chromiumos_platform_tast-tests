@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests the adjustment of night light color temperature",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"zxdan@google.com",
 			"awendy@google.com",
 		},

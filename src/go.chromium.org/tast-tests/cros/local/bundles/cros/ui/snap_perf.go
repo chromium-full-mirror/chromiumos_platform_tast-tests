@@ -26,7 +26,7 @@ func init() {
 		Func:         SnapPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures the animation smoothess of snapping windows in clamshell mode",
-		Contacts:     []string{"chromeos-wmp@google.com", "sammiequon@chromium.org"},
+		Contacts:     []string{"cros-sw-perf@google.com", "chromeos-wm-corexp@google.com", "sammiequon@chromium.org"},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

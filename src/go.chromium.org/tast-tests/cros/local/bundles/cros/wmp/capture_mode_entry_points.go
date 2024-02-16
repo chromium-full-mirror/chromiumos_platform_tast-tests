@@ -25,9 +25,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests entering capture mode with a variety of entry points",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wms@google.com",
 			"chromeos-sw-engprod@google.com",
-			"sammiequon@chromium.org",
 		},
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",

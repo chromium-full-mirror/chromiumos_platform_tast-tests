@@ -33,7 +33,6 @@ func init() {
 		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Test request mobile site function on websites under different types of login account",
 		Contacts: []string{
-			// "chromeos-wmp@google.com",
 			"cj.tsai@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},

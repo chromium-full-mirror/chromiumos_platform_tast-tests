@@ -35,7 +35,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-wms@google.com",
 			"benbecker@chromium.org",
-			"chromeos-wmp@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 		},

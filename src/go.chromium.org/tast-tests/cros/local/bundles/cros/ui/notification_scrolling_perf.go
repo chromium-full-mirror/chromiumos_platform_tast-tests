@@ -37,7 +37,7 @@ func init() {
 		Func:         NotificationScrollingPerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures input latency of scrolling through notification list",
-		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},

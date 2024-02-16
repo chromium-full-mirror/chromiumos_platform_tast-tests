@@ -42,7 +42,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "In tablet mode, checks split view works properly",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"zxdan@google.com",
 			"awendy@google.com",
 		},
@@ -338,8 +338,8 @@ func SplitViewTabletMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to swipe: ", err)
 	}
 
-	// Wait with the swipe paused so the overview mode gesture is recognized. Use 1 second because this is roughly the amount of time it takes for the 'swipe up and hold' overview gesture to trigger.
 	const pauseDuration = time.Second
+	// GoBigSleepLint: Wait with the swipe paused so the overview mode gesture is recognized. Use 1 second because this is roughly the amount of time it takes for the 'swipe up and hold' overview gesture to trigger.
 	if err = testing.Sleep(ctx, pauseDuration); err != nil {
 		s.Fatal("Failed to sleep while waiting for overview to trigger: ", err)
 	}

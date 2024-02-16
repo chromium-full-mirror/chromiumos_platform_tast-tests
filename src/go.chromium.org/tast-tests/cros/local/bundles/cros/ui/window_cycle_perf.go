@@ -34,7 +34,7 @@ func init() {
 		Desc:         "Measures the animation smoothness of window cycle animations when Alt + tabbing",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"andp@chromium.org",
 			"xiyuan@chromium.org",
 		},

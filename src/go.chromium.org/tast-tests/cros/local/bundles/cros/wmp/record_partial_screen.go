@@ -36,8 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that partial screen video record works correctly",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
-			"zxdan@google.com",
+			"chromeos-wms@google.com",
 			"awendy@google.com",
 		},
 		// ChromeOS > Software > ScreenCapture

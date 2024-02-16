@@ -34,9 +34,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that drag window to new desk in overview mode works correctly",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"chromeos-sw-engprod@google.com",
-			"conniekxu@chromium.org",
 		},
 		// ChromeOS > Software > Window Management > OverviewMode
 		BugComponent: "b:1252584",

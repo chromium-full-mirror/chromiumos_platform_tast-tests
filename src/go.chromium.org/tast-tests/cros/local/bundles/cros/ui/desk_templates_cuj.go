@@ -31,7 +31,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the performance of desks templates",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"zhumatthew@google.com",

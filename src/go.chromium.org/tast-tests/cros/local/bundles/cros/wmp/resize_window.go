@@ -69,7 +69,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Resize different windows by dragging 4 corners and 4 sides",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"awendy@google.com",
 		},
 		BugComponent: "b:1238037", // ChromeOS > Software > Window Management

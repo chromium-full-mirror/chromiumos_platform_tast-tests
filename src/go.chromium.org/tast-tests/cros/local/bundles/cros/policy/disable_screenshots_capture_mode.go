@@ -29,7 +29,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Behavior of the DisableScreenshots policy, check whether screenshot can be taken from capture mode in quick settings",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"afakhry@google.com",
 		},
 		BugComponent: "b:1253115",

@@ -27,7 +27,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures the presentation time of scrolling the overview grid in tablet mode",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"cros-sw-perf@google.com",
+			"chromeos-wm-corexp@google.com",
 			"sammiequon@chromium.org",
 		},
 		// ChromeOS > Software > Window Management > OverviewMode

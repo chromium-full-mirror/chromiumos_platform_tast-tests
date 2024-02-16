@@ -25,9 +25,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies the visibility change and resize behavior of the selfie cam's resize button",
 		Contacts: []string{
-			"chromeos-wm-corexp@google.com",
+			"chromeos-wms@google.com",
 			"chromeos-sw-engprod@google.com",
-			"michelefan@chromium.org",
 		},
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",

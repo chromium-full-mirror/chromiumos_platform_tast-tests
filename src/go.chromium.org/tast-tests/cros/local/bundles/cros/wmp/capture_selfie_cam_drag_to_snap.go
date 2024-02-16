@@ -27,9 +27,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that we can drag to snap camera preview",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"chromeos-sw-engprod@google.com",
-			"conniekxu@chromium.org",
 		},
 		// ChromeOS > Software > ScreenCapture
 		BugComponent: "b:1253115",

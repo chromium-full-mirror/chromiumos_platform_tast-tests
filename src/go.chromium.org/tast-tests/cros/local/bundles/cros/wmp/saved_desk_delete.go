@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks saved desk can be deleted",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"yongshun@chromium.org",

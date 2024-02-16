@@ -30,9 +30,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks that immersive mode works correctly",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"chromeos-sw-engprod@google.com",
-			"conniekxu@chromium.org",
 		},
 		// ChromeOS > Software > Window Management
 		BugComponent: "b:1238037",

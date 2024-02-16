@@ -52,7 +52,7 @@ func init() {
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"xiyuan@chromium.org",
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -308,7 +308,7 @@ func dragToClose(ctx context.Context, tsw *input.TouchscreenEventWriter,
 		return errors.Wrap(err, "failed to release touch")
 	}
 
-	// Wait for close animation to finish and close the window.
+	// GoBigSleepLint: Wait for close animation to finish and close the window.
 	if err := testing.Sleep(ctx, 500*time.Millisecond); err != nil {
 		return errors.Wrap(err, "failed to wait")
 	}

@@ -44,7 +44,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that reordering desk by drag & drop and keyboard shortcuts works well",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"yongshun@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},

@@ -37,7 +37,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tablet basics: Scroll, window controls",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"shidi@google.com",
 			"chromeos-sw-engprod@google.com",
 		},

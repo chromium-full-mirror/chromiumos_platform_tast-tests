@@ -35,7 +35,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "In clamshell mode, checks that snap in landscape and portrait works properly",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wm-corexp@google.com",
 			"zxdan@google.com",
 			"awendy@google.com",
 		},
@@ -296,7 +296,7 @@ func dragWindowTo(ctx context.Context, tconn *chrome.TestConn, windowID int, tar
 		return errors.Wrap(err, "failed to drag")
 	}
 
-	// Hold the window there for |holdDuration| before releasing the mouse.
+	// GoBigSleepLint: Hold the window there for |holdDuration| before releasing the mouse.
 	if err := testing.Sleep(ctx, holdDuration); err != nil {
 		return errors.Wrap(err, "failed to sleep")
 	}

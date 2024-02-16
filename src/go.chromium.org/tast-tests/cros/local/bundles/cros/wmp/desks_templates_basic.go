@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks desks can be saved as a desk template",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"zhumatthew@google.com",

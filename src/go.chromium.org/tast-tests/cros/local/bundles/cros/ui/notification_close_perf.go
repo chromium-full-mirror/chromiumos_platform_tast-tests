@@ -48,7 +48,7 @@ func init() {
 		Func:         NotificationClosePerf,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measures animation performance of the clear all animation or individual notification deletion in the message center",
-		Contacts:     []string{"cros-status-area-eng@google.com", "newcomer@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "newcomer@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246021", // ChromeOS > Software > System UI Surfaces > Notifications
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
@@ -217,7 +217,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 		}
 
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			// Wait a few seconds, otherwise all notifications will be added and
+			// GoBigSleepLint: Wait a few seconds, otherwise all notifications will be added and
 			// removed very quickly.
 			// TODO(crbug/1236150): Replace Sleeps with WaitUntilIdle when implemented.
 			if err := testing.Sleep(ctx, 2*time.Second); err != nil {
@@ -231,7 +231,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 						if err := browser.ClearNotification(ctx, btconn, ids[i]); err != nil {
 							return errors.Wrap(err, "failed to clear notification")
 						}
-						// Wait for stabilization / animation completion, otherwise all
+						// GoBigSleepLint: Wait for stabilization / animation completion, otherwise all
 						// notification removals will happen unrealistically fast.
 						// TODO(crbug/1236150): Replace Sleeps with WaitUntilIdle when implemented.
 						if err := testing.Sleep(ctx, time.Second); err != nil {
@@ -251,6 +251,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 							if err := arcclient.RemoveNotification(ctx, atconn, fmt.Sprintf("%d", i)); err != nil {
 								return errors.Wrap(err, "failed to remove notification")
 							}
+							// GoBigSleepLint: Wait for stabilization / animation completion.
 							if err := testing.Sleep(ctx, time.Second); err != nil {
 								return errors.Wrap(err, "failed to wait")
 							}
@@ -281,7 +282,7 @@ func NotificationClosePerf(ctx context.Context, s *testing.State) {
 					return errors.Wrap(err, "failed to collapse the uber tray")
 				}
 
-				// Wait a few seconds for notifications to stabilize.
+				// GoBigSleepLint: Wait a few seconds for notifications to stabilize.
 				// TODO(crbug/1236150): Replace Sleeps with WaitUntilIdle when implemented.
 				if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 					return errors.Wrap(err, "failed to wait")

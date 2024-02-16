@@ -33,7 +33,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Checks admin templates can be launched",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
+			"chromeos-wms@google.com",
 			"cros-commercial-productivity-eng@google.com",
 			"chromeos-sw-engprod@google.com",
 			"zhumatthew@google.com",

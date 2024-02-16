@@ -25,7 +25,7 @@ func init() {
 		Func:         SystemTrayItemsPerf,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures animation smoothness of items in the system tray",
-		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-wmp@google.com", "chromeos-sw-engprod@google.com"},
+		Contacts:     []string{"cros-status-area-eng@google.com", "leandre@chromium.org", "chromeos-sw-engprod@google.com"},
 		BugComponent: "b:1246070", // ChromeOS > Software > System UI Surfaces > Status Area
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},

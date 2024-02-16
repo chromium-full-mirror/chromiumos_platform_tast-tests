@@ -32,8 +32,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Checks that virtual desks works correctly when creating apps from tabs",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
-			"shidi@google.com",
+			"chromeos-wms@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1238200",

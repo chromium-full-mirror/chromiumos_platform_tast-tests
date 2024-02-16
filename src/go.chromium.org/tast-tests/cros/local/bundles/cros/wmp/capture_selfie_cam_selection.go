@@ -23,8 +23,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that we can select cameras from the capture settings menu",
 		Contacts: []string{
-			"chromeos-wmp@google.com",
-			"zxdan@google.com",
+			"chromeos-wms@google.com",
 			"awendy@google.com",
 		},
 		// ChromeOS > Software > ScreenCapture
