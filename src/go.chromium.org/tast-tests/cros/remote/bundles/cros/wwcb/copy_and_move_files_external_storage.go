@@ -30,7 +30,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Move and copy the files to erternal storage media and verify files are being copied/moved successfully",
 		Contacts:     []string{"cros-wwcb-automation@google.com", "allion-wwcb@allion.corp-partner.google.com"},
-		BugComponent: "b:294328393", // ChromeOS > External > WWCB > Allion > Automation
+		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb"},
 		SoftwareDeps: []string{"chrome"},
 		Vars:         []string{"USBID"},
