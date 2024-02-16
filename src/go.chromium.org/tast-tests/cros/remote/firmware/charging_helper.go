@@ -317,7 +317,7 @@ func PollToSetChargerStatus(ctx context.Context, h *Helper, attachCharger bool) 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		testing.ContextLogf(ctx, "Set servo role to %s", srcOrSnk)
 		if err := h.SetDUTPower(ctx, attachCharger); err != nil {
-			return errors.Wrapf(err, "failed to set servo role to %s", srcOrSnk)
+			return err // SetDUTPower might return PollBreak, so don't wrap.
 		}
 
 		ok, err := h.Servo.GetChargerAttached(ctx)

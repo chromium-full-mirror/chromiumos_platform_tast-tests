@@ -982,7 +982,7 @@ func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
 		}
 		return nil
 	}
-	return errors.New("servo does not support pd role and no rpm vars provided")
+	return testing.PollBreak(errors.New("servo does not support pd role and no rpm vars provided"))
 }
 
 // OpenCCD verifies if CCD is open, and if not, tries to use
