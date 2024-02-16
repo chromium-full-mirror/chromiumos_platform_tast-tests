@@ -146,9 +146,10 @@ func expectDeleteClientCertNotPossible(ctx context.Context, s *testing.State, ui
 		s.Fatal("Unexpected missing of 'View' menu item")
 	}
 
+	// "Export" is disabled b:323487263
 	exportItem := nodewith.Name("Export").Role(role.MenuItem)
-	if err := ui.Exists(exportItem)(ctx); err != nil {
-		s.Fatal("Unexpected missing of 'Export' menu item")
+	if err := ui.Exists(exportItem)(ctx); err == nil {
+		s.Fatal("Unexpected presence of 'Export' menu item")
 	}
 
 	// Close popup menu.
