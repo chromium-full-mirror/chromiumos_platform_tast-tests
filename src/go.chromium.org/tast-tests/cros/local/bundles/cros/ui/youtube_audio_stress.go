@@ -34,18 +34,15 @@ func init() {
 		Contacts: []string{
 			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
-			"andrescj@google.com",
-			"chromeos-gfx-video@google.com",
 		},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
-			Name:      "quick",
-			Val:       videoDuration{minutes: 4},
-			Timeout:   15 * time.Minute,
-			Fixture:   "chromeLoggedIn",
-			ExtraAttr: []string{"group:mainline", "informational"},
+			Name:    "quick",
+			Val:     videoDuration{minutes: 4},
+			Timeout: 15 * time.Minute,
+			Fixture: "chromeLoggedIn",
 		}, {
 			Name:      "bronze",
 			Val:       videoDuration{minutes: 6 * 60}, // 6 hours.

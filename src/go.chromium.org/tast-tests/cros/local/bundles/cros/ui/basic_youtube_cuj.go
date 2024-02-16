@@ -33,11 +33,9 @@ func init() {
 		Contacts: []string{
 			"intel.chrome.automation.team@intel.com",
 			"ambalavanan.m.m@intel.com",
-			"andrescj@google.com",
-			"chromeos-gfx-video@google.com",
 		},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
-		Attr:         []string{"group:mainline", "informational", "group:intel-nda"},
+		Attr:         []string{"group:intel-nda"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay(), hwdep.Speaker()),
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "loggedInAndKeepState",
