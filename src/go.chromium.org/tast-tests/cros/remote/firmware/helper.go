@@ -1588,6 +1588,16 @@ func (h *Helper) validateUSBConn(ctx context.Context) error {
 // https://chromium.googlesource.com/chromiumos/docs/+/HEAD/firmware_test_manual.md#firmware-screen-names
 func (h *Helper) WaitDUTConnectDuringBootFromUSB(ctx context.Context, expBoot bool) (retErr error) {
 	if expBoot {
+		defer func() {
+			if errors.As(retErr, &context.DeadlineExceeded) {
+				apPower, screenState, err := h.Servo.GetAPState(ctx)
+				if err != nil {
+					retErr = errors.Join(retErr, err)
+				} else {
+					retErr = errors.Join(retErr, errors.Errorf("found ap power state %s and screen state %s", apPower, screenState))
+				}
+			}
+		}()
 		if hasControl, err := h.Servo.HasControl(ctx, string(servo.CR50UARTCapture)); err != nil {
 			return errors.Wrapf(err, "failed while checking for %s control", servo.CR50UARTCapture)
 		} else if hasControl {
@@ -1980,4 +1990,16 @@ func (h *Helper) SetDefaultBootDisk(ctx context.Context) error {
 func (h *Helper) SetDefaultBootUSB(ctx context.Context) error {
 	testing.ContextLog(ctx, "Setting dev_default_boot")
 	return h.DUT.Conn().CommandContext(ctx, "crossystem", "dev_default_boot=usb").Run(ssh.DumpLogOnError)
+}
+
+// SaveEventLog saves the event logs.
+func (h *Helper) SaveEventLog(ctx context.Context, saveLogPath string) error {
+	output, err := h.Reporter.GetRawEventLogs(ctx)
+	if err != nil {
+		return err
+	}
+	if err := os.WriteFile(saveLogPath, []byte(output), 0666); err != nil {
+		return errors.Wrapf(err, "failed to write firmware log to %s", saveLogPath)
+	}
+	return nil
 }

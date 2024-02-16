@@ -17,6 +17,7 @@ import (
 // EventlogBootMode is a int representing the DUT's boot mode found from 'elogtool list'.
 type EventlogBootMode int
 
+// Names for the different boot modes.
 const (
 	NormalMode EventlogBootMode = iota + 1
 	DeveloperMode
@@ -45,19 +46,30 @@ func parseEventTime(input string) (time.Time, error) {
 	return time.Time{}, err
 }
 
+// GetRawEventLogs returns the result of `elogtool list` with
+// the UTC timezone set.
+func (r *Reporter) GetRawEventLogs(ctx context.Context) (string, error) {
+	events, err := r.CommandOutput(ctx, "env", "TZ=UTC", "elogtool", "list")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get event logs")
+	}
+	return events, nil
+}
+
 // EventlogList returns the result of `elogtool list`.
 // The returned events are sorted from oldest to newest.
 func (r *Reporter) EventlogList(ctx context.Context) ([]Event, error) {
-	output, err := r.CommandOutputLines(ctx, "env", "TZ=UTC", "elogtool", "list")
+	output, err := r.GetRawEventLogs(ctx)
 	if err != nil {
 		return []Event{}, err
 	}
+	splitOutputEvents := strings.Split(output, "\n")
 	var events []Event
 	// Expecting output similar to this one:
 	//  140 | 2021-09-20 15:11:55 | EC Event | Key Pressed
 	//  141 | 2021-09-20 15:13:30 | System boot | 45
 	//  142 | 2021-09-20 15:13:30 | System Reset
-	for _, line := range output {
+	for _, line := range splitOutputEvents {
 		split := strings.SplitN(line, " | ", 3)
 		if len(split) < 3 {
 			return []Event{}, errors.Errorf("eventlog entry had fewer than 3 ' | ' delimiters: %q", line)
@@ -118,12 +130,23 @@ func groupEventsByBoots(events []Event) [][]Event {
 	return results
 }
 
+// checkFirmwareVbootInfo checks if the DUT uses a new version event log.
+func checkFirmwareVbootInfo(eventMessage string) bool {
+	var (
+		reFirmwareVbootInfo *regexp.Regexp = regexp.MustCompile(`(?i)Firmware vboot info`)
+	)
+	firmwareVbootInfo := reFirmwareVbootInfo.FindStringSubmatch(eventMessage)
+	if firmwareVbootInfo != nil {
+		return true
+	}
+	return false
+}
+
 // findBootModeFromEvents takes a slice of events and returns a single
 // boot mode found. Call groupEventsByBoots first to group events from
 // 'elogtool list' for each boot.
 func findBootModeFromEvents(events []Event) (EventlogBootMode, error) {
 	var (
-		reFirmwareVbootInfo  *regexp.Regexp = regexp.MustCompile(`(?i)Firmware vboot info`)
 		reFirmwareBootMode   *regexp.Regexp = regexp.MustCompile(`boot_mode=([\w ]+)`)
 		reDeprecatedBootMode *regexp.Regexp = regexp.MustCompile(`(Diagnostics Mode|Chrome\s?OS[\w ]+)`)
 	)
@@ -145,10 +168,9 @@ func findBootModeFromEvents(events []Event) (EventlogBootMode, error) {
 	hasVbootInfo := false
 	for _, event := range events {
 		var findBootModeRegexp *regexp.Regexp
-		firmwareVbootInfo := reFirmwareVbootInfo.FindStringSubmatch(event.Message)
-		if firmwareVbootInfo != nil {
+		hasVbootInfo = checkFirmwareVbootInfo(event.Message)
+		if hasVbootInfo {
 			findBootModeRegexp = reFirmwareBootMode
-			hasVbootInfo = true
 		} else {
 			findBootModeRegexp = reDeprecatedBootMode
 		}
@@ -210,6 +232,67 @@ func (r *Reporter) CheckBootModes(ctx context.Context, newEvents []Event, expect
 			continue
 		}
 		return errors.Errorf("found %v, but expected %v", val, expectedBootModes[idx])
+	}
+	return nil
+}
+
+// findRecoveryReasonFromEvents takes a slice of events and returns
+// recovery reasons found.
+func findRecoveryReasonFromEvents(events []Event) []RecoveryReasonString {
+	var (
+		reRecoveryReason           *regexp.Regexp = regexp.MustCompile(`recovery_reason=.*\((.*)\)`)
+		reDeprecatedRecoveryReason *regexp.Regexp = regexp.MustCompile(`Chrome\s?OS[\w ]+\|\s(.*)\s\|.0x\w+`)
+	)
+	var findRecoveryReasonRegexp *regexp.Regexp
+	var recoveryReasonFound []RecoveryReasonString
+	hasVbootInfo := false
+	for _, event := range events {
+		hasVbootInfo = checkFirmwareVbootInfo(event.Message)
+		if hasVbootInfo {
+			findRecoveryReasonRegexp = reRecoveryReason
+		} else {
+			findRecoveryReasonRegexp = reDeprecatedRecoveryReason
+		}
+		recoveryReasonInEventLog := findRecoveryReasonRegexp.FindStringSubmatch(event.Message)
+		if len(recoveryReasonInEventLog) == 2 {
+			recoveryReasonFound = append(recoveryReasonFound, RecoveryReasonString(recoveryReasonInEventLog[1]))
+		}
+	}
+	return recoveryReasonFound
+}
+
+// CheckRecoveryEventsInEventLog checks for recovery reasons found from
+// 'elogtool list' against the expected ones.
+func (r *Reporter) CheckRecoveryEventsInEventLog(ctx context.Context, newEvents []Event, expRecoveryReasons []RecoveryReason) error {
+	groups := groupEventsByBoots(newEvents)
+	var foundRecoveryReasons []RecoveryReasonString
+	for _, events := range groups {
+		recoveryReasonsFound := findRecoveryReasonFromEvents(events)
+		switch len(recoveryReasonsFound) {
+		case 0:
+			recoveryReasonNotRequestedString, err := r.GetRecoveryReasonString(ctx, RecoveryReasonNotRequested)
+			if err != nil {
+				return errors.Wrap(err, "failed to get recovery reason string")
+			}
+			foundRecoveryReasons = append(foundRecoveryReasons, recoveryReasonNotRequestedString)
+		case 1:
+			foundRecoveryReasons = append(foundRecoveryReasons, recoveryReasonsFound[0])
+		default:
+			return errors.Errorf("unable to identify recovery reason from elog events, found recovery reasons: %v", recoveryReasonsFound)
+		}
+	}
+	if len(foundRecoveryReasons) != len(expRecoveryReasons) {
+		return errors.Errorf("found %d recovery reason from the event log, but expected %d, found recovery reasons: %v", len(foundRecoveryReasons), len(expRecoveryReasons), foundRecoveryReasons)
+	}
+	for idx, val := range foundRecoveryReasons {
+		expectedRecoveryReasonString, err := r.GetRecoveryReasonString(ctx, expRecoveryReasons[idx])
+		if err != nil {
+			return errors.Wrap(err, "failed to get recovery reason string")
+		}
+		if expectedRecoveryReasonString == val {
+			continue
+		}
+		return errors.Errorf("found %v, but expected %v", val, expectedRecoveryReasonString)
 	}
 	return nil
 }

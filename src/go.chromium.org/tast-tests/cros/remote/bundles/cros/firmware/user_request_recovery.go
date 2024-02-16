@@ -6,6 +6,7 @@ package firmware
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -46,6 +47,12 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	h := pv.Helper
 	var removeServoCharger bool
 
+	type bootUSBTimeout struct {
+		err error
+	}
+	bootUSBTimeoutErr := bootUSBTimeout{}
+	expectedUSBBootCount := 0
+
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -79,12 +86,46 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	defer func(ctx context.Context) {
+		if bootUSBTimeoutErr.err != nil && hasBrokenScreen {
+			if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+				s.Fatal("Failed to reboot the DUT: ", err)
+			}
+			waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+			defer cancelWaitConnect()
+
+			if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+				s.Fatal("Failed to reconnect to the DUT: ", err)
+			}
+			var checkRecoveryReasons []reporters.RecoveryReason
+			switch expectedUSBBootCount {
+			case 1:
+				checkRecoveryReasons = []reporters.RecoveryReason{reporters.RecoveryReasonUSTest, reporters.RecoveryReasonUSTest, reporters.RecoveryReasonLegacy, reporters.RecoveryReasonNotRequested}
+			case 2:
+				checkRecoveryReasons = []reporters.RecoveryReason{reporters.RecoveryReasonUSTest, reporters.RecoveryReasonUSTest, reporters.RecoveryReasonROManual, reporters.RecoveryReasonLegacy, reporters.RecoveryReasonNotRequested}
+			default:
+				s.Fatal("Unexpected count found: ", expectedUSBBootCount)
+			}
+			s.Log("Verifying the expected recovery reasons from event log")
+			newEvents, err := h.Reporter.EventlogList(ctx)
+			if err != nil {
+				s.Fatal(err, "failed to find events")
+			}
+			if err := h.Reporter.CheckRecoveryEventsInEventLog(ctx, newEvents, checkRecoveryReasons); err != nil {
+				s.Error("Failed to check event logs for recovery reasons: ", err)
+			} else {
+				s.Error("Found DUT booted to the broken screen")
+			}
+			saveEventLogPath := filepath.Join(s.OutDir(), "eventlog.txt")
+			if err := h.SaveEventLog(ctx, saveEventLogPath); err != nil {
+				s.Error("Failed to save event log: ", err)
+			}
+		}
 		if err := h.EnsureDUTBooted(ctx); err != nil {
 			s.Fatal("Failed to ensure DUT connected at the end of test: ", err)
 		}
 		s.Log("Restoring crossystem recovery_request to 0")
 		if err := h.DUT.Conn().CommandContext(ctx, "crossystem", "recovery_request=0").Run(); err != nil {
-			s.Fatal("Failed to restore crossystem recovery_request to 0: ", err)
+			s.Error("Failed to restore crossystem recovery_request to 0: ", err)
 		}
 		if removeServoCharger {
 			if err := h.SetDUTPower(ctx, true); err != nil {
@@ -164,8 +205,12 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	if err := insertUSBInFirmwareScreen(ctx, h, removeServoCharger); err != nil {
 		s.Fatal("Failed to insert USB in firmware screen: ", err)
 	}
+	expectedUSBBootCount++
 	s.Log("Checking if DUT boots from USB")
 	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
+		if errors.As(err, &context.DeadlineExceeded) {
+			bootUSBTimeoutErr.err = err
+		}
 		s.Fatal("Failed to boot from USB: ", err)
 	}
 	if err := checkRecoveryReason(ctx, h, reporters.RecoveryReasonUSTest); err != nil {
@@ -197,8 +242,12 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 	if err := insertUSBInFirmwareScreen(ctx, h, removeServoCharger); err != nil {
 		s.Fatal("Failed to insert USB in firmware screen: ", err)
 	}
+	expectedUSBBootCount++
 	s.Log("Checking if DUT boots from USB")
 	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
+		if errors.As(err, &context.DeadlineExceeded) {
+			bootUSBTimeoutErr.err = err
+		}
 		s.Fatal("Failed to boot from USB: ", err)
 	}
 	if err := checkRecoveryReason(ctx, h, reporters.RecoveryReasonROManual); err != nil {
@@ -238,7 +287,7 @@ func checkRecoveryReason(ctx context.Context, h *firmware.Helper, expectedRecove
 	} else if !isRecovery {
 		return errors.New("did not find DUT in recovery mode as expected")
 	}
-	testing.ContextLogf(ctx, "Checking if crossystem recovery_reason is %s", expectedRecoveryReason)
+	testing.ContextLog(ctx, "Checking if crossystem recovery_reason is ", expectedRecoveryReason)
 	if isExpected, err := h.Reporter.ContainsRecoveryReason(ctx, []reporters.RecoveryReason{expectedRecoveryReason}); err != nil {
 		return errors.Wrap(err, "failed to check the recovery reason")
 	} else if !isExpected {

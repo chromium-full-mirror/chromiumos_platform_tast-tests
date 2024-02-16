@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,6 +38,10 @@ func init() {
 func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	var removeServoCharger bool
+	type bootUSBTimeout struct {
+		err error
+	}
+	bootUSBTimeoutErr := bootUSBTimeout{}
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
 	}
@@ -48,16 +53,35 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
+	if err := h.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
+	}
 	defer func() {
 		// The dut might have booted from the usb.
 		// Reboot the machine from main disk before
 		// restoring the usb device.
-		s.Log("Rebooting the DUT")
 		if err := resetDUT(ctx, h, removeServoCharger); err != nil {
 			s.Fatal("Failed to cold reset the DUT: ", err)
 		}
+		if bootUSBTimeoutErr.err != nil {
+			s.Log("Verifying the expected recovery reasons from event log")
+			newEvents, err := h.Reporter.EventlogList(ctx)
+			if err != nil {
+				s.Fatal(err, "failed to find events")
+			}
+			checkRecoveryReasons := []reporters.RecoveryReason{reporters.RecoveryReasonROManual, reporters.RecoveryReasonLegacy, reporters.RecoveryReasonNotRequested}
+			if err := h.Reporter.CheckRecoveryEventsInEventLog(ctx, newEvents, checkRecoveryReasons); err != nil {
+				s.Error("Failed to check event logs for recovery reasons: ", err)
+			} else {
+				s.Error("Found DUT booted to the broken screen")
+			}
+			saveEventLogPath := filepath.Join(s.OutDir(), "eventlog.txt")
+			if err := h.SaveEventLog(ctx, saveEventLogPath); err != nil {
+				s.Error("Failed to save event log: ", err)
+			}
+		}
 		if err := h.RestoreUSBKey(ctx); err != nil {
-			s.Fatal("Failed to restore the USB: ", err)
+			s.Error("Failed to restore the USB: ", err)
 		}
 		if removeServoCharger {
 			if err := h.SetDUTPower(ctx, true); err != nil {
@@ -100,7 +124,10 @@ func RecScreenInvalidUSB(ctx context.Context, s *testing.State) {
 	}
 	s.Log("Checking if DUT boots from the USB")
 	if err := h.WaitDUTConnectDuringBootFromUSB(ctx, true); err != nil {
-		s.Fatal("Failed to boot from the USB: ", err)
+		if errors.As(err, &context.DeadlineExceeded) {
+			bootUSBTimeoutErr.err = err
+		}
+		s.Fatal("Failed to boot from USB: ", err)
 	}
 
 	match, err := h.Reporter.CheckDisplayedScreens(ctx, identifyFwScreens(h))
@@ -204,16 +231,16 @@ func resetDUT(ctx context.Context, h *firmware.Helper, removeServoCharger bool) 
 		if err := h.DUT.WaitUnreachable(waitUnreachableCtx); err != nil {
 			return errors.Wrap(err, "failed to wait for DUT to be unreachable after reboot")
 		}
-		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
-		defer cancelWaitConnect()
-
-		if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
-			return errors.Wrap(err, "failed to reconnect to the DUT")
-		}
 	} else {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			return errors.Wrap(err, "failed to ensure DUT is booted")
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
+			return errors.Wrap(err, "failed to reboot the DUT")
 		}
+	}
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+	defer cancelWaitConnect()
+
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
+		return errors.Wrap(err, "failed to reconnect to the DUT")
 	}
 	return nil
 }
