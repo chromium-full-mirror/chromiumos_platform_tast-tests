@@ -25,7 +25,6 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -51,7 +50,6 @@ func init() {
 			"tast.cros.wifi.WifiService",
 			wificell.ShillServiceName,
 		},
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("bruce", "sona", "syndra")),
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      certsUsableAndPersistVars(),
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesNone),
