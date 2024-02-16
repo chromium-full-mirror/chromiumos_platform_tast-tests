@@ -6,15 +6,17 @@ package firmware
 
 import (
 	"context"
-	"time"
-	"math"
 	"fmt"
-	"strings"
+	"math"
 	"strconv"
+	"strings"
+	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -26,16 +28,22 @@ func init() {
 		Desc: "Tests if the DUT can properly request VBUS voltages from a Source, and supply VBUS voltages to a Sink",
 		Contacts: []string{
 			"chromeos-faft@google.com", // Owning team list
-			"shurst@google.com",     // Test author
+			"shurst@google.com",        // Test author
 		},
 		BugComponent: "b:194910335", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
 		Attr:         []string{"group:firmware", "firmware_pd_unstable"},
 		Vars:         []string{"servo"},
+		SoftwareDeps: []string{"chrome"},
+		ServiceDeps: []string{
+			"tast.cros.ui.PowerMenuService",
+			"tast.cros.browser.ChromeService",
+			"tast.cros.power.BatteryService",
+		},
 		Fixture:      fixture.NormalMode,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Battery()),
-		Timeout:      15 * time.Minute,
+		Timeout:      60 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "normal",
@@ -78,11 +86,11 @@ func init() {
 
 const (
 	// pdPowerRolePollTimeout is the timeout for a power role swap
-	pdPowerRolePollTimeout  time.Duration = 500 * time.Millisecond
+	pdPowerRolePollTimeout time.Duration = 500 * time.Millisecond
 	// pdPowerRolePollInterval is the time before testing for a power role swap
 	pdPowerRolePollInterval time.Duration = 100 * time.Millisecond
 	// pdPowerVBusPollTimeout
-	pdVBusPollTimeout  time.Duration = 10 * time.Second
+	pdVBusPollTimeout time.Duration = 10 * time.Second
 	// pdPowerVBusPollInterval
 	pdVBusPollInterval time.Duration = 1 * time.Second
 )
@@ -104,16 +112,13 @@ const (
 // voltageSequence is the VBUS Voltage test sequence
 var voltageSequence = [22]int{5, 9, 10, 12, 15, 20, 15, 12, 9, 5, 20, 5, 5, 9, 9, 10, 10, 12, 12, 15, 15, 20}
 
-// allowedUsbcChargingVoltages are the allowed charging voltages
-var allowedUsbcChargingVoltages = []float64{0, 5, 9, 10, 12, 15, 20}
-
 const (
 	// pass
-	pass        int = 0
+	pass int = 0
 	// allowedFail
-	allowedFail     = 1
+	allowedFail = 1
 	// fail
-	fail            = 2
+	fail = 2
 )
 
 // compareVbus is a helper function for testing if VBUS falls within a expected range.
@@ -158,35 +163,24 @@ func getVoltageAndCurrent(vc string) (float64, float64, error) {
 	tmp1 := strings.Split(tmp0[1], "/")
 
 	// Strip off mV
-	vstr := tmp1[0][:len(tmp1[0]) - 2]
+	vstr := tmp1[0][:len(tmp1[0])-2]
 
 	// Strip off mA
-	cstr := tmp1[1][:len(tmp1[1]) - 2]
+	cstr := tmp1[1][:len(tmp1[1])-2]
 
 	// convert to float
 	v, err := strconv.ParseFloat(vstr, 64)
-	if (err != nil) {
+	if err != nil {
 		return 0, 0, err
 	}
 
 	// convert to float
 	c, err := strconv.ParseFloat(cstr, 64)
-	if (err != nil) {
+	if err != nil {
 		return 0, 0, err
 	}
 
 	return v, c, nil
-}
-
-// isVoltageInChargingVoltages tests if a voltage is a valid charging voltage
-func isVoltageInChargingVoltages(v float64, chgv []float64) bool {
-	for i := 0; i < len(chgv); i++ {
-		if chgv[i] == v {
-			return true
-		}
-	}
-
-	return false;
 }
 
 // charge starts charging a the given voltage
@@ -211,21 +205,17 @@ func charge(ctx context.Context, h *firmware.Helper, voltage int) error {
 // higher than it can support, that may damage the DUT.
 //
 // FAFT configs:
-//   UsbcInputVoltageLimit
-//   UsbcVoltageOnShutdownAndFullBatt
-//   ChargerProfileOverride
-//   MaxChargingPower
+//
+//	UsbcInputVoltageLimit
+//	ChargerProfileOverride
 //
 // Pass criteria is all voltage transitions are successful.
 func PDVbusRequest(ctx context.Context, s *testing.State) {
 	var expectedVbusVoltage float64
 	var okToFail bool
-	var dutVoltageLimit float64
-	var dutMaxChargingPower float64
 	var isOverride bool
 	var pdTesterFailures []string
 	var dutFailures []string
-	var chargingVoltages []float64
 
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -243,17 +233,29 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	// Move on to the actual VBUS Request test
 	//
 
-	dutVoltageLimit = h.Config.UsbcInputVoltageLimit
+	dutVoltageLimit := h.Config.UsbcInputVoltageLimit
 
 	isOverride = h.Config.ChargerProfileOverride
 	if isOverride == true {
 		s.Log("*** Custom charger profile takes over, which may cause voltage-not-matched. It is OK to fail. *** ")
 	}
 
+	if err := h.RequireRPCClient(ctx); err != nil {
+		s.Fatal("Failed to connect to RPC: ", err)
+	}
+	client := power.NewBatteryServiceClient(h.RPCClient.Conn)
+	if _, err := client.New(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to start BatteryServiceClient: ", err)
+	}
+	defer client.Close(ctx, &empty.Empty{})
+	if _, err := client.StopChargeLimit(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to stop charge limit: ", err)
+	}
+
 	// If battery is full, discharge it some before starting the test
-        if err := firmware.TestChargingVoltagesAfterDischarge(ctx, h, 93.0); err != nil {
-                s.Fatal("Failed checking voltages after discharge test: ", err)
-        }
+	if err := firmware.TestChargingVoltagesAfterDischarge(ctx, h, 93.0); err != nil {
+		s.Fatal("Failed checking voltages after discharge test: ", err)
+	}
 
 	// Obtain voltage limit due to maximum charging power. Note that this
 	// voltage limit applies only when EC follows the default policy. There
@@ -263,49 +265,34 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get Source Caps: ", err)
 	}
-	dutMaxChargingPower = h.Config.MaxChargingPower
-	selectedVoltage := 0.0
-	selectedPower := 0.0
 
-	for _ , sc := range srccaps {
-		mv, ma, err := getVoltageAndCurrent(sc)
+	chargingVoltages := make(map[int]bool)
+	for _, sc := range srccaps {
+		mv, _, err := getVoltageAndCurrent(sc)
 		if err != nil {
 			s.Fatal("error")
 		}
 
 		voltage := mv / 1000.0
-		current := ma / 1000.0
-		power := voltage * current
-
-		if isVoltageInChargingVoltages(voltage, allowedUsbcChargingVoltages) {
-			chargingVoltages = append(chargingVoltages, voltage)
-		}
-
-		if ((voltage > dutVoltageLimit) || (power <= selectedPower) || (power > dutMaxChargingPower)) {
-			continue
-		}
-		selectedVoltage = voltage
-		selectedPower = power
+		// Servo always returns integer voltages, even though they could theoretically be fractional.
+		chargingVoltages[int(voltage)] = true
+	}
+	if !chargingVoltages[5] {
+		s.Log("Charger doesn't support 5v, which should be impossible. Please try a different (i.e. 65w or greater) charger")
+	}
+	if !chargingVoltages[dutVoltageLimit] {
+		s.Logf("Charger doesn't support %vv. Please try a different (i.e. 65w or greater) charger", dutVoltageLimit)
+	}
+	if len(chargingVoltages) < 3 {
+		s.Log("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
 	}
 
-	if (selectedVoltage == 0) || (selectedPower == 0) {
-		s.Fatal("Attached charger does not provide a SRC capability matching any supported voltage. Connect a different charger to the servo")
-	}
+	s.Log("Start of PDTester initiated tests")
 
-	if (selectedVoltage < dutVoltageLimit) {
-		dutVoltageLimit = selectedVoltage
-		s.Logf("EC may request maximum %fV due to adapter's max", selectedVoltage)
-		s.Log("supported power and DUT's power constraints. DUT's")
-		s.Logf("max charging power %fW. Selected charging power %fW",
-			dutMaxChargingPower, selectedPower)
-	}
-
-	s.Log("Start of PDTester initiated tests");
-
-	for _ , voltage := range chargingVoltages {
-		s.Log("********* ", voltage, " *********")
+	for voltage := range chargingVoltages {
+		s.Logf("********* %v *********", voltage)
 		// Set charging voltage
-		err := charge(ctx, h, int(voltage))
+		err := charge(ctx, h, voltage)
 		if err != nil {
 			s.Fatal("Failed to set charging voltage: ", voltage)
 		}
@@ -335,22 +322,22 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 			}
 			okToFail = false
 		} else {
-			if (voltage < dutVoltageLimit) {
-				expectedVbusVoltage = voltage
+			if voltage < dutVoltageLimit {
+				expectedVbusVoltage = float64(voltage)
 			} else {
-				expectedVbusVoltage = dutVoltageLimit
+				expectedVbusVoltage = float64(dutVoltageLimit)
 			}
-			okToFail =  isOverride || (voltage > dutVoltageLimit)
+			okToFail = isOverride || (voltage > dutVoltageLimit)
 		}
 
 		result, resultStr := compareVbus(ctx, h, s, expectedVbusVoltage, okToFail)
-		if (result == fail) {
+		if result == fail {
 			s.Logf("%s FAIL", resultStr)
 		} else {
 			s.Logf("%s PASS", resultStr)
 		}
 
-		if (result == fail) {
+		if result == fail {
 			pdTesterFailures = append(pdTesterFailures, resultStr)
 		}
 	}
@@ -363,7 +350,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 
 	if len(pdTesterFailures) > 0 {
 		s.Log("PDTester voltage source cap failures")
-		for _ , fail := range pdTesterFailures {
+		for _, fail := range pdTesterFailures {
 			s.Log(fail)
 		}
 		number := len(pdTesterFailures)
@@ -373,7 +360,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	// The DUT must be in SNK mode for the pd <port> dev <voltage>
 	// command to have an effect.
 	dutPDState, err := h.Servo.GetDUTPDState(ctx)
-	if (err != nil) {
+	if err != nil {
 		s.Fatal("Failed to get DUT PD State")
 	}
 
@@ -395,19 +382,19 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Log("Start of DUT initiated tests");
-	for _ , v := range voltageSequence {
-		if float64(v) > dutVoltageLimit {
-			s.Log("Target ", v, "V: skipped, over the limit ", dutVoltageLimit, "V")
+	s.Log("Start of DUT initiated tests")
+	testedVoltages := make(map[int]bool)
+	for _, v := range voltageSequence {
+		if v > dutVoltageLimit {
+			s.Logf("Target %vV: skipped, over the limit %vV", v, dutVoltageLimit)
 			continue
 		}
 
-		if isVoltageInChargingVoltages(float64(v), chargingVoltages) == false {
-			s.Error("Target ", v, "V: skipped, voltage unsupported, ",
-				"update hdctools and servo_v4 firmware ",
-				"or attach a different charger")
+		if !chargingVoltages[v] {
+			s.Logf("Target %vV: skipped, voltage unsupported", v)
 			continue
 		}
+		testedVoltages[v] = true
 
 		// Build 'pd <port> dev <voltage> command
 		err = h.Servo.SendRequestSourceVoltage(ctx, v)
@@ -415,28 +402,31 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to request source voltage")
 		}
 
-		failCount := 0;
-		okToFail = isOverride || (float64(v) > dutVoltageLimit)
+		failCount := 0
+		okToFail = isOverride || (v > dutVoltageLimit)
 		err = testing.Poll(ctx, func(ctx context.Context) error {
-		     result, resultStr := compareVbus(ctx, h, s, float64(v), okToFail)
-		     if (result == fail) {
-			   failCount++;
-			   if (failCount >= maxPollFailCount) {
-				s.Logf("%s FAIL", resultStr)
-				dutFailures = append(dutFailures, resultStr)
-				return errors.Wrap(err, "FAIL")
-			   }
-		     } else {
-			   s.Logf("%s PASS", resultStr)
-			   return nil
-		     }
-		    return nil
-		}, &testing.PollOptions{Timeout: pdVBusPollTimeout, Interval: pdVBusPollInterval});
+			result, resultStr := compareVbus(ctx, h, s, float64(v), okToFail)
+			if result == fail {
+				failCount++
+				if failCount >= maxPollFailCount {
+					s.Logf("%s FAIL", resultStr)
+					dutFailures = append(dutFailures, resultStr)
+					return errors.Wrap(err, "FAIL")
+				}
+			} else {
+				s.Logf("%s PASS", resultStr)
+				return nil
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: pdVBusPollTimeout, Interval: pdVBusPollInterval})
+	}
+	if len(testedVoltages) < 3 {
+		s.Log("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
 	}
 
 	// Make sure DUT is set back to its max voltage so DUT will accept all
 	// options
-	err = h.Servo.SendRequestSourceVoltage(ctx, int(dutVoltageLimit))
+	err = h.Servo.SendRequestSourceVoltage(ctx, dutVoltageLimit)
 	if err != nil {
 		s.Fatal("Failed to request source voltage")
 	}
@@ -454,7 +444,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 
 	if len(dutFailures) > 0 {
 		s.Log("DUT voltage request failures")
-		for _ , fail := range dutFailures {
+		for _, fail := range dutFailures {
 			s.Log(fail)
 		}
 		number := len(dutFailures)
