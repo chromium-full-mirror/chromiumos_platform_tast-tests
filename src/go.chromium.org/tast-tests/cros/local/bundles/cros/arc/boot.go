@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/memory"
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/testing"
 )
@@ -19,6 +20,8 @@ type bootConfig struct {
 	numTrials int
 	// Extra Chrome command line options
 	chromeArgs []string
+	// Check that the Virtual Machine Memory Management Service is running.
+	checkVMMMS bool
 }
 
 func init() {
@@ -112,6 +115,16 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
+		}, {
+			// TODO(b:322724008): Remove this param and enable checkVMMMS on all other .vm* tests once we know this is stable.
+			Name: "vm_check_vmmms",
+			Val: bootConfig{
+				numTrials:  1,
+				checkVMMMS: true,
+			},
+			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}},
 	})
 }
@@ -127,6 +140,16 @@ func Boot(ctx context.Context, s *testing.State) {
 }
 
 func runBoot(ctx context.Context, s *testing.State) {
+	var vmmmsVerify *memory.VmmmsInitVerifier
+	if s.Param().(bootConfig).checkVMMMS {
+		var err error
+		vmmmsVerify, err = memory.NewVmmmsInitVerifier(ctx)
+		if err != nil {
+			s.Fatal("Failed to create VmmmsInitVerifier: ", err)
+		}
+		defer vmmmsVerify.Close()
+	}
+
 	reader, err := syslog.NewReader(ctx)
 	if err != nil {
 		s.Fatal("Failed to open syslog reader: ", err)
@@ -158,5 +181,12 @@ func runBoot(ctx context.Context, s *testing.State) {
 
 	if _, ok := pkgs["android"]; !ok {
 		s.Fatal("android package not found: ", pkgs)
+	}
+
+	// Ensures that the Virtual Machine Memory Management Service initialized successfully.
+	if vmmmsVerify != nil {
+		if err := vmmmsVerify.Verify(); err != nil {
+			s.Fatal("VMMMS did not initialized properly: ", err)
+		}
 	}
 }
