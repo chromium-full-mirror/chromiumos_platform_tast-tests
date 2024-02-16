@@ -80,8 +80,7 @@ func init() {
 				// The USB2.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
 				cswitchPort: "4",
 			},
-			Timeout:   10 * time.Minute,
-			ExtraAttr: []string{"group:intel-cswitch-set1"},
+			Timeout: 10 * time.Minute,
 		}, {
 			Name: "usb2_pendrive_bronze",
 			Val: usbTestParams{
@@ -106,8 +105,7 @@ func init() {
 				// The USB2.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
 				cswitchPort: "4",
 			},
-			Timeout:   20 * time.Minute,
-			ExtraAttr: []string{"group:intel-cswitch-set1"},
+			Timeout: 20 * time.Minute,
 		}, {
 			Name: "usb2_pendrive_gold",
 			Val: usbTestParams{
@@ -119,8 +117,7 @@ func init() {
 				// The USB2.0 pendrive is connected to C-Switch in P4 as per the intel_cswitch_set1 suite setup.
 				cswitchPort: "4",
 			},
-			Timeout:   30 * time.Minute,
-			ExtraAttr: []string{"group:intel-cswitch-set1"},
+			Timeout: 30 * time.Minute,
 		}, {
 			Name: "usb3_pendrive",
 			Val: usbTestParams{
@@ -144,7 +141,6 @@ func init() {
 				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
 				cswitchPort: "2",
 			},
-			ExtraAttr: []string{"group:intel-cswitch-set2"},
 		}, {
 			Name: "typea_keyboard_bronze",
 			Val: usbTestParams{
@@ -167,8 +163,7 @@ func init() {
 				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
 				cswitchPort: "2",
 			},
-			Timeout:   10 * time.Minute,
-			ExtraAttr: []string{"group:intel-cswitch-set2"},
+			Timeout: 10 * time.Minute,
 		}, {
 			Name: "typea_keyboard_gold",
 			Val: usbTestParams{
@@ -179,8 +174,7 @@ func init() {
 				// The USB typea keyboard is connected to C-Switch in P2 as per the intel_cswitch_set2 suite setup.
 				cswitchPort: "2",
 			},
-			Timeout:   15 * time.Minute,
-			ExtraAttr: []string{"group:intel-cswitch-set2"},
+			Timeout: 15 * time.Minute,
 		}, {
 			Name: "typec_keyboard_quick",
 			Val: usbTestParams{
