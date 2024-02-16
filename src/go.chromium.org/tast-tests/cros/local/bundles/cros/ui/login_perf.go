@@ -193,7 +193,7 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true,            // preloadLacros
+				false,           // preloadLacros
 				false,           // forkZygotes
 				false,           // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
@@ -209,7 +209,7 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true,            // preloadLacros
+				false,           // preloadLacros
 				false,           // forkZygotes
 				true,            // dropCaches
 				5 * time.Second, // sleepAtLoginScreen
