@@ -11,9 +11,15 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	paramTrustedReports = iota
+	paramReleases
+	paramUpdates
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: FwupdGetReleases,
+		Func: FwupdDbusTests,
 		Desc: "Checks that fwupd can detect the right releases",
 		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
 		BugComponent: "b:857851",
@@ -26,18 +32,22 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
-				Name: "check_trusted_reports_flag",
-				Val:  true,
+				Name: "trusted_reports_flag",
+				Val:  paramTrustedReports,
 			}, {
-				Name: "check_releases",
-				Val:  false,
-			}},
+				Name: "releases",
+				Val:  paramReleases,
+			}, {
+				Name: "updates",
+				Val:  paramUpdates,
+			},
+		},
 	})
 }
 
-// FwupdGetReleases checks for correct number of releases for the Fake Webcam.
+// FwupdDbusTests checks for correct number of releases for the Fake Webcam.
 // It also checks if the Trusted Reports flag is set correctly
-func FwupdGetReleases(ctx context.Context, s *testing.State) {
+func FwupdDbusTests(ctx context.Context, s *testing.State) {
 	fwupdVersion, err := fwupd.Version(ctx)
 	if err != nil {
 		s.Fatal("Unable to get FWUPD version: ", err)
@@ -66,9 +76,14 @@ func FwupdGetReleases(ctx context.Context, s *testing.State) {
 			TrustFlags: 0,
 		},
 	}
-	checkTrustedReports := s.Param().(bool)
+	action := s.Param().(int)
 	var releases []*fwupd.Release
-	releases, err = fwupd.ReleasesForDeviceID(ctx, fwupd.FakeWebcamDeviceID)
+	if action == paramUpdates {
+		releases, err = fwupd.UpdatesForDeviceID(ctx, fwupd.FakeWebcamDeviceID)
+		expectedReleases = expectedReleases[:3]
+	} else {
+		releases, err = fwupd.ReleasesForDeviceID(ctx, fwupd.FakeWebcamDeviceID)
+	}
 	if err != nil {
 		s.Fatal("Failed to get releases: ", err)
 	}
@@ -82,7 +97,7 @@ func FwupdGetReleases(ctx context.Context, s *testing.State) {
 		if expectedReleases[i].Version != release.Version {
 			s.Fatalf("Incorrect release Version found at index: %v, expected: %s, got: %s", i, expectedReleases[i].Version, release.Version)
 		}
-		if checkTrustedReports {
+		if action == paramTrustedReports {
 			trustedReportsFlag := release.TrustFlags & fwupd.TrustedReportsReleaseFlagBit
 			if expectedReleases[i].TrustFlags != trustedReportsFlag {
 				s.Fatalf("Incorrect release Trusted Reports flag found at index: %v, expected: %v, got: %v", i, expectedReleases[i].TrustFlags, trustedReportsFlag)

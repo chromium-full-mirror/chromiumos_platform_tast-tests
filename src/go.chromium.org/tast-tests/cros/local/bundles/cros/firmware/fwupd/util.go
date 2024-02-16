@@ -161,8 +161,8 @@ const (
 	GetDevicesMethod = "GetDevices"
 	// GetReleasesMethod - Method name to get releases
 	GetReleasesMethod = "GetReleases"
-	// GetUpgradesMethod - Method name to get updates
-	GetUpgradesMethod = "GetUpgrades"
+	// GetUpdatesMethod - Method name to get updates
+	GetUpdatesMethod = "GetUpgrades"
 
 	// TrustedReportsReleaseFlagBit (9th bit) represents Trusted Reports value
 	// in TrustFlags of the Release struct
@@ -225,8 +225,7 @@ func getDevices() ([]map[string]dbus.Variant, error) {
 	return devices, nil
 }
 
-// getReleases returns the list of releases from the given device id;
-func getReleases(ctx context.Context, deviceID string) ([]map[string]dbus.Variant, error) {
+func releasesForDbusCall(ctx context.Context, dbusMethod, deviceID string) ([]map[string]dbus.Variant, error) {
 	var releases []map[string]dbus.Variant
 	// Don't close the shared connection.
 	conn, err := dbusutil.SystemBus()
@@ -236,8 +235,8 @@ func getReleases(ctx context.Context, deviceID string) ([]map[string]dbus.Varian
 
 	fwupd := conn.Object(DbusName, DbusPath)
 
-	if err = fwupd.Call(DbusInterface+"."+GetReleasesMethod, 0, deviceID).Store(&releases); err != nil {
-		return nil, errors.Wrap(err, "failed to call "+GetReleasesMethod)
+	if err = fwupd.Call(DbusInterface+"."+dbusMethod, 0, deviceID).Store(&releases); err != nil {
+		return nil, errors.Wrap(err, "failed to call "+dbusMethod)
 	}
 
 	return releases, nil
@@ -346,20 +345,42 @@ func Version(ctx context.Context) (string, error) {
 	return version.String(), nil
 }
 
-// ReleasesForDeviceID returns the Releases available for the given DeviceID
-func ReleasesForDeviceID(ctx context.Context, deviceID string) (releases []*Release, err error) {
-	rawReleases, err := getReleases(ctx, deviceID)
-	if err != nil {
-		return nil, err
-	}
-
+// inspectReleases inspects a list of releases
+// Returns an error if even one release can not be inspected correctly
+func inspectReleases(ctx context.Context, rawReleases []map[string]dbus.Variant) (result []*Release, err error) {
 	for _, rawRelease := range rawReleases {
 		release, err := inspectRelease(ctx, rawRelease)
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to inspect the release: %s", rawRelease)
 		}
-		releases = append(releases, release)
+		result = append(result, release)
 	}
 
+	return result, nil
+}
+
+// UpdatesForDeviceID returns the Releases available for the given DeviceID
+func UpdatesForDeviceID(ctx context.Context, deviceID string) (releases []*Release, err error) {
+	updateMap, err := releasesForDbusCall(ctx, GetUpdatesMethod, deviceID)
+	if err != nil {
+		return nil, err
+	}
+	releases, err = inspectReleases(ctx, updateMap)
+	if err != nil {
+		return nil, err
+	}
+	return releases, nil
+}
+
+// ReleasesForDeviceID returns all the Releases available for the given DeviceID
+func ReleasesForDeviceID(ctx context.Context, deviceID string) (releases []*Release, err error) {
+	releaseMap, err := releasesForDbusCall(ctx, GetReleasesMethod, deviceID)
+	if err != nil {
+		return nil, err
+	}
+	releases, err = inspectReleases(ctx, releaseMap)
+	if err != nil {
+		return nil, err
+	}
 	return releases, nil
 }
