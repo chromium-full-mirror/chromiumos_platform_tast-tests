@@ -67,7 +67,7 @@ func ManagedPlayStore3pEmm(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	arcPolicy := arcent.CreateArcPolicyWithApps([]string{}, arcent.InstallTypeAvailable, arcent.PlayStoreModeBlockList)
@@ -88,7 +88,7 @@ func ManagedPlayStore3pEmm(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), managed3pEmmAccount[0], policies)
 		if err != nil {
-			rl.Exit("setup fake policy server", err)
+			return rl.Exit("setup fake policy server", err)
 		}
 		defer fdms.Stop(cleanupCtx)
 

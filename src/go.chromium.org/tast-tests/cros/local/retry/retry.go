@@ -6,6 +6,7 @@ package retry
 
 import (
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // Loop is a representation of retry loop state for a test.
@@ -13,14 +14,18 @@ type Loop struct {
 	Attempts    int
 	MaxAttempts int
 	DoRetries   bool
-	Fatalf      func(format string, args ...interface{})
+	errors      []error
+	Errorf      func(format string, args ...interface{})
 	Logf        func(format string, args ...interface{})
 }
 
 // Exit ends the retry loop. This is used in places where the failure is in the core feature.
 func (rl *Loop) Exit(desc string, err error) error {
-	rl.Fatalf("Failed to %s: %v", desc, err)
-	return nil
+	rl.errors = append(rl.errors, errors.Wrap(err, "failed to "+desc))
+	for i, prevErr := range rl.errors {
+		rl.Errorf("Failed attempt #%d: %s", i+1, prevErr)
+	}
+	return testing.PollBreak(errors.New("failed all attempts"))
 }
 
 // RetryForAll retries the loop even if retries are disabled. This is used for unrelated failures.
@@ -28,6 +33,7 @@ func (rl *Loop) RetryForAll(desc string, err error) error {
 	if rl.Attempts < rl.MaxAttempts {
 		rl.Attempts++
 		err = errors.Wrap(err, "failed to "+desc)
+		rl.errors = append(rl.errors, err)
 		rl.Logf("%s. Retrying", err)
 		return err
 	}

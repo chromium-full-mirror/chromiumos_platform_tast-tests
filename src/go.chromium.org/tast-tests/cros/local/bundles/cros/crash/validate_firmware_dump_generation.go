@@ -72,7 +72,7 @@ func ValidateFirmwareDumpGeneration(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	policyVal := s.Param().(string)
@@ -237,7 +237,7 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 	policies := []policy.Policy{&policy.UserFeedbackWithLowLevelDebugDataAllowed{Val: policytypes}}
 	fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 	if err != nil {
-		rl.Exit("setup fake policy server", err)
+		return rl.Exit("setup fake policy server", err)
 	}
 	defer fdms.Stop(cleanupCtx)
 
@@ -259,11 +259,11 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		rl.Exit("create test API Connection", err)
+		return rl.Exit("create test API Connection", err)
 	}
 
 	if err := policyutil.Verify(ctx, tconn, []policy.Policy{&policy.UserFeedbackWithLowLevelDebugDataAllowed{Val: policytypes}}); err != nil {
-		rl.Exit("verify UserFeedbackWithLowlevelDebugDataAllowed policy", err)
+		return rl.Exit("verify UserFeedbackWithLowlevelDebugDataAllowed policy", err)
 	}
 
 	var hash string

@@ -77,7 +77,7 @@ func UnicornBlockedApps(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	childUser := s.RequiredVar(unicorn.ChildUserVar)

@@ -151,7 +151,7 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	cleanupCtx := ctx
@@ -161,13 +161,13 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
-			rl.Exit("get login creds", err)
+			return rl.Exit("get login creds", err)
 		}
 		login := chrome.GAIALogin(creds)
 
 		fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, []string{}, arcent.InstallTypeAvailable, args.playStoreMode)
 		if err != nil {
-			rl.Exit("setup fake policy server", err)
+			return rl.Exit("setup fake policy server", err)
 		}
 		defer fdms.Stop(cleanupCtx)
 
@@ -210,11 +210,11 @@ func ManagedPlayStoreAccountSwitch(ctx context.Context, s *testing.State) {
 
 		secondaryUser, err := credconfig.PickRandomCreds(s.RequiredVar("ui.gaiaPoolDefault"))
 		if err != nil {
-			rl.Exit("get secondary user creds", err)
+			return rl.Exit("get secondary user creds", err)
 		}
 
 		if err := arcent.AddSecondaryAccount(ctx, tconn, cr, d, secondaryUser.User, secondaryUser.Pass); err != nil {
-			rl.Exit("add secondary account", err)
+			return rl.Exit("add secondary account", err)
 		}
 
 		if args.accountSwitchEnabled {

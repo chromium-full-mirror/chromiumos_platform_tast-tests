@@ -56,7 +56,7 @@ func OptinHealth(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	cleanupCtx := ctx
@@ -79,7 +79,7 @@ func OptinHealth(ctx context.Context, s *testing.State) {
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
-			rl.Exit("create test API Connection", err)
+			return rl.Exit("create test API Connection", err)
 		}
 
 		if err := optin.Perform(ctx, cr, tconn); err != nil {

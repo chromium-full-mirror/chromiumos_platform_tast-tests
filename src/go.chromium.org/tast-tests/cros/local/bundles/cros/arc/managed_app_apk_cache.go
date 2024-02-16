@@ -87,7 +87,7 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	cleanupCtx := ctx
@@ -97,12 +97,12 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		s.Log("Deleting apk cache directory")
 		if err := os.RemoveAll(apkCacheDir); err != nil {
-			rl.Retry("delete apk cache directory: ", err)
+			return rl.Retry("delete apk cache directory: ", err)
 		}
 
 		creds, err := credconfig.PickNRandomCreds(s.RequiredVar(arcent.LoginPoolVar), 2 /*n*/)
 		if err != nil {
-			rl.Exit("get login creds", err)
+			return rl.Exit("get login creds", err)
 		}
 
 		packages := []string{testPackage}
@@ -188,10 +188,10 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 }
 
 func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, rl *retry.Loop, packages []string) error {
-	notCachedRegEx       := fmt.Sprintf(
+	notCachedRegEx := fmt.Sprintf(
 		"(no cachedApk found for %s)|(Package %s version [0-9]+ does not exist in cache)|(Missed *in cache.*%s)",
 		testPackage, testPackage, testPackage)
-	pushingInCacheRegEx  := "Pushing in cache " + testPackage
+	pushingInCacheRegEx := "Pushing in cache " + testPackage
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)

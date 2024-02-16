@@ -52,7 +52,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 			ExtraAttr:         []string{"informational"},
 		}, {
-			Name:             "betty_vm",
+			Name:              "betty_vm",
 			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 		}},
@@ -73,7 +73,7 @@ func UnicornDisabledApps(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	childUser := s.RequiredVar(unicorn.ChildUserVar)

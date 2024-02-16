@@ -110,7 +110,7 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	cleanupCtx := ctx
@@ -120,14 +120,14 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
-			rl.Exit("get login creds", err)
+			return rl.Exit("get login creds", err)
 		}
 		login := chrome.GAIALogin(creds)
 
 		policies := []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}
 		fdms, err := policyutil.SetUpFakePolicyServer(ctx, s.OutDir(), creds.User, policies)
 		if err != nil {
-			rl.Exit("setup fake policy server", err)
+			return rl.Exit("setup fake policy server", err)
 		}
 		defer fdms.Stop(cleanupCtx)
 
@@ -145,12 +145,12 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 
 		tconn, err := cr.TestAPIConn(ctx)
 		if err != nil {
-			rl.Exit("create test API Connection", err)
+			return rl.Exit("create test API Connection", err)
 		}
 
 		// Ensure chrome://policy shows correct ArcEnabled value.
 		if err := policyutil.Verify(ctx, tconn, []policy.Policy{&policy.ArcEnabled{Val: expectEnabled}}); err != nil {
-			rl.Exit("verify ArcEnabled", err)
+			return rl.Exit("verify ArcEnabled", err)
 		}
 
 		// Wait for ARC to boot. It should succeed only if enabled by policy.
@@ -161,7 +161,7 @@ func ManagedBoot(ctx context.Context, s *testing.State) {
 				s.Fatal("Started ARC while blocked by user policy")
 			}
 		} else if expectEnabled {
-			rl.Exit("start ARC by user policy", err)
+			return rl.Exit("start ARC by user policy", err)
 		}
 
 		return nil

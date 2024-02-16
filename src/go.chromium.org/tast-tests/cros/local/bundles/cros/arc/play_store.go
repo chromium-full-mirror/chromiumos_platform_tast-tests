@@ -60,7 +60,7 @@ func init() {
 
 func PlayStore(ctx context.Context, s *testing.State) {
 	const (
-		pkgName = "com.google.android.calculator"
+		pkgName             = "com.google.android.calculator"
 		installationTimeout = 10 * time.Minute
 	)
 
@@ -71,7 +71,7 @@ func PlayStore(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
@@ -116,7 +116,7 @@ func PlayStore(ctx context.Context, s *testing.State) {
 
 		s.Log("Installing app")
 		if err := playstore.InstallApp(ctx, a, d, pkgName, &playstore.Options{TryLimit: -1, InstallationTimeout: installationTimeout}); err != nil {
-			rl.Exit("install the app", err)
+			return rl.Exit("install the app", err)
 		}
 
 		return nil

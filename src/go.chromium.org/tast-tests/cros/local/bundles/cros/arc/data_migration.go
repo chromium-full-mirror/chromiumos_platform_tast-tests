@@ -190,7 +190,7 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {

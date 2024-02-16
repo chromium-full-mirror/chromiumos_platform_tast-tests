@@ -112,7 +112,7 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	cleanupCtx := ctx
@@ -125,14 +125,14 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
-			rl.Exit("get login creds", err)
+			return rl.Exit("get login creds", err)
 		}
 		login := chrome.GAIALogin(creds)
 
 		packages := []string{testPackage}
 		fdms, err := setupPolicyServerWithArcAppsAndEnableLogging(ctx, s.OutDir(), creds.User, packages)
 		if err != nil {
-			rl.Exit("setup fake policy server", err)
+			return rl.Exit("setup fake policy server", err)
 		}
 		defer fdms.Stop(cleanupCtx)
 

@@ -85,21 +85,21 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
-		Fatalf:      s.Fatalf,
+		Errorf:      s.Errorf,
 		Logf:        s.Logf}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 
 		st, err := arc.GetState(ctx, tconn)
 		if err != nil {
-			rl.Exit("get ARC state", err)
+			return rl.Exit("get ARC state", err)
 		}
 		defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 		if st.Provisioned {
 			s.Log("ARC is already provisioned. Skipping the Play Store setup")
 			if err := apps.Close(ctx, tconn, apps.PlayStore.ID); err != nil {
-				rl.Exit("close the provisioned Play Store", err)
+				return rl.Exit("close the provisioned Play Store", err)
 			}
 		} else {
 			s.Log("Opting into Play Store")
@@ -124,22 +124,22 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 		// Start screen recording for easier to debug failures.
 		screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
 		if err != nil || screenRecorder == nil {
-			rl.Exit("create ScreenRecorder", err)
+			return rl.Exit("create ScreenRecorder", err)
 		}
 		if err := screenRecorder.Start(ctx, tconn); err != nil {
-			rl.Exit("start screen recorder", err)
+			return rl.Exit("start screen recorder", err)
 		}
 
 		defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(s.OutDir(), "recording.mp4"))
 
 		if err := playstore.OpenAppPage(ctx, a, appPkgName); err != nil {
-			rl.Exit("open the app page in Play Store", err)
+			return rl.Exit("open the app page in Play Store", err)
 		}
 
 		// This covers the time to provision ARC and load Play Store UI.
 		_, err = playstore.FindInstallButton(ctx, d, 90*time.Second)
 		if err != nil {
-			rl.Exit("find the install button", err)
+			return rl.Exit("find the install button", err)
 		}
 
 		askinPersonButton := d.Object(ui.ClassName("android.widget.Button"), ui.Text(askinPersonButtonText), ui.Enabled(true))
@@ -162,20 +162,20 @@ func UnicornParentPermission(ctx context.Context, s *testing.State) {
 
 			return nil
 		})(ctx); err != nil {
-			rl.Exit("click installButton and check the existence of Ask in person button", err)
+			return rl.Exit("click installButton and check the existence of Ask in person button", err)
 		}
 
 		if err := d.Object(ui.TextMatches(askinMessageButtonText)).Exists(ctx); err != nil {
-			rl.Exit("find Ask in a message button", err)
+			return rl.Exit("find Ask in a message button", err)
 		}
 
 		if err = askinPersonButton.Click(ctx); err != nil {
-			rl.Exit("click Ask in person button", err)
+			return rl.Exit("click Ask in person button", err)
 		}
 
 		parentPwd := d.Object(ui.ClassName("android.widget.EditText"), ui.Text(parentUser))
 		if err := parentPwd.WaitForExists(ctx, 90*time.Second); err != nil {
-			rl.Exit("find the parentPwd element", err)
+			return rl.Exit("find the parentPwd element", err)
 		}
 		return nil
 	}, nil); err != nil {
