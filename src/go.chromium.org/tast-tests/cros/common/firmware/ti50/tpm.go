@@ -101,10 +101,7 @@ func NewTpmHandle(ctx context.Context, b DevBoard, bus TpmBus) *TpmHandle {
 // OpenTitanToolTpmCommand runs one of the OpenTitanTool TPM subcommands (read-register or execute-command).
 func (t *TpmHandle) OpenTitanToolTpmCommand(subcmd string, subargs ...string) ([]byte, error) {
 	var args []string
-	if t.Bus == TpmBusI2c {
-		args = append(args, "--addr", TpmI2cAddress)
-	}
-	args = append(args, "tpm", subcmd)
+	args = append(args, "tpm", "--gsc-ready", string(GpioTi50ApIntL), subcmd)
 	args = append(args, subargs...)
 	response, err := t.b.OpenTitanToolCommand(t.Ctx, string(t.Bus), args...)
 	if err != nil {

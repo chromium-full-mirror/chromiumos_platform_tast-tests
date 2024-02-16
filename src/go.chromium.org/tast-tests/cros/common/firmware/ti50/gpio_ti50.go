@@ -137,6 +137,9 @@ const (
 	// GpioTi50LidOpen is the pin that GSC reads to know if the lid is open
 	// (active high).
 	GpioTi50LidOpen GpioName = "LID_OPEN"
+	// GpioTi50ApIntL is the falling edge "TPM ready" signal from GSC to AP.
+	GpioTi50ApIntL GpioName = "GSC_AP_INT_L"
+	// GpioTi50LidOpen is the pin that GSC reads to know if the lid is open.
 	// GpioTi50CcdModeL is the in/out low-active signal for when CCD cable is
 	// detected (active low).
 	GpioTi50CcdModeL GpioName = "CCD_MODE_ODL"
