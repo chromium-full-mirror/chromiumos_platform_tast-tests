@@ -128,6 +128,9 @@ func GenCrosvmCmd(socketDir, userDir, outDir, kernel, block, script string, opt 
 		return nil, errors.Wrap(err, "failed to create shared directory")
 	}
 
+	// Some boards (puff, fizz, hatch, soraka, octopus, and nocturne) disabled serial console on arcvm guest kernel.
+	// To have valid serial.log in these boards, build arcvm guest kernel by:
+	// USE=pcserial emerge-$BOARD sys-kernel/arcvm-kernel-ack-5_10
 	logFilePath := filepath.Join(outDir, "serial.log")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a input file")
