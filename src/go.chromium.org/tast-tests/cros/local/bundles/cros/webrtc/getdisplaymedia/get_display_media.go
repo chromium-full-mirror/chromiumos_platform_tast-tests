@@ -22,6 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -30,7 +31,7 @@ import (
 const (
 	// htmlFile is the file containing the HTML+JS code exercising getDisplayMedia().
 	htmlFile            = "getdisplaymedia.html"
-	measurementDuration = 30 * time.Second
+	measurementDuration = 60 * time.Second
 )
 
 // RunGetDisplayMediaPerf drives the code verifying the getDisplayMedia functionality and collects performance data.
@@ -101,9 +102,15 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 		p.Save(outDir)
 	}()
 
-	var gpuErr, i915IRQErr, cStateErr, cpuErr, batErr, wakeupErr error
+	// perf.Values is not thread safe. Following simultaneous update possibly causes race conditions.
+	// TODO(b/325560889): Protect perf.Values.
+	var gpuMetricsErr, gpuErr, i915IRQErr, cStateErr, cpuErr, batErr, wakeupErr error
 	var wg sync.WaitGroup
-	wg.Add(6)
+	wg.Add(7)
+	go func() {
+		defer wg.Done()
+		gpuMetricsErr = measureGPUMetrics(ctx, p)
+	}()
 	go func() {
 		defer wg.Done()
 		gpuErr = graphics.MeasureGPUCounters(ctx, measurementDuration, p)
@@ -130,6 +137,9 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 	}()
 
 	wg.Wait()
+	if gpuMetricsErr != nil {
+		return errors.Wrap(gpuErr, "failed to measure GPU counters")
+	}
 	if gpuErr != nil {
 		return errors.Wrap(gpuErr, "failed to measure GPU counters")
 	}
@@ -158,4 +168,36 @@ func DataFiles() []string {
 		"canvas_animation.js",
 		"third_party/blackframe.js",
 	}
+}
+
+// measureGPUMetrics measures GPU frequency and GPU usage, and saves them to perf.Values.
+// TODO(b/293221069): Remove this function if the power library enables to
+// configure collected metrics.
+func measureGPUMetrics(ctx context.Context, p *perf.Values) error {
+	const powerMeasurementInterval = 5 * time.Second
+
+	metrics, err := perf.NewTimeline(ctx, []perf.TimelineDatasource{
+		metrics.NewGPUFreqMetrics(),
+		metrics.NewGPUUsageDataSource(),
+	}, perf.Interval(powerMeasurementInterval))
+	if err != nil {
+		return errors.Wrap(err, "failed to build metrics timeline")
+	}
+	if err := metrics.Start(ctx); err != nil {
+		return errors.Wrap(err, "failed to start metrics")
+	}
+	if err := metrics.StartRecording(ctx); err != nil {
+		return errors.Wrap(err, "failed to start recording")
+	}
+	// GoBigSleepLint: Sleep to measure the performance metrics.
+	if err := testing.Sleep(ctx, measurementDuration); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v", measurementDuration)
+	}
+
+	gpuPerf, err := metrics.StopRecording(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to stop recording")
+	}
+	p.Merge(gpuPerf)
+	return nil
 }
