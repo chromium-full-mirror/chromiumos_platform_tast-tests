@@ -48,7 +48,7 @@ const policyProvidedCaOrg = "org-root_ca_cert"
 // is used to create a client and website certificates.
 // Chrome will need to import it to trust that the website certificate is valid.
 // Website server will need to use it to trust that the client certificate is valid.
-const caCertFile = "cert_settings_page_root_cert.crt"
+const caCertFile = "cert_settings_page_root_cert.pem"
 
 // editMenuItem  is UI element finder for "Edit" menu item.
 var editMenuItem = nodewith.Name("Edit").Role(role.MenuItem)
