@@ -120,7 +120,7 @@ def main():
             "if=/dev/urandom",
             f"of={mount_point}/fio_file",
             "bs=4k",
-            "count=256k",
+            "count=128k",
         ]
     )
 
