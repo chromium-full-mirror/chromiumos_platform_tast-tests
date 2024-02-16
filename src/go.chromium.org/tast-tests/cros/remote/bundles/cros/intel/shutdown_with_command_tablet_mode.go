@@ -38,13 +38,14 @@ func init() {
 		Contacts:     []string{"intel.chrome.automation.team@intel.com", "pathan.jilani@intel.com"},
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
-		Attr:         []string{"group:mainline", "informational", "group:intel-convertible"},
+		Attr:         []string{"group:mainline", "informational"},
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne", "kodama")),
 		Params: []testing.Param{{
 			Name:              "convertible",
 			Val:               shutdownWithCmdTabletModeParams{control: &tabletmode.ConvertibleModeControl{}},
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
+			ExtraAttr:         []string{"group:intel-convertible"},
 		}, {
 			Name:              "detachable",
 			Val:               shutdownWithCmdTabletModeParams{control: &tabletmode.DetachableModeControl{}},
