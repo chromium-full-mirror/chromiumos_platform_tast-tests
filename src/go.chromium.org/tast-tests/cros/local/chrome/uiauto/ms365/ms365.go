@@ -91,7 +91,7 @@ func (ms *Ms365) InputUserName(userName string) uiauto.Action {
 // InputPassword waits for the Microsoft "input password" screen and input the password.
 func (ms *Ms365) InputPassword(password string) uiauto.Action {
 	msPasswordWindow := nodewith.Role(role.RootWebArea).NameRegex(regexp.MustCompile("Sign in to your( Microsoft)? account"))
-	passwordInput := nodewith.Ancestor(msPasswordWindow).Role(role.TextField).NameContaining("password")
+	passwordInput := nodewith.Ancestor(msPasswordWindow).Role(role.TextField).NameRegex(regexp.MustCompile(".*(p|P)assword.*"))
 
 	return uiauto.Combine("MS SignIn Password",
 		ms.ui.WaitUntilExists(msPasswordWindow.Visible()),
