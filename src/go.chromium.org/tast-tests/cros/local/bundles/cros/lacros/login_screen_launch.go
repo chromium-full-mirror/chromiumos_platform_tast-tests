@@ -62,17 +62,17 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					false, // Don't fork Zygotes.
+					true,  // Fork Zygotes.
 					false, // keepAlive disabled
 				},
 			},
 			{
-				Name:      "rootfs_zygotes",
+				Name:      "rootfs_no_zygotes",
 				ExtraAttr: []string{"group:mainline", "informational"},
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					true,  // Fork Zygotes.
+					false, // Don't fork Zygotes.
 					false, // keepAlive disabled
 				},
 			},
@@ -82,8 +82,8 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					false, // Don't fork Zygotes.
-					true,  // keepAlive enabled
+					true, // Fork Zygotes.
+					true, // keepAlive enabled
 				},
 			},
 			{
@@ -92,7 +92,7 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeAsh,
 					lacros.Rootfs,
-					false, // Don't fork Zygotes.
+					true,  // ignored
 					false, // ignored
 				},
 			},
@@ -265,6 +265,8 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	params := s.Param().(loginScreenLaunchTestParam)
 	if params.forkZygotes {
 		options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
+	} else {
+		options = append(options, chrome.DisableFeatures("LacrosForkZygotesAtLoginScreen"))
 	}
 
 	// Setup Lacros configuration.
