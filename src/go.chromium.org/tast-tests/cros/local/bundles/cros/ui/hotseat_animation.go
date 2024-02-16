@@ -50,7 +50,6 @@ func init() {
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"tbarzic@chromium.org",
-			"andrewxu@chromium.org",
 			"cros-shelf-prod-notifications@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf

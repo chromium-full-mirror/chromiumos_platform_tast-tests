@@ -22,7 +22,6 @@ func init() {
 		Desc:         "Tests that the shelf is auto-hidden after launching an immersive ARC application",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
-			"yulunwu@chromium.org",
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},

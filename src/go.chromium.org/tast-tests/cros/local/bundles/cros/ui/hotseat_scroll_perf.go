@@ -32,8 +32,6 @@ func init() {
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
 			"tbarzic@chromium.org",
-			"andrewxu@chromium.org",
-			"newcomer@chromium.org",
 		},
 		// ChromeOS > Software > System UI Surfaces > Shelf
 		BugComponent: "b:1288352",

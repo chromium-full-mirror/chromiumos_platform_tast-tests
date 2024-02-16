@@ -58,7 +58,6 @@ func init() {
 		Desc:         "Tests the rearrangement of shelf app icons",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
-			"andrewxu@chromium.org",
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},

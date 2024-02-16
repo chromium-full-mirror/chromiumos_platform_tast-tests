@@ -37,7 +37,6 @@ func init() {
 			"cros-system-ui-eng@google.com",
 			"cros-launcher-prod-notifications@google.com",
 			"tbarzic@chromium.org",
-			"newcomer@chromium.org",
 		},
 		BugComponent: "b:1288350",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},

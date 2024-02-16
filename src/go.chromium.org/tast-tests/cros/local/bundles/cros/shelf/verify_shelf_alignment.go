@@ -36,7 +36,6 @@ func init() {
 		Desc:         "Tests the shelf alignment",
 		Contacts: []string{
 			"cros-system-ui-eng@google.com",
-			"andrewxu@chromium.org",
 			"tbarzic@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
