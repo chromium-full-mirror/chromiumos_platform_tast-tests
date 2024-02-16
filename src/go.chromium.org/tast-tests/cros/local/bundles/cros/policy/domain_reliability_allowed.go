@@ -120,7 +120,7 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 
 			mp := mitmproxy.New()
 			mp.SetOutDir(s.OutDir())
-			mp.SetScriptPath(s.DataPath("domain_reliability_500_requests.py"))
+			mp.AddScriptPath(s.DataPath("domain_reliability_500_requests.py"))
 
 			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx,
 				networkrequestmonitor.OptionalServiceParams{

@@ -49,9 +49,10 @@ type MitmProxy struct {
 	confDir      string
 	compressDump bool
 	cmd          *testexec.Cmd
-	isRunning    bool   // Is the proxy running? It is set to true on starting proxy.
-	removeCert   bool   // Should remove cert after test is completed?
-	scriptPath   string // Addon script used by mitmproxy
+	isRunning    bool     // Is the proxy running? It is set to true on starting proxy.
+	removeCert   bool     // Should remove cert after test is completed?
+	scriptPaths  []string // Addon scripts used by mitmproxy.
+	options      []string // Other options provided by users. We will add --set option to command.
 }
 
 // New creates a new MitmDump instance with default configuration.
@@ -63,10 +64,12 @@ func New() *MitmProxy {
 		outDir:       defaultOutDir,
 		compressDump: true,
 		removeCert:   true,
+		scriptPaths:  []string{},
+		options:      []string{},
 	}
 
 	if proxy.ScriptPath() != "" {
-		mp.scriptPath = proxy.ScriptPath()
+		mp.scriptPaths = []string{proxy.ScriptPath()}
 	}
 
 	return mp
@@ -78,9 +81,15 @@ func (mp *MitmProxy) SetRemoveCert(removeCert bool) *MitmProxy {
 	return mp
 }
 
-// SetScriptPath sets the path of addon script.
-func (mp *MitmProxy) SetScriptPath(scriptPath string) *MitmProxy {
-	mp.scriptPath = scriptPath
+// AddScriptPath adds the path of addon script.
+func (mp *MitmProxy) AddScriptPath(scriptPath string) *MitmProxy {
+	mp.scriptPaths = append(mp.scriptPaths, scriptPath)
+	return mp
+}
+
+// AddOtherOptions adds an option.
+func (mp *MitmProxy) AddOtherOptions(option string) *MitmProxy {
+	mp.options = append(mp.options, option)
 	return mp
 }
 
@@ -154,8 +163,12 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		"-w", dumpFilePath,
 	}
 
-	if len(mp.scriptPath) > 0 {
-		args = append(args, "-s", mp.scriptPath)
+	for _, path := range mp.scriptPaths {
+		args = append(args, "-s", path)
+	}
+
+	for _, option := range mp.options {
+		args = append(args, "--set", option)
 	}
 
 	// We redirect mitmproxy output to file.

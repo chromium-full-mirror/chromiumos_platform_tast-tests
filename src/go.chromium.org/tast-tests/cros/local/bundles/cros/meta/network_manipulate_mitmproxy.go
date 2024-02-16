@@ -6,6 +6,7 @@ package meta
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -20,8 +21,11 @@ import (
 )
 
 const (
-	httpRedirect    = "mitmproxy_redirect_requests.py"
-	httpErrorInject = "mitmproxy_inject_500_requests.py"
+	httpRedirect     = "mitmproxy_redirect_requests.py"
+	httpErrorInject  = "mitmproxy_inject_500_requests.py"
+	allowedEndpoints = "allowed_endpoints.py"
+	extraConfig      = "allowed_endpoints_yaml.py"
+	endpoints        = "endpoints.yml"
 )
 
 func init() {
@@ -47,6 +51,10 @@ func init() {
 			Name:      "error",
 			Val:       "error",
 			ExtraData: []string{httpErrorInject},
+		}, {
+			Name:      "diff",
+			Val:       "diff",
+			ExtraData: []string{allowedEndpoints, extraConfig, endpoints},
 		}},
 	})
 }
@@ -58,6 +66,7 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 
 	redirectCase := strings.HasSuffix(s.TestName(), "redirect")
 	errorInjectCase := strings.HasSuffix(s.TestName(), "error")
+	diffCase := strings.HasSuffix(s.TestName(), "diff")
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	proxy := mitmproxy.New()
@@ -65,9 +74,13 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	proxy.SetOutDir(s.OutDir())
 
 	if redirectCase {
-		proxy.SetScriptPath(s.DataPath(httpRedirect))
+		proxy.AddScriptPath(s.DataPath(httpRedirect))
 	} else if errorInjectCase {
-		proxy.SetScriptPath(s.DataPath(httpErrorInject))
+		proxy.AddScriptPath(s.DataPath(httpErrorInject))
+	} else if diffCase {
+		proxy.AddScriptPath(s.DataPath(allowedEndpoints))
+		proxy.AddScriptPath(s.DataPath(extraConfig))
+		proxy.AddOtherOptions(fmt.Sprintf("allowed_endpoints_yaml=%s", s.DataPath(endpoints)))
 	}
 
 	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {

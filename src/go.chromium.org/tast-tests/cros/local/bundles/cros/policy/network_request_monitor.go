@@ -488,7 +488,7 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 			if service.name == "domain_reliability" {
 				mp := mitmproxy.New()
 				mp.SetOutDir(s.OutDir())
-				mp.SetScriptPath(s.DataPath("domain_reliability_500_requests.py"))
+				mp.AddScriptPath(s.DataPath("domain_reliability_500_requests.py"))
 
 				params.Proxy = mp
 			}
