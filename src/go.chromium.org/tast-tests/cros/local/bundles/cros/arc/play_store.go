@@ -61,6 +61,7 @@ func init() {
 func PlayStore(ctx context.Context, s *testing.State) {
 	const (
 		pkgName = "com.google.android.calculator"
+		installationTimeout = 10 * time.Minute
 	)
 
 	cleanupCtx := ctx
@@ -114,7 +115,7 @@ func PlayStore(ctx context.Context, s *testing.State) {
 		defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 		s.Log("Installing app")
-		if err := playstore.InstallApp(ctx, a, d, pkgName, &playstore.Options{TryLimit: -1}); err != nil {
+		if err := playstore.InstallApp(ctx, a, d, pkgName, &playstore.Options{TryLimit: -1, InstallationTimeout: installationTimeout}); err != nil {
 			rl.Exit("install the app", err)
 		}
 
