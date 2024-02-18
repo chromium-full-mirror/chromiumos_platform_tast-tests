@@ -48,7 +48,7 @@ func init() {
 			"zhaon@google.com",
 		},
 		BugComponent: "b:1212695",
-		Attr:         []string{"group:ml_benchmark", "ml_benchmark_nightly"},
+		Attr:         []string{"group:video_conference", "video_conference_per_build"},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
 		Timeout:      15 * time.Minute,

@@ -119,7 +119,7 @@ func init() {
 		VarDeps: []string{
 			"ui.bond_credentials",
 		},
-		Attr: []string{"group:ml_benchmark", "ml_benchmark_nightly"},
+		Attr: []string{"group:video_conference", "video_conference_per_build"},
 		Data: []string{
 			"effects_frame_metrics.js",
 		},
