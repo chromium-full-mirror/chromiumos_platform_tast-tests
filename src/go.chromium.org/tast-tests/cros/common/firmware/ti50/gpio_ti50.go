@@ -161,6 +161,22 @@ const (
 	// GpioTi50BattDisableL is the signal from GSC to battery pack to cutoff
 	// the battery's power (active low).
 	GpioTi50BattDisableL GpioName = "BATT_DISABLE_L"
+	// GpioTi50UartDbgTxGscRx is the Ti50 console input.
+	GpioTi50GscUartRx GpioName = "GSC_UART_RX"
+	// GpioTi50UartGscTxDbgRx is the Ti50 console output.
+	GpioTi50GscUartTx GpioName = "GSC_UART_TX"
+	// GpioTi50UartFpmcuTxDbgRx is the UART signal from FPMCU to Ti50.
+	GpioTi50UartFpmcuTxDbgRx GpioName = "UART_FPMCU_TX_DBG_RX"
+	// GpioTi50UartDbgTxFpmcuRx is the UART signal from Ti50 to FPMCU.
+	GpioTi50UartDbgTxFpmcuRx GpioName = "UART_DBG_TX_FPMCU_RX"
+	// GpioTi50UartApTxDbgRx is the UART signal from AP to Ti50.
+	GpioTi50UartApTxDbgRx GpioName = "UART_AP_TX_DBG_RX"
+	// GpioTi50UartDbgTxApRx is the UART signal from Ti50 to AP.
+	GpioTi50UartDbgTxApRx GpioName = "UART_DBG_TX_AP_RX"
+	// GpioTi50UartEcTxDbgRx is the UART signal from EC to Ti50.
+	GpioTi50UartEcTxDbgRx GpioName = "UART_EC_TX_DBG_RX"
+	// GpioTi50UartDbgTxEcRx is the UART signal from Ti50 to EC.
+	GpioTi50UartDbgTxEcRx GpioName = "UART_DBG_TX_EC_RX"
 )
 
 const (

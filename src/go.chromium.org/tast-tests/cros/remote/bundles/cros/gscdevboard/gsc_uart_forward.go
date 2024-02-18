@@ -54,8 +54,14 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	// Simulate the AP processor being off initially.
 	s.Log("(Re)starting ti50")
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
-	b.ResetWithStraps(ctx, ti50.CcdSuzyQ, ti50.ServoMicroDisconnected)
+	b.ResetWithStraps(ctx, ti50.CcdDisconnected, ti50.ServoMicroDisconnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+
+	if b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) != false {
+		s.Error("GSC driving EC UART high before CCD connection")
+	}
+
+	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	b.WaitUntilCCDConnected(ctx)
 
 	// Test forwarding on each of three ports.
@@ -77,6 +83,16 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 		testForwarding(ctx, s, b, th, r, ti50.UartFPMCU, true, true, "AP on, no uServo")
 	}
 
+	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
+
+	startTime := time.Now()
+	for b.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) == true {
+		if time.Since(startTime) > 5*time.Second {
+			s.Error("GSC driving EC UART high after CCD disconnection")
+			break
+		}
+	}
+
 	//
 	// Boot GSC simulating a uServo being connected simultaneously with CCD.  Verify that
 	// data goes from UART to USB, but that USB data is not forwarded to UART (would conflict
@@ -86,6 +102,7 @@ func GSCUARTForward(ctx context.Context, s *testing.State) {
 	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 	b.ResetWithStraps(ctx, ti50.ServoMicroConnected)
 	th.MustSucceed(i.WaitUntilBooted(ctx), "GSC revives after reboot")
+	b.GpioApplyStrap(ctx, ti50.CcdSuzyQ)
 	b.WaitUntilCCDConnected(ctx)
 
 	// Test forwarding on each of three ports.

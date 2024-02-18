@@ -600,6 +600,16 @@ func (h DevboardHelper) WaitUntilCCDConnected(ctx context.Context) {
 	if err != nil {
 		h.Fatalf("CCD did not connect: %s", err)
 	}
+
+	// Further, wait until Ti50 drives EC UART TX high, indicating that CCD UART forwarding is
+	// active.
+	startTime := time.Now()
+	for h.GpioGet(ctx, ti50.GpioTi50UartDbgTxEcRx) != true {
+		if time.Since(startTime) > 5*time.Second {
+			h.Fatalf("GSC not driving EC UART high on CCD connection")
+			return
+		}
+	}
 }
 
 // CCDMustNotBeConnected verifies there is no CCD connection for the specified duration
