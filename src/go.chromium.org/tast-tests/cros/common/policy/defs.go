@@ -13458,6 +13458,7 @@ func (p *PrinterTypeDenyList) Equal(iface interface{}) bool {
 
 // ****************************************************************************
 // 649. SyncTypesListDisabled
+// This policy can be modified without rebooting.
 // ****************************************************************************
 type SyncTypesListDisabled struct {
 	Stat Status
@@ -25527,102 +25528,6 @@ func (p *RemoteAccessHostAllowEnterpriseFileTransfer) Equal(iface interface{}) b
 }
 
 // ****************************************************************************
-// 1128. DefaultMidiSetting
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type DefaultMidiSetting struct {
-	Stat Status
-	Val  int
-}
-
-func (p *DefaultMidiSetting) Name() string          { return "DefaultMidiSetting" }
-func (p *DefaultMidiSetting) Scope() Scope          { return ScopeUser }
-func (p *DefaultMidiSetting) Status() Status        { return p.Stat }
-func (p *DefaultMidiSetting) UntypedV() interface{} { return p.Val }
-func (p *DefaultMidiSetting) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v int
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as int", m)
-	}
-	return v, nil
-}
-func (p *DefaultMidiSetting) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *DefaultMidiSetting) Equal(iface interface{}) bool {
-	v, ok := iface.(int)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1129. MidiAllowedForUrls
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type MidiAllowedForUrls struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *MidiAllowedForUrls) Name() string          { return "MidiAllowedForUrls" }
-func (p *MidiAllowedForUrls) Scope() Scope          { return ScopeUser }
-func (p *MidiAllowedForUrls) Status() Status        { return p.Stat }
-func (p *MidiAllowedForUrls) UntypedV() interface{} { return p.Val }
-func (p *MidiAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *MidiAllowedForUrls) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *MidiAllowedForUrls) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
-// 1130. MidiBlockedForUrls
-// This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
-// ****************************************************************************
-type MidiBlockedForUrls struct {
-	Stat Status
-	Val  []string
-}
-
-func (p *MidiBlockedForUrls) Name() string          { return "MidiBlockedForUrls" }
-func (p *MidiBlockedForUrls) Scope() Scope          { return ScopeUser }
-func (p *MidiBlockedForUrls) Status() Status        { return p.Stat }
-func (p *MidiBlockedForUrls) UntypedV() interface{} { return p.Val }
-func (p *MidiBlockedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
-	var v []string
-	if err := json.Unmarshal(m, &v); err != nil {
-		return nil, errors.Wrapf(err, "could not read %s as []string", m)
-	}
-	return v, nil
-}
-func (p *MidiBlockedForUrls) SetProto(m *protoreflect.Message) {
-	SetUserProto(m, p.Name(), p.Val)
-}
-func (p *MidiBlockedForUrls) Equal(iface interface{}) bool {
-	v, ok := iface.([]string)
-	if !ok {
-		return ok
-	}
-	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
-}
-
-// ****************************************************************************
 // 1131. GlanceablesEnabled
 // This policy has a default value of False.
 // This policy can be modified without rebooting.
@@ -26137,7 +26042,6 @@ func (p *GoogleWorkspaceCloudUpload) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1147. ShortcutCustomizationAllowed
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type ShortcutCustomizationAllowed struct {
 	Stat Status
@@ -27458,7 +27362,6 @@ func (p *F12KeyModifier) Equal(iface interface{}) bool {
 // ****************************************************************************
 // 1202. VirtualKeyboardSmartVisibilityEnabled
 // This policy can be modified without rebooting.
-// This is a future policy, it is not present in stable builds.
 // ****************************************************************************
 type VirtualKeyboardSmartVisibilityEnabled struct {
 	Stat Status
@@ -27607,6 +27510,343 @@ func (p *InsertKeyModifier) SetProto(m *protoreflect.Message) {
 }
 func (p *InsertKeyModifier) Equal(iface interface{}) bool {
 	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1209. DeviceWeeklyScheduledSuspend
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DeviceWeeklyScheduledSuspend struct {
+	Stat Status
+	Val  []*DeviceWeeklyScheduledSuspendValue
+}
+
+type DeviceWeeklyScheduledSuspendValue struct {
+	End   *DeviceWeeklyScheduledSuspendValueEnd   `json:"end"`
+	Start *DeviceWeeklyScheduledSuspendValueStart `json:"start"`
+}
+
+type DeviceWeeklyScheduledSuspendValueEnd struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+type DeviceWeeklyScheduledSuspendValueStart struct {
+	DayOfWeek string `json:"day_of_week"`
+	Time      int    `json:"time"`
+}
+
+func (p *DeviceWeeklyScheduledSuspend) Name() string          { return "DeviceWeeklyScheduledSuspend" }
+func (p *DeviceWeeklyScheduledSuspend) Scope() Scope          { return ScopeDevice }
+func (p *DeviceWeeklyScheduledSuspend) Status() Status        { return p.Stat }
+func (p *DeviceWeeklyScheduledSuspend) UntypedV() interface{} { return p.Val }
+func (p *DeviceWeeklyScheduledSuspend) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []*DeviceWeeklyScheduledSuspendValue
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []*DeviceWeeklyScheduledSuspendValue", m)
+	}
+	return v, nil
+}
+func (p *DeviceWeeklyScheduledSuspend) SetProto(m *protoreflect.Message) {
+	SetDeviceProto(m, "DeviceWeeklyScheduledSuspend", "value", p.Val)
+}
+func (p *DeviceWeeklyScheduledSuspend) Equal(iface interface{}) bool {
+	v, ok := iface.([]*DeviceWeeklyScheduledSuspendValue)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1211. ScreenCaptureLocation
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type ScreenCaptureLocation struct {
+	Stat Status
+	Val  string
+}
+
+func (p *ScreenCaptureLocation) Name() string          { return "ScreenCaptureLocation" }
+func (p *ScreenCaptureLocation) Scope() Scope          { return ScopeUser }
+func (p *ScreenCaptureLocation) Status() Status        { return p.Stat }
+func (p *ScreenCaptureLocation) UntypedV() interface{} { return p.Val }
+func (p *ScreenCaptureLocation) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as string", m)
+	}
+	return v, nil
+}
+func (p *ScreenCaptureLocation) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *ScreenCaptureLocation) Equal(iface interface{}) bool {
+	v, ok := iface.(string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1212. AllowedDomainsForAppsList
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type AllowedDomainsForAppsList struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *AllowedDomainsForAppsList) Name() string          { return "AllowedDomainsForAppsList" }
+func (p *AllowedDomainsForAppsList) Scope() Scope          { return ScopeUser }
+func (p *AllowedDomainsForAppsList) Status() Status        { return p.Stat }
+func (p *AllowedDomainsForAppsList) UntypedV() interface{} { return p.Val }
+func (p *AllowedDomainsForAppsList) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *AllowedDomainsForAppsList) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *AllowedDomainsForAppsList) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1214. GoogleLocationServicesEnabled
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type GoogleLocationServicesEnabled struct {
+	Stat Status
+	Val  int
+}
+
+func (p *GoogleLocationServicesEnabled) Name() string          { return "GoogleLocationServicesEnabled" }
+func (p *GoogleLocationServicesEnabled) Scope() Scope          { return ScopeUser }
+func (p *GoogleLocationServicesEnabled) Status() Status        { return p.Stat }
+func (p *GoogleLocationServicesEnabled) UntypedV() interface{} { return p.Val }
+func (p *GoogleLocationServicesEnabled) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *GoogleLocationServicesEnabled) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *GoogleLocationServicesEnabled) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1216. LocalUserFilesAllowed
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type LocalUserFilesAllowed struct {
+	Stat Status
+	Val  bool
+}
+
+func (p *LocalUserFilesAllowed) Name() string          { return "LocalUserFilesAllowed" }
+func (p *LocalUserFilesAllowed) Scope() Scope          { return ScopeUser }
+func (p *LocalUserFilesAllowed) Status() Status        { return p.Stat }
+func (p *LocalUserFilesAllowed) UntypedV() interface{} { return p.Val }
+func (p *LocalUserFilesAllowed) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v bool
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as bool", m)
+	}
+	return v, nil
+}
+func (p *LocalUserFilesAllowed) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *LocalUserFilesAllowed) Equal(iface interface{}) bool {
+	v, ok := iface.(bool)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1218. SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins) Name() string {
+	return "SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins"
+}
+func (p *SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins) Scope() Scope   { return ScopeUser }
+func (p *SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins) Status() Status { return p.Stat }
+func (p *SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins) UntypedV() interface{} {
+	return p.Val
+}
+func (p *SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1219. DefaultWebPrintingSetting
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type DefaultWebPrintingSetting struct {
+	Stat Status
+	Val  int
+}
+
+func (p *DefaultWebPrintingSetting) Name() string          { return "DefaultWebPrintingSetting" }
+func (p *DefaultWebPrintingSetting) Scope() Scope          { return ScopeUser }
+func (p *DefaultWebPrintingSetting) Status() Status        { return p.Stat }
+func (p *DefaultWebPrintingSetting) UntypedV() interface{} { return p.Val }
+func (p *DefaultWebPrintingSetting) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v int
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as int", m)
+	}
+	return v, nil
+}
+func (p *DefaultWebPrintingSetting) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DefaultWebPrintingSetting) Equal(iface interface{}) bool {
+	v, ok := iface.(int)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1220. WebPrintingAllowedForUrls
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type WebPrintingAllowedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *WebPrintingAllowedForUrls) Name() string          { return "WebPrintingAllowedForUrls" }
+func (p *WebPrintingAllowedForUrls) Scope() Scope          { return ScopeUser }
+func (p *WebPrintingAllowedForUrls) Status() Status        { return p.Stat }
+func (p *WebPrintingAllowedForUrls) UntypedV() interface{} { return p.Val }
+func (p *WebPrintingAllowedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *WebPrintingAllowedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *WebPrintingAllowedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1221. WebPrintingBlockedForUrls
+// This policy can be modified without rebooting.
+// This is a future policy, it is not present in stable builds.
+// ****************************************************************************
+type WebPrintingBlockedForUrls struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *WebPrintingBlockedForUrls) Name() string          { return "WebPrintingBlockedForUrls" }
+func (p *WebPrintingBlockedForUrls) Scope() Scope          { return ScopeUser }
+func (p *WebPrintingBlockedForUrls) Status() Status        { return p.Stat }
+func (p *WebPrintingBlockedForUrls) UntypedV() interface{} { return p.Val }
+func (p *WebPrintingBlockedForUrls) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *WebPrintingBlockedForUrls) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *WebPrintingBlockedForUrls) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
+	if !ok {
+		return ok
+	}
+	return cmp.Equal(p.Val, v, cmpopts.EquateEmpty())
+}
+
+// ****************************************************************************
+// 1222. DocumentScanAPITrustedExtensions
+// This policy can be modified without rebooting.
+// ****************************************************************************
+type DocumentScanAPITrustedExtensions struct {
+	Stat Status
+	Val  []string
+}
+
+func (p *DocumentScanAPITrustedExtensions) Name() string          { return "DocumentScanAPITrustedExtensions" }
+func (p *DocumentScanAPITrustedExtensions) Scope() Scope          { return ScopeUser }
+func (p *DocumentScanAPITrustedExtensions) Status() Status        { return p.Stat }
+func (p *DocumentScanAPITrustedExtensions) UntypedV() interface{} { return p.Val }
+func (p *DocumentScanAPITrustedExtensions) UnmarshalAs(m json.RawMessage) (interface{}, error) {
+	var v []string
+	if err := json.Unmarshal(m, &v); err != nil {
+		return nil, errors.Wrapf(err, "could not read %s as []string", m)
+	}
+	return v, nil
+}
+func (p *DocumentScanAPITrustedExtensions) SetProto(m *protoreflect.Message) {
+	SetUserProto(m, p.Name(), p.Val)
+}
+func (p *DocumentScanAPITrustedExtensions) Equal(iface interface{}) bool {
+	v, ok := iface.([]string)
 	if !ok {
 		return ok
 	}
@@ -29188,12 +29428,6 @@ func newByName(name string) (Policy, error) {
 		return &ArcVmDataMigrationStrategy{}, nil
 	case "RemoteAccessHostAllowEnterpriseFileTransfer":
 		return &RemoteAccessHostAllowEnterpriseFileTransfer{}, nil
-	case "DefaultMidiSetting":
-		return &DefaultMidiSetting{}, nil
-	case "MidiAllowedForUrls":
-		return &MidiAllowedForUrls{}, nil
-	case "MidiBlockedForUrls":
-		return &MidiBlockedForUrls{}, nil
 	case "GlanceablesEnabled":
 		return &GlanceablesEnabled{}, nil
 	case "DeviceAuthenticationURLBlocklist":
@@ -29312,6 +29546,26 @@ func newByName(name string) (Policy, error) {
 		return &PageUpAndPageDownKeysModifier{}, nil
 	case "InsertKeyModifier":
 		return &InsertKeyModifier{}, nil
+	case "DeviceWeeklyScheduledSuspend":
+		return &DeviceWeeklyScheduledSuspend{}, nil
+	case "ScreenCaptureLocation":
+		return &ScreenCaptureLocation{}, nil
+	case "AllowedDomainsForAppsList":
+		return &AllowedDomainsForAppsList{}, nil
+	case "GoogleLocationServicesEnabled":
+		return &GoogleLocationServicesEnabled{}, nil
+	case "LocalUserFilesAllowed":
+		return &LocalUserFilesAllowed{}, nil
+	case "SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins":
+		return &SubAppsAPIsAllowedWithoutGestureAndAuthorizationForOrigins{}, nil
+	case "DefaultWebPrintingSetting":
+		return &DefaultWebPrintingSetting{}, nil
+	case "WebPrintingAllowedForUrls":
+		return &WebPrintingAllowedForUrls{}, nil
+	case "WebPrintingBlockedForUrls":
+		return &WebPrintingBlockedForUrls{}, nil
+	case "DocumentScanAPITrustedExtensions":
+		return &DocumentScanAPITrustedExtensions{}, nil
 	default:
 		return nil, errors.New("Unknown policy " + name)
 	}
