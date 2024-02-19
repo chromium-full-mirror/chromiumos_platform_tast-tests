@@ -106,7 +106,9 @@ func ParseLmkdKills(ctx context.Context, a *arc.ARC, since adb.LogcatTimestampLo
 	var result []*LmkdKillInfo
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		result = nil
+		lastLine := ""
 		if err := a.ScanLogcatSince(func(line string) bool {
+			lastLine = line
 			if strings.Contains(line, doneString) {
 				return true
 			}
@@ -116,11 +118,11 @@ func ParseLmkdKills(ctx context.Context, a *arc.ARC, since adb.LogcatTimestampLo
 			}
 			return false
 		}, since); err != nil {
-			testing.ContextLog(ctx, "Failed to scan logcat for LMKD kills: ", err)
-			return err
+			testing.ContextLogf(ctx, "Failed to find %q in logcat, last line seen %q: %s", doneString, lastLine, err)
+			return errors.Wrapf(err, "failed to find %q in logcat, last line seen %q", doneString, lastLine)
 		}
 		return nil
-	}, &testing.PollOptions{Interval: 10 * time.Second, Timeout: time.Minute}); err != nil {
+	}, &testing.PollOptions{Interval: 10 * time.Second, Timeout: 5 * time.Minute}); err != nil {
 		return nil, errors.Wrap(err, "failed to scan logcat for LMKD kills")
 	}
 	return result, nil
