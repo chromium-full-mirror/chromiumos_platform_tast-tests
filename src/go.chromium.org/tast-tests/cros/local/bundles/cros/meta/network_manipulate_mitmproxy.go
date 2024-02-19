@@ -34,6 +34,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that manipulating network traffic with mitmproxy",
 		Contacts: []string{
+			"cros-ufo-testing@google.com",
 			"yanghenry@google.com",
 		},
 		BugComponent: "b:1359643", // ChromeOS > EngProd > Software > Trust & Safety
@@ -64,25 +65,9 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	redirectCase := strings.HasSuffix(s.TestName(), "redirect")
-	errorInjectCase := strings.HasSuffix(s.TestName(), "error")
-	diffCase := strings.HasSuffix(s.TestName(), "diff")
-
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-	proxy := mitmproxy.New()
 
-	proxy.SetOutDir(s.OutDir())
-
-	if redirectCase {
-		proxy.AddScriptPath(s.DataPath(httpRedirect))
-	} else if errorInjectCase {
-		proxy.AddScriptPath(s.DataPath(httpErrorInject))
-	} else if diffCase {
-		proxy.AddScriptPath(s.DataPath(allowedEndpoints))
-		proxy.AddScriptPath(s.DataPath(extraConfig))
-		proxy.AddOtherOptions(fmt.Sprintf("allowed_endpoints_yaml=%s", s.DataPath(endpoints)))
-	}
-
+	proxy, err := getMitmproxy(s)
 	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
 		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
@@ -94,18 +79,23 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	}
 	br.ReloadActiveTab(ctx)
 
-	if redirectCase {
-		if err := verifyPageContent(ctx, conn, "google"); err != nil {
-			s.Fatal("Failed to redirect page to google: ", err)
-		}
-	} else if errorInjectCase {
-		if err := verifyPageContent(ctx, conn, "error injected by proxy"); err != nil {
-			s.Fatal("Failed to inject error: ", err)
-		}
+	if err := verify(ctx, s, conn); err != nil {
+		s.Fatal("Failed to verify page: ", err)
 	}
 
 	defer closeBrowser(cleanupCtx)
 	defer conn.Close()
+}
+
+func verify(ctx context.Context, s *testing.State, conn *chrome.Conn) error {
+	switch s.Param().(string) {
+	case "redirect":
+		return verifyPageContent(ctx, conn, "google")
+	case "error":
+		return verifyPageContent(ctx, conn, "error injected by proxy")
+	default:
+		return nil
+	}
 }
 
 func verifyPageContent(ctx context.Context, conn *chrome.Conn, expected string) error {
@@ -124,4 +114,23 @@ func verifyPageContent(ctx context.Context, conn *chrome.Conn, expected string) 
 	}
 
 	return nil
+}
+
+func getMitmproxy(s *testing.State) (*mitmproxy.MitmProxy, error) {
+	testCase := s.Param().(string)
+	var opts []mitmproxy.Option
+	switch testCase {
+	case "redirect":
+		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(httpRedirect)))
+		opts = append(opts, mitmproxy.OutDir(s.OutDir()))
+	case "error":
+		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(httpErrorInject)))
+		opts = append(opts, mitmproxy.OutDir(s.OutDir()))
+	case "diff":
+		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(allowedEndpoints), s.DataPath(extraConfig)))
+		opts = append(opts, mitmproxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml=%s", s.DataPath(endpoints))))
+		opts = append(opts, mitmproxy.OutDir(s.OutDir()))
+
+	}
+	return mitmproxy.New(opts...)
 }

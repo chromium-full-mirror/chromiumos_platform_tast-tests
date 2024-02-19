@@ -56,7 +56,7 @@ type MitmProxy struct {
 }
 
 // New creates a new MitmDump instance with default configuration.
-func New() *MitmProxy {
+func New(opts ...Option) (*MitmProxy, error) {
 	mp := &MitmProxy{
 		binaryPath:   DefaultBinaryPath,
 		port:         DefaultListenPort,
@@ -68,59 +68,19 @@ func New() *MitmProxy {
 		options:      []string{},
 	}
 
+	// Get values from command line.
 	if proxy.ScriptPath() != "" {
 		mp.scriptPaths = []string{proxy.ScriptPath()}
 	}
 
-	return mp
-}
+	// Override any value if users pass option from test.
+	for _, opt := range opts {
+		if err := opt(mp); err != nil {
+			return nil, err
+		}
+	}
 
-// SetRemoveCert sets whether to remove cert.
-func (mp *MitmProxy) SetRemoveCert(removeCert bool) *MitmProxy {
-	mp.removeCert = removeCert
-	return mp
-}
-
-// AddScriptPath adds the path of addon script.
-func (mp *MitmProxy) AddScriptPath(scriptPath string) *MitmProxy {
-	mp.scriptPaths = append(mp.scriptPaths, scriptPath)
-	return mp
-}
-
-// AddOtherOptions adds an option.
-func (mp *MitmProxy) AddOtherOptions(option string) *MitmProxy {
-	mp.options = append(mp.options, option)
-	return mp
-}
-
-// SetBinaryPath sets the binary path of mitmproxy.
-func (mp *MitmProxy) SetBinaryPath(binaryPath string) *MitmProxy {
-	mp.binaryPath = binaryPath
-	return mp
-}
-
-// SetListenPort sets the listening port of mitmproxy.
-func (mp *MitmProxy) SetListenPort(port int) *MitmProxy {
-	mp.port = port
-	return mp
-}
-
-// ListenPort returns the port mitmproxy intends to listen on.
-func (mp *MitmProxy) ListenPort() int {
-	return mp.port
-}
-
-// SetOutDir sets the mitmproxy output path.
-// Output includes dump and log.
-func (mp *MitmProxy) SetOutDir(path string) *MitmProxy {
-	mp.outDir = path
-	return mp
-}
-
-// SetConfDir sets the mitmproxy config path.
-func (mp *MitmProxy) SetConfDir(confDir string) *MitmProxy {
-	mp.confDir = confDir
-	return mp
+	return mp, nil
 }
 
 // IsRunning returns whether the proxy is running.

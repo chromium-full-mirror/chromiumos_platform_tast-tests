@@ -486,9 +486,13 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 				PolicySetting: tcs.PolicyStatus}
 
 			if service.name == "domain_reliability" {
-				mp := mitmproxy.New()
-				mp.SetOutDir(s.OutDir())
-				mp.AddScriptPath(s.DataPath("domain_reliability_500_requests.py"))
+				mp, err := mitmproxy.New(
+					mitmproxy.OutDir(s.OutDir()),
+					mitmproxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
+				)
+				if err != nil {
+					s.Fatal("Failed to create MitmProxy: ", err)
+				}
 
 				params.Proxy = mp
 			}

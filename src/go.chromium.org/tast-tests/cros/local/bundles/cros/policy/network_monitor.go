@@ -42,8 +42,10 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	mp := mitmproxy.New()
-	mp.SetOutDir(s.OutDir())
+	mp, err := mitmproxy.New(mitmproxy.OutDir(s.OutDir()))
+	if err != nil {
+		s.Fatal("Failed to create MitmProxy: ", err)
+	}
 
 	if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
 		s.Fatal("Failed to launch and apply proxy: ", err)

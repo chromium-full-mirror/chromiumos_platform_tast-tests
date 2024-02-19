@@ -157,7 +157,10 @@ func parseProxyAddress(proxyAddress string) (host string, port int, err error) {
 // CreateLaunchAndApplyProxy creates and apply a new proxy when proxy.enable is true.
 func (c *Chrome) CreateLaunchAndApplyProxy(ctx context.Context) proxy.Proxy {
 	if proxy.IsProxyEnabled() {
-		p := mitmproxy.New()
+		p, err := mitmproxy.New()
+		if err != nil {
+			panic(fmt.Sprintf("Failed to create MitmProxy: %v", err))
+		}
 		if err := c.LaunchAndApplyProxy(ctx, p); err != nil {
 			panic(fmt.Sprintf("Failed to launch and apply proxy: %v", err))
 		}
