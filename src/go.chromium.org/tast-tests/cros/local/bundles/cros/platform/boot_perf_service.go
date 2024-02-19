@@ -70,6 +70,8 @@ func (*BootPerfService) EnsureTlsdatedStopped(ctx context.Context, _ *empty.Empt
 //   - seconds_kernel_to_signin_users
 //   - seconds_kernel_to_login
 //   - seconds_kernel_to_network
+//   - seconds_kernel_to_patchpanel_start
+//   - seconds_kernel_to_patchpanel_started
 //   - seconds_startup_to_chrome_exec
 //   - seconds_chrome_exec_to_login
 //   - rdbytes_kernel_to_startup

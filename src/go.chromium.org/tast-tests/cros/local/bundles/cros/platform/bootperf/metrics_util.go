@@ -79,6 +79,9 @@ var (
 	//   kernel_to_cellular_registered - The moment when Shill detects a
 	//     cellular device.
 	//   kernel_to_wifi_registered - The moment when Shill detects a WiFi device.
+	//   kernel_to_patchpanel_start - The moment when patchpanel starts.
+	//   kernel_to_patchpanel_started - The moment when patchpanel finishes setup
+	//     and able to process D-Bus requests.
 	eventMetrics = []struct {
 		MetricName  string
 		EventName   string
@@ -101,6 +104,8 @@ var (
 		{"kernel_to_cellular_registered", "network-cellular-registered", metricOptional},
 		// All should have WiFi, but we still don't want to fail (e.g., if there are hardware issues).
 		{"kernel_to_wifi_registered", "network-wifi-registered", metricRecommended},
+		{"kernel_to_patchpanel_start", "patchpanel-start", metricRequired},
+		{"kernel_to_patchpanel_started", "patchpanel-started", metricRequired},
 	}
 
 	uptimeFileGlob = filepath.Join(bootstatCurrentDir, uptimePrefix+"*")
@@ -271,6 +276,8 @@ func parseUptime(eventName, bootstatDir string, index int) (float64, error) {
 //   - seconds_kernel_to_cellular_registered
 //   - seconds_kernel_to_wifi_registered
 //   - seconds_kernel_to_network
+//   - seconds_kernel_to_patchpanel_start
+//   - seconds_kernel_to_patchpanel_started
 func GatherTimeMetrics(ctx context.Context, results *platform.GetBootPerfMetricsResponse) error {
 	var missingNonRequiredEvennts []string
 	for _, k := range eventMetrics {
