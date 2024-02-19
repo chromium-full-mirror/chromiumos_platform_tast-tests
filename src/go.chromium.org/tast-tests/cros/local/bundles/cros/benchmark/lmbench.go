@@ -17,7 +17,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/bundles/cros/benchmark/setup"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -47,13 +46,10 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LMbench,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Execute LMBench to do benchmark testing and retrieve the results",
-		Contacts:     []string{"chromeos-perf-reliability-eng@google.com", "cienet-development@googlegroups.com", "xibin@google.com"},
-		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > SPERA > Automation
-		// Disabled due to <1% pass rate over 30 days. See b/246820188
-		//Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      setup.BenchmarkChromeFixture,
+		Desc:         "Measure system memory bandwidth and latency with LMBench",
+		Contacts:     []string{"cros-pe-pnp@google.com", "pmarheine@google.com"},
+		BugComponent: "b:1363623", // ChromeOS > Platform > Enablement > PnP
+		Attr:         []string{"group:crosbolt", "crosbolt_weekly"},
 		Timeout:      30 * time.Minute,
 	})
 }
