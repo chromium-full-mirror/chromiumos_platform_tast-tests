@@ -414,7 +414,7 @@ func (r *Router) setupWifiPhys(ctx context.Context) error {
 }
 
 // StartHostapd starts the hostapd server.
-func (r *Router) StartHostapd(ctx context.Context, name string, confs ...*hostapd.Config) (hs *hostapd.Server, retErr error) {
+func (r *Router) StartHostapd(ctx context.Context, name string, confs ...*hostapd.Config) (_ *hostapd.Server, retErr error) {
 	ctx, st := timing.Start(ctx, "router.StartHostapd")
 	defer st.End()
 	var ifaces []*hostapd.Iface
@@ -430,8 +430,9 @@ func (r *Router) StartHostapd(ctx context.Context, name string, confs ...*hostap
 				r.im.SetAvailable(iface)
 			}
 		}()
+		ifaces = append(ifaces, hostapd.NewIface(iface, conf))
 	}
-	hs, retErr = r.startHostapdOnIfaces(ctx, name, ifaces)
+	hs, retErr := r.startHostapdOnIfaces(ctx, name, ifaces)
 	if retErr != nil {
 		return nil, retErr
 	}
