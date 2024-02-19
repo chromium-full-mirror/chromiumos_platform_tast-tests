@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 )
 
 // paragraph includes all the information needed to type a paragraph
@@ -51,8 +52,9 @@ type paragraph struct {
 	// anything that could affect typing further paragraphs.
 	cleanUp action.Action
 
-	// recordTrace indicates whether to record trace.
-	recordTrace bool
+	// tracingCfg indicates which perfetto tracing config to use to collect a
+	// trace of this paragraph. No trace is collected if empty.
+	tracingCfg string
 }
 
 // These values for typing speed were chosen to be equidistant, and to
@@ -103,7 +105,7 @@ func getParagraphs(pc pointer.Context, cr *chrome.Chrome, tconn *chrome.TestConn
 			description: fmt.Sprintf("English WPM %d", fastTypingSpeed),
 			body:        englishString,
 			language:    ime.DefaultInputMethod,
-			recordTrace: true,
+			tracingCfg:  cujrecorder.SystemTraceConfigFile,
 		},
 		{
 			description: "Lorem Ipsum",

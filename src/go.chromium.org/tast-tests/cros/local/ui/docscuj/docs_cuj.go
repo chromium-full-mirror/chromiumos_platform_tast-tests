@@ -261,7 +261,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			return err
 		}
 
-		for _, p := range paragraphs {
+		for pIndex, p := range paragraphs {
 			// Before typing the next paragraph, ensure that the Docs
 			// tab hasn't crashed.
 			if err := tabChecker.Check(ctx); err != nil {
@@ -311,8 +311,9 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			}
 
 			// See go/trace-in-cuj-tests about rules for tracing.
-			if p.recordTrace {
-				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+			if p.tracingCfg != "" {
+				traceName := fmt.Sprintf("paragraph%d.data.gz", pIndex)
+				if err := recorder.StartTracingWithName(ctx, s.OutDir(), traceName, s.DataPath(p.tracingCfg)); err != nil {
 					return errors.Wrap(err, "failed to start tracing")
 				}
 			}
@@ -327,7 +328,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 				return errors.Wrap(err, "failed to type paragraph")
 			}
 
-			if p.recordTrace {
+			if p.tracingCfg != "" {
 				if err := recorder.StopTracing(ctx); err != nil {
 					return errors.Wrap(err, "failed to stop tracing")
 				}
