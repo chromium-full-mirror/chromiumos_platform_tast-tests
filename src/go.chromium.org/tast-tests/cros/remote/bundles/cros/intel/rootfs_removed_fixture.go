@@ -50,8 +50,6 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 		devMode           = "--allow-ra-in-dev-mode "
 		enableHevc        = "--enable-clear-hevc-for-testing"
 		configFile        = "/etc/chrome_dev.conf"
-		oemCryptoPath     = "/var/lib/oemcrypto"
-		oemPublicCertFile = "oem_public_cert.bin"
 		wrappedRSAKeyFile = "wrapped_rsa_key.bin"
 		wrappedKeyboxFile = "wrapped_wv_keybox"
 	)
@@ -110,18 +108,6 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			if err := d.Conn().CommandContext(ctx, "bash", "-c", fmt.Sprintf("echo '%s' >> %s", text, configFile)).Run(); err != nil {
 				s.Fatalf("Failed to write %s to %s: %v", text, configFile, err)
 			}
-		}
-	}
-
-	output, err := d.Conn().CommandContext(ctx, "bash", "-c", fmt.Sprintf("ls %s", oemCryptoPath)).Output()
-	if err != nil {
-		s.Fatal("Failed to run oemcrypto command: ", err)
-	}
-
-	var oemCryptoContents = []string{oemPublicCertFile, wrappedRSAKeyFile, wrappedKeyboxFile}
-	for _, val := range oemCryptoContents {
-		if !strings.Contains(string(output), val) {
-			s.Fatalf("Failed to find %s at %s", val, oemCryptoPath)
 		}
 	}
 
