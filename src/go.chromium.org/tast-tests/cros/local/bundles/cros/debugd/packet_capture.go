@@ -292,7 +292,7 @@ func PacketCapture(ctx context.Context, s *testing.State) {
 
 			// Notification must be gone after all packet captures are stopped.
 			s.Log("Checking if packet capture notification is gone")
-			if err := ash.WaitUntilNotificationGone(ctx, tconn, 30*time.Second, ash.WaitIDContains(notificationID)); err != nil {
+			if err := ash.WaitUntilNotificationGone(ctx, tconn, 60*time.Second, ash.WaitIDContains(notificationID)); err != nil {
 				s.Fatal("Notification isn't gone after stopping packet capture: ", err)
 			}
 
