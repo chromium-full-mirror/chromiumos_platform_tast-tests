@@ -39,11 +39,11 @@ func init() {
 				Val:              ime.FrenchFrance,
 				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.FrenchFrance}),
 			},
-			{
-				Name:             "us_intl_acute", // known issue (b:289319217)
-				Val:              ime.EnglishUSWithInternationalKeyboard,
-				ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
-			},
+			// {
+			// 	Name:             "us_intl_acute", // known issue (b:289319217)
+			// 	Val:              ime.EnglishUSWithInternationalKeyboard,
+			// 	ExtraSearchFlags: util.IMESearchFlags([]ime.InputMethod{ime.EnglishUSWithInternationalKeyboard}),
+			// },
 		},
 	})
 }
