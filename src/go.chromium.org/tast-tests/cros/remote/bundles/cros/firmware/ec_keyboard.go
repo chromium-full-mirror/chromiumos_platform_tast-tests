@@ -277,7 +277,7 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 	for key, keyCode := range testKeyMap {
 		s.Logf("Pressing key %q, expecting to read keycode %q", key, keyCode)
 		if err := readKeyPress(ctx, h, scanner, key, keyCode, keyPressFunc); err != nil {
-			s.Fatal("Failed to read key: ", err)
+			s.Error("Failed to read key: ", err)
 		}
 	}
 }
