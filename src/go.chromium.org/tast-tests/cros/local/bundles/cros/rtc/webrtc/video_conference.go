@@ -63,6 +63,8 @@ type VCTestParams struct {
 	Trace bool
 	// If NoiseCancellation is true, enable input noise cancellation on the platform.
 	NoiseCancellation bool
+	// BrowserType represents chrome browser type that the test runs with.
+	BrowserType browser.Type
 }
 
 const (
@@ -165,7 +167,7 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 
 // runNonStep holds a conference video call in which |numPeople| persons attends
 // and thus |numPeople-1| decoders and 1 encoder run.
-func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
+func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.State, conn *chrome.Conn, pr *power.Recorder, params VCTestParams) error {
 	const profileInterval = 100 * time.Second // Sleep interval to measure the performance metrics.
 	if params.NumPeople <= 1 {
 		return errors.Errorf("the number of people must be more than 1: NumPeople=%d", params.NumPeople)
@@ -192,7 +194,7 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 	var err error
 	var startHists []*metrics.Histogram
 	if len(histNames) > 0 {
-		startHists, err = metrics.GetHistograms(ctx, tconn, histNames)
+		startHists, err = metrics.GetHistograms(ctx, bTconn, histNames)
 		if err != nil {
 			return errors.Wrap(err, "failed to get histograms")
 		}
@@ -200,7 +202,7 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 
 	if params.Mouse {
 		// Active the text input window so that keyboard inputs the text area.
-		if err := browser.ActivateTabByTitle(ctx, tconn, mouseTitle); err != nil {
+		if err := browser.ActivateTabByTitle(ctx, bTconn, mouseTitle); err != nil {
 			return errors.Wrap(err, "failed activating video conference window")
 		}
 		mouseCtx := ctx
@@ -212,7 +214,7 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 		defer stopMouseOperating()
 	} else if params.Text {
 		// Active the text input window so that keyboard inputs the text area.
-		if err := browser.ActivateTabByTitle(ctx, tconn, textTitle); err != nil {
+		if err := browser.ActivateTabByTitle(ctx, bTconn, textTitle); err != nil {
 			return errors.Wrap(err, "failed activating video conference window")
 		}
 		// typeCtx is shorter than kbdCtx because a keyboard needs to be closed
@@ -226,7 +228,7 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 		defer stopTyping()
 	} else if params.Present {
 		// Capturing a tab activates the captured tab and window. Back to the video conference window.
-		if err := browser.ActivateTabByTitle(ctx, tconn, vcTitle); err != nil {
+		if err := browser.ActivateTabByTitle(ctx, bTconn, vcTitle); err != nil {
 			return errors.Wrap(err, "failed activating video conference window")
 		}
 	}
@@ -250,7 +252,7 @@ func runNonStep(ctx context.Context, s *testing.State, tconn *chrome.TestConn, c
 	}
 
 	if len(histNames) > 0 {
-		endHists, err := metrics.GetHistograms(ctx, tconn, histNames)
+		endHists, err := metrics.GetHistograms(ctx, bTconn, histNames)
 		if err != nil {
 			return errors.Wrap(err, "failed to get histograms")
 		}
@@ -368,12 +370,7 @@ func prepareWindowView(ctx context.Context, tconn *chrome.TestConn, newWinTitle 
 	return nil
 }
 
-func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, newWinURL string, params VCTestParams) error {
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to connect to test API")
-	}
-
+func runVCPerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.TestConn, s *testing.State, vcURL, newWinURL string, params VCTestParams) error {
 	closeCtx := ctx
 
 	// Reserve time for closing tab and cleaning up a power library.
@@ -393,7 +390,7 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	r := power.NewRecorder(ctx, powerInterval, s.OutDir(), s.TestName())
 	defer r.Close(closeCtx)
 
-	conn, err := cr.NewConn(ctx, vcURL)
+	conn, err := cs.NewConn(ctx, vcURL)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open %s", vcURL)
 	}
@@ -408,7 +405,7 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	var newWinStartUp func() error
 	if params.Present || params.Text || params.Mouse {
 		// Opens a new window for presentation or text input.
-		newWinConn, err := cr.NewConn(ctx, newWinURL, browser.WithNewWindow())
+		newWinConn, err := cs.NewConn(ctx, newWinURL, browser.WithNewWindow())
 		if err != nil {
 			return errors.Wrapf(err, "failed to open %s", newWinURL)
 		}
@@ -447,7 +444,7 @@ func runVCPerf(ctx context.Context, cr *chrome.Chrome, s *testing.State, vcURL, 
 	if params.Step {
 		return runStep(ctx, conn, r)
 	}
-	return runNonStep(ctx, s, tconn, conn, r, params)
+	return runNonStep(ctx, tconn, bTconn, s, conn, r, params)
 }
 
 // setUpAudio configures the audio server according to p.
@@ -475,7 +472,7 @@ func setUpAudio(ctx context.Context, p VCTestParams) error {
 
 // RunVideoConference runs a video conference using WebRTC API and measures the
 // performance metrics while enabling features in order.
-func RunVideoConference(ctx context.Context, cr *chrome.Chrome, s *testing.State, params VCTestParams) error {
+func RunVideoConference(ctx context.Context, cs ash.ConnSource, tconn, bTConn *chrome.TestConn, s *testing.State, params VCTestParams) error {
 	const cleanupTime = 5 * time.Second
 
 	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
@@ -491,7 +488,7 @@ func RunVideoConference(ctx context.Context, cr *chrome.Chrome, s *testing.State
 	ctx, cancel := ctxutil.Shorten(ctx, cleanupTime)
 	defer cancel()
 
-	if err := runVCPerf(ctx, cr, s, vcURL, newWinURL, params); err != nil {
+	if err := runVCPerf(ctx, cs, tconn, bTConn, s, vcURL, newWinURL, params); err != nil {
 		return err
 	}
 

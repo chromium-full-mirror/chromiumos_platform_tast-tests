@@ -25,7 +25,7 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebRTCVideoConference,
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Measure audio, camera, graphics and video stack performance in a video conference using WebRTC",
 		Vars: []string{
 			"rtc.WebRTCVideoConference.Mouse",
@@ -50,21 +50,32 @@ func init() {
 			{
 				Name: "custom",
 				Val: webrtc.VCTestParams{
-					NumPeople: 2,
+					NumPeople:   2,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "chromeRTCPerf",
 			},
 			{
 				Name: "step",
 				Val: webrtc.VCTestParams{
-					Step: true,
+					Step:        true,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "chromeRTCPerf",
+			},
+			{
+				Name: "step_lacros",
+				Val: webrtc.VCTestParams{
+					Step:        true,
+					BrowserType: browser.TypeLacros,
 				},
 				Fixture: "chromeRTCPerf",
 			},
 			{
 				Name: "2p",
 				Val: webrtc.VCTestParams{
-					NumPeople: 2,
+					NumPeople:   2,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -72,7 +83,8 @@ func init() {
 			{
 				Name: "4p",
 				Val: webrtc.VCTestParams{
-					NumPeople: 4,
+					NumPeople:   4,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -80,7 +92,8 @@ func init() {
 			{
 				Name: "9p",
 				Val: webrtc.VCTestParams{
-					NumPeople: 9,
+					NumPeople:   9,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -88,8 +101,9 @@ func init() {
 			{
 				Name: "4p_present",
 				Val: webrtc.VCTestParams{
-					NumPeople: 4,
-					Present:   true,
+					NumPeople:   4,
+					Present:     true,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -100,6 +114,7 @@ func init() {
 					NumPeople:         4,
 					Present:           true,
 					NoiseCancellation: true,
+					BrowserType:       browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -107,8 +122,9 @@ func init() {
 			{
 				Name: "4p_text",
 				Val: webrtc.VCTestParams{
-					NumPeople: 4,
-					Text:      true,
+					NumPeople:   4,
+					Text:        true,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -116,9 +132,10 @@ func init() {
 			{
 				Name: "4p_present_text",
 				Val: webrtc.VCTestParams{
-					NumPeople: 4,
-					Present:   true,
-					Text:      true,
+					NumPeople:   4,
+					Present:     true,
+					Text:        true,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -126,8 +143,9 @@ func init() {
 			{
 				Name: "4p_mouse",
 				Val: webrtc.VCTestParams{
-					NumPeople: 4,
-					Mouse:     true,
+					NumPeople:   4,
+					Mouse:       true,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
@@ -135,12 +153,57 @@ func init() {
 			{
 				Name: "4p_present_mouse",
 				Val: webrtc.VCTestParams{
-					NumPeople: 4,
-					Mouse:     true,
-					Present:   true,
+					NumPeople:   4,
+					Mouse:       true,
+					Present:     true,
+					BrowserType: browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_lacros",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					BrowserType: browser.TypeLacros,
+				},
+				Fixture:           "chromeRTCPerfLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_text_lacros",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Text:        true,
+					BrowserType: browser.TypeLacros,
+				},
+				Fixture:           "chromeRTCPerfLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_mouse_lacros",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Mouse:       true,
+					BrowserType: browser.TypeLacros,
+				},
+				Fixture:           "chromeRTCPerfLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_present_text_lacros",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					Text:        true,
+					Present:     true,
+					BrowserType: browser.TypeLacros,
+				},
+				Fixture:           "chromeRTCPerfLacros",
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 		},
 	})
@@ -215,11 +278,24 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup(ctx)
 
-	cr, l, _, err := lacros.Setup(ctx, s.FixtValue(), browser.TypeAsh)
+	cr, l, cs, err := lacros.Setup(ctx, s.FixtValue(), params.BrowserType)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
 	}
 	defer lacros.CloseLacros(ctx, l)
+
+	var br *browser.Browser
+	switch params.BrowserType {
+	case browser.TypeAsh:
+		br = cr.Browser()
+	case browser.TypeLacros:
+		br = l.Browser()
+	}
+
+	bTconn, err := br.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to browser test API: ", err)
+	}
 	graphics.DisableSysLogCheck(s.TestName(),
 		// Disable SysLogCheck for mediatek driver error because it is expected
 		// that the driver fails decoding VP9 k-SVC and falls back to the
@@ -230,7 +306,7 @@ func WebRTCVideoConference(ctx context.Context, s *testing.State) {
 		graphics.SysLogKernelSplats,
 	)
 
-	if err := webrtc.RunVideoConference(ctx, cr, s, params); err != nil {
+	if err := webrtc.RunVideoConference(ctx, cs, tconn, bTconn, s, params); err != nil {
 		s.Fatal("RunVideoConference failed: ", err)
 	}
 }
