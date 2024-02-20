@@ -223,11 +223,6 @@ func (c *Chrome) Creds() Creds { return c.cfg.Creds() }
 // VKEnabled returns whether virtual keyboard is enabled.
 func (c *Chrome) VKEnabled() bool { return c.cfg.VKEnabled() }
 
-// FieldTrialConfigEnabled returns whether field trial config is enabled.
-func (c *Chrome) FieldTrialConfigEnabled() bool {
-	return c.cfg.FieldTrialConfig() == "enable" || setup.FieldTrialConfig.Value() == "enable"
-}
-
 // LoginMode returns the user login mode as string.
 func (c *Chrome) LoginMode() string {
 	switch c.cfg.LoginMode() {
@@ -299,6 +294,9 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 
 	// TODO(crbug.com/325107262): ChromeRefresh2023 can be removed after uprev 123.0.0.6301.
 	opts = append(opts, EnableFeatures("ChromeRefresh2023"), LacrosEnableFeatures("ChromeRefresh2023"))
+
+	// TODO(b/317943159): Remove once OsSettingsRevampWayfinding flag is enabled by default in Chromium.
+	opts = append(opts, EnableFeatures("OsSettingsRevampWayfinding"))
 
 	opts = append(opts, ExtraArgs("--cryptohome-ignore-cleanup-ownership-for-testing"))
 

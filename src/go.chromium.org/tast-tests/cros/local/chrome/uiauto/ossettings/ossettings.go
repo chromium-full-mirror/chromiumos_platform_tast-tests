@@ -196,14 +196,14 @@ func (s *OSSettings) NavigateToPageURL(ctx context.Context, cr *chrome.Chrome, p
 	return webutil.NavigateToURLInApp(settingsConn, urlPrefix+pageShortURL, condition, 30*time.Second)(ctx)
 }
 
-// LaunchHelpApp returns a function that launches Help app by clicking "Get help with ChromeOS".
+// LaunchHelpApp returns a function that launches Help app by clicking "Get help".
 func (s *OSSettings) LaunchHelpApp() uiauto.Action {
-	return s.ui.LeftClick(nodewith.Name("Get help with ChromeOS").Role(role.Link).Ancestor(WindowFinder))
+	return s.ui.LeftClick(nodewith.NameStartingWith("Get help").Role(role.Link).Ancestor(WindowFinder))
 }
 
 // LaunchWhatsNew returns a function that launches Help app by clicking "See what's new".
 func (s *OSSettings) LaunchWhatsNew() uiauto.Action {
-	return s.ui.LeftClick(nodewith.Name("See what's new").Role(role.Link).Ancestor(WindowFinder))
+	return s.ui.LeftClick(nodewith.NameStartingWith("See what's new").Role(role.Link).Ancestor(WindowFinder))
 }
 
 // ChromeConn returns a Chrome connection to the Settings app.

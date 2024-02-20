@@ -111,7 +111,7 @@ var Accessibility = getMenuItemFinder("Accessibility")
 var ResetSettings = getMenuItemFinder("Reset settings")
 
 // AboutChromeOS is a subpage link.
-var AboutChromeOS = nodewith.MultilingualName("About ChromeOS", map[string]string{"de": "Über ChromeOS"}).
+var AboutChromeOS = nodewith.MultilingualNameStartingWith("About ChromeOS", map[string]string{"de": "Über ChromeOS"}).
 	Role(role.Link).Focusable()
 
 // MenuButton is a button to show the menu on the left side, only exist when the menu does not exist.
