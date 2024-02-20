@@ -122,13 +122,36 @@ func CreateNetworkTopology(ctx context.Context) (*Network, error) {
 // verify the default route setup on DUT. The returned env will be owned by n
 // and cleaned up on TearDown() so the caller should not clean it up directly.
 func (n *Network) CreatePrivateEnv(ctx context.Context, server *Server, vpnEnv *virtualnet.Env) (*virtualnet.Env, error) {
+	var err error
+	n.privateEnv, err = CreatePrivateEnv(ctx, n.pool, server, vpnEnv)
+	return n.privateEnv, err
+}
+
+// CreatePrivateEnv creates a virtualnet.Env behind the vpnEnv which can only be
+// reachable via server (done by dropping FORWARD packets from/to the private
+// env except for the ones from/to the vpn interfaces). This env can be used to
+// verify the default route setup on DUT. On success, the caller needs to call
+// cleanup on the returned Env after it's no longer needed.
+func CreatePrivateEnv(ctx context.Context, pool *subnet.Pool, server *Server, vpnEnv *virtualnet.Env) (*virtualnet.Env, error) {
 	privateEnv, err := virtualnet.CreateEnv(ctx, "private")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create VPN private env")
 	}
-	// Set the member here so that it can be cleaned up by the caller on failures.
-	n.privateEnv = privateEnv
-	if err := privateEnv.ConnectToRouterWithPool(ctx, vpnEnv, n.pool); err != nil {
+
+	success := false
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	defer func() {
+		if success {
+			return
+		}
+		if err := privateEnv.Cleanup(cleanupCtx); err != nil {
+			testing.ContextLog(cleanupCtx, "Failed to clean up env in defer handling: ", err)
+		}
+	}()
+
+	if err := privateEnv.ConnectToRouterWithPool(ctx, vpnEnv, pool); err != nil {
 		return nil, errors.Wrap(err, "failed to connect private env to VPN server env")
 	}
 	for _, iptablesCmd := range []string{"iptables", "ip6tables"} {
@@ -144,6 +167,8 @@ func (n *Network) CreatePrivateEnv(ctx context.Context, server *Server, vpnEnv *
 			}
 		}
 	}
+
+	success = true
 	return privateEnv, nil
 }
 
