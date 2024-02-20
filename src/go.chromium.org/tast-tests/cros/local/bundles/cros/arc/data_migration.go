@@ -290,15 +290,11 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 		return rl.Retry("connect to test API", err)
 	}
 
-	screenRecorder, err := uiauto.NewScreenRecorder(ctx, tconn)
-	if err != nil || screenRecorder == nil {
-		return rl.Exit("create screen recorder", err)
-	}
-	if err := screenRecorder.Start(ctx, tconn); err != nil {
-		return rl.Exit("start screen recorder", err)
-	}
-
-	defer uiauto.ScreenRecorderStopSaveRelease(cleanupCtx, screenRecorder, filepath.Join(outDir, "recording.mp4"))
+	installFailed := false
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder,
+		filepath.Join(outDir, fmt.Sprintf("recording-%d.mp4", rl.Attempts)),
+		func() bool { return installFailed })
 
 	// Regression check for b/173835269.
 	testing.ContextLog(ctx, "Installing app ", appToInstall)
@@ -310,12 +306,14 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 	installCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	if err := playstore.InstallApp(installCtx, a, d, appToInstall, &playOpt); err != nil {
-		testing.ContextLog(ctx, "Taking a screenshot as install-failed.png")
-		path := filepath.Join(outDir, "install-failed.png")
+		screenshotName := fmt.Sprintf("install-failed-%d.png", rl.Attempts)
+		testing.ContextLog(ctx, "Taking a screenshot as "+screenshotName)
+		path := filepath.Join(outDir, screenshotName)
 		if err := screenshot.Capture(cleanupCtx, path); err != nil {
 			testing.ContextLog(ctx, "Failed to take a screenshot: ", err)
 		}
 
+		installFailed = true
 		return rl.Retry("install app", err)
 	}
 
