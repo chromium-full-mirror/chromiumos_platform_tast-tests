@@ -210,7 +210,7 @@ func runQRCodeTest(ctx context.Context, cr *chrome.Chrome, bt browser.Type, app 
 			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(visibleButton)(ctx); err != nil {
 				return errors.Wrap(err, "failed to find the password visibility button")
 			}
-			if err := ui.LeftClick(visibleButton)(ctx); err != nil {
+			if err := ui.DoDefault(visibleButton)(ctx); err != nil {
 				return errors.Wrap(err, "failed to left click of the password visibility button")
 			}
 
