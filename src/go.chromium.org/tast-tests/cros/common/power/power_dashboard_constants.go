@@ -66,6 +66,8 @@ const (
 	BacklightPercentNonlinearKey = "level_backlight_percent_nonlinear"
 	// BacklightPercentLinearKey is the metric key for backlight linear.
 	BacklightPercentLinearKey = "level_backlight_percent_linear"
+	// SystemPowerKey is instantaneous power consumption out of the battery.
+	SystemPowerKey = "system"
 )
 
 // Only keys inside validMetricTypeMap are accepted metric types.

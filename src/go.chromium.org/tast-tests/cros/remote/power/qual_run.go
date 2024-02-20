@@ -139,29 +139,40 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 		if err != nil {
 			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
 		}
+
+		r.testPowers[t] = &result.Power{}
 		for _, f := range files {
-			// Since there are more than 1 power log json files, read power metrics from a specific file.
-			if f.IsDir() || !strings.HasPrefix(f.Name(), "power_log") || !strings.HasSuffix(f.Name(), "json") {
+			if !isPowerJSONLog(f) {
 				continue
+			}
+			if r.testPowers[t].Average.MinutesBatteryLife != 0 &&
+				r.testPowers[t].Average.MinutesBatteryLifeTested != 0 &&
+				r.testPowers[t].Average.DischargeRate != 0 &&
+				len(r.otherInfo) != 0 {
+				break
 			}
 			average, err := readPowerMetrics(path.Join(outputDir, f.Name()))
 			if err != nil {
 				return errors.Wrapf(err, "failed to read power metrics for test %s", t)
 			}
-			if _, ok := average[power.MinutesBatteryLifeKey]; !ok {
-				continue
+			// Since there are more than one power log json files, read power metrics
+			// from different json files for different metrics.
+			_, systemPowerKeyOK := average[power.SystemPowerKey]
+			if systemPowerKeyOK {
+				r.testPowers[t].Average.DischargeRate = average[power.SystemPowerKey].(float64)
 			}
-			r.testPowers[t] = &result.Power{Average: result.Average{
-				MinutesBatteryLife:       average[power.MinutesBatteryLifeKey].(float64),
-				MinutesBatteryLifeTested: average[power.MinutesBatteryLifeTestedKey].(float64),
-			}}
+			_, minutesBatteryLifeKeyOK := average[power.MinutesBatteryLifeKey]
+			_, minutesBatteryLifeTestedKeyOK := average[power.MinutesBatteryLifeTestedKey]
+			if minutesBatteryLifeKeyOK && minutesBatteryLifeTestedKeyOK {
+				r.testPowers[t].Average.MinutesBatteryLife = average[power.MinutesBatteryLifeKey].(float64)
+				r.testPowers[t].Average.MinutesBatteryLifeTested = average[power.MinutesBatteryLifeTestedKey].(float64)
+			}
 			// Record other average values.
 			for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
 				if value, ok := average[key]; ok {
 					r.otherInfo[key] = value
 				}
 			}
-			break
 		}
 	}
 	return nil
@@ -187,7 +198,8 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			Name: p.Name,
 		}
 
-		var values []float64
+		var minutesBatteryLifeValues []float64
+		var dischargeRateValues []float64
 		var weights []float64
 		minutesBatteryLifeTestedTotal := 0.0
 		for _, t := range p.Tests {
@@ -212,13 +224,14 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 				Direction: perf.SmallerIsBetter,
 			}, power.Average.MinutesBatteryLifeTested)
 			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *power})
-			values = append(values, power.Average.MinutesBatteryLife)
+			minutesBatteryLifeValues = append(minutesBatteryLifeValues, power.Average.MinutesBatteryLife)
+			dischargeRateValues = append(dischargeRateValues, power.Average.DischargeRate)
 			weights = append(weights, t.Weight)
 			minutesBatteryLifeTestedTotal += power.Average.MinutesBatteryLifeTested
 		}
 
-		minutesBatteryLife := stat.HarmonicMean(values, weights)
-
+		minutesBatteryLife := stat.HarmonicMean(minutesBatteryLifeValues, weights)
+		dischargeRate := stat.Mean(dischargeRateValues, weights)
 		// Collect battery metrics for each persona in perf.Values.
 		pv.Set(perf.Metric{
 			Name:      p.Name + "." + power.MinutesBatteryLifeKey,
@@ -275,7 +288,7 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 		powerLogs = append(powerLogs, plBytes...)
 
 		persona.Power = result.Power{
-			Average: result.Average{MinutesBatteryLife: minutesBatteryLife, MinutesBatteryLifeTested: minutesBatteryLifeTestedTotal},
+			Average: result.Average{MinutesBatteryLife: minutesBatteryLife, MinutesBatteryLifeTested: minutesBatteryLifeTestedTotal, DischargeRate: dischargeRate},
 		}
 
 		res.Personas = append(res.Personas, persona)
@@ -355,4 +368,11 @@ func readPowerMetrics(file string) (map[string]interface{}, error) {
 		return nil, errors.Wrapf(err, "failed to unmarshal json from file %s", file)
 	}
 	return res.Power.Average, nil
+}
+
+// isPowerJSONLog identifies if a file is power log json file.
+func isPowerJSONLog(file fs.DirEntry) bool {
+	return !file.IsDir() &&
+		strings.HasPrefix(file.Name(), "power_log") &&
+		strings.HasSuffix(file.Name(), "json")
 }

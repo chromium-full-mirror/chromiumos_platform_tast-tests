@@ -12,6 +12,7 @@ const FormatVersion int32 = 1
 type Average struct {
 	MinutesBatteryLife       float64 `json:"minutes_battery_life"`
 	MinutesBatteryLifeTested float64 `json:"minutes_battery_life_tested"`
+	DischargeRate            float64 `json:"watt_discharge_rate"`
 }
 
 // Power contains the power test result.
