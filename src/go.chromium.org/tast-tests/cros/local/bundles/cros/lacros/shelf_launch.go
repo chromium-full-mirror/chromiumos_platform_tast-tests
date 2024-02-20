@@ -15,7 +15,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfaillog"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -49,7 +51,9 @@ func init() {
 }
 
 func ShelfLaunch(ctx context.Context, s *testing.State) {
-	tconn, err := s.FixtValue().(chrome.HasChrome).Chrome().TestAPIConn(ctx)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to test API: ", err)
 	}
@@ -77,6 +81,11 @@ func ShelfLaunch(ctx context.Context, s *testing.State) {
 		}
 		s.Fatal("Lacros was not included in the list of installed applications: ", err)
 	}
+
+	dumpCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	defer faillog.DumpUITreeWithScreenshotOnError(dumpCtx, s.OutDir(), s.HasError, cr, "ui_tree")
 
 	s.Log("Checking that Lacros is a pinned app in the shelf")
 	shelfItems, err := ash.ShelfItems(ctx, tconn)
@@ -138,7 +147,6 @@ func ShelfLaunch(ctx context.Context, s *testing.State) {
 	if err := lacros.WaitForLacrosWindow(ctx, tconn, "about:blank"); err != nil {
 		s.Fatal("Failed waiting for Lacros to navigate to about:blank page: ", err)
 	}
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 	if strings.ToLower(enablePixelTesting.Value()) == "true" {
 		s.Log("Starting pixel testing")
 		d, err := screenshot.NewDifferFromChrome(ctx, s, cr, screenshot.Config{
