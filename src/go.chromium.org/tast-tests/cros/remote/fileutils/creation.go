@@ -1,9 +1,8 @@
-// Copyright 2020 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package fileutil provides utilities for operating files in remote wifi tests.
-package fileutil
+package fileutils
 
 import (
 	"context"
@@ -32,11 +31,11 @@ func WriteTmp(ctx context.Context, host *ssh.Conn, pattern string, content []byt
 
 // PrepareOutDirFile prepares the base directory of the path under OutDir and opens the file.
 func PrepareOutDirFile(ctx context.Context, filename string) (*os.File, error) {
-	outdir, ok := testing.ContextOutDir(ctx)
+	outDir, ok := testing.ContextOutDir(ctx)
 	if !ok {
 		return nil, errors.New("failed to get OutDir")
 	}
-	filepath := path.Join(outdir, filename)
+	filepath := path.Join(outDir, filename)
 	if err := os.MkdirAll(path.Dir(filepath), 0755); err != nil {
 		return nil, errors.Wrapf(err, "failed to create basedir for %q", filepath)
 	}

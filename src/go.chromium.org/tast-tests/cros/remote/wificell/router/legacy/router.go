@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/network/ip"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	remote_ip "go.chromium.org/tast-tests/cros/remote/network/ip"
 	remote_iw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
@@ -789,7 +790,7 @@ func (r *Router) MAC(ctx context.Context, iface string) (net.HardwareAddr, error
 // HostIsLegacyRouter determines whether the remote host is a Legacy router.
 func HostIsLegacyRouter(ctx context.Context, host *ssh.Conn) (bool, error) {
 	lsbReleaseMatchIfLegacy := "(?m)^CHROMEOS_RELEASE_BOARD=gale$"
-	matches, err := common.HostFileContentsMatch(ctx, host, lsbReleasePath, lsbReleaseMatchIfLegacy)
+	matches, err := fileutils.HostFileContentsMatch(ctx, host, lsbReleasePath, lsbReleaseMatchIfLegacy)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to check if remote file %q contents match %q", lsbReleasePath, lsbReleaseMatchIfLegacy)
 	}

@@ -9,8 +9,8 @@ import (
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/remote/log"
-	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -87,7 +87,7 @@ func BuildRouterLogDirName(r support.Router) string {
 func LogRouterFile(ctx context.Context, r support.Router, dstLogFilename string, fileContents []byte) error {
 	contextualOutputDirPath := BuildRouterLogDirName(r)
 	dstFilePath := filepath.Join(contextualOutputDirPath, dstLogFilename)
-	f, err := fileutil.PrepareOutDirFile(ctx, dstFilePath)
+	f, err := fileutils.PrepareOutDirFile(ctx, dstFilePath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to prepare output dir file %q", dstFilePath)
 	}

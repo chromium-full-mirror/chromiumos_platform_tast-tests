@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -128,12 +128,12 @@ func (d *Server) start(fullCtx context.Context) (err error) {
 	cmd := d.host.CommandContext(ctx, pythonCmd, d.pyPath(), strconv.Itoa(d.port), strconv.Itoa(d.statusCode), d.redirectAddr)
 
 	// Prepare stdout/stderr log files.
-	d.stdoutFile, err = fileutil.PrepareOutDirFile(ctx, d.stdoutFilename())
+	d.stdoutFile, err = fileutils.PrepareOutDirFile(ctx, d.stdoutFilename())
 	if err != nil {
 		return errors.Wrap(err, "failed to open stdout log of httpserver")
 	}
 	cmd.Stdout = d.stdoutFile
-	d.stderrFile, err = fileutil.PrepareOutDirFile(ctx, d.stderrFilename())
+	d.stderrFile, err = fileutils.PrepareOutDirFile(ctx, d.stderrFilename())
 	if err != nil {
 		return errors.Wrap(err, "failed to open stdout log of httpserver")
 	}

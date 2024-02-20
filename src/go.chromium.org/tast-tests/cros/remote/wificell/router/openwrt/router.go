@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	remoteIp "go.chromium.org/tast-tests/cros/remote/network/ip"
 	remoteIw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
@@ -757,7 +758,7 @@ func (r *Router) UnbindVeth(ctx context.Context, veth string) error {
 func HostIsOpenWrtRouter(ctx context.Context, host *ssh.Conn) (bool, error) {
 	deviceInfoPath := "/etc/device_info"
 	deviceInfoMatchIfOpenWrt := "(?m)^DEVICE_MANUFACTURER='OpenWrt'$"
-	matches, err := common.HostFileContentsMatch(ctx, host, deviceInfoPath, deviceInfoMatchIfOpenWrt)
+	matches, err := fileutils.HostFileContentsMatch(ctx, host, deviceInfoPath, deviceInfoMatchIfOpenWrt)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to check if remote file %q contents match %q", deviceInfoPath, deviceInfoMatchIfOpenWrt)
 	}

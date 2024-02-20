@@ -21,9 +21,9 @@ import (
 
 	"github.com/google/gopacket/layers"
 
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/common/network/daemonutil"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
-	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/shutil"
@@ -175,7 +175,7 @@ func (s *Server) initConfig(ctx context.Context) error {
 			return err
 		}
 		// Write the config to local log.
-		outDirConfFile, err := fileutil.PrepareOutDirFile(ctx, s.confPathOutDirIface(iface.name))
+		outDirConfFile, err := fileutils.PrepareOutDirFile(ctx, s.confPathOutDirIface(iface.name))
 		if err != nil {
 			return errors.Wrapf(err, "failed to prepare local hostapd config file copy %q", s.confPathOutDirIface(iface.name))
 		}
@@ -227,13 +227,13 @@ func (s *Server) start(fullCtx context.Context) (retErr error) {
 
 	// Prepare stdout/stderr log files.
 	var err error
-	s.stderrFile, err = fileutil.PrepareOutDirFile(ctx, s.stderrFilename())
+	s.stderrFile, err = fileutils.PrepareOutDirFile(ctx, s.stderrFilename())
 	if err != nil {
 		return errors.Wrap(err, "failed to open stderr log of hostapd")
 	}
 	cmd.Stderr = s.stderrFile
 
-	s.stdoutFile, err = fileutil.PrepareOutDirFile(ctx, s.stdoutFilename())
+	s.stdoutFile, err = fileutils.PrepareOutDirFile(ctx, s.stdoutFilename())
 	if err != nil {
 		return errors.Wrap(err, "failed to open stdout log of hostapd")
 	}

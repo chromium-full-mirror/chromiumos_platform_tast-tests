@@ -10,7 +10,7 @@ import (
 	"regexp"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/remote/wificell/router/common"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/remote/wificell/router/common/support"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -169,7 +169,7 @@ func (r *Router) ResolveAXDeviceType(ctx context.Context) (DeviceType, error) {
 // HostIsAXRouter determines whether the remote host is an AX router.
 func HostIsAXRouter(ctx context.Context, host *ssh.Conn) (bool, error) {
 	// Verify that the host has the nvram command.
-	nvramCmdExists, err := common.HostTestPath(ctx, host, "-x", nvramCmd)
+	nvramCmdExists, err := fileutils.HostTestPath(ctx, host, "-x", nvramCmd)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to check for the existence of the command %q", nvramCmd)
 	}

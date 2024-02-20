@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/network/ip"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/remote/log"
 	remote_ip "go.chromium.org/tast-tests/cros/remote/network/ip"
 	remote_iw "go.chromium.org/tast-tests/cros/remote/wifi/iw"
@@ -580,7 +581,7 @@ func (r *Router) MAC(ctx context.Context, iface string) (net.HardwareAddr, error
 // HostIsUbuntuRouter determines whether the remote host is a Ubuntu router.
 func HostIsUbuntuRouter(ctx context.Context, host *ssh.Conn) (bool, error) {
 	lsbReleaseMatchIfUbuntu := "(?m)^DISTRIB_ID=Ubuntu$"
-	matches, err := common.HostFileContentsMatch(ctx, host, lsbReleasePath, lsbReleaseMatchIfUbuntu)
+	matches, err := fileutils.HostFileContentsMatch(ctx, host, lsbReleasePath, lsbReleaseMatchIfUbuntu)
 	if err != nil {
 		return false, errors.Wrapf(err, "failed to check if remote file %q contents match %q", lsbReleasePath, lsbReleaseMatchIfUbuntu)
 	}

@@ -12,8 +12,8 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/tcpdump"
 	"go.chromium.org/tast-tests/cros/common/wificell/router"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	remotetcpdump "go.chromium.org/tast-tests/cros/remote/network/tcpdump"
-	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
@@ -64,11 +64,11 @@ func StartCapturer(ctx context.Context, host *ssh.Conn, name, iface, workDir str
 }
 
 func (c *Capturer) start(ctx context.Context) (err error) {
-	c.stdoutFile, err = fileutil.PrepareOutDirFile(ctx, c.filename("stdout"))
+	c.stdoutFile, err = fileutils.PrepareOutDirFile(ctx, c.filename("stdout"))
 	if err != nil {
 		return errors.Wrap(err, "failed to open stdout log of tcpdump")
 	}
-	c.stderrFile, err = fileutil.PrepareOutDirFile(ctx, c.filename("stderr"))
+	c.stderrFile, err = fileutils.PrepareOutDirFile(ctx, c.filename("stderr"))
 	if err != nil {
 		return errors.Wrap(err, "failed to open stderr log of tcpdump")
 	}

@@ -15,7 +15,7 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -213,7 +213,7 @@ func (s *Sender) configToArgs(ctx context.Context, c *config) ([]string, error) 
 	}
 	if len(c.footer) != 0 {
 		pattern := path.Join(s.workDir, "probe_response_footer_XXXXXX")
-		footerPath, err := fileutil.WriteTmp(ctx, s.host, pattern, c.footer)
+		footerPath, err := fileutils.WriteTmp(ctx, s.host, pattern, c.footer)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to prepare footer file")
 		}

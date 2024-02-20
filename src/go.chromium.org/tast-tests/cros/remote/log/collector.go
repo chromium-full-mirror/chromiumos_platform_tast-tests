@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/remote/wificell/fileutil"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -71,7 +71,7 @@ func DumpCollectedLogsToFile(ctx context.Context, logCollector Collector, contex
 	// Prepare output file.
 	dstLogFilename := BuildLogFilename(logName)
 	dstFilePath := filepath.Join(contextualOutputDirPath, dstLogFilename)
-	f, err := fileutil.PrepareOutDirFile(ctx, dstFilePath)
+	f, err := fileutils.PrepareOutDirFile(ctx, dstFilePath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to prepare output dir file %q", dstFilePath)
 	}
