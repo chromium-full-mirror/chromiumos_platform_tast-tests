@@ -106,6 +106,20 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"mmc_host"},
 				}}},
+		}, {
+			Name: "generic_cpu",
+			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{
+					probeStatement{"generic_cpu"},
+				}}},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name: "ec_component",
+			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{
+					probeStatement{"ec_component"},
+				}}},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
