@@ -278,13 +278,13 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		chargingVoltages[int(voltage)] = true
 	}
 	if !chargingVoltages[5] {
-		s.Log("Charger doesn't support 5v, which should be impossible. Please try a different (i.e. 65w or greater) charger")
+		s.Error("Charger doesn't support 5v, which should be impossible. Please try a different (i.e. 65w or greater) charger")
 	}
 	if !chargingVoltages[dutVoltageLimit] {
-		s.Logf("Charger doesn't support %vv. Please try a different (i.e. 65w or greater) charger", dutVoltageLimit)
+		s.Errorf("Charger doesn't support %vv. Please try a different (i.e. 65w or greater) charger", dutVoltageLimit)
 	}
 	if len(chargingVoltages) < 3 {
-		s.Log("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
+		s.Error("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
 	}
 
 	s.Log("Start of PDTester initiated tests")
@@ -349,9 +349,9 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	}
 
 	if len(pdTesterFailures) > 0 {
-		s.Log("PDTester voltage source cap failures")
+		s.Error("PDTester voltage source cap failures")
 		for _, fail := range pdTesterFailures {
-			s.Log(fail)
+			s.Error(fail)
 		}
 		number := len(pdTesterFailures)
 		s.Fatal("PDTester failed ", number, " times")
@@ -421,7 +421,7 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		}, &testing.PollOptions{Timeout: pdVBusPollTimeout, Interval: pdVBusPollInterval})
 	}
 	if len(testedVoltages) < 3 {
-		s.Log("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
+		s.Error("Charger doesn't support 3 different voltages. Please try a different (i.e. 65w or greater) charger")
 	}
 
 	// Make sure DUT is set back to its max voltage so DUT will accept all
