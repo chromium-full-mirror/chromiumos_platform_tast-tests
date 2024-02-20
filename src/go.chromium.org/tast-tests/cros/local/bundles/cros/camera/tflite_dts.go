@@ -50,8 +50,8 @@ func localLibraryDirectory() string {
 // TODO(shik): Run DTS with vendor provided stable delegates automatically.
 var sampleSettings = stableDelegateSettings{
 	StableDelegateLoaderSettings: stableDelegateLoaderSettings{
-		DelegatePath: localLibraryDirectory() + "libtensorflowlite_sample_stable_delegate.so",
-		DelegateName: "sample_stable_delegate",
+		DelegatePath: localLibraryDirectory() + "libtensorflowlite_cros_sample_delegate.so",
+		DelegateName: "cros_sample_delegate",
 	},
 }
 
