@@ -16,6 +16,7 @@ import (
 
 	rppb "chromiumos/system_api/runtime_probe_proto"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe/common"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/runtimeprobe/fixture"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
@@ -23,7 +24,6 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // componentConstraint constraints allowed runtime_probe component categories.
@@ -274,14 +274,6 @@ func decreaseComponentCount(count map[string]int, model, category string, compon
 	return true, name
 }
 
-// releasedDeviceDeps is a hardware dependency that only runs a test on DUTs
-// that has normal probe configs without private probe configs.
-var releasedDeviceDeps = hwdep.D(hwdep.RuntimeProbeConfig(), hwdep.RuntimeProbeConfigPrivate(false))
-
-// unreleasedDeviceDeps is a hardware dependency that only runs a test on DUTs
-// that has private probe configs.
-var unreleasedDeviceDeps = hwdep.D(hwdep.RuntimeProbeConfigPrivate(true))
-
 type probeFunctionTestParam struct {
 	categories           []string
 	allowExtraComponents bool
@@ -303,7 +295,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "battery",
-				ExtraHardwareDeps: releasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
@@ -311,14 +303,14 @@ func init() {
 			}, {
 				Name:              "battery_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: unreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"battery"},
 					allowExtraComponents: false,
 				},
 			}, {
 				Name:              "camera",
-				ExtraHardwareDeps: releasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
@@ -326,14 +318,14 @@ func init() {
 			}, {
 				Name:              "camera_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: unreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"camera"},
 					allowExtraComponents: false,
 				},
 			}, {
 				Name:              "edid",
-				ExtraHardwareDeps: releasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
@@ -341,14 +333,14 @@ func init() {
 			}, {
 				Name:              "edid_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: unreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"display_panel"},
 					allowExtraComponents: false,
 				},
 			}, {
 				Name:              "input_device",
-				ExtraHardwareDeps: releasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
 					allowExtraComponents: true,
@@ -356,14 +348,14 @@ func init() {
 			}, {
 				Name:              "input_device_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: unreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"stylus", "touchpad", "touchscreen"},
 					allowExtraComponents: true,
 				},
 			}, {
 				Name:              "memory",
-				ExtraHardwareDeps: releasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"dram"},
 					allowExtraComponents: false,
@@ -371,14 +363,14 @@ func init() {
 			}, {
 				Name:              "memory_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: unreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"dram"},
 					allowExtraComponents: false,
 				},
 			}, {
 				Name:              "network",
-				ExtraHardwareDeps: releasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"cellular", "ethernet", "wireless"},
 					allowExtraComponents: true,
@@ -386,14 +378,14 @@ func init() {
 			}, {
 				Name:              "network_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: unreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"cellular", "ethernet", "wireless"},
 					allowExtraComponents: true,
 				},
 			}, {
 				Name:              "storage",
-				ExtraHardwareDeps: releasedDeviceDeps,
+				ExtraHardwareDeps: common.ReleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"storage"},
 					allowExtraComponents: false,
@@ -401,7 +393,7 @@ func init() {
 			}, {
 				Name:              "storage_private",
 				Fixture:           fixture.DecryptProbeConfig,
-				ExtraHardwareDeps: unreleasedDeviceDeps,
+				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
 				Val: probeFunctionTestParam{
 					categories:           []string{"storage"},
 					allowExtraComponents: false,
