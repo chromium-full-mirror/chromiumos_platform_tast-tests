@@ -228,21 +228,23 @@ func usbStorageDevicesDetection(ctx context.Context, dut *dut.DUT) error {
 // connectedPeripheralsDetection verified whether all connected peripheral devices
 // detected or not.
 func connectedPeripheralsDetection(ctx context.Context, dut *dut.DUT) error {
-	var (
-		nativeHDMIRe = regexp.MustCompile(`\[CONNECTOR:\d+:HDMI.*status: connected`)
-		typeCHDMIRe  = regexp.MustCompile(`Type: HDMI`)
-	)
 	if err := usbStorageDevicesDetection(ctx, dut); err != nil {
 		return errors.Wrap(err, "failed to detect connected USB storage devices")
 	}
 	if err := sdCardDetection(ctx, dut); err != nil {
 		return errors.Wrap(err, "failed to detect connected SD Card")
 	}
-	numberOfDisplays := 1
-	nativeDisplayInfoPatterns := []*regexp.Regexp{nativeHDMIRe}
-	typeCDisplayInfoPatterns := []*regexp.Regexp{typeCHDMIRe}
-	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, numberOfDisplays, nativeDisplayInfoPatterns); err != nil {
-		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, numberOfDisplays, typeCDisplayInfoPatterns); err != nil {
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.NativeHDMI,
+	}
+	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
+		spec := usbutils.DisplaySpec{
+			NumberOfDisplays: &numberOfDisplay,
+			DisplayType:      "TypeCHDMI",
+		}
+		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
 			return errors.Wrap(err, "failed to detect external HDMI display")
 		}
 	}

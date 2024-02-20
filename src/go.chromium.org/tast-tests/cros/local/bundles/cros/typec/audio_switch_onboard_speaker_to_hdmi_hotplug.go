@@ -6,13 +6,12 @@ package typec
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -226,40 +225,6 @@ func selectedAudioNodeViaUI(ctx context.Context, cras *audio.Cras, tconn *chrome
 	return audioDeviceName, audioDeviceType, nil
 }
 
-// typecHDMIDisplayDetection checks for detection of typec HDMI external display.
-func typecHDMIDisplayDetection(ctx context.Context, tconn *chrome.TestConn) (string, error) {
-	var displayName string
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		displayInfo, err := display.GetInfo(ctx, tconn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get external display name")
-		}
-		if len(displayInfo) < 2 {
-			return errors.New("failed to find external display")
-		}
-		displayName = displayInfo[1].Name
-
-		const displayInfoFile = "/sys/kernel/debug/dri/0/i915_display_info"
-		out, err := ioutil.ReadFile(displayInfoFile)
-		if err != nil {
-			return errors.Wrap(err, "failed to read i915_display_info file")
-		}
-		displayInfoRe := regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
-		matches := displayInfoRe.FindAllString(string(out), -1)
-		if len(matches) != 1 {
-			return errors.New("failed to check external display info")
-		}
-		typecHDMIRe := regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`)
-		if !typecHDMIRe.MatchString(string(out)) {
-			return errors.New("failed to detect external typec HDMI display")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
-		return "", errors.Wrap(err, "timeout to get external display info")
-	}
-	return displayName, nil
-}
-
 // resumeAudioPlayback will resumes the audio playback.
 func resumeAudioPlayback(ctx context.Context, ui *uiauto.Context, playPauseButton *nodewith.Finder, infoBeforePause *uiauto.NodeInfo) error {
 	infoAtPause, err := ui.Info(ctx, playPauseButton)
@@ -276,11 +241,20 @@ func resumeAudioPlayback(ctx context.Context, ui *uiauto.Context, playPauseButto
 }
 
 func performAudioSwitching(ctx context.Context, ui *uiauto.Context, tconn *chrome.TestConn, cras *audio.Cras, playPauseButton *nodewith.Finder, infoBeforePause *uiauto.NodeInfo) error {
-	// Check whether external typec HDMI display is detected.
-	displayName, err := typecHDMIDisplayDetection(ctx, tconn)
-	if err != nil {
-		return errors.Wrap(err, "failed to detect connected typec HDMI display")
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.TypeCHDMI,
 	}
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
+		return errors.Wrap(err, "failed to check for connected external HDMI display")
+	}
+	// Get the display name for audio switching from quick-settings.
+	displayInfo, err := display.GetInfo(ctx, tconn)
+	if err != nil {
+		return errors.Wrap(err, "failed to get external display name")
+	}
+	displayName := displayInfo[1].Name
 
 	// From quick-settigs select internal-speaker as output audio node.
 	audioNodeInternalSpeaker := "Speaker (internal)"

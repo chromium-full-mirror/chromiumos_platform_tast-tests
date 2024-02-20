@@ -73,9 +73,6 @@ func SuspendResumeUSB4PlugUnplug(ctx context.Context, s *testing.State) {
 	// Config file which contains expected values of USB4 parameters.
 	const testConfig = "test_config.json"
 
-	var typeCHDMIRe = regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`)
-	typeCDisplayInfoPatterns := []*regexp.Regexp{typeCHDMIRe}
-
 	// TBT port ID in the DUT.
 	dutPort := s.RequiredVar("typec.dutTbtPort")
 	// cswitch port ID.
@@ -206,8 +203,12 @@ func SuspendResumeUSB4PlugUnplug(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to verify headphone: ", err)
 			}
 		}
-
-		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, 1, typeCDisplayInfoPatterns); err != nil {
+		numberOfDisplay := 1
+		spec := usbutils.DisplaySpec{
+			NumberOfDisplays: &numberOfDisplay,
+			DisplayType:      usbutils.TypeCHDMI,
+		}
+		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
 			s.Fatal("Failed to detect external HDMI display: ", err)
 		}
 
@@ -336,7 +337,7 @@ func SuspendResumeUSB4PlugUnplug(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to enumerate TBT device RX speed: ", err)
 		}
 
-		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, 1, typeCDisplayInfoPatterns); err != nil {
+		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
 			s.Fatal("Failed to detect external HDMI display: ", err)
 		}
 		if testOpt.verifyHeadphone {

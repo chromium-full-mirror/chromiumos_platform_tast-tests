@@ -35,13 +35,6 @@ type securityVerifyTestParams struct {
 	contentURL  string
 }
 
-var (
-	// hdmiDisplayInfoRe is regexp pattern for verifying HDMI display.
-	hdmiDisplayInfoRe = regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`)
-	// hdcpVerRe is regexp pattern for verifying HDCP 1.4 display.
-	hdcpVerRe = regexp.MustCompile(`HDCP1\.4`)
-)
-
 func init() {
 	testing.AddTest(&testing.Test{
 		// Test H/W topology requires DUT connected to external typec DP display.
@@ -100,10 +93,13 @@ func SecurityVerifyType1HDCP(ctx context.Context, s *testing.State) {
 	if err := testexec.CommandContext(ctx, "dmesg", "-C").Run(); err != nil {
 		s.Error("Failed to clear dmesg log: ", err)
 	}
-
-	const numOfConnectedDisplays = 1
-	typecDisplayInfoPattern := []*regexp.Regexp{hdmiDisplayInfoRe, hdcpVerRe}
-	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, numOfConnectedDisplays, typecDisplayInfoPattern); err != nil {
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.TypeCDP,
+		HDCPVer:          "HDCP1.4",
+	}
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
 		s.Fatal("Failed to check for connected external display: ", err)
 	}
 

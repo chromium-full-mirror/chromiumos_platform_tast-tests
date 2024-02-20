@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/typec/setup"
 	typecutilshelper "go.chromium.org/tast-tests/cros/local/bundles/cros/typec/typecutils"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -228,17 +229,13 @@ func TBTDockGatkexUSB4(ctx context.Context, s *testing.State) {
 	if err := typecutilshelper.CopyFile(destinationFilePath, sourceFilePath); err != nil {
 		s.Fatal("Failed to copy file: ", err)
 	}
-
-	if err := typecutils.FindConnectedDisplay(ctx, 1); err != nil {
-		s.Fatal("Failed to find connected display: ", err)
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayRes:       "4K",
 	}
-
-	if err := typecutils.CheckDisplayInfo(ctx, false, true); err != nil {
-		s.Fatal("Failed to check display info : ", err)
-	}
-
-	if err := typecutils.VerifyDisplay4KResolution(ctx); err != nil {
-		s.Fatal("Failed to Verify display 4K resolution: ", err)
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
+		s.Fatal("Failed to check for connected external HDMI display: ", err)
 	}
 
 	// Set mirror mode display.

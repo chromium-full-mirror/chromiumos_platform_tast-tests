@@ -8,7 +8,6 @@ import (
 	"context"
 	"encoding/json"
 	"io/ioutil"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
@@ -152,10 +151,12 @@ func TBTDisplayVideoPlaybackStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enumerate the TBT device: ", err)
 	}
 
-	const numOfConnectedDisplays = 1
-	tbtDisplayInfoRe := regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`)
-	typecTBTDisplayInfoPattern := []*regexp.Regexp{tbtDisplayInfoRe}
-	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, numOfConnectedDisplays, typecTBTDisplayInfoPattern); err != nil {
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.TBTDisplay,
+	}
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
 		s.Fatal("Failed to check for connected external TBT display: ", err)
 	}
 
@@ -179,8 +180,8 @@ func TBTDisplayVideoPlaybackStress(ctx context.Context, s *testing.State) {
 
 	var videoSource = youtube.VideoSrc{
 		URL:     "https://www.youtube.com/watch?v=uu_B4ywAhOM",
-		Title:   "8 Hours Beautiful World from a Bird’s Eye View 4K / Relaxation Time - YouTube",
-		Quality: "2160p4K",
+		Title:   "8 Hours Beautiful World from a Bird’s Eye View 4K / Relaxation Time",
+		Quality: "2160p",
 	}
 
 	// Create an instance of YtWeb to perform actions on youtube web.

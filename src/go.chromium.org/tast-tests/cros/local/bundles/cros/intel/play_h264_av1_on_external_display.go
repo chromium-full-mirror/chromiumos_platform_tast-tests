@@ -7,7 +7,6 @@ package intel
 import (
 	"context"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -105,13 +104,13 @@ func PlayH264AV1OnExternalDisplay(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to launch shaka player: ", err)
 	}
-
-	displayInfoRe := regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`)
-	hdcpVerRe := regexp.MustCompile(testData.hdcpVer)
-
-	typecDisplayInfoPattern := []*regexp.Regexp{displayInfoRe, hdcpVerRe}
-	const numOfConnectedDisplays = 1
-	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, numOfConnectedDisplays, typecDisplayInfoPattern); err != nil {
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.TypeCDP,
+		HDCPVer:          testData.hdcpVer,
+	}
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
 		s.Fatal("Failed to check for a connected external display: ", err)
 	}
 

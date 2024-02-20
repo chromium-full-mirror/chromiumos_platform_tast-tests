@@ -6,33 +6,21 @@ package intel
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type extendedDisplayTestParams struct {
-	displayInfoRe  []string
 	ecStateToCheck string
-	isTypecDP      bool
+	displayType    string
 	iterationCount int
 }
-
-const (
-	connectorDP   = `.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`
-	connectedDP   = `\[CONNECTOR:\d+:DP.*status: connected`
-	fullHDMode    = `modes:\n.*"\d+x\d+":.60`
-	connectorHDMI = `.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`
-	connectedHDMI = `\[CONNECTOR:\d+:HDMI.*status: connected`
-	typecHDMI     = `.*DP branch device present.*yes\n.*Type.*HDMI`
-)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -48,9 +36,8 @@ func init() {
 		Params: []testing.Param{{
 			Name: "typec_dp_g3",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
 				ecStateToCheck: "G3",
-				isTypecDP:      true,
+				displayType:    usbutils.TypeCDP,
 				iterationCount: 1,
 			},
 			Timeout:   5 * time.Minute,
@@ -58,9 +45,8 @@ func init() {
 		}, {
 			Name: "typec_dp_s5",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
 				ecStateToCheck: "S5",
-				isTypecDP:      true,
+				displayType:    usbutils.TypeCDP,
 				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
@@ -68,9 +54,8 @@ func init() {
 		}, {
 			Name: "native_dp_s5",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
 				ecStateToCheck: "S5",
-				isTypecDP:      false,
+				displayType:    usbutils.NativeDP,
 				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
@@ -78,9 +63,8 @@ func init() {
 		}, {
 			Name: "native_dp_g3",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode},
 				ecStateToCheck: "G3",
-				isTypecDP:      false,
+				displayType:    usbutils.NativeDP,
 				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
@@ -88,9 +72,8 @@ func init() {
 		}, {
 			Name: "typec_hdmi_g3",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode, typecHDMI},
 				ecStateToCheck: "G3",
-				isTypecDP:      false,
+				displayType:    usbutils.TypeCHDMI,
 				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
@@ -98,9 +81,8 @@ func init() {
 		}, {
 			Name: "typec_hdmi_s5",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorDP, connectedDP, fullHDMode, typecHDMI},
 				ecStateToCheck: "S5",
-				isTypecDP:      false,
+				displayType:    usbutils.TypeCHDMI,
 				iterationCount: 1,
 			},
 			Timeout:   5 * time.Minute,
@@ -108,9 +90,8 @@ func init() {
 		}, {
 			Name: "native_hdmi_g3",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorHDMI, connectedHDMI, fullHDMode},
 				ecStateToCheck: "G3",
-				isTypecDP:      false,
+				displayType:    usbutils.NativeHDMI,
 				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
@@ -118,9 +99,8 @@ func init() {
 		}, {
 			Name: "native_hdmi_s5",
 			Val: extendedDisplayTestParams{
-				displayInfoRe:  []string{connectorHDMI, connectedHDMI, fullHDMode},
 				ecStateToCheck: "S5",
-				isTypecDP:      false,
+				displayType:    usbutils.NativeHDMI,
 				iterationCount: 10,
 			},
 			Timeout:   15 * time.Minute,
@@ -158,9 +138,13 @@ func ExtendedDisplayColdboot(ctx context.Context, s *testing.State) {
 		if err := powercontrol.ChromeOSLogin(ctx, dut, s.RPCHint()); err != nil {
 			s.Fatal("Failed to login to Chrome: ", err)
 		}
-
-		if err := externalDisplayDetection(ctx, dut, 1, testOpt.displayInfoRe, testOpt.isTypecDP); err != nil {
-			s.Fatal("Failed detecting external display: ", err)
+		numberOfDisplay := 1
+		spec := usbutils.DisplaySpec{
+			NumberOfDisplays: &numberOfDisplay,
+			DisplayType:      testOpt.displayType,
+		}
+		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
+			s.Fatalf("Failed to detect external %s display: %v", testOpt.displayType, err)
 		}
 	}
 
@@ -193,44 +177,4 @@ func ExtendedDisplayColdboot(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
-}
-
-// externalDisplayDetection verifies connected extended display is detected or not.
-func externalDisplayDetection(ctx context.Context, dut *dut.DUT, numberOfDisplays int, regexpStrings []string, isTypecDP bool) error {
-	displayInfoFile := "/sys/kernel/debug/dri/0/i915_display_info"
-	typecDP := `.*DP branch device present.*no`
-	displayInfo := regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := dut.Conn().CommandContext(ctx, "cat", displayInfoFile).Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to run display info command")
-		}
-
-		matchedString := displayInfo.FindAllString(string(out), -1)
-		if len(matchedString) != numberOfDisplays {
-			return errors.New("connected external display info not found")
-		}
-
-		if isTypecDP {
-			re := regexp.MustCompile(typecDP)
-			matches := re.FindAllString(string(out), -1)
-			if len(matches) != numberOfDisplays+1 {
-				return errors.New("failed to check for typec DP external display")
-			}
-		}
-
-		for _, reString := range regexpStrings {
-			re := regexp.MustCompile(reString)
-			if !re.MatchString(string(out)) {
-				return errors.Errorf("failed %q error message", re)
-			}
-		}
-
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 15 * time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "please connect external display as required")
-	}
-	return nil
 }

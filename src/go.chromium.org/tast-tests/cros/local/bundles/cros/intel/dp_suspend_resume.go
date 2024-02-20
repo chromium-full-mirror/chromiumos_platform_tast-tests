@@ -10,8 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/graphics"
-	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,9 +31,6 @@ func init() {
 func DpSuspendResume(ctx context.Context, s *testing.State) {
 	var (
 		C10PkgPattern         = regexp.MustCompile(`C10 : ([A-Za-z0-9]+)`)
-		connectorInfoPtrns    = regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`)
-		connectedPtrns        = regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`)
-		modesPtrns            = regexp.MustCompile(`modes:\n.*"\d+x\d+":.60`)
 		SuspndFailurePattern  = regexp.MustCompile("Suspend failures: 0")
 		FrmwreLogErrorPattern = regexp.MustCompile("Firmware log errors: 0")
 		S0ixErrorPattern      = regexp.MustCompile("s0ix errors: 0")
@@ -44,10 +40,13 @@ func DpSuspendResume(ctx context.Context, s *testing.State) {
 		PkgCstateCmd     = "cat /sys/kernel/debug/pmc_core/package_cstate_show"
 		SuspendStressCmd = "suspend_stress_test -c 10"
 	)
-
-	displayInfoPatterns := []*regexp.Regexp{connectorInfoPtrns, connectedPtrns, modesPtrns}
-	if err := extDisplayDetection(ctx, 1, displayInfoPatterns); err != nil {
-		s.Fatal("Failed plugging external display: ", err)
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.NativeDP,
+	}
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
+		s.Fatal("Failed to check for connected external DP display: ", err)
 	}
 
 	cmdOutput := func(cmd string) string {
@@ -74,8 +73,8 @@ func DpSuspendResume(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := extDisplayDetection(ctx, 1, displayInfoPatterns); err != nil {
-		s.Fatal("Failed plugging external display after suspend-resume: ", err)
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
+		s.Fatal("Failed to check for connected external DP display: ", err)
 	}
 
 	slpOpSetPost := cmdOutput(SlpS0Cmd)
@@ -97,45 +96,7 @@ func DpSuspendResume(ctx context.Context, s *testing.State) {
 	if pkgOpSetPost == "0x0" || pkgOpSetPost == "0" {
 		s.Fatal("Package C10 should be non-zero, but got: ", pkgOpSetPost)
 	}
-	if err := extDisplayDetection(ctx, 1, displayInfoPatterns); err != nil {
-		s.Fatal("Failed to check plug status of external display: ", err)
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
+		s.Fatal("Failed to check for connected external DP display: ", err)
 	}
-}
-
-func extDisplayDetection(ctx context.Context, numberOfDisplays int, regexpPatterns []*regexp.Regexp) error {
-	const DisplayInfoCommand = "cat /sys/kernel/debug/dri/0/i915_display_info"
-	var DisplayInfo = regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		displCount, err := graphics.NumberOfOutputsConnected(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to get connected displays ")
-		}
-
-		if displCount < 2 {
-			return errors.New("external display is not connected")
-		}
-
-		out, err := testexec.CommandContext(ctx, "sh", "-c", DisplayInfoCommand).Output()
-
-		if err != nil {
-			return errors.Wrap(err, "failed to run display info command ")
-		}
-		matchedString := (DisplayInfo).FindAllString(string(out), -1)
-		if len(matchedString) != numberOfDisplays {
-			return errors.New("connected external display info not found")
-		}
-		if regexpPatterns != nil {
-			for _, pattern := range regexpPatterns {
-				if !(pattern).MatchString(string(out)) {
-					return errors.Errorf("failed %q error message", pattern)
-				}
-			}
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 25 * time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "please connect external display as required")
-	}
-	return nil
 }

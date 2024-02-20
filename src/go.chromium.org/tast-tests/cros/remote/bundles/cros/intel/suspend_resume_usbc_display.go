@@ -14,9 +14,9 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -77,9 +77,12 @@ func SuspendResumeUSBCDisplay(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
 	defer client.CloseChrome(ctxForCleanUp, &empty.Empty{})
-
-	if err := extDisplayDetection(ctx, dut, 1); err != nil {
-		s.Fatal("Failed to detect external monitor: ", err)
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+	}
+	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
+		s.Fatal("Failed to detect external display: ", err)
 	}
 
 	slpOpSetPreBytes, err := linuxssh.ReadFile(ctx, dut.Conn(), slpS0File)
@@ -150,8 +153,8 @@ func SuspendResumeUSBCDisplay(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if err := extDisplayDetection(ctx, dut, 1); err != nil {
-		s.Fatal("Failed to detect external monitor: ", err)
+	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
+		s.Fatal("Failed to detect external display: ", err)
 	}
 
 	slpOpSetPostBytes, err := linuxssh.ReadFile(ctx, dut.Conn(), slpS0File)
@@ -190,26 +193,4 @@ func SuspendResumeUSBCDisplay(ctx context.Context, s *testing.State) {
 	if pkgOpSetPost == "0x0" || pkgOpSetPost == "0" {
 		s.Fatal("Failed: Package C10 should be non-zero")
 	}
-}
-
-// extDisplayDetection checks whether an external display is detected or not.
-func extDisplayDetection(ctx context.Context, dut *dut.DUT, numberOfDisplays int) error {
-	const displayInfoFile = "/sys/kernel/debug/dri/0/i915_display_info"
-	displayInfoRe := regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := linuxssh.ReadFile(ctx, dut.Conn(), displayInfoFile)
-		if err != nil {
-			return errors.Wrap(err, "failed to get display info")
-		}
-		matchedString := displayInfoRe.FindAllString(string(out), -1)
-		if actual := len(matchedString); actual != numberOfDisplays {
-			return errors.Errorf("unexpected number of external display: want %d, actual %d", numberOfDisplays, actual)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 15 * time.Second,
-	}); err != nil {
-		return err
-	}
-	return nil
 }

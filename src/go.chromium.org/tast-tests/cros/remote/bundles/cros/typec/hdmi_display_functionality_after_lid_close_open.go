@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -52,27 +51,24 @@ func init() {
 		Params: []testing.Param{{
 			Name: "tbt_dock_with_tbt_display",
 			Val: displayParams{
-				displayType:        "TBT_display",
-				displayDetectionRe: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
-				iterationValue:     1,
+				displayType:    usbutils.TBTDisplay,
+				iterationValue: 1,
 			},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"group:intel-tbt3-dock-tbt-display"},
 		}, {
 			Name: "hdmi_lid_open_close",
 			Val: displayParams{
-				displayType:        "HDMI",
-				displayDetectionRe: `.*DP branch device present.*yes\n.*Type.*HDMI`,
-				iterationValue:     5,
+				displayType:    usbutils.TypeCHDMI,
+				iterationValue: 5,
 			},
 			Timeout:   8 * time.Minute,
 			ExtraAttr: []string{"group:intel-tbt3-hdmi-dongle"},
 		}, {
 			Name: "dp_with_tbt_dongle",
 			Val: displayParams{
-				displayType:        "DP",
-				displayDetectionRe: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
-				iterationValue:     1,
+				displayType:    usbutils.TypeCDP,
+				iterationValue: 1,
 			},
 			Timeout:   5 * time.Minute,
 			ExtraAttr: []string{"group:intel-tbt3-dp-dongle"},
@@ -216,10 +212,13 @@ func HDMIDisplayFunctionalityAfterLidCloseOpen(ctx context.Context, s *testing.S
 		s.Fatal("Failed to verify dmesg log: ", err)
 	}
 
-	displayDetectionRe := regexp.MustCompile(testOpt.displayDetectionRe)
-	hdmi4KRe := regexp.MustCompile("3840x2160|4096x2160")
-	typeCDisplayInfoPatterns := []*regexp.Regexp{displayDetectionRe, hdmi4KRe}
-	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, 1, typeCDisplayInfoPatterns); err != nil {
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      testOpt.displayType,
+		DisplayRes:       "4K",
+	}
+	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
 		s.Fatalf("Failed to detect external 4K %s display: %v", testOpt.displayType, err)
 	}
 

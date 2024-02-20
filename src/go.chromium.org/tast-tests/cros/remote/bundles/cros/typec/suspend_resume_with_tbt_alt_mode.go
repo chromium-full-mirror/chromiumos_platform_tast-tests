@@ -9,7 +9,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
@@ -52,9 +51,6 @@ func SuspendResumeWithTBTAltMode(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 2*time.Minute)
 	defer cancel()
-
-	var typeCHDMIRe = regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`)
-	typeCDisplayInfoPatterns := []*regexp.Regexp{typeCHDMIRe}
 
 	// TBT port ID in the DUT.
 	dutPort := s.RequiredVar("typec.dutTbtPort")
@@ -176,8 +172,11 @@ func SuspendResumeWithTBTAltMode(ctx context.Context, s *testing.State) {
 		if err := typecutils.CheckUSBPdMuxinfo(ctx, dut, "TBT=1"); err != nil {
 			s.Fatal("Failed to TBT alt mode: ", err)
 		}
-
-		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, 1, typeCDisplayInfoPatterns); err != nil {
+		numberOfDisplay := 1
+		spec := usbutils.DisplaySpec{
+			NumberOfDisplays: &numberOfDisplay,
+		}
+		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
 			s.Fatal("Failed to detect external HDMI display: ", err)
 		}
 
@@ -188,7 +187,7 @@ func SuspendResumeWithTBTAltMode(ctx context.Context, s *testing.State) {
 
 	verifyPeripheralDevices()
 
-	cmdCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	cmdCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	if err := dut.Conn().CommandContext(cmdCtx, "ectool", "reboot_ec").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		s.Fatal("Failed to execute ectool reboot command: ", err)

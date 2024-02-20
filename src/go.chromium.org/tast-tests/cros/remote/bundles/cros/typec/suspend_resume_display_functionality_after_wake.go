@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"regexp"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -46,11 +45,11 @@ func init() {
 		Timeout:      8 * time.Minute,
 		Params: []testing.Param{{
 			Name:      "typec_hdmi",
-			Val:       `.*DP branch device present.*yes\n.*Type.*HDMI`,
+			Val:       usbutils.TypeCHDMI,
 			ExtraAttr: []string{"group:intel-tbt3-hdmi-dongle"},
 		}, {
 			Name:      "typec_dp",
-			Val:       `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
+			Val:       usbutils.TypeCDP,
 			ExtraAttr: []string{"group:intel-tbt3-dp-dongle"},
 		}},
 	})
@@ -75,7 +74,6 @@ func SuspendResumeDisplayFunctionalityAfterWake(ctx context.Context, s *testing.
 	domainIP := s.RequiredVar("typec.domainIP")
 
 	servoSpec := s.RequiredVar("servo")
-	testOpt := s.Param().(string)
 	dut := s.DUT()
 
 	pxy, err := servo.NewProxy(ctx, servoSpec, dut.KeyFile(), dut.KeyDir())
@@ -187,12 +185,13 @@ func SuspendResumeDisplayFunctionalityAfterWake(ctx context.Context, s *testing.
 	if err := typecutils.CheckUSBPdMuxinfo(ctx, dut, "TBT=1"); err != nil {
 		s.Fatal("Failed to verify dmesg log: ", err)
 	}
-
-	displayDetectionRe := regexp.MustCompile(testOpt)
-	hdmi4kRe := regexp.MustCompile("3840x2160|4096x2160")
-	typeCDisplayInfoPatterns := []*regexp.Regexp{displayDetectionRe, hdmi4kRe}
-	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, 1, typeCDisplayInfoPatterns); err != nil {
-		s.Fatal("Failed to detect external 4K HDMI display: ", err)
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      s.Param().(string),
+	}
+	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
+		s.Fatal("Failed to detect external display: ", err)
 	}
 
 	if _, err := client.SetMirrorModeDisplay(ctx, &typec.KeyPath{SetMode: true}); err != nil {
@@ -259,8 +258,8 @@ func SuspendResumeDisplayFunctionalityAfterWake(ctx context.Context, s *testing.
 			s.Fatal("Failed to verify dmesg log: ", err)
 		}
 
-		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, 1, typeCDisplayInfoPatterns); err != nil {
-			s.Fatal("Failed to detect external HDMI display: ", err)
+		if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
+			s.Fatal("Failed to detect external display: ", err)
 		}
 	}
 

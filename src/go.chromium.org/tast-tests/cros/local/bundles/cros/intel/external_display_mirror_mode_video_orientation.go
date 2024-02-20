@@ -8,7 +8,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
@@ -73,11 +72,12 @@ func ExternalDisplayMirrorModeVideoOrientation(ctx context.Context, s *testing.S
 	}
 	const cSwitchOFF = "0"
 	defer cswitch.ToggleCSwitchPort(cleanupCtx, sessionID, cSwitchOFF, domainIP)
-
-	const numOfConnectedDisplays = 1
-	typecHDMIRe := regexp.MustCompile(`.*DP branch device present.*yes\n.*Type.*HDMI`)
-	typecHDMIInfoPattern := []*regexp.Regexp{typecHDMIRe}
-	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, numOfConnectedDisplays, typecHDMIInfoPattern); err != nil {
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.TypeCHDMI,
+	}
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
 		s.Fatal("Failed to check for connected external HDMI display: ", err)
 	}
 

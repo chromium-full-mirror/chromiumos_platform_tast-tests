@@ -6,10 +6,9 @@ package graphics
 
 import (
 	"context"
-	"io/ioutil"
-	"regexp"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
@@ -26,8 +25,8 @@ import (
 )
 
 type displayCompositionTestParams struct {
-	tabletMode    bool
-	displayInfoRe map[string]*regexp.Regexp
+	tabletMode  bool
+	displayType string
 }
 
 func init() {
@@ -47,31 +46,22 @@ func init() {
 		Params: []testing.Param{{
 			Name: "hdmi_clamshell_mode",
 			Val: displayCompositionTestParams{
-				tabletMode: false,
-				displayInfoRe: map[string]*regexp.Regexp{
-					"connectorInfoPtrns": regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`),
-					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:HDMI.*status: connected`),
-				},
+				tabletMode:  false,
+				displayType: usbutils.NativeHDMI,
 			},
 			ExtraAttr: []string{"group:intel-hdmi"},
 		}, {
 			Name: "hdmi_tablet_mode",
 			Val: displayCompositionTestParams{
-				tabletMode: true,
-				displayInfoRe: map[string]*regexp.Regexp{
-					"connectorInfoPtrns": regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[HDMI]+.*`),
-					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:HDMI.*status: connected`),
-				},
+				tabletMode:  true,
+				displayType: usbutils.NativeHDMI,
 			},
 			ExtraAttr: []string{"group:intel-hdmi"},
 		}, {
 			Name: "dp_clamshell_mode",
 			Val: displayCompositionTestParams{
-				tabletMode: false,
-				displayInfoRe: map[string]*regexp.Regexp{
-					"connectorInfoPtrns": regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`),
-					"connectedPtrns":     regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`),
-				},
+				tabletMode:  false,
+				displayType: usbutils.NativeDP,
 			},
 			ExtraAttr: []string{"group:intel-dp"},
 		}},
@@ -101,22 +91,22 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 
 	const (
 		settingsDeviceText  = "Device"
-		settingsDisplayText = "Displays"
+		settingsDisplayText = "Display"
 	)
 
 	var (
 		resolutionMenuParams  = nodewith.Name("Resolution").Role(role.ComboBoxSelect)
 		refreshRateMenuParams = nodewith.Name("Refresh Rate Menu").Role(role.ComboBoxSelect)
 		refreshRate60HzParam  = nodewith.Name("60 Hz").Role(role.ListBoxOption).First()
-		builtinDisplayParams  = nodewith.Name("Mirror Built-in display").Role(role.CheckBox)
+		builtinDisplayParams  = nodewith.Name("Mirror Built-in display").Role(role.ToggleButton)
 	)
-
-	displayInfoPatterns := []*regexp.Regexp{
-		testOpt.displayInfoRe["connectorInfoPtrns"],
-		testOpt.displayInfoRe["connectedPtrns"],
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      testOpt.displayType,
 	}
-	if err := externalMonitorDetection(ctx, 1, displayInfoPatterns); err != nil {
-		s.Fatal("Failed to detect extended display monitor: ", err)
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
+		s.Fatal("Failed to check for connected external display: ", err)
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
@@ -229,7 +219,9 @@ func ExtendedDisplayCompositionCheck(ctx context.Context, s *testing.State) {
 	if err := typecutils.SetDisplayResolution(ctx, tconn, &info[1], 3840, 2160, cr); err != nil {
 		s.Fatal("Failed to change resolution: ", err)
 	}
-
+	if err := cui.ScrollToVisible(refreshRateMenuParams)(ctx); err != nil {
+		s.Fatal("Failed to scroll far enough down to refresh rate settings: ", err)
+	}
 	if err := leftClickUIElement(refreshRateMenuParams); err != nil {
 		s.Fatal("Failed to find and click refresh rate menu with error: ", err)
 	}
@@ -247,35 +239,6 @@ func settingsPage(ctx context.Context, tconn *chrome.TestConn, ui *uiauto.Contex
 	}
 	if err := ui.LeftClick(confirm)(ctx); err != nil {
 		return errors.Wrap(err, "failed to left click element")
-	}
-	return nil
-}
-
-// externalMonitorDetection verifies whether required external display(HDMI or DP) connected.
-func externalMonitorDetection(ctx context.Context, numberOfDisplays int, regexpPatterns []*regexp.Regexp) error {
-	const displayInfoFile = "/sys/kernel/debug/dri/0/i915_display_info"
-	// This regexp will skip pipe A since that's the internal display detection.
-	displayInfo := regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := ioutil.ReadFile(displayInfoFile)
-		if err != nil {
-			return errors.Wrap(err, "failed to run display info command")
-		}
-		matchedString := displayInfo.FindAllString(string(out), -1)
-		if len(matchedString) != numberOfDisplays {
-			return errors.Errorf("unexpected number of external display info: got %d, want %d", len(matchedString), numberOfDisplays)
-		}
-
-		for _, pattern := range regexpPatterns {
-			if !pattern.MatchString(string(out)) {
-				return errors.Errorf("failed %q error message", pattern)
-			}
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 15 * time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "please connect external display as required")
 	}
 	return nil
 }

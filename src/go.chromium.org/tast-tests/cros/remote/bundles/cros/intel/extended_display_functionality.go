@@ -10,11 +10,11 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -136,8 +136,13 @@ func ExtendedDisplayFunctionality(ctx context.Context, s *testing.State) {
 	}
 
 	// Verifying external display detection before shutdown/reboot.
-	if err := externalTypecDisplayDetection(ctx, dut, 1); err != nil {
-		s.Fatalf("Failed detecting external display before %q: %v", testOpt.powerMode, err)
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      usbutils.TypeCHDMI,
+	}
+	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
+		s.Fatal("Failed to detect external HDMI display: ", err)
 	}
 
 	if testOpt.powerMode == "shutdown_command" {
@@ -172,7 +177,7 @@ func ExtendedDisplayFunctionality(ctx context.Context, s *testing.State) {
 	}
 
 	// Verifying external display detection after shutdown/reboot.
-	if err := externalTypecDisplayDetection(ctx, dut, 1); err != nil {
+	if err := usbutils.ExternalDisplayDetectionForRemote(ctx, dut, spec); err != nil {
 		s.Fatalf("Failed detecting external display after %q: %v", testOpt.powerMode, err)
 	}
 
@@ -188,53 +193,6 @@ func ExtendedDisplayFunctionality(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to validate previous sleep state: ", err)
 		}
 	}
-}
-
-// externalTypecDisplayDetection verifies extended display is connected through typec adapter or not.
-func externalTypecDisplayDetection(ctx context.Context, dut *dut.DUT, numberOfDisplays int) error {
-	// Checking whether typec adapter connected to DUT.
-	lsbOut, err := dut.Conn().CommandContext(ctx, "lsusb", "-t").Output()
-	if err != nil {
-		return errors.Wrap(err, "failed to execute lsusb command")
-	}
-
-	usbDetectionRe := regexp.MustCompile(`If 0.*Class=.*5000M`)
-	if !usbDetectionRe.MatchString(string(lsbOut)) {
-		return errors.New("failed to detect typec adapter")
-	}
-
-	var (
-		displayInfoRe     = regexp.MustCompile(`.*pipe\s+[BCD]\]:\n.*active=yes, mode=.[0-9]+x[0-9]+.: [0-9]+.*\s+[hw: active=yes]+`)
-		connectorInfoRe   = regexp.MustCompile(`.*: connectors:\n.\s+\[CONNECTOR:\d+:[DP]+.*`)
-		connectedStatusRe = regexp.MustCompile(`\[CONNECTOR:\d+:DP.*status: connected`)
-		modesRe           = regexp.MustCompile(`modes:\n.*"\d+x\d+":.60`)
-	)
-
-	displayInfoFile := "/sys/kernel/debug/dri/0/i915_display_info"
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := linuxssh.ReadFile(ctx, dut.Conn(), displayInfoFile)
-		if err != nil {
-			return errors.Wrapf(err, "failed to read %q file", displayInfoFile)
-		}
-
-		matchedString := displayInfoRe.FindAllString(string(out), -1)
-		if len(matchedString) != numberOfDisplays {
-			return errors.New("connected external display info not found")
-		}
-
-		displayInfoPatterns := []*regexp.Regexp{connectorInfoRe, connectedStatusRe, modesRe}
-		for _, pattern := range displayInfoPatterns {
-			if !pattern.MatchString(string(out)) {
-				return errors.Errorf("failed to find display info match %q", pattern)
-			}
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 30 * time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "unable to find external display")
-	}
-	return nil
 }
 
 // shutdownWithPowerButtonViaServo performs shutdown DUT with power button long press via servo.

@@ -13,6 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/cswitch"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/input"
@@ -22,8 +23,7 @@ import (
 )
 
 type displayFunctionalities struct {
-	isTypecHDMI bool
-	isTypecDP   bool
+	displayType string
 	cSwitchON   string
 }
 
@@ -42,7 +42,7 @@ func init() {
 		Params: []testing.Param{{
 			Name: "hdmi",
 			Val: displayFunctionalities{
-				isTypecHDMI: true,
+				displayType: usbutils.TypeCHDMI,
 				// The Type-C HDMI is connected to C-Switch in P1 as per the intel_cswitch_set1 suite setup.
 				cSwitchON: "1",
 			},
@@ -50,7 +50,7 @@ func init() {
 		}, {
 			Name: "dp",
 			Val: displayFunctionalities{
-				isTypecDP: true,
+				displayType: usbutils.TypeCDP,
 				// The Type-C DP is connected to C-Switch in P2 as per the intel_cswitch_set1 suite setup.
 				cSwitchON: "2",
 			},
@@ -107,13 +107,13 @@ func ExternalDisplayPlugUnplugVideoPlayback(ctx context.Context, s *testing.Stat
 	if err := cswitch.ToggleCSwitchPort(ctx, sessionID, cswitchVar, domainIP); err != nil {
 		s.Fatal("Failed to enable c-switch port: ", err)
 	}
-
-	if err := typecutils.FindConnectedDisplay(ctx, 1); err != nil {
-		s.Fatal("Failed to find connected display: ", err)
+	numberOfDisplay := 1
+	spec := usbutils.DisplaySpec{
+		NumberOfDisplays: &numberOfDisplay,
+		DisplayType:      testParms.displayType,
 	}
-
-	if err := typecutils.CheckDisplayInfo(ctx, testParms.isTypecHDMI, testParms.isTypecDP); err != nil {
-		s.Fatal("Failed to check display info : ", err)
+	if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
+		s.Fatal("Failed to check for connected external display: ", err)
 	}
 
 	srv := httptest.NewServer(http.FileServer(s.DataFileSystem()))

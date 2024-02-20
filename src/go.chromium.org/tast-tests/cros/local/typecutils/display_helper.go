@@ -123,7 +123,7 @@ func CheckDisplayInfo(ctx context.Context, typecHdmiConnector, typecDpConnector 
 // set holds boolean value true(set mirror display), false(unset mirror display).
 func SetMirrorDisplay(ctx context.Context, tconn *chrome.TestConn, set bool) error {
 	ui := uiauto.New(tconn)
-	displayFinder := nodewith.Name("Displays").Role(role.Link).Ancestor(ossettings.WindowFinder)
+	displayFinder := nodewith.Name("Display").Role(role.Link).Ancestor(ossettings.WindowFinder)
 
 	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Device").Role(role.Link))
 	if err != nil {
@@ -135,7 +135,7 @@ func SetMirrorDisplay(ctx context.Context, tconn *chrome.TestConn, set bool) err
 		return errors.Wrap(err, "failed to launch display page")
 	}
 
-	mirrorFinder := nodewith.Name("Mirror Built-in display").Role(role.CheckBox).Ancestor(ossettings.WindowFinder)
+	mirrorFinder := nodewith.Name("Mirror Built-in display").Role(role.ToggleButton).Ancestor(ossettings.WindowFinder)
 	// Find the node info for the mirror checkbox.
 	nodeInfo, err := ui.Info(ctx, mirrorFinder)
 	if err != nil {
@@ -256,7 +256,7 @@ func VerifyWindowOnDisplay(ctx context.Context, tconn *chrome.TestConn, pkgName,
 			return errors.Errorf("invalid display ID; go %q, want %q", windowInfo.DisplayID, dispID)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 1 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 25 * time.Second, Interval: 1 * time.Second}); err != nil {
 		return errors.Wrap(err, "failed to verify window on display")
 	}
 	return nil

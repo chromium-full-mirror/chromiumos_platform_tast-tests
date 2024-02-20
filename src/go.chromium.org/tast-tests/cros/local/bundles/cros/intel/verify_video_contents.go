@@ -10,7 +10,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
-	"regexp"
 	"strings"
 	"time"
 
@@ -33,15 +32,15 @@ import (
 
 // videoContent struct stores test specific data.
 type videoContent struct {
-	contentUrls         []string
-	proxyURL            string
-	hdcpVer             string
-	displayInfoReString string
-	typeVal             string
-	display             string
-	drmLogMsg           string
-	is4KDisplay         bool
-	isTBTDevice         bool
+	contentUrls []string
+	proxyURL    string
+	hdcpVer     string
+	displayType string
+	typeVal     string
+	display     string
+	drmLogMsg   string
+	is4KDisplay bool
+	isTBTDevice bool
 }
 
 func init() {
@@ -78,75 +77,75 @@ func init() {
 			// Test H/W topology requires DUT connected to external typec DP 4K display.
 			Name: "h264_uhd_hdcpv2_4k_display",
 			Val: videoContent{display: "DP",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
-				hdcpVer:             "HDCP2.2",
-				typeVal:             "Type1=1",
-				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
-				is4KDisplay:         true,
-				contentUrls:         []string{urlconst.H264UHD},
-				proxyURL:            urlconst.ProxyHDCPV2},
+				drmLogMsg:   "HDCP2.2 is enabled. Type 1",
+				hdcpVer:     "HDCP2.2",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCDP,
+				is4KDisplay: true,
+				contentUrls: []string{urlconst.H264UHD},
+				proxyURL:    urlconst.ProxyHDCPV2},
 			Timeout:   4 * time.Minute,
 			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec HDMI display.
 			Name: "hevc_cbcs_hdcp2_2_v1_display",
 			Val: videoContent{display: "HDMI",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 0",
-				hdcpVer:             "HDCP2.2",
-				typeVal:             "Type1=1",
-				displayInfoReString: `.*DP branch device present.*yes\n.*Type.*HDMI`,
-				contentUrls:         []string{urlconst.HEVCCBCS},
-				proxyURL:            urlconst.ProxyHDCPV1},
+				drmLogMsg:   "HDCP2.2 is enabled. Type 0",
+				hdcpVer:     "HDCP2.2",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCHDMI,
+				contentUrls: []string{urlconst.HEVCCBCS},
+				proxyURL:    urlconst.ProxyHDCPV1},
 			Timeout:   4 * time.Minute,
 			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec HDMI 4K display.
 			Name: "hevc_cbcs_hdcp1_4_v1_display",
 			Val: videoContent{display: "HDMI",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 0",
-				hdcpVer:             "HDCP1.4",
-				typeVal:             "Type1=1",
-				displayInfoReString: `.*DP branch device present.*yes\n.*Type.*HDMI`,
-				is4KDisplay:         true,
-				contentUrls:         []string{urlconst.HEVCCBCS},
-				proxyURL:            urlconst.ProxyHDCPV1},
+				drmLogMsg:   "HDCP2.2 is enabled. Type 0",
+				hdcpVer:     "HDCP1.4",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCHDMI,
+				is4KDisplay: true,
+				contentUrls: []string{urlconst.HEVCCBCS},
+				proxyURL:    urlconst.ProxyHDCPV1},
 			Timeout:   4 * time.Minute,
 			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec DP 4K display.
 			Name: "h264_hdcpv2_4k_display",
 			Val: videoContent{display: "DP",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
-				hdcpVer:             "HDCP2.2",
-				typeVal:             "Type1=1",
-				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
-				is4KDisplay:         true,
-				contentUrls:         []string{urlconst.H264Fullsample, urlconst.H264Subsample, urlconst.H264CBCS},
-				proxyURL:            urlconst.ProxyHDCPV2},
+				drmLogMsg:   "HDCP2.2 is enabled. Type 1",
+				hdcpVer:     "HDCP2.2",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCDP,
+				is4KDisplay: true,
+				contentUrls: []string{urlconst.H264Fullsample, urlconst.H264Subsample, urlconst.H264CBCS},
+				proxyURL:    urlconst.ProxyHDCPV2},
 			Timeout:   7 * time.Minute,
 			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec HDMI 4K display.
 			Name: "vp9_hdcpv2_4k_display",
 			Val: videoContent{display: "HDMI",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
-				hdcpVer:             "HDCP2.2",
-				typeVal:             "Type1=1",
-				displayInfoReString: `.*DP branch device present.*yes\n.*Type.*HDMI`,
-				is4KDisplay:         true,
-				contentUrls:         []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
-				proxyURL:            urlconst.ProxyHDCPV2},
+				drmLogMsg:   "HDCP2.2 is enabled. Type 1",
+				hdcpVer:     "HDCP2.2",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCHDMI,
+				is4KDisplay: true,
+				contentUrls: []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
+				proxyURL:    urlconst.ProxyHDCPV2},
 			Timeout:   7 * time.Minute,
 			ExtraAttr: []string{"group:intel-hdmi-type-c"},
 		}, {
 			// Test H/W topology requires DUT connected to external typec DP 4K display.
 			Name: "play_all_hevc_contents_4k_display",
 			Val: videoContent{display: "DP",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
-				hdcpVer:             "HDCP2.2",
-				typeVal:             "Type1=1",
-				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
-				is4KDisplay:         true,
+				drmLogMsg:   "HDCP2.2 is enabled. Type 1",
+				hdcpVer:     "HDCP2.2",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCDP,
+				is4KDisplay: true,
 				contentUrls: []string{urlconst.HEVCclip, urlconst.HEVC4K, urlconst.HEVCclipSD, urlconst.HEVCclipHD,
 					urlconst.HEVCCBCS, urlconst.HEVCCBCS2},
 				proxyURL: urlconst.ProxyHDCPV2},
@@ -157,13 +156,13 @@ func init() {
 			// DUT ---> TBT Dock station ---> typec 4K DP display.
 			Name: "hevc_hdcp2_tbt_dock_4k_display",
 			Val: videoContent{display: "DP",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
-				hdcpVer:             "HDCP2.2",
-				typeVal:             "Type1=1",
-				displayInfoReString: `\[CONNECTOR:[0-9]+:DP-[0-9]+\]: status: connected`,
-				is4KDisplay:         true,
-				contentUrls:         []string{urlconst.HEVCCBCS, urlconst.HEVCclip},
-				proxyURL:            urlconst.ProxyHDCPV2},
+				drmLogMsg:   "HDCP2.2 is enabled. Type 1",
+				hdcpVer:     "HDCP2.2",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCDP,
+				is4KDisplay: true,
+				contentUrls: []string{urlconst.HEVCCBCS, urlconst.HEVCclip},
+				proxyURL:    urlconst.ProxyHDCPV2},
 			Timeout:   7 * time.Minute,
 			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}, {
@@ -171,14 +170,14 @@ func init() {
 			// DUT ---> USB4 Gatkex ---> typec 4K DP display.
 			Name: "vp9_hdcp2_usb4_gatkex_4k_display",
 			Val: videoContent{display: "DP",
-				drmLogMsg:           "HDCP2.2 is enabled. Type 1",
-				hdcpVer:             "HDCP2.2",
-				typeVal:             "Type1=1",
-				displayInfoReString: `\[CONNECTOR:\d+:DP.*status: connected((.|\n)*)DP branch device present: no`,
-				is4KDisplay:         true,
-				isTBTDevice:         true,
-				contentUrls:         []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
-				proxyURL:            urlconst.ProxyHDCPV2},
+				drmLogMsg:   "HDCP2.2 is enabled. Type 1",
+				hdcpVer:     "HDCP2.2",
+				typeVal:     "Type1=1",
+				displayType: usbutils.TypeCDP,
+				is4KDisplay: true,
+				isTBTDevice: true,
+				contentUrls: []string{urlconst.VP9Subsample, urlconst.VP9Superframe, urlconst.VP9UHD},
+				proxyURL:    urlconst.ProxyHDCPV2},
 			Timeout:   7 * time.Minute,
 			ExtraAttr: []string{"group:intel-dp-type-c"},
 		}},
@@ -248,12 +247,13 @@ func VerifyVideoContents(ctx context.Context, s *testing.State) {
 
 			isExtDisplay = true
 			expectedAudioNode = "HDMI"
-			const numOfConnectedDisplays = 1
-			displayInfoRe := regexp.MustCompile(testData.displayInfoReString)
-			hdcpVerRe := regexp.MustCompile(testData.hdcpVer)
-
-			typecDisplayInfoPattern := []*regexp.Regexp{displayInfoRe, hdcpVerRe}
-			if err := usbutils.ExternalDisplayDetectionForLocal(ctx, numOfConnectedDisplays, typecDisplayInfoPattern); err != nil {
+			numberOfDisplay := 1
+			spec := usbutils.DisplaySpec{
+				NumberOfDisplays: &numberOfDisplay,
+				DisplayType:      testData.displayType,
+				HDCPVer:          testData.hdcpVer,
+			}
+			if err := usbutils.ExternalDisplayDetectionForLocal(ctx, spec); err != nil {
 				s.Fatal("Failed to check for connected external display: ", err)
 			}
 
