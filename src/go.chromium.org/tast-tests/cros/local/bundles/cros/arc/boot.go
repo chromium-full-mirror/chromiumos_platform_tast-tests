@@ -17,10 +17,6 @@ import (
 type bootConfig struct {
 	// Run boot this many times
 	numTrials int
-	// Use O_DIRECT in read-only system/vendor disk access for ARCVM
-	rootfsODirect bool
-	// Use O_DIRECT in /data disk access for ARCVM
-	dataDiskODirect bool
 	// Extra Chrome command line options
 	chromeArgs []string
 }
@@ -80,18 +76,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
-			Name: "vm_virtio_blk_data_o_direct",
-			Val: bootConfig{
-				numTrials: 1,
-				chromeArgs: []string{
-					"--enable-features=ArcEnableVirtioBlkForData",
-				},
-				dataDiskODirect: true,
-			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
-		}, {
 			Name: "vm_with_per_vcpu_core_scheduling",
 			Val: bootConfig{
 				numTrials: 1,
@@ -110,15 +94,6 @@ func init() {
 			ExtraAttr:         []string{"group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Timeout:           365 * 24 * time.Hour,
-		}, {
-			Name: "vm_o_direct",
-			Val: bootConfig{
-				numTrials:     1,
-				rootfsODirect: true,
-			},
-			ExtraAttr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Timeout:           chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 		}, {
 			Name: "vm_stress",
 			Val: bootConfig{
@@ -152,21 +127,6 @@ func Boot(ctx context.Context, s *testing.State) {
 }
 
 func runBoot(ctx context.Context, s *testing.State) {
-	arcvmConf := ""
-	if s.Param().(bootConfig).rootfsODirect {
-		// Set up O_DIRECT for /dev/vda (system.img) and /dev/vdb (vendor.img).
-		arcvmConf += "O_DIRECT_N=0\nO_DIRECT_N=1\n"
-	}
-	if s.Param().(bootConfig).dataDiskODirect {
-		arcvmConf += "O_DIRECT_N=4\n"
-	}
-	if arcvmConf != "" {
-		if err := arc.WriteArcvmDevConf(ctx, arcvmConf); err != nil {
-			s.Fatal("Failed to set arcvm_dev.conf: ", err)
-		}
-		defer arc.RestoreArcvmDevConf(ctx)
-	}
-
 	reader, err := syslog.NewReader(ctx)
 	if err != nil {
 		s.Fatal("Failed to open syslog reader: ", err)

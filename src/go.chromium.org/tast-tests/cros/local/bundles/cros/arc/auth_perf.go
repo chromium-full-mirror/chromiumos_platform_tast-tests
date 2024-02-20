@@ -47,8 +47,6 @@ type testParam struct {
 	chromeArgs        []string
 	// Whether to enable multiple workers feature for block devices in crosvm.
 	useMultipleWorkersBlock bool
-	// Whether to use O_DIRECT on /data
-	useODirectDataDisk bool
 	// Whether to enable Perfetto tracing
 	tracingEnabled bool
 }
@@ -125,15 +123,6 @@ func init() {
 				browserType:       browser.TypeAsh,
 				maxErrorBootCount: 3,
 				chromeArgs:        []string{"--enable-features=ArcEnableVirtioBlkForData"},
-			},
-		}, {
-			Name:              "unmanaged_o_direct_virtio_blk_vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
-			Val: testParam{
-				browserType:        browser.TypeAsh,
-				maxErrorBootCount:  3,
-				chromeArgs:         []string{"--enable-features=ArcEnableVirtioBlkForData"},
-				useODirectDataDisk: true,
 			},
 		}, {
 			Name:              "unmanaged_multipleworkers_virtio_blk_vm",
@@ -250,9 +239,6 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 
 	arcvmDevConf := ""
 
-	if param.useODirectDataDisk {
-		arcvmDevConf += "O_DIRECT_N=4\n"
-	}
 	if param.useMultipleWorkersBlock {
 		arcvmDevConf += "BLOCK_MULTIPLE_WORKERS=true\n"
 	}
