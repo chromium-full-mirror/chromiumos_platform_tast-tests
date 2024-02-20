@@ -29,7 +29,7 @@ func BreakSWAAttractLoop(ctx context.Context, tconn *chrome.TestConn) error {
 		return errors.Wrap(err, "failed to wait until splash screen is gone")
 	}
 
-	demoApp := nodewith.Name("Demo Mode App").First()
+	demoApp := nodewith.Name("ChromeOS Highlights").First()
 	if err := ui.WaitUntilExists(demoApp)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait until Demo App exists")
 	}
@@ -67,13 +67,13 @@ func VerifySWAFunctionality(ctx context.Context, tconn *chrome.TestConn, highlig
 	}
 
 	testing.ContextLog(ctx, "Waiting for Demo Mode App to launch")
-	demoApp := nodewith.Name("Demo Mode App").First()
+	demoApp := nodewith.Name("ChromeOS Highlights").First()
 	if err := ui.WaitUntilExists(demoApp)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait until Demo App exists")
 	}
 
 	testing.ContextLog(ctx, "Confirming that app is in fullscreen Attract Loop mode")
-	if err := ash.WaitForFullscreenConditionWithTitle(tconn, "Demo Mode App", true, 10*time.Second)(ctx); err != nil {
+	if err := ash.WaitForFullscreenConditionWithTitle(tconn, "ChromeOS Highlights", true, 10*time.Second)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
 	}
 
@@ -96,7 +96,7 @@ func VerifySWAFunctionality(ctx context.Context, tconn *chrome.TestConn, highlig
 	}
 
 	testing.ContextLog(ctx, "Confirming that app is in windowed Highlights mode")
-	if err := ash.WaitForFullscreenConditionWithTitle(tconn, "Demo Mode App", false, 10*time.Second)(ctx); err != nil {
+	if err := ash.WaitForFullscreenConditionWithTitle(tconn, "ChromeOS Highlights", false, 10*time.Second)(ctx); err != nil {
 		return errors.Wrap(err, "failed to wait for a window in fullscreen mode")
 	}
 	// Confirm that basic Highlights content is shown by presence of highlightsNode
