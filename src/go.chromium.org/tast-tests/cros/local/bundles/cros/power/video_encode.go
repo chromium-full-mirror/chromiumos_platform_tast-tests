@@ -30,6 +30,9 @@ const (
 	cameraDataNameRegex = "codec: video/webm.*"
 )
 
+// Use default value for timeParam if not set.
+var defaultTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 6 * time.Minute}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         VideoEncode,
@@ -192,6 +195,11 @@ func init() {
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               power.VideoEncodeFormatParams{Codec: "av1", Resolution: "qhvga", Framerate: 15},
+		}, {
+			Name:    "vp9_fhd_24fps_ash_30min", // 30min version for qual test suite.
+			Fixture: "powerAsh",
+			Val: power.VideoEncodeFormatParams{Codec: "vp9", Resolution: "fhd", Framerate: 24,
+				VideoEncodeTimeParams: power.TimeParams{Interval: 5 * time.Second, Total: 30 * time.Minute}},
 		}},
 	})
 }
@@ -234,8 +242,6 @@ func VideoEncode(ctx context.Context, s *testing.State) {
 	interval := videoEncodeFormatParams.VideoEncodeTimeParams.Interval
 	total := videoEncodeFormatParams.VideoEncodeTimeParams.Total
 
-	// Use default value for timeParam if not set.
-	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: 30 * time.Minute}
 	if interval == time.Duration(0) {
 		interval = defaultTimeParams.Interval
 	}
