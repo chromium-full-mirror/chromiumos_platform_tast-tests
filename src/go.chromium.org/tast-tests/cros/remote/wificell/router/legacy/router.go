@@ -414,38 +414,36 @@ func (r *Router) monitorOnInterface(ctx context.Context, iface string) (*iw.NetD
 }
 
 // StartHostapd starts the hostapd server.
-func (r *Router) StartHostapd(ctx context.Context, name string, confs ...*hostapd.Config) (_ *hostapd.Server, retErr error) {
+func (r *Router) StartHostapd(ctx context.Context, name string, conf *hostapd.Config) (_ *hostapd.Server, retErr error) {
 	ctx, st := timing.Start(ctx, "router.StartHostapd")
 	defer st.End()
-	var ifaces []*hostapd.Iface
-	for _, conf := range confs {
-		nd, err := r.netDev(ctx, conf.Channel, iw.IfTypeManaged)
-		if err != nil {
-			return nil, err
-		}
-		iface := nd.IfName
-		r.im.SetBusy(iface)
-		defer func() {
-			if retErr != nil {
-				r.im.SetAvailable(iface)
-			}
-		}()
-		ifaces = append(ifaces, hostapd.NewIface(iface, conf))
+
+	if err := conf.SecurityConfig.InstallRouterCredentials(ctx, r.host, r.workDir()); err != nil {
+		return nil, errors.Wrap(err, "failed to install router credentials")
 	}
-	return r.startHostapdOnIfaces(ctx, name, ifaces)
+
+	nd, err := r.netDev(ctx, conf.Channel, iw.IfTypeManaged)
+	if err != nil {
+		return nil, err
+	}
+	iface := nd.IfName
+	r.im.SetBusy(iface)
+	defer func() {
+		if retErr != nil {
+			r.im.SetAvailable(iface)
+		}
+	}()
+	return r.startHostapdOnIface(ctx, iface, name, conf)
 }
 
-func (r *Router) startHostapdOnIfaces(ctx context.Context, name string, ifaces []*hostapd.Iface) (_ *hostapd.Server, retErr error) {
-	ctx, st := timing.Start(ctx, "router.startHostapdOnIfaces")
+func (r *Router) startHostapdOnIface(ctx context.Context, iface, name string, conf *hostapd.Config) (_ *hostapd.Server, retErr error) {
+	ctx, st := timing.Start(ctx, "router.startHostapdOnIface")
 	defer st.End()
-	for _, iface := range ifaces {
-		if err := iface.Config().SecurityConfig.InstallRouterCredentials(ctx, r.host, r.workDir()); err != nil {
-			return nil, errors.Wrapf(err, "failed to install router credentials for interface %s", iface.Name())
-		}
-	}
+
 	// TODO(crbug.com/1047146): Remove this env addition part after we drop the old crypto like MD5.
 	environmentVars := map[string]string{envKeyOpenSslConf: "/etc/ssl/openssl.cnf.compat", envKeyOpenSslChromiumSkipTrustedPurposeCheck: "1"}
-	hs, err := hostapd.StartServerOnIface(ctx, r.host, name, r.workDir(), ifaces, environmentVars)
+
+	hs, err := hostapd.StartServer(ctx, r.host, name, iface, r.workDir(), conf, environmentVars)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start hostapd server")
 	}
@@ -458,10 +456,9 @@ func (r *Router) startHostapdOnIfaces(ctx context.Context, name string, ifaces [
 	}(ctx)
 	ctx, cancel := hs.ReserveForClose(ctx)
 	defer cancel()
-	for _, iface := range ifaces {
-		if err := r.iwr.SetTxPowerAuto(ctx, iface.Name()); err != nil {
-			return nil, errors.Wrapf(err, "failed to set txpower on interface %s to auto", iface.Name())
-		}
+
+	if err := r.iwr.SetTxPowerAuto(ctx, iface); err != nil {
+		return nil, errors.Wrap(err, "failed to set txpower to auto")
 	}
 	return hs, nil
 }
@@ -469,13 +466,12 @@ func (r *Router) startHostapdOnIfaces(ctx context.Context, name string, ifaces [
 // StopHostapd stops the hostapd server.
 func (r *Router) StopHostapd(ctx context.Context, hs *hostapd.Server) error {
 	var firstErr error
+	iface := hs.Interface()
 	if err := hs.Close(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop hostapd"))
 	}
-	for _, iface := range hs.Interfaces() {
-		utils.CollectFirstErr(ctx, &firstErr, r.ipr.SetLinkDown(ctx, iface))
-		r.im.SetAvailable(iface)
-	}
+	utils.CollectFirstErr(ctx, &firstErr, r.ipr.SetLinkDown(ctx, iface))
+	r.im.SetAvailable(iface)
 	return firstErr
 }
 
@@ -492,7 +488,7 @@ func (r *Router) ReconfigureHostapd(ctx context.Context, hs *hostapd.Server, con
 			r.im.SetAvailable(iface)
 		}
 	}()
-	return r.startHostapdOnIfaces(ctx, name, []*hostapd.Iface{hostapd.NewIface(iface, conf)})
+	return r.startHostapdOnIface(ctx, iface, name, conf)
 }
 
 // StartDHCP starts the DHCP server and configures the server IP. If DNS functionality is

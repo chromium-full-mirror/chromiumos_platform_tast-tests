@@ -123,7 +123,7 @@ type Capture interface {
 type Hostapd interface {
 	Router
 	// StartHostapd starts the hostapd server.
-	StartHostapd(ctx context.Context, name string, confs ...*hostapd.Config) (*hostapd.Server, error)
+	StartHostapd(ctx context.Context, name string, conf *hostapd.Config) (*hostapd.Server, error)
 	// StopHostapd stops the hostapd server.
 	StopHostapd(ctx context.Context, hs *hostapd.Server) error
 	// ReconfigureHostapd restarts the hostapd server with the new config. It preserves the interface and the name of the old hostapd server.

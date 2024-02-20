@@ -221,7 +221,7 @@ type TestFixture struct {
 
 	apID              int
 	seederIfaces      []*APIface
-	capturers         map[*APIface]map[int]*pcap.Capturer
+	capturers         map[*APIface]*pcap.Capturer
 	tetheringCapturer *pcap.Capturer
 	useWpaCliAPI      bool
 
@@ -262,7 +262,7 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, options *TFOptions) (ret
 	tf := &TestFixture{
 		options:      options,
 		duts:         append(make([]*dutData, 0), options.duts...),
-		capturers:    make(map[*APIface]map[int]*pcap.Capturer),
+		capturers:    make(map[*APIface]*pcap.Capturer),
 		aps:          make(map[*APIface]struct{}),
 		useWpaCliAPI: true,
 	}
@@ -917,74 +917,56 @@ func (tf *TestFixture) UniqueAPName() string {
 // ConfigureAPOnRouterID is an extended version of ConfigureAP, allowing to choose router
 // to establish the AP on.
 func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx RouterIdx, ops []hostapd.Option, fac security.ConfigFactory, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
-	return tf.ConfigureAPOnRouterIDWithConfs(ctx, idx, [][]hostapd.Option{ops}, []security.ConfigFactory{fac}, enableDNS, enableHTTP)
-}
-
-// ConfigureAPOnRouterIDWithConfs is an extended version of ConfigureAPOnRouterID, allowing
-// to choose router and interfaces to establish the AP on, for example, hostapd controls multiple interfaces.
-// opsList[i] and facList[i] are the hostapd options and security configurations of Interface i
-func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx RouterIdx, opsList [][]hostapd.Option, facList []security.ConfigFactory, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
-	ctx, st := timing.Start(ctx, "tf.ConfigureAPOnRouterIDWithConfs")
+	ctx, st := timing.Start(ctx, "tf.ConfigureAP")
 	defer st.End()
 
 	if len(tf.routers) <= int(idx) {
 		return nil, errors.Errorf("router index (%d) out of range [0, %d)", idx, len(tf.routers))
 	}
-	if len(opsList) != len(facList) {
-		return nil, errors.New("the number of hostapd option lists does not equal the number of security configurations")
-	}
 
 	r := tf.routers[idx].object
 	name := tf.UniqueAPName()
 
-	var configs []*hostapd.Config
-	capturers := make(map[int]*pcap.Capturer)
-	for i := 0; i < len(opsList); i++ {
-		ops := opsList[i]
-		fac := facList[i]
-		if fac != nil {
-			// Defer the securityConfig generation from test's init() to here because the step may emit error and that's not allowed in test init().
-			securityConfig, err := fac.Gen()
-			if err != nil {
-				return nil, err
-			}
-			ops = append([]hostapd.Option{hostapd.SecurityConfig(securityConfig)}, ops...)
-		}
-		config, err := hostapd.NewConfig(ops...)
+	if fac != nil {
+		// Defer the securityConfig generation from test's init() to here because the step may emit error and that's not allowed in test init().
+		securityConfig, err := fac.Gen()
 		if err != nil {
 			return nil, err
 		}
-		configs = append(configs, config)
-		var capturer *pcap.Capturer
-		if tf.options.EnablePacketCapture {
-			freqOps, err := config.PcapFreqOptions()
-			if err != nil {
-				return nil, err
-			}
-			capturer, err = tf.PcapRouter().StartCapture(ctx, tf.UniqueAPName(), config.Channel, config.OpClass, freqOps)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to start capturer")
-			}
-			defer func() {
-				if retErr != nil {
-					tf.PcapRouter().StopCapture(ctx, capturer)
-				}
-			}()
-			if capturer != nil {
-				freq, err := hostapd.ChannelToFrequencyWithOpClass(config.Channel, config.OpClass)
-				if err != nil {
-					return nil, errors.Wrap(err, "failed to calculate the frequency of the capturer")
-				}
-				capturers[freq] = capturer
-			}
-		}
+		ops = append([]hostapd.Option{hostapd.SecurityConfig(securityConfig)}, ops...)
 	}
-	ap, err := StartAPIface(ctx, r, name, enableDNS, enableHTTP, configs...)
+	config, err := hostapd.NewConfig(ops...)
+	if err != nil {
+		return nil, err
+	}
+
+	var capturer *pcap.Capturer
+	if tf.options.EnablePacketCapture {
+		freqOps, err := config.PcapFreqOptions()
+		if err != nil {
+			return nil, err
+		}
+		capturer, err = tf.PcapRouter().StartCapture(ctx, name, config.Channel, config.OpClass, freqOps)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to start capturer")
+		}
+		defer func() {
+			if retErr != nil {
+				tf.PcapRouter().StopCapture(ctx, capturer)
+			}
+		}()
+	}
+
+	ap, err := StartAPIface(ctx, r, name, config, enableDNS, enableHTTP)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start APIface")
 	}
-	tf.capturers[ap] = capturers
 	tf.aps[ap] = struct{}{}
+
+	if capturer != nil {
+		tf.capturers[ap] = capturer
+	}
+
 	return ap, nil
 }
 
@@ -1001,13 +983,11 @@ func (tf *TestFixture) ReserveForDeconfigAP(ctx context.Context, ap *APIface) (c
 		return ctx, func() {}
 	}
 	ctx, cancel := ap.ReserveForStop(ctx)
-	if capturers, ok := tf.capturers[ap]; ok {
+	if capturer, ok := tf.capturers[ap]; ok {
 		// Also reserve time for stopping the capturer if it exists.
 		// Noted that CancelFunc returned here is dropped as we rely on its
 		// parent's cancel() being called.
-		for _, capturer := range capturers {
-			ctx, _ = tf.PcapRouter().ReserveForStopCapture(ctx, capturer)
-		}
+		ctx, _ = tf.PcapRouter().ReserveForStopCapture(ctx, capturer)
 	}
 	return ctx, cancel
 }
@@ -1016,16 +996,14 @@ func (tf *TestFixture) ReserveForDeconfigAP(ctx context.Context, ap *APIface) (c
 func (tf *TestFixture) DeconfigAP(ctx context.Context, ap *APIface) (firstErr error) {
 	ctx, st := timing.Start(ctx, "tf.DeconfigAP")
 	defer st.End()
-	capturers := tf.capturers[ap]
+	capturer := tf.capturers[ap]
 	delete(tf.capturers, ap)
 	if err := ap.Stop(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop APIface"))
 	}
-	if capturers != nil {
-		for _, capturer := range capturers {
-			if err := tf.PcapRouter().StopCapture(ctx, capturer); err != nil {
-				utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
-			}
+	if capturer != nil {
+		if err := tf.PcapRouter().StopCapture(ctx, capturer); err != nil {
+			utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop capturer"))
 		}
 	}
 	return firstErr
@@ -2086,7 +2064,7 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		ap, err := StartAPIface(ctx, r.object, name, false, false, config)
+		ap, err := StartAPIface(ctx, r.object, name, config, false, false)
 		if err != nil {
 			return errors.Wrap(err, "failed to start APIface")
 		}
@@ -2474,22 +2452,10 @@ func (tf *TestFixture) StandardPcapRouter() (router.Standard, error) {
 	return r, nil
 }
 
-// Capturer returns the auto-spawned Capturer for the APIface instance only if APIface has only one Capturer.
+// Capturer returns the auto-spawned Capturer for the APIface instance.
 func (tf *TestFixture) Capturer(ap *APIface) (*pcap.Capturer, bool) {
-	capturers, ok := tf.capturers[ap]
-	if !ok || len(capturers) > 1 {
-		return nil, false
-	}
-	for _, capturer := range capturers {
-		return capturer, true
-	}
-	return nil, true
-}
-
-// Capturers returns the auto-spawned Capturers for the APIface instance.
-func (tf *TestFixture) Capturers(ap *APIface) (map[int]*pcap.Capturer, bool) {
-	capturers, ok := tf.capturers[ap]
-	return capturers, ok
+	capturer, ok := tf.capturers[ap]
+	return capturer, ok
 }
 
 // Attenuator returns the Attenuator object in the fixture.
