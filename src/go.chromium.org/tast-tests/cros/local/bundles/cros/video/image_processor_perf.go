@@ -6,8 +6,12 @@ package video
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -115,6 +119,46 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 			Unit:      "watt",
 			Direction: perf.SmallerIsBetter,
 		}, power)
+	}
+
+	logPath := s.OutDir() + "/ImageProcessorPerfTest/"
+	files, err := ioutil.ReadDir(logPath)
+	if err != nil {
+		s.Error("Failed to read ImageProcessorPerf test result directory: ", err)
+	}
+
+	for _, f := range files {
+		jsonFile, err := os.Open(logPath + f.Name())
+		if err != nil {
+			s.Error("Failed to open ImageProcessorPerf test json: ", err)
+		}
+
+		val, _ := ioutil.ReadAll(jsonFile)
+		var result interface{}
+		json.Unmarshal([]byte(val), &result)
+		data := result.(map[string]interface{})
+
+		jsonName := strings.TrimSuffix(f.Name(), ".json")
+		p.Set(perf.Metric{
+			Name:      jsonName + "_FramesDecoded",
+			Unit:      "frames",
+			Direction: perf.BiggerIsBetter,
+		}, data["FramesDecoded"].(float64))
+
+		p.Set(perf.Metric{
+			Name:      jsonName + "_FramesPerSecond",
+			Unit:      "frames",
+			Direction: perf.BiggerIsBetter,
+		}, data["FramesPerSecond"].(float64))
+
+		p.Set(perf.Metric{
+			Name:      jsonName + "_TotalDurationMs",
+			Unit:      "ms",
+			Direction: perf.SmallerIsBetter,
+		}, data["TotalDurationMs"].(float64))
+
+		s.Log(jsonName)
+		defer jsonFile.Close()
 	}
 
 	if err := p.Save(s.OutDir()); err != nil {
