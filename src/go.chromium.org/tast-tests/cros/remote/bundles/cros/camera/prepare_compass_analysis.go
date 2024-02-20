@@ -6,12 +6,14 @@ package camera
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/google/uuid"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/services/cros/camera"
@@ -115,11 +117,13 @@ func getFilenameByUTC(ctx context.Context) string {
 }
 
 // uploadArtifactToGS uploads the IQ artifacts to GS bucket
-func uploadArtifactToGS(ctx context.Context, artifactPath, artifactName string) error {
-	testing.ContextLogf(ctx, "Using GS bucket URL: %s", artifactGSBucketURL)
-	cmd := testexec.CommandContext(ctx, "gsutil", "cp", artifactPath, artifactGSBucketURL+artifactName)
+func uploadArtifactToGS(ctx context.Context, artifactPath, artifactName string) (uuid.UUID, error) {
+	analysisUUID := uuid.New()
+	artifactGSURL := fmt.Sprintf("%s%s/", artifactGSBucketURL, analysisUUID)
+	testing.ContextLogf(ctx, "Using URL (GS bucket with folder): %s", artifactGSURL)
+	cmd := testexec.CommandContext(ctx, "gsutil", "cp", artifactPath, artifactGSURL+artifactName)
 	testing.ContextLog(ctx, "Running command: ", shutil.EscapeSlice(cmd.Args))
-	return cmd.Run(testexec.DumpLogOnError)
+	return analysisUUID, cmd.Run(testexec.DumpLogOnError)
 }
 
 // PrepareCompassAnalysis prepares the required materials for Compass analysis
@@ -166,7 +170,9 @@ func PrepareCompassAnalysis(ctx context.Context, s *testing.State) {
 	}
 	defer os.Remove(artifactPathInDrone)
 
-	if err := uploadArtifactToGS(ctx, artifactPathInDrone, artifactName); err != nil {
+	uuid, err := uploadArtifactToGS(ctx, artifactPathInDrone, artifactName)
+	if err != nil {
 		s.Fatal("Failed to upload artifact: ", err)
 	}
+	testing.ContextLogf(ctx, "Analysis UUID (one-time generated): %s", uuid)
 }
