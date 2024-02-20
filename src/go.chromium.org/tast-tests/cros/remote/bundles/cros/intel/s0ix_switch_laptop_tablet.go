@@ -53,14 +53,8 @@ func S0ixSwitchLaptopTablet(ctx context.Context, s *testing.State) {
 	}
 
 	r := h.Reporter
-	var cutoffEvent reporters.Event
-	oldEvents, err := r.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Failed finding last event: ", err)
-	}
-
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
+	if err := r.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	// Create our suspend context.
@@ -95,7 +89,7 @@ func S0ixSwitchLaptopTablet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set DUT into tablet mode: ", err)
 	}
 
-	if err := verifyEvents(ctx, r, cutoffEvent); err != nil {
+	if err := verifyEvents(ctx, r); err != nil {
 		s.Fatal("Failed to verify events: ", err)
 	}
 
@@ -118,7 +112,7 @@ func S0ixSwitchLaptopTablet(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set DUT into tablet mode: ", err)
 	}
 
-	if err := verifyEvents(ctx, r, cutoffEvent); err != nil {
+	if err := verifyEvents(ctx, r); err != nil {
 		s.Fatal("Failed to verify events: ", err)
 	}
 
@@ -134,10 +128,10 @@ func S0ixSwitchLaptopTablet(ctx context.Context, s *testing.State) {
 }
 
 // verifyEvents verifies the required event set for S0ix and EC Mode change.
-func verifyEvents(ctx context.Context, r *reporters.Reporter, cutoffEvent reporters.Event) error {
+func verifyEvents(ctx context.Context, r *reporters.Reporter) error {
 	var requiredEventSets = [][]string{{`S0ix Enter`, `S0ix Exit`}, {`EC Event \| Mode change`}}
 
-	events, err := r.EventlogListAfter(ctx, cutoffEvent)
+	events, err := r.EventlogList(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed gathering events")
 	}

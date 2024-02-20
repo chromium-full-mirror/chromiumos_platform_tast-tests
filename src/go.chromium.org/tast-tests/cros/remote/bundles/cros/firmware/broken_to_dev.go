@@ -68,7 +68,7 @@ func BrokenToDev(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the GBBFlag_DEV_SCREEN_SHORT_DELAY flag: ", err)
 	}
 
-	if err := h.ClearEventlog(ctx); err != nil {
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 

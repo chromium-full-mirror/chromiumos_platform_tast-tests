@@ -198,14 +198,8 @@ func Eventlog(ctx context.Context, s *testing.State) {
 	r := h.Reporter
 	param := s.Param().(eventLogParams)
 
-	var cutoffEvent reporters.Event
-	oldEvents, err := r.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Finding last event: ", err)
-	}
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
-		s.Log("Found previous event: ", cutoffEvent)
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 	if param.resetType != "" {
 		if err := ms.ModeAwareReboot(ctx, param.resetType); err != nil {
@@ -309,7 +303,7 @@ func Eventlog(ctx context.Context, s *testing.State) {
 	var events []reporters.Event
 	if err := testing.Poll(ctx, func(context.Context) error {
 		var err error
-		events, err = r.EventlogListAfter(ctx, cutoffEvent)
+		events, err = r.EventlogList(ctx)
 		if err != nil {
 			return testing.PollBreak(err)
 		}

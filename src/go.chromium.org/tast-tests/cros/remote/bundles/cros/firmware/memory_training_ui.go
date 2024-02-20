@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/flashrom"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -41,15 +40,9 @@ func MemoryTrainingUI(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 	dut := s.DUT()
 
-	var cutoffEvent reporters.Event
 	r := h.Reporter
-	oldEvents, err := r.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Finding last event: ", err)
-	}
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
-		s.Log("Found previous event: ", cutoffEvent)
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	s.Log("Clearing MRC cache")
@@ -86,7 +79,7 @@ func MemoryTrainingUI(ctx context.Context, s *testing.State) {
 	}
 
 	checkMatches := func(ctx context.Context, expected string) error {
-		events, err := r.EventlogListAfter(ctx, cutoffEvent)
+		events, err := r.EventlogList(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to read event log")
 		}
@@ -104,12 +97,14 @@ func MemoryTrainingUI(ctx context.Context, s *testing.State) {
 		if !found && expected != "" {
 			return errors.Errorf("expected log message not found: %q", expected)
 		}
-		cutoffEvent = events[len(events)-1]
 		return nil
 	}
 
 	if err := checkMatches(ctx, "Early Sign of Life | MRC Early SOL Screen Shown"); err != nil {
 		s.Error("Firmware log: ", err)
+	}
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	s.Log("Reboot without clearing MRC cache")

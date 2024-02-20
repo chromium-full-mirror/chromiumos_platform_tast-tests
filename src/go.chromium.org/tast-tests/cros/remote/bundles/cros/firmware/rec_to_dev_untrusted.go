@@ -56,7 +56,7 @@ func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	if err := h.ClearEventlog(ctx); err != nil {
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 

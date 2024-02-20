@@ -58,7 +58,6 @@ func init() {
 
 func RollbackFirmware(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
-	var cutoffEvent reporters.Event
 
 	func() {
 		shouldRestoreFirmware := false
@@ -131,12 +130,8 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to set FW tries to A: ", err)
 			}
 		}
-		oldEvents, err := h.Reporter.EventlogList(ctx)
-		if err != nil {
-			s.Fatal("Finding last event: ", err)
-		}
-		if len(oldEvents) > 0 {
-			cutoffEvent = oldEvents[len(oldEvents)-1]
+		if err := h.Reporter.ClearEventlog(ctx); err != nil {
+			s.Fatal("Failed to clear event log: ", err)
 		}
 
 		ms, err := firmware.NewModeSwitcher(ctx, h)
@@ -156,7 +151,7 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 			var events []reporters.Event
 			if err := testing.Poll(ctx, func(context.Context) error {
 				var err error
-				events, err = h.Reporter.EventlogListAfter(ctx, cutoffEvent)
+				events, err = h.Reporter.EventlogList(ctx)
 				if err != nil {
 					return testing.PollBreak(err)
 				}
@@ -263,12 +258,8 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 			s.Errorf("Booted to wrong FW, got %q, want !%q", newFW, activeFW)
 		}
 
-		oldEvents, err = h.Reporter.EventlogList(ctx)
-		if err != nil {
-			s.Fatal("Finding last event: ", err)
-		}
-		if len(oldEvents) > 0 {
-			cutoffEvent = oldEvents[len(oldEvents)-1]
+		if err := h.Reporter.ClearEventlog(ctx); err != nil {
+			s.Fatal("Failed to clear event log: ", err)
 		}
 
 		s.Log("Rolling back ", inactiveSignSection)
@@ -298,7 +289,7 @@ func RollbackFirmware(ctx context.Context, s *testing.State) {
 	var events []reporters.Event
 	if err := testing.Poll(ctx, func(context.Context) error {
 		var err error
-		events, err = h.Reporter.EventlogListAfter(ctx, cutoffEvent)
+		events, err = h.Reporter.EventlogList(ctx)
 		if err != nil {
 			return testing.PollBreak(err)
 		}

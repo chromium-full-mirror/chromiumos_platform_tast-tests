@@ -7,6 +7,7 @@ package firmware
 import (
 	"context"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
@@ -31,6 +32,7 @@ func init() {
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
 		// TODO: When stable, change firmware_unstable to a different attr.
 		Attr:    []string{"group:firmware", "firmware_unstable", "firmware_usb"},
+		Vars:    []string{"firmware.skipFlashUSB"},
 		Timeout: 120 * time.Minute,
 		Params: []testing.Param{{
 			Name:    "normal",
@@ -67,12 +69,22 @@ func UserRequestRecovery(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create mode switcher: ", err)
 	}
 
+	skipFlashUSB := false
+	if skipFlashUSBStr, ok := s.Var("firmware.skipFlashUSB"); ok {
+		skipFlashUSB, err = strconv.ParseBool(skipFlashUSBStr)
+		if err != nil {
+			s.Fatalf("Invalid value for var firmware.skipFlashUSB: got %q, want true/false", skipFlashUSBStr)
+		}
+	}
 	cs := s.CloudStorage()
+	if skipFlashUSB {
+		cs = nil
+	}
 	if err := h.SetupUSBKey(ctx, cs); err != nil {
 		s.Fatal("USBKey not working: ", err)
 	}
 
-	if err := h.ClearEventlog(ctx); err != nil {
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 

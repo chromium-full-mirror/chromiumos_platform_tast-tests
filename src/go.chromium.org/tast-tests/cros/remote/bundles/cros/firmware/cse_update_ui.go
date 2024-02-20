@@ -11,7 +11,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
@@ -88,15 +87,8 @@ func CSEUpdateUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to upgrade bios: ", err)
 	}
 
-	var cutoffEvent reporters.Event
-	r := h.Reporter
-	oldEvents, err := r.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Finding last event: ", err)
-	}
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
-		s.Log("Found previous event: ", cutoffEvent)
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
@@ -108,7 +100,7 @@ func CSEUpdateUI(ctx context.Context, s *testing.State) {
 	}
 
 	checkMatches := func(ctx context.Context, expected string) error {
-		events, err := r.EventlogListAfter(ctx, cutoffEvent)
+		events, err := h.Reporter.EventlogList(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to read event log")
 		}
@@ -124,12 +116,11 @@ func CSEUpdateUI(ctx context.Context, s *testing.State) {
 		if !found {
 			return errors.Errorf("expected log message not found: %q", expected)
 		}
-		cutoffEvent = events[len(events)-1]
 		return nil
 	}
 
 	checkNoMatches := func(ctx context.Context) error {
-		events, err := r.EventlogListAfter(ctx, cutoffEvent)
+		events, err := h.Reporter.EventlogList(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to read event log")
 		}
@@ -140,7 +131,6 @@ func CSEUpdateUI(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		cutoffEvent = events[len(events)-1]
 		return nil
 	}
 
@@ -148,6 +138,9 @@ func CSEUpdateUI(ctx context.Context, s *testing.State) {
 		s.Error("Firmware log: ", err)
 	}
 
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
+	}
 	s.Log("Reboot without update")
 	if err := ms.ModeAwareReboot(ctx, firmware.WarmReset); err != nil {
 		s.Fatal("Failed to reboot: ", err)

@@ -154,14 +154,8 @@ func S3SuspendResume(ctx context.Context, s *testing.State) {
 	defer screenLockService.CloseChrome(ctx, &empty.Empty{})
 
 	r := h.Reporter
-	var cutoffEvent reporters.Event
-	oldEvents, err := r.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Failed finding last event: ", err)
-	}
-
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	if err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf(
@@ -241,7 +235,7 @@ func S3SuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to find %q pattern in dmesg log", WakeUpFromS3)
 	}
 
-	events, err := r.EventlogListAfter(ctx, cutoffEvent)
+	events, err := r.EventlogList(ctx)
 	if err != nil {
 		s.Fatal("Failed gathering events: ", err)
 	}

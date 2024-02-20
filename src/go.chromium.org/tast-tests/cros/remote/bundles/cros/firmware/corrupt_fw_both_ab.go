@@ -38,7 +38,7 @@ func init() {
 			"jbettis@chromium.org",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware", "firmware_level3"},
+		Attr:         []string{"group:firmware"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Timeout:      25 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
@@ -46,7 +46,7 @@ func init() {
 			{
 				Name:              "body_normal",
 				Fixture:           fixture.NormalMode,
-				ExtraAttr:         []string{"firmware_bios"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
 				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
@@ -55,7 +55,7 @@ func init() {
 			{
 				Name:              "body_dev",
 				Fixture:           fixture.DevModeGBB,
-				ExtraAttr:         []string{"firmware_bios"},
+				ExtraAttr:         []string{"firmware_bios", "firmware_level3"},
 				ExtraRequirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 				Val: &corruptTestVal{
 					bios.FWBodyAImageSection, bios.FWBodyBImageSection,
@@ -160,13 +160,8 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 		s.Fatal("Failed to copy files to servo host: ", err)
 	}
 
-	var cutoffEvent reporters.Event
-	oldEvents, err := h.Reporter.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Finding last event: ", err)
-	}
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	restoreFirmware := func(ctx context.Context) {
@@ -257,27 +252,27 @@ func corruptFWSectionTest(ctx context.Context, s *testing.State, corruptFMAPSect
 	var events []reporters.Event
 	if err := testing.Poll(ctx, func(context.Context) error {
 		var err error
-		events, err = h.Reporter.EventlogListAfter(ctx, cutoffEvent)
+		events, err = h.Reporter.EventlogList(ctx)
 		if err != nil {
 			return testing.PollBreak(err)
 		}
 		if len(events) == 0 {
 			return errors.New("no new events found")
 		}
+		found := false
+		for _, event := range events {
+			if strings.Contains(event.Message, failureReason) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return errors.Errorf("missing expected recovery reason %q in event log: %v", failureReason, events)
+		}
 		return nil
 	}, &testing.PollOptions{
 		Timeout: 1 * time.Minute, Interval: 5 * time.Second,
 	}); err != nil {
 		s.Fatal("Gathering events: ", err)
-	}
-	found := false
-	for _, event := range events {
-		if strings.Contains(event.Message, failureReason) {
-			found = true
-			break
-		}
-	}
-	if !found {
-		s.Error("Did not find expected recovery reason in event log: ", events)
 	}
 }

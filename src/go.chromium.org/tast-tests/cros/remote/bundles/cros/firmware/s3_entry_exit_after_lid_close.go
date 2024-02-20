@@ -125,14 +125,8 @@ func S3EntryExitAfterLidClose(ctx context.Context, s *testing.State) {
 	}
 
 	eventReporter := h.Reporter
-	var cutoffEvent reporters.Event
-	oldEvents, err := eventReporter.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Failed finding last event: ", err)
-	}
-
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", SwitchToS3Cmd).Run(); err != nil {
@@ -250,7 +244,7 @@ func S3EntryExitAfterLidClose(ctx context.Context, s *testing.State) {
 		s.Errorf("Failed to find %q pattern in dmesg log", WakeUpFromS3)
 	}
 
-	events, err := eventReporter.EventlogListAfter(ctx, cutoffEvent)
+	events, err := eventReporter.EventlogList(ctx)
 	if err != nil {
 		s.Fatal("Failed gathering events: ", err)
 	}

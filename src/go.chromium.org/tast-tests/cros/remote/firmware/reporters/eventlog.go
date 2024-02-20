@@ -12,6 +12,8 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/testing"
 )
 
 // EventlogBootMode is a int representing the DUT's boot mode found from 'elogtool list'.
@@ -44,6 +46,12 @@ func parseEventTime(input string) (time.Time, error) {
 		}
 	}
 	return time.Time{}, err
+}
+
+// ClearEventlog runs 'elogtool clear' to clear elog.
+func (r *Reporter) ClearEventlog(ctx context.Context) error {
+	testing.ContextLog(ctx, "Clearing the event log")
+	return r.d.Conn().CommandContext(ctx, "elogtool", "clear").Run(ssh.DumpLogOnError)
 }
 
 // GetRawEventLogs returns the result of `elogtool list` with
@@ -91,22 +99,6 @@ func (r *Reporter) EventlogList(ctx context.Context) ([]Event, error) {
 			Message:   split[2],
 			Index:     int(index),
 		})
-	}
-	return events, nil
-}
-
-// EventlogListAfter returns a list of events that occurred after a given index.
-func (r *Reporter) EventlogListAfter(ctx context.Context, previousEvent Event) ([]Event, error) {
-	events, err := r.EventlogList(ctx)
-	if err != nil {
-		return []Event{}, errors.Wrap(err, "reporting events")
-	}
-	// EventlogList reports events from oldest to newest.
-	// Iterate through the events in reverse order to return only the newest ones.
-	for i := len(events) - 1; i > 0; i-- {
-		if events[i].Timestamp.Before(previousEvent.Timestamp) || (events[i].Timestamp.Equal(previousEvent.Timestamp) && events[i].Index <= previousEvent.Index) {
-			return events[i+1:], nil
-		}
 	}
 	return events, nil
 }

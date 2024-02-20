@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -170,13 +169,8 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to make both copies bootable: ", err)
 	}
 
-	var previousEvent reporters.Event
-	oldEvents, err := h.Reporter.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Finding most recent event: ", err)
-	}
-	if len(oldEvents) > 0 {
-		previousEvent = oldEvents[len(oldEvents)-1]
+	if err := h.Reporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	prevKernAVer, err := changeKernelVersion(ctx, h, pb.PartitionCopy_A, -1)
@@ -279,9 +273,9 @@ func RollbackKernel(ctx context.Context, s *testing.State) {
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		var recModeEvents = map[int64]string{}
-		events, err := h.Reporter.EventlogListAfter(ctx, previousEvent)
+		events, err := h.Reporter.EventlogList(ctx)
 		if err != nil {
-			s.Fatal("Failed to get event log: ", err)
+			return errors.Wrap(err, "failed to get event log")
 		}
 		// Case insensitive to match with different log messages.
 		re := regexp.MustCompile(`(?i)recovery mode.*0x([a-fA-F0-9]+)`)

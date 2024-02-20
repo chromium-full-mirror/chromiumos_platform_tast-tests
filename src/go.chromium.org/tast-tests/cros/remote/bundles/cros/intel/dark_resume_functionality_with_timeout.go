@@ -60,14 +60,8 @@ func DarkResumeFunctionalityWithTimeout(ctx context.Context, s *testing.State) {
 	}
 
 	eventReporter := firmwareHelper.Reporter
-	var cutoffEvent reporters.Event
-	oldEvents, err := eventReporter.EventlogList(ctx)
-	if err != nil {
-		s.Fatal("Failed finding last event: ", err)
-	}
-
-	if len(oldEvents) > 0 {
-		cutoffEvent = oldEvents[len(oldEvents)-1]
+	if err := eventReporter.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	cmdRun := func(cmd string) {
@@ -128,7 +122,7 @@ func DarkResumeFunctionalityWithTimeout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to perform dark resume suspend with power button as wake source: ", err)
 	}
 
-	events, err := eventReporter.EventlogListAfter(ctx, cutoffEvent)
+	events, err := eventReporter.EventlogList(ctx)
 	if err != nil {
 		s.Fatal("Failed gathering events: ", err)
 	}
