@@ -134,6 +134,10 @@ func ESimInstallWithConfirmationCode(ctx context.Context, s *testing.State) {
 	}
 
 	var incorrectActivationCodeSubtext = nodewith.NameContaining("Unable to connect to this profile.").Role(role.StaticText)
+	if enableSmdsSupport {
+		incorrectActivationCodeSubtext = nodewith.NameContaining("Unable to install this profile.").Role(role.StaticText)
+	}
+
 	if err := uiauto.Combine("Verify that incorrect confirmation code subtext shows",
 		mdp.LeftClick(ossettings.ConfirmButton.Focusable()),
 		mdp.WithTimeout(3*time.Minute).WaitUntilExists(incorrectActivationCodeSubtext),
