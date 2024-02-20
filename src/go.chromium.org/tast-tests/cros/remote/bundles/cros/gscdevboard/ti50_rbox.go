@@ -15,8 +15,11 @@ import (
 )
 
 const (
-	// boxMinEcResetPulse is how long EC reset must be asserted.
-	boxMinEcResetPulse = 10 * time.Millisecond
+	// minEcResetPulse is how long EC reset must be asserted.
+	minEcResetPulse = 10 * time.Millisecond
+)
+
+const (
 	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
 	boxMaxDeepSleepDelay = time.Minute
 )
@@ -26,15 +29,11 @@ const (
 	tabletEcResetHoldDelay = 10 * time.Second
 	// tabletGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	tabletGscResetHoldDelay = 20 * time.Second
-	// tabletMinEcResetPulse is how long EC reset must be asserted
-	tabletMinEcResetPulse = 10 * time.Millisecond
 )
 
 const (
 	// clamshellGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	clamshellGscResetHoldDelay = 10 * time.Second
-	// clamshellMinEcResetPulse is how long EC reset must be asserted.
-	clamshellMinEcResetPulse = 10 * time.Millisecond
 	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
 	clamshellMaxDeepSleepDelay = time.Minute
 )
@@ -116,8 +115,8 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 		s.Error("GSC should not forward Recovery Button press with Power button pressed")
 	}
 
-	boxVerifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50RecoveryIn)
-	boxVerifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50RecoveryIn, ti50.GpioTi50PowerBtnL)
+	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50RecoveryIn)
+	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50RecoveryIn, ti50.GpioTi50PowerBtnL)
 
 	s.Log("Disconnecting CCD to allow deep sleep")
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
@@ -127,61 +126,14 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 		s.Fatal("GSC dut not enter deep sleep as precondition for next test: ", err)
 	}
 	s.Log("GSC in deep sleep")
-	boxVerifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50RecoveryIn, ti50.GpioTi50PowerBtnL)
+	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50RecoveryIn, ti50.GpioTi50PowerBtnL)
 
 	s.Log("Waiting for deep sleep")
 	if err := i.WaitUntilDeepSleep(ctx, boxMaxDeepSleepDelay); err != nil {
 		s.Fatal("GSC dut not enter deep sleep as precondition for next test: ", err)
 	}
 	s.Log("GSC in deep sleep")
-	boxVerifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50RecoveryIn)
-}
-
-// boxVerifyEcResetWithKeysInOrder verifies that pushing the first gpio then the second for 500ms
-// causes EC_RST_L to assert
-func boxVerifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils.DevboardHelper, first, second ti50.GpioName) {
-	s.Logf("Verifying EC_RST_L asserted when pushing %s then %s", first, second)
-	// Ensure that both keys start not pressed
-	b.GpioSet(ctx, first, true)
-	b.GpioSet(ctx, second, true)
-
-	s.Log("Start gpio monitoring")
-	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
-	if gpioMonitor.InitialValues[ti50.GpioTi50EcRstL] != true {
-		s.Error("EC_RST_L not de-asserted before pressing EC Refresh combo")
-	}
-
-	s.Log("Pushing ", first)
-	b.GpioSet(ctx, first, false)
-
-	s.Logf("Tapping %s for 500ms", second)
-	b.GpioSet(ctx, second, false)
-	testing.Sleep(ctx, time.Millisecond*500) // GoBigSleepLint: Simulating button press
-	b.GpioSet(ctx, second, true)
-
-	s.Log("Releasing ", first)
-	b.GpioSet(ctx, first, true)
-
-	events := b.GpioMonitorFinish(ctx, gpioMonitor)
-	s.Log("Stop gpio monitoring: ", events)
-
-	assertReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
-	if assertReset == nil {
-		s.Errorf("EC_RST_L did not assert with key combo %s then %s", first, second)
-	} else {
-		deassertReset := events.FindFirstAfter(*assertReset, ti50.GpioTi50EcRstL)
-		if deassertReset == nil {
-			s.Errorf("EC_RST_L did not de-assert after key combo released %s then %s", first, second)
-		} else {
-			assertTime := deassertReset.TimestampUS - assertReset.TimestampUS
-			// Allow 1% measurement error.
-			if assertTime < uint64(float64(boxMinEcResetPulse.Microseconds())*0.99) {
-				s.Errorf("EC_RST_L did stay asserted long enough: %dus", assertTime)
-			} else {
-				s.Logf("EC_RST_L asserted for %dus", assertTime)
-			}
-		}
-	}
+	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50RecoveryIn)
 }
 
 func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) {
@@ -303,7 +255,7 @@ func verifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils
 		} else {
 			assertTime := deassertReset.TimestampUS - assertReset.TimestampUS
 			// Allow 1% measurement error.
-			if assertTime < uint64(float64(clamshellMinEcResetPulse.Microseconds())*0.99) {
+			if assertTime < uint64(float64(minEcResetPulse.Microseconds())*0.99) {
 				s.Errorf("EC_RST_L did stay asserted long enough: %dus", assertTime)
 			} else {
 				s.Logf("EC_RST_L asserted for %dus", assertTime)
@@ -353,7 +305,7 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 		} else {
 			assertTime := deassertReset.TimestampUS - assertReset.TimestampUS
 			// Allow 1% measurement error.
-			if assertTime < uint64(float64(tabletMinEcResetPulse.Microseconds())*0.99) {
+			if assertTime < uint64(float64(minEcResetPulse.Microseconds())*0.99) {
 				s.Errorf("EC_RST_L did stay asserted long enough: %dus", assertTime)
 			} else {
 				s.Logf("EC_RST_L asserted for %dus", assertTime)
