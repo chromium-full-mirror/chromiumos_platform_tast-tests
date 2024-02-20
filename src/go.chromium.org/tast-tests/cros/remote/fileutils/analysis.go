@@ -7,7 +7,9 @@ package fileutils
 import (
 	"context"
 	"regexp"
+	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -54,4 +56,30 @@ func HostTestPath(ctx context.Context, host *ssh.Conn, testFlag, remotePath stri
 // true if remoteFilePath exists and is a regular file.
 func HostFileExists(ctx context.Context, host *ssh.Conn, remoteFilePath string) (bool, error) {
 	return HostTestPath(ctx, host, "-f", remoteFilePath)
+}
+
+// HostDirExists checks the host for the file at remoteFilePath and returns
+// true if remoteFilePath exists and is a directory.
+func HostDirExists(ctx context.Context, host *ssh.Conn, remoteFilePath string) (bool, error) {
+	return HostTestPath(ctx, host, "-d", remoteFilePath)
+}
+
+// LocalSha256sum runs the "sha256sum <path>" command on the remote tast runner
+// and returns the checksum it outputs.
+func LocalSha256sum(ctx context.Context, path string) (string, error) {
+	output, err := testexec.CommandContext(ctx, "sha256sum", path).Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.Fields(string(output))[0], nil
+}
+
+// RemoteSha256sum runs the "sha256sum <path>" command over the provides ssh
+// connection and returns the checksum it outputs.
+func RemoteSha256sum(ctx context.Context, sshConn *ssh.Conn, path string) (string, error) {
+	output, err := sshConn.CommandContext(ctx, "sha256sum", path).Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.Fields(string(output))[0], nil
 }
