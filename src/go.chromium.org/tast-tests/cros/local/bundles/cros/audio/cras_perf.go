@@ -51,6 +51,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org", "paulhsia@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+		Fixture:      "rebootForAudioDSPFixture",
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

@@ -49,6 +49,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "yuhsuan@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
+		Fixture:      "rebootForAudioDSPFixture",
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{

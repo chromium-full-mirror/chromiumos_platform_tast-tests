@@ -28,7 +28,9 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Speaker()),
-		Attr:         []string{"group:mainline"},
+		// Not to require 'rebootForAudioDSPFixture' to monitor the DSP failure rate. Hatch and Octopus is known to have 2% failure rate. (b/240269271)
+		// Fixture:      "rebootForAudioDSPFixture",
+		Attr: []string{"group:mainline"},
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasPlayUnstableModels...)),
 			ExtraAttr:         []string{"group:cq-medium", "group:cq-minimal"},

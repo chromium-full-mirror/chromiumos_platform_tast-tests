@@ -33,6 +33,7 @@ func init() {
 		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
+		Fixture:      "rebootForAudioDSPFixture",
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasRecordQualityUnstableModels...)),

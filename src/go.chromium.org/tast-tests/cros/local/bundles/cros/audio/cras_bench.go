@@ -24,6 +24,7 @@ func init() {
 			"group:crosbolt", "crosbolt_perbuild",
 		},
 		Timeout: 2 * time.Minute,
+		Fixture: "rebootForAudioDSPFixture",
 		Params: []testing.Param{
 			{
 				Name: "apm",

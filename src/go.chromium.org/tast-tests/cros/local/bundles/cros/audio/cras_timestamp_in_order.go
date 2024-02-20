@@ -30,6 +30,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "bailideng@google.com"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline", "informational"},
+		Fixture:      "rebootForAudioDSPFixture",
 		Params: []testing.Param{{
 			Name:              "capture",
 			ExtraHardwareDeps: hwdep.D(hwdep.Microphone()),

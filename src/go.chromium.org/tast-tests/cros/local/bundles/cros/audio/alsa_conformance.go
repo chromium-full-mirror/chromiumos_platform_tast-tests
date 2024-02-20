@@ -47,6 +47,7 @@ func init() {
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
+		Fixture:      "rebootForAudioDSPFixture",
 		Timeout:      10 * time.Minute,
 		Params: []testing.Param{
 			{
