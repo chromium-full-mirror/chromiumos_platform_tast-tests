@@ -45,7 +45,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:              "h264",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.h264"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}, {
@@ -53,37 +53,37 @@ func init() {
 			Name:              "h264_cq",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.h264"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Model(cqAllowlist...)),
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"test-25fps.h264", "test-25fps.h264.json"},
 		}, {
 			Name:              "vp8",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.vp8"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"test-25fps.vp8", "test-25fps.vp8.json"},
 		}, {
 			Name:              "vp9",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps.vp9"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"test-25fps.vp9", "test-25fps.vp9.json"},
 		}, {
 			Name:              "h264_resolution_switch",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "switch_1080p_720p_240frames.h264"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"switch_1080p_720p_240frames.h264", "switch_1080p_720p_240frames.h264.json"},
 		}, {
 			Name:              "vp8_resolution_switch",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "resolution_change_500frames.vp8.ivf"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"resolution_change_500frames.vp8.ivf", "resolution_change_500frames.vp8.ivf.json"},
 		}, {
 			Name:              "vp9_resolution_switch",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "resolution_change_500frames.vp9.ivf"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"resolution_change_500frames.vp9.ivf", "resolution_change_500frames.vp9.ivf.json"},
 		}, {
@@ -103,14 +103,14 @@ func init() {
 			// https://android.googlesource.com/platform/cts/+/HEAD/tests/tests/media/res/raw/vp90_2_17_show_existing_frame.vp9
 			Name:              "vp9_show_existing_frame",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "vda_smoke-vp90_2_17_show_existing_frame.vp9"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9, "video_decoder_legacy_supported"},
 			ExtraData:         []string{"vda_smoke-vp90_2_17_show_existing_frame.vp9", "vda_smoke-vp90_2_17_show_existing_frame.vp9.json"},
 		}, {
 			// H264 stream in which a profile changes from Baseline to Main.
 			Name:              "h264_profile_change",
 			Val:               chromeStackDecoderLegacyTestParam{dataPath: "test-25fps_basemain.h264"},
-			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_decodeaccel"},
+			ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_weekly", "graphics_video_decodeaccel"},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			ExtraData:         []string{"test-25fps_basemain.h264", "test-25fps_basemain.h264.json"},
 		}},

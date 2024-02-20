@@ -25,7 +25,7 @@ func init() {
 			"hiroh@chromium.org", // Underlying binary author.
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
-		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},
+		Attr:         []string{"group:graphics", "graphics_video", "graphics_weekly"},
 		Fixture:      "graphicsNoChrome",
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.GPUFamily("rogue")), // MT8173, e.g. Hana.
