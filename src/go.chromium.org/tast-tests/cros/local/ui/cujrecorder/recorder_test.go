@@ -41,6 +41,24 @@ func TestAddExtraChromeTraceCategories(t *testing.T) {
 			}
 		}
 	}
+
+	# Chrome trace events after client library enabled.
+	data_sources: {
+		config {
+			name: "track_event"
+			target_buffer: 2
+			chrome_config {
+				trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"cc\",\"benchmark\",\"input\"],\"memory_dump_config\":{}}"
+			}
+			track_event_config {
+				disabled_categories: "*"
+				enabled_categories: "cc"
+				enabled_categories: "benchmark"
+				enabled_categories: "input"
+				enabled_categories: "__metadata"
+			}
+		}
+	}
 	`
 	const extraCategories = "gpu,v8"
 	const expectedNewConfig = `
@@ -62,6 +80,26 @@ func TestAddExtraChromeTraceCategories(t *testing.T) {
 			chrome_config {
 				# Categories: cc, benchmark, input.
 				trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"cc\",\"benchmark\",\"input\",\"gpu\",\"v8\"],\"memory_dump_config\":{}}"
+			}
+		}
+	}
+
+	# Chrome trace events after client library enabled.
+	data_sources: {
+		config {
+			name: "track_event"
+			target_buffer: 2
+			chrome_config {
+				trace_config: "{\"record_mode\":\"record-until-full\",\"included_categories\":[\"cc\",\"benchmark\",\"input\",\"gpu\",\"v8\"],\"memory_dump_config\":{}}"
+			}
+			track_event_config {
+				disabled_categories: "*"
+				enabled_categories: "cc"
+				enabled_categories: "benchmark"
+				enabled_categories: "input"
+				enabled_categories: "gpu"
+				enabled_categories: "v8"
+				enabled_categories: "__metadata"
 			}
 		}
 	}

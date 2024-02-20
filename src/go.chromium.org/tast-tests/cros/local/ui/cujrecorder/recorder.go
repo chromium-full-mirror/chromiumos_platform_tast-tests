@@ -1966,16 +1966,22 @@ func addExtraChromeTraceCategories(
 	if err != nil {
 		return nil, "", err
 	}
+
 	categoriesReg := regexp.MustCompile(`included_categories\\":\[(.*)\]`)
 	subMatches := categoriesReg.FindAllStringSubmatch(configStr, -1)
-	if len(subMatches) != 2 {
-		return nil, "", errors.Errorf("expect 2 chrome data sources org.chromium.trace_event and org.chromium.trace_metadata, but found %v sources",
+	if len(subMatches) != 2 && len(subMatches) != 3 {
+		return nil, "", errors.Errorf("expect 2 (or 3) chrome category in data sources, but found %v sources",
 			len(subMatches))
 	}
-	// Ensure the 2 matches from `org.chromium.trace_event` and
-	// `org.chromium.trace_metadata` are exactly the same.
+
+	// Ensure the matches from `org.chromium.trace_event`,
+	// `org.chromium.trace_metadata`, and `track_event` are exactly the same.
 	if subMatches[0][1] != subMatches[1][1] {
 		return nil, "", errors.Errorf("%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[1][1])
+	}
+	if len(subMatches) == 3 && subMatches[0][1] != subMatches[2][1] {
+		return nil, "", errors.Errorf(
+			"%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[2][1])
 	}
 	categoriesStr := subMatches[0][1]
 	newCategories := strings.Split(extraCategories, ",")
@@ -1983,7 +1989,20 @@ func addExtraChromeTraceCategories(
 	for _, category := range newCategories {
 		newCategoriesStr += `,\"` + category + `\"`
 	}
-	newConfigStr := strings.Replace(configStr, categoriesStr, categoriesStr+newCategoriesStr, 2)
+	newConfigStr := strings.ReplaceAll(configStr, categoriesStr, categoriesStr+newCategoriesStr)
+
+	// Update `track_event` categories if any.
+	trackEventMetaCatReg := regexp.MustCompile(`\n(\s+)(enabled_categories: \"\_\_metadata\"\n)`)
+	metaCatMatch := trackEventMetaCatReg.FindAllStringSubmatch(newConfigStr, -1)
+	if len(metaCatMatch) == 1 {
+		leadingWhiteSapce := metaCatMatch[0][1]
+		newCategoriesStr = "\n"
+		for _, category := range newCategories {
+			newCategoriesStr += leadingWhiteSapce + "enabled_categories: \"" + category + "\"\n"
+		}
+		newCategoriesStr += leadingWhiteSapce + metaCatMatch[0][2]
+		newConfigStr = strings.Replace(newConfigStr, metaCatMatch[0][0], newCategoriesStr, 1)
+	}
 
 	f, err := os.CreateTemp("", "perfetto_config.pbtxt")
 	perfettoTmpConfigCleanup := func(ctx context.Context) {
