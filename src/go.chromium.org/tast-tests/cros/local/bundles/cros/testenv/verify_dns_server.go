@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package example
+package testenv
 
 import (
 	"context"
@@ -15,7 +15,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestenvDNS,
+		Func:         VerifyDNSServer,
 		Desc:         "Verify that middle-layer DNS redirects hosts using dnsmasq",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
@@ -23,7 +23,7 @@ func init() {
 	})
 }
 
-func TestenvDNS(ctx context.Context, s *testing.State) {
+func VerifyDNSServer(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()

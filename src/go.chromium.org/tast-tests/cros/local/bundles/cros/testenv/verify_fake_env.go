@@ -1,8 +1,8 @@
-// Copyright 2023 The ChromiumOS Authors
+// Copyright 2024 The ChromiumOS Authors
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package example
+package testenv
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         TestenvFake,
+		Func:         VerifyFakeEnv,
 		Desc:         "Example that set up the fake test environments",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
@@ -21,7 +21,7 @@ func init() {
 	})
 }
 
-func TestenvFake(ctx context.Context, s *testing.State) {
+func VerifyFakeEnv(ctx context.Context, s *testing.State) {
 	env, err := testenv.NewFakeEnv(ctx)
 	if err != nil {
 		s.Fatal("Failed to set up the fake env: ", err)
