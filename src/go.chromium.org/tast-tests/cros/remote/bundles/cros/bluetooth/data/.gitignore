@@ -1,0 +1,3 @@
+# Ignore downloaded data file copies.
+*.wav
+*.raw

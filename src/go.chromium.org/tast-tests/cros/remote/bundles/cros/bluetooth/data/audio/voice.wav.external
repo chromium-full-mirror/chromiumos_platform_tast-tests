@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/bluetooth/audio/voice_20240220.wav",
+  "size": 835628,
+  "sha256sum": "ba68e93826795153b440f54d437abf627255b61a983e54c88b2579fe929b5624"
+}

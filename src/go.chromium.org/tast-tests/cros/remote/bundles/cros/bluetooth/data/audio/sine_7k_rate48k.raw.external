@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/bluetooth/audio/sine_7k_rate48k_20240220.raw",
+  "size": 480000,
+  "sha256sum": "959b1a70b1998f1b4f749fe0db664928b957052f6bb2c9f099c539eedfcc8339"
+}
