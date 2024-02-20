@@ -21,7 +21,7 @@ func init() {
 		Func:         VideoDecodeAccelVD,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies ARCVM hardware decode acceleration using a media::VideoDecoder by running the c2_e2e_test APK (see go/arcvm-vd)",
-		Contacts:     []string{"chromeos-video-eng@google.com", "mwojtas@google.com"},
+		Contacts:     []string{"arcvm-platform-video@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		Attr:         []string{"group:arc-video"},

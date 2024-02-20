@@ -24,7 +24,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:     VideoDecodeAccelVDVDAPerf,
 		Desc:     "Measures performance of hardware decode acceleration performance using media::VideoDecoder through the VDA interface, by running the video_decode_accelerator_perf_tests binary (see go/vd-migration)",
-		Contacts: []string{"chromeos-video-eng@google.com", "arc-performance@google.com", "mwojtas@google.com"},
+		Contacts: []string{"arc-performance@google.com", "arcvm-platform-video@google.com"},
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Video
 		BugComponent: "b:632502",
 		Attr:         []string{"group:arc-video", "group:crosbolt", "crosbolt_perbuild"},
