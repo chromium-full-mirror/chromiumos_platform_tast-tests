@@ -51,6 +51,9 @@ dhcp-option=252,{{.wpad}}
 {{if .mtu}}
 dhcp-option=option:mtu,{{.mtu}}
 {{end}}
+{{if .capport_api}}
+dhcp-option=114,{{.capport_api}}
+{{end -}}
 log-queries
 log-dhcp
 `
@@ -89,6 +92,7 @@ type dnsmasq struct {
 	noIfname              bool
 	wpad                  string
 	mtu                   int
+	capportAPI            string
 
 	cmd *testexec.Cmd
 }
@@ -141,6 +145,13 @@ func WithDHCPWPAD(wpad string) Option {
 func WithMTU(mtu int) Option {
 	return func(d *dnsmasq) {
 		d.mtu = mtu
+	}
+}
+
+// WithCapportAPI configures the CAPPORT API field in DHCP (option 114).
+func WithCapportAPI(capportAPI string) Option {
+	return func(d *dnsmasq) {
+		d.capportAPI = capportAPI
 	}
 }
 
@@ -246,6 +257,10 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 
 	if d.mtu > 0 {
 		confVals["mtu"] = d.mtu
+	}
+
+	if d.capportAPI != "" {
+		confVals["capport_api"] = d.capportAPI
 	}
 
 	var addressLines []string

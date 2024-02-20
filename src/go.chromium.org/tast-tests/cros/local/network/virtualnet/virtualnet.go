@@ -99,6 +99,9 @@ type EnvOptions struct {
 	// If resolveHostToIP is not set, resolvedHost is resolved to an IPv4 or IPv6 address
 	// to the gateway of the virtualnet Env created with these EnvOptions.
 	ResolveHostToIP net.IP
+	// CapportURL is the URL of the CAPPORT API. If CapportURL is set, dnsmasq will send
+	// the DHCP option 114 with CapportURL, defined at RFC 8910.
+	CapportURL string
 }
 
 // ResetEthernetEphemeralPriority sets Ethernet services EphemeralPriority to 0,
@@ -224,6 +227,9 @@ func startServersInRouter(ctx context.Context, router *Env, pool *subnet.Pool, o
 	}
 	if opts.IPv4MTU > 0 {
 		dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithMTU(opts.IPv4MTU))
+	}
+	if opts.CapportURL != "" {
+		dnsmasqOpts = append(dnsmasqOpts, dnsmasq.WithCapportAPI(opts.CapportURL))
 	}
 	if len(dnsmasqOpts) > 0 {
 		dnsmasq := dnsmasq.New(dnsmasqOpts...)
