@@ -248,12 +248,14 @@ func NewValuesFromProto(vs ...*perfpb.Values) *Values {
 	p := NewValues()
 	for _, val := range vs {
 		for _, v := range val.Values {
+			// You might also need to update perf.Proto() if you change the conversion.
 			m := Metric{
 				Name:       v.Name,
 				Variant:    v.Variant,
 				Unit:       v.Unit,
 				Direction:  Direction(v.Direction),
 				Multiple:   v.Multiple,
+				Interval:   v.Interval,
 				HasStartTs: v.HasStartTs,
 				StartTs:    v.StartTs.AsTime(),
 			}
@@ -588,6 +590,7 @@ func (p *Values) Save(outDir string) error {
 func (p *Values) Proto() *perfpb.Values {
 	result := &perfpb.Values{}
 	for k, v := range p.values {
+		// You might also need to update perf.NewValuesFromProto() if you change the conversion.
 		result.Values = append(result.Values, &perfpb.Value{
 			Name:       k.Name,
 			Variant:    k.Variant,
