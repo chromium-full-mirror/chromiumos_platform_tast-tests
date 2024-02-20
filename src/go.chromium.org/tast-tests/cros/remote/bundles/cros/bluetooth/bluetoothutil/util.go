@@ -7,6 +7,8 @@ package bluetoothutil
 
 import (
 	"context"
+	"fmt"
+	"path"
 	"time"
 
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
@@ -14,6 +16,8 @@ import (
 	btr "go.chromium.org/tast-tests/cros/remote/bluetooth"
 	bts "go.chromium.org/tast-tests/cros/services/cros/bluetooth"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
@@ -101,4 +105,45 @@ func ConfigureAudioDevice(ctx context.Context, device *btr.EmulatedBTPeerDevice,
 		}
 	}
 	return nil
+}
+
+// copyDataFileToHost copies the remote tast data file to the host and returns
+// the path to the copied file on the host.
+//
+// The file transfer is done with linuxssh.PutFiles, which only transfers files
+// if they do not already exist and have matching SHA1 checksums.
+//
+// Note: The hostname parameter is only used for logging purposes and can be any
+// descriptive string name for the host.
+func copyDataFileToHost(ctx context.Context, sshConn *ssh.Conn, hostname string, dataPaths map[string]string, dataFile string) (string, error) {
+	testing.ContextLogf(ctx, "Copying data file %q from remote tast runner to %s", dataFile, hostname)
+	const remoteHostDataDir = "/var/tmp/tast/data/src/go.chromium.org/tast-tests/cros/remote/bundles/cros/bluetooth/data"
+	remoteDataFilePath := path.Join(remoteHostDataDir, dataFile)
+	localDataFilePath, ok := dataPaths[dataFile]
+	if !ok {
+		return "", errors.Errorf("invalid data file %q: no entry found to local path in dataFiles", dataFile)
+	}
+	if _, err := linuxssh.PutFiles(ctx, sshConn, map[string]string{
+		localDataFilePath: remoteDataFilePath,
+	}, linuxssh.DereferenceSymlinks); err != nil {
+		return "", errors.Wrapf(err, "failed to copy data file %q from remote tast runner at %q to %s at %q", dataFile, localDataFilePath, remoteDataFilePath, hostname)
+	}
+	testing.ContextLogf(ctx, "Data file %q available on %s at %q", dataFile, hostname, remoteDataFilePath)
+	return remoteDataFilePath, nil
+}
+
+// CopyDataFileToDut copies the remote tast data file to the DUT and returns the
+// path to the copied file on the DUT.
+func CopyDataFileToDut(ctx context.Context, dutConfig *btr.DUTConfig, dataPaths map[string]string, dataFile string) (string, error) {
+	return copyDataFileToHost(ctx, dutConfig.DUT.Conn(), fmt.Sprintf("DUT %q", dutConfig.DUT.HostName()), dataPaths, dataFile)
+}
+
+// CopyDataFileToBtpeer copies the remote tast data file to the btpeer and
+// returns the path to the copied file on the btpeer.
+func CopyDataFileToBtpeer(ctx context.Context, btpeerClient *btr.BtpeerClient, dataPaths map[string]string, dataFile string) (string, error) {
+	sshConn, err := btpeerClient.SSHConn()
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get active ssh connection to %s", btpeerClient)
+	}
+	return copyDataFileToHost(ctx, sshConn, btpeerClient.String(), dataPaths, dataFile)
 }

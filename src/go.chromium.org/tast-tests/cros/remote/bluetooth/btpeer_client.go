@@ -215,6 +215,17 @@ func (c *BtpeerClient) disconnectSSH(ctx context.Context) {
 	}
 }
 
+// SSHConn returns the current active ssh connection to the device. Returns a
+// non-nil error if no ssh connection is active.
+//
+// This SSHConn is will only be active until Disconnect or Reboot is called.
+func (c *BtpeerClient) SSHConn() (*ssh.Conn, error) {
+	if c.sshConn == nil {
+		return nil, errors.Errorf("no active ssh connection to %s", c)
+	}
+	return c.sshConn, nil
+}
+
 // Reboot will trigger a reboot of the btpeer device over ssh then attempt to
 // reestablish a new ssh connection to device until it is successful or times
 // out.
