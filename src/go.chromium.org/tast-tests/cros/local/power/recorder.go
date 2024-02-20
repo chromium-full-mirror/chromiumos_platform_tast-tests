@@ -12,15 +12,16 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/util"
-
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"gonum.org/v1/gonum/stat"
 )
 
 // RecorderTimeout is the max amount of time that Recorder is expected to
@@ -98,6 +99,83 @@ func (r *Recorder) Cooldown(ctx context.Context) error {
 	if err := util.WaitForIOCooldown(ctx); err != nil {
 		return err
 	}
+	return nil
+}
+
+// ThermalCooldownParams contains parameters for thermally cooling down device.
+type ThermalCooldownParams struct {
+	// Number of consecutive samples used to check the cooldown progress.
+	SampleCount int
+	// Sampling interval.
+	Interval time.Duration
+	// Maximum amount of time allowed for the device to cooldown.
+	Timeout time.Duration
+	// Maximum deviation acceptable from the samples.
+	MaxStandardDeviation float64
+}
+
+// ThermalCooldown tries to cooldown DUT to a steady state quickly by
+// setting fans to 100% and wait until the temperature meets the
+// stopping criteria defined in ThermalCooldownParams.
+func ThermalCooldown(ctx context.Context, p ThermalCooldownParams) error {
+	setFanMaxDuty := func(ctx context.Context) error {
+		if err := testexec.CommandContext(ctx, "ectool", "fanduty", "100").Run(); err != nil {
+			return errors.Wrap(err, "unable to set fan to max duty cycle")
+		}
+		return nil
+	}
+
+	setFanAutoCtrl := func(ctx context.Context) error {
+		if err := testexec.CommandContext(ctx, "ectool", "autofanctrl").Run(); err != nil {
+			return errors.Wrap(err, "unable to set fan to auto")
+		}
+		return nil
+	}
+
+	samples := make([]float64, 0)
+
+	if err := testing.Poll(ctx, func(context.Context) error {
+		if err := setFanMaxDuty(ctx); err != nil {
+			return err
+		}
+
+		temp, _, err := cpu.Temperature(ctx)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read CPU temperature"))
+		}
+
+		samples = append(samples, float64(temp)/1000)
+
+		if len(samples) < p.SampleCount {
+			return errors.Wrap(err, "not enough temperature samples")
+		}
+
+		stdDev := stat.StdDev(samples, nil)
+		samples = samples[1:]
+
+		if stdDev > p.MaxStandardDeviation {
+			return errors.Wrap(err, "temperature is changing more than specified standard deviation")
+		}
+
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  p.Timeout,
+		Interval: p.Interval,
+	}); err != nil {
+		if fanErr := setFanAutoCtrl(ctx); fanErr != nil {
+			testing.ContextLog(ctx, "Fan failed to reset to auto after cooldown failure")
+		}
+		return errors.Wrap(err, "failed to cooldown")
+	}
+
+	if err := setFanAutoCtrl(ctx); err != nil {
+		return err
+	}
+
+	if err := Cooldown(ctx); err != nil {
+		return err
+	}
+
 	return nil
 }
 
