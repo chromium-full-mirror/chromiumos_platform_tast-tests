@@ -486,7 +486,8 @@ func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
 
 	notificationDialog := nodewith.HasClass("AshNotificationView").NameStartingWith(notificationTitleText)
-	expandButton := nodewith.Name("Expand notification").Role(role.Button).Ancestor(notificationDialog)
+	// The name of the expand button is "Expand ChromeOS update for Android apps notification".
+	expandButton := nodewith.NameStartingWith("Expand").Role(role.Button).Ancestor(notificationDialog)
 	// The notification is collapsed sometimes, expand it.
 	if err := uiauto.IfSuccessThen(ui.WaitUntilExists(expandButton), ui.DoDefault(expandButton))(ctx); err != nil {
 		return errors.Wrap(err, "failed to expand update notification")
@@ -517,6 +518,7 @@ func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chro
 	const (
 		migrationProgressScreenTitleText = "Installing updates"
 		migrationFinishedScreenTitleText = "Finished updating!"
+		migrationTimeout                 = 2 * time.Minute
 	)
 
 	testing.ContextLog(ctx, "Going through migration screen")
@@ -556,7 +558,7 @@ func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chro
 		return nil
 	}
 
-	if err := ui.WaitUntilGone(progressBarNode)(ctx); err != nil {
+	if err := uiauto.New(tconn).WithTimeout(migrationTimeout).WaitUntilGone(progressBarNode)(ctx); err != nil {
 		return errors.Wrap(err, "migration timed out")
 	}
 
