@@ -58,6 +58,20 @@ func (s *Service) GetDevice(ctx context.Context) (*Device, error) {
 	return device, nil
 }
 
+// GetDeviceInterface returns the Interface property of the associated Device.
+// Returns err if there is no associated Device, or any step failed.
+func (s *Service) GetDeviceInterface(ctx context.Context) (string, error) {
+	d, err := s.GetDevice(ctx)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get Device for %s", s.ObjectPath())
+	}
+	props, err := d.GetProperties(ctx)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get properties for %s", d.ObjectPath())
+	}
+	return props.GetString(shillconst.DevicePropertyInterface)
+}
+
 // GetCurrentIPConfig returns the IPConfig for this Service.
 func (s *Service) GetCurrentIPConfig(ctx context.Context) (*IPConfig, error) {
 	serviceProps, err := s.GetProperties(ctx)
