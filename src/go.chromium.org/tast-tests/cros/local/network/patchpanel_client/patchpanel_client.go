@@ -32,6 +32,7 @@ const (
 	terminaVMShutdownMethod             = "org.chromium.PatchPanel.TerminaVmShutdown"
 	notifyAndroidInteractiveStateMethod = "org.chromium.PatchPanel.NotifyAndroidInteractiveState"
 	setFeatureFlagMethod                = "org.chromium.PatchPanel.SetFeatureFlag"
+	tagSocketMethod                     = "org.chromium.PatchPanel.TagSocket"
 )
 
 // Client is a wrapper around patchpanel DBus API.
@@ -267,4 +268,72 @@ func (c *Client) SetQosEnableWithRestore(ctx context.Context, enable bool) (func
 			testing.ContextLog(ctx, "Failed to restore QoS enable feature flag: ", err)
 		}
 	}, nil
+}
+
+type tagSocketParams struct {
+	networkID *int32
+	vpnPolicy pp.TagSocketRequest_VpnRoutingPolicy
+}
+
+// TagSocketOption is the option to call TagSocket().
+type TagSocketOption func(*tagSocketParams)
+
+// WithTagSocketNetworkID configures the network_id field to call TagSocket().
+func WithTagSocketNetworkID(networkID int) TagSocketOption {
+	n := int32(networkID)
+	return func(params *tagSocketParams) {
+		params.networkID = &n
+	}
+}
+
+// WithTagSocketRouteOnVPN sets vpn_policy to ROUTE_ON_VPN.
+func WithTagSocketRouteOnVPN() TagSocketOption {
+	return func(params *tagSocketParams) {
+		params.vpnPolicy = pp.TagSocketRequest_ROUTE_ON_VPN
+	}
+}
+
+// WithTagSocketBypassVPN sets vpn_policy to BY_PASS_VPN.
+func WithTagSocketBypassVPN() TagSocketOption {
+	return func(params *tagSocketParams) {
+		params.vpnPolicy = pp.TagSocketRequest_BYPASS_VPN
+	}
+}
+
+// TagSocket calls patchpanel to tag the socket represented by fd with opts. See
+// the document for this API in the proto file for more details.
+func (c *Client) TagSocket(ctx context.Context, fd int32, opts ...TagSocketOption) error {
+	params := tagSocketParams{
+		vpnPolicy: pp.TagSocketRequest_DEFAULT_ROUTING,
+	}
+	for _, opt := range opts {
+		opt(&params)
+	}
+
+	request := &pp.TagSocketRequest{
+		NetworkId: params.networkID,
+		VpnPolicy: params.vpnPolicy,
+	}
+
+	buf, err := proto.Marshal(request)
+	if err != nil {
+		return errors.Wrapf(err, "failed to marshal %s request", tagSocketMethod)
+	}
+
+	dbusFd := dbus.UnixFD(fd)
+
+	if err := c.obj.CallWithContext(ctx, tagSocketMethod, 0, buf, dbusFd).Store(&buf); err != nil {
+		return errors.Wrapf(err, "failed to read %s method", tagSocketMethod)
+	}
+
+	response := &pp.TagSocketResponse{}
+	if err := proto.Unmarshal(buf, response); err != nil {
+		return errors.Wrapf(err, "failed to unmarshal %s response", tagSocketMethod)
+	}
+
+	if !response.Success {
+		return errors.Wrapf(err, "%s returns failure", tagSocketMethod)
+	}
+
+	return nil
 }
