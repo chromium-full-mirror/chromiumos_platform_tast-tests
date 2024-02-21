@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/crosint/arc/cts-tm/CtsDocumentClient_20240305.apk",
+  "size": 4360291,
+  "sha256sum": "7cb08873fe4a4aec46fc56c6ae20c83d8df971ee05e5669d46010481b607cd5c"
+}
