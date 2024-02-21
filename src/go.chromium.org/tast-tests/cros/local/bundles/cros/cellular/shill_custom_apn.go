@@ -123,7 +123,10 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	if _, _, err = helper.GetHomeProviderFromShill(ctx); err != nil {
 		s.Fatal("Failed to get HomeProvider from shill: ", err)
 	}
-	carrier, _ := cellular.GetCarrier(operatorID)
+	carrier, err := cellular.GetCarrier(operatorID)
+	if err != nil {
+		s.Fatal("Failed to match operator ID to carrier: ", err)
+	}
 	knownAPNs, err := cellular.GetKnownAPNsForOperator(operatorID)
 	if err != nil {
 		s.Fatal("Cannot find known APNs: ", err)
