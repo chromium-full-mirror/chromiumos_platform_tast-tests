@@ -33,8 +33,6 @@ func init() {
 		Fixture:      "chromeLoggedIn",
 		Attr: []string{
 			"group:mainline",
-			"informational",
-			"group:criticalstaging",
 			"group:paper-io",
 			"paper-io_printing",
 			"group:hw_agnostic",
