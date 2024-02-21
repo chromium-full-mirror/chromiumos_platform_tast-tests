@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 const defaultRPCTimeout = 10 * time.Second
@@ -632,8 +631,7 @@ func (r *XMLRpc) Run(ctx context.Context, cl Call, out ...interface{}) error {
 	// Otherwise, return without unpacking.
 	if len(out) > 0 {
 		if err := res.unpack(out); err != nil {
-			testing.ContextLogf(ctx, "Failed to unpack XML-RPC response for request %v: %s : err: %v", cl, string(bodyBytes), err)
-			return err
+			return errors.Wrapf(err, "failed to unpack XML-RPC response for request %v: %s", cl, string(bodyBytes))
 		}
 	}
 	return nil
