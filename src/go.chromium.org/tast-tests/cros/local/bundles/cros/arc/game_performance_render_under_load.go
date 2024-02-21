@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/gameperformance"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -21,14 +22,21 @@ func init() {
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBooted",
 		Data:         []string{"ArcGamePerformanceTest.apk"},
 		Timeout:      1 * time.Hour,
 		Params: []testing.Param{{
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
+		}, {
+			Name:              "vm_pvsched",
+			BugComponent:      "b:167279",
+			Fixture:           "arcBootedWithPvSchedEnabled",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}},
 	})
 }

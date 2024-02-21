@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -44,6 +45,13 @@ func init() {
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Fixture:           "arcBootedWithDisableExternalStorage",
+		}, {
+			Name:              "vm_pvsched",
+			BugComponent:      "b:167279",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+			Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
 		}, {
 			Name:              "vm_lacros",
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},

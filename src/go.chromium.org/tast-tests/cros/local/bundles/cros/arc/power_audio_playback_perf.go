@@ -35,7 +35,6 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBootedWithDisableExternalStorage",
 		Attr:         []string{"group:crosbolt", "crosbolt_nightly"},
 		Params: []testing.Param{
 			{
@@ -46,6 +45,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "default_vm",
@@ -55,6 +55,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "low_latency",
@@ -64,6 +65,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "low_latency_vm",
@@ -73,6 +75,18 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
+			},
+			{
+				Name:         "low_latency_vm_pvsched",
+				BugComponent: "b:167279",
+				Val: audio.TestParameters{
+					PerformanceMode:      audio.PerformanceModeLowLatency,
+					BatteryDischargeMode: setup.ForceBatteryDischarge,
+				},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge(), hwdep.HasParavirtSchedControl()),
+				Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
 			},
 			{
 				Name: "power_saving",
@@ -82,6 +96,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "power_saving_vm",
@@ -91,6 +106,18 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
+			},
+			{
+				Name:         "power_saving_vm_pvsched",
+				BugComponent: "b:167279",
+				Val: audio.TestParameters{
+					PerformanceMode:      audio.PerformanceModePowerSaving,
+					BatteryDischargeMode: setup.ForceBatteryDischarge,
+				},
+				ExtraSoftwareDeps: []string{"android_vm"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
 			},
 			{
 				Name: "default_nobatterymetrics",
@@ -100,6 +127,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "default_vm_nobatterymetrics",
@@ -109,6 +137,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "low_latency_nobatterymetrics",
@@ -118,6 +147,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "low_latency_vm_nobatterymetrics",
@@ -127,6 +157,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "power_saving_nobatterymetrics",
@@ -136,6 +167,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 			{
 				Name: "power_saving_vm_nobatterymetrics",
@@ -145,6 +177,7 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
+				Fixture:           "arcBootedWithDisableExternalStorage",
 			},
 		},
 		Timeout: 10 * time.Minute,

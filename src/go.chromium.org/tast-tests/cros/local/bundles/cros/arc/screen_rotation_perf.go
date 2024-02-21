@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -30,16 +31,23 @@ func init() {
 		BugComponent: "b:168382",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBooted",
 		// Sunflower.apk taken from: https://github.com/googlesamples/android-sunflower
 		// Commit hash: ce82cffeed8150cf97789065898f08f29a2a1c9b
 		Data:    []string{"Sunflower.apk"},
 		Timeout: 8 * time.Minute,
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
+			Fixture:           "arcBooted",
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			Fixture:           "arcBooted",
+		}, {
+			Name:              "vm_pvsched",
+			BugComponent:      "b:167279",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Fixture:           "arcBootedWithPvSchedEnabled",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}},
 	})
 }

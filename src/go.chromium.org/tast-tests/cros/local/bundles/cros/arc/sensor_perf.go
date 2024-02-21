@@ -33,11 +33,18 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.BaseAccelerometer()),
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
+			Fixture:           "arcBooted",
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			Fixture:           "arcBooted",
+		}, {
+			Name:              "vm_pvsched",
+			BugComponent:      "b:167279",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Fixture:           "arcBootedWithPvSchedEnabled",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}},
-		Fixture: "arcBooted",
 		Timeout: 2 * time.Minute,
 	})
 }

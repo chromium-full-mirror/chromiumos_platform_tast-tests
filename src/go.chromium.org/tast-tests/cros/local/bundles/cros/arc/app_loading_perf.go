@@ -37,6 +37,7 @@ var (
 	// arcAppLoadingBooted is a precondition similar to arc.Booted() with no opt-in and disables some heavy Android activities that use system resources.
 	arcAppLoadingBooted = arc.NewPrecondition("arcapploading_booted", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
 
+	arcAppLoadingBootedWithPvSchedEnabled = arc.NewPreconditionWithPvSchedEnabled("arcapploading_booted_with_pvsched", nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
 	// arcAppLoadingBootedLacros is a precondition similar arcAppLoadingBooted but with Lacros enabled.
 	arcAppLoadingBootedLacros = arc.NewPreconditionWithBrowserType("arcapploading_booted_lacros", browser.TypeLacros, nil /* GAIAVARS */, nil /* GAIALOGINPOOLVARS */, false /* O_DIRECT */, append(arc.DisableSyncFlags(), disabledFeatures...)...)
 )
@@ -79,6 +80,16 @@ func init() {
 				binaryTranslation: false,
 			},
 			Pre: arcAppLoadingBooted,
+		}, {
+			Name:              "vm_pvsched",
+			BugComponent:      "b:167279",
+			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+			ExtraSoftwareDeps: []string{"android_vm"},
+			Val: testParameters{
+				binaryTranslation: false,
+			},
+			Pre:               arcAppLoadingBootedWithPvSchedEnabled,
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}, {
 			Name:              "vm_lacros",
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},

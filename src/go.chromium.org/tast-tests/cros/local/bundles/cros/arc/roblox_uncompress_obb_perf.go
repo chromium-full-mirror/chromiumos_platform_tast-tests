@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,13 +33,20 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Fixture:      "arcBooted",
 		Data:         []string{"com.roblox.client-886.zip"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
+			Fixture:           "arcBooted",
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
+			Fixture:           "arcBooted",
+		}, {
+			Name:              "vm_pvsched",
+			BugComponent:      "b:167279",
+			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+			Fixture:           "arcBootedWithPvSchedEnabled",
 		}},
 	})
 }

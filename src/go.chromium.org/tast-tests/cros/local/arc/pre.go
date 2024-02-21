@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/pvsched"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/timing"
@@ -82,6 +83,36 @@ func NewPreconditionWithBrowserType(name string, browserType browser.Type, gaia 
 		rootfsODirect: rootfsODirect,
 	}
 	return pre
+}
+
+// NewPreconditionWithPvSchedEnabled creates a new arc precondition for tests that need different args.
+// Similar to NewPrecondition, but enabled paravirt sched feature.
+// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+func NewPreconditionWithPvSchedEnabled(name string, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
+	return NewPreconditionWithBrowserTypePvSchedEnabled(name, browser.TypeAsh, gaia, gaiaPool, rootfsODirect, extraArgs...)
+}
+
+// NewPreconditionWithBrowserTypePvSchedEnabled creates a new arc precondition for tests that need different args and browser types.
+// Similar to NewPreconditionWithBrowserType. Code is duplicated instead of
+// refactoring so that revert is potentially conflict free.
+// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+func NewPreconditionWithBrowserTypePvSchedEnabled(name string, browserType browser.Type, gaia *GaiaVars, gaiaPool *GaiaLoginPoolVars, rootfsODirect bool, extraArgs ...string) testing.Precondition {
+	timeout := ResetTimeout + chrome.LoginTimeout + BootTimeout
+	if gaia != nil || gaiaPool != nil {
+		timeout = ResetTimeout + chrome.GAIALoginTimeout + BootTimeout + optin.OptinTimeout
+	}
+	pre := preImpl{
+		name:          name,
+		browserType:   browserType,
+		timeout:       timeout,
+		gaia:          gaia,
+		gaiaPool:      gaiaPool,
+		extraArgs:     extraArgs,
+		rootfsODirect: rootfsODirect,
+	}
+	return &preImplWithPvSchedEnabled{
+		preImpl: pre,
+	}
 }
 
 // GaiaVars holds the secret variables for username and password for a GAIA login.
@@ -274,4 +305,41 @@ func (p *preImpl) closeInternal(ctx context.Context, s *testing.PreState) {
 	if err := RestoreArcvmDevConf(ctx); err != nil {
 		s.Log("Failed to write arcvm_dev.conf: ", err)
 	}
+}
+
+// Similar to preImpl, but with paravirt sched feature enabled.
+// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+type preImplWithPvSchedEnabled struct {
+	pvSchedEnabled bool // Current state of PvSched feature
+	preImpl
+}
+
+func (p *preImplWithPvSchedEnabled) String() string         { return p.preImpl.name }
+func (p *preImplWithPvSchedEnabled) Timeout() time.Duration { return p.preImpl.timeout }
+
+func (p *preImplWithPvSchedEnabled) Prepare(ctx context.Context, s *testing.PreState) interface{} {
+	var err error
+
+	p.pvSchedEnabled, err = pvsched.Enabled()
+	if err != nil {
+		s.Fatal("Failed to parse Paravirt Sched feature state: ", err)
+	}
+
+	if !p.pvSchedEnabled {
+		pvsched.Enable()
+	}
+
+	return p.preImpl.Prepare(ctx, s)
+}
+
+func (p *preImplWithPvSchedEnabled) Close(ctx context.Context, s *testing.PreState) {
+	if !p.pvSchedEnabled {
+		pvsched.Disable()
+	}
+
+	p.preImpl.Close(ctx, s)
+}
+
+func (p *preImplWithPvSchedEnabled) closeInternal(ctx context.Context, s *testing.PreState) {
+	p.preImpl.closeInternal(ctx, s)
 }

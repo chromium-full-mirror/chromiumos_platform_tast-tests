@@ -34,6 +34,7 @@ func TestTimeout(t *gotesting.T) {
 		if t.Pre == arc.Booted() ||
 			t.Fixture == "arcBooted" ||
 			t.Fixture == "arcBootedInTabletMode" ||
+			t.Fixture == "arcBootedWithPvSchedEnabled" ||
 			t.Fixture == "arcBootedWithoutUIAutomator" {
 			return false
 		}

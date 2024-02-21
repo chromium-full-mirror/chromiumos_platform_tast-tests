@@ -66,7 +66,6 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      "arcBooted",
 		Data:         []string{"oboetester_debug.apk"},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio"},
 		Timeout:      7 * time.Minute,
@@ -81,6 +80,21 @@ func init() {
 					},
 					threshold: 30,
 				},
+				Fixture: "arcBooted",
+			},
+			{
+				Name:         "aaudio_noload_pvsched",
+				BugComponent: "b:167279",
+				Val: audioOboetesterGlitchParam{
+					stressMode: audioOboetesterGlitchStressLoadNone,
+					options: []arc.ActivityStartOption{
+						arc.WithExtraString("in_api", "aaudio"),
+						arc.WithExtraString("out_api", "aaudio"),
+					},
+					threshold: 30,
+				},
+				Fixture:           "arcBootedWithPvSchedEnabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
 			{
 				Name: "aaudio_speedometer",
@@ -91,6 +105,20 @@ func init() {
 						arc.WithExtraString("out_api", "aaudio"),
 					},
 				},
+				Fixture: "arcBooted",
+			},
+			{
+				Name:         "aaudio_speedometer_pvsched",
+				BugComponent: "b:167279",
+				Val: audioOboetesterGlitchParam{
+					stressMode: audioOboetesterGlitchStressLoadSpeedometer,
+					options: []arc.ActivityStartOption{
+						arc.WithExtraString("in_api", "aaudio"),
+						arc.WithExtraString("out_api", "aaudio"),
+					},
+				},
+				Fixture:           "arcBootedWithPvSchedEnabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
 			{
 				Name: "opensles_noload",
@@ -102,6 +130,21 @@ func init() {
 					},
 					threshold: 30,
 				},
+				Fixture: "arcBooted",
+			},
+			{
+				Name:         "opensles_noload_pvsched",
+				BugComponent: "b:167279",
+				Val: audioOboetesterGlitchParam{
+					stressMode: audioOboetesterGlitchStressLoadNone,
+					options: []arc.ActivityStartOption{
+						arc.WithExtraString("in_api", "opensles"),
+						arc.WithExtraString("out_api", "opensles"),
+					},
+					threshold: 30,
+				},
+				Fixture:           "arcBootedWithPvSchedEnabled",
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
 			{
 				Name: "opensles_speedometer",
@@ -112,6 +155,7 @@ func init() {
 						arc.WithExtraString("out_api", "opensles"),
 					},
 				},
+				Fixture: "arcBooted",
 			},
 
 			// Run the test with a stricter threshold for the selected models.
@@ -126,6 +170,7 @@ func init() {
 					},
 					threshold: 5,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "opensles_noload_strict",
@@ -138,6 +183,7 @@ func init() {
 					},
 					threshold: 5,
 				},
+				Fixture: "arcBooted",
 			},
 		},
 	})

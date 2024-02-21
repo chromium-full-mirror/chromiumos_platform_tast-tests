@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/swap"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
+	"go.chromium.org/tast-tests/cros/local/pvsched"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -114,6 +115,52 @@ func init() {
 		TearDownTimeout: ResetTimeout,
 	})
 
+	// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+		}, nil
+	}
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithPvSchedEnabled",
+		Desc: "ARC is booted, with paravirt sched enabled",
+		Contacts: []string{
+			"vineethrp@google.com",
+			"arc-commercial@google.com",
+		},
+		Impl:            NewArcBootedFixtureWithPvSchedEnabled(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.ExtraArgs(DisableSyncFlags()...),
+			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
+		}, nil
+	}
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithDisableExternalStoragePvSchedEnabled",
+		Desc: "ARC is booted, with external storage disabled and paravirt sched enabled",
+		Contacts: []string{
+			"vineethrp@google.com",
+			"arc-commercial@google.com",
+		},
+		Impl:            NewArcBootedFixtureWithPvSchedEnabled(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 	// arcBootedRestricted is a fixture similar to arcBootedWithDisableExternalStorage,
 	// but limits the CPU time of ARC using CGroups.
 	fixtureConfig = DefaultBootedFixtureConfig()
@@ -688,6 +735,36 @@ func NewArcBootedFixture(arcBootedFixtureConfig BootedFixtureConfig) testing.Fix
 	}
 }
 
+// NewArcBootedFixtureWithPvSchedEnabled returns a fixtureImple for ARC(bootedFixtureWithPvSchedEnabled).
+// Similar to NewArcBootedFixture and could be refactored, but duplicating
+// code without touching NewArcBootedFixture so that revert becomes easier.
+// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+func NewArcBootedFixtureWithPvSchedEnabled(arcBootedFixtureConfig BootedFixtureConfig) testing.FixtureImpl {
+
+	bf := bootedFixture{
+		parentStateProvider: arcBootedFixtureConfig.ParentStateProvider,
+		enableUIAutomator:   arcBootedFixtureConfig.EnableUIAutomator,
+		arcvmConfig:         arcBootedFixtureConfig.ArcvmConfig,
+		playStoreOptin:      arcBootedFixtureConfig.PlayStoreOptin,
+		bootTimeout:         arcBootedFixtureConfig.BootTimeout,
+		fOpt: func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			opts, err := arcBootedFixtureConfig.FOpts(ctx, s)
+			if err != nil {
+				return nil, err
+			}
+			if arcBootedFixtureConfig.PlayStoreOptin {
+				opts = append(opts, chrome.ARCSupported())
+			} else {
+				opts = append(opts, chrome.ARCEnabled())
+			}
+			return append(opts, chrome.ExtraArgs("--disable-features=ArcResizeLock")), nil
+		},
+	}
+	return &bootedFixtureWithPvSchedEnabled{
+		bootedFixture: bf,
+	}
+}
+
 // NewMtbfArcBootedFixture returns a FixtureImpl with a OptionsCallback function provided for MTBF ARC++ tests.
 func NewMtbfArcBootedFixture(fOpts chrome.OptionsCallback) testing.FixtureImpl {
 	return &bootedFixture{
@@ -896,4 +973,47 @@ func saveDumpsys(ctx context.Context, a *ARC, outDir string) error {
 	cmd := a.Command(ctx, "dumpsys")
 	cmd.Stdout = file
 	return cmd.Run()
+}
+
+// Similar to bootedFixture but enables paravirt sched feature.
+// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+type bootedFixtureWithPvSchedEnabled struct {
+	pvSchedEnabled bool // Current state of PvSched feature
+	bootedFixture
+}
+
+func (f *bootedFixtureWithPvSchedEnabled) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var err error
+
+	f.pvSchedEnabled, err = pvsched.Enabled()
+	if err != nil {
+		s.Fatal("Failed to get Paravirt Sched state: ", err)
+	}
+
+	if !f.pvSchedEnabled {
+		pvsched.Enable()
+	}
+
+	return f.bootedFixture.SetUp(ctx, s)
+}
+
+func (f *bootedFixtureWithPvSchedEnabled) TearDown(ctx context.Context, s *testing.FixtState) {
+
+	if !f.pvSchedEnabled {
+		pvsched.Disable()
+	}
+
+	f.bootedFixture.TearDown(ctx, s)
+}
+
+func (f *bootedFixtureWithPvSchedEnabled) Reset(ctx context.Context) error {
+	return f.bootedFixture.Reset(ctx)
+}
+
+func (f *bootedFixtureWithPvSchedEnabled) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	f.bootedFixture.PreTest(ctx, s)
+}
+
+func (f *bootedFixtureWithPvSchedEnabled) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	f.bootedFixture.PostTest(ctx, s)
 }

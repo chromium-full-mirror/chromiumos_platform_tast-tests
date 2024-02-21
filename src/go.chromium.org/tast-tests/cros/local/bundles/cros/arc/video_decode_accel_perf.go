@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/video"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -68,6 +69,14 @@ func init() {
 			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.h264"},
 			Fixture:           "arcBootedWithDisableExternalStorage",
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264_60, "android_vm"},
+			ExtraData:         []string{"1080p_60fps_600frames.h264", "1080p_60fps_600frames.h264.json"},
+		}, {
+			Name:              "h264_1080p_60fps_vm_pvsched",
+			BugComponent:      "b:167279",
+			Val:               video.DecodeTestOptions{TestVideo: "1080p_60fps_600frames.h264"},
+			Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
+			ExtraSoftwareDeps: []string{caps.HWDecodeH264_60, "android_vm"},
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			ExtraData:         []string{"1080p_60fps_600frames.h264", "1080p_60fps_600frames.h264.json"},
 		}, {
 			Name:              "h264_oopvd_1080p_60fps_vm",
