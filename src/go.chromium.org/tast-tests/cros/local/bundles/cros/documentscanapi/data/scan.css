@@ -30,9 +30,48 @@
   -webkit-animation: rotation .6s infinite linear;
 }
 
-#scanButton {
-  height: 200px;
-  width: 100%;
+#setup {
+  width: 50%;
+  min-width: 460px;
+  max-width: 500px;
+  border-right: 1px solid black;
+  display: inline-block;
+}
+
+#simpleSetup {
+  border-bottom: 1px solid black;
+  padding: 5px;
+  margin: 0;
+}
+
+#advancedSetup {
+  width: 450px;
+  padding: 5px;
+  margin: 0;
+}
+
+#scannerInfo {
+  display: none;
+}
+
+#scannerConfig {
+  height: 250px;
+  overflow: auto;
+}
+
+#results {
+  display: inline-block;
+  min-width: 250px;
+  max-width: calc(100% - 520px);
+  vertical-align: top;
+  padding-left: 10px;
+}
+
+#imageContainer img {
+  margin: 5px;
+  border: 1px solid black;
+  max-width: 200px;
+  margin: 20px;
 }
 
 @-webkit-keyframes rotation {

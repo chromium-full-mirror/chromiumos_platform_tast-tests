@@ -8,8 +8,57 @@
     <div id="waitAnimation" style="display: none;">
       <div id="waitSpinner"></div>
     </div>
-    <button id="scanButton">Scan</button>
-    <img id="scannedImage" src=""></img>
+    <div id="setup">
+      <div id="simpleSetup">
+        <h1>Simple Scan</h1>
+        <button id="doSimpleScan">Simple Scan</button>
+      </div>
+      <div id="advancedSetup">
+        <h1>Advanced Scan Setup</h1>
+        <button id="getListButton">Get Scanners</button>
+        <select name="scannerList" id="scannerList"></select><br>
+          <ul id="scannerInfo">
+            <li>Manufacturer: <span id="mfgr"></span></li>
+            <li>Model: <span id="model"></span></li>
+            <li>Connection: <span id="connection"></span></li>
+            <li>Secure: <span id="secure"></span></li>
+            <li>Protocol: <span id="protocolType"></span></li>
+          </ul>
+        <div>
+          <button id="getScannerConfigButton" disabled="disabled">Open Scanner</button>
+          <button id="closeScannerButton" disabled="disabled">Close Scanner</button>
+          <button id="toggleInactive">Show inactive</button>
+          <button id="toggleAdvanced">Show advanced</button>
+        </div>
+        <div>
+          <label for="scanSource">Scan source</label>: <select name="scanSource" id="scanSource"></select>
+        </div>
+        <div>
+          <label for="scanResolution">Resolution</label>: <select name="scanResolution" id="scanResolution"></select>
+        </div>
+        <div>
+          <button id="sizeA4" disabled="disabled">A4</button>
+          <button id="sizeLetter" disabled="disabled">Letter</button>
+          <button id="sizeLegal" disabled="disabled">Legal</button>
+          <button id="sizeA3" disabled="disabled">A3</button>
+          <button id="sizeFull" disabled="disabled">Full</button>
+        </div>
+        <pre id="scannerConfig"></pre>
+        <br>
+        Status: <span id="scanStatus">No scanner</span>
+        <div>
+        <button id="scanButton" disabled="disabled">Scan</button>
+        <button id="cancelButton" disabled="disabled">Cancel</button>
+        Bytes received: <span id="bytesReceived"></span>
+        Pages: <span id="pageCount"></span>
+        </div>
+      </div>
+    </div>
+    <div id="results">
+      <h1>Scanned results</h1>
+      <div id="imageContainer">
+      </div>
+    </div>
     <script src="scan.js"></script>
   </body>
 </html>

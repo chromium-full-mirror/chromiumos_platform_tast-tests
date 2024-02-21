@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/documentscanapi/setup"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -21,12 +22,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/restriction"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/printing/ippusbbridge"
 	"go.chromium.org/tast-tests/cros/local/printing/usbprinter"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,7 +34,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Scan,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Tests that a scan can be performed using the Document Scan API",
+		Desc:         "Tests that a scan can be performed using the simple Document Scan API",
 		Contacts:     []string{"project-bolton@google.com", "bmgordon@chromium.org"},
 		// ChromeOS > Platform > Services > Scanning
 		BugComponent: "b:860616",
@@ -61,9 +61,7 @@ func init() {
 	})
 }
 
-const esclCapabilities = "/usr/local/etc/virtual-usb-printer/escl_capabilities.json"
-
-// Scan tests the chrome.documentScan API.
+// Scan tests the simple chrome.documentScan API.
 func Scan(ctx context.Context, s *testing.State) {
 	// Use cleanupCtx for any deferred cleanups in case of timeouts or
 	// cancellations on the shortened context.
@@ -77,7 +75,7 @@ func Scan(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(extDir)
 
-	scanTargetExtID, err := setUpDocumentScanExtension(ctx, s, extDir)
+	scanTargetExtID, err := setup.CreateExtension(ctx, s, extDir)
 	if err != nil {
 		s.Fatal("Failed setup of Document Scan extension: ", err)
 	}
@@ -111,7 +109,7 @@ func Scan(ctx context.Context, s *testing.State) {
 	printer, err := usbprinter.Start(ctx,
 		usbprinter.WithIPPUSBDescriptors(),
 		usbprinter.WithGenericIPPAttributes(),
-		usbprinter.WithESCLCapabilities(esclCapabilities),
+		usbprinter.WithESCLCapabilities(setup.EsclCapabilities),
 		usbprinter.ExpectUdevEventOnStop(),
 		usbprinter.WaitUntilConfigured())
 	if err != nil {
@@ -145,17 +143,21 @@ func Scan(ctx context.Context, s *testing.State) {
 	s.Log("Clicking Scan button")
 	ui := uiauto.New(tconn)
 
-	scanButton := nodewith.Name("Scan").Role(role.Button).Ancestor(nodewith.Name("Scanner Control").HasClass("RootView").First())
+	extensionWindow := nodewith.Name("Scanner Control").Role(role.RootWebArea)
+	scanButton := nodewith.Name("Simple Scan").Role(role.Button).Ancestor(extensionWindow)
 
-	if err := uiauto.Combine("wait for scan button",
+	if err := uiauto.Combine("wait for simple scan button",
 		ui.WithTimeout(10*time.Second).WaitUntilExists(scanButton),
 	)(ctx); err != nil {
 		s.Fatal("Scan button failed to appear: ", err)
 	}
 
+	// The button is disabled right before starting the scan, then enabled again
+	// once scanning finishes.
 	if err := uiauto.Combine("click button and wait",
 		ui.DoDefault(scanButton),
-		ui.WithTimeout(30*time.Second).WaitUntilGone(scanButton),
+		ui.WithTimeout(5*time.Second).WaitForRestriction(scanButton, restriction.Disabled),
+		ui.WithTimeout(30*time.Second).WaitUntilEnabled(scanButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to perform scan: ", err)
 	}
@@ -193,20 +195,4 @@ func Scan(ctx context.Context, s *testing.State) {
 		s.Error("Scanned file differed from golden image: ", err)
 		diff.DumpLog(ctx)
 	}
-}
-
-// setUpDocumentScanExtension moves the extension files into the extension directory and returns extension ID.
-func setUpDocumentScanExtension(ctx context.Context, s *testing.State, extDir string) (string, error) {
-	for _, name := range []string{"manifest.json", "background.js", "scan.html", "scan.js", "scan.css"} {
-		if err := fsutil.CopyFile(s.DataPath(name), filepath.Join(extDir, name)); err != nil {
-			return "", errors.Wrapf(err, "failed to copy file %q", name)
-		}
-	}
-
-	extID, err := chrome.ComputeExtensionID(extDir)
-	if err != nil {
-		s.Fatalf("Failed to compute extension ID for %q: %v", extDir, err)
-	}
-
-	return extID, nil
 }
