@@ -37,6 +37,10 @@ func init() {
 func RecToDevUntrusted(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to get config: ", err)
+	}
+
 	// This test is not applicable for devices with h.Config.RecButtonDevSwitch
 	// or h.Config.PowerButtonDevSwitch because there is no "Confirm" menu item
 	// for them.
