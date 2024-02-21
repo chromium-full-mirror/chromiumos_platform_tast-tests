@@ -777,3 +777,19 @@ func (b *BluetoothFlossFacade) SetEnabledOnBoot(ctx context.Context, adapterEnab
 func (b *BluetoothFlossFacade) SetDebugLogLevels(ctx context.Context, level uint32) error {
 	return errors.New("setting log level in floss is not supported")
 }
+
+// IsWBSSupported returns true if the adapter supports Wide-Band Speech (WBS).
+func (b *BluetoothFlossFacade) IsWBSSupported(ctx context.Context) (bool, error) {
+	if err := b.assertEnabled(); err != nil {
+		return false, err
+	}
+	return b.adapterClient.IsWbsSupported(ctx)
+}
+
+// IsSWBSupported returns true if the adapter supports Super Wide-Band (SWB).
+func (b *BluetoothFlossFacade) IsSWBSupported(ctx context.Context) (bool, error) {
+	if err := b.assertEnabled(); err != nil {
+		return false, err
+	}
+	return b.adapterClient.IsSwbSupported(ctx)
+}

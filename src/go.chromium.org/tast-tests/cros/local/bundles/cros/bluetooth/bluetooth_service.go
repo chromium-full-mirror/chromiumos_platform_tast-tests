@@ -549,3 +549,31 @@ func (b *BtService) SetDebugLogLevels(ctx context.Context, request *pb.SetDebugL
 	}
 	return &emptypb.Empty{}, nil
 }
+
+// IsWBSSupported returns true if the adapter supports Wide-Band Speech (WBS).
+func (b *BtService) IsWBSSupported(ctx context.Context, empty *emptypb.Empty) (*pb.IsWBSSupportedResponse, error) {
+	if err := b.assertHasFacade(); err != nil {
+		return nil, err
+	}
+	supported, err := b.facade.IsWBSSupported(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.IsWBSSupportedResponse{
+		WbsSupported: supported,
+	}, nil
+}
+
+// IsSWBSupported returns true if the adapter supports SWB.
+func (b *BtService) IsSWBSupported(ctx context.Context, empty *emptypb.Empty) (*pb.IsSWBSupportedResponse, error) {
+	if err := b.assertHasFacade(); err != nil {
+		return nil, err
+	}
+	supported, err := b.facade.IsSWBSupported(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.IsSWBSupportedResponse{
+		SwbSupported: supported,
+	}, nil
+}

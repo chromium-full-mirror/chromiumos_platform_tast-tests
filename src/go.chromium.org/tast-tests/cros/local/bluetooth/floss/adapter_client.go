@@ -454,3 +454,9 @@ func (c *AdapterClient) DisconnectAllEnabledProfiles(ctx context.Context, device
 func (c *AdapterClient) IsWbsSupported(ctx context.Context) (bool, error) {
 	return c.dbus.CallForBool(ctx, "IsWbsSupported")
 }
+
+// IsSwbSupported calls the floss D-Bus method with the same name for this
+// object.
+func (c *AdapterClient) IsSwbSupported(ctx context.Context) (bool, error) {
+	return c.dbus.CallForBool(ctx, "IsSwbSupported")
+}

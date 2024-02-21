@@ -222,6 +222,12 @@ type BluetoothFacade interface {
 
 	// SetDebugLogLevels sets the level for verbose debug log.
 	SetDebugLogLevels(ctx context.Context, level uint32) error
+
+	// IsWBSSupported returns true if the adapter supports Wide-Band Speech (WBS).
+	IsWBSSupported(ctx context.Context) (bool, error)
+
+	// IsSWBSupported returns true if the adapter supports Super Wide-Band (SWB).
+	IsSWBSupported(ctx context.Context) (bool, error)
 }
 
 // DiscoverDevice will start discovery, wait until a device is found, and then

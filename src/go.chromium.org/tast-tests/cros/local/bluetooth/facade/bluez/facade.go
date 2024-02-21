@@ -620,3 +620,23 @@ func (b *BluetoothBluezFacade) SetDebugLogLevels(ctx context.Context, level uint
 
 	return nil
 }
+
+// IsWBSSupported returns true if the adapter supports Wide-Band Speech (WBS).
+func (b *BluetoothBluezFacade) IsWBSSupported(ctx context.Context) (bool, error) {
+	adapter, err := b.defaultAdapter()
+	if err != nil {
+		return false, err
+	}
+	capabilities, err := adapter.GetSupportedCapabilities(ctx)
+	if err != nil {
+		return false, err
+	}
+	return capabilities["wide band speech"] == true, nil
+}
+
+// IsSWBSupported returns true if the adapter supports Super Wide-Band (SWB).
+//
+// Since SWB is not supported by bluez on chromeos, this simply returns false.
+func (b *BluetoothBluezFacade) IsSWBSupported(ctx context.Context) (bool, error) {
+	return false, nil
+}

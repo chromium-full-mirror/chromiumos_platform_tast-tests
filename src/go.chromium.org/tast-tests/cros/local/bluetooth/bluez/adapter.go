@@ -18,6 +18,9 @@ import (
 )
 
 // Adapter contains helper functions for getting and setting bluetooth adapter state.
+//
+// See chromiumos/src/third_party/bluez/current/doc/adapter-api.txt for d-bus
+// interface documentation.
 type Adapter struct {
 	dbus *dbusutil.DBusObject
 }
@@ -155,6 +158,29 @@ func (a *Adapter) RemoveDevice(ctx context.Context, devicePath dbus.ObjectPath) 
 		return errors.Wrapf(c.Err, "failed to remove device with path %q", devicePath)
 	}
 	return nil
+}
+
+// GetSupportedCapabilities returns the supported capabilities of the device.
+// Returns a map of the supported capabilities which refers to the capability
+// name to the description of the capability (often a bool, but not guaranteed
+// to be).
+//
+// Note: This method name matches the d-bus method name, which is why it has
+// the "Get" prefix even though it is against golang style.
+func (a *Adapter) GetSupportedCapabilities(ctx context.Context) (map[string]interface{}, error) {
+	c := a.dbus.Call(ctx, "GetSupportedCapabilities")
+	if c.Err != nil {
+		return nil, errors.Wrap(c.Err, "failed to get supported capabilities")
+	}
+	var rawResult map[string]dbus.Variant
+	if err := c.Store(&rawResult); err != nil {
+		return nil, errors.Wrap(err, "failed to store response of method GetSupportedCapabilities as a map[string]dbus.Variant")
+	}
+	result := make(map[string]interface{})
+	for capability, isSupported := range rawResult {
+		result[capability] = isSupported.Value()
+	}
+	return result, nil
 }
 
 // IsEnabled checks if bluetooth adapter present and powered on.

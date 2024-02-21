@@ -30,7 +30,8 @@ service BluetoothService {
   //
   // Enable should be called after this if to ensure the adapter is powered on
   // if it is to be used beyond calling IsPoweredOn.
-  rpc SetBluetoothStack(SetBluetoothStackRequest) returns (google.protobuf.Empty) {}
+  rpc SetBluetoothStack(SetBluetoothStackRequest)
+      returns (google.protobuf.Empty) {}
 
   // StackType returns the BluetoothStackType the facade uses.
   rpc StackType(google.protobuf.Empty) returns (StackTypeResponse) {}
@@ -45,7 +46,8 @@ service BluetoothService {
   rpc Reset(ResetRequest) returns (google.protobuf.Empty) {}
 
   // AdapterProperties collects and returns the default adapter's properties.
-  rpc AdapterProperties(google.protobuf.Empty) returns (AdapterPropertiesResponse) {}
+  rpc AdapterProperties(google.protobuf.Empty)
+      returns (AdapterPropertiesResponse) {}
 
   // IsPoweredOn returns true if the default adapter is enabled.
   rpc IsPoweredOn(google.protobuf.Empty) returns (IsPoweredOnResponse) {}
@@ -71,7 +73,8 @@ service BluetoothService {
   // SetDiscoverableWithTimeout sets whether the default adapter is
   // discoverable. If discoverable is true, it will be set as discoverable for
   // the provided timeout in seconds.
-  rpc SetDiscoverableWithTimeout(SetDiscoverableWithTimeoutRequest) returns (google.protobuf.Empty) {}
+  rpc SetDiscoverableWithTimeout(SetDiscoverableWithTimeoutRequest)
+      returns (google.protobuf.Empty) {}
 
   // IsPairable returns true if the default adapter is pairable.
   rpc IsPairable(google.protobuf.Empty) returns (IsPairableResponse) {}
@@ -102,17 +105,21 @@ service BluetoothService {
   rpc ConnectDevice(ConnectDeviceRequest) returns (google.protobuf.Empty) {}
 
   // DisconnectDevice disconnects the device with the given address.
-  rpc DisconnectDevice(DisconnectDeviceRequest) returns (google.protobuf.Empty) {}
+  rpc DisconnectDevice(DisconnectDeviceRequest)
+      returns (google.protobuf.Empty) {}
 
   // WaitForConnectState waits the device to be connected or disconnected.
-  rpc WaitForConnectState(WaitForConnectStateRequest) returns (google.protobuf.Empty) {}
+  rpc WaitForConnectState(WaitForConnectStateRequest)
+      returns (google.protobuf.Empty) {}
 
   // DeviceProperties collects and returns a known device's properties.
-  rpc DeviceProperties(DevicePropertiesRequest) returns (DevicePropertiesResponse) {}
+  rpc DeviceProperties(DevicePropertiesRequest)
+      returns (DevicePropertiesResponse) {}
 
   // DeviceIsConnected checks whether the device with the given address is
   // connected.
-  rpc DeviceIsConnected(DeviceIsConnectedRequest) returns (DeviceIsConnectedResponse) {}
+  rpc DeviceIsConnected(DeviceIsConnectedRequest)
+      returns (DeviceIsConnectedResponse) {}
 
   // DeviceIsPaired checks whether the device with the given address is paired.
   rpc DeviceIsPaired(DeviceIsPairedRequest) returns (DeviceIsPairedResponse) {}
@@ -149,12 +156,19 @@ service BluetoothService {
   // the bluetooth adapter is enabled on boot.
   // Note: This requires the chrome ui to have been loaded with the signin
   // profile test extension key.
-  rpc SetEnabledOnBoot(SetEnabledOnBootRequest) returns (google.protobuf.Empty) {}
+  rpc SetEnabledOnBoot(SetEnabledOnBootRequest)
+      returns (google.protobuf.Empty) {}
 
   // SetDebugLogLevels sets the debug log level.
   // Note: Setting log level is only supported for bluez at this time.
   rpc SetDebugLogLevels(SetDebugLogLevelsRequest)
       returns (google.protobuf.Empty) {}
+
+  // IsWBSSupported returns true if the adapter supports Wide-Band Speech (WBS).
+  rpc IsWBSSupported(google.protobuf.Empty) returns (IsWBSSupportedResponse) {}
+
+  // IsSWBSupported returns true if the adapter supports SWB.
+  rpc IsSWBSupported(google.protobuf.Empty) returns (IsSWBSupportedResponse) {}
 }
 
 enum BluetoothStackType {
@@ -200,91 +214,52 @@ message BluetoothDeviceProperties {
   bool paired = 5;
 }
 
+message SetBluetoothStackRequest { BluetoothStackType stackType = 1; }
 
-message SetBluetoothStackRequest {
-  BluetoothStackType stackType = 1;
-}
+message StackTypeResponse { BluetoothStackType stackType = 1; }
 
-message StackTypeResponse {
-  BluetoothStackType stackType = 1;
-}
-
-message ResetRequest {
-  bool powerOn = 1;
-}
+message ResetRequest { bool powerOn = 1; }
 
 message AdapterPropertiesResponse {
   BluetoothAdapterProperties adapterProperties = 1;
 }
 
-message IsPoweredOnResponse {
-  bool isPoweredOn = 1;
-}
+message IsPoweredOnResponse { bool isPoweredOn = 1; }
 
-message SetPoweredRequest {
-  bool powered = 1;
-}
+message SetPoweredRequest { bool powered = 1; }
 
-message IsDiscoveringResponse {
-  bool isDiscovering = 1;
-}
+message IsDiscoveringResponse { bool isDiscovering = 1; }
 
-message IsDiscoverableResponse {
-  bool isDiscoverable = 1;
-}
+message IsDiscoverableResponse { bool isDiscoverable = 1; }
 
-message SetDiscoverableRequest {
-  bool discoverable = 1;
-}
+message SetDiscoverableRequest { bool discoverable = 1; }
 
 message SetDiscoverableWithTimeoutRequest {
   bool discoverable = 1;
   uint32 timeoutSeconds = 2;
 }
 
-message IsPairableResponse {
-  bool isPairable = 1;
-}
+message IsPairableResponse { bool isPairable = 1; }
 
-message SetPairableRequest {
-  bool pairable = 1;
-}
+message SetPairableRequest { bool pairable = 1; }
 
-message AddressResponse {
-  string adapterAddress = 1;
-}
+message AddressResponse { string adapterAddress = 1; }
 
-message NameResponse {
-  string adapterName = 1;
-}
+message NameResponse { string adapterName = 1; }
 
-message UUIDsResponse {
-  repeated string adapterUUIDs = 1;
-}
+message UUIDsResponse { repeated string adapterUUIDs = 1; }
 
-message DevicesResponse {
-  repeated string knownDeviceAddresses = 1;
-}
+message DevicesResponse { repeated string knownDeviceAddresses = 1; }
 
-message HasDeviceRequest {
-  string deviceAddress = 1;
-}
+message HasDeviceRequest { string deviceAddress = 1; }
 
-message HasDeviceResponse {
-  bool hasDevice = 1;
-}
+message HasDeviceResponse { bool hasDevice = 1; }
 
-message RemoveDeviceRequest {
-  string deviceAddress = 1;
-}
+message RemoveDeviceRequest { string deviceAddress = 1; }
 
-message ConnectDeviceRequest {
-  string deviceAddress = 1;
-}
+message ConnectDeviceRequest { string deviceAddress = 1; }
 
-message DisconnectDeviceRequest {
-  string deviceAddress = 1;
-}
+message DisconnectDeviceRequest { string deviceAddress = 1; }
 
 message WaitForConnectStateRequest {
   string deviceAddress = 1;
@@ -292,53 +267,31 @@ message WaitForConnectStateRequest {
   optional google.protobuf.Duration timeout = 3;
 }
 
-message DevicePropertiesRequest {
-  string deviceAddress = 1;
-}
+message DevicePropertiesRequest { string deviceAddress = 1; }
 
 message DevicePropertiesResponse {
   BluetoothDeviceProperties deviceProperties = 1;
 }
 
-message DeviceIsConnectedRequest {
-  string deviceAddress = 1;
-}
+message DeviceIsConnectedRequest { string deviceAddress = 1; }
 
-message DeviceIsConnectedResponse {
-  bool deviceIsConnected = 1;
-}
+message DeviceIsConnectedResponse { bool deviceIsConnected = 1; }
 
-message DeviceIsPairedRequest {
-  string deviceAddress = 1;
-}
+message DeviceIsPairedRequest { string deviceAddress = 1; }
 
-message DeviceIsPairedResponse {
-  bool deviceIsPaired = 1;
-}
+message DeviceIsPairedResponse { bool deviceIsPaired = 1; }
 
-message DeviceAddressRequest {
-  string deviceName = 1;
-}
+message DeviceAddressRequest { string deviceName = 1; }
 
-message DeviceAddressResponse {
-  string deviceAddress = 1;
-}
+message DeviceAddressResponse { string deviceAddress = 1; }
 
-message DeviceNameRequest {
-  string deviceAddress = 1;
-}
+message DeviceNameRequest { string deviceAddress = 1; }
 
-message DeviceNameResponse {
-  string deviceName = 1;
-}
+message DeviceNameResponse { string deviceName = 1; }
 
-message DeviceAliasRequest {
-  string deviceAddress = 1;
-}
+message DeviceAliasRequest { string deviceAddress = 1; }
 
-message DeviceAliasResponse {
-  string deviceAlias = 1;
-}
+message DeviceAliasResponse { string deviceAlias = 1; }
 
 message DiscoverDeviceRequest {
   reserved 2;
@@ -351,14 +304,12 @@ message PairDeviceRequest {
   string pin = 2;
 }
 
-message EnabledOnBootResponse {
-  bool adapter_enabled_on_boot = 1;
-}
+message EnabledOnBootResponse { bool adapter_enabled_on_boot = 1; }
 
-message SetEnabledOnBootRequest {
-  bool adapter_enabled_on_boot = 1;
-}
+message SetEnabledOnBootRequest { bool adapter_enabled_on_boot = 1; }
 
-message SetDebugLogLevelsRequest {
-  uint32 level = 1;
-}
+message SetDebugLogLevelsRequest { uint32 level = 1; }
+
+message IsWBSSupportedResponse { bool wbs_supported = 1; }
+
+message IsSWBSupportedResponse { bool swb_supported = 1; }
