@@ -9,14 +9,17 @@ import (
 	"fmt"
 	"net"
 	"runtime"
+	"strings"
 	"syscall"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/shillconst"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -32,6 +35,15 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Params: []testing.Param{
+			{
+				Val: false,
+			},
+			{
+				Name: "vpn_lockdown",
+				Val:  true,
+			},
+		},
 	})
 }
 
@@ -40,6 +52,7 @@ type routingTagSocketAPITestCase struct {
 	l4serverEnv   *virtualnet.Env // where the l4server should be running
 	uid           int             // socket owner
 	tagSocketOpts []patchpanel.TagSocketOption
+	expectBlocked bool // whether the connection should be blocked
 }
 
 // RoutingTagSocketAPI will set up a network topology with the virtualnet
@@ -55,19 +68,37 @@ type routingTagSocketAPITestCase struct {
 // (high priority), eth_base (low priority), and vpn. server_vpn_private is only
 // reachable from the vpn server set up in router_test.
 //
+// In the VPN lockdown test, VPN server will be set up but the service property
+// will be modified so that the connection cannot be established.
+//
 // To verify that "call TagSocket on a socket will make the packets from this
 // socket routed on a specific network", this test will set up a TCP/UDP server
 // on the corresponding env only reachable from the specific network (default
 // route is required to reach them), and verify that the connection can be
 // established.
 //
+// To verify that "connection will be blocked in the VPN lockdown mode", this
+// test will set up TCP/UDP server on the env which is supposed to be reachable
+// without the VPN lockdown, and verify that the connection cannot be
+// established.
+//
 // Subtest is used in this test since they share the same set up code, but the
 // set up code is too specified to have a fixture for it.
 func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
+	isVPNLockdownTest := s.Param().(bool)
+
 	// Use a shortened context for test operations to reserve time for cleanup.
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	// Use test profile here since setting always-on VPN in the default profile
+	// may be hard to recover in the worst case.
+	popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
+	if err != nil {
+		s.Fatal("Failed to push test profile: ", err)
+	}
+	defer popFunc(cleanupCtx)
 
 	testEnv := routing.NewTestEnv()
 	if err := testEnv.SetUp(ctx); err != nil {
@@ -101,7 +132,11 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 	}
 
 	vpnEnv := testEnv.TestRouter
-	vpnConn, err := vpn.StartConnection(ctx, vpnEnv, vpn.TypeIKEv2, vpn.WithIPType(vpn.IPTypeIPv4AndIPv6))
+	vpnOpts := []vpn.Option{vpn.WithIPType(vpn.IPTypeIPv4AndIPv6)}
+	if isVPNLockdownTest {
+		vpnOpts = append(vpnOpts, vpn.WithoutAutoConnect())
+	}
+	vpnConn, err := vpn.StartConnection(ctx, testEnv.TestRouter, vpn.TypeIKEv2, vpnOpts...)
 	if err != nil {
 		s.Fatal("Failed to setup VPN connection: ", err)
 	}
@@ -120,6 +155,31 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 			s.Log("Failed to tear down env private to VPN: ", err)
 		}
 	}()
+
+	if isVPNLockdownTest {
+		// Reset VPN credentials so that it cannot connect.
+		if err := vpnConn.Service().ClearProperty(ctx, "IKEv2.PSK"); err != nil {
+			s.Fatal("Failed to reset VPN credentials: ", err)
+		}
+
+		cleanupFunc, err := vpn.SetAlwaysOnVPN(ctx, shillconst.AlwaysOnVPNModeStrict, vpnConn.Service())
+		if err != nil {
+			s.Fatal("Failed to configure VPN lockdown mode: ", err)
+		}
+		defer cleanupFunc(cleanupCtx)
+
+		const vpnConnectedTimeout = 2 * time.Second
+		s.Logf("Wait for %v seconds to make sure VPN won't become connected", vpnConnectedTimeout.Seconds())
+		// GoBigSleepLint: We want to make sure that VPN won't become connected
+		// during this period, so cannot use a pool here.
+		testing.Sleep(ctx, vpnConnectedTimeout)
+
+		if connected, err := vpnConn.Service().IsConnected(ctx); err != nil {
+			s.Fatal("Failed to get VPN service state: ", err)
+		} else if connected {
+			s.Fatal("VPN service is connected unexpected")
+		}
+	}
 
 	// TODO(b/322083502): Change to use network_id when it is ready.
 	getIfIdx := func(ifname string) int {
@@ -140,11 +200,6 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 
 	// Network ids used in the test cases.
 	lowPrioNetworkIndex := getIfIdx(testEnv.BaseRouter.VethOutName)
-	vpnIfname, err := vpnConn.Service().GetDeviceInterface(ctx)
-	if err != nil {
-		s.Fatal("Failed to get interface name for VPN: ", err)
-	}
-	vpnNetworkIndex := getIfIdx(vpnIfname)
 
 	// Envs for setting up the l4servers in the test cases.
 	lowPrioNetworkServerEnv := testEnv.BaseServer
@@ -160,48 +215,105 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 		return port
 	}
 
-	for _, tc := range []routingTagSocketAPITestCase{
-		{
-			desc:        "system traffic will be routed to low priority network with setting network_id",
-			l4serverEnv: lowPrioNetworkServerEnv,
-			uid:         rootUID,
-			tagSocketOpts: []patchpanel.TagSocketOption{
-				patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+	var tcs []routingTagSocketAPITestCase
+	if !isVPNLockdownTest {
+		vpnIfname, err := vpnConn.Service().GetDeviceInterface(ctx)
+		if err != nil {
+			s.Fatal("Failed to get interface name for VPN: ", err)
+		}
+		vpnNetworkIndex := getIfIdx(vpnIfname)
+
+		tcs = []routingTagSocketAPITestCase{
+			{
+				desc:        "system traffic will be routed to low priority network with setting network_id",
+				l4serverEnv: lowPrioNetworkServerEnv,
+				uid:         rootUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+				},
 			},
-		},
-		{
-			desc:        "user traffic will be routed to low priority network with setting network_id",
-			l4serverEnv: lowPrioNetworkServerEnv,
-			uid:         chronosUID,
-			tagSocketOpts: []patchpanel.TagSocketOption{
-				patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+			{
+				desc:        "user traffic will be routed to low priority network with setting network_id",
+				l4serverEnv: lowPrioNetworkServerEnv,
+				uid:         chronosUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+				},
 			},
-		},
-		{
-			desc:        "system traffic will be routed to vpn with setting network_id",
-			l4serverEnv: vpnReachableServerEnv,
-			uid:         rootUID,
-			tagSocketOpts: []patchpanel.TagSocketOption{
-				patchpanel.WithTagSocketNetworkID(vpnNetworkIndex),
+			{
+				desc:        "system traffic will be routed to vpn with setting network_id",
+				l4serverEnv: vpnReachableServerEnv,
+				uid:         rootUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketNetworkID(vpnNetworkIndex),
+				},
 			},
-		},
-		{
-			desc:        "system traffic will be routed to vpn with policy=ROUTE_ON_VPN",
-			l4serverEnv: vpnReachableServerEnv,
-			uid:         rootUID,
-			tagSocketOpts: []patchpanel.TagSocketOption{
-				patchpanel.WithTagSocketRouteOnVPN(),
+			{
+				desc:        "system traffic will be routed to vpn with policy=ROUTE_ON_VPN",
+				l4serverEnv: vpnReachableServerEnv,
+				uid:         rootUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketRouteOnVPN(),
+				},
 			},
-		},
-		{
-			desc:        "user traffic will be routed to high priority network with policy=BYPASS_VPN",
-			l4serverEnv: highPrioNetworkServerEnv,
-			uid:         chronosUID,
-			tagSocketOpts: []patchpanel.TagSocketOption{
-				patchpanel.WithTagSocketBypassVPN(),
+			{
+				desc:        "user traffic will be routed to high priority network with policy=BYPASS_VPN",
+				l4serverEnv: highPrioNetworkServerEnv,
+				uid:         chronosUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketBypassVPN(),
+				},
 			},
-		},
-	} {
+		}
+	} else {
+		tcs = []routingTagSocketAPITestCase{
+			{
+				desc:        "system traffic will be routed to low priority network with setting network_id",
+				l4serverEnv: lowPrioNetworkServerEnv,
+				uid:         rootUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+				},
+			},
+			{
+				desc:        "user traffic will be blocked with setting network_id",
+				l4serverEnv: lowPrioNetworkServerEnv,
+				uid:         chronosUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+				},
+				expectBlocked: true,
+			},
+			{
+				desc:        "system traffic will be blocked with policy=ROUTE_ON_VPN",
+				l4serverEnv: highPrioNetworkServerEnv,
+				uid:         rootUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketRouteOnVPN(),
+				},
+				expectBlocked: true,
+			},
+			{
+				desc:        "user traffic will be routed to high priority network with policy=BYPASS_VPN",
+				l4serverEnv: highPrioNetworkServerEnv,
+				uid:         chronosUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketBypassVPN(),
+				},
+			},
+			{
+				desc:        "user traffic will be routed to low priority network with setting network_id and policy=BYPASS_VPN",
+				l4serverEnv: lowPrioNetworkServerEnv,
+				uid:         chronosUID,
+				tagSocketOpts: []patchpanel.TagSocketOption{
+					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
+					patchpanel.WithTagSocketBypassVPN(),
+				},
+			},
+		}
+	}
+
+	for _, tc := range tcs {
 		s.Run(ctx, tc.desc, func(ctx context.Context, s *testing.State) {
 			if err := testConnect(ctx, tc, getNextPort); err != nil {
 				s.Error("Failed to verify socket connection: ", err)
@@ -219,6 +331,8 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 		return errors.Wrap(err, "failed to get IP addrs from the base server")
 	}
 
+	isTCP := func(f l4server.Family) bool { return f == l4server.TCP4 || f == l4server.TCP6 }
+
 	for _, family := range []l4server.Family{l4server.TCP4, l4server.TCP6, l4server.UDP4, l4server.UDP6} {
 		port := getPort()
 
@@ -235,7 +349,16 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 		testing.ContextLogf(ctx, "Verifying %s connection to %s", family, peerSocketAddr)
 
 		conn, err := dialWithTagSocket(ctx, family.String(), peerSocketAddr, tc.uid, tc.tagSocketOpts...)
-		if err != nil {
+		if tc.expectBlocked && isTCP(family) {
+			// TCP will fail at connect().
+			if err == nil {
+				return errors.New("unexpected connect success")
+			}
+			if !strings.Contains(err.Error(), "connection refused") {
+				return errors.Wrap(err, "got unexpected connect error")
+			}
+			continue // to the test for the next family
+		} else if err != nil {
 			return errors.Wrap(err, "failed to create socket connection")
 		}
 
@@ -244,7 +367,17 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 		if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
 			return errors.Wrap(err, "failed to set write deadline on connection")
 		}
-		if _, err := conn.Write([]byte(msg)); err != nil {
+		_, err = conn.Write([]byte(msg))
+		if tc.expectBlocked && !isTCP(family) {
+			// UDP will fail when sending the first packet.
+			if err == nil {
+				return errors.New("unexpected write success")
+			}
+			if !strings.Contains(err.Error(), "operation not permitted") {
+				return errors.Wrap(err, "got unexpected write error")
+			}
+			continue // to the test for the next family
+		} else if err != nil {
 			return errors.Wrap(err, "failed to write")
 		}
 
