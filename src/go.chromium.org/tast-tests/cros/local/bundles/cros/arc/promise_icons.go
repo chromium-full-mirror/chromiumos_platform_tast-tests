@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies that a Play Store installation creates a promise icon in Launcher",
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
-			"vpao@google.com",
+			"mattlui@google.com",
 		},
 		BugComponent: "b:1203766",
 		Attr:         []string{"group:mainline", "informational"},
@@ -50,9 +50,9 @@ func init() {
 // PromiseIcons test checks for the presence of a promise icon in the Launcher when a Play Store installation starts.
 func PromiseIcons(ctx context.Context, s *testing.State) {
 	const (
-		packageName     = "com.netease.mrzhna"
-		waitingLabel    = "LifeAfter, waiting"
-		installingLabel = "LifeAfter, installing"
+		packageName     = "com.supercell.brawlstars"
+		waitingLabel    = "Brawl Stars, waiting"
+		installingLabel = "Brawl Stars, installing"
 	)
 
 	cr := s.FixtValue().(*arc.PreData).Chrome
