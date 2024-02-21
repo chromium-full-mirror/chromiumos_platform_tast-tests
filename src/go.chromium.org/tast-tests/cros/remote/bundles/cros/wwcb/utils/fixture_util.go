@@ -134,6 +134,10 @@ func InitFixture(ctx context.Context) error {
 
 	// Retrieve the fixture information from each serial port.
 	for _, port := range ports {
+		// Only use serial ports containing ACM*, e.g. /dev/ttyACM0
+		if !strings.Contains(port, "ACM") {
+			continue
+		}
 		resp, err := requestSerialPort(ctx, port, "i")
 		if err != nil {
 			return errors.Wrap(err, "request serial port")
