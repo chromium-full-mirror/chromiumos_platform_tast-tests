@@ -33,12 +33,6 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           2 * time.Minute,
-			}, {
-				Name:              "lowperf",
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           2 * time.Minute,
 			},
 		},
 	})

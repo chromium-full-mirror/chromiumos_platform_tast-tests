@@ -19,10 +19,11 @@ import (
 func TestCrostiniConnectivityParams(t *testing.T) {
 	params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 		{
-			Name:          "arc_crostini",
-			UseFixture:    true,
-			RequiresARC:   true,
-			IsNotMainline: true,
+			Name:             "arc_crostini",
+			UseFixture:       true,
+			RequiresARC:      true,
+			IsNotMainline:    true,
+			OnlyStableBoards: true,
 		},
 	})
 	genparams.Ensure(t, "logout_perf.go", params)

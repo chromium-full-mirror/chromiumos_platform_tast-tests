@@ -26,8 +26,8 @@ func TestSecureCopyPasteParams(t *testing.T) {
 				app:     "secure_copy.py",
 				action:  copying,
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}, {
 			Name:      "copy_x11",
 			ExtraData: []string{"secure_copy.py"},
@@ -36,8 +36,8 @@ func TestSecureCopyPasteParams(t *testing.T) {
 				app:     "secure_copy.py",
 				action:  copying,
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}, {
 			Name:      "paste_wayland",
 			ExtraData: []string{"secure_paste.py"},
@@ -46,8 +46,8 @@ func TestSecureCopyPasteParams(t *testing.T) {
 				app:     "secure_paste.py",
 				action:  pasting,
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}, {
 			Name:      "paste_x11",
 			ExtraData: []string{"secure_paste.py"},
@@ -56,8 +56,8 @@ func TestSecureCopyPasteParams(t *testing.T) {
 				app:     "secure_paste.py",
 				action:  pasting,
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}})
 	genparams.Ensure(t, "secure_copy_paste.go", params)
 }

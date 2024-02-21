@@ -70,13 +70,6 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Timeout:           20 * time.Minute,
 				Val:               vm.DebianBullseye,
-			}, {
-				Name:              "lowperf",
-				ExtraData:         []string{crostini.GetContainerMetadataArtifact("bullseye", false), crostini.GetContainerRootfsArtifact("bullseye", false)},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Timeout:           20 * time.Minute,
-				Val:               vm.DebianBullseye,
 			},
 		},
 	})

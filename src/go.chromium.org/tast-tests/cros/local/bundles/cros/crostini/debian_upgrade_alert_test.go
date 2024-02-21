@@ -23,7 +23,7 @@ func TestDebianUpgradeAlertParams(t *testing.T) {
 		MinimalSet:         true,
 		SelfManagedInstall: false,
 		UseFixture:         true,
-		LowPerfEligible:    true,
+		OnlyStableBoards:   true,
 	}})
 	genparams.Ensure(t, "debian_upgrade_alert.go", params)
 }

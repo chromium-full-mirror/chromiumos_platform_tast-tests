@@ -37,24 +37,10 @@ func init() {
 				Timeout:           3 * time.Minute,
 				Val:               browser.TypeAsh,
 			}, {
-				Name:              "bullseye_lowperf",
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           3 * time.Minute,
-				Val:               browser.TypeAsh,
-			}, {
 				Name:              "bookworm_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           3 * time.Minute,
-				Val:               browser.TypeAsh,
-			}, {
-				Name:              "bookworm_lowperf",
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           3 * time.Minute,
 				Val:               browser.TypeAsh,
 			}, {

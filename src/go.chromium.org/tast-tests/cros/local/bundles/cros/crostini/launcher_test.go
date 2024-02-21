@@ -28,8 +28,8 @@ func TestLauncherParams(t *testing.T) {
 				installRoot: ".local",
 				launcherID:  "ddlengdehbebnlegdnllbdhpjofodekl",
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}, {
 			Name:      "local_x11",
 			ExtraData: []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
@@ -40,8 +40,8 @@ func TestLauncherParams(t *testing.T) {
 				installRoot: ".local",
 				launcherID:  "mddfmcdnhpnhoefmmiochnnjofmfhanb",
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}, {
 			Name:      "system_wayland",
 			ExtraData: []string{"launcher_wayland_demo_fixed_size.desktop", "launcher_wayland_demo.png"},
@@ -52,8 +52,8 @@ func TestLauncherParams(t *testing.T) {
 				installRoot: "/usr",
 				launcherID:  "ddlengdehbebnlegdnllbdhpjofodekl",
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}, {
 			Name:      "system_x11",
 			ExtraData: []string{"launcher_x11_demo_fixed_size.desktop", "launcher_x11_demo.png"},
@@ -64,8 +64,8 @@ func TestLauncherParams(t *testing.T) {
 				installRoot: "/usr",
 				launcherID:  "mddfmcdnhpnhoefmmiochnnjofmfhanb",
 			}`,
-			UseFixture:      true,
-			LowPerfEligible: true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
 		}})
 	genparams.Ensure(t, "launcher.go", params)
 }

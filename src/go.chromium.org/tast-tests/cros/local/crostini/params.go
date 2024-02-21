@@ -299,7 +299,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 				name = combineName(name, testCase.IMEName)
 			}
 
-			if !testCase.IsNotMainline && !testCase.OnlyStableBoards {
+			if !testCase.IsNotMainline {
 				if i.stable {
 					name = combineName(name, "stable")
 				} else if testCase.LowPerfEligible {
@@ -352,7 +352,7 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 					}
 				} else {
 					if i.stable {
-						hardwareDeps = "crostini.CrostiniStable"
+						hardwareDeps = "crostini.CrostiniOptimalPerf"
 					} else {
 						hardwareDeps = "crostini.CrostiniUnstable"
 					}

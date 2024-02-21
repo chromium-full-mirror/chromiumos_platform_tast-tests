@@ -104,10 +104,10 @@ func TestFixTestParams(t *testing.T) {
 			customTimeout = DefaultStandardTimeout
 		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:         customTimeout,
-			UseFixture:      true,
-			LowPerfEligible: true,
-			RequiresARC:     options.requiresARC,
+			Timeout:          customTimeout,
+			UseFixture:       true,
+			OnlyStableBoards: true,
+			RequiresARC:      options.requiresARC,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -121,11 +121,11 @@ var lacrosTests = []string{
 func TestLacrosTestParams(t *testing.T) {
 	for _, filename := range lacrosTests {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:         3 * time.Minute,
-			UseFixture:      true,
-			TestLacros:      true,
-			Val:             "browser.TypeAsh",
-			LowPerfEligible: true,
+			Timeout:          3 * time.Minute,
+			UseFixture:       true,
+			TestLacros:       true,
+			Val:              "browser.TypeAsh",
+			OnlyStableBoards: true,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
@@ -193,6 +193,7 @@ func TestAppTestParams(t *testing.T) {
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
+				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
 				MinimumContainerVersion: vm.DebianBullseye,
 				CriticalStaging:         options.criticalStaging,
@@ -223,6 +224,7 @@ func TestAppWindowOperationsTestParams(t *testing.T) {
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
+				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
 				MinimumContainerVersion: vm.DebianBullseye,
 				CriticalStaging:         options.criticalStaging,
@@ -234,6 +236,7 @@ func TestAppWindowOperationsTestParams(t *testing.T) {
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
+				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
 				MinimumContainerVersion: vm.DebianBullseye,
 				CriticalStaging:         options.criticalStaging,
@@ -245,6 +248,7 @@ func TestAppWindowOperationsTestParams(t *testing.T) {
 				ExtraSoftwareDeps:       []string{"crostini_app"},
 				UseLargeContainer:       true,
 				UseFixture:              true,
+				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
 				MinimumContainerVersion: vm.DebianBullseye,
 				CriticalStaging:         options.criticalStaging,
@@ -275,6 +279,7 @@ func TestAppIMELanguageTestParams(t *testing.T) {
 			ExtraSoftwareDeps: []string{"crostini_app"},
 			UseLargeContainer: true,
 			UseFixture:        true,
+			OnlyStableBoards:  true,
 			IMEName:           imeName,
 			Val:               "\"" + imeName + "\"",
 		})
@@ -299,11 +304,11 @@ func TestGaiaTestParams(t *testing.T) {
 			customTimeout = DefaultStandardTimeout
 		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:         customTimeout,
-			UseGaiaLogin:    true,
-			UseFixture:      true,
-			LowPerfEligible: true,
-			RequiresARC:     options.requiresARC,
+			Timeout:          customTimeout,
+			UseGaiaLogin:     true,
+			UseFixture:       true,
+			OnlyStableBoards: true,
+			RequiresARC:      options.requiresARC,
 		}})
 		genparams.Ensure(t, filename, params)
 	}

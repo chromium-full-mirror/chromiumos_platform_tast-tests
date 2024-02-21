@@ -47,22 +47,10 @@ func init() {
 				Fixture:           "crostiniBullseyeGaia",
 				Timeout:           7 * time.Minute,
 			}, {
-				Name:              "bullseye_lowperf_gaia",
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeGaiaWithoutArc",
-				Timeout:           7 * time.Minute,
-			}, {
 				Name:              "bookworm_stable_gaia",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookwormGaia",
-				Timeout:           7 * time.Minute,
-			}, {
-				Name:              "bookworm_lowperf_gaia",
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormGaiaWithoutArc",
 				Timeout:           7 * time.Minute,
 			},
 		},

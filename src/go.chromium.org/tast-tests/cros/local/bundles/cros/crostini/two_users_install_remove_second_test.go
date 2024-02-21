@@ -22,7 +22,7 @@ func TestTwoUsersInstallRemoveSecondParams(t *testing.T) {
 		Timeout:            14 * time.Minute,
 		SelfManagedInstall: true,
 		MinimalSet:         true,
-		LowPerfEligible:    true,
+		OnlyStableBoards:   true,
 	}})
 	genparams.Ensure(t, "two_users_install_remove_second.go", params)
 }

@@ -22,7 +22,7 @@ func TestCheckValidUsersParams(t *testing.T) {
 		Timeout:            20 * time.Minute,
 		MinimalSet:         true,
 		SelfManagedInstall: true,
-		LowPerfEligible:    true,
+		OnlyStableBoards:   true,
 	}})
 	genparams.Ensure(t, "check_valid_users.go", params)
 }

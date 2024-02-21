@@ -34,7 +34,7 @@ func init() {
 			{
 				Name:              "stable",
 				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniStable,
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           7 * time.Minute,
 			}, {

@@ -38,33 +38,11 @@ func init() {
 					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
-				Name:              "gtk3_wayland_bullseye_lowperf",
-				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_gtk3_demo.py",
-					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
-				},
-			}, {
 				Name:              "gtk3_wayland_bookworm_stable",
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_gtk3_demo.py",
-					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk3_demo.py"},
-				},
-			}, {
-				Name:              "gtk3_wayland_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_gtk3_demo.py",
@@ -82,33 +60,11 @@ func init() {
 					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
 				},
 			}, {
-				Name:              "gtk3_x11_bullseye_lowperf",
-				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_gtk3_demo.py",
-					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
-				},
-			}, {
 				Name:              "gtk3_x11_bookworm_stable",
 				ExtraData:         []string{"toolkit_gtk3_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_gtk3_demo.py",
-					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk3_demo.py"},
-				},
-			}, {
-				Name:              "gtk3_x11_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_gtk3_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_gtk3_demo.py",
@@ -126,33 +82,11 @@ func init() {
 					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk4_demo.py"},
 				},
 			}, {
-				Name:              "gtk4_wayland_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_gtk4_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_gtk4_demo.py",
-					Command: []string{"env", "GDK_BACKEND=wayland", "python3", "toolkit_gtk4_demo.py"},
-				},
-			}, {
 				Name:              "gtk4_x11_bookworm_stable",
 				ExtraData:         []string{"toolkit_gtk4_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_gtk4_demo.py",
-					Command: []string{"env", "GDK_BACKEND=x11", "python3", "toolkit_gtk4_demo.py"},
-				},
-			}, {
-				Name:              "gtk4_x11_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_gtk4_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_gtk4_demo.py",
@@ -170,33 +104,11 @@ func init() {
 					Command: []string{"python3", "toolkit_qt5_demo.py"},
 				},
 			}, {
-				Name:              "qt5_x11_bullseye_lowperf",
-				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_qt5_demo.py",
-					Command: []string{"python3", "toolkit_qt5_demo.py"},
-				},
-			}, {
 				Name:              "qt5_x11_bookworm_stable",
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_qt5_demo.py",
-					Command: []string{"python3", "toolkit_qt5_demo.py"},
-				},
-			}, {
-				Name:              "qt5_x11_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_qt5_demo.py",
@@ -215,36 +127,12 @@ func init() {
 					Command: []string{"python3", "toolkit_qt5_demo.py"},
 				},
 			}, {
-				Name:              "qt5_wayland_bullseye_lowperf",
-				ExtraAttr:         []string{"informational"},
-				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_qt5_demo.py",
-					Command: []string{"python3", "toolkit_qt5_demo.py"},
-				},
-			}, {
 				Name:              "qt5_wayland_bookworm_stable",
 				ExtraAttr:         []string{"informational"},
 				ExtraData:         []string{"toolkit_qt5_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_qt5_demo.py",
-					Command: []string{"python3", "toolkit_qt5_demo.py"},
-				},
-			}, {
-				Name:              "qt5_wayland_bookworm_lowperf",
-				ExtraAttr:         []string{"informational"},
-				ExtraData:         []string{"toolkit_qt5_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_qt5_demo.py",
@@ -262,33 +150,11 @@ func init() {
 					Command: []string{"python3", "toolkit_qt6_demo.py"},
 				},
 			}, {
-				Name:              "qt6_x11_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_qt6_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_qt6_demo.py",
-					Command: []string{"python3", "toolkit_qt6_demo.py"},
-				},
-			}, {
 				Name:              "qt6_wayland_bookworm_stable",
 				ExtraData:         []string{"toolkit_qt6_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_qt6_demo.py",
-					Command: []string{"python3", "toolkit_qt6_demo.py"},
-				},
-			}, {
-				Name:              "qt6_wayland_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_qt6_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_qt6_demo.py",
@@ -306,33 +172,11 @@ func init() {
 					Command: []string{"python3", "toolkit_tkinter_demo.py"},
 				},
 			}, {
-				Name:              "tkinter_bullseye_lowperf",
-				ExtraData:         []string{"toolkit_tkinter_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_tkinter_demo.py",
-					Command: []string{"python3", "toolkit_tkinter_demo.py"},
-				},
-			}, {
 				Name:              "tkinter_bookworm_stable",
 				ExtraData:         []string{"toolkit_tkinter_demo.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: guestos.ToolkitConfig{
-					Data:    "toolkit_tkinter_demo.py",
-					Command: []string{"python3", "toolkit_tkinter_demo.py"},
-				},
-			}, {
-				Name:              "tkinter_bookworm_lowperf",
-				ExtraData:         []string{"toolkit_tkinter_demo.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: guestos.ToolkitConfig{
 					Data:    "toolkit_tkinter_demo.py",

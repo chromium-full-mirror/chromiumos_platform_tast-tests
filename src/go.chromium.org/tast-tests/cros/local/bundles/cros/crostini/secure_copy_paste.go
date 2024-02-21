@@ -62,35 +62,11 @@ func init() {
 					action:  copying,
 				},
 			}, {
-				Name:              "copy_wayland_bullseye_lowperf",
-				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "wayland",
-					app:     "secure_copy.py",
-					action:  copying,
-				},
-			}, {
 				Name:              "copy_wayland_bookworm_stable",
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "wayland",
-					app:     "secure_copy.py",
-					action:  copying,
-				},
-			}, {
-				Name:              "copy_wayland_bookworm_lowperf",
-				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: secureCopyPasteConfig{
 					backend: "wayland",
@@ -110,35 +86,11 @@ func init() {
 					action:  copying,
 				},
 			}, {
-				Name:              "copy_x11_bullseye_lowperf",
-				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "x11",
-					app:     "secure_copy.py",
-					action:  copying,
-				},
-			}, {
 				Name:              "copy_x11_bookworm_stable",
 				ExtraData:         []string{"secure_copy.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "x11",
-					app:     "secure_copy.py",
-					action:  copying,
-				},
-			}, {
-				Name:              "copy_x11_bookworm_lowperf",
-				ExtraData:         []string{"secure_copy.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: secureCopyPasteConfig{
 					backend: "x11",
@@ -158,35 +110,11 @@ func init() {
 					action:  pasting,
 				},
 			}, {
-				Name:              "paste_wayland_bullseye_lowperf",
-				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "wayland",
-					app:     "secure_paste.py",
-					action:  pasting,
-				},
-			}, {
 				Name:              "paste_wayland_bookworm_stable",
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "wayland",
-					app:     "secure_paste.py",
-					action:  pasting,
-				},
-			}, {
-				Name:              "paste_wayland_bookworm_lowperf",
-				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: secureCopyPasteConfig{
 					backend: "wayland",
@@ -206,35 +134,11 @@ func init() {
 					action:  pasting,
 				},
 			}, {
-				Name:              "paste_x11_bullseye_lowperf",
-				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBullseyeWithoutArc",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "x11",
-					app:     "secure_paste.py",
-					action:  pasting,
-				},
-			}, {
 				Name:              "paste_x11_bookworm_stable",
 				ExtraData:         []string{"secure_paste.py"},
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
-				Timeout:           7 * time.Minute,
-				Val: secureCopyPasteConfig{
-					backend: "x11",
-					app:     "secure_paste.py",
-					action:  pasting,
-				},
-			}, {
-				Name:              "paste_x11_bookworm_lowperf",
-				ExtraData:         []string{"secure_paste.py"},
-				ExtraSoftwareDeps: []string{"dlc"},
-				ExtraHardwareDeps: crostini.CrostiniLowPerf,
-				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           7 * time.Minute,
 				Val: secureCopyPasteConfig{
 					backend: "x11",
