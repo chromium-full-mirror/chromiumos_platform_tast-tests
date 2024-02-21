@@ -41,7 +41,7 @@ const (
 	roamDiagnosticsScanCount                = 2
 
 	roamDiagnosticsRoamTimeout  = 5 * time.Second
-	roamDiagnosticsScansTimeout = 10 * time.Second
+	roamDiagnosticsScansTimeout = 15 * time.Second
 
 	roamDiagnosticsLogFilePerm  os.FileMode = 0644
 	roamDiagnosticsLogFileFlags             = os.O_WRONLY | os.O_CREATE | os.O_TRUNC
