@@ -108,6 +108,11 @@ func TestFixTestParams(t *testing.T) {
 			Name:      "telus",
 			Val:       "telus",
 			ExtraAttr: []string{"cellular_carrier_telus"},
+		},
+		{
+			Name:      "rak",
+			Val:       "rak",
+			ExtraAttr: []string{"cellular_carrier_rak"},
 		},`
 	}
 
