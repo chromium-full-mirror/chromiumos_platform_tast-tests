@@ -193,7 +193,6 @@ func (s *Servo) SendDataSwapRequest(ctx context.Context) error {
 func (s *Servo) EnablePDConsoleDebug(ctx context.Context) error {
 	cmd := "pd dump 2"
 
-	testing.ContextLog(ctx, "Enabling PD Console Debug")
 	if err := s.RunECCommand(ctx, cmd); err != nil {
 		return errors.Wrap(err, "EC pd command failed")
 	}
@@ -205,7 +204,6 @@ func (s *Servo) EnablePDConsoleDebug(ctx context.Context) error {
 func (s *Servo) DisablePDConsoleDebug(ctx context.Context) error {
 	cmd := "pd dump 0"
 
-	testing.ContextLog(ctx, "Disabling PD Console Debug")
 	if err := s.RunECCommand(ctx, cmd); err != nil {
 		return errors.Wrap(err, "EC pd command failed")
 	}
