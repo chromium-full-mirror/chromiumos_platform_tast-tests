@@ -69,7 +69,8 @@ func init() {
 					Step:        true,
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture: "chromeRTCPerf",
+				Fixture:   "chromeRTCPerf",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "2p",

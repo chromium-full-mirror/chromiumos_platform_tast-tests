@@ -132,10 +132,12 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 	if err := pr.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}
+	checkPoint := pr.StartCheckpoint("idle")
 	// GoBigSleepLint: Sleep for profiling idle state.
 	if err := testing.Sleep(ctx, profileInterval); err != nil {
 		return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
 	}
+	pr.EndCheckpoint(checkPoint)
 
 	type stepConfig struct {
 		name    string
@@ -153,11 +155,13 @@ func runStep(ctx context.Context, conn *chrome.Conn, pr *power.Recorder) error {
 		if err := conn.Eval(ctx, step.evalStr, nil); err != nil {
 			return errors.Wrap(err, step.errMsg)
 		}
+		checkPoint := pr.StartCheckpoint(step.name)
 		testing.ContextLog(ctx, "Measuring performance metrics ", step.name)
 		// GoBigSleepLint: Sleep to measure the performance metrics
 		if err := testing.Sleep(ctx, profileInterval); err != nil {
 			return errors.Wrapf(err, "failed to sleep for %v", profileInterval)
 		}
+		pr.EndCheckpoint(checkPoint)
 	}
 	if err := pr.Finish(ctx); err != nil {
 		return errors.Wrap(err, "cannot finish collecting power metrics")
