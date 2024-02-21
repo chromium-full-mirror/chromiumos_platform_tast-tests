@@ -7,6 +7,7 @@ package uwb
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 	"time"
 
@@ -75,18 +76,25 @@ func (f *mixedPeerRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState
 	if mainHostName, ok := s.Var("uwb.mainHost"); ok {
 		fixtData.MainHost = mainHostName
 	} else {
-		fixtData.MainHost = s.DUT().HostName()
+		dutHost := s.DUT().HostName()
+		if host, _, err := net.SplitHostPort(dutHost); err == nil {
+			dutHost = host
+		}
+		fixtData.MainHost = dutHost
 	}
 
 	//Set crosHosts in FixtData
 	if crosHostsNames, ok := s.Var("uwb.crosHosts"); ok {
 		fixtData.CrosHosts = strings.Split(crosHostsNames, ",")
 	} else {
-		// We only support 1x1 setups now. So just get the name of the other CrOS
-		// companion DUT that's there until we need to expand.
+		// No crosHosts var passed in, just use host names directly from DUTs.
 		fixtData.CrosHosts = make([]string, len(s.CompanionDUTs()))
 		for _, dut := range s.CompanionDUTs() {
-			fixtData.CrosHosts = append(fixtData.CrosHosts, dut.HostName())
+			dutHost := dut.HostName()
+			if host, _, err := net.SplitHostPort(dutHost); err == nil {
+				dutHost = host
+			}
+			fixtData.CrosHosts = append(fixtData.CrosHosts, dutHost)
 		}
 	}
 
