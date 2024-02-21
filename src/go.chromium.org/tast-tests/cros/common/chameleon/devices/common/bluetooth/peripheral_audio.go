@@ -6,12 +6,119 @@ package bluetooth
 
 import (
 	"context"
-	"time"
+	"encoding/json"
 	"strconv"
+	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/xmlrpc"
 	"go.chromium.org/tast/core/errors"
 )
+
+// audioRecordingEntity will be the test data key Chameleond uses to get the
+// filename for audio file capturing. This was for the Tauto client
+// implementation, which is abstracted out in this implementation. Filenames
+// instead are just specified in passed AudioFile data.
+const audioRecordingEntity = "recorded_by_peer"
+
+// AudioConfig stores audio configuration values as used by SetAudioConfig.
+type AudioConfig struct {
+	// AudioServer is the audio server to use.
+	AudioServer AudioServer
+
+	// A2DPCodec is the A2DP audio codec to use.
+	A2DPCodec A2DPCodec
+
+	// HPCodec is the HFP audio codec to use.
+	HFPCodec HFPCodec
+}
+
+// Update will overwrite this config's values with any non-empty values in newConfig.
+func (ac *AudioConfig) Update(newConfig *AudioConfig) {
+	if newConfig.AudioServer != "" {
+		ac.AudioServer = newConfig.AudioServer
+	}
+	if newConfig.A2DPCodec != "" {
+		ac.A2DPCodec = newConfig.A2DPCodec
+	}
+	if newConfig.HFPCodec != "" {
+		ac.HFPCodec = newConfig.HFPCodec
+	}
+}
+
+// marshall returns the AudioConfig in the format Chameleond expects in method calls.
+func (ac *AudioConfig) marshall() map[string]string {
+	configMap := make(map[string]string)
+	if ac.AudioServer != "" {
+		configMap["audio_server"] = ac.AudioServer.String()
+	}
+	if ac.A2DPCodec != "" {
+		configMap["a2dp_codec"] = ac.A2DPCodec.String()
+	}
+	if ac.HFPCodec != "" {
+		configMap["hfp_codec"] = ac.HFPCodec.String()
+	}
+	return configMap
+}
+
+// String returns this audio config as a string for logging purposes.
+func (ac *AudioConfig) String() string {
+	configJSON, err := json.Marshal(ac.marshall())
+	if err != nil {
+		panic("failed to marshall AudioConfig map to JSON")
+	}
+	return string(configJSON)
+}
+
+// AudioFile describes an audio file on the chameleond host.
+type AudioFile struct {
+	// DeviceFile is the path to the file on the chameleond host.
+	DeviceFile string
+
+	// SampleFormat is the sample format to use with the audio file during
+	// playback or capturing.
+	//
+	// The value expected to be in the format pulseaudio (pacat) command or
+	// pipewire (pw-record) command expects. The value will be converted to
+	// lowercase and underscores will be replaced by spaces before using it on the
+	// chameleond server.
+	SampleFormat string
+
+	// SampleRate is the sample rate to use with the audio file during
+	// playback or capturing.
+	SampleRate int
+
+	// Channels is the amount of channels to use with the audio file during
+	// playback or capturing.
+	Channels int
+}
+
+// marshall returns the AudioFile in the format Chameleond expects in method calls.
+func (af *AudioFile) marshall() map[string]interface{} {
+	audioFileMap := make(map[string]interface{})
+	if af.DeviceFile != "" {
+		audioFileMap["device_file"] = af.DeviceFile
+	}
+	if af.SampleFormat != "" {
+		audioFileMap["format"] = af.SampleFormat
+	}
+	if af.SampleRate != 0 {
+		audioFileMap["rate"] = af.SampleRate
+	}
+	if af.Channels != 0 {
+		audioFileMap["channels"] = af.Channels
+	}
+	return audioFileMap
+}
+
+// String returns this audio file as a string for logging purposes.
+func (af *AudioFile) String() string {
+	audioFileJSON, err := json.Marshal(af.marshall())
+	if err != nil {
+		panic("failed to marshall AudioFile map to JSON")
+	}
+	return string(audioFileJSON)
+}
 
 // AudioPeripheral is an interface for making RPC calls to a chameleond daemon
 // targeting a specific bluetooth audio peripheral chameleon device flow.
@@ -68,7 +175,7 @@ type AudioPeripheral interface {
 
 	// SetAudioConfig calls the Chameleond RPC method of the same name.
 	// Sets the audio configuration.
-	SetAudioConfig(ctx context.Context, audioConfig map[string]string) error
+	SetAudioConfig(ctx context.Context, audioConfig *AudioConfig) error
 
 	// StartPulseaudio calls the Chameleond RPC method of the same name.
 	// Starts the pulseaudio process.
@@ -92,7 +199,7 @@ type AudioPeripheral interface {
 
 	// StartPlayingAudioSubprocess calls the Chameleond RPC method of the same name.
 	// Starts playing the audio file in a subprocess.
-	StartPlayingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, testData map[string]string, waitSecs int) error
+	StartPlayingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, srcAudioFile *AudioFile, waitSecs int) error
 
 	// StopPlayingAudioSubprocess calls the Chameleond RPC method of the same name.
 	// Stops playing the audio file in the subprocess.
@@ -132,16 +239,25 @@ type AudioPeripheral interface {
 	// StartRecordingAudioSubprocessPulseaudio calls the Chameleond RPC method of
 	// the same name.
 	// Starts recording audio in a subprocess using pulseaudio.
-	StartRecordingAudioSubprocessPulseaudio(ctx context.Context, audioProfile AudioProfile, testData map[string]string, recordingEntity string) error
+	//
+	// Note: The testData and recordingEntity params are restructured in this client
+	// as a single AudioFile parameter for ease of use.
+	StartRecordingAudioSubprocessPulseaudio(ctx context.Context, audioProfile AudioProfile, dstAudioFile *AudioFile) error
 
 	// StartRecordingAudioSubprocessPipewire calls the Chameleond RPC method of
 	// the same name.
 	// Starts recording audio in a subprocess using pipewire.
-	StartRecordingAudioSubprocessPipewire(ctx context.Context, audioProfile AudioProfile, testData map[string]string, recordingEntity string) error
+	//
+	// Note: The testData and recordingEntity params are restructured in this client
+	// as a single AudioFile parameter for ease of use.
+	StartRecordingAudioSubprocessPipewire(ctx context.Context, audioProfile AudioProfile, dstAudioFile *AudioFile) error
 
 	// StartRecordingAudioSubprocess calls the Chameleond RPC method of the same name.
 	// Starts recording audio in a subprocess.
-	StartRecordingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, testData map[string]string, recordingEntity string) error
+	//
+	// Note: The testData and recordingEntity params are restructured in this client
+	// as a single AudioFile parameter for ease of use.
+	StartRecordingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, dstAudioFile *AudioFile) error
 
 	// HandleOneChunk calls the Chameleond RPC method of the same name.
 	// Saves one chunk of data into a file and remote copies it to the DUT.
@@ -206,18 +322,34 @@ func (c *CommonAudioPeripheral) GetUserIDOfPi(ctx context.Context) (string, erro
 	return c.RPC("GetUserIdOfPi").CallForString(ctx)
 }
 
+// callForIntOrNil calls the method for an int return value, but will return -1
+// if the method returns nil instead. This works around missing support for nil
+// values in the XMLRPC client library.
+func (c *CommonAudioPeripheral) callForIntOrNil(ctx context.Context, callBuilder *xmlrpc.CallBuilder) (int, error) {
+	result := -1
+	err := callBuilder.Returns(&result).Call(ctx)
+	if err != nil {
+		// Will return nil if no ID present, but the XMLRPC client does not support
+		// this, so parse the error.
+		if strings.Contains(err.Error(), "value <empty> is not an int value") {
+			return -1, nil
+		}
+		return 0, err
+	}
+	return result, nil
+}
+
 // GetPipewireBluezID calls the "GetPipewireBluezId" Chameleond RPC method.
 // This implements AudioPeripheral.GetPipewireBluezID, see that for more details.
 //
 // Note that the casing of the Chameleond RPC method name differs from this
 // method name slightly to meet golang standards.
+//
+// Returns -1 if GetPipewireBluezId returned no results.
+//
+// Will attempt to get the ID for up to 12s.
 func (c *CommonAudioPeripheral) GetPipewireBluezID(ctx context.Context) (int, error) {
-	result := -1
-	err := c.RPC("GetPipewireBluezId").Returns(&result).Call(ctx)
-	if err != nil {
-		return 0, err
-	}
-	return result, nil
+	return c.callForIntOrNil(ctx, c.RPC("GetPipewireBluezId").Timeout(12*time.Second))
 }
 
 // StartPipewire calls the Chameleond RPC method of the same name.
@@ -245,7 +377,7 @@ func (c *CommonAudioPeripheral) GetAudioServerName(ctx context.Context) (AudioSe
 // StartAudioServer calls the Chameleond RPC method of the same name.
 // This implements AudioPeripheral.StartAudioServer, see that for more details.
 func (c *CommonAudioPeripheral) StartAudioServer(ctx context.Context, audioProfile AudioProfile) error {
-	return c.RPC("StartAudioServer").Args(audioProfile.String()).CallForBoolSuccess(ctx)
+	return c.RPC("StartAudioServer").Args(audioProfile.String()).Timeout(30 * time.Second).CallForBoolSuccess(ctx)
 }
 
 // StopAudioServer calls the Chameleond RPC method of the same name.
@@ -256,8 +388,8 @@ func (c *CommonAudioPeripheral) StopAudioServer(ctx context.Context) error {
 
 // SetAudioConfig calls the Chameleond RPC method of the same name.
 // This implements AudioPeripheral.SetAudioConfig, see that for more details.
-func (c *CommonAudioPeripheral) SetAudioConfig(ctx context.Context, audioConfig map[string]string) error {
-	return c.RPC("SetAudioConfig").Args(audioConfig).Call(ctx)
+func (c *CommonAudioPeripheral) SetAudioConfig(ctx context.Context, audioConfig *AudioConfig) error {
+	return c.RPC("SetAudioConfig").Args(audioConfig.marshall()).CallForBoolSuccess(ctx)
 }
 
 // StartPulseaudio calls the Chameleond RPC method of the same name.
@@ -293,8 +425,8 @@ func (c *CommonAudioPeripheral) PlayAudio(ctx context.Context, audioFile string)
 // StartPlayingAudioSubprocess calls the Chameleond RPC method of the same name.
 // This implements AudioPeripheral.StartPlayingAudioSubprocess, see that for
 // more details.
-func (c *CommonAudioPeripheral) StartPlayingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, testData map[string]string, waitSecs int) error {
-	return c.RPC("StartPlayingAudioSubprocess").Args(audioProfile.String(), testData, waitSecs).CallForBoolSuccess(ctx)
+func (c *CommonAudioPeripheral) StartPlayingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, srcAudioFile *AudioFile, waitSecs int) error {
+	return c.RPC("StartPlayingAudioSubprocess").Args(audioProfile.String(), srcAudioFile.marshall(), waitSecs).CallForBoolSuccess(ctx)
 }
 
 // StopPlayingAudioSubprocess calls the Chameleond RPC method of the same name.
@@ -333,14 +465,14 @@ func (c *CommonAudioPeripheral) GetBluezSourceDevice(ctx context.Context, audioP
 // This implements AudioPeripheral.GetBluezSourceHFPDevice, see that for more
 // details.
 func (c *CommonAudioPeripheral) GetBluezSourceHFPDevice(ctx context.Context, audioProfile AudioProfile) (int, error) {
-	return c.RPC("GetBluezSourceHFPDevice").Args(audioProfile.String()).CallForInt(ctx)
+	return c.callForIntOrNil(ctx, c.RPC("GetBluezSourceHFPDevice").Args(audioProfile))
 }
 
 // GetBluezSinkHFPDevice calls the Chameleond RPC method of the same name.
 // This implements AudioPeripheral.GetBluezSinkHFPDevice, see that for more
 // details.
 func (c *CommonAudioPeripheral) GetBluezSinkHFPDevice(ctx context.Context, audioProfile AudioProfile) (int, error) {
-	return c.RPC("GetBluezSinkHFPDevice").Args(audioProfile.String()).CallForInt(ctx)
+	return c.callForIntOrNil(ctx, c.RPC("GetBluezSinkHFPDevice").Args(audioProfile))
 }
 
 // GetBluezSourceA2DPDevice calls the Chameleond RPC method of the same name.
@@ -362,23 +494,29 @@ func (c *CommonAudioPeripheral) GetBluezSourceA2DPDevice(ctx context.Context, au
 // the same name.
 // This implements AudioPeripheral.StartRecordingAudioSubprocessPulseaudio, see
 // that for more details.
-func (c *CommonAudioPeripheral) StartRecordingAudioSubprocessPulseaudio(ctx context.Context, audioProfile AudioProfile, testData map[string]string, recordingEntity string) error {
-	return c.RPC("StartRecordingAudioSubprocessPulseaudio").Args(audioProfile.String(), testData, recordingEntity).CallForBoolSuccess(ctx)
+func (c *CommonAudioPeripheral) StartRecordingAudioSubprocessPulseaudio(ctx context.Context, audioProfile AudioProfile, dstAudioFile *AudioFile) error {
+	testData := dstAudioFile.marshall()
+	testData[audioRecordingEntity] = dstAudioFile.DeviceFile
+	return c.RPC("StartRecordingAudioSubprocessPulseaudio").Args(audioProfile.String(), dstAudioFile.marshall(), audioRecordingEntity).CallForBoolSuccess(ctx)
 }
 
 // StartRecordingAudioSubprocessPipewire calls the Chameleond RPC method of the
 // same name.
 // This implements AudioPeripheral.StartRecordingAudioSubprocessPipewire, see
 // that for more details.
-func (c *CommonAudioPeripheral) StartRecordingAudioSubprocessPipewire(ctx context.Context, audioProfile AudioProfile, testData map[string]string, recordingEntity string) error {
-	return c.RPC("StartRecordingAudioSubprocessPipewire").Args(audioProfile.String(), testData, recordingEntity).CallForBoolSuccess(ctx)
+func (c *CommonAudioPeripheral) StartRecordingAudioSubprocessPipewire(ctx context.Context, audioProfile AudioProfile, dstAudioFile *AudioFile) error {
+	testData := dstAudioFile.marshall()
+	testData[audioRecordingEntity] = dstAudioFile.DeviceFile
+	return c.RPC("StartRecordingAudioSubprocessPipewire").Args(audioProfile.String(), testData).CallForBoolSuccess(ctx)
 }
 
 // StartRecordingAudioSubprocess calls the Chameleond RPC method of the same
 // name. This implements AudioPeripheral.StartRecordingAudioSubprocess, see that
 // for more details.
-func (c *CommonAudioPeripheral) StartRecordingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, testData map[string]string, recordingEntity string) error {
-	return c.RPC("StartRecordingAudioSubprocess").Args(audioProfile.String(), testData, recordingEntity).CallForBoolSuccess(ctx)
+func (c *CommonAudioPeripheral) StartRecordingAudioSubprocess(ctx context.Context, audioProfile AudioProfile, dstAudioFile *AudioFile) error {
+	testData := dstAudioFile.marshall()
+	testData[audioRecordingEntity] = dstAudioFile.DeviceFile
+	return c.RPC("StartRecordingAudioSubprocess").Args(audioProfile.String(), testData, audioRecordingEntity).CallForBoolSuccess(ctx)
 }
 
 // HandleOneChunk calls the Chameleond RPC method of the same name.

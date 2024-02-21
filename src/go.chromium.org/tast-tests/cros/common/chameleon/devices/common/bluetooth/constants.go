@@ -161,14 +161,6 @@ func (pac PairingAgentCapability) String() string {
 	return string(pac)
 }
 
-const (
-	// AudioConfigAudioServer is the key of the configure map for audio server name.
-	AudioConfigAudioServer string = "audio_server"
-
-	// AudioConfigA2DPCodec is the key of the configure map for A2DP codec.
-	AudioConfigA2DPCodec string = "a2dp_codec"
-)
-
 // AudioServer refers to audio server names, as they would be returned by
 // AudioPeripheral.GetAudioServerName.
 type AudioServer string
@@ -191,40 +183,72 @@ type AudioProfile string
 
 const (
 
-	// AudioProfileA2DP is the "a2dp" AudioProfile
+	// AudioProfileA2DP is the "a2dp" AudioProfile.
 	AudioProfileA2DP AudioProfile = "a2dp"
 
-	// AudioProfileA2DPMedium is the "a2dp_medium" AudioProfile
+	// AudioProfileA2DPMedium is the "a2dp_medium" AudioProfile.
 	AudioProfileA2DPMedium AudioProfile = "a2dp_medium"
 
-	// AudioProfileA2DPLong is the "a2dp_long" AudioProfile
+	// AudioProfileA2DPLong is the "a2dp_long" AudioProfile.
 	AudioProfileA2DPLong AudioProfile = "a2dp_long"
 
-	// AudioProfileA2DPRate4410 is the "a2dp_rate_44100" AudioProfile
+	// AudioProfileA2DPRate4410 is the "a2dp_rate_44100" AudioProfile.
 	AudioProfileA2DPRate4410 AudioProfile = "a2dp_rate_44100"
 
-	// AudioProfileAVRCP is the "avrcp" AudioProfile
+	// AudioProfileAVRCP is the "avrcp" AudioProfile.
 	AudioProfileAVRCP AudioProfile = "avrcp"
 
-	// AudioProfileHFPNBS is the "hfp_nbs" AudioProfile
+	// AudioProfileHFPNBS is the "hfp_nbs" AudioProfile.
 	AudioProfileHFPNBS AudioProfile = "hfp_nbs"
 
-	// AudioProfileHFPNBSMedium is the "hfp_nbs_medium" AudioProfile
+	// AudioProfileHFPNBSMedium is the "hfp_nbs_medium" AudioProfile.
 	AudioProfileHFPNBSMedium AudioProfile = "hfp_nbs_medium"
 
-	// AudioProfileHFPWPS is the "hfp_wbs" AudioProfile
-	AudioProfileHFPWPS AudioProfile = "hfp_wbs"
+	// AudioProfileHFPWBS is the "hfp_wbs" AudioProfile.
+	AudioProfileHFPWBS AudioProfile = "hfp_wbs"
 
-	// AudioProfileHFPWPSMedium is the "hfp_wbs_medium" AudioProfile
-	AudioProfileHFPWPSMedium AudioProfile = "hfp_wbs_medium"
+	// AudioProfileHFPWBSMedium is the "hfp_wbs_medium" AudioProfile.
+	AudioProfileHFPWBSMedium AudioProfile = "hfp_wbs_medium"
+
+	// AudioProfileHFPSWB is the "hfp_swb" AudioProfile.
+	AudioProfileHFPSWB AudioProfile = "hfp_swb"
 )
 
 // GetOfonoSupportedProfiles return profiles that support Ofono.
 func GetOfonoSupportedProfiles() []AudioProfile {
-	return []AudioProfile {AudioProfileHFPWPS, AudioProfileHFPNBS, AudioProfileHFPWPSMedium, AudioProfileHFPNBSMedium}
+	return []AudioProfile{AudioProfileHFPWBS, AudioProfileHFPNBS, AudioProfileHFPWBSMedium, AudioProfileHFPNBSMedium}
 }
 
 // String returns AudioProfile as a string.
 func (p AudioProfile) String() string {
 	return string(p)
+}
+
+// A2DPCodec is an A2DP audio codec.
+type A2DPCodec string
+
+const (
+	// A2DPCodecAAC is the AAC A2DPCodec.
+	A2DPCodecAAC A2DPCodec = "aac"
+
+	// A2DPCodecSBC is the SBC A2DPCodec.
+	A2DPCodecSBC A2DPCodec = "sbc"
+)
+
+// String returns A2DPCodec as a string.
+func (c A2DPCodec) String() string {
+	return string(c)
+}
+
+// HFPCodec is an HFP audio codec.
+type HFPCodec string
+
+const (
+	// HFPCodecLC3 is the LC3 HFP audio codec.
+	HFPCodecLC3 HFPCodec = "lc3"
+)
+
+// String returns HFPCodec as a string.
+func (c HFPCodec) String() string {
+	return string(c)
 }
