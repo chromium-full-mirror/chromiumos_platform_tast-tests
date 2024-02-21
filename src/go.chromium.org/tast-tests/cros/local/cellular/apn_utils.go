@@ -179,12 +179,16 @@ func GetKnownAPNsForOperator(operatorID string) ([]KnownAPN, error) {
 
 // GetCarrier returns the carrier that matches the operatorID.
 func GetCarrier(operatorID string) (Carrier, error) {
+	if len(operatorID) < 5 || len(operatorID) > 6 {
+		return CarrierUnknown, errors.Errorf("operator ID %q is malformed", operatorID)
+	}
+
 	carrier, ok := carrierMapping[operatorID]
 	if !ok {
 		operatorID1 := operatorID[0:5]
 		carrier, ok = carrierMapping[operatorID1]
 		if !ok {
-			return carrier, errors.Errorf("cannot find carrier for operators %q or %q", operatorID, operatorID1)
+			return CarrierUnknown, errors.Errorf("cannot find carrier for operators %q or %q", operatorID, operatorID1)
 		}
 	}
 	return carrier, nil
