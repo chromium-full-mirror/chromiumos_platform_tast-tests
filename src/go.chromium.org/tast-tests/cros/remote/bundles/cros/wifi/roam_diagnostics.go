@@ -199,6 +199,16 @@ func executeRoamDiagnosticsTest(ctx context.Context, s *testing.State, ap0Params
 	attenuator := tf.Attenuator()
 	resetAttenuation(ctx, s, attenuator)
 
+	ctx, restoreBgAndFg, err := tf.WifiClient().TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
 	ap0, freq0, deconfig := wifiutil.ConfigureAP(ctx, s, ap0Params, 0, secConfFac)
 	defer deconfig(ctx, ap0)
 	ctx, cancel := tf.ReserveForDeconfigAP(ctx, ap0)
