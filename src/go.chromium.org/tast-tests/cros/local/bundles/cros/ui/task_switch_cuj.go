@@ -83,6 +83,16 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 			},
+			{
+				Name:              "pvsched",
+				BugComponent:      "b:167279",
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+				Fixture:           "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
+				Val: taskswitchcuj.TaskSwitchTest{
+					BrowserType: browser.TypeAsh,
+				},
+			},
 		},
 	})
 }

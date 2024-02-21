@@ -60,6 +60,14 @@ func init() {
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
+			{
+				Name:              "pvsched",
+				Val:               browser.TypeAsh,
+				BugComponent:      "b:167279",
+				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+			},
 		},
 	})
 }

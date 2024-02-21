@@ -42,6 +42,13 @@ func init() {
 				Val:     browser.TypeAsh,
 				Fixture: "loggedInToCUJUser",
 			}, {
+				Name:              "pvsched",
+				BugComponent:      "b:167279",
+				Val:               browser.TypeAsh,
+				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
+				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
+			}, {
 				Name:              "lacros",
 				Val:               browser.TypeLacros,
 				ExtraSoftwareDeps: []string{"lacros"},

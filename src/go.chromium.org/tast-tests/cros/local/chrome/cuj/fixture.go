@@ -39,6 +39,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
+	"go.chromium.org/tast-tests/cros/local/pvsched"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/wpr"
@@ -212,6 +213,25 @@ func init() {
 			"cros-sw-perf@google.com",
 		},
 		Impl:            &loggedInToCUJUserFixture{bt: browser.TypeAsh},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithPvSchedEnabled",
+		Desc: "Similar to loggedInToCUJUser but with paravirt sched feature enabled",
+		Contacts: []string{
+			"vineethrp@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:            browser.TypeAsh,
+			enablePvSched: true,
+		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
@@ -653,6 +673,32 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
+	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithPvSchedEnabled",
+		Desc: "CUJ test fixture with WebRTC event logging and paravirt sched enabled",
+		Contacts: []string{
+			"vineethrp@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+				chrome.EnableFeatures("PreferConstantFrameRate"),
+			},
+			bt:            browser.TypeAsh,
+			docsBlocker:   true,
+			enablePvSched: true,
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithWebRTCEventLoggingDisableARC",
 		Desc: "CUJ test fixture with WebRTC event logging with ARC disabled",
@@ -921,6 +967,27 @@ func init() {
 			chromeExtraOpts: []chrome.Option{
 				chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"),
 			},
+		},
+		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpWithOptinTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	// TODO(b/325918094): Remove when enough data is collected related to paravirt sched impact.
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserARCSupportedWithPvSchedEnabled",
+		Desc: "CUJ fixture with ARC supported and paravirt sched feature enabled",
+		Contacts: []string{
+			"vineethrp@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			bt:            browser.TypeAsh,
+			arcSupported:  true,
+			enablePvSched: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpWithOptinTimeout,
@@ -1781,6 +1848,11 @@ type loggedInToCUJUserFixture struct {
 	// If other than -1, indicates a WPR mode to work in using wprArchive.
 	wprMode    wpr.Mode
 	wprArchive string
+	// TODO(b/325918094): Remove when paravirt sched is fully enabled on chromeos
+	// enablePvSched specifies whether paravirt sched feature has to be enabled.
+	enablePvSched bool
+	// pvSchedEnabled specifies if paravirt sched was already enabled when the cuj started.
+	pvSchedEnabled bool
 }
 
 // NewWPRLoggedInToCUJUserWithoutCooldownFixture returns a newly created fixture object with WPR parameters
@@ -1891,6 +1963,17 @@ func (f *loggedInToCUJUserFixture) SetUp(ctx context.Context, s *testing.FixtSta
 					chrome.DisablePolicyKeyVerification(),
 				)
 			}
+		}
+		if f.enablePvSched {
+			f.pvSchedEnabled, err = pvsched.Enabled()
+			if err != nil {
+				s.Fatal("Failed to get Paravirt Sched state: ", err)
+			}
+
+			if !f.pvSchedEnabled {
+				pvsched.Enable()
+			}
+
 		}
 		if f.enableBSM {
 			opts = append(opts, chrome.EnableFeatures("CrosBatterySaver", "CrosBatterySaverAlwaysOn"))
@@ -2263,6 +2346,11 @@ func (f *loggedInToCUJUserFixture) TearDown(ctx context.Context, s *testing.Fixt
 	if f.fdms != nil {
 		f.fdms.Stop(ctx)
 		f.fdms = nil
+	}
+	if f.enablePvSched {
+		if !f.pvSchedEnabled {
+			pvsched.Disable()
+		}
 	}
 }
 
