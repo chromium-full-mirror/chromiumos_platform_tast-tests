@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -123,8 +122,7 @@ func HideWebStoreIcon(ctx context.Context, s *testing.State) {
 			}
 
 			// Confirm the status of the Web Store icon on the shelf.
-			shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-			if err := policyutil.WaitUntilExistsStatus(ctx, tconn, nodewith.Name(appName).ClassNameRegex(shelfAppButtonRegex), param.wantIcon, 15*time.Second); err != nil {
+			if err := policyutil.WaitUntilExistsStatus(ctx, tconn, nodewith.Name(appName).ClassName(ash.ShelfAppButtonClassName), param.wantIcon, 15*time.Second); err != nil {
 				s.Error("Could not confirm the desired status of the Web Store Icon on the system shelf: ", err)
 			}
 		})

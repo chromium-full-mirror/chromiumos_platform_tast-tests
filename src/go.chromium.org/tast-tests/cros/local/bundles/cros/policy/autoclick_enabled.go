@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
@@ -105,8 +104,7 @@ func AutoclickEnabled(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 
 			// Move mouse to status tray.
-			statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
-			if err := ui.MouseMoveTo(nodewith.ClassNameRegex(statusAreaRegex), 0)(ctx); err != nil {
+			if err := ui.MouseMoveTo(nodewith.ClassName(ash.StatusAreaClassName), 0)(ctx); err != nil {
 				s.Fatal("Failed to move mouse to status tray: ", err)
 			}
 

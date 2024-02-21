@@ -23,7 +23,7 @@ var NBSWarningLabel = nodewith.Role(role.StaticText).NameStartingWith("Your Chro
 var SystemTray = nodewith.HasClass("UnifiedSystemTray")
 
 // StatusAreaWidget is the finder to find the control widgets.
-var StatusAreaWidget = nodewith.Role(role.Pane).ClassNameRegex(regexp.MustCompile(ash.StatusAreaClassNameRegex))
+var StatusAreaWidget = nodewith.Role(role.Pane).ClassName(ash.StatusAreaClassName)
 
 // FeatureTileAccessibility is the finder for the "Accessibility" feature tile.
 var FeatureTileAccessibility = nodewith.HasClass("FeatureTile").NameContaining("accessibility")

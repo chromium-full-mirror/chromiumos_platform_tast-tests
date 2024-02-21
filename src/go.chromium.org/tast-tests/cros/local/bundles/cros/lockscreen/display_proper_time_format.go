@@ -6,7 +6,6 @@ package lockscreen
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"time"
 
@@ -90,8 +89,7 @@ func DisplayProperTimeFormat(ctx context.Context, s *testing.State) {
 
 			// Ensure the status area is visible.
 			ui := uiauto.New(tconn)
-			statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
-			statusArea := nodewith.ClassNameRegex(statusAreaRegex)
+			statusArea := nodewith.ClassName(ash.StatusAreaClassName)
 			if err := ui.WaitUntilExists(statusArea)(ctx); err != nil {
 				s.Fatal("Failed to find status area widget: ", err)
 			}

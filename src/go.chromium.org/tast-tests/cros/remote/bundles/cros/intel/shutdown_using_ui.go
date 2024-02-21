@@ -86,7 +86,7 @@ func ShutdownUsingUI(ctx context.Context, s *testing.State) {
 		testing.ContextLogf(ctx, "Iteration: %d/%d", i, iter)
 		// Performs some actions on the UI like Opening status tray
 		// and perform shutdown with UI button.
-		var statusTray = "ash/StatusAreaWidgetDelegate"
+		var statusTray = "StatusAreaWidgetDelegate"
 		statusTrayFinder := &ui.Finder{
 			NodeWiths: []*ui.NodeWith{
 				{Value: &ui.NodeWith_HasClass{HasClass: statusTray}},

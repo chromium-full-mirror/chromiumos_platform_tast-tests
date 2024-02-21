@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -87,8 +86,7 @@ func OobeArcAppOpen(ctx context.Context, s *testing.State) {
 	}
 	defer a.Close(ctx)
 
-	statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
-	statusArea := nodewith.ClassNameRegex(statusAreaRegex)
+	statusArea := nodewith.ClassName(ash.StatusAreaClassName)
 
 	s.Log("Waiting for setup complete notification")
 	_, err = ash.WaitForNotification(ctx, tconn, 25*time.Minute, ash.WaitTitle("Setup complete"), ash.WaitMessageContains("Installed 6 out of 6 applications"))

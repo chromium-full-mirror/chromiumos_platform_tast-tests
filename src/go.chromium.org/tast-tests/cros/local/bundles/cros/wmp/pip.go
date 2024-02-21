@@ -8,7 +8,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -497,8 +496,7 @@ func testPipExpandViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *
 // expandPipViaShelfIcon expands the PiP window by pressing the shelf icon of the app.
 // Note that this behavior is currently supported only by ARC PiP.
 func expandPipViaShelfIcon(ctx context.Context, tconn *chrome.TestConn, ac *uiauto.Context) error {
-	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-	pipShelfIcon := nodewith.Name(arcPipAppName).ClassNameRegex(shelfAppButtonRegex)
+	pipShelfIcon := nodewith.Name(arcPipAppName).ClassName(ash.ShelfAppButtonClassName)
 	if err := ac.WithTimeout(10 * time.Second).LeftClick(pipShelfIcon)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to click on the shelf icon of %s", arcPipAppName)
 	}

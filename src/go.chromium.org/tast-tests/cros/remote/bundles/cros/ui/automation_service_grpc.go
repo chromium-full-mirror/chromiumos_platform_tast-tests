@@ -55,14 +55,14 @@ func AutomationServiceGRPC(ctx context.Context, s *testing.State) {
 	// Wait until both chrome app and files app buttons show up after initial login.
 	filesAppShelfButtonFinder := &pb.Finder{
 		NodeWiths: []*pb.NodeWith{
-			{Value: &pb.NodeWith_HasClass{HasClass: "ash/ShelfAppButton"}},
+			{Value: &pb.NodeWith_HasClass{HasClass: "ShelfAppButton"}},
 			{Value: &pb.NodeWith_Name{Name: "Files"}},
 		},
 	}
 
 	chromeAppShelfButtonFinder := &pb.Finder{
 		NodeWiths: []*pb.NodeWith{
-			{Value: &pb.NodeWith_HasClass{HasClass: "ash/ShelfAppButton"}},
+			{Value: &pb.NodeWith_HasClass{HasClass: "ShelfAppButton"}},
 			{Value: &pb.NodeWith_Name{Name: "Google Chrome"}},
 		},
 	}

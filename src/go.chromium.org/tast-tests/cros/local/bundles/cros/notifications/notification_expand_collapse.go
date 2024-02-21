@@ -6,7 +6,6 @@ package notifications
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -57,8 +56,7 @@ func NotificationExpandCollapse(ctx context.Context, s *testing.State) {
 	popup := nodewith.Role(role.Window).HasClass("ash/message_center/MessagePopup")
 	notificationHeader := nodewith.HasClass("NotificationHeaderView")
 	expandButton := nodewith.HasClass("AshNotificationExpandButton")
-	statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
-	statusArea := nodewith.ClassNameRegex(statusAreaRegex)
+	statusArea := nodewith.ClassName(ash.StatusAreaClassName)
 	// TODO(b/325132191): Switch to class NotificationListView::MessageViewContainer
 	notificationInMessageCenter := nodewith.HasClass("MessageViewContainer")
 

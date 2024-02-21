@@ -6,7 +6,6 @@ package launcher
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -21,8 +20,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
-
-var shelfAppButtonRegex = regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -226,7 +223,7 @@ func pinApps(ctx context.Context, tconn *chrome.TestConn, apps []apps.App, conta
 
 		//  Verify that pinned Application appears on the Shelf.
 		ui := uiauto.New(tconn)
-		finder := nodewith.Name(app.Name).ClassNameRegex(shelfAppButtonRegex)
+		finder := nodewith.Name(app.Name).ClassName(ash.ShelfAppButtonClassName)
 		if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(finder)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to find app %v on shelf", app.Name)
 		}
@@ -250,7 +247,7 @@ func pinApps(ctx context.Context, tconn *chrome.TestConn, apps []apps.App, conta
 // buttonLocations returns the left coordinates of the locations of all buttons on the shelf.
 func buttonLocations(ctx context.Context, tconn *chrome.TestConn) (map[string]int, error) {
 	button2Loc := make(map[string]int)
-	finder := nodewith.ClassNameRegex(shelfAppButtonRegex)
+	finder := nodewith.ClassName(ash.ShelfAppButtonClassName)
 	appButtons, err := uiauto.New(tconn).NodesInfo(ctx, finder)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get all button on shelf")
@@ -263,7 +260,7 @@ func buttonLocations(ctx context.Context, tconn *chrome.TestConn) (map[string]in
 
 // buttonsShiftLeft makes sure all the existing buttons on the shelf shifting to the left after a new item is added to the shelf.
 func buttonsShiftLeft(ctx context.Context, tconn *chrome.TestConn, prevLocations map[string]int) error {
-	finder := nodewith.ClassNameRegex(shelfAppButtonRegex)
+	finder := nodewith.ClassName(ash.ShelfAppButtonClassName)
 	appButtons, err := uiauto.New(tconn).NodesInfo(ctx, finder)
 	if err != nil {
 		return errors.Wrap(err, "failed to get all button on shelf")
@@ -281,7 +278,7 @@ func buttonsShiftLeft(ctx context.Context, tconn *chrome.TestConn, prevLocations
 
 // rightmostButton checks if the given app is the rightmost app on the shelf.
 func rightmostButton(ctx context.Context, tconn *chrome.TestConn, appName string) error {
-	finder := nodewith.ClassNameRegex(shelfAppButtonRegex)
+	finder := nodewith.ClassName(ash.ShelfAppButtonClassName)
 	appButtons, err := uiauto.New(tconn).NodesInfo(ctx, finder)
 	if err != nil {
 		return errors.Wrap(err, "failed to get all buttons on shelf")

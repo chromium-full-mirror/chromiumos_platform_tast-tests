@@ -91,7 +91,7 @@ func makeScreenRecording(ctx context.Context, conn *grpc.ClientConn, fileName st
 	uiautoSvc := pb.NewAutomationServiceClient(conn)
 	filesAppShelfButtonFinder := &pb.Finder{
 		NodeWiths: []*pb.NodeWith{
-			{Value: &pb.NodeWith_HasClass{HasClass: "ash/ShelfAppButton"}},
+			{Value: &pb.NodeWith_HasClass{HasClass: "ShelfAppButton"}},
 			{Value: &pb.NodeWith_Name{Name: "Files"}},
 		},
 	}

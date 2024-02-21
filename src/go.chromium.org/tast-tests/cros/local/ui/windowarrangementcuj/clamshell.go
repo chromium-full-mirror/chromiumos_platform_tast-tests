@@ -6,7 +6,6 @@ package windowarrangementcuj
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
@@ -165,8 +164,7 @@ func RunClamShell(ctx, closeCtx context.Context, tconn *chrome.TestConn, ui *uia
 	}
 
 	// Unminimize window.
-	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-	chromeAppIcon := nodewith.NameContaining("Chrome").ClassNameRegex(shelfAppButtonRegex).Role(role.Button)
+	chromeAppIcon := nodewith.NameContaining("Chrome").ClassName(ash.ShelfAppButtonClassName).Role(role.Button)
 	if err := pc.Click(chromeAppIcon)(ctx); err != nil {
 		return errors.Wrap(err, "failed to unminimize the browser window")
 	}

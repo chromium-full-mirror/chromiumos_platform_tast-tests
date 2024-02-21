@@ -6,7 +6,6 @@ package policy
 
 import (
 	"context"
-	"regexp"
 
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/pci"
@@ -65,8 +64,7 @@ func PinnedLauncherApps(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassNameRegex(shelfAppButtonRegex)
+	filesAppShelfButton := nodewith.Name(apps.Files.Name).ClassName(ash.ShelfAppButtonClassName)
 	unpinContextMenuItem := nodewith.Name("Unpin").ClassName("MenuItemView")
 	if err := uiauto.Combine("check unpin option is not present for pinned app",
 		ui.RightClick(filesAppShelfButton),

@@ -6,7 +6,6 @@ package shelf
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -145,8 +144,7 @@ func LaunchedApps(ctx context.Context, s *testing.State) {
 
 	// Check that the icons are also present in the UI
 	for _, app := range defaultApps {
-		shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-		err := ui.Exists(nodewith.ClassNameRegex(shelfAppButtonRegex).Role(role.Button).Name(app.Name))(ctx)
+		err := ui.Exists(nodewith.ClassName(ash.ShelfAppButtonClassName).Role(role.Button).Name(app.Name))(ctx)
 		if err != nil {
 			s.Errorf("There was no icon for %s in the shelf", app.Name)
 		} else {

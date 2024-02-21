@@ -6,7 +6,6 @@ package wmp
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -113,8 +112,7 @@ func WindowCaptionButton(ctx context.Context, s *testing.State) {
 	}
 
 	// Click on the browser app to bring window back. This is under the assumption that the Chrome icon is the first icon on the shelf.
-	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-	chromeIcon := nodewith.ClassNameRegex(shelfAppButtonRegex).First()
+	chromeIcon := nodewith.ClassName(ash.ShelfAppButtonClassName).First()
 	if err := ui.LeftClick(chromeIcon)(ctx); err != nil {
 		s.Fatal("Failed to click on the Chrome icon: ", err)
 	}

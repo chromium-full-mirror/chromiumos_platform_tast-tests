@@ -11,7 +11,6 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -696,8 +695,7 @@ func toggleAppManagementSettingToggleViaClick(ctx context.Context, tconn *chrome
 // OpenAppManagementSetting opens the app management page if the given app.
 func OpenAppManagementSetting(ctx context.Context, tconn *chrome.TestConn, appName string) error {
 	uia := uiauto.New(tconn)
-	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-	resizeLockShelfIcon := nodewith.Name(appName).ClassNameRegex(shelfAppButtonRegex)
+	resizeLockShelfIcon := nodewith.Name(appName).ClassName(ash.ShelfAppButtonClassName)
 	if err := uia.WithTimeout(10 * time.Second).RightClick(resizeLockShelfIcon)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to click on the shelf icon of %s", appName)
 	}
@@ -712,8 +710,7 @@ func OpenAppManagementSetting(ctx context.Context, tconn *chrome.TestConn, appNa
 // CloseAppManagementSetting closes any open app management page.
 func CloseAppManagementSetting(ctx context.Context, tconn *chrome.TestConn) error {
 	uia := uiauto.New(tconn)
-	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
-	settingShelfIcon := nodewith.Name(settingsAppName).ClassNameRegex(shelfAppButtonRegex)
+	settingShelfIcon := nodewith.Name(settingsAppName).ClassName(ash.ShelfAppButtonClassName)
 	if err := uia.WithTimeout(10 * time.Second).RightClick(settingShelfIcon)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find and right click on the shelf icon of the settings app")
 	}

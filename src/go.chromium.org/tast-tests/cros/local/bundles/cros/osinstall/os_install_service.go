@@ -6,7 +6,6 @@ package osinstall
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"time"
 
@@ -137,8 +136,7 @@ func (svc *osInstallService) RunOsInstall(ctx context.Context, req *empty.Empty)
 func (svc *osInstallService) ShutDown(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	ui := svc.ui
 	// Open the status tray.
-	statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
-	statusTrayNode := nodewith.ClassNameRegex(statusAreaRegex).Role(role.Pane)
+	statusTrayNode := nodewith.ClassName(ash.StatusAreaClassName).Role(role.Pane)
 	if err := ui.WaitUntilExists(statusTrayNode)(ctx); err != nil {
 		svc.DumpUITree(ctx)
 		return nil, err

@@ -127,7 +127,7 @@ func performUIActions(ctx context.Context, cl *crosserverutil.Client) error {
 	uiautoSvc := pb.NewAutomationServiceClient(cl.Conn)
 	filesAppShelfButtonFinder := &pb.Finder{
 		NodeWiths: []*pb.NodeWith{
-			{Value: &pb.NodeWith_HasClass{HasClass: "ash/ShelfAppButton"}},
+			{Value: &pb.NodeWith_HasClass{HasClass: "ShelfAppButton"}},
 			{Value: &pb.NodeWith_Name{Name: "Files"}},
 		},
 	}

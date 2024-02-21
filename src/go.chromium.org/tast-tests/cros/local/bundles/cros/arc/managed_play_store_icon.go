@@ -6,7 +6,6 @@ package arc
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
@@ -188,9 +187,8 @@ func ManagedPlayStoreIcon(ctx context.Context, s *testing.State) {
 	// Polling till the icon is found or the timeout is reached.
 	uia := uiauto.New(tconn)
 	notFoundError := errors.New("Play Store icon is not found yet")
-	shelfAppButtonRegex := regexp.MustCompile(ash.ShelfAppButtonClassNameRegex)
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		if found, err := uia.IsNodeFound(ctx, nodewith.Name(apps.PlayStore.Name).ClassNameRegex(shelfAppButtonRegex)); err != nil {
+		if found, err := uia.IsNodeFound(ctx, nodewith.Name(apps.PlayStore.Name).ClassName(ash.ShelfAppButtonClassName)); err != nil {
 			if errors.Is(err, context.DeadlineExceeded) {
 				return err
 			}

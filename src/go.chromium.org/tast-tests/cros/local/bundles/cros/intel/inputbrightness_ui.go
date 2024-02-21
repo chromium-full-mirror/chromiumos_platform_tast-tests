@@ -6,7 +6,6 @@ package intel
 
 import (
 	"context"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -96,8 +95,7 @@ func InputbrightnessUI(ctx context.Context, s *testing.State) {
 			ui := uiauto.New(tconn)
 
 			// Find the Status tray node and click to open it.
-			statusAreaRegex := regexp.MustCompile(ash.StatusAreaClassNameRegex)
-			statusTrayToggler := nodewith.ClassNameRegex(statusAreaRegex)
+			statusTrayToggler := nodewith.ClassName(ash.StatusAreaClassName)
 			if err := uiauto.Combine("find and click the status tray",
 				ui.LeftClick(statusTrayToggler),
 			)(ctx); err != nil {
