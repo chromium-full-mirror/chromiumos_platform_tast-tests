@@ -78,16 +78,15 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Second*10)
 	defer cancel()
 
-	// Run against the preprod of Google frontend in the given environment.
+	// Run against the preprod of Google frontend.
 	if s.Param().(param).usePreprod {
-		env, err := testenv.NewPreprodEnv(ctx,
+		envOpts := []testenv.Option{
 			testenv.RedirectMap(map[string]string{
-				"gaia-prod":      "gfe-preprod",
-				"play-prod":      "gfe-preprod",
-				"policies-prod":  "gfe-preprod",
-				"recovery-prod":  "gfe-preprod",
-				"websearch-prod": "gfe-preprod",
-			}))
+				"gfe-prod": "gfe-preprod",
+			}),
+			testenv.PortalDetection(false), // Disable portal detection that may conflict with a mid DNS server during network validation.
+		}
+		env, err := testenv.NewPreprodEnv(ctx, envOpts...)
 		if err != nil {
 			s.Fatal("Failed to init the preprod env: ", err)
 		}

@@ -44,12 +44,6 @@ type DNSServer struct {
 	HasStarted   bool
 }
 
-// FromTo is a pair of (from, to) of hostname
-type FromTo struct {
-	From string
-	To   string
-}
-
 // NewDNSServer creates a new DNSServer.
 // Note that the following conditions should be met for it to work:
 // - Default network is not changed when DNSServer is running.
@@ -75,7 +69,7 @@ func NewDNSServer() *DNSServer {
 // To bypass the DNS server and send query directly to the upstream nameservers, use "#" as a wildcard
 //
 //	{From: "www.example.com", To: "#"},
-func (s *DNSServer) Start(ctx context.Context, hostmap []FromTo) (retErr error) {
+func (s *DNSServer) Start(ctx context.Context, hostmap map[string]string) (retErr error) {
 	if s.HasStarted {
 		return errors.New("DNS server already running, skipping Start")
 	}
@@ -106,7 +100,7 @@ func (s *DNSServer) Start(ctx context.Context, hostmap []FromTo) (retErr error) 
 	provision.Marker.Acquire()
 	defer func() {
 		if retErr != nil {
-			s.Stop(ctx)
+			s.Close(ctx)
 		}
 	}()
 
@@ -143,8 +137,8 @@ func (s *DNSServer) Start(ctx context.Context, hostmap []FromTo) (retErr error) 
 	return nil
 }
 
-// Stop stops the DNS server.
-func (s *DNSServer) Stop(ctx context.Context) error {
+// Close stops the DNS server and cleans up the resources used.
+func (s *DNSServer) Close(ctx context.Context) error {
 	if !s.HasStarted {
 		return nil
 	}
@@ -163,6 +157,7 @@ func (s *DNSServer) Stop(ctx context.Context) error {
 			err = errors.Wrap(err, "failed to reset the DNS IP after use")
 		}
 	}
+
 	// Closing the fd will signal to patchpanel that it needs to tear down the network namespace
 	// for the local server.
 	if s.lifelineFD != nil {
@@ -228,7 +223,7 @@ func (s *DNSServer) getStaticIPNameServers(ctx context.Context) ([]string, error
 
 // configureDnsmasq configures the local DNS server with upstream nameservers specified and
 // returns command line args used to start the DNS server.
-func (s *DNSServer) configureDnsmasq(ctx context.Context, hostmap []FromTo) error {
+func (s *DNSServer) configureDnsmasq(ctx context.Context, hostmap map[string]string) error {
 	fr, err := TempFile(s.tempDir, "resolv-*.conf")
 	if err != nil {
 		return errors.Wrap(err, "failed to create new resolv.conf")
@@ -254,9 +249,7 @@ func (s *DNSServer) configureDnsmasq(ctx context.Context, hostmap []FromTo) erro
 	// Example,
 	// --address=/example.com/1.2.3.4 --address=/www.example.com/2.3.4.5 will send queries for example.com and a.example.com to 1.2.3.4, but www.example.com will go to 2.3.4.5
 	// --address=/example.com/1.2.3.4 --server=/www.example.com/# will send queries for example.com and its subdomains to 1.2.3.4, except www.example.com (and its subdomains) which will be forwarded as usual
-	for _, h := range hostmap {
-		from := h.From
-		to := h.To
+	for from, to := range hostmap {
 		// TODO(b/323427320): Warn if /etc/hosts overrides the same host with a different IP already that would cause this query to be ignored.
 		// If "#" is a destination (bypass redirection), send queries to the upstream nameservers
 		if to == "#" {

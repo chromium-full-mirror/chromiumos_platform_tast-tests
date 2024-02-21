@@ -9,6 +9,8 @@ import (
 	"encoding/json"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/testenv/middns"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -37,9 +39,13 @@ type BaseEnv struct {
 	hostMap     map[string]string // A map of (host aliases => host names), eg {"example-prod": "www.example.com", "example-preprod": "preprod.example.com"}
 	redirectMap map[string]string // A map of (original hosts => destination hosts), eg {"example-prod": "example-preprod"}
 
-	// DNS configs
+	// Redirection configs
 	shouldRedirect bool
-	hostsUpdater   *HostsUpdater
+	// TODO(b/321781988): Remove HostsUpdater for DNS when no longer needed.
+	hostsUpdater           *HostsUpdater
+	dnsEnabled             bool
+	portalDetectionEnabled bool
+	midDNS                 *middns.DNSServer
 
 	cleanups []func(context.Context) error // will be called in a reverse order during Close
 }
@@ -47,10 +53,12 @@ type BaseEnv struct {
 // NewBase creates a new base test environment and configures it with the given options.
 func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error) {
 	b := &BaseEnv{
-		Name:        name,
-		vars:        make(map[string]interface{}),
-		hostMap:     make(map[string]string),
-		redirectMap: make(map[string]string),
+		Name:                   name,
+		vars:                   make(map[string]interface{}),
+		hostMap:                make(map[string]string),
+		redirectMap:            make(map[string]string),
+		dnsEnabled:             true, // defaults to using a DNS server for redirection
+		portalDetectionEnabled: true,
 	}
 
 	// Parse options and configure the BaseEnv with them
@@ -93,23 +101,50 @@ func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error)
 		b.shouldRedirect = len(b.redirectMap) > 0
 	}
 
-	// Configure redirection for the given hosts using the updater
+	// Configure redirection for the given hosts using either a DNS server or /etc/hosts updater.
 	if b.shouldRedirect {
-		hostsUpdater, err := NewHostsUpdater(ctx)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to init /etc/hosts updater")
+		if b.dnsEnabled {
+			midDNS := middns.NewDNSServer()
+			b.cleanups = append(b.cleanups, midDNS.Close)
+			b.midDNS = midDNS
+		} else {
+			hostsUpdater, err := NewHostsUpdater(ctx)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to init /etc/hosts updater")
+			}
+			b.cleanups = append(b.cleanups, hostsUpdater.Cleanup)
+			b.hostsUpdater = hostsUpdater
 		}
-		b.cleanups = append(b.cleanups, hostsUpdater.Cleanup)
-		b.hostsUpdater = hostsUpdater
 	}
 	return b, nil
 }
 
 // Start starts the necessary servers with the configurations to set up the test environment.
 func (b *BaseEnv) Start(ctx context.Context) error {
-	if b.shouldRedirect && b.hostsUpdater != nil {
-		if _, err := b.hostsUpdater.Redirect(ctx, b.redirectMap); err != nil {
-			return errors.Wrap(err, "failed to override hosts in /etc/hosts")
+	if b.shouldRedirect {
+		// Start host redirection.
+		if b.dnsEnabled {
+			if !b.portalDetectionEnabled {
+				// Disable portal detection while the DNS server runs to avoid conflicts on DNS queries, resulting in lost connection.
+				manager, err := shill.NewManager(ctx)
+				if err != nil {
+					return errors.Wrap(err, "failed to create shill manager")
+				}
+				if err := manager.DisablePortalDetection(ctx); err != nil {
+					return errors.Wrap(err, "failed to disable portal detection")
+				}
+				testing.ContextLog(ctx, "Disabled portal detection before mid DNS starts")
+
+				// Re-enable portal detection on cleanup.
+				b.cleanups = append(b.cleanups, manager.EnablePortalDetection)
+			}
+			if err := b.midDNS.Start(ctx, b.redirectMap); err != nil {
+				return errors.Wrap(err, "failed to redirect hosts using mid DNS server")
+			}
+		} else {
+			if _, err := b.hostsUpdater.Redirect(ctx, b.redirectMap); err != nil {
+				return errors.Wrap(err, "failed to override hosts in /etc/hosts")
+			}
 		}
 	}
 	return nil

@@ -29,19 +29,19 @@ func VerifyDNSServer(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	d := middns.NewDNSServer()
-	hostmap := []middns.FromTo{
+	hostmap := map[string]string{
 		// Redirect all subdomains of example.com to 1.1.1.1.
-		middns.FromTo{From: "example.com", To: "1.1.1.1"},
+		"example.com": "1.1.1.1",
 		// Redirect all subdomains of specific.example.com to 2.2.2.2.
-		middns.FromTo{From: "specific.example.com", To: "2.2.2.2"},
+		"specific.example.com": "2.2.2.2",
 		// Use "#" to bypass the DNS server and directly send query to the upstream nameservers that will return a real IP in production.
-		middns.FromTo{From: "www.example.com", To: "#"},
+		"www.example.com": "#",
 	}
 
 	if err := d.Start(ctx, hostmap); err != nil {
 		s.Fatal("Failed to start local DNS server: ", err)
 	}
-	defer d.Stop(cleanupCtx)
+	defer d.Close(cleanupCtx)
 
 	// Verify that the DNS server redirects all subdomains of example.com, specific domains
 	// and resolution bypass as configured.
@@ -71,7 +71,7 @@ func VerifyDNSServer(ctx context.Context, s *testing.State) {
 	}
 
 	// Stop the DNS server
-	if err := d.Stop(cleanupCtx); err != nil {
+	if err := d.Close(cleanupCtx); err != nil {
 		s.Fatal("Failed to stop local DNS server: ", err)
 	}
 
