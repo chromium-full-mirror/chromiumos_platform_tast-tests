@@ -1,0 +1,64 @@
+// Copyright 2023 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.audio;
+
+import "google/protobuf/empty.proto";
+import "go.chromium.org/tast-tests/cros/services/cros/audio/cras_types.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/audio";
+
+// CrasControlService provides methods for interacting with the cras control
+// dbus interface.
+//
+// Methods are added on an as-needed basis.
+service CrasControlService {
+  // RestartCras restarts the cras job and waits for it to be back up before
+  // returning.
+  rpc RestartCras(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // SetForceHfpSwbEnabled sets the state to enable or disable bluetooth HFP
+  // SWB.
+  rpc SetForceHfpSwbEnabled(SetForceHfpSwbEnabledRequest)
+      returns (google.protobuf.Empty) {}
+
+  // GetForceHfpSwbEnabled gets the force_hfp_swb_enabled state.
+  rpc GetForceHfpSwbEnabled(google.protobuf.Empty)
+      returns (GetForceHfpSwbEnabledResponse) {}
+
+  // GetNodes returns node information from Cras as returned by GetNodes.
+  rpc GetNodes(google.protobuf.Empty) returns (GetNodesResponse) {}
+
+  // SelectedInputNode calls GetNodes and returns the active input node.
+  rpc SelectedInputNode(google.protobuf.Empty)
+      returns (SelectedInputNodeResponse) {}
+
+  // SelectedOutputNode calls GetNodes and returns the active output node.
+  rpc SelectedOutputNode(google.protobuf.Empty)
+      returns (SelectedOutputNodeResponse) {}
+
+  // SetActiveInputNode calls SetActiveInputNode with the given node ID.
+  rpc SetActiveInputNode(SetActiveInputNodeRequest)
+      returns (google.protobuf.Empty) {}
+
+  // SetActiveOutputNode calls SetActiveOutputNode with the given node ID.
+  rpc SetActiveOutputNode(SetActiveOutputNodeRequest)
+      returns (google.protobuf.Empty) {}
+}
+
+message SetForceHfpSwbEnabledRequest { bool force_hfp_swb_enabled = 1; }
+
+message GetForceHfpSwbEnabledResponse { bool force_hfp_swb_enabled = 1; }
+
+message GetNodesResponse { repeated CrasNode nodes = 1; }
+
+message SelectedInputNodeResponse { CrasNode selected_input_node = 1; }
+
+message SelectedOutputNodeResponse { CrasNode selected_output_node = 1; }
+
+message SetActiveInputNodeRequest { uint64 node_id = 1; }
+
+message SetActiveOutputNodeRequest { uint64 node_id = 1; }

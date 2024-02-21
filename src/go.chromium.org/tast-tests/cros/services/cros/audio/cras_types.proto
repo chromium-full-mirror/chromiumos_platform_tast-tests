@@ -122,3 +122,35 @@ enum CaptureEffect {
   // Specifies the AGC on DSP allowed effect ("0x40" bitmask).
   CAPTURE_EFFECT_AGC_ON_DSP_ALLOWED = 6;
 }
+
+//
+// Source: adhd::cras/include/cras_iodev_info.h::CRAS_IODEV_LAST_OPEN_RESULT
+enum CrasIODevLastOpenResult {
+  IO_DEV_LAST_OPEN_RESULT_UNKNOWN = 0;
+  IO_DEV_LAST_OPEN_RESULT_SUCCESS = 1;
+  IO_DEV_LAST_OPEN_RESULT_FAILURE = 2;
+}
+
+// Represents a CrasNode, with data limited what is relevant for testing.
+message CrasNode {
+  // False for output nodes, true for input nodes.
+  bool is_input = 1;
+
+  // The id of this node. It is unique among all nodes including both output and
+  // input nodes.
+  uint64 id = 2;
+
+  // The type of this node.
+  CrasNodeType type = 3;
+
+  // The name of the device that this node belongs to. For example,
+  // "HDA Intel PCH: CA0132 Analog:0,0" or "Creative SB Arena Headset".
+  string device_name = 4;
+
+  // Whether this node is currently used for output/input. There is one active
+  // node for output and one active node for input.
+  bool active = 5;
+
+  // The node volume indexed from 0 to 100.
+  uint64 node_volume = 6;
+}

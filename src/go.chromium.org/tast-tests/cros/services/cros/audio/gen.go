@@ -10,6 +10,7 @@
 
 //go:generate protoc -I ../../../../../.. --go_out=plugins=grpc:../../../../../.. go.chromium.org/tast-tests/cros/services/cros/audio/cras_types.proto
 //go:generate protoc -I ../../../../../.. --go_out=plugins=grpc:../../../../../.. go.chromium.org/tast-tests/cros/services/cros/audio/cras_test_service.proto
+//go:generate protoc -I ../../../../../.. --go_out=plugins=grpc:../../../../../.. go.chromium.org/tast-tests/cros/services/cros/audio/cras_control_service.proto
 
 package audio
 

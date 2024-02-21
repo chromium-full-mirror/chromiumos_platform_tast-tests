@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"github.com/godbus/dbus/v5"
+	"go.chromium.org/tast-tests/cros/common/audio/cras"
+	audiopb "go.chromium.org/tast-tests/cros/services/cros/audio"
 
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -111,6 +113,23 @@ type CrasNode struct {
 	IsInput    bool
 	DeviceName string
 	NodeVolume uint64
+}
+
+// ToProto returns this CrasNode in the proto message format used by cras Tast
+// services.
+func (n *CrasNode) ToProto() (*audiopb.CrasNode, error) {
+	nodeType, err := cras.UnmarshalNodeType(n.Type)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to unmarshall node type %q", n.Type)
+	}
+	return &audiopb.CrasNode{
+		Id:         n.ID,
+		Type:       nodeType,
+		Active:     n.Active,
+		IsInput:    n.IsInput,
+		DeviceName: n.DeviceName,
+		NodeVolume: n.NodeVolume,
+	}, nil
 }
 
 // VolumeState contains the metadata of volume state in Cras.
@@ -248,13 +267,23 @@ func (c *Cras) call(ctx context.Context, method string, args ...interface{}) *db
 	return c.obj.CallWithContext(ctx, dbusInterface+"."+method, 0, args...)
 }
 
-// SetActiveNode calls cras.Control.SetActiveInput(Output)Node over D-Bus.
+// SetActiveNode calls SetActiveInputNode or SetActiveOutputNode based on
+// whether the node is an input or output node.
 func (c *Cras) SetActiveNode(ctx context.Context, node CrasNode) error {
-	cmd := "SetActiveOutputNode"
 	if node.IsInput {
-		cmd = "SetActiveInputNode"
+		return c.SetActiveInputNode(ctx, node.ID)
 	}
-	return c.call(ctx, cmd, node.ID).Err
+	return c.SetActiveOutputNode(ctx, node.ID)
+}
+
+// SetActiveOutputNode calls cras.Control.SetActiveOutputNode over D-Bus.
+func (c *Cras) SetActiveOutputNode(ctx context.Context, nodeID uint64) error {
+	return c.call(ctx, "SetActiveOutputNode", nodeID).Err
+}
+
+// SetActiveInputNode calls cras.Control.SetActiveOutputNode over D-Bus.
+func (c *Cras) SetActiveInputNode(ctx context.Context, nodeID uint64) error {
+	return c.call(ctx, "SetActiveInputNode", nodeID).Err
 }
 
 // SetActiveNodeByMatcher sets node with specified matcher active.
@@ -477,4 +506,15 @@ func (c *Cras) WaitUntilFeatureFlagHasValue(ctx context.Context, flagName string
 		Timeout:  10 * time.Second,
 		Interval: time.Second,
 	})
+}
+
+// GetForceHFPSwbEnabled returns the response of the dbus method of the same name.
+func (c *Cras) GetForceHFPSwbEnabled(ctx context.Context) (enabled bool, err error) {
+	err = c.call(ctx, "GetForceHFPSwbEnabled").Store(&enabled)
+	return enabled, err
+}
+
+// SetForceHFPSwbEnabled calls the dbus method of the same name.
+func (c *Cras) SetForceHFPSwbEnabled(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetForceHFPSwbEnabled", enabled).Err
 }
