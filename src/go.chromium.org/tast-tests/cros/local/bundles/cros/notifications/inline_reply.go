@@ -32,9 +32,7 @@ func init() {
 		LacrosStatus:   testing.LacrosVariantExists,
 		Desc:           "Verify inline reply for Chrome notification works",
 		Contacts: []string{
-			// "chromeos-sw-engprod@google.com",
-			"alfredyu@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"chromeos-sw-engprod@google.com",
 		},
 		// ChromeOS > Software > System UI Surfaces > Notifications
 		BugComponent: "b:1246021",
