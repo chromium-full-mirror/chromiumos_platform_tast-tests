@@ -223,23 +223,6 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create config: ", err)
 	}
 
-	testParams := s.Param().(firmware.PDTestParams)
-
-	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
-		s.Fatal("Failed to configure Servo for PD testing: ", err)
-	}
-
-	//
-	// Move on to the actual VBUS Request test
-	//
-
-	dutVoltageLimit := h.Config.UsbcInputVoltageLimit
-
-	isOverride = h.Config.ChargerProfileOverride
-	if isOverride == true {
-		s.Log("*** Custom charger profile takes over, which may cause voltage-not-matched. It is OK to fail. *** ")
-	}
-
 	if err := h.RequireRPCClient(ctx); err != nil {
 		s.Fatal("Failed to connect to RPC: ", err)
 	}
@@ -255,6 +238,23 @@ func PDVbusRequest(ctx context.Context, s *testing.State) {
 	// If battery is full, discharge it some before starting the test
 	if err := firmware.TestChargingVoltagesAfterDischarge(ctx, h, 93.0); err != nil {
 		s.Fatal("Failed checking voltages after discharge test: ", err)
+	}
+
+	testParams := s.Param().(firmware.PDTestParams)
+
+	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
+		s.Fatal("Failed to configure Servo for PD testing: ", err)
+	}
+
+	//
+	// Move on to the actual VBUS Request test
+	//
+
+	dutVoltageLimit := h.Config.UsbcInputVoltageLimit
+
+	isOverride = h.Config.ChargerProfileOverride
+	if isOverride == true {
+		s.Log("*** Custom charger profile takes over, which may cause voltage-not-matched. It is OK to fail. *** ")
 	}
 
 	// Obtain voltage limit due to maximum charging power. Note that this

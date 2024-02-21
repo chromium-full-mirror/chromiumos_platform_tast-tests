@@ -957,6 +957,10 @@ func (h *Helper) SetDUTPower(ctx context.Context, powerOn bool) error {
 		role := servo.PDRoleSnk
 		if powerOn {
 			role = servo.PDRoleSrc
+			if err := h.Servo.SetOnOff(ctx, servo.DTSMode, servo.On); err != nil {
+				return errors.Wrap(err, "set dts on")
+			}
+			testing.ContextLogf(ctx, "Set %s:%s", servo.DTSMode, servo.On)
 		}
 		if err := h.Servo.SetPDRole(ctx, role); err != nil {
 			return errors.Wrap(err, "set pd role")
