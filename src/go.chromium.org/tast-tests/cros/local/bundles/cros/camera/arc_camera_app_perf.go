@@ -155,19 +155,23 @@ func testOpenCloseSnapshot(ctx context.Context, cr *chrome.Chrome, tconn *chrome
 	if err != nil {
 		return errors.Wrap(err, "failed to get metrics")
 	}
+
+	nanosToMillis := func(nanos int64) float64 {
+		return float64(nanos) * 0.000001
+	}
 	if len(metrics.OpeningCamera) < cameraResetCount || len(metrics.ClosingCamera) < cameraResetCount {
 		return errors.Wrapf(err, "too few opening/closing camera metrics are collected. Opening: %v, Closing: %v", len(metrics.OpeningCamera), len(metrics.ClosingCamera))
 	}
 	for i := 0; i < cameraResetCount; i++ {
-		p.Append(openCameraMetric, float64(metrics.OpeningCamera[i]))
-		p.Append(closeCameraMetric, float64(metrics.ClosingCamera[i]))
+		p.Append(openCameraMetric, nanosToMillis(metrics.OpeningCamera[i]))
+		p.Append(closeCameraMetric, nanosToMillis(metrics.ClosingCamera[i]))
 	}
 
 	if len(metrics.TakingPhoto) < snapshotWarmupCount+snapshotCount {
 		return errors.Wrapf(err, "too few taking photo metrics are collected. Taking Photo: %v", len(metrics.TakingPhoto))
 	}
 	for i := snapshotWarmupCount; i < snapshotWarmupCount+snapshotCount; i++ {
-		p.Append(snapshotMetric, float64(metrics.TakingPhoto[i]))
+		p.Append(snapshotMetric, nanosToMillis(metrics.TakingPhoto[i]))
 	}
 
 	return nil
