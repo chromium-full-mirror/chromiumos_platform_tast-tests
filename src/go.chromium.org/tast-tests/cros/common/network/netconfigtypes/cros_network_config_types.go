@@ -39,6 +39,25 @@ const (
 	WiFi
 )
 
+func (nt NetworkType) String() string {
+	strings := map[NetworkType]string{
+		All:      "all",
+		Cellular: "cellular",
+		Ethernet: "ethernet",
+		Mobile:   "mobile",
+		Tether:   "tethering",
+		VPN:      "vpn",
+		Wireless: "wireless",
+		WiFi:     "wifi",
+	}
+
+	s, ok := strings[nt]
+	if !ok {
+		return "unknown"
+	}
+	return s
+}
+
 // DeviceStateType : Device / Technology state for devices.
 type DeviceStateType int
 
@@ -58,6 +77,24 @@ const (
 	// UnavailableDST : Not used in DeviceStateProperties, but useful when querying by type.
 	UnavailableDST
 )
+
+func (dst DeviceStateType) String() string {
+	strings := map[DeviceStateType]string{
+		UninitializedDST: "uninitialized",
+		DisabledDST:      "disabled",
+		DisablingDST:     "disabling",
+		EnablingDST:      "enabling",
+		EnabledDST:       "enabled",
+		ProhibitedDST:    "prohibited",
+		UnavailableDST:   "unavailable",
+	}
+
+	s, ok := strings[dst]
+	if !ok {
+		return "unknown"
+	}
+	return s
+}
 
 // ConnectionStateType : Connection state of visible networks.
 type ConnectionStateType int

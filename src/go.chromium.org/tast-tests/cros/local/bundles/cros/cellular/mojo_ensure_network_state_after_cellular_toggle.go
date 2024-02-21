@@ -42,10 +42,10 @@ func compareDeviceStatelist(orgDeviceState, curDeviceState []types.DeviceStatePr
 		// Check cellular device against the known status.
 		if deviceType == types.Cellular {
 			if enabled && deviceState != types.EnabledDST {
-				return errors.Errorf("unexpected Cellular state expected: enabled got: %d", deviceState)
+				return errors.Errorf("unexpected Cellular state, got: %v, want: enabled", deviceState)
 
 			} else if !enabled && deviceState != types.DisabledDST {
-				return errors.Errorf("unexpected Cellular state expected: disabled got: %d", deviceState)
+				return errors.Errorf("unexpected Cellular state, got: %v, want: disabled", deviceState)
 			}
 		}
 
@@ -57,7 +57,7 @@ func compareDeviceStatelist(orgDeviceState, curDeviceState []types.DeviceStatePr
 		// Ethernet and WiFi should maintain the original state.
 		for _, cfg := range orgDeviceState {
 			if cfg.Type == deviceType && cfg.DeviceState != deviceState {
-				return errors.Errorf("unexpected state for device %d, expected: %d, got: %d", cfg.Type, cfg.DeviceState, deviceState)
+				return errors.Errorf("unexpected state for %v device, got: %v, want: %v", cfg.Type, deviceState, cfg.DeviceState)
 			}
 		}
 	}
