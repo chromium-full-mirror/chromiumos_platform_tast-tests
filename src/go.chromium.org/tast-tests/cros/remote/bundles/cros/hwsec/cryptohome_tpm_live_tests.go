@@ -172,7 +172,7 @@ func CryptohomeTPMLiveTests(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to take TPM ownership: ", err)
 	}
 
-	if out, err := cmdRunner.Run(ctx, "cryptohome-tpm-live-test", "--test="+s.Param().(testParams).testName); err != nil {
+	if out, err := cmdRunner.RunWithCombinedOutput(ctx, "cryptohome-tpm-live-test", "--test="+s.Param().(testParams).testName); err != nil {
 		logFile := filepath.Join(s.OutDir(), "tpm_live_test_output.txt")
 		if writeErr := ioutil.WriteFile(logFile, out, 0644); writeErr != nil {
 			s.Errorf("Failed to write to %s: %v", logFile, writeErr)
