@@ -382,6 +382,7 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
+				chrome.ExtraArgs(chromeWebRTCEncodedFrameArgs...),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",

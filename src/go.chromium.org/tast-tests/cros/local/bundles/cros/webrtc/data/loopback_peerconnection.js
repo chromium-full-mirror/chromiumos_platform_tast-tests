@@ -44,13 +44,14 @@ async function getStream(width, height, displayMediaType) {
 async function createStreamAndPCs(
   width,
   height,
-  svcScalabilityMode,
+  encodedInsertableStreams,
   displayMediaType
 ) {
-  const isSModeEnc = svcScalabilityMode.startsWith('S');
-  let localPC = new RTCPeerConnection({ encodedInsertableStreams: isSModeEnc });
+  let localPC = new RTCPeerConnection({
+    encodedInsertableStreams: encodedInsertableStreams,
+  });
   let remotePC = new RTCPeerConnection({
-    encodedInsertableStreams: isSModeEnc,
+    encodedInsertableStreams: encodedInsertableStreams,
   });
 
   return {
@@ -68,20 +69,24 @@ async function start(
   svcScalabilityMode,
   displayMediaType
 ) {
+  if (svcScalabilityMode !== '' && !svcScalabilityMode.startsWith('L1')) {
+    console.log('unexpected svcScalabilityMode: ', svcScalabilityMode);
+    return;
+  }
   let { stream, localPC, remotePC } = await createStreamAndPCs(
     width,
     height,
-    svcScalabilityMode,
+    false,
     displayMediaType
   );
 
-  let rids = [];
   let init = {
     // Prefer resolution even at the cost of visual quality to avoid falling
     // down to SW video encoding, see b/181320567 or crbug.com/1179020.
     degradationPreference: 'maintain-resolution',
     streams: [stream],
   };
+  let rids = [];
   if (simulcasts > 1) {
     for (let i = 0; i < simulcasts; i++) {
       rids.push(i);
@@ -89,9 +94,6 @@ async function start(
     init.sendEncodings = rids.map((i) => {
       return { rid: i, scaleResolutionDownBy: 2 ** (rids.length - (i + 1)) };
     });
-  } else if (svcScalabilityMode !== '') {
-    // TODO: Decode the top spatial layer only in LxTx_KEY.
-    init.sendEncodings = [{ scalabilityMode: svcScalabilityMode }];
   }
   localPC.addTransceiver(stream.getVideoTracks()[0], init);
   remotePC.addTransceiver('video');
@@ -107,30 +109,37 @@ async function start(
   // |targetBitrate| uses a conservative 0.05 bits per pixel (bpp) estimate.
   const targetBitrate = width * height * 30 /*fps*/ * 0.05;
   await connect(localPC, remotePC, profile, targetBitrate, rids);
-  await onTrack;
-
   testVisible.setPeerConnections([localPC], [remotePC]);
+  await onTrack;
 }
 
-async function startSMode(profile, width, height, svcScalabilityMode) {
+async function startSpatialSVC(profile, width, height, svcScalabilityMode) {
+  if (svcScalabilityMode == '' || svcScalabilityMode.startsWith('L1')) {
+    console.log('unexpected svcScalabilityMode: ', svcScalabilityMode);
+    return;
+  }
   let { stream, localPC, remotePC } = await createStreamAndPCs(
     width,
     height,
-    svcScalabilityMode,
+    true,
     ''
   );
   let localPCTransceiver = localPC.addTransceiver(stream.getVideoTracks()[0], {
-    // Prefer resolution even at the cost of visual quality to avoid falling
-    // down to SW video encoding, see b/181320567 or crbug.com/1179020.
-    degradationPreference: 'maintain-resolution',
     streams: [stream],
     sendEncodings: [{ scalabilityMode: svcScalabilityMode }],
   });
   // TODO(crbug.com/1513866): Remove this header extension setting.
   setUpHeaderExtension(localPCTransceiver);
+  // Prefer resolution even at the cost of visual quality to avoid falling
+  // down to SW video encoding, see b/181320567 or crbug.com/1179020.
+  let params = localPCTransceiver.sender.getParameters();
+  params.degradationPreference = 'maintain-resolution';
+  await localPCTransceiver.sender.setParameters(params);
+
   let localPCStream = localPCTransceiver.sender.createEncodedStreams();
 
   const numStreams = parseInt(svcScalabilityMode[1]);
+
   let localPCs = new Array(numStreams);
   let remotePCs = new Array(numStreams);
   let remoteVideoIds = new Array(numStreams);
@@ -164,7 +173,7 @@ async function startSMode(profile, width, height, svcScalabilityMode) {
   localPCs[numStreams - 1] = localPC;
   remotePCs[numStreams - 1] = remotePC;
 
-  const topSpatialLayerIndex = numStreams - 1;
+  const topSpatialLayerIndex = parseInt(svcScalabilityMode[1]) - 1;
   let onTracks = new Array(numStreams);
   for (let i = 0; i < numStreams; i++) {
     const onTrack = new Promise((resolve, reject) => {
@@ -173,19 +182,25 @@ async function startSMode(profile, width, height, svcScalabilityMode) {
         remoteVideo.srcObject = new MediaStream([e.track]);
         let receiver = e.receiver;
         let receiverStream = receiver.createEncodedStreams();
+        // TODO(bugs.webrtc.org/15795): Set the marker bit of RTP Packet
+        // and RemotePC[i] decodes frames whose spatial indices are i in S-mode
+        // encoding.
+        const decodeSpatialIndex = topSpatialLayerIndex;
+        let transformInit;
+        if (svcScalabilityMode.startsWith('S')) {
+          transformInit = new TransformSmodeStream(
+            svcScalabilityMode,
+            decodeSpatialIndex
+          );
+        } else {
+          transformInit = new TransformkSVCStream(
+            svcScalabilityMode,
+            decodeSpatialIndex
+          );
+        }
+
         receiverStream.readable
-          .pipeThrough(
-            new TransformStream({
-              transform(frame, controller) {
-                const metadata = frame.getMetadata();
-                // TODO(bugs.webrtc.org/15795): Set the marker bit of RtcPacket
-                // and RemotePC[i] decodes frames whose spatial indices are i.
-                if (metadata.spatialIndex == topSpatialLayerIndex) {
-                  controller.enqueue(frame);
-                }
-              },
-            })
-          )
+          .pipeThrough(new TransformStream(transformInit))
           .pipeTo(receiverStream.writable);
         resolve();
       };
@@ -195,7 +210,7 @@ async function startSMode(profile, width, height, svcScalabilityMode) {
 
   let ssrcs = new Array(numStreams - 1);
   for (let i = 0; i < numStreams; i++) {
-    const ssrc = await connect(localPCs[i], remotePCs[i], profile, 0, []);
+    const ssrc = await connect(localPCs[i], remotePCs[i], profile);
     if (i < ssrcs.length) {
       ssrcs[i] = ssrc;
     }
@@ -219,9 +234,9 @@ async function startSMode(profile, width, height, svcScalabilityMode) {
     )
     .pipeTo(localPCStream.writable);
 
+  testVisible.setPeerConnections(localPCs, remotePCs);
+
   for (let i = 0; i < onTracks.length; i++) {
     await onTracks[i];
   }
-
-  testVisible.setPeerConnections(localPCs, remotePCs);
 }

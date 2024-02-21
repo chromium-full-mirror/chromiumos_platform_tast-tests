@@ -104,38 +104,18 @@ func setupRTCPeerConnectionTest(ctx context.Context, conn *chrome.Conn, tconn *c
 	return true, nil
 }
 
-// runPeerConnectionAndVerifyImplementation kicks off the RTC PeerConnection.
-// It verifies the implementation of the running video decoders and encoders are
-// expected ones.
-func runPeerConnectionAndVerifyImplementation(ctx context.Context, conn *chrome.Conn, params RTCTestParams) error {
-	if isSMode(params.Svc) {
-		if err := conn.Call(ctx, nil, "startSMode", params.Profile, params.StreamWidth, params.StreamHeight, params.Svc); err != nil {
-			return errors.Wrap(err, "error establishing connection")
-		}
-
-	} else {
-		if err := conn.Call(ctx, nil, "start", params.Profile, params.StreamWidth, params.StreamHeight, params.Simulcasts, params.Svc, params.DisplayMediaType); err != nil {
-			return errors.Wrap(err, "error establishing connection")
-		}
-	}
-
-	return verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs)
-}
-
-// measurePerformance measures the webrtc stats and system performance, and records the results to p.
+// measurePerformance measures the webrtc stats and system performance, and records
+// the results to the perf.Values.
 func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn, tconn *chrome.TestConn, params RTCTestParams, p *graphics.ThreadSafePerfValues) error {
-	pcID := 0
-	if isSMode(params.Svc) {
-		numStreams, err := numSModeLayers(params.Svc)
-		if err != nil {
-			return err
-		}
-		// Collect the performance of only the decoder for the largest resolution stream.
-		// TODO(bugs.webrtc.org/15795): After each decoder decodes different
-		// resolution stream from each eother, collect all the decoders' performance.
-		pcID = numStreams - 1
+	numStreams, err := numSpatialLayers(params.Svc)
+	if err != nil {
+		return err
 	}
 
+	// Collect the performance of only the decoder for the largest resolution stream.
+	// TODO(bugs.webrtc.org/15795): After each decoder decodes different
+	// resolution stream from each eother, collect all the decoders' performance.
+	pcID := numStreams - 1
 	readCodecPC := fmt.Sprintf("testVisible.localPeerConnections[%d]", pcID)
 	if err := webrtc.MeasureRTCStats(ctx, conn, params.Profile, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", params.Svc, readRTCReport(pcID), webrtc.CreateReadCodecFunc(readCodecPC), validateFrame, p.GetUnderlyingValues()); err != nil {
 		return errors.Wrap(err, "failed to measure RTCStats")

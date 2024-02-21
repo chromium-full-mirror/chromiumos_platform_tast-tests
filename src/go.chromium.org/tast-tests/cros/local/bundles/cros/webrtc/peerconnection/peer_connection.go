@@ -141,14 +141,26 @@ func readRTCReport(id int) webrtc.ReadRTCReportFunc {
 	}
 }
 
-func isSMode(scalabilityMode string) bool {
-	return strings.HasPrefix(scalabilityMode, "S")
+func isSpatialLayerSVC(scalabilityMode string) bool {
+	if strings.HasPrefix(scalabilityMode, "S") {
+		return true
+	}
+	if strings.HasPrefix(scalabilityMode, "L") {
+		if numLayers, err := strconv.Atoi(string(scalabilityMode[1])); err == nil {
+			return numLayers > 1
+		}
+
+	}
+	return false
 }
 
-func numSModeLayers(scalabilityMode string) (int, error) {
+func numSpatialLayers(scalabilityMode string) (int, error) {
+	if !isSpatialLayerSVC(scalabilityMode) {
+		return 1, nil
+	}
 	numLayers, err := strconv.Atoi(string(scalabilityMode[1]))
 	if err != nil {
-		return 0, errors.Wrapf(err, "failed to get the numbner of layers in s-mode encoding: %s", scalabilityMode)
+		return 0, errors.Wrapf(err, "failed to get the number of layers from scalabilityMode: %s", scalabilityMode)
 	}
 	return numLayers, nil
 }
@@ -206,8 +218,15 @@ func RunRTCPeerConnection(ctx context.Context, cs ash.ConnSource, cr *chrome.Chr
 		return errors.Wrap(err, "timed out waiting for page loading")
 	}
 
-	if isSMode(params.Svc) {
-		if err := conn.Call(ctx, nil, "startSMode", params.Profile, params.StreamWidth, params.StreamHeight, params.Svc); err != nil {
+	return runPeerConnectionAndVerifyImplementation(ctx, conn, params)
+}
+
+// runPeerConnectionAndVerifyImplementation kicks off the RTC PeerConnection.
+// It verifies the implementation of the running video decoders and encoders are
+// expected ones.
+func runPeerConnectionAndVerifyImplementation(ctx context.Context, conn *chrome.Conn, params RTCTestParams) error {
+	if isSpatialLayerSVC(params.Svc) {
+		if err := conn.Call(ctx, nil, "startSpatialSVC", params.Profile, params.StreamWidth, params.StreamHeight, params.Svc); err != nil {
 			return errors.Wrap(err, "error establishing connection")
 		}
 	} else {
@@ -245,15 +264,12 @@ func verifyDecoderImplementation(ctx context.Context, conn *chrome.Conn, verifyD
 		return nil
 	}
 
-	numDecoders := 1
-	// TODO(b/322436617): Verify all the decoders in simulcast and non S-mode SVC encoding.
-	if isSMode(scalabilityMode) {
-		var err error
-		numDecoders, err = numSModeLayers(scalabilityMode)
-		if err != nil {
-			return err
-		}
+	// TODO(b/322436617): Verify all the decoders in simulcast
+	numDecoders, err := numSpatialLayers(scalabilityMode)
+	if err != nil {
+		return err
 	}
+
 	for i := 0; i < numDecoders; i++ {
 		decImplName, hwDecoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, true, readRTCReport(i))
 		if err != nil {
@@ -274,16 +290,14 @@ func verifyEncoderImplementation(ctx context.Context, conn *chrome.Conn, verifyE
 		return nil
 	}
 
-	id := 0
-	if isSMode(scalabilityMode) {
-		numStreams, err := numSModeLayers(scalabilityMode)
-		if err != nil {
-			return err
-		}
-		// The main local peer connection in S mode encoding is set to
-		// testVisible.localPeerConnections[numStreams - 1].
-		id = numStreams - 1
+	numStreams, err := numSpatialLayers(scalabilityMode)
+	if err != nil {
+		return err
 	}
+	// The main local peer connection in spatial layer encoding is set to
+	// testVisible.localPeerConnections[numStreams - 1].
+	id := numStreams - 1
+
 	encImplName, hwEncoderUsed, err := webrtc.GetCodecImplementation(ctx, conn, false, readRTCReport(id))
 	if err != nil {
 		return errors.Wrap(err, "failed to get encoder implementation name")
