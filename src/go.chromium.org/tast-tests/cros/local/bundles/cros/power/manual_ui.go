@@ -125,23 +125,25 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	}
 
 	// Give a few minutes for testers to do manual testing setup.
-	// Testers can press "Ctrl + Alt + /" to bring up the keyboard
+	// Testers can press "Ctrl + Launcher + S" to bring up the keyboard
 	// shortcuts widget to end the manual setup at any time.
 	ui := uiauto.New(tconn)
-	ksReg := regexp.MustCompile("(Keyboard shortcuts|Shortcuts)")
-	keyboardShortcutsWindow := nodewith.NameRegex(ksReg).ClassName("Widget").Role(role.Window)
+	ksReg := regexp.MustCompile("[sS]hortcuts")
+	keyboardShortcutsWindow := nodewith.NameRegex(ksReg).Role(role.Window).HasClass("BrowserFrame")
 	closeButton := nodewith.Name("Close").Role(role.Button).Ancestor(keyboardShortcutsWindow)
 	if err := ui.WithTimeout(manualSetupDuration).WaitUntilExists(keyboardShortcutsWindow)(ctx); err == nil {
 		if err := ui.LeftClick(closeButton)(ctx); err != nil {
 			s.Error("Failed to close the Keyboard shortcuts widget: ", err)
 		}
 		msg := "You indicated the test setup is done. Test will proceed to next step."
+		s.Log(msg)
 		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
 			"Manual Power Test Setup Finish", msg); err != nil {
 			s.Log("Failed to create test setup completion notification: ", err)
 		}
 	} else {
 		msg := fmt.Sprintf("%v setup time has been reached. Test will proceed to next step.", manualSetupDuration)
+		s.Log(msg)
 		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
 			"Manual Power Test Setup Finish", msg); err != nil {
 			s.Log("Failed to create test setup completion notification: ", err)
@@ -168,12 +170,14 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	// Given few minutes for testers to do manual testing.
 	if err := ui.WithTimeout(manualTestDuration).WaitUntilExists(keyboardShortcutsWindow)(ctx); err == nil {
 		msg := "You indicated the manual test is done. Test will collect the result."
+		s.Log(msg)
 		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
 			"Manual Power Test Finish", msg); err != nil {
 			s.Log("Failed to create test completion notification: ", err)
 		}
 	} else {
 		msg := fmt.Sprintf("%v manual test time has been reached. Test will collect the result.", manualTestDuration)
+		s.Log(msg)
 		if _, err := browser.CreateTestNotification(ctx, tconn, browser.NotificationTypeBasic,
 			"Manual Power Test Finish", msg); err != nil {
 			s.Log("Failed to create test completion notification: ", err)
