@@ -169,6 +169,29 @@ func (t *TpmHandle) TpmvGetBootMode() (byte, error) {
 	return mode, nil
 }
 
+// TpmvGetApRoVerificationStatus reads AP RO Verification status via vendor
+// command.
+func (t *TpmHandle) TpmvGetApRoVerificationStatus() (APROResultCode, error) {
+	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" + // size
+		"20000000" + // ordinal: vendor
+		"0039") // subcommand: GetApRoVerificationStatus
+
+	response, err := t.Send(tpmvGetBootMode)
+	if err != nil {
+		return ApRoV2Unknown, err
+	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return ApRoV2Unknown, err
+	}
+	if errorCode != 0 {
+		return ApRoV2Unknown, errors.Errorf("GetApRoVerificationStatus command returned error: %d", errorCode)
+	}
+	mode := response[12]
+	return APROResultCode(mode), nil
+}
+
 // TpmvCommitNvmem sends the CommitNvmem vendor command.
 func (t *TpmHandle) TpmvCommitNvmem() error {
 	tpmvCommitNvmem, err := hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS

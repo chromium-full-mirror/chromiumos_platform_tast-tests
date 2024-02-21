@@ -22,6 +22,9 @@ const (
 const (
 	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
 	boxMaxDeepSleepDelay = time.Minute
+	// boxEcResetGpioDelay is the amount of time the EC reset key combo should be
+	// held for box form factor.
+	boxEcResetGpioDelay = 200 * time.Millisecond
 )
 
 const (
@@ -29,6 +32,9 @@ const (
 	tabletEcResetHoldDelay = 10 * time.Second
 	// tabletGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	tabletGscResetHoldDelay = 20 * time.Second
+	// tabletEcResetGpioDelay is the amount of time the EC reset key combo should
+	// be held for tablet form factor.
+	tabletEcResetGpioDelay = tabletEcResetHoldDelay + 200*time.Millisecond
 )
 
 const (
@@ -36,6 +42,9 @@ const (
 	clamshellGscResetHoldDelay = 10 * time.Second
 	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
 	clamshellMaxDeepSleepDelay = time.Minute
+	// clamshellEcResetGpioDelay is the amount of time the EC reset key combo
+	// should be  held for clamshell form factor.
+	clamshellEcResetGpioDelay = 200 * time.Millisecond
 )
 
 type ti50ValidRBOXParam struct {
@@ -134,6 +143,8 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 	}
 	s.Log("GSC in deep sleep")
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50RecoveryIn)
+
+	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50RecoveryIn, boxEcResetGpioDelay)
 }
 
 func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage) {
@@ -211,10 +222,9 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	b.GpioSet(ctx, ti50.GpioTi50KsiRefresh, true)
 	b.GpioSet(ctx, ti50.GpioTi50KsiBack, true)
 
-	// TODO(b/262618201) finish the rest of test for other form factors
-	// TODO(b/262618201) ensure that AP RO bypass key combo works
+	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50KsiRefresh, clamshellEcResetGpioDelay)
+
 	// TODO(b/262618201) ensure that battery disconnect key combo works
-	// TODO(b/262618201) ensure that RMA triggered keycombo works
 }
 
 // verifyEcResetWithKeysInOrder verifies that pushing the first gpio then the second for 500ms
@@ -275,8 +285,9 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	verifyPassthrough(ctx, s, b, ti50.GpioTi50VolDownIn, ti50.GpioTi50VolDownOut)
 	verifyPassthrough(ctx, s, b, ti50.GpioTi50VolUpIn, ti50.GpioTi50VolUpOut)
 
-	// Ensure both keys for combo are not pushed
+	// Ensure keys for combo are not pushed
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
 	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
 
 	s.Log("Start gpio monitoring")
@@ -289,8 +300,8 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
 	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
 	testing.Sleep(ctx, time.Second*11) // GoBigSleepLint: Simulating button press
+	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
-	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
 	s.Log("Stop gpio monitoring: ", events)
@@ -370,9 +381,14 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
 	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
 
-	// TODO(b/262618201) ensure that AP RO bypass key combo works
+	// Hold the EC Reset key the entire time we are verifying RMA sequence, then
+	// use the tapping of VolumeUp as the cancel of GSC reset to only trigger
+	// EC reset repeatedly.
+	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
+
+	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50VolUpIn, tabletEcResetGpioDelay)
+
 	// TODO(b/262618201) ensure that battery disconnect key combo works
-	// TODO(b/262618201) ensure that RMA triggered keycombo works
 }
 
 // verifyPassthrough verifies that the specified from gpio is matches on the to gpio for both
@@ -385,5 +401,98 @@ func verifyPassthrough(ctx context.Context, s *testing.State, b utils.DevboardHe
 	b.GpioSet(ctx, from, false)
 	if b.GpioGet(ctx, to) != false {
 		s.Errorf("GSC should forward low from %s to %s", from, to)
+	}
+}
+
+func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, gpio ti50.GpioName, ecResetGpioDelay time.Duration) {
+	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
+	params := s.Param().(ti50ValidRBOXParam)
+	assertVal := false
+
+	// Verify that AP RO result is one of the V2 errors before performing
+	// the RMA key sequence. This only applies to Ti50 not Cr50.
+	tpm := b.ResetAndTpmStartup(ctx, i, params.formFactor)
+	mode, err := tpm.TpmvGetApRoVerificationStatus()
+	th.MustSucceed(err, "Get AP RO verification status via TPMV command")
+	if !mode.IsV2Code() {
+		s.Error("AP RO verification status not V2 code: ", mode)
+	}
+
+	// Turn AP off while performing RMA key combo (AP would be shut off with the
+	// first refresh/recovery key tap anyway due to EC reset).
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
+
+	b.GpioSet(ctx, gpio, assertVal)
+	// GoBigSleepLint: Simulating button press
+	testing.Sleep(ctx, ecResetGpioDelay)
+	b.GpioSet(ctx, gpio, !assertVal)
+
+	// GoBigSleepLint: Simulating reasonable time between button press
+	testing.Sleep(ctx, time.Millisecond*500)
+
+	b.GpioSet(ctx, gpio, assertVal)
+	// GoBigSleepLint: Simulating button press
+	testing.Sleep(ctx, ecResetGpioDelay)
+	b.GpioSet(ctx, gpio, !assertVal)
+
+	// GoBigSleepLint: Simulating reasonable time between button press
+	testing.Sleep(ctx, time.Millisecond*500)
+
+	b.GpioSet(ctx, gpio, assertVal)
+	// GoBigSleepLint: Simulating button press
+	testing.Sleep(ctx, ecResetGpioDelay)
+	b.GpioSet(ctx, gpio, !assertVal)
+
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+
+	// Turn AP back on
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+	b.WaitForTpm(ctx, tpm)
+
+	// Turn AP back off. This should not reset the RMA request since we are not
+	// going to read the RMA request via TPMV command.
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
+
+	// GoBigSleepLint: Simulating AP being off for reasonable amount of time
+	testing.Sleep(ctx, time.Millisecond*200)
+
+	// Turn AP back on. Should still have RMA request pending
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+	b.WaitForTpm(ctx, tpm)
+
+	// Ensure that AP RO verification status is a V1 code. This indicates that
+	// RMA was requested.
+	mode, err = tpm.TpmvGetApRoVerificationStatus()
+	th.MustSucceed(err, "Get AP RO verification status via TPMV command")
+	if mode.IsV2Code() {
+		s.Error("AP RO verification status should be V1 code: ", mode)
+	}
+
+	// Ensure that AP RO verification status is still a V1 code. The status should
+	// not reset until AP is reset.
+	mode, err = tpm.TpmvGetApRoVerificationStatus()
+	th.MustSucceed(err, "Get AP RO verification status via TPMV command")
+	if mode.IsV2Code() {
+		s.Error("AP RO verification status should be V1 code: ", mode)
+	}
+
+	// Turn AP back off. This should reset the RMA request since we read the
+	// RMA request.
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
+
+	// GoBigSleepLint: Simulating AP being off for reasonable amount of time
+	testing.Sleep(ctx, time.Millisecond*200)
+
+	// Turn AP back on. Should still have RMA request pending
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, true)
+	b.WaitForTpm(ctx, tpm)
+
+	// Ensure that AP RO verification status has returned to V2 code meaning there
+	// is not RMA request pending.
+	mode, err = tpm.TpmvGetApRoVerificationStatus()
+	th.MustSucceed(err, "Get AP RO verification status via TPMV command")
+	if !mode.IsV2Code() {
+		s.Error("AP RO verification status should be V2 code: ", mode)
 	}
 }

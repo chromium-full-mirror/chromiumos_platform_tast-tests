@@ -161,3 +161,66 @@ const (
 	// GscOTShield is a small OpenTitan board on top of HyperDebug.
 	GscOTShield TestbedType = "gsc_ot_shield"
 )
+
+// APROResultCode represents the status of AP RO verification.
+type APROResultCode byte
+
+const (
+	// ApRoNotRun is a V1 code that means AP RO verification did not run.
+	ApRoNotRun APROResultCode = 0
+	// ApRoPassUnverifiedGbb is a V1 code that mean everything passed but GBB.
+	ApRoPassUnverifiedGbb APROResultCode = 1
+	// ApRoFail is a V1 code that means verification failed .
+	ApRoFail APROResultCode = 2
+	// ApRoUnsupportedUnknown is a V1 code that mean an unknown error occurred.
+	ApRoUnsupportedUnknown APROResultCode = 3
+	// ApRoUnsupportedNotTriggered is a V1 code that means verification was not
+	// triggered.
+	ApRoUnsupportedNotTriggered APROResultCode = 4
+	// ApRoUnsupportedTriggered is a V1 code that means verification was not run.
+	ApRoUnsupportedTriggered APROResultCode = 5
+	// ApRoPass is a V1 code that means verification passed.
+	ApRoPass APROResultCode = 6
+	// ApRoInProgress is a V1 code that means verification is on going.
+	ApRoInProgress APROResultCode = 7
+	// ApRoV2Success is a V2 code meaning success.
+	ApRoV2Success APROResultCode = 20
+	// ApRoV2FailedVerification is a V2 code meaning failure.
+	ApRoV2FailedVerification APROResultCode = 21
+	// ApRoV2InconsistentGscvd is a V2 code meaning GSCVD section was bad.
+	ApRoV2InconsistentGscvd APROResultCode = 22
+	// ApRoV2InconsistentKeyblock is a V2 code meaning key block was bad.
+	ApRoV2InconsistentKeyblock APROResultCode = 23
+	// ApRoV2InconsistentKey is a V2 code meaning signing key was wrong.
+	ApRoV2InconsistentKey APROResultCode = 24
+	// ApRoV2SpiRead is a V2 code meaning SPI read failed.
+	ApRoV2SpiRead APROResultCode = 25
+	// ApRoV2UnsupportedCryptoAlgorithm is a V2 code meaning bad crypto algorithm.
+	ApRoV2UnsupportedCryptoAlgorithm APROResultCode = 26
+	// ApRoV2VersionMismatch is a V2 code meaning version did not match.
+	ApRoV2VersionMismatch APROResultCode = 27
+	// ApRoV2OutOfMemory is a V2 code meaning there wasn't enough memory.
+	ApRoV2OutOfMemory APROResultCode = 28
+	// ApRoV2Internal is a V2 code meaning there was an internal error.
+	ApRoV2Internal APROResultCode = 29
+	// ApRoV2TooBig is a V2 code meaning there was an internal size error.
+	ApRoV2TooBig APROResultCode = 30
+	// ApRoV2MissingGscvd is a V2 code meaning there was no GSCVD section.
+	ApRoV2MissingGscvd APROResultCode = 31
+	// ApRoV2BoardIDMismatch is a V2 code meaning the board id did not match.
+	ApRoV2BoardIDMismatch APROResultCode = 32
+	// ApRoV2SettingNotProvisioned is a V2 code meaning setting were not
+	// provisioned.
+	ApRoV2SettingNotProvisioned APROResultCode = 33
+	// ApRoV2NonZeroGbbFlags is a V2 code meaning GBB flags are non-zero.
+	ApRoV2NonZeroGbbFlags APROResultCode = 36
+	// ApRoV2WrongRootKey is a V2 code meaning the wrong key was used.
+	ApRoV2WrongRootKey APROResultCode = 37
+	// ApRoV2Unknown is a V2 code meaning there was an unknown error.
+	ApRoV2Unknown APROResultCode = 255
+)
+
+// IsV2Code returns true if this is a version 2 return code
+func (c APROResultCode) IsV2Code() bool {
+	return byte(c) >= byte(ApRoV2Success)
+}
