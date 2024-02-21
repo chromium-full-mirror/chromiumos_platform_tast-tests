@@ -18,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -290,17 +291,19 @@ func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
 	const oldBackupID = "com.google.android.gms:id/switchWidget"
 
 	// Turn on backup in case if it is off which is the expectation for this test.
+	// Not finding the button is as critical as not being able to click it.
 	backupToggleOn := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Turn on"), androidui.Enabled(true))
 	if err := backupToggleOn.WaitForExists(ctx, time.Second*10); err != nil {
-		testing.ContextLog(ctx, "Turn on button doesn't exist")
+		return errors.Wrap(err, "Backup turn on button doesn't exist")
 	} else if err := backupToggleOn.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click Turn on button")
 	}
 
-	// Dismiss Google photos backup step.
+	// Dismiss Google photos backup step in case it exists, otherwise just log this as not critical
+	// (e.g. this is a valid option as not all devices may have Google photos installed).
 	photosSkip := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Skip"), androidui.Enabled(true))
 	if err := photosSkip.WaitForExists(ctx, time.Second*10); err != nil {
-		testing.ContextLog(ctx, "Skip button is not there")
+		testing.ContextLog(ctx, "Skip button is not there, Google photos may not be installed")
 	} else if err := photosSkip.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click Skip button")
 	}
@@ -340,13 +343,21 @@ func testBackupToggle(ctx context.Context, arcDevice *androidui.Device) error {
 			return errors.Wrap(err, "failed to click backup toggle in Old UI")
 		}
 	} else {
-		// It's ok to be lax on the checks here as we have confirmed once that the UI we need exists.
+		// Turn on backup in case if it is off which is the expectation for this test.
+		// Not finding the button is as critical as not being able to click it.
 		backupToggleOn := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Turn on"), androidui.Enabled(true))
-		if err := backupToggleOn.Click(ctx); err != nil {
-			return errors.Wrap(err, "failed to click backup toggle New UI")
+		if err := backupToggleOn.WaitForExists(ctx, time.Second*10); err != nil {
+			return errors.Wrap(err, "Backup turn on button doesn't exist on new UI")
+		} else if err := backupToggleOn.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click Turn on button on new UI")
 		}
+
+		// Dismiss Google photos backup step in case it exists, otherwise just log this as not critical
+		// (e.g. this is a valid option as not all devices may have Google photos installed).
 		photosSkip := arcDevice.Object(androidui.ClassName("android.widget.Button"), androidui.TextMatches("(?i)Skip"), androidui.Enabled(true))
-		if err := photosSkip.Click(ctx); err != nil {
+		if err := photosSkip.WaitForExists(ctx, time.Second*10); err != nil {
+			testing.ContextLog(ctx, "Skip button is not there, Google photos may not be installed in New UI")
+		} else if err := photosSkip.Click(ctx); err != nil {
 			return errors.Wrap(err, "failed to click Skip button in New UI")
 		}
 
