@@ -37,7 +37,7 @@ type txMeas struct {
 	FramesPerSecond float64 `json:"framesPerSecond"`
 	Encoder         string  `json:"encoderImplementation"`
 	Active          bool    `json:"active"`
-	ScalabiltyMode  string  `json:"scalabilityMode"`
+	ScalabilityMode string  `json:"scalabilityMode"`
 }
 
 // WebRTC Stats collected on the receiver side.
@@ -68,7 +68,7 @@ type validateFrameFunc func(ctx context.Context, conn *chrome.Conn, width, heigh
 //
 // Returns error on failure or timeout.
 func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
-	streamWidth, streamHeight int, displayCapture bool, readRTCReport ReadRTCReportFunc) error {
+	streamWidth, streamHeight int, displayCapture bool, scalabilityMode string, readRTCReport ReadRTCReportFunc) error {
 	const (
 		// Before taking any measurements, we need to wait for the RTCPeerConnection
 		// to ramp up the CPU adaptation; until then, the transmitted resolution may
@@ -98,7 +98,11 @@ func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
 					streamWidth, streamHeight, txm.FrameWidth, txm.FrameHeight, txm)
 			}
 		}
-		testing.ContextLogf(ctx, "tx resolution: %.0fx%.0f", txm.FrameWidth, txm.FrameHeight)
+		if scalabilityMode != "" && !strings.HasPrefix(scalabilityMode, "L1") && scalabilityMode != txm.ScalabilityMode {
+			return errors.Errorf("scalabilityMode is not %s, current: %s, txm=%v", scalabilityMode, txm.ScalabilityMode, txm)
+		}
+
+		testing.ContextLogf(ctx, "tx resolution: %.0fx%.0f, scalabilityMode: %s, implementation: %s", txm.FrameWidth, txm.FrameHeight, txm.ScalabilityMode, txm.Encoder)
 		return nil
 	}, &testing.PollOptions{Timeout: maxStreamWarmUp, Interval: time.Second}); err != nil {
 		return errors.Wrap(err, "timeout waiting for tx resolution to stabilize")
@@ -296,9 +300,9 @@ func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, streamWidth, 
 
 // MeasureRTCStats parses the WebRTC Tx and Rx Stats, and stores them into p.
 // See https://www.w3.org/TR/webrtc-stats/#stats-dictionaries for more info.
-func MeasureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, streamHeight int, displayCapture bool,
+func MeasureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, streamHeight int, displayCapture bool, scalabilityMode string,
 	readRTCReport ReadRTCReportFunc, validateFrame validateFrameFunc, p *perf.Values) error {
-	if err := WaitForPeerConnectionStabilized(ctx, conn, streamWidth, streamHeight, displayCapture, readRTCReport); err != nil {
+	if err := WaitForPeerConnectionStabilized(ctx, conn, streamWidth, streamHeight, displayCapture, scalabilityMode, readRTCReport); err != nil {
 		return err
 	}
 

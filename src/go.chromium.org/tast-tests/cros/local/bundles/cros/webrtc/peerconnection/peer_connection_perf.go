@@ -135,7 +135,7 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 		pcID = numStreams - 1
 	}
 
-	if err := webrtc.MeasureRTCStats(ctx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(pcID), validateFrame, p.GetUnderlyingValues()); err != nil {
+	if err := webrtc.MeasureRTCStats(ctx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", params.Svc, readRTCReport(pcID), validateFrame, p.GetUnderlyingValues()); err != nil {
 		return errors.Wrap(err, "failed to measure RTCStats")
 	}
 

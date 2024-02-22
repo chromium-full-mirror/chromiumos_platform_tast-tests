@@ -132,12 +132,34 @@ class VideoConference {
   }
 
   async connect(localPC, remotePC, codec) {
+    function findFirstCodec(name) {
+      return RTCRtpReceiver.getCapabilities(name.split('/')[0]).codecs.filter(
+        (c) =>
+          c.mimeType.localeCompare(name, undefined, { sensitivity: 'base' }) ===
+          0
+      )[0];
+    }
+
     localPC.onicecandidate = (e) => remotePC.addIceCandidate(e.candidate);
     remotePC.onicecandidate = (e) => localPC.addIceCandidate(e.candidate);
 
-    let offer = await localPC.createOffer();
-    offer.sdp = setSdpDefaultVideoCodec(offer.sdp, codec);
+    const senders = localPC.getSenders();
+    if (senders.length !== 1) {
+      console.log('Unexpected senders length: ', senders);
+      return;
+    }
+    if (codec !== 'VP9' && codec !== 'VP8') {
+      console.log('Unexpected codec: ', codec);
+      return;
+    }
+    let sender = senders[0];
+    let params = sender.getParameters();
+    params.degradationPreference = 'maintain-resolution';
+    const rtcRTPCodec = findFirstCodec('video/' + codec);
+    params.encodings[0].codec = rtcRTPCodec;
+    await sender.setParameters(params);
 
+    let offer = await localPC.createOffer();
     await localPC.setLocalDescription(offer);
     await remotePC.setRemoteDescription(localPC.localDescription);
     await remotePC.setLocalDescription();
@@ -303,9 +325,6 @@ class VideoConference {
     let mainLocalTransceiver = mainLocalPC.addTransceiver(
       this.sentStream.getVideoTracks()[0],
       {
-        // Prefer resolution even at the cost of visual quality to avoid falling
-        // down to SW video encoding, see b/181320567 or crbug.com/1179020.
-        degradationPreference: 'maintain-resolution',
         streams: [this.sentStream],
         sendEncodings: [sendEncodings],
       }
@@ -415,7 +434,6 @@ class VideoConference {
     });
     const displayLocalPCStream = this.displayLocalPC
       .addTransceiver(this.displayStream.getVideoTracks()[0], {
-        degradationPreference: 'maintain-resolution',
         streams: [this.displayStream],
         sendEncodings: [{ scalabilityMode: 'L1T3' }],
       })

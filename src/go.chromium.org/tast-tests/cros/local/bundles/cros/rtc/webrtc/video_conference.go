@@ -105,7 +105,6 @@ func TestFiles() []string {
 		mouseHTML,
 		"webrtc/canvas_animation.js",
 		"webrtc/video_conference.js",
-		"webrtc/third_party/munge_sdp.js",
 		traceConfigFile,
 	}
 }
@@ -616,13 +615,13 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 	if err := conn.Call(ctx, &encCfg, fmt.Sprintf("() => { return VC.getEncoderConfig(%d); }", params.NumPeople), nil); err != nil {
 		return errors.Wrap(err, "failed getting a camera resolution")
 	}
-	testing.ContextLogf(ctx, "Video encoder config: %dp %s , scaleResolutionDownBy: %.2f (=%d/%d)",
+	testing.ContextLogf(ctx, "Video encoder config: %dp %s, scaleResolutionDownBy: %.2f (=%d/%d)",
 		encCfg.OutputHeight, encCfg.ScalabilityMode,
 		float32(encCfg.InputHeight)/float32(encCfg.OutputHeight), encCfg.InputHeight, encCfg.OutputHeight)
 
 	videoHeight := encCfg.OutputHeight
 	videoWidth := videoHeight * 16 / 9
-	if err := webrtc.WaitForPeerConnectionStabilized(ctx, conn, videoWidth, videoHeight, false, readRTCReport(params.NumPeople-2, false)); err != nil {
+	if err := webrtc.WaitForPeerConnectionStabilized(ctx, conn, videoWidth, videoHeight, false, encCfg.ScalabilityMode, readRTCReport(params.NumPeople-2, false)); err != nil {
 		return err
 	}
 
