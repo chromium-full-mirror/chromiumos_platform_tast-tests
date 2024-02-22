@@ -474,6 +474,23 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 			s.Log("Saving `top` results to top.txt")
 			os.WriteFile(filepath.Join(s.OutDir(), "top.txt"), []byte(out), 0644)
 		}
+
+		out, ipCmderr := testexec.CommandContext(ctx, "ip", "addr", "show").Output(testexec.DumpLogOnError)
+		if ipCmderr == nil {
+			s.Log("Saving `ip addr show` results to ip_addr.txt")
+			os.WriteFile(filepath.Join(s.OutDir(), "ip_addr.txt"), []byte(out), 0644)
+		} else {
+			s.Log("Failed to run ip addr show", ipCmderr)
+		}
+
+		out, tcpDumpErr := testexec.CommandContext(ctx, "/usr/bin/timeout", "--preserve-status", "5s", "/usr/local/sbin/tcpdump", "-ni", "any", "port", "5353", "or", "1900", "-l", "--immediate-mode").Output(testexec.DumpLogOnError)
+		if tcpDumpErr == nil {
+			s.Log("Saving `tcpdump` results to tcpdump.txt")
+			os.WriteFile(filepath.Join(s.OutDir(), "tcpdump.txt"), []byte(out), 0644)
+		} else {
+			s.Log("Failed to run tcpdump", tcpDumpErr)
+		}
+
 		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 	if tracingEnabled {
