@@ -19,7 +19,7 @@ func init() {
 		Func:         CommandVim,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Test vim in Terminal window",
-		Contacts:     []string{"clumptini+oncall@google.com", "jamesye@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,

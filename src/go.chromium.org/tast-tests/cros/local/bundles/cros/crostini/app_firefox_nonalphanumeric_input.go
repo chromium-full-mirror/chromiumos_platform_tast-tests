@@ -24,7 +24,7 @@ func init() {
 		Func:         AppFirefoxNonalphanumericInput,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify non-alphanumeric keys (tab, ctrl+c, ctrl+v, arrows, backspace and enter) work in firefox test webpage",
-		Contacts:     []string{"clumptini@google.com", "sophialin@google.com"},
+		Contacts:     []string{"clumptini@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",

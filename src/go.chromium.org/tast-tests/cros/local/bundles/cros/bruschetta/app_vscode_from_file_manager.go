@@ -24,7 +24,7 @@ func init() {
 		Func:         AppVscodeFromFileManager,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Launches Visual Studio Code from File Manager",
-		Contacts:     []string{"clumptini+oncall@google.com", "jamesye@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq", "informational"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

@@ -19,7 +19,7 @@ func init() {
 		Func:         VerifyAppWayland,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Runs a Wayland bruschetta application from the terminal and verifies that it renders",
-		Contacts:     []string{"clumptini+oncall@google.com", "jamesye@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},

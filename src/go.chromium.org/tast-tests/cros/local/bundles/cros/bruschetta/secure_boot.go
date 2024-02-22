@@ -18,7 +18,7 @@ func init() {
 		Func:         SecureBoot,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks UEFI Secure Boot is enabled for bruschetta VM",
-		Contacts:     []string{"clumptini+oncall@google.com", "jamesye@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},

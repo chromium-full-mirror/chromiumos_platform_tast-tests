@@ -22,7 +22,7 @@ func init() {
 		Func:         AppEmacs,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Opens Emacs from terminal and does some edits via keyboard",
-		Contacts:     []string{"clumptini+oncall@google.com", "davidmunro@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

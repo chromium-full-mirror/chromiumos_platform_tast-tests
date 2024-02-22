@@ -21,7 +21,7 @@ func init() {
 		Func:         CopyFilesToGuest,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Tests copying files to the bruschetta VM through the Files app",
-		Contacts:     []string{"clumptini+oncall@google.com", "sidereal@google.com", "jamesye@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},

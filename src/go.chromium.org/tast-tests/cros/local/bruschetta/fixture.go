@@ -71,7 +71,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            BruschettaFixture,
 		Desc:            "Set up reference VM",
-		Contacts:        []string{"sidereal@google.com", "jamesye@google.com", "clumptini+oncall@google.com"},
+		Contacts:        []string{"clumptini+oncall@google.com"},
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
@@ -83,7 +83,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            BruschettaFixtureClamshell,
 		Desc:            "Set up reference VM in clamshell mode",
-		Contacts:        []string{"sidereal@google.com", "jamesye@google.com", "clumptini+oncall@google.com"},
+		Contacts:        []string{"clumptini+oncall@google.com"},
 		Impl:            &bruschettaAppsFixture{deviceMode: devicemode.ClamshellMode},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,
@@ -95,7 +95,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            BruschettaFixtureWithLacros,
 		Desc:            "Set up reference VM with Lacros",
-		Contacts:        []string{"sidereal@google.com", "jamesye@google.com", "clumptini+oncall@google.com"},
+		Contacts:        []string{"clumptini+oncall@google.com"},
 		Impl:            &bruschettaFixture{},
 		SetUpTimeout:    installationTimeout + uninstallationTimeout,
 		ResetTimeout:    resetTimeout,

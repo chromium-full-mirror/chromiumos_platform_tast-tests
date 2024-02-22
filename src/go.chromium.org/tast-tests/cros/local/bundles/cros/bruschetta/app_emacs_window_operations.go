@@ -22,7 +22,7 @@ func init() {
 		Func:         AppEmacsWindowOperations,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Performs maximize/restore/minimize/close actions on Emacs",
-		Contacts:     []string{"clumptini+oncall@google.com", "jamesye@google.com"},
+		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:bruschetta_cq"},
 		Vars:         screenshot.ScreenDiffVars,
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},

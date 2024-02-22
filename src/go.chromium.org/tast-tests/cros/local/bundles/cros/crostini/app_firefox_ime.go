@@ -29,7 +29,7 @@ func init() {
 		Func:         AppFirefoxIME,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Open a test webpage with an input box in Firefox and test IME inputs",
-		Contacts:     []string{"clumptini@google.com", "sophialin@google.com"},
+		Contacts:     []string{"clumptini@google.com"},
 		Attr:         []string{},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
