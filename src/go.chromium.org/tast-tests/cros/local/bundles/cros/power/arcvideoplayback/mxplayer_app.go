@@ -117,19 +117,26 @@ func (m *MxPlayerApp) Launch(ctx context.Context) error {
 
 // DismissPrompts dismisses prompts and grants storage permission.
 func (m *MxPlayerApp) DismissPrompts(ctx context.Context) error {
-	// The "This app is designed for mobile" prompt needs to be dismissed to enter the app.
-	if err := apputil.DismissMobilePrompt(ctx, m.tconn); err != nil {
-		return errors.Wrap(err, `failed to dismiss "This app is designed for mobile" prompt`)
-	}
-
 	otherOptionBtn := m.d.Object(androidui.ID(mxPlayerIDPrefix+"other_layout"), androidui.ClassName(layoutClassName))
 	// There might be two different arc dump hierarchies of granting storage permission that affect how nodes are captured.
 	openSettingsBtn := m.d.Object(androidui.ID(mxPlayerIDPrefix+"storage_permission_accept"), androidui.Text("OPEN SETTINGS"))
 	storageAllowBtn := m.d.Object(androidui.ResourceIDMatches(".*permission_allow_button$"), androidui.TextMatches("(?i)Allow"))
-	foundObject, err := cuj.FindAnyExists(ctx, longUITimeout, otherOptionBtn, openSettingsBtn, storageAllowBtn)
-	if err != nil {
+	var foundObject *androidui.Object
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// The "This app is designed for mobile" prompt needs to be dismissed to enter the app.
+		if err := apputil.DismissMobilePrompt(ctx, m.tconn); err != nil {
+			return errors.Wrap(err, `failed to dismiss "This app is designed for mobile" prompt`)
+		}
+		var err error
+		foundObject, err = cuj.FindAnyExists(ctx, defaultUITimeout, otherOptionBtn, openSettingsBtn, storageAllowBtn)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
 		return errors.Wrap(err, "failed to find objects before granting storage permission")
 	}
+
 	if foundObject == otherOptionBtn {
 		// When the internet connection is unstable, it will shows the location selection prompt.
 		// Dismiss it to do the following actions.
