@@ -9,7 +9,6 @@ import (
 	"context"
 	"os"
 	"regexp"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/adb"
 	"go.chromium.org/tast/core/errors"
@@ -62,44 +61,25 @@ func (a *ARC) DumpLogcat(ctx context.Context, filePath string) error {
 	return a.device.DumpLogcat(ctx, filePath)
 }
 
-func (a *ARC) scanLogcat(pred func(string) bool, since *time.Time) error {
+// ScanLogcat scans the local logcat file in the test output folder. This file
+// is not limited by the logcat buffers size, so history is preserved from the
+// beginning of the test.
+// The function pred is called on the logcat contents line by line. This
+// function returns successfully if pred returns true. If pred never returns
+// true, this function returns an error as soon as all logcat lines are parsed.
+// Note that logcat timestamps may not increase monotonically. Filtering lines
+// that have timestamps after a given line may drop lines logged after that
+// line.
+func (a *ARC) ScanLogcat(pred func(string) bool) error {
 	file, err := os.Open(a.logcatFile.Name())
 	if err != nil {
 		return errors.Wrap(err, "failed to open logcat file in OutDir")
 	}
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		line := scanner.Text()
-		var t time.Time
-		t, err := adb.ParseLogcatTimestamp(line)
-		if err != nil {
-			// Don't match lines without timestamps.
-			continue
-		}
-		if since != nil && t.Before(*since) {
-			// Don't match lines before since time.
-			continue
-		}
-		if pred(line) {
+		if pred(scanner.Text()) {
 			return nil
 		}
 	}
 	return errors.New("pred did not match any lines")
-}
-
-// ScanLogcat scans the local logcat file in the test output folder. This file is not limited by the logcat buffers size, so history is preserved from the beginning of the test.
-// The function pred is called on the logcat contents line by line. This function returns successfully if pred returns true. If pred never returns true, this function returns an error as soon as all logcat lines are parsed.
-func (a *ARC) ScanLogcat(pred func(string) bool) error {
-	return a.scanLogcat(pred, nil)
-}
-
-// ScanLogcatSince scans the local logcat file in the test output folder. This file is not limited by the logcat buffers size, so history is preserved from the beginning of the test.
-// The function pred is called on the logcat contents line by line. This function returns successfully if pred returns true. If pred never returns true, this function returns an error as soon as all logcat lines are parsed.
-// The timestamp since is used to ignore logcat lines before a time.
-func (a *ARC) ScanLogcatSince(pred func(string) bool, since adb.LogcatTimestampLong) error {
-	sinceTime, err := adb.ParseLogcatTimestamp(string(since))
-	if err != nil {
-		return errors.Wrapf(err, "failed to parse since logcat timestamp %q", since)
-	}
-	return a.scanLogcat(pred, &sinceTime)
 }
