@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 // Package gio contains functions and structs used for testing the gaming input overlay.
+// TODO(b/304598019): Rename package name.
 package gio
 
 import (
@@ -85,6 +86,7 @@ type ButtonHeuristics struct {
 type TestParams struct {
 	TestConn          *chrome.TestConn
 	Arc               *arc.ARC
+	Chrome            *chrome.Chrome
 	Device            *ui.Device
 	Activity          *arc.Activity
 	ActivityStartTime time.Time
@@ -98,8 +100,18 @@ type mode int
 // PerformTestFunc allows callers to run their desired test after a provided activity has been launched.
 type PerformTestFunc func(params TestParams) (err error)
 
-// SetupTestApp installs the input overlay test application, starts the activity, and defers to the caller to perform a test.
+// SetupTestApp sets up the input overlay test application in freeform windowing mode.
 func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFunc) {
+	setupTestAppWithWindowing(ctx, s, arc.WindowingModeFreeform, testFunc)
+}
+
+// SetupTestAppInFullscreen sets up the input overlay test application in fullscreen mode.
+func SetupTestAppInFullscreen(ctx context.Context, s *testing.State, testFunc PerformTestFunc) {
+	setupTestAppWithWindowing(ctx, s, arc.WindowingModeFullscreen, testFunc)
+}
+
+// setupTestAppWithWindowing installs the input overlay test application, starts the activity in the given windowing mode, and defers to the caller to perform a test.
+func setupTestAppWithWindowing(ctx context.Context, s *testing.State, windowingMode arc.WindowingMode, testFunc PerformTestFunc) {
 	// Shorten the test context so that even if the test times out
 	// there will be time to clean up.
 	cleanupCtx := ctx
@@ -156,7 +168,7 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 	// Start timing and launch the activity.
 	startTime := time.Now()
 
-	if err := act.Start(ctx, tconn, arc.WithWindowingMode(arc.WindowingModeFreeform), arc.WithWaitForLaunch()); err != nil {
+	if err := act.Start(ctx, tconn, arc.WithWindowingMode(windowingMode), arc.WithWaitForLaunch()); err != nil {
 		s.Fatal("Failed to start ArcInputOverlayTest: ", err)
 	}
 	defer act.Stop(ctx, tconn)
@@ -177,6 +189,7 @@ func SetupTestApp(ctx context.Context, s *testing.State, testFunc PerformTestFun
 	if err := testFunc(TestParams{
 		TestConn:          tconn,
 		Arc:               a,
+		Chrome:            cr,
 		Device:            d,
 		Activity:          act,
 		ActivityStartTime: startTime,
