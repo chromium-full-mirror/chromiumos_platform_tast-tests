@@ -236,7 +236,7 @@ var LowPerfModels = []string{
 
 var optimalMemoryMegabytes = 7 * 1024
 
-// CrostiniMinDiskSizeCond is a hardware condition that only runs tests on models with > 12GB of disk size.
+// CrostiniMinDiskSizeCond is a hardware condition that only runs tests on models with > 15GB of disk size.
 // Crostini needs a minimum of 3GB of free space to install which is frequently not available on devices with 8GB
 // disks. For more see http://crbug.com/1039403
 var CrostiniMinDiskSizeCond = hwdep.MinStorage(15)
