@@ -9,11 +9,16 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
+	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type p2pSimpleConnectTestcase struct {
+	p2pOpts []wpacli.P2PGOOption
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,6 +34,20 @@ func init() {
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 		HardwareDeps: hwdep.D(hwdep.WifiP2P()),
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
+		Params: []testing.Param{
+			{
+				// Verifies that DUT can connect to p2p group on 2.4GHz band.
+				Name: "2_4ghz",
+				Val: p2pSimpleConnectTestcase{
+					p2pOpts: []wpacli.P2PGOOption{wpacli.SetP2PGOFreq(2462)},
+				},
+			}, {
+				// Verifies that DUT can connect to p2p group on 5GHz band.
+				Name: "5ghz",
+				Val: p2pSimpleConnectTestcase{
+					p2pOpts: []wpacli.P2PGOOption{wpacli.SetP2PGOFreq(5180)},
+				},
+			}},
 	})
 }
 
@@ -48,7 +67,9 @@ func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 		8- Deconfigure the p2p GO.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
-	if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT); err != nil {
+	testcase := s.Param().(p2pSimpleConnectTestcase)
+
+	if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, testcase.p2pOpts...); err != nil {
 		s.Fatal("Failed to configure the p2p group owner (GO): ", err)
 	}
 	defer func(ctx context.Context) {
