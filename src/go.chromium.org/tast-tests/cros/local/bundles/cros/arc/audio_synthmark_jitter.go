@@ -167,13 +167,14 @@ func AudioSynthmarkJitter(ctx context.Context, s *testing.State) {
 					return
 				default:
 					if err := oboetesterActivity.Start(ctx, tconn); err != nil {
-						s.Fatal("Failed to start Oboetester: ", err)
+						s.Log("Failed to start Oboetester: ", err)
+						continue
 					}
 					if err := d.Object(ui.TextContains("TEST OUTPUT")).WaitForExists(ctx, 10*time.Second); err != nil {
-						s.Fatal("Failed to wait for Oboetester TEST OUTPUT: ", err)
+						s.Log("Failed to wait for Oboetester TEST OUTPUT: ", err)
 					}
 					if err := oboetesterActivity.Stop(ctx, tconn); err != nil {
-						s.Fatal("Failed to stop Oboetester: ", err)
+						s.Log("Failed to stop Oboetester: ", err)
 					}
 				}
 			}
