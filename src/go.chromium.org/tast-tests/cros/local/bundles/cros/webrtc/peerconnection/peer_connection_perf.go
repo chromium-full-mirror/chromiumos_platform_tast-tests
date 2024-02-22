@@ -8,6 +8,7 @@ package peerconnection
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"sync"
@@ -135,7 +136,8 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 		pcID = numStreams - 1
 	}
 
-	if err := webrtc.MeasureRTCStats(ctx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", params.Svc, readRTCReport(pcID), validateFrame, p.GetUnderlyingValues()); err != nil {
+	readCodecPC := fmt.Sprintf("testVisible.localPeerConnections[%d]", pcID)
+	if err := webrtc.MeasureRTCStats(ctx, conn, params.Profile, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", params.Svc, readRTCReport(pcID), webrtc.CreateReadCodecFunc(readCodecPC), validateFrame, p.GetUnderlyingValues()); err != nil {
 		return errors.Wrap(err, "failed to measure RTCStats")
 	}
 

@@ -574,23 +574,23 @@ func readRTCReport(id int, displayCapture bool) webrtc.ReadRTCReportFunc {
 			}
 		}
 		return conn.Call(ctx, out, fmt.Sprintf(`async() => {
-		  const peerConnection = %s;
-		  const stats = await peerConnection.getStats(null);
-		  if (stats == null) {
-		    throw new Error("getStats() failed");
-		  }
-		  var R = null;
-		  for (const [_, report] of stats) {
-		    if (report['type'] === '%s' &&
-		       (!R || R['frameHeight'] < report['frameHeight'])) {
-		      R = report;
-		    }
-		  }
-		  if (R !== null) {
-		    return R;
-		  }
-		  throw new Error("Stat not found");
-		}`, peerConnection, staticType))
+			const peerConnection = %s;
+			const stats = await peerConnection.getStats(null);
+			if (stats == null) {
+			  throw new Error("getStats() failed");
+			}
+			var R = null;
+			for (const [_, report] of stats) {
+			  if (report['type'] === '%s' &&
+				 (!R || R['frameHeight'] < report['frameHeight'])) {
+				R = report;
+			  }
+			}
+			if (R !== null) {
+			  return R;
+			}
+			throw new Error("Stat not found");
+		  }`, peerConnection, staticType))
 	}
 }
 
@@ -607,6 +607,7 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 	testing.ContextLog(ctx, "Camera resolution: ", cameraResolution)
 
 	type encoderConfig struct {
+		Codec           string `json:"codec"`
 		InputHeight     int    `json:"inputHeight"`
 		OutputHeight    int    `json:"outputHeight"`
 		ScalabilityMode string `json:"scalabilityMode"`
@@ -615,13 +616,15 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 	if err := conn.Call(ctx, &encCfg, fmt.Sprintf("() => { return VC.getEncoderConfig(%d); }", params.NumPeople), nil); err != nil {
 		return errors.Wrap(err, "failed getting a camera resolution")
 	}
-	testing.ContextLogf(ctx, "Video encoder config: %dp %s, scaleResolutionDownBy: %.2f (=%d/%d)",
+	testing.ContextLogf(ctx, "Video encoder config: %s, %dp, %s, scaleResolutionDownBy: %.2f (=%d/%d)",
+		encCfg.Codec,
 		encCfg.OutputHeight, encCfg.ScalabilityMode,
 		float32(encCfg.InputHeight)/float32(encCfg.OutputHeight), encCfg.InputHeight, encCfg.OutputHeight)
 
 	videoHeight := encCfg.OutputHeight
 	videoWidth := videoHeight * 16 / 9
-	if err := webrtc.WaitForPeerConnectionStabilized(ctx, conn, videoWidth, videoHeight, false, encCfg.ScalabilityMode, readRTCReport(params.NumPeople-2, false)); err != nil {
+	readCodecPC := fmt.Sprintf("VC.localPCs[%d]", params.NumPeople-2)
+	if err := webrtc.WaitForPeerConnectionStabilized(ctx, conn, encCfg.Codec, videoWidth, videoHeight, false, encCfg.ScalabilityMode, readRTCReport(params.NumPeople-2, false), webrtc.CreateReadCodecFunc(readCodecPC)); err != nil {
 		return err
 	}
 

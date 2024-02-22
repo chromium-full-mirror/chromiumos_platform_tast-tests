@@ -7,6 +7,7 @@ package webrtc
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -25,13 +26,9 @@ const (
 
 // WebRTC Stats collected on transmission side.
 type txMeas struct {
-	// From https://www.w3.org/TR/webrtc-stats/#dom-rtcoutboundrtpstreamstats-totalencodetime:
-	// "Total number of seconds that has been spent encoding the framesEncoded
-	// frames of this stream. The average encode time can be calculated by
-	// dividing this value with framesEncoded."
+	// https://www.w3.org/TR/webrtc-stats/#outboundrtpstats-dict*
 	TotalEncodeTime float64 `json:"totalEncodeTime"`
 	FramesEncoded   float64 `json:"framesEncoded"`
-	// See https://www.w3.org/TR/webrtc-stats/#vststats-dict* for the following.
 	FrameWidth      float64 `json:"frameWidth"`
 	FrameHeight     float64 `json:"frameHeight"`
 	FramesPerSecond float64 `json:"framesPerSecond"`
@@ -42,10 +39,7 @@ type txMeas struct {
 
 // WebRTC Stats collected on the receiver side.
 type rxMeas struct {
-	// From https://w3c.github.io/webrtc-stats/#dom-rtcinboundrtpstreamstats-totaldecodetime
-	// "Total number of seconds that have been spent decoding the framesDecoded
-	// frames of this stream. The average decode time can be calculated by
-	// dividing this value with framesDecoded."
+	// https://www.w3.org/TR/webrtc-stats/#inboundrtpstats-dict*
 	TotalDecodeTime float64 `json:"totalDecodeTime"`
 	FramesDecoded   float64 `json:"framesDecoded"`
 	FramesDropped   float64 `json:"framesDropped"`
@@ -54,7 +48,49 @@ type rxMeas struct {
 // ReadRTCReportFunc is the type of a function that reads WebRTC stats and fills out in rxMeas if decode is true, or txMeas.
 type ReadRTCReportFunc func(ctx context.Context, conn *chrome.Conn, decode bool, out interface{}) error
 
+// readCodecFunc is the type of a function that reads WebRTC codec stats and returns codec string (e.g. "H264", "VP8").
+type readCodecFunc func(ctx context.Context, conn *chrome.Conn) (string, error)
+
 type validateFrameFunc func(ctx context.Context, conn *chrome.Conn, width, height int) error
+
+// CreateReadCodecFunc returns readCodecFunc for peerConnection.
+func CreateReadCodecFunc(peerConnection string) readCodecFunc {
+	return func(ctx context.Context, conn *chrome.Conn) (string, error) {
+		type rtcCodecStats struct {
+			MimeType string `json:"mimeType"`
+		}
+		var out rtcCodecStats
+		err := conn.Call(ctx, &out, fmt.Sprintf(`async() => {
+			const peerConnection = %s;
+			const stats = await peerConnection.getStats(null);
+			if (stats == null) {
+			  throw new Error("getStats() failed");
+			}
+			var R = null;
+			for (const [_, report] of stats) {
+			  if (report['type'] === 'codec') {
+				R = report;
+			  }
+			}
+			if (R !== null) {
+			  return R;
+			}
+			throw new Error("Stat not found");
+			}`, peerConnection))
+		if err != nil {
+			return "", err
+		}
+		if out.MimeType == "" {
+			return "", errors.New("Mimetype is not filled")
+		}
+		for _, codec := range []string{"H264", "VP8", "VP9", "AV1"} {
+			if strings.Contains(out.MimeType, codec) {
+				return codec, nil
+			}
+		}
+		return "", errors.Errorf("unknown mimeType: %s", out.MimeType)
+	}
+}
 
 // WaitForPeerConnectionStabilized waits up to maxStreamWarmUp for one of the
 // following:
@@ -67,8 +103,8 @@ type validateFrameFunc func(ctx context.Context, conn *chrome.Conn, width, heigh
 // reach streamHeight.
 //
 // Returns error on failure or timeout.
-func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
-	streamWidth, streamHeight int, displayCapture bool, scalabilityMode string, readRTCReport ReadRTCReportFunc) error {
+func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn, codec string,
+	streamWidth, streamHeight int, displayCapture bool, scalabilityMode string, readRTCReport ReadRTCReportFunc, readCodec readCodecFunc) error {
 	const (
 		// Before taking any measurements, we need to wait for the RTCPeerConnection
 		// to ramp up the CPU adaptation; until then, the transmitted resolution may
@@ -77,6 +113,14 @@ func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
 	)
 	testing.ContextLogf(ctx, "Waiting at most %v seconds for tx resolution rampup, target %dx%d", maxStreamWarmUp, streamWidth, streamHeight)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		curCodec, err := readCodec(ctx, conn)
+		if err != nil {
+			return errors.Wrap(err, "failed to read codec")
+		}
+		if curCodec != codec {
+			return errors.Errorf("codec is not %s, current: %s", codec, curCodec)
+		}
+
 		var txm txMeas
 		if err := readRTCReport(ctx, conn, false, &txm); err != nil {
 			return testing.PollBreak(err)
@@ -98,6 +142,7 @@ func WaitForPeerConnectionStabilized(ctx context.Context, conn *chrome.Conn,
 					streamWidth, streamHeight, txm.FrameWidth, txm.FrameHeight, txm)
 			}
 		}
+
 		if scalabilityMode != "" && !strings.HasPrefix(scalabilityMode, "L1") && scalabilityMode != txm.ScalabilityMode {
 			return errors.Errorf("scalabilityMode is not %s, current: %s, txm=%v", scalabilityMode, txm.ScalabilityMode, txm)
 		}
@@ -300,9 +345,9 @@ func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, streamWidth, 
 
 // MeasureRTCStats parses the WebRTC Tx and Rx Stats, and stores them into p.
 // See https://www.w3.org/TR/webrtc-stats/#stats-dictionaries for more info.
-func MeasureRTCStats(ctx context.Context, conn *chrome.Conn, streamWidth, streamHeight int, displayCapture bool, scalabilityMode string,
-	readRTCReport ReadRTCReportFunc, validateFrame validateFrameFunc, p *perf.Values) error {
-	if err := WaitForPeerConnectionStabilized(ctx, conn, streamWidth, streamHeight, displayCapture, scalabilityMode, readRTCReport); err != nil {
+func MeasureRTCStats(ctx context.Context, conn *chrome.Conn, codec string, streamWidth, streamHeight int, displayCapture bool, scalabilityMode string,
+	readRTCReport ReadRTCReportFunc, readCodec readCodecFunc, validateFrame validateFrameFunc, p *perf.Values) error {
+	if err := WaitForPeerConnectionStabilized(ctx, conn, codec, streamWidth, streamHeight, displayCapture, scalabilityMode, readRTCReport, readCodec); err != nil {
 		return err
 	}
 
