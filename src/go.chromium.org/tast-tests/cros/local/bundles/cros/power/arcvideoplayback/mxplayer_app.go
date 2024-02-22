@@ -48,45 +48,47 @@ const (
 
 // MxPlayerApp defines the members related to MX Player.
 type MxPlayerApp struct {
-	tconn *chrome.TestConn
-	kb    *input.KeyboardEventWriter
-	a     *arc.ARC
-	d     *androidui.Device
-	cr    *chrome.Chrome
+	tconn    *chrome.TestConn
+	kb       *input.KeyboardEventWriter
+	a        *arc.ARC
+	d        *androidui.Device
+	cr       *chrome.Chrome
+	dataPath func(string) string
 }
 
 // NewMxPlayerApp creates an instance of MX Player app.
-func NewMxPlayerApp(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device) *MxPlayerApp {
+func NewMxPlayerApp(cr *chrome.Chrome, tconn *chrome.TestConn, kb *input.KeyboardEventWriter, a *arc.ARC, d *androidui.Device, dataPath func(string) string) VideoApp {
 	return &MxPlayerApp{
-		tconn: tconn,
-		kb:    kb,
-		a:     a,
-		d:     d,
-		cr:    cr,
+		tconn:    tconn,
+		kb:       kb,
+		a:        a,
+		d:        d,
+		cr:       cr,
+		dataPath: dataPath,
 	}
 }
 
-// Install installs the MX Player app.
+// Install the MX Player app.
 func (m *MxPlayerApp) Install(ctx context.Context) error {
 	return util.InstallApp(ctx, m.tconn, m.a, m.d, mxPlayerPackage)
 }
 
-// Uninstall uninstalls the MX Player app if it has been installed.
+// Uninstall the MX Player app if it has been installed.
 func (m *MxPlayerApp) Uninstall(ctx context.Context) error {
 	return util.UninstallApp(ctx, m.a, mxPlayerPackage)
 }
 
-// CopyFileToDownloadsFolder copies the video file to the 'Downloads' folder and check if
+// CopyFileToFolder copies the video file to the 'Downloads' folder and check if
 // the file has finished copying. Remember to call the cleanup function to delete the file
 // created in this function.
-func (m *MxPlayerApp) CopyFileToDownloadsFolder(ctx context.Context, videoPath string) (cleanup func() error, retErr error) {
+func (m *MxPlayerApp) CopyFileToFolder(ctx context.Context, videoPath string) (cleanup func() error, retErr error) {
 	downloadsPath, err := cryptohome.DownloadsPath(ctx, m.cr.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to retrieve user's Downloads path")
 	}
 	fileName := filepath.Base(videoPath)
 	targetFilePath := filepath.Join(downloadsPath, fileName)
-	if err := fsutil.CopyFile(videoPath, targetFilePath); err != nil {
+	if err := fsutil.CopyFile(m.dataPath(videoPath), targetFilePath); err != nil {
 		return nil, errors.Wrap(err, "failed to copy the file to the 'Downloads' folder")
 	}
 	defer func() {
@@ -96,7 +98,7 @@ func (m *MxPlayerApp) CopyFileToDownloadsFolder(ctx context.Context, videoPath s
 	}()
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		files, err := filepath.Glob(filepath.Join(downloadsPath, fileName))
+		files, err := filepath.Glob(targetFilePath)
 		if err != nil {
 			return errors.Wrap(err, "failed to glob video file")
 		}
@@ -110,7 +112,7 @@ func (m *MxPlayerApp) CopyFileToDownloadsFolder(ctx context.Context, videoPath s
 	return func() error { return os.Remove(targetFilePath) }, nil
 }
 
-// Launch launches the MX Player app.
+// Launch the MX Player app.
 func (m *MxPlayerApp) Launch(ctx context.Context) error {
 	return util.LaunchApp(ctx, m.tconn, m.kb, apps.MxPlayer)
 }
@@ -150,6 +152,16 @@ func (m *MxPlayerApp) DismissPrompts(ctx context.Context) error {
 	}
 
 	return m.grantStoragePermission(ctx)
+}
+
+// PlayVideoInFullScreen plays the video in full screen.
+func (m *MxPlayerApp) PlayVideoInFullScreen(videoName string) uiauto.Action {
+	return uiauto.Combine("play the video in full screen",
+		m.DismissPrompts,
+		m.EnterFullScreen,
+		m.OpenAndPlayVideo(videoName),
+		m.SetLoopOn,
+	)
 }
 
 // OpenAndPlayVideo opens a video from Download folder on MX Player app and ensure the video is playing.

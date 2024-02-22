@@ -127,14 +127,13 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		s.Log("Failed to parse Element APK URL: ", err)
 	}
 
-	videoPath := s.DataPath(multitaskingapp.VideoSrc)
 	params := &multitaskingapp.TestParams{
 		BrowserType:   bt,
 		OutDir:        s.OutDir(),
 		WebSource:     cuj.GoogleWebSource,
 		TestName:      s.TestName(),
 		ElementAPKURL: elementAPKURL,
-		VideoPath:     videoPath,
+		DataPath:      s.DataPath,
 		TabletMode:    tabletMode,
 		BrowserTime:   browserTime,
 		SocialAppTime: socialAppTime,

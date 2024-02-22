@@ -60,6 +60,20 @@ func InstallAppFromAPKURL(ctx context.Context, a *arc.ARC, d *androidui.Device, 
 	return logAppVersion(ctx, a, d, pkgName)
 }
 
+// InstallAppFromAPKPath installs the app from the given APK path.
+func InstallAppFromAPKPath(ctx context.Context, a *arc.ARC, d *androidui.Device, pkgName, apkPath string) error {
+	// Uninstall the app if it is already installed
+	// to ensure the app is installed from the given APK.
+	if err := UninstallApp(ctx, a, pkgName); err != nil {
+		return errors.Wrap(err, "failed to uninstall app before installing from APK path")
+	}
+
+	if err := a.Install(ctx, apkPath); err != nil {
+		return errors.Wrapf(err, "failed to install %s from apk", pkgName)
+	}
+	return logAppVersion(ctx, a, d, pkgName)
+}
+
 // logAppVersion prints app version name.
 func logAppVersion(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string) error {
 	out, err := a.Command(ctx, "dumpsys", "package", pkgName).Output(testexec.DumpLogOnError)

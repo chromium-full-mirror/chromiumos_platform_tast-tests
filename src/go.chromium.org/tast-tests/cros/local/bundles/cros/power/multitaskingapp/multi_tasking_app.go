@@ -40,7 +40,7 @@ type TestParams struct {
 	TestName      string
 	OutDir        string
 	ElementAPKURL string
-	VideoPath     string
+	DataPath      func(string) string
 	TabletMode    bool
 	BrowserTime   time.Duration
 	SocialAppTime time.Duration
@@ -88,7 +88,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		outDir        = params.OutDir
 		testName      = params.TestName
 		elementAPKURL = params.ElementAPKURL
-		videoPath     = params.VideoPath
+		dataPath      = params.DataPath
 		browserTime   = params.BrowserTime
 		socialAppTime = params.SocialAppTime
 		videoAppTime  = params.VideoAppTime
@@ -133,12 +133,12 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	}
 	defer socialApp.Uninstall(closeCtx)
 
-	videoApp := arcvideoplayback.NewMxPlayerApp(cr, tconn, kb, a, d)
+	videoApp := arcvideoplayback.NewMxPlayerApp(cr, tconn, kb, a, d, dataPath).(*arcvideoplayback.MxPlayerApp)
 	if err := videoApp.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install MxPlayer app")
 	}
 	defer videoApp.Uninstall(closeCtx)
-	cleanupFile, err := videoApp.CopyFileToDownloadsFolder(ctx, videoPath)
+	cleanupFile, err := videoApp.CopyFileToFolder(ctx, VideoSrc)
 	if err != nil {
 		return errors.Wrap(err, "failed to copy video file to Downloads folder")
 	}

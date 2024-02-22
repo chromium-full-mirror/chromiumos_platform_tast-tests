@@ -423,6 +423,12 @@ var MxPlayer = App{
 	Name: "MX Player",
 }
 
+// ExoPlayer has details about the ExoPlayer app.
+var ExoPlayer = App{
+	ID:   "iicclkgpjckngafokkpcmgnghjhldjhf",
+	Name: "ExoPlayer",
+}
+
 // Launch launches an app specified by appID.
 func Launch(ctx context.Context, tconn *chrome.TestConn, appID string) error {
 	_, err := getInstalledAppID(ctx, tconn, func(app *ash.ChromeApp) bool { return app.AppID == appID }, nil)
