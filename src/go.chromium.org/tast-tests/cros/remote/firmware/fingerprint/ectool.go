@@ -128,12 +128,19 @@ func RebootFpmcu(ctx context.Context, d *dut.DUT, bootTo FWImageType) error {
 	testing.ContextLog(ctx, "Rebooting FPMCU")
 	// This command returns error even on success, so ignore error. b/116396469
 	_ = EctoolCommand(ctx, d, "reboot_ec").Run()
+
 	if bootTo == ImageTypeRO {
+		// GoBigSleepLint: After verification, FPMCU RO is waiting 1 second for
+		// the `rwsigaction abort` command before jumping to RW.
 		testing.Sleep(ctx, 500*time.Millisecond)
 		err := EctoolCommand(ctx, d, "rwsigaction", "abort").Run()
 		if err != nil {
 			return errors.Wrap(err, "failed to abort rwsig")
 		}
+	} else {
+		// GoBigSleepLint: Give the FPMCU time to boot before accessing the UART.
+		// Otherwise, we could kill the bus and break all comms with the FPMCU.
+		testing.Sleep(ctx, 2*time.Second)
 	}
 
 	if err := WaitForRunningFirmwareImage(ctx, d, bootTo); err != nil {
