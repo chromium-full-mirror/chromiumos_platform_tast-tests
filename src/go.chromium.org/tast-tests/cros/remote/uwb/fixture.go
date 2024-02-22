@@ -88,7 +88,7 @@ func (f *mixedPeerRemoteFixture) SetUp(ctx context.Context, s *testing.FixtState
 		fixtData.CrosHosts = strings.Split(crosHostsNames, ",")
 	} else {
 		// No crosHosts var passed in, just use host names directly from DUTs.
-		fixtData.CrosHosts = make([]string, len(s.CompanionDUTs()))
+		fixtData.CrosHosts = make([]string, 0, len(s.CompanionDUTs()))
 		for _, dut := range s.CompanionDUTs() {
 			dutHost := dut.HostName()
 			if host, _, err := net.SplitHostPort(dutHost); err == nil {
