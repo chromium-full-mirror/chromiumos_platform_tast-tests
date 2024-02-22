@@ -68,23 +68,17 @@ var Accounts = getMenuItemFinder("Accounts")
 // Device is a subpage link.
 var Device = getMenuItemFinder("Device")
 
-// Personalization is a subpage link.
-var Personalization = getMenuItemFinder("Personalization")
+// WallpaperAndStyle is a subpage link.
+var WallpaperAndStyle = getMenuItemFinder("Wallpaper and style")
 
-// SearchAndAssistant is a subpage link.
-var SearchAndAssistant = getMenuItemFinder("Search and Assistant")
+// PrivacyAndSecurity is a subpage link.
+var PrivacyAndSecurity = getMenuItemFinder("Privacy and security")
 
-// SecurityAndPrivacy is a subpage link.
-var SecurityAndPrivacy = getMenuItemFinder("Security and Privacy")
+// SystemPreferences is a subpage link.)
+var SystemPreferences = getMenuItemFinder("System preferences")
 
 // Apps is a subpage link.
 var Apps = getMenuItemFinder("Apps")
-
-// DateAndTime is a subpage link.
-var DateAndTime = getMenuItemFinder("Date and time")
-
-// LanguagesAndInputs is a subpage link.
-var LanguagesAndInputs = getMenuItemFinder("Languages and inputs")
 
 // Elements in "Languages page"
 var (
@@ -95,20 +89,8 @@ var (
 	SearchLanguages = nodewith.Name("Search languages").Role(role.SearchBox)
 )
 
-// Files is a subpage link.
-var Files = getMenuItemFinder("Files")
-
-// PrintersAndScanners is a subpage link.
-var PrintersAndScanners = getMenuItemFinder("Printers and scanners")
-
-// Developers is a subpage link.
-var Developers = getMenuItemFinder("Developers")
-
 // Accessibility is a subpage link.
 var Accessibility = getMenuItemFinder("Accessibility")
-
-// ResetSettings is a subpage link.
-var ResetSettings = getMenuItemFinder("Reset settings")
 
 // AboutChromeOS is a subpage link.
 var AboutChromeOS = nodewith.MultilingualNameStartingWith("About ChromeOS", map[string]string{"de": "Über ChromeOS"}).

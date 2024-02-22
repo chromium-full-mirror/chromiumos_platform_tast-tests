@@ -522,27 +522,19 @@ func UninstallApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome
 }
 
 // CommonSections returns a map that contains *nodewith.Finder for OS-Settings UI elements of common sections.
-func CommonSections(advanceExpanded bool) map[string]*nodewith.Finder {
+func CommonSections() map[string]*nodewith.Finder {
 	sections := map[string]*nodewith.Finder{
 		"Network":              Network,
 		"Bluetooth":            Bluetooth,
-		"Connected Devices":    ConnectedDevices,
+		"Connected devices":    ConnectedDevices,
 		"Accounts":             Accounts,
 		"Device":               Device,
-		"Personalization":      Personalization,
-		"Security And Privacy": SecurityAndPrivacy,
+		"Wallpaper and style":  WallpaperAndStyle,
+		"Privacy and security": PrivacyAndSecurity,
 		"Apps":                 Apps,
+		"Accessibility":        Accessibility,
+		"System preferences":   SystemPreferences,
 		"About ChromeOS":       AboutChromeOS,
-	}
-
-	if advanceExpanded {
-		sections["Date And Time"] = DateAndTime
-		sections["Languages And Inputs"] = LanguagesAndInputs
-		sections["Files"] = Files
-		sections["Printers and Scanners"] = PrintersAndScanners
-		sections["Developers"] = Developers
-		sections["Accessibility"] = Accessibility
-		sections["Reset Settings"] = ResetSettings
 	}
 
 	return sections

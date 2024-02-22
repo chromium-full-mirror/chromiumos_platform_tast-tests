@@ -63,11 +63,7 @@ func AllSections(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for OS-settings is ready to use: ", err)
 	}
 
-	if err := expandSubSection(osSettings, ossettings.Advanced, true)(ctx); err != nil {
-		s.Fatal("Failed to expand advanced settings: ", err)
-	}
-
-	sections := ossettings.CommonSections(true)
+	sections := ossettings.CommonSections()
 	for sectionName, sectionFinder := range sections {
 		section := sectionTest{
 			name:   sectionName,
@@ -76,10 +72,9 @@ func AllSections(ctx context.Context, s *testing.State) {
 		if sectionFinder == ossettings.Network {
 			section.subSectionToExpand = "Add network connection"
 		}
-		if sectionFinder == ossettings.DateAndTime {
+		if sectionFinder == ossettings.SystemPreferences {
 			section.subSettingToToggle = "Use 24-hour clock"
 		}
-
 		if err := checkSection(ctx, cr, osSettings, section); err != nil {
 			s.Fatalf("Failed to check section %s: %v", sectionName, err)
 		}
