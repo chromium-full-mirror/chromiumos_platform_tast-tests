@@ -338,7 +338,7 @@ func getBlockDevList(ctx context.Context, dut *dut.DUT) ([]string, error) {
 
 	var result []string
 	for _, dev := range strings.Fields(sysBlockLs) {
-		if strings.HasPrefix(dev, "zram") {
+		if strings.HasPrefix(dev, "zram") || strings.Contains(dev, "boot") {
 			// Skip zram devices for they fail size check and are
 			// not physical devices anyway.
 			continue
