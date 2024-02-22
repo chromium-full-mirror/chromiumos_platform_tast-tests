@@ -94,22 +94,44 @@ func FirstLmkdKillOfPriority(log []*LmkdKillInfo, priority VmmmsPriority) *LmkdK
 	return nil
 }
 
-// ParseLmkdKills parses all LMKD kills in logcat. Returns a slice of LmkdKillInfo.
-func ParseLmkdKills(ctx context.Context, a *arc.ARC, since adb.LogcatTimestampLong) ([]*LmkdKillInfo, error) {
-	// We write a unique string to logcat so that when we observe it we know that
-	// we are caught up with all lines logged before this call.
-	doneString := fmt.Sprintf("ParseLmkdKills::Done::[%16x]", rand.Uint64())
-	if err := a.Command(ctx, "log", doneString).Run(); err != nil {
-		return nil, errors.Wrapf(err, "failed to log %q to synchronize logcat parsing", doneString)
+// LmkdKillsParser scans LMKD kill logs from logcat between NewLmkdKillsParser
+// and LmkdKillsParser.Parse.
+type LmkdKillsParser struct {
+	// beginLog is a unique string to use when logging start and end markers to
+	// make sure we scan the correct range of lines in logcat.
+	beginLog string
+}
+
+// NewLmkdKillsParser writes a unique stamp to logcat so that the later Parse
+// call scans the correct range of lines.
+func NewLmkdKillsParser(ctx context.Context, a *arc.ARC) (*LmkdKillsParser, error) {
+	beginLog := fmt.Sprintf("ParseLmkdKills::Begin::[%16x]", rand.Uint64())
+	if err := a.Command(ctx, "log", beginLog).Run(); err != nil {
+		return nil, errors.Wrapf(err, "failed to log %q to synchronize logcat parsing", beginLog)
+	}
+	return &LmkdKillsParser{beginLog}, nil
+}
+
+// Parse parses all LMKD kills in logcat between the LmkdKillsParser creation
+// and now.
+func (p *LmkdKillsParser) Parse(ctx context.Context, a *arc.ARC) ([]*LmkdKillInfo, error) {
+	endLog := fmt.Sprintf("ParseLmkdKills::End::[%16x]", rand.Uint64())
+	if err := a.Command(ctx, "log", endLog).Run(); err != nil {
+		return nil, errors.Wrapf(err, "failed to log %q to synchronize logcat parsing", endLog)
 	}
 
 	var result []*LmkdKillInfo
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		result = nil
+		beginLogSeen := false
 		lastLine := ""
-		if err := a.ScanLogcatSince(func(line string) bool {
+		if err := a.ScanLogcat(func(line string) bool {
 			lastLine = line
-			if strings.Contains(line, doneString) {
+			if !beginLogSeen {
+				beginLogSeen = strings.Contains(line, p.beginLog)
+				// Ignore lines logged before NewLmkdKillsParser.
+				return false
+			} else if strings.Contains(line, endLog) {
 				return true
 			}
 			killInfo := parseLmkdKillInfo(line)
@@ -117,9 +139,9 @@ func ParseLmkdKills(ctx context.Context, a *arc.ARC, since adb.LogcatTimestampLo
 				result = append(result, killInfo)
 			}
 			return false
-		}, since); err != nil {
-			testing.ContextLogf(ctx, "Failed to find %q in logcat, last line seen %q: %s", doneString, lastLine, err)
-			return errors.Wrapf(err, "failed to find %q in logcat, last line seen %q", doneString, lastLine)
+		}); err != nil {
+			testing.ContextLogf(ctx, "Failed to find %q in logcat, last line seen %q: %s", endLog, lastLine, err)
+			return errors.Wrapf(err, "failed to find %q in logcat, last line seen %q", endLog, lastLine)
 		}
 		return nil
 	}, &testing.PollOptions{Interval: 10 * time.Second, Timeout: 5 * time.Minute}); err != nil {

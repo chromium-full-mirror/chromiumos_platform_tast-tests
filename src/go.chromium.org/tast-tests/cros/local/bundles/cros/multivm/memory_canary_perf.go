@@ -153,9 +153,9 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.Wrap(err, "failed to Start UMA metrics")
 	}
 
-	parseLmkdKillsSince, err := a.LogcatDeviceTime(ctx)
+	lmkdKillsParser, err := memoryuser.NewLmkdKillsParser(ctx, a)
 	if err != nil {
-		return errors.Wrap(err, "failed to get start time for ParseLmkdKills")
+		return errors.Wrap(err, "failed to create LmkdKillsParser")
 	}
 
 	canaryCloser, canaryStillAlive, err := memoryuser.OpenAppTabCanaries(ctx, canaryAllocationMiB, canaryCompressionRatio, br, fs, tconn, a)
@@ -303,7 +303,7 @@ func stressCanary(ctx context.Context, fs http.FileSystem, param *canaryHealthPe
 		return errors.Wrap(err, "failed to parse VMMMS logs")
 	}
 
-	lmkdLog, err := memoryuser.ParseLmkdKills(ctx, a, parseLmkdKillsSince)
+	lmkdLog, err := lmkdKillsParser.Parse(ctx, a)
 	if err != nil {
 		return errors.Wrap(err, "failed to collect LMKD logs")
 	}
