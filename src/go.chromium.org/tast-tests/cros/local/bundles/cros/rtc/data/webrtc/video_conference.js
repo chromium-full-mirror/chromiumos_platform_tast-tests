@@ -2,39 +2,52 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-class TransformSVCStream {
-  constructor(scalabilityMode, decodeSpatialIndex) {
-    this.decodeSpatialIndex = decodeSpatialIndex;
+
+// TransformkSVCStream extracts encoded video frames from the |scalabilityMode|
+// (k-SVC) stream and feeds into a video decoder so that the input stream is
+// decodable k-SVC stream whose spatial index is |maxDecodeSpatialIndex|.
+// Because of the bitrate adaptation in a WebRTC peer connection, the encoded
+// video frames doesn't necessary compose a |scalabilityMode| stream. In this
+// case, TransformkSVCStream inputs the current top spatial index layer.
+//
+// Caveat: WebRTC Encoded Transform API doesn't invoke transform() in decode
+// order, but calls transform() as a frame is assembled from received packets.
+// This implementation is not resilient to the reordered frames. Handling the
+// frame dependency is troublesome so we don't implement it assuming the
+// reordering seldom happens.
+class TransformkSVCStream {
+  constructor(scalabilityMode, maxDecodeSpatialIndex) {
+    this.maxDecodeSpatialIndex = maxDecodeSpatialIndex;
+    this.currentTopSpatialLayer = 0;
     this.decodeLowerLayers = false;
-    this.interLayerDependencyType = '';
-    if (scalabilityMode.startsWith('L1') || scalabilityMode.startsWith('S')) {
-      this.interLayerDependencyType = 'Off';
-    } else if (scalabilityMode.endsWith('KEY')) {
-      this.interLayerDependencyType = 'OnKey';
-    } else {
-      // VC doesn't support scalabilityMode in which upper spatial layers can
-      // depend other spatial layers on non keyframe.
-      // this.interLayerDependencyType = 'On';
+    if (!scalabilityMode.endsWith('KEY')) {
       console.log('Unexpected scalabilityMode: ', scalabilityMode);
     }
   }
   async transform(frame, controller) {
     const metadata = frame.getMetadata();
-    const isKeyFrame = frame.type == 'key';
-    if (this.interLayerDependencyType == 'OnKey' && isKeyFrame) {
-      // Decode the successive frames until decodeSpatialIndex on keyframe
-      // in k-SVC.
-      this.decodeLowerLayers = true;
+    if (metadata.spatialIndex > this.maxDecodeSpatialIndex) {
+      return;
     }
-    let decode =
-      metadata.spatialIndex == this.decodeSpatialIndex ||
+    const isKeyFrame = frame.type == 'key';
+    if (isKeyFrame) {
+      if (metadata.spatialIndex !== 0) {
+        console.log('Keyframe is only in the bottom spatial layer');
+        return;
+      }
+      this.decodeLowerLayers = true;
+    } else if (metadata.spatialIndex == 0) {
+      this.decodeLowerLayers = false;
+    }
+
+    if (this.decodeLowerLayers) {
+      this.currentTopSpatialLayer = metadata.spatialIndex;
+    }
+    const decode =
+      metadata.spatialIndex == this.currentTopSpatialLayer ||
       this.decodeLowerLayers;
     if (decode) {
       controller.enqueue(frame);
-    }
-    if (metadata.spatialIndex == this.decodeSpatialIndex) {
-      // Set to false: We need to decode only frames on the decodeSpatialIndex.
-      this.decodeLowerLayers = false;
     }
   }
 }
@@ -205,6 +218,7 @@ class VideoConference {
     }
 
     return {
+      Codec: 'VP9',
       inputHeight: cameraHeight,
       outputHeight: encodeHeight,
       scalabilityMode: scalabilityMode,
@@ -351,7 +365,7 @@ class VideoConference {
         receiverStream.readable
           .pipeThrough(
             new TransformStream(
-              new TransformSVCStream(
+              new TransformkSVCStream(
                 sendEncodings.scalabilityMode,
                 topSpatialIndex
               )
