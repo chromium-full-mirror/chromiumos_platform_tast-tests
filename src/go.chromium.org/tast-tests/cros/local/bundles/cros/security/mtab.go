@@ -143,6 +143,7 @@ func Mtab(ctx context.Context, s *testing.State) {
 		"/sys/fs/selinux":           {nil, "selinuxfs", "rw,nosuid,noexec"},
 		"/sys/kernel/debug":         {nil, "debugfs", defaultRW + ",gid=605,mode=750"},
 		"/sys/kernel/debug/tracing": {nil, "tracefs", defaultRW + ",mode=755"},
+		"/sys/kernel/security":      {nil, "securityfs", defaultRO + ",mode=755"},
 		"/sys/kernel/tracing":       {nil, "tracefs", defaultRW + ",mode=755"},
 
 		"/usr/share/chromeos-assets/quickoffice":            {loopDev, "squashfs", defaultRO},
