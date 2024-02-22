@@ -11,14 +11,35 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/spaced"
 	"go.chromium.org/tast-tests/cros/local/vm"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+// CheckFreeSpace checks if the given path has enough free space.
+func CheckFreeSpace(ctx context.Context, path string, bytes uint64) error {
+	c, err := spaced.NewClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create spaced client")
+	}
+
+	avail, err := c.FreeDiskSpace(ctx, path)
+	if err != nil {
+		return errors.Wrap(err, "failed to query free disk space")
+	}
+
+	if uint64(avail) < bytes {
+		return errors.Errorf("insufficient free space: %d < %d", avail, bytes)
+	}
+
+	return nil
+}
 
 // Option holds parameters for a guest storage.
 type Option struct {
@@ -65,10 +86,10 @@ func virtiofsTimeout(c string) (time.Duration, error) {
 	return timeout, nil
 }
 
-// SetUpLogicVolume creates a 8G logic volume with lvName in thinpool
+// SetUpLogicVolume creates a logic volume with lvName in thinpool
 //
 // Returns file path of newly created logical volume and cleanup function that removes the logical volume (if no error)
-func SetUpLogicVolume(ctx context.Context, lvName string) (lvPath string, cleanUp func(ctx context.Context), _ error) {
+func SetUpLogicVolume(ctx context.Context, lvName string, bytes uint64) (lvPath string, cleanUp func(ctx context.Context), _ error) {
 	// Create command to get volume group name
 	out, err := testexec.CommandContext(ctx, "vgs", "-o", "vg_name", "--noheadings").Output()
 	if err != nil {
@@ -90,7 +111,7 @@ func SetUpLogicVolume(ctx context.Context, lvName string) (lvPath string, cleanU
 			continue
 		}
 		// Create a logic volume in thinpool
-		if err := testexec.CommandContext(ctx, "lvcreate", "-V8G", "-T", thinpool, "-n", lvName).Run(); err != nil {
+		if err := testexec.CommandContext(ctx, "lvcreate", "-V", strconv.FormatUint(bytes, 10), "-T", thinpool, "-n", lvName).Run(); err != nil {
 			return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create logical volume on "+thinpool)
 		}
 
@@ -106,10 +127,10 @@ func SetUpLogicVolume(ctx context.Context, lvName string) (lvPath string, cleanU
 	return "", func(_ context.Context) {}, errors.New("failed to create a logical volume")
 }
 
-// SetUpBlockFile creates a 8G file and returns the file path
+// SetUpBlockFile creates a sparse file with the given length and returns the file path
 //
 // Returns path of created block image file and cleanup function that removes the file (if no error)
-func SetUpBlockFile(ctx context.Context, userDir string) (blockPath string, cleanUp func(ctx context.Context), _ error) {
+func SetUpBlockFile(ctx context.Context, userDir string, bytes uint64) (blockPath string, cleanUp func(ctx context.Context), _ error) {
 	blockPath = filepath.Join(userDir, "block")
 	f, err := os.Create(blockPath)
 	if err != nil {
@@ -123,7 +144,7 @@ func SetUpBlockFile(ctx context.Context, userDir string) (blockPath string, clea
 		}
 	}
 
-	if err := f.Truncate(8 * 1024 * 1024 * 1024); err != nil {
+	if err := f.Truncate(int64(bytes)); err != nil {
 		return "", cleanUp, errors.Wrap(err, "failed to set block device file size")
 	}
 

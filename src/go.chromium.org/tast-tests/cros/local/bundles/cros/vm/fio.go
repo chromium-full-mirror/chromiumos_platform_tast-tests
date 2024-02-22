@@ -432,7 +432,14 @@ func Fio(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a temporary directory on the encrypted file system on `/home/root/${user hash}/`.
-	// This directory will be accessed by FIO process.
+	// FIO process in the guest will write 512MiB data here.
+	// First, check if enough space is available.
+	const MiB uint64 = 1024 * 1024
+	blockSize := 1024 * MiB // Must be large enough to have 512MiB data + filesystem metadata
+	if err := storage.CheckFreeSpace(ctx, "/home/root", blockSize); err != nil {
+		s.Fatal("Failed to check free space: ", err)
+	}
+	// Then, create a directory
 	username := data.Chrome.NormalizedUser()
 	rootCryptDir, err := cryptohome.SystemPath(ctx, username)
 	if err != nil {
@@ -475,13 +482,13 @@ func Fio(ctx context.Context, s *testing.State) {
 	var blockPath string
 	// Create a disk image for virtio block
 	if opt.Kind == "block_lvm" {
-		blockPath, cleanup, err = storage.SetUpLogicVolume(ctx, "vm_test_lv")
+		blockPath, cleanup, err = storage.SetUpLogicVolume(ctx, "vm_test_lv", blockSize)
 		if err != nil {
 			s.Fatal("Failed to set up logic volume: ", err)
 		}
 		defer cleanup(cleanupCtx)
 	} else {
-		blockPath, cleanup, err = storage.SetUpBlockFile(ctx, ud)
+		blockPath, cleanup, err = storage.SetUpBlockFile(ctx, ud, blockSize)
 		if err != nil {
 			s.Fatal("Failed to set up block image file: ", err)
 		}

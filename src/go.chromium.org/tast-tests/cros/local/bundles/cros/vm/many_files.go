@@ -303,7 +303,15 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	}
 
 	// Create a temporary directory on the encrypted file system on `/home/root/${user hash}/`.
-	// This directory will be accessed by FIO.
+	// The test script in the guest write data into this directory.
+
+	// First, check if enough space is available.
+	const MiB uint64 = 1024 * 1024
+	blockSize := 128 * MiB // 128 MiB is large enough to have test files and filesystem metadata.
+	if err := storage.CheckFreeSpace(ctx, "/home/root", blockSize); err != nil {
+		s.Fatal("Failed to check free space: ", err)
+	}
+	// Then, create a directory
 	rootCryptDir, err := cryptohome.SystemPath(ctx, username)
 	if err != nil {
 		s.Fatal("Failed to get the cryptohome directory: ", err)
@@ -331,12 +339,12 @@ func ManyFiles(ctx context.Context, s *testing.State) {
 	var blockPath string
 	var cleanUp func(context.Context)
 	if opt.Kind == "block_lvm" {
-		blockPath, cleanUp, err = storage.SetUpLogicVolume(ctx, "vm_test_lv")
+		blockPath, cleanUp, err = storage.SetUpLogicVolume(ctx, "vm_test_lv", blockSize)
 		if err != nil {
 			s.Fatal("Failed to set up logic volume: ", err)
 		}
 	} else {
-		blockPath, cleanUp, err = storage.SetUpBlockFile(ctx, ud)
+		blockPath, cleanUp, err = storage.SetUpBlockFile(ctx, ud, blockSize)
 		if err != nil {
 			s.Fatal("Failed to set up block image file: ", err)
 		}
