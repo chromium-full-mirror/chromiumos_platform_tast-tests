@@ -6,6 +6,7 @@ package bluetooth
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -145,6 +146,9 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 
 		defaultUITimeout = 15 * time.Second
 	)
+
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
 	app, err := apputil.NewApp(ctx, kb, tconn, a, d, appName, pkgName)
 	if err != nil {
