@@ -5,11 +5,9 @@
 package firmware
 
 import (
-	"bufio"
 	"context"
 	"fmt"
-	"io"
-	"os"
+	"path/filepath"
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
@@ -93,36 +91,49 @@ func GetFwVersion(ctx context.Context, h *Helper, param reporters.CrossystemPara
 	return onlyID, err
 }
 
-// DownloadFirmwareFile will download a tar file from cloud and save to a temporary directory,
-// based on the shipped firmware version passed in for test.
-func DownloadFirmwareFile(ctx context.Context, cs *testing.CloudStorage, tmpDir, gcsFirmwareFilePath string) error {
+// DownloadFirmwareFiles will extract the AP and EC bin files from the cloud storage.
+// TODO: Currently DownloadFirmwareFile and DownloadRequiredFirmwareFiles perform similar
+// actions. As soon as DownloadFirmwareFile is proven to work in the lab environment, these two
+// functions should be accommodated together so that we can remove one of them.
+func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Helper, tmpDir, gcsFirmwareFilePath, fileName, fwidModel string) (*FWFilesToFlash, error) {
 	testing.ContextLogf(ctx, "Downloading firmware image from the path: %s", gcsFirmwareFilePath)
-
-	// Stage the complete path.
-	r, err := cs.Open(ctx, fmt.Sprintf("gs://%s", gcsFirmwareFilePath))
-	if err != nil {
-		return errors.Wrapf(err, "failed to open file for url %q", gcsFirmwareFilePath)
+	// In case a file name is not provided, the default const FiemwareFileName will be used.
+	// The downloaded file in tmpDir will always be named as the const FirmwareFileName.
+	if fileName == "" {
+		fileName = FirmwareFileName
 	}
-
-	// Open tmp file
-	fo, err := os.Create(tmpDir + "/" + FirmwareFileName)
-	if err != nil {
-		return errors.Wrapf(err, "failed to open tmp file %q", tmpDir+"/"+FirmwareFileName)
+	// Ensuring that the file path has a 'gs://' preFix.
+	if !strings.HasPrefix(gcsFirmwareFilePath, "gs://") {
+		gcsFirmwareFilePath = "gs://" + gcsFirmwareFilePath
 	}
-	// Close file on exit
-	defer func() error {
-		if err := fo.Close(); err != nil {
-			return errors.Wrapf(err, "failed to close tmp file %q", tmpDir+"/"+FirmwareFileName)
+	// Find a devserver that works.
+	for _, devserver := range cs.Devservers() {
+		testing.ContextLogf(ctx, "Trying devserver at %q", devserver)
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-f", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
+			testing.ContextLogf(ctx, "Devserver %q not healthy: %v", devserver, err)
+			continue
 		}
-		return nil
-	}()
-	w := bufio.NewWriter(fo)
-	written, err := io.Copy(w, r)
-	if err != nil {
-		return errors.Wrap(err, "failed to download the file")
+
+		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=%s", devserver, gcsFirmwareFilePath, fileName)
+		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-fL", stagingURL); err != nil {
+			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
+			continue
+		}
+
+		ecFilenamePool, ecMonitorFileNamePool := getFileNamePools(ctx, fwidModel, ECFirmware)
+		apFileNamePool, _ := getFileNamePools(ctx, fwidModel, APFirmware)
+		// No need of the Prefix 'gs://' for the extraction.
+		gcsFirmwareFilePath = strings.TrimPrefix(gcsFirmwareFilePath, "gs://")
+		// To do the extraction, gcsFirmwareFilePath should point to the tar file to be untared.
+		gcsFirmwareFilePath = filepath.Join(gcsFirmwareFilePath, fileName)
+		monitorBin := extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, tmpDir, MonitorFileToFlash, ecMonitorFileNamePool)
+		apBin := extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, tmpDir, APFirmwareFileToFlash, apFileNamePool)
+		ecBin := extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, tmpDir, ECFirmwareFileToFlash, ecFilenamePool)
+		return &FWFilesToFlash{ECFirmwareFile: ecBin, MonitorFile: monitorBin, APFirmwareFile: apBin}, nil
+
 	}
-	testing.ContextLogf(ctx, "Downloaded stats for %s: %d", fo.Name(), written)
-	return nil
+	return nil, errors.New("unable to download file")
 }
 
 // DownloadRequiredFirmwareFiles will extract and download the specified AP and EC .bin files from the firmware tar in the cloud storage
@@ -210,7 +221,7 @@ func extractFirmwareFile(ctx context.Context, h *Helper, devserver, gcsFirmwareF
 	for _, filename := range fileNamePool {
 		testImageURL := fmt.Sprintf("%s/extract/%s?file=%s", devserver, gcsFirmwareFilePath, filename)
 		testing.ContextLogf(ctx, "Downloading image file %q", filename)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", testImageURL, "--output", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileName)); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-fL", testImageURL, "--output", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileName)); err != nil {
 			testing.ContextLogf(ctx, "Failed to extract image file at %q: %v", testImageURL, err)
 			continue
 		}
