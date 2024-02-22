@@ -287,8 +287,8 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	// Ensure keys for combo are not pushed
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
-	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
+	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
+	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, true)
 
 	s.Log("Start gpio monitoring")
 	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50EcRstL)
@@ -296,11 +296,12 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 		s.Error("EC_RST_L not de-asserted before pressing EC Refresh combo")
 	}
 
-	s.Log("Pushing Power and VolDown then wait for reset to occur")
+	s.Log("Pushing Power and VolUp then wait for reset to occur")
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
-	testing.Sleep(ctx, time.Second*11) // GoBigSleepLint: Simulating button press
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
+	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
+	// GoBigSleepLint: Simulating button press
+	testing.Sleep(ctx, tabletEcResetGpioDelay)
+	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, true)
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
 
 	events := b.GpioMonitorFinish(ctx, gpioMonitor)
@@ -335,13 +336,13 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	s.Log("Pushing GSC reset keys")
 	// Ensure that all GSC reset key combo keys are not being pushed
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
-	// Volume Up is required not to be pushed during the 20 seconds
-	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
+	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, true)
+	// Volume Down is required not to be pushed during the 20 seconds
+	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
 
 	// Push all GSC reset keys
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
+	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
 
 	s.Log("Waiting for GSC to reset")
 	beforeReset := time.Now()
@@ -359,13 +360,13 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	// Release all GSC reset keys
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
-
-	s.Log("Start verifying GSC reset does not trigger with Volume Up Pressed")
-	// Push all GSC reset keys but with extra Volume Up, which should prevent GSC reset
-	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
 	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, true)
+
+	s.Log("Start verifying GSC reset does not trigger with Volume Down pressed")
+	// Push all GSC reset keys but with extra Volume Down, which should prevent GSC reset
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
+	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
+	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
 
 	s.Log("Waiting for GSC to reset")
 	beforeReset = time.Now()
@@ -378,12 +379,7 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 
 	// Release all GSC reset keys
 	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
-	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, false)
-	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, false)
-
-	// Hold the EC Reset key the entire time we are verifying RMA sequence, then
-	// use the tapping of VolumeUp as the cancel of GSC reset to only trigger
-	// EC reset repeatedly.
+	b.GpioSet(ctx, ti50.GpioTi50VolUpIn, true)
 	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
 
 	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50VolUpIn, tabletEcResetGpioDelay)
