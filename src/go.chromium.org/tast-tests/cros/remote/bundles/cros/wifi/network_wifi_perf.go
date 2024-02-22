@@ -441,11 +441,11 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
 	var perfTestTypes = []perfmanager.TestType{
-		//perfmanager.TestTypeTCPTx,
-		//perfmanager.TestTypeTCPRx,
-		//perfmanager.TestTypeTCPBidirectional,
-		//perfmanager.TestTypeUDPTx,
-		//perfmanager.TestTypeUDPRx,
+		perfmanager.TestTypeTCPTx,
+		perfmanager.TestTypeTCPRx,
+		perfmanager.TestTypeTCPBidirectional,
+		perfmanager.TestTypeUDPTx,
+		perfmanager.TestTypeUDPRx,
 		perfmanager.TestTypeUDPBidirectional,
 	}
 
