@@ -14,6 +14,24 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// timeParam contains the timing parameters for the test run
+type timeParams struct {
+	fioTimeSec        int
+	suspendIterations int
+	timeoutMin        int
+}
+
+const (
+	fullFioTimeSec         = 19800
+	quickFioTimeSec        = 1800
+	fullSuspendIterations  = 1000
+	quickSuspendIterations = 50
+	fullPollTimeoutMin     = 420
+	quickPollTimeoutMin    = 90
+	fullTimeoutMin         = 450
+	quickTimeoutMin        = 120
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: SuspendStress,
@@ -26,18 +44,28 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Timeout:      450 * time.Minute,
 		Requirements: []string{
 			tdreq.StorageSuspend,
 		},
 		Params: []testing.Param{
 			{
+				Val:       timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
+				Timeout:   fullTimeoutMin * time.Minute,
 				ExtraAttr: []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 			}, {
 				Name:      "iteration_2",
+				Val:       timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
+				Timeout:   fullTimeoutMin * time.Minute,
 				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
 			}, {
 				Name:      "iteration_3",
+				Val:       timeParams{fioTimeSec: fullFioTimeSec, suspendIterations: fullSuspendIterations, timeoutMin: fullPollTimeoutMin},
+				Timeout:   fullTimeoutMin * time.Minute,
+				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+			}, {
+				Name:      "quick",
+				Val:       timeParams{fioTimeSec: quickFioTimeSec, suspendIterations: quickSuspendIterations, timeoutMin: quickPollTimeoutMin},
+				Timeout:   quickTimeoutMin * time.Minute,
 				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
 			},
 		},
@@ -58,17 +86,19 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
+	params := s.Param().(timeParams)
+
 	t := util.TestConfig{}.
 		WithResultWriter(resultWriter).
 		WithDisk(disk).
-		WithRunTimeSec(19800).
+		WithRunTimeSec(params.fioTimeSec).
 		WithJobFromFile(s.DataPath("suspend_stress"))
 	pidFio, err := t.RunBackground(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to run fio: ", err)
 	}
 
-	pidSuspend, err := util.SuspendStressTest(ctx, s.DUT(), 1000)
+	pidSuspend, err := util.SuspendStressTest(ctx, s.DUT(), params.suspendIterations)
 	if err != nil {
 		s.Fatal("Failed to run suspend stress test: ", err)
 	}
@@ -81,7 +111,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		}
 		s.Log(out)
 		return nil
-	}, &testing.PollOptions{Timeout: 7 * time.Hour}); err != nil {
+	}, &testing.PollOptions{Timeout: time.Duration(params.timeoutMin) * time.Minute}); err != nil {
 		s.Fatal("Timed out listening for pid done: ", err)
 	}
 

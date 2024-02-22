@@ -15,6 +15,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	fullStressTimeSec     = "21600"
+	quickStressTimeSec    = "3600"
+	fullStressTimeoutMin  = 420
+	quickStressTimeoutMin = 90
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: Stress,
@@ -28,16 +35,23 @@ func init() {
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
 		Fixture:      fixture.USBDevModeWithReinstall,
-		Timeout:      7 * time.Hour,
 		Requirements: []string{
 			tdreq.StorageStable,
 		},
 		Params: []testing.Param{
 			{
-				ExtraAttr:    []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
+				Val:       fullStressTimeSec,
+				Timeout:   fullStressTimeoutMin * time.Minute,
+				ExtraAttr: []string{"group:storage-qual", "storage-qual_pdp_stress", "storage-qual_avl_v3"},
 			}, {
-				Name: "iteration_2",
-				ExtraAttr:    []string{"group:storage-qual", "storage-qual_avl_v3"},
+				Name:      "iteration_2",
+				Val:       fullStressTimeSec,
+				Timeout:   fullStressTimeoutMin * time.Minute,
+				ExtraAttr: []string{"group:storage-qual", "storage-qual_avl_v3"},
+			}, {
+				Name:    "quick",
+				Val:     quickStressTimeSec,
+				Timeout: quickStressTimeoutMin * time.Minute,
 			},
 		},
 	})
@@ -52,7 +66,8 @@ func Stress(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
 
-	out, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "stressapptest", "-m", "8", "-s", "21600", "-d", disk.Path)
+	runTimeSec := s.Param().(string)
+	out, err := util.RunCmdWithStringOutput(ctx, s.DUT(), "stressapptest", "-m", "8", "-s", runTimeSec, "-d", disk.Path)
 	if err != nil {
 		s.Fatal("Failed to run stressapptest: ", err)
 	}
