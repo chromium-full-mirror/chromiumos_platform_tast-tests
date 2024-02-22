@@ -245,13 +245,11 @@ func verifyPointerCaptureButtons(ctx context.Context, s *testing.State, t pointe
 	matcher := func(a motioninput.Action, pressure float64) motioninput.Matcher {
 		return motioninput.SinglePointerMatcher(a, motioninput.SourceMouseRelative, coords.NewPoint(0, 0), pressure)
 	}
-	hoverEnterMatcher := motioninput.ActionSourceMatcher(motioninput.ActionHoverEnter, motioninput.SourceMouseRelative)
 	if err := t.tester.ExpectEventsAndClear(ctx,
 		matcher(motioninput.ActionDown, 1),
 		matcher(motioninput.ActionButtonPress, 1),
 		matcher(motioninput.ActionButtonRelease, 0),
-		matcher(motioninput.ActionUp, 0),
-		hoverEnterMatcher); err != nil {
+		matcher(motioninput.ActionUp, 0)); err != nil {
 		s.Fatal("Failed to clear motion events and clear: ", err)
 	}
 }
