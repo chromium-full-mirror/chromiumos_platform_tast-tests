@@ -22,6 +22,7 @@ func init() {
 		Desc:         "Verifies consistency of install attributes across versions",
 		Contacts: []string{
 			"cros-hwsec@google.com",
+			"sadmansakib@google.com",
 			"chingkang@google.com",
 		},
 		// ChromeOS > Platform > System > Hardware Security > HwSec AP
