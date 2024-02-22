@@ -160,10 +160,9 @@ func init() {
 			Fixture: "crosHealthdRunning",
 		}, {
 			// Contact: weiluanwang@google.com
-			Name:      "power_button",
-			Val:       croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
-			Fixture:   "crosHealthdRunning",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Name:    "power_button",
+			Val:     croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
+			Fixture: "crosHealthdRunning",
 		}},
 	})
 }

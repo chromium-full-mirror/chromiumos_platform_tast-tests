@@ -151,11 +151,6 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
 			// TODO(b/279707249): Promote to critical.
 			ExtraAttr: []string{"informational"},
-		}, {
-			// Contact: weiluanwang@google.com
-			Name:    "power_button",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutinePowerButton),
-			Fixture: "crosHealthdRunning",
 		}},
 	})
 }
