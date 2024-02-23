@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -49,7 +48,7 @@ func init() {
 		PreTestTimeout:  preTestTimeout,
 		TearDownTimeout: tearDownTimeout,
 		ServiceDeps:     []string{"tast.cros.cellular.RemoteCellularService"},
-		Vars:            []string{"callboxManager", "callbox", "companionCount"},
+		Vars:            []string{"callboxManager", "callbox"},
 	})
 }
 
@@ -334,22 +333,7 @@ func (tf *TestFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 
 // disableCompanionDUTs disables all "companion" DUTs that are connected to the same callbox.
 func disableCompanionDUTs(ctx context.Context, s *testing.FixtState) error {
-	str, ok := s.Var("companionCount")
-	if !ok {
-		return nil
-	}
-
-	companionCount, err := strconv.Atoi(str)
-	if err != nil {
-		return errors.Wrapf(err, "failed to parse integer variable: %q", str)
-	}
-
-	for i := 0; i < companionCount; i++ {
-		companionDUT := s.CompanionDUT(fmt.Sprintf("cd%d", i+1))
-		if companionDUT == nil {
-			return errors.Errorf("failed to get companion DUT cd%d", i+1)
-		}
-
+	for _, companionDUT := range s.CompanionDUTs() {
 		s.Log("Connecting to companion DUT: ", companionDUT.HostName())
 		companionCl, err := rpc.Dial(ctx, companionDUT, s.RPCHint())
 		if err != nil {
@@ -360,12 +344,12 @@ func disableCompanionDUTs(ctx context.Context, s *testing.FixtState) error {
 		// Create a new remote cellular client on companion DUT and disable it.
 		service := cellular.NewRemoteCellularServiceClient(companionCl.Conn)
 		if _, err := service.SetUp(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrapf(err, "failed to initialize remote cellular client on companion DUT: %d", i+1)
+			return errors.Wrapf(err, "failed to initialize remote cellular client on companion DUT: %s", companionDUT.HostName())
 		}
 
 		s.Log("Disabling cellular on companion DUT: ", companionDUT.HostName())
 		if _, err := service.Disable(ctx, &empty.Empty{}); err != nil {
-			return errors.Wrapf(err, "failed to disable companion DUT: %d", i+1)
+			return errors.Wrapf(err, "failed to disable companion DUT: %s", companionDUT.HostName())
 		}
 	}
 
