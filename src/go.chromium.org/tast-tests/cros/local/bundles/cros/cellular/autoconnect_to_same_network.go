@@ -16,12 +16,16 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type autoconnectToSameNetworkTestParams struct {
+	shouldEnableAutoconnect bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:           AutoconnectToSameNetwork,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Checks that when mobile data is turned off then back on, the previously connected network autoconnects",
+		Desc:           "Checks that disabling and re-enabling mobile data will only reconnect if auto-connect was enabled",
 		Contacts: []string{
 			"cros-connectivity@google.com",
 			"hsuregan@google.com",
@@ -30,10 +34,19 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
 		Fixture:      "cellular",
+		Params: []testing.Param{{
+			Name: "auto_connect_enabled",
+			Val:  autoconnectToSameNetworkTestParams{shouldEnableAutoconnect: true},
+		}, {
+			Name: "auto_connect_disabled",
+			Val:  autoconnectToSameNetworkTestParams{shouldEnableAutoconnect: false},
+		}},
 	})
 }
 
 func AutoconnectToSameNetwork(ctx context.Context, s *testing.State) {
+	shouldEnableAutoconnect := s.Param().(autoconnectToSameNetworkTestParams).shouldEnableAutoconnect
+
 	cr, err := chrome.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create a new instance of Chrome: ", err)
@@ -64,21 +77,21 @@ func AutoconnectToSameNetwork(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify network is active: ", err)
 	}
 
-	wasAutoconnectChanged, err := helper.SetServiceAutoConnect(ctx, true)
+	autoconnectChanged, err := helper.SetServiceAutoConnect(ctx, shouldEnableAutoconnect)
 	if err != nil {
-		s.Fatal("Failed to set autoconnect to false")
+		s.Fatalf("Failed to set auto-connect to %t", shouldEnableAutoconnect)
 	}
 	resetAutoconnect := func() {
-		if wasAutoconnectChanged {
-			if _, err := helper.SetServiceAutoConnect(ctx, false); err != nil {
-				s.Fatal("Failed to set autoconnect back to true")
+		if autoconnectChanged {
+			if _, err := helper.SetServiceAutoConnect(ctx, !shouldEnableAutoconnect); err != nil {
+				s.Fatalf("Failed to set auto-connect back to %t", !shouldEnableAutoconnect)
 			}
 		}
 	}
 	defer resetAutoconnect()
 
-	if err := ossettings.VerifyAutoconnectStateOfActiveNetwork(ctx, tconn, true); err != nil {
-		s.Fatal("Failed to verify autoconnect toggle of network: ", err)
+	if err := ossettings.VerifyAutoconnectStateOfActiveNetwork(ctx, tconn, shouldEnableAutoconnect); err != nil {
+		s.Fatal("Failed to verify auto-connect toggle of network: ", err)
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(30 * time.Second)
@@ -90,6 +103,7 @@ func AutoconnectToSameNetwork(ctx context.Context, s *testing.State) {
 		// that happen soon after the toggle changes. Add a
 		// delay before clicking the MobileDataToggle again.
 		action.Sleep(5*time.Second),
+		ui.WaitUntilEnabled(ossettings.MobileDataToggle),
 		mdp.LeftClick(ossettings.MobileDataToggle),
 		ui.WaitUntilCheckedState(ossettings.MobileDataToggle, true),
 	)(ctx); err != nil {
@@ -106,9 +120,19 @@ func AutoconnectToSameNetwork(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for profile refresh: ", err)
 	}
 
-	secondIccid, err := helper.GetCurrentICCID(ctx)
-	if iccid != secondIccid || helper.IsConnected(ctx) != nil {
-		s.Fatal("The same network did not autoconnect")
+	secondIccid, _ := helper.GetCurrentICCID(ctx)
+	sameNetworkIsConnected := iccid == secondIccid && helper.IsConnected(ctx) == nil
+	if sameNetworkIsConnected != shouldEnableAutoconnect {
+		if shouldEnableAutoconnect {
+			s.Fatal("Cellular network should have been auto-connected but is disconnected")
+		} else {
+			s.Fatal("Cellular network should have been disconnected but is auto-connected")
+		}
+	}
+
+	// Only check that the UI shows the network as connected if we expect it to be connected.
+	if !shouldEnableAutoconnect {
+		return
 	}
 
 	if err := ossettings.VerifyNetworkIsActive(ctx, tconn, iccid); err != nil {
