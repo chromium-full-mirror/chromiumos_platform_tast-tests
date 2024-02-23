@@ -212,6 +212,9 @@ const (
 
 	// CrashSender filter.
 	CrashSender ProgramName = "crash_sender"
+
+	// SessionManager filter
+	SessionManager ProgramName = "session_manager"
 )
 
 // Program instructs Reader to report messages from a certain program only.
