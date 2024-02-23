@@ -17,6 +17,8 @@ type GscProperties interface {
 	GscHostI2cBusses() map[byte]I2CBus
 	// PreferredTPMBus returns the preferred TPM bus to emulate AP communication.
 	PreferredTPMBus() ti50.TpmBus
+	// HasEcRstFet indicates whether the GSC uses a secondary EC RST FET pin.
+	HasEcRstFet() bool
 }
 
 // I2CBus represents an I2C bus, naming the two signal pins in case the tests want to reconfigure

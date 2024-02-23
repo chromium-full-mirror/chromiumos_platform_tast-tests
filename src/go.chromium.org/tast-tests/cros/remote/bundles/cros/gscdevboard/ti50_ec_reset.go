@@ -24,11 +24,14 @@ func init() {
 			"jbk@chromium.org",         // Test Author
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCOpenCCD,
+		Attr: []string{"group:gsc",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield",
+			"gsc_image_ti50",
+			"gsc_nightly"},
+		Fixture: fixture.GSCOpenCCD,
 		Params: []testing.Param{{
 			Name: "gsc_reset_gpio",
-			Val:  verifyEcRestOnGscReset,
+			Val:  verifyEcResetOnGscReset,
 		}, {
 			Name: "gsc_reset_tpmv",
 			Val:  verifyEcResetOnTpmvRebootCmd,
@@ -52,13 +55,18 @@ func Ti50ECReset(ctx context.Context, s *testing.State) {
 	subTest(ctx, s, b, i, th)
 }
 
-func verifyEcRestOnGscReset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
+func verifyEcResetOnGscReset(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {
+	hasEcReset := b.GscProperties().HasEcRstFet()
 	s.Log("Verify EC reset on GSC_RST_L toggle")
 	// Hold GSC in reset before start GPIO monitoring
 	b.GpioSet(ctx, ti50.GpioTi50ResetL, false)
 
 	s.Log("Start gpio monitoring")
-	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50ResetL, ti50.GpioTi50EcRstL, ti50.GpioTi50EcRstFet)
+	gpios := []ti50.GpioName{ti50.GpioTi50ResetL, ti50.GpioTi50EcRstL}
+	if hasEcReset {
+		gpios = append(gpios, ti50.GpioTi50EcRstFet)
+	}
+	gpioMonitor := b.GpioMonitorStart(ctx, gpios...)
 
 	s.Log("Booting ti50")
 	b.GpioSet(ctx, ti50.GpioTi50ResetL, true)
@@ -76,21 +84,32 @@ func verifyEcRestOnGscReset(ctx context.Context, s *testing.State, b utils.Devbo
 		// Must return so we don't dereference null below
 		return
 	}
-	firstFetAfterRelease := events.FindFirstAfter(*resetReleased, ti50.GpioTi50EcRstFet)
-	if firstFetAfterRelease == nil {
-		s.Errorf("%s did have an edge after release GSC from reset", ti50.GpioTi50EcRstFet)
-		// Must return so we don't dereference null below
-		return
+
+	// Depending on if GSC has a secondary EC RESET FET pin, we need to find
+	// the real EC RESET edge after it or not
+	var ecResetAfter *utils.GpioEvent
+	if hasEcReset {
+		firstFetAfterRelease := events.FindFirstAfter(*resetReleased, ti50.GpioTi50EcRstFet)
+		if firstFetAfterRelease == nil {
+			s.Errorf("%s did have an edge after release GSC from reset", ti50.GpioTi50EcRstFet)
+			// Must return so we don't dereference null below
+			return
+		}
+
+		ecResetAfter = firstFetAfterRelease
+	} else {
+		ecResetAfter = resetReleased
 	}
 
-	firstEcAfterFet := events.FindFirstAfter(*firstFetAfterRelease, ti50.GpioTi50EcRstL)
-	if firstEcAfterFet == nil || firstEcAfterFet.Edge != utils.GpioEdgeRising {
+	// Find the real EC RESET edge
+	realEcRelease := events.FindFirstAfter(*ecResetAfter, ti50.GpioTi50EcRstL)
+	if realEcRelease == nil || realEcRelease.Edge != utils.GpioEdgeRising {
 		s.Errorf("%s edge right after FET release is not rising edge", ti50.GpioTi50EcRstL)
 		// Must return so we don't dereference null below
 		return
 	}
 
-	s.Logf("EC released from Reset %dms after GSC released", (firstEcAfterFet.TimestampUS-resetReleased.TimestampUS)/1000)
+	s.Logf("EC released from Reset %dms after GSC released", (realEcRelease.TimestampUS-resetReleased.TimestampUS)/1000)
 }
 
 func verifyEcResetOnTpmvRebootCmd(ctx context.Context, s *testing.State, b utils.DevboardHelper, i *ti50.CrOSImage, th utils.FirmwareTestingHelper) {

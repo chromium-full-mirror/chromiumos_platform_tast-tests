@@ -30,3 +30,8 @@ func (g *gscCr50) GscHostI2cBusses() map[byte]I2CBus {
 func (g *gscCr50) PreferredTPMBus() ti50.TpmBus {
 	return ti50.TpmBusSpi
 }
+
+func (g *gscCr50) HasEcRstFet() bool {
+	// No EC Reset FET pin, but designs with Cr50 also have double reset issue.
+	return false
+}

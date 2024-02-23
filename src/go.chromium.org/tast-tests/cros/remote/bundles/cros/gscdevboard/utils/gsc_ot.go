@@ -35,3 +35,7 @@ func (g *gscOT) GscHostI2cBusses() map[byte]I2CBus {
 func (g *gscOT) PreferredTPMBus() ti50.TpmBus {
 	return ti50.TpmBusI2c
 }
+
+func (g *gscOT) HasEcRstFet() bool {
+	return false
+}
