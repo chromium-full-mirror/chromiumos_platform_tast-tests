@@ -218,6 +218,8 @@ const (
 	ENABLEBACKLIGHTL GpioName = "ENABLE_BACKLIGHT_L"
 	// ECBLENOD for the 'ectool gpioget EC_BL_EN_OD' cmd.
 	ECBLENOD GpioName = "EC_BL_EN_OD"
+	// BASEPWREN for the 'ectool gpioget BASE_PWR_EN' cmd.
+	BASEPWREN GpioName = "BASE_PWR_EN"
 )
 
 // FindGPIOs iterates through a passed in list of gpios, and returns the state of the gpios that exist.

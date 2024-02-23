@@ -435,7 +435,7 @@ func getBaseStateSetter(ctx context.Context, ecTool *firmware.ECTool) (baseState
 	// controlling the base state. The first one found from the list would
 	// be used in setting base state attached/detached.
 	// If no GPIO matched, use ECTool as base state setter.
-	baseGpioNames := []firmware.GpioName{firmware.ENBASE, firmware.ENPP3300POGO, firmware.PP3300DXBASE}
+	baseGpioNames := []firmware.GpioName{firmware.ENBASE, firmware.ENPP3300POGO, firmware.PP3300DXBASE, firmware.BASEPWREN}
 	foundNames, err := ecTool.FindGPIOs(ctx, baseGpioNames)
 	if err != nil {
 		return nil, errors.Wrap(err, "FindGPIOs failed")
