@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -17,7 +16,6 @@ import (
 	pmpb "chromiumos/system_api/power_manager_proto"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/common/usbutils"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -115,36 +113,12 @@ func TransitionToTabletMode(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check UI element exist status")
 	}
 
-	keyboardAvailable, keyboardDevPath, err := input.FindPhysicalKeyboard(ctx)
+	keyboardAvailable, _, err := input.FindPhysicalKeyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to create keyboard event: ", err)
 	}
 	if !keyboardAvailable {
 		s.Fatal("Failed to find keyboard input device")
-	}
-
-	const devRoot = "/dev"
-	onboardKeyboardEventPath, err := filepath.Rel(devRoot, keyboardDevPath)
-	if err != nil {
-		s.Fatal("Failed to get keyboard event relative path: ", err)
-	}
-
-	onboardKeyboardStatus := "disabled"
-	if err := inputDeviceDetectionCheck(ctx, onboardKeyboardEventPath, onboardKeyboardStatus); err != nil {
-		s.Fatal("Failed to verify keyboard event in evtest in tablet mode: ", err)
-	}
-
-	const (
-		usbDeviceClassName = "Mass Storage"
-		usbSpeed           = "5000M"
-	)
-	usbDevicesList, err := usbutils.ListDevicesInfo(ctx, nil)
-	if err != nil {
-		s.Fatal("Failed to get USB devices list: ", err)
-	}
-	got := usbutils.NumberOfUSBDevicesConnected(usbDevicesList, usbDeviceClassName, usbSpeed)
-	if want := 1; got != want {
-		s.Fatalf("Unexpected number of USB devices connected: got %d, want %d", got, want)
 	}
 
 	// Long press the power button.

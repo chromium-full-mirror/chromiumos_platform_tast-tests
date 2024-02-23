@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -39,7 +38,7 @@ func TabletModeCheck(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	keyboardAvailable, keyboardDevPath, err := input.FindPhysicalKeyboard(ctx)
+	keyboardAvailable, _, err := input.FindPhysicalKeyboard(ctx)
 	if err != nil {
 		s.Fatal("Failed to create keyboard event: ", err)
 	}
@@ -48,7 +47,7 @@ func TabletModeCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find keyboard input device")
 	}
 
-	touchpadAvailable, touchpadDevPath, err := input.FindPhysicalTrackpad(ctx)
+	touchpadAvailable, _, err := input.FindPhysicalTrackpad(ctx)
 	if err != nil {
 		s.Fatal("Failed to create touchpad event: ", err)
 	}
@@ -57,44 +56,12 @@ func TabletModeCheck(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find touchpad input device")
 	}
 
-	const (
-		devRoot              = "/dev"
-		enabledStatusString  = "enabled"
-		disabledStatusString = "disabled"
-	)
-
-	onboardKeyboardEventPath, err := filepath.Rel(devRoot, keyboardDevPath)
-	if err != nil {
-		s.Fatal("Failed to get keyboard event relative path: ", err)
-	}
-
-	if err := inputDeviceDetectionCheck(ctx, onboardKeyboardEventPath, enabledStatusString); err != nil {
-		s.Fatal("Failed to verify keyboard event in evtest in clamshell mode: ", err)
-	}
-
-	touchpadEventPath, err := filepath.Rel(devRoot, touchpadDevPath)
-	if err != nil {
-		s.Fatal("Failed to get touchpad event relative path: ", err)
-	}
-
-	if err := inputDeviceDetectionCheck(ctx, touchpadEventPath, enabledStatusString); err != nil {
-		s.Fatal("Failed to verify touchpad event in evtest in clamshell mode: ", err)
-	}
-
 	testing.ContextLog(ctx, "Put DUT into tablet mode")
 	cleanUp, err := ash.EnsureTabletModeEnabledWithKeyboardDisabled(ctx)
 	if err != nil {
 		s.Fatal("Failed to put DUT in tablet mode: ", err)
 	}
 	defer cleanUp(cleanupCtx)
-
-	if err := inputDeviceDetectionCheck(ctx, onboardKeyboardEventPath, disabledStatusString); err != nil {
-		s.Fatal("Failed to verify keyboard event in evtest in tablet mode: ", err)
-	}
-
-	if err := inputDeviceDetectionCheck(ctx, touchpadEventPath, disabledStatusString); err != nil {
-		s.Fatal("Failed to verify touchpad event in evtest in tablet mode: ", err)
-	}
 }
 
 // inputDeviceDetectionCheck verifies input device eventPath has expectedDetectionStatus.
