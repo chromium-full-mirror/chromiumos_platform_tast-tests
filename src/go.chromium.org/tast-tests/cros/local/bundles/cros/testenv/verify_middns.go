@@ -15,15 +15,16 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         VerifyDNSServer,
+		Func:         VerifyMidDNS,
 		Desc:         "Verify that middle-layer DNS redirects hosts using dnsmasq",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
 		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
 		Attr:         []string{},  // manual
+		Timeout:      2 * time.Minute,
 	})
 }
 
-func VerifyDNSServer(ctx context.Context, s *testing.State) {
+func VerifyMidDNS(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
