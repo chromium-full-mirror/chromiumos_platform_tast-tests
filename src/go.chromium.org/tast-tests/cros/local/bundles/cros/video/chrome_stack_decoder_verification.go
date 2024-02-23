@@ -28,6 +28,7 @@ var av1CommonFiles = []string{
 	"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-cols-is-power-of-2.ivf",
 	"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-rows-is-power-of-2.ivf",
 	"test_vectors/av1/8-bit/test-25fps-192x288-tile-rows-3-tile-cols-3.ivf",
+	"test_vectors/av1/8-bit/llama_av1_240p_200kbps_24fps.ivf",
 }
 
 var av1Aom8bitFiles = map[string][]string{

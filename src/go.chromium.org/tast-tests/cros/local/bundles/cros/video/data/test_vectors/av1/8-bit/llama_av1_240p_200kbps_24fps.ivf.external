@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/av1/llama_av1_240p_200kbps_24fps_20240222.ivf",
+  "size": 41544,
+  "sha256sum": "142f15640467a8c7a927c3bc956c46d441dc158f99f1cde10a4e1aaed15ec081"
+}

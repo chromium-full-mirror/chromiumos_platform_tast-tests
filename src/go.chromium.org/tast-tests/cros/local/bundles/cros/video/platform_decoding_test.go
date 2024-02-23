@@ -35,6 +35,7 @@ var av1Files = map[string][]string{
 		"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-cols-is-power-of-2.ivf",
 		"test_vectors/av1/8-bit/test-25fps-192x288-only-tile-rows-is-power-of-2.ivf",
 		"test_vectors/av1/8-bit/test-25fps-192x288-tile-rows-3-tile-cols-3.ivf",
+		"test_vectors/av1/8-bit/llama_av1_240p_200kbps_24fps.ivf",
 	},
 	"10bit": {
 		"test_vectors/av1/10-bit/00000671.ivf",
