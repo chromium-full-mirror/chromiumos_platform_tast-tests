@@ -639,7 +639,7 @@ func logout(ctx context.Context, cr *chrome.Chrome, l *lacros.Lacros) error {
 // avoid possible noise when collecting the browser login time performance at restoring time, this
 // function also makes sure to close the OS settings app before returning.
 func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error {
-	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Apps").Role(role.Link))
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Apps)
 	if err != nil {
 		return errors.Wrap(err, "failed to launch apps settings page")
 	}
