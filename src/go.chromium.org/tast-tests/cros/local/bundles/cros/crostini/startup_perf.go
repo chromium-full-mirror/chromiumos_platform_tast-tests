@@ -26,11 +26,13 @@ func init() {
 			{
 				Name:              "bullseye",
 				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           1 * time.Minute,
 			}, {
 				Name:              "bookworm",
 				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           1 * time.Minute,
 			},

@@ -337,25 +337,23 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 			extraSoftwareDeps = append(extraSoftwareDeps, "dlc")
 
 			var hardwareDeps string
-			if !testCase.IsNotMainline {
-				if testCase.UseLargeContainer {
-					if i.stable {
-						hardwareDeps = "crostini.CrostiniAppStable"
-					} else {
-						hardwareDeps = "crostini.CrostiniAppUnstable"
-					}
-				} else if testCase.LowPerfEligible {
-					if i.stable {
-						hardwareDeps = "crostini.CrostiniOptimalPerf"
-					} else {
-						hardwareDeps = "crostini.CrostiniLowPerf"
-					}
+			if testCase.UseLargeContainer {
+				if i.stable {
+					hardwareDeps = "crostini.CrostiniAppStable"
 				} else {
-					if i.stable {
-						hardwareDeps = "crostini.CrostiniOptimalPerf"
-					} else {
-						hardwareDeps = "crostini.CrostiniUnstable"
-					}
+					hardwareDeps = "crostini.CrostiniAppUnstable"
+				}
+			} else if testCase.LowPerfEligible {
+				if i.stable {
+					hardwareDeps = "crostini.CrostiniOptimalPerf"
+				} else {
+					hardwareDeps = "crostini.CrostiniLowPerf"
+				}
+			} else {
+				if i.stable {
+					hardwareDeps = "crostini.CrostiniOptimalPerf"
+				} else {
+					hardwareDeps = "crostini.CrostiniUnstable"
 				}
 			}
 

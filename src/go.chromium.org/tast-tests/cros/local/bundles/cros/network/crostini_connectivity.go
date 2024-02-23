@@ -30,24 +30,28 @@ func init() {
 			{
 				Name:              "dualstack_bullseye",
 				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           2 * time.Minute,
 				Val:               guestos.ConnectivityTestParams{},
 			}, {
 				Name:              "dualstack_bookworm",
 				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           2 * time.Minute,
 				Val:               guestos.ConnectivityTestParams{},
 			}, {
 				Name:              "v6only_bullseye",
 				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBullseye",
 				Timeout:           2 * time.Minute,
 				Val:               guestos.ConnectivityTestParams{V6Only: true},
 			}, {
 				Name:              "v6only_bookworm",
 				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           2 * time.Minute,
 				Val:               guestos.ConnectivityTestParams{V6Only: true},
