@@ -123,7 +123,7 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 			}
 			err := dataRoleSwap(ctx, h, swapSrc)
 			if err != nil {
-				s.Fatal("Data role swap failed: ", err)
+				s.Error("Data role swap failed: ", err)
 			}
 		}
 	}
