@@ -86,10 +86,10 @@ func PlatformAPIEventsKeyboardDiagnostic(ctx context.Context, s *testing.State) 
 	}
 
 	if hasKeyboard {
-		// Check that the keyboard page is shown.
-		keyboardHeading := nodewith.NameContaining("Keyboard").Role(role.Heading)
-		if err := uiauto.New(v.TConn).WaitUntilExists(keyboardHeading)(ctx); err != nil {
-			s.Fatal("Failed to open on keyboard tab: ", err)
+		// Check that the keyboard tester on the keyboard page is shown.
+		keyboardTesterDoneButton := nodewith.NameContaining("Done").Role(role.Button)
+		if err := uiauto.New(v.TConn).WaitUntilExists(keyboardTesterDoneButton)(ctx); err != nil {
+			s.Fatal("Failed to open on keyboard tab with the keyboard tester: ", err)
 		}
 	}
 
