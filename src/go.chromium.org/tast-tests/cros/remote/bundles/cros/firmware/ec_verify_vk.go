@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -71,7 +70,7 @@ func init() {
 			},
 		}, {
 			Name:              "detachable",
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable)),
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Detachable), hwdep.Keyboard()),
 			Val: dutTestParams{
 				canDoTabletSwitch: true,
 				formFactor:        detachable,
@@ -142,6 +141,13 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	defer func(ctx context.Context) {
+		// Restore init keyboard and usb keyboard to the default value.
+		if err := h.Servo.SetOnOff(ctx, servo.InitKeyboard, servo.On); err != nil {
+			s.Fatal("Failed to set init keyboard to on: ", err)
+		}
+		if err := h.Servo.SetOnOff(ctx, servo.USBKeyboard, servo.Off); err != nil {
+			s.Fatal("Failed to set usb keyboard to off: ", err)
+		}
 		res, err := screenRecorder.Stop(ctx, &empty.Empty{})
 		if err != nil {
 			s.Log("Unable to save the recording: ", err)
@@ -156,42 +162,16 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Record initial states of all emulated keyboards for restoration later.
-	var initUSBKBState, initDefaultKBState bool
-	for kb, state := range map[servo.OnOffControl]bool{
-		servo.USBKeyboard:  initUSBKBState,
-		servo.InitKeyboard: initDefaultKBState,
-	} {
-		var err error
-		state, err = h.Servo.GetOnOff(ctx, kb)
-		if err != nil {
-			s.Fatalf("Failed to get state for %s: %v", kb, err)
-		}
-		defer func(restoreVal bool, ctrl servo.OnOffControl) {
-			var onoff servo.OnOffValue
-			switch restoreVal {
-			case true:
-				onoff = servo.On
-			case false:
-				onoff = servo.Off
-			}
-			s.Logf("Restoring %s to %s", ctrl, onoff)
-			if err := h.Servo.SetOnOff(ctx, ctrl, onoff); err != nil {
-				s.Fatalf("Failed to restore %s to %s: %v", ctrl, onoff, err)
-			}
-		}(state, kb)
-	}
-
 	// Restore tablet mode settings so that DUT won't
 	// be left in tablet mode at the end of test.
 	args := s.Param().(dutTestParams)
 	ecTool := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
-	var restoreECTabletMode bool
-	defer func(ctx context.Context, restoreECTabletMode *bool) {
-		if *restoreECTabletMode {
-			s.Log("Restoring ec tablet mode setting at the end of test")
+	var restoreLaptopMode bool
+	defer func(ctx context.Context) {
+		if restoreLaptopMode {
+			s.Log("Restoring laptop mode setting at the end of test")
 			if _, err := h.Servo.RunTabletModeCommandGetOutput(ctx, args.tabletModeOff); err != nil {
-				s.Fatal("Unablet to reset EC tablet mode setting: ", err)
+				s.Fatal("Unable to restore laptop mode: ", err)
 			}
 		}
 		if args.formFactor == convertible {
@@ -207,7 +187,7 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 				}
 			}
 		}
-	}(cleanupCtx, &restoreECTabletMode)
+	}(cleanupCtx)
 
 	vkService := pb.NewCheckVirtualKeyboardServiceClient(h.RPCClient.Conn)
 	for _, tc := range []struct {
@@ -216,20 +196,16 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 		turnTabletModeOn  bool
 		tabletModeCmd     string
 	}{
-		{args.formFactor, args.canDoTabletSwitch, false, args.tabletModeOff},
 		{args.formFactor, args.canDoTabletSwitch, true, args.tabletModeOn},
+		{args.formFactor, args.canDoTabletSwitch, false, args.tabletModeOff},
 	} {
-		// Switch DUT to tablet mode, then back to clamshell mode, for convertibles and detachables.
-		msg, err := switchDUTMode(ctx, h, tc.canDoTabletSwitch, tc.turnTabletModeOn, tc.tabletModeCmd, ecTool)
-		if err != nil {
+		if err := switchDUTMode(ctx, h, tc.canDoTabletSwitch, tc.turnTabletModeOn, tc.tabletModeCmd, ecTool); err != nil {
 			s.Fatalf("Failed to run %s: %v", tc.tabletModeCmd, err)
 		}
-		const tabletModeEnabled = "tablet mode enabled"
-		switch strings.Contains(msg, tabletModeEnabled) {
-		case true:
-			restoreECTabletMode = true
-		default:
-			restoreECTabletMode = false
+		if tc.turnTabletModeOn {
+			restoreLaptopMode = true
+		} else {
+			restoreLaptopMode = false
 		}
 		s.Log("Sleeping for a few seconds")
 		// GoBigSleepLint: Short delay to ensure that switching to tablet mode has
@@ -256,32 +232,23 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}
-		// Turn all emulated keyboards off prior to testing the virtual
-		// keyboard.
-		for _, kb := range []servo.OnOffControl{servo.USBKeyboard, servo.InitKeyboard} {
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				s.Logf("Setting %s to %s", kb, servo.Off)
-				if err := h.Servo.SetOnOff(ctx, kb, servo.Off); err != nil {
-					return errors.Wrapf(err, "failed to set %s to %s", kb, servo.Off)
-				}
-				keyboardOff, err := h.Servo.GetOnOff(ctx, kb)
-				if err != nil {
-					return errors.Wrapf(err, "failed to get %s", kb)
-				}
-				if keyboardOff != false {
-					return errors.Errorf("got unexpected %s value: %t", kb, keyboardOff)
-				}
-				return nil
-			}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
-				s.Fatalf("Failed to set %s to %s: %v", kb, servo.Off, err)
+		for _, testCase := range []struct {
+			keyboard servo.OnOffControl
+			onOff    servo.OnOffValue
+		}{
+			{keyboard: servo.InitKeyboard, onOff: servo.On},
+			{keyboard: servo.InitKeyboard, onOff: servo.Off},
+			{keyboard: servo.USBKeyboard, onOff: servo.On},
+			{keyboard: servo.USBKeyboard, onOff: servo.Off},
+		} {
+			if err := setAndVerifyKeyboard(ctx, h, testCase.keyboard, testCase.onOff); err != nil {
+				s.Fatalf("Failed to set %v to %v: %v", testCase.keyboard, testCase.onOff, err)
 			}
 		}
-		// Document the output of keyboard path and lsusb for debugging purposes.
-		if err := recordKeyboards(ctx, h, filepath.Join(s.OutDir(), "keyboards.txt")); err != nil {
-			s.Fatal("Failed to record keyboard info: ", err)
-		}
-		if err := recordUSBDevices(ctx, h, filepath.Join(s.OutDir(), "lsusb.txt")); err != nil {
-			s.Fatal("Failed to record lsusb: ", err)
+		if err := checkServoKeyboard(ctx, h, false); err != nil {
+			if _, ok := err.(*servoKeyboardErr); !ok {
+				s.Fatal("Failed to check servo keyboard: ", err)
+			}
 		}
 		if err := verifyVK(); err != nil {
 			_, ok := err.(*verifyVkErr)
@@ -308,9 +275,9 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 	}
 }
 
-func switchDUTMode(ctx context.Context, h *firmware.Helper, canDoTabletSwitch, turnTabletModeOn bool, tabletModeCmd string, ecTool *firmware.ECTool) (string, error) {
+func switchDUTMode(ctx context.Context, h *firmware.Helper, canDoTabletSwitch, turnTabletModeOn bool, tabletModeCmd string, ecTool *firmware.ECTool) error {
 	if !canDoTabletSwitch {
-		return "", nil
+		return nil
 	}
 	forceTabletModeAngle := func(ctx context.Context) error {
 		if turnTabletModeOn {
@@ -327,18 +294,18 @@ func switchDUTMode(ctx context.Context, h *firmware.Helper, canDoTabletSwitch, t
 		return nil
 	}
 	testing.ContextLogf(ctx, "Running EC command %s to change DUT's tablet mode state", tabletModeCmd)
-	out, err := h.Servo.RunTabletModeCommandGetOutput(ctx, tabletModeCmd)
+	_, err := h.Servo.RunTabletModeCommandGetOutput(ctx, tabletModeCmd)
 	if err != nil {
 		if _, ok := err.(*servo.TabletModeCmdUnsupportedErr); !ok {
-			return "", errors.Wrap(err, "failed to set DUT tablet mode state")
+			return errors.Wrap(err, "failed to set DUT tablet mode state")
 		}
 		testing.ContextLogf(ctx, "Failed to set DUT tablet mode state, and got: %v. Attempting to set tablet_mode_angle with ectool instead", err)
 		if err := forceTabletModeAngle(ctx); err != nil {
-			return "", errors.Wrap(err, "failed to set DUT tablet mode state")
+			return errors.Wrap(err, "failed to set DUT tablet mode state")
 		}
-		return "", nil
+		return nil
 	}
-	return out, nil
+	return nil
 }
 
 func checkTabletMode(ctx context.Context, h *firmware.Helper, turnTabletModeOn bool) (bool, error) {
@@ -371,25 +338,47 @@ func checkVKIsPresent(ctx context.Context, h *firmware.Helper, cvkc pb.CheckVirt
 	return nil
 }
 
-func recordUSBDevices(ctx context.Context, h *firmware.Helper, destPath string) error {
-	output, err := h.DUT.Conn().CommandContext(ctx, "lsusb").Output()
-	if err != nil {
-		return errors.Wrap(err, "running lsusb")
+func setAndVerifyKeyboard(ctx context.Context, h *firmware.Helper, keyboard servo.OnOffControl, onOffVal servo.OnOffValue) error {
+	var onoff bool
+	switch onOffVal {
+	case servo.On:
+		onoff = true
+	case servo.Off:
+		onoff = false
 	}
-	if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
-		return errors.Wrap(err, "failed to write")
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		testing.ContextLogf(ctx, "Setting %s to %s", keyboard, onOffVal)
+		if err := h.Servo.SetOnOff(ctx, keyboard, onOffVal); err != nil {
+			return errors.Wrapf(err, "failed to set %s to %s", keyboard, onOffVal)
+		}
+		keyboardValue, err := h.Servo.GetOnOff(ctx, keyboard)
+		if err != nil {
+			return errors.Wrapf(err, "failed to get %s", keyboard)
+		}
+		if keyboardValue != onoff {
+			return errors.Errorf("got unexpected %s value: %t", keyboard, keyboardValue)
+		}
+		return nil
+	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
+		return errors.Wrap(err, "failed to set and verify keyboard")
 	}
 	return nil
 }
 
-func recordKeyboards(ctx context.Context, h *firmware.Helper, destPath string) error {
-	keyboardInfo := `ls -l /dev/input/by-path/*-kbd`
-	output, err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", keyboardInfo).Output(ssh.DumpLogOnError)
+type servoKeyboardErr struct {
+	*errors.E
+}
+
+func checkServoKeyboard(ctx context.Context, h *firmware.Helper, expectedExist bool) error {
+	servoKeyboardString := "Atmel Corp. LUFA Keyboard Demo Application"
+	lsusbOutput, err := h.DUT.Conn().CommandContext(ctx, "lsusb").Output(ssh.DumpLogOnError)
 	if err != nil {
-		return errors.Wrap(err, "running ls -l")
+		return errors.Wrap(err, "running lsusb")
 	}
-	if err := os.WriteFile(destPath, []byte(output), 0666); err != nil {
-		return errors.Wrap(err, "failed to write")
+	isExist := strings.Contains(string(lsusbOutput), servoKeyboardString)
+	if expectedExist != isExist {
+		testing.ContextLogf(ctx, "Expected servo keyboard exists: %v, but got: %v", expectedExist, isExist)
+		return &servoKeyboardErr{errors.Errorf("got unexpected servo keyboard value: %v", isExist)}
 	}
 	return nil
 }
