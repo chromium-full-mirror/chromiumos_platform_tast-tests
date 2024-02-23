@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
@@ -57,8 +58,14 @@ func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest
 
 // LaunchAtNetwork will launch the OS Settings application at Network page.
 func (s *Service) LaunchAtNetwork(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	cr := s.sharedObject.Chrome
+	if cr == nil {
+		return &emptypb.Empty{}, errors.New("Chrome has not been started")
+	}
+
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		_, err := LaunchAtPage(ctx, tconn, Network)
+		condition := New(tconn).Exists(nodewith.Name("Network").Role(role.Heading))
+		_, err := LaunchAtPageURL(ctx, tconn, cr, "network", condition)
 		return &emptypb.Empty{}, err
 	})
 }
@@ -71,7 +78,7 @@ func (s *Service) LaunchAtWifiPage(ctx context.Context, e *emptypb.Empty) (*empt
 	}
 
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		condition := uiauto.New(tconn).Exists(nodewith.Name("Wi-Fi subpage back button").Ancestor(WindowFinder))
+		condition := New(tconn).Exists(nodewith.Name("Wi-Fi subpage back button"))
 		if _, err := LaunchAtPageURL(ctx, tconn, cr, "networks?type=WiFi", condition); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS-Settings and navigate to Wi-Fi")
 		}
@@ -108,7 +115,7 @@ func (s *Service) OpenHotspotDetailPage(ctx context.Context, e *emptypb.Empty) (
 	}
 
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		condition := uiauto.New(tconn).Exists(nodewith.Name("Hotspot subpage back button"))
+		condition := New(tconn).Exists(nodewith.Name("Hotspot subpage back button"))
 		if _, err := LaunchAtPageURL(ctx, tconn, cr, "hotspotDetail", condition); err != nil {
 			return &emptypb.Empty{}, errors.Wrap(err, "failed to launch OS-Settings and navigate to Hotspot detail")
 		}
@@ -234,7 +241,6 @@ func (s *Service) KnownWifiNetworks(ctx context.Context, e *emptypb.Empty) (*pb.
 			return nil, errors.New("Chrome has not been started")
 		}
 
-		ui := uiauto.New(tconn)
 		settings, err := Launch(ctx, tconn)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to launch OS Settings")
@@ -243,7 +249,7 @@ func (s *Service) KnownWifiNetworks(ctx context.Context, e *emptypb.Empty) (*pb.
 		defer faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(cleanupCtx, func() bool { return retErr != nil }, tconn, "known_networks_ossettings")
 
 		const pageShortURL = "knownNetworks"
-		condition := ui.Exists(KnownNetworksHeading.Ancestor(WindowFinder))
+		condition := settings.Exists(KnownNetworksHeading)
 		if err := settings.NavigateToPageURL(ctx, cr, pageShortURL, condition); err != nil {
 			return nil, errors.Wrapf(err, "failed to navigate to page %q", pageShortURL)
 		}
