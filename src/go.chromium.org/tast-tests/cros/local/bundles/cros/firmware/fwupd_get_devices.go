@@ -36,11 +36,11 @@ func FwupdGetDevices(ctx context.Context, s *testing.State) {
 	}
 	s.Log("FWUPD version detected: ", fwupdVersion)
 
-	// Get device using DeviceID
+	// Get device using GUID
 	var device *fwupd.Device
-	device, err = fwupd.DeviceByID(ctx, fwupd.FakeWebcamDeviceID)
+	device, err = fwupd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
 	if err != nil {
-		s.Fatal("Failed to detect expected device using DeviceID: ", err)
+		s.Fatal("Failed to detect expected device using GUID: ", err)
 	}
 	if device.Name != fwupd.FakeWebcamName {
 		s.Fatalf("Detected device name: %s is different from expected device name: %s", device.Name, fwupd.FakeWebcamName)

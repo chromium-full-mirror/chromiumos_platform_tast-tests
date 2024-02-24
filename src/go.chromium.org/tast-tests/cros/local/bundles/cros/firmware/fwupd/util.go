@@ -26,9 +26,6 @@ const ReleaseURI = "https://storage.googleapis.com/chromeos-localmirror/lvfs/tes
 // It takes Brya about 3 minutes for the state to change from fully charged to discharging.
 const ChargingStateTimeout = 10 * time.Minute
 
-// FakeWebcamDeviceID is the DeviceID of the Fakecam installed on test devices
-const FakeWebcamDeviceID string = "08d460be0f1f9f128413f816022a6439e0078018"
-
 // FakeWebcamGUID is the GUID of the Fakecam installed on test devices
 const FakeWebcamGUID string = "b585990a-003e-5270-89d5-3705a17f9a43"
 

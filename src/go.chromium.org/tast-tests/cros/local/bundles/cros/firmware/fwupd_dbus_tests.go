@@ -76,13 +76,21 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 			TrustFlags: 0,
 		},
 	}
+	// Get device using GUID
+	var device *fwupd.Device
+	device, err = fwupd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
+	if err != nil {
+		s.Fatal("Failed to detect expected device using GUID: ", err)
+	}
+	var testDeviceID = device.DeviceId
+	s.Log("FakeWebcam device id found: ", testDeviceID)
 	action := s.Param().(int)
 	var releases []*fwupd.Release
 	if action == paramUpdates {
-		releases, err = fwupd.UpdatesForDeviceID(ctx, fwupd.FakeWebcamDeviceID)
+		releases, err = fwupd.UpdatesForDeviceID(ctx, testDeviceID)
 		expectedReleases = expectedReleases[:3]
 	} else {
-		releases, err = fwupd.ReleasesForDeviceID(ctx, fwupd.FakeWebcamDeviceID)
+		releases, err = fwupd.ReleasesForDeviceID(ctx, testDeviceID)
 	}
 	if err != nil {
 		s.Fatal("Failed to get releases: ", err)
