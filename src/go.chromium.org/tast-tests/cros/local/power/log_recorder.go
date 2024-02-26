@@ -5,6 +5,7 @@
 package power
 
 import (
+	"os"
 	"path/filepath"
 
 	"go.chromium.org/tast-tests/cros/local/logsaver"
@@ -29,12 +30,14 @@ func (lr *LogRecorder) Start() error {
 		return errors.New("Log markers were already created but not cleaned up")
 	}
 
-	logMarker, err := logsaver.NewMarker("/var/log/cros_ec.log")
-	if err != nil {
-		return errors.Wrap(err, "failed to start the log saver")
-	}
+	if _, err := os.Stat("/dev/cros_ec"); err == nil {
+		logMarker, err := logsaver.NewMarker("/var/log/cros_ec.log")
+		if err != nil {
+			return errors.Wrap(err, "failed to start the log saver")
+		}
 
-	lr.logMarkers["cros_ec.log"] = logMarker
+		lr.logMarkers["cros_ec.log"] = logMarker
+	}
 
 	return nil
 }
