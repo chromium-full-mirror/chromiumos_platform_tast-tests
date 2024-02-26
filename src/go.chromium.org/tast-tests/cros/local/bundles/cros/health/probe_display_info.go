@@ -28,7 +28,8 @@ func init() {
 			"kerker@google.com",
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
-		Attr:         []string{"group:mainline", "informational"},
+		// TODO(b/326832237): Promote to critical.
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "crosHealthdRunning",
