@@ -177,7 +177,7 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 	// Toggle secure DNS, the UI might lag, keep trying until secure DNS is toggled to the expected state.
 	leftClickAc := ac.WithInterval(2 * time.Second)
 	var toggleSecureDNS = func(ctx context.Context, check checked.Checked) error {
-		tb := nodewith.Role(role.ToggleButton).Name("Use secure DNS")
+		tb := nodewith.Role(role.ToggleButton).Name("Use secure connections to look up sites")
 		var secureDNSChecked = func(ctx context.Context) error {
 			tbInfo, err := ac.Info(ctx, tb)
 			if err != nil {
@@ -205,7 +205,7 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 			return err
 		}
 		selectNode := nodewith.Name("Select DNS provider").Role(role.ComboBoxSelect)
-		optionNode := nodewith.Name("OS default (when available)").Role(role.ListBoxOption)
+		optionNode := nodewith.Name("Network default").Role(role.ListBoxOption)
 		if err := uiauto.Combine("enable secure DNS automatic mode",
 			ac.WithTimeout(10*time.Second).WaitUntilExists(selectNode),
 			ac.WithInterval(3*time.Second).LeftClickUntil(selectNode, ac.Exists(optionNode)),
