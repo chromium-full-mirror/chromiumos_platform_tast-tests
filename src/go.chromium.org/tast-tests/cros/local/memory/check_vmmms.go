@@ -10,7 +10,9 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/local/syslog"
+	"go.chromium.org/tast-tests/cros/local/sysutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // VmmmsInitVerifier verifies that the Virtual Machine Memory Management Service
@@ -42,7 +44,16 @@ var vmmmsServerRE = regexp.MustCompile(`^Server accepted new connection\. CID: (
 // Verify scans syslog from the VmmmsInitVerifier creation time looking for
 // lines showing Resource Manager and ARC connecting to VMMMS. Should be called
 // after arc.New* to make sure VMMMS has had enough time to initialize.
-func (iv *VmmmsInitVerifier) Verify() error {
+func (iv *VmmmsInitVerifier) Verify(ctx context.Context) error {
+	version, _, err := sysutil.KernelVersionAndArch()
+	if err != nil {
+		return errors.Wrap(err, "failed to get kernel version to check that VMMMS is supported")
+	}
+	// VMMMMS is only supported on ChromeOS Kernels 5.4 and later.
+	if !version.IsOrLater(5, 4) {
+		testing.ContextLogf(ctx, "Skipping VMMMS verification because kernel version is %q", version.String())
+		return nil
+	}
 	resourcedClientOK := false
 	resourcedServerOK := false
 	lmkdClientOK := false

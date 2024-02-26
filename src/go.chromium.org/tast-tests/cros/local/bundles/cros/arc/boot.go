@@ -185,7 +185,7 @@ func runBoot(ctx context.Context, s *testing.State) {
 
 	// Ensures that the Virtual Machine Memory Management Service initialized successfully.
 	if vmmmsVerify != nil {
-		if err := vmmmsVerify.Verify(); err != nil {
+		if err := vmmmsVerify.Verify(ctx); err != nil {
 			s.Fatal("VMMMS did not initialized properly: ", err)
 		}
 	}
