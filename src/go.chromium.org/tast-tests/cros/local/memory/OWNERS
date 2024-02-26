@@ -1,0 +1,9 @@
+set noparent
+
+# ChromeOS Kernel Memory
+bgeffon@chromium.org
+ctshao@google.com
+vovoy@chromium.org
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
