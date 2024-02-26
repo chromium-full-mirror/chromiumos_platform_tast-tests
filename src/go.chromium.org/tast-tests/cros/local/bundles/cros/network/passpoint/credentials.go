@@ -88,7 +88,10 @@ func (pc *Credentials) ToShillProperties() (map[string]interface{}, error) {
 		shillconst.PasspointCredentialsPropertyMeteredOverride:    false,
 		shillconst.PasspointCredentialsPropertyAndroidPackageName: testPackageName,
 		shillconst.ServicePropertyEAPCACertPEM:                    []string{TestCerts.CACred.Cert},
-		shillconst.PasspointCredentialsPropertyExpirationTime:     pc.ExpirationTime,
+	}
+
+	if pc.ExpirationTime != "" {
+		props[shillconst.PasspointCredentialsPropertyExpirationTime] = pc.ExpirationTime
 	}
 
 	switch pc.Auth {
