@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -31,36 +32,25 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      3 * time.Minute,
-		Params: []testing.Param{
-			{
-				Name: "classic",
-				Val:  false,
-			},
-			{
-				Name: "webui",
-				Val:  true,
-			},
-		},
 	})
 }
 
 func TabletTransitionPerf(ctx context.Context, s *testing.State) {
+	// Reserve five seconds for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	// Ensure display on to record ui performance correctly.
 	if err := power.TurnOnDisplay(ctx); err != nil {
 		s.Fatal("Failed to turn on display: ", err)
 	}
 
-	var opt chrome.Option
-	if s.Param().(bool) {
-		opt = chrome.EnableFeatures("WebUITabStrip")
-	} else {
-		opt = chrome.DisableFeatures("WebUITabStrip")
-	}
-	cr, err := chrome.New(ctx, opt)
+	cr, err := chrome.New(ctx)
 	if err != nil {
-		s.Fatal("Failed to start chrome: ", err)
+		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
@@ -76,7 +66,7 @@ func TabletTransitionPerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to ensure in clamshell mode: ", err)
 	}
-	defer cleanup(ctx)
+	defer cleanup(cleanupCtx)
 
 	// The top window (first window in the list returned by |ash.GetAllWindow|) needs to be normal window state otherwise no animation will occur.
 	windows, err := ash.GetAllWindows(ctx, tconn)

@@ -35,7 +35,7 @@ func init() {
 		Contacts: []string{
 			"cros-sw-perf@google.com",
 			"chromeos-wm-corexp@google.com",
-			"andp@chromium.org",
+			"sammiequon@chromium.org",
 			"xiyuan@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
