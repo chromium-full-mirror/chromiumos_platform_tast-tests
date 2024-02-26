@@ -64,7 +64,7 @@ func ExtractCrosTestFiles(ctx context.Context, cr *chrome.Chrome, zipPath string
 	if err := os.RemoveAll(targetPath); err != nil {
 		return nil, errors.Wrap(err, "failed to delete the target path")
 	}
-	// Ensure the subdirectory has the same mode as user-created ones in /home/chronos/user/Downloads.
+	// Ensure the subdirectory has the same mode as user-created ones in the Downloads directory.
 	if err := os.Mkdir(targetPath, os.FileMode(int(0711))); err != nil {
 		return filenames, errors.Wrap(err, "failed to create subdirectory in Downloads folder")
 	}
