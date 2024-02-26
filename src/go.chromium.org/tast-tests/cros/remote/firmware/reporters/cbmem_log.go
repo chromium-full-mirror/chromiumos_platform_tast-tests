@@ -17,9 +17,28 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// CBMEMLogType is a string represents the coverage of DUT's firmware log.
+type CBMEMLogType string
+
+// Firmware log types to parse to cbmem command.
+const (
+	LastBootLog         CBMEMLogType = "-1"
+	SecondToLastBootLog CBMEMLogType = "-2"
+	ConsoleLog          CBMEMLogType = "-c"
+)
+
 // GetCBMEMLogs gets CBMEM log from the last boot.
-func (r *Reporter) GetCBMEMLogs(ctx context.Context) (string, error) {
-	cbmem, err := r.CommandOutput(ctx, "cbmem", "-1")
+func (r *Reporter) GetCBMEMLogs(ctx context.Context, logType ...CBMEMLogType) (string, error) {
+	var logTypeString string
+	switch len(logType) {
+	case 0:
+		logTypeString = string(LastBootLog)
+	case 1:
+		logTypeString = string(logType[0])
+	default:
+		return "", errors.New("too many arguments")
+	}
+	cbmem, err := r.CommandOutput(ctx, "cbmem", logTypeString)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to get CBMEM logs")
 	}
@@ -37,8 +56,8 @@ func (r *Reporter) GetCBMEMTimestamps(ctx context.Context) (string, error) {
 
 // GetDisplayedFWScreens gets the CBMEM logs, and returns a list of all the
 // recorded firmware screens, specifically their ids.
-func (r *Reporter) GetDisplayedFWScreens(ctx context.Context) ([]firmware.FwScreenID, error) {
-	cbmemLogs, err := r.GetCBMEMLogs(ctx)
+func (r *Reporter) GetDisplayedFWScreens(ctx context.Context, logType ...CBMEMLogType) ([]firmware.FwScreenID, error) {
+	cbmemLogs, err := r.GetCBMEMLogs(ctx, logType...)
 	if err != nil {
 		return nil, err
 	}
@@ -87,8 +106,8 @@ func (r *Reporter) GetDisplayedFWScreens(ctx context.Context) ([]firmware.FwScre
 // CheckDisplayedScreens uses reporter to obtain a list of firmware screen ids
 // recorded in the CBMEM logs, and verifies if there are matches found for the
 // passed-in list.
-func (r *Reporter) CheckDisplayedScreens(ctx context.Context, expected []firmware.FwScreenID) (bool, error) {
-	fwScreens, err := r.GetDisplayedFWScreens(ctx)
+func (r *Reporter) CheckDisplayedScreens(ctx context.Context, expected []firmware.FwScreenID, logType ...CBMEMLogType) (bool, error) {
+	fwScreens, err := r.GetDisplayedFWScreens(ctx, logType...)
 	if err != nil {
 		return false, errors.Wrap(err, "failed to get firmware screens")
 	}

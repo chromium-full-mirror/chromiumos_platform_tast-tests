@@ -42,6 +42,16 @@ const (
 	ECX86      ECCapability = "x86"
 )
 
+// MiniDiagCapability represents one feature that the MiniDiag contains.
+type MiniDiagCapability string
+
+// These are the MiniDiagCapabilities currently described in fw-testing-configs.
+const (
+	CbmemPreservedByAPReset MiniDiagCapability = "cbmem_preserved_by_ap_reset"
+	EventLogLaunchCount     MiniDiagCapability = "event_log_launch_count"
+	EventLogTestReport      MiniDiagCapability = "event_log_test_report"
+)
+
 // USBEnablePin represents each object in the list in the config files for the key "custom_usb_enable_pins".
 type USBEnablePin struct {
 	Name      string
@@ -59,30 +69,31 @@ const defaultName = "DEFAULTS"
 // Config contains platform-specific attributes.
 // Fields are documented in autotest/server/cros/faft/configs/DEFAULTS.json.
 type Config struct {
-	ACOnCanWakeApFromUlp             bool              `json:"ac_on_can_wake_ap_from_ulp"`
-	ChargerProfileOverride           bool              `json:"charger_profile_override"`
-	ChromeEC                         bool              `json:"chrome_ec"`
-	ECCapability                     []ECCapability    `json:"ec_capability"`
-	GSCCanWakeECWithReset            bool              `json:"gsc_can_wake_ec_with_reset"`
-	HasKeyboard                      bool              `json:"has_keyboard"`
-	Hibernate                        bool              `json:"hibernate"`
-	IsDetachable                     bool              `json:"is_detachable"`
-	LidWakeFromPowerOff              bool              `json:"lid_wake_from_power_off"`
-	MiniDiagEnabled                  bool              `json:"minidiag_enabled"`
-	MiniOSEnabled                    bool              `json:"minios_enabled"`
-	ModeSwitcherType                 ModeSwitcherType  `json:"mode_switcher_type"`
-	NoBrokenScreenInDev              bool              `json:"no_broken_screen_in_dev"`
-	Parent                           string            `json:"parent"`
-	Platform                         string            `json:"platform"`
-	PowerButtonDevSwitch             bool              `json:"power_button_dev_switch"`
-	RawUSBEnablePins                 []json.RawMessage `json:"custom_usb_enable_pins"`
-	RecButtonDevSwitch               bool              `json:"rec_button_dev_switch"`
-	RecForceMRC                      bool              `json:"rec_force_mrc"`
-	SMMStore                         bool              `json:"smm_store"`
-	USBAPortCount                    *int              `json:"usb_a_port_count"`
-	UsbcInputVoltageLimit            int               `json:"usbc_input_voltage_limit"`
-	MaxChargingPower                 float64           `json:"max_charging_power"`
-	UsbcVoltageOnShutdownAndFullBatt int               `json:"usbc_voltage_on_shutdown_and_full_batt"`
+	ACOnCanWakeApFromUlp             bool                 `json:"ac_on_can_wake_ap_from_ulp"`
+	ChargerProfileOverride           bool                 `json:"charger_profile_override"`
+	ChromeEC                         bool                 `json:"chrome_ec"`
+	ECCapability                     []ECCapability       `json:"ec_capability"`
+	GSCCanWakeECWithReset            bool                 `json:"gsc_can_wake_ec_with_reset"`
+	HasKeyboard                      bool                 `json:"has_keyboard"`
+	Hibernate                        bool                 `json:"hibernate"`
+	IsDetachable                     bool                 `json:"is_detachable"`
+	LidWakeFromPowerOff              bool                 `json:"lid_wake_from_power_off"`
+	MiniDiagCapability               []MiniDiagCapability `json:"minidiag_capability"`
+	MiniDiagEnabled                  bool                 `json:"minidiag_enabled"`
+	MiniOSEnabled                    bool                 `json:"minios_enabled"`
+	ModeSwitcherType                 ModeSwitcherType     `json:"mode_switcher_type"`
+	NoBrokenScreenInDev              bool                 `json:"no_broken_screen_in_dev"`
+	Parent                           string               `json:"parent"`
+	Platform                         string               `json:"platform"`
+	PowerButtonDevSwitch             bool                 `json:"power_button_dev_switch"`
+	RawUSBEnablePins                 []json.RawMessage    `json:"custom_usb_enable_pins"`
+	RecButtonDevSwitch               bool                 `json:"rec_button_dev_switch"`
+	RecForceMRC                      bool                 `json:"rec_force_mrc"`
+	SMMStore                         bool                 `json:"smm_store"`
+	USBAPortCount                    *int                 `json:"usb_a_port_count"`
+	UsbcInputVoltageLimit            int                  `json:"usbc_input_voltage_limit"`
+	MaxChargingPower                 float64              `json:"max_charging_power"`
+	UsbcVoltageOnShutdownAndFullBatt int                  `json:"usbc_voltage_on_shutdown_and_full_batt"`
 
 	// Raw duration fields represent a quantity of seconds.
 	// They are used during NewConfig to populate actual duration fields, which are defined below.
@@ -267,4 +278,14 @@ func (cfg *Config) HasECCapability(ecc ECCapability) bool {
 func toSeconds(f float64) time.Duration {
 	// The 1000* factor enables a non-integer f to be cast as a time.Duration, an integer field.
 	return time.Duration(1000*f) * time.Millisecond
+}
+
+// HasMiniDiagCapability checks whether cfg has a certain MiniDiagCapability.
+func (cfg *Config) HasMiniDiagCapability(mdc MiniDiagCapability) bool {
+	for _, capability := range cfg.MiniDiagCapability {
+		if mdc == capability {
+			return true
+		}
+	}
+	return false
 }

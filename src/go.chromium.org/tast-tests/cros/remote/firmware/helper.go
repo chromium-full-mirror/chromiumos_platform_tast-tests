@@ -1755,8 +1755,8 @@ func (h *Helper) ResetServoEthernetDongle(ctx context.Context) error {
 }
 
 // SaveCBMEMLogs saves the CBMEM logs from last boot-up.
-func (h *Helper) SaveCBMEMLogs(ctx context.Context, saveLogPath string) error {
-	out, err := h.Reporter.GetCBMEMLogs(ctx)
+func (h *Helper) SaveCBMEMLogs(ctx context.Context, saveLogPath string, logType ...reporters.CBMEMLogType) error {
+	out, err := h.Reporter.GetCBMEMLogs(ctx, logType...)
 	if err != nil {
 		return errors.Wrap(err, "failed to run cbmem command")
 	}
