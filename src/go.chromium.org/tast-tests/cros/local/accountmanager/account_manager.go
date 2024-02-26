@@ -135,7 +135,7 @@ func OpenAccountManagerSettingsAction(tconn *chrome.TestConn, cr *chrome.Chrome)
 	return func(ctx context.Context) error {
 		ui := uiauto.New(tconn).WithTimeout(DefaultUITimeout)
 		// Open Account Manager page in OS Settings and find Add Google Account button.
-		if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "accountManager", ui.Exists(nodewith.Name("Add Google Account").Role(role.Button))); err != nil {
+		if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "osPeople", ui.Exists(nodewith.Name("Add Google Account").Role(role.Button))); err != nil {
 			return errors.Wrap(err, "failed to launch Account Manager page")
 		}
 		return nil
