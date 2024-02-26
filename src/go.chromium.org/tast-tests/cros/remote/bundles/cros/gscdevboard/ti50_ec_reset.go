@@ -80,9 +80,8 @@ func verifyEcResetOnGscReset(ctx context.Context, s *testing.State, b utils.Devb
 
 	resetReleased := events.FindFirst(ti50.GpioTi50ResetL, utils.GpioEdgeRising)
 	if resetReleased == nil {
-		s.Error("GSC did not come out of reset")
-		// Must return so we don't dereference null below
-		return
+		// Must be fatal so we don't dereference nil below
+		s.Fatal("GSC did not come out of reset")
 	}
 
 	// Depending on if GSC has a secondary EC RESET FET pin, we need to find
@@ -91,9 +90,8 @@ func verifyEcResetOnGscReset(ctx context.Context, s *testing.State, b utils.Devb
 	if hasEcReset {
 		firstFetAfterRelease := events.FindFirstAfter(*resetReleased, ti50.GpioTi50EcRstFet)
 		if firstFetAfterRelease == nil {
-			s.Errorf("%s did have an edge after release GSC from reset", ti50.GpioTi50EcRstFet)
-			// Must return so we don't dereference null below
-			return
+			// Must be fatal so we don't dereference nil below
+			s.Fatalf("%s did have an edge after release GSC from reset", ti50.GpioTi50EcRstFet)
 		}
 
 		ecResetAfter = firstFetAfterRelease
@@ -104,9 +102,8 @@ func verifyEcResetOnGscReset(ctx context.Context, s *testing.State, b utils.Devb
 	// Find the real EC RESET edge
 	realEcRelease := events.FindFirstAfter(*ecResetAfter, ti50.GpioTi50EcRstL)
 	if realEcRelease == nil || realEcRelease.Edge != utils.GpioEdgeRising {
-		s.Errorf("%s edge right after FET release is not rising edge", ti50.GpioTi50EcRstL)
-		// Must return so we don't dereference null below
-		return
+		// Must be fatal so we don't dereference nil below
+		s.Fatalf("%s edge right after FET release is not rising edge", ti50.GpioTi50EcRstL)
 	}
 
 	s.Logf("EC released from Reset %dms after GSC released", (realEcRelease.TimestampUS-resetReleased.TimestampUS)/1000)
@@ -133,9 +130,8 @@ func verifyEcResetOnTpmvRebootCmd(ctx context.Context, s *testing.State, b utils
 
 	ecReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
 	if ecReset == nil {
-		s.Error("EC not put in reset with GSC reboot TPMV command")
-		// Must return so we don't dereference null below
-		return
+		// Must be fatal so we don't dereference nil below
+		s.Fatal("EC not put in reset with GSC reboot TPMV command")
 	}
 	ecResetReleased := events.FindFirstAfter(*ecReset, ti50.GpioTi50EcRstL)
 	if ecResetReleased == nil {
@@ -160,9 +156,8 @@ func verifyEcResetOnConsoleRebootCmd(ctx context.Context, s *testing.State, b ut
 
 	ecReset := events.FindFirst(ti50.GpioTi50EcRstL, utils.GpioEdgeFalling)
 	if ecReset == nil {
-		s.Error("EC not put in reset with GSC reboot console command")
-		// Must return so we don't dereference null below
-		return
+		// Must be fatal so we don't dereference nil below
+		s.Fatal("EC not put in reset with GSC reboot console command")
 	}
 	ecResetReleased := events.FindFirstAfter(*ecReset, ti50.GpioTi50EcRstL)
 	if ecResetReleased == nil {
