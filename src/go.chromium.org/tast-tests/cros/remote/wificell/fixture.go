@@ -100,6 +100,7 @@ func init() {
 	params[TFFeaturesCompanionDUT|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT"
 	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT and self managed AP"
 	params[TFFeaturesWithUI] = "Wificell setup with the UI"
+	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCapture|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT, self managed AP"
 
 	fixtures := make(map[TFFeatures]*testing.Fixture)
 	for f, desc := range params {
