@@ -16,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -161,6 +162,19 @@ func startEvTestLogging(ctx context.Context, s *testing.State) (func(), error) {
 // indefinitely, causing the test infrastucture to mark the test as failed.
 // TODO: add different kinds of suspend test, including stress test
 func Suspend(ctx context.Context, s *testing.State) {
+	// TODO(b/324513129): remove this once we have a better solution in place.
+	// **DO NOT COPY-PASTE THIS CODE IF YOU ARE NOT AFFECTED BY b/324513129**
+	// If you are affected by b/324513129, please add a comment on that bug
+	// and retain this comment block in the new location.
+	_, err := setup.EnableService(ctx, "powerd")
+	if err != nil {
+		s.Fatal("Did not start powerd: ", err)
+	}
+	testing.ContextLog(ctx, "waiting for powerd to become ready")
+	if _, err := power.NewPowerManager(ctx); err != nil {
+		s.Fatal("Failed to connect to PowerManager DBus interface after restarting powerd: ", err)
+	}
+
 	if s.Param().(string) == "fwupd_off" {
 		// Sometimes fwupd may end up being stuck in a lengthy transfer from a device making it non-
 		// suspendable. Stop fwupd before trying the suspend so this doesn't happen.
