@@ -34,7 +34,17 @@ func init() {
 		Requirements: []string{"sys-fw-0022-v02"},
 		Timeout:      5 * time.Minute,
 		// Restrict boards that don't support any method in the tabletmode package for forcing tabletmode.
-		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.SkipOnModel("nautilus", "nautiluslte", "soraka", "pantheon", "nocturne", "kodama")),
+		HardwareDeps: hwdep.D(hwdep.ChromeEC(),
+			hwdep.SkipOnModel(
+				"akali360", // nami: EC FW doesn't support 'ectool motionsense tablet_mode_angle' command
+				"kodama",
+				"nautilus",
+				"nautiluslte",
+				"nocturne",
+				"pantheon",
+				"robo360", // coral: EC FW doesn't support 'ectool motionsense tablet_mode_angle' command
+				"soraka",
+			)),
 		Params: []testing.Param{{
 			Name:              "convertible",
 			Val:               tabletModeConfig{control: &tabletmode.ConvertibleModeControl{}},
@@ -107,8 +117,9 @@ func TabletModeNotification(ctx context.Context, s *testing.State) {
 	// Give powerd time to process the notification and switch the DUT to tablet mode.
 	verifyPowerdTogglesTabletMode(ctx, s, dut, true)
 
-	// We aren't attempting to stress test the tablet mode switching capabilities, so
-	// give powerd time to finish switching the DUT's state before toggling it again.
+	// GoBigSleepLint: We aren't attempting to stress test the tablet mode switching
+	// capabilities, so give powerd time to finish switching the DUT's state before
+	// toggling it again.
 	testing.Sleep(ctx, 1*time.Second)
 
 	testing.ContextLog(ctx, "Disable tablet mode")
@@ -118,8 +129,9 @@ func TabletModeNotification(ctx context.Context, s *testing.State) {
 	// Give powerd time to process the notification and switch the DUT to tablet mode.
 	verifyPowerdTogglesTabletMode(ctx, s, dut, false)
 
-	// We aren't attempting to stress test the tablet mode switching capabilities, so
-	// give powerd time to finish switching the DUT's state before toggling it again.
+	// GoBigSleepLint: We aren't attempting to stress test the tablet mode switching
+	// capabilities, so give powerd time to finish switching the DUT's state before
+	// toggling it again.
 	testing.Sleep(ctx, 1*time.Second)
 
 	testing.ContextLog(ctx, "Enable tablet mode")
