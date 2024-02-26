@@ -395,6 +395,14 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if err != nil {
 		s.Fatal("Failed to get current boot mode: ", err)
 	}
+	if mode != common.BootModeRecovery && mode != common.BootModeUSBDev {
+		// Ensure that the charger is attached before boot mode transition. If it's not,
+		// some machines, for example lazor and limozeen, might enter the hibernation state
+		// due to being idle at G3.
+		if err := firmware.PollToSetChargerStatus(ctx, i.value.Helper, true); err != nil {
+			s.Log("Failed to attach charger: ", err)
+		}
+	}
 
 	// If this is the first PreTest invocation, save the starting boot mode.
 	// This isn't in SetUp to avoid reading CurrentBootMode twice.
