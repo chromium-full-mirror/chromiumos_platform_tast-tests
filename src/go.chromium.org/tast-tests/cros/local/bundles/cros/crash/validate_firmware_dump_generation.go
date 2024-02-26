@@ -45,7 +45,7 @@ func init() {
 		},
 		// ChromeOS > Platform > Connectivity > WiFi
 		BugComponent:    "b:893827",
-		Attr:            []string{"group:mainline", "informational", "group:wificell", "wificell_func"},
+		Attr:            []string{"group:mainline", "informational", "group:criticalstaging", "group:wificell", "wificell_func"},
 		SoftwareDeps:    []string{"chrome", "fbpreprocessord"},
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel()),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc},
