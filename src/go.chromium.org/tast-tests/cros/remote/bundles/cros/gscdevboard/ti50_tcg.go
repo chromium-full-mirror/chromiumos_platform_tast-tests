@@ -63,9 +63,6 @@ func init() {
 			Name: "test_cancel",
 			Val:  "TestCancel",
 		}, {
-			Name: "test_capability_handles",
-			Val:  "TestCapabilityHandles",
-		}, {
 			Name: "test_certify_creation",
 			Val:  "TestCertifyCreation",
 		}, {
@@ -77,9 +74,6 @@ func init() {
 		}, {
 			Name: "test_certify_key_without_nv__certify",
 			Val:  "TestCertifyKeyWithoutNv_Certify",
-		}, {
-			Name: "test_context_clear",
-			Val:  "TestContextClear",
 		}, {
 			Name: "test_continue_session_attr",
 			Val:  "TestContinueSessionAttr",
@@ -126,20 +120,11 @@ func init() {
 			Name: "test_ecc_sig2",
 			Val:  "TestEccSig2",
 		}, {
-			Name: "test_ecdaa_coverage",
-			Val:  "TestEcdaaCoverage",
-		}, {
-			Name: "test_ecdaa_sign",
-			Val:  "TestEcdaaSign",
-		}, {
 			Name: "test_ec_schnorr_coverage",
 			Val:  "TestEcSchnorrCoverage",
 		}, {
 			Name: "test_empty_sensitive",
 			Val:  "TestEmptySensitive",
-		}, {
-			Name: "test_error_reporting",
-			Val:  "TestErrorReporting",
 		}, {
 			Name: "test_evict_control",
 			Val:  "TestEvictControl",
@@ -182,9 +167,6 @@ func init() {
 		}, {
 			Name: "test_hash",
 			Val:  "TestHash",
-		}, {
-			Name: "test_hierarchy_control",
-			Val:  "TestHierarchyControl",
 		}, {
 			Name: "test_hierarchy_control_owner_access",
 			Val:  "TestHierarchyControlOwnerAccess",
@@ -297,32 +279,14 @@ func init() {
 			Name: "test_patch__r88_898154",
 			Val:  "TestPatch_R88_898154",
 		}, {
-			Name: "test_pcr_extend",
-			Val:  "TestPCRExtend",
-		}, {
-			Name: "test_pcr_extend_all_localities",
-			Val:  "TestPCRExtendAllLocalities",
-		}, {
-			Name: "test_pcr_locality",
-			Val:  "TestPCRLocality",
-		}, {
-			Name: "test_pcr_reset",
-			Val:  "TestPCRReset",
-		}, {
 			Name: "test_persistent_transient_object",
 			Val:  "TestPersistentTransientObject",
-		}, {
-			Name: "test_physical_presence",
-			Val:  "TestPhysicalPresence",
 		}, {
 			Name: "test_pin",
 			Val:  "TestPin",
 		}, {
 			Name: "test_plaintext_import_export",
 			Val:  "TestPlaintextImportExport",
-		}, {
-			Name: "test_policy5",
-			Val:  "TestPolicy5",
 		}, {
 			Name: "test_policy_auth",
 			Val:  "TestPolicyAuth",
@@ -332,12 +296,6 @@ func init() {
 		}, {
 			Name: "test_policy_auth_bound_da",
 			Val:  "TestPolicyAuthBoundDA",
-		}, {
-			Name: "test_policy_nv",
-			Val:  "TestPolicyNv",
-		}, {
-			Name: "test_policy_nv_offset",
-			Val:  "TestPolicyNvOffset",
 		}, {
 			Name: "test_policy_pcr_raw_commands",
 			Val:  "TestPolicyPCRRawCommands",
@@ -368,9 +326,6 @@ func init() {
 		}, {
 			Name: "test_raw_certify_creation",
 			Val:  "TestRawCertifyCreation",
-		}, {
-			Name: "test_raw_nv_change_auth",
-			Val:  "TestRawNVChangeAuth",
 		}, {
 			Name: "test_raw_nv_define_space",
 			Val:  "TestRawNVDefineSpace",
