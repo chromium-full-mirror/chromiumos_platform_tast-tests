@@ -28,7 +28,7 @@ func init() {
 		Desc: "Verify cryptohome recovery failures are logged as expected",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"anastasiian@chromium.org",
+			"iscsi@google.com",
 		},
 		BugComponent: "b:1032705",
 		Fixture:      "ussAuthSessionFixture",

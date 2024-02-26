@@ -23,7 +23,7 @@ func init() {
 		Desc: "Test addition and authentication of recovery auth factor with password",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"anastasiian@chromium.org",
+			"iscsi@google.com",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},

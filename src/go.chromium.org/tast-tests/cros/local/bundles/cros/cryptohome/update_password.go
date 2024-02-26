@@ -28,7 +28,7 @@ func init() {
 		Desc: "Update password auth factor and authenticate with the new password",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"anastasiian@chromium.org",
+			"iscsi@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"group:mainline", "group:cryptohome"},

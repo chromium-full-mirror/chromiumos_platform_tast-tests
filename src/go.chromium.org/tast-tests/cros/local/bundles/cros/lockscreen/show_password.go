@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Test Show/Hide password functionality on lockscreen Password field and \"PIN or password\" field",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"rrsilva@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Checks local password change flow in OS Settings",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

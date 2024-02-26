@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Checks that screen-locking works by keyboard shortcut",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

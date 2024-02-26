@@ -41,7 +41,7 @@ func init() {
 		Desc:         "Test signout from the lock screen",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"rrsilva@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

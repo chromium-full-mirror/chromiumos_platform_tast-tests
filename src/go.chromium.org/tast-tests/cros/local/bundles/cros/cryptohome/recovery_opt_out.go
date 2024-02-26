@@ -31,7 +31,7 @@ func init() {
 		Contacts: []string{
 			"cryptohome-core@google.com",
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"iscsi@google.com",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr: []string{

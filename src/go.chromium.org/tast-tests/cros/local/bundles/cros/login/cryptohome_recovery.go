@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Checks cryptohome account recovery flow",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"antrim@chromium.org",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
 		SoftwareDeps: []string{"chrome", "chrome_internal"},

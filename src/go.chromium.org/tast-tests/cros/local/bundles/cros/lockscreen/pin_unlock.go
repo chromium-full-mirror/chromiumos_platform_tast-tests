@@ -23,7 +23,7 @@ func init() {
 		Desc:         "Checks that PIN unlock and PIN autosubmit works for ChromeOS",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@google.com",
+			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

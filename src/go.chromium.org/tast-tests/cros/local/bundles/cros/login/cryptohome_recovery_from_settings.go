@@ -30,7 +30,7 @@ func init() {
 		Desc:         "Checks cryptohome password change flow, with setting up the flow from OS Settings",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"antrim@chromium.org",
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS

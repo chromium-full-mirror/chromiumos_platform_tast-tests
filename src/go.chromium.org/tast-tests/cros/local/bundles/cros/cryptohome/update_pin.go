@@ -25,7 +25,7 @@ func init() {
 		Desc: "Update pin auth factor and authenticate with the new pin",
 		Contacts: []string{
 			"cryptohome-core@google.com",
-			"anastasiian@chromium.org",
+			"iscsi@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		Attr:         []string{"group:mainline", "group:cryptohome"},

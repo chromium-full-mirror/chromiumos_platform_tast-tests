@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Checks cryptohome password change flow",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"rrsilva@google.com",
 			"bohdanty@google.com",
 			"chromeos-sw-engprod@google.com",
 		},

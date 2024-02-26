@@ -25,7 +25,7 @@ func init() {
 		Desc:         "Checks that screen-locking works by closing lid",
 		Contacts: []string{
 			"cros-lurs@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 			"chromeos-sw-engprod@google.com",
 			"cros-exp-wg+testresults@google.com", // for fieldtrial_testing_config
 		},

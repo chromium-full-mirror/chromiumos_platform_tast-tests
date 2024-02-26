@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Test pin enrollment, pin unlock and pin login",
 		Contacts: []string{
 			"cros-oobe@google.com",
-			"anastasiian@google.com",
+			"emaamari@google.com",
 			"bohdanty@google.com",
 			"chromeos-sw-engprod@google.com",
 		},
