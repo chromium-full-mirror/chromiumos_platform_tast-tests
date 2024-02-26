@@ -7,11 +7,13 @@ package meta
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"reflect"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"go.chromium.org/tast-tests/cros/common/meta"
 	"go.chromium.org/tast/core/fsutil"
@@ -80,6 +82,12 @@ func init() {
 				Val:  remoteParamVal{featureA: true, featureB: true},
 			},
 		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaRemoteDUTLabConfigFixture",
+		Desc:     "Test tast parameterized fixture",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
+		Impl:     remoteDUTLabConfigFixture{},
 	})
 }
 
@@ -202,3 +210,25 @@ func (remoteParamFixture) Reset(ctx context.Context) error {
 func (remoteParamFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
 func (remoteParamFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
 func (remoteParamFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
+
+type remoteDUTLabConfigFixture struct{}
+
+func (remoteDUTLabConfigFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	dutLabConfig, err := s.ChromeOSDUTLabConfig("")
+	if err != nil {
+		s.Fatal("Failed to get the lab configuration of the DUT: ", err)
+	}
+	jsonOut := protojson.Format(dutLabConfig)
+	const filename = "dut_lab_config_for_fixture.jsonpb"
+	if err := os.WriteFile(filepath.Join(s.OutDir(), filename), []byte(jsonOut), 0644); err != nil {
+		s.Fatalf("Failed to create %q: %v", filename, err)
+	}
+
+	return nil
+}
+func (remoteDUTLabConfigFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (remoteDUTLabConfigFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (remoteDUTLabConfigFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (remoteDUTLabConfigFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}

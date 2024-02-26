@@ -8,11 +8,13 @@ package meta
 import (
 	"context"
 	"fmt"
+	"os"
 	"path/filepath"
 	"reflect"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"google.golang.org/protobuf/encoding/protojson"
 
 	"go.chromium.org/tast-tests/cros/common/meta"
 	"go.chromium.org/tast/core/fsutil"
@@ -75,6 +77,12 @@ func init() {
 		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
 		Impl:     localParamFixture{},
 		Params:   genParams(),
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "metaLocalDUTLabConfigFixture",
+		Desc:     "Test tast parameterized fixture",
+		Contacts: []string{"tast-owner@google.com", "seewaifu@chromium.org"},
+		Impl:     localDUTLabConfigFixture{},
 	})
 }
 
@@ -321,3 +329,25 @@ func ParamFixtureName(features uint32) string {
 func paramName(features uint32) string {
 	return fmt.Sprintf("f_%x", features)
 }
+
+type localDUTLabConfigFixture struct{}
+
+func (localDUTLabConfigFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	dutLabConfig, err := s.ChromeOSDUTLabConfig("")
+	if err != nil {
+		s.Fatal("Failed to get the lab configuration of the DUT: ", err)
+	}
+	jsonOut := protojson.Format(dutLabConfig)
+	const filename = "dut_lab_config_for_fixture.jsonpb"
+	if err := os.WriteFile(filepath.Join(s.OutDir(), filename), []byte(jsonOut), 0644); err != nil {
+		s.Fatalf("Failed to create %q: %v", filename, err)
+	}
+
+	return nil
+}
+func (localDUTLabConfigFixture) Reset(ctx context.Context) error {
+	return nil
+}
+func (localDUTLabConfigFixture) PreTest(ctx context.Context, s *testing.FixtTestState)  {}
+func (localDUTLabConfigFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {}
+func (localDUTLabConfigFixture) TearDown(ctx context.Context, s *testing.FixtState)     {}
