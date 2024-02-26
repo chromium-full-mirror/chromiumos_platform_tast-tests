@@ -321,7 +321,7 @@ func (vm *VM) ShareDownloadsPath(ctx context.Context, path string, writable bool
 				Path:     path,
 				Writable: writable,
 			},
-			StorageLocation: spb.SharePathRequest_DOWNLOADS,
+			StorageLocation: spb.SharePathRequest_MY_FILES,
 			OwnerId:         vm.Concierge.ownerID,
 		}, resp); err != nil {
 		return "", err
