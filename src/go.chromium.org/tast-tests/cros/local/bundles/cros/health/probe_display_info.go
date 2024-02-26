@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/jsontypes"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"diagnostics"},
+		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "crosHealthdRunning",
 	})
 }
