@@ -239,7 +239,8 @@ func setDoHMode(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, 
 			kb.AccelAction("Ctrl+A"),
 			kb.AccelAction("Backspace"),
 			kb.TypeAction(dohProvider),
-			kb.AccelAction("Enter"),
+			// Lose focus to trigger the update.
+			ac.FocusAndWait(selectNode),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to enable DoH with a custom provider")
 		}
