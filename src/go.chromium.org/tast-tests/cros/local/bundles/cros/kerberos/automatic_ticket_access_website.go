@@ -122,18 +122,13 @@ func AutomaticTicketAccessWebsite(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Kerberos tickets section: ", err)
 	}
 
-	// Wait for ticket to appear.
-	s.Log("Waiting for Kerberos ticket to appear")
-	// Fetching ticket using KerberosAccount policy displays domain in capital
-	// letters. Hence using NameStartingWith(name) rather Name(name@domain).
-	if err := ui.WaitUntilExists(nodewith.NameStartingWith(username).Role(role.StaticText))(ctx); err != nil {
-		s.Fatal("Failed to find Kerberos ticket: ", err)
+	// Trying to find an active ticket.
+	if err := kerberos.CheckForTicket(ctx, ui, config); err != nil {
+		s.Fatal("Failed to find active ticket: ", err)
 	}
 
-	// Check that ticket is active.
-	if err := ui.Exists(nodewith.Name("Active").Role(role.StaticText))(ctx); err != nil {
-		s.Fatal("Kerberos ticket was not in Active state")
-	}
+	// Close the OS Settings app so the UI locators won't ghost one another.
+	apps.Close(ctx, tconn, apps.Settings.ID)
 
 	conn, err := cr.NewConn(ctx, config.WebsiteAddress)
 	if err != nil {

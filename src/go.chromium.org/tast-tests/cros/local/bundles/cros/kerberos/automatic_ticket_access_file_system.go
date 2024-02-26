@@ -122,14 +122,9 @@ func AutomaticTicketAccessFileSystem(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Kerberos tickets section: ", err)
 	}
 
-	s.Log("Waiting for Kerberos ticket to appear")
-	if err := ui.WaitUntilExists(nodewith.NameStartingWith(username).Role(role.StaticText))(ctx); err != nil {
-		s.Fatal("Failed to find Kerberos ticket: ", err)
-	}
-
-	// Check that ticket is active.
-	if err := ui.Exists(nodewith.Name("Active").Role(role.StaticText))(ctx); err != nil {
-		s.Fatal("Kerberos ticket is not active: ", err)
+	// Trying to find an active ticket.
+	if err := kerberos.CheckForTicket(ctx, ui, config); err != nil {
+		s.Fatal("Failed to find active ticket: ", err)
 	}
 
 	// Close the OS Settings app so the UI locators won't ghost one another.
