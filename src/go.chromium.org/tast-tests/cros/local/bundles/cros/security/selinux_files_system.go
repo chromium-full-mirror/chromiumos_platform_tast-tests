@@ -195,7 +195,6 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/usr/share/cros/init", Context: "cros_init_shell_scripts", Recursive: true, Filter: selinux.IgnorePathsButNotContents([]string{
 			"/usr/share/cros/init/activate_date.sh",
 			"/usr/share/cros/init/crx-import.sh",
-			"/usr/share/cros/init/lockbox-cache.sh",
 			"/usr/share/cros/init/powerd-pre-start.sh",
 			"/usr/share/cros/init/shill.sh",
 			"/usr/share/cros/init/shill-pre-start.sh",
@@ -205,7 +204,6 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		})},
 		{Path: "/usr/share/cros/init/activate_date.sh", Context: "cros_init_activate_date_script", IgnoreErrors: true},
 		{Path: "/usr/share/cros/init/crx-import.sh", Context: "cros_init_crx_import_script"},
-		{Path: "/usr/share/cros/init/lockbox-cache.sh", Context: "cros_init_lockbox_cache_script"},
 		{Path: "/usr/share/cros/init/powerd-pre-start.sh", Context: "cros_init_powerd_pre_start_script"},
 		{Path: "/usr/share/cros/init/shill.sh", Context: "cros_init_shill_shell_script"},
 		{Path: "/usr/share/cros/init/shill-pre-start.sh", Context: "cros_init_shill_shell_script"},

@@ -164,7 +164,6 @@ func SandboxedServices(ctx context.Context, s *testing.State) {
 		{"crx-import.sh", "root", "root", 0},
 		{"dump_vpd_log", "root", "root", 0},
 		{"frecon-pre-start.sh", "root", "root", 0},
-		{"lockbox-cache.sh", "root", "root", 0},
 		{"powerd-pre-start.sh", "root", "root", 0},
 		{"update_rw_vpd", "root", "root", 0},
 		{"vpd_get_value", "root", "root", 0},
