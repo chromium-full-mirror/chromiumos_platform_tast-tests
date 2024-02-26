@@ -120,6 +120,13 @@ func init() {
 					probeStatement{"ec_component"},
 				}}},
 			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			Name: "tpm",
+			Val: verifySandboxTestParams{
+				probeConfig: probeConfig{[]probeStatement{
+					probeStatement{"tpm"},
+				}}},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
