@@ -103,7 +103,7 @@ var MenuButton = nodewith.Name("Main menu").Role(role.Button).Focusable()
 var (
 	VersionInfo       = nodewith.NameStartingWith("Version ").Role(role.StaticText)
 	CheckUpdateBtn    = nodewith.Name("Check for updates").Role(role.Button)
-	ReportIssue       = nodewith.Name("Send feedback").Role(role.Link)
+	ReportIssue       = nodewith.NameStartingWith("Send feedback").Role(role.Link)
 	AdditionalDetails = nodewith.Name("Additional details").Role(role.Link)
 	TermsOfService    = nodewith.Name("Terms of Service").Role(role.Link)
 
