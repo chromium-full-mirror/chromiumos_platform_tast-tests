@@ -20,6 +20,7 @@ type attestParam struct {
 	profile    apb.CertificateProfile
 	keyType    apb.KeyType
 	systemCert bool
+	cannotSign bool
 }
 
 func init() {
@@ -175,6 +176,7 @@ func init() {
 				profile:    apb.CertificateProfile_ENTERPRISE_VTPM_EK_CERTIFICATE,
 				keyType:    apb.KeyType_KEY_TYPE_ECC,
 				systemCert: true,
+				cannotSign: true,
 			},
 		}, {
 			// This test requires the device ADID.
@@ -184,6 +186,7 @@ func init() {
 				profile:    apb.CertificateProfile_ENTERPRISE_VTPM_EK_CERTIFICATE,
 				keyType:    apb.KeyType_KEY_TYPE_ECC,
 				systemCert: false,
+				cannotSign: true,
 			},
 		}, {
 			// This test requires the device in verified mode.
@@ -261,6 +264,7 @@ func init() {
 				profile:    apb.CertificateProfile_ARC_TPM_CERTIFYING_KEY_CERTIFICATE,
 				keyType:    apb.KeyType_KEY_TYPE_ECC,
 				systemCert: true,
+				cannotSign: true,
 			},
 		}, {
 			// TODO(b/256992149): Waiting for crrev.com/c/5179676
@@ -270,6 +274,7 @@ func init() {
 				profile:    apb.CertificateProfile_ARC_TPM_CERTIFYING_KEY_CERTIFICATE,
 				keyType:    apb.KeyType_KEY_TYPE_ECC,
 				systemCert: false,
+				cannotSign: true,
 			},
 		}, {
 			Name:              "arc_attestation_device_key_certificate_ecc_system",
@@ -365,6 +370,11 @@ func Attestation(ctx context.Context, s *testing.State) {
 		}
 	}
 
+	// Cleanup the keys before creating them.
+	if err := attestation.DeleteKeys(ctx, username, hwsec.DefaultCertLabel); err != nil {
+		s.Fatal("Failed to remove the default key: ", err)
+	}
+
 	certReply, err := ac.GetCertificate(ctx, &getCertificateRequest)
 	if err != nil {
 		s.Fatal("Failed to call D-Bus API to get certificate: ", err)
@@ -373,15 +383,17 @@ func Attestation(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get certificate: ", certReply.Status.String())
 	}
 
-	// TODO(b/165426637): Enable it after we inject the fake device policy with customer ID.
-	if username != "" {
-		if err := at.SignEnterpriseChallenge(ctx, apb.VerifiedAccessFlow_ENTERPRISE_USER, username, hwsec.DefaultCertLabel); err != nil {
-			s.Fatal("Failed to sign enterprise challenge: ", err)
+	if !param.cannotSign {
+		// TODO(b/165426637): Enable it after we inject the fake device policy with customer ID.
+		if username != "" {
+			if err := at.SignEnterpriseChallenge(ctx, apb.VerifiedAccessFlow_ENTERPRISE_USER, username, hwsec.DefaultCertLabel); err != nil {
+				s.Fatal("Failed to sign enterprise challenge: ", err)
+			}
 		}
-	}
 
-	if err := at.SignSimpleChallenge(ctx, username, hwsec.DefaultCertLabel); err != nil {
-		s.Fatal("Failed to sign simple challenge: ", err)
+		if err := at.SignSimpleChallenge(ctx, username, hwsec.DefaultCertLabel); err != nil {
+			s.Fatal("Failed to sign simple challenge: ", err)
+		}
 	}
 
 	s.Log("Start key payload closed-loop testing")
