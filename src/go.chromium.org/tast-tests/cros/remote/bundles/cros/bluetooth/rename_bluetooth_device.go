@@ -94,20 +94,16 @@ func RenameBluetoothDevice(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set the connect state of the Bluetooth device: ", err)
 	}
 
+	option := bts.BluetoothDeviceDetailRequest_MATCH_OPTION_CONNECTED.Enum()
+	if !expectDeviceIsConnected {
+		option = bts.BluetoothDeviceDetailRequest_MATCH_OPTION_DISCONNECTED.Enum()
+	}
 	// Waiting for the device to be connected/disconnected before proceed on other steps.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		resp, err := fv.BluetoothUIService.BluetoothDeviceDetail(ctx, &bts.BluetoothDeviceDetailRequest{
-			Name: device.AdvertisedName(),
-		})
-		if err != nil {
-			return errors.Wrapf(err, "failed to retrieve the information of Bluetooth device %q", device.AdvertisedName())
-		}
-		if resp.Device.IsConnected != expectDeviceIsConnected {
-			return errors.Errorf("unexpected connection state of Bluetooth device; got: %t, want: %t", resp.Device.IsConnected, expectDeviceIsConnected)
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second}); err != nil {
-		s.Fatal("Failed to wait for the Bluetooth device match the expected connection status: ", err)
+	if _, err := fv.BluetoothUIService.BluetoothDeviceDetail(ctx, &bts.BluetoothDeviceDetailRequest{
+		Name:        device.AdvertisedName(),
+		MatchOption: option,
+	}); err != nil {
+		s.Fatal("Failed to wait for the Bluetooth device: ", err)
 	}
 
 	const deviceNickName = "TestNickName"

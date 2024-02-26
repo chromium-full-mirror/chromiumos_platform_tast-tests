@@ -6,6 +6,8 @@ package ossettings
 
 import (
 	"context"
+	"fmt"
+	"regexp"
 
 	"go.chromium.org/tast-tests/cros/local/bluetooth"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -38,6 +40,19 @@ var BluetoothForgetDeviceButton = nodewith.NameContaining("Forget").HasClass("ca
 // after clicking BluetoothForgetDeviceButton.
 var BluetoothConfirmForgetButton = nodewith.NameContaining("Forget").HasClass("action-button").Role(role.Button)
 
+// BluetoothDeviceItemButtonOnBluetoothSettingsPage returns the button of the Bluetooth
+// device item on the OS-Settings Bluetooth Page.
+func BluetoothDeviceItemButtonOnBluetoothSettingsPage(name string) *nodewith.Finder {
+	// Regular expression for finding a device entry.
+	//
+	// These are examples of the target label:
+	// 	Device 1 of 3 named KEYBD_REF. Device is connected. Device type is unknown. Device has 99% battery.
+	// 	Device 2 of 3 named MOUSE_REF. Device is not connected. Device type is unknown.
+	// 	Device 3 of 3 named RenamedBT. Device is not connected. Device is a mouse.
+	r := regexp.MustCompile(fmt.Sprintf(`^Device \d+ of \d+ named %s\. Device is (connected|not connected)\. Device (type is|is a) \w+\.( Device has (\d+)%% battery\.)?$`, name))
+	return nodewith.NameRegex(r).Role(role.Button).HasClass("list-item")
+}
+
 // NavigateToBluetoothSettingsSubpage will navigate to the Bluetooth settings
 // subpage within the OS Settings.
 // NOTE: When the OsSettingsRevampWayfinding feature flag is enabled, the
@@ -61,21 +76,17 @@ func NavigateToBluetoothSettingsSubpage(ctx context.Context, tconn *chrome.TestC
 // NavigateToBluetoothDeviceDetailsPage will navigate to the Bluetooth Device Details
 // subpage for the device specified by |deviceName|. This is safe to call when OS Settings
 // are already open.
-func NavigateToBluetoothDeviceDetailsPage(ctx context.Context, tconn *chrome.TestConn, deviceName string) (*OSSettings, error) {
-	app, err := Launch(ctx, tconn)
+func NavigateToBluetoothDeviceDetailsPage(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, deviceName string) (*OSSettings, error) {
+	condition := uiauto.New(tconn).Exists(nodewith.Name("Bluetooth subpage back button").Ancestor(WindowFinder))
+	app, err := LaunchAtPageURL(ctx, tconn, cr, "bluetoothDevices", condition)
 	if err != nil {
 		return nil, err
 	}
 
 	ui := uiauto.New(tconn)
-
-	var connectedDevice = BluetoothConnectedDeviceRows.NameContaining(deviceName)
-
-	if err := uiauto.Combine("Focus and click the Bluetooth Settings button and the Connected device's Device Details subpage button",
-		ui.FocusAndWait(BluetoothSettingsSubpageButton),
-		ui.LeftClick(BluetoothSettingsSubpageButton),
-		ui.FocusAndWait(connectedDevice),
-		ui.LeftClick(connectedDevice),
+	if err := uiauto.Combine("Focus and click the device's Device Details subpage button",
+		ui.FocusAndWait(BluetoothDeviceItemButtonOnBluetoothSettingsPage(deviceName)),
+		ui.LeftClick(BluetoothDeviceItemButtonOnBluetoothSettingsPage(deviceName)),
 	)(ctx); err != nil {
 		return nil, err
 	}

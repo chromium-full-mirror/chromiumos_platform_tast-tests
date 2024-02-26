@@ -357,7 +357,7 @@ func (bui *BtUIService) ensureDeviceIsPairing(ctx context.Context, deviceName st
 // for the device specified in the request, then click "Forget" to forget the
 // device.
 func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.ForgetBluetoothDeviceRequest) (_ *emptypb.Empty, retErr error) {
-	_, tconn, err := bui.crAndTestAPIConn(ctx)
+	cr, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -366,7 +366,7 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	app, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, request.DeviceName)
+	app, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, cr, tconn, request.DeviceName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", request.DeviceName)
 	}
@@ -457,7 +457,7 @@ func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty)
 // BluetoothDeviceDetail will attempt to navigate to the Device Detail subpage for the device
 // specified in the request, then retrieves the information of this particular device.
 func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.BluetoothDeviceDetailRequest) (_ *pb.BluetoothDeviceDetailResponse, retErr error) {
-	_, tconn, err := bui.crAndTestAPIConn(ctx)
+	cr, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -466,7 +466,7 @@ func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.Bluet
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, req.Name)
+	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, cr, tconn, req.Name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", req.Name)
 	}
@@ -483,9 +483,9 @@ func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.Bluet
 	if req.MatchOption != nil {
 		switch req.GetMatchOption() {
 		case pb.BluetoothDeviceDetailRequest_MATCH_OPTION_CONNECTED:
-			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^Connected to %s$`, req.Name))
+			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^(Connected to) %s$`, req.Name))
 		case pb.BluetoothDeviceDetailRequest_MATCH_OPTION_DISCONNECTED:
-			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^Disconnected from %s$`, req.Name))
+			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^(Disconnected from) %s$`, req.Name))
 		default:
 			// Match both as other options are irrelevant regarding the connection state.
 			deviceHeadingRegexp = regexp.MustCompile(fmt.Sprintf(`^(Connected to|Disconnected from) %s$`, req.Name))
@@ -571,7 +571,7 @@ func (bui *BtUIService) RenameBluetoothDevice(ctx context.Context, req *pb.Renam
 		return &emptypb.Empty{}, errors.New("invalid custom name")
 	}
 
-	_, tconn, err := bui.crAndTestAPIConn(ctx)
+	cr, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -581,7 +581,7 @@ func (bui *BtUIService) RenameBluetoothDevice(ctx context.Context, req *pb.Renam
 	defer cancel()
 
 	deviceName := req.Device.GetName()
-	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, deviceName)
+	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, cr, tconn, deviceName)
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrapf(err, "failed to navigate to Bluetooth device %q detail page", deviceName)
 	}
@@ -608,10 +608,25 @@ func (bui *BtUIService) RenameBluetoothDevice(ctx context.Context, req *pb.Renam
 		}
 	}(cleanupCtx)
 
+	textField := nodewith.Name("Device name").Role(role.TextField).Ancestor(deviceNameDialog)
+	if err := settings.EnsureFocused(textField)(ctx); err != nil {
+		return &emptypb.Empty{}, errors.Wrap(err, "failed to focus the textfield of the Bluetooth device name dialog")
+	}
+
+	selectAllAndType := func(str string) uiauto.Action {
+		return uiauto.Combine("enter custom name",
+			kb.AccelAction("Ctrl+A"),
+			kb.TypeAction(str),
+		)
+	}
+
+	ui := uiauto.New(tconn)
 	return &emptypb.Empty{}, uiauto.Combine("rename the Bluetooth device",
-		settings.EnsureFocused(nodewith.Name("Device name").Role(role.TextField).Ancestor(deviceNameDialog)),
-		kb.AccelAction("Ctrl+A"),
-		kb.TypeAction(req.GetCustomName()),
+		// Keep retrying typing until the text matches the expected input as ChromeOS might reset it during typing action (b/329191341).
+		ui.RetryUntil(
+			selectAllAndType(req.GetCustomName()),
+			settings.WithTimeout(3*time.Second).WaitUntilExists(nodewith.Name(req.GetCustomName()).Role(role.InlineTextBox).Ancestor(textField)),
+		),
 		settings.LeftClick(nodewith.Name("Done").Role(role.Button).Ancestor(deviceNameDialog)),
 		settings.WaitUntilGone(deviceNameDialog),
 		settings.WaitUntilExists(nodewith.Name(req.GetCustomName()).Role(role.Heading).First()),
