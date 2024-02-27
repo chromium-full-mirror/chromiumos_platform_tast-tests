@@ -44,8 +44,8 @@ func init() {
 			"cienet-firmware@cienet.corp-partner.google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:         []string{"group:firmware", "firmware_unstable"},
+		Attr:         []string{"group:firmware", "firmware_bios", "firmware_level4"},
+		Requirements: []string{"sys-fw-0021-v01", "sys-fw-0024-v01", "sys-fw-0025-v01"},
 		SoftwareDeps: []string{"crossystem"},
 		Vars:         []string{"firmware.skipFlashUSB"},
 		Fixture:      fixture.DevMode,
