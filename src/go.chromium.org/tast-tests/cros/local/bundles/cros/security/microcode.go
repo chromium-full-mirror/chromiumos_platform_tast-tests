@@ -7,13 +7,13 @@ package security
 import (
 	"bufio"
 	"bytes"
-	"compress/gzip"
 	"context"
 	"debug/elf"
 	"encoding/binary"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -46,12 +46,14 @@ func init() {
 }
 
 func Microcode(ctx context.Context, s *testing.State) {
-	vmlinuz, err := readKernelImage(ctx)
+	vmlinuz, err := os.CreateTemp("/tmp", "vmlinuz")
+	defer os.Remove(vmlinuz.Name())
+	err = readKernelImage(ctx, vmlinuz)
 	if err != nil {
 		s.Fatal("Failed to read kernel image: ", err)
 	}
 
-	vmlinux, err := unpackKernelImage(vmlinuz)
+	vmlinux, err := unpackKernelImage(ctx, vmlinuz)
 	if err != nil {
 		s.Fatal("Failed to extract kernel image: ", err)
 	}
@@ -140,18 +142,26 @@ func Microcode(ctx context.Context, s *testing.State) {
 }
 
 // readKernelImage obtains the kernel image from the booted kernel partition.
-func readKernelImage(ctx context.Context) ([]byte, error) {
+// The kernel image is written to the temp file 'vmlinuz', so it can be unpacked
+// (decompressed) later.
+func readKernelImage(ctx context.Context, vmlinuz *os.File) error {
 	dev, err := getKernelPartition(ctx)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	vmlinux, err := testexec.CommandContext(ctx, "futility", "vbutil_kernel", "--get-vmlinuz", dev, "--vmlinuz-out", "/dev/stdout").Output(testexec.DumpLogOnError)
+	_, err = testexec.CommandContext(ctx,
+		"futility",
+		"vbutil_kernel",
+		"--get-vmlinuz",
+		dev,
+		"--vmlinuz-out",
+		vmlinuz.Name()).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return vmlinux, nil
+	return nil
 }
 
 // Matches the partition number on a block device name.
@@ -183,24 +193,83 @@ func getKernelPartition(ctx context.Context) (string, error) {
 	return kdev, nil
 }
 
-// unpackKernelImage decompresses gzip-compressed kernel image. See scripts/extract-vmlinux in the
-// kernel source tree for reference.
-func unpackKernelImage(vmlinuz []byte) ([]byte, error) {
-	// Search for gzip header.
-	offset := bytes.Index(vmlinuz, []byte{0x1f, 0x8b, 0x08})
-	if offset == -1 {
-		return nil, errors.New("failed to locate gzip header")
-	}
+// extractVmlinux unpacks (decompresses) the linux kernel in the 'vmlinuz' file.
+// This function executes a script that attempts various decompression algorithms based
+// on magic bytes being present in the file. Only minimal checking on the output file
+// is possible (looking for "ELF" in the file description) due to limitations on tools
+// available on the DUT (i.e., 'readelf' is not present).
+func extractVmlinux(ctx context.Context, vmlinuz *os.File) ([]byte, error) {
+	// The following script is adapted (and heavily modified) from:
+	//   kernel/v6.6/scripts/extract-vmlinux
+	// This handles any file compression that the linux kernel is able to, as of v6.6.
+	extractVmlinuxSh := `
+try_decompress()
+{
+	# 1. for pos in $(tr "$1\n$2" "\n$2=" < "$img" | grep -abo "^$2")
+	#   - Find all offsets of the specific magic characters we're looking for.
+	#     - Example output:
+	#       $ tr '\135\0\0\0'\nxxx \nxxx= < vmlinuz | grep -abo "^xxx"
+	#       110:xxx
+	#       1076:xxx
+	#       2637:xxx
+	# 2. pos=${pos%%:*}
+	#   - Remove the colon and everything after it from that output.
+	#     - Example output:
+	#       $ pos=110:xxx ; pos=${pos%%:*} ; echo $pos
+	#       110
+	# 3. tail -c+$pos "$img" | $3 > $tmp 2> /dev/null;
+	#   - Send vmlinuz contents from that offset onward into the chosen decompression program.
+	# 4. file $tmp | grep -s ELF 2>&1 &&  exit 0
+	#   - Check the decompressed file contains "ELF" in the description.
+	#   - If vmlinuz fails to be decompressed successfully, 'file' will not output a valid
+	#   description.
+	for	pos in $(tr "$1\n$2" "\n$2=" < "$img" | grep -abo "^$2")
+	do
+		pos=${pos%%:*}
+		tail -c+$pos "$img" | $3 > $tmp 2> /dev/null
+		file $tmp | grep -s ELF 2>&1 &&  exit 0
+	done
+}
 
-	zr, err := gzip.NewReader(bytes.NewReader(vmlinuz[offset:]))
+img="$0"
+tmp="$1"
+
+try_decompress '\037\213\010' xy    gunzip
+try_decompress '\3757zXZ\000' abcde unxz
+try_decompress 'BZh'          xy    bunzip2
+try_decompress '\135\0\0\0'   xxx   unlzma
+try_decompress '\211\114\132' xy    'lzop -d'
+try_decompress '\002!L\030'   xxx   'lz4 -d'
+try_decompress '(\265/\375'   xxx   unzstd
+
+echo "Cannot find vmlinux." >&2
+exit 1
+`
+
+	extractedVmlinux, err := os.CreateTemp("/tmp", "vmlinux")
+	defer os.Remove(extractedVmlinux.Name())
+	_, err = testexec.CommandContext(
+		ctx,
+		"bash",
+		"-c",
+		extractVmlinuxSh,
+		vmlinuz.Name(),
+		extractedVmlinux.Name()).Output(testexec.DumpLogOnError)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed extract vmlinux")
 	}
-	// This is required so the GZIP parser doesn't try to interpret the trailing data in the
-	// image as another stream and fails on that.
-	zr.Multistream(false)
 
-	vmlinux, err := ioutil.ReadAll(zr)
+	vmlinuxBytes, err := os.ReadFile(extractedVmlinux.Name())
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to read uncompressed linux path: %q", extractedVmlinux.Name())
+	}
+
+	return vmlinuxBytes, nil
+}
+
+// unpackKernelImage decompresses the compressed kernel image.
+func unpackKernelImage(ctx context.Context, vmlinuz *os.File) ([]byte, error) {
+	vmlinux, err := extractVmlinux(ctx, vmlinuz)
 	if err != nil {
 		return nil, err
 	}
