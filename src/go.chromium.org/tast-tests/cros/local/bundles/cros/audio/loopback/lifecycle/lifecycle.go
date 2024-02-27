@@ -82,16 +82,6 @@ func (t *tester) Run(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set internal device as selected device: ", err)
 	}
 
-	node, err := cras.SelectedOutputNode(ctx)
-	if err != nil {
-		s.Fatal("SelectedOutputNode failed: ", err)
-	}
-
-	// Set volume to 0 to avoid making noise during test
-	if err = cras.SetOutputNodeVolume(ctx, *node, 0); err != nil {
-		s.Fatal("SetOutputNodeVolume failed: ", err)
-	}
-
 	t.playbackRaw = filepath.Join(s.OutDir(), "playback.raw")
 	t.playbackWav = filepath.Join(s.OutDir(), "playback.wav")
 	t.captureRaw = filepath.Join(s.OutDir(), "capture.raw")
