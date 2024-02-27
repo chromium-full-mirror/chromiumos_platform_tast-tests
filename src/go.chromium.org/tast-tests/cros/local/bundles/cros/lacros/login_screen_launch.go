@@ -134,9 +134,6 @@ func waitForPasswordEntry(ctx context.Context, tConn *chrome.TestConn) error {
 	if st, err := lockscreen.WaitState(ctx, tConn, func(st lockscreen.State) bool { return st.ReadyForPassword }, 30*time.Second); err != nil {
 		return errors.Wrapf(err, "failed waiting for the login screen to be ready for password entry: last state: %+v", st)
 	}
-	if err := lockscreen.WaitForPasswordEntry(ctx, tConn, 30*time.Second); err != nil {
-		return errors.Wrap(err, "failed waiting for the login screen to be ready for password entry")
-	}
 	return nil
 }
 
@@ -188,6 +185,23 @@ func runningLacrosProcs(ctx context.Context, lacrosPath string) (map[int32]strin
 	}
 
 	return lacrosProcs, nil
+}
+
+// waitForLacrosInfo waits until a valid lacrosinfo.Snapshot is obtained, then returns it.
+func waitForLacrosInfo(ctx context.Context, tLoginConn *chrome.TestConn) (info *lacrosinfo.Info, err error) {
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		info, err = lacrosinfo.Snapshot(ctx, tLoginConn)
+		if err != nil {
+			return err
+		}
+		if len(info.LacrosPath) == 0 {
+			return errors.New("failed to get Lacros path")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: time.Second}); err != nil {
+		return info, errors.Wrap(err, "failed to get lacrosinfo.Snapshot")
+	}
+	return info, nil
 }
 
 // waitForLacrosProcs waits until at least minProcesses Lacros processes are running, then returns all of them.
@@ -294,12 +308,9 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 	}
 
 	// Gather the Lacros processes that are running at login screen.
-	info, err := lacrosinfo.Snapshot(ctx, tLoginConn)
+	info, err := waitForLacrosInfo(ctx, tLoginConn)
 	if err != nil {
 		s.Fatal("Failed to get lacrosinfo.Snapshot: ", err)
-	}
-	if len(info.LacrosPath) == 0 {
-		s.Fatal("Failed to get Lacros path")
 	}
 
 	// If Zygotes are forking at login screen, there will be 3 additional Chrome processes.
