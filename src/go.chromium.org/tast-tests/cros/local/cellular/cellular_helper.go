@@ -1704,7 +1704,7 @@ func (h *Helper) CreateCarrierLockCsvFile(ctx context.Context, profile string) (
 	}
 	serial := string(bserial)
 
-	bmodel, err := exec.Command("cat", "/run/chromeos-config/v1/name").Output()
+	bmodel, err := exec.Command("vpd_get_value", "model_name").Output()
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read model")
 	}
