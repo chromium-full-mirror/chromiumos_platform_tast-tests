@@ -47,9 +47,9 @@ func init() {
 }
 
 // verifyInstallAttributes verifies the contents of current install_attributes with the base version.
-func verifyInstallAttributes(ctx context.Context, cryptohome *hwsec.CryptohomeClient, config *util.CrossVersionLoginConfig) error {
+func verifyInstallAttributes(ctx context.Context, deviceManagementClient *hwsec.DeviceManagementClient, config *util.CrossVersionLoginConfig) error {
 	for name, expectedValue := range config.InstallAttrs {
-		value, err := cryptohome.InstallAttributesGet(ctx, name)
+		value, err := deviceManagementClient.InstallAttributesGet(ctx, name)
 		if err != nil {
 			return errors.Wrapf(err, "failed to get install attributes for %s", name)
 		}
@@ -67,7 +67,7 @@ func CrossVersionInstallAttributesMigrationAbort(ctx context.Context, s *testing
 	if err != nil {
 		s.Fatal("Failed to create the helper instance: ", err)
 	}
-	cryptohome := helper.CryptohomeClient()
+	deviceManagementClient := helper.DeviceManagementClient()
 	dc := helper.DaemonController()
 
 	dataPath := s.FixtValue().(*fixture.CrossVersionLoginFixture).DataPath
@@ -142,7 +142,7 @@ func CrossVersionInstallAttributesMigrationAbort(ctx context.Context, s *testing
 				continue
 			}
 			// Verify consistency of the install-attributes contents.
-			if err := verifyInstallAttributes(ctx, cryptohome, &config); err != nil {
+			if err := verifyInstallAttributes(ctx, deviceManagementClient, &config); err != nil {
 				s.Fatal("Failed to verify the consistency of install attributes content: ", err)
 			}
 		}
