@@ -23,7 +23,7 @@ const fileID tpm2.TPMHandle = 0x100100F
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50NVCreateDelete,
+		Func:    GSCNVCreateDelete,
 		Desc:    "Creates, deletes, and recreates NVs on the GSC",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -32,14 +32,14 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
 	})
 }
 
-func Ti50NVCreateDelete(ctx context.Context, s *testing.State) {
+func GSCNVCreateDelete(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
