@@ -175,7 +175,15 @@ func (d *Disk) detectType(ctx context.Context) error {
 		}
 
 		if removable == 0 {
-			d.Type = UfsDisk
+			sysfsType, err := d.ReadSysfsString(ctx, "device/inquiry")
+			if err != nil {
+				return errors.Wrap(err, "can't read sda type value")
+			}
+			if strings.Contains(sysfsType, "ATA") {
+				d.Type = SataDisk
+			} else {
+				d.Type = UfsDisk
+			}
 		} else {
 			d.Type = UsbDisk
 		}
