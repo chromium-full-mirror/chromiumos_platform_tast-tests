@@ -23,6 +23,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type webUIJSErrorsParams struct {
+	browserType          browser.Type
+	fieldTrialConfigMode chrome.FieldTrialConfigMode
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         WebUIJSErrors,
@@ -34,12 +39,48 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      chrome.MinLoginTimeout + time.Minute,
 		Params: []testing.Param{{
-			Val: browser.TypeAsh,
+			Val: webUIJSErrorsParams{
+				browserType:          browser.TypeAsh,
+				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
+			},
+		}, {
+			Name:      "field_trial_on",
+			ExtraAttr: []string{"informational"},
+			Val: webUIJSErrorsParams{
+				browserType:          browser.TypeAsh,
+				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
+			},
+		}, {
+			Name:      "field_trial_off",
+			ExtraAttr: []string{"informational"},
+			Val: webUIJSErrorsParams{
+				browserType:          browser.TypeAsh,
+				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
+			},
 		}, {
 			Name:              "lacros",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Val:               browser.TypeLacros,
+			Val: webUIJSErrorsParams{
+				browserType:          browser.TypeLacros,
+				fieldTrialConfigMode: chrome.FieldTrialConfigDefault,
+			},
+		}, {
+			Name:              "lacros_field_trial_on",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val: webUIJSErrorsParams{
+				browserType:          browser.TypeLacros,
+				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
+			},
+		}, {
+			Name:              "lacros_field_trial_off",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Val: webUIJSErrorsParams{
+				browserType:          browser.TypeLacros,
+				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
+			},
 		}},
 	})
 }
@@ -227,9 +268,14 @@ func WebUIJSErrors(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	params := s.Param().(webUIJSErrorsParams)
 	const vModuleFlags = "--vmodule=chrome_js_error_report_processor=3,web_ui_impl=3,web_ui_main_frame_observer=3,webui_js_error_ui=3"
-	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, s.Param().(browser.Type), lacrosfixt.NewConfig(),
-		chrome.ExtraArgs(vModuleFlags))
+	chromeOpts := []chrome.Option{chrome.ExtraArgs(vModuleFlags)}
+	if params.fieldTrialConfigMode != chrome.FieldTrialConfigDefault {
+		chromeOpts = append(chromeOpts, chrome.FieldTrialConfig(params.fieldTrialConfigMode))
+	}
+	cr, br, closeBrowser, err := browserfixt.SetUpWithNewChrome(ctx, params.browserType, lacrosfixt.NewConfig(),
+		chromeOpts...)
 	if err != nil {
 		s.Fatal("Chrome login failed: ", err)
 	}
