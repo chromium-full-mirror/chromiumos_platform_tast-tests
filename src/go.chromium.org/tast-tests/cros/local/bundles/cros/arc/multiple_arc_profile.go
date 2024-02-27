@@ -148,7 +148,7 @@ func openARCSettings(ctx context.Context, tconn *chrome.TestConn) error {
 	if err := uiauto.Combine("Open Android Settings",
 		settings.FocusAndWait(playStoreButton),
 		settings.LeftClick(playStoreButton),
-		settings.LeftClick(nodewith.Name("Manage Android preferences").Role(role.Link)),
+		settings.LeftClick(nodewith.Name("Android Settings").Role(role.Link)),
 	)(ctx); err != nil {
 		return errors.Wrap(err, "failed to open ARC settings page")
 	}
@@ -191,8 +191,8 @@ func addARCAccount(ctx context.Context, arcDevice *androidui.Device, tconn *chro
 		return errors.Wrap(err, "failed to add after retry")
 	}
 
-	if err := ui.WaitUntilExists(nodewith.Name("Manage Android preferences").Role(role.Link).Focused())(ctx); err != nil {
-		return errors.Wrap(err, "failed to find Manage Android preferences link")
+	if err := ui.WaitUntilExists(nodewith.Name("Android Settings").Role(role.Link).Focused())(ctx); err != nil {
+		return errors.Wrap(err, "failed to find Android Settings link")
 	}
 	return nil
 }

@@ -135,7 +135,7 @@ func openAndroidSettingsAndAddAccount(ctx context.Context, arcDevice *androidui.
 				ui.WaitUntilExists(nodewith.Name("An error occurred").Role(role.Heading)),
 				ui.LeftClick(nodewith.Name("Close").HasClass("ImageButton").Role(role.Button)),
 			),
-			ui.LeftClick(nodewith.Name("Manage Android preferences").Role(role.Link)),
+			ui.LeftClick(nodewith.Name("Android Settings").Role(role.Link)),
 		)(ctx); err != nil {
 			return errors.Wrap(err, "failed to close the An error occurred pop-up")
 		}

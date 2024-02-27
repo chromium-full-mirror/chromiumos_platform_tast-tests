@@ -103,7 +103,7 @@ func VerifySettings(ctx context.Context, s *testing.State) {
 	if err := uiauto.Combine("Open Android Settings",
 		ui.FocusAndWait(playStoreButton),
 		ui.LeftClick(playStoreButton),
-		ui.LeftClick(nodewith.Name("Manage Android preferences").Role(role.Link)),
+		ui.LeftClick(nodewith.Name("Android Settings").Role(role.Link)),
 	)(ctx); err != nil {
 		s.Fatal("Failed to Open Android Settings : ", err)
 	}
