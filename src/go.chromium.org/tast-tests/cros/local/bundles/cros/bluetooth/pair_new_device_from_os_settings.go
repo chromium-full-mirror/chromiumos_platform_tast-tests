@@ -44,11 +44,11 @@ func init() {
 func PairNewDeviceFromOSSettings(ctx context.Context, s *testing.State) {
 	tconn := s.FixtValue().(bluetooth.HasTconn).Tconn()
 
-	app, err := ossettings.Launch(ctx, tconn)
+	app, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Bluetooth)
 	defer app.Close(ctx)
 
 	if err != nil {
-		s.Fatal("Failed to launch OS Settings: ", err)
+		s.Fatal("Failed to launch Bluetooth page in OS Settings: ", err)
 	}
 
 	bt := s.FixtValue().(bluetooth.HasBluetoothImpl).BluetoothImpl()
