@@ -29,8 +29,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check the PDF OCR feature converts PDF image to text using the OCR (Optical Character Recognition) model available in the screen-ai dlc. This test checks the PDF OCR toggle from the Settings",
 		Contacts: []string{
-			"chromeos-a11y-eng@google.com", // Mailing list
-			"kyungjunlee@google.com",       // Test author
+			"chrome-screen-ai@google.com", // Mailing list
+			"kyungjunlee@google.com",      // Test author
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
 		Attr:         []string{"group:mainline", "informational"},

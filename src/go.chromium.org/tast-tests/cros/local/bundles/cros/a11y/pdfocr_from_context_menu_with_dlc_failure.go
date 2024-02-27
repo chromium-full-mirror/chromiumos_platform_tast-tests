@@ -28,8 +28,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check the PDF OCR feature, being turned on from the Context Menu, with the screen-ai dlc install failure",
 		Contacts: []string{
-			"chromeos-a11y-eng@google.com", // Mailing list
-			"kyungjunlee@google.com",       // Test author
+			"chrome-screen-ai@google.com", // Mailing list
+			"kyungjunlee@google.com",      // Test author
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
 		// TODO(b/309545302): add back `[]string{"group:mainline", "informational"}`

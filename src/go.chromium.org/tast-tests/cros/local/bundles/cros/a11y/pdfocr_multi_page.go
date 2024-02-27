@@ -30,8 +30,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Check PDF OCR with a eight-page PDF example",
 		Contacts: []string{
-			"chromeos-a11y-eng@google.com", // Mailing list
-			"kyungjunlee@google.com",       // Test author
+			"chrome-screen-ai@google.com", // Mailing list
+			"kyungjunlee@google.com",      // Test author
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
 		Attr:         []string{"group:mainline", "informational"},
