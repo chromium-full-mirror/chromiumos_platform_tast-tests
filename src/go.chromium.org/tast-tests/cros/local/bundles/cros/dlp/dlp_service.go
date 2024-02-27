@@ -36,6 +36,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/session"
 	pb "go.chromium.org/tast-tests/cros/services/cros/dlp"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -434,7 +435,11 @@ func (service *DataLeakPreventionService) Screenshare(ctx context.Context, req *
 
 // FilesDriveCopyPaste downloads a restricted file, and then copy-pastes it to Google Drive.
 func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Context, req *pb.ActionRequest) (_ *empty.Empty, retErr error) {
-	_, err := drivefs.NewDriveFs(ctx, service.chrome.NormalizedUser())
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
+	defer cancel()
+
+	dfs, err := drivefs.NewDriveFs(ctx, service.chrome.NormalizedUser())
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to start DriveFS")
 	}
@@ -443,7 +448,7 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "error while setting up the browser")
 	}
-	defer closeBrowser(ctx)
+	defer closeBrowser(cleanupCtx)
 
 	tconn, err := service.chrome.TestAPIConn(ctx)
 	if err != nil {
@@ -460,22 +465,62 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to launch the Files App")
 	}
-	defer filesApp.Close(ctx)
+	defer filesApp.Close(cleanupCtx)
 
 	keyboard, err := input.VirtualKeyboard(ctx)
 	if err != nil {
 		return &empty.Empty{}, errors.Wrap(err, "failed to get keyboard")
 	}
-	defer keyboard.Close(ctx)
+	defer keyboard.Close(cleanupCtx)
 
-	if err := uiauto.Combine("copy pasting managed file",
-		filesApp.OpenDownloads(),
-		filesApp.WaitForFile(files.DlFileName),
-		filesApp.CopyFileToClipboard(files.DlFileName),
-		filesApp.OpenDrive(),
-		filesApp.PasteFileFromClipboard(keyboard),
-	)(ctx); err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to copy and paste managed file")
+	if err := uiauto.Combine("open Downloads directory", filesApp.OpenDownloads(), filesApp.WaitForFile(files.DlFileName))(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to open Downloads")
+	}
+
+	// Rename the file to a unique name and check that it's still managed.
+	// This also ensures that different tests don't interact with each other, after copying the file to Drive.
+	uuid, err := uuid.NewRandom()
+	if err != nil {
+		return &empty.Empty{}, err
+	}
+	dlFileName := fmt.Sprintf("data-%s.txt", uuid.String())
+	if err := filesApp.RenameFile(keyboard, files.DlFileName, dlFileName)(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to rename the file")
+	}
+
+	if err := filesApp.CopyFileToClipboard(dlFileName)(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to copy the file to clipboard")
+	}
+
+	if err := filesApp.OpenDrive()(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to open Google Drive")
+	}
+
+	driveFilePath := dfs.MyDrivePath(dlFileName)
+	defer func(ctx context.Context) {
+		if err := os.Remove(driveFilePath); err != nil {
+			testing.ContextLogf(ctx, "Failed to remove %s: %v", dlFileName, err)
+		}
+	}(cleanupCtx)
+
+	driveAPIScopes := []string{"https://www.googleapis.com/auth/drive"}
+
+	// Perform Drive API authentication.
+	ts := drivefs.NewChromeOSTokenSourceForAccount(ctx, tconn, driveAPIScopes, service.chrome.Creds().User)
+	rts := drivefs.RetryTokenSource(ts, drivefs.WithContext(ctx), drivefs.WithDelay(time.Second*5))
+	driveAPIClient, err := drivefs.CreateAPIClient(ctx, rts)
+	if err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to create a Drive API client")
+	}
+
+	defer func(ctx context.Context) {
+		if err := drivefs.RemoveDriveFsFileViaAPI(dfs, driveAPIClient, dlFileName)(ctx); err != nil {
+			testing.ContextLogf(ctx, "Failed to remove %s via Drive API: %v", dlFileName, err)
+		}
+	}(cleanupCtx)
+
+	if err := uiauto.Combine("paste managed file", filesApp.PasteFileFromClipboard(keyboard), filesApp.WaitForFile(dlFileName))(ctx); err != nil {
+		return &empty.Empty{}, errors.Wrap(err, "failed to paste managed the file")
 	}
 
 	return &empty.Empty{}, nil
