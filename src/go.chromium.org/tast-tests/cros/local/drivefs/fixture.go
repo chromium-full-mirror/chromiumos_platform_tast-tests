@@ -145,13 +145,13 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "driveFsStartedBulkPinningEnabledWithCurlLogLevelFine",
+		Name:     "driveFsStartedBulkPinningEnabledWithLogLevelFine",
 		Desc:     "Ensures DriveFS is mounted and provides an authenticated Drive API Client",
 		Contacts: []string{"benreich@chromium.org", "chromeos-files-syd@chromium.org"},
 		Impl: &fixture{
 			drivefsOptions: CliArgsMap{
 				CliKeyModuleLogLevel: {
-					"curl_api": "LOG_FINE",
+					"*": "LOG_FINE",
 				},
 			},
 			enableBulkPinning: true,

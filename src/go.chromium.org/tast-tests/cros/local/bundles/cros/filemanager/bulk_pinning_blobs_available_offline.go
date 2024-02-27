@@ -56,7 +56,7 @@ func init() {
 			Value: "screenplay-cb3e1d67-a0a8-4c73-a824-357d56f729fa",
 		}},
 		Timeout: 5 * time.Minute,
-		Fixture: "driveFsStartedBulkPinningEnabledWithCurlLogLevelFine",
+		Fixture: "driveFsStartedBulkPinningEnabledWithLogLevelFine",
 	})
 }
 
