@@ -15,7 +15,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+// TODO(b/319036849, b/324533891): These models are skipped in power.Suspend.
+// Remove them when the bugs are closed.
+var unstableModel = []string{"tentacool", "tentacruel", "elm", "hana", "homestar", "quackingstick", "wormdingler", "kingoftown", "lazor", "limozeen", "pazquel", "pompom", "sona"}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,6 +34,7 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(unstableModel...)),
 	})
 }
 
