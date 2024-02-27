@@ -17,7 +17,6 @@ func InitializeAllowedEntries() []AllowedEntry {
 	return []AllowedEntry{
 		{"dhcpcd", "", ".*eth\\d: checksum failure from.*", 0},
 		{"dhcpcd", "", ".*eth\\d: DHCP lease expired.*", 0},
-		{"dhcpcd", "", ".*eth\\d: dhcp_envoption 119: Operation not supported.*", 0},
 		{"dhcpcd", "", ".*eth.*: truncated packet.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get properties for device.*", 0},
 		{"dnsproxyd", "client.cc", ".*Unable to get connected service properties for device.*", 0},
