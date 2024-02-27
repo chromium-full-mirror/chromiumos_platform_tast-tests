@@ -48,6 +48,32 @@ func SetUpHostVPN(ctx context.Context, vpnType vpn.Type, opts ...vpn.Option) (*v
 	return vpn.StartConnection(ctx, nil, vpnType, opts...)
 }
 
+// InstallAndPreAuthorizeARCVPN installs ARC VPN app and pre-authorizes the
+// package so that the Android system doesn't create a pop UI asking the user
+// to authorize the VPN app. The caller is responsible to call the returned
+// cleanup function to uninstall the app
+func InstallAndPreAuthorizeARCVPN(ctx context.Context, a *arc.ARC) (func(context.Context), error) {
+	testing.ContextLog(ctx, "Installing ArcVpnTest.apk")
+	if err := a.Install(ctx, arc.APKPath(VPNTestAppAPK)); err != nil {
+		return nil, errors.Wrap(err, "failed to install app")
+	}
+
+	testing.ContextLog(ctx, "Preauthorizing ArcVpnTest")
+	if _, err := a.Command(ctx, "dumpsys", "wifi", "authorize-vpn", VPNTestAppPkg).Output(testexec.DumpLogOnError); err != nil {
+		testing.ContextLog(ctx, "Failed to preauthorize ArcVpnTest, uninstalling")
+		if err := a.Uninstall(ctx, VPNTestAppPkg); err != nil {
+			testing.ContextLog(ctx, "Failed to uninstall ArcVpnTest.apk: ", err)
+		}
+		return nil, errors.Wrap(err, "failed to execute authorize-vpn command")
+	}
+	return func(ctx context.Context) {
+		testing.ContextLog(ctx, "Uninstalling ArcVpnTest.apk")
+		if err := a.Uninstall(ctx, VPNTestAppPkg); err != nil {
+			testing.ContextLog(ctx, "Failed to uninstall ArcVpnTest.apk: ", err)
+		}
+	}, nil
+}
+
 // SetARCVPNEnabled flips the flag in the current running ARC instance. If running multiple tests
 // within the same ARC instance, it's recommended to cleanup by flipping the flag back to the
 // expected default state afterwards. Since no state is persisted, new ARC instances will initialize
@@ -130,15 +156,13 @@ func ForceStopARCVPN(ctx context.Context, a *arc.ARC) error {
 	return nil
 }
 
-// SetupSocket sets up a socket using given address and port of the remote peer
-// we want to connect to, and protocol of the socket. This setup only works
-// with WiFi and only when there is one WiFi network in ARC. Do not support
-// Ethernet now because it's common that there are multiple Ethernet networks
-// on DUT with virtualnet package, and we don't have a easy way to determine
-// which Ethernet we should use in ARC now.
+// SetupSocket sets up a socket using:
+// (1) given address and port of the remote peer we want to connect to
+// (2) protocol of the socket (One of l4server.TCP* or l4server.UDP*)
+// (3) name of the interface in ARC we want to use to setup the socket
 // When called multiple times in one test, the older socket will be replaced by
 // newly setup socket for sending messages.
-func SetupSocket(ctx context.Context, a *arc.ARC, family l4server.Family, address string, port int) error {
+func SetupSocket(ctx context.Context, a *arc.ARC, family l4server.Family, ifname, address string, port int) error {
 	if family == l4server.TCP6 || family == l4server.TCP4 {
 		family = l4server.TCP
 	}
@@ -149,6 +173,7 @@ func SetupSocket(ctx context.Context, a *arc.ARC, family l4server.Family, addres
 	if _, err := a.BroadcastIntent(ctx,
 		VPNTestAppSetupSocketIntent,
 		"--es", "proto", family.String(),
+		"--es", "interface", ifname,
 		"--es", "address", address,
 		"--ei", "port", strconv.Itoa(port)); err != nil {
 		return errors.Wrap(err, "setup socket failed")

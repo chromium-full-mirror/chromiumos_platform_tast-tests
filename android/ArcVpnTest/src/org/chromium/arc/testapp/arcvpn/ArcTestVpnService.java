@@ -15,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkInfo;
 import android.net.VpnService;
@@ -45,6 +46,7 @@ public class ArcTestVpnService extends VpnService {
 
     // Keys used for setting intent.
     private static final String PROTOCOL_KEY = "proto";
+    private static final String INTERFACE_KEY = "interface";
     private static final String MESSAGE_KEY = "message";
     private static final String ADDRESS_KEY = "address";
     private static final String PORT_KEY = "port";
@@ -89,6 +91,7 @@ public class ArcTestVpnService extends VpnService {
             // Setup socket by given protocol, address and port.
             if (SETUP_SOCKET.equals(intent.getAction())) {
                 String proto = intent.getStringExtra(PROTOCOL_KEY);
+                String ifname = intent.getStringExtra(INTERFACE_KEY);
                 String address = intent.getStringExtra(ADDRESS_KEY);
                 if (address == null) {
                     Log.e(TAG, "Address is not correctly set, setup socket failed.");
@@ -107,10 +110,10 @@ public class ArcTestVpnService extends VpnService {
                 }
                 switch (proto) {
                     case PROTOCOL_TCP:
-                        setupTcpSocket();
+                        setupTcpSocket(ifname);
                         break;
                     case PROTOCOL_UDP:
-                        setupUdpSocket();
+                        setupUdpSocket(ifname);
                         break;
                     default:
                         Log.e(TAG, "Invalid procotol: " + proto + ", setup socket failed.");
@@ -122,6 +125,10 @@ public class ArcTestVpnService extends VpnService {
                     Log.e(TAG, "Message is not correctly set, send message failed.");
                     return;
                 }
+                if (mLastSetupSocketFamily == null) {
+                    Log.e(TAG, "Socket has not been setup yet, send message failed.");
+                    return;
+                }
                 switch (mLastSetupSocketFamily) {
                     case PROTOCOL_TCP:
                         sendTcpMessage(message);
@@ -130,8 +137,6 @@ public class ArcTestVpnService extends VpnService {
                         sendUdpMessage(message);
                         break;
                     default:
-                        Log.e(TAG, "Socket has not been setup yet, send message failed.");
-                        break;
                 }
             }
         }
@@ -208,19 +213,18 @@ public class ArcTestVpnService extends VpnService {
     }
 
     /**
-     * Sets up a TCP socket using given address and port of the remote peer we want to connect to.
-     * Currently the setup only works with the situation that there is only one connected WiFi
-     * network on the device and only WiFi is supported.
+     * Sets up a TCP socket using given address and port of the remote peer we want to connect to,
+     * and the name of the interface in ARC that we want to use to setup the socket.
      * When called multiple times in one test, the older socket will be replaced by newly setup
      * socket for sending messages.
      */
-    private void setupTcpSocket() {
+    private void setupTcpSocket(String ifname) {
         new Thread(() -> {
                 try {
-                    Network net = getConnectedWifiNetwork();
+                    Network net = getNetworkByInterface(ifname);
                     if (net == null) {
-                        Log.e(TAG, "A connected WiFi network does not exist, set up socket"
-                                + "failed.");
+                        Log.e(TAG, "Network with specified interface name does not exist, set up "
+                                + "socket failed.");
                         return;
                     }
                     mTcpSocket = net.getSocketFactory().createSocket();
@@ -253,19 +257,18 @@ public class ArcTestVpnService extends VpnService {
     }
 
     /**
-     * Sets up a UDP socket using given address and port of the remote peer we want to connect to.
-     * Currently the setup only works with the situation that there is only one connected WiFi
-     * network on the device and only WiFi is supported.
+     * Sets up a UDP socket using given address and port of the remote peer we want to connect to,
+     * and the name of the interface in ARC that we want to use to setup the socket.
      * When called multiple times in one test, the older socket will be replaced by newly setup
      * socket for sending messages.
      */
-    private void setupUdpSocket() {
+    private void setupUdpSocket(String ifname) {
         new Thread(() -> {
             try {
-                Network net = getConnectedWifiNetwork();
+                Network net = getNetworkByInterface(ifname);
                 if (net == null) {
-                    Log.e(TAG, "A connected WiFi network that satisfies requirement does not "
-                            + "exist, set up socket failed.");
+                    Log.e(TAG, "Network with specified interface name does not exist, set up "
+                            + "socket failed.");
                     return;
                 }
                 mUdpSocket = new DatagramSocket();
@@ -300,12 +303,12 @@ public class ArcTestVpnService extends VpnService {
     }
 
     /**
-     * Gets a connected WiFi network from all available networks. It is expected that there is
-     * only one such network based on the test setup.
+     * Gets the network whose interface matches the specified interface from all available ARC
+     * networks. Note that the interface name is the interface name within ARC, not in host.
      *
-     * @return WiFi network, null if it doesn't exist
+     * @return the network that matches the interface, null if it doesn't exist
      */
-    private Network getConnectedWifiNetwork() {
+    private Network getNetworkByInterface(String ifname) {
         ConnectivityManager connectivityManager = (ConnectivityManager) getApplicationContext()
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
         if (connectivityManager == null) {
@@ -314,10 +317,8 @@ public class ArcTestVpnService extends VpnService {
         }
         Network[] networks = connectivityManager.getAllNetworks();
         for (Network network : networks) {
-            NetworkInfo networkInfo = connectivityManager.getNetworkInfo(network);
-            if (networkInfo != null && networkInfo.getType() ==
-                    ConnectivityManager.TYPE_WIFI &&
-                    networkInfo.isConnected()) {
+            LinkProperties linkProperties = connectivityManager.getLinkProperties(network);
+            if (linkProperties.getInterfaceName().equals(ifname)) {
                 return network;
             }
         }

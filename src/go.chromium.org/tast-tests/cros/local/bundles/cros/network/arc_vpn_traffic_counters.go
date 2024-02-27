@@ -153,22 +153,11 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to start %s server: %v", networkFam, err)
 	}
 
-	// Install and start the test app.
-	testing.ContextLog(ctx, "Installing ArcVpnTest.apk")
-	if err := a.Install(ctx, arc.APKPath(arcvpn.VPNTestAppAPK)); err != nil {
-		s.Fatal("Failed to install app: ", err)
+	cleanupFunc, err := arcvpn.InstallAndPreAuthorizeARCVPN(ctx, a)
+	if err != nil {
+		s.Fatal("Failed to install and preauthorizing ARC VPN test app: ", err)
 	}
-	defer func() {
-		testing.ContextLog(cleanupCtx, "Uninstalling ArcVpnTest.apk")
-		if err := a.Uninstall(cleanupCtx, arcvpn.VPNTestAppPkg); err != nil {
-			s.Fatal("Failed to uninstall ArcVpnTest.apk: ", err)
-		}
-	}()
-
-	testing.ContextLog(ctx, "Preauthorizing ArcVpnTest")
-	if _, err := a.Command(ctx, "dumpsys", "wifi", "authorize-vpn", arcvpn.VPNTestAppPkg).Output(testexec.DumpLogOnError); err != nil {
-		s.Fatal("Failed to execute authorize-vpn command: ", err)
-	}
+	defer cleanupFunc(cleanupCtx)
 
 	testing.ContextLog(ctx, "Starting ArcVpnTest app")
 	if err := arcvpn.StartARCVPN(ctx, a); err != nil {
@@ -185,10 +174,6 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to start %s: %v", arcvpn.VPNTestAppSvc, err)
 	}
 
-	if err := arcvpn.SetupSocket(ctx, a, networkFam, addr.String(), port); err != nil {
-		s.Error(err, "failed to set socket")
-	}
-
 	pc, err := patchpanel.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to create patchpanel client: ", err)
@@ -196,8 +181,26 @@ func ARCVPNTrafficCounters(ctx context.Context, s *testing.State) {
 
 	ifname, err := wifi.Service.GetDeviceInterface(ctx)
 	if err != nil {
-		s.Fatal(err, "failed to get device interface name")
+		s.Fatal("Failed to get device interface name: ", err)
 	}
+	// Since we cannot get enough information to choose the right network in
+	// test app to setup socket, we get the ARC side interface name of
+	// simulated WiFi interface in tast test and pass the information to test
+	// app via intent extras.
+	response, err := pc.GetDevices(ctx)
+	if err != nil {
+		s.Fatal("Failed to get patchpanel devices: ", err)
+	}
+	var guestIfname string
+	for _, device := range response.Devices {
+		if device.PhysIfname == ifname {
+			guestIfname = device.GuestIfname
+		}
+	}
+	if err := arcvpn.SetupSocket(ctx, a, networkFam, guestIfname, addr.String(), port); err != nil {
+		s.Fatal("Failed to set socket: ", err)
+	}
+
 	// Send message packets and check difference of outgoing bytes from simulated WiFi interface.
 	testing.ContextLog(ctx, "Send message packet and wait until the packet is counted")
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
