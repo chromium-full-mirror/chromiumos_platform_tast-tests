@@ -47,7 +47,7 @@ func init() {
 				disableCellularWithoutStop: true,
 			},
 		}},
-		Fixture:      "cellular",
+		Fixture:      "cellularNoUI",
 		HardwareDeps: hwdep.D(hwdep.WifiSAP()),
 		Timeout:      2 * time.Minute,
 	})

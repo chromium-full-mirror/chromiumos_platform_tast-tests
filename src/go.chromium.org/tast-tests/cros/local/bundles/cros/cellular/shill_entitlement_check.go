@@ -67,7 +67,7 @@ func init() {
 			Val:       shillCellularEntitlementCheckTestParam{"callbox_default_unreachable_entitlement_server.pbf", shillconst.TetheringReadinessNotAllowedUserNotEntitled, false},
 			ExtraData: []string{"callbox_default_unreachable_entitlement_server.pbf"},
 		}},
-		Fixture: "cellularResetShillProfileOnPostTest",
+		Fixture: "cellularNoUIResetShillProfileOnPostTest",
 		Timeout: 2 * time.Minute,
 	})
 }

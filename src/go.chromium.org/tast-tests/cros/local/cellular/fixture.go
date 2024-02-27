@@ -32,6 +32,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	uiJobName = "ui"
+)
+
 // The Cellular test fixture ensures that modemfwd is stopped.
 
 func init() {
@@ -45,6 +49,17 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture(),
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularNoUI",
+		Desc:            "Cellular tests without UI are safe to run",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCellularFixture().setStopUI(true),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularRebootSetupLocal",
@@ -171,6 +186,20 @@ func init() {
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "cellularNoUIResetShillProfileOnPostTest",
+		Desc: "Tests that require shill to be reset after each test. This includes resetting the default.profile. Tests run without UI",
+		Contacts: []string{
+			"andrewlassalle@google.com",
+			"chromeos-cellular-team@google.com",
+		},
+		SetUpTimeout:    5 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second).setStopUI(true),
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularArcBooted",
 		Desc:            "Arc tests on cellular interface",
 		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
@@ -234,6 +263,7 @@ func init() {
 type cellularFixture struct {
 	// Fixture control flags
 	restartMM                   bool
+	stopUI                      bool
 	useFakeDMS                  bool
 	useRoaming                  bool
 	useTestESIM                 bool
@@ -252,6 +282,7 @@ type cellularFixture struct {
 	modemLoggingStarted bool
 	sf                  *starfish.Starfish
 	netUnlock           func()
+	uiStopped           bool
 	// Per-test logging marker
 	logMarker *logsaver.Marker
 }
@@ -290,6 +321,10 @@ func (f *cellularFixture) setUseRoaming(value bool) *cellularFixture {
 }
 func (f *cellularFixture) setUseTestESIM(value bool) *cellularFixture {
 	f.useTestESIM = value
+	return f
+}
+func (f *cellularFixture) setStopUI(value bool) *cellularFixture {
+	f.stopUI = value
 	return f
 }
 func (f *cellularFixture) setResetShillProfileOnPostTest(value bool) *cellularFixture {
@@ -453,6 +488,16 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			testing.ContextLog(ctx, "Unable to get name for default Cellular Service: ", err)
 		} else {
 			testing.ContextLog(ctx, "Cellular has default Service: ", name)
+		}
+	}
+	if f.stopUI {
+		if f.uiStopped, err = stopJob(ctx, uiJobName); err != nil {
+			s.Fatalf("Failed to stop job: %q, %s", uiJobName, err)
+		}
+		if f.uiStopped {
+			s.Logf("Stopped %q", uiJobName)
+		} else {
+			s.Logf("%q not running", uiJobName)
 		}
 	}
 
@@ -737,6 +782,12 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Fatalf("Failed to start %q: %s", modemfwd.JobName, err)
 		}
 		s.Logf("Started %q", modemfwd.JobName)
+	}
+	if f.uiStopped {
+		if err := upstart.EnsureJobRunning(ctx, uiJobName); err != nil {
+			s.Fatalf("Failed to start %q: %s", uiJobName, err)
+		}
+		s.Logf("Started %q", uiJobName)
 	}
 	if f.sf != nil {
 		if err := f.sf.Teardown(ctx); err != nil {
