@@ -7,6 +7,7 @@ package lifecycle
 import (
 	"context"
 	"math"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -25,6 +26,12 @@ type Checker interface {
 type soxStatsChecker struct {
 	schedule
 	checkVolume    func(dB float64) error
+	timelineName   string
+	timelineSymbol rune
+}
+
+type anomalyChecker struct {
+	schedule
 	timelineName   string
 	timelineSymbol rune
 }
@@ -153,4 +160,54 @@ func getSoxStats(ctx context.Context, file string, startSec, endSec int) (stats 
 	}
 	stats.lengthSec = time.Duration(lengthFloat * float64(time.Second))
 	return
+}
+
+func (c *anomalyChecker) Check(ctx context.Context, s *testing.State, t *tester) {
+	wavLocalTime := c.schedule.add(-t.Capture.getSchedule().startSec)
+	startSec, endSec := wavLocalTime.startSec, wavLocalTime.endSec
+
+	trimmedCapture := filepath.Join(s.OutDir(), "capture_trimmed.raw")
+
+	cmd := testexec.CommandContext(
+		ctx,
+		"sox",
+		"-t", "s16", "-r", "48000", "-c", "2",
+		t.captureRaw,
+		trimmedCapture,
+		"trim", strconv.Itoa(startSec), strconv.Itoa(endSec-startSec),
+	)
+	if err := cmd.Run(); err != nil {
+		s.Error("sox command failed: ", err)
+		return
+	}
+
+	checkCommand := testexec.CommandContext(
+		ctx,
+		"check_recorded_frequency.py",
+		"--golden_frequencies", "440", "440",
+		"--test_file", trimmedCapture,
+		"-c", "2",
+		"-m", "0", "1",
+		"--check_anomaly", "True",
+	)
+
+	_, stderr, err := checkCommand.SeparatedOutput()
+	if err != nil {
+		s.Errorf("Failed in check anomaly: script output: %s: %v", string(stderr), err)
+		return
+	}
+}
+
+func (c *anomalyChecker) maybeLogSchedule(ctx context.Context, t *tester) {
+	t.logScheduleRow(ctx, c.timelineName, c.timelineSymbol, c.schedule)
+}
+
+// CheckSineAnomaly returns a Checker that will check the sine waveform in given duration.
+// If there is anomaly in the waveform it will fail the test.
+func CheckSineAnomaly(startSec, endSec int) Checker {
+	return &anomalyChecker{
+		schedule:       schedule{startSec, endSec},
+		timelineName:   "check anomaly",
+		timelineSymbol: 's',
+	}
 }
