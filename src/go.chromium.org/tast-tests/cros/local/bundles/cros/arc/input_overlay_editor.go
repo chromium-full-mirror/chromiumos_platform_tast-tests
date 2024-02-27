@@ -60,7 +60,7 @@ func InputOverlayEditor(ctx context.Context, s *testing.State) {
 		uda := uidetection.NewDefault(params.TestConn).WithOptions(uidetection.Retries(3)).WithTimeout(time.Minute)
 
 		editButton := nodewith.Name("Edit").HasClass("PillButton")
-		appWindow := nodewith.Name("ARC Input Overlay Test").Role(role.Window).HasClass("RootView")
+		appWindow := nodewith.Name("ARCInputOverlayTest").Role(role.Window).HasClass("RootView")
 
 		// CUJ: Attempts to change binding to illegal keys.
 		s.Log("Editor CUJ #1: key mappings changed to illegal keys")
