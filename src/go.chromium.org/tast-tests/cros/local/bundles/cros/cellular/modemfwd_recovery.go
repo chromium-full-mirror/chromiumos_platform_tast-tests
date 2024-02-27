@@ -35,7 +35,7 @@ func init() {
 		Attr:         []string{"group:cellular", "cellular_sim_active", "group:cellular_crosbolt", "cellular_crosbolt_perf_nightly"},
 		Fixture:      "cellular",
 		Timeout:      10 * time.Minute,
-		HardwareDeps: hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeL850, cellularconst.ModemTypeSC7280)),
+		HardwareDeps: hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeSC7280)),
 		SoftwareDeps: []string{"modemfwd"},
 		Params: []testing.Param{{
 			Name: "",
