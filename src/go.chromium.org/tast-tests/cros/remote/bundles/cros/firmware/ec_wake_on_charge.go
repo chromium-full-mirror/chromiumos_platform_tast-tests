@@ -135,13 +135,13 @@ func ECWakeOnCharge(ctx context.Context, s *testing.State) {
 
 	args := s.Param().(*testArgsForECWakeOnCharge)
 	defer func(ctx context.Context, args *testArgsForECWakeOnCharge) {
-		if err := h.EnsureDUTBooted(ctx); err != nil {
-			s.Fatal("Failed to ensure DUT booted: ", err)
-		}
 		if args.hasLid {
 			if err := h.Servo.OpenLid(ctx); err != nil {
 				s.Fatal("Failed to set lid state: ", err)
 			}
+		}
+		if err := h.EnsureDUTBooted(ctx); err != nil {
+			s.Fatal("Failed to ensure DUT booted: ", err)
 		}
 		if args.formFactor == "convertible" && tabletModeAngleHasChanged {
 			// Check for tablet mode angles, and if they are different
@@ -459,13 +459,13 @@ func checkECWakesFromACReconnected(ctx context.Context, h *firmware.Helper, lidO
 			return err
 		}
 	}
-	// Cr50 goes to sleep during hibernation, and when DUT wakes, CCD state might be locked.
-	// Open CCD before talking to the EC.
-	if err := h.OpenCCD(ctx, true, true); err != nil {
-		return errors.Wrap(err, "failed to open CCD")
-	}
 	// Verify EC console is responsive.
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Cr50 goes to sleep during hibernation, and when DUT wakes, CCD state might be locked.
+		// Open CCD before talking to the EC.
+		if err := h.OpenCCD(ctx, true, true); err != nil {
+			return errors.Wrap(err, "failed to open CCD")
+		}
 		if _, err := h.Servo.RunECCommandGetOutput(ctx, "version", []string{`.`}); err != nil {
 			return errors.Wrap(err, "EC is not responsive after reconnecting power supply to DUT")
 		}
