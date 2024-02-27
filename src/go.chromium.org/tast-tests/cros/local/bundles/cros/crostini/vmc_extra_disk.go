@@ -7,9 +7,8 @@ package crostini
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
-	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -57,20 +56,22 @@ func VmcExtraDisk(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get CROS_USER_ID_HASH: ", err)
 	}
 
-	// Create a file in a temp directory in ChromeOS and push it to the container.
-	dir, err := ioutil.TempDir("", "tast.crostini.VmcExtraDisk")
-	if err != nil {
-		s.Fatal("Failed to create a temp directory: ", err)
-	}
-	defer os.RemoveAll(dir)
-
-	extraDisk := filepath.Join(dir, "extra.img")
-
 	// Run `vmc extra-disk-create`
-	if err := vmc.Command(ctx, hash, "create-extra-disk", "--size", "256M", extraDisk).
-		Run(testexec.DumpLogOnError); err != nil {
+	vmcCmd := vmc.Command(ctx, hash, "create-extra-disk", "--size", "256M", "extra.img")
+	vmcOutput, err := vmcCmd.Output(testexec.DumpLogOnError)
+	if err != nil {
 		s.Fatal("Failed to create an extra disk image: ", err)
 	}
+
+	// Extract the created disk path from the message.
+	diskCreatedRe := regexp.MustCompile(`^A raw disk is created at (.*)\.\n$`)
+	matches := diskCreatedRe.FindSubmatch(vmcOutput)
+	if len(matches) != 2 {
+		s.Fatalf("Didn't find extra disk creation message in '%q'", vmcOutput)
+	}
+	extraDisk := string(matches[1])
+
+	defer os.Remove(extraDisk)
 
 	const vmName = "tast_extra_disk_vm"
 
