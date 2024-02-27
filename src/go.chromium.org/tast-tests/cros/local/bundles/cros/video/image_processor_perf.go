@@ -139,23 +139,37 @@ func ImageProcessorPerf(ctx context.Context, s *testing.State) {
 		data := result.(map[string]interface{})
 
 		jsonName := strings.TrimSuffix(f.Name(), ".json")
-		p.Set(perf.Metric{
-			Name:      jsonName + "_FramesDecoded",
-			Unit:      "frames",
-			Direction: perf.BiggerIsBetter,
-		}, data["FramesDecoded"].(float64))
+		if frames, ok := data["FramesDecoded"]; ok {
+			p.Set(perf.Metric{
+				Name:      jsonName + "_FramesDecoded",
+				Unit:      "frames",
+				Direction: perf.BiggerIsBetter,
+			}, frames.(float64))
+		}
 
-		p.Set(perf.Metric{
-			Name:      jsonName + "_FramesPerSecond",
-			Unit:      "frames",
-			Direction: perf.BiggerIsBetter,
-		}, data["FramesPerSecond"].(float64))
+		if fps, ok := data["FramesPerSecond"]; ok {
+			p.Set(perf.Metric{
+				Name:      jsonName + "_FramesPerSecond",
+				Unit:      "frames",
+				Direction: perf.BiggerIsBetter,
+			}, fps.(float64))
+		}
 
-		p.Set(perf.Metric{
-			Name:      jsonName + "_TotalDurationMs",
-			Unit:      "ms",
-			Direction: perf.SmallerIsBetter,
-		}, data["TotalDurationMs"].(float64))
+		if duration, ok := data["TotalDurationMs"]; ok {
+			p.Set(perf.Metric{
+				Name:      jsonName + "_TotalDurationMs",
+				Unit:      "ms",
+				Direction: perf.SmallerIsBetter,
+			}, duration.(float64))
+		}
+
+		if psnr, ok := data["PSNR"]; ok {
+			p.Set(perf.Metric{
+				Name:      jsonName + "_PSNR",
+				Unit:      "decibels",
+				Direction: perf.BiggerIsBetter,
+			}, psnr.(float64))
+		}
 
 		s.Log(jsonName)
 		defer jsonFile.Close()
