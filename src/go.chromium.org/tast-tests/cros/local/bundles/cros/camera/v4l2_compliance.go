@@ -67,6 +67,7 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 		"0c45:6a14": "b/288647798",
 		"0c45:6a16": "b/287943727",
 		"0408:4041": "b/262499795",
+		"322e:2339": "b/327164074",
 	}
 
 	// Use a shorter context to save time for clean.
