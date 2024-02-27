@@ -426,15 +426,23 @@ func getFirmwareLogBootTime(ctx context.Context) (float64, error) {
 
 // These are go-ified constants that match the ones with underscores and all caps in coreboot sources.
 const (
+	TsStart               = 0
 	TsVbReadKernelDone    = 1050
 	TsVbVbootDone         = 1100
 	TsStartKernel         = 1101
 	TsKernelDecompression = 1102
 )
 
+// CbmemTimestamp represents a single entry from `cbmem -T` output, containing the start time
+// and time diff relative to the previous entry.
+type CbmemTimestamp struct {
+	startSecs float64
+	diffSecs  float64
+}
+
 // GatherFirmwareStageTimings gets timings for various stages of firmware like kernel verification time.
 func GatherFirmwareStageTimings(ctx context.Context, results *platform.GetBootPerfMetricsResponse) error {
-	timings, err := getFirmwareLogDiffTimings(ctx)
+	timings, err := getFirmwareLogTimings(ctx)
 	if err != nil {
 		return err
 	}
@@ -449,27 +457,57 @@ func GatherFirmwareStageTimings(ctx context.Context, results *platform.GetBootPe
 	// update this test. Hopefully, such an event will be named
 	// "decompression done" so we can simply use the diff time of that
 	// event.
-	if timings[TsStartKernel] > 0 && timings[TsKernelDecompression] > 0 {
-		results.Metrics["seconds_kernel_decompression_relocation"] = timings[TsStartKernel]
+	if timings[TsStartKernel].diffSecs > 0 && timings[TsKernelDecompression].diffSecs > 0 {
+		results.Metrics["seconds_kernel_decompression_relocation"] = timings[TsStartKernel].diffSecs
 	}
-	if timings[TsVbVbootDone] > 0 {
-		results.Metrics["seconds_vboot_kernel_verification"] = timings[TsVbVbootDone]
+	if timings[TsVbVbootDone].diffSecs > 0 {
+		results.Metrics["seconds_vboot_kernel_verification"] = timings[TsVbVbootDone].diffSecs
 	}
-	if timings[TsVbReadKernelDone] > 0 {
-		results.Metrics["seconds_vboot_read_kernel"] = timings[TsVbReadKernelDone]
+	if timings[TsVbReadKernelDone].diffSecs > 0 {
+		results.Metrics["seconds_vboot_read_kernel"] = timings[TsVbReadKernelDone].diffSecs
 	}
+
+	// On recent Intel platforms, we have timestamps for various stages of the CSE firmware,
+	// which runs prior to x86 coming out of reset. These appear before the "1st timestamp" in
+	// cbmem. If they are present, as indicated by "1st timestamp" not having a 0 diff, add
+	// metrics for the total pre- and post-x86 reset times.
+	//
+	// Example without CSE timestamps:
+	// $ cbmem -T
+	// 0       40806   0       1st timestamp
+	// 11      46988   6182    start of bootblock
+	// 12      50404   3415    end of bootblock
+	// ...
+	//
+	// Example with CSE timestamps:
+	// $ cbmem -T
+	// 990     0       0       CSME ROM started execution
+	// 944     71368   71368   CSE sent 'Boot Stall Done' to PMC
+	// 945     72368   1000    CSE started to handle ICC configuration
+	// 946     73368   1000    CSE sent 'Host BIOS Prep Done' to PMC
+	// 947     190368  117000  CSE received 'CPU Reset Done Ack sent' from PMC
+	// 0       226217  35849   1st timestamp
+	// 11      236038  9820    start of bootblock
+	// 12      240410  4372    end of bootblock
+	// ...
+	if timings[TsStart].diffSecs > 0 {
+		results.Metrics["seconds_power_on_to_x86"] = timings[TsStart].startSecs
+		results.Metrics["seconds_x86_to_kernel"] =
+			results.Metrics["seconds_power_on_to_kernel"] - results.Metrics["seconds_power_on_to_x86"]
+	}
+
 	return nil
 }
 
-// getFirmwareLogDiffTimings gets the diff timing from each stage of `cbmem -T` and
-// returns it in a map of timing ID -> seconds.
-func getFirmwareLogDiffTimings(ctx context.Context) (map[uint64]float64, error) {
+// getFirmwareLogTimings gets the start and diff timing from each stage of `cbmem -T` and
+// returns it in a map of timing ID -> {start time, diff time}
+func getFirmwareLogTimings(ctx context.Context) (map[uint64]CbmemTimestamp, error) {
 	stdout, err := readFirmwareTimestamps(ctx, true)
 	if err != nil {
 		return nil, err
 	}
 
-	v := make(map[uint64]float64)
+	v := make(map[uint64]CbmemTimestamp)
 	// Parse timings from the output. `cbmem -T` reports how long various stages take with the format of 'ID Start_Time Diff_Time "Human readable ID description"'.
 	// Example: 99   2745224 38592 selfboot jump
 	re := regexp.MustCompile(`^([0-9]+)\s+([0-9]+)\s+([0-9]+)`)
@@ -484,12 +522,19 @@ func getFirmwareLogDiffTimings(ctx context.Context) (map[uint64]float64, error) 
 		if err != nil {
 			return nil, errors.Wrapf(err, "failed to parse ID from %q", line)
 		}
-		usecs, err := strconv.ParseUint(m[3], 10, 64)
+		startUsecs, err := strconv.ParseUint(m[2], 10, 64)
 		if err != nil {
-			return nil, errors.Wrapf(err, "failed to parse time from %q", line)
+			return nil, errors.Wrapf(err, "failed to parse start time from %q", line)
+		}
+		diffUsecs, err := strconv.ParseUint(m[3], 10, 64)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse diff time from %q", line)
 		}
 
-		v[id] = float64(usecs) / 1000000
+		v[id] = CbmemTimestamp{
+			diffSecs:  float64(diffUsecs) / 1000000,
+			startSecs: float64(startUsecs) / 1000000,
+		}
 	}
 
 	return v, nil
