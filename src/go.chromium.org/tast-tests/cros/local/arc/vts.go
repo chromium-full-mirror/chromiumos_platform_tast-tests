@@ -16,6 +16,31 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// disableSELinuxAndReturnCleanup disables SELinux enforcement on CrOS and ARC if it is enabled.
+// The goal is to disable SELinux on ARC, which is complex to do directly on
+// a production build due to lack of adb access. Disabling SELinux on CrOS would
+// automatically disable SELinux on ARC.
+// Returns a function to re-enable SELinux enforcement if it was enabled.
+func disableSELinuxAndReturnCleanup(ctx context.Context) (func(), error) {
+	output, err := testexec.CommandContext(ctx, "getenforce").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return func() {}, errors.Wrap(err, "failed to read SELinux enforcement")
+	}
+	if strings.TrimSpace(string(output)) == "Permissive" {
+		// Someone else already disabled SELinux, do nothing and cleanup nothing.
+		return func() {}, nil
+	}
+	if err := testexec.CommandContext(ctx, "setenforce", "0").Run(testexec.DumpLogOnError); err != nil {
+		return func() {}, errors.Wrap(err, "failed to disable SELinux enforcement")
+	}
+	reenableSELinux := func() {
+		if err := testexec.CommandContext(ctx, "setenforce", "1").Run(testexec.DumpLogOnError); err != nil {
+			testing.ContextLog(ctx, "Failed to reenable SELinux enforcement: ", err)
+		}
+	}
+	return reenableSELinux, nil
+}
+
 // listVtsTests lists all test cases in a VTS executable.
 // TODO(crbug.com/946390): Migrate to gtest package once it supports ARC.
 func listVtsTests(ctx context.Context, a *ARC, exec string) ([]string, error) {
@@ -86,6 +111,13 @@ func RunVtsTests(ctx context.Context, a *ARC, testExecLocalPath, outDir string) 
 	cleanup := func() {
 		a.Command(ctx, "rm", testExecPath).Run()
 	}
+
+	testing.ContextLog(ctx, "Disable SELinux")
+	reenableSELinux, err := disableSELinuxAndReturnCleanup(ctx)
+	if err != nil {
+		return reenableSELinux, errors.Wrap(err, "failed to disable SELinux")
+	}
+	defer reenableSELinux()
 
 	if err := a.Command(ctx, "chmod", "0777", testExecPath).Run(testexec.DumpLogOnError); err != nil {
 		return cleanup, errors.Wrap(err, "failed to change test binary permissions")
