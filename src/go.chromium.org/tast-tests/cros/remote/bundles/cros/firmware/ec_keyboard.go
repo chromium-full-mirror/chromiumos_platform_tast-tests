@@ -42,32 +42,29 @@ func init() {
 			"tij@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:firmware"},
+		Attr:         []string{"group:firmware", "firmware_ec"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.Keyboard()),
 		Requirements: []string{"sys-fw-0022-v02"},
 		Fixture:      fixture.NormalMode,
-		Timeout:      2 * time.Minute,
+		Timeout:      5 * time.Minute,
 		ServiceDeps:  []string{"tast.cros.firmware.UtilsService"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Val:               servoECKeyboard,
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Detachable, hwdep.Convertible)),
-			ExtraAttr:         []string{"firmware_ec"},
 		}, {
-			Name:      "usb_keyboard",
-			Val:       servoUSBKeyboard,
-			ExtraAttr: []string{"firmware_ec"},
+			Name: "usb_keyboard",
+			Val:  servoUSBKeyboard,
 		}, {
 			Name:              "convertible",
 			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
 			Val:               convertibleKeyboard,
-			ExtraAttr:         []string{"firmware_ec"},
 		}},
 	})
 }
 
 const (
-	typeTimeout = 500 * time.Millisecond
+	typeTimeout = 1 * time.Second
 	keyPressDur = 100 * time.Millisecond // Equivalent to DurTab keypress.
 )
 
@@ -158,11 +155,32 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 			// Host command not implemented: EC result 1 (INVALID_COMMAND)
 			// Vivaldi keyboard not enabled: EC result 2 (ERROR)
 			if strings.Contains(string(out), "EC result 1 (INVALID_COMMAND)") || strings.Contains(string(out), "EC result 2 (ERROR)") {
-				// This is a legacy device
-				s.Log("Testing legacy keys: F5, F6, F7")
-				testKeyMap["<f5>"] = "KEY_F5"
-				testKeyMap["<f6>"] = "KEY_F6"
-				testKeyMap["<f7>"] = "KEY_F7"
+				// Non-vivaldi devices that have key mappings
+				// 13577 trogdor/pazquel360: F5=KEY_SYSRQ F6=KEY_BRIGHTNESSDOWN F7=KEY_BRIGHTNESSUP
+				// 13885 asurada/spherion:   F5=KEY_SYSRQ F6=KEY_BRIGHTNESSDOWN F7=KEY_BRIGHTNESSUP
+				// 14454 cherry/tomato:      F5=KEY_SYSRQ F6=KEY_BRIGHTNESSDOWN F7=KEY_BRIGHTNESSUP
+				// 15194 corsola/steelix:    F5=KEY_BRIGHTNESSDOWN F6=KEY_BRIGHTNESSUP F7=KEY_MICMUTE
+				if err := h.RequirePlatform(ctx); err != nil {
+					s.Error("Could not read platform: ", err)
+				}
+				if h.Model == "steelix" {
+					s.Log("Testing steelix keys: KEY_BRIGHTNESSDOWN, KEY_BRIGHTNESSUP, KEY_MICMUTE")
+					testKeyMap["<f5>"] = "KEY_BRIGHTNESSDOWN"
+					testKeyMap["<f6>"] = "KEY_BRIGHTNESSUP"
+					testKeyMap["<f7>"] = "KEY_MICMUTE"
+				} else if s.Features("").Hardware.HardwareFeatures.FwConfig.FwRoVersion.MajorVersion >= 13885 || h.Model == "pompom" || h.Model == "kingoftown" || h.Model == "pazquel" || h.Model == "pazquel360" {
+					s.Log("Testing non-vivaldi keys: KEY_SYSRQ, KEY_BRIGHTNESSDOWN, KEY_BRIGHTNESSUP")
+					testKeyMap["<f5>"] = "KEY_SYSRQ"
+					testKeyMap["<f6>"] = "KEY_BRIGHTNESSDOWN"
+					testKeyMap["<f7>"] = "KEY_BRIGHTNESSUP"
+				} else {
+					// This is a legacy device
+					// 13577 trogdor/lazor
+					s.Log("Testing legacy keys: F5, F6, F7")
+					testKeyMap["<f5>"] = "KEY_F5"
+					testKeyMap["<f6>"] = "KEY_F6"
+					testKeyMap["<f7>"] = "KEY_F7"
+				}
 			} else {
 				s.Fatalf("ectool kbgetconfig failed: %v, %s", err, string(out))
 			}
@@ -252,42 +270,10 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 	stdout, _ := cmd.StdoutPipe()
 	scanner := bufio.NewScanner(stdout)
 	cmd.Start()
+	defer stdout.Close()
+	defer cmd.Abort()
 
-	// Read and discard initial info text.
-	func() {
-		text := make(chan string)
-		go func() {
-			defer close(text)
-			for scanner.Scan() {
-				text <- scanner.Text()
-			}
-		}()
-		for {
-			select {
-			case <-time.After(1 * time.Second):
-				// Time out after 1 second so it doesn't get stuck here.
-				s.Log("Finshed reading preamble")
-				return
-			case <-text:
-				continue
-			}
-		}
-	}()
-
-	for key, keyCode := range testKeyMap {
-		s.Logf("Pressing key %q, expecting to read keycode %q", key, keyCode)
-		if err := readKeyPress(ctx, h, scanner, key, keyCode, keyPressFunc); err != nil {
-			s.Error("Failed to read key: ", err)
-		}
-	}
-}
-
-func readKeyPress(ctx context.Context, h *firmware.Helper, scanner *bufio.Scanner, key, keyCode string,
-	keyPress func(context.Context, string) error) error {
-	// Event: time 1707783159.027244, type 1 (EV_KEY), code 15 (KEY_TAB), value 0
-	regex := `Event.*time.*code\s(\d*)\s\((KEY_[^\)]*)\).* value 0`
-	expMatch := regexp.MustCompile(regex)
-
+	// Read stdout in background
 	text := make(chan string)
 	go func() {
 		defer close(text)
@@ -295,6 +281,20 @@ func readKeyPress(ctx context.Context, h *firmware.Helper, scanner *bufio.Scanne
 			text <- scanner.Text()
 		}
 	}()
+
+	for key, keyCode := range testKeyMap {
+		s.Logf("Pressing key %q, expecting to read keycode %q", key, keyCode)
+		if err := readKeyPress(ctx, h, text, key, keyCode, keyPressFunc); err != nil {
+			s.Errorf("Failed to read key %q: %v", keyCode, err)
+		}
+	}
+}
+
+func readKeyPress(ctx context.Context, h *firmware.Helper, text chan string, key, keyCode string,
+	keyPress func(context.Context, string) error) error {
+	// Event: time 1707783159.027244, type 1 (EV_KEY), code 15 (KEY_TAB), value 0
+	regex := `Event.*time.*code\s(\d*)\s\((KEY_[^\)]*)\).* value 0`
+	expMatch := regexp.MustCompile(regex)
 
 	start := time.Now()
 	if err := keyPress(ctx, key); err != nil {
