@@ -159,8 +159,8 @@ func (svc *osInstallService) ShutDown(ctx context.Context, req *empty.Empty) (*e
 		return nil, err
 	}
 
-	// Press power off.
-	powerOffNode := nodewith.Name("Power off").Role(role.MenuItem)
+	// Press Shut down.
+	powerOffNode := nodewith.Name("Shut down").Role(role.MenuItem)
 	if err := ui.WaitUntilExists(powerOffNode)(ctx); err != nil {
 		svc.DumpUITree(ctx)
 		return nil, err
