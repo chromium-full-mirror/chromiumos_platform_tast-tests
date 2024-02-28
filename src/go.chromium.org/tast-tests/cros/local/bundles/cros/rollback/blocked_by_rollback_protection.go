@@ -34,8 +34,7 @@ func init() {
 		Desc:         "Tests that no rollback happens if firmware or kernel version of the rollback image are too low",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"mpolzer@google.com", // Test author
-			"crisguerrero@chromium.org",
+			"mpolzer@google.com",
 		},
 		BugComponent: "b:1031231",
 		SoftwareDeps: []string{"vpd"}, // Do not run on VM. Test needs NVRAM flash storage to work.

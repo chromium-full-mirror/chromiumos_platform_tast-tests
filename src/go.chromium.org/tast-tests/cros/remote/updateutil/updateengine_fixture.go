@@ -19,7 +19,7 @@ func init() {
 		Name: fixture.UpdateEngine,
 		Desc: "Fixture for tests that use update engine, ensures status is reset",
 		Contacts: []string{
-			"crisguerrero@google.com",           // Author
+			"kimjae@google.com",
 			"chromeos-core-services@google.com", // Update engine
 			"chromeos-commercial-remote-management@google.com",
 		},
@@ -37,7 +37,7 @@ func init() {
 		Name: fixture.UpdateEngineEnrolled,
 		Desc: "Fixture providing enrollment and udpate engine reset",
 		Contacts: []string{
-			"crisguerrero@chromium.org",
+			"mpolzer@chromium.org",
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Parent:          fixture.Enrolled, // Provides enrollment.

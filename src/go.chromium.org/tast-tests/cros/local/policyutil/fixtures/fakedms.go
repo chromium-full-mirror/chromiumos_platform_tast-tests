@@ -65,7 +65,7 @@ func init() {
 		Desc: "Fixture for a running FakeDMS ensuring to reset update engine",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"crisguerrero@chromium.org",
+			"mpolzer@chromium.org",
 		},
 		Impl: &fakeDMSFixture{
 			importState: true,

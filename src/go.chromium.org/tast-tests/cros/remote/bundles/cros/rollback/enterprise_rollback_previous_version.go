@@ -30,8 +30,7 @@ func init() {
 		Desc:         "Tests the enterprise rollback feature by rolling back to a previous release",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
-			"mpolzer@google.com", // Test author
-			"crisguerrero@chromium.org",
+			"mpolzer@google.com",
 		},
 		BugComponent: "b:1031231",
 		Attr:         []string{"group:autoupdate"},

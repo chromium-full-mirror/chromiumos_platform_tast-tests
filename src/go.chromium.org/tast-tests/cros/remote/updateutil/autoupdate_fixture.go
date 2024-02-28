@@ -22,7 +22,7 @@ func init() {
 		Name: fixture.Autoupdate,
 		Desc: "Fixture for autoupdate tests, ensures that the DUT stays on initially provisioned test image",
 		Contacts: []string{
-			"gabormada@google.com",
+			"mpolzer@google.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Parent:          fixture.UpdateEngine, // Ensure update engine is reset.

@@ -185,7 +185,7 @@ func init() {
 		Name: fixture.ChromeUpdateEngineEnrolledLoggedIn,
 		Desc: "Logged into a user session with enrollment and ensure update engine is reset",
 		Contacts: []string{
-			"crisguerrero@chromium.org",
+			"mpolzer@google.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
 		Impl: &policyChromeFixture{

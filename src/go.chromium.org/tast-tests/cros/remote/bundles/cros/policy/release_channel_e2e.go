@@ -42,8 +42,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Enroll a device in an OU and select a channel",
 		Contacts: []string{
-			"vsavu@google.com",          // Test author
-			"crisguerrero@chromium.org", // Test author
+			"vsavu@google.com", // Test author
 			"chromeos-commercial-remote-management@google.com",
 		},
 		BugComponent: "b:1031231",

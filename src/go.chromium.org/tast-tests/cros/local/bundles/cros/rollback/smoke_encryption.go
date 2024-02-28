@@ -29,7 +29,7 @@ func init() {
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"mpolzer@google.com",
-			"crisguerrero@chromium.org",
+			"igorcov@chromium.org",
 		},
 		BugComponent: "b:1031231",
 		Attr:         []string{"group:mainline"},

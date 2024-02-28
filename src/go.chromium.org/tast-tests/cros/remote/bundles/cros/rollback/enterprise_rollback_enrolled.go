@@ -36,9 +36,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check that Enterprise Rollback recovers policy networks after re-enrollment",
 		Contacts: []string{
-			// DO NOT modify these tests without approval from a test contact.
-			"mpolzer@google.com",        // Test author
-			"crisguerrero@chromium.org", // Test author
+			"mpolzer@google.com",
 			"chromeos-commercial-remote-management@google.com",
 		},
 		BugComponent: "b:1031231",

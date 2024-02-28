@@ -21,10 +21,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Check the enterprise rollback data restore mechanism while faking a rollback on one image",
 		Contacts: []string{
-			// DO NOT modify these tests without approval from a test contact.
 			"chromeos-commercial-remote-management@google.com",
-			"mpolzer@google.com", // Test author
-			"crisguerrero@chromium.org",
+			"mpolzer@google.com",
 		},
 		BugComponent: "b:1031231",
 		Attr: []string{
