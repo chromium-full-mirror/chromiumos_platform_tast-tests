@@ -1233,7 +1233,7 @@ var chromeAllowDistinctiveIdentifierArgs = []string{
 	"--unsafely-allow-protected-media-identifier-for-domain=127.0.0.1"}
 
 var chromeWebRTCEncodedFrameArgs = []string{
-	"--enable-blink-features=RTCEncodedFrameSetMetadata,RTCEncodedVideoFrameAdditionalMetadata,RTCEncodedVideoFrameClone",
+	"--enable-blink-features=RTCEncodedFrameSetMetadata,RTCEncodedVideoFrameAdditionalMetadata",
 	"--enable-features=AllowRTCEncodedVideoFrameSetMetadataAllFields",
 }
 
