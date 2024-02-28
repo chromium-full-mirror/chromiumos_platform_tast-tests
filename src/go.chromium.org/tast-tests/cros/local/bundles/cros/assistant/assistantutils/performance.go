@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
@@ -29,7 +30,7 @@ func RecordAnimationPerformance(
 	pv *perf.Values,
 	histogramsToWait []string,
 	action func(context.Context) error,
-	getPerfMetricName func(*metrics.Histogram) string,
+	getPerfMetricName func(*histogram.Histogram) string,
 ) error {
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
 		// Do not block performance test even if we failed to wait cpu idle time.
@@ -53,17 +54,17 @@ func RecordAnimationPerformance(
 
 // ProcessHistogram saves histogram data to perf.Values.
 func ProcessHistogram(
-	histograms []*metrics.Histogram,
+	histograms []*histogram.Histogram,
 	pv *perf.Values, nWindows int,
 ) error {
-	return processHistogramInternal(histograms, pv, func(h *metrics.Histogram) string {
+	return processHistogramInternal(histograms, pv, func(h *histogram.Histogram) string {
 		return fmt.Sprintf("%s.%dwindows", h.Name, nWindows)
 	})
 }
 
 func processHistogramInternal(
-	histograms []*metrics.Histogram, pv *perf.Values,
-	getPerfMetricName func(*metrics.Histogram) string,
+	histograms []*histogram.Histogram, pv *perf.Values,
+	getPerfMetricName func(*histogram.Histogram) string,
 ) error {
 	for _, h := range histograms {
 		mean, err := h.Mean()

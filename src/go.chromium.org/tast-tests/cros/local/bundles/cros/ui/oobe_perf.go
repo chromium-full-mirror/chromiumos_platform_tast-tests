@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
@@ -44,7 +45,7 @@ func OobePerf(ctx context.Context, s *testing.State) {
 		histogramName = "OOBE.WebUI.LoadTime.FirstRun"
 	)
 	r := perfutil.NewRunner(nil, perfutil.RunnerOptions{IgnoreFirstRun: true, DropMinMaxValues: true})
-	r.RunMultiple(ctx, "OobePerf", uiperf.Run(s, func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
+	r.RunMultiple(ctx, "OobePerf", uiperf.Run(s, func(ctx context.Context, name string) ([]*histogram.Histogram, error) {
 		// Load OOBE Welcome Screen (first OOBE screen). Test extension is required to fetch histograms.
 		cr, err := chrome.New(ctx, chrome.NoLogin(), chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")))
 		if err != nil {
@@ -60,7 +61,7 @@ func OobePerf(ctx context.Context, s *testing.State) {
 		// Wait for the WebUI load time histogram reported. 10 seconds should be enough even on the slowest boards. Making it 15 just in case.
 		// TODO(b/286953538) - Reduce timeout once the regression is fixed.
 		hist, err := metrics.WaitForHistogram(ctx, tLoginConn, histogramName, 45*time.Second)
-		return []*metrics.Histogram{hist}, err
+		return []*histogram.Histogram{hist}, err
 	}),
 		perfutil.StoreAllWithHeuristics("Duration"))
 

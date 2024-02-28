@@ -5,13 +5,12 @@
 package util
 
 import (
-	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
-
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast/core/errors"
 )
 
 // PercentSamplesBelow returns the percentage of UMA histogram samples whose buckets that are below a certain threshold.
-func PercentSamplesBelow(h *metrics.Histogram, threshold int64) (float64, error) {
+func PercentSamplesBelow(h *histogram.Histogram, threshold int64) (float64, error) {
 	if h.TotalCount() == 0 {
 		return 0, errors.New("no histogram data")
 	}

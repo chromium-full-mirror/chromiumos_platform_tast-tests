@@ -18,6 +18,7 @@ import (
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/bond"
+	ch "go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
@@ -372,7 +373,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 	}
 	s.Log("histogram snapshot after metric monitoring mode enabled (before typing): ", histogramsAfterMonitoringModeEnabled)
 
-	deltaHistograms, err := metrics.DiffHistograms(histogramsAfterWebrtcAndMetrics, histogramsAfterMonitoringModeEnabled)
+	deltaHistograms, err := ch.DiffHistograms(histogramsAfterWebrtcAndMetrics, histogramsAfterMonitoringModeEnabled)
 	if err != nil {
 		s.Log("Failed to diff histograms")
 	}
@@ -479,7 +480,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 		s.Log("histogram after metric before typing: ", histogramsBeforeTyping)
 
-		deltaHistograms, err := metrics.DiffHistograms(histogramsAfterMonitoringModeEnabled, histogramsBeforeTyping)
+		deltaHistograms, err := ch.DiffHistograms(histogramsAfterMonitoringModeEnabled, histogramsBeforeTyping)
 		if err != nil {
 			s.Log("Failed to diff histograms")
 		}
@@ -560,7 +561,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 		s.Log("histogram after typing: ", histogramsAfterTyping)
 
-		deltaHistograms, err = metrics.DiffHistograms(histogramsBeforeTyping, histogramsAfterTyping)
+		deltaHistograms, err = ch.DiffHistograms(histogramsBeforeTyping, histogramsAfterTyping)
 		if err != nil {
 			s.Log("Failed to diff histograms")
 		}

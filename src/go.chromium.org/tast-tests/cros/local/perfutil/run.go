@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -24,12 +25,12 @@ const DefaultRuns = 10
 
 // ScenarioFunc is the function to conduct the test operation and returns the
 // metric value.
-type ScenarioFunc func(context.Context, string) ([]*metrics.Histogram, error)
+type ScenarioFunc func(context.Context, string) ([]*histogram.Histogram, error)
 
 // RunAndWaitAll is a utility function to create ScenarioFunc which conducts
 // f with metrics.RunAndWaitAll.
 func RunAndWaitAll(tconn *chrome.TestConn, f func(ctx context.Context) error, names ...string) ScenarioFunc {
-	return func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
+	return func(ctx context.Context, name string) ([]*histogram.Histogram, error) {
 		return metrics.RunAndWaitAll(ctx, tconn, time.Minute, f, names...)
 	}
 }
@@ -37,19 +38,19 @@ func RunAndWaitAll(tconn *chrome.TestConn, f func(ctx context.Context) error, na
 // RunAndWaitAny is a utility function to create ScenarioFunc which conducts
 // f with metrics.RunAndWaitAny.
 func RunAndWaitAny(tconn *chrome.TestConn, f func(ctx context.Context) error, names ...string) ScenarioFunc {
-	return func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
+	return func(ctx context.Context, name string) ([]*histogram.Histogram, error) {
 		return metrics.RunAndWaitAny(ctx, tconn, time.Minute, f, names...)
 	}
 }
 
 // StoreFunc is a function to be used for RunMultiple.
-type StoreFunc func(ctx context.Context, pv *Values, hists []*metrics.Histogram) error
+type StoreFunc func(ctx context.Context, pv *Values, hists []*histogram.Histogram) error
 
 // StoreAllWithHeuristics is a utility function to store all metrics. It
 // determines the direction of perf (bigger is better or smaller is better)
 // and unit through heuristics from the name of metrics.
 func StoreAllWithHeuristics(suffix string) StoreFunc {
-	return func(ctx context.Context, pv *Values, hists []*metrics.Histogram) error {
+	return func(ctx context.Context, pv *Values, hists []*histogram.Histogram) error {
 		for _, hist := range hists {
 			if err := StoreMetricWithHeuristics(ctx, pv, hist, suffix); err != nil {
 				return err
@@ -62,7 +63,7 @@ func StoreAllWithHeuristics(suffix string) StoreFunc {
 // StoreMetricWithHeuristics stores the metric to |pv|.
 // It determines the direction of perf (bigger is better or smaller is better)
 // and unit through heuristics from the name of metrics.
-func StoreMetricWithHeuristics(ctx context.Context, pv *Values, hist *metrics.Histogram, suffix string) error {
+func StoreMetricWithHeuristics(ctx context.Context, pv *Values, hist *histogram.Histogram, suffix string) error {
 	mean, err := hist.Mean()
 	if err != nil {
 		return errors.Wrapf(err, "failed to get mean for histogram %s", hist.Name)
@@ -83,7 +84,7 @@ func StoreMetricWithHeuristics(ctx context.Context, pv *Values, hist *metrics.Hi
 
 // StoreAll is a function to store all histograms into values.
 func StoreAll(direction perf.Direction, unit, suffix string) StoreFunc {
-	return func(ctx context.Context, pv *Values, hists []*metrics.Histogram) error {
+	return func(ctx context.Context, pv *Values, hists []*histogram.Histogram) error {
 		for _, hist := range hists {
 			mean, err := hist.Mean()
 			if err != nil {
@@ -106,12 +107,12 @@ func StoreAll(direction perf.Direction, unit, suffix string) StoreFunc {
 }
 
 // StoreSmoothness is a utility function to store animation smoothness metrics.
-func StoreSmoothness(ctx context.Context, pv *Values, hists []*metrics.Histogram) error {
+func StoreSmoothness(ctx context.Context, pv *Values, hists []*histogram.Histogram) error {
 	return StoreAll(perf.BiggerIsBetter, "percent", "")(ctx, pv, hists)
 }
 
 // StoreLatency is a utility function to store input-latency metrics.
-func StoreLatency(ctx context.Context, pv *Values, hists []*metrics.Histogram) error {
+func StoreLatency(ctx context.Context, pv *Values, hists []*histogram.Histogram) error {
 	return StoreAll(perf.SmallerIsBetter, "ms", "")(ctx, pv, hists)
 }
 

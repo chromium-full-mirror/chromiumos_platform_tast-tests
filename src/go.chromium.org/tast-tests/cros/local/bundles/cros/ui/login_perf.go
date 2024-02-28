@@ -15,6 +15,7 @@ import (
 
 	"github.com/mafredri/cdp/rpcc"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -38,7 +39,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -546,7 +546,7 @@ func countVisibleWindows(ctx context.Context, cr *chrome.Chrome) (int, error) {
 
 // maxHistogramValue calculates the estimated maximum of the histogram values.
 // At is an error when there are no data points.
-func maxHistogramValue(h *metrics.Histogram) (float64, error) {
+func maxHistogramValue(h *histogram.Histogram) (float64, error) {
 	if h.TotalCount() == 0 {
 		return 0, errors.New("no histogram data")
 	}
@@ -562,7 +562,7 @@ func maxHistogramValue(h *metrics.Histogram) (float64, error) {
 func reportMaxHistogramValue(
 	ctx context.Context,
 	pv *perfutil.Values,
-	hist *metrics.Histogram,
+	hist *histogram.Histogram,
 	unit,
 	valueName string,
 ) error {
@@ -819,7 +819,7 @@ func testFunction(
 ) (
 	*chrome.Chrome,
 	*lacros.Lacros,
-	[]*metrics.Histogram,
+	[]*histogram.Histogram,
 	map[perf.Metric][]float64,
 	error,
 ) {
@@ -932,7 +932,7 @@ func testFunction(
 		}
 	}
 
-	var histograms []*metrics.Histogram
+	var histograms []*histogram.Histogram
 
 	// CUJ TPS metrics recording wrapper
 	cujFunc := func(ctx context.Context) error {
@@ -992,14 +992,14 @@ func testFunction(
 	return cr, l, histograms, tpsValues.GetValues(), err
 }
 
-// storeHistograms transforms []*metrics.Histogram test results into perf Values to report.
+// storeHistograms transforms []*histogram.Histogram test results into perf Values to report.
 func storeHistograms(
 	ctx context.Context,
 	expectHistograms, heuristicsHistograms []string,
 	currentWindows int,
 	arcMode, metricsReportingSuffix string,
 	pv *perfutil.Values,
-	hists []*metrics.Histogram,
+	hists []*histogram.Histogram,
 ) error {
 	heuristicsHistogramsMap := make(map[string]bool, len(expectHistograms))
 	for _, v := range heuristicsHistograms {
@@ -1252,9 +1252,9 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 					testName,
 					uiperf.Run(
 						s,
-						func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
+						func(ctx context.Context, name string) ([]*histogram.Histogram, error) {
 							// Tracing is disabled for the performance runs.
-							var histograms []*metrics.Histogram
+							var histograms []*histogram.Histogram
 							var tpsValues map[perf.Metric][]float64
 							var err error
 							// Fill in external 'cr', 'l'.
@@ -1262,7 +1262,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 							r.Values().MergeWithSuffix(metricsReportingSuffix, tpsValues)
 							return histograms, err
 						}),
-					func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
+					func(ctx context.Context, pv *perfutil.Values, hists []*histogram.Histogram) error {
 						// Shorten context a bit to allow for cleanup.
 						localCloseCtx := ctx
 						ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -1307,7 +1307,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 				// Tracing run errors are logged but do not fail the test.
 				tracingValues := perfutil.NewValues(false /*dropMinMax*/)
 
-				var tracingHistograms []*metrics.Histogram
+				var tracingHistograms []*histogram.Histogram
 				var tpsValues map[perf.Metric][]float64
 
 				cr, l, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)

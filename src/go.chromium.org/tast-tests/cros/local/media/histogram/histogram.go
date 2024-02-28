@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast/core/errors"
@@ -31,7 +32,7 @@ const SuccessCountAtLeastOne = -1
 // introduce some false positive results. To indicate we want to relax the check
 // this way we just need to pass a successCount of -1 (the constant
 // SuccessCountAtLeastOne defined above can be used for this).
-func WasHWAccelUsed(ctx context.Context, tconn *chrome.TestConn, initHistogram *metrics.Histogram, histogramName string, successValue, successCount int64) (bool, error) {
+func WasHWAccelUsed(ctx context.Context, tconn *chrome.TestConn, initHistogram *histogram.Histogram, histogramName string, successValue, successCount int64) (bool, error) {
 	// There are three valid cases.
 	// 1. No histogram is updated. This is the case if HW Acceleration is disabled due to Chrome flag, ex. --disable-accelerated-video-decode.
 	// 2. Histogram is updated with 15. This is the case if Chrome tries to initailize HW Acceleration but it fails because the codec is not supported on DUT.

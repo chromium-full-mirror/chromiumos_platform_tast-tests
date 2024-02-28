@@ -12,6 +12,7 @@ import (
 
 	"github.com/godbus/dbus/v5"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
@@ -191,7 +192,7 @@ func checkCrashReport(ctx context.Context, outDir string) error {
 	return nil
 }
 
-func checkOOMHistogram(ctx context.Context, tconn *chrome.TestConn, histogram *metrics.Histogram) error {
+func checkOOMHistogram(ctx context.Context, tconn *chrome.TestConn, histogram *histogram.Histogram) error {
 	testing.ContextLog(ctx, "Waiting for histogram update with OOM enum")
 	err := testing.Poll(ctx, func(ctx context.Context) error {
 		newHistogram, err := metrics.GetHistogram(ctx, tconn, crosEventHistogram)

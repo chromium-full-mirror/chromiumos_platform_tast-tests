@@ -10,12 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
-	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/pointer"
@@ -24,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/ui"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -384,7 +383,7 @@ func SplitViewResizePerf(ctx context.Context, s *testing.State) {
 					),
 					histogramNames...,
 				)),
-				func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
+				func(ctx context.Context, pv *perfutil.Values, hists []*histogram.Histogram) error {
 					for _, hist := range hists {
 						value, err := hist.Mean()
 						if err != nil {

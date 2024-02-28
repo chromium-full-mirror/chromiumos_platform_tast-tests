@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
@@ -120,7 +121,7 @@ func executeRustBinding(ctx context.Context, s *testing.State, args ...string) {
 	}
 }
 
-func waitHistogram(ctx context.Context, s *testing.State, tconn *chrome.TestConn, name string) *metrics.Histogram {
+func waitHistogram(ctx context.Context, s *testing.State, tconn *chrome.TestConn, name string) *histogram.Histogram {
 	s.Logf("Waiting for %v histogram", name)
 	h, err := metrics.WaitForHistogram(ctx, tconn, name, waitHistogramTimeout)
 	if err != nil {
@@ -129,7 +130,7 @@ func waitHistogram(ctx context.Context, s *testing.State, tconn *chrome.TestConn
 	return h
 }
 
-func waitHistogramUpdate(ctx context.Context, s *testing.State, tconn *chrome.TestConn, name string, hOld *metrics.Histogram) *metrics.Histogram {
+func waitHistogramUpdate(ctx context.Context, s *testing.State, tconn *chrome.TestConn, name string, hOld *histogram.Histogram) *histogram.Histogram {
 	s.Logf("Waiting for %v histogram update", name)
 	h, err := metrics.WaitForHistogramUpdate(ctx, tconn, name, hOld, waitHistogramTimeout)
 	if err != nil {
@@ -138,7 +139,7 @@ func waitHistogramUpdate(ctx context.Context, s *testing.State, tconn *chrome.Te
 	return h
 }
 
-func checkHistogram(s *testing.State, h *metrics.Histogram, val, numSamples int64) {
+func checkHistogram(s *testing.State, h *histogram.Histogram, val, numSamples int64) {
 	if len(h.Buckets) != 1 {
 		s.Fatalf("Got %v buckets instead of 1", len(h.Buckets))
 	}

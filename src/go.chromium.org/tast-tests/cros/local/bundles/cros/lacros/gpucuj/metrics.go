@@ -15,6 +15,7 @@ import (
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/trace/github.com/google/perfetto/perfetto_proto"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -338,7 +339,7 @@ func (m *metricsRecorder) record(ctx context.Context, invoc *testInvocation, min
 	return nil
 }
 
-func (m *metricsRecorder) recordHistogram(ctx context.Context, invoc *testInvocation, h *metrics.Histogram) error {
+func (m *metricsRecorder) recordHistogram(ctx context.Context, invoc *testInvocation, h *histogram.Histogram) error {
 	// Ignore empty histograms. It's hard to define what the mean should be in this case.
 	if h.TotalCount() == 0 {
 		return nil

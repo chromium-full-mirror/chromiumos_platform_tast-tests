@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
@@ -196,7 +197,7 @@ type record struct {
 	Sum int64 `json:"sum"`
 
 	// Buckets contains ranges of reported values. It's the concatenated histogram buckets from multiple runs.
-	Buckets []metrics.HistogramBucket `json:"buckets"`
+	Buckets []histogram.Bucket `json:"buckets"`
 }
 
 // combine combines another record into an existing one.
@@ -1304,7 +1305,7 @@ func (r *Recorder) stopRecording(ctx, runCtx context.Context) (e error) {
 	}
 
 	// Collects metrics per browser type.
-	tHists := make(map[browser.Type][]*metrics.Histogram)
+	tHists := make(map[browser.Type][]*histogram.Histogram)
 	for bt, rr := range r.mr {
 		tconn := r.tconns[bt]
 		inTestHistograms, err := rr.Histogram(runCtx, tconn)
@@ -1808,12 +1809,12 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 		}
 
 		// Get the histogram diffs from when StartSnapshot was called.
-		ashDiff, err := metrics.DiffHistograms(ashHists, newAshHists)
+		ashDiff, err := histogram.DiffHistograms(ashHists, newAshHists)
 		if err != nil {
 			return errors.Wrapf(err, "failed to diff old and new Ash histograms for snapshot, old had length %d; new had length %d", len(ashHists), len(newAshHists))
 		}
 
-		browserDiff, err := metrics.DiffHistograms(browserHists, newBrowserHists)
+		browserDiff, err := histogram.DiffHistograms(browserHists, newBrowserHists)
 		if err != nil {
 			return errors.Wrapf(err, "failed to diff old and new browser histograms for snapshot, old had length %d; new had length %d", len(browserHists), len(newBrowserHists))
 		}
@@ -1821,7 +1822,7 @@ func (r *Recorder) StartSnapshot(ctx context.Context, prefix string, ashMetrics,
 		// For each metric and its corresponding browser type, create
 		// a new record with the new histogram diff.
 		browserTypes := []browser.Type{browser.TypeAsh, bt}
-		for i, diffs := range [][]*metrics.Histogram{ashDiff, browserDiff} {
+		for i, diffs := range [][]*histogram.Histogram{ashDiff, browserDiff} {
 			for _, hist := range diffs {
 				metric, ok := r.records[browserTypes[i]][hist.Name]
 				if !ok {
@@ -1879,7 +1880,7 @@ func WaitForCPUStabilization(ctx context.Context) {
 }
 
 // histsWithSamples returns the names of the histograms that have at least one sample.
-func histsWithSamples(hists []*metrics.Histogram) []string {
+func histsWithSamples(hists []*histogram.Histogram) []string {
 	var histNames []string
 	for _, hist := range hists {
 		if hist.TotalCount() > 0 {
@@ -1990,8 +1991,7 @@ func addExtraChromeTraceCategories(
 		return nil, "", errors.Errorf("%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[1][1])
 	}
 	if len(subMatches) == 3 && subMatches[0][1] != subMatches[2][1] {
-		return nil, "", errors.Errorf(
-			"%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[2][1])
+		return nil, "", errors.Errorf("%s != %s; expect two chrome data sources to have same categories", subMatches[0][1], subMatches[2][1])
 	}
 	categoriesStr := subMatches[0][1]
 	newCategories := strings.Split(extraCategories, ",")

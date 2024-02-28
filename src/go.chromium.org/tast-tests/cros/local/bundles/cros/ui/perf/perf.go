@@ -8,16 +8,16 @@ package perf
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast/core/testing"
 )
 
 // Run is used by perfutil runner to run the performance scenario. It wraps
 // s.Run around the scenario function, returning a closure to be used by tests.
-func Run(s *testing.State, scenario perfutil.ScenarioFunc) func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
-	return func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
-		var hists []*metrics.Histogram
+func Run(s *testing.State, scenario perfutil.ScenarioFunc) func(ctx context.Context, name string) ([]*histogram.Histogram, error) {
+	return func(ctx context.Context, name string) ([]*histogram.Histogram, error) {
+		var hists []*histogram.Histogram
 		var err error
 		s.Run(ctx, name, func(ctx context.Context, s *testing.State) {
 			hists, err = scenario(ctx, name)

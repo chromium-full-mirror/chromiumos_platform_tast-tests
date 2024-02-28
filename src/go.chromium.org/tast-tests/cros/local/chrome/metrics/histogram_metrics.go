@@ -8,20 +8,21 @@ import (
 	"context"
 	"fmt"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
 )
 
 // HistogramMetricWriter are functions that log perf metrics from Histograms.
-type HistogramMetricWriter func(pv *perf.Values, histogram *Histogram) error
+type HistogramMetricWriter func(pv *perf.Values, histogram *histogram.Histogram) error
 
 // HistogramMetrics is a helper to log performance metrics from the diff
 // between two samples of a histogram.
 type HistogramMetrics struct {
 	name    string
 	writers []HistogramMetricWriter
-	prev    *Histogram
+	prev    *histogram.Histogram
 }
 
 // NewHistogramMetrics creates a heler to log performance metrics from the
@@ -98,7 +99,7 @@ func WriteHistogramMetrics(ctx context.Context, tconn *chrome.TestConn, pv *perf
 //	Unit: the unit param
 //	Direction: the direction param
 func SetMeanHistogramMetricWriter(suffix, unit string, direction perf.Direction) HistogramMetricWriter {
-	return func(pv *perf.Values, histogram *Histogram) error {
+	return func(pv *perf.Values, histogram *histogram.Histogram) error {
 		mean, err := histogram.Mean()
 		if err != nil {
 			return err
@@ -123,7 +124,7 @@ func SetMeanHistogramMetricWriter(suffix, unit string, direction perf.Direction)
 //	Unit: the unit param
 //	Direction: the direction param
 func AppendMeanHistogramMetricWriter(suffix, unit string, direction perf.Direction) HistogramMetricWriter {
-	return func(pv *perf.Values, histogram *Histogram) error {
+	return func(pv *perf.Values, histogram *histogram.Histogram) error {
 		mean, err := histogram.Mean()
 		if err != nil {
 			return err
@@ -149,7 +150,7 @@ func AppendMeanHistogramMetricWriter(suffix, unit string, direction perf.Directi
 //	Unit: the unit param
 //	Direction: the direction param
 func SetPercentileHistogramMetricWriter(percentile int, suffix, unit string, direction perf.Direction) HistogramMetricWriter {
-	return func(pv *perf.Values, histogram *Histogram) error {
+	return func(pv *perf.Values, histogram *histogram.Histogram) error {
 		value, err := histogram.Percentile(percentile)
 		if err != nil {
 			return err
@@ -175,7 +176,7 @@ func SetPercentileHistogramMetricWriter(percentile int, suffix, unit string, dir
 //	Unit: the unit param
 //	Direction: the direction param
 func AppendPercentileHistogramMetricWriter(percentile int, suffix, unit string, direction perf.Direction) HistogramMetricWriter {
-	return func(pv *perf.Values, histogram *Histogram) error {
+	return func(pv *perf.Values, histogram *histogram.Histogram) error {
 		value, err := histogram.Percentile(percentile)
 		if err != nil {
 			return err

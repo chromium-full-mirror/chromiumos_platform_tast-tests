@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
@@ -18,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
-	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -428,7 +428,7 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 
 		return nil
 	}, histogramsName...)),
-		func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
+		func(ctx context.Context, pv *perfutil.Values, hists []*histogram.Histogram) error {
 			for _, hist := range hists {
 				mean, err := hist.Mean()
 				if err != nil {

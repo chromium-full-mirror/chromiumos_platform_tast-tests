@@ -116,7 +116,7 @@ func Histograms(ctx context.Context, s *testing.State) {
 
 	foundExpectedSample := false
 
-	// Finding the `HistogramBucket` corresponding to `platformProductGroup` and
+	// Finding the `Bucket` corresponding to `platformProductGroup` and
 	// checking whether only one sample was reported.
 	for _, value := range h2.Buckets {
 		if value.Min == platformProductGroup {

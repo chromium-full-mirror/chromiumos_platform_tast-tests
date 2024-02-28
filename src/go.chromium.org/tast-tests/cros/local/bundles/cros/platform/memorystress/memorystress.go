@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -30,9 +31,9 @@ const (
 // TestCaseResult is the result of a stress test case.
 type TestCaseResult struct {
 	// jankyCount is the average janky count in 30 seconds histogram.
-	jankyCount *metrics.Histogram
+	jankyCount *histogram.Histogram
 	// discardLatency is the discard latency histogram.
-	discardLatency *metrics.Histogram
+	discardLatency *histogram.Histogram
 	// reloadCount is the tab reload count.
 	reloadCount uint64
 	// oomCount is the oom kill count.
@@ -319,7 +320,7 @@ func TestCase(ctx context.Context, br *browser.Browser, localRand *rand.Rand, mb
 	if err != nil {
 		return TestCaseResult{}, errors.Wrap(err, "failed to get histograms")
 	}
-	histograms, err := metrics.DiffHistograms(startHistograms, endHistograms)
+	histograms, err := histogram.DiffHistograms(startHistograms, endHistograms)
 	if err != nil {
 		return TestCaseResult{}, errors.Wrap(err, "failed to diff histograms")
 	}

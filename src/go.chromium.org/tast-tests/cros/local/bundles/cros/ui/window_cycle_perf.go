@@ -9,18 +9,17 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	uiperf "go.chromium.org/tast-tests/cros/local/bundles/cros/ui/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localPerf "go.chromium.org/tast-tests/cros/local/perf"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
 	"go.chromium.org/tast-tests/cros/local/ui"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -141,7 +140,7 @@ func WindowCyclePerf(ctx context.Context, s *testing.State) {
 
 			suffix := fmt.Sprintf("%dwindows", numWindows)
 			// storeAllMetricsAndLogError stores all metrics to |pv| and print logs if there is any error.
-			storeAllMetricsAndLogError := func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
+			storeAllMetricsAndLogError := func(ctx context.Context, pv *perfutil.Values, hists []*histogram.Histogram) error {
 				for _, hist := range hists {
 					if err := perfutil.StoreMetricWithHeuristics(ctx, pv, hist, suffix); err != nil {
 						// Log the error and keep storing other metrics.

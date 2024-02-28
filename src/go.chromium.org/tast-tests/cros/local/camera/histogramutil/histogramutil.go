@@ -9,6 +9,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast/core/errors"
@@ -16,7 +17,7 @@ import (
 )
 
 // HistogramVerifier is a function that verifies the histogram values.
-type HistogramVerifier func(m *metrics.Histogram) error
+type HistogramVerifier func(m *histogram.Histogram) error
 
 // HistogramTests contains the names of the tracked histograms and their associated verifiers.
 type HistogramTests map[string]HistogramVerifier
@@ -39,7 +40,7 @@ func (ht HistogramTests) Record(ctx context.Context, tconn *chrome.TestConn) (*m
 }
 
 // wait waits until the histograms tracked by |ht| have new values.
-func (ht HistogramTests) wait(ctx context.Context, tconn *chrome.TestConn, recorder *metrics.Recorder) ([]*metrics.Histogram, error) {
+func (ht HistogramTests) wait(ctx context.Context, tconn *chrome.TestConn, recorder *metrics.Recorder) ([]*histogram.Histogram, error) {
 	// It takes time for Chrome to refresh the histograms. Leave 3 seconds
 	// for the clean-up tasks in case of error.
 	ctxDeadline, _ := ctx.Deadline()
@@ -71,7 +72,7 @@ func (ht HistogramTests) Verify(ctx context.Context, tconn *chrome.TestConn, rec
 // AssertHistogramEq returns a HistogramVerifier that can be used to check if a
 // histogram's value equals to |value|.
 func AssertHistogramEq(value float64) HistogramVerifier {
-	return func(m *metrics.Histogram) error {
+	return func(m *histogram.Histogram) error {
 		// We assume that there's only one sample hence we can check
 		// against the histogram mean.
 		if len(m.Buckets) != 1 {
@@ -89,7 +90,7 @@ func AssertHistogramEq(value float64) HistogramVerifier {
 // AssertHistogramIn returns a HistogramVerifier that can be used to check if a
 // histogram's value is in |values|.
 func AssertHistogramIn(values ...float64) HistogramVerifier {
-	return func(m *metrics.Histogram) error {
+	return func(m *histogram.Histogram) error {
 		// We assume that there's only one sample hence we can check
 		// against the histogram mean.
 		if len(m.Buckets) != 1 {
@@ -111,7 +112,7 @@ func AssertHistogramIn(values ...float64) HistogramVerifier {
 // AssertHistogramMeanGt returns a HistogramVerifier that can be used to check
 // if a histogram's mean value is greater than |value|.
 func AssertHistogramMeanGt(value float64) HistogramVerifier {
-	return func(m *metrics.Histogram) error {
+	return func(m *histogram.Histogram) error {
 		if len(m.Buckets) == 0 {
 			return errors.Errorf("invalid %s: %v", m.Name, m.Buckets)
 		}
@@ -127,7 +128,7 @@ func AssertHistogramMeanGt(value float64) HistogramVerifier {
 // AssertHistogramMeanGe returns a HistogramVerifier that can be used to check
 // if a histogram's mean value is greater than or equal to |value|.
 func AssertHistogramMeanGe(value float64) HistogramVerifier {
-	return func(m *metrics.Histogram) error {
+	return func(m *histogram.Histogram) error {
 		if len(m.Buckets) == 0 {
 			return errors.Errorf("invalid %s: %v", m.Name, m.Buckets)
 		}
@@ -143,7 +144,7 @@ func AssertHistogramMeanGe(value float64) HistogramVerifier {
 // AssertHistogramInRange returns a HistogramVerifier that can be used to check
 // if a histogram's mean value is in the range [minValue, maxValue].
 func AssertHistogramInRange(minValue, maxValue float64) HistogramVerifier {
-	return func(m *metrics.Histogram) error {
+	return func(m *histogram.Histogram) error {
 		if len(m.Buckets) == 0 {
 			return errors.Errorf("invalid %s: %v", m.Name, m.Buckets)
 		}

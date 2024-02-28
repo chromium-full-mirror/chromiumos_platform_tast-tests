@@ -8,11 +8,11 @@ import (
 	"context"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -27,7 +27,7 @@ type HistogramMetrics struct {
 	tconn     *chrome.TestConn
 	names     []string // Histogram names.
 	metrics   map[string]perf.Metric
-	lastHists []*metrics.Histogram
+	lastHists []*histogram.Histogram
 	// label is used to identify the HistogramMetrics instance in log messages,
 	// when it is embedded in other structs.
 	label string
@@ -124,7 +124,7 @@ func (v *HistogramMetrics) snapshot(ctx context.Context, values *perf.Values) er
 	if err != nil {
 		return errors.Wrapf(err, "failed to get histograms %v", v.names)
 	}
-	diffs, err := metrics.DiffHistograms(v.lastHists, newHists)
+	diffs, err := histogram.DiffHistograms(v.lastHists, newHists)
 	if err != nil {
 		return errors.Wrapf(err, "failed to diff histograms, old had length %d; new had length %d", len(v.lastHists), len(newHists))
 	}

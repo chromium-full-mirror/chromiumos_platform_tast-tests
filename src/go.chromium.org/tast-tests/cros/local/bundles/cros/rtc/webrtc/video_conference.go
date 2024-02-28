@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -198,7 +199,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 		histNames = keyInputHistograms
 	}
 	var err error
-	var startHists []*metrics.Histogram
+	var startHists []*histogram.Histogram
 	if len(histNames) > 0 {
 		startHists, err = metrics.GetHistograms(ctx, bTconn, histNames)
 		if err != nil {
@@ -262,7 +263,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 		if err != nil {
 			return errors.Wrap(err, "failed to get histograms")
 		}
-		diffHists, err := metrics.DiffHistograms(startHists, endHists)
+		diffHists, err := histogram.DiffHistograms(startHists, endHists)
 		if err != nil {
 			return errors.Wrap(err, "get histograms")
 		}
@@ -285,7 +286,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	return nil
 }
 
-func chromeLatencyMetrics(hists []*metrics.Histogram) (*perf.Values, error) {
+func chromeLatencyMetrics(hists []*histogram.Histogram) (*perf.Values, error) {
 	// Check histograms is not empty.
 	for _, hist := range hists {
 		if hist.TotalCount() == 0 {

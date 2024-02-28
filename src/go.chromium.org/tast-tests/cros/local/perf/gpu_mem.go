@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/async"
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -28,7 +29,7 @@ type GPUDataSource struct {
 	stopc chan struct{}
 
 	dataMutex   sync.Mutex
-	currentData map[browser.Type][]*metrics.Histogram
+	currentData map[browser.Type][]*histogram.Histogram
 	dataErr     error
 }
 
@@ -38,7 +39,7 @@ func NewGPUDataSource(tconns map[browser.Type]*chrome.TestConn) *GPUDataSource {
 		tconns:      tconns,
 		previous:    make(map[browser.Type]float64),
 		stopc:       make(chan struct{}),
-		currentData: make(map[browser.Type][]*metrics.Histogram),
+		currentData: make(map[browser.Type][]*histogram.Histogram),
 	}
 }
 
@@ -126,7 +127,7 @@ func (ds *GPUDataSource) Start(ctx context.Context) error {
 	return nil
 }
 
-func (ds *GPUDataSource) histograms() (map[browser.Type][]*metrics.Histogram, error) {
+func (ds *GPUDataSource) histograms() (map[browser.Type][]*histogram.Histogram, error) {
 	ds.dataMutex.Lock()
 	defer ds.dataMutex.Unlock()
 	if ds.dataErr != nil {

@@ -13,6 +13,9 @@ import (
 	"strings"
 	"time"
 
+	"golang.org/x/sys/unix"
+
+	ch "go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
@@ -31,7 +34,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
-	"golang.org/x/sys/unix"
 )
 
 var video = nodewith.Role(role.Video)
@@ -113,7 +115,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 		s.Log("Delete old /var/log/perf_output.txt")
 		err := os.Remove(perfOutputFile)
 		if err != nil {
-			s.Fatal("Failed to delete old /var/log/perf_output.txt", err)
+			s.Fatal("Failed to delete old /var/log/perf_output.txt: ", err)
 		}
 	}
 
@@ -268,7 +270,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 		}
 		s.Log("histogram snapshot after video playback: ", histogramsAfterVideoPlayback)
 
-		deltaHistograms, err := metrics.DiffHistograms(histogramsBeforeVideoPlayback, histogramsAfterVideoPlayback)
+		deltaHistograms, err := ch.DiffHistograms(histogramsBeforeVideoPlayback, histogramsAfterVideoPlayback)
 		if err != nil {
 			s.Log("Failed to diff histograms")
 		}

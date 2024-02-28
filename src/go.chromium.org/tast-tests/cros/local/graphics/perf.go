@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -28,9 +29,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/cpu"
 	"go.chromium.org/tast-tests/cros/local/power"
 	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
-
 	"go.chromium.org/tast-tests/cros/local/power/util"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -914,7 +913,7 @@ func MeasureDRAMBandwidth(ctx context.Context, duration time.Duration, p perfVal
 // UpdatePerfMetricFromHistogram takes a snapshot of histogramName and
 // calculates the average difference with initHistogram. The result is then
 // logged to perfValues with metricName.
-func UpdatePerfMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *metrics.Histogram, perfValues perfValueInterface, metricName string) error {
+func UpdatePerfMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *histogram.Histogram, perfValues perfValueInterface, metricName string) error {
 	laterHistogram, err := metrics.GetHistogram(ctx, tconn, histogramName)
 	if err != nil {
 		return errors.Wrap(err, "failed to get later histogram")
@@ -957,7 +956,7 @@ func UpdatePerfMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, 
 // The buckets in the range [minPromotedOverlayValue, maxPromotedOverlayValue]  are considered to represent
 // samples promoted to overlays.
 // The result is then logged to perfValues with metricName.
-func UpdateOverlaysMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *metrics.Histogram, minPromotedOverlayValue, maxPromotedOverlayValue int, perfValues perfValueInterface, metricName string) error {
+func UpdateOverlaysMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *histogram.Histogram, minPromotedOverlayValue, maxPromotedOverlayValue int, perfValues perfValueInterface, metricName string) error {
 	laterHistogram, err := metrics.GetHistogram(ctx, tconn, histogramName)
 	if err != nil {
 		return errors.Wrap(err, "failed to get later histogram")

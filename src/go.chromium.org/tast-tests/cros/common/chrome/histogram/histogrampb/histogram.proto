@@ -1,0 +1,21 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.common.chrome.histogram.histogrampb;
+
+option go_package = "go.chromium.org/tast-tests/cros/common/chrome/histogram/histogrampb";
+
+message Bucket {
+  int64 min = 1;
+  int64 max = 2;
+  int64 count = 3;
+}
+
+message Histogram {
+  string name = 1;
+  int64 sum = 2;
+  repeated Bucket buckets = 3;
+}
