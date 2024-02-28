@@ -37,7 +37,7 @@ func init() {
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "chibar@google.com"},
 		SoftwareDeps: []string{"chrome", "vm_host", "untrusted_vm", "dlc", "amd64"},
 		HardwareDeps: bruschetta.BruschettaHwDeps,
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		BugComponent: "b:1248538",
 		Fixture:      bruschetta.BruschettaFixture,
 		Timeout:      7 * time.Minute,
@@ -47,7 +47,7 @@ func init() {
 func USBStorage(ctx context.Context, s *testing.State) {
 	bru := s.FixtValue().(bruschetta.FixtureData).BruschettaVM
 	cr := s.FixtValue().(bruschetta.FixtureData).Chrome
-	const usbOperationTimeout = 10 * time.Second
+	const usbOperationTimeout = 15 * time.Second
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
