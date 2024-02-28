@@ -3,7 +3,6 @@
 # found in the LICENSE file.
 
 import logging
-from typing import Sequence
 
 from mitmproxy import ctx
 from mitmproxy.optmanager import load_paths

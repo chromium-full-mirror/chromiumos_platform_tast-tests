@@ -21,11 +21,12 @@ import (
 )
 
 const (
-	httpRedirect     = "mitmproxy_redirect_requests.py"
-	httpErrorInject  = "mitmproxy_inject_500_requests.py"
-	allowedEndpoints = "allowed_endpoints.py"
-	extraConfig      = "allowed_endpoints_yaml.py"
-	endpoints        = "endpoints.yml"
+	httpRedirect       = "mitmproxy_redirect_requests.py"
+	httpErrorInject    = "mitmproxy_inject_500_requests.py"
+	allowedEndpoints   = "allowed_endpoints.py"
+	extraConfig        = "allowed_endpoints_yaml.py"
+	endpoints          = "endpoints.yml"
+	discoveryEndpoints = "discovery_traffic.py"
 )
 
 func init() {
@@ -53,6 +54,10 @@ func init() {
 			Val:       "error",
 			ExtraData: []string{httpErrorInject},
 		}, {
+			Name:      "discovery",
+			Val:       "discovery",
+			ExtraData: []string{discoveryEndpoints},
+		}, {
 			Name:      "diff",
 			Val:       "diff",
 			ExtraData: []string{allowedEndpoints, extraConfig, endpoints},
@@ -67,7 +72,7 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	proxy, err := getMitmproxy(s)
+	proxy, err := newMitmproxy(s)
 	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
 		s.Fatal("Failed to launch and apply proxy: ", err)
 	}
@@ -116,21 +121,32 @@ func verifyPageContent(ctx context.Context, conn *chrome.Conn, expected string) 
 	return nil
 }
 
-func getMitmproxy(s *testing.State) (*mitmproxy.MitmProxy, error) {
+func newMitmproxy(s *testing.State) (*mitmproxy.MitmProxy, error) {
 	testCase := s.Param().(string)
 	var opts []mitmproxy.Option
 	switch testCase {
 	case "redirect":
-		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(httpRedirect)))
-		opts = append(opts, mitmproxy.OutDir(s.OutDir()))
+		opts = append(opts,
+			mitmproxy.ScriptPath(s.DataPath(httpRedirect)),
+			mitmproxy.OutDir(s.OutDir()),
+		)
 	case "error":
-		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(httpErrorInject)))
-		opts = append(opts, mitmproxy.OutDir(s.OutDir()))
+		opts = append(opts,
+			mitmproxy.ScriptPath(s.DataPath(httpErrorInject)),
+			mitmproxy.OutDir(s.OutDir()),
+		)
 	case "diff":
-		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(allowedEndpoints), s.DataPath(extraConfig)))
-		opts = append(opts, mitmproxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml=%s", s.DataPath(endpoints))))
-		opts = append(opts, mitmproxy.OutDir(s.OutDir()))
-
+		opts = append(opts,
+			mitmproxy.ScriptPath(s.DataPath(allowedEndpoints), s.DataPath(extraConfig)),
+			mitmproxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml=%s", s.DataPath(endpoints))),
+			mitmproxy.OutDir(s.OutDir()),
+		)
+	case "discovery":
+		opts = append(opts,
+			mitmproxy.ScriptPath(s.DataPath(discoveryEndpoints)),
+			mitmproxy.CustomOptions(fmt.Sprintf("endpoint_info_folder=%s", s.OutDir()), fmt.Sprintf("patterns_to_record=%s", "example.com")),
+			mitmproxy.OutDir(s.OutDir()),
+		)
 	}
 	return mitmproxy.New(opts...)
 }
