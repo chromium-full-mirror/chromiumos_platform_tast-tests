@@ -103,7 +103,10 @@ func getClientArguments(config *Config) []string {
 		"-y", "c",
 		"-P", strconv.Itoa(config.PortCount),
 		"-t", strconv.Itoa(int(config.TestTime / time.Second)),
-		"-w", strconv.Itoa(int(config.WindowSize)),
+	}
+
+	if config.WindowSize > 0 {
+		res = append(res, "-w", strconv.Itoa(int(config.WindowSize)))
 	}
 
 	if config.Protocol == ProtocolUDP {

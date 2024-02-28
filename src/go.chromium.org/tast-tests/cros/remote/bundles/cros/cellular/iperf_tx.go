@@ -94,7 +94,7 @@ func IperfTx(ctx context.Context, s *testing.State) {
 	}
 	s.Log("modemType is :", resp.ModemType)
 	max := manager.GetMaxLTETxThroughputInMbps(ctx, resp.ModemType)
-	additionalOptions := []iperf.ConfigOption{iperf.TestTimeOption(30 * time.Second), iperf.MaxBandwidthOption(iperf.BitRate(max) * iperf.Mbps)}
+	additionalOptions := []iperf.ConfigOption{iperf.TestTimeOption(30 * time.Second), iperf.MaxBandwidthOption(iperf.BitRate(max) * iperf.Mbps), iperf.WindowSizeOption(320 * iperf.KB)}
 
 	// Test is Tx/upload so DUT is client and callbox is server.
 	perfValues := perf.NewValues()

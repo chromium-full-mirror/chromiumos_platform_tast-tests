@@ -53,7 +53,7 @@ const (
 	defaultMaxBandwidth  = 1 * Gbps
 	defaultPort          = 5001
 	defaultPortCount     = 4
-	defaultWindowSize    = 320 * KB
+	defaultWindowSize    = 0
 	defaultBidirectional = false
 )
 

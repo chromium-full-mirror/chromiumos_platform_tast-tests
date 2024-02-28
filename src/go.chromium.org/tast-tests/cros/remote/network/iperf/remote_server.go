@@ -166,7 +166,10 @@ func getServerArguments(config *Config) []string {
 		"-y", "c",
 		"-B", config.ServerIP,
 		"-p", strconv.Itoa(config.Port),
-		"-w", strconv.Itoa(int(config.WindowSize)),
+	}
+
+	if config.WindowSize > 0 {
+		res = append(res, "-w", strconv.Itoa(int(config.WindowSize)))
 	}
 
 	if config.Protocol == ProtocolUDP {

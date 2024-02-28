@@ -157,6 +157,10 @@ func (p *TestManager) Config(routerType routerSupport.RouterType, testType TestT
 		return nil, errors.Errorf("failed to find the iperf protocol for %s", testType)
 	}
 
+	if (testType == TestTypeTCPBidirectional) || (testType == TestTypeTCPTx) || (testType == TestTypeTCPRx) {
+		options = append(options, iperf.WindowSizeOption(320*iperf.KB))
+	}
+
 	switch testType {
 	case TestTypeTCPBidirectional:
 		// TCP bidirectional results reported by the client seem to be less reliable
