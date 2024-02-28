@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/network"
+	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -48,6 +49,10 @@ func ResolvConfPortal(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
+
+	// Dump network info on failure.
+	errorHandler := dumputil.CreateErrorHandler(cleanupCtx)
+	s.AttachErrorHandlers(errorHandler, errorHandler)
 
 	// Shill setup.
 	m, err := shill.NewManager(ctx)

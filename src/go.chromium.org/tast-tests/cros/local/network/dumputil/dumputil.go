@@ -11,6 +11,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -117,4 +118,20 @@ func DumpNetworkInfo(ctx context.Context, filename string) error {
 	}
 
 	return lastErr
+}
+
+// CreateErrorHandler creates an error handler to dump network info on test
+// failures. This should be used together with s.AttachErrorHandlers(). Example:
+//
+//	errorHandler := dumputil.CreateErrorHandler(cleanupCtx)
+//	s.AttachErrorHandlers(errorHandler, errorHandler)
+func CreateErrorHandler(ctx context.Context) func(string) {
+	return func(string) {
+		filename := "network_dump_on_error_" + time.Now().Format("030405000") + ".txt"
+		if err := DumpNetworkInfo(ctx, filename); err != nil {
+			testing.ContextLog(ctx, "Failed to dump network info on error: ", err)
+		} else {
+			testing.ContextLog(ctx, "Dumped current network info to ", filename)
+		}
+	}
 }

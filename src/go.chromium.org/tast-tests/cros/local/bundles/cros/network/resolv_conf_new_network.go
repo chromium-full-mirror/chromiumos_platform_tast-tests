@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
+	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
@@ -90,6 +91,10 @@ func ResolvConfNewNetwork(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
+
+	// Dump network info on failure.
+	errorHandler := dumputil.CreateErrorHandler(cleanupCtx)
+	s.AttachErrorHandlers(errorHandler, errorHandler)
 
 	// Shill-related setup.
 	m, err := shill.NewManager(ctx)
