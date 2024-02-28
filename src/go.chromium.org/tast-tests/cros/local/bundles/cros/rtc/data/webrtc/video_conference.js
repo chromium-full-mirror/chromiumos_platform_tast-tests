@@ -61,7 +61,7 @@ class VideoConference {
         height: { ideal: 1080, max: 1080, min: 720 },
         aspectRatio: { exact: 1.77778 },
         frameRate: 30,
-        facingMode: { exact: 'user' },
+        facingMode: { ideal: 'user' },
       },
     };
     if (audio) {
