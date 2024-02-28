@@ -65,12 +65,6 @@ func init() {
 				ExtraAttr: []string{"paper-io_mfp_printscan"},
 			}, {
 				//MFP in lab
-				Name:      "lexmark_mc3426adw",
-				Val:       "lexmark_mc3426adw_descriptor.json",
-				ExtraData: []string{"lexmark_mc3426adw_descriptor.json"},
-				ExtraAttr: []string{"paper-io_mfp_printscan"},
-			}, {
-				//MFP in lab
 				Name:              "usb_canon_tr4700_series",
 				Val:               "usb_canon_tr4700_series_descriptor.json",
 				ExtraData:         []string{"usb_canon_tr4700_series_descriptor.json"},
