@@ -1,0 +1,23 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.power;
+
+import "google/protobuf/empty.proto";
+
+import "histogram.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/power";
+
+service SuspendPerfService {
+
+  rpc Prepare(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc GetHistogram(HistogramRequest)
+      returns (tast.common.chrome.histogram.histogrampb.Histogram) {}
+}
+
+message HistogramRequest { string name = 1; }
