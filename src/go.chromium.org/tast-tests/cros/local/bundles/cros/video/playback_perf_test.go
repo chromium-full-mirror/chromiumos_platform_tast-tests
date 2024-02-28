@@ -298,6 +298,18 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		params = append(params, param)
 	}
 
+	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
+		resolution, dec := 1080, "hw"
+		for _, fps := range []int{30, 60} {
+			param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps), resolution, fps, dec,
+				"batch_decoding_in_renderer", "chromeVideoWithBatchDecodingInRenderer",
+				[]string{})
+			param.HardwareDeps = "hwdep.CPUSocFamily(\"intel\")"
+			params = append(params, param)
+		}
+
+	}
+
 	code := genparams.Template(t, `{{ range . }}{
 		Name: {{ .Name | fmt }},
 		Val:  playback.Config{
