@@ -42,7 +42,7 @@ var BluetoothConfirmForgetButton = nodewith.NameContaining("Forget").HasClass("a
 // within the OS Settings by clicking the sub-page button. This is safe to call
 // when the OS Settings are already open.
 func NavigateToBluetoothSettingsPage(ctx context.Context, tconn *chrome.TestConn, bt bluetooth.Bluetooth) (*OSSettings, error) {
-	app, err := Launch(ctx, tconn)
+	app, err := LaunchAtPage(ctx, tconn, Bluetooth)
 	if err != nil {
 		return app, err
 	}
