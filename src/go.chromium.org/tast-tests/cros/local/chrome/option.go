@@ -309,11 +309,11 @@ func GAIAEnterpriseEnroll(creds Creds) Option {
 	}
 }
 
-// GAIAZTEEnterpriseEnroll returns an Option that can be passed to New to enable Enterprise
+// ZeroTouchEnroll returns an Option that can be passed to New to enable Enterprise
 // Enrollment before login.
-func GAIAZTEEnterpriseEnroll() Option {
+func ZeroTouchEnroll() Option {
 	return func(cfg *config.MutableConfig) error {
-		cfg.EnrollMode = config.GAIAZTEEnroll
+		cfg.EnrollMode = config.ZeroTouchEnroll
 		return nil
 	}
 }

@@ -25,13 +25,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const gaiaZTEEnrollmentTimeout = 4 * time.Minute
+const zeroTouchEnrollmentTimeout = 4 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         GAIAZTEEnrollment,
+		Func:         ZeroTouchEnrollment,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "ZTE GAIA Enroll a device without checking policies",
+		Desc:         "ZTE Enroll a device without checking policies",
 		Contacts: []string{
 			"chromeos-commercial-remote-management@google.com",
 			"vsavu@google.com",
@@ -44,7 +44,7 @@ func init() {
 		Timeout:      7 * time.Minute,
 		SearchFlags: []*testing.StringPair{{
 			Key: "feature_id",
-			// ZTE Enrollment.
+			// Zero Touch Enrollment.
 			Value: "screenplay-6f0905f0-9ecd-4974-b4a1-7e4b828b5dc2",
 		}, {
 			Key: "feature_id",
@@ -59,27 +59,27 @@ func init() {
 				Val: gaiaenrollment.TestParams{
 					DMServer:             policy.DMServerAlphaURL,
 					PoolID:               tape.ZTETestAutomation,
-					SerialNumber:         "policy.GAIAZTEEnrollment.serial_number",
-					HardwareModel:        "policy.GAIAZTEEnrollment.hardware_model",
-					DeviceProvisionToken: "policy.GAIAZTEEnrollment.device_provision_token",
-					CustomerID:           "policy.GAIAZTEEnrollment.customer_id",
-					BatchKey:             "policy.GAIAZTEEnrollment.batch_key",
+					SerialNumber:         "policy.ZeroTouchEnrollment.serial_number",
+					HardwareModel:        "policy.ZeroTouchEnrollment.hardware_model",
+					DeviceProvisionToken: "policy.ZeroTouchEnrollment.device_provision_token",
+					CustomerID:           "policy.ZeroTouchEnrollment.customer_id",
+					BatchKey:             "policy.ZeroTouchEnrollment.batch_key",
 				},
 			},
 		},
 		Vars: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 			tape.ServiceAccountVar,
-			"policy.GAIAZTEEnrollment.serial_number",
-			"policy.GAIAZTEEnrollment.hardware_model",
-			"policy.GAIAZTEEnrollment.device_provision_token",
-			"policy.GAIAZTEEnrollment.customer_id",
-			"policy.GAIAZTEEnrollment.batch_key",
+			"policy.ZeroTouchEnrollment.serial_number",
+			"policy.ZeroTouchEnrollment.hardware_model",
+			"policy.ZeroTouchEnrollment.device_provision_token",
+			"policy.ZeroTouchEnrollment.customer_id",
+			"policy.ZeroTouchEnrollment.batch_key",
 		},
 	})
 }
 
-func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
+func ZeroTouchEnrollment(ctx context.Context, s *testing.State) {
 	param := s.Param().(gaiaenrollment.TestParams)
 	dmServerURL := param.DMServer
 	poolID := param.PoolID
@@ -144,7 +144,7 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create tape client: ", err)
 	}
-	timeout := int32(gaiaZTEEnrollmentTimeout.Seconds())
+	timeout := int32(zeroTouchEnrollmentTimeout.Seconds())
 	// Create an account manager and lease a test account for the duration of the test.
 	accManager, acc, err := tape.NewOwnedTestAccountManagerFromClient(ctx, tapeClient, false /*lock*/, tape.WithTimeout(timeout), tape.WithPoolID(poolID))
 	if err != nil {
@@ -161,11 +161,11 @@ func GAIAZTEEnrollment(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	if _, err := pc.GAIAZTEEnrollUsingChrome(ctx, &ps.GAIAZTEEnrollUsingChromeRequest{
+	if _, err := pc.ZeroTouchEnrollUsingChrome(ctx, &ps.ZeroTouchEnrollUsingChromeRequest{
 		DmserverURL: dmServerURL,
 		ManifestKey: s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
 	}); err != nil {
-		s.Fatal("Failed to ZTE enroll using chrome: ", err)
+		s.Fatal("Failed to zero touch enroll using chrome: ", err)
 	}
 	defer pc.StopChrome(cleanupCtx, &empty.Empty{})
 }

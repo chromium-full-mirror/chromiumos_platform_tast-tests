@@ -219,16 +219,16 @@ func (c *PolicyService) GAIAEnrollUsingChrome(ctx context.Context, req *ppb.GAIA
 	return &empty.Empty{}, nil
 }
 
-// GAIAZTEEnrollUsingChrome ZTE enrolls the device using dmserver.
-func (c *PolicyService) GAIAZTEEnrollUsingChrome(ctx context.Context, req *ppb.GAIAZTEEnrollUsingChromeRequest) (*empty.Empty, error) {
-	testing.ContextLogf(ctx, "ZTE Enrolling using Chrome with dmserver: %s", string(req.DmserverURL))
+// ZeroTouchEnrollUsingChrome enrolls the device using dmserver.
+func (c *PolicyService) ZeroTouchEnrollUsingChrome(ctx context.Context, req *ppb.ZeroTouchEnrollUsingChromeRequest) (*empty.Empty, error) {
+	testing.ContextLogf(ctx, "Zero Touch Enrolling using Chrome with dmserver: %s", string(req.DmserverURL))
 
 	// Store the IDs we need for deprovisioning, as enrollment can fail after provisioning we need to defer this function before enrolling.
 	defer c.StoreIDsForDeprovisioningAndLogErrors(ctx)
 
 	if err := c.newChrome(
 		ctx,
-		chrome.GAIAZTEEnterpriseEnroll(),
+		chrome.ZeroTouchEnroll(),
 		chrome.KeepState(),
 		chrome.NoLogin(),
 		chrome.DMSPolicy(req.DmserverURL),

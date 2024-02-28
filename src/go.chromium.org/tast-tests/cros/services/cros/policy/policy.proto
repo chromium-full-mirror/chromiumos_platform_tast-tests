@@ -12,26 +12,41 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/policy";
 
 // Policy provides functions to perform enrollment.
 service PolicyService {
-  rpc VerifyPolicyStatus(VerifyPolicyStatusRequest) returns (google.protobuf.Empty) {}
-  rpc StartNewChromeReader(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-  rpc WaitForEnrollmentError(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-  rpc GAIAZTEEnrollUsingChrome(GAIAZTEEnrollUsingChromeRequest) returns (google.protobuf.Empty) {}
-  rpc EnrollUsingChrome(EnrollUsingChromeRequest) returns (google.protobuf.Empty) {}
-  rpc GAIAEnrollUsingChrome(GAIAEnrollUsingChromeRequest) returns (google.protobuf.Empty) {}
-  rpc GAIAEnrollAndLoginUsingChrome(GAIAEnrollAndLoginUsingChromeRequest) returns (google.protobuf.Empty) {}
-  rpc GAIAEnrollForReporting(GAIAEnrollForReportingRequest) returns (google.protobuf.Empty) {}
-  rpc GAIALoginForReporting(GAIALoginForReportingRequest) returns (google.protobuf.Empty) {} 
-  rpc SAMLTestIdPEnrollUsingChrome(SAMLTestIdPEnrollUsingChromeRequest) returns (google.protobuf.Empty) {}
+  rpc VerifyPolicyStatus(VerifyPolicyStatusRequest)
+      returns (google.protobuf.Empty) {}
+  rpc StartNewChromeReader(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+  rpc WaitForEnrollmentError(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+  rpc ZeroTouchEnrollUsingChrome(ZeroTouchEnrollUsingChromeRequest)
+      returns (google.protobuf.Empty) {}
+  rpc EnrollUsingChrome(EnrollUsingChromeRequest)
+      returns (google.protobuf.Empty) {}
+  rpc GAIAEnrollUsingChrome(GAIAEnrollUsingChromeRequest)
+      returns (google.protobuf.Empty) {}
+  rpc GAIAEnrollAndLoginUsingChrome(GAIAEnrollAndLoginUsingChromeRequest)
+      returns (google.protobuf.Empty) {}
+  rpc GAIAEnrollForReporting(GAIAEnrollForReportingRequest)
+      returns (google.protobuf.Empty) {}
+  rpc GAIALoginForReporting(GAIALoginForReportingRequest)
+      returns (google.protobuf.Empty) {}
+  rpc SAMLTestIdPEnrollUsingChrome(SAMLTestIdPEnrollUsingChromeRequest)
+      returns (google.protobuf.Empty) {}
   rpc UpdatePolicies(UpdatePoliciesRequest) returns (google.protobuf.Empty) {}
-  rpc CheckChromeAndFakeDMS(google.protobuf.Empty) returns (google.protobuf.Empty) {}
-  rpc StopChromeAndFakeDMS(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc CheckChromeAndFakeDMS(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+  rpc StopChromeAndFakeDMS(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
   rpc StartChrome(StartChromeRequest) returns (google.protobuf.Empty) {}
   rpc StopChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc ContinueLogin(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
-  rpc CreateFakeDMSDir(CreateFakeDMSDirRequest) returns (google.protobuf.Empty) {}
-  rpc CreateTempFakeDMSDir(CreateTempFakeDMSDirRequest) returns (CreateTempFakeDMSDirResponse) {}
-  rpc RemoveFakeDMSDir(RemoveFakeDMSDirRequest) returns (google.protobuf.Empty) {}
+  rpc CreateFakeDMSDir(CreateFakeDMSDirRequest)
+      returns (google.protobuf.Empty) {}
+  rpc CreateTempFakeDMSDir(CreateTempFakeDMSDirRequest)
+      returns (CreateTempFakeDMSDirResponse) {}
+  rpc RemoveFakeDMSDir(RemoveFakeDMSDirRequest)
+      returns (google.protobuf.Empty) {}
 
   rpc StartExternalDataServer(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
@@ -45,10 +60,12 @@ service PolicyService {
   rpc EvalInExtension(EvalInExtensionRequest)
       returns (EvalInExtensionResponse) {}
 
-  // Verifies that the notification corresponding to the id in the request is visible.
+  // Verifies that the notification corresponding to the id in the request is
+  // visible.
   rpc VerifyVisibleNotification(VerifyVisibleNotificationRequest)
       returns (google.protobuf.Empty) {}
-  // Creates a new connection to the Chrome URL in the request and evaluates the expression in the request on it.
+  // Creates a new connection to the Chrome URL in the request and evaluates the
+  // expression in the request on it.
   rpc EvalExpressionInChromeURL(EvalExpressionInChromeUrlRequest)
       returns (google.protobuf.Empty) {}
 
@@ -59,15 +76,14 @@ service PolicyService {
   rpc DirectoryAPIID(google.protobuf.Empty) returns (DirectoryAPIIDResponse) {}
 
   // Locks the device.
-  rpc LockDevice(google.protobuf.Empty)
-      returns (google.protobuf.Empty) {}
+  rpc LockDevice(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // Unlock the device with password.
-  rpc UnlockDeviceWithPassword(UnlockDeviceWithPasswordRequest) returns (google.protobuf.Empty) {}
+  rpc UnlockDeviceWithPassword(UnlockDeviceWithPasswordRequest)
+      returns (google.protobuf.Empty) {}
 
   // Log outs of the user session.
-  rpc Logout(google.protobuf.Empty)
-      returns (google.protobuf.Empty) {}
+  rpc Logout(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   rpc SendRemoteCommand(SendRemoteCommandRequest)
       returns (SendRemoteCommandResponse) {}
@@ -81,9 +97,7 @@ service PolicyService {
       returns (google.protobuf.Empty) {}
 }
 
-message VerifyPolicyStatusRequest {
-  bytes policies = 1;
-}
+message VerifyPolicyStatusRequest { bytes policies = 1; }
 
 message EnrollUsingChromeRequest {
   bytes policy_json = 1;
@@ -94,7 +108,7 @@ message EnrollUsingChromeRequest {
   bool skip_login = 6;
 }
 
-message GAIAZTEEnrollUsingChromeRequest {
+message ZeroTouchEnrollUsingChromeRequest {
   string dmserverURL = 1;
   string manifestKey = 2;
 }
@@ -111,7 +125,7 @@ message GAIAEnrollAndLoginUsingChromeRequest {
   string dmserverURL = 3;
 }
 
-message GAIAEnrollForReportingRequest{
+message GAIAEnrollForReportingRequest {
   string username = 1;
   string password = 2;
   string dmserver_url = 3;
@@ -120,7 +134,7 @@ message GAIAEnrollForReportingRequest{
   string extra_args = 6;
   bool skip_login = 7;
 }
-message GAIALoginForReportingRequest{
+message GAIALoginForReportingRequest {
   string username = 1;
   string password = 2;
   string dmserver_url = 3;
@@ -135,29 +149,17 @@ message SAMLTestIdPEnrollUsingChromeRequest {
   string dmserverURL = 3;
 }
 
-message CreateFakeDMSDirRequest {
-  string path = 1;
-}
+message CreateFakeDMSDirRequest { string path = 1; }
 
-message CreateTempFakeDMSDirRequest {
-  string path = 1;
-}
+message CreateTempFakeDMSDirRequest { string path = 1; }
 
-message CreateTempFakeDMSDirResponse {
-  string path = 1;
-}
+message CreateTempFakeDMSDirResponse { string path = 1; }
 
-message RemoveFakeDMSDirRequest {
-  string path = 1;
-}
+message RemoveFakeDMSDirRequest { string path = 1; }
 
-message UpdatePoliciesRequest {
-  bytes policy_json = 1;
-}
+message UpdatePoliciesRequest { bytes policy_json = 1; }
 
-message ServePolicyDataRequest {
-  bytes contents = 1;
-}
+message ServePolicyDataRequest { bytes contents = 1; }
 
 message ServePolicyDataResponse {
   string url = 1;
@@ -169,9 +171,7 @@ message EvalInExtensionRequest {
   string expression = 2;
 }
 
-message EvalInExtensionResponse {
-  bytes result = 1;
-}
+message EvalInExtensionResponse { bytes result = 1; }
 
 message ExtensionFile {
   string name = 1;
@@ -183,9 +183,7 @@ message Extension {
   repeated ExtensionFile files = 2;
 }
 
-message VerifyVisibleNotificationRequest {
-  string notification_id = 1;
-}
+message VerifyVisibleNotificationRequest { string notification_id = 1; }
 
 message EvalExpressionInChromeUrlRequest {
   string url = 1;
@@ -200,31 +198,17 @@ message StartChromeRequest {
   bool defer_login = 5;
 }
 
-message ClientIdResponse {
-  string clientId = 1;
-}
+message ClientIdResponse { string clientId = 1; }
 
-message DirectoryAPIIDResponse {
-  string directoryAPIID = 1;
-}
+message DirectoryAPIIDResponse { string directoryAPIID = 1; }
 
-message UnlockDeviceWithPasswordRequest{
+message UnlockDeviceWithPasswordRequest {
   string username = 1;
   string password = 2;
 }
 
-message SendRemoteCommandRequest {
-  bytes remote_command = 1;
-}
-message SendRemoteCommandResponse {
-  int64 command_id = 1;
-}
-message WaitRemoteCommandResultRequest {
-  int64 command_id = 1;
-}
-message WaitRemoteCommandResultResponse {
-  bytes result = 1;
-}
-message WaitRemoteCommandAckedRequest {
-  int64 command_id = 1;
-}
+message SendRemoteCommandRequest { bytes remote_command = 1; }
+message SendRemoteCommandResponse { int64 command_id = 1; }
+message WaitRemoteCommandResultRequest { int64 command_id = 1; }
+message WaitRemoteCommandResultResponse { bytes result = 1; }
+message WaitRemoteCommandAckedRequest { int64 command_id = 1; }

@@ -49,8 +49,8 @@ func LogIn(ctx context.Context, cfg *config.Config, sess *driver.Session) error 
 		if err := performGAIAEnrollment(ctx, cfg, sess); err != nil {
 			return err
 		}
-	case config.GAIAZTEEnroll:
-		if err := performGAIAZTEEnrollment(ctx, cfg, sess); err != nil {
+	case config.ZeroTouchEnroll:
+		if err := performZeroTouchEnrollment(ctx, cfg, sess); err != nil {
 			return err
 		}
 	default:

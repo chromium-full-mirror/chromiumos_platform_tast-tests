@@ -159,7 +159,7 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 				"*auto_enrollment_controller*=1"}, ","))
 	}
 
-	if cfg.EnrollMode() != config.GAIAZTEEnroll {
+	if cfg.EnrollMode() != config.ZeroTouchEnroll {
 		if cfg.LoginMode() != config.GAIALogin && cfg.EnrollMode() != config.GAIAEnroll && cfg.EnrollMode() != config.SAMLTestIDPEnroll {
 			args = append(args, "--disable-gaia-services")
 		}

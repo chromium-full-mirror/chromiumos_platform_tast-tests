@@ -293,9 +293,9 @@ func performGAIAEnrollment(ctx context.Context, cfg *config.Config, sess *driver
 	return nil
 }
 
-// performGAIAZTEEnrollment enrolls the test device using the OOBE screen.
-func performGAIAZTEEnrollment(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
-	ctx, st := timing.Start(ctx, "zteenroll")
+// performZeroTouchEnrollment enrolls the test device using the OOBE screen.
+func performZeroTouchEnrollment(ctx context.Context, cfg *config.Config, sess *driver.Session) error {
+	ctx, st := timing.Start(ctx, "zerotouchenroll")
 	defer st.End()
 
 	conn, err := WaitForOOBEConnection(ctx, sess)
