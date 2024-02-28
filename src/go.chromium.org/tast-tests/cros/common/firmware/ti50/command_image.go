@@ -23,7 +23,7 @@ var (
 	normalSleep *regexp.Regexp = regexp.MustCompile(`Entering normal sleep`)
 	deepSleep   *regexp.Regexp = regexp.MustCompile(`Entering deep sleep zzz`)
 	anySleep    *regexp.Regexp = regexp.MustCompile(`Entering (deep|normal) sleep( zzz)?`)
-	roBoot      *regexp.Regexp = regexp.MustCompile(`Ravn4\|`)
+	roBoot      *regexp.Regexp = regexp.MustCompile(`(Starting ROM_EXT|Ravn4\|)`)
 )
 
 // CommandImage displays a prompt and responds to cli commands.
