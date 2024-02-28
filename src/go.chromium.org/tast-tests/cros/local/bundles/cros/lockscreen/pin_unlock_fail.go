@@ -87,7 +87,7 @@ func PinUnlockFail(ctx context.Context, s *testing.State) {
 	ui := uiauto.New(tconn)
 	for count < lockoutAttempts {
 		if err := lockscreen.WaitUntilPinPadExists(ctx, tconn); err != nil {
-			s.Fatalf("Failed to find PIN pad after %v incorrect attempts", count)
+			s.Fatalf("Failed to find PIN pad after %v incorrect attempts: %v", count, err)
 		}
 
 		// Enter and submit the PIN to unlock the DUT.

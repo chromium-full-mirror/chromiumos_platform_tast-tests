@@ -265,7 +265,7 @@ func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 // WaitUntilPinPadExists waits until the PIN pad is present.
 func WaitUntilPinPadExists(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	return ui.WaitUntilExists(nodewith.HasClass("LoginPinView"))(ctx)
+	return ui.WaitUntilExists(nodewith.HasClass("LoginPinView").First())(ctx)
 }
 
 // WaitUntilPinPadGone waits until the PIN pad is gone.
