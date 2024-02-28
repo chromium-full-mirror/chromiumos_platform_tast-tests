@@ -46,7 +46,7 @@ func init() {
 				Name:              "scaling",
 				Timeout:           5 * time.Minute,
 				ExtraHardwareDeps: hwdep.D(hwdep.CPUSocFamily("qualcomm")),
-				Val:               "*scaling*",
+				Val:               "*Scaling*:*scaling*",
 			},
 			{
 				Name:              "mediatek",
