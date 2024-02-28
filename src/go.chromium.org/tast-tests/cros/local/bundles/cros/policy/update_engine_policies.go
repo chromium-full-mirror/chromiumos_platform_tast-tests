@@ -211,6 +211,30 @@ func init() {
 				// COM_FOUND_CUJ21_TASK3_WF1
 				Value: "screenplay-50b385e7-4bd5-4ee3-bf3e-f49c6f679540",
 			}},
+		}, {
+			Name: "extended_auto_updates_enabled",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.DeviceExtendedAutoUpdateEnabled{Val: true},
+				},
+				expectedUpdateRequestSubstrings: []string{"extended_okay=\"true\""},
+			},
+		}, {
+			Name: "extended_auto_updates_disabled",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.DeviceExtendedAutoUpdateEnabled{Val: false},
+				},
+				expectedUpdateRequestSubstrings: []string{"extended_okay=\"false\""},
+			},
+		}, {
+			Name: "extended_auto_updates_unset",
+			Val: &updateEngineTestParam{
+				policyValues: []policy.Policy{
+					&policy.DeviceExtendedAutoUpdateEnabled{},
+				},
+				expectedUpdateRequestSubstrings: []string{"extended_okay=\"false\""},
+			},
 		}},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceReleaseLtsTag{}, pci.VerifiedFunctionalityOS),
@@ -220,6 +244,7 @@ func init() {
 			pci.SearchFlag(&policy.ChromeOsReleaseChannelDelegated{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceMetricsReportingEnabled{}, pci.VerifiedFunctionalityOS),
 			pci.SearchFlag(&policy.DeviceQuickFixBuildToken{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.DeviceExtendedAutoUpdateEnabled{}, pci.VerifiedFunctionalityOS),
 		},
 	})
 }
