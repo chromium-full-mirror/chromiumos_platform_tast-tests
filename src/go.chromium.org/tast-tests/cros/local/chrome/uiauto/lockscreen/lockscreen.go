@@ -236,12 +236,9 @@ func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 		return errors.Wrap(err, "failed to find PIN input field unrestricted")
 	}
 
-	// If we can't find the PIN pad, we click the input field and enter the PIN via the keyboard. If
-	// we do find the PIN pad, we use the PIN pad to enter the PIN.
-	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(nodewith.HasClass("LoginPinView"))(ctx); err != nil {
-		if err := ui.WithTimeout(uiTimeout).WaitUntilExists(SimplePinOrPasswordFieldFinder)(ctx); err != nil {
-			return errors.Wrap(err, "failed to find PIN or password box")
-		}
+	// If we find `PIN or password` input field, we click it and enter the PIN via the keyboard.
+	// If we find the PIN pad, we use the PIN pad to enter the PIN.
+	if err := ui.WithTimeout(uiTimeout).WaitUntilExists(SimplePinOrPasswordFieldFinder)(ctx); err == nil {
 		if err := ui.LeftClick(SimplePinOrPasswordFieldFinder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click PIN or password box")
 		}
@@ -252,14 +249,15 @@ func EnterPIN(ctx context.Context, tconn *chrome.TestConn, kb *input.KeyboardEve
 		if err := kb.Type(ctx, PIN); err != nil {
 			return errors.Wrap(err, "failed to type PIN")
 		}
-	} else {
-		//return errors.New("found LoginPinView");
+	} else if err := ui.WithTimeout(uiTimeout).WaitUntilExists(digitFieldFinder)(ctx); err == nil {
 		for i, d := range PIN {
 			button := nodewith.Role(role.Button).Name(string(d))
 			if err := ui.WithTimeout(uiTimeout).DoDefault(button)(ctx); err != nil {
 				return errors.Wrapf(err, "failed to press %q button (Digit %v of PIN)", d, i)
 			}
 		}
+	} else {
+		return errors.New("no PIN input found")
 	}
 	return nil
 }
