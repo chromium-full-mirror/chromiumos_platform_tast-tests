@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/remote/dut"
 	powerpb "go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -49,53 +48,81 @@ func init() {
 }
 
 const (
-	defaultSuspendSeconds = 10
+	defaultSuspendSeconds       = 10
+	defaultRedialTimeoutSeconds = 60
 )
 
-// TODO make a new struct type with name and direction
+// TODO make a new struct type with name and direction.
 var defaultMetrics = []string{"Power.KernelSuspendTimeOnAC", "Power.KernelResumeTimeOnAC", "Power.DisplayAfterResumeDurationMsOnAC"}
 
-// Delay and timeout for waitHistogramsUpdate()
+// Delay and timeout for waitHistogramsUpdate().
 var defaultWaitInterval = time.Duration(2) * time.Second
 var defaultWaitTimeout = time.Duration(40) * time.Second
+
+var remoteCommandTimeout = time.Duration(3) * time.Second
 
 func SuspendPerf(ctx context.Context, s *testing.State) {
 	args := s.Param().(testArgsForSuspendPerf)
 
+	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to connect to the RPC service on the DUT: ", err)
+	}
+	defer cl.Close(ctx)
+
 	// Login and setup
-	if err := prepareDUT(ctx, s); err != nil {
-		s.Fatal("Failed to setup test: ", err)
+	service := powerpb.NewSuspendPerfServiceClient(cl.Conn)
+	if _, err := service.Prepare(ctx, &empty.Empty{}); err != nil {
+		s.Fatal("Failed to login on DUT: ", err)
 	}
 
 	// Get old (before the suspend) histograms if exist. Usually this is empty.
-	older, err := getHistograms(ctx, s, defaultMetrics)
+	older, err := getHistograms(ctx, s, service, defaultMetrics)
 	if err != nil {
 		s.Fatal("Failed to get Histograms from DUT: ", err)
 	}
 
 	prev := older
+	seconds := defaultSuspendSeconds
+
 	for i := 0; i < args.numSuspend; i++ {
 		// Suspend and resume
-		err = suspendDUT(ctx, s, defaultSuspendSeconds)
-		if err != nil {
-			s.Fatal("Could not suspend DUT: ", err)
-		}
-		s.Log("Wait for suspend metrics update")
+		s.Logf("Suspending DUT for %d seconds", seconds)
+		req := powerpb.SuspendRequest{Seconds: int32(seconds)}
+		if res, err := service.Suspend(ctx, &req); err != nil {
+			if res != nil && res.Failed {
+				if res.Output != "" {
+					s.Logf("Suspend command failed, the command output is: %s", res.Output)
+				}
+				s.Fatal("Failed to suspend DUT: ", err)
+			}
+			s.Log("Ignore suspend command error if connection is lost: ", err)
 
-		prev, err = waitHistogramsUpdate(ctx, s, prev)
+			// Reconnect because suspend can disconnect network.
+			cl, err = redialRPC(ctx, s, defaultRedialTimeoutSeconds+seconds)
+			if err != nil {
+				s.Fatal("Failed to reconnect the RPC: ", err)
+			}
+			// defer cl.Close() is already set.
+		}
+		s.Log("Resumed")
+
+		s.Log("Wait for suspend metrics update")
+		service = powerpb.NewSuspendPerfServiceClient(cl.Conn)
+		prev, err = waitHistogramsUpdate(ctx, s, service, prev)
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
 		}
 	}
 	newer := prev
 
-	// Make differences of Histograms
+	// Make differences of Histograms.
 	diff, err := histogram.DiffHistograms(older, newer)
 	if err != nil {
 		s.Fatal("Failed to make difference of histograms: ", err)
 	}
 
-	// Write perf metrics from the Diff Histogram and save it
+	// Write perf metrics from the Diff Histogram and save it.
 	pv := perf.NewValues()
 	writeMetricsFromHistograms(diff, pv)
 	err = pv.Save(s.OutDir())
@@ -104,39 +131,32 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 }
 
-func prepareDUT(ctx context.Context, s *testing.State) error {
-	s.Log("====== Prepare DUT ")
+func redialRPC(ctx context.Context, s *testing.State, timeoutSeconds int) (*rpc.Client, error) {
+	d := s.DUT()
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Set a short timeout to the iteration in case of
+		// any SSH operations blocking for a long time.
+		ctx, cancel := context.WithTimeout(ctx, remoteCommandTimeout)
+		defer cancel()
 
-	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
-	if err != nil {
-		return errors.Wrap(err, "can not connect to the RPC service on the DUT")
+		if err := d.WaitConnect(ctx); err != nil {
+			return errors.Wrap(err, "failed to connect to DUT after suspend")
+		}
+		return nil
+	}, &testing.PollOptions{
+		Timeout:  time.Duration(timeoutSeconds) * time.Second,
+		Interval: defaultWaitInterval,
+	}); err != nil {
+		return nil, err
 	}
-	defer cl.Close(ctx)
 
-	service := powerpb.NewSuspendPerfServiceClient(cl.Conn)
-	_, err = service.Prepare(ctx, &empty.Empty{})
-	if err != nil {
-		return errors.Wrap(err, "failed to guest login")
-	}
-
-	return nil
+	return rpc.Dial(ctx, d, s.RPCHint())
 }
 
-func suspendDUT(ctx context.Context, s *testing.State, seconds int) error {
-	s.Logf("====== Suspending DUT for %d seconds", seconds)
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(seconds+60)*time.Second)
-	defer cancel()
-	if err := dut.SuspendDUT(ctx, s.DUT(), seconds); err != nil {
-		return errors.Wrap(err, "failed to suspend DUT")
-	}
-	s.Log("====== Resumed")
-	return nil
-}
-
-func waitHistogramsUpdate(ctx context.Context, s *testing.State, prev []*histogram.Histogram) ([]*histogram.Histogram, error) {
+func waitHistogramsUpdate(ctx context.Context, s *testing.State, service powerpb.SuspendPerfServiceClient, prev []*histogram.Histogram) ([]*histogram.Histogram, error) {
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		curr, err := getHistograms(ctx, s, defaultMetrics)
+		curr, err := getHistograms(ctx, s, service, defaultMetrics)
 		if err != nil {
 			return err
 		}
@@ -159,19 +179,11 @@ func waitHistogramsUpdate(ctx context.Context, s *testing.State, prev []*histogr
 		return nil, err
 	}
 
-	return getHistograms(ctx, s, defaultMetrics)
+	return getHistograms(ctx, s, service, defaultMetrics)
 }
 
-func getHistograms(ctx context.Context, s *testing.State, names []string) ([]*histogram.Histogram, error) {
-	cl, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
-	if err != nil {
-		return nil, errors.Wrap(err, "can not connect to the RPC service on the DUT")
-	}
-	defer cl.Close(ctx)
-
+func getHistograms(ctx context.Context, s *testing.State, service powerpb.SuspendPerfServiceClient, names []string) ([]*histogram.Histogram, error) {
 	var hists []*histogram.Histogram
-	service := powerpb.NewSuspendPerfServiceClient(cl.Conn)
-
 	for _, n := range names {
 		hist, err := getHistogram(ctx, s, service, n)
 		if err != nil {

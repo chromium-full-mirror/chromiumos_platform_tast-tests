@@ -18,6 +18,22 @@ service SuspendPerfService {
 
   rpc GetHistogram(HistogramRequest)
       returns (tast.common.chrome.histogram.histogrampb.Histogram) {}
+
+  rpc Suspend(SuspendRequest) returns (SuspendResponse) {}
 }
 
+// HistogramRequest is for passing the name of Histogram to GetHistogram().
 message HistogramRequest { string name = 1; }
+
+// SuspendRequest is for passing the seconds of suspend duration to Suspend().
+message SuspendRequest { int32 seconds = 1; }
+
+// SuspendResponse is for notifying result of Suspend() if it fails to
+// execute command or command failure with its output.
+// Since Suspend() will disconnect the network, if it works successfully,
+// the caller will receive a network error. But if it fails, Suspend() also
+// need to notice it failed to suspend.
+message SuspendResponse {
+  bool failed = 1;
+  string output = 2;
+}
