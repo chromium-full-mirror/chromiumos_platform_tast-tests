@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -63,6 +64,9 @@ const (
 	// List of fixture names for video conferencing testing with fake VC extension installed.
 	LoggedInWithFakeVCExtension       = "loggedInWithFakeVCExtension"
 	LoggedInLacrosWithFakeVCExtension = "loggedInLacrosWithFakeVCExtension"
+
+	// PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder is a fixture used for power measurements with standard power api.
+	PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder = "powerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder"
 )
 
 type platformEffectLevel int
@@ -389,6 +393,33 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: PowerLoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
+		Desc: "Log in with a fake powerloadtest user, setup power, disable wifi and screen recorder",
+		Contacts: []string{
+			"chromeos-platform-power@google.com",
+			"xiuwen@chromium.org",
+		},
+		Impl: setup.NewPowerUIFixture(setup.PowerTestOptions{
+			NightLight:         setup.DisableNightLight,
+			DarkTheme:          setup.EnableLightTheme,
+			KeyboardBrightness: setup.SetKbBrightnessToZero,
+			Wifi:               setup.DisableWifiInterfaces,
+		}, setup.PowerFixtureOptions{
+			BrowserType:     browser.TypeAsh,
+			EnableGAIALogin: true,
+			BrowserExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("VCBackgroundReplace"),
+			},
+		}),
+		Parent:          LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
+		SetUpTimeout:    chrome.GAIALoginTimeout + setup.SetUpTimeout,
+		ResetTimeout:    setup.ResetTimeout,
+		TearDownTimeout: setup.TearDownTimeout,
+		PreTestTimeout:  setup.PreTestTimeout,
+		PostTestTimeout: setup.PostTestTimeout,
 	})
 }
 
