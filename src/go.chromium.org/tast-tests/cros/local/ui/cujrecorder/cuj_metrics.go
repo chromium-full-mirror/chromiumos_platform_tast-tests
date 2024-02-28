@@ -54,6 +54,10 @@ func CUJAshCommonMetricConfigs() []MetricConfig {
 		// Desk Metrics.
 		NewCustomMetricConfig("Ash.Desks.AnimationLatency.DeskActivation", "ms", perf.SmallerIsBetter),
 		NewSmoothnessMetricConfig("Ash.Desks.AnimationSmoothness.DeskActivation"),
+		NewEnumCustomMetricConfig("Ash.Desks.DesksSwitchScreenshotResult",
+			map[int64]string{
+				0: "Failure",
+				1: "Success"}),
 
 		// Other metrics to monitor.
 		NewLatencyMetricConfig("Ash.DragWindowFromShelf.PresentationTime"),
