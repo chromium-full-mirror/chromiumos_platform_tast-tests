@@ -119,12 +119,12 @@ func DisableArc(ctx context.Context, s *testing.State) {
 
 func turnOffPlayStore(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
-	removePlayStoreButton := nodewith.Name("Remove Google Play Store").Role(role.Button)
+	removePlayStoreButton := nodewith.Name("Remove Google Play and Android apps").Role(role.Button)
 	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "androidAppsDetails", ui.Exists(removePlayStoreButton)); err != nil {
 		return errors.Wrap(err, "failed to launch apps settings page")
 	}
 	return uiauto.Combine("turn off Play Store",
 		ui.LeftClick(removePlayStoreButton),
-		ui.LeftClick(nodewith.Name("Remove Android apps").Role(role.Button)),
+		ui.LeftClick(nodewith.Name("Remove").Role(role.Button)),
 	)(ctx)
 }
