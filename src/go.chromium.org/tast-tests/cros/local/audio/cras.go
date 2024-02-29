@@ -444,6 +444,11 @@ func (c *Cras) SetNoiseCancellationEnabled(ctx context.Context, enabled bool) er
 	return c.call(ctx, "SetNoiseCancellationEnabled", enabled).Err
 }
 
+// SetStyleTransferEnabled enables or disables style transfer.
+func (c *Cras) SetStyleTransferEnabled(ctx context.Context, enabled bool) error {
+	return c.call(ctx, "SetStyleTransferEnabled", enabled).Err
+}
+
 // GetFeatureFlagForTest returns the enabled status of the given feature as seen by CRAS.
 func (c *Cras) GetFeatureFlagForTest(ctx context.Context, flagName string) (enabled bool, err error) {
 	err = c.call(ctx, "GetFeatureFlagForTest", flagName).Store(&enabled)

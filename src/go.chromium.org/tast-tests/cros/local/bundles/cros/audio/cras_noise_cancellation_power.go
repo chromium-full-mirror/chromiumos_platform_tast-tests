@@ -102,6 +102,39 @@ func init() {
 				},
 			},
 			{
+				Name: "aec_nc_ast",
+				Val: crasNoiseCancellationPowerParam{
+					crasSetUp: func(ctx context.Context, s *testing.State) {
+						cras, err := audio.RestartCras(ctx)
+						if err != nil {
+							s.Fatal("Failed to restart CRAS: ", err)
+						}
+						if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
+							s.Fatal("Cannot install nc-ap-dlc: ", err)
+						}
+						if err := dlc.Install(ctx, "nuance-dlc", ""); err != nil {
+							s.Fatal("Cannot install nuance-dlc: ", err)
+						}
+						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
+							s.Fatal("Failed to set internal mic active: ", err)
+						}
+						if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+							s.Fatal("Failed to set internal speaker active: ", err)
+						}
+						if err := cras.SetNoiseCancellationEnabled(ctx, true); err != nil {
+							s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
+						}
+						if err := cras.SetStyleTransferEnabled(ctx, true); err != nil {
+							s.Fatal("Failed to SetStyleTransferEnabled: ", err)
+						}
+						if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
+							s.Fatal("Faild to WaitUntilFeatureFlagHasValue: ", err)
+						}
+					},
+					extraCrasClientArgs: []string{"--effects=aec"},
+				},
+			},
+			{
 				Name: "dsp_aec",
 				Val: crasNoiseCancellationPowerParam{
 					crasSetUp: func(ctx context.Context, s *testing.State) {
