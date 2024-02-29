@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/async"
@@ -101,11 +102,11 @@ func (r *PeakMemoryWatcher) Start(ctx context.Context) error {
 			// Get RSS size
 			statusFile := "/proc/" + strconv.Itoa(r.pid) + "/status"
 			currentRss, currentMaxGpu := 0.0, 0.0
-			f, err := os.Open(statusFile)
+			statusFileContents, err := os.ReadFile(statusFile)
 			if err != nil {
-				testing.ContextLogf(ctx, "Couldn't open process status file: %+v", err)
+				testing.ContextLogf(ctx, "Couldn't read process status file: %+v", err)
 			} else {
-				scanner := bufio.NewScanner(f)
+				scanner := bufio.NewScanner(strings.NewReader(string(statusFileContents[:])))
 				for scanner.Scan() {
 					re := regexp.MustCompile(`\bVmRSS:\s*(\d+)`)
 					matches := re.FindStringSubmatch(scanner.Text())
@@ -124,15 +125,14 @@ func (r *PeakMemoryWatcher) Start(ctx context.Context) error {
 			fdinfoDir := "/proc/" + strconv.Itoa(r.pid) + "/fdinfo/"
 			files, _ := ioutil.ReadDir(fdinfoDir)
 			for _, file := range files {
-				f, err := os.Open(fdinfoDir + file.Name())
+				fdinfoContents, err := os.ReadFile(fdinfoDir + file.Name())
 				if err != nil {
-					testing.ContextLogf(ctx, "Couldn't open process fdinfo file: %+v", err)
+					testing.ContextLogf(ctx, "Couldn't read process fdinfo file: %+v", err)
 					continue
 				}
-				defer f.Close()
 
 				total, shared := 0.0, 0.0
-				scanner := bufio.NewScanner(f)
+				scanner := bufio.NewScanner(strings.NewReader(string(fdinfoContents[:])))
 				for scanner.Scan() {
 					re := regexp.MustCompile(`\bdrm-(total|shared)-memory:\s*(\d+)`)
 					matches := re.FindStringSubmatch(scanner.Text())
