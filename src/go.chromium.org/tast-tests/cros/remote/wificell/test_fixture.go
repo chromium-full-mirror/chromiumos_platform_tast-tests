@@ -917,13 +917,16 @@ func (tf *TestFixture) UniqueAPName() string {
 // ConfigureAPOnRouterID is an extended version of ConfigureAP, allowing to choose router
 // to establish the AP on.
 func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx RouterIdx, ops []hostapd.Option, fac security.ConfigFactory, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
-	return tf.ConfigureAPOnRouterIDWithConfs(ctx, idx, [][]hostapd.Option{ops}, []security.ConfigFactory{fac}, enableDNS, enableHTTP)
+	return tf.ConfigureAPOnRouterIDWithConfs(ctx, idx, [][]hostapd.Option{ops}, []security.ConfigFactory{fac}, "", true, enableDNS, enableHTTP)
 }
 
 // ConfigureAPOnRouterIDWithConfs is an extended version of ConfigureAPOnRouterID, allowing
 // to choose router and interfaces to establish the AP on, for example, hostapd controls multiple interfaces.
 // opsList[i] and facList[i] are the hostapd options and security configurations of Interface i
-func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx RouterIdx, opsList [][]hostapd.Option, facList []security.ConfigFactory, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
+// If enableDHCP is true, the DHCP server is installed on dhcpIface
+// When dhcpIface is empty, the DHCP server uses the interface of the hostapd server if the hostapd server has
+// only one interface; otherwise it is installed on a bridge which connects all hostapd interfaces
+func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx RouterIdx, opsList [][]hostapd.Option, facList []security.ConfigFactory, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "tf.ConfigureAPOnRouterIDWithConfs")
 	defer st.End()
 
@@ -991,7 +994,10 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 			return nil, errors.Wrap(err, "failed to get a bridge")
 		}
 		tf.routers[idx].br = &bridgeData{r: router, br: bridge}
-		ap, err = StartAPIface(ctx, r, name, bridge, enableDNS, enableHTTP, configs...)
+		if dhcpIface == "" {
+			dhcpIface = bridge
+		}
+		ap, err = StartAPIface(ctx, r, name, dhcpIface, enableDHCP, enableDNS, enableHTTP, configs...)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start APIface")
 		}
@@ -999,7 +1005,7 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 			router.BindIfaceToBridge(ctx, iface, bridge)
 		}
 	} else {
-		ap, err = StartAPIface(ctx, r, name, "", enableDNS, enableHTTP, configs...)
+		ap, err = StartAPIface(ctx, r, name, dhcpIface, enableDHCP, enableDNS, enableHTTP, configs...)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to start APIface")
 		}
@@ -1957,7 +1963,7 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		ap, err := StartAPIface(ctx, r.object, name, "", false, false, config)
+		ap, err := StartAPIface(ctx, r.object, name, "", false, false, false, config)
 		if err != nil {
 			return errors.Wrap(err, "failed to start APIface")
 		}

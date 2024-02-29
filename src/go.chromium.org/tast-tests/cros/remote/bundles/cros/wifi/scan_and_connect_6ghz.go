@@ -171,7 +171,7 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 			opsList = append(opsList, ap6GHzOpts)
 			secConfFacList = append(secConfFacList, secConfFac)
 		}
-		ap, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, 0, opsList, secConfFacList, false, false)
+		ap, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, 0, opsList, secConfFacList, "", true, false, false)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to configure the APs")
 		}

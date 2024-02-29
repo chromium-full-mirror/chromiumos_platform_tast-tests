@@ -118,17 +118,24 @@ func (h *APIface) ServerSubnet() *net.IPNet {
 	return &net.IPNet{IP: ip, Mask: mask}
 }
 
+// Name returns the name of the AP.
+func (h *APIface) Name() string {
+	return h.name
+}
+
 // StartAPIface starts the service.
 // After started, the caller should call h.Stop() at the end, and use the shortened ctx
 // (provided by h.ReserveForStop()) before h.Stop() to reserve time for h.Stop() to run.
 // If dhcpIface is empty, the DHCP server uses the interface of the hostapd server
-func StartAPIface(ctx context.Context, r router.Base, name, dhcpIface string, enableDNS, enableHTTP bool, confs ...*hostapd.Config) (_ *APIface, retErr error) {
+func StartAPIface(ctx context.Context, r router.Base, name, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool, confs ...*hostapd.Config) (_ *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "StartAPIface")
 	defer st.End()
 
 	var h APIface
 	var err error
+
 	h.name = name
+
 	// Validate router support.
 	if rSupported, ok := r.(supportedRouter); ok {
 		h.router = rSupported
@@ -150,40 +157,40 @@ func StartAPIface(ctx context.Context, r router.Base, name, dhcpIface string, en
 	ctx, cancel := h.hostapd.ReserveForClose(ctx)
 	defer cancel()
 	h.ifaces = h.hostapd.Interfaces()
-
-	h.subnetIdx, err = reserveSubnetIdx()
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if retErr != nil {
-			freeSubnetIdx(h.subnetIdx)
-		}
-	}()
-
-	var dnsOpt *dhcp.DNSOption
-	if enableDNS {
-		dnsOpt = new(dhcp.DNSOption)
-		dnsOpt.Port = dnsPort
-		dnsOpt.NameServers = []string{}
-		dnsOpt.ResolvedHost = ""
-		dnsOpt.ResolveHostToIP = h.ServerIP()
-	}
-	if dhcpIface == "" {
-		dhcpIface = h.Interface()
-	}
-	h.dhcpd, err = h.router.StartDHCP(ctx, name, dhcpIface, h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), dnsOpt)
-	if err != nil {
-		return nil, err
-	}
-
-	if enableHTTP {
-		h.httpServer, err = h.router.StartHTTP(ctx, name, dhcpIface, httpRedirectURL, httpPort, http.StatusFound)
+	if enableDHCP {
+		h.subnetIdx, err = reserveSubnetIdx()
 		if err != nil {
 			return nil, err
 		}
-	}
+		defer func() {
+			if retErr != nil {
+				freeSubnetIdx(h.subnetIdx)
+			}
+		}()
 
+		var dnsOpt *dhcp.DNSOption
+		if enableDNS {
+			dnsOpt = new(dhcp.DNSOption)
+			dnsOpt.Port = dnsPort
+			dnsOpt.NameServers = []string{}
+			dnsOpt.ResolvedHost = ""
+			dnsOpt.ResolveHostToIP = h.ServerIP()
+		}
+		if dhcpIface == "" {
+			dhcpIface = h.Interface()
+		}
+		h.dhcpd, err = h.router.StartDHCP(ctx, name, dhcpIface, h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), dnsOpt)
+		if err != nil {
+			return nil, err
+		}
+
+		if enableHTTP {
+			h.httpServer, err = h.router.StartHTTP(ctx, name, dhcpIface, httpRedirectURL, httpPort, http.StatusFound)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
 	return &h, nil
 }
 
