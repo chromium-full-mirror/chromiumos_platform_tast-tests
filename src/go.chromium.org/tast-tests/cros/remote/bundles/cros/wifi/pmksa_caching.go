@@ -6,6 +6,8 @@ package wifi
 
 import (
 	"context"
+	"encoding/hex"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
@@ -20,12 +22,13 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type pmksaCachingTestCase struct {
 	apOpts     []hostapd.Option
-	secOpts    []wpaeap.Option
 	secConfFac security.ConfigFactory
 	authAlgo   wpa.AuthAlgo // Authentication algorithm used if PMKSA caching doesn't present.
 	checkEap   bool         // check EAP by monitoring wpa_supplicant signal in addition to checking pcap.
@@ -42,7 +45,7 @@ var (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: PMKSACaching,
-		Desc: "Verifies that 802.1x authentication (EAP exchange) or non-Open authentication is bypassed and PMKSA is done using PMK caching when it is available",
+		Desc: "Verifies that 802.1x authentication (EAP exchange) or non-Open authentication is bypassed if FT is enabled or PMKSA is done using PMK caching when it is available",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
 			"junyuu@chromium.org",             // Test author
@@ -52,7 +55,6 @@ func init() {
 		Attr:            []string{"group:wificell", "wificell_func", "wificell_unstable"},
 		TestBedDeps:     []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:     []string{wificell.ShillServiceName},
-		Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc, tdreq.WiFiProcPassMatfuncBeforeUpdates},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		Params: []testing.Param{
@@ -67,6 +69,7 @@ func init() {
 					authAlgo: wpa.AuthAlgoOpen,
 					checkEap: true,
 				},
+				Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
 				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
@@ -82,6 +85,7 @@ func init() {
 					authAlgo: wpa.AuthAlgoOpen,
 					checkEap: true,
 				},
+				Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
 				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
 			{
@@ -97,44 +101,77 @@ func init() {
 					),
 					authAlgo: wpa.AuthAlgoSAE,
 				},
+				Fixture:         wificell.FixtureID(wificell.TFFeaturesNone),
 				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 			},
+			{
+				Name:              "ftsae",
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiFT()),
+				Val: pmksaCachingTestCase{
+					apOpts: []hostapd.Option{
+						hostapd.PMF(hostapd.PMFRequired),
+					},
+					secConfFac: wpa.NewConfigFactory(
+						"chromeos", wpa.Mode(wpa.ModePureWPA3),
+						wpa.Ciphers2(wpa.CipherCCMP), wpa.FTMode(wpa.FTModePure),
+					),
+					authAlgo: wpa.AuthAlgoFT,
+				},
+				Fixture:         wificell.FixtureID(wificell.TFFeaturesBridgeAndVeth),
+				VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
+			},
+			// wpa_supplicant disables PMKSA caching with FT-EAP by default due
+			// to known interoperability issues with APs
 		},
 	})
 }
 
 func PMKSACaching(ctx context.Context, s *testing.State) {
 	/*
-	 This test verifies that 802.1X authentication (EAP exchange) or non-Open
-	 authentication is bypassed and PMKSA is done using PMK caching when it
-	 is available by using the following steps:
-	 1. Disable background and foreground scan so that the DUT doesn't
-	    accidentally roam.
-	 2. Set up an AP "AP0" using with random MAC/SSID and EAP or non-Open
-	    authentication.
-	 3. Connect the DUT to AP0.
-	 4. Conduct a ping test to ensure we are connected to AP0.
-	 5. Set up another AP "AP1" using random MAC, the same SSID, the same
-	    EAP or non-Open authentication and WiFi mode as AP0.
-	 6.1. While the DUT connected to AP0, request DUT to discover then roam
-	      to AP1 using BSS TM Request.
-	 6.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
-	      AP1.
-	 6.3. Assert that EAP or non-Open authentication is NOT skipped during the
-	      roaming to AP1 if the test case is 802.1X or non-Open, respectively.
-	 7.1. While the DUT connected to AP1, request DUT to roam to AP0 using
-	      BSS TM Request.
-	 7.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
-	      AP0, which indicates a roaming.
-	 7.3. Assert that EAP or non-Open authentication is skipped during the
-	      roaming to AP0 if the test case is 802.1X or non-Open, respectively.
-	 8.1. Deconfigure AP0.
-	 8.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
-	      AP1, which indicates a roaming.
-	 8.3. Assert that EAP or non-Open authentication is skipped during the
-	      association to AP1.
-	 9. Verify the DUT is connected to AP1 within timeout.
-	 10. Clean up state and revert the steps from (1).
+		 This test verifies that 802.1X authentication (EAP exchange) or non-Open
+		 authentication is bypassed
+		 a. if FT is enabled
+		 b. or PMKSA is done using PMK caching when it is available
+		 by using the following steps:
+		 1. Disable background and foreground scan so that the DUT doesn't
+		    accidentally roam.
+		 2. Set up an AP "AP0" using with random MAC/SSID and EAP or non-Open
+		    authentication.
+		 3. Connect the DUT to AP0.
+		 4. Conduct a ping test to ensure we are connected to AP0.
+		 5. Set up another AP "AP1" using random MAC, the same SSID, the same
+		    EAP or non-Open authentication and WiFi mode as AP0.
+		If FT is disabled:
+		 6.1. While the DUT connected to AP0, request DUT to discover then roam
+		      to AP1 using BSS TM Request.
+		 6.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
+		      AP1.
+		 6.3. Assert that EAP or non-Open authentication is NOT skipped during the
+		      roaming to AP1 if the test case is 802.1X or non-Open, respectively.
+		 7.1. While the DUT connected to AP1, request DUT to roam to AP0 using
+		      BSS TM Request.
+		 7.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
+		      AP0, which indicates a roaming.
+		 7.3. Assert that EAP or non-Open authentication is skipped during the
+		      roaming to AP0 if the test case is 802.1X or non-Open, respectively.
+		 8.1. Deconfigure AP0.
+		 8.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
+		      AP1, which indicates a connection.
+		 8.3. Assert that EAP or non-Open authentication is skipped during the
+		      association to AP1.
+		 9. Verify the DUT is connected to AP1 within timeout.
+		 10. Clean up state and revert the steps from (1).
+		If FT is enabled, the DUT uses FT instead of PMKSA caching during roaming,
+		so PMKSA caching can only be verfied when AP1 is torn down and the DUT
+		reconnects to AP0:
+		 6.1. Deconfigure AP1.
+		 6.2. Assert that the Shill property WiFiBSSID is equal to the BSSID from
+		      AP0, which indicates a connection.
+		 6.3. Assert that non-Open authentication is skipped during the association
+		      to AP0.
+		 7. Verify the DUT is connected to AP0 within timeout.
+		 8. Clean up state and revert the steps from (1).
 	*/
 	const (
 		ap0Channel  = 1
@@ -161,7 +198,6 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to start capturer: ", err)
 		}
 		if checkEap {
-			expectedAuthAlgo = wpa.AuthAlgoOpen
 			skippedRecver, err = tf.WifiClient().EAPAuthSkipped(ctx)
 			if err != nil {
 				s.Fatal("Failed to create a EAP authentication watcher: ", err)
@@ -249,7 +285,35 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 	ap0Opts := buildHostapdOpts(ap0Channel, ap0BSSID, tc.apOpts)
 	ap1Opts := buildHostapdOpts(ap1Channel, ap1BSSID, tc.apOpts)
 
-	ap0, err := tf.ConfigureAP(ctx, ap0Opts, tc.secConfFac)
+	var br []string
+	var dhcpIface string
+	ftEnabled := tc.authAlgo == wpa.AuthAlgoFT
+	if ftEnabled {
+		const (
+			key0 = "1f1e1d1c1b1a191817161514131211100f0e0d0c0b0a09080706050403020100"
+			key1 = "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+			mdID = "a1b2"
+		)
+		var (
+			id0 = hex.EncodeToString(mac0)
+			id1 = hex.EncodeToString(mac1)
+		)
+		br, err = tf.GetBridgesOnRouterID(wificell.DefaultRouter)
+		if err != nil {
+			s.Fatal("Failed to get bridge names on router: ", err)
+		}
+		dhcpIface = br[0]
+		ap0Opts = append(ap0Opts, hostapd.MobilityDomain(mdID), hostapd.NASIdentifier(id0), hostapd.R1KeyHolder(id0),
+			hostapd.R0KHs(fmt.Sprintf("%s %s %s", mac1, id1, key0)),
+			hostapd.R1KHs(fmt.Sprintf("%s %s %s", mac1, mac1, key1)),
+			hostapd.Bridge(br[0]))
+		ap1Opts = append(ap1Opts, hostapd.MobilityDomain(mdID), hostapd.NASIdentifier(id1), hostapd.R1KeyHolder(id1),
+			hostapd.R0KHs(fmt.Sprintf("%s %s %s", mac0, id0, key1)),
+			hostapd.R1KHs(fmt.Sprintf("%s %s %s", mac0, mac0, key0)),
+			hostapd.Bridge(br[1]))
+	}
+
+	ap0, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, wificell.DefaultRouter, [][]hostapd.Option{ap0Opts}, []security.ConfigFactory{tc.secConfFac}, dhcpIface, true, false, false)
 	if err != nil {
 		s.Fatal("Failed to configure AP0: ", err)
 	}
@@ -337,10 +401,10 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 	// Expect EAP or authentication is not skipped during DUT's association to
 	// newly configured AP1.
-	checkAuthSkipped(roamCtx, s, tc.authAlgo, tc.checkEap, false, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
+	checkAuthSkipped(roamCtx, s, tc.authAlgo, tc.checkEap, ftEnabled, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
 		// Configure AP1 after ExpectShillProperty() because a roaming
 		// may happen automatically right after AP1 is up.
-		ap1, err = tf.ConfigureAP(actionCtx, ap1Opts, tc.secConfFac)
+		ap1, err = tf.ConfigureAPOnRouterIDWithConfs(actionCtx, wificell.DefaultRouter, [][]hostapd.Option{ap1Opts}, []security.ConfigFactory{tc.secConfFac}, "", !ftEnabled, false, false)
 		if err != nil {
 			s.Fatal("Failed to configure AP1: ", err)
 		}
@@ -375,53 +439,79 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Freq Opts: ", err)
 	}
 
-	// Expect EAP or authentication is skipped during DUT roaming back to
-	// previously connected AP0.
-	checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap0Channel, ap0FreqOps, func(actionCtx context.Context) {
-		req := requestParams
-		req.Neighbors = []string{ap0BSSID}
-
-		s.Logf("Sending BSS Transition Management Request from AP1 %s to DUT %s", mac1, clientMAC)
-		if err := ap1.SendBSSTMRequest(actionCtx, clientMAC.String(), req); err != nil {
-			s.Fatal("Failed to send BSS TM Request: ", err)
+	pollVerifyConnection := func(ctx context.Context, ap *wificell.APIface) error {
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			return tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, ap)
+		}, &testing.PollOptions{
+			Timeout:  time.Second * 20,
+			Interval: time.Second,
+		}); err != nil {
+			return errors.Wrap(err, "failed to verify the connection")
 		}
-
-		s.Log("Waiting for falling back to AP0")
-		if _, err := waitForRoam(); err != nil {
-			s.Fatal("Failed to wait for falling back to AP0: ", err)
-		}
-	})
-
-	// Expect the DUT to roam to AP1 within timeout.
-	roamCtx, cancel = context.WithTimeout(ctx, roamTimeout)
-	defer cancel()
-	waitForRoam, err = tf.WifiClient().ExpectShillProperty(roamCtx, connResp.ServicePath, roamProps(ap1BSSID), nil)
-	if err != nil {
-		s.Fatal("Failed to create a property watcher on DUT: ", err)
+		return nil
 	}
 
-	// Expect EAP or authentication is skipped during DUT roaming back to
-	// previously connected AP1 after deconfiguring AP0.
-	checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
-		if err := tf.DeconfigAP(actionCtx, ap0); err != nil {
-			s.Fatal("Failed to deconfig AP: ", err)
-		}
-		ap0 = nil
+	if !ftEnabled {
+		// Expect EAP or authentication is skipped during DUT roaming back to
+		// previously connected AP0.
+		checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap0Channel, ap0FreqOps, func(actionCtx context.Context) {
+			req := requestParams
+			req.Neighbors = []string{ap0BSSID}
 
-		s.Log("Waiting for falling back to AP1")
-		if _, err := waitForRoam(); err != nil {
-			s.Fatal("Failed to wait for falling back to AP1: ", err)
-		}
-	})
+			s.Logf("Sending BSS Transition Management Request from AP1 %s to DUT %s", mac1, clientMAC)
+			if err := ap1.SendBSSTMRequest(actionCtx, clientMAC.String(), req); err != nil {
+				s.Fatal("Failed to send BSS TM Request: ", err)
+			}
 
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		return tf.VerifyConnection(ctx, ap1)
-	}, &testing.PollOptions{
-		Timeout:  time.Second * 20,
-		Interval: time.Second,
-	}); err != nil {
-		s.Error("Failed to wait for the connection to recover: ", err)
+			s.Log("Waiting for falling back to AP0")
+			if _, err := waitForRoam(); err != nil {
+				s.Fatal("Failed to wait for falling back to AP0: ", err)
+			}
+		})
+
+		// Expect the DUT to roam to AP1 within timeout.
+		roamCtx, cancel = context.WithTimeout(ctx, roamTimeout)
+		defer cancel()
+		waitForRoam, err = tf.WifiClient().ExpectShillProperty(roamCtx, connResp.ServicePath, roamProps(ap1BSSID), nil)
+		if err != nil {
+			s.Fatal("Failed to create a property watcher on DUT: ", err)
+		}
+
+		// Expect EAP or authentication is skipped during DUT roaming back to
+		// previously connected AP1 after deconfiguring AP0.
+		checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
+			s.Log("Tearing down AP0")
+			if err := tf.DeconfigAP(actionCtx, ap0); err != nil {
+				s.Fatal("Failed to deconfig AP: ", err)
+			}
+			ap0 = nil
+
+			s.Log("Waiting for falling back to AP1")
+			if _, err := waitForRoam(); err != nil {
+				s.Fatal("Failed to wait for falling back to AP1: ", err)
+			}
+		})
+
+		if err = pollVerifyConnection(ctx, ap1); err != nil {
+			s.Error("Failed to wait for the connection to recover: ", err)
+		}
+	} else {
+		// Expect EAP or authentication is skipped during DUT roaming back to
+		// previously connected AP1 after deconfiguring AP0.
+		checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap0Channel, ap0FreqOps, func(actionCtx context.Context) {
+			s.Log("Tearing down AP1")
+			if err := tf.DeconfigAP(actionCtx, ap1); err != nil {
+				s.Fatal("Failed to deconfig AP: ", err)
+			}
+			ap1 = nil
+
+			s.Log("Waiting for falling back to AP0")
+			if _, err := waitForRoam(); err != nil {
+				s.Fatal("Failed to wait for falling back to AP0: ", err)
+			}
+		})
+		if err = pollVerifyConnection(ctx, ap0); err != nil {
+			s.Error("Failed to wait for the connection to recover: ", err)
+		}
 	}
-
-	s.Log("Tearing down")
 }
