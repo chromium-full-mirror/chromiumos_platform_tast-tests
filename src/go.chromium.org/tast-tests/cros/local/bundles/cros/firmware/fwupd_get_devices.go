@@ -21,7 +21,7 @@ func init() {
 			"chromeos-fwupd@google.com", // CrOS FWUPD
 			"rishabhagr@chromium.org",
 		},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"fwupd"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
