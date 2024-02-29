@@ -151,16 +151,16 @@ func (c *Service) VerifyMirrorMode(ctx context.Context, req *empty.Empty) (*empt
 
 // PlayVideo resumes the paused video.
 func (c *Service) PlayVideo(ctx context.Context, req *typec.KeyPath) (*empty.Empty, error) {
-	if err := c.conn.Call(ctx, nil, "playRepeatedly", req.Path, true, true); err != nil {
-		return nil, errors.Wrap(err, "failed to play video")
-	}
-	playStatus := true
+	var playStatus bool
 	videoElement := "document.getElementsByTagName('video')[0]"
 	if err := c.conn.Eval(ctx, videoElement+".paused", &playStatus); err != nil {
 		return nil, errors.Wrap(err, "failed to get video play status")
 	}
 	if playStatus {
-		return nil, errors.New("failed: video is not played")
+		videoElement := "document.getElementsByTagName('video')[0].play()"
+		if err := c.conn.Eval(ctx, videoElement, nil); err != nil {
+			return nil, errors.Wrap(err, "failed to play video")
+		}
 	}
 	return &empty.Empty{}, nil
 }
