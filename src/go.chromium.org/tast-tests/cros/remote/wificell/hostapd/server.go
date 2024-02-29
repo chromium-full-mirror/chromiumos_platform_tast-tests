@@ -21,8 +21,8 @@ import (
 
 	"github.com/google/gopacket/layers"
 
-	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/common/network/daemonutil"
+	"go.chromium.org/tast-tests/cros/remote/fileutils"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -339,8 +339,8 @@ func (s *Server) hostapdCLI(ctx context.Context, args ...string) (string, error)
 // this Server interface ifaceName.
 func (s *Server) hostapdCLIIface(ctx context.Context, ifaceName string, args ...string) (string, error) {
 	fullArgs := append([]string{
-		"-p" + s.ctrlPath(),
-		"-i" + ifaceName,
+		"-p", s.ctrlPath(),
+		"-i", ifaceName,
 	}, args...)
 	raw, err := s.host.CommandContext(ctx, hostapdCLI, fullArgs...).Output()
 	if err != nil {
