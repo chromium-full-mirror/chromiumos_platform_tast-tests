@@ -8,7 +8,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"path/filepath"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
@@ -33,11 +35,27 @@ func init() {
 			{
 				Name: "nc",
 				Val: offlinePipelineBenchmarkParam{
-					dlcID:           "nc-ap-dlc",
-					dlcSharedObject: "libdenoiser.so",
+					dlcID:             "nc-ap-dlc",
+					dlcSharedObject:   "libdenoiser.so",
+					pluginName:        "plugin_processor_create",
+					blockSizeFrames:   480,
+					inputWavFrameRate: 48000,
 				},
 				ExtraSoftwareDeps: []string{
 					"amd64", // libdenoiser.so is amd64 only.
+				},
+			},
+			{
+				Name: "ast",
+				Val: offlinePipelineBenchmarkParam{
+					dlcID:             "nuance-dlc",
+					dlcSharedObject:   "libstyle.so",
+					pluginName:        "plugin_processor_create_ast",
+					blockSizeFrames:   480,
+					inputWavFrameRate: 24000,
+				},
+				ExtraSoftwareDeps: []string{
+					"amd64", // libstyle.so is amd64 only.
 				},
 			},
 		},
@@ -45,8 +63,11 @@ func init() {
 }
 
 type offlinePipelineBenchmarkParam struct {
-	dlcID           string
-	dlcSharedObject string
+	dlcID             string
+	dlcSharedObject   string
+	pluginName        string
+	blockSizeFrames   int
+	inputWavFrameRate int
 }
 
 // OfflinePipelineBenchmark benchmarks audio_processor modules using offline-pipeline.
@@ -72,7 +93,7 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 		"sox",
 		"-n", "-L", "-e", "signed-integer",
 		"-b", "16",
-		"-r", "48000",
+		"-r", strconv.Itoa(param.inputWavFrameRate),
 		"-c", "1",
 		inputWav,
 		"synth", "60",
@@ -85,6 +106,8 @@ func OfflinePipelineBenchmark(ctx context.Context, s *testing.State) {
 	stdout, err := testexec.CommandContext(
 		ctx,
 		"offline-pipeline", "--json",
+		fmt.Sprintf("--plugin-name=%s", param.pluginName),
+		fmt.Sprintf("--block-size-frames=%d", param.blockSizeFrames),
 		sharedObject, inputWav, outputWav,
 	).Output(testexec.DumpLogOnError)
 	if err != nil {
