@@ -371,6 +371,7 @@ func init() {
 			}, {
 				Name:              "network",
 				ExtraHardwareDeps: common.ReleasedDeviceDeps,
+				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
 				Val: probeFunctionTestParam{
 					categories:           []string{"cellular", "ethernet", "wireless"},
 					allowExtraComponents: true,
@@ -379,6 +380,7 @@ func init() {
 				Name:              "network_private",
 				Fixture:           fixture.DecryptProbeConfig,
 				ExtraHardwareDeps: common.UnreleasedDeviceDeps,
+				ExtraSoftwareDeps: []string{"no_kernel_upstream"},
 				Val: probeFunctionTestParam{
 					categories:           []string{"cellular", "ethernet", "wireless"},
 					allowExtraComponents: true,
