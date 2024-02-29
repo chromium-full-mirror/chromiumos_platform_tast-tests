@@ -308,7 +308,7 @@ func changeLinkCapturingSetting(ctx context.Context, tconn *chrome.TestConn, cr 
 	const (
 		testAppName                = "Link Capturing Test App"
 		testAppID                  = "cacnggingocklkpmmmniidnncakhjgob"
-		linkCapturingOpenInApp     = "Open in " + testAppName
+		linkCapturingOpenInApp     = "Open in " + testAppName + " app"
 		linkCapturingOpenInBrowser = "Open in Chrome browser"
 	)
 
