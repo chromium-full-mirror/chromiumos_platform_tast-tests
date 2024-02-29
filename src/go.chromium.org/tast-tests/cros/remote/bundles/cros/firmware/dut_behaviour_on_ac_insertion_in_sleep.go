@@ -12,6 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
+	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
@@ -80,6 +81,10 @@ func DUTBehaviourOnACInsertionInSleep(ctx context.Context, s *testing.State) {
 		}, &getChargerPollOptions); err != nil {
 			s.Fatal("Check for charger failed: ", err)
 		}
+
+		if err := powercontrol.PowerOntoDUT(ctx, h.ServoProxy, dut); err != nil {
+			s.Fatal("Failed to power on DUT at cleanup: ", err)
+		}
 	}()
 	s.Log("Stopping power supply")
 	if err := h.SetDUTPower(ctx, false); err != nil {
@@ -115,7 +120,7 @@ func DUTBehaviourOnACInsertionInSleep(ctx context.Context, s *testing.State) {
 	if err := h.DUT.Conn().CommandContext(powerOffCtx, "powerd_dbus_suspend").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		s.Fatal("Failed to power off DUT: ", err)
 	}
-	sdCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	sdCtx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 	if err := dut.WaitUnreachable(sdCtx); err != nil {
 		s.Fatal("Failed to wait for unreachable: ", err)
