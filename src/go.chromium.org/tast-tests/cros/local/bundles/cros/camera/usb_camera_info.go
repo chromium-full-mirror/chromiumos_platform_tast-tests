@@ -9,13 +9,11 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
-	"go.chromium.org/tast-tests/cros/local/upstart"
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -28,24 +26,11 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:mainline", "informational", "group:camera-stability"},
 		SoftwareDeps: []string{caps.BuiltinUSBCamera},
+		Fixture:      fixture.CameraServiceStopped,
 	})
 }
 
 func USBCameraInfo(ctx context.Context, s *testing.State) {
-	// Reserve some time to cleanup, even if it fails due to ctx timeout.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	if err := upstart.StopJob(ctx, "cros-camera"); err != nil {
-		s.Fatal("Failed to stop cros-camera service: ", err)
-	}
-	defer func() {
-		if err := upstart.EnsureJobRunning(cleanupCtx, "cros-camera"); err != nil {
-			s.Fatal("Failed to start cros-camera service: ", err)
-		}
-	}()
-
 	usbCameraList, err := testutil.USBCamerasFromV4L2Test(ctx)
 	if err != nil {
 		s.Fatal("Failed to get usb camera list: ", err)
