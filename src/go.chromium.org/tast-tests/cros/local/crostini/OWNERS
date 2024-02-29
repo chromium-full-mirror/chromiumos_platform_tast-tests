@@ -1,1 +1,5 @@
 include chromiumos/owners:v1:/guestos/OWNERS.crostini
+
+# Essential Inputs team for IME & Emoji tests
+shend@chromium.org
+jopalmer@google.com
