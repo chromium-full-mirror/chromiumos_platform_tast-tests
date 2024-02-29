@@ -1317,7 +1317,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_720p_30fps_hw_3x3",
+				Name: "h264_720p_30fps_hw_x9",
 				Val: playback.Config{
 					FileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType: 0,
@@ -1336,7 +1336,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "hevc_720p_30fps_hw_3x3",
+				Name: "hevc_720p_30fps_hw_x9",
 				Val: playback.Config{
 					FileName:    "perf/hevc/720p_30fps_300frames.hevc.mp4",
 					DecoderType: 0,
@@ -1355,7 +1355,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp8_720p_30fps_hw_3x3",
+				Name: "vp8_720p_30fps_hw_x9",
 				Val: playback.Config{
 					FileName:    "perf/vp8/720p_30fps_300frames.vp8.webm",
 					DecoderType: 0,
@@ -1374,7 +1374,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp9_720p_30fps_hw_3x3",
+				Name: "vp9_720p_30fps_hw_x9",
 				Val: playback.Config{
 					FileName:    "perf/vp9/720p_30fps_300frames.vp9.webm",
 					DecoderType: 0,
@@ -1393,7 +1393,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "av1_720p_30fps_hw_3x3",
+				Name: "av1_720p_30fps_hw_x9",
 				Val: playback.Config{
 					FileName:    "perf/av1/720p_30fps_300frames.av1.mp4",
 					DecoderType: 0,
@@ -1412,7 +1412,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_720p_30fps_hw_3x3_oopvd",
+				Name: "h264_720p_30fps_hw_x9_oopvd",
 				Val: playback.Config{
 					FileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType: 0,
@@ -1431,7 +1431,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_720p_30fps_hw_3x3_oopvd_decoder_thread",
+				Name: "h264_720p_30fps_hw_x9_oopvd_decoder_thread",
 				Val: playback.Config{
 					FileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType: 0,

@@ -208,7 +208,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 	for _, codec := range []string{"h264", "hevc", "vp8", "vp9", "av1"} {
 		resolution, fps, dec := 720, 30, "hw"
 		param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
-			resolution, fps, dec, "3x3", "", nil)
+			resolution, fps, dec, "x9", "", nil)
 		param.Grid.Width = 3
 		param.Grid.Height = 3
 		params = append(params, param)
@@ -218,12 +218,12 @@ func TestPlaybackPerfConfig(t *testing.T) {
 	{
 		codec, resolution, fps, dec := "h264", 720, 30, "hw"
 		param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
-			resolution, fps, dec, "3x3_oopvd", "chromeVideoOOPVD", nil)
+			resolution, fps, dec, "x9_oopvd", "chromeVideoOOPVD", nil)
 		param.Grid.Width = 3
 		param.Grid.Height = 3
 		params = append(params, param)
 		param = genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
-			resolution, fps, dec, "3x3_oopvd_decoder_thread", "chromeVideoOOPVDAndDedicatedDecoderThread", nil)
+			resolution, fps, dec, "x9_oopvd_decoder_thread", "chromeVideoOOPVDAndDedicatedDecoderThread", nil)
 		param.Grid.Width = 3
 		param.Grid.Height = 3
 		params = append(params, param)
