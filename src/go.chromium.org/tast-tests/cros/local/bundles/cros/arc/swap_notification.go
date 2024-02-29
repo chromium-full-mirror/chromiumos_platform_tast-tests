@@ -114,6 +114,6 @@ func SwapNotification(ctx context.Context, s *testing.State) {
 
 	s.Log("Waiting for swap to be disabled")
 	if err := swap.WaitForStatus(ctx, socketPath, []swap.Status{swap.Ready}); err != nil {
-		s.Fatal("Failed to wait for swap to be enabled: ", err)
+		s.Fatal("Failed to wait for swap to be disabled: ", err)
 	}
 }
