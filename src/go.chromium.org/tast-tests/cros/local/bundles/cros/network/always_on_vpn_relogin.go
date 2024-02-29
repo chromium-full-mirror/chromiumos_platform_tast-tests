@@ -22,7 +22,7 @@ import (
 // alwaysOnVPNReloginTestCase defines mode and config of the VPN
 // we want to set up in the test
 type alwaysOnVPNReloginTestCase struct {
-	mode    string // mode of always-on VPN we want to test.
+	mode    shillconst.AlwaysOnVPNMode // mode of always-on VPN we want to test.
 	vpnType vpn.Type
 }
 
@@ -147,25 +147,14 @@ func AlwaysOnVPNRelogin(ctx context.Context, s *testing.State) {
 	// Use set up host VPN as service and change the Always-on VPN mode.
 	vpnMode := s.Param().(alwaysOnVPNReloginTestCase).mode
 	s.Logf("Setting always-on-vpn mode in shill to %s and waiting for VPN connected", vpnMode)
-	profile, err := m.ActiveProfile(ctx)
+	resetFunc, err := vpn.SetAlwaysOnVPN(ctx, vpnMode, service)
 	if err != nil {
-		s.Fatal("Failed to get active profile: ", err)
+		s.Fatal("Failed to configure Always-on VPN: ", err)
 	}
-	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, service); err != nil {
-		s.Fatal("Failed to set Always-on VPN properties: ", err)
-	}
-	defer func() {
-		if err := profile.SetAlwaysOnVPN(cleanupCtx, shillconst.AlwaysOnVPNModeOff, nil); err != nil {
-			s.Fatal("Failed to reset Always-on VPN properties: ", err)
-		}
-	}()
+	defer resetFunc(cleanupCtx)
 
 	// Check if always on VPN is set in correct mode.
-	props, err := profile.GetProperties(ctx)
-	if err != nil {
-		s.Fatal("Failed to get props: ", err)
-	}
-	if curMode, err := props.GetString(shillconst.ProfilePropertyAlwaysOnVPNMode); err != nil {
+	if curMode, err := vpn.GetAlwaysOnVPNMode(ctx); err != nil {
 		s.Fatal("Failed to get Always-on VPN mode: ", err)
 	} else if curMode != vpnMode {
 		s.Fatalf("Current Always-on VPN mode is %v, want: %v", curMode, vpnMode)

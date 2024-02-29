@@ -17,7 +17,7 @@ import (
 )
 
 type alwaysOnVPNRoutingTestCase struct {
-	mode    string // mode of always-on VPN we want to test.
+	mode    shillconst.AlwaysOnVPNMode // mode of always-on VPN we want to test.
 	vpnType vpn.Type
 }
 
@@ -81,11 +81,6 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	m, err := shill.NewManager(ctx)
-	if err != nil {
-		s.Fatal("Failed to create shill manager proxy: ", err)
-	}
-
 	// Set up an test profile and pop it out on stack after test is finished.
 	popFunc, err := shill.LogOutUserAndPushTestProfile(ctx)
 	if err != nil {
@@ -127,24 +122,17 @@ func AlwaysOnVPNRouting(ctx context.Context, s *testing.State) {
 	// Use set up host VPN as service and change the Always-on VPN mode.
 	vpnMode := s.Param().(alwaysOnVPNRoutingTestCase).mode
 	s.Logf("Setting always-on-vpn mode in shill to %s and waiting for VPN connected", vpnMode)
-	profile, err := m.ActiveProfile(ctx)
+	resetFunc, err := vpn.SetAlwaysOnVPN(ctx, vpnMode, conn.Service())
 	if err != nil {
-		s.Fatal("Failed to get active profile: ", err)
+		s.Fatal("Failed to configure Always-on VPN: ", err)
 	}
-	// We use a test profile here so don't need to reset the value.
-	if err := profile.SetAlwaysOnVPN(ctx, vpnMode, conn.Service()); err != nil {
-		s.Fatal("Failed to set Always-on VPN properties: ", err)
-	}
+	defer resetFunc(cleanupCtx)
 
 	// Check if always on VPN is set in correct mode.
-	props, err := profile.GetProperties(ctx)
-	if err != nil {
-		s.Fatal("Failed to get props: ", err)
-	}
-	if curMode, err := props.GetString(shillconst.ProfilePropertyAlwaysOnVPNMode); err != nil {
+	if curMode, err := vpn.GetAlwaysOnVPNMode(ctx); err != nil {
 		s.Fatal("Failed to get Always-on VPN mode: ", err)
 	} else if curMode != vpnMode {
-		s.Errorf("Current Always-on VPN mode is %v, want: %v", curMode, vpnMode)
+		s.Fatalf("Current Always-on VPN mode is %v, want: %v", curMode, vpnMode)
 	}
 
 	// Check if VPN can be automatically connected.

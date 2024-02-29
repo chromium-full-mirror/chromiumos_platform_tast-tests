@@ -437,11 +437,14 @@ const (
 	CellularServiceMinSignalStrength = 10
 )
 
+// AlwaysOnVPNMode represents a value to configure always-on VPN.
+type AlwaysOnVPNMode string
+
 // Shill always on VPN values.
 const (
-	AlwaysOnVPNModeOff        = "off"
-	AlwaysOnVPNModeStrict     = "strict"
-	AlwaysOnVPNModeBestEffort = "best-effort"
+	AlwaysOnVPNModeOff        AlwaysOnVPNMode = "off"
+	AlwaysOnVPNModeStrict     AlwaysOnVPNMode = "strict"
+	AlwaysOnVPNModeBestEffort AlwaysOnVPNMode = "best-effort"
 )
 
 // Tethering-related constants, as defined in dbus-constants.h

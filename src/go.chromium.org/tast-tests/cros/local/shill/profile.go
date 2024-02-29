@@ -47,7 +47,7 @@ func (p *Profile) DeleteEntry(ctx context.Context, entryID string) error {
 
 // SetAlwaysOnVPN sets the AlwaysOnVpnMode and AlwaysOnVpnService properties on
 // the profile. If mode is "off", svc must be nil.
-func (p *Profile) SetAlwaysOnVPN(ctx context.Context, mode string, svc *Service) error {
+func (p *Profile) SetAlwaysOnVPN(ctx context.Context, mode shillconst.AlwaysOnVPNMode, svc *Service) error {
 	if (mode == shillconst.AlwaysOnVPNModeOff) != (svc == nil) {
 		return errors.Errorf("mode %v and service %v does not match", mode, svc)
 	}

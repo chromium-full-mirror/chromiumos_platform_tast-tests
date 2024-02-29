@@ -168,3 +168,56 @@ func VerifyVPNServiceConnect(ctx context.Context, m *shill.Manager, service *shi
 	}
 	return nil
 }
+
+// SetAlwaysOnVPN configures shill to use Always-on VPN mode with vpnSvc. On
+// success, returns a function to disable Always-on VPN (instead of restoring
+// the state prior to the call to this function).
+func SetAlwaysOnVPN(ctx context.Context, mode shillconst.AlwaysOnVPNMode, vpnSvc *shill.Service) (func(context.Context), error) {
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to connect to shill Manager")
+	}
+
+	profile, err := m.ActiveProfile(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get active profile")
+	}
+
+	if err := profile.SetAlwaysOnVPN(ctx, mode, vpnSvc); err != nil {
+		return nil, errors.Wrap(err, "failed to configure Always-on VPN in shill")
+	}
+
+	return func(context.Context) {
+		if err := profile.SetAlwaysOnVPN(ctx, shillconst.AlwaysOnVPNModeOff, nil); err != nil {
+			testing.ContextLog(ctx, "Failed to reset Always-on VPN in shill: ", err)
+		}
+	}, nil
+}
+
+// GetAlwaysOnVPNMode returns the current Always-on VPN mode configured in
+// shill.
+func GetAlwaysOnVPNMode(ctx context.Context) (shillconst.AlwaysOnVPNMode, error) {
+	const retModeUnknown = shillconst.AlwaysOnVPNModeOff
+
+	m, err := shill.NewManager(ctx)
+	if err != nil {
+		return retModeUnknown, errors.Wrap(err, "failed to connect to shill Manager")
+	}
+
+	profile, err := m.ActiveProfile(ctx)
+	if err != nil {
+		return retModeUnknown, errors.Wrap(err, "failed to get active profile")
+	}
+
+	props, err := profile.GetProperties(ctx)
+	if err != nil {
+		return retModeUnknown, errors.Wrapf(err, "failed to get properties from profile %s", profile.ObjectPath())
+	}
+
+	mode, err := props.GetString(shillconst.ProfilePropertyAlwaysOnVPNMode)
+	if err != nil {
+		return retModeUnknown, errors.Wrap(err, "failed to get Always-on VPN mode")
+	}
+
+	return shillconst.AlwaysOnVPNMode(mode), nil
+}
