@@ -28,8 +28,7 @@ func init() {
 			"cros-networking@google.com", // Platform networking team
 			"akahuang@google.com",        // Test author
 		},
-		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},
-		Fixture: "shillReset",
+		Attr: []string{"group:mainline", "group:hw_agnostic", "informational"},
 	})
 }
 
@@ -43,11 +42,12 @@ func ShillCAPPORT(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
 
-	// Relying on shillReset test fixture to undo the enabling of portal detection.
 	testing.ContextLog(ctx, "Enabling portal detection on ethernet")
-	if err := m.EnablePortalDetection(ctx); err != nil {
+	restorePortalDetection, err := m.EnablePortalDetectionWithRestore(ctx)
+	if err != nil {
 		s.Fatal("Enable Portal Detection failed: ", err)
 	}
+	defer restorePortalDetection(cleanupCtx)
 
 	httpsCerts := certs.New(certs.SSLCrtPath, certificate.TestCert3())
 	cleanupCerts, err := httpsCerts.InstallTestCerts(ctx)

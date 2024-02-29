@@ -38,8 +38,7 @@ func init() {
 			"cros-networking@google.com",          // Platform networking team
 			"michaelrygiel@google.com",            // Test author
 		},
-		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},
-		Fixture: "shillReset",
+		Attr: []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Params: []testing.Param{{
 			Name: "redirectfound",
 			Val: &params{
@@ -153,24 +152,25 @@ func init() {
 }
 
 func ShillCaptivePortalHTTP(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
 
 	testing.ContextLog(ctx, "Enabling portal detection on ethernet")
-	// Relying on shillReset test fixture to undo the enabling of portal detection.
-	if err := m.EnablePortalDetection(ctx); err != nil {
+	restorePortalDetection, err := m.EnablePortalDetectionWithRestore(ctx)
+	if err != nil {
 		s.Fatal("Enable Portal Detection failed: ", err)
 	}
+	defer restorePortalDetection(cleanupCtx)
 
 	if err := m.SetProperty(ctx, shillconst.ManagerPropertyPortalHTTPSURL, captiveportalconsts.HTTPSPortalURL); err != nil {
 		s.Fatal("Failed to set portal httpsurl: ", err)
 	}
-
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
 
 	params := s.Param().(*params)
 

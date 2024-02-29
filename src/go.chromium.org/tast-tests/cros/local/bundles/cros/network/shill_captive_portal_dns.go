@@ -32,8 +32,7 @@ func init() {
 			"cros-networking@google.com",          // Platform networking team
 			"michaelrygiel@google.com",            // Test maintainer
 		},
-		Attr:    []string{"group:mainline", "group:hw_agnostic", "informational"},
-		Fixture: "shillReset",
+		Attr: []string{"group:mainline", "group:hw_agnostic", "informational"},
 	})
 }
 
@@ -45,16 +44,21 @@ const (
 )
 
 func ShillCaptivePortalDNS(ctx context.Context, s *testing.State) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
 
 	testing.ContextLog(ctx, "Enabling portal detection on ethernet")
-	// Relying on shillReset test fixture to undo the enabling of portal detection.
-	if err := manager.EnablePortalDetection(ctx); err != nil {
+	restorePortalDetection, err := manager.EnablePortalDetectionWithRestore(ctx)
+	if err != nil {
 		s.Fatal("Enable Portal Detection failed: ", err)
 	}
+	defer restorePortalDetection(cleanupCtx)
 
 	testing.ContextLog(ctx, "Setting up a netns for router")
 	pool := subnet.NewPool()
@@ -69,9 +73,6 @@ func ShillCaptivePortalDNS(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create a router env: ", err)
 	}
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-	defer cancel()
 	defer router.Cleanup(cleanupCtx)
 
 	ifaceAddrs, err := router.WaitForVethInAddrs(ctx, true, false)

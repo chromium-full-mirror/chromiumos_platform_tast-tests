@@ -740,6 +740,13 @@ func (m *Manager) EnablePortalDetection(ctx context.Context) error {
 	return m.SetPortalDetection(ctx, shillconst.PortalDetectorDefaultCheckPortalList)
 }
 
+// EnablePortalDetectionWithRestore enables portal detection for the default
+// technologies and returns a function to restore the portal detection to its
+// previous state.
+func (m *Manager) EnablePortalDetectionWithRestore(ctx context.Context) (func(context.Context), error) {
+	return m.SetPortalDetectionWithRestore(ctx, shillconst.PortalDetectorDefaultCheckPortalList)
+}
+
 // DisablePortalDetection disables portal detection for all technologies.
 func (m *Manager) DisablePortalDetection(ctx context.Context) error {
 	return m.SetPortalDetection(ctx, "")
