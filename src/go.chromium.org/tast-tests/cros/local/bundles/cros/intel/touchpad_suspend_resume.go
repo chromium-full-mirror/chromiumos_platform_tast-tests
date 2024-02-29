@@ -33,7 +33,7 @@ var (
 	suspendFailureRe   = regexp.MustCompile("Suspend failures: 0")
 	firmwareLogErrorRe = regexp.MustCompile("Firmware log errors: 0")
 	s0ixErrorRe        = regexp.MustCompile("s0ix errors: 0")
-	evtestRe           = regexp.MustCompile(`Event.*time.*code\s(\d*)\s\(` + `ABS_MT_POSITION_X` + `\)`)
+	evtestRe           = regexp.MustCompile(`Event: time (\d+\.\d+), type (\d+) \(EV_ABS\), code (\d+) \(ABS_MT_TRACKING_ID\), value (-?\d+)`)
 )
 
 func init() {
@@ -57,7 +57,9 @@ func TouchpadSuspendResume(ctx context.Context, s *testing.State) {
 	cr, srv, info := createNewServer(ctx, s)
 	defer srv.Close()
 
-	scannerTouchpad := assertTouchpadEventOccursDuringCanvasDraw(ctx, info, cr, srv, s)
+	if err := assertTouchpadEventOccursDuringCanvasDraw(ctx, info, cr, srv, s); err != nil {
+		s.Fatal("Failed to perform canvas draw event: ", err)
+	}
 
 	slpPrebyte, err := ioutil.ReadFile(slpS0File)
 	if err != nil {
@@ -93,8 +95,8 @@ func TouchpadSuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to reconnect to the Chrome session: ", err)
 	}
 
-	if err := performEVTestToLaunchCanvasAndMonitorEvent(ctx, info, cr, scannerTouchpad, srv.URL); err != nil {
-		s.Fatal("Failed to perform evtest: ", err)
+	if err := assertTouchpadEventOccursDuringCanvasDraw(ctx, info, cr, srv, s); err != nil {
+		s.Fatal("Failed to perform canvas draw event: ", err)
 	}
 
 	if err := assertSLPCounterChanged(slpPreString); err != nil {
@@ -298,10 +300,10 @@ func createNewServer(ctx context.Context, s *testing.State) (*chrome.Chrome, *ht
 
 // assertTouchpadEventOccursDuringCanvasDraw verifies the Touchpad events while
 // drawing on the canvas.
-func assertTouchpadEventOccursDuringCanvasDraw(ctx context.Context, info *display.Info, cr *chrome.Chrome, srv *httptest.Server, s *testing.State) *bufio.Scanner {
+func assertTouchpadEventOccursDuringCanvasDraw(ctx context.Context, info *display.Info, cr *chrome.Chrome, srv *httptest.Server, s *testing.State) error {
 	cmd, stdout, err := touchPadScanner(ctx)
 	if err != nil {
-		s.Fatal("Failed to get touchpad scanner: ", err)
+		return errors.Wrap(err, "failed to get touchpad scanner")
 	}
 	defer cmd.Wait()
 	defer cmd.Kill()
@@ -309,7 +311,7 @@ func assertTouchpadEventOccursDuringCanvasDraw(ctx context.Context, info *displa
 	scannerTouchpad := bufio.NewScanner(stdout)
 
 	if err := performEVTestToLaunchCanvasAndMonitorEvent(ctx, info, cr, scannerTouchpad, srv.URL); err != nil {
-		s.Fatal("Failed to perform evtest: ", err)
+		return errors.Wrap(err, "failed to perform evtest")
 	}
-	return scannerTouchpad
+	return nil
 }
