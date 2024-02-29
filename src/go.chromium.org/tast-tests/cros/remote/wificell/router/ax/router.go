@@ -22,17 +22,19 @@ const nvramCmd = "/bin/nvram"
 
 // Router is used to control an Asus AX wireless router and stores state of the router.
 type Router struct {
-	host       *ssh.Conn
-	name       string
-	routerType support.RouterType
+	host        *ssh.Conn
+	name        string
+	routerType  support.RouterType
+	routerModel string
 }
 
 // NewRouter prepares initial test AP state.
 func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Router, error) {
 	r := &Router{
-		host:       host,
-		name:       name,
-		routerType: support.AxT,
+		host:        host,
+		name:        name,
+		routerType:  support.AxT,
+		routerModel: "GTAXC11000",
 	}
 	return r, nil
 }
@@ -40,6 +42,11 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 // RouterName returns the name of the managed router device.
 func (r *Router) RouterName() string {
 	return r.name
+}
+
+// RouterModel returns the router's model.
+func (r *Router) RouterModel() string {
+	return r.routerModel
 }
 
 // RouterType returns the router's type.

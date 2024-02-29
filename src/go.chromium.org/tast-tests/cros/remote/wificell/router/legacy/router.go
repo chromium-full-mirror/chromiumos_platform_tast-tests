@@ -37,6 +37,8 @@ import (
 
 // Used hostapd environment variable keys.
 const (
+	// routerModelGale is the model name used for ChromeOS Gale routers.
+	routerModelGale                              = "gale"
 	envKeyOpenSslConf                            = "OPENSSL_CONF"
 	envKeyOpenSslChromiumSkipTrustedPurposeCheck = "OPENSSL_CHROMIUM_SKIP_TRUSTED_PURPOSE_CHECK"
 )
@@ -53,6 +55,7 @@ type Router struct {
 	host          *ssh.Conn
 	name          string
 	routerType    support.RouterType
+	routerModel   string
 	board         string
 	phys          map[int]*iw.Phy // map from phy idx to iw.Phy.
 	im            *common.IfaceManager
@@ -71,6 +74,7 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 		host:          host,
 		name:          name,
 		routerType:    support.LegacyT,
+		routerModel:   routerModelGale,
 		phys:          make(map[int]*iw.Phy),
 		iwr:           remote_iw.NewRemoteRunner(host),
 		ipr:           remote_ip.NewRemoteRunner(host),
@@ -181,6 +185,11 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 // RouterType returns the router's type
 func (r *Router) RouterType() support.RouterType {
 	return r.routerType
+}
+
+// RouterModel returns the router's model.
+func (r *Router) RouterModel() string {
+	return r.routerModel
 }
 
 // RouterName returns the name of the managed router device.

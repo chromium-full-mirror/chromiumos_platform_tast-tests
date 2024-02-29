@@ -40,11 +40,16 @@ const (
 	buildInfoFile   = "/etc/cros/cros_openwrt_image_build_info.json"
 )
 
+var (
+	buildInfoDeviceName string
+)
+
 // Router controls an OpenWrt router and stores the router state.
 type Router struct {
 	host             *ssh.Conn
 	name             string
 	routerType       support.RouterType
+	routerModel      string
 	syslogdCollector *log.LogreadCollector
 	iwr              *remoteIw.Runner
 	ipr              *remoteIp.Runner
@@ -78,6 +83,7 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (rou
 		host:           host,
 		name:           name,
 		routerType:     support.OpenWrtT,
+		routerModel:    createUniqueRouterModel(),
 		iwr:            remoteIw.NewRemoteRunner(host),
 		ipr:            remoteIp.NewRemoteRunner(host),
 		phys:           make(map[int]*iw.Phy),
@@ -266,6 +272,21 @@ func (r *Router) RouterType() support.RouterType {
 	return r.routerType
 }
 
+// RouterModel returns the router's model.
+func (r *Router) RouterModel() string {
+	return r.routerModel
+}
+
+// createUniqueRouterModel creates the router model name by combining the router Type and the device name from the build info.
+func createUniqueRouterModel() string {
+	rModel := "openwrt"
+	devName := strings.ReplaceAll(buildInfoDeviceName, " ", "")
+	if devName != "" {
+		rModel = rModel + "_" + devName
+	}
+	return rModel
+}
+
 // RouterName returns the name of the managed router device.
 func (r *Router) RouterName() string {
 	return r.name
@@ -285,7 +306,9 @@ func (r *Router) StartReboot(ctx context.Context) error {
 }
 
 // logBuildInfo retrieves the build info file present on all ChromeOS OpenWrt
-// test routers, saves a copy of it to the logs, and logs the key info.
+// test routers, saves a copy of it to the logs, and logs the key info. Also, save
+// the device type and name which are used to create the unique model name for the
+// router.
 func (r *Router) logBuildInfo(ctx context.Context) error {
 	// Get the build info from the router.
 	if err := r.host.CommandContext(ctx, "test", "-f", buildInfoFile).Run(); err != nil {
@@ -306,6 +329,7 @@ func (r *Router) logBuildInfo(ctx context.Context) error {
 	if err := protojson.Unmarshal(buildInfoJSON, buildInfo); err != nil {
 		return errors.Wrap(err, "failed to unmarshal build info file from router")
 	}
+	buildInfoDeviceName = buildInfo.GetStandardBuildConfig().GetDeviceName()
 	minimalBuildInfo := &api.CrosOpenWrtImageBuildInfo{
 		StandardBuildConfig: &api.CrosOpenWrtImageBuildInfo_StandardBuildConfig{
 			BuildProfile: buildInfo.GetStandardBuildConfig().GetBuildProfile(),

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -29,6 +30,7 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/wlan"
 	"go.chromium.org/tast/core/timing"
 )
 
@@ -50,6 +52,7 @@ type Router struct {
 	host          *ssh.Conn
 	name          string
 	routerType    support.RouterType
+	routerModel   string
 	board         string
 	phys          map[int]*iw.Phy // map from phy idx to iw.Phy.
 	im            *common.IfaceManager
@@ -68,6 +71,7 @@ func NewRouter(ctx, daemonCtx context.Context, host *ssh.Conn, name string) (*Ro
 		host:          host,
 		name:          name,
 		routerType:    support.UbuntuT,
+		routerModel:   createUniqueRouterModel(ctx, host),
 		phys:          make(map[int]*iw.Phy),
 		iwr:           remote_iw.NewRemoteRunner(host),
 		ipr:           remote_ip.NewRemoteRunner(host),
@@ -143,9 +147,80 @@ func (r *Router) RouterType() support.RouterType {
 	return r.routerType
 }
 
+// RouterModel returns the router's model.
+func (r *Router) RouterModel() string {
+	return r.routerModel
+}
+
+// createUniqueRouterModel creates the router model name by combining the router Type and the device name from the build info.
+func createUniqueRouterModel(ctx context.Context, host *ssh.Conn) string {
+	rModel := "ubuntu"
+	sysPN, err := systemProductName(ctx, host)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get the system product name: ", err)
+		return rModel
+	}
+	sysPN = strings.TrimSuffix(sysPN, "\n")
+	if sysPN != "" {
+		rModel = rModel + "_" + sysPN
+	}
+	netCN, err := networkControllerName(ctx, host)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to get the network controller name: ", err)
+		return rModel
+	}
+	if netCN != "" {
+		rModel = rModel + "_" + netCN
+	}
+	return rModel
+}
+
 // RouterName returns the name of the managed router device.
 func (r *Router) RouterName() string {
 	return r.name
+}
+
+// systemProductName returns the system product name of the router.
+func systemProductName(ctx context.Context, host *ssh.Conn) (string, error) {
+	sysPN, err := host.CommandContext(ctx, "dmidecode", "-s", "system-product-name").Output()
+	if err != nil {
+		return "", err
+	}
+	return string(sysPN), nil
+}
+
+// networkControllerName returns the network controller name of the router.
+func networkControllerName(ctx context.Context, host *ssh.Conn) (string, error) {
+	lspciOutput, err := host.CommandContext(ctx, "lspci", "-vvnn").Output()
+	if err != nil {
+		return "", err
+	}
+	networkControllerName, err := parseNetworkControllerName(ctx, string(lspciOutput))
+	if err != nil {
+		return "", errors.Wrapf(err, "fetch network controller name: failed to parse raw network controller name from lscpi output %q", lspciOutput)
+	}
+	return networkControllerName, nil
+}
+
+func parseNetworkControllerName(ctx context.Context, lscpiOutput string) (string, error) {
+	matcher := regexp.MustCompile(`(?m)^.+ Network controller \[(.+)\]: Intel Corporation Device \[(.+):(.+)\] \(rev .*\)$`)
+	match := matcher.FindStringSubmatch(lscpiOutput)
+	if len(match) != 4 {
+		return "", errors.New("parse network controller name: no regex match")
+	}
+	vendorID := "0x" + strings.TrimSpace(match[2])
+	productID := "0x" + strings.TrimSpace(match[3])
+
+	devInfo := wlan.DevInfo{Vendor: vendorID, Device: productID}
+	wlanDev, ok := wlan.LookupWLANDev[devInfo]
+	if !ok {
+		return "", errors.Errorf("parse network controller name: got unknown wlan device %v", wlanDev)
+	}
+	devName, ok := wlan.DeviceNames[wlanDev]
+	if !ok {
+		return "", errors.Errorf("parse network controller name: got unknown device name %v", devName)
+	}
+	return strings.ReplaceAll(devName, " ", ""), nil
 }
 
 // StartReboot initiates a reboot of the router host.

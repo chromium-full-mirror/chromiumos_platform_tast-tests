@@ -82,6 +82,8 @@ type Router interface {
 	RouterName() string
 	// RouterType returns the router type.
 	RouterType() RouterType
+	// RouterModel returns unique router model name.
+	RouterModel() string
 	// StartReboot initiates a reboot of the router host.
 	//
 	// Close must be called prior to StartReboot, not after.

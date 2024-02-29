@@ -635,7 +635,7 @@ func NetworkWifiPerf(ctx context.Context, s *testing.State) {
 		allTags = append(allTags, psTag)
 		apConfigDesc := apIface.Config().PerfDesc()
 		allTags = append(allTags, apConfigDesc)
-		allTags = append(allTags, routerType.String())
+		allTags = append(allTags, tf.Router().RouterModel())
 		apConfigTag = strings.Join(allTags, "_")
 
 		signalLevel, err := iwr.WifiInterfaceSignalLevel(ctx, clientIface)
