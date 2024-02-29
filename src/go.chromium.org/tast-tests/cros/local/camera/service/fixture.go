@@ -22,9 +22,10 @@ const (
 )
 
 func init() {
+	// Fixtures that ensure all built-in cameras are enumerated; intended for user space testing.
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CameraServiceReady,
-		Desc:            "The cros-camera service is ready",
+		Desc:            "The cros-camera service is ready, with all built-in cameras enumerated",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		Impl:            &serviceFixture{request: startService},
 		Parent:          fixture.CameraEnumerated,
@@ -34,21 +35,32 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.CameraConnectorReady,
-		Desc:            "The camera connector is ready",
+		Desc:            "The camera connector is ready, with all built-in cameras enumerated",
 		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		Impl:            &connectorFixture{},
 		Parent:          fixture.CameraServiceReady,
 		SetUpTimeout:    chrome.LoginTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+	// Fixture that does not ensure all built-in cameras are enumerated; intended for kernel testing.
+	testing.AddFixture(&testing.Fixture{
+		Name:            fixture.CameraServiceStopped,
+		Desc:            "The cros-camera service is stopped",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
+		Impl:            &serviceFixture{request: stopService},
+		SetUpTimeout:    serviceTimeout,
+		ResetTimeout:    serviceTimeout,
+		TearDownTimeout: serviceTimeout,
+	})
 }
 
 type serviceRequest uint
 
-// We use enum here, because we plan to support stopping service.
 const (
-	// startService starts cros-camera service in Setup() and Reset()
+	// startService ensures cros-camera service is started in Setup() and Reset().
 	startService serviceRequest = iota
+	// stopService ensures cros-camera service is stopped in Setup() and Reset().
+	stopService
 )
 
 // The ServiceRequest only affect the operation in Setup() and Reset().
@@ -86,14 +98,15 @@ func (f *serviceFixture) PostTest(ctx context.Context, s *testing.FixtTestState)
 // ensureServiceState makes sure that the cros-camera service is in a state
 // that is requested by serviceRequest.
 func ensureServiceState(ctx context.Context, request serviceRequest) error {
-	if request == startService {
+	switch request {
+	case startService:
 		// WaitForCameraSocket includes a call to EnsureJobRunning.
-		if err := testutil.WaitForCameraSocket(ctx); err != nil {
-			return err
-		}
+		return testutil.WaitForCameraSocket(ctx)
+	case stopService:
+		return upstart.StopJob(ctx, "cros-camera")
 	}
 
-	return nil
+	return errors.New("invalid request")
 }
 
 type connectorFixture struct {

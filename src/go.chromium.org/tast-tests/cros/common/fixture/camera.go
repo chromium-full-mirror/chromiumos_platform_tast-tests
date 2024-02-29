@@ -9,6 +9,8 @@ const (
 	CameraServiceReady = "cameraServiceReady"
 	// CameraConnectorReady ensures camera connector is ready without any user.
 	CameraConnectorReady = "cameraConnectorReady"
+	// CameraServiceStopped ensures camera service is stopped.
+	CameraServiceStopped = "cameraServiceStopped"
 
 	// CameraEnumerated ensures all the built-in cameras are enumerated.
 	// This is a remote fixture meant to be used as parent of a local fixture.

@@ -10,6 +10,7 @@ import (
 	"os"
 	"strings"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
@@ -83,6 +84,7 @@ func init() {
 		SoftwareDeps: []string{caps.BuiltinMIPICamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnModel(unsupportedModel...)),
 		Data:         configFiles(),
+		Fixture:      fixture.CameraServiceStopped,
 	})
 }
 
