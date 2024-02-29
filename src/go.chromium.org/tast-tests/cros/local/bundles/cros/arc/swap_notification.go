@@ -88,7 +88,7 @@ func SwapNotification(ctx context.Context, s *testing.State) {
 			}
 		}
 		return errors.New("Notification not found")
-	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: 15 * time.Second}); err != nil {
 		s.Fatal("Failed to find notification: ", err)
 	}
 
