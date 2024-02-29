@@ -1001,6 +1001,26 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithVulkanWithoutCooldown",
+		Desc: "CUJ fixture that skips CPU cooldown and runs with Vulkan composite/raster",
+		Contacts: []string{
+			"hob@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaverWithoutCooldownParent",
 		Desc: "CUJ fixture that skips CPU cooldown and has battery saver active without Android battery saver",
 		Contacts: []string{

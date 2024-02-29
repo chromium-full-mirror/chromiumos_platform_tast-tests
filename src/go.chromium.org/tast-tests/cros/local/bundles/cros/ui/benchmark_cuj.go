@@ -82,6 +82,18 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
+				Name:      "vulkan_motionmark",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithVulkanWithoutCooldown",
+				ExtraSoftwareDeps: []string{"vulkan_composite"},
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMarkInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
 				Name:      "jetstream",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
@@ -172,6 +184,18 @@ func init() {
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:      "vulkan_webxprt4",
+				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
+				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture:   "loggedInToCUJUserWithVulkanWithoutCooldown",
+				ExtraSoftwareDeps: []string{"vulkan_composite"},
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.WebXPRT4Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
 			},
 			// Battery saver tests only run manually
 			{
