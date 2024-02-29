@@ -24,6 +24,22 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+// Models in noTabletMode are convertibles that were observed to not support
+// tablet mode. Following are the observed issues with these models:
+// 1. Got "Command 'tabletmode' not found or ambiguous" after sending
+// 'tabletmode on' in ec console.
+// 2. Got "EC result 3 (INVALID_PARAM)" after sending
+// 'ectool motionsense tablet_mode_angle' in VT2.
+// 3. Got "EC result 1 (INVALID_COMMAND) Failed to set tablet mode, rv=-1001"
+// after sending 'ectool tabletmode on' in VT2.
+var noTabletMode = []string{
+	"akali360",
+	"nautilus",
+	"nautiluslte",
+	"pantheon",
+	"robo360",
+}
+
 type dutType int
 
 const (
@@ -61,7 +77,7 @@ func init() {
 		Timeout:      8 * time.Minute,
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.TouchScreen()),
 		Params: []testing.Param{{
-			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible)),
+			ExtraHardwareDeps: hwdep.D(hwdep.FormFactor(hwdep.Convertible), hwdep.SkipOnModel(noTabletMode...)),
 			Val: dutTestParams{
 				canDoTabletSwitch: true,
 				formFactor:        convertible,

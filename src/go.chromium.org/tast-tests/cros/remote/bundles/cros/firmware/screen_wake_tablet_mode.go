@@ -111,12 +111,19 @@ var convertibleKeyboardScanned = []string{
 }
 
 // Models in tabletModeNotSupported are convertibles that were observed to not support
-// tablet mode.
+// tablet mode. Following are the observed issues with these models:
+// 1. Got "Command 'tabletmode' not found or ambiguous" after sending
+// 'tabletmode on' in ec console.
+// 2. Got "EC result 3 (INVALID_PARAM)" after sending
+// 'ectool motionsense tablet_mode_angle' in VT2.
+// 3. Got "EC result 1 (INVALID_COMMAND) Failed to set tablet mode, rv=-1001"
+// after sending 'ectool tabletmode on' in VT2.
 var tabletModeNotSupported = []string{
-	"robo360",
+	"akali360",
 	"nautilus",
 	"nautiluslte",
 	"pantheon",
+	"robo360",
 }
 
 func init() {
