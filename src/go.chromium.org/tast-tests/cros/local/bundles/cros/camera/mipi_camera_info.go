@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast/core/testing"
@@ -26,6 +27,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:camera_dependent", "group:camera-stability"},
 		SoftwareDeps: []string{caps.BuiltinMIPICamera},
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated()),
+		Fixture:      fixture.CameraServiceStopped,
 	})
 }
 
