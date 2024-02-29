@@ -75,7 +75,7 @@ func DaemonsRestartStress(ctx context.Context, s *testing.State) {
 	}
 
 	ctxForResumeDaemons := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
 	defer cancel()
 
 	// Drop the DA reset permission.
