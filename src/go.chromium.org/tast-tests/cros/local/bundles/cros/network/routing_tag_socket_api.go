@@ -230,11 +230,17 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 
 		// Send msg and read the response. Verify that they are the same.
 		const msg = "hello"
+		if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
+			return errors.Wrap(err, "failed to set write deadline on connection")
+		}
 		if _, err := conn.Write([]byte(msg)); err != nil {
 			return errors.Wrap(err, "failed to write")
 		}
 
 		in := make([]byte, len(msg))
+		if err := conn.SetReadDeadline(time.Now().Add(2 * time.Second)); err != nil {
+			return errors.Wrap(err, "failed to set read deadline on connection")
+		}
 		if _, err = conn.Read(in); err != nil {
 			return errors.Wrap(err, "failed to read")
 		}
