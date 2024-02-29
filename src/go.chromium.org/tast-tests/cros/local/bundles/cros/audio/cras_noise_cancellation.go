@@ -106,12 +106,63 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
 			},
+			{
+				Name: "aec_nc_ast",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              48000,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+					extraCaptureFlags: []string{
+						"--effects=aec",
+					},
+				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "aec_nc_ast_44100hz",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              44100,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+					extraCaptureFlags: []string{
+						"--effects=aec",
+					},
+				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "nc_ast",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              48000,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraAttr:         []string{"informational"},
+			},
+			{
+				Name: "nc_ast_44100hz",
+				Val: crasNoiseCancellationParams{
+					noiseCancellationEnabled: true,
+					captureRate:              44100,
+					expectedRMS:              0.03,
+					expectedRMSTolerance:     0.01,
+				},
+				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraAttr:         []string{"informational"},
+			},
 		},
 	})
 }
 
 type crasNoiseCancellationParams struct {
 	noiseCancellationEnabled bool
+	styleTransferEnabled     bool
 	captureRate              int
 	expectedRMS              float64
 	expectedRMSTolerance     float64
@@ -127,9 +178,13 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
 
+	// Start chrome.
 	chromeOpts := param.extraChromeOpts
 	if param.noiseCancellationEnabled {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"))
+	}
+	if param.styleTransferEnabled {
+		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioStyleTransfer"))
 	}
 	cr, err := chrome.New(ctx, chromeOpts...)
 	if err != nil {
@@ -137,12 +192,19 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx)
 
+	// Install DLC.
 	if param.noiseCancellationEnabled {
 		if err := dlc.Install(ctx, "nc-ap-dlc", ""); err != nil {
 			s.Fatal("Cannot install nc-ap-dlc: ", err)
 		}
 	}
+	if param.styleTransferEnabled {
+		if err := dlc.Install(ctx, "nuance-dlc", ""); err != nil {
+			s.Fatal("Cannot install nuance-dlc: ", err)
+		}
+	}
 
+	// Start Cras.
 	if err := audio.SetupLoopback(ctx, cr); err != nil {
 		s.Fatal("Failed to SetupLoopback: ", err)
 	}
@@ -156,10 +218,19 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 			s.Fatal("Feature flag not propagated to CRAS: ", err)
 		}
 	}
+	if param.styleTransferEnabled {
+		if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", true); err != nil {
+			s.Fatal("Feature flag not propagated to CRAS: ", err)
+		}
+	}
 	if err := cras.SetNoiseCancellationEnabled(ctx, param.noiseCancellationEnabled); err != nil {
 		s.Fatal("Failed to SetNoiseCancellationEnabled: ", err)
 	}
+	if err := cras.SetStyleTransferEnabled(ctx, param.styleTransferEnabled); err != nil {
+		s.Fatal("Failed to SetStyleTransferEnabled: ", err)
+	}
 
+	// Generate test file.
 	const noiseDuration = 10 * time.Second
 
 	noiseWave := filepath.Join(s.OutDir(), "noise.wav")
@@ -220,6 +291,7 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 		s.Errorf("Cannot convert %s to %s: %v", captureRaw, captureWav, err)
 	}
 
+	// Verify: RMS.
 	rms, err := audio.GetRmsAmplitude(ctx, audio.TestRawData{
 		Path:          captureRaw,
 		BitsPerSample: 16,
