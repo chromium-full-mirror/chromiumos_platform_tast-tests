@@ -78,18 +78,23 @@ const (
 
 var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
 
+// loginPerfTestParam is a set of parameters for the login perf test.
+// The baseline parameters are:
+//   - windows: 8
+//   - arcMode: arcenabled
+//   - tabletMode: false
+//   - browserType: browser.TypeAsh
+//   - lacrosSelection: lacros.NotSelected (i.e. Ash)
+//   - preloadLacros: true
 type loginPerfTestParam struct {
-	windows            []int            // List of number of session restored windows.
-	arcmodes           []string         // List of ARC modes to test.
-	checkTabletMode    bool             // Whether to check the Tablet mode in addition to the Clamshell mode.
-	bt                 browser.Type     // browser.{TypeAsh/TypeLacros}
-	lacrosSelection    lacros.Selection // lacros.{Omaha,Rootfs}
-	preloadLacros      bool             // Whether to enable LacrosLaunchAtLoginScreen feature
-	forkZygotes        bool             // Whether to fork Zygotes at login screen when preloadLacros is true
-	dropCaches         bool             // Whether to drop block caches before starting test.
-	sleepAtLoginScreen time.Duration    // Test will sleep at the login screen for the specified duration.
-	disabledFeatures   []string         // Controls ash-chrome features to be disabled.
-	enabledFeatures    []string         // Controls ash-chrome features to be enabled.
+	windows          int              // Number of session restored windows.
+	arcMode          string           // ARC mode to test.
+	tabletMode       bool             // Whether to run the test in tablet mode.
+	browserType      browser.Type     // browser.{TypeAsh/TypeLacros}
+	lacrosSelection  lacros.Selection // lacros.{Omaha,Rootfs}
+	preloadLacros    bool             // Whether to enable LacrosLaunchAtLoginScreen feature.
+	disabledFeatures []string         // Controls ash-chrome features to be disabled.
+	enabledFeatures  []string         // Controls ash-chrome features to be enabled.
 }
 
 func init() {
@@ -99,7 +104,7 @@ func init() {
 		Desc:         "Measures performance and UI smoothness of ChromeOS login",
 		Contacts: []string{
 			"cros-sw-perf@google.com",
-			"alemate@google.com",
+			"vincentchiang@google.com",
 			"oshima@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
@@ -108,218 +113,170 @@ func init() {
 			"ui.signinProfileTestExtensionManifestKey",
 			"ui.gaiaPoolDefault",
 		},
-		// Test runs login / chrome restart 120+ times.
-		Data: []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
+		Data:    []string{"animation.html", "animation.js", loginPerfTraceConfigFileName},
+		Timeout: 15 * time.Minute,
 		Params: []testing.Param{{
-			Name:      "ash_chrome",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
+			Val: loginPerfTestParam{
+				8,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeAsh,    // browserType
+				lacros.NotSelected, // lacrosSelection
+				false,              // preloadLacros
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
+			},
+		}, {
+			Name:      "noarc_2windows",
 			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
-			Timeout:   90 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{2, 8},                 // windows
-				[]string{noarc, arcenabled}, // arcmodes
-				true,                        // checkTabletMode
-				browser.TypeAsh,
-				lacros.NotSelected,
+				2,                  // windows
+				noarc,              // arcMode
+				false,              // tabletMode
+				browser.TypeAsh,    // browserType
+				lacros.NotSelected, // lacrosSelection
 				false,              // preloadLacros
-				false,              // forkZygotes
-				false,              // dropCaches
-				0,                  // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:      "ash_chrome_delay_login",
+			Name:      "noarc",
 			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
-			Timeout:   50 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{2, 8},                 // windows
-				[]string{noarc, arcenabled}, // arcmodes
-				false,                       // checkTabletMode
-				browser.TypeAsh,
-				lacros.NotSelected,
+				8,                  // windows
+				noarc,              // arcMode
+				false,              // tabletMode
+				browser.TypeAsh,    // browserType
+				lacros.NotSelected, // lacrosSelection
 				false,              // preloadLacros
-				false,              // forkZygotes
-				false,              // dropCaches
-				5 * time.Second,    // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:      "ash_chrome_cold_boot",
-			ExtraAttr: []string{"group:cuj", "cuj_loginperf"},
-			Timeout:   40 * time.Minute,
+			Name:              "2windows",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
 			Val: loginPerfTestParam{
-				[]int{2, 8},                 // windows
-				[]string{noarc, arcenabled}, // arcmodes
-				false,                       // checkTabletMode
-				browser.TypeAsh,
-				lacros.NotSelected,
+				2,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeAsh,    // browserType
+				lacros.NotSelected, // lacrosSelection
 				false,              // preloadLacros
-				false,              // forkZygotes
-				true,               // dropCaches
-				0,                  // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_only",
+			Name:              "lacros_rootfs_noarc_2windows",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           90 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				true, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
-				false,              // preloadLacros
-				false,              // forkZygotes
-				false,              // dropCaches
-				0,                  // sleepAtLoginScreen
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_chrome_root_fs_only_cold_boot",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           40 * time.Minute,
-			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
-				false,              // preloadLacros
-				false,              // forkZygotes
-				true,               // dropCaches
-				0,                  // sleepAtLoginScreen
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_chrome_root_fs_only_delay_login",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           50 * time.Minute,
-			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
-				false,              // preloadLacros
-				false,              // forkZygotes
-				false,              // dropCaches
-				5 * time.Second,    // sleepAtLoginScreen
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_chrome_root_fs_only_cold_boot_delay_login",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           50 * time.Minute,
-			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
-				false,              // preloadLacros
-				false,              // forkZygotes
-				true,               // dropCaches
-				5 * time.Second,    // sleepAtLoginScreen
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name:              "lacros_chrome_root_fs_only_enable_preload",
-			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           40 * time.Minute,
-			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
+				2,                  // windows
+				noarc,              // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
 				true,               // preloadLacros
-				false,              // forkZygotes
-				false,              // dropCaches
-				0,                  // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_only_enable_preload_delay_login",
+			Name:              "lacros_rootfs_noarc",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
+				8,                  // windows
+				noarc,              // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
 				true,               // preloadLacros
-				false,              // forkZygotes
-				false,              // dropCaches
-				5 * time.Second,    // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot",
+			Name:              "lacros_rootfs_2windows",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           40 * time.Minute,
+			ExtraSoftwareDeps: []string{"lacros", "arc"},
 			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
+				2,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
 				true,               // preloadLacros
-				false,              // forkZygotes
-				true,               // dropCaches
-				0,                  // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot_delay_login",
+			Name:              "lacros_rootfs",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           40 * time.Minute,
+			ExtraSoftwareDeps: []string{"lacros", "arc"},
 			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
+				8,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
 				true,               // preloadLacros
-				false,              // forkZygotes
-				true,               // dropCaches
-				5 * time.Second,    // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
 		}, {
-			Name:              "lacros_chrome_root_fs_only_enable_preload_fork_zygotes_cold_boot_delay_login",
+			Name:              "lacros_rootfs_nopreload_noarc",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           40 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
+				8,                  // windows
+				noarc,              // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
+				false,              // preloadLacros
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
+			},
+		}, {
+			Name:              "lacros_rootfs_nopreload",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"lacros", "arc"},
+			Val: loginPerfTestParam{
+				8,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
+				false,              // preloadLacros
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
+			},
+		}, {
+			Name:              "tablet",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"arc"},
+			Val: loginPerfTestParam{
+				8,                  // windows
+				arcenabled,         // arcMode
+				true,               // tabletMode
+				browser.TypeAsh,    // browserType
+				lacros.NotSelected, // lacrosSelection
+				false,              // preloadLacros
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
+			},
+		}, {
+			Name:              "lacros_rootfs_tablet",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"lacros", "arc"},
+			Val: loginPerfTestParam{
+				8,                  // windows
+				arcenabled,         // arcMode
+				true,               // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
 				true,               // preloadLacros
-				true,               // forkZygotes
-				true,               // dropCaches
-				5 * time.Second,    // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
@@ -329,17 +286,13 @@ func init() {
 			ExtraAttr:         []string{},
 			ExtraHardwareDeps: hwdep.D(hwdep.Model("kasumi", "vilboz" /* amd64 */, "krane" /* arm */)),
 			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           90 * time.Minute,
 			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{noarc, arcenabled},
-				true, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Omaha,
+				8,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Omaha,       // lacrosSelection
 				false,              // preloadLacros
-				false,              // forkZygotes
-				false,              // dropCaches
-				0,                  // sleepAtLoginScreen
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
@@ -347,18 +300,28 @@ func init() {
 			// Planned configuration for our production.
 			Name:              "lacros_chrome_rootfs_prod",
 			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
-			ExtraSoftwareDeps: []string{"lacros"},
-			Timeout:           40 * time.Minute,
+			ExtraSoftwareDeps: []string{"lacros", "arc"},
 			Val: loginPerfTestParam{
-				[]int{2, 8},
-				[]string{arcenabled},
-				false, // checkTabletMode
-				browser.TypeLacros,
-				lacros.Rootfs,
+				8,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
 				true,               // preloadLacros
-				true,               // forkZygotes
-				true,               // dropCaches
-				5 * time.Second,    // sleepAtLoginScreen
+				[]string{},         // disabledFeatures
+				[]string{deferARC}, // enabledFeatures
+			},
+		}, {
+			Name:              "lacros_chrome_rootfs_prod_2windows",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"lacros", "arc"},
+			Val: loginPerfTestParam{
+				2,                  // windows
+				arcenabled,         // arcMode
+				false,              // tabletMode
+				browser.TypeLacros, // browserType
+				lacros.Rootfs,      // lacrosSelection
+				true,               // preloadLacros
 				[]string{},         // disabledFeatures
 				[]string{deferARC}, // enabledFeatures
 			},
@@ -367,21 +330,21 @@ func init() {
 }
 
 type loginPerfTestConfig struct {
-	arcMode          string             // ARC++ mode name. Used to add suffix to the reported metrics.
-	arcOpt           []chrome.Option    // Additional Chrome options to control ARC++.
-	creds            chrome.Creds       // Test user credentials.
-	currentWindows   int                // Test will ensure that at least this number of windows will be restored.
-	expectHistograms []string           // The list of expected histograms. Test will wait for all of them to get reported.
-	inTabletMode     bool               // Whether Chrome should run in tablet mode.
-	lacrosCfg        *lacrosfixt.Config // Lacros configuration.
-	param            loginPerfTestParam // Tast subtest parameters.
-	windows          int                // Number of restored windows as configured.
+	arcMode              string             // ARC++ mode name.
+	arcOpt               []chrome.Option    // Additional Chrome options to control ARC++.
+	creds                chrome.Creds       // Test user credentials.
+	currentWindows       int                // Test will ensure that at least this number of windows will be restored.
+	expectHistograms     []string           // The list of expected histograms. Test will wait for all of them to get reported.
+	inTabletMode         bool               // Whether Chrome should run in tablet mode.
+	lacrosCfg            *lacrosfixt.Config // Lacros configuration.
+	param                loginPerfTestParam // Tast subtest parameters.
+	windows              int                // Number of restored windows as configured.
+	signinExtManifestKey string             // Key used for login extension.
 }
 
 // loginPerfStartToLoginScreen starts Chrome to the login screen.
 func loginPerfStartToLoginScreen(
 	ctx context.Context,
-	s *testing.State,
 	testConfig *loginPerfTestConfig,
 ) (cr *chrome.Chrome, retErr error) {
 	// chrome.NoLogin() and chrome.KeepState() are needed to show the login
@@ -390,7 +353,7 @@ func loginPerfStartToLoginScreen(
 		chrome.NoLogin(),
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(
-			s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+			testConfig.signinExtManifestKey),
 		chrome.EnableFeatures("FullRestore"),
 		chrome.EnableRestoreTabs(),
 		chrome.SkipForceOnlineSignInForTesting(),
@@ -401,7 +364,7 @@ func loginPerfStartToLoginScreen(
 		chrome.DisableFeatures(testConfig.param.disabledFeatures...),
 		chrome.EnableFeatures(testConfig.param.enabledFeatures...),
 	}
-	if testConfig.param.bt == browser.TypeLacros {
+	if testConfig.param.browserType == browser.TypeLacros {
 		defaultOpts, err := testConfig.lacrosCfg.Opts()
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to get default options")
@@ -413,23 +376,19 @@ func loginPerfStartToLoginScreen(
 	}
 	if testConfig.param.preloadLacros {
 		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
-		if testConfig.param.forkZygotes {
-			options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
-		} else {
-			options = append(options, chrome.DisableFeatures("LacrosForkZygotesAtLoginScreen"))
-		}
+		options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
 		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
-		s.Log("loginPerfStartToLoginScreen: Enabling LacrosLaunchAtLoginScreen feature")
+		testing.ContextLog(ctx, "loginPerfStartToLoginScreen: Enabling LacrosLaunchAtLoginScreen feature")
 	} else {
 		options = append(options, chrome.DisableFeatures("LacrosLaunchAtLoginScreen"))
-		s.Log("loginPerfStartToLoginScreen: Disabling LacrosLaunchAtLoginScreen feature")
+		testing.ContextLog(ctx, "loginPerfStartToLoginScreen: Disabling LacrosLaunchAtLoginScreen feature")
 	}
-	if testConfig.param.dropCaches {
-		if err := disk.DropCaches(ctx); err != nil {
-			return nil, errors.Wrap(err, "failed to drop caches")
-		}
-		s.Log("loginPerfStartToLoginScreen: File caches dropped")
+
+	// Drop caches to simulate cold boot.
+	if err := disk.DropCaches(ctx); err != nil {
+		return nil, errors.Wrap(err, "failed to drop caches")
 	}
+	testing.ContextLog(ctx, "loginPerfStartToLoginScreen: File caches dropped")
 
 	cr, err := chrome.New(
 		ctx,
@@ -441,7 +400,7 @@ func loginPerfStartToLoginScreen(
 	defer func() {
 		if retErr != nil {
 			if cr == nil {
-				s.Log("loginPerfStartToLoginScreen: Chrome is unexpectedly nil, will not close")
+				testing.ContextLog(ctx, "loginPerfStartToLoginScreen: Chrome is unexpectedly nil, will not close")
 			} else {
 				cr.Close(ctx)
 				cr = nil
@@ -449,11 +408,16 @@ func loginPerfStartToLoginScreen(
 		}
 	}()
 
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return nil, errors.New("failed to get the out directory")
+	}
+
 	tLoginConn, err := cr.SigninProfileTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "creating login test api connection failed")
 	}
-	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), func() bool { return retErr != nil }, tLoginConn)
+	defer faillog.DumpUITreeOnError(ctx, outDir, func() bool { return retErr != nil }, tLoginConn)
 
 	if err := ash.SetTabletModeEnabled(ctx, tLoginConn, testConfig.inTabletMode); err != nil {
 		return nil, errors.Wrapf(err, "failed to set tablet mode %v", testConfig.inTabletMode)
@@ -468,12 +432,10 @@ func loginPerfStartToLoginScreen(
 		return nil, errors.Wrapf(err, "failed waiting for the login screen to be ready for password entry: last state: %+v", st)
 	}
 
-	if testConfig.param.sleepAtLoginScreen != 0 {
-		s.Logf("Sleeping for %v before trying to log in", testConfig.param.sleepAtLoginScreen)
-		// GoBigSleepLint: This sleep is a test parameter.
-		if err := testing.Sleep(ctx, testConfig.param.sleepAtLoginScreen); err != nil {
-			return nil, errors.Wrapf(err, "failed to sleep at the login screen for %v", testConfig.param.sleepAtLoginScreen)
-		}
+	testing.ContextLog(ctx, "Sleeping for 5 seconds before trying to log in")
+	// GoBigSleepLint: This sleep is a test parameter.
+	if err := testing.Sleep(ctx, 5*time.Second); err != nil {
+		return nil, errors.Wrap(err, "failed to sleep at the login screen for 5 seconds")
 	}
 
 	return cr, nil
@@ -725,11 +687,11 @@ func setAlwaysRestoreSettings(ctx context.Context, tconn *chrome.TestConn) error
 // in subsequent test runs.
 func initializeLoginPerfTest(ctx context.Context,
 	sOutDir string,
-	browserType browser.Type,
 	lacrosConfig *lacrosfixt.Config,
 	loginPool string,
-	preloadLacros,
-	forkZygotes bool,
+	param loginPerfTestParam,
+	signinExtManifestKey,
+	url string,
 ) (
 	retCreds chrome.Creds,
 	retErr error,
@@ -756,20 +718,16 @@ func initializeLoginPerfTest(ctx context.Context,
 		// We enable ARC initially to fully initialize it.
 		options = append(options, chrome.ARCSupported(), disableARCSyncOption)
 	}
-	if browserType == browser.TypeLacros {
+	if param.browserType == browser.TypeLacros {
 		defaultOpts, err := lacrosConfig.Opts()
 		if err != nil {
 			return chrome.Creds{}, errors.Wrap(err, "failed to get default options")
 		}
 		options = append(options, defaultOpts...)
 	}
-	if preloadLacros {
+	if param.preloadLacros {
 		options = append(options, chrome.EnableFeatures("LacrosLaunchAtLoginScreen"))
-		if forkZygotes {
-			options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
-		} else {
-			options = append(options, chrome.DisableFeatures("LacrosForkZygotesAtLoginScreen"))
-		}
+		options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
 		options = append(options, chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"))
 		testing.ContextLog(ctx, "initializeLoginPerfTest: Enabling LacrosLaunchAtLoginScreen feature")
 	} else {
@@ -807,7 +765,7 @@ func initializeLoginPerfTest(ctx context.Context,
 	}
 
 	var l *lacros.Lacros
-	if browserType == browser.TypeLacros {
+	if param.browserType == browser.TypeLacros {
 		var err error
 		l, err = lacros.Launch(ctx, tconn)
 		if err != nil {
@@ -859,6 +817,72 @@ func initializeLoginPerfTest(ctx context.Context,
 		return creds, errors.Wrap(err, "failed to log out")
 	}
 	cr = nil
+
+	testing.ContextLog(ctx, "Create new windows: Sign in to create new windows")
+	// Log in and log out to create a user pod on the login screen and required number of windows in session.
+	err = func() error {
+		// We do not need ARC to create Chrome windows.
+		testConfig := &loginPerfTestConfig{
+			arcMode:              param.arcMode,
+			arcOpt:               []chrome.Option{},
+			creds:                creds,
+			inTabletMode:         false,
+			lacrosCfg:            lacrosConfig,
+			param:                param,
+			windows:              param.windows,
+			signinExtManifestKey: signinExtManifestKey,
+		}
+		cr, err := loginPerfStartToLoginScreen(ctx, testConfig)
+		if err != nil {
+			return err
+		}
+		defer func() {
+			// cr is not valid after logout.
+			if cr == nil {
+				testing.ContextLog(ctx, "create windows: Chrome is nil, will not close")
+			} else {
+				cr.Close(ctx)
+				cr = nil
+			}
+		}()
+
+		l, _, err := loginPerfDoLogin(ctx, cr, creds, param.browserType)
+		if err != nil {
+			return err
+		}
+		// Wait for windows to be restored.
+		var visible int
+		if err := testing.Poll(ctx, func(ctx context.Context) error {
+			var err error
+			if visible, err = countVisibleWindows(ctx, cr); err != nil {
+				return testing.PollBreak(err)
+			}
+			if visible != 0 && visible != 1 {
+				return errors.Errorf("unexpected number of visible windows: expected %d, found %d", 0, visible)
+			}
+			return nil
+		}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 10 * time.Millisecond}); err != nil {
+			return errors.Wrap(err, "failed to check number of existing windows before creating new ones")
+		}
+		testing.ContextLogf(ctx, "Before creating windows: visible=%d", visible)
+		if err := loginPerfCreateWindows(ctx, cr, l, url, param.windows); err != nil {
+			return err
+		}
+		testing.ContextLog(ctx, "Sign out: sleep for 20 seconds to let session settle")
+		// GoBigSleepLint: Give session time to settle.
+		if err := testing.Sleep(ctx, 20*time.Second); err != nil {
+			return errors.Wrap(err, "failed to sleep for 20 seconds")
+		}
+		if err := logout(ctx, cr, l); err != nil {
+			return errors.Wrap(err, "failed to log out")
+		}
+		cr = nil
+		return nil
+	}()
+	if err != nil {
+		return creds, errors.Wrap(err, "failed to create new browser windows")
+	}
+
 	return creds, nil
 }
 
@@ -876,7 +900,7 @@ func testFunction(
 	map[perf.Metric][]float64,
 	error,
 ) {
-	cr, err := loginPerfStartToLoginScreen(ctx, s, testConfig)
+	cr, err := loginPerfStartToLoginScreen(ctx, testConfig)
 	if err != nil {
 		return cr, nil, nil, nil, errors.Wrap(err, "failed to start to login screen")
 	}
@@ -896,7 +920,7 @@ func testFunction(
 		if err != nil {
 			s.Fatal("ps aux failed with: ", err)
 		}
-		l, lacrosConnectTime, err = loginPerfDoLogin(ctx, cr, testConfig.creds, testConfig.param.bt)
+		l, lacrosConnectTime, err = loginPerfDoLogin(ctx, cr, testConfig.creds, testConfig.param.browserType)
 		if err != nil {
 			return errors.Wrap(err, "failed to log in")
 		}
@@ -1049,8 +1073,6 @@ func testFunction(
 func storeHistograms(
 	ctx context.Context,
 	expectHistograms, heuristicsHistograms []string,
-	currentWindows int,
-	arcMode, metricsReportingSuffix string,
 	pv *perfutil.Values,
 	hists []*histogram.Histogram,
 ) error {
@@ -1058,13 +1080,13 @@ func storeHistograms(
 	for _, v := range heuristicsHistograms {
 		heuristicsHistogramsMap[v] = true
 	}
-	suffix := fmt.Sprintf("%s.%dwindows", arcMode, currentWindows)
+
 	for _, hist := range hists {
 		if heuristicsHistogramsMap[hist.Name] {
-			perfutil.StoreMetricWithHeuristics(ctx, pv, hist, suffix)
+			perfutil.StoreMetricWithHeuristics(ctx, pv, hist, "")
 			continue
 		}
-		valueName := hist.Name + metricsReportingSuffix
+		valueName := hist.Name
 		switch hist.Name {
 		case ensureWorkVisibleHistogram:
 			reportMaxHistogramValue(ctx, pv, hist, "microsecond", valueName)
@@ -1103,15 +1125,43 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	param := s.Param().(loginPerfTestParam)
 	lacrosCfg := lacrosfixt.NewConfig(lacrosfixt.Selection(param.lacrosSelection))
 
+	// Run an http server to serve the test contents for accessing from the chrome browsers.
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+
+	url := server.URL + "/animation.html"
+
+	displCount, err := graphics.NumberOfOutputsConnected(ctx)
+	if err != nil {
+		s.Fatal("Failed to get connected displays count: ", err)
+	}
+
+	// Run the login flow for various situations.
+	// - change the number of browser windows, 2 or 8
+	// - the window system status; clamshell mode or tablet mode.
+	windows := param.windows
+	arcMode := param.arcMode
+
+	var arcOpt []chrome.Option
+	switch arcMode {
+	case noarc:
+	case arcenabled:
+		arcOpt = []chrome.Option{chrome.ARCSupported(),
+			chrome.DisableFeatures("ArcExternalStorageAccess"),
+			disableARCSyncOption}
+	default:
+		s.Fatal("Unknown arcMode value=", arcMode)
+	}
+
 	// Log in and log out to create a user pod on the login screen.
 	creds, err := initializeLoginPerfTest(
 		ctx,
 		s.OutDir(),
-		param.bt,
 		lacrosCfg,
 		s.RequiredVar("ui.gaiaPoolDefault"),
-		param.preloadLacros,
-		param.forkZygotes,
+		param,
+		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+		url,
 	)
 	if err != nil {
 		s.Fatal("Failed to initialize test: ", err)
@@ -1125,287 +1175,172 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 	)
 	// Use 3 (successful) runs instead of 10, to reduce tests time.
 	r.SetRunsNumber(perfutil.RunnerCyclesOptions{MaxRuns: 5, MinSuccessfulRuns: 3})
-	// Run an http server to serve the test contents for accessing from the chrome browsers.
-	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
-	defer server.Close()
+	s.Logf("Starting test: %s for  %d windows", arcMode, windows)
 
-	url := server.URL + "/animation.html"
-
-	arcmodes := []string{noarc}
-	// If arc is not supported, limit arcmodes to "noarc" case only.
-	if arc.Supported() {
-		arcmodes = param.arcmodes
+	inTabletMode := param.tabletMode
+	suffix := ".ClamshellMode"
+	if inTabletMode {
+		suffix = ".TabletMode"
 	}
 
-	displCount, err := graphics.NumberOfOutputsConnected(ctx)
-	if err != nil {
-		s.Fatal("Failed to get connected displays count: ", err)
+	heuristicsHistograms := []string{
+		"Ash.LoginAnimation.Smoothness" + suffix,
+		"Ash.LoginAnimation.Jank" + suffix,
+		"Ash.LoginAnimation.Duration2" + suffix,
 	}
 
-	currentWindows := 0
-	// Run the login flow for various situations.
-	// - change the number of browser windows, 2 or 8
-	// - the window system status; clamshell mode or tablet mode.
-	for _, windows := range param.windows {
-		for _, arcMode := range arcmodes {
-			var arcOpt []chrome.Option
-			switch arcMode {
-			case noarc:
-			case arcenabled:
-				arcOpt = []chrome.Option{chrome.ARCSupported(),
-					chrome.DisableFeatures("ArcExternalStorageAccess"),
-					disableARCSyncOption}
-			default:
-				s.Fatal("Unknown arcMode value=", arcMode)
-			}
-			s.Log("Starting test: '"+arcMode+"' for ", windows, " windows")
+	allHistograms := []string{
+		ensureWorkVisibleHistogram,
+		ensureWorkVisibleLowResHistogram,
+		allBrowserWindowsCreated,
+		allBrowserWindowsShown,
+		allShelfIconsLoaded,
+		ashTastBootTimeLogin2,
+		bootTimeLogin3,
+		uptimeLogoutToUIStopAfterLogout,
+		uptimeUIStopToProcessesTerminatedAfterLogout,
+		uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
+		uptimeChromeExecToLoginPromptVisibleAfterLogout,
+		uptimeLogout,
+		uptimeLoginPromptSetupTimeAfterLogout,
+		uptimeLogoutToLoginPromptVisible,
+	}
+	// Histogram is only collected when the DUT is connected to the display.
+	if displCount > 0 {
+		allHistograms = append(allHistograms, allBrowserWindowsPresented)
+		allHistograms = append(allHistograms, shelfLoginAnimationEnd)
+		allHistograms = append(allHistograms, heuristicsHistograms...)
+	}
+	if arcMode != noarc {
+		allHistograms = append(allHistograms,
+			ashTastArcUIAvailableAfterLoginDuration,
+			arcTastUIAvailableTimeDelta,
+		)
+	}
 
-			if currentWindows != windows {
-				s.Log("CREATE NEW WINDOWS: Sign in to create new windows")
-				// Log in and log out to create a user pod on the login screen and required number of windows in session.
-				err := func() error {
-					// We do not need ARC to create Chrome windows.
-					testConfig := &loginPerfTestConfig{
-						arcMode:      arcMode,
-						arcOpt:       []chrome.Option{},
-						creds:        creds,
-						inTabletMode: false,
-						lacrosCfg:    lacrosCfg,
-						param:        param,
-						windows:      windows,
-					}
-					cr, err := loginPerfStartToLoginScreen(ctx, s, testConfig)
-					if err != nil {
-						return err
-					}
-					defer func() {
-						// cr is not valid after logout.
-						if cr == nil {
-							s.Log("create windows: Chrome is nil, will not close")
-						} else {
-							cr.Close(closeCtx)
-							cr = nil
-						}
-					}()
+	testConfig := &loginPerfTestConfig{
+		arcMode,
+		arcOpt,
+		creds,
+		param.windows,
+		allHistograms,
+		inTabletMode,
+		lacrosCfg,
+		param,
+		windows,
+		s.RequiredVar("ui.signinProfileTestExtensionManifestKey"),
+	}
 
-					l, _, err := loginPerfDoLogin(ctx, cr, creds, param.bt)
-					if err != nil {
-						return err
-					}
-					// Wait for windows to be restored
-					var visible int
-					if err := testing.Poll(ctx, func(ctx context.Context) error {
-						var err error
-						if visible, err = countVisibleWindows(ctx, cr); err != nil {
-							return testing.PollBreak(err)
-						}
-						if visible != currentWindows && visible != currentWindows+1 {
-							return errors.Errorf("unexpected number of visible windows: expected %d, found %d", currentWindows, visible)
-						}
-						return nil
-					}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 10 * time.Millisecond}); err != nil {
-						return errors.Wrap(err, "failed to check number of existing windows before creating new ones")
-					}
-					s.Logf("Before creating windows: visible=%d", visible)
-					if err := loginPerfCreateWindows(ctx, cr, l, url, windows-currentWindows); err != nil {
-						return err
-					}
-					s.Log("Sign out: sleep for 20 seconds to let session settle")
-					// GoBigSleepLint: Give session time to settle.
-					if err := testing.Sleep(ctx, 20*time.Second); err != nil {
-						return errors.Wrap(err, "failed to sleep for 20 seconds")
-					}
-					if err := logout(ctx, cr, l); err != nil {
-						return errors.Wrap(err, "failed to log out")
-					}
-					cr = nil
-					return nil
-				}()
-				if err != nil {
-					s.Fatal("Failed to create new browser windows: ", err)
-				}
-				currentWindows = windows
-			}
+	// |cr| and |l| are shared between multiple
+	// runs, because Chrome connection must to be
+	// closed only after histograms are stored.
+	var cr *chrome.Chrome
+	var l *lacros.Lacros
 
-			for _, inTabletMode := range []bool{false, true} {
-				if inTabletMode && !param.checkTabletMode {
-					// Skip if not configured.
-					continue
-				}
-				var suffix string
-				if inTabletMode {
-					suffix = ".TabletMode"
-				} else {
-					suffix = ".ClamshellMode"
-				}
+	testName := s.TestName()
+	s.Logf("Starting test: %q", testName)
 
-				// |cr| and |l| are shared between multiple
-				// runs, because Chrome connection must to be
-				// closed only after histograms are stored.
-				var cr *chrome.Chrome
-				var l *lacros.Lacros
-
-				heuristicsHistograms := []string{
-					"Ash.LoginAnimation.Smoothness" + suffix,
-					"Ash.LoginAnimation.Jank" + suffix,
-					"Ash.LoginAnimation.Duration2" + suffix,
-				}
-
-				allHistograms := []string{
-					ensureWorkVisibleHistogram,
-					ensureWorkVisibleLowResHistogram,
-					allBrowserWindowsCreated,
-					allBrowserWindowsShown,
-					allShelfIconsLoaded,
-					ashTastBootTimeLogin2,
-					bootTimeLogin3,
-					uptimeLogoutToUIStopAfterLogout,
-					uptimeUIStopToProcessesTerminatedAfterLogout,
-					uptimeOtherProcessesTerminatedToChromeExecAfterLogout,
-					uptimeChromeExecToLoginPromptVisibleAfterLogout,
-					uptimeLogout,
-					uptimeLoginPromptSetupTimeAfterLogout,
-					uptimeLogoutToLoginPromptVisible,
-				}
-				// Histogram is only collected when the DUT is connected to the display.
-				if displCount > 0 {
-					allHistograms = append(allHistograms, allBrowserWindowsPresented)
-					allHistograms = append(allHistograms, shelfLoginAnimationEnd)
-					allHistograms = append(allHistograms, heuristicsHistograms...)
-				}
-				if arcMode != noarc {
-					allHistograms = append(allHistograms,
-						ashTastArcUIAvailableAfterLoginDuration,
-						arcTastUIAvailableTimeDelta,
-					)
-				}
-
-				metricsReportingSuffix := fmt.Sprintf("%s.%s.%dwindows", suffix, arcMode, currentWindows)
-
-				testConfig := &loginPerfTestConfig{
-					arcMode,
-					arcOpt,
-					creds,
-					currentWindows,
-					allHistograms,
-					inTabletMode,
-					lacrosCfg,
-					param,
-					windows,
-				}
-
-				testName := s.TestName() + metricsReportingSuffix
-				s.Logf("Starting test: %q", testName)
-
-				// Performance run.
-				// Metrics are collected and saved to `pv`.
-				var allRunErrors []string
-				if allRunErrors, err = r.RunMultiple(
-					ctx,
-					testName,
-					uiperf.Run(
-						s,
-						func(ctx context.Context, name string) ([]*histogram.Histogram, error) {
-							// Tracing is disabled for the performance runs.
-							var histograms []*histogram.Histogram
-							var tpsValues map[perf.Metric][]float64
-							var err error
-							// Fill in external 'cr', 'l'.
-							cr, l, histograms, tpsValues, err = testFunction(ctx, s, name, testConfig, false)
-							r.Values().MergeWithSuffix(metricsReportingSuffix, tpsValues)
-							return histograms, err
-						}),
-					func(ctx context.Context, pv *perfutil.Values, hists []*histogram.Histogram) error {
-						// Shorten context a bit to allow for cleanup.
-						localCloseCtx := ctx
-						ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-						defer cancel()
-						defer func() {
-							// cr is not valid after logout.
-							if cr == nil {
-								s.Log("subtest cleanup: Chrome is nil, will not close")
-							} else {
-								cr.Close(localCloseCtx)
-								cr = nil
-							}
-						}()
-
-						if err := storeHistograms(
-							ctx,
-							testConfig.expectHistograms,
-							heuristicsHistograms,
-							currentWindows,
-							arcMode,
-							metricsReportingSuffix,
-							pv,
-							hists,
-						); err != nil {
-							return errors.Wrap(err, "storeHistograms failed")
-						}
-						if err := logout(ctx, cr, l); err != nil {
-							return errors.Wrap(err, "failed to log out")
-						}
-						cr = nil
-						return nil
-					}); err != nil {
-					s.Fatalf("Failed to run test scenario %s: %s", testName, err)
-				}
-				if len(allRunErrors) > 0 {
-					s.Logf("WARNING: Some of the %s runs ended with failures. All run errors: %v", testName, allRunErrors)
-				}
-				// Do a tracing run.
-				// Values are not stored to the perf results, but only reported to the test log.
-				// Tracing run is different from performance run and we need metrics values from the
-				// tracing run to analyze the trace.
-				// Tracing run errors are logged but do not fail the test.
-				tracingValues := perfutil.NewValues(false /*dropMinMax*/)
-
-				var tracingHistograms []*histogram.Histogram
+	// Performance run.
+	// Metrics are collected and saved to `pv`.
+	var allRunErrors []string
+	if allRunErrors, err = r.RunMultiple(
+		ctx,
+		testName,
+		uiperf.Run(
+			s,
+			func(ctx context.Context, name string) ([]*metrics.Histogram, error) {
+				// Tracing is disabled for the performance runs.
+				var histograms []*metrics.Histogram
 				var tpsValues map[perf.Metric][]float64
-
-				cr, l, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)
-				defer func() {
-					// cr is not valid after logout.
-					if cr == nil {
-						s.Log("tracing cleanup: Chrome is nil, will not close")
-					} else {
-						cr.Close(closeCtx)
-						cr = nil
-					}
-				}()
-
-				if err != nil {
-					s.Logf("WARNING: Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
-				} else if err := storeHistograms(
-					ctx,
-					testConfig.expectHistograms,
-					heuristicsHistograms,
-					currentWindows,
-					arcMode,
-					metricsReportingSuffix,
-					tracingValues,
-					tracingHistograms,
-				); err != nil {
-					s.Logf("WARNING: Failed to dump tracing histograms for the test scenario %s-tracing: %v", testName, err)
+				var err error
+				// Fill in external 'cr', 'l'.
+				cr, l, histograms, tpsValues, err = testFunction(ctx, s, name, testConfig, false)
+				r.Values().MergeWithSuffix("", tpsValues)
+				return histograms, err
+			}),
+		func(ctx context.Context, pv *perfutil.Values, hists []*metrics.Histogram) error {
+			// Shorten context a bit to allow for cleanup.
+			localCloseCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+			defer cancel()
+			defer func() {
+				// cr is not valid after logout.
+				if cr == nil {
+					s.Log("Subtest cleanup: Chrome is nil, will not close")
 				} else {
-					tracingValues.ForEach(func(name string, value []float64) {
-						if len(value) != 1 {
-							s.Logf("WARNING: %s-tracing: number of %s values is not equal to one: %v", testName, name, value)
-						} else {
-							s.Logf("%s-tracing %s: %f", testName, name, value[0])
-						}
-					})
-					for metric, values := range tpsValues {
-						s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
-					}
+					cr.Close(localCloseCtx)
+					cr = nil
 				}
-				if err := logout(ctx, cr, l); err != nil {
-					s.Logf("WARNING: Failed to sign out from the tracing session %s-tracing: %v", testName, err)
-				}
-				cr = nil
+			}()
+
+			if err := storeHistograms(
+				ctx,
+				testConfig.expectHistograms,
+				heuristicsHistograms,
+				pv,
+				hists,
+			); err != nil {
+				return errors.Wrap(err, "storeHistograms failed")
 			}
+			if err := logout(ctx, cr, l); err != nil {
+				return errors.Wrap(err, "failed to log out")
+			}
+			cr = nil
+			return nil
+		}); err != nil {
+		s.Fatalf("Failed to run test scenario %s: %v", testName, err)
+	}
+	if len(allRunErrors) > 0 {
+		s.Logf("WARNING: Some of the %s runs ended with failures. All run errors: %v", testName, allRunErrors)
+	}
+	// Do a tracing run.
+	// Values are not stored to the perf results, but only reported to the test log.
+	// Tracing run is different from performance run and we need metrics values from the
+	// tracing run to analyze the trace.
+	// Tracing run errors are logged but do not fail the test.
+	tracingValues := perfutil.NewValues(false /*dropMinMax*/)
+
+	var tracingHistograms []*metrics.Histogram
+	var tpsValues map[perf.Metric][]float64
+
+	cr, l, tracingHistograms, tpsValues, err = testFunction(ctx, s, fmt.Sprintf("%s-tracing", testName), testConfig, true)
+	defer func() {
+		// cr is not valid after logout.
+		if cr == nil {
+			s.Log("tracing cleanup: Chrome is nil, will not close")
+		} else {
+			cr.Close(closeCtx)
+			cr = nil
+		}
+	}()
+
+	if err != nil {
+		s.Logf("WARNING: Failed to run tracing for the test scenario %s-tracing: %s", testName, err)
+	} else if err := storeHistograms(
+		ctx,
+		testConfig.expectHistograms,
+		heuristicsHistograms,
+		tracingValues,
+		tracingHistograms,
+	); err != nil {
+		s.Logf("WARNING: Failed to dump tracing histograms for the test scenario %s-tracing: %v", testName, err)
+	} else {
+		tracingValues.ForEach(func(name string, value []float64) {
+			if len(value) != 1 {
+				s.Logf("WARNING: %s-tracing: number of %s values is not equal to one: %v", testName, name, value)
+			} else {
+				s.Logf("%s-tracing %s: %f", testName, name, value[0])
+			}
+		})
+		for metric, values := range tpsValues {
+			s.Logf("%s-tracing %s: %v", testName, metric.Name, values)
 		}
 	}
+	if err := logout(ctx, cr, l); err != nil {
+		s.Logf("WARNING: Failed to sign out from the tracing session %s-tracing: %v", testName, err)
+	}
+	cr = nil
+
 	if err := r.Values().Save(closeCtx, s.OutDir()); err != nil {
 		s.Error("Failed saving perf data: ", err)
 	}
