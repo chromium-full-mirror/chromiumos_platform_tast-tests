@@ -2726,6 +2726,20 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 			},
 			{
+				Name: "v4l2_stateless_hevc_main_10",
+				Val: platformDecodingParams{
+					filenames:          []string{"test_vectors/hevc/main_10/DBLK_A_MAIN10_VIXS_4.hevc", "test_vectors/hevc/main_10/INITQP_B_Main10_Sony_1.hevc", "test_vectors/hevc/main_10/WP_A_MAIN10_Toshiba_3.hevc", "test_vectors/hevc/main_10/WP_MAIN10_B_Toshiba_3.hevc", "test_vectors/hevc/main_10/WPP_A_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_B_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_C_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_D_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_E_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_F_ericsson_MAIN10_2.hevc"},
+					decoder:            "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
+					decoderArgsBuilder: platform.V4L2StatelessDecodeArgs,
+					ignoredSysLogs:     []graphics.SysLogCategory{graphics.SysLogKernelSplats},
+				},
+				Timeout:           10 * time.Minute,
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding()),
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_hevc_1080_30"},
+				ExtraData:         []string{"test_vectors/hevc/main_10/DBLK_A_MAIN10_VIXS_4.hevc", "test_vectors/hevc/main_10/DBLK_A_MAIN10_VIXS_4.hevc.json", "test_vectors/hevc/main_10/INITQP_B_Main10_Sony_1.hevc", "test_vectors/hevc/main_10/INITQP_B_Main10_Sony_1.hevc.json", "test_vectors/hevc/main_10/WP_A_MAIN10_Toshiba_3.hevc", "test_vectors/hevc/main_10/WP_A_MAIN10_Toshiba_3.hevc.json", "test_vectors/hevc/main_10/WP_MAIN10_B_Toshiba_3.hevc", "test_vectors/hevc/main_10/WP_MAIN10_B_Toshiba_3.hevc.json", "test_vectors/hevc/main_10/WPP_A_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_A_ericsson_MAIN10_2.hevc.json", "test_vectors/hevc/main_10/WPP_B_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_B_ericsson_MAIN10_2.hevc.json", "test_vectors/hevc/main_10/WPP_C_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_C_ericsson_MAIN10_2.hevc.json", "test_vectors/hevc/main_10/WPP_D_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_D_ericsson_MAIN10_2.hevc.json", "test_vectors/hevc/main_10/WPP_E_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_E_ericsson_MAIN10_2.hevc.json", "test_vectors/hevc/main_10/WPP_F_ericsson_MAIN10_2.hevc", "test_vectors/hevc/main_10/WPP_F_ericsson_MAIN10_2.hevc.json"},
+				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
+			},
+			{
 				Name: "v4l2_q08c",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf", "test_vectors/vp8/vp80-00-comprehensive-001.ivf", "test_vectors/h264/baseline/AUD_MW_E.h264", "test_vectors/h264/main/CABA1_SVA_B.h264"},

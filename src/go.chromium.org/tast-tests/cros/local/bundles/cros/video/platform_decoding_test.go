@@ -1533,7 +1533,10 @@ func TestPlatformDecodingParams(t *testing.T) {
 		}
 
 		// Generate V4L2 HEVC tests.
-		for _, testGroup := range []string{"main"} {
+		for _, testGroup := range []string{"main", "main_10"} {
+			if stateness == "Stateful" && testGroup == "main_10" {
+				continue
+			}
 			files := hevcFiles[testGroup]
 
 			hardwareDeps := commonHardwareDeps
