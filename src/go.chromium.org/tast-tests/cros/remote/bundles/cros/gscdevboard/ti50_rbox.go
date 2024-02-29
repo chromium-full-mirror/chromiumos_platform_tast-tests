@@ -17,6 +17,9 @@ import (
 const (
 	// minEcResetPulse is how long EC reset must be asserted.
 	minEcResetPulse = 10 * time.Millisecond
+	// battDisconnectMinimum is how long AC must be removed before battery
+	// disconnect is asserted
+	battDisconnectMinimum = 5 * time.Second
 )
 
 const (
@@ -213,8 +216,8 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	b.GpioSet(ctx, ti50.GpioTi50KsiBack, true)
 
 	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50KsiRefresh, clamshellEcResetGpioDelay)
-
-	// TODO(b/262618201) ensure that battery disconnect key combo works
+	verifyBatteryDisconnectCancelled(ctx, s, b, ti50.GpioTi50KsiRefresh)
+	verifyBatteryDisconnect(ctx, s, b, ti50.GpioTi50KsiRefresh)
 
 	// Finish test if bypass_sleep_check var is present (even if value is "false")
 	if _, noSleepCheck := s.Var("bypass_sleep_check"); noSleepCheck {
@@ -323,8 +326,8 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	b.GpioSet(ctx, ti50.GpioTi50VolDownIn, true)
 
 	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50VolUpIn, tabletEcResetGpioDelay)
-
-	// TODO(b/262618201) ensure that battery disconnect key combo works
+	verifyBatteryDisconnectCancelled(ctx, s, b, ti50.GpioTi50VolUpIn)
+	verifyBatteryDisconnect(ctx, s, b, ti50.GpioTi50VolUpIn)
 }
 
 // verifyEcResetWithKeysInOrder verifies that pushing the first gpio then the
@@ -385,6 +388,105 @@ func verifyEcResetWithKeysInOrder(ctx context.Context, s *testing.State, b utils
 			return
 		}
 		s.Logf("EC_RST_L delayed by %dms", resetDelayMs)
+	}
+}
+
+// verifyBatteryDisconnect verifies the battery disconnect sequence
+func verifyBatteryDisconnect(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecResetPin ti50.GpioName) {
+	s.Log("Start gpio monitoring for battery disconnect ")
+
+	// Start with AC connected
+	b.GpioSet(ctx, ti50.GpioTi50ACPresent, true)
+
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50BattDisableL, ti50.GpioTi50ACPresent)
+	if gpioMonitor.InitialValues[ti50.GpioTi50BattDisableL] != true {
+		s.Errorf("%s not de-asserted before battery disconnect combo", ti50.GpioTi50BattDisableL)
+	}
+
+	// Press EC Reset key combo
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
+	b.GpioSet(ctx, ecResetPin, false)
+
+	// Remove power
+	b.GpioSet(ctx, ti50.GpioTi50ACPresent, false)
+
+	s.Log("Hold battery disconnect key combo for a few seconds")
+	// GoBigSleepLint: Hold key combo for 5+ seconds
+	testing.Sleep(ctx, battDisconnectMinimum+time.Second)
+
+	// Release EC Reset key combo
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+	b.GpioSet(ctx, ecResetPin, true)
+
+	events := b.GpioMonitorFinish(ctx, gpioMonitor)
+	s.Log("Stop gpio monitoring: ", events)
+
+	assertBattDisable := events.FindFirst(ti50.GpioTi50BattDisableL, utils.GpioEdgeFalling)
+	if assertBattDisable == nil {
+		s.Errorf("%s did not assert with key combo", ti50.GpioTi50BattDisableL)
+	} else {
+		acRemovedEdge := events.FindFirst(ti50.GpioTi50ACPresent, utils.GpioEdgeFalling)
+		if acRemovedEdge == nil {
+			s.Fatal("Could not find AC_PRESENT falling edge")
+		}
+		delayTime := assertBattDisable.TimestampUS - acRemovedEdge.TimestampUS
+		// Allow 1% measurement error.
+		if delayTime < uint64(float64(battDisconnectMinimum.Microseconds())*0.99) {
+			s.Errorf("Asserted %s too soon after removing AC power: %dus", ti50.GpioTi50BattDisableL, delayTime)
+		} else if delayTime > uint64(float64(battDisconnectMinimum.Microseconds())*1.01) {
+			s.Errorf("Asserted %s too later after removing AC power: %dus", ti50.GpioTi50BattDisableL, delayTime)
+		} else {
+			s.Logf("%s asserted after %dus", ti50.GpioTi50BattDisableL, delayTime)
+		}
+	}
+}
+
+// verifyBatteryDisconnectCancelled verifies the battery disconnect sequence
+// is cancelled if the AC power is re connected within 5 seconds
+func verifyBatteryDisconnectCancelled(ctx context.Context, s *testing.State, b utils.DevboardHelper, ecResetPin ti50.GpioName) {
+	s.Log("Start gpio monitoring for battery disconnect")
+
+	// Start with AC connected
+	b.GpioSet(ctx, ti50.GpioTi50ACPresent, true)
+	gpioMonitor := b.GpioMonitorStart(ctx, ti50.GpioTi50BattDisableL, ti50.GpioTi50ACPresent)
+	if gpioMonitor.InitialValues[ti50.GpioTi50BattDisableL] != true {
+		s.Errorf("%s not de-asserted before battery disconnect combo", ti50.GpioTi50BattDisableL)
+	}
+
+	// Press EC Reset key combo
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, false)
+	b.GpioSet(ctx, ecResetPin, false)
+
+	// Remove power
+	b.GpioSet(ctx, ti50.GpioTi50ACPresent, false)
+
+	s.Log("Hold battery disconnect key combo for a few seconds")
+	// GoBigSleepLint: Hold key combo for half of the required time
+	testing.Sleep(ctx, battDisconnectMinimum/2)
+
+	// Send a pulse on AC Present. This should cancel battery disconnect
+	b.GpioSet(ctx, ti50.GpioTi50ACPresent, true)
+	b.GpioSet(ctx, ti50.GpioTi50ACPresent, false)
+
+	s.Log("Hold battery disconnect key combo for a few seconds")
+	// GoBigSleepLint: Hold key combo for half of the required time
+	testing.Sleep(ctx, battDisconnectMinimum/2+time.Second)
+
+	// Release EC Reset key combo
+	b.GpioSet(ctx, ti50.GpioTi50PowerBtnL, true)
+	b.GpioSet(ctx, ecResetPin, true)
+
+	events := b.GpioMonitorFinish(ctx, gpioMonitor)
+	s.Log("Stop gpio monitoring: ", events)
+
+	assertBattDisable := events.FindFirst(ti50.GpioTi50BattDisableL, utils.GpioEdgeFalling)
+	if assertBattDisable != nil {
+		acRemovedEdge := events.FindFirst(ti50.GpioTi50ACPresent, utils.GpioEdgeFalling)
+		if acRemovedEdge == nil {
+			s.Fatal("Could not find AC_PRESENT falling edge")
+		}
+		delayTime := assertBattDisable.TimestampUS - acRemovedEdge.TimestampUS
+		s.Errorf("Battery disconnect after %dus when it should have been canceled", delayTime)
 	}
 }
 

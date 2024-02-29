@@ -155,6 +155,12 @@ const (
 	// GpioTi50SmbusScl is the SCL signal for I2C/SM Bus communication where the
 	// GSC is host.
 	GpioTi50SmbusScl GpioName = "SMBUS_SCL"
+	// GpioTi50ACPresent is the signal from PMIC indicating if the ChromeOS device
+	// is connected to a power source (active high).
+	GpioTi50ACPresent GpioName = "AC_PRESENT"
+	// GpioTi50BattDisableL is the signal from GSC to battery pack to cutoff
+	// the battery's power (active low).
+	GpioTi50BattDisableL GpioName = "BATT_DISABLE_L"
 )
 
 const (
