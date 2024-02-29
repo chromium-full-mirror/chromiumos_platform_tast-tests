@@ -32,8 +32,12 @@ func init() {
 			"ti50-core@google.com",
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		Attr:         []string{"group:gsc", "gsc_dt_ab", "gsc_dt_shield", "gsc_image_ti50", "gsc_nightly"},
-		Fixture:      fixture.GSCOpenCCD,
+		Attr: []string{"group:gsc",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield",
+			"gsc_image_ti50",
+			"gsc_nightly"},
+		Fixture: fixture.GSCOpenCCD,
+		Vars:    []string{"bypass_sleep_check"},
 		Params: []testing.Param{{
 			Name: "spi_tablet",
 			Val: ti50ValidStrapsParam{
@@ -103,6 +107,12 @@ func Ti50ValidStraps(ctx context.Context, s *testing.State) {
 	th.MustSucceed(i.WaitUntilBooted(ctx), "Ti50 revives after reboot")
 	if err := checkGSCBrdpropCommandOutput(ctx, i, userParams.brdpropOutput); err != nil {
 		s.Error("Failed verify straps after power-on reset: ", err)
+	}
+
+	// Finish test if bypass_sleep_check var is present (even if value is "false")
+	if _, noSleepCheck := s.Var("bypass_sleep_check"); noSleepCheck {
+		s.Log("Bypassing sleep check")
+		return
 	}
 
 	s.Log("Putting Ti50 into deep sleep")
