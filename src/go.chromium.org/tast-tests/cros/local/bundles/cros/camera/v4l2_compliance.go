@@ -7,14 +7,10 @@ package camera
 import (
 	"context"
 	"strings"
-	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
-	"go.chromium.org/tast-tests/cros/local/upstart"
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -33,30 +29,8 @@ func init() {
 		// TODO(b/173778998) Jinlon privacy switch is not compliance: EBUSY during streamoff.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("jinlon")),
 		SoftwareDeps: []string{"uvc_compliant"},
+		Fixture:      fixture.CameraServiceStopped,
 	})
-}
-
-func startCrosCameraService(ctx context.Context) error {
-	testing.ContextLog(ctx, "Starting cros-camera")
-	if err := upstart.EnsureJobRunning(ctx, "cros-camera"); err != nil {
-		return errors.Wrap(err, "failed to start cros-camera")
-	}
-	return nil
-}
-
-func stopCrosCameraService(ctx context.Context) error {
-	testing.ContextLog(ctx, "Stopping cros-camera")
-	if err := upstart.StopJob(ctx, "cros-camera"); err != nil {
-		return errors.Wrap(err, "failed to stop cros-camera")
-	}
-
-	if err := upstart.WaitForJobStatus(ctx, "cros-camera", upstartcommon.StopGoal,
-		upstartcommon.WaitingState, upstart.RejectWrongGoal, ctxutil.MaxTimeout); err != nil {
-		startCrosCameraService(ctx)
-		return errors.Wrap(err, "the cros-camera service did not stop before calling runCrosCameraTest")
-	}
-
-	return nil
 }
 
 func V4L2Compliance(ctx context.Context, s *testing.State) {
@@ -68,19 +42,9 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 		"0c45:6a16": "b/287943727",
 		"0408:4041": "b/262499795",
 		"322e:2339": "b/327164074",
-		"5959:0131": "b/302211073",// Auto PLF missing
-		"2b7e:1085": "b/302211073",// Auto PLF missing
+		"5959:0131": "b/302211073", // Auto PLF missing
+		"2b7e:1085": "b/302211073", // Auto PLF missing
 	}
-
-	// Use a shorter context to save time for clean.
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	err := stopCrosCameraService(ctx)
-	if err != nil {
-		s.Fatal("Error stopping cros-camera service: ", err)
-	}
-	defer startCrosCameraService(ctx)
 
 	captureDevices, err := testutil.CaptureDevicesFromV4L2Test(ctx)
 	if err != nil {
