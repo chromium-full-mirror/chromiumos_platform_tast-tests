@@ -43,7 +43,7 @@ import (
 )
 
 // Default runtime should be about 5 mins although manual runtime is expected
-// to be about 30 mins controlled by varaiable
+// to be about 30 mins controlled by variable.
 const (
 	testTimeout   = time.Hour
 	longUITimeout = time.Minute
@@ -52,6 +52,20 @@ const (
 var (
 	meetRootWebArea   = nodewith.NameContaining("Meet").Role(role.RootWebArea)
 	histogramsWebArea = nodewith.Name("Histograms").Role(role.RootWebArea)
+
+	// meetCallHistograms records histograms of MeetCall performance comparisons.
+	meetCallHistograms = []string{
+		"Graphics.Smoothness.PercentDroppedFrames3.AllSequences",
+		"EventLatency.KeyPressed.TotalLatency",
+		"EventLatency.MousePressed.TotalLatency",
+		"PageLoad.PaintTiming.NavigationToLargestContentfulPaint2",
+		"PageLoad.PaintTiming.NavigationToFirstContentfulPaint",
+		"PageLoad.InteractiveTiming.InputDelay3",
+		"PageLoad.InteractiveTiming.TimeToNextPaint",
+		"PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart",
+		"Graphics.Smoothness.Jank.AllSequences",
+		"Graphics.Smoothness.Jank3.AllSequences",
+	}
 )
 
 type meetTest struct {
@@ -107,7 +121,7 @@ func init() {
 			"chromeos-competitive-analysis@google.com",
 			"williskung@google.com",
 		},
-		BugComponent: "b:1025042", // ChromeOS > EngProd > Platform > crosca > Automation
+		BugComponent: "b:1485133", // ChromeOS > Platform > baseOS > Performance > Competitive Analysis
 		SoftwareDeps: []string{"chrome"},
 		Vars: []string{
 			"crosca.MeetCall.bond_credentials",
@@ -330,17 +344,21 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 		webrtcInternals.Close()
 	}(closeCtx)
-	// Open histogram detail page for each of the metrics to match windows python test operations.
-	for _, metric := range histogram.Metrics {
-		histogramURL := "chrome://histograms/" + metric
-		conn, err := cr.NewConn(ctx, histogramURL)
-		if err != nil {
-			s.Fatalf("Failed to open %s: %v", histogramURL, err)
-		}
-		conns = append(conns, conn)
-	}
 
-	histogramsAfterWebrtcAndMetrics, err := metrics.GetHistograms(ctx, tconn, histogram.Metrics)
+	// Open histogram detail page for each of the metrics to match windows python test operations.
+	tabs, err := histogram.CreateHistogramTabs(ctx, cr, meetCallHistograms)
+	if err != nil {
+		s.Fatalf("Failed to create histogram tabs: %v", err)
+	}
+	defer func(ctx context.Context) {
+		for _, tab := range tabs {
+			if err := tab.Close(ctx); err != nil {
+				s.Log("Failed to close histogram tab: ", err)
+			}
+		}
+	}(closeCtx)
+
+	histogramsAfterWebrtcAndMetrics, err := metrics.GetHistograms(ctx, tconn, meetCallHistograms)
 	if err != nil {
 		s.Log("Failed to open histogram pages: ", err)
 	}
@@ -363,11 +381,11 @@ func MeetCall(ctx context.Context, s *testing.State) {
 	// GoBigSleepLint: A short delay is to allow tab switch to WebRTC to complete.
 	testing.Sleep(ctx, 1*time.Second)
 
-	if err := histogram.SwitchToMonitoringMode(ctx, conns, ui, kb); err != nil {
+	if err := histogram.SwitchToMonitoringMode(ctx, ui, kb, tabs); err != nil {
 		s.Fatal("Failed to switch to monitoring mode: ", err)
 	}
 
-	histogramsAfterMonitoringModeEnabled, err := metrics.GetHistograms(ctx, tconn, histogram.Metrics)
+	histogramsAfterMonitoringModeEnabled, err := metrics.GetHistograms(ctx, tconn, meetCallHistograms)
 	if err != nil {
 		s.Log("Failed to open histogram pages: ", err)
 	}
@@ -474,7 +492,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		s.Log("Types the sequence of characters for ", typingTimeout)
 
-		histogramsBeforeTyping, err := metrics.GetHistograms(ctx, tconn, histogram.Metrics)
+		histogramsBeforeTyping, err := metrics.GetHistograms(ctx, tconn, meetCallHistograms)
 		if err != nil {
 			s.Log("Failed to open histogram pages: ", err)
 		}
@@ -555,7 +573,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Display brightness after typing: ", brightness)
 
-		histogramsAfterTyping, err := metrics.GetHistograms(ctx, tconn, histogram.Metrics)
+		histogramsAfterTyping, err := metrics.GetHistograms(ctx, tconn, meetCallHistograms)
 		if err != nil {
 			s.Log("Failed to open histogram pages: ", err)
 		}
@@ -607,7 +625,8 @@ func MeetCall(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
-	if err := histogram.GenerateResults(ctx, conns, ui, s.OutDir()); err != nil {
+
+	if err := histogram.GenerateResults(ctx, ui, tabs, s.OutDir()); err != nil {
 		s.Fatal("Failed to generate results: ", err)
 	}
 	if err := recorder.Record(ctx, pv); err != nil {

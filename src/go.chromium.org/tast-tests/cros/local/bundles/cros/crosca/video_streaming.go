@@ -36,10 +36,28 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-var video = nodewith.Role(role.Video)
-var playbackTime time.Duration
-var perfOutputFile = "/var/log/perf_output.txt"
-var videoSettingH264Dash60Fps = "H264 DASH 60 FPS"
+var (
+	playbackTime = 5 * time.Minute
+
+	perfOutputFile            = "/var/log/perf_output.txt"
+	videoSettingH264Dash60Fps = "H264 DASH 60 FPS"
+
+	video = nodewith.Role(role.Video)
+
+	// videoStreamingHistograms records histograms of Video Streaming performance comparisons.
+	videoStreamingHistograms = []string{
+		"Graphics.Smoothness.PercentDroppedFrames3.AllSequences",
+		"EventLatency.KeyPressed.TotalLatency",
+		"EventLatency.MousePressed.TotalLatency",
+		"PageLoad.PaintTiming.NavigationToLargestContentfulPaint2",
+		"PageLoad.PaintTiming.NavigationToFirstContentfulPaint",
+		"PageLoad.InteractiveTiming.InputDelay3",
+		"PageLoad.InteractiveTiming.TimeToNextPaint",
+		"PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart",
+		"Graphics.Smoothness.Jank.AllSequences",
+		"Graphics.Smoothness.Jank3.AllSequences",
+	}
+)
 
 // playbackTimeVarString allow user to specify the duration of video playback
 var playbackTimeVarString = testing.RegisterVarString(
@@ -119,10 +137,18 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	conns, err = histogram.CreateHistogramTabs(ctx, cr)
+	tabs, err := histogram.CreateHistogramTabs(ctx, cr, videoStreamingHistograms)
 	if err != nil {
-		s.Fatal("Failed to create histogram tabs: ", err)
+		s.Fatalf("Failed to create histogram tabs: %v", err)
 	}
+	defer func(ctx context.Context) {
+		for _, tab := range tabs {
+			if err := tab.Close(ctx); err != nil {
+				s.Log("Failed to close histogram tab: ", err)
+			}
+		}
+	}(cleanupCtx)
+
 	histogramWindow, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return strings.Contains(w.Title, "Histogram") })
 	if err != nil {
 		s.Fatal("Failed to find the histogram window: ", err)
@@ -146,7 +172,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to find the CrosVideo window: ", err)
 	}
 
-	histogramsAfterCrosVideoLaunched, err := metrics.GetHistograms(ctx, tconn, histogram.Metrics)
+	histogramsAfterCrosVideoLaunched, err := metrics.GetHistograms(ctx, tconn, videoStreamingHistograms)
 	if err != nil {
 		s.Log("Failed to open histogram pages: ", err)
 	}
@@ -185,8 +211,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	if err := histogramWindow.ActivateWindow(ctx, tconn); err != nil {
 		s.Fatal("Failed to activate Histogram window: ", err)
 	}
-
-	if err := histogram.SwitchToMonitoringMode(ctx, conns, ui, kb); err != nil {
+	if err := histogram.SwitchToMonitoringMode(ctx, ui, kb, tabs); err != nil {
 		s.Fatal("Failed to switch to monitoring mode: ", err)
 	}
 	if err := crosVideoWindow.ActivateWindow(ctx, tconn); err != nil {
@@ -195,8 +220,6 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	pv := perf.NewValues()
 
 	startVideoStreaming := func(ctx context.Context) error {
-
-		playbackTime = 5 * time.Minute
 		playBackTimeInteger, err := readPlayBackTimeInteger(s)
 		playbackTime = time.Duration(playBackTimeInteger) * time.Minute
 
@@ -223,7 +246,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 			s.Log("Failed to ensure that the WebRTC Internals window is maximized: ", err)
 		}
 
-		histogramsBeforeVideoPlayback, err := metrics.GetHistograms(ctx, tconn, histogram.Metrics)
+		histogramsBeforeVideoPlayback, err := metrics.GetHistograms(ctx, tconn, videoStreamingHistograms)
 		if err != nil {
 			s.Log("Failed to open histogram pages: ", err)
 		}
@@ -264,7 +287,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		histogramsAfterVideoPlayback, err := metrics.GetHistograms(ctx, tconn, histogram.Metrics)
+		histogramsAfterVideoPlayback, err := metrics.GetHistograms(ctx, tconn, videoStreamingHistograms)
 		if err != nil {
 			s.Log("Failed to open histogram pages: ", err)
 		}
@@ -292,7 +315,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	if err := crosVideoWindow.CloseWindow(ctx, tconn); err != nil {
 		s.Fatal("Failed to close CrosVideo window: ", err)
 	}
-	if err := histogram.GenerateResults(ctx, conns, ui, s.OutDir()); err != nil {
+	if err := histogram.GenerateResults(ctx, ui, tabs, s.OutDir()); err != nil {
 		s.Fatal("Failed to generate results: ", err)
 	}
 	if err := recorder.Record(ctx, pv); err != nil {

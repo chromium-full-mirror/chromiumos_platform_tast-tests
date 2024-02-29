@@ -26,48 +26,63 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// HistogramTab holds the information of a Chrome browser tab.
+type HistogramTab struct {
+	histogram string
+	conn      *chrome.Conn
+}
+
+// NewHistogramTab creates a new HistogramTab instance.
+func NewHistogramTab(histogram string) *HistogramTab {
+	return &HistogramTab{
+		histogram: histogram,
+		conn:      nil,
+	}
+}
+
+// Close closes the HistogramTab connection.
+func (tab *HistogramTab) Close(ctx context.Context) error {
+	if tab.conn == nil {
+		return nil
+	}
+	if err := tab.conn.CloseTarget(ctx); err != nil {
+		return errors.Wrap(err, "failed to close tab")
+	}
+	if err := tab.conn.Close(); err != nil {
+		return errors.Wrap(err, "failed to close tab connection")
+	}
+	tab.conn = nil
+	return nil
+}
+
 type hist struct {
 	Sample int     `json:"sample"`
 	Mean   float64 `json:"mean"`
 }
 
-var (
-	histogramsWebArea = nodewith.Name("Histograms").Role(role.RootWebArea)
-	// Metrics to be shared with cros competitive analysis cuj to create chrome histogram tabs.
-	Metrics = []string{
-		"Graphics.Smoothness.PercentDroppedFrames3.AllSequences",
-		"EventLatency.KeyPressed.TotalLatency",
-		"EventLatency.MousePressed.TotalLatency",
-		"PageLoad.PaintTiming.NavigationToLargestContentfulPaint2",
-		"PageLoad.PaintTiming.NavigationToFirstContentfulPaint",
-		"PageLoad.InteractiveTiming.InputDelay3",
-		"PageLoad.InteractiveTiming.TimeToNextPaint",
-		"PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart",
-		"Graphics.Smoothness.Jank.AllSequences",
-		"Graphics.Smoothness.Jank3.AllSequences",
-	}
-)
+var histogramsWebArea = nodewith.Name("Histograms").Role(role.RootWebArea)
 
 // CreateHistogramTabs creates histogram tabs to match windows test workload.
-func CreateHistogramTabs(ctx context.Context, cr *chrome.Chrome) ([]*chrome.Conn, error) {
-	var conns []*chrome.Conn
-	for _, metric := range Metrics {
-		histogramURL := "chrome://histograms/" + metric
-		conn, err := cr.NewConn(ctx, histogramURL)
+func CreateHistogramTabs(ctx context.Context, cr *chrome.Chrome, hist []string) (tabs []*HistogramTab, err error) {
+	for _, h := range hist {
+		tab := NewHistogramTab(h)
+		tab.conn, err = cr.NewConn(ctx, "chrome://histograms/"+h)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to open histogram")
 		}
-		conns = append(conns, conn)
+		tabs = append(tabs, tab)
 	}
-	return conns, nil
+	return tabs, nil
 }
 
 // SwitchToMonitoringMode enables monitoring mode of chrome histogram tabs to match windows test workload.
-func SwitchToMonitoringMode(ctx context.Context, conns []*chrome.Conn, ui *uiauto.Context, kb *input.KeyboardEventWriter) error {
+func SwitchToMonitoringMode(ctx context.Context, ui *uiauto.Context, kb *input.KeyboardEventWriter, tabs []*HistogramTab) error {
 	monitoringMode := nodewith.Name("Switch to Monitoring Mode").Role(role.Button)
-	for idx := range conns {
-		if err := uiauto.Combine("switch to monitoring mode",
-			kb.AccelAction("Ctrl+Tab"),
+	for idx, tab := range tabs {
+		if err := tab.conn.ActivateTarget(ctx); err != nil {
+			return errors.Wrap(err, "failed to activate target")
+		}
+		if err := uiauto.NamedCombine("switch to monitoring mode",
 			ui.LeftClick(monitoringMode),
 			ui.WaitUntilGone(monitoringMode),
 		)(ctx); err != nil {
@@ -77,33 +92,59 @@ func SwitchToMonitoringMode(ctx context.Context, conns []*chrome.Conn, ui *uiaut
 	return nil
 }
 
+// ensureFileNotExist ensures that the file does not exist.
+// If the file exists, remove it and return nil.
+func ensureFileNotExist(filename string) error {
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		return nil
+	} else if err != nil {
+		return errors.Wrapf(err, "failed to stat %s: %v", filename, err)
+	}
+	if err := os.Remove(filename); err != nil {
+		return errors.Wrapf(err, "failed to remove %s file", filename)
+	}
+	return nil
+}
+
 // GenerateResults generates histogram result of chrome histogram tabs to match Windows tests work load.
-func GenerateResults(ctx context.Context, conns []*chrome.Conn, ui *uiauto.Context, outDir string) error {
-	resultFilename := fmt.Sprintf("%s_result.json", time.Now().Format("2006-01-02-15-04-05"))
+func GenerateResults(ctx context.Context, ui *uiauto.Context, tabs []*HistogramTab, outDir string) error {
+	dateStr := time.Now().Format("2006-01-02-15-04-05")
+	resultFilename := fmt.Sprintf("%s_result.json", dateStr)
+	if err := ensureFileNotExist(filepath.Join(outDir, resultFilename)); err != nil {
+		return err
+	}
+
 	f, err := os.Create(filepath.Join(outDir, resultFilename))
 	if err != nil {
 		return errors.Wrapf(err, "failed to create %s file", resultFilename)
 	}
 	defer f.Close()
+
 	histogramMap := make(map[string]hist)
-	for id, conn := range conns {
-		if err := conn.ActivateTarget(ctx); err != nil {
+	for _, tab := range tabs {
+		if err := tab.conn.ActivateTarget(ctx); err != nil {
 			return errors.Wrap(err, "failed to activate target")
 		}
+
 		sample, mean, err := readHistogram(ctx, ui)
 		if err != nil {
 			return errors.Wrap(err, "failed to get histogram")
 		}
-		histogramMap[Metrics[id]] = hist{
+		histogramMap[tab.histogram] = hist{
 			Sample: sample,
 			Mean:   mean,
 		}
-		filename := fmt.Sprintf("%s_%s.png", Metrics[id], time.Now().Format("2006-01-02-15-04-05"))
-		path := filepath.Join(outDir, filename)
-		if err := screenshot.Capture(ctx, path); err != nil {
+
+		filename := fmt.Sprintf("%s_%s.png", tab.histogram, dateStr)
+		imgPath := filepath.Join(outDir, filename)
+		if err := ensureFileNotExist(imgPath); err != nil {
+			return err
+		}
+		if err := screenshot.Capture(ctx, imgPath); err != nil {
 			testing.ContextLog(ctx, "Failed to capture screenshot: ", err)
 		}
 	}
+
 	histogramJSON, err := json.Marshal(histogramMap)
 	if err != nil {
 		return errors.Wrap(err, "failed to marshal json")
@@ -182,7 +223,6 @@ func readHistogram(ctx context.Context, ui *uiauto.Context) (sample int, mean fl
 			return 0, 0, errors.Wrap(err, "failed to get histogram body")
 		}
 
-		// infoNameString := fmt.Sprintf("\n%s", info.Name)
 		testing.ContextLog(ctx, "histogram body info.Name: ", fmt.Sprintf("\n%s", info.Name))
 	}
 	return sample, mean, nil
