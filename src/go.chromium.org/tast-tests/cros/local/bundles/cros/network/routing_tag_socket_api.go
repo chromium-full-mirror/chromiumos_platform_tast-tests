@@ -89,6 +89,17 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create network for test: ", err)
 	}
 
+	// Wait for connectivity of the high priority network to be ready. Especially
+	// SLAAC may take a few seconds.
+	if errs := testEnv.VerifyTestNetwork(ctx, routing.VerifyOptions{
+		IPv4:      true,
+		IPv6:      true,
+		IsPrimary: true,
+		Timeout:   30 * time.Second,
+	}); len(errs) != 0 {
+		s.Fatal("Failed to verify test network: ", errs)
+	}
+
 	vpnEnv := testEnv.TestRouter
 	vpnConn, err := vpn.StartConnection(ctx, vpnEnv, vpn.TypeIKEv2, vpn.WithIPType(vpn.IPTypeIPv4AndIPv6))
 	if err != nil {
