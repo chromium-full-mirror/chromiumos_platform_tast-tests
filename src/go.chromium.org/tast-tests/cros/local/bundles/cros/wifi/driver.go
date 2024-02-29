@@ -111,6 +111,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	},
 	wlan.IntelAX203: {
 		"5.15": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
+		"6.6":  "wireless/iwl7000/iwlwifi/iwlwifi.ko",
 	},
 	wlan.IntelAX211: {
 		"5.10": "wireless/iwl7000/iwlwifi/iwlwifi.ko",
@@ -207,6 +208,7 @@ var expectedWLANDriver = map[wlan.DeviceID]map[string]string{
 	wlan.MediaTekMT7922PCIE: {
 		"5.15": "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 		"6.1":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
+		"6.6":  "wireless/mediatek/mt76/mt7921/mt7921e.ko",
 	},
 }
 
