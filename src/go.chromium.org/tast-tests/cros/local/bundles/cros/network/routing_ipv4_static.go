@@ -137,13 +137,18 @@ func RoutingIPv4Static(ctx context.Context, s *testing.State) {
 	testing.Sleep(ctx, routing.DHCPExtraTimeout)
 	testing.ContextLog(ctx, "DHCP timeout was triggered")
 
-	// Verify the service state is not changed.
-	state, err := testEnv.TestService.GetState(ctx)
-	if err != nil {
-		s.Fatal("Failed to get service state: ", err)
-	}
-	if state != shillconst.ServiceStateOnline {
-		s.Fatalf("Expect service state %s, but got %s", shillconst.ServiceStateOnline, state)
+	// Verify the service state is still online.
+	// TODO(b/159725895): Ideally the service state should not change after DHCP
+	// failure, but actually after the service becomes online at the first time in
+	// the above code, the StaticIPConfig will be reset due to the current
+	// ethernet_any implementation, so when DHCP failure is triggered, the Network
+	// class in shill does not know any IP config on this network so the state
+	// will be turned to disconnected at once. After that, this network is no
+	// longer attached to ethernet_any and get the StaticIPConfig back and becomes
+	// online again. As a result, we need to wait for service online instead of
+	// checking its state directly here.
+	if err := testEnv.TestService.WaitForProperty(ctx, shillconst.ServicePropertyState, shillconst.ServiceStateOnline, 5*time.Second); err != nil {
+		s.Fatal("Failed to wait for the test service online after DHCP expired: ", err)
 	}
 
 	// Verify routing setup for test network.
