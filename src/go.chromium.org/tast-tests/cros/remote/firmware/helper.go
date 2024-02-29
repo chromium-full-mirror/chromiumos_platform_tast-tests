@@ -686,14 +686,14 @@ func (h *Helper) SetupUSBKey(ctx context.Context, cloudStorage *testing.CloudSto
 	// Find a devserver that works from servo host, and flash image from there.
 	for _, devserver := range cloudStorage.Devservers() {
 		testing.ContextLogf(ctx, "Trying devserver at %q", devserver)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-f", "-s", "-S", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
 			testing.ContextLog(ctx, "Devserver not healthy: ", err)
 			continue
 		}
 		artifactsURL := strings.TrimSuffix(cloudStorage.BuildArtifactsURL(), "/")
 		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=chromiumos_test_image.tar.xz", devserver, artifactsURL)
 		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", stagingURL); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-f", "-s", "-S", stagingURL); err != nil {
 			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
 			continue
 		}

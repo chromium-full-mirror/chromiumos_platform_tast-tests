@@ -145,14 +145,14 @@ func DownloadRequiredFirmwareFiles(ctx context.Context, h *Helper, cs *testing.C
 	// Find a devserver that works from servo host, and download image from there.
 	for _, devserver := range cs.Devservers() {
 		testing.ContextLogf(ctx, "Trying devserver at %q", devserver)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-f", "-s", "-S", "--connect-timeout", "3", fmt.Sprintf("%s/check_health", devserver)); err != nil {
 			testing.ContextLog(ctx, "Devserver not healthy: ", err)
 			continue
 		}
 		artifactsURL := strings.TrimSuffix(cs.BuildArtifactsURL(), "/")
 		stagingURL := fmt.Sprintf("%s/stage?archive_url=%s&files=%s", devserver, artifactsURL, gcsFirmwareFilePath)
 		testing.ContextLogf(ctx, "Staging image %q", stagingURL)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", stagingURL); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-f", "-s", "-S", stagingURL); err != nil {
 			testing.ContextLogf(ctx, "Failed to stage file at %q: %v", stagingURL, err)
 			continue
 		}
@@ -221,7 +221,7 @@ func extractFirmwareFile(ctx context.Context, h *Helper, devserver, gcsFirmwareF
 	for _, filename := range fileNamePool {
 		testImageURL := fmt.Sprintf("%s/extract/%s?file=%s", devserver, gcsFirmwareFilePath, filename)
 		testing.ContextLogf(ctx, "Downloading image file %q", filename)
-		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-fL", testImageURL, "--output", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileName)); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, false, "curl", "-s", "-S", "-fL", testImageURL, "--output", fmt.Sprintf("%s/%s", servoTmpDir, firmwareFileName)); err != nil {
 			testing.ContextLogf(ctx, "Failed to extract image file at %q: %v", testImageURL, err)
 			continue
 		}
