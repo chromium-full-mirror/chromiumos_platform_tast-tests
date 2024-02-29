@@ -267,7 +267,7 @@ func drawStrokes(ctx context.Context, tconn *chrome.TestConn, sg *strokeGroup) e
 // when numStrokes = 1.
 func (hwCtx *HandwritingContext) drawStrokesFromFile(filePath string, numStrokes int) uiauto.Action {
 	return func(ctx context.Context) error {
-		const minPointsPerStroke = 100
+		const minPointsPerStroke = 50
 
 		// Read and unmarshal the SVG file into the corresponding structs.
 		svgFile, err := readSvg(filePath)
