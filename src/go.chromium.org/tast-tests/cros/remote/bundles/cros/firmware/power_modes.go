@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -15,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
+	"go.chromium.org/tast-tests/cros/remote/tabletmode"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
@@ -23,7 +23,8 @@ import (
 )
 
 type powerModeTestParams struct {
-	powermode firmware.ResetType
+	powermode  firmware.ResetType
+	tabletmode bool
 }
 
 const (
@@ -45,22 +46,26 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.ui.ScreenLockService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC(), hwdep.FormFactor(hwdep.Convertible, hwdep.Chromeslate, hwdep.Detachable)),
-		Vars: []string{"servo",
-			"firmware.mode", // Optional. Expecting "tablet". By default firmware.mode will be "clamshell".
-		},
+		Vars:         []string{"servo"},
 		// TODO: When stable, change firmware_unstable to a different attr.
-		Attr:    []string{"group:firmware", "firmware_unstable", "group:intel-nda"},
+		Attr:    []string{"group:firmware", "firmware_unstable"},
 		Fixture: fixture.NormalMode,
 		Params: []testing.Param{{
 			Name:      "coldreset",
 			Val:       powerModeTestParams{powermode: coldReset},
+			ExtraAttr: []string{"group:intel-nda"},
+		}, {
+			Name:      "coldreset_tablet_mode",
+			Val:       powerModeTestParams{powermode: coldReset, tabletmode: true},
 			ExtraAttr: []string{"group:intel-convertible"},
 		}, {
-			Name: "shutdown",
-			Val:  powerModeTestParams{powermode: shutDown},
+			Name:      "shutdown",
+			Val:       powerModeTestParams{powermode: shutDown},
+			ExtraAttr: []string{"group:intel-nda"},
 		}, {
-			Name: "warmreset",
-			Val:  powerModeTestParams{powermode: warmReset},
+			Name:      "warmreset",
+			Val:       powerModeTestParams{powermode: warmReset},
+			ExtraAttr: []string{"group:intel-nda"},
 		},
 		},
 	})
@@ -77,28 +82,13 @@ func PowerModes(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed opening servo: ", err)
 	}
 
-	// Get the initial tablet_mode_angle settings to restore at the end of test.
-	re := regexp.MustCompile(`tablet_mode_angle=(\d+) hys=(\d+)`)
-	out, err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle").Output()
-	if err != nil {
-		s.Fatal("Failed to retrieve tablet_mode_angle settings: ", err)
+	tmc := &tabletmode.ConvertibleModeControl{}
+	if err := tmc.InitControl(ctx, dut); err != nil {
+		s.Fatal("Failed to init TabletModeControl: ", err)
 	}
-	m := re.FindSubmatch(out)
-	if len(m) != 3 {
-		s.Fatalf("Failed to get initial tablet_mode_angle settings: got submatches %+v", m)
-	}
-	initLidAngle := m[1]
-	initHys := m[2]
-
-	defaultMode := "clamshell"
-	if mode, ok := s.Var("firmware.mode"); ok {
-		defaultMode = mode
-	}
-
-	if defaultMode == "tablet" {
-		// Set tabletModeAngle to 0 to force the DUT into tablet mode.
+	if testOpt.tabletmode {
 		testing.ContextLog(ctx, "Put DUT into tablet mode")
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", "0", "0").Run(); err != nil {
+		if err := tmc.ForceTabletMode(ctx); err != nil {
 			s.Fatal("Failed to set DUT into tablet mode: ", err)
 		}
 	}
@@ -109,9 +99,6 @@ func PowerModes(ctx context.Context, s *testing.State) {
 			if err := h.Servo.SetPowerState(ctx, servo.PowerStateOn); err != nil {
 				s.Fatal("Failed to set powerstate to ON at cleanup: ", err)
 			}
-		}
-		if err := dut.Conn().CommandContext(ctx, "ectool", "motionsense", "tablet_mode_angle", string(initLidAngle), string(initHys)).Run(); err != nil {
-			s.Fatal("Failed to restore tablet_mode_angle to the original settings: ", err)
 		}
 	}(ctx)
 
