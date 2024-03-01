@@ -22,7 +22,7 @@ import (
 
 const (
 	pingTimeout      = 60 * time.Second
-	curlTimeout      = 60 * time.Second
+	curlTimeout      = 90 * time.Second
 	defaultInterval  = 300 * time.Millisecond
 	speedtestTimeout = 2 * time.Minute
 	googleDotComIPv6 = "ipv6.google.com"
