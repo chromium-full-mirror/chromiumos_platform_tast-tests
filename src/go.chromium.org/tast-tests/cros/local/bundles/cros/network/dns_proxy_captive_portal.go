@@ -118,7 +118,7 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	defer cleanupCerts(cleanupCtx)
 
 	opts := virtualnet.EnvOptions{
-		Priority:                   5,
+		// No need to set Priority, since there is only 1 Ethernet in this test.
 		NameSuffix:                 "",
 		EnableDHCP:                 true,
 		EnableDNS:                  true,
