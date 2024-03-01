@@ -20,7 +20,10 @@ const NetDiagJs = `
 /**
  * @fileoverview A wrapper file around the network diagnostics API.
  */
-function() {
+async function() {
+	const networkHealthMojoModule =
+    await import('chrome://resources/mojo/chromeos/services/network_health/public/mojom/network_diagnostics.mojom-webui.js');
+
   return {
     /**
      * Network Diagnostics mojo remote.
@@ -31,7 +34,7 @@ function() {
 
     getNetworkDiagnostics() {
       if (!this.networkDiagnostics_) {
-        this.networkDiagnostics_ = chromeos.networkDiagnostics.mojom
+        this.networkDiagnostics_ = networkHealthMojoModule
                                        .NetworkDiagnosticsRoutines.getRemote()
       }
       return this.networkDiagnostics_;
