@@ -23,6 +23,7 @@ const (
 	userFacingSwitchMode
 	envFacingSwitchMode
 	switchCamera
+	restartCamera
 )
 
 type ccaTestParams struct {
@@ -85,6 +86,11 @@ func init() {
 			ExtraAttr: []string{"group:intel-convertible"},
 			Val:       ccaTestParams{switchCamera, 1, true},
 			Timeout:   5 * time.Minute,
+		}, {
+			Name:      "consecutive_image_stress",
+			ExtraAttr: []string{"group:intel-nda"},
+			Val:       ccaTestParams{restartCamera, 360, false},
+			Timeout:   15 * time.Minute,
 		}},
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 	})
@@ -161,6 +167,7 @@ func CCAUIEssential(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open default camera facing: ", err)
 	}
 
+	tb := s.FixtValue().(cca.FixtureData).TestBridge()
 	for i := 1; i <= iterations; i++ {
 		s.Logf("Iteration: %d/%d", i, iterations)
 		switch action {
@@ -222,6 +229,14 @@ func CCAUIEssential(ctx context.Context, s *testing.State) {
 				if err := app.SwitchMode(ctx, cca.Photo); err != nil {
 					s.Fatal("Failed to switch to Photo mode: ", err)
 				}
+			}
+		case restartCamera:
+			if err := app.Restart(ctx, tb); err != nil {
+				s.Fatal("Failed to switch camera: ", err)
+			}
+			_, err := app.TakeSinglePhoto(ctx, cca.TimerOff)
+			if err != nil {
+				s.Fatal("Failed to capture image: ", err)
 			}
 		}
 	}
