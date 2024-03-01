@@ -405,10 +405,6 @@ func CopyDexOptCache(ctx context.Context, outputDir string) error {
 		return errors.Wrap(err, "failed to get android-data path")
 	}
 
-	if err := arc.WaitForDexOptOnBoot(ctx, 5*time.Minute); err != nil {
-		return errors.Wrap(err, "failed to wait for dexopt on boot to finish")
-	}
-
 	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, chrome.DefaultUser)
 	if err != nil {
 		return errors.Wrap(err, "failed to make Android /data directory available on host")

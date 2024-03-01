@@ -45,7 +45,7 @@ func Preopt(ctx context.Context, s *testing.State) {
 }
 
 func performBootAndWaitForDexOpt(ctx context.Context, outDir string) error {
-	args := append(arc.DisableSyncFlags(), "--arc-force-post-boot-dex-opt")
+	args := append(arc.DisableSyncFlags())
 	cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU(),
 		chrome.ExtraArgs(args...))
 	if err != nil {
@@ -59,7 +59,7 @@ func performBootAndWaitForDexOpt(ctx context.Context, outDir string) error {
 	}
 	defer a.Close(ctx)
 
-	if err := arc.WaitForDexOptOnBoot(ctx, 2*time.Minute); err != nil {
+	if err := a.EnsurePostBootDexOptFinished(ctx, 2*time.Minute); err != nil {
 		return errors.Wrap(err, "failed to wait for dexopt on boot to finish")
 	}
 

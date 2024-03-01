@@ -15,6 +15,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1063,8 +1064,8 @@ func RestoreArcvmDevConf(ctx context.Context) error {
 	return nil
 }
 
-// WaitForDexOptOnBoot waits for the dexopt on boot to finish.
-func WaitForDexOptOnBoot(ctx context.Context, timeout time.Duration) error {
+// EnsurePostBootDexOptFinished force the post dexopt boot to run and wait for its finish.
+func (a *ARC) EnsurePostBootDexOptFinished(ctx context.Context, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
@@ -1074,10 +1075,31 @@ func WaitForDexOptOnBoot(ctx context.Context, timeout time.Duration) error {
 	}
 	if sdkVersion >= SDKR {
 		testing.ContextLog(ctx, "Waiting for dexopt on boot to finish")
-		const prop = "dev.arc.boot_dexopt_complete"
-		if err := waitProp(ctx, prop, "1", reportTiming); err != nil {
-			return errors.Wrapf(err, "property %s not set", prop)
+		dexOptFinished, err := a.isPostBootDexOptFinished(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to check PostBootDexOptFinished statu")
 		}
+		if dexOptFinished {
+			return nil
+		}
+
+		err = a.schedulePostBootDexOpt(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to schedule post boot dex opt job")
+		}
+
+		testing.Poll(ctx, func(ctx context.Context) error {
+			dexOptFinished, err = a.isPostBootDexOptFinished(ctx)
+			if err != nil {
+				return err
+			}
+
+			if !dexOptFinished {
+				return errors.New("DexOpt is not finished")
+			}
+
+			return nil
+		}, &testing.PollOptions{Interval: time.Second})
 	} else {
 		// TODO(b/293899461): remove the dependency on CPU idle wait once the dex opt on boot complete
 		// property exists in P.
@@ -1088,6 +1110,37 @@ func WaitForDexOptOnBoot(ctx context.Context, timeout time.Duration) error {
 	}
 
 	return nil
+}
+
+func (a *ARC) isPostBootDexOptFinished(ctx context.Context) (bool, error) {
+	out, err := a.Command(ctx, "dumpsys", "package", "dexopt").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return false, errors.Wrap(err, "failed to dump package dexopt information")
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(out)), "\n")
+	inBgDexOptDump := false
+	for _, line := range lines {
+		if strings.Contains(line, "BgDexopt state:") {
+			inBgDexOptDump = true
+		} else if inBgDexOptDump {
+			lineParts := strings.Split(strings.TrimSpace(line), ":")
+			if lineParts[0] == "mFinishedPostBootUpdate" {
+				val, err := strconv.ParseBool(lineParts[1])
+				if err != nil {
+					return false, errors.Wrap(err, "failed to parse mFinishedPostBootUpdate value")
+				}
+				return val, nil
+			}
+		}
+	}
+
+	return false, errors.Errorf("failed to find mFinishedPostBootUpdate value from dumpsys package dexopt: %s", out)
+}
+
+func (a *ARC) schedulePostBootDexOpt(ctx context.Context) error {
+	// 801 is the post boot dexopt job ID
+	return a.Command(ctx, "cmd", "jobscheduler", "run", "-f", "android", "801").Run(testexec.DumpLogOnError)
 }
 
 // CheckNoDex2Oat verifies whether ARC is pre-optimized and no dex2oat was previously running in the background.

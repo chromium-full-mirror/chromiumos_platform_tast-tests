@@ -8,6 +8,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
@@ -46,7 +47,7 @@ func (c *DexOptCacheService) Generate(ctx context.Context, request *empty.Empty)
 	}()
 
 	testing.ContextLog(ctx, "Starting ARC")
-	cr, a, err := cache.OpenSession(ctx, []string{"--arc-force-post-boot-dex-opt", "--arc-disable-dexopt-cache"}, targetDir)
+	cr, a, err := cache.OpenSession(ctx, []string{"--arc-disable-dexopt-cache"}, targetDir)
 	if err != nil {
 		os.RemoveAll(targetDir)
 		return nil, errors.Wrap(err, "failed to start ARC")
@@ -54,6 +55,10 @@ func (c *DexOptCacheService) Generate(ctx context.Context, request *empty.Empty)
 
 	defer cr.Close(ctx)
 	defer a.Close(ctx)
+
+	if err := a.EnsurePostBootDexOptFinished(ctx, 5*time.Minute); err != nil {
+		return nil, errors.Wrap(err, "failed to wait for dexopt on boot to finish")
+	}
 
 	if err := cache.CopyDexOptCache(ctx, targetDir); err != nil {
 		os.RemoveAll(targetDir)
