@@ -46,19 +46,18 @@ func init() {
 		Func: CertsAreUserSpecific,
 		// This test launches a web page so there should be a lacros variant.
 		// Lacros test will be added once the issue(crbug/1366609) is fixed.
-		LacrosStatus:   testing.LacrosVariantNeeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify that the imported certificates are user specific",
+		LacrosStatus: testing.LacrosVariantNeeded,
+		Desc:         "Verify that the imported certificates are user specific",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"edgar.chang@cienet.com",
-			"cj.tsai@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		Attr:         []string{"group:network", "network_e2e_unstable"},
-		SoftwareDeps: []string{"chrome"},
+		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:network", "network_e2e"},
+		SoftwareDeps:   []string{"chrome"},
 		// Import binding and non-binding certs from regular user.
 		// Import non-binding certs from guest user.
 		Timeout: 3 * (testScenarioTimeout + cleanUpReserveTimeout),
