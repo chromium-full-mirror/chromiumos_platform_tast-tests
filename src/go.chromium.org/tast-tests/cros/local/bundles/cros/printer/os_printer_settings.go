@@ -93,6 +93,25 @@ func OsPrinterSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close all notifications: ", err)
 	}
 
+	// Set up keyboard.
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to find keyboard: ", err)
+	}
+	defer kb.Close(ctx)
+
+	// Focus the search printers text field box.
+	searchBox := nodewith.Name("Search printers").Role(role.SearchBox).Ancestor(ossettings.WindowFinder)
+	printerNameEntry := nodewith.HasClass("list-item").NameStartingWith(printer.VisibleName).Ancestor(ossettings.WindowFinder)
+	if err := uiauto.Combine("Search for virtual printer",
+		ui.DoDefault(searchBox),
+		ui.WithTimeout(uiTimeout).WaitUntilExists(searchBox.Focused()),
+		kb.TypeAction(printer.VisibleName),
+		ui.WithTimeout(uiTimeout).WaitUntilExists(printerNameEntry),
+	)(ctx); err != nil {
+		s.Fatal("Failed to search for virtual printer: ", err)
+	}
+
 	savePrinterButton := nodewith.HasClass("save-printer-button").Name("Save").Ancestor(ossettings.WindowFinder)
 	moreActionsButton := nodewith.HasClass("icon-more-vert").Name("More actions").Ancestor(ossettings.WindowFinder)
 
@@ -110,13 +129,6 @@ func OsPrinterSettings(ctx context.Context, s *testing.State) {
 	)(ctx); err != nil {
 		s.Fatal("Failed to edit saved printer entry: ", err)
 	}
-
-	// Set up keyboard.
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to find keyboard: ", err)
-	}
-	defer kb.Close(ctx)
 
 	// Focus the printer name text field box.
 	printerNameTextField := nodewith.Name("Name").Role(role.TextField).Ancestor(ossettings.WindowFinder)

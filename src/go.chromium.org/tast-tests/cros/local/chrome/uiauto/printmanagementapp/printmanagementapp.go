@@ -80,7 +80,7 @@ func (p *PrintManagementApp) Focus() uiauto.Action {
 
 // LaunchPrinterSettings returns an action that opens Printer settings.
 func (p *PrintManagementApp) LaunchPrinterSettings() uiauto.Action {
-	printerSettingsWindow := nodewith.Name("Settings - Printers").Role(role.Window).First()
+	printerSettingsWindow := nodewith.Name("Settings - Print").Role(role.Window).First()
 	return uiauto.IfSuccessThen(p.verifyLaunchSettingsButton(),
 		uiauto.Combine("press manage printers and confirm settings opens",
 			p.ui.DoDefault(printManagementLaunchSettingsButton),

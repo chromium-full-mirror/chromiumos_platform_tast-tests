@@ -125,7 +125,7 @@ func OpenPrinterSettingsFromPrintPreviewDestinationDialogCros(ctx context.Contex
 	// in the list and "Manager Printers" in the empty state UI.
 	buttonNameRegex := regexp.MustCompile("Manage( Printers)?")
 	launchButton := nodewith.NameRegex(buttonNameRegex).Role(role.Button)
-	printerSettingsWindow := nodewith.Name("Settings - Printers").Role(role.Window).First()
+	printerSettingsWindow := nodewith.Name("Settings - Print").Role(role.Window).First()
 	if err := uiauto.Combine("find and click manage printers button",
 		ui.WaitUntilExists(launchButton),
 		ui.DoDefault(launchButton),

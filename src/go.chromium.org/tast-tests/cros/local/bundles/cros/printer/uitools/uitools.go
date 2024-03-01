@@ -45,10 +45,10 @@ const (
 	OtherAvailablePrintersName = "Other available printers"
 	PpdStartTextName           = "PPD-Adobe:"
 	PpdRetrieveErrorName       = "Unable to retrieve PPD"
-	PrintersName               = "Printers"
+	PrintersName               = "Print"
 	ProtocolName               = "Protocol"
 	SearchPrintersName         = "Search printers"
-	SettingsPageName           = "osPrinting"
+	SettingsPageName           = "cupsPrinters"
 	ViewPpdName                = "View printer PPD"
 )
 
@@ -68,7 +68,7 @@ var (
 	OtherAvailablePrintersFinder *nodewith.Finder = nodewith.Role(role.Button).Name(OtherAvailablePrintersName)
 	PpdStartTextFinder           *nodewith.Finder = nodewith.Role(role.StaticText).NameContaining(PpdStartTextName)
 	PpdRetrieveErrorFinder       *nodewith.Finder = nodewith.Role(role.StaticText).NameContaining(PpdRetrieveErrorName)
-	PrintersFinder               *nodewith.Finder = nodewith.Role(role.Link).Name(PrintersName)
+	PrintersFinder               *nodewith.Finder = nodewith.Role(role.Heading).Name(PrintersName)
 	ProtocolFinder               *nodewith.Finder = nodewith.Role(role.ComboBoxSelect).Name(ProtocolName)
 	SearchPrintersFinder         *nodewith.Finder = nodewith.Role(role.SearchBox).Name(SearchPrintersName)
 	ViewPpdFinder                *nodewith.Finder = nodewith.Role(role.Button).Name(ViewPpdName)
