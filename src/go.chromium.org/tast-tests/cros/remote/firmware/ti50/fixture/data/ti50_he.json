@@ -1,25 +1,25 @@
 {
   "pins": [
     {
-      "name": "PLT_RST_L",
-      "mode": "OpenDrain",
+      "alias_of": "PltRst",
       "level": false,
-      "pull_mode": "PullUp",
-      "alias_of": "PltRst"
+      "mode": "OpenDrain",
+      "name": "PLT_RST_L",
+      "pull_mode": "PullUp"
     }
   ],
   "uarts": [
     {
-      "name": "AP",
-      "alias_of": ""
+      "alias_of": "",
+      "name": "AP"
     },
     {
-      "name": "EC",
-      "alias_of": ""
+      "alias_of": "",
+      "name": "EC"
     },
     {
-      "name": "FPMCU",
-      "alias_of": ""
+      "alias_of": "",
+      "name": "FPMCU"
     }
   ]
 }
