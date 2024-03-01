@@ -10,7 +10,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
-	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -50,10 +49,10 @@ func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 	}
 	defer pxy.Close(cleanupCtx)
 
-	shutdownPowerState := "S5"
-	if err := powercontrol.ShutdownAndWaitForPowerState(ctx, pxy, dut, shutdownPowerState); err != nil {
-		s.Fatalf("Failed to shutdown and wait for %q powerstate: %v", shutdownPowerState, err)
+	if err := utils.ShutdownDUT(ctx, pxy, dut); err != nil {
+		s.Fatal("Failed to shutdown DUT: ", err)
 	}
+	defer utils.PowerOnDUT(ctx, pxy, dut)
 
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
