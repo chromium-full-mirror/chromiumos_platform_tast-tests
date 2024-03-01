@@ -89,10 +89,17 @@ func ForgetDevice(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to pair device with UI: ", err)
 	}
 
+	toastOverlay := ui.Node().HasClass("ToastOverlay").Finder()
+	disconnectedPromptFinder := ui.Node().Name(fmt.Sprintf("%s disconnected", device.AdvertisedName())).Role(ui.Role_ROLE_STATIC_TEXT).Ancestor(toastOverlay).Finder()
 	if !expectDeviceToBeConnected {
 		// Power off the Bluetooth device to disconnect it from ChromeOS.
 		if err := device.RPC().AdapterPowerOff(ctx); err != nil {
 			s.Fatal("Failed to power off the device: ", err)
+		}
+
+		// Must to wait until the disconnect prompt is gone so that the following test won't be misled by this prompt.
+		if err := waitForPrompt(ctx, fv.DUTRPCClient.Conn, disconnectedPromptFinder, true /* expectShown */); err != nil {
+			s.Fatal("Failed to wait for disconnected prompt to appear and disappear: ", err)
 		}
 	}
 
@@ -125,7 +132,7 @@ func ForgetDevice(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to forget Bluetooth device %q: %v", device.AdvertisedName(), err)
 	}
 
-	if err := verifyDisconnectedPromptBehavior(ctx, fv.DUTRPCClient.Conn, device.AdvertisedName(), expectDeviceToBeConnected); err != nil {
+	if err := verifyDisconnectedPromptBehavior(ctx, fv.DUTRPCClient.Conn, disconnectedPromptFinder, expectDeviceToBeConnected); err != nil {
 		s.Fatal("Failed to verify disconnected prompt behavior: ", err)
 	}
 
@@ -143,7 +150,7 @@ func ForgetDevice(ctx context.Context, s *testing.State) {
 
 }
 
-func verifyDisconnectedPromptBehavior(ctx context.Context, conn *grpc.ClientConn, deviceName string, forgetFromConnectedDevice bool) (retErr error) {
+func verifyDisconnectedPromptBehavior(ctx context.Context, conn *grpc.ClientConn, disconnectedPromptFinder *ui.Finder, forgetFromConnectedDevice bool) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
@@ -152,25 +159,36 @@ func verifyDisconnectedPromptBehavior(ctx context.Context, conn *grpc.ClientConn
 		if retErr != nil {
 			faillog := ui.NewChromeUIServiceClient(conn)
 			faillog.DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{
-				FilePrefix: fmt.Sprintf("%s_disconnected_prompt", deviceName),
+				FilePrefix: "verify_disconnected_prompt",
 			})
 		}
 	}(cleanupCtx)
 
-	uiSvc := ui.NewAutomationServiceClient(conn)
-	toastOverlay := ui.Node().HasClass("ToastOverlay").Finder()
-	disconnectedPrompt := ui.Node().Name(fmt.Sprintf("%s disconnected", deviceName)).Role(ui.Role_ROLE_STATIC_TEXT).Ancestor(toastOverlay)
-
 	// The disconnected prompt should popup only when forgetting from a connected device.
-	if forgetFromConnectedDevice {
-		_, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
-			Finder: disconnectedPrompt.Finder(),
-		})
-		return err
+	return waitForPrompt(ctx, conn, disconnectedPromptFinder, forgetFromConnectedDevice)
+}
+
+// waitForPrompt waits until the specific prompt shows if expected and gone.
+func waitForPrompt(ctx context.Context, conn *grpc.ClientConn, prompt *ui.Finder, expectShown bool) error {
+	uiSvc := ui.NewAutomationServiceClient(conn)
+	if expectShown {
+		if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
+			Finder: prompt,
+		}); err != nil {
+			return errors.Wrap(err, "failed to wait until prompt exists")
+		}
+
+		if _, err := uiSvc.WaitUntilGone(ctx, &ui.WaitUntilGoneRequest{
+			Finder: prompt,
+		}); err != nil {
+			return errors.Wrap(err, "failed to wait until prompt gone")
+		}
 	}
-	_, err := uiSvc.EnsureGone(ctx, &ui.EnsureGoneRequest{
-		Finder:  disconnectedPrompt.Finder(),
+	if _, err := uiSvc.EnsureGone(ctx, &ui.EnsureGoneRequest{
+		Finder:  prompt,
 		Timeout: &durationpb.Duration{Seconds: 5},
-	})
-	return err
+	}); err != nil {
+		return errors.Wrap(err, "failed to wait until prompt gone")
+	}
+	return nil
 }
