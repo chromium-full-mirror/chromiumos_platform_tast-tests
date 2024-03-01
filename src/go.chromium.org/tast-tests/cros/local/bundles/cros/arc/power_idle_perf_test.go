@@ -74,8 +74,16 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 				"false",
 			},
 			{
+				"noarc_extended",
+				"crosbolt_weekly",
+				"arc", // to prevent _noarc tests from running on non-ARC boards
+				"chromeLoggedInDisableSyncNoFwUpdate",
+				"75 * time.Minute",
+				"true",
+			},
+			{
 				"",
-				"crosbolt_arc_perf_qual",
+				"",
 				"android_container",
 				"arcBootedRestricted",
 				"20 * time.Minute",
@@ -83,7 +91,7 @@ func TestPowerIdlePerfParamsAreGenerated(t *testing.T) {
 			},
 			{
 				"vm",
-				"crosbolt_arc_perf_qual",
+				"",
 				"android_vm",
 				"arcBootedRestricted",
 				"20 * time.Minute",

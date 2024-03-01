@@ -62,7 +62,18 @@ func init() {
 				Timeout: 20 * time.Minute,
 			},
 			{
-				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
+				Name:              "noarc_extended",
+				ExtraAttr:         []string{"crosbolt_weekly"},
+				ExtraSoftwareDeps: []string{"arc"},
+				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				Val: testArgsForPowerIdlePerf{
+					setupOption:  setup.ForceBatteryDischarge,
+					extendedTest: true,
+				},
+				Fixture: "chromeLoggedInDisableSyncNoFwUpdate",
+				Timeout: 75 * time.Minute,
+			},
+			{
 				ExtraSoftwareDeps: []string{"android_container"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
@@ -74,7 +85,6 @@ func init() {
 			},
 			{
 				Name:              "vm",
-				ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 				ExtraSoftwareDeps: []string{"android_vm"},
 				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
 				Val: testArgsForPowerIdlePerf{
@@ -118,6 +128,17 @@ func init() {
 				},
 				Fixture: "chromeLoggedInDisableSyncNoFwUpdate",
 				Timeout: 20 * time.Minute,
+			},
+			{
+				Name:              "noarc_extended_nobatterymetrics",
+				ExtraSoftwareDeps: []string{"arc"},
+				ExtraHardwareDeps: hwdep.D(hwdep.NoForceDischarge()),
+				Val: testArgsForPowerIdlePerf{
+					setupOption:  setup.NoBatteryDischarge,
+					extendedTest: true,
+				},
+				Fixture: "chromeLoggedInDisableSyncNoFwUpdate",
+				Timeout: 75 * time.Minute,
 			},
 			{
 				Name:              "nobatterymetrics",
