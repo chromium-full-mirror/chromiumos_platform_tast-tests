@@ -121,7 +121,7 @@ func openAppInfoPage(ctx context.Context, tconn *chrome.TestConn) error {
 			ui.WaitUntilExists(playstoreSubpageButton))
 	}
 
-	moreSettingsButton := nodewith.Name("More settings and permissions").Role(role.Link)
+	moreSettingsButton := nodewith.Name("More Android settings and permissions").Role(role.Link)
 	managePermissions := nodewith.Name("Manage permissions").Role(role.Link)
 	if err := uiauto.Combine("check context menu of play store app on the shelf",
 		ash.RightClickApp(tconn, apps.PlayStore.Name),
