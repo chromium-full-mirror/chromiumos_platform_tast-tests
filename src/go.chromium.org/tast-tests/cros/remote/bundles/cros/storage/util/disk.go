@@ -106,7 +106,11 @@ func newDisk(ctx context.Context, dut *dut.DUT, path string, isPartition bool) (
 	physDevName := name
 
 	if isPartition {
-		physDevName = physDevName[:len(physDevName)-2]
+		if physDevName[len(physDevName)-2] == 'p' {
+			physDevName = physDevName[:len(physDevName)-2]
+		} else {
+			physDevName = physDevName[:len(physDevName)-1]
+		}
 	}
 
 	size, err := getBlockDeviceSize(ctx, dut, path)
