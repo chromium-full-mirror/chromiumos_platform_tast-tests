@@ -389,7 +389,15 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	}
 
 	shouldSkipChoobe := false
-	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.shouldSkip()", &shouldSkipChoobe); err != nil {
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.requestShouldSkip()", nil); err != nil {
+		s.Fatal("Failed to request the evaluation of the `shouldSkip()` method of CHOOBE screen: ", err)
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ChoobeScreen.isShouldSkipReceived()"); err != nil {
+		s.Fatal("Failed to wait for the reception of `ShouldSkip` value of CHOOBE screen: ", err)
+	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.updatedShouldSkip()", &shouldSkipChoobe); err != nil {
 		s.Fatal("Failed to evaluate whether to skip CHOOBE screen: ", err)
 	}
 
@@ -406,6 +414,7 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.isTouchpadScrollScreenVisible()", &isTouchpadScrollButtonVisible); err != nil {
 			s.Fatal("Failed to evaluate whether the touchpad scroll button on CHOOBE screen is visible: ", err)
 		}
+
 		if isTouchpadScrollButtonVisible {
 			if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeScreen.clickTouchpadScrollScreen()", nil); err != nil {
 				s.Fatal("Failed to click the touchpad scroll button on CHOOBE screen: ", err)
@@ -441,9 +450,18 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	if !shouldSkipChoobe {
 		shouldSkipTouchpadScroll = !isTouchpadScrollButtonVisible
 	} else {
-		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.shouldSkip()", &shouldSkipTouchpadScroll); err != nil {
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.requestShouldSkip()", nil); err != nil {
+			s.Fatal("Failed to request the evaluation of the `shouldSkip()` method of touchpad scroll screen: ", err)
+		}
+
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.isShouldSkipReceived()"); err != nil {
+			s.Fatal("Failed to wait for the reception of `ShouldSkip` value of touchpad scroll screen: ", err)
+		}
+
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.ChoobeTouchpadScrollScreen.updatedShouldSkip()", &shouldSkipTouchpadScroll); err != nil {
 			s.Fatal("Failed to evaluate whether to skip touchpad scroll screen: ", err)
 		}
+
 	}
 	if shouldSkipTouchpadScroll {
 		s.Log("Skipping the touchpad scroll screen")
