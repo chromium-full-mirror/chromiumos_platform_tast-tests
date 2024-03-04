@@ -237,17 +237,19 @@ func init() {
 }
 
 func runOneTestCase(ctx context.Context, toGuest *os.File, reader *bufio.Reader, testCase, outDir string, traceCmdEvents []string) error {
-	var collectFunc func(ctx context.Context) error
+	var ti *tracing.TraceInstance
 	if len(traceCmdEvents) > 0 {
 		outPath := filepath.Join(outDir, fmt.Sprintf("%s-trace.dat", strings.TrimSuffix(testCase, "()")))
-		cleanupFunc := func() {}
 		var err error
 
-		cleanupFunc, collectFunc, err = tracing.RunTraceCmd(ctx, outPath, traceCmdEvents)
+		ti, err := tracing.CreateTraceInstance(ctx, "tast",
+			tracing.CPUBufferKiB(15000),
+			tracing.EnableEvents(traceCmdEvents...),
+			tracing.RecordOnDiskMode(outPath))
 		if err != nil {
 			return errors.Wrap(err, "failed to start trace-cmd")
 		}
-		defer cleanupFunc()
+		defer ti.Finalize(ctx)
 	}
 
 	testing.ContextLog(ctx, "Start test case: ", testCase)
@@ -260,8 +262,8 @@ func runOneTestCase(ctx context.Context, toGuest *os.File, reader *bufio.Reader,
 	testing.ContextLog(ctx, "Finished test case: ", testCase)
 
 	// Stop trace-cmd
-	if collectFunc != nil {
-		if err := collectFunc(ctx); err != nil {
+	if ti != nil {
+		if err := ti.Save(ctx, ""); err != nil {
 			return errors.Wrap(err, "failed to stop trace-cmd")
 		}
 	}

@@ -289,17 +289,18 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		return &result, errors.Wrap(err, "failed to create test connection")
 	}
 
-	var collectFunc func(ctx context.Context) error
+	var ti *tracing.TraceInstance
 	if len(traceCmdEvents) > 0 {
 		outPath := filepath.Join(testDir, fmt.Sprintf("%d-trace.dat", successCount))
-		var cleanupFunc func()
-		var err error
 
-		cleanupFunc, collectFunc, err = tracing.RunTraceCmd(ctx, outPath, traceCmdEvents)
+		ti, err := tracing.CreateTraceInstance(ctx, "tast",
+			tracing.CPUBufferKiB(15000),
+			tracing.EnableEvents(traceCmdEvents...),
+			tracing.RecordOnDiskMode(outPath))
 		if err != nil {
 			return &result, errors.Wrap(err, "failed to start trace-cmd")
 		}
-		defer cleanupFunc()
+		defer ti.Finalize(cleanupCtx)
 	}
 
 	testing.ContextLog(ctx, "Starting Play Store window deferred")
@@ -318,9 +319,9 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		return &result, errors.Wrap(err, "failed to read disk stats")
 	}
 
-	// Stop trace-cmd.
-	if collectFunc != nil {
-		if err := collectFunc(ctx); err != nil {
+	// Stop trace-cmd and save the data.
+	if ti != nil {
+		if err := ti.Save(ctx, ""); err != nil {
 			return &result, errors.Wrap(err, "failed to stop trace-cmd")
 		}
 	}
