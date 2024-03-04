@@ -99,6 +99,7 @@ var tpmVersions = []tpmVersion{
 // We didn't prepare WebAuthn data until M112.
 const webauthnMinMilestone = 112
 const defaultMinMilestone = 88
+
 // We didn't prepare InstallAttrs data until M118.
 const installAttrsMinMilestone = 118
 
@@ -120,7 +121,7 @@ func max(a, b int) int {
 func makeTestParamsCode(t *testing.T, testMilestoneBegin int, isStable bool) string {
 	params := []crossVersionParam{{
 		Name:      "current",
-		Fixture:   "crossVersionCurrent",
+		Fixture:   "crossVersion.current",
 		ExtraAttr: []string{"group:mainline", "informational"},
 	}}
 	for _, tpmVer := range tpmVersions {
@@ -141,7 +142,7 @@ func makeTestParamsCode(t *testing.T, testMilestoneBegin int, isStable bool) str
 			}
 
 			name := fmt.Sprintf("%s_r%d", tpmVer.name, milestone)
-			fixture := "crossVersion" + toCamelCase(name)
+			fixture := "crossVersion." + name
 
 			param := crossVersionParam{
 				Name:              name,

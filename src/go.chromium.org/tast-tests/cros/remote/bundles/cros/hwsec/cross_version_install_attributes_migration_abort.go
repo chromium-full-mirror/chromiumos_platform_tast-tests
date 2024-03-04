@@ -35,11 +35,11 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:              "ti50_r118",
-				Fixture:           "crossVersionTi50R118",
+				Fixture:           "crossVersion.ti50_r118",
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "gsc"},
 			}, {
 				Name:              "tpm2_r118",
-				Fixture:           "crossVersionTpm2R118",
+				Fixture:           "crossVersion.tpm2_r118",
 				ExtraSoftwareDeps: []string{"no_tpm_dynamic", "no_gsc"},
 			},
 		},
