@@ -1,0 +1,2 @@
+# compliance tests and services are owned by the ChromeOS USB team.
+include /src/go.chromium.org/tast-tests/cros/common/typec/OWNERS
