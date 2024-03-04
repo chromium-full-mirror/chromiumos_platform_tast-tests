@@ -250,13 +250,6 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		defer arc.RestoreArcvmDevConf(ctx)
 	}
 
-	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics
-	cleanup, err := setup.DisableMulticastSetup(ctx)
-	if err != nil {
-		s.Fatal("Could not disable multicast: ", err)
-	}
-	defer cleanup(ctx)
-
 	var gaia chrome.Option
 	if param.username != "" {
 		gaia = chrome.GAIALogin(chrome.Creds{User: s.RequiredVar(param.username), Pass: s.RequiredVar(param.password)})
@@ -273,6 +266,13 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 			cr.Close(ctx)
 		}
 	}()
+
+	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics.
+	cleanup, err := setup.DisableMulticastSetup(ctx)
+	if err != nil {
+		s.Fatal("Could not disable multicast: ", err)
+	}
+	defer cleanup(ctx)
 
 	errorCount := 0
 	var playStoreShownTimes []float64
