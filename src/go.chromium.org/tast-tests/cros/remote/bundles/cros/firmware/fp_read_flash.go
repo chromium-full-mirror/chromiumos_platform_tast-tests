@@ -86,8 +86,8 @@ func FpReadFlash(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Reading from flash while running RW firmware should fail")
-	if err := fingerprint.ReadFromRollbackFlash(ctx, d.DUT(), t.FPBoard(), filepath.Join(t.DUTTempDir(), "test1.bin")); err == nil {
-		s.Fatal("Should not be able to read from flash")
+	if err := fingerprint.ReadFromRollbackFlashFails(ctx, d.DUT(), t.FPBoard(), filepath.Join(t.DUTTempDir(), "test1.bin")); err != nil {
+		s.Fatal("Failed to confirm that rollback is not readable: ", err)
 	}
 
 	testing.ContextLog(ctx, "Reboot to RO")
@@ -96,8 +96,8 @@ func FpReadFlash(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Reading from flash while running RO firmware should fail")
-	if err := fingerprint.ReadFromRollbackFlash(ctx, d.DUT(), t.FPBoard(), filepath.Join(t.DUTTempDir(), "test2.bin")); err == nil {
-		s.Fatal("Should not be able to read from flash")
+	if err := fingerprint.ReadFromRollbackFlashFails(ctx, d.DUT(), t.FPBoard(), filepath.Join(t.DUTTempDir(), "test2.bin")); err != nil {
+		s.Fatal("Failed to confirm that rollback is not readable: ", err)
 	}
 
 	testing.ContextLog(ctx, "Reboot to RW")
