@@ -53,7 +53,6 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      "arcBooted",
 		Attr:         []string{"group:mainline", "group:audio"},
 		Timeout:      3 * time.Minute,
 		Params: []testing.Param{
@@ -70,6 +69,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_11025",
@@ -83,6 +83,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_16000",
@@ -96,6 +97,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_22050",
@@ -109,6 +111,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_32000",
@@ -122,6 +125,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_44100",
@@ -135,6 +139,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_48000",
@@ -148,6 +153,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_48000_powersaving",
@@ -161,6 +167,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "stereo_48000_lowlatency",
@@ -174,6 +181,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "5point1_8000",
@@ -187,6 +195,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "5point1_11025",
@@ -200,6 +209,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "5point1_16000",
@@ -213,6 +223,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "5point1_22050",
@@ -226,6 +237,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "5point1_32000",
@@ -239,6 +251,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "5point1_44100",
@@ -252,6 +265,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "5point1_48000",
@@ -265,6 +279,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "quad_48000",
@@ -278,6 +293,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_8000",
@@ -292,6 +308,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_11025",
@@ -306,6 +323,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_16000",
@@ -320,6 +338,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_22050",
@@ -334,6 +353,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_32000",
@@ -348,6 +368,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_44100",
@@ -362,6 +383,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_48000",
@@ -376,6 +398,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_48000_powersaving",
@@ -390,6 +413,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_stereo_48000_lowlatency",
@@ -404,6 +428,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_5point1_8000",
@@ -418,6 +443,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_5point1_11025",
@@ -432,6 +458,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_5point1_16000",
@@ -446,6 +473,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_5point1_22050",
@@ -460,6 +488,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_5point1_32000",
@@ -474,6 +503,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_5point1_44100",
@@ -488,6 +518,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_5point1_48000",
@@ -502,6 +533,7 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
 			},
 			{
 				Name:              "unstable_quad_48000",
@@ -516,6 +548,147 @@ func init() {
 					},
 					incorrectSlicesLimit: 50,
 				},
+				Fixture: "arcBooted",
+			},
+			{
+				Name:              "stereo_48000_fieldtrial_testing_config_off",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutStereo,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOff",
+			},
+			{
+				Name:              "stereo_48000_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutStereo,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOn",
+			},
+			{
+				Name:              "quad_48000_fieldtrial_testing_config_off",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutQuad,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOff",
+			},
+			{
+				Name:              "quad_48000_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutQuad,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOn",
+			},
+			{
+				Name:              "5point1_48000_fieldtrial_testing_config_off",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOff",
+			},
+			{
+				Name:              "5point1_48000_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOut5Point1,
+						PerformanceMode: arcaudio.PerformanceModeNone,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOn",
+			},
+			{
+				Name:              "stereo_48000_lowlatency_fieldtrial_testing_config_off",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutStereo,
+						PerformanceMode: arcaudio.PerformanceModeLowLatency,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOff",
+			},
+			{
+				Name:              "stereo_48000_lowlatency_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutStereo,
+						PerformanceMode: arcaudio.PerformanceModeLowLatency,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOn",
+			},
+			{
+				Name:              "stereo_48000_powersaving_fieldtrial_testing_config_off",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutStereo,
+						PerformanceMode: arcaudio.PerformanceModePowerSaving,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOff",
+			},
+			{
+				Name:              "stereo_48000_powersaving_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(stableModel...)),
+				Val: audioLoopbackCorrectnessVal{
+					arcaudioTestParams: arcaudio.TestParameters{
+						Class:           "org.chromium.arc.testapp.arcaudiotest.TestOutputSineActivity",
+						SampleRate:      48000,
+						ChannelConfig:   arcaudio.ChannelConfigOutStereo,
+						PerformanceMode: arcaudio.PerformanceModePowerSaving,
+					},
+					incorrectSlicesLimit: 50,
+				},
+				Fixture: "arcBootedWithFieldTrialConfigOn",
 			},
 		},
 	})

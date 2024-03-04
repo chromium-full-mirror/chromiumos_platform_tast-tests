@@ -37,6 +37,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 		Val               val
 		ExtraHardwareDeps string
 		ExtraAttr         string
+		Fixture           string
 	}
 
 	type testcase struct {
@@ -44,6 +45,27 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 		SampleRate      int
 		ChannelConfig   string
 		PerformanceMode string
+	}
+
+	testcaseToTestParams := func(tc testcase) []valMember {
+		return []valMember{
+			{
+				Key:   "Class",
+				Value: tc.Class,
+			},
+			{
+				Key:   "SampleRate",
+				Value: strconv.Itoa(tc.SampleRate),
+			},
+			{
+				Key:   "ChannelConfig",
+				Value: tc.ChannelConfig,
+			},
+			{
+				Key:   "PerformanceMode",
+				Value: tc.PerformanceMode,
+			},
+		}
 	}
 
 	var testcases []testcase
@@ -137,30 +159,73 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 			params = append(params, paramData{
 				Name: generateName(tier.name, tc),
 				Val: val{
-					ArcaudioTestParams: []valMember{
-						{
-							Key:   "Class",
-							Value: tc.Class,
-						},
-						{
-							Key:   "SampleRate",
-							Value: strconv.Itoa(tc.SampleRate),
-						},
-						{
-							Key:   "ChannelConfig",
-							Value: tc.ChannelConfig,
-						},
-						{
-							Key:   "PerformanceMode",
-							Value: tc.PerformanceMode,
-						},
-					},
+					ArcaudioTestParams:   testcaseToTestParams(tc),
 					IncorrectSlicesLimit: tier.incorrectSlicesLimit,
 				},
 				ExtraHardwareDeps: tier.hwdep,
 				ExtraAttr:         tier.attr,
+				Fixture:           "arcBooted",
 			})
 		}
+	}
+
+	// Generate Field-trial on and off variant for these testcases (only on stable tier)
+	fieldTrialTestcases := []testcase{
+		{
+			Class:           classTestOutputSine,
+			SampleRate:      48000,
+			ChannelConfig:   channelConfigOutStereo,
+			PerformanceMode: performanceModeNone,
+		},
+		{
+			Class:           classTestOutputSine,
+			SampleRate:      48000,
+			ChannelConfig:   channelConfigOutQuad,
+			PerformanceMode: performanceModeNone,
+		},
+		{
+			Class:           classTestOutputSine,
+			SampleRate:      48000,
+			ChannelConfig:   channelConfigOut5Point1,
+			PerformanceMode: performanceModeNone,
+		},
+		{
+			Class:           classTestOutputSine,
+			SampleRate:      48000,
+			ChannelConfig:   channelConfigOutStereo,
+			PerformanceMode: performanceModeLowLatency,
+		},
+		{
+			Class:           classTestOutputSine,
+			SampleRate:      48000,
+			ChannelConfig:   channelConfigOutStereo,
+			PerformanceMode: performanceModePowerSaving,
+		},
+	}
+	for _, tc := range fieldTrialTestcases {
+		// Field-trial config off
+		paramOff := paramData{
+			Name: generateName("", tc) + "_fieldtrial_testing_config_off",
+			Val: val{
+				ArcaudioTestParams:   testcaseToTestParams(tc),
+				IncorrectSlicesLimit: 50,
+			},
+			ExtraHardwareDeps: `hwdep.D(hwdep.Model(stableModel...))`,
+			Fixture:           "arcBootedWithFieldTrialConfigOff",
+		}
+		params = append(params, paramOff)
+
+		// Field-trial config on
+		paramOn := paramData{
+			Name: generateName("", tc) + "_fieldtrial_testing_config_on",
+			Val: val{
+				ArcaudioTestParams:   testcaseToTestParams(tc),
+				IncorrectSlicesLimit: 50,
+			},
+			ExtraHardwareDeps: `hwdep.D(hwdep.Model(stableModel...))`,
+			Fixture:           "arcBootedWithFieldTrialConfigOn",
+		}
+		params = append(params, paramOn)
 	}
 
 	code := genparams.Template(t, `{{ range . }}{
@@ -174,6 +239,7 @@ func TestAudioLoopbackCorrectnessParams(t *testing.T) {
 			},
 			incorrectSlicesLimit: {{ .Val.IncorrectSlicesLimit }},
 		},
+		{{if .Fixture}} Fixture: "{{ .Fixture }}", {{end}}
 	},
 	{{ end }}`, params)
 	genparams.Ensure(t, "audio_loopback_correctness.go", code)
