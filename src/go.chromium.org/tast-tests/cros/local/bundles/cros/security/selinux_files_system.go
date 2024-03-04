@@ -132,7 +132,7 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/var/cache/modem-utilities", Context: "cros_var_cache_modem_utilities"},
 		{Path: "/var/lib", Context: "cros_var_lib", Log: true},
 		{Path: "/var/lib/dlcservice", Context: "cros_var_lib_dlcservice", Recursive: true},
-		{Path: "/var/lib/metrics", Context: "cros_metrics_file", Recursive: true, Filter: selinux.IgnorePathsButNotContents([]string{
+		{Path: "/var/lib/metrics", Context: "cros_metrics_file", Recursive: true, Filter: selinux.IgnorePaths([]string{
 			"/var/lib/metrics/uma-events",
 			"/var/lib/metrics/uma-events.d",
 		})},
