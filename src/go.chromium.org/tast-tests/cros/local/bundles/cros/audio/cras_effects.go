@@ -432,6 +432,110 @@ func init() {
 				Fixture:           crasEffectsHasNoAPNC,
 				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPNCOnlyModels...)),
 			},
+			{
+				Name: "forced_voice_isolation_with_nc_button_disabled",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: false,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "forced_voice_isolation_with_nc_button_enabled",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "forced_disabled_voice_isolation_with_nc_button_disabled",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: false,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "forced_disabled_voice_isolation_with_nc_button_enabled",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x100, expectAPEffects: nil}, // Force disable NC.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "nc_then_unprocessed_stream",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x310, expectAPEffects: []string{apNC}}, // Force enable NC.
+						{effects: 0x100, expectAPEffects: nil},            // unprocessed.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
+			{
+				Name: "unprocessed_then_nc_stream",
+				Val: crasEffectsParam{
+					noiseCancellationEnabled: true,
+					inputDevice:              "INTERNAL_MIC",
+					outputDevice:             "INTERNAL_SPEAKER",
+					captureClients: []captureConfig{
+						{effects: 0x100, expectAPEffects: nil},            // Force enable NC.
+						{effects: 0x310, expectAPEffects: []string{apNC}}, // unprocessed.
+					},
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
+					},
+				},
+				Fixture:           crasEffectsHasAPNC,
+				ExtraHardwareDeps: hwdep.D(hwdep.Model(internal.DSPAPNCModels...)),
+			},
 		},
 	})
 }
