@@ -35,7 +35,9 @@ func TestTimeout(t *gotesting.T) {
 			t.Fixture == "arcBooted" ||
 			t.Fixture == "arcBootedInTabletMode" ||
 			t.Fixture == "arcBootedWithPvSchedEnabled" ||
-			t.Fixture == "arcBootedWithoutUIAutomator" {
+			t.Fixture == "arcBootedWithoutUIAutomator" ||
+			t.Fixture == "arcBootedWithFieldTrialConfigOff" ||
+			t.Fixture == "arcBootedWithFieldTrialConfigOn" {
 			return false
 		}
 		return true

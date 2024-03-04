@@ -651,6 +651,52 @@ func init() {
 		PostTestTimeout: PostTestTimeout,
 		TearDownTimeout: ResetTimeout,
 	})
+
+	// arcBootedWithFieldTrialConfigOff is a fixture similar to arcBooted with field trial config disabled.
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable),
+		}, nil
+	}
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithFieldTrialConfigOff",
+		Desc: "ARC is booted with field trial disabled",
+		Contacts: []string{
+			"pteerapong@chromium.org",
+			"arcvm-eng-team@google.com",
+		},
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
+
+	// arcBootedWithFieldTrialConfigOn is a fixture similar to arcBooted with field trial config enabled.
+	fixtureConfig = DefaultBootedFixtureConfig()
+	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+		return []chrome.Option{
+			chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable),
+		}, nil
+	}
+	testing.AddFixture(&testing.Fixture{
+		Name: "arcBootedWithFieldTrialConfigOn",
+		Desc: "ARC is booted with field trial enabled",
+		Contacts: []string{
+			"pteerapong@chromium.org",
+			"arcvm-eng-team@google.com",
+		},
+		Impl:            NewArcBootedFixture(fixtureConfig),
+		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
+		ResetTimeout:    ResetTimeout,
+		PostTestTimeout: PostTestTimeout,
+		TearDownTimeout: ResetTimeout,
+	})
 }
 
 type bootedFixture struct {
