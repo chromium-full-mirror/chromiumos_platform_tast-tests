@@ -293,7 +293,7 @@ func OpenFileInDownloads(ctx context.Context, appsSvc pb.AppsServiceClient, uiau
 		return errors.Wrap(err, "failed to launch files app")
 	}
 
-	fileNameFinder := ui.Node().Name(fileName).Role(ui.Role_ROLE_STATIC_TEXT).Finder()
+	fileNameFinder := ui.Node().Name(fileName).Role(ui.Role_ROLE_STATIC_TEXT).Nth(0).Finder()
 	downloadsFinder := ui.Node().Name("Downloads").Nth(0).Finder()
 
 	for _, finder := range []*ui.Finder{
