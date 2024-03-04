@@ -312,7 +312,7 @@ def run_tast_tests(
     results_dir: str = None,
     bundle: str = None,
     vars: list = [],
-) -> Path:
+):
     """Run `tests` on DUT"""
     logging.info(f"[Tast] Running tests {tests}...")
     tast_run_command = [
@@ -340,11 +340,28 @@ def run_tast_tests(
         cwd=CHROMEOS_CHECKOUT_PATH,
         check=True,
     )
-    tests_results_dir = re.findall(
+    logging.info(process.stdout.decode("utf-8"))
+    stdout = io.BytesIO(process.stdout).readlines()
+    if len(stdout) < 3:
+        return ["", f"{tests} [ Fail ] for unknown reasons"]
+    tests_results_dir_matches = re.findall(
         "Results saved to \/(.*)",
-        io.BytesIO(process.stdout).readlines()[-1].decode("utf-8"),
-    )[0]
-    return CHROMEOS_CHECKOUT_PATH / "out" / tests_results_dir
+        stdout[-1].decode("utf-8"),
+    )
+    if len(tests_results_dir_matches) > 0:
+        tests_results_dir = tests_results_dir_matches[0]
+    else:
+        tests_results_dir = ""
+
+    tests_status_matches = re.findall(
+        "[a-zA-Z0-9.:-]* (.*)",
+        stdout[-3].decode("utf-8"),
+    )
+    if len(tests_status_matches) > 0:
+        tests_status = tests_status_matches[0]
+    else:
+        tests_status = f"{tests} [ FAIL ] for unknown reasons"
+    return [CHROMEOS_CHECKOUT_PATH / "out" / tests_results_dir, tests_status]
 
 
 def check_cpu_usage(dut: str, timeout: int = 60, interval: int = 1) -> None:
@@ -627,35 +644,43 @@ def main(argv) -> Optional[int]:
         else:
             logging.info("[Flash] Not flashing image")
 
+        test_statuses = []
         for i in range(opts.repeat):
             logging.info(f"[Tast] #{i+1} Running tests {opts.patterns}...")
-            results_dir_path = run_tast_tests(
+            results_dir_path, test_status = run_tast_tests(
                 opts.local_port,
                 opts.patterns,
                 opts.results_dir,
                 opts.bundle,
                 opts.vars,
             )
-            dut_model = write_local_dut_info(results_dir_path)
+            if "PASS" in test_status:
+                dut_model = write_local_dut_info(results_dir_path)
 
-            if not opts.local:
-                if not opts.upload:
-                    while True:
-                        user_input = input(
-                            "[Cloud] Are you sure to upload test results to the bucket"
-                            f" {opts.bucket_name}?(y/n):"
-                        ).lower()
-                        if user_input == "y":
-                            upload = True
-                            break
-                        elif user_input == "n":
-                            break
-                        else:
-                            logging.info("Enter y or n")
-                if opts.upload or upload:
-                    upload_latest_tests_results(
-                        username, opts.bucket_name, dut_model, results_dir_path
-                    )
+                if not opts.local:
+                    if not opts.upload:
+                        while True:
+                            user_input = input(
+                                "[Cloud] Are you sure to upload test results to the bucket"
+                                f" {opts.bucket_name}?(y/n):"
+                            ).lower()
+                            if user_input == "y":
+                                upload = True
+                                break
+                            elif user_input == "n":
+                                break
+                            else:
+                                logging.info("Enter y or n")
+                    if opts.upload or upload:
+                        upload_latest_tests_results(
+                            username,
+                            opts.bucket_name,
+                            dut_model,
+                            results_dir_path,
+                        )
+            test_statuses.append(test_status)
+
+        logging.info("[Tast] All tests completed:\n" + "\n".join(test_statuses))
 
     finally:
         kill_ssh_tunnel(opts.local_port)
