@@ -11,6 +11,7 @@ import (
 	perfpkg "go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/device"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/procutil"
@@ -51,7 +52,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org", "paulhsia@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
-		Fixture:      "rebootForAudioDSPFixture",
+		Fixture:      fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 		Timeout:      5 * time.Minute,
 		Params: []testing.Param{
 			{
@@ -255,6 +256,12 @@ func CrasPerf(ctx context.Context, s *testing.State) {
 	// Use this perf value to hold CPU cycles per second spent in CRAS of each iteration.
 	pv := perfpkg.NewValues()
 
+	param := s.Param().(testParameters)
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to CRAS: ", err)
+	}
+
 	for i := 0; i < iterations; i++ {
 		s.Log("Iteration: ", i)
 
@@ -263,9 +270,17 @@ func CrasPerf(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to restart CRAS: ", err)
 		}
 
-		// Any device being available means CRAS is ready.
-		if err := audio.WaitForDevice(ctx, audio.OutputStream|audio.InputStream); err != nil {
-			s.Fatal("Failed to wait for any output or input device: ", err)
+		if param.Capture {
+			if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
+				crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
+				s.Fatal("Failed to set internal mic to active: ", err)
+			}
+		}
+
+		if param.Playback {
+			if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+				s.Fatal("Failed to set internal speaker to active: ", err)
+			}
 		}
 
 		proc, err := procutil.FindUnique(procutil.ByExe(crasPath))

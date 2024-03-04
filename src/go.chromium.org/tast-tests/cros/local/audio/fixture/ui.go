@@ -15,17 +15,21 @@ import (
 )
 
 // UIStopped is a ParameterizedFixture which stops the UI.
-type UIStopped struct{}
+type UIStopped struct {
+	// Name of the parent fixture.
+	Parent string
+}
 
 var _ ParameterizedFixture = UIStopped{}
 
 // Instance returns the instance name of the parameterized UIStopped fixture.
 func (pf UIStopped) Instance() string {
 	return maybeRegisterFixture(&testing.Fixture{
-		Name:            "uiStopped",
+		Name:            maybeWithParentName("uiStopped", pf.Parent),
 		Desc:            "Stops the UI",
 		Contacts:        []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl:            uiStoppedFixture{},
+		Parent:          pf.Parent,
 		SetUpTimeout:    20 * time.Second,
 		TearDownTimeout: 20 * time.Second,
 	})
@@ -37,7 +41,7 @@ func (uiStoppedFixture) SetUp(ctx context.Context, s *testing.FixtState) interfa
 	if err := upstart.StopJob(ctx, "ui"); err != nil {
 		s.Fatal("Cannot stop ui: ", err)
 	}
-	return nil
+	return s.ParentValue()
 }
 
 func (uiStoppedFixture) TearDown(ctx context.Context, s *testing.FixtState) {

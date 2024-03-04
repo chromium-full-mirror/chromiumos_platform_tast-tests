@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 	"text/template"
 	"time"
 
@@ -36,11 +35,9 @@ func (pf AloopLoaded) Instance() string {
 	if pf.Channels != 0 {
 		name += fmt.Sprintf("%dch", pf.Channels)
 	}
-	if pf.Parent != "" {
-		name += fmt.Sprintf("With%s%s", strings.ToUpper(pf.Parent[:1]), pf.Parent[1:])
-	}
+
 	return maybeRegisterFixture(&testing.Fixture{
-		Name:     name,
+		Name:     maybeWithParentName(name, pf.Parent),
 		Desc:     fmt.Sprintf("Configure the ALSA loopback device with %v", pf),
 		Contacts: []string{"chromeos-audio-bugs@google.com", "aaronyu@google.com"},
 		Impl: &AloopLoadedFixture{

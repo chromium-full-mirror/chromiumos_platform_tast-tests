@@ -5,6 +5,9 @@
 package fixture
 
 import (
+	"fmt"
+	"strings"
+
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -18,4 +21,11 @@ func maybeRegisterFixture(f *testing.Fixture) string {
 		testing.AddFixture(f)
 	}
 	return f.Name
+}
+
+func maybeWithParentName(base, parent string) string {
+	if parent == "" {
+		return base
+	}
+	return fmt.Sprintf("%sWith%s%s", base, strings.ToUpper(parent[:1]), parent[1:])
 }
