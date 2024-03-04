@@ -23,7 +23,7 @@ func init() {
 		Desc:            "The HWSec attestation test fixture",
 		Contacts:        []string{"cros-hwsec@google.com", "yich@google.com"},
 		Impl:            &attestFixtImpl{},
-		SetUpTimeout:    30 * time.Second,
+		SetUpTimeout:    2 * time.Minute,
 		ResetTimeout:    5 * time.Second,
 		TearDownTimeout: 30 * time.Second,
 	})
