@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
@@ -67,7 +68,7 @@ func ARCIPv6Connectivity(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create shill client: ", err)
 	}
-	restoreEthernet, err := arc.HideUnusedEthernet(ctx, shillManager)
+	restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, shillManager)
 	if err != nil {
 		s.Fatal("Failed to hide unused ethernet: ", err)
 	}
@@ -136,12 +137,12 @@ func ARCIPv6Connectivity(ctx context.Context, s *testing.State) {
 
 	// ping virtual router address and virtual server address from ARC.
 	for _, target := range pingAddrs {
-		if err := arc.ExpectPingSuccess(ctx, a, arcIfname, target); err != nil {
+		if err := arcnet.ExpectPingSuccess(ctx, a, arcIfname, target); err != nil {
 			s.Errorf("Failed to ping %s from ARC over %q: %v", target, arcIfname, err)
 		}
 		// b/265877162: ARC T+ no longer support network ranking, so we only verify default network till R.
 		if arcVersion <= arc.SDKR {
-			if err := arc.ExpectPingSuccess(ctx, a, "", target); err != nil {
+			if err := arcnet.ExpectPingSuccess(ctx, a, "", target); err != nil {
 				s.Errorf("Failed to ping %s from ARC over default network: %v", target, err)
 			}
 		}

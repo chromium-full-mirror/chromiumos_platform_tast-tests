@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// Package arc provides ARC-related networking functionality.
 package arc
 
 import (
@@ -12,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -43,7 +45,7 @@ const (
 
 // NetworkInterfaceNames filters Android interfaces and returns ARC related network interfaces.
 func NetworkInterfaceNames(ctx context.Context) ([]string, error) {
-	out, err := BootstrapCommand(ctx, "/system/bin/ls", "/sys/class/net/").Output()
+	out, err := arc.BootstrapCommand(ctx, "/system/bin/ls", "/sys/class/net/").Output()
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +66,7 @@ func NetworkInterfaceNames(ctx context.Context) ([]string, error) {
 // ExpectPingSuccess checks if 'addr' is reachable over the 'network' in ARC.
 // See ArcNetworkDebugTools#reachCmd for possible 'network' values.
 // Use an empty 'network' to test on default network.
-func ExpectPingSuccess(ctx context.Context, a *ARC, network, addr string) error {
+func ExpectPingSuccess(ctx context.Context, a *arc.ARC, network, addr string) error {
 	if network == "" {
 		testing.ContextLogf(ctx, "Start to ping %s from ARC over default network", addr)
 	} else {

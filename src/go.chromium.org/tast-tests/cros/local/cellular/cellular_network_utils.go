@@ -14,6 +14,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -180,7 +181,7 @@ func VerifyIPConnectivity(ctx context.Context, cmd func(context.Context, string,
 func verifyArcIPConnectivityUsingPing(ctx context.Context, addr string, a *arc.ARC) error {
 	testing.ContextLog(ctx, "Verify ARC IP connectivity to: ", addr)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		if err := arc.ExpectPingSuccess(ctx, a, "", addr); err != nil {
+		if err := arcnet.ExpectPingSuccess(ctx, a, "", addr); err != nil {
 			testing.ContextLog(ctx, "Failed to ping: ", addr)
 			return errors.Wrap(err, "failed ip ping test")
 		}

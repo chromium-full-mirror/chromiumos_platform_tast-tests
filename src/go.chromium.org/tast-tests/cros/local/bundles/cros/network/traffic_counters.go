@@ -25,6 +25,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/network"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
@@ -128,7 +129,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	defer restorePortal(cleanupCtx)
 
 	if param.arc {
-		restoreEthernet, err := arc.HideUnusedEthernet(ctx, mgr)
+		restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, mgr)
 		if err != nil {
 			s.Fatal("Failed to hide unused ethernet: ", err)
 		}

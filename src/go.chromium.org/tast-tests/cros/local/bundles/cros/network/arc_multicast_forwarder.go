@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/hwsim"
 	"go.chromium.org/tast-tests/cros/local/network/multicast"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
@@ -142,7 +143,7 @@ func ARCMulticastForwarder(ctx context.Context, s *testing.State) {
 	// Hide the additional Ethernet interface (except for the one for SSH) if
 	// there is any, since ARC doesn't support the 3rd interface.
 	if !isWifi {
-		restoreEthernet, err := arc.HideUnusedEthernet(ctx, manager)
+		restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, manager)
 		if err != nil {
 			s.Fatal("Failed to hide unused ethernet: ", err)
 		}

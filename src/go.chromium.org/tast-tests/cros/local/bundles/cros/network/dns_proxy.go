@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
 	"go.chromium.org/tast-tests/cros/local/network"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/vm"
@@ -179,7 +180,7 @@ func DNSProxy(ctx context.Context, s *testing.State) {
 	}
 	if params.arc {
 		// Hide unused ethernet to avoid ARC's limitation.
-		restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
+		restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, m)
 		if err != nil {
 			s.Fatal("Failed to hide unused ethernet: ", err)
 		}

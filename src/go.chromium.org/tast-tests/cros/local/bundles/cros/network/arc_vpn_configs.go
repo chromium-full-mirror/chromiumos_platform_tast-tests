@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/arcvpn"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
@@ -104,7 +105,7 @@ func verifyVPNWithTestCase(ctx context.Context, s *testing.State, a *arc.ARC, tc
 	if err := ping.ExpectPingSuccessWithTimeout(ctx, conn.Server.OverlayIPv4, "chronos", 10*time.Second); err != nil {
 		return errors.Wrapf(err, "failed to ping from host %s", conn.Server.OverlayIPv4)
 	}
-	if err := arc.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err != nil {
+	if err := arcnet.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err != nil {
 		return errors.Wrapf(err, "failed to ping %s from ARC over 'vpn'", conn.Server.OverlayIPv4)
 	}
 
@@ -122,7 +123,7 @@ func verifyVPNWithTestCase(ctx context.Context, s *testing.State, a *arc.ARC, tc
 	if err := arcvpn.WaitForARCServiceState(ctx, a, arcvpn.FacadeVPNPkg, arcvpn.FacadeVPNSvc, false); err != nil {
 		return errors.Wrapf(err, "failed to stop %s", arcvpn.FacadeVPNSvc)
 	}
-	if err := arc.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err == nil {
+	if err := arcnet.ExpectPingSuccess(ctx, a, "vpn", conn.Server.OverlayIPv4); err == nil {
 		return errors.Errorf("expected unable to ping %s from ARC over 'vpn', but was reachable", conn.Server.OverlayIPv4)
 	}
 

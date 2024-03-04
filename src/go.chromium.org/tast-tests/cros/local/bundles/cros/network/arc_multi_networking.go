@@ -14,6 +14,7 @@ import (
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -76,7 +77,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create shill client: ", err)
 	}
-	restoreEthernet, err := arc.HideUnusedEthernet(ctx, shillManager)
+	restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, shillManager)
 	if err != nil {
 		s.Fatal("Failed to hide unused ethernet: ", err)
 	}

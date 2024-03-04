@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/network/dns"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crostini"
+	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/certs"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/env"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
@@ -179,7 +180,7 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create shill client: ", err)
 		}
-		restoreEthernet, err := arc.HideUnusedEthernet(ctx, m)
+		restoreEthernet, err := arcnet.HideUnusedEthernet(ctx, m)
 		if err != nil {
 			s.Fatal("Failed to hide unused ethernet: ", err)
 		}
