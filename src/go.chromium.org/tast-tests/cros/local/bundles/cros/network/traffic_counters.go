@@ -277,7 +277,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	if param.vpn {
 		// Connect the VPN.
 		svr := svrs[0]
-		conn, err := vpn.StartConnection(ctx, svr.rt, vpn.TypeWireGuard)
+		conn, err := vpn.StartConnection(
+			ctx, svr.rt, vpn.TypeWireGuard,
+			// l4server is only listening on underlay address now.
+			vpn.WithAllowingReachUnderlayIP(),
+		)
 		if err != nil {
 			s.Fatal("Failed to connect vpn: ", err)
 		}

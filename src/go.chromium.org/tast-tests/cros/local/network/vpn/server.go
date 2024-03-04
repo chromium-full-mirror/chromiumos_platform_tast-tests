@@ -411,14 +411,16 @@ func StartServerWithConfig(ctx context.Context, env *env.Env, config *Config) (*
 	// Make a copy of the config, in case that the caller changes it later.
 	server.Config = *config
 
-	if server.OverlayIPv4 != "" {
-		if err := env.RunWithoutChroot(ctx, "iptables", "-I", "INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv4, "-j", "DROP", "-w"); err != nil {
-			return nil, errors.Wrap(err, "failed to install iptables rules to drop packets")
+	if !server.Config.allowReachUnderlayIPFromVPN {
+		if server.OverlayIPv4 != "" {
+			if err := env.RunWithoutChroot(ctx, "iptables", "-I", "INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv4, "-j", "DROP", "-w"); err != nil {
+				return nil, errors.Wrap(err, "failed to install iptables rules to drop packets")
+			}
 		}
-	}
-	if server.OverlayIPv6 != "" {
-		if err := env.RunWithoutChroot(ctx, "ip6tables", "-I", "INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv6, "-j", "DROP", "-w"); err != nil {
-			return nil, errors.Wrap(err, "failed to install iptables rules to drop packets")
+		if server.OverlayIPv6 != "" {
+			if err := env.RunWithoutChroot(ctx, "ip6tables", "-I", "INPUT", "-i", server.OverlayIfname, "!", "-d", server.OverlayIPv6, "-j", "DROP", "-w"); err != nil {
+				return nil, errors.Wrap(err, "failed to install iptables rules to drop packets")
+			}
 		}
 	}
 

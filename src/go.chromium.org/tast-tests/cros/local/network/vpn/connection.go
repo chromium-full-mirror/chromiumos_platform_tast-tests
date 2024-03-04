@@ -66,6 +66,8 @@ type Config struct {
 
 	includedRoutesV4 []net.IPNet
 
+	allowReachUnderlayIPFromVPN bool
+
 	autoConnect bool
 }
 
@@ -335,6 +337,18 @@ func WithIPv6Subnet(n *subnet.IPv6Subnet) Option {
 func WithIPv4IncludedRoute(route *net.IPNet) Option {
 	return func(c *Config) {
 		c.includedRoutesV4 = append(c.includedRoutesV4, *route)
+	}
+}
+
+// WithAllowingReachUnderlayIP allows the client to reach the server listening
+// only on the underlay IP (i.e., the same address which the VPN server is
+// listening on) via the VPN connection. By default, those packets will be
+// dropped. This option is not suggested in general, since in the test we
+// usually want to set up an environment that resources available on physical
+// networks and VPNs are different.
+func WithAllowingReachUnderlayIP() Option {
+	return func(c *Config) {
+		c.allowReachUnderlayIPFromVPN = true
 	}
 }
 
