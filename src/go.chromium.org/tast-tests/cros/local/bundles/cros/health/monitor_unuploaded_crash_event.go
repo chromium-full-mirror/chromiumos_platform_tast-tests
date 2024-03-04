@@ -60,13 +60,13 @@ func init() {
 		// platform2/crash-reporter/crash_sender_base.h.
 		Timeout: 4 * time.Minute,
 		Params: []testing.Param{{
-			Name: "user_logged_in",
+			Name:    "user_logged_in",
 			Fixture: "crosHealthdRunningWithChromeLoggedIn",
 		}, {
-			Name:    "user_not_logged_in",
+			Name: "user_not_logged_in",
 			// Ensure that the test does not run in guest mode.
-			Fixture: "crosHealthdRunningWithChromeNotLoggedIn",
-			ExtraAttr: []string{"informational"},
+			Fixture:   "crosHealthdRunningWithChromeNotLoggedIn",
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}},
 	})
 }
