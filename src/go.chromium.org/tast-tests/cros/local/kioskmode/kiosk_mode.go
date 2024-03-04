@@ -384,7 +384,7 @@ func (k *Kiosk) RestartChromeWithOptions(ctx context.Context, opts ...chrome.Opt
 func LaunchAppManually(ctx context.Context, tconn *chrome.TestConn, name string) error {
 	testing.ContextLogf(ctx, "Kiosk mode: Starting Kiosk app from signin screen %q", name)
 	ui := uiauto.New(tconn)
-	localAccountsBtn := nodewith.Name("Apps").HasClass("LoginShelfButton")
+	localAccountsBtn := nodewith.Name("Apps").HasClass("KioskAppsButton")
 	if err := ui.WithTimeout(30 * time.Second).WaitUntilExists(localAccountsBtn)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find 'Apps' button")
 	}
