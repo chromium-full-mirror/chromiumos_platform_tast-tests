@@ -77,24 +77,6 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoOOPVDAndDedicatedDecoderThread",
-		Desc:     "Logged into a user session with logging and out-of-process video decoding enabled and a dedicated decoder thread for hardware video decoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
-				chrome.EnableFeatures("UseDedicatedDecoderThreadInVideoDecoderProcess"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
-	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoNaCl",
 		Desc:     "Logged into a user session with logging, NaCl and the MojoVideoDecoder-for-Pepper enabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},

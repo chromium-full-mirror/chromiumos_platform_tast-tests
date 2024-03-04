@@ -214,21 +214,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		params = append(params, param)
 	}
 
-	// grid and oop-vd with a different thread type
-	{
-		codec, resolution, fps, dec := "h264", 720, 30, "hw"
-		param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
-			resolution, fps, dec, "x9_oopvd", "chromeVideoOOPVD", nil)
-		param.Grid.Width = 3
-		param.Grid.Height = 3
-		params = append(params, param)
-		param = genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
-			resolution, fps, dec, "x9_oopvd_decoder_thread", "chromeVideoOOPVDAndDedicatedDecoderThread", nil)
-		param.Grid.Width = 3
-		param.Grid.Height = 3
-		params = append(params, param)
-	}
-
 	// lacros
 	for _, resolution := range []int{720, 1080, 2160} {
 		fpss := []int{30}

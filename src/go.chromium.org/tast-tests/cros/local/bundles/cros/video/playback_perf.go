@@ -1412,44 +1412,6 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_720p_30fps_hw_x9_oopvd",
-				Val: playback.Config{
-					FileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
-					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
-					Grid: coords.Size{
-						Width:  3,
-						Height: 3,
-					},
-					PerfMeasurement: true,
-					PerfSetting:     playback.PerfSetting{},
-					Duration:        25 * time.Second,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
-				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoOOPVD",
-				Timeout:           5 * time.Minute,
-			},
-			{
-				Name: "h264_720p_30fps_hw_x9_oopvd_decoder_thread",
-				Val: playback.Config{
-					FileName:    "perf/h264/720p_30fps_300frames.h264.mp4",
-					DecoderType: 0,
-					BrowserType: browser.TypeAsh,
-					Grid: coords.Size{
-						Width:  3,
-						Height: 3,
-					},
-					PerfMeasurement: true,
-					PerfSetting:     playback.PerfSetting{},
-					Duration:        25 * time.Second,
-				},
-				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
-				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoOOPVDAndDedicatedDecoderThread",
-				Timeout:           5 * time.Minute,
-			},
-			{
 				Name: "h264_720p_30fps_hw_lacros",
 				Val: playback.Config{
 					FileName:        "perf/h264/720p_30fps_300frames.h264.mp4",
