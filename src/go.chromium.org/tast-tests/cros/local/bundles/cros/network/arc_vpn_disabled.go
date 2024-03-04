@@ -37,6 +37,11 @@ func ARCVPNDisabled(ctx context.Context, s *testing.State) {
 
 	a := s.FixtValue().(vpn.FixtureEnv).ARC
 
+	// Save the ARC network dumpsys as close to the time of error as possible, in case
+	// further cleanup affects the network state.
+	handler := arc.CreateNetworkDumpsysErrorHandler(cleanupCtx, a)
+	s.AttachErrorHandlers(handler, handler)
+
 	if err := arcvpn.SetARCVPNEnabled(ctx, a, false); err != nil {
 		s.Fatal("Failed to disable ARC VPN: ", err)
 	}

@@ -72,6 +72,11 @@ func verifyVPNWithTestCase(ctx context.Context, s *testing.State, a *arc.ARC, tc
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 6*time.Second)
 	defer cancel()
 
+	// Save the ARC network dumpsys as close to the time of error as possible, in case
+	// further cleanup affects the network state.
+	handler := arcnet.CreateNetworkDumpsysErrorHandler(cleanupCtx, a)
+	s.AttachErrorHandlers(handler, handler)
+
 	// We specifically don't use a L2TP type because shill overrides the MTU value into a
 	// hardcoded value. This eventually gets set properly again on the host-side, but Chrome
 	// passes the overridden value to ARC so it won't get reflected properly in ARC. Note that

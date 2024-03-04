@@ -39,6 +39,11 @@ func HostToARCVPN(ctx context.Context, s *testing.State) {
 
 	a := s.FixtValue().(*arc.PreData).ARC
 
+	// Save the ARC network dumpsys as close to the time of error as possible, in case
+	// further cleanup affects the network state.
+	handler := arcnet.CreateNetworkDumpsysErrorHandler(cleanupCtx, a)
+	s.AttachErrorHandlers(handler, handler)
+
 	// Set up and connect to host VPN.
 	conn, err := arcvpn.SetUpHostVPN(ctx, vpn.TypeL2TPIPsec)
 	if err != nil {

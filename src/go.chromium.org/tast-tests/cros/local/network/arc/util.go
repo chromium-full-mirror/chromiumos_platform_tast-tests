@@ -7,6 +7,8 @@ package arc
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -146,4 +148,38 @@ func HideUnusedEthernet(ctx context.Context, manager *shill.Manager) (action.Act
 		}
 		return nil
 	}, nil
+}
+
+// SaveNetworkDumpsys saves 'adb shell dumpsys' output of the ARC networking and wifi state to a
+// log file.
+func SaveNetworkDumpsys(ctx context.Context, a *arc.ARC, outDir string) error {
+	dateString := time.Now().Format(time.RFC3339) // "2006-01-02T15:04:05Z07:00" format
+	filename := "arc-network-dumpsys_" + dateString + ".txt"
+	path := filepath.Join(outDir, filename)
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	cmd := a.Command(ctx, "dumpsys", "wifi", "mojo", "networks", "arc-networks", "vpn", "proxy", "system", "arc-host-vpn")
+	cmd.Stdout = file
+	return cmd.Run(testexec.DumpLogOnError)
+}
+
+// CreateNetworkDumpsysErrorHandler creates an error handler to dump network info on test
+// failures. This should be used together with s.AttachErrorHandlers(). Example:
+//
+//	errorHandler := arc.CreateNetworkDumpsysErrorHandler(cleanupCtx, a)
+//	s.AttachErrorHandlers(errorHandler, errorHandler)
+func CreateNetworkDumpsysErrorHandler(ctx context.Context, a *arc.ARC) func(string) {
+	return func(string) {
+		outdir, ok := testing.ContextOutDir(ctx)
+		if !ok {
+			testing.ContextLog(ctx, "Failed to get context output directory")
+		}
+		if err := SaveNetworkDumpsys(ctx, a, outdir); err != nil {
+			testing.ContextLog(ctx, "Failed to save ARC network dumpsys: ", err)
+		}
+	}
 }
