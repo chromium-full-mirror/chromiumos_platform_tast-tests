@@ -158,7 +158,7 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
-				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running vis TFC.
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
 				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -173,7 +173,7 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
-				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running vis TFC.
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
 				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -189,7 +189,7 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
-				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running vis TFC.
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
 				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -205,7 +205,7 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
-				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running vis TFC.
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
 				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -221,7 +221,7 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
-				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running vis TFC.
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
 				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -237,7 +237,7 @@ func init() {
 						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
 					powerSave: false, shouldTputRequired: false,
 				}},
-				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running vis TFC.
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
 				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX_E),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -251,6 +251,8 @@ func init() {
 					},
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
+				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -264,6 +266,8 @@ func init() {
 					},
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
+				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -278,6 +282,8 @@ func init() {
 					},
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
+				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
@@ -292,6 +298,8 @@ func init() {
 					},
 					powerSave: false, shouldTputRequired: false,
 				}},
+				// TODO(b/324464044): Remove the extra attr wificell_openwrt when wifi_perf starts running via TFC.
+				ExtraAttr:         []string{"wificell_openwrt"},
 				ExtraTestBedDeps:  tbdep.WifiRouterFeatures(labapi.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE),
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 			},
