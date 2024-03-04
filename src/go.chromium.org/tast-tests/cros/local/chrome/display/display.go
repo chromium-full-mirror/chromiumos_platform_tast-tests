@@ -470,15 +470,16 @@ const (
 
 // SetPSRState sets PSR state. Only supports i915 platforms.
 func SetPSRState(state PSRState) error {
+	// This file exists on all i915 devices regardless of psr support, so we cannot
+	// rely on the file's existence to infer psr support. Reading from this file
+	// on an i915 device without PSR support will fail with ENODEV.
 	edpPsrStatusPath := "/sys/kernel/debug/dri/0/i915_edp_psr_debug"
-	if _, err := os.Lstat(edpPsrStatusPath); os.IsNotExist(err) {
+	if _, err := os.ReadFile(edpPsrStatusPath); err != nil {
 		// It's not a failure to set to default if PSR is not supported.
 		if state == PSRDefault {
 			return nil
 		}
 		return errors.New("SetPSRState is only supported on i915 devices with PSR")
-	} else if err != nil {
-		return err
 	}
 
 	// stateString is the value to be written to the psr debug file.
