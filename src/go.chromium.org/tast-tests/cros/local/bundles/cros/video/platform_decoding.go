@@ -2740,6 +2740,20 @@ func init() {
 				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
 			},
 			{
+				Name: "v4l2_stateless_hevc_mv_hevc",
+				Val: platformDecodingParams{
+					filenames:          []string{"test_vectors/hevc/mv_hevc/MVHEVCS_A.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_B.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_C.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_D.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_E.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_F.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_G.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_H.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_I.hevc"},
+					decoder:            "/usr/local/libexec/chrome-binary-tests/v4l2_stateless_decoder",
+					decoderArgsBuilder: platform.V4L2StatelessDecodeArgs,
+					ignoredSysLogs:     []graphics.SysLogCategory{graphics.SysLogKernelSplats},
+				},
+				Timeout:           10 * time.Minute,
+				ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatelessVideoDecoding()),
+				ExtraSoftwareDeps: []string{"v4l2_codec", "autotest-capability:hw_dec_hevc_1080_30"},
+				ExtraData:         []string{"test_vectors/hevc/mv_hevc/MVHEVCS_A.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_A.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_B.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_B.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_C.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_C.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_D.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_D.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_E.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_E.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_F.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_F.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_G.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_G.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_H.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_H.hevc.json", "test_vectors/hevc/mv_hevc/MVHEVCS_I.hevc", "test_vectors/hevc/mv_hevc/MVHEVCS_I.hevc.json"},
+				ExtraAttr:         []string{"graphics_video_hevc", "graphics_perbuild"},
+			},
+			{
 				Name: "v4l2_q08c",
 				Val: platformDecodingParams{
 					filenames:          []string{"test_vectors/vp9/Profile_0_8bit/buf/crowd_run_1080X512_fr30_bd8_8buf_l3.ivf", "test_vectors/vp8/vp80-00-comprehensive-001.ivf", "test_vectors/h264/baseline/AUD_MW_E.h264", "test_vectors/h264/main/CABA1_SVA_B.h264"},
