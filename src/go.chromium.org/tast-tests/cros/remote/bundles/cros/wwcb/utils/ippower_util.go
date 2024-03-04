@@ -8,7 +8,9 @@ package utils
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -79,5 +81,53 @@ func CloseIppower(ctx context.Context, ports []int) error {
 		return errors.Wrap(err, "failed to send request")
 	}
 	defer resp.Body.Close()
+	return nil
+}
+
+// IppowerIP is designed to obtain the IP address of IP Power from a specified network segment.
+func IppowerIP(dutIP string) (string, error) {
+	subnet := strings.Join(strings.Split(dutIP, ".")[:3], ".")
+	client := http.Client{
+		Timeout: 300 * time.Millisecond,
+	}
+
+	for i := 1; i < 255; i++ {
+		url := fmt.Sprintf("http://%s.%d/set.cmd?user=%s+pass=%s+cmd=getpower", subnet, i, user, password)
+		resp, err := client.Get(url)
+		if err != nil {
+			continue
+		}
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			resp.Body.Close()
+			continue
+		}
+		if strings.Contains(string(body), "<!--CGI-DATABEG-->") {
+			resp.Body.Close()
+			return fmt.Sprintf("%s.%d", subnet, i), nil
+		}
+		resp.Body.Close()
+	}
+	return "", errors.Errorf("unable to obtain IP Power IP from the %s network segment", subnet)
+}
+
+// CheckIppowerStatus is for check if IP Power is online.
+func CheckIppowerStatus(ip string) error {
+	client := http.Client{
+		Timeout: 300 * time.Millisecond,
+	}
+	url := fmt.Sprintf("http://%s/set.cmd?user=%s+pass=%s+cmd=getpower", ip, user, password)
+	resp, err := client.Get(url)
+	if err != nil {
+		return errors.Errorf("unable to send a GET request to %s", ip)
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return errors.Errorf("unable to read the body content from %s", ip)
+	}
+	if !strings.Contains(string(body), "<!--CGI-DATABEG-->") {
+		return errors.New("the content returned by IP Power does not contain '<!--CGI-DATABEG-->'")
+	}
 	return nil
 }
