@@ -106,8 +106,8 @@ func CheckCharacterKeys(ctx context.Context, s *testing.State, cl *rpc.Client, a
 		return errors.Wrap(err, "failed to read test file")
 	}
 	// Compare the contents of text files.
-	if inputKey != strings.TrimSpace(string(testFile)) {
-		return errors.Errorf("text file comparison failed. Expected: '%q', Got: '%q'", inputKey, strings.TrimSpace(string(testFile)))
+	if inputKey != strings.Replace(string(testFile), "\n", "", -1) {
+		return errors.Errorf("text file comparison failed. Expected: '%q', Got: '%q'", inputKey, strings.Replace(string(testFile), "\n", "", -1))
 	}
 	return nil
 }
