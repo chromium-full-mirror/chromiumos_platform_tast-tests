@@ -120,11 +120,13 @@ func ECVerifyVK(ctx context.Context, s *testing.State) {
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
 		s.Fatal("Failed to cold reset DUT at the beginning of test: ", err)
 	}
+	h.DisconnectDUT(ctx)
+
 	// Wait for DUT to reconnect.
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 
-	if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 

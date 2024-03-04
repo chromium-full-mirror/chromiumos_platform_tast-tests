@@ -218,8 +218,9 @@ func ScreenWakeTabletMode(ctx context.Context, s *testing.State) {
 
 	// Wait for DUT to reconnect.
 	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
+
 	defer cancelWaitConnect()
-	if err := s.DUT().WaitConnect(waitConnectCtx); err != nil {
+	if err := h.WaitConnect(waitConnectCtx, firmware.ResetEthernetDongle); err != nil {
 		s.Fatal("Failed to reconnect to DUT: ", err)
 	}
 
