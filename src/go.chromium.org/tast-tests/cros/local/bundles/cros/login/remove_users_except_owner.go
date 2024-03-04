@@ -89,7 +89,7 @@ func RemoveUsersExceptOwner(ctx context.Context, s *testing.State) {
 			defer settings.Close(cleanUpCtx)
 		}
 
-		isEnabled, err := settings.IsToggleOptionEnabled(ctx, cr, signinutil.RestrictSignInOption)
+		isEnabled, err := settings.IsToggleOptionEnabled(ctx, cr, signinutil.LimitSignInOption)
 		if err != nil {
 			s.Fatal("Could not check the status of the toggle: ", err)
 		}
@@ -125,7 +125,7 @@ func RemoveUsersExceptOwner(ctx context.Context, s *testing.State) {
 
 		ui := uiauto.New(tconn)
 
-		if err := ui.LeftClick(nodewith.Name(signinutil.RestrictSignInOption).Role(role.ToggleButton))(ctx); err != nil {
+		if err := ui.LeftClick(nodewith.Name(signinutil.LimitSignInOption).Role(role.ToggleButton))(ctx); err != nil {
 			s.Fatal("Failed to show the list of users: ", err)
 		}
 

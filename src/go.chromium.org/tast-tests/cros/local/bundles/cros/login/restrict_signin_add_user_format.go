@@ -89,11 +89,11 @@ func RestrictSigninAddUserFormat(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	if err := uiauto.Combine("enable restricted sign-in",
-		ui.LeftClick(nodewith.Name(signinutil.RestrictSignInOption).Role(role.ToggleButton)),
+	if err := uiauto.Combine("enable limit sign-in",
+		ui.LeftClick(nodewith.Name(signinutil.LimitSignInOption).Role(role.ToggleButton)),
 		ui.WaitUntilExists(nodewith.NameStartingWith(signinutil.GetUsernameFromEmail(deviceOwner)).NameContaining("owner").Role(role.StaticText)),
 	)(ctx); err != nil {
-		s.Fatal("Failed to enable restricted sign-in: ", err)
+		s.Fatal("Failed to enable limit sign-in: ", err)
 	}
 
 	for _, tc := range []struct {

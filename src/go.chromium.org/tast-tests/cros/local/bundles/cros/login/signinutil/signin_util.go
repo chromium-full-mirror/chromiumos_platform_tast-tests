@@ -20,9 +20,9 @@ import (
 	"go.chromium.org/tast/core/errors"
 )
 
-// RestrictSignInOption is the name of the option in OS Settings that allows user to
-// restrict sign-in to the existing or provided list of users.
-const RestrictSignInOption = "Restrict sign-in to the following users:"
+// LimitSignInOption is the name of the option in OS Settings that allows user to
+// limit sign-in to the existing or provided list of users.
+const LimitSignInOption = "Limit who can sign in"
 
 // GetUsernameFromEmail returns the part of the email before '@'.
 func GetUsernameFromEmail(email string) string {
@@ -45,7 +45,7 @@ func OpenManageOtherPeople(ctx context.Context, cr *chrome.Chrome, tconn *chrome
 		return settings, errors.Wrap(err, "failed to open Manage other people subsettings")
 	}
 
-	if err := ui.WaitUntilExists(nodewith.Name(RestrictSignInOption).Role(role.ToggleButton))(ctx); err != nil {
+	if err := ui.WaitUntilExists(nodewith.Name(LimitSignInOption).Role(role.ToggleButton))(ctx); err != nil {
 		return settings, errors.Wrap(err, "failed to wait for the toggle to show the list of users")
 	}
 

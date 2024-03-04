@@ -84,7 +84,7 @@ func RestrictSignin(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	// Select 'Restrict sign-in' in Settings.
+	// Select 'Limit sign-in' in Settings.
 	func() {
 		cr, err := userutil.Login(ctx, deviceOwner, devicePassword)
 		if err != nil {
@@ -111,11 +111,11 @@ func RestrictSignin(ctx context.Context, s *testing.State) {
 
 		ui := uiauto.New(tconn)
 
-		if err := uiauto.Combine("restrict sign-in to existing users only",
-			ui.LeftClick(nodewith.Name(signinutil.RestrictSignInOption).Role(role.ToggleButton)),
+		if err := uiauto.Combine("limit sign-in to existing users only",
+			ui.LeftClick(nodewith.Name(signinutil.LimitSignInOption).Role(role.ToggleButton)),
 			ui.WaitUntilExists(nodewith.NameStartingWith(signinutil.GetUsernameFromEmail(deviceOwner)).NameContaining("owner").Role(role.StaticText)),
 		)(ctx); err != nil {
-			s.Fatal("Failed to restrict sign-in: ", err)
+			s.Fatal("Failed to limit sign-in: ", err)
 		}
 	}()
 
