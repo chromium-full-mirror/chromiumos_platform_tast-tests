@@ -77,7 +77,7 @@ func TPMContest(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	const minTestIterations = 50
-	commands := [][]string{{"cat", "/sys/class/tpm/tpm0/ph_enable"},
+	commands := [][]string{{"libhwsec_client", "get_random", "4"},
 		// oemcrypto_hw_ref_tests tasks the TPM from a trusted application context
 		{"oemcrypto_hw_ref_tests", "-v", "-v", "-v", "-v",
 			"--gtest_filter=*OEMCryptoSessionTests.OEMCryptoMemoryCreateUsageTableHeaderForHugeHeaderBufferLength"}}
