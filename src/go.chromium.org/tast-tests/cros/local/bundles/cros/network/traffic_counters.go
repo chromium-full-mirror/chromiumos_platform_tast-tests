@@ -239,8 +239,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 				s.Errorf("Expected comparable counter missing: %s", k)
 				continue
 			}
-			if c.tx < (b.tx+uint64(msgLen)) || c.rx < (b.rx+uint64(msgLen)) {
-				s.Errorf("Unexpected counter result for %v: tx[%v vs %v (base)] rx[%v vs %v (base)]  ", k, c.tx, b.tx, c.rx, b.rx)
+			if c.tx < (b.tx + uint64(msgLen)) {
+				s.Errorf("Unexpected counter result for %v tx: got diff=%v-%v=%v, want diff>=%v", k, c.tx, b.tx, (c.tx - b.tx), msgLen)
+			}
+			if c.rx < (b.rx + uint64(msgLen)) {
+				s.Errorf("Unexpected counter result for %v rx: got diff=%v-%v=%v, want diff>=%v", k, c.rx, b.rx, (c.rx - b.rx), msgLen)
 			}
 		}
 	}
