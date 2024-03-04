@@ -1,0 +1,9 @@
+set noparent
+
+mhiramat@google.com
+takayas@chromium.org
+keiichiw@chromium.org
+chinglinyu@chromium.org
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast

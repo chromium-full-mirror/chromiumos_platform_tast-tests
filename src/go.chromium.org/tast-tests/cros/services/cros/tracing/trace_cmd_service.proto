@@ -1,0 +1,50 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.tracing;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/tracing";
+
+service TraceCmdService {
+
+  rpc CreateInstance(TraceCmdConfig) returns (google.protobuf.Empty) {}
+
+  rpc ReconnectInstance(TraceCmdName) returns (google.protobuf.Empty) {}
+
+  rpc Restart(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc Save(TraceCmdSaveOption) returns (TraceCmdOutput) {}
+
+  rpc Finalize(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc CleanupAll(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+}
+
+message TraceEvent {
+  string name = 1;
+  string filter = 2;
+  string trigger = 3;
+}
+
+message TraceCmdConfig {
+  string name = 1;
+  int32 buffer_size_kb = 2;
+  bool initial_stop = 3;
+  repeated TraceEvent events = 4;
+  bool enable_ftrace = 5;
+  repeated string ftrace_functions = 6;
+}
+
+message TraceCmdName { string name = 1; }
+
+message TraceCmdOutput { string path = 1; }
+
+message TraceCmdSaveOption {
+  bool keep_data = 1;
+  bool keep_tracing = 2;
+}
