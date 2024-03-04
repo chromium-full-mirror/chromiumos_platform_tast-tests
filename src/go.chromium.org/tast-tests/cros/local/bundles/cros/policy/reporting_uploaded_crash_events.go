@@ -38,8 +38,8 @@ func init() {
 		},
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting
-		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
+		SoftwareDeps: []string{"chrome", "vpd"},
+		Attr:         []string{"group:mainline", "informational", "group:enterprise-reporting-daily", "group:enterprise-reporting", "group:hw_agnostic"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ReportDeviceCrashReportInfo{}, pci.VerifiedFunctionalityOS),
