@@ -121,14 +121,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create manager proxy: ", err)
 	}
-	if err := mgr.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
-		s.Fatal("Failed to disable portal detection on ethernet: ", err)
+	restorePortal, err := mgr.DisablePortalDetectionWithRestore(ctx)
+	if err != nil {
+		s.Fatal("Failed to disable portal detection: ", err)
 	}
-	defer func() {
-		if err := mgr.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "ethernet,wifi,cellular"); err != nil {
-			s.Fatal("Failed to restore portal detection on ethernet: ", err)
-		}
-	}()
+	defer restorePortal(cleanupCtx)
 
 	if param.arc {
 		restoreEthernet, err := arc.HideUnusedEthernet(ctx, mgr)
@@ -159,7 +156,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		defer svr.cleanup(cleanupCtx)
 	}
 
-	b := make([]byte, 64)
+	b := make([]byte, 128)
 	rand.Seed(time.Now().UnixNano())
 	rand.Read(b) // OK to elide error since its documented to return nil
 	msg := hex.EncodeToString(b)
@@ -174,11 +171,11 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 	getCounters := func(keys map[string]bool) map[string]*counters {
 		ctrs := make(map[string]*counters)
 		// GoBigSleepLint: Ensure the counters are flushed. There is some marginal
-		// delay in when the updated values are ready; and while 5 seconds is an
+		// delay in when the updated values are ready; and while 2 seconds is an
 		// arbitrary duration, it should be the case that this much time is more
 		// than enough. The alternative to sleeping here is polling and managing
 		// errors. This is much simpler to maintain and understand.
-		testing.Sleep(ctx, 5*time.Second)
+		testing.Sleep(ctx, 2*time.Second)
 		resp, err := pc.GetTrafficCounters(ctx, []string{})
 		if err != nil {
 			s.Fatal("Failed to get traffic counters: ", err)
@@ -217,13 +214,15 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	// Tests that traffic counters increase by at least an expected amount
-	// across two consecutive runs. Only counters that map to |keys| are
-	// considered. |f| is expected to generate traffic and return the
-	// desired counters.
-	test := func(keys map[string]bool, f func() map[string]*counters) {
+	// Tests that traffic counters increase by at least an expected amount across
+	// two consecutive runs. Only counters that map to keys are considered.
+	// genTraffic is expected to generate traffic where both tx and rx should
+	// larger than msgLen.
+	test := func(keys map[string]bool, genTraffic func()) {
 		// Generate initial set of counters.
-		base := f()
+		testing.ContextLog(ctx, "Generating traffic to get counters for baseline")
+		genTraffic()
+		base := getCounters(keys)
 		// Verify we have all expected counters.
 		for k := range keys {
 			if _, ok := base[k]; !ok {
@@ -231,19 +230,27 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		// Generate comparison set.
-		comp := f()
+		// Generate comparison set. Generate traffic a few times to make sure the
+		// signal-to-noise ratio is large enough to reduce the chance of false
+		// positive.
+		testing.ContextLog(ctx, "Generating traffic to get counters for comparison")
+		const iterations = 20
+		for i := 0; i < iterations; i++ {
+			genTraffic()
+		}
+		expectedDiff := uint64(iterations * msgLen)
+		comp := getCounters(keys)
 		for k, b := range base {
 			c, ok := comp[k]
 			if !ok {
 				s.Errorf("Expected comparable counter missing: %s", k)
 				continue
 			}
-			if c.tx < (b.tx + uint64(msgLen)) {
-				s.Errorf("Unexpected counter result for %v tx: got diff=%v-%v=%v, want diff>=%v", k, c.tx, b.tx, (c.tx - b.tx), msgLen)
+			if c.tx < (b.tx + expectedDiff) {
+				s.Errorf("Unexpected counter result for %v tx: got diff=%v-%v=%v, want diff>=%v", k, c.tx, b.tx, (c.tx - b.tx), expectedDiff)
 			}
-			if c.rx < (b.rx + uint64(msgLen)) {
-				s.Errorf("Unexpected counter result for %v rx: got diff=%v-%v=%v, want diff>=%v", k, c.rx, b.rx, (c.rx - b.rx), msgLen)
+			if c.rx < (b.rx + expectedDiff) {
+				s.Errorf("Unexpected counter result for %v rx: got diff=%v-%v=%v, want diff>=%v", k, c.rx, b.rx, (c.rx - b.rx), expectedDiff)
 			}
 		}
 	}
@@ -257,13 +264,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		})
 		test(
 			expected,
-			func() map[string]*counters {
+			func() {
 				runIO([]string{
 					"kerberosd", // SYSTEM
 					"debugd",    // USER
 					"chronos",   // CHROME
 				})
-				return getCounters(expected)
 			})
 	}
 
@@ -285,9 +291,8 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 		expected[key("vpn", pp.TrafficCounter_CHROME, ipFamily(svr.fam))] = true
 		test(
 			expected,
-			func() map[string]*counters {
+			func() {
 				runIO([]string{"chronos"})
-				return getCounters(expected)
 			})
 	}
 
@@ -313,11 +318,10 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to start HTTP server: ", err)
 			}
 			test(expected,
-				func() map[string]*counters {
+				func() {
 					if err := f(); err != nil {
 						s.Errorf("Failed to run HTTP i/o test for %v:%v: %v", svr.fam.String(), svr.dst(), err)
 					}
-					return getCounters(expected)
 				})
 		}
 	}
@@ -351,9 +355,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_ARC},
 			func() error {
 				// Use dumpsys to generate some traffic to/from the HTTP server.
-				// "host_default" to force using the default network on the host since
-				// the network selection in ARC might not be the same as the host on T+.
-				// See b/265877162.
+				// - "host_default" to force using the default network on the host since
+				//   the network selection in ARC might not be the same as the host on
+				//   T+. See b/265877162.
+				// - Note that we cannot control the tx packet length here. We should
+				//   consider switching to use the QoS test app which can send and
+				//   receive UDP packets directly.
 				args := []string{
 					"wifi",
 					"tools", "http", "host_default",
