@@ -7,16 +7,29 @@ package power
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
+	"go.chromium.org/tast-tests/cros/remote/tracing"
 	powerpb "go.chromium.org/tast-tests/cros/services/cros/power"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/testing"
+)
+
+const (
+	// traceCmdEventsVarName is the name of the variable to specify events for trace-cmd to collect.
+	traceCmdEventsVarName = "power.SuspendPerf.traceCmdEvents"
+)
+
+var traceCmdEventsVar = testing.RegisterVarString(
+	traceCmdEventsVarName,
+	"",
+	"Comma-separated events to enable trace-cmd and to ask it to record. (e.g. 'syscalls,sched:*')",
 )
 
 type testArgsForSuspendPerf struct {
@@ -35,7 +48,7 @@ func init() {
 		BugComponent: "b:256693104",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.power.SuspendPerfService"},
+		ServiceDeps:  []string{"tast.cros.power.SuspendPerfService", "tast.cros.tracing.TraceCmdService"},
 		// (40 sec for histograms + 10 + 60 sec suspend/resume) * 5 times
 		Timeout: 10 * time.Minute,
 		Params: []testing.Param{{
@@ -50,6 +63,9 @@ func init() {
 const (
 	defaultSuspendSeconds       = 10
 	defaultRedialTimeoutSeconds = 60
+
+	defaultInstanceName = "suspend_perf"
+	defaultBufferSize   = 10240
 )
 
 // TODO make a new struct type with name and direction.
@@ -70,6 +86,11 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	}
 	defer cl.Close(ctx)
 
+	if err := initTracing(ctx, cl); err != nil {
+		s.Log("Failed to initialize tracing, but this is ignorable: ", err)
+	}
+	defer cleanupTracing(ctx, s, cl)
+
 	// Login and setup
 	service := powerpb.NewSuspendPerfServiceClient(cl.Conn)
 	if _, err := service.Prepare(ctx, &empty.Empty{}); err != nil {
@@ -86,6 +107,10 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	seconds := defaultSuspendSeconds
 
 	for i := 0; i < args.numSuspend; i++ {
+		if err := startTracing(ctx, s, cl); err != nil {
+			s.Log("Failed to start tracing, but this is ignorable: ", err)
+		}
+
 		// Suspend and resume
 		s.Logf("Suspending DUT for %d seconds", seconds)
 		req := powerpb.SuspendRequest{Seconds: int32(seconds)}
@@ -113,6 +138,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
 		}
+		saveTraceData(ctx, s, cl, i)
 	}
 	newer := prev
 
@@ -151,6 +177,63 @@ func redialRPC(ctx context.Context, s *testing.State, timeoutSeconds int) (*rpc.
 	}
 
 	return rpc.Dial(ctx, d, s.RPCHint())
+}
+
+func shouldRunTraceCmd() bool {
+	return traceCmdEventsVar.Value() != ""
+}
+
+// initTracing creates an instance in DUT
+func initTracing(ctx context.Context, cl *rpc.Client) error {
+	if !shouldRunTraceCmd() {
+		return nil
+	}
+	// Add a new tracing instance for this test
+	// TODO: tune the parameters
+	_, err := tracing.NewRemoteInstance(ctx, cl, defaultInstanceName,
+		tracing.CPUBufferKiB(defaultBufferSize),
+		tracing.InitialStop(),
+		tracing.EnableEvents(strings.Split(traceCmdEventsVar.Value(), ",")...))
+	return err
+}
+
+// startTracing starts tracing in DUT
+func startTracing(ctx context.Context, s *testing.State, cl *rpc.Client) error {
+	if !shouldRunTraceCmd() {
+		return nil
+	}
+	if err := tracing.StartRemoteInstanceTrace(ctx, cl, defaultInstanceName); err != nil {
+		return errors.Wrap(err, "failed to reconnect tracing")
+	}
+	return nil
+}
+
+// saveTraceData fetches the trace data from DUT and save it in s.OutDir().
+func saveTraceData(ctx context.Context, s *testing.State, cl *rpc.Client, i int) error {
+	if !shouldRunTraceCmd() {
+		return nil
+	}
+	dest := fmt.Sprintf("%s/trace-%d.dat", s.OutDir(), i)
+	if err := tracing.SaveRemoteInstanceTraceData(ctx, cl, defaultInstanceName,
+		func(src string) error {
+			return s.DUT().GetFile(ctx, src, dest)
+		}); err != nil {
+		return errors.Wrap(err, "failed to copy the data file from DUT")
+	}
+	s.Logf("Save trace data into %q", dest)
+
+	return nil
+}
+
+func cleanupTracing(ctx context.Context, s *testing.State, cl *rpc.Client) error {
+	if !shouldRunTraceCmd() {
+		return nil
+	}
+	if cl == nil {
+		return errors.Errorf("failed to cleaning up a trace instance: %q", defaultInstanceName)
+	}
+	s.Logf("Cleaning up a trace instance: %s", defaultInstanceName)
+	return tracing.CleanupRemoteInstance(ctx, cl, defaultInstanceName)
 }
 
 func waitHistogramsUpdate(ctx context.Context, s *testing.State, service powerpb.SuspendPerfServiceClient, prev []*histogram.Histogram) ([]*histogram.Histogram, error) {
