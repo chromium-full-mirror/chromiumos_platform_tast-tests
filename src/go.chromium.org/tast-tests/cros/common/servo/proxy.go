@@ -16,7 +16,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/docker/docker/api/types"
@@ -627,11 +626,6 @@ func (p *Proxy) GetPort() int {
 
 // dockerExec execs a command with Docker SDK.
 func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, args ...string) ([]byte, []byte, error) {
-	execConfig := types.ExecConfig{
-		AttachStdout: true,
-		AttachStderr: true,
-		Privileged:   true,
-	}
 	// TODO (anhdle): Implement stdin hijacking.
 	// Attach stdin if provided.
 	if stdin != nil {
@@ -639,56 +633,72 @@ func (p *Proxy) dockerExec(ctx context.Context, stdin io.Reader, name string, ar
 		return nil, nil, err
 	}
 
+	// prepare exec
+	execConfig := types.ExecConfig{
+		AttachStdout: true,
+		AttachStderr: true,
+		Privileged:   true,
+	}
 	// The only user within servod container is root, no sudo needed.
 	execConfig.Cmd = append([]string{name}, args...)
-
 	testing.ContextLog(ctx, "Running docker command ", execConfig.Cmd)
-	r, err := p.dcl.ContainerExecCreate(ctx, p.sdc, execConfig)
+	createResp, err := p.dcl.ContainerExecCreate(ctx, p.sdc, execConfig)
+	if err != nil {
+		return nil, nil, err
+	}
+	execID := createResp.ID
+
+	// run it, with stdout/stderr attached
+	attachResp, err := p.dcl.ContainerExecAttach(ctx, execID, types.ExecStartCheck{})
+	if err != nil {
+		return nil, nil, err
+	}
+	defer attachResp.Close()
+
+	// read the output
+	var outBuf, errBuf bytes.Buffer
+	outputDone := make(chan error, 1)
+
+	go func() {
+		// StdCopy demultiplexes the stream into two buffers
+		_, err = stdcopy.StdCopy(&outBuf, &errBuf, attachResp.Reader)
+		outputDone <- err
+	}()
+
+	select {
+	case err := <-outputDone:
+		if err != nil {
+			return nil, nil, err
+		}
+		break
+
+	case <-ctx.Done():
+		return nil, nil, ctx.Err()
+	}
+
+	// get the exit code
+	inspectResp, err := p.dcl.ContainerExecInspect(ctx, execID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(1)
-	// Wait for cmd to finish within the Docker container.
-	go func(dcl *client.Client) {
-		defer wg.Done()
-		for {
-			iRes, err := dcl.ContainerExecInspect(ctx, r.ID)
-			if err != nil || !iRes.Running {
-				break
-			}
-			err = testing.Sleep(ctx, 250*time.Millisecond)
-			if err != nil {
-				break
-			}
-		}
-	}(p.dcl)
-
-	var out, stderr []byte
-	wg.Add(1)
-	// Get the stdout of the cmd.
-	go func(dcl *client.Client) {
-		defer wg.Done()
-		hRes, err := dcl.ContainerExecAttach(ctx, r.ID, types.ExecStartCheck{})
-		if err != nil {
-			return
-		}
-		defer hRes.Close()
-		var outBuf, errBuf bytes.Buffer
-		stdcopy.StdCopy(&outBuf, &errBuf, hRes.Reader)
-		stderr = errBuf.Bytes()
-		out = outBuf.Bytes()
-	}(p.dcl)
-
-	wg.Wait()
-	// Validate the stdout for invalid UTF-8 encoding.
-	if out != nil {
-		validatedOutput := strings.ToValidUTF8(string(out), "")
-		out = []byte(validatedOutput)
+	stdout := toValidUTF8(outBuf.Bytes())
+	stderr := toValidUTF8(errBuf.Bytes())
+	if inspectResp.ExitCode != 0 {
+		exitCodeErr := errors.Errorf(
+			"docker exec command exited with non-zero exit code: %v", inspectResp.ExitCode,
+		)
+		return stdout, stderr, exitCodeErr
 	}
+	return stdout, stderr, nil
+}
 
-	return out, stderr, err
+// toValidUTF8 converts replaces invalid utf8 byte segments with empty strings
+func toValidUTF8(data []byte) []byte {
+	if data == nil {
+		return nil
+	}
+	return []byte(strings.ToValidUTF8(string(data), ""))
 }
 
 // Proxied returns true if the servo host is connected via ssh proxy.
