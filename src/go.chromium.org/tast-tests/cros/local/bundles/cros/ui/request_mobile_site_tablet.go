@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
@@ -28,18 +27,18 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           RequestMobileSiteTablet,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		LacrosStatus:   testing.LacrosVariantExists,
-		Desc:           "Test request mobile site function on websites under different types of login account",
+		Func:         RequestMobileSiteTablet,
+		LacrosStatus: testing.LacrosVariantExists,
+		Desc:         "Test request mobile site function on websites under different types of login account",
 		Contacts: []string{
 			"cj.tsai@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1238037", // ChromeOS > Software > Window Management
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Timeout:      12 * time.Minute,
+		BugComponent:   "b:1238037", // ChromeOS > Software > Window Management
+		LifeCycleStage: testing.LifeCycleInDevelopment,
+		Attr:           []string{"group:mainline", "informational", "group:hw_agnostic"},
+		SoftwareDeps:   []string{"chrome", "chrome_internal"},
+		Timeout:        12 * time.Minute,
 		VarDeps: []string{
 			"family.parentEmail",
 			"family.parentPassword",
@@ -116,7 +115,7 @@ func RequestMobileSiteTablet(ctx context.Context, s *testing.State) {
 	}
 
 	res := &mobileTestResources{
-		requestMobileSiteBtn: nodewith.Name("Request mobile site").Role(role.MenuItemCheckBox).Ancestor(nodewith.HasClass("SubmenuView")),
+		requestMobileSiteBtn: nodewith.Name("Request mobile site").Role(role.MenuItem).Ancestor(nodewith.HasClass("SubmenuView")),
 		outDir:               s.OutDir(),
 	}
 
@@ -199,17 +198,17 @@ func mobileSiteTest(ctx context.Context, br *browser.Browser, res *mobileTestRes
 	}
 
 	testing.ContextLog(ctx, `Turning on "request mobile site"`)
-	if err := requestMobileSiteAndVerify(ctx, conn, websiteName, res, checked.True); err != nil {
+	if err := requestMobileSiteAndVerify(ctx, conn, websiteName, res, true); err != nil {
 		return errors.Wrap(err, `failed to turn on "request mobile site"`)
 	}
 
 	testing.ContextLog(ctx, `Turning off "request mobile site"`)
-	if err := requestMobileSiteAndVerify(ctx, conn, websiteName, res, checked.False); err != nil {
+	if err := requestMobileSiteAndVerify(ctx, conn, websiteName, res, false); err != nil {
 		return errors.Wrap(err, `failed to turn off "request mobile site"`)
 	}
 
 	testing.ContextLog(ctx, `Turning on "request mobile site"`)
-	if err := requestMobileSiteAndVerify(ctx, conn, websiteName, res, checked.True); err != nil {
+	if err := requestMobileSiteAndVerify(ctx, conn, websiteName, res, true); err != nil {
 		return errors.Wrap(err, `failed to turn on "request mobile site"`)
 	}
 
@@ -218,7 +217,7 @@ func mobileSiteTest(ctx context.Context, br *browser.Browser, res *mobileTestRes
 		return errors.Wrapf(err, "failed to navigate to %q", url)
 	}
 
-	if err := verifyMobileSite(ctx, res, checked.True); err != nil {
+	if err := verifyMobileSite(ctx, conn, res, true); err != nil {
 		return errors.Wrap(err, `failed to verify "request mobile site"`)
 	}
 	return nil
@@ -226,7 +225,7 @@ func mobileSiteTest(ctx context.Context, br *browser.Browser, res *mobileTestRes
 
 // requestMobileSiteAndVerify opens the three dot menu, clicks the "request mobile site"
 // button, waits for the website to be stable, and verifies the expected mobile site status.
-func requestMobileSiteAndVerify(ctx context.Context, conn *chrome.Conn, websiteName string, res *mobileTestResources, status checked.Checked) error {
+func requestMobileSiteAndVerify(ctx context.Context, conn *chrome.Conn, websiteName string, res *mobileTestResources, expected bool) error {
 	if err := uiauto.Combine(`select "request mobile site"`,
 		res.ui.LeftClick(res.threeDotMenuBtn),
 		res.ui.LeftClick(res.requestMobileSiteBtn),
@@ -235,32 +234,26 @@ func requestMobileSiteAndVerify(ctx context.Context, conn *chrome.Conn, websiteN
 		return err
 	}
 
-	if err := verifyMobileSite(ctx, res, status); err != nil {
+	if err := verifyMobileSite(ctx, conn, res, expected); err != nil {
 		return errors.Wrap(err, "failed to verify mobile site status")
 	}
 	return nil
 }
 
-// verifyMobileSite opens the three dot menu, checks if the "request mobile site" button is checked,
-// verifies the expected "request mobile site" button status, and then closes the three dot menu.
-func verifyMobileSite(ctx context.Context, res *mobileTestResources, expected checked.Checked) error {
-	if err := uiauto.Combine(`open "request mobile site" option`,
-		res.ui.LeftClick(res.threeDotMenuBtn),
-		res.ui.WaitUntilExists(res.requestMobileSiteBtn),
-	)(ctx); err != nil {
-		return err
-	}
-
-	if nodeInfo, err := res.ui.Info(ctx, res.requestMobileSiteBtn); err != nil {
-		return errors.Wrap(err, "failed to get node information")
-	} else if nodeInfo.Checked != expected {
-		return errors.Errorf("failed to verify mobile site status; got: %v, want: %v", nodeInfo.Checked, expected)
-	}
-
-	return uiauto.Combine(`close "three dot menu"`,
-		res.ui.LeftClick(res.threeDotMenuBtn),
-		res.ui.WaitUntilGone(nodewith.HasClass("SubmenuView").Role(role.Menu)),
-	)(ctx)
+// verifyMobileSite verifies the mobile site settings by fetching the user agent data from the browser.
+// Note: The button is unavailable in the a11y tree. Using navigator API as a workaround.
+func verifyMobileSite(ctx context.Context, conn *chrome.Conn, res *mobileTestResources, expected bool) error {
+	// The user agent might not be loaded immediately after the settings is changed.
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		var enabled bool
+		if err := conn.Eval(ctx, "navigator.userAgentData.mobile", &enabled); err != nil {
+			return errors.Wrap(err, "failed to get mobile site status")
+		}
+		if enabled != expected {
+			return errors.Errorf("failed to verify mobile site status; got: %v, want: %v", enabled, expected)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: time.Minute, Interval: time.Second})
 }
 
 // ensureLeftOffSettingEnabled opens chrome://settings/onStartup, ensures that "continue
