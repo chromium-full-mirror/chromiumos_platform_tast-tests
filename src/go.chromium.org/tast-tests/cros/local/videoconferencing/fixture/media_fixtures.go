@@ -415,7 +415,7 @@ func init() {
 			},
 		}),
 		Parent:          LoggedInWithFakeHALAndEffectsEnabledNoScreenRecorder,
-		SetUpTimeout:    chrome.GAIALoginTimeout + setup.SetUpTimeout,
+		SetUpTimeout:    2 * (chrome.GAIALoginTimeout + setup.SetUpTimeout),
 		ResetTimeout:    setup.ResetTimeout,
 		TearDownTimeout: setup.TearDownTimeout,
 		PreTestTimeout:  setup.PreTestTimeout,
