@@ -187,6 +187,15 @@ func PrintDetailedPort(ctx context.Context, uid, port string) error {
 	return nil
 }
 
+// GetFixtureOnline is a function that returns fixtureOnline.
+func GetFixtureOnline() map[string]any {
+	fixtureOnlineInterface := make(map[string]any)
+	for key, value := range fixtureOnline {
+		fixtureOnlineInterface[key] = value
+	}
+	return fixtureOnlineInterface
+}
+
 // TestAllFixtures tests all fixtures are alive.
 func TestAllFixtures(ctx context.Context) error {
 	for uid, port := range fixtureOnline {
@@ -227,7 +236,17 @@ func ControlFixture(ctx context.Context, uid, status string) error {
 	if _, err := requestSerialPort(ctx, port, cmd); err != nil {
 		return errors.Wrap(err, "request serial port")
 	}
-
+	// Ascertaining the exact type of device connected behind the fixture poses a challenge,
+	// as it could be a docking station, monitor, pendrive, or similar.
+	// Due to the varied methods of device detection, attempting to identify the device type may incur significant time overhead.
+	//
+	// During actual testing procedures, we employ a polling mechanism to scan for connected devices,
+	// typically for a duration of 30 seconds. The purpose of this approach is to allow for some additional buffer time,
+	// mitigating the risk of the system failing to detect devices when multiple devices are connected simultaneously.
+	//
+	// For further insights into our testing methodology, please consult the following link:https://reurl.cc/ezMGEM
+	// GoBigSleepLint: Wait for device connected.
+	testing.Sleep(ctx, 7*time.Second)
 	return nil
 }
 
