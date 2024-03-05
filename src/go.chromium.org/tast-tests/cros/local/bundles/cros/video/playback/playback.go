@@ -373,14 +373,14 @@ type measureParams struct {
 
 // measurePerformance collects video playback performance playing a video with either SW or HW decoder.
 func measurePerformance(ctx context.Context, params measureParams) error {
-	p := perf.NewValues()
+	p := graphics.NewThreadSafePerfValues()
 	// Save the perf result to OutDir even if something wrong while measuring the performance.
 	defer func() {
 		outDir, ok := testing.ContextOutDir(ctx)
 		if !ok {
 			return
 		}
-		p.Save(outDir)
+		p.GetUnderlyingValues().Save(outDir)
 	}()
 
 	const decodeHistogram = "Media.MojoVideoDecoder.Decode"
@@ -501,17 +501,17 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 		return errors.Wrap(roughnessErr, "failed to measure playback roughness")
 	}
 
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, decodeHistogram, initDecodeHistogram, p, "video_decode_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.bTconn, decodeHistogram, initDecodeHistogram, p.GetUnderlyingValues(), "video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Decode perf metric")
 	}
-	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p, "platform_video_decode_delay"); err != nil {
+	if err := graphics.UpdatePerfMetricFromHistogram(ctx, params.tconn, platformdecodeHistogram, initPlatformdecodeHistogram, p.GetUnderlyingValues(), "platform_video_decode_delay"); err != nil {
 		return errors.Wrap(err, "failed to calculate Platform Decode perf metric")
 	}
-	if err := graphics.UpdateOverlaysMetricFromHistogram(ctx, params.tconn, overlaysHistogram, initOverlaysHistogram, minPromotedOverlayValue, maxPromotedOverlayValue, p, "overlays"); err != nil {
+	if err := graphics.UpdateOverlaysMetricFromHistogram(ctx, params.tconn, overlaysHistogram, initOverlaysHistogram, minPromotedOverlayValue, maxPromotedOverlayValue, p.GetUnderlyingValues(), "overlays"); err != nil {
 		return errors.Wrap(err, "failed to calculate overlays metric")
 	}
 
-	if err := sampleDroppedFrames(ctx, params.conn, p); err != nil {
+	if err := sampleDroppedFrames(ctx, params.conn, p.GetUnderlyingValues()); err != nil {
 		return errors.Wrap(err, "failed to get dropped frames and percentage")
 	}
 

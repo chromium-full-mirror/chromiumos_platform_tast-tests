@@ -35,6 +35,13 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// perfValueInterface allows perf collection functions to take either either a
+// graphics.ThreadSafeValues or a perf.Values.
+type perfValueInterface interface {
+	Append(s perf.Metric, vs ...float64)
+	Set(s perf.Metric, vs ...float64)
+}
+
 // errorOnNonDischarging returns a proper error when the battery is not discharging.
 // If no discharging is expected, then returns nil.
 func errorOnNonDischarging(ctx context.Context, status *pb.Status) error {
@@ -469,7 +476,7 @@ func collectPackagePerformanceCounters(ctx context.Context, interval time.Durati
 
 // MeasureI915IRQs measures the average amount of Intel i915 interrupts per
 // second seen during the test payload execution.
-func MeasureI915IRQs(ctx context.Context, t time.Duration, p *perf.Values) error {
+func MeasureI915IRQs(ctx context.Context, t time.Duration, p perfValueInterface) error {
 	const i915File = "/sys/devices/i915/events/interrupts"
 	if _, err := os.Stat(i915File); err != nil {
 		// Not an Intel GPU or i915 IRQ rate not supported, return nil with no error.
@@ -519,7 +526,7 @@ func MeasureI915IRQs(ctx context.Context, t time.Duration, p *perf.Values) error
 	return nil
 }
 
-func reportMetric(name, unit string, value float64, direction perf.Direction, p *perf.Values) {
+func reportMetric(name, unit string, value float64, direction perf.Direction, p perfValueInterface) {
 	p.Set(perf.Metric{
 		Name:      name,
 		Unit:      unit,
@@ -527,7 +534,7 @@ func reportMetric(name, unit string, value float64, direction perf.Direction, p 
 	}, value)
 }
 
-func parseAndReportCounter(ctx context.Context, counters map[string]time.Duration, counterName string, p *perf.Values) {
+func parseAndReportCounter(ctx context.Context, counters map[string]time.Duration, counterName string, p perfValueInterface) {
 	if counter, ok := counters[counterName]; ok && counter.Seconds() != 0 {
 		usage := 100 * counter.Seconds() / counters["total"].Seconds()
 		testing.ContextLogf(ctx, "%s: %f%%", counterName, usage)
@@ -536,7 +543,7 @@ func parseAndReportCounter(ctx context.Context, counters map[string]time.Duratio
 }
 
 // MeasureGPUCounters measures GPU usage for a period of time t into p.
-func MeasureGPUCounters(ctx context.Context, t time.Duration, p *perf.Values) error {
+func MeasureGPUCounters(ctx context.Context, t time.Duration, p perfValueInterface) error {
 	testing.ContextLog(ctx, "Measuring GPU usage for ", t)
 
 	type gpuTask struct {
@@ -612,7 +619,7 @@ func MeasureGPUCounters(ctx context.Context, t time.Duration, p *perf.Values) er
 // sleep states. The total elapsed cycles is available under the first CPU's TSC
 // (Time Stamp Counter) register. The "active " state, which would be c0, is the
 // remaining cycles. See e.g. https://en.wikichip.org/wiki/acpi/c-states.
-func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p *perf.Values) error {
+func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p perfValueInterface) error {
 	testing.ContextLog(ctx, "Measuring Package C-State residency for ", t)
 	counters, err := collectPackagePerformanceCounters(ctx, t)
 	if err != nil {
@@ -648,7 +655,7 @@ func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p *perf.
 // that time. To provide accurate readings, the battery needs to be configured
 // to discharge (callers need to ensure this).
 // [1] https://www.kernel.org/doc/Documentation/ABI/testing/sysfs-class-power
-func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t time.Duration, p *perf.Values) error {
+func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t time.Duration, p perfValueInterface) error {
 	status, err := power.GetStatus(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the battery status")
@@ -723,7 +730,7 @@ func MeasureSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, t ti
 //   - To provide accurate readings, the battery needs to be configured to
 //     discharge (callers need to ensure this).
 func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.TestConn, numSamples int,
-	samplePeriod time.Duration, tolerance float64, minDuration time.Duration, p *perf.Values) error {
+	samplePeriod time.Duration, tolerance float64, minDuration time.Duration, p perfValueInterface) error {
 	status, err := power.GetStatus(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to get the battery status")
@@ -838,7 +845,7 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 // MeasureFdCount counts the average and peak number of open FDs by the GPU
 // process(es) during playback. Polls every 1 seconds up until the duration
 // given.
-func MeasureFdCount(ctx context.Context, duration time.Duration, p *perf.Values) error {
+func MeasureFdCount(ctx context.Context, duration time.Duration, p perfValueInterface) error {
 	testing.ContextLog(ctx, "Measuring open file descriptors for ", duration)
 	processes, err := chromeproc.GetGPUProcesses()
 	if err != nil {
@@ -878,7 +885,7 @@ func MeasureFdCount(ctx context.Context, duration time.Duration, p *perf.Values)
 
 // MeasureDRAMBandwidth measures average DRAM bandwidth consumption in bytes
 // per second over the given duration.
-func MeasureDRAMBandwidth(ctx context.Context, duration time.Duration, p *perf.Values) error {
+func MeasureDRAMBandwidth(ctx context.Context, duration time.Duration, p perfValueInterface) error {
 	testing.ContextLog(ctx, "Measuring DRAM bandwidth usage for ", duration)
 
 	mtkDramToolCmd := exec.Command("mtk_dram_tool", "-l", strconv.FormatInt(duration.Milliseconds(), 10))
@@ -907,7 +914,7 @@ func MeasureDRAMBandwidth(ctx context.Context, duration time.Duration, p *perf.V
 // UpdatePerfMetricFromHistogram takes a snapshot of histogramName and
 // calculates the average difference with initHistogram. The result is then
 // logged to perfValues with metricName.
-func UpdatePerfMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *metrics.Histogram, perfValues *perf.Values, metricName string) error {
+func UpdatePerfMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *metrics.Histogram, perfValues perfValueInterface, metricName string) error {
 	laterHistogram, err := metrics.GetHistogram(ctx, tconn, histogramName)
 	if err != nil {
 		return errors.Wrap(err, "failed to get later histogram")
@@ -950,7 +957,7 @@ func UpdatePerfMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, 
 // The buckets in the range [minPromotedOverlayValue, maxPromotedOverlayValue]  are considered to represent
 // samples promoted to overlays.
 // The result is then logged to perfValues with metricName.
-func UpdateOverlaysMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *metrics.Histogram, minPromotedOverlayValue, maxPromotedOverlayValue int, perfValues *perf.Values, metricName string) error {
+func UpdateOverlaysMetricFromHistogram(ctx context.Context, tconn *chrome.TestConn, histogramName string, initHistogram *metrics.Histogram, minPromotedOverlayValue, maxPromotedOverlayValue int, perfValues perfValueInterface, metricName string) error {
 	laterHistogram, err := metrics.GetHistogram(ctx, tconn, histogramName)
 	if err != nil {
 		return errors.Wrap(err, "failed to get later histogram")
@@ -1001,7 +1008,7 @@ func UpdateOverlaysMetricFromHistogram(ctx context.Context, tconn *chrome.TestCo
 //	if err := cpu.WaitUntilIdle(ctx); err != nil {
 //		return errors.Wrap(err, "failed waiting for CPU to become idle")
 //	}
-func MeasureCPUUsageAndPower(ctx context.Context, stabilization, measurement time.Duration, p *perf.Values) error {
+func MeasureCPUUsageAndPower(ctx context.Context, stabilization, measurement time.Duration, p perfValueInterface) error {
 	if stabilization != 0 {
 		testing.ContextLogf(ctx, "Sleeping %v to wait for CPU usage to stabilize", stabilization)
 		// GoBigSleepLint: sleep to wait for CPU usage to stabilize.
@@ -1038,7 +1045,7 @@ func MeasureCPUUsageAndPower(ctx context.Context, stabilization, measurement tim
 // MeasureThreadPoolUnnecessaryWakeups measures the spurious wakeups of threads
 // in chrome base::ThreadPool of chrome renderer process, chrome Browser process
 // and chrome GPU process in measurement duration.
-func MeasureThreadPoolUnnecessaryWakeups(ctx context.Context, tconn *chrome.TestConn, measurement time.Duration, p *perf.Values) error {
+func MeasureThreadPoolUnnecessaryWakeups(ctx context.Context, tconn *chrome.TestConn, measurement time.Duration, p perfValueInterface) error {
 	wakeupHistogramNames := []string{
 		"ThreadPool.UnnecessaryWakeup.Browser.Foreground",
 		"ThreadPool.UnnecessaryWakeup.Renderer.Foreground",
