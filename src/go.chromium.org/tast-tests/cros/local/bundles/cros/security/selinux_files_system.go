@@ -84,6 +84,7 @@ func SELinuxFilesSystem(ctx context.Context, s *testing.State) {
 		{Path: "/sys/fs/selinux/null", Context: "null_device"},
 		{Path: "/sys/kernel/config", Context: "configfs", IgnoreErrors: true},
 		{Path: "/sys/kernel/debug", Context: "debugfs"},
+		{Path: "/sys/kernel/debug/debugfs_tracing_on", Context: "debugfs_tracing", IgnoreErrors: true},
 		{Path: "/sys/kernel/debug/tracing", Context: "debugfs_tracing_debug"},
 		{Path: "/sys/kernel/debug/tracing/trace_marker", Context: "debugfs_trace_marker", IgnoreErrors: true},
 		{Path: "/sys/kernel/debug/sync", Context: "debugfs_sync", IgnoreErrors: true},
