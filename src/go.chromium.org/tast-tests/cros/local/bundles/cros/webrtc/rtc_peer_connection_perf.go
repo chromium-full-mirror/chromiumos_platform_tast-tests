@@ -1175,7 +1175,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 			},
 			{
-				Name: "h264_720p_hw_oopve_hw_oopvd",
+				Name: "h264_720p_hw_oopve_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode:                     peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode:                     peerconnection.VerifyHWEncoderUsed,
@@ -1187,10 +1187,10 @@ func init() {
 					TraceChromeEvents:                     false,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
-				Fixture:           "chromeVideoWithFakeWebcamAndOOPVDAndOOPVE",
+				Fixture:           "chromeVideoWithFakeWebcamAndINPVDAndOOPVE",
 			},
 			{
-				Name: "h264_720p_hw_enc_hw_oopvd",
+				Name: "h264_720p_hw_enc_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -1201,7 +1201,7 @@ func init() {
 					TraceChromeEvents: false,
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_enc_h264_1080_30", "autotest-capability:hw_dec_h264_1080_30"},
-				Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+				Fixture:           "chromeVideoINPVDWithFakeWebcam",
 			},
 			{
 				Name: "vp8_720p_hw_oopve_hw_dec",
@@ -1219,7 +1219,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 			},
 			{
-				Name: "vp8_720p_hw_oopve_hw_oopvd",
+				Name: "vp8_720p_hw_oopve_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode:                     peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode:                     peerconnection.VerifyHWEncoderUsed,
@@ -1231,10 +1231,10 @@ func init() {
 					TraceChromeEvents:                     false,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeVideoWithFakeWebcamAndOOPVDAndOOPVE",
+				Fixture:           "chromeVideoWithFakeWebcamAndINPVDAndOOPVE",
 			},
 			{
-				Name: "vp8_720p_hw_enc_hw_oopvd",
+				Name: "vp8_720p_hw_enc_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -1245,7 +1245,7 @@ func init() {
 					TraceChromeEvents: false,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp8_1080_30", "autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+				Fixture:           "chromeVideoINPVDWithFakeWebcam",
 			},
 			{
 				Name: "vp9_720p_hw_oopve_hw_dec",
@@ -1263,7 +1263,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 			},
 			{
-				Name: "vp9_720p_hw_oopve_hw_oopvd",
+				Name: "vp9_720p_hw_oopve_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode:                     peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode:                     peerconnection.VerifyHWEncoderUsed,
@@ -1275,10 +1275,10 @@ func init() {
 					TraceChromeEvents:                     false,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
-				Fixture:           "chromeVideoWithFakeWebcamAndOOPVDAndOOPVE",
+				Fixture:           "chromeVideoWithFakeWebcamAndINPVDAndOOPVE",
 			},
 			{
-				Name: "vp9_720p_hw_enc_hw_oopvd",
+				Name: "vp9_720p_hw_enc_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -1289,7 +1289,7 @@ func init() {
 					TraceChromeEvents: false,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_vp9_1080_30", "autotest-capability:hw_dec_vp9_1080_30"},
-				Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+				Fixture:           "chromeVideoINPVDWithFakeWebcam",
 			},
 			{
 				Name: "av1_720p_hw_oopve_hw_dec",
@@ -1307,7 +1307,7 @@ func init() {
 				Fixture:           "chromeVideoWithFakeWebcamAndOOPVE",
 			},
 			{
-				Name: "av1_720p_hw_oopve_hw_oopvd",
+				Name: "av1_720p_hw_oopve_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode:                     peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode:                     peerconnection.VerifyHWEncoderUsed,
@@ -1319,10 +1319,10 @@ func init() {
 					TraceChromeEvents:                     false,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
-				Fixture:           "chromeVideoWithFakeWebcamAndOOPVDAndOOPVE",
+				Fixture:           "chromeVideoWithFakeWebcamAndINPVDAndOOPVE",
 			},
 			{
-				Name: "av1_720p_hw_enc_hw_oopvd",
+				Name: "av1_720p_hw_enc_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
@@ -1333,7 +1333,7 @@ func init() {
 					TraceChromeEvents: false,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
-				Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+				Fixture:           "chromeVideoINPVDWithFakeWebcam",
 			},
 			{
 				Name: "h264_720p_lacros_hw_enc_hw_dec",
@@ -1392,7 +1392,7 @@ func init() {
 				Fixture:           "chromeVideoLacrosWithFakeWebcam",
 			},
 			{
-				Name: "vp8_1080p_tab_l1t3_sw_enc_hw_oopvd",
+				Name: "vp8_1080p_tab_l1t3_sw_enc_hw_inpvd",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
@@ -1405,7 +1405,7 @@ func init() {
 					TraceChromeEvents: false,
 				},
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp8_1080_30"},
-				Fixture:           "chromeTabCaptureWithOOPVDAndSWEncoding",
+				Fixture:           "chromeTabCaptureWithINPVDAndSWEncoding",
 			},
 			{
 				Name: "vp8_1080p_tab_l1t3_lacros_sw_enc_hw_dec",

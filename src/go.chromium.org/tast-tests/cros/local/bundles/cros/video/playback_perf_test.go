@@ -178,7 +178,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		}
 		for _, fps := range fpss {
 			param := genPlaybackPerfParam("h264", playback.GenDataPath("h264", resolution, fps),
-				resolution, fps, "hw", "oopvd", "chromeVideoOOPVD", nil)
+				resolution, fps, "hw", "inpvd", "chromeVideoINPVD", nil)
 			if resolution == 1080 && fps == 30 {
 				param.MeasureSteadyStateMetrics = true
 			}
@@ -191,7 +191,7 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		resolution, fps, dec := 1080, 30, "hw"
 		file := playbackPerfLongFile[codec]
 		param := genPlaybackPerfParam(codec, file, resolution, fps, dec,
-			"long_oopvd", "chromeVideoOOPVD",
+			"long_inpvd", "chromeVideoINPVD",
 			[]string{"drm_atomic"})
 		// "rogue" is for MT8173 hana.
 		param.HardwareDeps = "hwdep.SkipGPUFamily(\"rogue\"), hwdep.InternalDisplay()"

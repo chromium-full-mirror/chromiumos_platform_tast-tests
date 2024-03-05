@@ -1167,7 +1167,7 @@ func init() {
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_720p_30fps_hw_oopvd",
+				Name: "h264_720p_30fps_hw_inpvd",
 				Val: playback.Config{
 					FileName:        "perf/h264/720p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
@@ -1178,11 +1178,11 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/720p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_1080p_30fps_hw_oopvd",
+				Name: "h264_1080p_30fps_hw_inpvd",
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
@@ -1195,11 +1195,11 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30"},
 				ExtraData:         []string{"perf/h264/1080p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_1080p_60fps_hw_oopvd",
+				Name: "h264_1080p_60fps_hw_inpvd",
 				Val: playback.Config{
 					FileName:        "perf/h264/1080p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
@@ -1210,11 +1210,11 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_60"},
 				ExtraData:         []string{"perf/h264/1080p_60fps_600frames.h264.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_2160p_30fps_hw_oopvd",
+				Name: "h264_2160p_30fps_hw_inpvd",
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_30fps_300frames.h264.mp4",
 					DecoderType:     0,
@@ -1225,11 +1225,11 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_30"},
 				ExtraData:         []string{"perf/h264/2160p_30fps_300frames.h264.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_2160p_60fps_hw_oopvd",
+				Name: "h264_2160p_60fps_hw_inpvd",
 				Val: playback.Config{
 					FileName:        "perf/h264/2160p_60fps_600frames.h264.mp4",
 					DecoderType:     0,
@@ -1240,11 +1240,11 @@ func init() {
 				},
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_2160_60"},
 				ExtraData:         []string{"perf/h264/2160p_60fps_600frames.h264.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "h264_1080p_30fps_hw_long_oopvd",
+				Name: "h264_1080p_30fps_hw_long_inpvd",
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.mp4",
 					DecoderType:     0,
@@ -1259,11 +1259,11 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_h264_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "hevc_1080p_30fps_hw_long_oopvd",
+				Name: "hevc_1080p_30fps_hw_long_inpvd",
 				Val: playback.Config{
 					FileName:        "crosvideo/1080-5-frag.mp4",
 					DecoderType:     0,
@@ -1277,11 +1277,11 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"proprietary_codecs", "autotest-capability:hw_dec_hevc_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080-5-frag.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "vp9_1080p_30fps_hw_long_oopvd",
+				Name: "vp9_1080p_30fps_hw_long_inpvd",
 				Val: playback.Config{
 					FileName:        "crosvideo/1080.webm",
 					DecoderType:     0,
@@ -1295,11 +1295,11 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_vp9_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/1080.webm"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{
-				Name: "av1_1080p_30fps_hw_long_oopvd",
+				Name: "av1_1080p_30fps_hw_long_inpvd",
 				Val: playback.Config{
 					FileName:        "crosvideo/av1_1080p_30fps.mp4",
 					DecoderType:     0,
@@ -1313,7 +1313,7 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue"), hwdep.InternalDisplay()),
 				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30", "drm_atomic"},
 				ExtraData:         []string{"crosvideo/av1_1080p_30fps.mp4"},
-				Fixture:           "chromeVideoOOPVD",
+				Fixture:           "chromeVideoINPVD",
 				Timeout:           5 * time.Minute,
 			},
 			{

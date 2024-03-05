@@ -73,7 +73,7 @@ const (
 
 	swDec decoderImpl = "sw_dec"
 	hwDec decoderImpl = "hw_dec"
-	oopVD decoderImpl = "hw_oopvd"
+	inpVD decoderImpl = "hw_inpvd"
 )
 
 func isHardwareEncoderImpl(enc encoderImpl) bool {
@@ -90,7 +90,7 @@ func isHardwareDecoderImpl(dec decoderImpl) bool {
 	switch dec {
 	case swDec:
 		return false
-	case hwDec, oopVD:
+	case hwDec, inpVD:
 		return true
 	}
 	panic(fmt.Sprintf("unknown decoder: %v", dec))
@@ -127,7 +127,7 @@ func softwareCodecsDeps(codec string, enc encoderImpl, dec decoderImpl) []string
 			deps = append(deps, caps.HWEncodeAV1)
 		}
 	}
-	if dec == hwDec || dec == oopVD {
+	if dec == hwDec || dec == inpVD {
 		switch codec {
 		case "h264":
 			deps = append(deps, caps.HWDecodeH264)
@@ -181,8 +181,8 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 			return "chromeVideoWithFakeWebcamAndNoHwAcceleration"
 		case hwDec:
 			return "chromeVideoWithFakeWebcamAndSWEncoding"
-		case oopVD:
-			panic("we don't test OOP-VD + software encoding")
+		case inpVD:
+			panic("we don't test INP-VD + software encoding")
 		}
 	case hwEnc:
 		switch dec {
@@ -193,8 +193,8 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 				return "chromeVideoWithFakeWebcamAndHWSModeEncoding"
 			}
 			return "chromeVideoWithFakeWebcam"
-		case oopVD:
-			return "chromeVideoOOPVDWithFakeWebcam"
+		case inpVD:
+			return "chromeVideoINPVDWithFakeWebcam"
 		}
 	case oopVE:
 		if stream == s3t3 {
@@ -205,8 +205,8 @@ func toFixture(enc encoderImpl, dec decoderImpl, stream streamType) string {
 			panic("we don't test OOP-VE + software decoding")
 		case hwDec:
 			return "chromeVideoWithFakeWebcamAndOOPVE"
-		case oopVD:
-			return "chromeVideoWithFakeWebcamAndOOPVDAndOOPVE"
+		case inpVD:
+			return "chromeVideoWithFakeWebcamAndINPVDAndOOPVE"
 		}
 	}
 	panic(fmt.Sprintf("unexpected pair, enc=%s, dec=%s", string(enc), string(dec)))
@@ -328,13 +328,13 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			}
 		}
 	}
-	// OOP-VD and OOP-VE test cases.
+	// INP-VD and OOP-VE test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		for _, ed := range [][]interface{}{
 			{oopVE, hwDec},
-			{oopVE, oopVD},
-			{hwEnc, oopVD},
-			// {swEnc, oopVD}, there is no fixture for this.
+			{oopVE, inpVD},
+			{hwEnc, inpVD},
+			// {swEnc, inpVD}, there is no fixture for this.
 		} {
 			var enc encoderImpl = ed[0].(encoderImpl)
 			var dec decoderImpl = ed[1].(decoderImpl)
@@ -382,9 +382,9 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		sourceDatas = append(sourceDatas, sourceData)
 	}
 
-	// Tab capture + OOP-VD test case.
-	tabCaptureOOPVDParamData := rtcTestParamsData{
-		VerifyDecoderMode: toVerifyDecoderMode(oopVD),
+	// Tab capture + INP-VD test case.
+	tabCaptureINPVDParamData := rtcTestParamsData{
+		VerifyDecoderMode: toVerifyDecoderMode(inpVD),
 		VerifyEncoderMode: toVerifyEncoderMode(swEnc),
 		Profile:           "VP8",
 		StreamWidth:       k1080p.Width,
@@ -394,13 +394,13 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 		BrowserType:       "browser.TypeAsh",
 		TraceChromeEvents: false,
 	}
-	tabCaptureOOPVDSourceData := rtcPerfTestSourceData{
-		Name:         "vp8_1080p_tab_l1t3_sw_enc_hw_oopvd",
-		ParamData:    tabCaptureOOPVDParamData,
-		SoftwareDeps: softwareCodecsDeps("vp8", swEnc, oopVD),
-		Fixture:      "chromeTabCaptureWithOOPVDAndSWEncoding",
+	tabCaptureINPVDSourceData := rtcPerfTestSourceData{
+		Name:         "vp8_1080p_tab_l1t3_sw_enc_hw_inpvd",
+		ParamData:    tabCaptureINPVDParamData,
+		SoftwareDeps: softwareCodecsDeps("vp8", swEnc, inpVD),
+		Fixture:      "chromeTabCaptureWithINPVDAndSWEncoding",
 	}
-	sourceDatas = append(sourceDatas, tabCaptureOOPVDSourceData)
+	sourceDatas = append(sourceDatas, tabCaptureINPVDSourceData)
 
 	// Tab capture + LaCrOS test case.
 	tabCaptureLacrosParamData := rtcTestParamsData{

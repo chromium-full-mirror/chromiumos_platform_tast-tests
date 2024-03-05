@@ -119,7 +119,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
 			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
-			Name: "h264_verify_hw_dec_oopvd",
+			Name: "h264_verify_hw_dec_inpvd",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -129,7 +129,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+			Fixture:           "chromeVideoINPVDWithFakeWebcam",
 		}, {
 			Name: "vp8_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{
@@ -156,7 +156,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
 			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
-			Name: "vp8_verify_hw_dec_oopvd",
+			Name: "vp8_verify_hw_dec_inpvd",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -166,7 +166,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP8},
-			Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+			Fixture:           "chromeVideoINPVDWithFakeWebcam",
 		}, {
 			// This is a 2 temporal layers test, via the (experimental) API.
 			// See https://www.w3.org/TR/webrtc-svc/#scalabilitymodes for SVC identifiers.
@@ -223,7 +223,7 @@ func init() {
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsV4L2StatefulVideoDecoding()), // E.g. MT8173 Hana and QC SC7180 Trogdor.
 			Fixture:           "chromeVideoWithFakeWebcamAndV4L2FlatStatefulDecoder",
 		}, {
-			Name: "vp9_verify_hw_dec_oopvd",
+			Name: "vp9_verify_hw_dec_inpvd",
 			Val: peerconnection.RTCTestParams{
 				VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
 				VerifyEncoderMode: peerconnection.NoVerifyEncoderMode,
@@ -233,7 +233,7 @@ func init() {
 				BrowserType:       browser.TypeAsh,
 			},
 			ExtraSoftwareDeps: []string{caps.HWDecodeVP9},
-			Fixture:           "chromeVideoOOPVDWithFakeWebcam",
+			Fixture:           "chromeVideoINPVDWithFakeWebcam",
 		}, {
 			Name: "vp9_1080p_verify_hw_dec",
 			Val: peerconnection.RTCTestParams{

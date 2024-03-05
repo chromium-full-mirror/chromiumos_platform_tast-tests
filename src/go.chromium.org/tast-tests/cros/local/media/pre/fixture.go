@@ -60,14 +60,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoOOPVD",
-		Desc:     "Logged into a user session with logging and out-of-process video decoding enabled",
+		Name:     "chromeVideoINPVD",
+		Desc:     "Logged into a user session with logging and out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -242,13 +242,13 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoOOPVDWithGuestLogin",
-		Desc:     "Like chromeVideoWithGuestLogin but with out-of-process video decoding",
+		Name:     "chromeVideoINPVDWithGuestLogin",
+		Desc:     "Like chromeVideoWithGuestLogin but with out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 				chrome.GuestLogin(),
 			}, nil
 		}),
@@ -391,14 +391,14 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoOOPVDWithFakeWebcam",
-		Desc:     "Like chromeVideoWithFakeWebcam but with out-of-process video decoding",
+		Name:     "chromeVideoINPVDWithFakeWebcam",
+		Desc:     "Like chromeVideoWithFakeWebcam but with out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -480,14 +480,14 @@ func init() {
 
 	// TODO(b/248528896): Remove once both out-of-process video decoding and encoding are enabled by default.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndOOPVDAndOOPVE",
-		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video decoder and encoder",
+		Name:     "chromeVideoWithFakeWebcamAndINPVDAndOOPVE",
+		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but using the out-of-process video encoder and out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 				chrome.EnableFeatures("UseOutOfProcessVideoEncoding"),
 			}, nil
 		}),
@@ -654,8 +654,8 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeTabCaptureWithOOPVDAndSWEncoding",
-		Desc:     "Like chromeTabCapture but with out-of-process video decoding (OOP-VD) and software encoding",
+		Name:     "chromeTabCaptureWithINPVDAndSWEncoding",
+		Desc:     "Like chromeTabCapture but with out-of-process video decoding disabled and forcing software encoding",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
@@ -663,7 +663,7 @@ func init() {
 				// Chrome automatically selects a tab page whose title contains "test".
 				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
 				chrome.ExtraArgs("--disable-accelerated-video-encode"),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
@@ -875,15 +875,15 @@ func init() {
 	})
 
 	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoOOPVDWithDistinctiveIdentifier",
-		Desc:     "Like chromeVideoWithDistinctiveIdentifier but with out-of-process video decoding",
+		Name:     "chromeVideoINPVDWithDistinctiveIdentifier",
+		Desc:     "Like chromeVideoWithDistinctiveIdentifier but with out-of-process video decoding disabled",
 		Contacts: []string{"chromeos-gfx-video@google.com"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.ExtraArgs(chromeBypassPermissionsArgs...),
 				chrome.ExtraArgs(chromeAllowDistinctiveIdentifierArgs...),
-				chrome.EnableFeatures("UseOutOfProcessVideoDecoding"),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",

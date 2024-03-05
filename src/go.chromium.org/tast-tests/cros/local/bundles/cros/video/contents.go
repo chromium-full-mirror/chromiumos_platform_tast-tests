@@ -48,7 +48,7 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
 			Fixture:           "chromeVideo",
 		}, {
-			Name: "h264_360p_hw_oopvd",
+			Name: "h264_360p_hw_inpvd",
 			Val: contentsParams{
 				fileName:    "still-colors-360p.h264.mp4",
 				refFileName: "still-colors-360p.ref.png",
@@ -58,7 +58,7 @@ func init() {
 			ExtraData:         []string{"still-colors-360p.h264.mp4", "still-colors-360p.ref.png"},
 			ExtraHardwareDeps: hwdep.D(hwdep.SupportsNV12Overlays()),
 			ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-			Fixture:           "chromeVideoOOPVD",
+			Fixture:           "chromeVideoINPVD",
 		}, {
 			// TODO(andrescj): move to graphics_nightly after the test is stabilized.
 			Name: "h264_360p_exotic_crop_hw",
