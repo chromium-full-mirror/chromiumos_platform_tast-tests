@@ -59,7 +59,7 @@ func init() {
 		},
 		TestBedDeps:  []string{tbdep.Cbx(false)},
 		SoftwareDeps: []string{"chrome", "camera_feature_effects"},
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("betty")),
+		HardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 		Timeout:      15 * time.Minute,
 		Data: []string{
 			"effects_frame_metrics.js",
