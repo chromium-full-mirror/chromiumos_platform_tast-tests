@@ -62,6 +62,7 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/wlan"
 	"go.chromium.org/tast/core/timing"
 )
 
@@ -188,6 +189,7 @@ type dutData struct {
 	rpcHint          *testing.RPCHint
 	rpc              *rpc.Client
 	wifiClient       *WifiClient
+	chipset          wlan.DeviceID
 	bluetoothClient  bluetooth.BluetoothServiceClient
 	cellularClient   cellular.RemoteCellularServiceClient
 	originalLogLevel int
@@ -221,6 +223,7 @@ type TestFixture struct {
 
 	apID              int
 	seederIfaces      []*APIface
+	seederSSID        string
 	capturers         map[*APIface]map[int]*pcap.Capturer
 	tetheringCapturer *pcap.Capturer
 	useWpaCliAPI      bool
@@ -332,6 +335,12 @@ func (tf *TestFixture) initializeDuts(ctx, daemonCtx context.Context) error {
 		if _, err := d.wifiClient.InitDUT(ctx, &wifi.InitDUTRequest{WithUi: tf.options.EnableDutUI}); err != nil {
 			return errors.Wrap(err, "failed to InitDUT")
 		}
+
+		info, err := d.wifiClient.GetDeviceInfo(ctx, &empty.Empty{})
+		if err == nil {
+		}
+		testing.ContextLogf(ctx, "DUT#%d added: %+v", idx, info.Name)
+		d.chipset = wlan.DeviceID(info.Id)
 
 		if tf.options.EnableCellular && DutIdx(idx) == DefaultDUT {
 			d.cellularClient = cellular.NewRemoteCellularServiceClient(d.rpc.Conn)
@@ -2084,10 +2093,13 @@ func (tf *TestFixture) UseWpaCliAPI(enable bool) {
 // the pcap, otherwise the AP on pcap reuses the one of the other 2 interfaces and fail.
 func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
 	startSeedingAP := func(ctx context.Context, r *routerData, channel int) error {
+		// AP instance name for logging.
 		name := tf.UniqueAPName()
+		// Store the most recent seeder SSID.
+		tf.seederSSID = hostapd.RandomSSID("SUPPORT_SSID_")
 		ops := []hostapd.Option{
 			hostapd.Mode(hostapd.Mode80211nPure), ap.HTCaps(ap.HTCapHT20),
-			hostapd.Channel(channel), hostapd.SSID(hostapd.RandomSSID("SUPPORT_SSID_")),
+			hostapd.Channel(channel), hostapd.SSID(tf.seederSSID),
 			hostapd.SpectrumManagement()}
 		config, err := hostapd.NewConfig(ops...)
 		if err != nil {
@@ -2101,14 +2113,17 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
 		tf.seederIfaces = append(tf.seederIfaces, ap)
 		return nil
 	}
-	// Intel WiFi such as AC7265 requires at least 3 APs to seed the regulatory domain, see b/313936485 for context.
-	if err := startSeedingAP(ctx, tf.routers[0], 1); err != nil {
-		return err
+	if tf.duts[DefaultDUT].chipset == wlan.Intel7265 ||
+		len(tf.duts) == 2 && tf.duts[PeerDUT1].chipset == wlan.Intel7265 {
+		// AC7265 requires at least 3 APs to seed the regulatory domain, see b/313936485 for context.
+		if err := startSeedingAP(ctx, tf.routers[0], 1); err != nil {
+			return err
+		}
+		if err := startSeedingAP(ctx, tf.routers[0], 1); err != nil {
+			return err
+		}
 	}
-	if err := startSeedingAP(ctx, tf.routers[0], 40); err != nil {
-		return err
-	}
-	if err := startSeedingAP(ctx, tf.pcap, 48); err != nil {
+	if err := startSeedingAP(ctx, tf.pcap, 1); err != nil {
 		return err
 	}
 	return nil
@@ -2125,6 +2140,7 @@ func (tf *TestFixture) DeconfigSeedingAP(ctx context.Context) error {
 		}
 	}
 	tf.seederIfaces = nil
+	tf.seederSSID = ""
 	return nil
 }
 
