@@ -1,0 +1,57 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.tracing;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/tracing";
+
+service PerfettoTraceService {
+
+  // Basic usage is Start() -> run workload -> Stop() -> get result file ->
+  // Finalize().
+  rpc Start(PerfettoOption) returns (PerfettoResponse) {}
+
+  rpc Stop(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc Finalize(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  rpc Reconnect(PerfettoSessionToken) returns (google.protobuf.Empty) {}
+
+  // TODO: Add RunQuery etc.
+}
+
+// The commandline options which needs to be passed to perfetto.
+message PerfettoOption {
+  oneof config {
+    // Config file path. Either this or config_data must be set.
+    string file_path = 1;
+    // Config data. This will be passed to perfetto via a temporary file.
+    string data = 2;
+  }
+  // Trace data file path. If not set, the service will make a temporary file.
+  string trace_data_path = 3;
+  // Run perfetto in background. This allows caller to detach from it.
+  bool background = 4;
+  // Gzip(.gz) the trace data file. This is will be done in Finalize. Need to
+  // set trace_data_path.
+  bool compress_trace_data = 5;
+}
+
+message PerfettoResponse {
+  // This returns where the trace data will be written.
+  string trace_data_path = 1;
+  // Token will be returned if PerfettoOption.background = true.
+  optional PerfettoSessionToken token = 2;
+}
+
+message PerfettoSessionToken {
+  int32 pid = 1;
+  bool use_temp_file = 2;
+  bool compress_trace_data = 3;
+  string trace_data_path = 4;
+}

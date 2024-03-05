@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. trace_cmd_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. perfetto_trace_service.proto
 
 // Package tracing provides the TraceCmdService.
 package tracing
