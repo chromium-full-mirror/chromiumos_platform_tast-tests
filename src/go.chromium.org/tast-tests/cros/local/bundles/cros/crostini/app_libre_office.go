@@ -120,9 +120,11 @@ func verifyLibreOfficeApp(ctx context.Context, ui *uiauto.Context, tconn *chrome
 		return errors.Wrapf(err, "failed to capture %s window", fullAppName)
 	}
 
-	if err := uiauto.Combine("quit "+fullAppName,
-		keyboard.AccelAction("ctrl+Q"),
-		ui.WithTimeout(10*time.Second).WaitUntilGone(appWindow),
+	if err := uiauto.Retry(10,
+		uiauto.Combine("quit "+fullAppName,
+			keyboard.AccelAction("ctrl+Q"),
+			ui.WithTimeout(1*time.Second).WaitUntilGone(appWindow),
+		),
 	)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to quit %s window", fullAppName)
 	}
