@@ -237,7 +237,7 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 			return errors.Wrap(err, "failed to add vault key data of password")
 		}
 		if supportsLE {
-			if err := config.AddVaultKeyData(ctx, cryptohome, authID, NewVaultKeyInfo(pin, pinLabel, false)); err != nil {
+			if err := config.AddVaultKeyData(ctx, cryptohome, authID, NewVaultKeyInfo(pin, pinLabel, true)); err != nil {
 				return errors.Wrap(err, "failed to add vault key data of pin")
 			}
 		}
