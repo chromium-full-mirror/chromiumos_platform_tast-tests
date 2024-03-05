@@ -223,7 +223,7 @@ func newWPEnabledZeroGBBFixture() testing.FixtureImpl {
 	}
 }
 
-func (i *impl) varToBool(s *testing.FixtState, varName string) (bool, error) {
+func varToBool(s *testing.FixtState, varName string) (bool, error) {
 	value := false
 	valueStr, ok := s.Var(varName)
 	if ok {
@@ -240,7 +240,7 @@ func (i *impl) varToBool(s *testing.FixtState, varName string) (bool, error) {
 // operations.
 func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	var err error
-	i.disallowSSH, err = i.varToBool(s, "noSSH")
+	i.disallowSSH, err = varToBool(s, "noSSH")
 	if err != nil {
 		s.Fatal("noSSH: ", err)
 	}
@@ -266,7 +266,7 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			common.GBBAddFlag(&flags, pb.GBBFlag_FORCE_DEV_SWITCH_ON, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)
 		}
 	}
-	noECSync, err := i.varToBool(s, "firmware.no_ec_sync")
+	noECSync, err := varToBool(s, "firmware.no_ec_sync")
 	if err != nil {
 		s.Fatal("ECSync: ", err)
 	}
@@ -288,7 +288,7 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			s.Fatal("Failed to connect to DUT: ", err)
 		}
 		skipFlashUSB := false
-		skipFlashUSB, err = i.varToBool(s, "firmware.skipFlashUSB")
+		skipFlashUSB, err = varToBool(s, "firmware.skipFlashUSB")
 		if err != nil {
 			s.Fatal("SkipFlashUSB: ", err)
 		}
