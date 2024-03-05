@@ -41,9 +41,12 @@ func MIPICameraInfo(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to re-marshal cros-camera-tool output")
 		}
-		if module != "" {
-			filename := fmt.Sprintf("%s/module%d_%s_%s_cros-camera-tool.txt", s.OutDir(), i, module, cam["sensor_id"])
-			os.WriteFile(filename, []byte(json), 0644)
+		var filename string
+		if module == "" {
+			filename = fmt.Sprintf("%s/module%d_unknown_unknown_cros-camera-tool.txt", s.OutDir(), i)
+		} else {
+			filename = fmt.Sprintf("%s/module%d_%s_%s_cros-camera-tool.txt", s.OutDir(), i, module, cam["sensor_id"])
 		}
+		os.WriteFile(filename, []byte(json), 0644)
 	}
 }
