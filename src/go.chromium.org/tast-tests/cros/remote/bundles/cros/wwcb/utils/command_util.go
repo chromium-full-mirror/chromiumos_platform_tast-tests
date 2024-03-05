@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -548,4 +549,57 @@ func CurrentTime(ctx context.Context, dut *dut.DUT) (time.Time, error) {
 		return time.Time{}, errors.Wrapf(err, "parse time from %s", str)
 	}
 	return t, err
+}
+
+// FindDockingPowerPath returns the power_supply path of docking.
+func FindDockingPowerPath(ctx context.Context, dut *dut.DUT) (string, error) {
+	out, err := dut.Conn().CommandContext(ctx, "ls", "/sys/class/power_supply").Output(exec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "reterieve power supply")
+	}
+	powerChargers := strings.Split(strings.TrimSpace(string(out)), "\n")
+	for i := 0; i < len(powerChargers); i++ {
+		if !strings.Contains(powerChargers[i], "CROS_USBPD_CHARGER") {
+			continue
+		}
+		powerSupply := fmt.Sprintf("/sys/class/power_supply/%s/voltage_now", powerChargers[i])
+		out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", powerSupply).Output()
+		if err != nil {
+			return "", errors.Wrap(err, "retrieve power voltage from DUT")
+		}
+		testing.ContextLogf(ctx, "voltage_now:%s", string(out))
+		if strings.TrimSpace(string(out)) == "0" {
+			return fmt.Sprint(powerChargers[i]), nil
+		}
+	}
+	return "", errors.New("can't find docking power path")
+}
+
+// VerifyDockingPower verifys the docking power > 45W.
+func VerifyDockingPower(ctx context.Context, dut *dut.DUT, powerPath string) error {
+	baseValue := 1000000
+	const powerWattage = 45
+	out, err := dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/"+powerPath+"/current_max").Output()
+	if err != nil {
+		return errors.Wrap(err, "retrieve electric current from DUT")
+	}
+	currentMax, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
+	if err != nil {
+		return errors.Wrap(err, "converter electric current to float")
+	}
+	currentMax = currentMax / float64(baseValue)
+	out, err = dut.Conn().CommandContext(ctx, "sudo", "cat", "/sys/class/power_supply/"+powerPath+"/voltage_max_design").Output()
+	if err != nil {
+		return errors.Wrap(err, "retrieve voltage from DUT")
+	}
+	voltageMax, err := strconv.ParseFloat(strings.TrimSpace(string(out)), 64)
+	if err != nil {
+		return errors.Wrap(err, "converter voltage to float")
+	}
+	voltageMax = voltageMax / float64(baseValue)
+	power := voltageMax * currentMax
+	if power < powerWattage {
+		return errors.New("the power got:" + strconv.FormatFloat(power, 'f', -1, 64) + " want:" + strconv.Itoa(powerWattage))
+	}
+	return nil
 }
