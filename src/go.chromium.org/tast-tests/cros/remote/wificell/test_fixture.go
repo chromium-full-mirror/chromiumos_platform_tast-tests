@@ -1438,7 +1438,14 @@ func (tf *TestFixture) VerifyConnectionFromDUT(ctx context.Context, dutIdx DutId
 		return errors.Wrap(err, "failed to query shill service information")
 	}
 	clientFreq := service.Wifi.Frequency
-	serverFreq, err := hostapd.ChannelToFrequencyWithOpClass(ap.Config().Channel, ap.Config().OpClass)
+	// The channel number might change during the test due to CSA event. Use iw command to
+	// get the current AP channel.
+	iwr := iw.NewRemoteRunner(tf.routers[dutIdx].host)
+	chConfig, err := iwr.RadioConfig(ctx, ap.Interface())
+	if err != nil {
+		return errors.Wrap(err, "failed to get the radio configuration")
+	}
+	serverFreq, err := hostapd.ChannelToFrequencyWithOpClass(chConfig.Number, ap.Config().OpClass)
 	if err != nil {
 		return errors.Wrap(err, "failed to get server frequency")
 	}
