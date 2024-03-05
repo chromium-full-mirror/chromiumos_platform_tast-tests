@@ -228,12 +228,6 @@ func PasspointRoaming(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Allow Shill to perform interworking select and match networks.
-	if err := tc.manager.SetInterworkingSelectEnabled(ctx, tc.clientIface, true); err != nil {
-		s.Fatal("Failed to enable interworking selection: ", err)
-	}
-	defer tc.manager.SetInterworkingSelectEnabled(ctx, tc.clientIface, false)
-
 	// Obtain a proxy to wpa_supplicant to flush BSS cache during the test.
 	wpas, err := wpasupplicant.NewSupplicant(ctx)
 	if err != nil {

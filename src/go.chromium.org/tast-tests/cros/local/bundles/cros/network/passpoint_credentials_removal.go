@@ -133,12 +133,6 @@ func PasspointCredentialsRemoval(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to obtain Wi-Fi manager: ", err)
 	}
 
-	// Allow Shill to perform interworking select and match networks.
-	if err := m.SetInterworkingSelectEnabled(ctx, ifaces.Client[0], true); err != nil {
-		s.Fatal("Failed to enable interworking selection: ", err)
-	}
-	defer m.SetInterworkingSelectEnabled(cleanupCtx, ifaces.Client[0], false)
-
 	// Create the test access point.
 	ap := tc.ap.ToServer(ifaces.AP[0], s.OutDir())
 	if err := ap.Start(ctx); err != nil {

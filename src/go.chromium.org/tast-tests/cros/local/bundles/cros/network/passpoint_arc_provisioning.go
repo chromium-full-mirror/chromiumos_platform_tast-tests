@@ -132,12 +132,6 @@ func PasspointARCProvisioning(ctx context.Context, s *testing.State) {
 		s.Fatal("Test requires at least one simulated client interface")
 	}
 
-	// Allow Shill to perform interworking select and match networks.
-	if err := m.SetInterworkingSelectEnabled(ctx, ifaces.Client[0], true); err != nil {
-		s.Fatal("Failed to enable interworking selection: ", err)
-	}
-	defer m.SetInterworkingSelectEnabled(ctx, ifaces.Client[0], false)
-
 	// Get ARC handle to provision credentials.
 	a := s.FixtValue().(*hwsim.ShillSimulatedWiFi).ARC
 	for _, tc := range tcs {

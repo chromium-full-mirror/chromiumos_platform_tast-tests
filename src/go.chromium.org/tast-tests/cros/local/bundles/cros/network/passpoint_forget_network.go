@@ -69,11 +69,6 @@ func PasspointForgetNetwork(ctx context.Context, s *testing.State) {
 	if len(ifaces.Client) < 1 {
 		s.Fatal("Test requires at least one simulated client interface")
 	}
-	// Allow Shill to perform interworking select and match networks.
-	if err := m.SetInterworkingSelectEnabled(ctx, ifaces.Client[0], true); err != nil {
-		s.Fatal("Failed to enable interworking selection: ", err)
-	}
-	defer m.SetInterworkingSelectEnabled(cleanupCtx, ifaces.Client[0], false)
 	// Start AP.
 	ap := passpoint.AccessPoint{
 		SSID:               "TestSSID",

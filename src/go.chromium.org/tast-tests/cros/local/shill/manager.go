@@ -620,20 +620,6 @@ func (m *Manager) AddPasspointCredentials(ctx context.Context, profile dbus.Obje
 	return m.Call(ctx, "AddPasspointCredentials", profile, props).Err
 }
 
-// SetInterworkingSelectEnabled sets the "interworking enabled" property to
-// |enabled| for the Wi-Fi device |iface|.
-func (m *Manager) SetInterworkingSelectEnabled(ctx context.Context, iface string, enabled bool) error {
-	dev, err := m.DeviceByName(ctx, iface)
-	if err != nil {
-		return errors.Wrapf(err, "failed to obtain device for interface %s", iface)
-	}
-	err = dev.PropertyHolder.SetProperty(ctx, shillconst.DevicePropertyPasspointInterworkingSelectEnabled, enabled)
-	if err != nil {
-		return errors.Wrapf(err, "failed to set interworking selection on %s", iface)
-	}
-	return nil
-}
-
 // CreateFakeUserProfile creates a fake user profile in Shill on top of the
 // default profile for test purpose.
 func (m *Manager) CreateFakeUserProfile(ctx context.Context, name string) (path dbus.ObjectPath, err error) {

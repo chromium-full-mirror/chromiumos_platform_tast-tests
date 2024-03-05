@@ -545,12 +545,6 @@ func PasspointSelection(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
-	// Allow Shill to perform interworking select and match networks.
-	if err := tc.manager.SetInterworkingSelectEnabled(ctx, tc.clientIface, true); err != nil {
-		s.Fatal("Failed to enable interworking selection: ", err)
-	}
-	defer tc.manager.SetInterworkingSelectEnabled(cleanupCtx, tc.clientIface, false)
-
 	// Ensure the cache of scanned network will be flushed right after the
 	// removal of the access points.
 	// As the test run is quicker than real life network changes, the cache might

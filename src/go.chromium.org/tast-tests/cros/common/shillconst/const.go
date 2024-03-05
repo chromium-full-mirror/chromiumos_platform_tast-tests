@@ -77,17 +77,16 @@ const (
 	DevicePropertyEapCompleted      = "EapAuthenticationCompleted"
 
 	// WiFi device property names.
-	DevicePropertyLastWakeReason                     = "LastWakeReason"
-	DevicePropertyMACAddrRandomEnabled               = "MACAddressRandomizationEnabled"
-	DevicePropertyMACAddrRandomSupported             = "MACAddressRandomizationSupported"
-	DevicePropertyNetDetectScanPeriodSeconds         = "NetDetectScanPeriodSeconds"
-	DevicePropertyPasspointInterworkingSelectEnabled = "PasspointInterworkingSelectEnabled"
-	DevicePropertyScanning                           = "Scanning" // Also for cellular.
-	DevicePropertyWakeOnWiFiAllowed                  = "WakeOnWiFiAllowed"
-	DevicePropertyWakeOnWiFiFeaturesEnabled          = "WakeOnWiFiFeaturesEnabled"
-	DevicePropertyWiFiBgscanMethod                   = "BgscanMethod"
-	DevicePropertyWiFiBgscanShortInterval            = "BgscanShortInterval"
-	DevicePropertyWiFiScanInterval                   = "ScanInterval"
+	DevicePropertyLastWakeReason             = "LastWakeReason"
+	DevicePropertyMACAddrRandomEnabled       = "MACAddressRandomizationEnabled"
+	DevicePropertyMACAddrRandomSupported     = "MACAddressRandomizationSupported"
+	DevicePropertyNetDetectScanPeriodSeconds = "NetDetectScanPeriodSeconds"
+	DevicePropertyScanning                   = "Scanning" // Also for cellular.
+	DevicePropertyWakeOnWiFiAllowed          = "WakeOnWiFiAllowed"
+	DevicePropertyWakeOnWiFiFeaturesEnabled  = "WakeOnWiFiFeaturesEnabled"
+	DevicePropertyWiFiBgscanMethod           = "BgscanMethod"
+	DevicePropertyWiFiBgscanShortInterval    = "BgscanShortInterval"
+	DevicePropertyWiFiScanInterval           = "ScanInterval"
 )
 
 // IPConfig property names.
