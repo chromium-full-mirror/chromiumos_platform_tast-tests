@@ -62,7 +62,7 @@ func init() {
 			Name:      "cpu_stress",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCPUStress),
 			Fixture:   "crosHealthdRunningAndRebootDUT",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}, {
 			// Contact: yycheng@google.com
 			Name:    "floating_point_accuracy",
