@@ -275,10 +275,10 @@ func (y *YtWeb) SkipAd() uiauto.Action {
 		}
 
 		testing.ContextLog(ctx, "Checking for YouTube ads")
-		adText := nodewith.NameContaining("Ad").Role(role.StaticText).Ancestor(videoPlayer).First()
-		skipAdButton := nodewith.NameStartingWith("Skip Ad").Role(role.Button)
+		adClass := nodewith.HasClass("ytp-ad-player-overlay").Ancestor(videoPlayer).First()
+		skipAdButton := nodewith.NameStartingWith("Skip").Role(role.Button).Ancestor(videoPlayer).First()
 		return testing.Poll(ctx, func(ctx context.Context) error {
-			if err := y.ui.WithTimeout(shortUITimeout).WaitUntilExists(adText)(ctx); err != nil {
+			if err := y.ui.WithTimeout(shortUITimeout).WaitUntilExists(adClass)(ctx); err != nil {
 				testing.ContextLog(ctx, "No ads found")
 				return nil
 			}
