@@ -10,6 +10,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -49,8 +50,9 @@ type MitmProxy struct {
 	confDir      string
 	compressDump bool
 	cmd          *testexec.Cmd
-	isRunning    bool     // Is the proxy running? It is set to true on starting proxy.
-	removeCert   bool     // Should remove cert after test is completed?
+	isRunning    bool // Is the proxy running? It is set to true on starting proxy.
+	removeCert   bool // Should remove cert after test is completed?
+	healthCheck  bool
 	scriptPaths  []string // Addon scripts used by mitmproxy.
 	options      []string // Other options provided by users. We will add --set option to command.
 }
@@ -64,6 +66,7 @@ func New(opts ...Option) (*MitmProxy, error) {
 		outDir:       defaultOutDir,
 		compressDump: true,
 		removeCert:   true,
+		healthCheck:  true,
 		scriptPaths:  []string{},
 		options:      []string{},
 	}
@@ -142,8 +145,10 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		return errors.Wrap(err, "failed to launch proxy server")
 	}
 
-	if err := mp.verifyProxyStart(ctx); err != nil {
-		return errors.Wrap(err, "Mitmproxy fails to start")
+	if mp.healthCheck {
+		if err := mp.verifyProxyStart(ctx); err != nil {
+			return errors.Wrap(err, "failed to health check proxy server")
+		}
 	}
 
 	testing.ContextLog(ctx, "Mitmproxy is successfully launched. Streaming to ", dumpFilePath)
@@ -172,7 +177,7 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	caCertPool.AppendCertsFromPEM(caCert)
 
 	// Get Proxy.
-	proxyURLStr := fmt.Sprintf("http://localhost:%d", mp.port)
+	proxyURLStr := "http://" + mp.ProxyAddress()
 	proxyURL, err := url.Parse(proxyURLStr)
 	if err != nil {
 		return errors.Wrapf(err, "failed to parse url: %s", proxyURLStr)
@@ -188,16 +193,28 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 		},
 	}
 
+	// This would pass if the magic domain "mitm.it" returns a 200 OK without the following error message in response.
+	const respRootCANotInstalled = "traffic is not passing through mitmproxy"
+	const testURL = "https://mitm.it/"
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Avoid using www.google.com because some tests may block google.com domain.
-		if _, err := client.Get("https://www.youtube.com"); err != nil {
-			return errors.Wrap(err, "failed to access google homepage")
+		resp, err := client.Get(testURL)
+		if err != nil {
+			return errors.Wrap(err, "failed to visit the magic domain")
+		}
+		if resp.StatusCode != http.StatusOK {
+			return errors.Errorf("%s returns %v, want %v", testURL, resp.StatusCode, http.StatusOK)
+		}
+		body, err := io.ReadAll(resp.Body)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to read response"))
+		}
+		if strings.Contains(string(body), respRootCANotInstalled) {
+			return testing.PollBreak(errors.New("mitmproxy root certificate is not properly installed"))
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
-		return errors.Wrap(err, "mitmproxy fails to start")
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return errors.Wrap(err, "mitmproxy: failed to start with root certificate")
 	}
-
 	return nil
 }
 

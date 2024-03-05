@@ -140,6 +140,7 @@ func newMitmproxy(s *testing.State) (*mitmproxy.MitmProxy, error) {
 			mitmproxy.ScriptPath(s.DataPath(allowedEndpoints), s.DataPath(extraConfig)),
 			mitmproxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml=%s", s.DataPath(endpoints))),
 			mitmproxy.OutDir(s.OutDir()),
+			mitmproxy.HealthCheck(false), // Disable health check as it uses the local domain that won't work with the allowlist set for this test.
 		)
 	case "discovery":
 		opts = append(opts,
