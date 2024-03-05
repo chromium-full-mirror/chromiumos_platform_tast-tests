@@ -11,7 +11,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 	"time"
 
@@ -111,7 +110,7 @@ func SetUpLogicVolume(ctx context.Context, lvName string, bytes uint64) (lvPath 
 			continue
 		}
 		// Create a logic volume in thinpool
-		if err := testexec.CommandContext(ctx, "lvcreate", "-V", strconv.FormatUint(bytes, 10), "-T", thinpool, "-n", lvName).Run(); err != nil {
+		if err := testexec.CommandContext(ctx, "lvcreate", "-V", fmt.Sprintf("%db", bytes), "-T", thinpool, "-n", lvName).Run(); err != nil {
 			return "", func(_ context.Context) {}, errors.Wrap(err, "failed to create logical volume on "+thinpool)
 		}
 
