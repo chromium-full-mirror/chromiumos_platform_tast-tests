@@ -34,12 +34,6 @@ func NewPreprodEnv(ctx context.Context, opts ...Option) (Env, error) {
 	return &PreprodEnv{BaseEnv: base}, nil
 }
 
-// Start starts the necessary servers with the configurations to set up the test environment.
-func (e *PreprodEnv) Start(ctx context.Context) error {
-	testing.ContextLogf(ctx, "Starting up %v env", e.Name)
-	return e.BaseEnv.Start(ctx)
-}
-
 // Close stops the running servers and cleans up any resources used to set up this environment.
 func (e *PreprodEnv) Close(ctx context.Context) error {
 	testing.ContextLogf(ctx, "Tearing down %v env", e.Name)

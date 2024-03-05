@@ -26,8 +26,5 @@ func VerifyPreprodEnv(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to init the preprod env: ", err)
 	}
-	if err := env.Start(ctx); err != nil {
-		s.Fatal("Failed to set up the preprod env: ", err)
-	}
 	defer env.Close(ctx)
 }

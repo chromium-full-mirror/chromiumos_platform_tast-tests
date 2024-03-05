@@ -19,9 +19,6 @@ import (
 // This can manage the lifecycle of the underlying servers (eg, the middle-layer DNS or proxy server)
 // and configure them with various options for HTTP/S redirection or network verification.
 type Env interface {
-	// Start is called to start the servers for the configurations passed in to the New* methods.
-	// Once started, it can't be restarted with a new configuration for now but closing and starting will do the trick when needed to reload the configuration.
-	Start(context.Context) error
 	// Close is called to stop the servers and release the resources used when the test environment is no longer needed.
 	// It's a caller's responsibility to call Close after use.
 	Close(context.Context) error
@@ -40,24 +37,21 @@ type BaseEnv struct {
 	redirectMap map[string]string // A map of (original hosts => destination hosts), eg {"example-prod": "example-preprod"}
 
 	// Redirection configs
-	shouldRedirect bool
-	// TODO(b/321781988): Remove HostsUpdater for DNS when no longer needed.
-	hostsUpdater           *HostsUpdater
-	dnsEnabled             bool
+	shouldRedirect         bool
 	portalDetectionEnabled bool
 	midDNS                 *middns.DNSServer
 
 	cleanups []func(context.Context) error // will be called in a reverse order during Close
 }
 
-// NewBase creates a new base test environment and configures it with the given options.
+// NewBase creates a new base test environment and starts setting the requested environment.
+// Env options can be passed in for various scenarios.
 func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error) {
 	b := &BaseEnv{
 		Name:                   name,
 		vars:                   make(map[string]interface{}),
 		hostMap:                make(map[string]string),
 		redirectMap:            make(map[string]string),
-		dnsEnabled:             true, // defaults to using a DNS server for redirection
 		portalDetectionEnabled: true,
 	}
 
@@ -103,50 +97,42 @@ func NewBase(ctx context.Context, name string, opts ...Option) (*BaseEnv, error)
 
 	// Configure redirection for the given hosts using either a DNS server or /etc/hosts updater.
 	if b.shouldRedirect {
-		if b.dnsEnabled {
-			midDNS := middns.NewDNSServer()
-			b.cleanups = append(b.cleanups, midDNS.Close)
-			b.midDNS = midDNS
-		} else {
-			hostsUpdater, err := NewHostsUpdater(ctx)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to init /etc/hosts updater")
-			}
-			b.cleanups = append(b.cleanups, hostsUpdater.Cleanup)
-			b.hostsUpdater = hostsUpdater
-		}
+		midDNS := middns.NewDNSServer()
+		b.cleanups = append(b.cleanups, midDNS.Close)
+		b.midDNS = midDNS
+	}
+
+	// Start a new environment.
+	if err := b.start(ctx); err != nil {
+		b.Close(ctx)
+		return nil, errors.Wrap(err, "failed to start new environment")
 	}
 	return b, nil
 }
 
-// Start starts the necessary servers with the configurations to set up the test environment.
-func (b *BaseEnv) Start(ctx context.Context) error {
+// start starts the necessary servers with the configurations to set up the test environment.
+func (b *BaseEnv) start(ctx context.Context) error {
 	if b.shouldRedirect {
 		// Start host redirection.
-		if b.dnsEnabled {
-			if !b.portalDetectionEnabled {
-				// Disable portal detection while the DNS server runs to avoid conflicts on DNS queries, resulting in lost connection.
-				manager, err := shill.NewManager(ctx)
-				if err != nil {
-					return errors.Wrap(err, "failed to create shill manager")
-				}
-				if err := manager.DisablePortalDetection(ctx); err != nil {
-					return errors.Wrap(err, "failed to disable portal detection")
-				}
-				testing.ContextLog(ctx, "Disabled portal detection before mid DNS starts")
+		if !b.portalDetectionEnabled {
+			// Disable portal detection while the DNS server runs to avoid conflicts on DNS queries, resulting in lost connection.
+			manager, err := shill.NewManager(ctx)
+			if err != nil {
+				return errors.Wrap(err, "failed to create shill manager")
+			}
+			if err := manager.DisablePortalDetection(ctx); err != nil {
+				return errors.Wrap(err, "failed to disable portal detection")
+			}
+			testing.ContextLog(ctx, "testenv: portal detection disabled before mid DNS starts")
 
-				// Re-enable portal detection on cleanup.
-				b.cleanups = append(b.cleanups, manager.EnablePortalDetection)
-			}
-			if err := b.midDNS.Start(ctx, b.redirectMap); err != nil {
-				return errors.Wrap(err, "failed to redirect hosts using mid DNS server")
-			}
-		} else {
-			if _, err := b.hostsUpdater.Redirect(ctx, b.redirectMap); err != nil {
-				return errors.Wrap(err, "failed to override hosts in /etc/hosts")
-			}
+			// Re-enable portal detection on cleanup.
+			b.cleanups = append(b.cleanups, manager.EnablePortalDetection)
+		}
+		if err := b.midDNS.Start(ctx, b.redirectMap); err != nil {
+			return errors.Wrap(err, "failed to redirect hosts using mid DNS server")
 		}
 	}
+	testing.ContextLog(ctx, "testenv: started for external dependencies")
 	return nil
 }
 
@@ -162,7 +148,7 @@ func (b *BaseEnv) Close(ctx context.Context) error {
 		}
 		b.cleanups = []func(context.Context) error{}
 	}()
-
+	testing.ContextLog(ctx, "testenv: closed")
 	return nil
 }
 

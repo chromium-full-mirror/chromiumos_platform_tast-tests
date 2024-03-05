@@ -23,9 +23,9 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-type param struct {
+type oobeTestArgs struct {
 	isAddPersonFlow bool
-	usePreprod      bool
+	preprod         bool // whether to run against preprod versions of dependencies (default: false)
 }
 
 func init() {
@@ -49,19 +49,19 @@ func init() {
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"group:criticalstaging"},
-			Val:       param{isAddPersonFlow: false, usePreprod: false},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false},
 		}, {
 			Name:      "add_person_flow",
 			ExtraAttr: []string{"group:criticalstaging"},
-			Val:       param{isAddPersonFlow: true, usePreprod: false},
+			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false},
 		}, {
 			ExtraAttr: []string{"group:testenv_preprod"},
 			Name:      "preprod",
-			Val:       param{isAddPersonFlow: false, usePreprod: true},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: true},
 		}, {
 			ExtraAttr: []string{"group:testenv_preprod"},
 			Name:      "preprod_add_person_flow",
-			Val:       param{isAddPersonFlow: true, usePreprod: true},
+			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: true},
 		}},
 	})
 }
@@ -78,11 +78,11 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, time.Second*10)
 	defer cancel()
 
-	// Run against the preprod of Google frontend.
-	if s.Param().(param).usePreprod {
+	// Set up the test environment to run tests against the preprod of Google frontend if requested.
+	if s.Param().(oobeTestArgs).preprod {
 		envOpts := []testenv.Option{
 			testenv.RedirectMap(map[string]string{
-				"gfe-prod": "gfe-preprod",
+				"google-prod": "gfe-preprod",
 			}),
 			testenv.PortalDetection(false), // Disable portal detection that may conflict with a mid DNS server during network validation.
 		}
@@ -90,13 +90,10 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to init the preprod env: ", err)
 		}
-		if err := env.Start(ctx); err != nil {
-			s.Fatal("Failed to set up the preprod env: ", err)
-		}
 		defer env.Close(cleanupCtx)
 	}
 
-	isAddPersonFlow := s.Param().(param).isAddPersonFlow
+	isAddPersonFlow := s.Param().(oobeTestArgs).isAddPersonFlow
 	if isAddPersonFlow {
 		// Create user on the device.
 		cr, err := chrome.New(ctx)

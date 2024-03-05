@@ -33,12 +33,6 @@ func NewFakeEnv(ctx context.Context) (Env, error) {
 	return &FakeEnv{BaseEnv: base}, nil
 }
 
-// Start starts the fake environment.
-func (e *FakeEnv) Start(ctx context.Context) error {
-	testing.ContextLogf(ctx, "Setting up %v env with hosts: %v", e.Name, e.hostMap)
-	return nil
-}
-
 // Stop cleans up any changes made to set up the fake environment.
 func (e *FakeEnv) Stop(ctx context.Context) error {
 	testing.ContextLogf(ctx, "Stopping %v env", e.Name)

@@ -32,14 +32,6 @@ func RedirectMap(redirects map[string]string) Option {
 	}
 }
 
-// DNSEnabled is an option whether to use a middle layer DNS server or not (modify /etc/hosts) for host redirection.
-func DNSEnabled(enable bool) Option {
-	return func(b *BaseEnv) error {
-		b.dnsEnabled = enable
-		return nil
-	}
-}
-
 // PortalDetection is an option to enable (default) or disable portal detection in a requested test environment.
 // Portal detection may fail in checking DNS queries particularly if a middle layer DNS server is running, resulting in lost network connection.
 // To avoid this conflict, disable portal detection by passing in this option with `enable` set to false.
