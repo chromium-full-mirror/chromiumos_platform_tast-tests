@@ -185,7 +185,7 @@ func WaitForResultWithCategory(tconn *chrome.TestConn, searchInfo SearchCategory
 
 	categoryName := category + " , search result category"
 	return uiauto.Combine(fmt.Sprintf("Wait for %s", category),
-		ui.WaitUntilExists(SearchResultListLabelFinder.Name(category).Ancestor(SearchResultListViewFinder.Name(categoryName))),
+		ui.WaitUntilExists(SearchResultListLabelFinder.Name(category).Ancestor(SearchResultListViewFinder.Name(categoryName)).First()),
 		ui.WaitUntilExists(SearchResultListItemFinder.NameContaining(result).Ancestor(SearchResultListViewFinder.Name(categoryName))),
 	)
 }

@@ -204,7 +204,7 @@ func init() {
 				Val: searchQualityTestCase{
 					query:          "language",
 					useRegex:       false,
-					expectedResult: "Languages, Languages and inputs, Settings",
+					expectedResult: "Languages, System preferences",
 					category:       "Best Match",
 				},
 				ExtraAttr: []string{"group:hw_agnostic"},
