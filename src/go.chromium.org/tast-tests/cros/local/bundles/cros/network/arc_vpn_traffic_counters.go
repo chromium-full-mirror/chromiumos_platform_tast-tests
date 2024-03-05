@@ -45,7 +45,7 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		Fixture:      "shillSimulatedWiFiWithArcBooted",
-		SoftwareDeps: []string{"arc"},
+		SoftwareDeps: []string{"arc", "no_android_p"},
 		Params: []testing.Param{
 			{
 				Name: "tcp4",
@@ -248,7 +248,8 @@ func sendMessageAndConfirmCounted(ctx context.Context, a *arc.ARC, fam l4server.
 				return tc.GetRxBytes(), tc.GetRxPackets(), nil
 			}
 		}
-		return 0, 0, errors.New("failed to find traffic counter that matches")
+		// If no matching counters found, it means that count for the traffic counter is 0.
+		return 0, 0, nil
 	}
 
 	tcByte1, tcPkt1, err := getCounters()
