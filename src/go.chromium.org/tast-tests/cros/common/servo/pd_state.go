@@ -103,7 +103,7 @@ var peStateNameLookup = map[int]string{
 }
 
 // pdStateFieldIndex maps field names to their position in the regex. Supports
-// output for both TCPM stack versions.
+// output for both TCPM stack versions plus PDC.
 var pdStateFieldIndex = map[TCPMVersion]map[string]int{
 	TCPMv1: {
 		"Full":       0,
@@ -128,6 +128,15 @@ var pdStateFieldIndex = map[TCPMVersion]map[string]int{
 		"TCFlags":    8,
 		"PEState":    9,
 		"PEFlags":    10,
+	},
+	PDC: {
+		"Full":       0,
+		"PortNumber": 1,
+		"CCPolarity": 2,
+		"PowerRole":  3,
+		"DataRole":   4,
+		"Vconn":      5,
+		"PDCState":   6,
 	},
 }
 
@@ -171,6 +180,17 @@ var pdStateCmdRegexp = map[TCPMVersion]string{
 	//     10 - PE Flags     -- 0201
 	//     11 - Extra fields -- SPR
 	TCPMv2: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(-VC)?\s+TC State:\s+([\w\.]+)?,\s+Flags:\s+0x(\w+)\s+PE State:\s+(\w+)?,\s+Flags:\s+0x(\w+)\s+(.*)[\r\n]`,
+	// For PDC DUTs
+	//   Example: "C1 CC1, Role: SNK-DFP PDC State: Attached.SNK"
+	//   Match Index:
+	//      0 - Full match
+	//      1 - Port number  -- 1
+	//      2 - CC Polarity  -- CC1
+	//      3 - Power role   -- SNK
+	//      4 - Data role    -- DFP
+	//      5 - VConn (optional "-VC")
+	//      6 - PDC State    -- Attached.SNK (See `pdc_state_names` in the EC's pdc_power_mgmt.c)
+	PDC: `C(\d+)\s+(CC\d+),\s+Role:\s+(\w+)-(\w+)(-VC)?\s+PDC State:\s+([\w\. ]+)?`,
 }
 
 const pdStateInvalidPortRegexp string = `Parameter (\d+) invalid`
@@ -216,7 +236,7 @@ func (t *pdStateTokens) peStateName(ver TCPMVersion) (string, error) {
 		return token, nil
 	}
 
-	panic("Invalid TCPM version")
+	panic("Only TCPMv1 or TCPMv2 supported")
 }
 
 // PDState encapsulates the full PD port state on an EC or Servo
@@ -233,35 +253,40 @@ type PDState struct {
 	// depending on TCPM version. Avoid accessing these members directly
 	// and create a method such as IsSourceReady() to obtain the desired
 	// info in a version-safe manner, referencing `.Version` if necessary.
+	// Not used in PDC DUTs.
 	PEStateName string
 	PEFlags     uint32
 
 	TCStateName string // TCPMv2 DUTs only
 	TCFlags     uint32 // TCPMv2 DUTs only
+
+	PDCState string // PDC DUTs only
 }
 
 // IsSourceReady returns true if port is in a source-ready state
 func (pdState *PDState) IsSourceReady() bool {
-	switch pdState.PEStateName {
-	case "SRC_READY": // TCPMv1
-		return true
-	case "PE_SRC_Ready": // TCPMv2
-		return true
-	default:
-		return false
+	switch pdState.Version {
+	case TCPMv1:
+		return pdState.PEStateName == "SRC_READY"
+	case TCPMv2:
+		return pdState.PEStateName == "PE_SRC_Ready"
+	case PDC:
+		return pdState.PDCState == "Attached.SRC"
 	}
+	panic("Unknown TCPM ver")
 }
 
 // IsSinkReady returns true if port is in a sink-ready state
 func (pdState *PDState) IsSinkReady() bool {
-	switch pdState.PEStateName {
-	case "SNK_READY": // TCPMv1
-		return true
-	case "PE_SNK_Ready": // TCPMv2
-		return true
-	default:
-		return false
+	switch pdState.Version {
+	case TCPMv1:
+		return pdState.PEStateName == "SNK_READY"
+	case TCPMv2:
+		return pdState.PEStateName == "PE_SNK_Ready"
+	case PDC:
+		return pdState.PDCState == "Attached.SNK"
 	}
+	panic("Unknown TCPM ver")
 }
 
 // IsPDReady returns true if the port is in a source- or sink-ready state
@@ -317,14 +342,26 @@ func (s *Servo) getPDStateByTargetAndVersion(
 		panic("This method may only be called with an exact port, not PDPortUnderTest")
 	}
 
-	if ver == TCPMv2 && target == pdStateServo {
-		panic("Servo does not use TCPMv2. Must pass TCPMv1.")
+	if target == pdStateServo && ver != TCPMv1 {
+		panic("Servo only supports TCPMv1.")
 	}
 
 	// Get the correct regex based on version and build the command
 	regex := pdStateCmdRegexp[ver] + "|" + pdStateInvalidPortRegexp
 
-	cmd := fmt.Sprintf("pd %d state", port)
+	var cmd string
+
+	// Build the correct command string based on TCPM vs PDC
+	switch ver {
+	case TCPMv1:
+		fallthrough
+	case TCPMv2:
+		cmd = fmt.Sprintf("pd %d state", port)
+	case PDC:
+		cmd = fmt.Sprintf("pdc status %d", port)
+	default:
+		panic("Unknown TCPM version")
+	}
 
 	var t pdStateTokens
 
@@ -364,7 +401,7 @@ func (s *Servo) getPDStateByTargetAndVersion(
 	var portState PDState
 
 	//
-	// Fill in fields common to both TCPM versions
+	// Fill in fields common to all versions (TCPM and PDC)
 	//
 
 	portState.Version = ver
@@ -379,12 +416,6 @@ func (s *Servo) getPDStateByTargetAndVersion(
 		return nil, err
 	}
 	portState.Polarity = pdPolarityValue(polarity)
-
-	connection, err := t.lookup("Connection", ver)
-	if err != nil {
-		return nil, err
-	}
-	portState.Connection = connectionValue(connection)
 
 	powerRole, err := t.lookup("PowerRole", ver)
 	if err != nil {
@@ -405,19 +436,29 @@ func (s *Servo) getPDStateByTargetAndVersion(
 	}
 
 	//
-	// PE state and flags
+	// PE state and flags, Connection state (TCPMv1 and TCPMv2 only)
 	//
+	if ver == TCPMv2 || ver == TCPMv1 {
+		// PE State name
+		portState.PEStateName, err = t.peStateName(ver)
+		if err != nil {
+			return nil, err
+		}
 
-	portState.PEStateName, err = t.peStateName(ver)
-	if err != nil {
-		return nil, err
-	}
+		// PE Flags
+		flags64, err := strconv.ParseUint(t[pdStateFieldIndex[ver]["PEFlags"]], 16, 32)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to convert PE flags number")
+		}
+		portState.PEFlags = uint32(flags64)
 
-	flags64, err := strconv.ParseUint(t[pdStateFieldIndex[ver]["PEFlags"]], 16, 32)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to convert PE flags number")
+		// Connection
+		connection, err := t.lookup("Connection", ver)
+		if err != nil {
+			return nil, err
+		}
+		portState.Connection = connectionValue(connection)
 	}
-	portState.PEFlags = uint32(flags64)
 
 	//
 	// TC state and flags (TCPMv2 only)
@@ -433,6 +474,14 @@ func (s *Servo) getPDStateByTargetAndVersion(
 			return nil, errors.Wrap(err, "failed to convert TC flags number")
 		}
 		portState.TCFlags = uint32(flags64)
+	}
+
+	//
+	// PDC State (PDC only)
+	//
+
+	if ver == PDC {
+		portState.PDCState = t[pdStateFieldIndex[ver]["PDCState"]]
 	}
 
 	return &portState, nil

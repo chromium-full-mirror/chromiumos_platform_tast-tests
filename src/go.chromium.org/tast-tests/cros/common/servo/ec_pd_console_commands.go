@@ -30,6 +30,7 @@ type TCPMVersion int
 const (
 	TCPMv1 TCPMVersion = 1
 	TCPMv2 TCPMVersion = 2
+	PDC    TCPMVersion = 3
 )
 
 // Supported DualRole states
@@ -75,6 +76,8 @@ func (s *Servo) RequireDUTPDInfo(ctx context.Context) error {
 			pdInfo.version = TCPMv1
 		case 2:
 			pdInfo.version = TCPMv2
+		case 3:
+			pdInfo.version = PDC
 		default:
 			return errors.Errorf("invalid TCPM version (%d) Output: %q", ver, out)
 		}
