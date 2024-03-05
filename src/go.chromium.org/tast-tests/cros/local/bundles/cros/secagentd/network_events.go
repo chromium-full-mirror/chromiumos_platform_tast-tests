@@ -127,7 +127,7 @@ func init() {
 				family:       l4server.TCP4,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "relaxed_tcp",
 			Val: networkTypeParams{
@@ -135,7 +135,7 @@ func init() {
 				family:       l4server.TCP4,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "relaxed_tcp_v6",
 			Val: networkTypeParams{
@@ -143,7 +143,7 @@ func init() {
 				family:       l4server.TCP6,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "relaxed_udp",
 			Val: networkTypeParams{
@@ -151,7 +151,7 @@ func init() {
 				family:       l4server.UDP4,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "relaxed_udp_v6",
 			Val: networkTypeParams{
@@ -159,7 +159,7 @@ func init() {
 				family:       l4server.UDP6,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}},
 	})
 }
