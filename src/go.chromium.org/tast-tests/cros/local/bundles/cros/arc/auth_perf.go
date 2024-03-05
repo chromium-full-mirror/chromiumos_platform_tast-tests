@@ -31,11 +31,10 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
-	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
-
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/lsbrelease"
+	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type testParam struct {
@@ -470,7 +469,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	}
 	if _, err := cpu.WaitUntilStabilized(ctx, coolDownConfig()); err != nil {
 		if tracingEnabled {
-			sess.Stop()
+			sess.Stop(ctx)
 		}
 		out, topCmdErr := testexec.CommandContext(ctx, "top", "-n1", "-b", "-H", "-c", "-w").Output(testexec.DumpLogOnError)
 		if topCmdErr == nil {
@@ -497,7 +496,7 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
 	if tracingEnabled {
-		sess.Stop()
+		sess.Stop(ctx)
 	}
 
 	energyBefore, err := metrics.NewRAPLSnapshot()

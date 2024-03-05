@@ -10,17 +10,19 @@ import (
 	"encoding/csv"
 	"io/ioutil"
 	"os"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
 	"github.com/golang/protobuf/proto"
-
+	"github.com/shirou/gopsutil/v3/process"
 	"golang.org/x/sys/unix"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -31,7 +33,21 @@ const traceProcessorPath = "/usr/local/bin/trace_processor_shell"
 // Session stores the cmd and the result file of the trace.
 // Remember to call Session.Finalize to finalize the tracing session.
 type Session struct {
-	cmd               *testexec.Cmd
+	// cmd is used for running the perfetto process for non-background session.
+	cmd *testexec.Cmd
+	// proc is used for attaching perfetto process for background session.
+	// Both cmd and proc can be nil if user recoonected to a perfetto session
+	// which has already finished tracing.
+	proc              *process.Process
+	useTempFile       bool
+	compressTraceData bool
+	traceDataPath     string
+}
+
+// SessionToken stores the current session state so that ReconnectBackgroundSession
+// can reconnect to the session using it. External program should not change it.
+type SessionToken struct {
+	pid               int
 	useTempFile       bool
 	compressTraceData bool
 	traceDataPath     string
@@ -42,8 +58,9 @@ func createTempFileForTrace() (*os.File, error) {
 }
 
 type option struct {
-	TraceDataPath string
-	Compression   bool
+	traceDataPath string
+	compression   bool
+	background    bool
 }
 
 type traceSessionOption func(*option)
@@ -51,14 +68,33 @@ type traceSessionOption func(*option)
 // WithTraceDataPath configures the session with trace data written to the given path.
 func WithTraceDataPath(path string) traceSessionOption {
 	return func(opt *option) {
-		opt.TraceDataPath = path
+		opt.traceDataPath = path
 	}
 }
 
 // WithCompression configures the session with compressing the trace data after the session is finalized.
+// Note: The compressed data file name is traceDataPath + ".gz".
 func WithCompression() traceSessionOption {
 	return func(opt *option) {
-		opt.Compression = true
+		opt.compression = true
+	}
+}
+
+// InBackground configures the session is running in background.
+// The background session allows user to reconnect it by a token returned from
+// `Token()` method. Thus the remote service which is expected to be
+// disconnected (e.g. suspend & resume) can use that background session.
+// On the other hand, non-background session cannot be disconnected. If it is
+// disconnected, the perfetto session will be aborted.
+// Note that the caller needs to call `Stop()` to stop the session and call
+// `Finalize()` method to remove a temporary trace data file (if you do not
+// specify a trace data file by `WithTraceDataPath()`.)
+// To prevent runaway background tracing sessions, set `duration_ms`
+// in the perfetto configuration, which forcibly terminates the tracing
+// after specified time elapsed.
+func InBackground() traceSessionOption {
+	return func(opt *option) {
+		opt.background = true
 	}
 }
 
@@ -68,21 +104,53 @@ func (sess *Session) TraceDataPath() string {
 }
 
 // Stop stops the system-wide trace, which should be created by StartSession.
+// If the session is already detached, this returns an error.
 // Note that the session shouldn't be stopped too early (like in 500
 // milliseconds), so that perfetto_cmd has time to register the signal handler
 // to handle SIGTERM properly.
-func (sess *Session) Stop() error {
-	if err := sess.cmd.Signal(unix.SIGTERM); err != nil {
+func (sess *Session) Stop(ctx context.Context) error {
+	var err error
+	if sess.cmd != nil {
+		err = sess.cmd.Signal(unix.SIGTERM)
+	} else if sess.proc != nil {
+		err = sess.proc.SendSignal(unix.SIGTERM)
+	} else {
+		return errors.New("this session is already detached from traced")
+	}
+
+	if err != nil {
 		return errors.Wrap(err, "failed to terminate the tracing session")
 	}
 
-	return sess.Wait()
+	return sess.Wait(ctx)
 }
+
+const (
+	defaultWaitTimeout = 5 * time.Second
+)
 
 // Wait waits until the tracing session is done, which should be created
 // by StartSession.
-func (sess *Session) Wait() error {
-	return sess.cmd.Wait()
+func (sess *Session) Wait(ctx context.Context) error {
+	if sess.cmd != nil {
+		// TODO(b/330329525): this requires a timeout check.
+		return sess.cmd.Wait()
+	}
+	if sess.proc != nil {
+		// sess.proc.Wait() doesn't work here because proc is not a child process.
+		return procutil.WaitForTerminated(ctx, sess.proc, defaultWaitTimeout)
+	}
+
+	// The perfetto process already exits.
+	return nil
+}
+
+// Token returns a token for reconnect.
+func (sess *Session) Token() (*SessionToken, error) {
+	if sess.cmd != nil {
+		return nil, errors.New("failed to get token because it is not running in background")
+	}
+	return &SessionToken{pid: int(sess.proc.Pid), useTempFile: sess.useTempFile, compressTraceData: sess.compressTraceData, traceDataPath: sess.traceDataPath}, nil
 }
 
 // RunMetrics collects the result with trace_processor_shell.
@@ -231,9 +299,9 @@ func StartSession(ctx context.Context, configFile string, opts ...traceSessionOp
 	var traceDataFile *os.File = nil
 	var err error = nil
 
-	if option.TraceDataPath != "" {
+	if option.traceDataPath != "" {
 		useTempFile = false
-		traceDataFile, err = os.OpenFile(option.TraceDataPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+		traceDataFile, err = os.OpenFile(option.traceDataPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to create the trace data file")
 		}
@@ -249,8 +317,38 @@ func StartSession(ctx context.Context, configFile string, opts ...traceSessionOp
 	// This runs a perfetto trace session with the options:
 	//   -c traceConfigPath --txt: configure the trace session as defined in the text proto |traceConfigPath|
 	//   -o traceOutputPath      : save the trace data (binary proto) to |traceOutputPath|
-	cmd := testexec.CommandContext(ctx, "perfetto", "-c", configFile, "--txt", "-o", traceDataPath)
-	if err := cmd.Start(); err != nil {
+	//   -D                      : run traced in background (optional)
+	args := []string{"-c", configFile, "--txt", "-o", traceDataPath}
+	if option.background {
+		args = append(args, "-D")
+	}
+	cmd := testexec.CommandContext(ctx, "perfetto", args...)
+
+	var proc *process.Process = nil
+	if !option.background {
+		err = cmd.Start()
+	} else {
+		var out []byte
+		out, err = cmd.Output()
+		if err == nil {
+			proc, err = func(out string) (*process.Process, error) {
+				// Regular expression to find one or more digits (PID)
+				re := regexp.MustCompile(`\d+`)
+				match := re.FindString(out)
+				if match == "" {
+					return nil, errors.New("failed to find the tracing session pid")
+				}
+				pid, err := strconv.Atoi(match)
+				if err != nil || match == "" {
+					return nil, errors.Wrap(err, "failed to convert the tracing session pid")
+				}
+				return process.NewProcess(int32(pid))
+			}(string(out))
+		}
+		cmd = nil
+	}
+
+	if err != nil {
 		if e := os.Remove(traceDataFile.Name()); e != nil {
 			// Cleanup the temp file is non-fatal. Just log the error.
 			testing.ContextLog(ctx, "Failed to remove the trace data file: ", e)
@@ -258,7 +356,7 @@ func StartSession(ctx context.Context, configFile string, opts ...traceSessionOp
 		return nil, errors.Wrap(err, "failed to start the tracing session")
 	}
 
-	return &Session{cmd: cmd, useTempFile: useTempFile, compressTraceData: option.Compression, traceDataPath: traceDataPath}, nil
+	return &Session{cmd: cmd, proc: proc, useTempFile: useTempFile, compressTraceData: option.compression, traceDataPath: traceDataPath}, nil
 }
 
 // StartSessionAndWaitUntilDone collects a system-wide trace using the perfetto command line tool.
@@ -271,7 +369,7 @@ func StartSessionAndWaitUntilDone(ctx context.Context, configFile string, opts .
 		return nil, err
 	}
 
-	if err := sess.Wait(); err != nil {
+	if err := sess.Wait(ctx); err != nil {
 		// Session is already started. We need to remove the temp file.
 		if errRemove := sess.removeTempTraceDataFile(); err != nil {
 			testing.ContextLog(ctx, "Failed to remove the temp trace data file", errRemove)
@@ -280,4 +378,22 @@ func StartSessionAndWaitUntilDone(ctx context.Context, configFile string, opts .
 	}
 
 	return sess, nil
+}
+
+// ReconnectBackgroundSession reconnects to an existing system-wide background perfetto trace.
+// Returns a Session instance on success or error on failure.
+// The caller should call Finalize() to perform the final actions with the
+// tracing session whether the test is successful or not.
+// Or, the caller can Disconnect() to perform detaching from current trace.
+func ReconnectBackgroundSession(ctx context.Context, tok *SessionToken) (*Session, error) {
+	if tok.pid <= 0 {
+		return nil, errors.Errorf("wrong pid (%d) is specified", tok.pid)
+	}
+	if _, err := os.Stat(tok.traceDataPath); err != nil {
+		return nil, errors.Wrapf(err, "trace data file (%s) does not exist", tok.traceDataPath)
+	}
+	// The perfetto trace daemon can have exited already (e.g. after "duration_ms" elapsed).
+	// So ignore error.
+	proc, _ := process.NewProcess(int32(tok.pid))
+	return &Session{cmd: nil, proc: proc, useTempFile: tok.useTempFile, compressTraceData: tok.compressTraceData, traceDataPath: tok.traceDataPath}, nil
 }

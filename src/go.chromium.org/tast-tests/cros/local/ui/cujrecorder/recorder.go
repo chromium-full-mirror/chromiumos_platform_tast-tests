@@ -813,7 +813,7 @@ func (r *Recorder) StopTracing(ctx context.Context) error {
 		return errors.New("can't stop tracing because there is no active session")
 	}
 	testing.ContextLog(ctx, "Stopping active system tracing session")
-	if err := r.activeSession.Stop(); err != nil {
+	if err := r.activeSession.Stop(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop tracing")
 	}
 	r.Annotate(ctx, "Stop_tracing")

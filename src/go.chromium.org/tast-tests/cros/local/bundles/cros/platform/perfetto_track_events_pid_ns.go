@@ -13,7 +13,6 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/tracing"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -42,7 +41,7 @@ func init() {
 }
 
 func verifyTrackEventPid(ctx context.Context, s *testing.State, sess *tracing.Session) {
-	if err := sess.Stop(); err != nil {
+	if err := sess.Stop(ctx); err != nil {
 		s.Fatal("Failed to stop tracing: ", err)
 	}
 

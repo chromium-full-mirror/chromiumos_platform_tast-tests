@@ -12,10 +12,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
-
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/apps"
@@ -26,6 +22,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/tracing"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 type browsingTestParam struct {
@@ -334,7 +333,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 		s.Log("Collecting Perfetto trace File at: ", session.TraceDataPath())
 
 		defer session.Finalize(cleanupCtx)
-		defer session.Stop()
+		defer session.Stop(cleanupCtx)
 	}
 
 	if err := r.Start(ctx); err != nil {

@@ -221,13 +221,13 @@ func PowerVideocall(ctx context.Context, s *testing.State) {
 	)
 	if err != nil {
 		if params.collectTrace {
-			sess.Stop()
+			sess.Stop(ctx)
 		}
 		s.Fatal("Failed to collect metric data: ", err)
 	}
 
 	if params.collectTrace {
-		if err := sess.Stop(); err != nil {
+		if err := sess.Stop(ctx); err != nil {
 			s.Fatal("Failed to stop the tracing session: ", err)
 		}
 	}

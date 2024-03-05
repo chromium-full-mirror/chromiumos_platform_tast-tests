@@ -245,7 +245,7 @@ func Idle(ctx context.Context, s *testing.State) {
 		s.Log("Collecting Perfetto trace File at: ", session.TraceDataPath())
 
 		defer session.Finalize(cleanupCtx)
-		defer session.Stop()
+		defer session.Stop(cleanupCtx)
 	}
 
 	if err := r.Start(ctx); err != nil {

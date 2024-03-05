@@ -500,7 +500,7 @@ func measureContextSwitch(ctx context.Context, measurementDuration time.Duration
 	stopped := false
 	defer func() {
 		if !stopped {
-			sess.Stop()
+			sess.Stop(ctx)
 		}
 	}()
 
@@ -509,7 +509,7 @@ func measureContextSwitch(ctx context.Context, measurementDuration time.Duration
 		return gpu, gpuMain, errors.Wrap(err, "failed to sleep to wait for the tracing session")
 	}
 	stopped = true
-	if err := sess.Stop(); err != nil {
+	if err := sess.Stop(ctx); err != nil {
 		return gpu, gpuMain, errors.Wrap(err, "failed to stop tracing")
 	}
 	testing.ContextLog(ctx, "Completed tracing events")

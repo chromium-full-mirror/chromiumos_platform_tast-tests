@@ -11,10 +11,9 @@ import (
 	"time"
 
 	"android.googlesource.com/platform/external/perfetto/protos/perfetto/metrics/github.com/google/perfetto/perfetto_proto"
-	"go.chromium.org/tast/core/ctxutil"
 
 	"go.chromium.org/tast-tests/cros/local/tracing"
-
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -103,7 +102,7 @@ func LocalPerfettoTBMTracedProbes(ctx context.Context, s *testing.State) {
 	}
 
 	// The trace config uses a long duration. Terminate the session with sess.Stop() before the full trace duration elapses to avoid context timeout in trace processing.
-	if err := sess.Stop(); err != nil {
+	if err := sess.Stop(ctx); err != nil {
 		s.Fatal("Failed to stop the tracing session: ", err)
 	}
 

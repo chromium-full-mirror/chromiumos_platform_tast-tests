@@ -555,7 +555,7 @@ func recordTracing(ctx context.Context, outDir, configFile string) error {
 	stopped := false
 	defer func() {
 		if !stopped {
-			session.Stop()
+			session.Stop(ctx)
 		}
 	}()
 	// GoBigSleepLint: sleep to collect tracing events
@@ -563,7 +563,7 @@ func recordTracing(ctx context.Context, outDir, configFile string) error {
 		return errors.Wrap(err, "failed to sleep to wait for the tracing session")
 	}
 	stopped = true
-	if err := session.Stop(); err != nil {
+	if err := session.Stop(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop tracing")
 	}
 	testing.ContextLog(ctx, "Complete tracing")

@@ -10,8 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"go.chromium.org/tast/core/ctxutil"
-
 	"go.chromium.org/tast-tests/cros/common/media/caps"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/camera/getusermedia"
@@ -21,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -63,7 +62,7 @@ func init() {
 }
 
 func collectMetrics(ctx context.Context, pv *perf.Values, sess *tracing.Session, paths metricsPath) error {
-	if err := sess.Stop(); err != nil {
+	if err := sess.Stop(ctx); err != nil {
 		return errors.Wrap(err, "failed to stop session")
 	}
 
