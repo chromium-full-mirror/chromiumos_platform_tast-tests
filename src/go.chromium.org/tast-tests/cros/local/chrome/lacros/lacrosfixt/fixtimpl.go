@@ -95,9 +95,9 @@ func init() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// lacrosAudio is the same as lacros but has some special flags for audio tests.
+	// lacrosAudioFieldTrialConfigDisable is the same as lacros but has some special flags for audio tests.
 	testing.AddFixture(&testing.Fixture{
-		Name:     "lacrosAudio",
+		Name:     "lacrosAudioFieldTrialConfigDisable",
 		Desc:     "Lacros Chrome from a pre-built image with camera/microphone permissions",
 		Contacts: []string{"hidehiko@chromium.org", "edcourtney@chromium.org"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
@@ -105,7 +105,27 @@ func init() {
 				chrome.ExtraArgs("--use-fake-ui-for-media-stream"),
 				chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
 				chrome.LacrosExtraArgs("--use-fake-ui-for-media-stream"),
-				chrome.LacrosExtraArgs("--autoplay-policy=no-user-gesture-required"))).Opts()
+				chrome.LacrosExtraArgs("--autoplay-policy=no-user-gesture-required"),
+				chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable))).Opts()
+		}),
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	// lacrosAudioFieldTrialConfigEnable is the same as lacros but has some special flags for audio tests
+	// and enables the field-trial config.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "lacrosAudioFieldTrialConfigEnable",
+		Desc:     "Lacros Chrome from a pre-built image with camera/microphone permissions",
+		Contacts: []string{"hidehiko@chromium.org", "edcourtney@chromium.org"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return NewConfig(ChromeOptions(
+				chrome.ExtraArgs("--use-fake-ui-for-media-stream"),
+				chrome.ExtraArgs("--autoplay-policy=no-user-gesture-required"), // Allow media autoplay.
+				chrome.LacrosExtraArgs("--use-fake-ui-for-media-stream"),
+				chrome.LacrosExtraArgs("--autoplay-policy=no-user-gesture-required"),
+				chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable))).Opts()
 		}),
 		SetUpTimeout:    chrome.FixtureSetUpTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,

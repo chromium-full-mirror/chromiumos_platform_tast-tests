@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
@@ -45,15 +46,28 @@ func init() {
 		HardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Microphone()),
 		Attr:         []string{"group:mainline"},
 		Timeout:      4 * time.Minute,
-		Fixture:      "chromeLoggedIn",
 		Params: []testing.Param{
 			{
-				Name: "gain",
-				Val:  gainSlider,
+				Name:    "gain_fieldtrial_config_disable",
+				Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisable,
+				Val:     gainSlider,
 			},
 			{
-				Name: "mute",
-				Val:  muteButton,
+				Name:    "mute_fieldtrial_config_disable",
+				Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisable,
+				Val:     muteButton,
+			},
+			{
+				Name:      "gain_fieldtrial_config_enable",
+				Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnable,
+				Val:       gainSlider,
+				ExtraAttr: []string{"informational"},
+			},
+			{
+				Name:      "mute_fieldtrial_config_enable",
+				Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnable,
+				Val:       muteButton,
+				ExtraAttr: []string{"informational"},
 			},
 		},
 	})
@@ -84,7 +98,7 @@ func playAndCaptureToCalculateRMS(ctx context.Context, input, output audio.TestR
 		input.Rate)
 	playCmd.Start()
 
-	// Wait a short time to make sure playback command is working.
+	// GoBigSleepLint: Wait a short time to make sure playback command is working.
 	if err := testing.Sleep(ctx, 1*time.Second); err != nil {
 		if waitErr := playCmd.Wait(); waitErr != nil {
 			return 0.0, errors.Wrap(waitErr, "playback did not finish in time")

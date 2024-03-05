@@ -38,16 +38,28 @@ func init() {
 		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudio"}.Instance(),
 		Timeout:      7 * time.Minute, // A lenient limit for launching Lacros Chrome.
 		Data:         []string{"audio_capture_test.html", "audio_capture_test.js"},
 		Params: []testing.Param{{
+			Name:              "stable_fieldtrial_config_disable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigDisable"}.Instance(),
 			ExtraSoftwareDeps: []string{"lacros_stable"},
 			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
-			Name:              "unstable",
-			ExtraAttr:         []string{"informational"},
+			Name:              "unstable_fieldtrial_config_disable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigDisable"}.Instance(),
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
+			ExtraAttr:         []string{"informational"},
+		}, {
+			Name:              "stable_fieldtrial_config_enable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigEnable"}.Instance(),
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraAttr:         []string{"informational", "group:cq-medium"},
+		}, {
+			Name:              "unstable_fieldtrial_config_enable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigEnable"}.Instance(),
+			ExtraSoftwareDeps: []string{"lacros_unstable"},
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }
@@ -186,7 +198,7 @@ func AudioRecord(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to close downloads page: ", err)
 	}
 
-	if err := fsutil.CopyFile(filepath.Join(downloadsPath, recordedFileName), filepath.Join(s.OutDir(), recordedFileName)); err != nil {
+	if err := fsutil.MoveFile(filepath.Join(downloadsPath, recordedFileName), filepath.Join(s.OutDir(), recordedFileName)); err != nil {
 		s.Fatal("Cannot copy recorded files to results folder: ", err)
 	}
 

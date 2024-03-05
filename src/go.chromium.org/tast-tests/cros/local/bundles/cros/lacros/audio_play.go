@@ -33,13 +33,26 @@ func init() {
 		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "group:audio"},
 		SoftwareDeps: []string{"chrome", "lacros"},
-		Fixture:      audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudio"}.Instance(), Timeout: 7 * time.Minute, // A lenient limit for launching Lacros Chrome.
-		Data: []string{"sine_2ch_440hz_10s_20231101.wav", "audio_playback_test.html"},
+		Timeout:      7 * time.Minute, // A lenient limit for launching Lacros Chrome.
+		Data:         []string{"sine_2ch_440hz_10s_20231101.wav", "audio_playback_test.html"},
 		Params: []testing.Param{{
+			Name:              "stable_fieldtrial_config_disable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigDisable"}.Instance(),
 			ExtraSoftwareDeps: []string{"lacros_stable"},
 			ExtraAttr:         []string{"group:cq-medium"},
 		}, {
-			Name:              "unstable",
+			Name:              "unstable_fieldtrial_config_disable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigDisable"}.Instance(),
+			ExtraSoftwareDeps: []string{"lacros_unstable"},
+			ExtraAttr:         []string{"informational"},
+		}, {
+			Name:              "stable_fieldtrial_config_enable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigEnable"}.Instance(),
+			ExtraSoftwareDeps: []string{"lacros_stable"},
+			ExtraAttr:         []string{"informational", "group:cq-medium"},
+		}, {
+			Name:              "unstable_fieldtrial_config_enable",
+			Fixture:           audiofixture.AloopLoaded{Channels: 2, Parent: "lacrosAudioFieldTrialConfigEnable"}.Instance(),
 			ExtraSoftwareDeps: []string{"lacros_unstable"},
 			ExtraAttr:         []string{"informational"},
 		}},

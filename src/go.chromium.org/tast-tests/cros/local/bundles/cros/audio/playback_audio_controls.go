@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
@@ -38,7 +39,17 @@ func init() {
 		BugComponent: "b:776546",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Attr:         []string{"group:mainline", "group:intel-nda"},
-		Fixture:      "chromeLoggedIn",
+		Params: []testing.Param{
+			{
+				Name:    "fieldtrial_config_disable",
+				Fixture: fixture.ChromeLoggedInWithFieldTrialConfigDisable,
+			},
+			{
+				Name:      "fieldtrial_config_enable",
+				Fixture:   fixture.ChromeLoggedInWithFieldTrialConfigEnable,
+				ExtraAttr: []string{"informational"},
+			},
+		},
 	})
 }
 
