@@ -35,11 +35,12 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Change and disable keyboard key bindings from OS settings",
 		Contacts: []string{
-			"cros-settings@google.com",
-			"chromeos-sw-engprod@google.com",
+			"cros-peripherals@google.com",
+			"michaelcheco@google.com",
+			"dpad@google.com",
 		},
-		// OS > Systems > Settings
-		BugComponent: "b:1246072",
+		// ChromeOS > Software > System Services > Peripherals > Keyboard
+		BugComponent: "b:1131926",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.Keyboard()),
