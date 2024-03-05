@@ -146,8 +146,8 @@ func attachUsbDeviceToARCVM(ctx context.Context, cr *chrome.Chrome, tconn *chrom
 	return uiauto.Combine("Manage USB",
 		ui.FocusAndWait(playStoreButton),
 		ui.LeftClick(playStoreButton),
-		ui.FocusAndWait(nodewith.Name("Manage USB devices").Role(role.Link)),
-		ui.LeftClick(nodewith.Name("Manage USB devices").Role(role.Link)),
+		ui.FocusAndWait(nodewith.NameStartingWith("Manage USB devices").Role(role.Link)),
+		ui.LeftClick(nodewith.NameStartingWith("Manage USB devices").Role(role.Link)),
 		ui.FocusAndWait(nodewith.Name(usbProduct).Role(role.ToggleButton)),
 		ui.LeftClick(nodewith.Name(usbProduct).Role(role.ToggleButton)),
 	)(ctx)
