@@ -8,10 +8,12 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/meta/tastrun"
 	"go.chromium.org/tast-tests/cros/remote/power"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -122,20 +124,58 @@ func PowerQualV2(ctx context.Context, s *testing.State) {
 	for i, tests := range testGroups {
 		resultsDir := filepath.Join(s.OutDir(), fmt.Sprintf("power_qual_tests_%d", i))
 		s.Logf("Start to run test(s) %v and save results in %s", tests, resultsDir)
-		skippedTests := tastrun.RunAndEvaluate(runCtx, s, flags, tests, resultsDir, skipPolicy)
+		skippedTests, testErrs := runAndEvaluate(runCtx, s, flags, tests, resultsDir, skipPolicy)
 
-		// RunAndEvaluate propagates any test errors to the testing state s.
-		// Check if there are errors before generating report.
-		if s.HasError() {
-			// Just return. The propagated errors will be logged and test will fail.
-			return
+		if len(testErrs) != 0 {
+			s.Log("Current test group has the following errors:")
+			for index, testErr := range testErrs {
+				s.Logf("Error %d: %v", index, testErr)
+			}
+			s.Log("Continue to run the following test group")
+			continue
 		}
 		if err := run.AddTestResults(ctx, tests, skippedTests, resultsDir); err != nil {
-			s.Fatal("Failed to add test results: ", err)
+			s.Log("Failed to add test results: ", err)
 		}
 	}
 
 	if err := run.GenerateReport(ctx, s.OutDir(), s.TestName()); err != nil {
-		s.Fatal("Failed to generate power qual test results: ", err)
+		s.Log("Failed to generate power qual test results: ", err)
 	}
+}
+
+// runAndEvaluate runs tests and checks the results, propagating any test failure.
+// It returns (the names of) any skipped tests and test executation or result parsing errors.
+func runAndEvaluate(ctx context.Context, s *testing.State, flags, patterns []string, resultsDir string, policy tastrun.SkipPolicy) ([]string, []error) {
+	var testErrs []error
+	// Run tests.
+	flags = append(flags, "-resultsdir="+resultsDir)
+	if stdout, _, err := tastrun.Exec(ctx, s, "run", flags, patterns); err != nil {
+		lines := strings.Split(strings.TrimSpace(string(stdout)), "\n")
+		tasterr := errors.Errorf("failed to run tast: %v (last line: %q", err, lines[len(lines)-1])
+		testErrs = append(testErrs, tasterr)
+	}
+
+	// Evaluate results.
+	results, err := tastrun.ParseResultsJSON(resultsDir)
+	if err != nil {
+		parsingErr := errors.Wrap(err, "failed to parse test results")
+		testErrs = append(testErrs, parsingErr)
+	}
+
+	var skippedTests []string
+	for _, result := range results {
+		if len(result.Errors) != 0 {
+			testErr := errors.Errorf("Test %s failed: %v", result.Name, result.Errors)
+			testErrs = append(testErrs, testErr)
+		}
+		if result.SkipReason != "" {
+			s.Logf("Test %s was skipped: %s", result.Name, result.SkipReason)
+			skippedTests = append(skippedTests, result.Name)
+		}
+	}
+	if len(skippedTests) > 0 && policy == tastrun.SkipPolicyDisallowSkipping {
+		s.Errorf("Skipped %d test(s) in total: %v", len(skippedTests), skippedTests)
+	}
+	return skippedTests, testErrs
 }

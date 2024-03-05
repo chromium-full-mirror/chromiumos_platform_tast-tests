@@ -17,8 +17,9 @@ var supportedFormatVersions = []int32{1}
 
 // Test has the information for a test in a power test persona.
 type Test struct {
-	Name           string  `json:"name"`
-	Weight         float64 `json:"weight"`
+	Name   string  `json:"name"`
+	Weight float64 `json:"weight"`
+	// Minimum running time for a test in minutes.
 	MinRunningTime float64 `json:"min_running_time"`
 }
 

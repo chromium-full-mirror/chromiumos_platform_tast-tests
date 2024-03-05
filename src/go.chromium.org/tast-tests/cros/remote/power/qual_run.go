@@ -132,12 +132,14 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 		}
 		dir, err := findTestDir(t, dirs)
 		if err != nil {
-			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
+			testing.ContextLogf(ctx, "Failed to find %s test dir from %s", t, testsDir)
+			continue
 		}
 		outputDir := path.Join(testsDir, dir)
 		files, err := os.ReadDir(outputDir)
 		if err != nil {
-			return errors.Wrapf(err, "failed to find %s test dir from %s", t, testsDir)
+			testing.ContextLogf(ctx, "Failed to find %s test dir from %s", t, testsDir)
+			continue
 		}
 
 		r.testPowers[t] = &result.Power{}
@@ -153,7 +155,8 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			}
 			average, err := readPowerMetrics(path.Join(outputDir, f.Name()))
 			if err != nil {
-				return errors.Wrapf(err, "failed to read power metrics for test %s", t)
+				testing.ContextLogf(ctx, "Failed to read power metrics for test %s", t)
+				continue
 			}
 			// Since there are more than one power log json files, read power metrics
 			// from different json files for different metrics.
@@ -194,6 +197,8 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 
 	// Calculate result for each persona.
 	for _, p := range r.Config.Personas {
+		missingTestResultFlag := false
+		disqualifiedRunningTimeFlag := false
 		persona := result.Persona{
 			Name: p.Name,
 		}
@@ -212,10 +217,14 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			}
 			power := r.testPowers[t.Name]
 			if power == nil {
-				return errors.Errorf("no power test result for %s", t.Name)
+				testing.ContextLogf(ctx, "No power test result for %s", t.Name)
+				missingTestResultFlag = true
+				break
 			}
 			if power.Average.MinutesBatteryLifeTested < t.MinRunningTime {
-				return errors.Errorf("test running time %f is less than min_running_time %f", power.Average.MinutesBatteryLifeTested, t.MinRunningTime)
+				testing.ContextLogf(ctx, "Test running time %f is less than min_running_time %f", power.Average.MinutesBatteryLifeTested, t.MinRunningTime)
+				disqualifiedRunningTimeFlag = true
+				break
 			}
 			// Collect minutes_battery_life_tested for each subtest in perf.Values.
 			pv.Set(perf.Metric{
@@ -229,7 +238,14 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 			weights = append(weights, t.Weight)
 			minutesBatteryLifeTestedTotal += power.Average.MinutesBatteryLifeTested
 		}
-
+		if missingTestResultFlag {
+			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because some test results in that persona is missing", p.Name)
+			continue
+		}
+		if disqualifiedRunningTimeFlag {
+			testing.ContextLogf(ctx, "No aggregated power test results for persona %s because some test running time is under its min_running_time", p.Name)
+			continue
+		}
 		minutesBatteryLife := stat.HarmonicMean(minutesBatteryLifeValues, weights)
 		dischargeRate := stat.Mean(dischargeRateValues, weights)
 		// Collect battery metrics for each persona in perf.Values.
