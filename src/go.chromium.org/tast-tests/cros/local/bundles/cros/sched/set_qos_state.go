@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Checks that schedqos in resourced works",
 		Contacts:     []string{"cros-core-systems-perf@google.com", "kawasin@google.com"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      30 * time.Second,
 	})
