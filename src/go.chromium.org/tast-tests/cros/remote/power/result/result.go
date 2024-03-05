@@ -13,6 +13,10 @@ type Average struct {
 	MinutesBatteryLife       float64 `json:"minutes_battery_life"`
 	MinutesBatteryLifeTested float64 `json:"minutes_battery_life_tested"`
 	DischargeRate            float64 `json:"watt_discharge_rate"`
+	// The following two fields only apply to browsing tests.
+	// For non-browing tests, they will be omitted.
+	BrowsingTestConfigVersion     float64 `json:"browsing_test_config_version,omitempty"`
+	BrowsingTestCachedSiteVersion float64 `json:"browsing_test_cached_site_version,omitempty"`
 }
 
 // Power contains the power test result.

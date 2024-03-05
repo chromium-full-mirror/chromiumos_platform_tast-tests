@@ -68,6 +68,10 @@ const (
 	BacklightPercentLinearKey = "level_backlight_percent_linear"
 	// SystemPowerKey is instantaneous power consumption out of the battery.
 	SystemPowerKey = "system"
+	// BrowsingTestConfigVersionKey is browsing test config version.
+	BrowsingTestConfigVersionKey = "browsing_test_config_version"
+	// BrowsingTestCachedSiteVersionKey is website cached version.
+	BrowsingTestCachedSiteVersionKey = "browsing_test_cached_site_version"
 )
 
 // Only keys inside validMetricTypeMap are accepted metric types.
