@@ -100,6 +100,13 @@ func Quicksettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to open Network Quick Settings menu: ", err)
 	}
 
+	// Ensure that the Your devices tab is visible.
+	yourDevices := nodewith.Name("Your devices").Ancestor(networkDetailedView)
+
+	if err := ui.WaitUntilExists(yourDevices)(ctx); err != nil {
+		s.Fatal("Failed to find Your devices tab: ", err)
+	}
+
 	// Ensure a connection has been established.
 	detailsBtn := nodewith.Role("button").NameRegex(regexp.MustCompile("(?i)open settings for .*" + deviceName)).Ancestor(networkDetailedView)
 

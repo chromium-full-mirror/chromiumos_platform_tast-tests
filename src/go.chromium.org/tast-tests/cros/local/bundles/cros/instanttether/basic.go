@@ -120,6 +120,11 @@ func Basic(ctx context.Context, s *testing.State) {
 
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
+	// Ensure that the Instant Tethering/Hotspot page is opened.
+	if err := settings.WaitUntilExists(nodewith.Role("button").Name("Instant hotspot"))(ctx); err != nil {
+		s.Fatal("Failed to find Instant Tethering/Hotspot page: ", err)
+	}
+
 	// Initiate Instant Tethering while WiFi is still connected
 	// so we still have ADB access to accept the mobile data provisioning notification.
 	if err := uiauto.Combine("connecting to the mobile network",
@@ -143,7 +148,7 @@ func Basic(ctx context.Context, s *testing.State) {
 	tethered = true
 
 	// Ensure the CrOS UI updates to reflect the tethered network's status.
-	if err := settings.WaitUntilExists(nodewith.NameRegex(regexp.MustCompile(`(?i)instant tethering network, signal strength \d+%`)))(ctx); err != nil {
+	if err := settings.WaitUntilExists(nodewith.Name("Disconnect").Role(role.Button))(ctx); err != nil {
 		s.Fatal("Failed to find text confirming Instant Tethering is connected: ", err)
 	}
 
