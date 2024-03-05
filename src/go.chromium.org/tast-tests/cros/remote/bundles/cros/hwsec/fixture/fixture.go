@@ -78,6 +78,7 @@ func xverFixtParamFactory(hsmName string, milestone int, dataPrefix string) test
 }
 
 func genXverFixtParams() (params []testing.FixtureParam) {
+	// Data prefixes for cross version with TPM2.0
 	tpm2DataPrefixes := map[int]string{
 		88:  "R88-13597.108.0-custombuild20220717_betty_20220719",
 		89:  "R89-13729.85.0-custombuild20220715_betty_20220719",
@@ -111,7 +112,8 @@ func genXverFixtParams() (params []testing.FixtureParam) {
 		118: "R118-15604.33.0_novato_20231123",
 		119: "R119-15633.69.0_amd64-generic_20231212",
 	}
-	tpmDynamicDataPrefixes := []string{
+	// Data prefixes for cross version with TPM dynamic
+	tpmDynamicDataPrefixes := map[int]string{
 		96:  "R96-14268.94.0-custombuild20220715_reven-vmtest_20220719",
 		97:  "R97-14324.81.0-custombuild20220716_reven-vmtest_20220719",
 		98:  "R98-14388.65.0-custombuild20220719_reven-vmtest_20220719",
@@ -137,7 +139,8 @@ func genXverFixtParams() (params []testing.FixtureParam) {
 		118: "R118-15604.60.0_reven-vmtest_20231123",
 		119: "R119-15633.69.0_reven-vmtest_20231212",
 	}
-	ti50DataPrefixes := []string{
+	// Data prefixes for cross version with Ti50 emulator
+	ti50DataPrefixes := map[int]string{
 		112: "R112-15359.49.0_betty_20230410",
 		113: "R113-15393.65.0_betty_20230627",
 		114: "R114-15437.60.0_betty_20230627",
