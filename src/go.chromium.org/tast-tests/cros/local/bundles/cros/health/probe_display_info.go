@@ -294,6 +294,32 @@ func verifyEmbeddedDisplayInfo(ctx context.Context, edp *embeddedDisplayInfo, ed
 	return nil
 }
 
+func verifyEmbeddedDisplayInfoWithoutEdidInfo(ctx context.Context, edp *embeddedDisplayInfo) error {
+	// Output shouldn't contain the following information since there is no edid information.
+	if edp.Manufacturer != "" || edp.ModelID != nil || edp.SerialNumber != nil || edp.ManufactureWeek != nil || edp.ManufactureYear != nil || edp.EdidVersion != "" || edp.InputType != "" || edp.DisplayName != "" {
+		return errors.New("cros_healthd reports edid data when there is no edid information")
+	}
+	// Width and height can't be longer than 500 mm. This is used to catch potential overflow in healthd.
+	if edp.DisplayWidth != nil && *edp.DisplayWidth > 500 {
+		return errors.Errorf("display width is not in a valid range: %v", *edp.DisplayWidth)
+	}
+	if edp.DisplayHeight != nil && *edp.DisplayHeight > 500 {
+		return errors.Errorf("display height is not in a valid range: %v", *edp.DisplayHeight)
+	}
+	// Resolution can't be larger than 10000. This is used to catch potential overflow in healthd.
+	if edp.ResolutionHorizontal != nil && *edp.ResolutionHorizontal > 10000 {
+		return errors.Errorf("horizontal resolution is not in a valid range: %v", *edp.ResolutionHorizontal)
+	}
+	if edp.ResolutionVertical != nil && *edp.ResolutionVertical > 10000 {
+		return errors.Errorf("vertical resolution is not in a valid range: %v", *edp.ResolutionVertical)
+	}
+	// We don't have refresh rate higher than 150 or lower than 25.
+	if edp.RefreshRate != nil && (*edp.RefreshRate > 150 || *edp.RefreshRate < 25) {
+		return errors.Errorf("refresh rate is not in a valid range: %v", *edp.RefreshRate)
+	}
+	return nil
+}
+
 func ProbeDisplayInfo(ctx context.Context, s *testing.State) {
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryDisplay}
 	var display displayInfo
@@ -301,14 +327,23 @@ func ProbeDisplayInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get display telemetry info: ", err)
 	}
 
-	b, err := testexec.CommandContext(ctx, "edid-decode", "/sys/class/drm/card0-eDP-1/edid").Output(testexec.DumpLogOnError)
-	if err != nil {
-		s.Fatal("Failed to get EDID information, err: ", err)
+	var edid string
+	// The edid info could be empty, so it's possible that the edid-decode fails. We don't need to report these failures.
+	if b, err := testexec.CommandContext(ctx, "edid-decode", "/sys/class/drm/card0-eDP-1/edid").Output(testexec.DumpLogOnError); err == nil {
+		edid = string(b)
+	} else if b, err := testexec.CommandContext(ctx, "edid-decode", "/sys/class/drm/card0-DSI-1/edid").Output(testexec.DumpLogOnError); err == nil {
+		edid = string(b)
 	}
-	edid := string(b)
-	s.Log("EDID information: ", edid)
 
-	if err := verifyEmbeddedDisplayInfo(ctx, &display.EDP, edid); err != nil {
-		s.Fatal("Failed to validate embedded display info, err: ", err)
+	if edid != "" {
+		s.Log("EDID information: ", edid)
+
+		if err := verifyEmbeddedDisplayInfo(ctx, &display.EDP, edid); err != nil {
+			s.Fatal("Failed to validate embedded display info, err: ", err)
+		}
+	} else {
+		if err := verifyEmbeddedDisplayInfoWithoutEdidInfo(ctx, &display.EDP); err != nil {
+			s.Fatal("Failed to validate embedded display info without edid info, err: ", err)
+		}
 	}
 }
