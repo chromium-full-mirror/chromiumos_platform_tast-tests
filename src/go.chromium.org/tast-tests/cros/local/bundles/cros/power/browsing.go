@@ -10,9 +10,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -312,15 +315,24 @@ func Browsing(ctx context.Context, s *testing.State) {
 
 	// Generate custom perf.Values for summarize in power_log.html
 	configValues := perf.NewValues()
-	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_loopCount", Unit: "unit"}, float64(loopCount))
-	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_secsPerPage", Unit: "s"}, float64(secsPerPage))
-	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_secsPerScroll", Unit: "s"}, float64(secsPerScroll))
-	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_numPage", Unit: "unit"}, float64(config.URLData.NumPage))
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "browsing_test_config_loop_count", Unit: "unit"}, float64(loopCount))
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "browsing_test_config_secs_per_page", Unit: "s"}, float64(secsPerPage))
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "browsing_test_config_secs_per_scroll", Unit: "s"}, float64(secsPerScroll))
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "browsing_test_config_num_page", Unit: "unit"}, float64(config.URLData.NumPage))
+	configVersionNum, err := strconv.ParseInt(strings.Replace(config.Version, "-", "", -1), 10, 64)
+	if err != nil {
+		s.Error("Converting Browsing config version from string to int failed: ", err)
+	}
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "browsing_test_config_version", Unit: "unit"}, float64(configVersionNum))
+
+	configURLVersionNum, err := strconv.ParseInt(strings.Replace(config.URLData.Version, "-", "", -1), 10, 64)
+	if err != nil {
+		s.Error("Converting Browsing URL config version from string to int failed: ", err)
+	}
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "browsing_test_cached_site_version", Unit: "unit"}, float64(configURLVersionNum))
 
 	// Put the value in the Name for String data.
-	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigName_" + configName, Unit: "unit"}, 0)
-	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigVersion_" + config.Version, Unit: "unit"}, 0)
-	configValues.Set(perf.Metric{Name: "perf.BrowsingConfig_ConfigURLVersion_" + config.URLData.Version, Unit: "unit"}, 0)
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "browsing_test_config_name_" + configName, Unit: "unit"}, 0)
 
 	if collectTrace {
 		var session *tracing.Session
@@ -402,7 +414,9 @@ func Browsing(ctx context.Context, s *testing.State) {
 	}
 	// End of main test body.
 
-	if err := r.Finish(ctx, configValues); err != nil {
+	// Save custom perf values to power logs and results-chart.json.
+	r.AddOptionalRecorderArg(power.OptionalRecorderArgPowerLogCustomPerfKey, configValues)
+	if err := r.Finish(ctx); err != nil {
 		s.Error("Cannot finish collecting power metrics: ", err)
 	}
 }
