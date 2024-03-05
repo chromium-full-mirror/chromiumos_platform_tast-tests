@@ -96,16 +96,21 @@ func verifyEmbeddedDisplaySize(ctx context.Context, edp *embeddedDisplayInfo, ed
 		return errors.New("failed to parse edid to get size information")
 	}
 
+	if edp.DisplayWidth == nil || edp.DisplayHeight == nil {
+		return errors.New("there is no display size info")
+	}
+
+	// The size data could be not accurate, we should only check if they are close.
 	if width, err := strconv.ParseUint(match[1], 10, 32); err != nil {
 		return err
-	} else if err := compareUintPointer((*uint32)(edp.DisplayWidth), uint32(width)* /* cm to mm */ 10, "DisplayWidth"); err != nil {
-		return err
+	} else if math.Abs(float64(*edp.DisplayWidth)-float64(width)* /* cm to mm */ 10) > 10 {
+		return errors.Errorf("reported display width [%v]mm is not close to edid data [%v]cm", *edp.DisplayWidth, uint32(width))
 	}
 
 	if height, err := strconv.ParseUint(match[2], 10, 32); err != nil {
 		return err
-	} else if err := compareUintPointer((*uint32)(edp.DisplayHeight), uint32(height)* /*cm to mm */ 10, "DisplayHeight"); err != nil {
-		return err
+	} else if math.Abs(float64(*edp.DisplayHeight)-float64(height)* /* cm to mm */ 10) > 10 {
+		return errors.Errorf("reported display height [%v]mm is not close to edid data [%v]cm", *edp.DisplayHeight, uint32(height))
 	}
 
 	return nil
