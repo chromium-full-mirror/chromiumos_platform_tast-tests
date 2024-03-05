@@ -574,10 +574,11 @@ func selectAllDownloadChips(arg *downloadArguments, chipType holdingspace.ChipTy
 
 // waitAllFilesLaunch waits for all specify files are launched.
 func waitAllFilesLaunch(arg *downloadArguments) uiauto.Action {
-	browserNodeFinder := nodewith.Ancestor(nodewith.Role(role.Window).HasClass("BrowserFrame"))
+	browserNodeFinder := nodewith.Role(role.Window).HasClass("BrowserFrame")
+	tabNodeFinder := nodewith.Role(role.Tab).HasClass("Tab").Ancestor(browserNodeFinder)
 	return func(ctx context.Context) error {
 		for _, file := range arg.files {
-			tab := browserNodeFinder.HasClass("Tab").Role(role.Tab).Name(file)
+			tab := tabNodeFinder.NameStartingWith(file)
 			if err := arg.ui.WaitUntilExists(tab)(ctx); err != nil {
 				return errors.Wrapf(err, "failed to find tab %q", file)
 			}
