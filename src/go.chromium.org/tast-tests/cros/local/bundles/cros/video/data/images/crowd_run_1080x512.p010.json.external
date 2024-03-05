@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/images/crowd_run_1080x512_20240305.p010.json",
+  "size": 113,
+  "sha256sum": "533ab6bd7855c1905331607dd0a663e3a61a5b6fff04645a49d645f62a5e48ec"
+}
