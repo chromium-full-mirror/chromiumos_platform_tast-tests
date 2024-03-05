@@ -35,7 +35,7 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "default_fake_login",
 			Val:       &pb.NewRequest{},
-			ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+			ExtraAttr: []string{"group:mainline", "informational"},
 		}, {
 			Name: "default_fake_login_with_region",
 			Val: &pb.NewRequest{
