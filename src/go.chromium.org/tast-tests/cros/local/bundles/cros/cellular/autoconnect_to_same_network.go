@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -57,11 +58,15 @@ func AutoconnectToSameNetwork(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 15*time.Second)
+	defer cancel()
+
 	mdp, err := ossettings.OpenMobileDataSubpage(ctx, tconn, cr)
 	if err != nil {
 		s.Fatal("Failed to open mobile data subpage: ", err)
 	}
-	defer mdp.Close(ctx)
+	defer mdp.Close(cleanupCtx)
 
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 	if _, err := helper.Connect(ctx); err != nil {
@@ -83,7 +88,7 @@ func AutoconnectToSameNetwork(ctx context.Context, s *testing.State) {
 	}
 	resetAutoconnect := func() {
 		if autoconnectChanged {
-			if _, err := helper.SetServiceAutoConnect(ctx, !shouldEnableAutoconnect); err != nil {
+			if _, err := helper.SetServiceAutoConnect(cleanupCtx, !shouldEnableAutoconnect); err != nil {
 				s.Fatalf("Failed to set auto-connect back to %t", !shouldEnableAutoconnect)
 			}
 		}
