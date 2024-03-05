@@ -36,6 +36,9 @@ dhcp-option=option:router,{{.gateway}}
 {{range .address}}
 address={{. -}}
 {{end -}}
+{{range .local}}
+local=/{{. -}}/
+{{end -}}
 {{if .dns}}
 dhcp-option=option:dns-server,{{.dns}}
 {{end -}}
@@ -264,6 +267,7 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 	}
 
 	var addressLines []string
+	var localLines []string
 	for _, resolvedHost := range d.resolvedHosts {
 		var toIP, hostName string
 		if resolvedHost.ToIP != nil {
@@ -281,10 +285,15 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 			hostName = resolvedHost.Domain
 		}
 		addressLines = append(addressLines, fmt.Sprintf("/%v/%v", hostName, toIP))
+
+		if resolvedHost.ToIP != nil && resolvedHost.Domain != "" {
+			localLines = append(localLines, resolvedHost.Domain)
+		}
 	}
 
 	if d.enableDNS {
 		confVals["address"] = addressLines
+		confVals["local"] = localLines
 		confVals["port"] = dnsPort // enable DNS if needed for address forwarding
 	}
 	b := &bytes.Buffer{}
