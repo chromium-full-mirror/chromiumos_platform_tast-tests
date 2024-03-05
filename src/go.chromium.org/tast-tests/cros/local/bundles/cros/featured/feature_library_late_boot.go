@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"path/filepath"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 
@@ -46,6 +47,7 @@ func init() {
 		BugComponent: "b:1096648",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
+		Timeout:      chrome.MinLoginTimeout + 60*time.Second,
 		Params: []testing.Param{{
 			Name: "experiment_enabled_without_params",
 			Val: featureLibraryTestParams{
