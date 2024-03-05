@@ -33,7 +33,7 @@ func init() {
 		// allow access to the required path. Skip on reven for
 		// now, since reven uses integrity mode.
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
-		SoftwareDeps: []string{"kfence_enabled"},
+		SoftwareDeps: []string{"kfence_enabled", "shipping_kernel"},
 		Params: []testing.Param{{
 			Name:              "real_consent",
 			ExtraSoftwareDeps: []string{"chrome", "metrics_consent"},
