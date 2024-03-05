@@ -197,3 +197,13 @@ type VethBridgeBinding interface {
 	// UnbindVeth unbinds the veth to any other interface.
 	UnbindVeth(ctx context.Context, veth string) error
 }
+
+// IfaceBridgeBinding shall be implemented if the router supports bridges, veths, and can bind bridges and veths.
+type IfaceBridgeBinding interface {
+	Router
+	Bridge
+	// BindIfaceToBridge binds the iface to bridge.
+	BindIfaceToBridge(ctx context.Context, iface, br string) error
+	// UnbindIface unbinds the iface to any other interface.
+	UnbindIface(ctx context.Context, iface string) error
+}

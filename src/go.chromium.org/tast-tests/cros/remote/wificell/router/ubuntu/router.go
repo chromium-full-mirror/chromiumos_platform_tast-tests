@@ -625,6 +625,16 @@ func (r *Router) UnbindVeth(ctx context.Context, veth string) error {
 	return common.UnbindVeth(ctx, r.ipr, veth)
 }
 
+// BindIfaceToBridge binds the iface to bridge.
+func (r *Router) BindIfaceToBridge(ctx context.Context, iface, br string) error {
+	return common.BindIfaceToBridge(ctx, r.ipr, iface, br)
+}
+
+// UnbindIface unbinds the iface to any other interface.
+func (r *Router) UnbindIface(ctx context.Context, iface string) error {
+	return common.UnbindIface(ctx, r.ipr, iface)
+}
+
 // Utilities for resource control.
 
 // createWifiIface creates an interface on phy with type=t and returns the name of created interface.

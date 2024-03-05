@@ -160,7 +160,15 @@ const (
 	ChromeFeatureExperimentalHotspot = "TetheringExperimentalFunctionality"
 )
 
-// bridgeVeth holds all variables related to bridges and veth on a router.
+// bridgeData holds all variables related to bridges on a router for multiple
+// interfaces on a single hostapd.
+type bridgeData struct {
+	r  router.StandardWithBridge
+	br string
+}
+
+// bridgeVeth holds all variables related to bridges and veth on a router for
+// TFFeaturesBridgeAndVeth fixture
 type bridgeVethData struct {
 	r    router.StandardWithBridgeAndVeth
 	br   []string
@@ -172,6 +180,7 @@ type routerData struct {
 	target string
 	host   *ssh.Conn
 	object router.Base
+	br     *bridgeData
 	brveth *bridgeVethData
 }
 
@@ -824,6 +833,16 @@ func (tf *TestFixture) Close(ctx context.Context) (firstErr error) {
 		routerDescription := fmt.Sprintf("primary router[%d] target %q", i, rd.target)
 		testing.ContextLogf(ctx, "Closing %s", routerDescription)
 
+		// De-configure bridges on routers except pcap.
+		if rd.br != nil && rd != tf.pcap {
+			testing.ContextLogf(ctx, "Closing bridges at router %d", i)
+			br := rd.br
+			if err := br.r.ReleaseBridge(ctx, br.br); err != nil {
+				utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to release bridge %q: ", br.br))
+			}
+			testing.ContextLogf(ctx, "Closed bridges at router %d", i)
+		}
+
 		// De-configure bridges and veths on routers except pcap.
 		if rd.brveth != nil && rd != tf.pcap {
 			testing.ContextLogf(ctx, "Closing bridges and veths at router %d", i)
@@ -982,9 +1001,30 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 			}
 		}
 	}
-	ap, err := StartAPIface(ctx, r, name, enableDNS, enableHTTP, configs...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start APIface")
+	var ap *APIface
+	var err error
+	if len(configs) > 1 {
+		router, ok := r.(router.StandardWithBridge)
+		if !ok {
+			return nil, errors.New("router is not a standard router with bridge support")
+		}
+		bridge, err := router.NewBridge(ctx)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to get a bridge")
+		}
+		tf.routers[idx].br = &bridgeData{r: router, br: bridge}
+		ap, err = StartAPIface(ctx, r, name, bridge, enableDNS, enableHTTP, configs...)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to start APIface")
+		}
+		for _, iface := range ap.Interfaces() {
+			router.BindIfaceToBridge(ctx, iface, bridge)
+		}
+	} else {
+		ap, err = StartAPIface(ctx, r, name, "", enableDNS, enableHTTP, configs...)
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to start APIface")
+		}
 	}
 	tf.capturers[ap] = capturers
 	tf.aps[ap] = struct{}{}
@@ -1021,6 +1061,25 @@ func (tf *TestFixture) DeconfigAP(ctx context.Context, ap *APIface) (firstErr er
 	defer st.End()
 	capturers := tf.capturers[ap]
 	delete(tf.capturers, ap)
+	ifaces := ap.Interfaces()
+	// If ap has multiple interfaces, these interfaces are bound to a bridge,
+	// unbind these interfaces before stopping ap
+	if len(ifaces) > 1 {
+		if ap.Router() != nil {
+			if router, ok := ap.Router().(router.StandardWithBridge); !ok {
+				utils.CollectFirstErr(ctx, &firstErr, errors.New("router is not a standard router with bridge support"))
+			} else {
+				for _, iface := range ifaces {
+					if err := router.UnbindIface(ctx, iface); err != nil {
+						utils.CollectFirstErr(ctx, &firstErr, errors.Wrapf(err, "failed to unbind %q", iface))
+					}
+				}
+			}
+		} else {
+			utils.CollectFirstErr(ctx, &firstErr, errors.New("router of ap is nil"))
+		}
+	}
+
 	if err := ap.Stop(ctx); err != nil {
 		utils.CollectFirstErr(ctx, &firstErr, errors.Wrap(err, "failed to stop APIface"))
 	}
@@ -1960,7 +2019,7 @@ func (tf *TestFixture) SeedRegdomain(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		ap, err := StartAPIface(ctx, r.object, name, false, false, config)
+		ap, err := StartAPIface(ctx, r.object, name, "", false, false, config)
 		if err != nil {
 			return errors.Wrap(err, "failed to start APIface")
 		}

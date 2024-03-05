@@ -48,3 +48,13 @@ func RemoveAllBridgeIfaces(ctx context.Context, ipr *ip.Runner) error {
 	}
 	return nil
 }
+
+// BindIfaceToBridge binds the iface to bridge.
+func BindIfaceToBridge(ctx context.Context, ipr *ip.Runner, iface, br string) error {
+	return ipr.SetBridge(ctx, iface, br)
+}
+
+// UnbindIface unbinds the iface to any other interface.
+func UnbindIface(ctx context.Context, ipr *ip.Runner, iface string) error {
+	return ipr.UnsetBridge(ctx, iface)
+}

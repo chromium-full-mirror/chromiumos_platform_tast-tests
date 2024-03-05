@@ -121,13 +121,14 @@ func (h *APIface) ServerSubnet() *net.IPNet {
 // StartAPIface starts the service.
 // After started, the caller should call h.Stop() at the end, and use the shortened ctx
 // (provided by h.ReserveForStop()) before h.Stop() to reserve time for h.Stop() to run.
-func StartAPIface(ctx context.Context, r router.Base, name string, enableDNS, enableHTTP bool, confs ...*hostapd.Config) (_ *APIface, retErr error) {
+// If dhcpIface is empty, the DHCP server uses the interface of the hostapd server
+func StartAPIface(ctx context.Context, r router.Base, name, dhcpIface string, enableDNS, enableHTTP bool, confs ...*hostapd.Config) (_ *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "StartAPIface")
 	defer st.End()
 
 	var h APIface
 	var err error
-
+	h.name = name
 	// Validate router support.
 	if rSupported, ok := r.(supportedRouter); ok {
 		h.router = rSupported
@@ -168,14 +169,16 @@ func StartAPIface(ctx context.Context, r router.Base, name string, enableDNS, en
 		dnsOpt.ResolvedHost = ""
 		dnsOpt.ResolveHostToIP = h.ServerIP()
 	}
-
-	h.dhcpd, err = h.router.StartDHCP(ctx, name, h.Interface(), h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), dnsOpt)
+	if dhcpIface == "" {
+		dhcpIface = h.Interface()
+	}
+	h.dhcpd, err = h.router.StartDHCP(ctx, name, dhcpIface, h.subnetIP(1), h.subnetIP(128), h.ServerIP(), h.broadcastIP(), h.mask(), dnsOpt)
 	if err != nil {
 		return nil, err
 	}
 
 	if enableHTTP {
-		h.httpServer, err = h.router.StartHTTP(ctx, name, h.Interface(), httpRedirectURL, httpPort, http.StatusFound)
+		h.httpServer, err = h.router.StartHTTP(ctx, name, dhcpIface, httpRedirectURL, httpPort, http.StatusFound)
 		if err != nil {
 			return nil, err
 		}

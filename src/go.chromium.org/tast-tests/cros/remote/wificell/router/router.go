@@ -56,3 +56,11 @@ type StandardWithBridgeAndVeth interface {
 	support.Veth
 	support.VethBridgeBinding
 }
+
+// StandardWithBridge includes all the functionality in Standard as well
+// as support.Bridge, and support.IfaceBridgeBinding.
+type StandardWithBridge interface {
+	Standard
+	support.Bridge
+	support.IfaceBridgeBinding
+}
