@@ -10,14 +10,14 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ShillCellularStressSuspendResume,
+		Func:           ShillStressSuspendResume,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Desc:           "Stress test suspend resume, verify modem is in right state after each resume",
@@ -30,7 +30,7 @@ func init() {
 	})
 }
 
-func ShillCellularStressSuspendResume(ctx context.Context, s *testing.State) {
+func ShillStressSuspendResume(ctx context.Context, s *testing.State) {
 	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	cr, err := chrome.New(ctx)
@@ -59,8 +59,12 @@ func ShillCellularStressSuspendResume(ctx context.Context, s *testing.State) {
 				return errors.Wrapf(err, "Connect failed on attempt %d", i)
 			}
 
-			if err := power.SuspendAndResume(ctx, cr, suspendTimeSec*time.Second); err != nil {
+			if _, err := suspend.ForDuration(ctx, suspendTimeSec*time.Second); err != nil {
 				return errors.Wrap(err, "failed to perform system suspend")
+			}
+
+			if err = cr.Reconnect(ctx); err != nil {
+				return errors.Wrap(err, "failed to reconnect to Chrome")
 			}
 		}
 		return nil

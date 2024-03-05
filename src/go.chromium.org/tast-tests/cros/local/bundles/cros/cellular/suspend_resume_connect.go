@@ -18,7 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -110,8 +110,12 @@ func SuspendResumeConnect(ctx context.Context, s *testing.State) {
 		s.Log("Disconnect successfully")
 	}
 
-	if err := power.SuspendAndResume(ctx, cr, 15*time.Second); err != nil {
+	if _, err := suspend.ForDuration(ctx, 15*time.Second); err != nil {
 		s.Fatal("Failed to suspend and resume: ", err)
+	}
+
+	if err = cr.Reconnect(ctx); err != nil {
+		s.Fatal("Failed to reconnect to Chrome: ", err)
 	}
 
 	tconn, err = cr.TestAPIConn(ctx)
@@ -140,8 +144,12 @@ func SuspendResumeConnect(ctx context.Context, s *testing.State) {
 	}
 	defer cleanup1(cleanupCtx)
 
-	if err := power.SuspendAndResume(ctx, cr, 15*time.Second); err != nil {
+	if _, err := suspend.ForDuration(ctx, 15*time.Second); err != nil {
 		s.Fatal("Failed to suspend and resume: ", err)
+	}
+
+	if err = cr.Reconnect(ctx); err != nil {
+		s.Fatal("Failed to reconnect to Chrome: ", err)
 	}
 
 	tconn, err = cr.TestAPIConn(ctx)

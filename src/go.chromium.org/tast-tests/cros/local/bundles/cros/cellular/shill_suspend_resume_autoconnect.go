@@ -12,7 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/hermes"
-	"go.chromium.org/tast-tests/cros/local/power"
+	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -105,8 +105,12 @@ func ShillSuspendResumeAutoconnect(ctx context.Context, s *testing.State) {
 	}
 
 	// Request suspend for 10 seconds.
-	if err := power.SuspendAndResume(ctx, cr, 10*time.Second); err != nil {
+	if _, err := suspend.ForDuration(ctx, 10*time.Second); err != nil {
 		s.Fatal("Failed to perform system suspend (precondition): ", err)
+	}
+
+	if err = cr.Reconnect(ctx); err != nil {
+		s.Fatal("Failed to reconnect to Chrome: ", err)
 	}
 
 	// Try to re-login in case it is logged out after resume
