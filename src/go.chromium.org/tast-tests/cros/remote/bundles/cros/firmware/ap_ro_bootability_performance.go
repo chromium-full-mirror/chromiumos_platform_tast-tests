@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/google/uuid"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
 	"go.chromium.org/tast-tests/cros/common/firmware/bios"
@@ -194,7 +195,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	req := fwpb.GBBFlagsState{Set: []fwpb.GBBFlag{fwpb.GBBFlag_DISABLE_EC_SOFTWARE_SYNC}}
 	ecSoftwareSyncDisabled, err = fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, &req)
 	if err != nil {
-		s.Fatal("Failed to enable EC software sync: ", err)
+		s.Fatal("Failed to disable EC software sync: ", err)
 	}
 	if ecSoftwareSyncDisabled {
 		s.Log("Disabling EC software sync")
@@ -269,6 +270,24 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 	defer os.RemoveAll(tmpDir)
 
+	// Create a new directory in servo host to store the downloaded files.
+	randomSuffix, err := uuid.NewRandom()
+	if err != nil {
+		s.Fatal("Failed to create a random suffix: ", err)
+	}
+	tmpDirServo := fmt.Sprintf("/var/tmp/APROBootabilityPerformance-%s", randomSuffix)
+	s.Logf("Servo tmp dir: %s", tmpDirServo)
+	if err := h.ServoProxy.RunCommand(ctx, false, "mkdir", "-p", tmpDirServo); err != nil {
+		s.Fatalf("Failed to create temp directory %s on servo host: %s", tmpDirServo, err)
+	}
+	// Delete the tmp directory on the servo host at the end.
+	defer func() {
+		s.Log("Deleting tmp directory on servo: ", tmpDirServo)
+		if err := h.ServoProxy.RunCommand(cleanupCtx, false, "rm", "-rf", tmpDirServo); err != nil {
+			s.Fatal("Failed to delete temp directory on servo host: ", err)
+		}
+	}()
+
 	restoreECOverServo := true
 	ecChip, err := h.Servo.GetString(ctx, servo.ECChip)
 	if err != nil {
@@ -286,7 +305,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	}
 
 	// Download the latest shipped firmware.
-	firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, fwidModel, shippedFwVersions[len(shippedFwVersions)-1])
+	firmwareFilesToFlash, err := downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, fwidModel, shippedFwVersions[len(shippedFwVersions)-1])
 	if err != nil {
 		s.Fatal("Failed while downloading file: ", err)
 	}
@@ -346,12 +365,16 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 			// the EC firmware through servo.
 			// To-Do: Add restoration of AP when a DUT can't boot.
 			s.Log("Restoring EC firmware through servo at the end of the test")
+			fileMap := map[string]string{fmt.Sprintf("%s/%s", tmpDir, ecFwBackup): fmt.Sprintf("%s/%s", tmpDirServo, ecFwBackup)}
+			if err := h.ServoProxy.PutFiles(ctx, false, fileMap); err != nil {
+				s.Fatal("Failed to copy EC firmware file to servo host: ", err)
+			}
 			if ecChip == "stm32" {
-				if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", tmpDir, ecFwBackup), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--bitbang_rate=57600", "--verify", "--verbose"); err != nil {
-					s.Fatal("Failed to restore EC firmware: ", err)
+				if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", tmpDirServo, ecFwBackup), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--bitbang_rate=57600", "--verify", "--verbose"); err != nil {
+					s.Fatal("Failed to restore stm32 EC firmware: ", err)
 				}
-			} else if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", tmpDir, ecFwBackup), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"); err != nil {
-				s.Fatal("Failed to flash EC firmware bin file: ", err)
+			} else if err := h.ServoProxy.RunCommand(ctx, false, "flash_ec", fmt.Sprintf("--chip=%s", ecChip), fmt.Sprintf("--image=%s/%s", tmpDirServo, ecFwBackup), fmt.Sprintf("--port=%d", h.ServoProxy.GetPort()), "--verify", "--verbose"); err != nil {
+				s.Fatal("Failed to restore EC firmware: ", err)
 			}
 
 			if err := h.EnsureDUTBooted(ctx); err != nil {
@@ -449,7 +472,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	// Repeat steps for older RO firmware versions (i.e., RO_old-n + RW_new).
 	for i := len(shippedFwVersions) - 2; i >= 0; i-- {
 		s.Log("Downloading an older shipped firmware file")
-		firmwareFilesToFlash, err = downloadAndUntarFwFile(ctx, s, h, tmpDir, fwidModel, shippedFwVersions[i])
+		firmwareFilesToFlash, err = downloadAndUntarFwFile(ctx, s, h, tmpDir, tmpDirServo, fwidModel, shippedFwVersions[i])
 		if err != nil {
 			s.Fatal("Failed while downloading file: ", err)
 		}
@@ -507,7 +530,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 // downloadAndUntarFwFile downloads and untars a firmware source file from the cloud,
 // using the given model name and shipped firmware version. It returns the path to the
 // untarred firmware binary on the host.
-func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.Helper, tmpDir, fwidModel string, fwToTest jsonFwInfo) (*firmware.FWFilesToFlash, error) {
+func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.Helper, tmpDir, tmpDirServo, fwidModel string, fwToTest jsonFwInfo) (*firmware.FWFilesToFlash, error) {
 	// getValidURL runs 'gsutil ls' and returns the valid url containing the firmware source.
 	getValidURL := func(path string) (string, string, error) {
 		out, stderr, err := testexec.CommandContext(ctx, "gsutil", "ls", path).SeparatedOutput(testexec.DumpLogOnError)
@@ -580,9 +603,26 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 		}
 
 		if url != "" {
-			filesToFlash, err := firmware.DownloadFirmwareFiles(ctx, s.CloudStorage(), h, tmpDir, url, fileName, fwidModel)
+			filesToFlash, err := firmware.DownloadFirmwareFiles(ctx, s.CloudStorage(), h, tmpDirServo, url, fileName, fwidModel)
 			if err != nil {
 				testing.ContextLog(ctx, "Failed to download the file: ", err)
+				continue
+			}
+			// Copy firmware files to the local host.
+			if filesToFlash.APFirmwareFile != "" {
+				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.APFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.APFirmwareFile)); err != nil {
+					return nil, errors.Wrap(err, "failed to copy AP firmware file from servo host")
+				}
+			}
+			if filesToFlash.ECFirmwareFile != "" {
+				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.ECFirmwareFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.ECFirmwareFile)); err != nil {
+					return nil, errors.Wrap(err, "failed to copy EC firmware file from servo host")
+				}
+			}
+			if filesToFlash.MonitorFile != "" {
+				if err := h.ServoProxy.GetFile(ctx, false, fmt.Sprintf("%s/%s", tmpDirServo, filesToFlash.MonitorFile), fmt.Sprintf("%s/%s", tmpDir, filesToFlash.MonitorFile)); err != nil {
+					return nil, errors.Wrap(err, "failed to copy Monitor firmware file from servo host")
+				}
 			}
 			return filesToFlash, nil
 		}

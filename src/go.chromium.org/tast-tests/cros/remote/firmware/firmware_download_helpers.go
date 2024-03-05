@@ -130,6 +130,10 @@ func DownloadFirmwareFiles(ctx context.Context, cs *testing.CloudStorage, h *Hel
 		monitorBin := extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, tmpDir, MonitorFileToFlash, ecMonitorFileNamePool)
 		apBin := extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, tmpDir, APFirmwareFileToFlash, apFileNamePool)
 		ecBin := extractFirmwareFile(ctx, h, devserver, gcsFirmwareFilePath, tmpDir, ECFirmwareFileToFlash, ecFilenamePool)
+		// At least one apBin or ecBin should be found.
+		if apBin == "" && ecBin == "" {
+			return nil, errors.New("unable to extract bin files")
+		}
 		return &FWFilesToFlash{ECFirmwareFile: ecBin, MonitorFile: monitorBin, APFirmwareFile: apBin}, nil
 
 	}
