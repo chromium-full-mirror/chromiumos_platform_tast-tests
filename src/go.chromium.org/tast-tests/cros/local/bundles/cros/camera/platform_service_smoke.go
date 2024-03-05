@@ -22,7 +22,7 @@ func init() {
 		Desc:         "Smoke test for the Platform Camera Service",
 		Contacts:     []string{"chromeos-camera-eng@google.com", "hidenorik@chromium.org"},
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext"},
+		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 		// TODO(b/243048705): skip the test on faulty flash. Remove the first three entries when resolved.
 		// TODO(b/323099045): skip on unstable camera (0408:a098). Remove the last entry when resolved.
