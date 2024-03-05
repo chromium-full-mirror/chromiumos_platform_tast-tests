@@ -72,4 +72,6 @@ const (
 	ChromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent = "chromeLoggedInWithFieldTrialConfigEnableAndVerboseConsent"
 	// Logged in to a user session with FieldTrialConfigDisable *and* verbose consent flags.
 	ChromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent = "chromeLoggedInWithFieldTrialConfigDisableAndVerboseConsent"
+	// Logged in to a user session with SchedQoSOnResourcedForChrome feature enabled.
+	ChromeLoggedInWithSchedQoS = "chromeLoggedInWithSchedQoS"
 )

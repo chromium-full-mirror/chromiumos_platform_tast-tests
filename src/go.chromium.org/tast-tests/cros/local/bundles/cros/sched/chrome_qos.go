@@ -1,0 +1,174 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+package sched
+
+import (
+	"context"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/shirou/gopsutil/v3/process"
+
+	"go.chromium.org/tast-tests/cros/common/fixture"
+	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash/ashproc"
+	"go.chromium.org/tast-tests/cros/local/chrome/chromeproc"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
+)
+
+func init() {
+	testing.AddTest(&testing.Test{
+		Func:         ChromeQoS,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Checks that Chrome processes works with resourced schedqos",
+		Contacts:     []string{"cros-core-systems-perf@google.com", "kawasin@google.com"},
+		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		SoftwareDeps: []string{"chrome"},
+		Fixture:      fixture.ChromeLoggedInWithSchedQoS,
+		Timeout:      30 * time.Second,
+	})
+}
+
+func getCPUCgroup(pid int32) (string, error) {
+	cgroupPath := filepath.Join("/proc", strconv.Itoa(int(pid)), "cgroup")
+	cgroups, err := os.ReadFile(cgroupPath)
+	if err != nil {
+		return "", err
+	}
+	for _, line := range strings.Split(string(cgroups), "\n") {
+		line := strings.Split(line, ":")
+		if line[1] == "cpu" {
+			return line[2], nil
+		}
+	}
+	return "", errors.New("cpu cgroup not found")
+}
+
+func getCPUSetCgroup(pid, tid int32) (string, error) {
+	cgroupPath := filepath.Join("/proc", strconv.Itoa(int(pid)), "task", strconv.Itoa(int(tid)), "cgroup")
+	cgroups, err := os.ReadFile(cgroupPath)
+	if err != nil {
+		return "", err
+	}
+	for _, line := range strings.Split(string(cgroups), "\n") {
+		line := strings.Split(line, ":")
+		if line[1] == "cpuset" {
+			return line[2], nil
+		}
+	}
+	return "", errors.New("cpuset cgroup not found")
+}
+
+func checkCPUCgroup(ctx context.Context, s *testing.State, pid int32) {
+	cgroup, err := getCPUCgroup(pid)
+	if err != nil {
+		s.Fatalf("Failed to get cpu cgroup for process %d: %v", pid, err)
+	}
+	if cgroup == "/resourced/normal" || cgroup == "/resourced/background" {
+		return
+	}
+	s.Fatalf("Unexpected cpu cgroup %s for process %d", cgroup, pid)
+}
+
+func checkCPUSetCgroup(ctx context.Context, s *testing.State, pid, tid int32) {
+	cgroup, err := getCPUSetCgroup(pid, tid)
+	if err != nil {
+		s.Fatalf("Failed to get cpuset cgroup for process %d: %v", pid, err)
+	}
+	if cgroup == "/resourced/all" || cgroup == "/resourced/efficient" {
+		return
+	}
+	s.Fatalf("Unexpected cpuset cgroup %s for process %d, thread %d", cgroup, pid, tid)
+}
+
+func isQoSEligibleProcess(ctx context.Context, s *testing.State, p *process.Process) bool {
+	cmdline, err := p.CmdlineWithContext(ctx)
+	if err != nil {
+		s.Fatal("Failed to get process name: ", err)
+	}
+	// Zygote and broker processes are out of schedqos control.
+	return !strings.Contains(cmdline, "--type=zygote") && !strings.Contains(cmdline, "--type=broker")
+}
+
+func countBackgroundProcesses(ctx context.Context, s *testing.State, processes []*process.Process) int {
+	var count int
+	for _, p := range processes {
+		if cgroup, err := getCPUCgroup(p.Pid); err != nil {
+			s.Fatalf("Failed to get cpu cgroup for process %d: %v", p.Pid, err)
+		} else if cgroup == "/resourced/background" {
+			count++
+		}
+	}
+	return count
+}
+
+func ChromeQoS(ctx context.Context, s *testing.State) {
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	br := cr.Browser()
+
+	processes, err := ashproc.Processes()
+	if err != nil {
+		s.Fatal("Failed to get Chrome processes: ", err)
+	} else if len(processes) == 0 {
+		s.Fatal("No Chrome processes found")
+	}
+
+	// Check cpu cgroups of all Chrome processes are managed by resourced.
+	for _, process := range processes {
+		if isQoSEligibleProcess(ctx, s, process) {
+			checkCPUCgroup(ctx, s, process.Pid)
+			checkCPUSetCgroup(ctx, s, process.Pid, process.Pid)
+		}
+	}
+
+	// Open a page.
+	server := httptest.NewServer(http.FileServer(s.DataFileSystem()))
+	defer server.Close()
+	testURL := server.URL + "/simple.html"
+
+	conn, err := br.NewTab(ctx, testURL)
+	if err != nil {
+		s.Fatal("Failed to open simple page: ", err)
+	}
+	defer conn.Close()
+
+	rendererProcesses, err := chromeproc.GetRendererProcesses()
+	if err != nil {
+		s.Fatal("Failed to get renderer processes: ", err)
+	}
+	nBefore := countBackgroundProcesses(ctx, s, rendererProcesses)
+
+	// By opening a new tab, the page (simple.html) goes to background.
+	conn2, err := br.NewTab(ctx, "")
+	if err != nil {
+		s.Fatal("Failed to open new tab: ", err)
+	}
+	defer conn2.Close()
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		rendererProcesses, err = chromeproc.GetRendererProcesses()
+		if err != nil {
+			s.Fatal("Failed to get renderer processes: ", err)
+		}
+		nAfter := countBackgroundProcesses(ctx, s, rendererProcesses)
+
+		if nAfter <= nBefore {
+			return errors.Errorf("Background renderer processes not increased: before %v, after: %v", nBefore, nAfter)
+		}
+
+		s.Logf("Background renderer processes increased: before %v, after: %v", nBefore, nAfter)
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		s.Fatal("Failed to verify background renderer processes: ", err)
+	}
+}
