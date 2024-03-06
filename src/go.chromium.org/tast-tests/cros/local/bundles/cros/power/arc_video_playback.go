@@ -144,6 +144,7 @@ func init() {
 				Name:      "exoplayer_h264_1080_30fps_ash",
 				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_1080_30fps"},
 				ExtraData: []string{"arc_video_playback/h264_1080_30fps.mp4", arcvpb.ExoPlayerAPKFileName},
+				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
 				Name:      "exoplayer_h264_1080_60fps_ash",
 				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "h264_1080_60fps"},
@@ -192,6 +193,7 @@ func init() {
 				Name:      "exoplayer_vp9_1080_30fps_ash",
 				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_1080_30fps"},
 				ExtraData: []string{"arc_video_playback/vp9_1080_30fps.webm", arcvpb.ExoPlayerAPKFileName},
+				ExtraAttr: []string{"group:power", "power_regression"},
 			}, {
 				Name:      "exoplayer_vp9_1080_60fps_ash",
 				Val:       arcVideoTestParam{App: arcvpb.NewExoPlayerApp, VideoName: "vp9_1080_60fps"},
