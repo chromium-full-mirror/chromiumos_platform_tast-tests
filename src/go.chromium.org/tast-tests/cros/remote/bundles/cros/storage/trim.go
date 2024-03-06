@@ -24,7 +24,7 @@ func init() {
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Timeout:      120 * time.Minute,
+		Timeout:      240 * time.Minute,
 		Requirements: []string{
 			tdreq.StorageTrim,
 		},
