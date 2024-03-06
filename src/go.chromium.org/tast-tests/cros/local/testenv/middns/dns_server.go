@@ -38,6 +38,7 @@ type DNSServer struct {
 	IP           string
 	pidFileName  string
 	confFileName string
+	confArgs     []string
 	lifelineFD   *os.File
 	tempDir      string
 	shillService *shill.Service
@@ -49,7 +50,9 @@ type DNSServer struct {
 // - Default network is not changed when DNSServer is running.
 // - 8.8.8.8 is reachable
 func NewDNSServer() *DNSServer {
-	return &DNSServer{}
+	return &DNSServer{
+		confArgs: []string{},
+	}
 }
 
 // Start starts a DNS server.
@@ -134,6 +137,11 @@ func (s *DNSServer) Start(ctx context.Context, hostmap map[string]string) (retEr
 		return errors.Wrap(err, "failed to set the DNS server")
 	}
 	testing.ContextLog(ctx, "DNS server static IP address set to: ", s.shillService)
+
+	// Final health check to ensure that mid DNS works as expected.
+	if err := s.healthCheck(ctx); err != nil {
+		return errors.Wrap(err, "failed to health check mid DNS")
+	}
 	return nil
 }
 
@@ -288,6 +296,7 @@ func (s *DNSServer) configureDnsmasq(ctx context.Context, hostmap map[string]str
 			return errors.Wrap(err, "failed to write dnsmasq.conf")
 		}
 	}
+	s.confArgs = args
 	s.confFileName = fd.Name()
 	return nil
 }
@@ -319,6 +328,22 @@ func (s *DNSServer) configureNetwork(ctx context.Context) error {
 		return errors.New("failed to parse DNS IP")
 	}
 	s.IP = ip.String()
+	return nil
+}
+
+// healthCheck checks if mid DNS server works as expected by querying the first entry in the given hostmap using `dig`.
+func (s *DNSServer) healthCheck(ctx context.Context) error {
+	for _, arg := range s.confArgs {
+		const keyAddr = "address=/"
+		if strings.HasPrefix(arg, keyAddr) { // eg. "address=/example.com/1.1.1.1"
+			kv := strings.Split(arg[len(keyAddr):], "/")
+			if err := VerifyQuery(ctx,
+				kv[0], ByHostAndIP(kv[0], kv[1]), 15*time.Second); err != nil {
+				return errors.Wrapf(err, "failed to query mid DNS for: %v, expected addr: %v", kv[0], kv[1])
+			}
+			break // Use only the first one in the hostmap for health check
+		}
+	}
 	return nil
 }
 
