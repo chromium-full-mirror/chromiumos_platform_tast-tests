@@ -58,7 +58,7 @@ func VerifyNearbySharePermissions(ctx context.Context, params networkrequestmoni
 		connectedDevicesURL      = "multidevice"
 		connectedDevicesPageName = "Connected devices"
 		setupButtonName          = "Set up"
-		toggleName               = "Nearby Share"
+		toggleName               = "Quick Share"
 	)
 
 	// Open 'Connected devices' page in OS Settings.
