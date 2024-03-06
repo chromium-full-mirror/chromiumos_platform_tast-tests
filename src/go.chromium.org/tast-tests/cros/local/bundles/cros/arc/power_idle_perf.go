@@ -229,9 +229,21 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 	discharge := args.setupOption == setup.ForceBatteryDischarge
 	sup.Add(setup.PowerTest(ctx, tconn,
 		setup.PowerTestOptions{
-			Wifi:       setup.DisableWifiInterfaces,
-			NightLight: setup.DisableNightLight,
-			DarkTheme:  setup.EnableLightTheme,
+			Wifi:               setup.DisableWifiInterfaces,
+			NightLight:         setup.DisableNightLight,
+			DarkTheme:          setup.EnableLightTheme,
+			UI:                 setup.DoNotChangeUI,
+			Multicast:          setup.DisableMulticast,
+			Ramfs:              setup.DoNotSetupRamfs,
+			Powerd:             setup.DoNotChangePowerd,
+			UpdateEngine:       setup.DisableUpdateEngine,
+			VNC:                setup.DisableVNC,
+			Avahi:              setup.DisableAvahi,
+			DPTF:               setup.DisableDPTF,
+			Backlight:          setup.SetBacklight, // set to default value.
+			KeyboardBrightness: setup.SetKbBrightnessToZero,
+			Audio:              setup.Mute,
+			Bluetooth:          setup.DisableBluetoothInterfaces,
 		},
 		setup.NewBatteryDischarge(discharge, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
