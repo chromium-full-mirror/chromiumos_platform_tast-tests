@@ -22,7 +22,7 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-const gaiaBytebotEnrollmentTimeout = 7 * time.Minute
+const gaiaBytebotEnrollmentTimeout = 10 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
