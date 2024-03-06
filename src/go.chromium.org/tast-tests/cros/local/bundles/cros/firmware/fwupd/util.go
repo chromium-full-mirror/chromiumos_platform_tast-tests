@@ -20,7 +20,9 @@ import (
 )
 
 // ReleaseURI contains the release URI of the test webcam device in the system.
-const ReleaseURI = "https://storage.googleapis.com/chromeos-localmirror/lvfs/test/3fab34cfa1ef97238fb24c5e40a979bc544bb2b0967b863e43e7d58e0d9a923f-fakedevice124.cab"
+// The URI is coming from the fwupd website. Here is the link of the fake device
+// https://fwupd.org/lvfs/devices/org.fwupd.fakedevice.firmware. See v1.2.4
+const ReleaseURI = "https://storage.googleapis.com/chromeos-localmirror/lvfs/test/a92d4f433e925ea8e4a10d25dfa58e64ba1e68d07ee963605a2ccbaa2e3185aa-fakedevice124.cab"
 
 // ChargingStateTimeout has the time needed for polling battery charging state changes.
 // It takes Brya about 3 minutes for the state to change from fully charged to discharging.
