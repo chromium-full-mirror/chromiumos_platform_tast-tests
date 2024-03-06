@@ -26,7 +26,7 @@ func init() {
 			"chungsheng@google.com",
 		},
 		BugComponent: "b:606088",
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"racc"},
 		Params: []testing.Param{
 			{
