@@ -6,6 +6,7 @@ package bruschetta
 
 import (
 	"context"
+	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/usbdevice"
 	"go.chromium.org/tast-tests/cros/local/bruschetta"
+	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/usbutil"
 	"go.chromium.org/tast-tests/cros/local/vm"
@@ -45,11 +47,19 @@ func init() {
 
 func USBStorage(ctx context.Context, s *testing.State) {
 	bru := s.FixtValue().(bruschetta.FixtureData).BruschettaVM
+	cr := s.FixtValue().(bruschetta.FixtureData).Chrome
 	const usbOperationTimeout = 10 * time.Second
 
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+
+	// Set up an environment variable used by vmc
+	hash, err := cryptohome.UserHash(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get user hash: ", err)
+	}
+	os.Setenv("CROS_USER_ID_HASH", hash)
 
 	// Create a virtual USB mass storage device
 	usbMassStorage := usbdevice.NewUSBMassStorage()
