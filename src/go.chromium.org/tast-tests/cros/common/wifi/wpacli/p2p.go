@@ -12,67 +12,25 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/network/ip"
 	"go.chromium.org/tast-tests/cros/common/utils"
+	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
-const (
-	p2pDefaultFreq int = 2462
-)
-
-// setP2PGOAddConf contains the optional information for "p2pGroupAdd" function.
-type setP2PGroupAddConf struct {
-	freq      int
-	networkID int
-}
-
-// P2PGOOption is a function signature that modifies P2PGroupAdd.
-type P2PGOOption func(*setP2PGroupAddConf)
-
-// SetP2PGOFreq returns a P2PGroupAddOption which sets the first center frequency (in MHz).
-func SetP2PGOFreq(f int) P2PGOOption {
-	return func(c *setP2PGroupAddConf) {
-		c.freq = f
-	}
-}
-
-// NetworkID returns a P2PGroupAddOption which sets the NetworkID of the group.
-func NetworkID(id int) P2PGOOption {
-	return func(c *setP2PGroupAddConf) {
-		c.networkID = id
-	}
-}
-
-// GetP2PFreq returns frequency encoded in the set of P2PGOOption elements.
-func GetP2PFreq(ops ...P2PGOOption) int {
-	conf := &setP2PGroupAddConf{}
-	for _, op := range ops {
-		op(conf)
-	}
-	return conf.freq
-}
-
 // p2pGroupAdd add a new P2P group. It does either of two things:
 // If networkID is not present in ops, it creates new P2P group and becomes GO.
 // If networkID is present in ops, it connects to the existing P2P group.
-func (r *Runner) p2pGroupAdd(ctx context.Context, ops ...P2PGOOption) error {
-	conf := &setP2PGroupAddConf{
-		networkID: -1,
-	}
-	for _, op := range ops {
-		op(conf)
-	}
-
+func (r *Runner) p2pGroupAdd(ctx context.Context, ops ...p2p.GroupOption) error {
 	cmd := []string{"p2p_group_add"}
 	// The "persistent" parameter works counterintuitively: if it's omitted,
 	// the group is created as GO, if it's present the group is created in the Client mode.
-	if conf.networkID != -1 {
-		cmd = append(cmd, "persistent="+strconv.Itoa(conf.networkID))
+	if id := p2p.NetworkID(ops...); id != -1 {
+		cmd = append(cmd, "persistent="+strconv.Itoa(id))
 	}
-	if conf.freq > 0 {
-		cmd = append(cmd, "freq="+strconv.Itoa(conf.freq))
+	if freq := p2p.Freq(ops...); freq > 0 {
+		cmd = append(cmd, "freq="+strconv.Itoa(freq))
 	}
 
 	return r.run(ctx, "OK", cmd...)
@@ -146,7 +104,7 @@ func (r *Runner) p2pGroupStartedWait(ctx context.Context, wpaMonitor *WPAMonitor
 
 // P2PGroupCreate brings up an auto-provisioned WiFi Direct group and assumes its ownership
 // (makes the host GO).
-func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...P2PGOOption) (iface,
+func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...p2p.GroupOption) (iface,
 	ssid, key string, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
@@ -199,7 +157,7 @@ func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...P2PG
 
 // P2PGroupConnect connects to an existing P2P Group.
 func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
-	ssid, key string, ops ...P2PGOOption) (iface string, netID int, retErr error) {
+	ssid, key string, ops ...p2p.GroupOption) (iface string, netID int, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
@@ -223,7 +181,7 @@ func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
 	if err != nil {
 		return "", -1, err
 	}
-	ops = append(ops, NetworkID(networkID))
+	ops = append(ops, p2p.SetNetworkID(networkID))
 
 	// Add a p2p group owner (GO).
 	if err := r.p2pGroupAdd(timeoutCtx, ops...); err != nil {

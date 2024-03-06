@@ -31,7 +31,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/common/wifi/iw"
-	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
+	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/network"
 	"go.chromium.org/tast-tests/cros/local/network/cmd"
@@ -3197,9 +3197,9 @@ func (s *ShillService) p2pGroupCreateWPACLI(ctx context.Context, request *wifi.P
 	ipr := ip.NewLocalRunner()
 	wpar := localwpacli.NewLocalRunner()
 
-	var options []wpacli.P2PGOOption
+	var options []p2p.GroupOption
 	if request.Data.Freq > 0 {
-		options = append(options, wpacli.SetP2PGOFreq(int(request.Data.Freq)))
+		options = append(options, p2p.SetFreq(int(request.Data.Freq)))
 	}
 	// Ignore other options, not supported by WPA CLI yet.
 	iface, ssid, key, err := wpar.P2PGroupCreate(ctx, ipr, options...)
@@ -3235,7 +3235,7 @@ func (s *ShillService) p2pGroupConnectWPACLI(ctx context.Context, request *wifi.
 	wpar := localwpacli.NewLocalRunner()
 
 	p2pClientIface, p2pClientNetID, err := wpar.P2PGroupConnect(ctx, ipr,
-		request.Data.Ssid, request.Data.Key, wpacli.SetP2PGOFreq(int(request.Data.Freq)))
+		request.Data.Ssid, request.Data.Key, p2p.SetFreq(int(request.Data.Freq)))
 	if err != nil {
 		return &wifi.P2PGroupConnectResponse{}, err
 	}

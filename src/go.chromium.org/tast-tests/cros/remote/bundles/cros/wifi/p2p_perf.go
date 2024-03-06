@@ -11,7 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	group_owner "go.chromium.org/tast-tests/cros/common/wifi/wpacli"
+	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/remote/network/iperf"
 	"go.chromium.org/tast-tests/cros/remote/wifi/iw"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -51,7 +51,7 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 		8- Deconfigure the p2p GO.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
-	if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, group_owner.SetP2PGOFreq(5180)); err != nil {
+	if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, p2p.SetFreq(5180)); err != nil {
 		s.Fatal("Failed to configure the p2p group owner (GO): ", err)
 	}
 	defer func(ctx context.Context) {
@@ -75,7 +75,11 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 
 	// Print the P2P channel configuration.
 	iwr := iw.NewRemoteRunner(tf.P2PGOConn())
-	chConfig, err := iwr.RadioConfig(ctx, tf.P2PGOIface())
+	iface, err := tf.P2PGOIface(ctx)
+	if err != nil {
+		s.Error("Failed to get P2P GO interface name: ", err)
+	}
+	chConfig, err := iwr.RadioConfig(ctx, iface)
 	if err != nil {
 		s.Error("Failed the P2P channel configuration: ", err)
 	}
@@ -95,7 +99,7 @@ func P2PPerf(ctx context.Context, s *testing.State) {
 	}()
 
 	pv.Set(perf.Metric{
-		Name:      "p2p_tcp_ave_tput_ch" + strconv.Itoa(chConfig.Number) + "_mode_" + string(group_owner.PhyModeHT40),
+		Name:      "p2p_tcp_ave_tput_ch" + strconv.Itoa(chConfig.Number),
 		Unit:      "Mbps",
 		Direction: perf.BiggerIsBetter,
 	}, float64(finalResult.Throughput/iperf.Mbps))

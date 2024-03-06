@@ -75,6 +75,10 @@ const (
 	// fixtureVarEnableRouterReboot is the fixture var for setting
 	// TFOptions.EnableRouterReboot for all fixtures.
 	fixtureVarEnableRouterReboot = "wificell.EnableRouterReboot"
+
+	// fixtureVarInvokeMethod is the fixture var for setting
+	// defaultRPCInvokeMethod for all fixtures.
+	fixtureVarInvokeMethod = "wificell.InvokeMethod"
 )
 
 func init() {
@@ -138,6 +142,9 @@ func init() {
 		}
 		if f&TFFeaturesCellular != 0 {
 			fixtures[f].ServiceDeps = append(fixtures[f].ServiceDeps, CellularServiceName)
+		}
+		if f&TFFeaturesCompanionDUT != 0 {
+			fixtures[f].Vars = append(fixtures[f].Vars, fixtureVarInvokeMethod)
 		}
 	}
 
@@ -530,6 +537,18 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 	// Read companion DUT.
 	if f.features&TFFeaturesCompanionDUT != 0 {
 		ops.RequirePrimaryRouter(false)
+
+		im, ok := s.Var(fixtureVarInvokeMethod)
+		if ok {
+			switch im {
+			case "WPA_CLI":
+				defaultRPCInvokeMethod = wifi.InvokeMethodEnum_WPA_CLI
+			case "SHILL_API":
+				defaultRPCInvokeMethod = wifi.InvokeMethodEnum_SHILL_API
+			default:
+				s.Fatalf("Invoke method %q not supported", im)
+			}
+		}
 
 		for role, cd := range s.CompanionDUTs() {
 			if cd == nil {

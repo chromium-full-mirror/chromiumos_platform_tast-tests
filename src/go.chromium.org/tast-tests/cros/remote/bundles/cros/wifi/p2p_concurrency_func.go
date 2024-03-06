@@ -11,7 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	group_owner "go.chromium.org/tast-tests/cros/common/wifi/wpacli"
+	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 
 	ap "go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
@@ -23,7 +23,7 @@ import (
 
 type p2pConcurrencyTestcase struct {
 	printableName string
-	p2pOpts       []group_owner.P2PGOOption
+	p2pOpts       []p2p.GroupOption
 	apOpts        []ap.Option
 }
 
@@ -46,28 +46,28 @@ func init() {
 				// Verifies that DUT can connect to AP and p2p client on 2GHz band on different channels.
 				Name: "different_channel_2ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(2462)},
+					p2pOpts: []p2p.GroupOption{p2p.SetFreq(2462)},
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}},
 			}, {
 				// Verifies that DUT can connect to AP and p2p client on 5GHz band on different channels.
 				Name: "different_channel_5ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(5180)},
+					p2pOpts: []p2p.GroupOption{p2p.SetFreq(5180)},
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
 				}},
 			}, {
 				// Verifies that DUT can connect to AP and p2p client on same channel on the 2GHz band.
 				Name: "same_channel_2ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(2462)},
+					p2pOpts: []p2p.GroupOption{p2p.SetFreq(2462)},
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}},
 			}, {
 				// Verifies that DUT can connect to AP and p2p client on same channel on the 5GHz band.
 				Name: "same_channel_5ghz",
 				Val: []p2pConcurrencyTestcase{{
-					p2pOpts: []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(5240)},
+					p2pOpts: []p2p.GroupOption{p2p.SetFreq(5240)},
 					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
 				}},
 			}, {
@@ -75,11 +75,11 @@ func init() {
 				Name: "different_bands",
 				Val: []p2pConcurrencyTestcase{{
 					printableName: "P2P GO connection on 5GHz band and Infra AP connection on 2.4GHz band",
-					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(5180)},
+					p2pOpts:       []p2p.GroupOption{p2p.SetFreq(5180)},
 					apOpts:        []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
 				}, {
 					printableName: "P2P GO connection on 2.4GHz band and Infra AP connection on 5GHz band",
-					p2pOpts:       []group_owner.P2PGOOption{group_owner.SetP2PGOFreq(2462)},
+					p2pOpts:       []p2p.GroupOption{p2p.SetFreq(2462)},
 					apOpts:        []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40), ap.VHTChWidth(ap.VHTChWidth20Or40)},
 				}},
 			},
@@ -132,7 +132,7 @@ func P2PConcurrencyFunc(ctx context.Context, s *testing.State) {
 
 	P2PGOIsConfigured := false
 	P2PClientIsConfigured := false
-	configureP2PConnection := func(ctx context.Context, options []group_owner.P2PGOOption) {
+	configureP2PConnection := func(ctx context.Context, options []p2p.GroupOption) {
 		s.Log("P2PConcurrencyFunc: Configure P2P connection")
 		successfulRun := false
 		if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, options...); err != nil {

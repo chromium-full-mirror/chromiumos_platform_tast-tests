@@ -9,7 +9,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	"go.chromium.org/tast-tests/cros/common/wifi/wpacli"
+	"go.chromium.org/tast-tests/cros/common/wifi/p2p"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 
 	"go.chromium.org/tast/core/testing"
@@ -17,7 +17,7 @@ import (
 )
 
 type p2pSimpleConnectTestcase struct {
-	p2pOpts []wpacli.P2PGOOption
+	p2pOpts []p2p.GroupOption
 }
 
 func init() {
@@ -39,13 +39,13 @@ func init() {
 				// Verifies that DUT can connect to p2p group on 2.4GHz band.
 				Name: "2_4ghz",
 				Val: p2pSimpleConnectTestcase{
-					p2pOpts: []wpacli.P2PGOOption{wpacli.SetP2PGOFreq(2462)},
+					p2pOpts: []p2p.GroupOption{p2p.SetFreq(2462)},
 				},
 			}, {
 				// Verifies that DUT can connect to p2p group on 5GHz band.
 				Name: "5ghz",
 				Val: p2pSimpleConnectTestcase{
-					p2pOpts: []wpacli.P2PGOOption{wpacli.SetP2PGOFreq(5180)},
+					p2pOpts: []p2p.GroupOption{p2p.SetFreq(5180)},
 				},
 			}},
 	})
