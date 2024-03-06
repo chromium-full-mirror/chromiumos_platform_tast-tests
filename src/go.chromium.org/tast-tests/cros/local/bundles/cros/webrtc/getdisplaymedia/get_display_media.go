@@ -92,24 +92,23 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 		return errors.Wrap(err, "failed to run getDisplayMedia()")
 	}
 
-	p := perf.NewValues()
+	p := graphics.NewThreadSafePerfValues()
 	// Save the perf result to OutDir even if something went wrong while measuring the performance.
 	defer func() {
 		outDir, ok := testing.ContextOutDir(ctx)
 		if !ok {
 			return
 		}
-		p.Save(outDir)
+		p.GetUnderlyingValues().Save(outDir)
 	}()
 
-	// perf.Values is not thread safe. Following simultaneous update possibly causes race conditions.
-	// TODO(b/325560889): Protect perf.Values.
+	var gpuPerf *perf.Values
 	var gpuMetricsErr, gpuErr, i915IRQErr, cStateErr, cpuErr, batErr, wakeupErr error
 	var wg sync.WaitGroup
 	wg.Add(7)
 	go func() {
 		defer wg.Done()
-		gpuMetricsErr = measureGPUMetrics(ctx, p)
+		gpuPerf, gpuMetricsErr = measureGPUMetrics(ctx)
 	}()
 	go func() {
 		defer wg.Done()
@@ -158,6 +157,7 @@ func RunGetDisplayMediaPerf(ctx context.Context, fileSystem http.FileSystem, cs 
 	if wakeupErr != nil {
 		return errors.Wrap(wakeupErr, "failed to measure unnecessary wakeups of ThreadPool")
 	}
+	p.GetUnderlyingValues().Merge(gpuPerf)
 	return nil
 }
 
@@ -170,10 +170,10 @@ func DataFiles() []string {
 	}
 }
 
-// measureGPUMetrics measures GPU frequency and GPU usage, and saves them to perf.Values.
+// measureGPUMetrics measures GPU frequency and GPU usage, and returns them as perf.Values.
 // TODO(b/293221069): Remove this function if the power library enables to
 // configure collected metrics.
-func measureGPUMetrics(ctx context.Context, p *perf.Values) error {
+func measureGPUMetrics(ctx context.Context) (*perf.Values, error) {
 	const powerMeasurementInterval = 5 * time.Second
 
 	metrics, err := perf.NewTimeline(ctx, []perf.TimelineDatasource{
@@ -181,23 +181,22 @@ func measureGPUMetrics(ctx context.Context, p *perf.Values) error {
 		metrics.NewGPUUsageDataSource(),
 	}, perf.Interval(powerMeasurementInterval))
 	if err != nil {
-		return errors.Wrap(err, "failed to build metrics timeline")
+		return nil, errors.Wrap(err, "failed to build metrics timeline")
 	}
 	if err := metrics.Start(ctx); err != nil {
-		return errors.Wrap(err, "failed to start metrics")
+		return nil, errors.Wrap(err, "failed to start metrics")
 	}
 	if err := metrics.StartRecording(ctx); err != nil {
-		return errors.Wrap(err, "failed to start recording")
+		return nil, errors.Wrap(err, "failed to start recording")
 	}
 	// GoBigSleepLint: Sleep to measure the performance metrics.
 	if err := testing.Sleep(ctx, measurementDuration); err != nil {
-		return errors.Wrapf(err, "failed to sleep for %v", measurementDuration)
+		return nil, errors.Wrapf(err, "failed to sleep for %v", measurementDuration)
 	}
 
 	gpuPerf, err := metrics.StopRecording(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to stop recording")
+		return nil, errors.Wrap(err, "failed to stop recording")
 	}
-	p.Merge(gpuPerf)
-	return nil
+	return gpuPerf, nil
 }

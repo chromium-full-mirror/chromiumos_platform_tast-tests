@@ -15,7 +15,6 @@ import (
 	"sync"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/graphics"
@@ -80,7 +79,7 @@ func RunCaptureStream(ctx context.Context, s *testing.State, cs ash.ConnSource, 
 		return nil
 	}
 
-	p := perf.NewValues()
+	p := graphics.NewThreadSafePerfValues()
 
 	var gpuErr, cStateErr, cpuErr error
 	var wg sync.WaitGroup
@@ -108,7 +107,7 @@ func RunCaptureStream(ctx context.Context, s *testing.State, cs ash.ConnSource, 
 		return errors.Wrap(cpuErr, "failed to measure CPU/Package power")
 	}
 
-	p.Save(s.OutDir())
+	p.GetUnderlyingValues().Save(s.OutDir())
 	return nil
 }
 

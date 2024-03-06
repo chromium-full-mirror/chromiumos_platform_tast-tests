@@ -13,7 +13,6 @@ import (
 	"sync"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
@@ -122,9 +121,8 @@ func runPeerConnectionAndVerifyImplementation(ctx context.Context, conn *chrome.
 	return verifyCodecImplementation(ctx, conn, params.VerifyDecoderMode, params.VerifyEncoderMode, params.Svc, params.SimulcastHWEncs)
 }
 
-// measurePerformance measures the webrtc stats and system performance, and records
-// the results to the perf.Values.
-func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn, tconn *chrome.TestConn, params RTCTestParams, p *perf.Values) error {
+// measurePerformance measures the webrtc stats and system performance, and records the results to p.
+func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn, tconn *chrome.TestConn, params RTCTestParams, p *graphics.ThreadSafePerfValues) error {
 	pcID := 0
 	if isSMode(params.Svc) {
 		numStreams, err := numSModeLayers(params.Svc)
@@ -137,7 +135,7 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 		pcID = numStreams - 1
 	}
 
-	if err := webrtc.MeasureRTCStats(ctx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(pcID), validateFrame, p); err != nil {
+	if err := webrtc.MeasureRTCStats(ctx, conn, params.StreamWidth, params.StreamHeight, params.DisplayMediaType != "", readRTCReport(pcID), validateFrame, p.GetUnderlyingValues()); err != nil {
 		return errors.Wrap(err, "failed to measure RTCStats")
 	}
 
@@ -186,7 +184,7 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 	if err != nil {
 		return errors.Wrap(err, "failed to get expected resolutions")
 	}
-	if traceErr := measureChromeTraceEvents(ctx, s, resolutions, p); traceErr != nil {
+	if traceErr := measureChromeTraceEvents(ctx, s, resolutions, p.GetUnderlyingValues()); traceErr != nil {
 		return errors.Wrap(traceErr, "failed to measure decoding/encoding chrome trace events")
 	}
 
@@ -198,7 +196,7 @@ func measurePerformance(ctx context.Context, s *testing.State, conn *chrome.Conn
 // is plugged into a |params.videoGridDimension| x |params.videoGridDimension| grid with copies
 // of videoURL being played, similar to a mosaic video call.
 func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrome,
-	s *testing.State, loopbackURL, videoURL string, params RTCTestParams, p *perf.Values) error {
+	s *testing.State, loopbackURL, videoURL string, params RTCTestParams, p *graphics.ThreadSafePerfValues) error {
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to test API")
@@ -231,7 +229,7 @@ func peerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome.Chrom
 		return err
 	}
 
-	testing.ContextLogf(ctx, "Metric: %+v", p)
+	testing.ContextLogf(ctx, "Metric: %+v", p.GetUnderlyingValues())
 	return nil
 }
 
@@ -287,11 +285,11 @@ func RunRTCPeerConnectionPerf(ctx context.Context, cs ash.ConnSource, cr *chrome
 	if params.VideoGridDimension > 1 {
 		videoGridURL = server.URL + "/" + params.VideoGridFile
 	}
-	p := perf.NewValues()
+	p := graphics.NewThreadSafePerfValues()
 	if err := peerConnectionPerf(ctx, cs, cr, s, loopbackURL, videoGridURL, params, p); err != nil {
 		return err
 	}
 
-	p.Save(s.OutDir())
+	p.GetUnderlyingValues().Save(s.OutDir())
 	return nil
 }

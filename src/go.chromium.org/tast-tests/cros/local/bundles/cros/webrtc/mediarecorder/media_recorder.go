@@ -73,7 +73,6 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 		return err
 	}
 
-	p := perf.NewValues()
 	// Wait until CPU is idle enough. CPU usage can be high immediately after login for various reasons (e.g. animated images on the lock screen).
 	cleanUpBenchmark, err := mediacpu.SetUpBenchmark(ctx)
 	if err != nil {
@@ -113,6 +112,7 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 		return errors.Wrapf(err, "failed to evaluate startRecording(%v)", profile)
 	}
 
+	p := graphics.NewThreadSafePerfValues()
 	var gpuErr, cpuErr error
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -156,9 +156,9 @@ func MeasurePerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.T
 	if err != nil {
 		return errors.Wrap(err, "failed to calculate the processig time per frame")
 	}
-	reportMetric("frame_processing_time", "millisecond", float64(processingTimePerFrame.Milliseconds()), perf.SmallerIsBetter, p)
+	reportMetric("frame_processing_time", "millisecond", float64(processingTimePerFrame.Milliseconds()), perf.SmallerIsBetter, p.GetUnderlyingValues())
 
-	if err := p.Save(outDir); err != nil {
+	if err := p.GetUnderlyingValues().Save(outDir); err != nil {
 		return errors.Wrap(err, "failed to store performance data")
 	}
 	return nil
