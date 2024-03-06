@@ -122,11 +122,13 @@ func CustomApnLimit(ctx context.Context, s *testing.State) {
 	}
 
 	ui := uiauto.New(tconn)
-	if err := uiauto.Combine("Verify New APN button is disabled and show tooltip",
-		ui.CheckRestriction(ossettings.NewAPNBtn, restriction.Disabled),
-		ui.MouseMoveTo(ossettings.NewAPNBtn, 0),
+	if err := uiauto.Combine("Verify Create new APN is disabled and show tooltip",
+		ui.LeftClick(ossettings.MoreApnActionsTridot),
+		ui.WaitUntilExists(ossettings.CreateNewApnMenuBtn),
+		ui.CheckRestriction(ossettings.CreateNewApnMenuBtn, restriction.Disabled),
+		ui.MouseMoveTo(ossettings.CreateNewApnMenuBtn, 0),
 		ui.WaitUntilExists(ossettings.APNLimitTooltip),
 	)(ctx); err != nil {
-		s.Fatal("Failed to verify New APN button is disabled and show tooltip: ", err)
+		s.Fatal("Failed to verify Create new APN is disabled and show tooltip: ", err)
 	}
 }

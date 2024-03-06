@@ -522,9 +522,17 @@ func (s *OSSettings) VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chr
 
 // CreateCustomAPN creates new APN and verify it is shown in the APN list after.
 func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error {
-	if err := s.ui.LeftClick(NewAPNBtn)(ctx); err != nil {
-		return errors.Wrap(err, "failed to click on New APN button")
+	if err := s.ui.LeftClick(MoreApnActionsTridot)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click more actions tridot")
 	}
+
+	if err := uiauto.Combine("Add custom APN in new APN dialog",
+		s.ui.WaitUntilExists(CreateNewApnMenuBtn),
+		s.ui.LeftClick(CreateNewApnMenuBtn),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click create custom APN menu button")
+	}
+
 	kb, err := input.Keyboard(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to open the keyboard")

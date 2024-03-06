@@ -344,6 +344,15 @@ var (
 	// NewAPNBtn is the finder for the new APN button in the APN details page.
 	NewAPNBtn = nodewith.Name("New APN").Role(role.Button)
 
+	// MoreApnActionsTridot is the finder for the new APN tri-dot button in the APN details page.
+	MoreApnActionsTridot = nodewith.NameContaining("More actions").Role(role.Button).HasClass("icon-more-vert")
+
+	// CreateNewApnMenuBtn is the finder for the "Create new APN" menu item.
+	CreateNewApnMenuBtn = nodewith.Name("Create new APN").HasClass("dropdown-item").Role(role.MenuItem)
+
+	// DiscoverKnownApnsMenuBtn is the finder for the "Discover known APNs" menu item.
+	DiscoverKnownApnsMenuBtn = nodewith.Name("Discover known APNs").HasClass("dropdown-item").Role(role.MenuItem)
+
 	// APNLimitTooltip is the finder for the tooltip of the new APN button when number of APN hit the max limit.
 	APNLimitTooltip = nodewith.Name("Remove an APN to add a new APN").Role(role.Tooltip)
 )
