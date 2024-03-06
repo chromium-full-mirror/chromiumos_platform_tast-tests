@@ -111,8 +111,9 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.DeferLogin(),
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+		// TODO(b/315829727): Remove this as a part of post-launch cleanup.
+		chrome.EnableFeatures("LocalPasswordsForConsumers"),
 	}
-
 	// Keep the user that was previously added for the 'AddPerson' flow.
 	if isAddPersonFlow {
 		options = append(options, chrome.KeepState())
@@ -240,6 +241,23 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		ui.LeftClick(focusedButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to continue on the sync screen: ", err)
+	}
+
+	s.Log("Waiting for the password selection screen")
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordSelectionScreen.isVisible()"); err != nil {
+		s.Fatal("Failed to wait for the password selection screen to be visible: ", err)
+	}
+
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordSelectionScreen.selectGaiaPassword()", nil); err != nil {
+		s.Fatal("Failed to select GAIA password: ", err)
+	}
+
+	nextButton := nodewith.Name("Next").Role(role.Button)
+	if err := uiauto.Combine("click next on the password selection screen",
+		ui.WaitUntilEnabled(nextButton),
+		ui.LeftClick(nextButton),
+	)(ctx); err != nil {
+		s.Fatal("Failed to click password selection screen next button: ", err)
 	}
 
 	shouldSkipFingerprint := false
