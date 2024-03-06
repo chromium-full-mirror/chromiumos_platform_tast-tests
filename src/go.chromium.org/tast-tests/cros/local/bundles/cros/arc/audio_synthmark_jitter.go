@@ -20,6 +20,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -37,6 +40,10 @@ const (
 	// audioSynthmarkJitterStressRepeatedlyStartApp repeatedly starts and stops Oboetester app.
 	// This can catch virtio-gpu memory allocation regression with TDP MMU in b/296807862.
 	audioSynthmarkJitterStressRepeatedlyStartApp
+
+	// audioSynthmarkJitterStressSpeedometer run the test with a single tab of Speedometer
+	// benchmark in Chrome.
+	audioSynthmarkJitterStressSpeedometer
 )
 
 type audioSynthmarkJitterParam struct {
@@ -78,6 +85,11 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: audioSynthmarkJitterParam{
 				stressMode: audioSynthmarkJitterStressRepeatedlyStartApp,
+			},
+		}, {
+			Name: "stress_speedometer",
+			Val: audioSynthmarkJitterParam{
+				stressMode: audioSynthmarkJitterStressSpeedometer,
 			},
 		}},
 	})
@@ -179,6 +191,26 @@ func AudioSynthmarkJitter(ctx context.Context, s *testing.State) {
 				}
 			}
 		}()
+	case audioSynthmarkJitterStressSpeedometer:
+		// Open and start Speedometer test. Note that we don't wait for it to finish.
+		// It will be automatically closed once the JitterMark test finish.
+		conn, err := cr.NewConn(ctx, "https://browserbench.org/Speedometer2.0/")
+		if err != nil {
+			s.Fatal("Failed to open Speedometer website: ", err)
+		}
+		defer func() {
+			conn.CloseTarget(cleanupCtx)
+			conn.Close()
+		}()
+
+		uia := uiauto.New(tconn)
+		startButton := nodewith.Name("Start Test").Role(role.Button).Onscreen()
+		if err := uiauto.Combine("click Start Test",
+			uia.WaitUntilExists(startButton),
+			uia.LeftClickUntil(startButton, uia.Gone(startButton)),
+		)(ctx); err != nil {
+			s.Fatal("Failed to start speedometer: ", err)
+		}
 	}
 
 	// Launch cyclic_bench on the host
