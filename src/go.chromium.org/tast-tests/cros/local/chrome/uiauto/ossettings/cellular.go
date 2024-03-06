@@ -521,8 +521,9 @@ func (s *OSSettings) VerifyApnIsVisibleInSubtext(ctx context.Context, tconn *chr
 	return nil
 }
 
-// CreateCustomAPN creates new APN and verify it is shown in the APN list after.
-func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error {
+// OpenNewAPNDialogAndPopulateFields opens the new APN dialog and populates its
+// fields with |apn| configuration.
+func (s *OSSettings) OpenNewAPNDialogAndPopulateFields(ctx context.Context, apn *ApnConfig) error {
 	if err := s.ui.LeftClick(MoreApnActionsTridot)(ctx); err != nil {
 		return errors.Wrap(err, "failed to click more actions tridot")
 	}
@@ -594,6 +595,15 @@ func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error 
 		)(ctx); err != nil {
 			return errors.Wrapf(err, "failed to select IP menu item: %s", apn.IPType)
 		}
+	}
+
+	return nil
+}
+
+// CreateCustomAPN creates new APN and verify it is shown in the APN list after.
+func (s *OSSettings) CreateCustomAPN(ctx context.Context, apn *ApnConfig) error {
+	if err := s.OpenNewAPNDialogAndPopulateFields(ctx, apn); err != nil {
+		return errors.Wrap(err, "failed to open new APN dialog and populate fields")
 	}
 
 	if err := uiauto.Combine("Add and verify APN added",
