@@ -339,6 +339,12 @@ func (c *Cras) WaitForDeviceUntil(ctx context.Context, condition func(*CrasNode)
 }
 
 // WaitForDevice waits for specified types of stream nodes to be active.
+// There are 4 ways to select active audio device:
+// 1. Stop UI and select with cras.SetActiveNodeByType.
+// 2. Start Chrome with --use-fake-cras-audio-client-for-dbus and select with cras.SetActiveNodeByType
+// 3. Start Chrome without --use-fake-cras-audio-client-for-dbus and select with UI automation
+// 4. Start Chrome without --use-fake-cras-audio-client-for-dbus and use WaitForDevice just to ensure CRAS is ready
+// Notice that if Chrome login breaks, tests rely on the Chrome may fail unrelated to audio functionality.
 // You can pass the streamType as a bitmap to wait for both input and output
 // nodes to be active. Ex: WaitForDevice(ctx, InputStream|OutputStream)
 // It should be used to verify the target types of nodes exist and are

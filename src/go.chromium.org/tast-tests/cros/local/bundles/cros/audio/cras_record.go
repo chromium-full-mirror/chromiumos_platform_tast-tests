@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -28,7 +29,7 @@ func init() {
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "yuhsuan@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		HardwareDeps: hwdep.D(hwdep.Microphone()),
-		Fixture:      "rebootForAudioDSPFixture",
+		Fixture:      fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 		Attr:         []string{"group:mainline"},
 		Params: []testing.Param{{
 			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel(crasRecordUnstableModels...)),
@@ -44,8 +45,13 @@ func init() {
 func CrasRecord(ctx context.Context, s *testing.State) {
 	const duration = 5 // second
 
-	if err := audio.WaitForDevice(ctx, audio.InputStream); err != nil {
-		s.Fatal("Failed to wait for input stream: ", err)
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to CRAS: ", err)
+	}
+	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
+		s.Fatal("Failed to set internal speaker to active: ", err)
 	}
 
 	// Set timeout to duration + 3s, which is the time buffer to complete the normal execution.

@@ -13,6 +13,8 @@ import (
 	commonaudio "go.chromium.org/tast-tests/cros/common/audio"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
+	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/soundcardinit"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast/core/errors"
@@ -25,7 +27,7 @@ func init() {
 		Func:         SoundCardInit,
 		Desc:         "Verifies sound_card_init boot time calibration logic",
 		HardwareDeps: hwdep.D(commonaudio.SoundCardInitConditions()...),
-		Fixture:      "rebootForAudioDSPFixture",
+		Fixture:      fixture.UIStopped{Parent: "rebootForAudioDSPFixture"}.Instance(),
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "judyhsiao@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
 		Attr:         []string{"group:mainline"},
@@ -60,8 +62,13 @@ const vpdFile = "/sys/firmware/vpd/ro/dsm_calib_r0_0"
 // SoundCardInit Verifies sound_card_init boot time calibration logic.
 func SoundCardInit(ctx context.Context, s *testing.State) {
 
-	if err := audio.WaitForDevice(ctx, audio.OutputStream); err != nil {
-		s.Fatal("Failed to wait for output device: ", err)
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to CRAS: ", err)
+	}
+	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_SPEAKER"); err != nil {
+		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
+		s.Fatal("Failed to set internal speaker active: ", err)
 	}
 
 	soundCardID, err := soundcardinit.GetSoundCardID(ctx)
