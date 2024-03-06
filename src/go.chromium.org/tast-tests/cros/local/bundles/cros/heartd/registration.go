@@ -42,7 +42,7 @@ func Registration(ctx context.Context, s *testing.State) {
 	}
 
 	// Register action.
-	output, err := testexec.CommandContext(ctx, "/usr/bin/heartd-tool", "--action1=kNoOperation", "--simulate_client_missing").Output()
+	output, err := testexec.CommandContext(ctx, "/usr/local/bin/heartd-tool", "--action1=kNoOperation", "--simulate_client_missing").Output()
 	if err != nil {
 		s.Fatal("Failed to run heartd-tool: ", err)
 	}
