@@ -77,6 +77,8 @@ func SignOutAll(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Test API connection: ", err)
 	}
 
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
+
 	currentUser := creds[len(creds)-1].User
 	if err := signInAll(ctx, tconn, creds[:len(creds)-1], currentUser); err != nil {
 		s.Fatal("Failed to sign in all user: ", err)
@@ -99,7 +101,6 @@ func SignOutAll(ctx context.Context, s *testing.State) {
 	if tconn, err = cr.SigninProfileTestAPIConn(ctx); err != nil {
 		s.Fatal("Failed to re-establish test API connection: ", err)
 	}
-	defer faillog.DumpUITreeOnErrorToFile(cleanupCtx, s.OutDir(), s.HasError, tconn, "dump_after_signOut.txt")
 
 	if err := signedOut(ctx, tconn, creds); err != nil {
 		s.Fatal("Failed to verify user signed out: ", err)
@@ -112,7 +113,8 @@ func SignOutAll(ctx context.Context, s *testing.State) {
 func signInAll(ctx context.Context, tconn *chrome.TestConn, aboutToSignIn []chrome.Creds, currentUser string) error {
 	var (
 		ui            = uiauto.New(tconn)
-		signInAnother = nodewith.NameStartingWith("Sign in another user").HasClass("Button")
+		powerButton   = nodewith.HasClass("PowerButtonContainer")
+		signInAnother = nodewith.NameStartingWith("Sign in another user").HasClass("AddUserButton")
 		multiSignIn   = nodewith.Name("Multiple sign-in").HasClass("Label")
 	)
 
@@ -129,8 +131,9 @@ func signInAll(ctx context.Context, tconn *chrome.TestConn, aboutToSignIn []chro
 		}
 
 		// The current session must be the last signed-in user.
-		userIcon := nodewith.NameContaining(currentUser).Ancestor(nodewith.HasClass("TopShortcutButtonContainer"))
+		userIcon := nodewith.NameContaining(currentUser).HasClass("MenuItemView")
 		if err := uiauto.Combine("sign in another user",
+			ui.LeftClick(powerButton),
 			ui.LeftClick(userIcon),
 			ui.LeftClick(signInAnother),
 			// A prompt of "Sign in another user" will show when signing in the first non-owner user and won't pop-up again after dismissing it.
@@ -143,11 +146,11 @@ func signInAll(ctx context.Context, tconn *chrome.TestConn, aboutToSignIn []chro
 			return errors.Wrap(err, "failed to wait for login screen")
 		}
 
-		if err := ui.LeftClick(nodewith.NameContaining(cred.User).HasClass("Button"))(ctx); err != nil {
+		if err := ui.LeftClick(nodewith.NameContaining(cred.User).HasClass("LoginUserView::TapButton"))(ctx); err != nil {
 			return errors.Wrap(err, "failed to select the account")
 		}
 
-		pwdInputField := nodewith.Name("Password for " + cred.User).HasClass("Textfield")
+		pwdInputField := nodewith.Name("Password for " + cred.User).HasClass("LoginPasswordView::LoginTextfield")
 		if err := uiauto.Combine("input password and sign in",
 			ui.WithTimeout(30*time.Second).LeftClickUntil(pwdInputField, ui.WithTimeout(5*time.Second).WaitUntilExists(pwdInputField.Focused())),
 			kb.TypeAction(cred.Pass),
@@ -182,7 +185,17 @@ func signOutAllAndWait(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 	defer sw.Close(ctx)
 
-	if err := uiauto.New(tconn).MouseMoveTo(nodewith.Name("Sign out all").HasClass("PillButton"), 0)(ctx); err != nil {
+	ui := uiauto.New(tconn)
+
+	powerButton := nodewith.HasClass("PowerButtonContainer")
+
+	if err := ui.LeftClick(powerButton)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on the powerButton")
+	}
+
+	signOutButton := nodewith.Name("Sign out")
+
+	if err := uiauto.New(tconn).MouseMoveTo(signOutButton, 0)(ctx); err != nil {
 		return errors.Wrap(err, "failed to move to the location of sign out button")
 	}
 
@@ -214,8 +227,8 @@ func signedOut(ctx context.Context, tconn *chrome.TestConn, creds []chrome.Creds
 
 	for _, user := range creds {
 		if err := uiauto.Combine("check the password field existed",
-			ui.LeftClick(nodewith.NameContaining(user.User).HasClass("Button")),
-			ui.WaitUntilExists(nodewith.Name("Password for "+user.User).HasClass("Textfield")),
+			ui.LeftClick(nodewith.NameContaining(user.User).HasClass("LoginUserView::TapButton")),
+			ui.WaitUntilExists(nodewith.Name("Password for "+user.User).HasClass("LoginPasswordView::LoginTextfield")),
 		)(ctx); err != nil {
 			return err
 		}
