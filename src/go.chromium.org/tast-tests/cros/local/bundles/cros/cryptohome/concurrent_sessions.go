@@ -5,9 +5,10 @@
 package cryptohome
 
 import (
-	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 	"context"
 	"time"
+
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
@@ -25,7 +26,7 @@ func init() {
 			"jadmanski@chromium.org",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
+		Attr:         []string{"group:mainline", "group:cryptohome", "group:hw_agnostic", "informational"},
 	})
 }
 

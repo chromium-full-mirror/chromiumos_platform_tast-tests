@@ -31,7 +31,7 @@ func init() {
 		Contacts:     []string{"cryptohome-core@google.com", "iby@chromium.org"},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
 		SoftwareDeps: []string{"chrome"},
-		Attr:         []string{"group:mainline"},
+		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		Pre:          chrome.LoggedIn(),
 		Params: []testing.Param{{
 			Name: "normal",

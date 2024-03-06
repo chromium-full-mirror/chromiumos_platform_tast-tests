@@ -41,7 +41,7 @@ func init() {
 			"jadmanski@chromium.org",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:mainline", "group:cryptohome", "informational"},
+		Attr:         []string{"group:mainline", "group:cryptohome", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Params: []testing.Param{{
 			Name: "legacy",
