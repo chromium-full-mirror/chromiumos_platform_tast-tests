@@ -15,9 +15,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/retry"
+	"go.chromium.org/tast-tests/cros/local/testenv"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
+
+type playStoreTestArgs struct {
+	preprod bool // whether to run against preprod versions of dependencies (default: false)
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -36,22 +41,32 @@ func init() {
 		SoftwareDeps: []string{"play_store", "chrome"},
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+			Val:               playStoreTestArgs{preprod: false},
 		}, {
 			Name:              "betty",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_container", "qemu"},
+			Val:               playStoreTestArgs{preprod: false},
 		}, {
 			Name:              "vm",
 			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "no_android_vm_t"},
+			Val:               playStoreTestArgs{preprod: false},
 		}, {
 			Name:              "x",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm", "no_qemu", "android_vm_t"},
+			Val:               playStoreTestArgs{preprod: false},
 		}, {
 			Name:              "betty_vm",
 			ExtraAttr:         []string{"informational"},
 			ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+			Val:               playStoreTestArgs{preprod: false},
+		}, {
+			Name:              "preprod",
+			ExtraAttr:         []string{"informational"},
+			ExtraSoftwareDeps: []string{"android_vm", "qemu"}, // Use betty_vm configuration for googleapis
+			Val:               playStoreTestArgs{preprod: true},
 		}},
 		Timeout: 15 * time.Minute,
 		VarDeps: []string{"ui.gaiaPoolDefault"},
@@ -87,6 +102,19 @@ func PlayStore(ctx context.Context, s *testing.State) {
 
 		if err := optin.PerformWithRetry(ctx, cr, 2 /*maxAttempts*/); err != nil {
 			return rl.Retry("optin to Play Store", err)
+		}
+
+		// Set up the test environment for external dependencies post opt-in.
+		// This will redirect *.google.com and *.googleapis.com to the preprod of Google frontend
+		// to see that PlayStore works with any changes coming in this environment.
+		if s.Param().(playStoreTestArgs).preprod {
+			env, err := testenv.NewPreprodEnv(ctx,
+				testenv.RedirectMap(arc.PassThroughPreprodGFE))
+			if err != nil {
+				return rl.Retry("set up the preprod env", err)
+			}
+			defer env.Close(cleanupCtx)
+			s.Log("Running testenv for external dependencies")
 		}
 
 		tconn, err := cr.TestAPIConn(ctx)
