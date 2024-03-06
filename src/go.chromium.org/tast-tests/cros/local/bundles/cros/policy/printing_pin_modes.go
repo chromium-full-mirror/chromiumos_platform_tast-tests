@@ -34,12 +34,13 @@ func init() {
 		},
 		// ChromeOS > Software > Commercial (Enterprise) > Printing
 		BugComponent: "b:1111614",
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
 		Attr: []string{
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		Timeout: 4 * time.Minute,
 		// PIN printing is enabled only on enrolled devices, thus we use fixtures with enrollment.
