@@ -49,7 +49,7 @@ func init() {
 			"chromeos-platform-power@google.com",
 		},
 		BugComponent: "b:1361410",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
 		Timeout:      4 * time.Minute,
 		// TODO(b/319036849): when the issues with these devices are resolved, remove parameterised
 		// versions of this test and also remove the hwdeps - this should be run on all devices
