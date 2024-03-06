@@ -553,6 +553,12 @@ func (c *cryptohomeBinary) getRecoverableKeyStores(ctx context.Context, username
 	return c.call(ctx, args...)
 }
 
+// lockRecoveryFactorUntilReboot returns the responses by calling "cryptohome --action=lock_factor_until_reboot".
+func (c *cryptohomeBinary) lockRecoveryFactorUntilReboot(ctx context.Context) ([]byte, error) {
+	args := []string{"--output-format=binary-protobuf", "--action=lock_factor_until_reboot", "--recovery_mediator_pub_key"}
+	return c.call(ctx, args...)
+}
+
 // isPinWeaverPkEstablishmentBlocked returns the responses by calling "cryptohome --action=is_pw_pk_establishment_blocked".
 func (c *cryptohomeBinary) isPinWeaverPkEstablishmentBlocked(ctx context.Context) ([]byte, error) {
 	args := []string{"--action=is_pw_pk_establishment_blocked"}

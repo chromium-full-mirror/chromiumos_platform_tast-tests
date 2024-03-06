@@ -19,7 +19,6 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-
 	cpb "go.chromium.org/chromiumos/system_api/cryptohome_proto"
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 
@@ -1072,6 +1071,14 @@ func (u *CryptohomeClient) UpdateRecoveryAuthFactor(
 	authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID string,
 	ensureFreshRecoveryID bool) error {
 	_, err := u.binary.updateRecoveryAuthFactor(ctx, authSessionID, label, mediatorPubKeyHex, userGaiaID, deviceUserID, ensureFreshRecoveryID)
+	return err
+}
+
+// Remove the flag file `/run/cryptohome/crd_detected_on_login_screen` after calling this function.
+// LockRecoveryFactorUntilReboot locks the recovery auth factor for all users for the authentication operation until system reboots.
+func (u *CryptohomeClient) LockRecoveryFactorUntilReboot(
+	ctx context.Context) error {
+	_, err := u.binary.lockRecoveryFactorUntilReboot(ctx)
 	return err
 }
 
