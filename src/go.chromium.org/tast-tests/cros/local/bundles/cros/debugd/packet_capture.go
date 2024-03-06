@@ -44,8 +44,9 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
 		Fixture:      fixture.ChromeEnrolledLoggedIn,
 		// Add two minutes to the timeout for network operations and notification wait time.
 		Timeout: chrome.EnrollmentAndLoginTimeout + 2*time.Minute,
