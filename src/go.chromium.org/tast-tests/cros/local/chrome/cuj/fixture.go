@@ -851,7 +851,6 @@ func init() {
 				chrome.ExtraArgs(webRTCEventLogCommandFlag),
 			},
 			bt:          browser.TypeAsh,
-			disableARC:  true,
 			docsBlocker: true,
 			enableBSM:   true,
 		},
