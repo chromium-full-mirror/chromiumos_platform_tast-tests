@@ -89,8 +89,8 @@ func ShutdownUsingUI(ctx context.Context, s *testing.State) {
 		var statusTray = "StatusAreaWidgetDelegate"
 		statusTrayFinder := &ui.Finder{
 			NodeWiths: []*ui.NodeWith{
-				{Value: &ui.NodeWith_HasClass{HasClass: statusTray}},
 				{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_PANE}},
+				{Value: &ui.NodeWith_HasClass{HasClass: statusTray}},
 			},
 		}
 		if _, err := uiautoSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: statusTrayFinder}); err != nil {
