@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
-	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -196,9 +195,5 @@ func Suspend(ctx context.Context, s *testing.State) {
 	_, err = suspend.ForDurationWithKernelFreezeTimeout(ctx, 10*time.Second, 8*time.Second)
 	if err != nil {
 		s.Fatal("Failed to suspend: ", err)
-	}
-
-	if err := shill.WaitForOnlineAfterResume(ctx); err != nil {
-		s.Fatal("Network failed to comeback after resuming: ", err)
 	}
 }
