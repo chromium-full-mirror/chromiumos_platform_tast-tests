@@ -603,3 +603,73 @@ func VerifyDockingPower(ctx context.Context, dut *dut.DUT, powerPath string) err
 	}
 	return nil
 }
+
+// FindDeviceSpeed returns the device speed by lsusb -t.
+func FindDeviceSpeed(ctx context.Context, dut *dut.DUT, fixtureID string) (string, error) {
+	if err := ControlFixture(ctx, fixtureID, "off"); err != nil {
+		return "", errors.Wrapf(err, "disconnect from %s", fixtureID)
+	}
+	lsusbInfo := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsusbInfoByte, err := dut.Conn().CommandContext(ctx, "lsusb", "-t").Output()
+		if err != nil {
+			return errors.Wrap(err, "execute lsusb -t command before connect fixture")
+		}
+		lsusbInfo = string(lsusbInfoByte)
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "failed to find the usb info")
+	}
+
+	if err := ControlFixture(ctx, fixtureID, "on"); err != nil {
+		return "", errors.Wrapf(err, "connect to %s", fixtureID)
+	}
+
+	lsusbInfoBefore := strings.Split(strings.TrimSpace(string(lsusbInfo)), "\n")
+	speed := ""
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		lsusbInfoByte, err := dut.Conn().CommandContext(ctx, "lsusb", "-t").Output()
+		if err != nil {
+			return errors.Wrap(err, "execute lsusb -t command after connect fixture")
+		}
+		lsusbInfoAfter := strings.Split(strings.TrimSpace(string(lsusbInfoByte)), "\n")
+		exists := make(map[string]struct{})
+		for _, v := range lsusbInfoBefore {
+			exists[v] = struct{}{}
+		}
+		var diff []string
+		for _, v := range lsusbInfoAfter {
+			if _, ok := exists[v]; !ok {
+				diff = append(diff, v)
+			}
+		}
+		if len(diff) == 0 {
+			return errors.New("did not find new device")
+		}
+		for _, v := range diff {
+			lastCommaIndex := strings.LastIndex(v, ",")
+			substring := v[lastCommaIndex+1:]
+			if speed != "" && speed != substring {
+				return errors.Errorf("find the wrong speed, got:%s want:%s", speed, substring)
+			}
+			speed = substring
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+		return "", errors.Wrap(err, "did not find new device speed")
+	}
+	return speed, nil
+}
+
+// VerifyDeviceSpeed verifies the device speed is the same.
+func VerifyDeviceSpeed(ctx context.Context, dut *dut.DUT, fixtureID, expectDeviceSpeed string) error {
+	speed, err := FindDeviceSpeed(ctx, dut, fixtureID)
+	if err != nil {
+		return errors.Wrap(err, "can't find the device speed")
+	}
+	if speed != expectDeviceSpeed {
+		return errors.Errorf("got:%s want:%s", speed, expectDeviceSpeed)
+	}
+	return nil
+}
