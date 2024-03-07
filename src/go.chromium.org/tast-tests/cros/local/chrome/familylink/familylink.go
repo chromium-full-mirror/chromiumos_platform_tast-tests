@@ -58,7 +58,7 @@ func AddEduSecondaryAccount(ctx context.Context, cr *chrome.Chrome, tconn *chrom
 
 	testing.ContextLog(ctx, "Launching the settings app")
 	addSchoolAccountButton := nodewith.Name("Add school account").Role(role.Button)
-	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "accountManager", ui.Exists(addSchoolAccountButton)); err != nil {
+	if _, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "osPeople", ui.Exists(addSchoolAccountButton)); err != nil {
 		return errors.Wrap(err, "failed to launch Account Manager page")
 	}
 
