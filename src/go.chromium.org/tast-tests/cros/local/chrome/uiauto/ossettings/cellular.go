@@ -379,6 +379,7 @@ func SelectPreRevampOtherAPN(ctx context.Context, tconn *chrome.TestConn, apn st
 
 	if err := uiauto.Combine("Select other menu item",
 		ui.WaitUntilExists(AccessPointDropdown.Focusable()),
+		ui.ScrollToVisible(AccessPointDropdown),
 		ui.LeftClick(AccessPointDropdown),
 		ui.WaitUntilExists(apnMenuItem),
 		ui.LeftClick(apnMenuItem),
