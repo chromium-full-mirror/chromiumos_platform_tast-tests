@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/gscdevboard/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware/ti50/fixture"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -18,7 +19,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:    GSCTPM,
 		Desc:    "Test TPM functionality of ti50 in remote environment(Andreiboard connected to devboardsvc host)",
-		Timeout: 30 * time.Second,
+		Timeout: 60 * time.Second,
 		Contacts: []string{
 			"cros-hwsec@google.com", // CrOS GSC Developers
 			"aluo@chromium.org",     // Test Author
@@ -46,7 +47,22 @@ func GSCTPM(ctx context.Context, s *testing.State) {
 	i := ti50.MustOpenCrOSImage(ctx, b, s)
 	defer i.Close(ctx)
 
-	tpmHandle := b.ResetAndTpmStartupForBus(ctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
+	// Record everything that is transmitted by SPI bus lines CLK/CS/MISO/MOSI, for manual inspection later.
+	gpioMonitor := b.GpioMonitorStart(
+		ctx,
+		ti50.Ti50SpiTpmCs,
+		ti50.Ti50SpiTpmSck,
+		ti50.Ti50SpiTpmMosi,
+		ti50.Ti50SpiTpmMiso)
+	// Store transcript of CLK/CS/MISO/MOSI events in .vcd format, to be reviewed in e.g. Pulseview.
+	defer func(ctx context.Context) {
+		events := b.GpioMonitorFinish(ctx, gpioMonitor)
+		gpioMonitor.Save(ctx, events, "spi.vcd")
+	}(ctx)
+
+	nctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+	tpmHandle := b.ResetAndTpmStartupForBus(nctx, i, bus, ti50.CcdSuzyQ, ti50.FfClamshell)
 
 	// Read boot mode as a simple check of vendor command.
 	bm, err := tpmHandle.TpmvGetBootMode()

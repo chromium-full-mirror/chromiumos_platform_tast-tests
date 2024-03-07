@@ -37,6 +37,19 @@ func GSCTPMSPICorners(ctx context.Context, s *testing.State) {
 
 	tpmHandle := b.ResetAndTpmStartupForBus(ctx, i, ti50.TpmBusSpi, ti50.CcdDisconnected, ti50.FfClamshell)
 
+	// Record everything that is transmitted by CLK/CS/MISO/MOSI lines, for manual inspection later.
+	gpioMonitor := b.GpioMonitorStart(
+		ctx,
+		ti50.Ti50SpiTpmCs,
+		ti50.Ti50SpiTpmSck,
+		ti50.Ti50SpiTpmMosi,
+		ti50.Ti50SpiTpmMiso)
+	// Store transcript of CLK/CS/MISO/MOSI events in .vcd format, to be reviewed in e.g. Pulseview.
+	defer func() {
+		events := b.GpioMonitorFinish(ctx, gpioMonitor)
+		gpioMonitor.Save(ctx, events, "tpm_spi_corners.vcd")
+	}()
+
 	// Perform irregular SPI TPM transaction, ask for content of status register, but never
 	// read the bytes.
 	_, err := b.OpenTitanToolCommand(ctx, "spi", "--bus", "TPM", "raw-write", "--hexdata", "C3D4001800")

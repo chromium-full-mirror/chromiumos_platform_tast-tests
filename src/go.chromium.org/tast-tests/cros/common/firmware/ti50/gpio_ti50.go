@@ -206,3 +206,15 @@ const (
 	// OpenTitanShield.
 	I2cPAC2Bus I2cBusName = "PAC2"
 )
+
+// GSC SPI TPM (Device mode) GPIO pins
+const (
+	// Ti50SpiTpmCs is SPI-DEV CS signal
+	Ti50SpiTpmCs GpioName = "SPI_TPM_CS"
+	// Ti50SpiTpmSck is SPI-DEV clock signal
+	Ti50SpiTpmSck GpioName = "SPI_TPM_SCK"
+	// Ti50SpiTpmMosi is SPI-DEV MOSI signal
+	Ti50SpiTpmMosi GpioName = "SPI_TPM_MOSI"
+	// Ti50SpiTpmMiso is SPI-DEV MISO signal
+	Ti50SpiTpmMiso GpioName = "SPI_TPM_MISO"
+)
