@@ -332,21 +332,23 @@ func ProbeDisplayInfo(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get display telemetry info: ", err)
 	}
 
+	edidPath := []string{"/sys/class/drm/card0-eDP-1/edid", "/sys/class/drm/card0-DSI-1/edid", "/sys/class/drm/card1-eDP-1/edid"}
 	var edid string
 	// The edid info could be empty, so it's possible that the edid-decode fails. We don't need to report these failures.
-	if b, err := testexec.CommandContext(ctx, "edid-decode", "/sys/class/drm/card0-eDP-1/edid").Output(testexec.DumpLogOnError); err == nil {
-		edid = string(b)
-	} else if b, err := testexec.CommandContext(ctx, "edid-decode", "/sys/class/drm/card0-DSI-1/edid").Output(testexec.DumpLogOnError); err == nil {
-		edid = string(b)
+	for _, path := range edidPath {
+		if b, err := testexec.CommandContext(ctx, "edid-decode", path).Output(testexec.DumpLogOnError); err == nil {
+			edid = string(b)
+			break
+		}
 	}
 
 	if edid != "" {
 		s.Log("EDID information: ", edid)
-
 		if err := verifyEmbeddedDisplayInfo(ctx, &display.EDP, edid); err != nil {
 			s.Fatal("Failed to validate embedded display info, err: ", err)
 		}
 	} else {
+		s.Log("Verify display info without EDID information")
 		if err := verifyEmbeddedDisplayInfoWithoutEdidInfo(ctx, &display.EDP); err != nil {
 			s.Fatal("Failed to validate embedded display info without edid info, err: ", err)
 		}
