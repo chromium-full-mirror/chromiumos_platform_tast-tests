@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verify new account addition from ARC account picker",
 		Contacts: []string{
 			"team-dent@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr:         []string{

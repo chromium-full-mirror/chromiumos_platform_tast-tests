@@ -33,7 +33,7 @@ func init() {
 		Desc:         "Verify that a secondary account can be added and removed from OS Settings",
 		Contacts: []string{
 			"team-dent@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr: []string{

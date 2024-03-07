@@ -27,7 +27,7 @@ func init() {
 		Name: "loggedInToChromeAndArc",
 		Desc: "Logged in using real Gaia account. ARC is booted with disabling sync flags. ArcAccountRestrictions feature is enabled",
 		Contacts: []string{
-			"anastasiian@chromium.org", "team-dent@google.com",
+			"emaamari@google.com", "team-dent@google.com",
 		},
 		Impl:            &accountManagerTestFixture{},
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,
@@ -41,7 +41,7 @@ func init() {
 		Name: "loggedInToLacros",
 		Desc: "Logged in using real Gaia account + with Lacros enabled. ARC is booted with disabling sync flags. ArcAccountRestrictions feature is enabled",
 		Contacts: []string{
-			"anastasiian@chromium.org", "team-dent@google.com",
+			"emaamari@google.com", "team-dent@google.com",
 		},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return lacrosfixt.NewConfig(lacrosfixt.ChromeOptions(
@@ -60,7 +60,7 @@ func init() {
 		Name: "loggedInToChromeAndArcWithLacros",
 		Desc: "Logged in using real Gaia account + with Lacros enabled. ARC is booted with disabling sync flags. ArcAccountRestrictions feature is enabled",
 		Contacts: []string{
-			"anastasiian@chromium.org", "team-dent@google.com",
+			"emaamari@google.com", "team-dent@google.com",
 		},
 		Impl:            &accountManagerTestFixture{isLacros: true},
 		SetUpTimeout:    chrome.GAIALoginTimeout + optin.OptinTimeout + arc.BootTimeout + 2*time.Minute,

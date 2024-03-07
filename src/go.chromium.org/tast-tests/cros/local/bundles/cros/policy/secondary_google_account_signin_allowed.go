@@ -31,7 +31,7 @@ func init() {
 		Contacts: []string{
 			"team-dent@google.com",
 			"sinhak@google.com",
-			"anastasiian@google.com",
+			"emaamari@google.com",
 			"alexanderhartl@google.com", // Test author
 		},
 		BugComponent: "b:1279804",

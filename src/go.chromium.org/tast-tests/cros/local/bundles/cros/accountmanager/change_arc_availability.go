@@ -26,7 +26,7 @@ func init() {
 		Desc:         "Verify that ARC availability can be changed in OS Settings",
 		Contacts: []string{
 			"team-dent@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr: []string{

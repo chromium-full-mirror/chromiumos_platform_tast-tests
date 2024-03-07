@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verify that a secondary account can be added from One Google Bar",
 		Contacts: []string{
 			"team-dent@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr:         []string{

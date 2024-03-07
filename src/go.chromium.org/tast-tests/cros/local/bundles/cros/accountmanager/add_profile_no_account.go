@@ -31,7 +31,7 @@ func init() {
 		Desc:         "Addition of a secondary signed-out lacros profile",
 		Contacts: []string{
 			"team-dent@google.com",
-			"anastasiian@chromium.org",
+			"emaamari@google.com",
 		},
 		BugComponent: "b:1279804", // ChromeOS > Software > Commercial (Enterprise) > Identity > Account Manager
 		Attr: []string{
