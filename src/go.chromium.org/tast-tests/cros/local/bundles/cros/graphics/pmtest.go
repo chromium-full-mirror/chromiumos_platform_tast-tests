@@ -81,8 +81,15 @@ func Pmtest(ctx context.Context, s *testing.State) {
 	params := s.Param().(pmTestParam)
 	mode := params.pmMode
 
-	suspendMode := graphics.GetSuspendState(ctx)
-	s.Log("Target suspend state: ", suspendMode)
+	origSuspendMode := graphics.GetSuspendState(ctx)
+	s.Log("Original suspend state: ", origSuspendMode)
+	defer graphics.SetSuspendState(ctx, origSuspendMode)
+
+	if err := graphics.SetSuspendState(ctx, graphics.SuspendS3); err != nil {
+		s.Fatal("Failed to set to suspend to S3")
+	}
+	s.Log("Target suspend state: ", graphics.SuspendS3)
+
 	inList := func(str graphics.PmTestMode, list []graphics.PmTestMode) bool {
 		for _, l := range list {
 			if str == l {
@@ -90,11 +97,6 @@ func Pmtest(ctx context.Context, s *testing.State) {
 			}
 		}
 		return false
-	}
-	// pm_test processors and core doesn't support S2idle(S0ix).
-	if inList(mode, []graphics.PmTestMode{graphics.PmTestProcessors, graphics.PmTestCore}) && suspendMode == graphics.SuspendS0ix {
-		s.Logf("pm_test %q doesn't support %q. Skipping the test", mode, suspendMode)
-		return
 	}
 	// Check if mode is supported.
 	if !inList(mode, origPmMode.Available) {
