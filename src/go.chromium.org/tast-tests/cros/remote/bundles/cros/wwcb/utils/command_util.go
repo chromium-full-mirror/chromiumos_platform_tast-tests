@@ -727,3 +727,12 @@ func FindUSBConnectStatus(ctx context.Context, dut *dut.DUT, dockingPort string)
 	}
 	return "USB3", nil
 }
+
+// FindEthernetSpeed returns the ethernet speed.
+func FindEthernetSpeed(ctx context.Context, dut *dut.DUT, eth string) (string, error) {
+	out, err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("ethtool %s | grep Speed", eth)).Output(exec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "check the ethernet speed")
+	}
+	return strings.TrimSpace(strings.Replace(string(out), "Speed: ", "", -1)), nil
+}
