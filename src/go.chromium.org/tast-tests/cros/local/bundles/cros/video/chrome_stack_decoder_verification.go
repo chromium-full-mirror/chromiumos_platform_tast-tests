@@ -254,6 +254,9 @@ var av110BitFilmGrainFiles = []string{
 var h264InvalidBitstreams = []string{
 	"test_vectors/h264/files_from_bugs/b_234651916_big_buck_bunny_artifacts_rk3399.h264",
 	"test_vectors/h264/files_from_bugs/b_184041918_Webex_out_of_order_h264_frames.h264",
+	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264",
+	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264",
+	"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264",
 }
 
 var h264Files = map[string][]string{
@@ -1378,48 +1381,6 @@ func init() {
 				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"}, "h264_files_from_bugs_276358257"),
 				Val: chromeStackDecoderVerificationTestParam{
 					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_276358257__amd_gpu_gen3_lockup.h264"},
-					validatorType:   decoding.MD5,
-					mustFail:        false,
-					enabledFeatures: []string{},
-				},
-			},
-			{
-				Name:              "h264_files_from_bugs_277849540_1",
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"}),
-				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"}, "h264_files_from_bugs_277849540_1"),
-				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_16x16.h264"},
-					validatorType:   decoding.MD5,
-					mustFail:        false,
-					enabledFeatures: []string{},
-				},
-			},
-			{
-				Name:              "h264_files_from_bugs_277849540_2",
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"}),
-				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"}, "h264_files_from_bugs_277849540_2"),
-				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_4x4.h264"},
-					validatorType:   decoding.MD5,
-					mustFail:        false,
-					enabledFeatures: []string{},
-				},
-			},
-			{
-				Name:              "h264_files_from_bugs_277849540_3",
-				ExtraAttr:         []string{"group:graphics", "graphics_video", "graphics_perbuild", "graphics_video_chromestackdecoding"},
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipGPUFamily("rogue")),
-				ExtraSoftwareDeps: []string{caps.HWDecodeH264, "proprietary_codecs"},
-				ExtraData:         appendJSONFiles([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"}),
-				Timeout:           calculateTestTimeout([]string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"}, "h264_files_from_bugs_277849540_3"),
-				Val: chromeStackDecoderVerificationTestParam{
-					videoFiles:      []string{"test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8.h264"},
 					validatorType:   decoding.MD5,
 					mustFail:        false,
 					enabledFeatures: []string{},
