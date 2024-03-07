@@ -673,3 +673,57 @@ func VerifyDeviceSpeed(ctx context.Context, dut *dut.DUT, fixtureID, expectDevic
 	}
 	return nil
 }
+
+// FindDockingConnectPort returns the docking connect port information.
+func FindDockingConnectPort(ctx context.Context, dut *dut.DUT, dockingID string) (string, error) {
+	if err := ControlFixture(ctx, dockingID, "off"); err != nil {
+		return "", errors.Wrap(err, "failed to connect to docking")
+	}
+	usbStatus, err := dut.Conn().CommandContext(ctx, "ectool", "usbpdmuxinfo").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "execute ectool usbpdmuxinfo")
+	}
+	usbStatusBefore := strings.Split(strings.TrimSpace(string(usbStatus)), "\n")
+	if err := ControlFixture(ctx, dockingID, "on"); err != nil {
+		return "", errors.Wrap(err, "failed to connect to docking")
+	}
+	usbStatus, err = dut.Conn().CommandContext(ctx, "ectool", "usbpdmuxinfo").Output()
+	if err != nil {
+		return "", errors.Wrap(err, "execute ectool usbpdmuxinfo after connect to docking")
+	}
+	usbStatusAfter := strings.Split(strings.TrimSpace(string(usbStatus)), "\n")
+	exists := make(map[string]struct{})
+	for _, v := range usbStatusBefore {
+		exists[v] = struct{}{}
+	}
+	var diff []string
+	for _, v := range usbStatusAfter {
+		if _, ok := exists[v]; !ok {
+			diff = append(diff, v)
+		}
+	}
+	if len(diff) == 0 {
+		return "", errors.New("does not find docking connect status")
+	}
+	index := strings.Index(diff[0], ":")
+	return diff[0][:index], nil
+}
+
+// FindUSBConnectStatus returns the usb connect status.
+func FindUSBConnectStatus(ctx context.Context, dut *dut.DUT, dockingPort string) (string, error) {
+	usbStatus, err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("ectool usbpdmuxinfo | grep '%s'", dockingPort)).Output(exec.DumpLogOnError)
+	if err != nil {
+		return "", errors.Wrap(err, "execute ectool usbpdmuxinfo")
+	}
+
+	dockingStatus := strings.Split(string(usbStatus), " ")
+	TBT := strings.Replace(dockingStatus[len(dockingStatus)-2], "TBT=", "", -1)
+	USB4 := strings.Replace(dockingStatus[len(dockingStatus)-1], "USB4=", "", -1)
+	if USB4 == "1" {
+		return "USB4/TBT4", nil
+	}
+	if TBT == "1" {
+		return "TBT3", nil
+	}
+	return "USB3", nil
+}
