@@ -113,6 +113,7 @@ func matchTargetDomains(ctx context.Context, sess *driver.Session, fullDomain, u
 		defer conn.Close()
 		content := -1
 		if err := conn.Eval(ctx, loginBanner, &content); err != nil {
+			testing.ContextLogf(ctx, "Could not find domain %q in the GAIA banner", fullDomain)
 			return false
 		}
 		return content == 1

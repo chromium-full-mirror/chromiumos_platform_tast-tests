@@ -101,7 +101,18 @@ func waitForSingleGAIAWebView(ctx context.Context, sess *driver.Session, targetM
 		if targets, err := sess.FindTargets(ctx, targetMatcher); err != nil {
 			return err
 		} else if len(targets) != 1 {
-			return errors.Errorf("got %d GAIA targets; want 1", len(targets))
+			allTargets, allTargetsErr := sess.FindTargets(ctx, func(t *driver.Target) bool { return true })
+			if allTargetsErr != nil {
+				return errors.Errorf("got %d GAIA targets; want 1. Failed to get all targets: %v", len(targets), allTargetsErr)
+			}
+
+			var allTargetDetails []string
+			for _, t := range allTargets {
+				details := fmt.Sprintf("{ TargetID: %q, Title: %q, URL: %q }", t.TargetID, t.Title, t.URL)
+				allTargetDetails = append(allTargetDetails, details)
+			}
+
+			return errors.Errorf("got %d GAIA targets; want 1. All targets: %v", len(targets), allTargetDetails)
 		} else {
 			target = targets[0]
 			return nil
