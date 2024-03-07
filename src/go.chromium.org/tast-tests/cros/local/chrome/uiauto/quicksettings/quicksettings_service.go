@@ -105,6 +105,9 @@ func (s *Service) ToggleOption(ctx context.Context, req *pb.ToggleOptionRequest)
 
 			return &emptypb.Empty{}, ToggleOption(ctx, tconn, toggleButton, req.GetEnabled())
 
+		case pb.ToggleOptionRequest_Hotspot:
+			return &emptypb.Empty{}, ToggleOption(ctx, tconn, HotspotDetailedViewToggle, req.GetEnabled())
+
 		default:
 			return nil, errors.New("not supported toggle option")
 		}

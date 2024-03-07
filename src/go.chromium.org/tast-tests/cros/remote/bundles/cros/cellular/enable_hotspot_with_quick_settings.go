@@ -120,6 +120,14 @@ func EnableHotspotWithQuickSettings(ctx context.Context, s *testing.State) {
 	if _, err := quicksettingsSvc.NavigateToHotspotDetailedView(ctx, &emptypb.Empty{}); err != nil {
 		s.Fatal("Failed to open hotspot detailed page: ", err)
 	}
+
+	if _, err := quicksettingsSvc.ToggleOption(ctx, &quicksettings.ToggleOptionRequest{
+		ToggleButton: quicksettings.ToggleOptionRequest_Hotspot,
+		Enabled:      true,
+	}); err != nil {
+		s.Fatal("Failed to turn on Hotspot: ", err)
+	}
+
 	if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: hotspotutil.NoDeviceConnectedMessage}); err != nil {
 		s.Fatal("Failed to verify no devices connected message in hotspot detailed page: ", err)
 	}
