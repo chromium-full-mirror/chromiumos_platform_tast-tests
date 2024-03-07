@@ -205,37 +205,59 @@ func (h *UIHelper) SendMessage(ctx context.Context, number, message string) erro
 
 // ValidateMessage - validates sms received.
 func (h *UIHelper) ValidateMessage(ctx context.Context, messageSent string) error {
-
-	// check message content.
-	notification := nodewith.Role(role.Window).ClassName("ash/message_center/MessagePopup")
-
-	// check notification window.
-	if err := h.UI.WithTimeout(1 * time.Minute).WaitUntilExists(notification)(ctx); err != nil {
-		return errors.Wrap(err, "failed to see sms notification dialog")
-	}
-
-	testing.ContextLog(ctx, "notification details:", notification)
-	alertDialog := nodewith.Role(role.AlertDialog).ClassName("MessagePopupView").Onscreen()
-
-	// Read number and sms message and compare and close dialog.
-	smsDetails, err := h.UI.Info(ctx, alertDialog)
+	// Keyboard to input key inputs.
+	kb, err := input.Keyboard(ctx)
 	if err != nil {
-		return errors.Wrap(err, "failed to see sms notification dialog content")
+		return errors.Wrap(err, "failed to get keyboard")
 	}
+	defer kb.Close(ctx)
 
-	testing.ContextLog(ctx, "alert dialog data: ", smsDetails)
-	strPattern := regexp.MustCompile(`\s+`)
-	smsReceived := strPattern.ReplaceAllString(smsDetails.Name, " ")
-	smsSent := strPattern.ReplaceAllString(messageSent, " ")
+	// Poll max 2 minutes to check intended SMS received.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// check message content.
+		notification := nodewith.Role(role.Window).ClassName("ash/message_center/MessagePopup")
 
-	testing.ContextLog(ctx, "smsReceived: ", smsReceived)
-	testing.ContextLog(ctx, "smsSent: ", smsSent)
-	if strings.Contains(smsReceived, smsSent) {
-		testing.ContextLog(ctx, "success message received")
-		return nil
+		// check for notification window.
+		if err := h.UI.Exists(notification)(ctx); err != nil {
+			return errors.Wrap(err, "failed to find sms notification dialog")
+		}
+
+		alertDialog := nodewith.Role(role.AlertDialog).ClassName("MessagePopupView").Onscreen().First()
+
+		// Read number and sms message to compare.
+		smsDetails, err := h.UI.Info(ctx, alertDialog)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to see sms notification dialog content"))
+		}
+
+		testing.ContextLog(ctx, "alert dialog data: ", smsDetails)
+		strPattern := regexp.MustCompile(`\s+`)
+		smsReceived := strPattern.ReplaceAllString(smsDetails.Name, " ")
+		smsSent := strPattern.ReplaceAllString(messageSent, " ")
+
+		testing.ContextLog(ctx, "smsReceived: ", smsReceived)
+		testing.ContextLog(ctx, "smsSent: ", smsSent)
+		if strings.Contains(smsReceived, smsSent) {
+			testing.ContextLog(ctx, "success message received")
+			return nil
+		}
+
+		// Click on alert dialog to close.
+		if err := uiauto.Combine("Click on alert dialog",
+			h.UI.WithTimeout(1*time.Second).WaitUntilExists(alertDialog.First()),
+			h.UIHandler.Click(alertDialog.First()),
+			kb.AccelAction("Ctrl+X"),
+		)(ctx); err != nil {
+			faillog.DumpUITreeWithScreenshotWithTestAPIOnErrorToContextOutDir(ctx, func() bool { return true }, h.Tconn, "cellular_sms")
+			return testing.PollBreak(errors.Wrap(err, "failed to click on notification  dialog"))
+		}
+		return errors.New("notification does not contain sent sms")
+	}, &testing.PollOptions{
+		Timeout:  2 * time.Minute,
+		Interval: 1 * time.Second}); err != nil {
+		return err
 	}
-
-	return errors.Wrap(err, "notification does not contain sent sms")
+	return nil
 }
 
 // ValidateSuppressedMessage validates that the network log reports a suppressed text message.
