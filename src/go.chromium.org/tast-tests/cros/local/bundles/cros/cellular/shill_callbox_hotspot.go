@@ -16,9 +16,6 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-// callboxHotspotTestProfileName is the profile we create and use for cellular tethering tests.
-const callboxHotspotTestProfileName = "test"
-
 type shillCallboxHotspotTestParam struct {
 	ModbOverrideProto string
 	// Expected APN name for the bearer of type DEFAULT when tethering is enabled, if any.
@@ -169,10 +166,11 @@ func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
 	}
 	defer deferCleanUp()
 
-	errs := helper.ResetShill(ctx)
+	deferCleanUpResetShill, errs := helper.ResetShillAndAddFakeUserProfile(ctx)
 	if errs != nil {
 		s.Fatal("Failed to reset shill: ", errs)
 	}
+	defer deferCleanUpResetShill()
 
 	// Wait until registered to start a connection attempt with a small timeout.
 	if err := helper.WaitForModemRegisteredAfterReset(ctx, 20*time.Second); err != nil {
@@ -189,15 +187,6 @@ func ShillCallboxHotspot(ctx context.Context, s *testing.State) {
 	if err := helper.Manager.SetExperimentalTetheringFunctionality(ctx, true); err != nil {
 		s.Fatal("Unable to set ExperimentalTetheringFunctionality: ", err)
 	}
-
-	if _, err := helper.Manager.CreateFakeUserProfile(ctx, callboxHotspotTestProfileName); err != nil {
-		s.Fatalf("Failed to create fake profile %q", callboxHotspotTestProfileName)
-	}
-	defer func(ctx context.Context) {
-		if err := helper.Manager.RemoveFakeUserProfile(ctx, callboxHotspotTestProfileName); err != nil {
-			s.Fatalf("Failed to remove profile %q", callboxHotspotTestProfileName)
-		}
-	}(ctx)
 
 	testing.ContextLog(ctx, "Configure tethering")
 	if err := helper.Manager.ConfigureTethering(ctx, serviceProps); err != nil {

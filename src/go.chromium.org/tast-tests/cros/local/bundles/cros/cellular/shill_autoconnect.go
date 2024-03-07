@@ -24,7 +24,7 @@ func init() {
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_run_isolated"},
 		Fixture:        "cellular",
-		Timeout:        3 * time.Minute,
+		Timeout:        2 * time.Minute,
 	})
 }
 
@@ -35,9 +35,11 @@ func ShillAutoconnect(ctx context.Context, s *testing.State) {
 
 	// Cellular will only auto-connect *once* when Manager.ScanAndConnectToBestServices is called,
 	// so restart shill to ensure that auto-connect will happen.
-	if err := helper.ResetShill(ctx); err != nil {
-		s.Fatal("Failed to reset shill")
+	deferCleanUpResetShill, errs := helper.ResetShillAndAddFakeUserProfile(ctx)
+	if errs != nil {
+		s.Fatal("Failed to reset shill: ", errs)
 	}
+	defer deferCleanUpResetShill()
 
 	service, err := helper.FindServiceForDevice(ctx)
 	if err != nil {

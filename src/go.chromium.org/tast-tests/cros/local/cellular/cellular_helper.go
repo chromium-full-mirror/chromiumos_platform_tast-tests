@@ -801,6 +801,34 @@ func (h *Helper) ResetShillAndSetProfile(ctx context.Context, path string) []err
 	return h.resetShill(ctx, path)
 }
 
+// ResetShillAndAddFakeUserProfile restarts shill, and adds a fake user profile.
+func (h *Helper) ResetShillAndAddFakeUserProfile(ctx context.Context) (func(), []error) {
+	if errs := h.resetShill(ctx, ""); errs != nil {
+		return nil, errs
+	}
+	deferRemoveFakeUser, err := h.CreateFakeUserProfile(ctx)
+	if err != nil {
+		return nil, []error{errors.Wrap(err, "failed to create fake user profile")}
+	}
+	return deferRemoveFakeUser, nil
+
+}
+
+// CreateFakeUserProfile clears all shill profiles and adds a fake user profile in shill.
+// The function returns a closure to delete the profile.
+func (h *Helper) CreateFakeUserProfile(ctx context.Context) (func(), error) {
+	const profileName = "cellularTest"
+	testing.ContextLog(ctx, "Create fake user profile")
+	if _, err := h.Manager.CreateFakeUserProfile(ctx, profileName); err != nil {
+		return nil, errors.Wrapf(err, "failed to create fake profile %q", profileName)
+	}
+	return func() {
+		if err := h.Manager.RemoveFakeUserProfile(ctx, profileName); err != nil {
+			testing.ContextLogf(ctx, "Failed to remove profile %q: %s", profileName, err)
+		}
+	}, nil
+}
+
 // CaptureDBusLogs - Capture DBus system logs
 // Return nil if DBus log collection succeeds, else return error.
 func (h *Helper) CaptureDBusLogs(ctx context.Context) error {
