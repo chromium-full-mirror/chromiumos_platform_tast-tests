@@ -123,7 +123,7 @@ func AllowScreenLock(ctx context.Context, s *testing.State) {
 			}
 
 			// Check if the power menu button is shown.
-			if err := ui.WaitUntilExists(nodewith.Name("Power menu").ClassName("Button"))(ctx); err != nil {
+			if err := ui.WaitUntilExists(quicksettings.PowerMenuButton)(ctx); err != nil {
 				s.Error("Failed to check the power menu button: ", err)
 			}
 
