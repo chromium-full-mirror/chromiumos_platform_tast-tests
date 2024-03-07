@@ -87,7 +87,7 @@ func Connector(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get connectors: ", err)
 	}
-	defer graphics.DumpModetestOnError(ctx, s.OutDir(), s.HasError)
+	defer graphics.DumpModetestOnError(ctx, "-c", s.OutDir(), s.HasError)
 
 	if err := checkUniqueEncoders(ctx, connectors); err != nil {
 		s.Error("Failed to have check unique encoders: ", err)

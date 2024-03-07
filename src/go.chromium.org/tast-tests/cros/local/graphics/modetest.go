@@ -142,7 +142,7 @@ func GetModeTestPlanes(ctx context.Context) ([][]uint64, error) {
 }
 
 // DumpModetestOnError dumps the output of modetest to a file if the test failed.
-func DumpModetestOnError(ctx context.Context, outDir string, hasError func() bool) {
+func DumpModetestOnError(ctx context.Context, options, outDir string, hasError func() bool) {
 	if !hasError() {
 		return
 	}
@@ -154,7 +154,7 @@ func DumpModetestOnError(ctx context.Context, outDir string, hasError func() boo
 	}
 	defer f.Close()
 
-	cmd := testexec.CommandContext(ctx, "modetest", "-c")
+	cmd := testexec.CommandContext(ctx, "modetest", options)
 	cmd.Stdout, cmd.Stderr = f, f
 	if err := cmd.Run(); err != nil {
 		testing.ContextLog(ctx, "Failed to run modetest: ", err)
