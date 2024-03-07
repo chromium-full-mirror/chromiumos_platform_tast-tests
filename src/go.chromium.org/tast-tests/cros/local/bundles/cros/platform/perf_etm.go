@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -35,6 +36,10 @@ func init() {
 		// ETM is the optional HW implemented only on Qualcomm SoCs
 		HardwareDeps: hwdep.D(hwdep.Platform("trogdor", "herobrine")),
 		Attr:         []string{"group:mainline"},
+		// At the time of writing, this test hits timeouts in the CQ ~5% of the time with
+		// the default timeout of 1m30s. The error message recommends a timeout of at least
+		// 4m10s, so set the timeout 5mins.
+		Timeout: 5 * time.Minute,
 	})
 }
 
