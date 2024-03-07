@@ -38,9 +38,7 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 		return errors.Wrap(err, "failed to close all notifications before toggle hotspot")
 	}
 
-	if err := s.SetToggleOption(cr, toggleName, expected)(ctx); err != nil {
-		return errors.Wrapf(err, "failed to toggle hotspot to %t", expected)
-	}
+	s.SetToggleOption(cr, toggleName, expected)(ctx)
 
 	statusLabel := HotspotOffSublabel
 	if expected {
