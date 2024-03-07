@@ -25,8 +25,8 @@ func init() {
 		Func:         VerifyMidDNSARC,
 		Desc:         "Verify that a mid DNS server redirects hosts for ARC VM",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
-		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{},  // manual
+		BugComponent: "b:1528139", // ChromeOS > EngProd > Software > Trust & Safety > UFO Testing
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		SoftwareDeps: []string{"chrome", "arc"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
@@ -62,7 +62,7 @@ func VerifyMidDNSARC(ctx context.Context, s *testing.State) {
 
 	// Check that the example.com is properly redirected to 1.1.1.1 by the DNS server using `dig` command.
 	if err := middns.VerifyQuery(ctx,
-		"example.com", middns.AllOf("example.com", "1.1.1.1", d.IP), 15*time.Second); err != nil {
+		"example.com", middns.ByHostAndIP("example.com", "1.1.1.1"), 15*time.Second); err != nil {
 		s.Fatal("DNS redirection verification failed: ", err)
 	}
 	s.Log("Host redirection succeeded on cros")

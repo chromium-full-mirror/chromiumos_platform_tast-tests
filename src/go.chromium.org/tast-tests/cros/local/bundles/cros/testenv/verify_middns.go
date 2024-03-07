@@ -18,8 +18,8 @@ func init() {
 		Func:         VerifyMidDNS,
 		Desc:         "Verify that middle-layer DNS redirects hosts using dnsmasq",
 		Contacts:     []string{"cros-ufo-testing@google.com", "hyungtaekim@chromium.org"},
-		BugComponent: "b:1034522", // ChromeOS > Test > Harness > Tast > Examples
-		Attr:         []string{},  // manual
+		BugComponent: "b:1528139", // ChromeOS > EngProd > Software > Trust & Safety > UFO Testing
+		Attr:         []string{"group:mainline", "group:hw_agnostic", "informational"},
 		Timeout:      2 * time.Minute,
 	})
 }
@@ -60,11 +60,9 @@ func VerifyMidDNS(ctx context.Context, s *testing.State) {
 		{"specific.example.com", "2.2.2.2", true},
 		{"www.example.com", "1.1.1.1", false},
 	} {
-		var m middns.QueryMatcher
-		if tc.shouldEqual {
-			m = middns.AllOf(tc.host, tc.ip, d.IP)
-		} else {
-			m = middns.OnlyHostNotServer(tc.host, tc.ip, d.IP)
+		m := middns.ByHostAndIP(tc.host, tc.ip)
+		if !tc.shouldEqual {
+			m = middns.Not(m)
 		}
 		if err := middns.VerifyQuery(ctx, tc.host, m, 15*time.Second); err != nil {
 			s.Fatalf("Failed to redirect for host: %v, %v", tc.host, err)
@@ -78,7 +76,7 @@ func VerifyMidDNS(ctx context.Context, s *testing.State) {
 
 	// Verify that the example.com should not go to 1.1.1.1 and talk to the DNS server once it has stopped.
 	if err := middns.VerifyQuery(ctx,
-		"example.com", middns.NoneOf("example.com", "1.1.1.1", d.IP), 15*time.Second); err != nil {
+		"example.com", middns.Not(middns.ByHostAndIP("example.com", "1.1.1.1")), 15*time.Second); err != nil {
 		s.Fatalf("Failed to stop redirect for host: %v, %v", "example.com", err)
 	}
 }

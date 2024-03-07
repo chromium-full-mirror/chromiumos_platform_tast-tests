@@ -19,33 +19,12 @@ import (
 // QueryMatcher is a matcher that checks certain query info in `dig` output.
 type QueryMatcher func(out string) bool
 
-// ByServer returns whether the DNS server has the IP in dig output.
-func ByServer(dnsIP string) QueryMatcher {
-	return func(out string) bool {
-		re := regexp.MustCompile(
-			fmt.Sprintf(`SERVER:\s+%s\b`, regexp.QuoteMeta(dnsIP)))
-		return re.MatchString(out)
-	}
-}
-
 // ByHostAndIP returns whether the given hostname and IP are found in the dig answer section.
 func ByHostAndIP(host, ip string) QueryMatcher {
 	return func(out string) bool {
 		re := regexp.MustCompile(
 			fmt.Sprintf(`%s[^\n]+\b%s\b`, regexp.QuoteMeta(host), regexp.QuoteMeta(ip)))
 		return re.MatchString(out)
-	}
-}
-
-// And joins all given matchers.
-func And(ms ...QueryMatcher) QueryMatcher {
-	return func(out string) bool {
-		for _, m := range ms {
-			if !m(out) {
-				return false
-			}
-		}
-		return true
 	}
 }
 
@@ -56,19 +35,6 @@ func Not(m QueryMatcher) QueryMatcher {
 	}
 }
 
-// AllOf, OnlyHostNotServer and NoneOf return a matcher that satisfies a certain condition with the given hostname, IP and DNS IP address.
-var (
-	AllOf = func(hostname, hostIP, dnsIP string) QueryMatcher {
-		return And(ByHostAndIP(hostname, hostIP), ByServer(dnsIP))
-	}
-	OnlyHostNotServer = func(hostname, hostIP, dnsIP string) QueryMatcher {
-		return And(Not(ByHostAndIP(hostname, hostIP)), ByServer(dnsIP))
-	}
-	NoneOf = func(hostname, hostIP, dnsIP string) QueryMatcher {
-		return And(Not(ByHostAndIP(hostname, hostIP)), Not(ByServer(dnsIP)))
-	}
-)
-
 // digMatch runs `dig` and check if the output satisfies the given matcher.
 func digMatch(ctx context.Context, host string, m QueryMatcher) error {
 	out, err := testexec.CommandContext(ctx, "dig", host).Output()
@@ -76,7 +42,7 @@ func digMatch(ctx context.Context, host string, m QueryMatcher) error {
 		return errors.Wrap(err, "failed to run dig")
 	}
 	if !m(string(out)) {
-		return errors.Errorf("failed to look up host: %v, out: %v", host, string(out))
+		return errors.Errorf("failed to dig match host: %v", host)
 	}
 	return nil
 }
