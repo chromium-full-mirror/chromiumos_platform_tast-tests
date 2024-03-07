@@ -24,12 +24,21 @@ import (
 const (
 	// traceCmdEventsVarName is the name of the variable to specify events for trace-cmd to collect.
 	traceCmdEventsVarName = "power.SuspendPerf.traceCmdEvents"
+
+	// enablePerfettoVarName is the name of the variable to enable Perfetto trace.
+	enablePerfettoVarName = "power.SuspendPerf.enablePerfetto"
 )
 
 var traceCmdEventsVar = testing.RegisterVarString(
 	traceCmdEventsVarName,
 	"",
 	"Comma-separated events to enable trace-cmd and to ask it to record. (e.g. 'syscalls,sched:*')",
+)
+
+var enablePerfettoVar = testing.RegisterVarString(
+	enablePerfettoVarName,
+	"",
+	"Boolean value to enable Perfetto to record. Use 'yes or 'no'",
 )
 
 type testArgsForSuspendPerf struct {
@@ -48,7 +57,7 @@ func init() {
 		BugComponent: "b:256693104",
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
-		ServiceDeps:  []string{"tast.cros.power.SuspendPerfService", "tast.cros.tracing.TraceCmdService"},
+		ServiceDeps:  []string{"tast.cros.power.SuspendPerfService", "tast.cros.tracing.TraceCmdService", "tast.cros.tracing.PerfettoTraceService"},
 		// (40 sec for histograms + 10 + 60 sec suspend/resume) * 5 times
 		Timeout: 10 * time.Minute,
 		Params: []testing.Param{{
@@ -107,9 +116,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 	seconds := defaultSuspendSeconds
 
 	for i := 0; i < args.numSuspend; i++ {
-		if err := startTracing(ctx, s, cl); err != nil {
-			s.Log("Failed to start tracing, but this is ignorable: ", err)
-		}
+		tok := startTracing(ctx, s, cl)
 
 		// Suspend and resume
 		s.Logf("Suspending DUT for %d seconds", seconds)
@@ -138,7 +145,7 @@ func SuspendPerf(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Could not observe histogram update: ", err)
 		}
-		saveTraceData(ctx, s, cl, i)
+		saveTraceData(ctx, s, cl, tok, i)
 	}
 	newer := prev
 
@@ -183,7 +190,11 @@ func shouldRunTraceCmd() bool {
 	return traceCmdEventsVar.Value() != ""
 }
 
-// initTracing creates an instance in DUT
+func shouldRunPerfetto() bool {
+	return enablePerfettoVar.Value() == "yes"
+}
+
+// initTracing creates an trace-cmd instance in DUT.
 func initTracing(ctx context.Context, cl *rpc.Client) error {
 	if !shouldRunTraceCmd() {
 		return nil
@@ -197,8 +208,8 @@ func initTracing(ctx context.Context, cl *rpc.Client) error {
 	return err
 }
 
-// startTracing starts tracing in DUT
-func startTracing(ctx context.Context, s *testing.State, cl *rpc.Client) error {
+// startTraceCmd attaches to trace-cmd and start it.
+func startTraceCmd(ctx context.Context, cl *rpc.Client) error {
 	if !shouldRunTraceCmd() {
 		return nil
 	}
@@ -208,8 +219,34 @@ func startTracing(ctx context.Context, s *testing.State, cl *rpc.Client) error {
 	return nil
 }
 
-// saveTraceData fetches the trace data from DUT and save it in s.OutDir().
-func saveTraceData(ctx context.Context, s *testing.State, cl *rpc.Client, i int) error {
+// startPerfetto starts perfetto and detach from it.
+func startPerfetto(ctx context.Context, cl *rpc.Client) (*tracing.RemoteSessionToken, error) {
+	if !shouldRunPerfetto() {
+		return nil, nil
+	}
+	sess, err := tracing.StartRemoteSession(ctx, cl, tracing.WithConfigTextData(perfettoConfigData), tracing.InBackground())
+	if err != nil {
+		return nil, err
+	}
+	tok := sess.Token()
+	return tok, nil
+}
+
+// startTracing starts tracing in DUT.
+func startTracing(ctx context.Context, s *testing.State, cl *rpc.Client) *tracing.RemoteSessionToken {
+	if err := startTraceCmd(ctx, cl); err != nil {
+		s.Log("Failed to start trace-cmd, but this is ignorable: ", err)
+	}
+
+	tok, err := startPerfetto(ctx, cl)
+	if err != nil {
+		s.Log("Failed to start perfetto, but this is ignorable: ", err)
+	}
+	return tok
+}
+
+// saveTraceCmd fetches the trace data from DUT and save it in s.OutDir().
+func saveTraceCmd(ctx context.Context, s *testing.State, cl *rpc.Client, i int) error {
 	if !shouldRunTraceCmd() {
 		return nil
 	}
@@ -221,16 +258,38 @@ func saveTraceData(ctx context.Context, s *testing.State, cl *rpc.Client, i int)
 		return errors.Wrap(err, "failed to copy the data file from DUT")
 	}
 	s.Logf("Save trace data into %q", dest)
-
 	return nil
+}
+
+func savePerfetto(ctx context.Context, s *testing.State, cl *rpc.Client, tok *tracing.RemoteSessionToken, i int) error {
+	if tok == nil {
+		return nil
+	}
+	dest := fmt.Sprintf("%s/perfetto-%d.trace", s.OutDir(), i)
+	if err := tracing.SaveRemoteSessionTraceData(ctx, cl, tok,
+		func(src string) error {
+			return s.DUT().GetFile(ctx, src, dest)
+		}); err != nil {
+		return errors.Wrap(err, "failed to copy the perfetto data file from DUT")
+	}
+	s.Logf("Save perfetto trace data into %q", dest)
+	return nil
+}
+
+// saveTraceData fetches the trace data from DUT and save it in s.OutDir().
+func saveTraceData(ctx context.Context, s *testing.State, cl *rpc.Client, tok *tracing.RemoteSessionToken, i int) {
+	if err := saveTraceCmd(ctx, s, cl, i); err != nil {
+		s.Log("Ignorable: Failed to save trace-cmd data: ", err)
+	}
+
+	if err := savePerfetto(ctx, s, cl, tok, i); err != nil {
+		s.Log("Ignorable: Failed to save perfetto data: ", err)
+	}
 }
 
 func cleanupTracing(ctx context.Context, s *testing.State, cl *rpc.Client) error {
 	if !shouldRunTraceCmd() {
 		return nil
-	}
-	if cl == nil {
-		return errors.Errorf("failed to cleaning up a trace instance: %q", defaultInstanceName)
 	}
 	s.Logf("Cleaning up a trace instance: %s", defaultInstanceName)
 	return tracing.CleanupRemoteInstance(ctx, cl, defaultInstanceName)
@@ -325,3 +384,106 @@ func writeMetricsFromHistogram(hist *histogram.Histogram, pv *perf.Values) {
 		}, p100)
 	}
 }
+
+const (
+	// Perfetto configuration data, generated by https://ui.perfetto.dev/#!/record
+	perfettoConfigData = `
+buffers: {
+	size_kb: 63488
+	fill_policy: DISCARD
+}
+buffers: {
+	size_kb: 2048
+	fill_policy: DISCARD
+}
+data_sources: {
+	config {
+		name: "android.packages_list"
+		target_buffer: 1
+	}
+}
+data_sources: {
+	config {
+		name: "linux.process_stats"
+		target_buffer: 1
+		process_stats_config {
+			scan_all_processes_on_start: true
+			proc_stats_poll_ms: 1000
+		}
+	}
+}
+data_sources: {
+	config {
+		name: "track_event"
+		chrome_config {
+			trace_config: "{\"record_mode\":\"record-continuously\",\"included_categories\":[\"power\",\"disabled-by-default-power\",\"log\",\"toplevel\",\"cc\",\"gpu\",\"viz\",\"ui\",\"views\"],\"excluded_categories\":[\"*\"],\"memory_dump_config\":{}}"
+			privacy_filtering_enabled: false
+			client_priority: USER_INITIATED
+		}
+		track_event_config {
+			disabled_categories: "*"
+			enabled_categories: "power"
+			enabled_categories: "disabled-by-default-power"
+			enabled_categories: "log"
+			enabled_categories: "toplevel"
+			enabled_categories: "cc"
+			enabled_categories: "gpu"
+			enabled_categories: "viz"
+			enabled_categories: "ui"
+			enabled_categories: "views"
+			enabled_categories: "__metadata"
+			timestamp_unit_multiplier: 1000
+			filter_debug_annotations: false
+			enable_thread_time_sampling: true
+			filter_dynamic_event_names: false
+		}
+	}
+}
+data_sources: {
+	config {
+		name: "linux.sys_stats"
+		sys_stats_config {
+			psi_period_ms: 100
+		}
+	}
+}
+data_sources: {
+	config {
+		name: "linux.sys_stats"
+		sys_stats_config {
+			vmstat_period_ms: 1000
+			stat_period_ms: 1000
+			stat_counters: STAT_CPU_TIMES
+			stat_counters: STAT_FORK_COUNT
+		}
+	}
+}
+data_sources: {
+	config {
+		name: "linux.ftrace"
+		ftrace_config {
+			ftrace_events: "sched/sched_switch"
+			ftrace_events: "power/suspend_resume"
+			ftrace_events: "sched/sched_wakeup"
+			ftrace_events: "sched/sched_wakeup_new"
+			ftrace_events: "sched/sched_waking"
+			ftrace_events: "regulator/regulator_set_voltage"
+			ftrace_events: "regulator/regulator_set_voltage_complete"
+			ftrace_events: "power/clock_enable"
+			ftrace_events: "power/clock_disable"
+			ftrace_events: "power/clock_set_rate"
+			ftrace_events: "sched/sched_process_exit"
+			ftrace_events: "sched/sched_process_free"
+			ftrace_events: "task/task_newtask"
+			ftrace_events: "task/task_rename"
+			ftrace_events: "irq/*"
+			ftrace_events: "timer/*"
+		}
+	}
+}
+duration_ms: 60000
+flush_period_ms: 30000
+incremental_state_config {
+	clear_period_ms: 5000
+}`
+)
