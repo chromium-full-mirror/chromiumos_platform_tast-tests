@@ -623,28 +623,6 @@ func init() {
 	})
 
 	fixtureConfig = DefaultBootedFixtureConfig()
-	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-		return []chrome.Option{
-			chrome.ARCEnabled(),
-			chrome.UnRestrictARCCPU(),
-			chrome.EnableFeatures("PasspointARCSupport"),
-		}, nil
-	}
-	testing.AddFixture(&testing.Fixture{
-		Name: "arcBootedWithPasspoint",
-		Desc: "ARC is booted with kPasspointARCSupport feature enabled",
-		Contacts: []string{
-			"jasongustaman@google.com",
-			"cros-networking@google.com",
-		},
-		Impl:            NewArcBootedFixture(fixtureConfig),
-		SetUpTimeout:    chrome.LoginTimeout + BootTimeout + ui.StartTimeout,
-		ResetTimeout:    ResetTimeout,
-		PostTestTimeout: PostTestTimeout,
-		TearDownTimeout: ResetTimeout,
-	})
-
-	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.BootTimeout = BootTimeout + swap.UnrestrictedTimeout
 	fixtureConfig.ArcvmConfig = "SKIP_SWAP_POLICY=true"
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {

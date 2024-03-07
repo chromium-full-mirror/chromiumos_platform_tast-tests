@@ -79,7 +79,7 @@ func init() {
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "shillSimulatedWiFiWithArcBooted",
-		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Shill is configured correctly",
+		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures ARC is booted",
 		Contacts: []string{
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
@@ -98,8 +98,8 @@ func init() {
 		}),
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name: "shillSimulatedWiFiWithArcBootedWithPasspoint",
-		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Shill is configured correctly",
+		Name: "shillSimulatedWiFiWithChromeLoggedIn",
+		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Chrome is logged in",
 		Contacts: []string{
 			"damiendejean@google.com", // fixture maintainer
 			"cros-networking@google.com",
@@ -107,27 +107,7 @@ func init() {
 		SetUpTimeout:    hwsimTimeout,
 		TearDownTimeout: hwsimTimeout,
 		ResetTimeout:    hwsimTimeout,
-		Parent:          "arcBootedWithPasspoint",
-		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
-			preData := s.ParentValue().(*arc.PreData)
-			return ShillSimulatedWiFi{
-				Chrome:   preData.Chrome,
-				ARC:      preData.ARC,
-				UIDevice: preData.UIDevice,
-			}
-		}),
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "shillSimulatedWiFiWithChromeLoggedInWithPasspoint",
-		Desc: "A fixture that loads the Wi-Fi hardware simulator and ensures Shill is configured correctly",
-		Contacts: []string{
-			"damiendejean@google.com", // fixture maintainer
-			"cros-networking@google.com",
-		},
-		SetUpTimeout:    hwsimTimeout,
-		TearDownTimeout: hwsimTimeout,
-		ResetTimeout:    hwsimTimeout,
-		Parent:          "chromeLoggedInWithPasspoint",
+		Parent:          "chromeLoggedIn",
 		Impl: NewShillSimulatedWiFiFixture(func(s *testing.FixtState) ShillSimulatedWiFi {
 			return ShillSimulatedWiFi{
 				Chrome: s.ParentValue().(chrome.HasChrome).Chrome(),
