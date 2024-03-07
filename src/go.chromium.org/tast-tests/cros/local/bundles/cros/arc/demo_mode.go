@@ -93,6 +93,10 @@ func DemoMode(ctx context.Context, s *testing.State) {
 	}
 	defer arc.Close(clearupCtx)
 
+	defer arc.DumpUIHierarchyOnError(clearupCtx, s.OutDir(), func() bool {
+		return s.HasError()
+	})
+
 	if err := apps.Launch(ctx, tconn, apps.PlayStore.ID); err != nil {
 		s.Fatal("Failed to launch Play Store: ", err)
 	}
@@ -120,9 +124,15 @@ func DemoMode(ctx context.Context, s *testing.State) {
 
 	playstore.OpenAppPage(ctx, arc, testPackage)
 
-	// Ensure that the "Install" button appears and is disabled.
-	opButton := d.Object(ui.ClassName("android.widget.Button"), ui.TextMatches(installButtonText), ui.Enabled(false))
-	if err := opButton.WaitForExists(ctx, 20*time.Second); err != nil {
-		s.Fatal("Failed to find greyed Install button in Play Store: ", err)
+	installButton, err := playstore.FindActionButton(ctx, d, "Install", 20*time.Second)
+	if err != nil {
+		s.Fatal("Failed to find Install button in Play Store: ", err)
+	}
+	clickable, err := installButton.IsClickable(ctx)
+	if err != nil {
+		s.Fatal("Failed to check whether Install button in Play Store is clickable: ", err)
+	}
+	if clickable {
+		s.Fatal("Install button in Play Store isn't grayed out and unclickable")
 	}
 }
