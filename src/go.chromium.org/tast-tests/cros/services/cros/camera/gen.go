@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 //go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. cca_service.proto
+//go:generate protoc -I . --go_out=plugins=grpc:../../../../../.. enum_service.proto
 
 // Package camera provides all camera related types compiled from protobuf.
 package camera

@@ -8,8 +8,8 @@ import (
 	"context"
 	"path/filepath"
 
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
-	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -26,16 +26,12 @@ func init() {
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 		// TODO(b/243048705): skip the test on faulty flash. Remove the first three entries when resolved.
 		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnCameraUSBModule("0408:3028", "0408:4021", "05c8:03f4")),
-		Fixture:      "chromeNotLoggedIn",
+		Fixture:      fixture.CameraConnectorReady,
 	})
 }
 
 func PlatformServiceSmoke(ctx context.Context, s *testing.State) {
 	const exec = "cros_camera_connector_test"
-
-	if err := testutil.WaitForCameraSocket(ctx); err != nil {
-		s.Fatal("Failed to wait for Camera Socket: ", err)
-	}
 
 	t := gtest.New(exec,
 		gtest.Logfile(filepath.Join(s.OutDir(), "gtest.log")),

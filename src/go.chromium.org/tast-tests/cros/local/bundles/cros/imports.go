@@ -156,6 +156,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/wmp"
 	_ "go.chromium.org/tast-tests/cros/local/bundles/cros/wwcb"
 
+	_ "go.chromium.org/tast-tests/cros/local/camera/service" // import fixture for camera service tests
 	// import fixtures for arc game performance testing.
 	// imports kioskLoggedIn fixtures. It is not referenced by tests as it
 	// returns FixtData type from policyutil/fixtures.

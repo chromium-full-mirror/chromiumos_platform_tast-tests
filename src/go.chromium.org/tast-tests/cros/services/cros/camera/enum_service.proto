@@ -1,0 +1,20 @@
+// Copyright 2024 The ChromiumOS Authors
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+syntax = "proto3";
+
+package tast.cros.camera;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "go.chromium.org/tast-tests/cros/services/cros/camera";
+
+// EnumService provides RPC methods to be used by camera remote tests.
+service EnumService {
+  // CheckBuiltinCamera checks whether built-in cameras are all enumerated.
+  // This call returns an error if at least one built-in camera was not
+  // enumerated. Otherwise, the error is nil.
+  rpc CheckBuiltinCamera(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+}
