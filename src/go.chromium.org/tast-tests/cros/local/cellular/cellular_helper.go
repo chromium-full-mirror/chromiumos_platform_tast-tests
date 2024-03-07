@@ -563,7 +563,9 @@ func (h *Helper) ConnectToServiceWithTimeout(ctx context.Context, service *shill
 		if err := service.Connect(ctx); err != nil {
 			return err
 		}
-		if err := service.WaitForConnectedOrError(ctx); err != nil {
+		waitCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
+		defer cancel()
+		if err := service.WaitForConnectedOrError(waitCtx); err != nil {
 			return err
 		}
 		return nil
