@@ -134,6 +134,7 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50RecoveryIn, nil)
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50RecoveryIn, ti50.GpioTi50PowerBtnL, nil)
+	verifyMinECPulseWidth(ctx, s, b)
 
 	verifyRMAKeySequence(ctx, s, b, i, ti50.GpioTi50RecoveryIn, boxEcResetGpioDelay)
 
@@ -184,6 +185,7 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50KsiRefresh, nil)
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50KsiRefresh, ti50.GpioTi50PowerBtnL, nil)
+	verifyMinECPulseWidth(ctx, s, b)
 
 	s.Log("Pushing GSC reset keys")
 	// Ensure that all GSC reset key combo keys are not being pushed yet
@@ -267,6 +269,7 @@ func ti50RBOXTablet(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	delay := tabletEcResetHoldDelay
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50PowerBtnL, ti50.GpioTi50VolUpIn, &delay)
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50VolUpIn, ti50.GpioTi50PowerBtnL, &delay)
+	verifyMinECPulseWidth(ctx, s, b)
 
 	// Ensure EC reset works when Volume Down is also pressed. This is the
 	// recovery key combo and needs to reset the EC as well.
@@ -500,6 +503,29 @@ func verifyPassthrough(ctx context.Context, s *testing.State, b utils.DevboardHe
 	b.GpioSet(ctx, from, false)
 	if b.GpioGet(ctx, to) != false {
 		s.Errorf("GSC should forward low from %s to %s", from, to)
+	}
+}
+
+// verifyMinECPulseWidth verifies that the EC_RESET_L pulse width is extended
+// to 10ms when an external source asserts it for less than 10ms.
+func verifyMinECPulseWidth(ctx context.Context, s *testing.State, b utils.DevboardHelper) {
+	// Send a short 1ms pulse on EC reset pin, and collect the value of EC reset
+	// during the entire bit bang operation
+	result := b.GpioBitbang(ctx, "1kHz", "101111111111111", true, ti50.GpioTi50EcRstL)
+	numAssertedEcReset := 0
+	for _, level := range result.All {
+		if !level[ti50.GpioTi50EcRstL] {
+			numAssertedEcReset++
+		}
+	}
+	// Allow some variance in the automated tests to ensure it is not flaky, but
+	// it might not be needed.
+	if numAssertedEcReset < 9 {
+		s.Errorf("EC_RESET_L not held long enough, only %dms", numAssertedEcReset)
+	} else if numAssertedEcReset > 11 {
+		s.Errorf("EC_RESET_L held too long, was %dms", numAssertedEcReset)
+	} else {
+		s.Logf("EC_RESET_L held for %dms", numAssertedEcReset)
 	}
 }
 
