@@ -74,45 +74,6 @@ func fullUserDomain(user string) (string, error) {
 	return m[1], nil
 }
 
-// findEnrollmentTargets returns the Gaia WebView targets, that are used to
-// help enrollment on the device.
-// Returns nil if none are found.
-func findEnrollmentTargets(ctx context.Context, sess *driver.Session, userDomain string) ([]*driver.Target, error) {
-	isGAIAWebView := func(t *driver.Target) bool {
-		return t.Type == "webview" && isGAIASignInURL(t.URL)
-	}
-
-	ts, err := sess.FindTargets(ctx, isGAIAWebView)
-	if err != nil {
-		return nil, err
-	}
-
-	// It's common for multiple targets to be returned.
-	// We want to run the command specifically on the "apps" target.
-	var targets []*driver.Target
-	for _, t := range ts {
-		u, err := url.Parse(t.URL)
-		if err != nil {
-			continue
-		}
-
-		q := u.Query()
-		clientID := q.Get("client_id")
-		managedDomain := q.Get("manageddomain")
-		flowName := q.Get("flowName")
-
-		if clientID != "" && managedDomain != "" && flowName != "" {
-			if strings.Contains(clientID, "apps.googleusercontent.com") &&
-				strings.Contains(managedDomain, userDomain) &&
-				strings.Contains(flowName, "SetupChromeOs") {
-				targets = append(targets, t)
-			}
-		}
-	}
-
-	return targets, nil
-}
-
 // matchTargetDomains returns a function that matches only the GAIA WebView
 // target for post-enrollment enterprise account sign in.
 // Used by test automation to distinguish between multiple GAIA webview
