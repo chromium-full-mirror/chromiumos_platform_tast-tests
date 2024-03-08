@@ -35,7 +35,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.apps.AppsService", "tast.cros.ui.AutomationService", "tast.cros.wwcb.DisplayService", "tast.cros.inputs.KeyboardService"},
 		Params: []testing.Param{
 			{
-				Name:      "smoke",
+				Name:      "fast",
 				ExtraAttr: []string{"pasit_fast"},
 			}},
 	})
