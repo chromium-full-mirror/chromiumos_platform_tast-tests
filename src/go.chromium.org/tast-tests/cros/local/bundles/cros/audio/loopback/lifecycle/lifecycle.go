@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -160,6 +161,8 @@ func (t *tester) Run(ctx context.Context, s *testing.State) {
 			s.Error("Capture raw -> wav convertion failed: ", err)
 		}
 	}
+
+	defer crastestclient.DumpAudioDiagnosticsOnError(ctx, s.OutDir(), s.HasError)
 
 	for _, c := range t.Checks {
 		c.Check(ctx, s, t)

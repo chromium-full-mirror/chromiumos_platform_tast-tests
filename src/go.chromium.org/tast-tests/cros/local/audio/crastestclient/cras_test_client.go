@@ -340,3 +340,13 @@ func DumpAudioDiagnostics(ctx context.Context, dir string) error {
 	cmd.Stdout = f
 	return cmd.Run()
 }
+
+// DumpAudioDiagnosticsOnError dumps audio diagnostics into the given dir,
+// when hasError is true.
+func DumpAudioDiagnosticsOnError(ctx context.Context, dir string, hasError func() bool) {
+	if !hasError() {
+		return
+	}
+
+	DumpAudioDiagnostics(ctx, dir)
+}
