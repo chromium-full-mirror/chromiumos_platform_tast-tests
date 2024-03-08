@@ -620,6 +620,8 @@ func (s *Server) StartChannelSwitch(ctx context.Context, csCount, csChannel int,
 			return testing.PollBreak(errors.Wrap(err, "failed to get the radio configuration"))
 		}
 		if chConfig.Number == csChannel {
+			// Update hostapd channel.
+			s.Config().Channel = csChannel
 			return nil
 		}
 		return errors.Errorf("failed to switch to the alternate channel %d", csChannel)
