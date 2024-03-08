@@ -142,13 +142,13 @@ func AutomaticCleanupCritical(ctx context.Context, s *testing.State) {
 			}
 
 			// Create users with contents to fill up disk space.
-			_, err = cleanup.CreateFilledUserHomedir(ctx, user1, password, "Downloads", homedirSize)
+			_, err = cleanup.CreateFilledUserHomedir(ctx, user1, password, "MyFiles/Downloads", homedirSize)
 			if err != nil {
 				s.Fatal("Failed to create user with content: ", err)
 			}
 			defer cryptohome.RemoveVault(ctx, user1)
 
-			fillFile2, err := cleanup.CreateFilledUserHomedir(ctx, user2, password, "Downloads", homedirSize)
+			fillFile2, err := cleanup.CreateFilledUserHomedir(ctx, user2, password, "MyFiles/Downloads", homedirSize)
 			if err != nil {
 				s.Fatal("Failed to create user with content: ", err)
 			}

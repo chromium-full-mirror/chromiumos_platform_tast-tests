@@ -74,13 +74,13 @@ func NoAccessToDownloads(ctx context.Context, s *testing.State) {
 
 	// Create a file in Downloads.
 	const fileName = "test.txt"
-	ownerID, err := cryptohome.UserHash(ctx, cr.NormalizedUser())
+	userPath, err := cryptohome.UserPath(ctx, cr.NormalizedUser())
 	if err != nil {
-		s.Fatal("Failed to get user hash: ", err)
+		s.Fatal("Failed to get user downloads path: ", err)
 	}
-	filePath := filepath.Join("/home/user", ownerID, "Downloads", fileName)
+	filePath := filepath.Join(userPath, "MyFiles", "Downloads", fileName)
 	if err := ioutil.WriteFile(filePath, []byte("teststring"), 0644); err != nil {
-		for _, dir := range []string{"/home/user", filepath.Join("/home/user", ownerID), filepath.Join("/home/user", ownerID, "Downloads")} {
+		for _, dir := range []string{userPath, filepath.Join(userPath, "MyFiles"), filepath.Join(userPath, "MyFiles", "Downloads")} {
 			if stat, err := os.Stat(dir); err == nil && stat.IsDir() {
 				s.Logf("%s exists", dir)
 			} else {

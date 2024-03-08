@@ -173,11 +173,11 @@ func PasspointARCDialog(ctx context.Context, s *testing.State) {
 	}
 
 	// Create Passpoint config file in "Downloads".
-	ownerID, err := cryptohome.UserHash(ctx, cr.NormalizedUser())
+	downloadsPath, err := cryptohome.DownloadsPath(ctx, cr.NormalizedUser())
 	if err != nil {
-		s.Fatal("Failed to get user hash: ", err)
+		s.Fatal("Failed to get user downloads path: ", err)
 	}
-	filePath := filepath.Join("/home/user", ownerID, "Downloads", fileName)
+	filePath := filepath.Join(downloadsPath, fileName)
 	if err := ioutil.WriteFile(filePath, []byte(config), 0644); err != nil {
 		s.Fatal("Failed to write Passpoint config: ", err)
 	}
