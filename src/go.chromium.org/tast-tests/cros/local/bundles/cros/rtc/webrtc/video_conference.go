@@ -63,6 +63,8 @@ type VCTestParams struct {
 	Trace bool
 	// If NoiseCancellation is true, enable input noise cancellation on the platform.
 	NoiseCancellation bool
+	// If StyleTransfer is true, enable input style transfer on the platform.
+	StyleTransfer bool
 	// BrowserType represents chrome browser type that the test runs with.
 	BrowserType browser.Type
 }
@@ -471,6 +473,9 @@ func setUpAudio(ctx context.Context, p VCTestParams) error {
 		return errors.Wrap(err, "cras.SetNoiseCancellationEnabled")
 	}
 
+	if err := cras.SetStyleTransferEnabled(ctx, p.StyleTransfer); err != nil {
+		return errors.Wrap(err, "cras.SetStyleTransferEnabled")
+	}
 	return nil
 }
 
