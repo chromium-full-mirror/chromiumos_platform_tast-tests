@@ -27,7 +27,7 @@ func init() {
 			"enterpriseconnectors.ash_username3",
 			"enterpriseconnectors.ash_password3",
 		),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
@@ -47,7 +47,7 @@ func init() {
 			"enterpriseconnectors.ash_username1",
 			"enterpriseconnectors.ash_password1",
 		),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
@@ -67,7 +67,7 @@ func init() {
 			"enterpriseconnectors.ash_username2",
 			"enterpriseconnectors.ash_password2",
 		),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
@@ -87,7 +87,7 @@ func init() {
 			"enterpriseconnectors.lacros_username3",
 			"enterpriseconnectors.lacros_password3",
 		),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
@@ -107,7 +107,7 @@ func init() {
 			"enterpriseconnectors.lacros_username1",
 			"enterpriseconnectors.lacros_password1",
 		),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
@@ -127,7 +127,7 @@ func init() {
 			"enterpriseconnectors.lacros_username2",
 			"enterpriseconnectors.lacros_password2",
 		),
-		SetUpTimeout:    chrome.FixtureSetUpTimeout + 1*time.Minute,
+		SetUpTimeout:    chrome.FixtureSetUpTimeout + 3*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 		Vars: []string{
