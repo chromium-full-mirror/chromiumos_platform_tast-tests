@@ -6,15 +6,9 @@ package power
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
-	"strings"
-	"time"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // Level describes the power level management to use.
@@ -75,33 +69,4 @@ func releaseKeepAwake(ctx context.Context, tconn *chrome.TestConn) error {
 	}
 
 	return nil
-}
-
-// SuspendAndResume calls powerd_dbus_suspend command to suspend the system
-// and lets it stay sleep for the given duration and then wake up.
-func SuspendAndResume(ctx context.Context, cr *chrome.Chrome, timeout time.Duration) error {
-	// Read wakeup count here to prevent suspend retries, which happens without
-	// user input.
-	wakeupCount, err := ioutil.ReadFile("/sys/power/wakeup_count")
-	if err != nil {
-		return errors.Wrap(err, "failed to read wakeup count before suspend")
-	}
-
-	timeoutSec := int(timeout.Round(time.Second).Seconds())
-	cmd := testexec.CommandContext(
-		ctx,
-		"powerd_dbus_suspend",
-		"--delay=0",
-		fmt.Sprintf("--wakeup_timeout=%d", timeoutSec),
-		fmt.Sprintf("--wakeup_count=%s", strings.Trim(string(wakeupCount), "\n")),
-		"--timeout=30",
-	)
-	testing.ContextLogf(ctx, "Suspend DUT for %d seconds: %s", timeoutSec, cmd.Args)
-
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "powerd_dbus_suspend failed to properly suspend")
-	}
-
-	testing.ContextLog(ctx, "DUT resumes from suspend")
-	return cr.Reconnect(ctx)
 }
