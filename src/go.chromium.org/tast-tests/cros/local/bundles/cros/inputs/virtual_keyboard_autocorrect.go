@@ -37,7 +37,12 @@ func init() {
 		Desc:         "Checks that virtual keyboard can perform typing with autocorrects",
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:hw_agnostic"},
+		Attr:         []string{
+			// Disabled by TORA.  See: b/311054997
+			//	"group:mainline",
+			//	"group:input-tools",
+			//	"group:hw_agnostic"
+		},
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
 		SearchFlags: []*testing.StringPair{
 			{
