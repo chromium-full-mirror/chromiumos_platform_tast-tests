@@ -20,11 +20,12 @@ const (
 	// battDisconnectMinimum is how long AC must be removed before battery
 	// disconnect is asserted
 	battDisconnectMinimum = 5 * time.Second
+	// deepSleepDelay the maximum amount of time we should wait in a test for
+	// deep sleep. This is 10 seconds longer than max deep sleep delay.
+	deepSleepDelay = 70 * time.Second
 )
 
 const (
-	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
-	boxMaxDeepSleepDelay = time.Minute
 	// boxEcResetGpioDelay is the amount of time the EC reset key combo should be
 	// held for box form factor.
 	boxEcResetGpioDelay = 200 * time.Millisecond
@@ -43,8 +44,6 @@ const (
 const (
 	// clamshellGscResetHoldDelay is how long GSC reset keys must be held to trigger GSC reset
 	clamshellGscResetHoldDelay = 10 * time.Second
-	// deepSleepDelay the maximum amount of time we should wait in a test for deep sleep
-	clamshellMaxDeepSleepDelay = time.Minute
 	// clamshellEcResetGpioDelay is the amount of time the EC reset key combo
 	// should be  held for clamshell form factor.
 	clamshellEcResetGpioDelay = 200 * time.Millisecond
@@ -148,14 +147,14 @@ func ti50RBOXBox(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 
 	s.Log("Waiting for deep sleep")
-	if err := i.WaitUntilDeepSleep(ctx, boxMaxDeepSleepDelay); err != nil {
+	if err := i.WaitUntilDeepSleep(ctx, deepSleepDelay); err != nil {
 		s.Fatal("GSC dut not enter deep sleep as precondition for next test: ", err)
 	}
 	s.Log("GSC in deep sleep")
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50RecoveryIn, ti50.GpioTi50PowerBtnL, nil)
 
 	s.Log("Waiting for deep sleep")
-	if err := i.WaitUntilDeepSleep(ctx, boxMaxDeepSleepDelay); err != nil {
+	if err := i.WaitUntilDeepSleep(ctx, deepSleepDelay); err != nil {
 		s.Fatal("GSC dut not enter deep sleep as precondition for next test: ", err)
 	}
 	s.Log("GSC in deep sleep")
@@ -231,14 +230,14 @@ func ti50RBOXClamshell(ctx context.Context, s *testing.State, b utils.DevboardHe
 	b.GpioApplyStrap(ctx, ti50.CcdDisconnected)
 
 	s.Log("Waiting for deep sleep")
-	if err := i.WaitUntilDeepSleep(ctx, clamshellMaxDeepSleepDelay); err != nil {
+	if err := i.WaitUntilDeepSleep(ctx, deepSleepDelay); err != nil {
 		s.Fatal("GSC dut not enter deep sleep as precondition for next test: ", err)
 	}
 	s.Log("GSC in deep sleep")
 	verifyEcResetWithKeysInOrder(ctx, s, b, ti50.GpioTi50KsiRefresh, ti50.GpioTi50PowerBtnL, nil)
 
 	s.Log("Waiting for deep sleep")
-	if err := i.WaitUntilDeepSleep(ctx, clamshellMaxDeepSleepDelay); err != nil {
+	if err := i.WaitUntilDeepSleep(ctx, deepSleepDelay); err != nil {
 		s.Fatal("GSC dut not enter deep sleep as precondition for next test: ", err)
 	}
 	s.Log("GSC in deep sleep")
@@ -621,4 +620,7 @@ func verifyRMAKeySequence(ctx context.Context, s *testing.State, b utils.Devboar
 	if !mode.IsV2Code() {
 		s.Error("AP RO verification status should be V2 code: ", mode)
 	}
+
+	// Turn AP back off for further testing to allow deep sleeping
+	b.GpioSet(ctx, ti50.GpioTi50PltRstL, false)
 }
