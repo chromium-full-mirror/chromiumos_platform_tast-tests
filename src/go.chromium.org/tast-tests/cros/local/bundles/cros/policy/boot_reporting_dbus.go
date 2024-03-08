@@ -34,7 +34,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the boot reporting telemetry is being populated and sent correctly",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
+			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

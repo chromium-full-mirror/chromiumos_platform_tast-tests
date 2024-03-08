@@ -34,7 +34,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that the display information is being reported as expected",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
+			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

@@ -28,7 +28,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that heartbeat events are being sent to missive when the flag is enabled",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
+			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

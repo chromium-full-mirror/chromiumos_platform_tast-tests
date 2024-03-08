@@ -34,8 +34,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify heartbeat reporting functionality",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
-			"albertojuarez@google.com",
+			"cros-reporting-alerts+tast@google.com",
+			"albertojuarez@google.com", // Test maintainer
 			"rzakarian@google.com",
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

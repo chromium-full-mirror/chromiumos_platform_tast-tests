@@ -26,7 +26,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verifies that missive and enqueue work after chrome shuts down and restarts, kill chrome, check missive, start chrome, check missive, enqueue",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
+			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author
 		},
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

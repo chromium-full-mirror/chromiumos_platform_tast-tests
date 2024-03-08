@@ -25,7 +25,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify heartbeat events with flag enabled using the fake reporting service",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
+			"cros-reporting-alerts+tast@google.com",
 			"albertojuarez@google.com", // Test author
 		},
 		Timeout:      3 * time.Minute,

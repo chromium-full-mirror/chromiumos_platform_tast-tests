@@ -34,7 +34,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify uploaded fatal crash events are reported when policy ReportDeviceCrashReportInfo is on",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
+			"cros-reporting-alerts+tast@google.com",
+			"albertojuarez@google.com", // Test maintainer
 		},
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

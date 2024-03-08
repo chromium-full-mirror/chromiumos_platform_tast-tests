@@ -34,8 +34,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify runtime counters telemetry is reported when DeviceReportRuntimeCounters is on",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
-			"albertojuarez@google.com",
+			"cros-reporting-alerts+tast@google.com",
+			"albertojuarez@google.com", // Test maintainer
 		},
 		Timeout:      6 * time.Minute,
 		BugComponent: "b:817866", // Chrome OS Server Projects > Enterprise Management > Reporting

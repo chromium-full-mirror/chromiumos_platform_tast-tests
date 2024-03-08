@@ -34,7 +34,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify network telemetry is reported when ReportDeviceNetworkStatus is enabled",
 		Contacts: []string{
-			"cros-reporting-team@google.com",
+			"cros-reporting-alerts+tast@google.com",
 			"anasr@google.com", // Test author
 		},
 		Timeout:      10 * time.Minute,
