@@ -80,13 +80,13 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 
 	// Set up the test environment to run tests against the preprod of Google frontend if requested.
 	if s.Param().(oobeTestArgs).preprod {
-		envOpts := []testenv.Option{
+		env, err := testenv.NewPreprodEnv(ctx,
 			testenv.RedirectMap(map[string]string{
-				"google-prod": "gfe-preprod",
+				"google-prod":     "gfe-preprod",
+				"googleapis-prod": "gfe-preprod",
 			}),
 			testenv.PortalDetection(false), // Disable portal detection that may conflict with a mid DNS server during network validation.
-		}
-		env, err := testenv.NewPreprodEnv(ctx, envOpts...)
+		)
 		if err != nil {
 			s.Fatal("Failed to init the preprod env: ", err)
 		}
