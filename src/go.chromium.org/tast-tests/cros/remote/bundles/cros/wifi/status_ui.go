@@ -300,7 +300,7 @@ func (s *osSettingsWifiPageTest) checkTextAndScanningIndicator(ctx context.Conte
 
 	// Checking the text.
 	if _, err := s.settingsSvc.EvalJSWithShadowPiercer(ctx, &ossettings.EvalJSWithShadowPiercerRequest{
-		Expression: checkTextJSExpr(queryElementJSExpr("div#onOff", ""), expectedText),
+		Expression: checkTextJSExpr(queryElementJSExpr(".primary-toggle", ""), expectedText),
 	}); err != nil {
 		return errors.Wrap(err, "failed to check the status label of Wi-Fi")
 	}
