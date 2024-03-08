@@ -25,20 +25,19 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           DisconnectFromNetwork,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify that the user has a way of disconnecting from the current network on a Chromebook",
+		Func:         DisconnectFromNetwork,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that the user has a way of disconnecting from the current network on a Chromebook",
 		Contacts: []string{
-			// TODO(b/311444590): Enable the following contacts after the test is stabled.
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"cj.tsai@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
-		BugComponent: "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		BugComponent:   "b:1131912", // ChromeOS > Software > System Services > Connectivity > WiFi
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell", "wificell_e2e"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			wificell.BrowserChromeServiceName,
