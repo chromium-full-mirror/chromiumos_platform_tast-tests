@@ -206,7 +206,10 @@ func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{
 			cred := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
 
 			// To use the same user as certs are installed for.
-			chromeOpts = append(chromeOpts, chrome.FakeLogin(cred))
+			chromeOpts = append(chromeOpts,
+				chrome.FakeLogin(cred),
+				chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
+			)
 		}
 		if f.useARC {
 			chromeOpts = append(chromeOpts, chrome.ARCEnabled())

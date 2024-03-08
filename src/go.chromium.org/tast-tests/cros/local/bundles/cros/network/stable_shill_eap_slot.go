@@ -99,6 +99,7 @@ func StableShillEAPSlot(ctx context.Context, s *testing.State) {
 		ctx,
 		chrome.KeepState(),     // to avoid resetings TPM
 		chrome.FakeLogin(cred), // to use the same user as certs are installed for
+		chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
 	)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)

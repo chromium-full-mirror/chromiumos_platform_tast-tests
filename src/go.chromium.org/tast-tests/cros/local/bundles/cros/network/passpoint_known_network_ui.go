@@ -109,6 +109,7 @@ func PasspointKnownNetworkUI(ctx context.Context, s *testing.State) {
 		chrome.KeepState(),     // to avoid resetting TPM
 		chrome.FakeLogin(cred), // to use the same user as certs are installed for
 		chrome.EnableFeatures("PasspointSettings"),
+		chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
 	)
 	if err != nil {
 		s.Fatal("Failed to login: ", err)

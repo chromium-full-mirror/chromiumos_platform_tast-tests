@@ -231,6 +231,7 @@ func chromeLogin(ctx context.Context) error {
 		ctx,
 		chrome.KeepState(),     // to avoid resetting TPM
 		chrome.FakeLogin(cred), // to use the same user as certs are installed for
+		chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
 	)
 	if err != nil {
 		return err
