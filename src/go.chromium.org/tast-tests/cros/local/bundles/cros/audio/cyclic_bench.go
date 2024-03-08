@@ -65,7 +65,7 @@ const (
 	// crasClientPriority indicates the rt-priority of cras client.
 	crasClientPriority = 10
 	// defaultStressPriority indicates the default rt-priority of stress threads.
-	defaultStressPriority = 20
+	defaultStressPriority = 8
 	// defaultInterval is the default interval used in cyclictest.
 	defaultInterval = 10000 * time.Microsecond
 	// defaultLoops is the default number of loops tested in cyclictest.
@@ -168,7 +168,7 @@ func init() {
 				},
 			},
 			{
-				Name: "rr12_1thread_10ms_stress_rr20_2workers_per_cpu",
+				Name: "rr12_1thread_10ms_stress_rr8_2workers_per_cpu",
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
