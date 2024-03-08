@@ -64,7 +64,7 @@ func init() {
 			Val:               playStoreTestArgs{preprod: false},
 		}, {
 			Name:              "preprod",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"android_vm", "qemu"}, // Use betty_vm configuration for googleapis
 			Val:               playStoreTestArgs{preprod: true},
 		}},
@@ -114,7 +114,6 @@ func PlayStore(ctx context.Context, s *testing.State) {
 				return rl.Retry("set up the preprod env", err)
 			}
 			defer env.Close(cleanupCtx)
-			s.Log("Running testenv for external dependencies")
 		}
 
 		tconn, err := cr.TestAPIConn(ctx)

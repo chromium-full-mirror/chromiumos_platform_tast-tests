@@ -11,8 +11,14 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/testenv"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
+
+type optinTestArgs struct {
+	preprod bool // whether to run against preprod versions of dependencies (default: false)
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -38,16 +44,25 @@ func init() {
 			{
 				ExtraAttr:         []string{"group:cq-minimal"},
 				ExtraSoftwareDeps: []string{"android_container"},
+				Val:               optinTestArgs{preprod: false},
 			},
 			{
 				Name:              "vm",
 				ExtraAttr:         []string{"group:cq-minimal"},
 				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t"},
+				Val:               optinTestArgs{preprod: false},
 			},
 			{
 				Name:              "x",
-				ExtraAttr:         []string{"group:mainline", "informational"},
+				ExtraAttr:         []string{"informational"},
 				ExtraSoftwareDeps: []string{"android_vm_t"},
+				Val:               optinTestArgs{preprod: false},
+			},
+			{
+				Name:              "preprod",
+				ExtraAttr:         []string{"group:hw_agnostic", "informational"},
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				Val:               optinTestArgs{preprod: true},
 			}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
 	})
@@ -62,13 +77,27 @@ func Optin(ctx context.Context, s *testing.State) {
 		maxAttempts = 1
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	gaiaLogin := chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))
 
 	cr, err := setupChrome(ctx, gaiaLogin)
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
 	}
-	defer cr.Close(ctx)
+	defer cr.Close(cleanupCtx)
+
+	// Set up the test environment to test the opt-in against external dependencies.
+	// This will redirect *.google.com and *.googleapis.com to the preprod of Google frontend.
+	if s.Param().(optinTestArgs).preprod {
+		env, err := testenv.NewPreprodEnv(ctx, testenv.RedirectMap(arc.PassThroughPreprodGFE))
+		if err != nil {
+			s.Fatal("Failed to redirect to preprod: ", err)
+		}
+		defer env.Close(cleanupCtx)
+	}
 
 	s.Log("Performing optin")
 
