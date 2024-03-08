@@ -46,11 +46,10 @@ func init() {
 		},
 		SoftwareDeps: []string{"no_qemu"},
 		Fixture:      "graphicsNoChrome",
-		Attr:         []string{"group:graphics"},
 		Params: []testing.Param{{
 			//TODO(b:271158350): add this to graphics_nightly or weekly once we have figured out how to run this less often/expensively.
 			Name:      "gles2",
-			ExtraAttr: []string{"graphics_nightly"},
+			ExtraAttr: []string{"group:graphics", "graphics_nightly"},
 			Timeout:   20 * time.Minute,
 			Val: deqpParms{
 				api:        graphics.GLES2,
