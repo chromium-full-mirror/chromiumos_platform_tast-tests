@@ -252,11 +252,6 @@ func MakeTestParamsFromList(t genparams.TestingT, baseCases []Param) string {
 	var itLacros = []iterator{{debianVersion: vm.DebianBullseye, stable: true}, {debianVersion: vm.DebianBookworm, stable: true}}
 
 	for _, testCase := range baseCases {
-		if testCase.IMEName != "" {
-			testCase.MinimumContainerVersion = vm.DebianBullseye
-			testCase.DeviceMode = devicemode.ClamshellMode
-		}
-
 		iterate := func(i iterator, bt browser.Type, testNoDownloadsBindMount bool) {
 			if testCase.LowPerfEligible {
 				if testCase.OnlyStableBoards {

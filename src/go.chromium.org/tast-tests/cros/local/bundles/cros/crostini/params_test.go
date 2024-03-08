@@ -29,7 +29,7 @@ type testOptions struct {
 	requiresARC     bool
 	criticalStaging bool
 	// Foundational tests that should run on all devices. These tests should be lightweight enough
-	// to be stable enough to run on low performance devices.
+	// to be stable enough to run on low performance devices and older versions of debian.
 	foundation bool
 	// TODO(b/328698041): Remove this after removal of bind mount is released.
 	noDownloadsBindMount bool
@@ -108,11 +108,16 @@ func TestFixTestParams(t *testing.T) {
 		if customTimeout == 0 {
 			customTimeout = DefaultStandardTimeout
 		}
+		minimumContainerVersion := vm.DebianBookworm
+		if options.foundation {
+			minimumContainerVersion = vm.DebianBullseye
+		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:                  customTimeout,
 			UseFixture:               true,
 			OnlyStableBoards:         !options.foundation,
 			LowPerfEligible:          options.foundation,
+			MinimumContainerVersion:  minimumContainerVersion,
 			RequiresARC:              options.requiresARC,
 			TestNoDownloadsBindMount: options.noDownloadsBindMount,
 		}})
@@ -173,7 +178,7 @@ var appTests = map[string]testOptions{
 	"app_firefox_terminal.go":              {},
 	"app_gedit_emoji.go":                   {},
 	"app_gedit_filesharing.go":             {},
-	"app_gedit.go":                         {},
+	"app_gedit.go":                         {foundation: true},
 	"app_gedit_nonalphanumeric_input.go":   {},
 	"app_gedit_switch_ime.go":              {},
 	"app_gedit_unshare_folder.go":          {},
@@ -181,7 +186,7 @@ var appTests = map[string]testOptions{
 	"app_vlc.go":                           {},
 	"app_vscode_emoji.go":                  {},
 	"app_vscode_from_file_manager.go":      {},
-	"app_vscode.go":                        {},
+	"app_vscode.go":                        {foundation: true},
 	"app_vscode_nonalphanumeric_input.go":  {},
 	"app_vscode_uninstall.go":              {},
 	"restart_app.go":                       {},
@@ -194,6 +199,10 @@ func TestAppTestParams(t *testing.T) {
 		if timeout == 0 {
 			timeout = DefaultAppTimeout
 		}
+		minimumContainerVersion := vm.DebianBookworm
+		if options.foundation {
+			minimumContainerVersion = vm.DebianBullseye
+		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{
 			{
 				Timeout:                 timeout,
@@ -202,7 +211,7 @@ func TestAppTestParams(t *testing.T) {
 				UseFixture:              true,
 				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
-				MinimumContainerVersion: vm.DebianBullseye,
+				MinimumContainerVersion: minimumContainerVersion,
 				CriticalStaging:         options.criticalStaging,
 			}})
 		genparams.Ensure(t, filename, params)
@@ -233,7 +242,7 @@ func TestAppWindowOperationsTestParams(t *testing.T) {
 				UseFixture:              true,
 				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
-				MinimumContainerVersion: vm.DebianBullseye,
+				MinimumContainerVersion: vm.DebianBookworm,
 				CriticalStaging:         options.criticalStaging,
 			},
 			{
@@ -245,7 +254,7 @@ func TestAppWindowOperationsTestParams(t *testing.T) {
 				UseFixture:              true,
 				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
-				MinimumContainerVersion: vm.DebianBullseye,
+				MinimumContainerVersion: vm.DebianBookworm,
 				CriticalStaging:         options.criticalStaging,
 			},
 			{
@@ -257,7 +266,7 @@ func TestAppWindowOperationsTestParams(t *testing.T) {
 				UseFixture:              true,
 				OnlyStableBoards:        true,
 				DeviceMode:              devicemode.ClamshellMode,
-				MinimumContainerVersion: vm.DebianBullseye,
+				MinimumContainerVersion: vm.DebianBookworm,
 				CriticalStaging:         options.criticalStaging,
 			},
 		})
@@ -282,13 +291,15 @@ func TestAppIMELanguageTestParams(t *testing.T) {
 
 	for _, imeName := range imeTestCases {
 		imeParams = append(imeParams, crostini.Param{
-			Timeout:           15 * time.Minute,
-			ExtraSoftwareDeps: []string{"crostini_app"},
-			UseLargeContainer: true,
-			UseFixture:        true,
-			OnlyStableBoards:  true,
-			IMEName:           imeName,
-			Val:               "\"" + imeName + "\"",
+			Timeout:                 15 * time.Minute,
+			ExtraSoftwareDeps:       []string{"crostini_app"},
+			UseLargeContainer:       true,
+			UseFixture:              true,
+			OnlyStableBoards:        true,
+			MinimumContainerVersion: vm.DebianBookworm,
+			DeviceMode:              devicemode.ClamshellMode,
+			IMEName:                 imeName,
+			Val:                     "\"" + imeName + "\"",
 		})
 	}
 	for _, filename := range appIMELanguageTests {
@@ -336,7 +347,7 @@ func TestContainerTestParams(t *testing.T) {
 			Timeout:                 15 * time.Minute,
 			UseLargeContainer:       true,
 			UseFixture:              true,
-			MinimumContainerVersion: vm.DebianBullseye,
+			MinimumContainerVersion: vm.DebianBookworm,
 		}})
 		genparams.Ensure(t, filename, params)
 	}
