@@ -44,10 +44,22 @@ func init() {
 				Fixture:           "crostiniBullseye",
 				Timeout:           12 * time.Minute,
 			}, {
+				Name:              "bullseye_lowperf",
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniLowPerf,
+				Fixture:           "crostiniBullseyeWithoutArc",
+				Timeout:           12 * time.Minute,
+			}, {
 				Name:              "bookworm_stable",
 				ExtraSoftwareDeps: []string{"dlc"},
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
+				Timeout:           12 * time.Minute,
+			}, {
+				Name:              "bookworm_lowperf",
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniLowPerf,
+				Fixture:           "crostiniBookwormWithoutArc",
 				Timeout:           12 * time.Minute,
 			},
 		},

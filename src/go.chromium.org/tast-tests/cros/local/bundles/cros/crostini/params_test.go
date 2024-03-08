@@ -28,6 +28,9 @@ type testOptions struct {
 	timeout         time.Duration
 	requiresARC     bool
 	criticalStaging bool
+	// Foundational tests that should run on all devices. These tests should be lightweight enough
+	// to be stable enough to run on low performance devices.
+	foundation bool
 }
 
 const DefaultStandardTimeout = 7 * time.Minute
@@ -35,19 +38,19 @@ const DefaultAppTimeout = 15 * time.Minute
 
 // Map crostini tests by file and their extra test options (if any).
 var standardTests = map[string]testOptions{
-	"app_gedit_install_uninstall.go": {timeout: 12 * time.Minute},
-	"audio_basic.go":                 {},
+	"app_gedit_install_uninstall.go": {foundation: true, timeout: 12 * time.Minute},
+	"audio_basic.go":                 {foundation: true},
 	// Audio playback configurations took about 6 minutes on model with echo reference
 	"audio_playback_configurations.go":  {timeout: 10 * time.Minute},
 	"backup_restore.go":                 {timeout: 10 * time.Minute},
-	"basic.go":                          {},
-	"close_terminal_tabs_and_window.go": {},
-	"command_cd.go":                     {},
-	"command_ps.go":                     {},
-	"command_vim.go":                    {},
+	"basic.go":                          {foundation: true},
+	"close_terminal_tabs_and_window.go": {foundation: true},
+	"command_cd.go":                     {foundation: true},
+	"command_ps.go":                     {foundation: true},
+	"command_vim.go":                    {foundation: true},
 	"copy_files_to_linux_files.go":      {},
 	"crash_reporter.go":                 {},
-	"drag_drop.go":                      {},
+	"drag_drop.go":                      {foundation: true},
 	"files_app_watch.go":                {},
 	"fs_corruption.go":                  {timeout: 10 * time.Minute},
 	"home_directory_share.go":           {},
@@ -62,8 +65,8 @@ var standardTests = map[string]testOptions{
 	"package_info.go":                   {},
 	"package_install_uninstall.go":      {},
 	"pulse_audio_basic.go":              {},
-	"remove_cancel.go":                  {},
-	"remove_ok.go":                      {},
+	"remove_cancel.go":                  {foundation: true},
+	"remove_ok.go":                      {foundation: true},
 	"resize_backup_restore.go":          {timeout: 15 * time.Minute},
 	"resize_cancel.go":                  {},
 	"resize_ok.go":                      {},
@@ -72,12 +75,12 @@ var standardTests = map[string]testOptions{
 	"restart.go":                        {},
 	"restart_icon.go":                   {},
 	"run_with_arc.go":                   {requiresARC: true},
-	"shared_font_files.go":              {},
+	"shared_font_files.go":              {foundation: true},
 	"share_downloads_add_files.go":      {},
 	"share_downloads.go":                {},
 	"share_files_cancel.go":             {},
 	"share_files_manage.go":             {},
-	"share_files_ok.go":                 {},
+	"share_files_ok.go":                 {foundation: true},
 	"share_files_restart.go":            {},
 	"share_files_toast.go":              {},
 	"share_folders.go":                  {},
@@ -92,7 +95,7 @@ var standardTests = map[string]testOptions{
 	"verify_app_x11.go":                 {},
 	"vmc_extra_disk.go":                 {},
 	"vmc_start.go":                      {},
-	"webserver.go":                      {},
+	"webserver.go":                      {foundation: true},
 	"xattrs.go":                         {},
 }
 
@@ -106,7 +109,8 @@ func TestFixTestParams(t *testing.T) {
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
 			Timeout:          customTimeout,
 			UseFixture:       true,
-			OnlyStableBoards: true,
+			OnlyStableBoards: !options.foundation,
+			LowPerfEligible:  options.foundation,
 			RequiresARC:      options.requiresARC,
 		}})
 		genparams.Ensure(t, filename, params)
