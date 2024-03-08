@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type audioSynthmarkJitterStressMode int
@@ -69,7 +70,6 @@ func init() {
 		// ChromeOS > Platform > Virtualization > ARC++ & ARCVM > ARC Audio
 		BugComponent: "b:879188",
 		SoftwareDeps: []string{"chrome", "arc"},
-		Fixture:      "arcBooted",
 		Data:         []string{audioSynthmarkJitterSynthmarkAPK},
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "group:audio"},
 		Timeout:      15 * time.Minute,
@@ -78,6 +78,14 @@ func init() {
 			Val: audioSynthmarkJitterParam{
 				stressMode: audioSynthmarkJitterStressNone,
 			},
+			Fixture: "arcBooted",
+		}, {
+			Name: "nostress_pvsched",
+			Val: audioSynthmarkJitterParam{
+				stressMode: audioSynthmarkJitterStressNone,
+			},
+			Fixture:           "arcBootedWithPvSchedEnabled",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}, {
 			Name:      "stress_repeatedly_start_app",
 			ExtraData: []string{audioSynthmarkJitterOboetesterAPK},
@@ -86,11 +94,20 @@ func init() {
 			Val: audioSynthmarkJitterParam{
 				stressMode: audioSynthmarkJitterStressRepeatedlyStartApp,
 			},
+			Fixture: "arcBooted",
 		}, {
 			Name: "stress_speedometer",
 			Val: audioSynthmarkJitterParam{
 				stressMode: audioSynthmarkJitterStressSpeedometer,
 			},
+			Fixture: "arcBooted",
+		}, {
+			Name: "stress_speedometer_pvsched",
+			Val: audioSynthmarkJitterParam{
+				stressMode: audioSynthmarkJitterStressSpeedometer,
+			},
+			Fixture:           "arcBootedWithPvSchedEnabled",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}},
 	})
 }
