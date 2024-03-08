@@ -944,6 +944,7 @@ func (ms *ModeSwitcher) PowerOff(ctx context.Context) error {
 		if err := h.DUT.Conn().CommandContext(powerOffCtx, "poweroff").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
 			return errors.Wrap(err, "DUT poweroff")
 		}
+		h.DUT.Disconnect(ctx)
 		err := waitForPowerOff(ctx)
 		if err == nil {
 			return nil
