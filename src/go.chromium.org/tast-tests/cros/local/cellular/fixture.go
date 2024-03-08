@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crash"
 	"go.chromium.org/tast-tests/cros/local/hermes"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
@@ -257,6 +258,17 @@ func init() {
 		Impl:            newCellularFixture().setClearSIMLock(true),
 		Vars:            []string{"autotest_host_info_labels"},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "cellularWithChrome",
+		Desc:            "Cellular tests that require Chrome login first",
+		Contacts:        []string{"chromeos-cellular-team@google.com", "madhavadas@google.com"},
+		SetUpTimeout:    4 * time.Minute,
+		ResetTimeout:    5 * time.Second,
+		PreTestTimeout:  4 * time.Minute,
+		PostTestTimeout: 3 * time.Minute,
+		TearDownTimeout: 5 * time.Second,
+		Impl:            newCellularFixture().setHasChrome(true),
+	})
 }
 
 // cellularFixture implements testing.FixtureImpl.
@@ -270,6 +282,7 @@ type cellularFixture struct {
 	checkSIM                    bool
 	clearSIMLock                bool
 	hasArc                      bool
+	hasChrome                   bool
 	resetShillProfileOnPostTest bool
 	restartOnFailure            []string
 	daemonUptimeBeforeTest      time.Duration
@@ -281,6 +294,7 @@ type cellularFixture struct {
 	modemfwdStopped     bool
 	modemLoggingStarted bool
 	sf                  *starfish.Starfish
+	cr                  *chrome.Chrome
 	netUnlock           func()
 	uiStopped           bool
 	// Per-test logging marker
@@ -347,12 +361,17 @@ func (f *cellularFixture) setDisableCellularInShill(value bool) *cellularFixture
 	f.disableCellularInShill = value
 	return f
 }
+func (f *cellularFixture) setHasChrome(value bool) *cellularFixture {
+	f.hasChrome = value
+	return f
+}
 
 // FixtData holds information made available to tests that specify this fixture.
 type FixtData struct {
 	Helper *Helper
 	fdms   *fakedms.FakeDMS
 	ARC    *arc.ARC
+	Chrome *chrome.Chrome
 }
 
 // FakeDMS implements the HasFakeDMS interface.
@@ -515,6 +534,14 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 		a = s.ParentValue().(*arc.PreData).ARC
 	}
 
+	var cr *chrome.Chrome
+	if f.hasChrome {
+		cr, err = chrome.New(ctx)
+		if err != nil {
+			s.Fatal("Failed to create a new instance of Chrome: ", err)
+		}
+	}
+	f.cr = cr
 	if f.sf == nil {
 		var err error
 		if f.modemfwdStopped, err = stopJob(ctx, modemfwd.JobName); err != nil {
@@ -568,7 +595,7 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 			s.Fatal("Failed to disconnect for checkSIM: ", err)
 		}
 	}
-	return &FixtData{helper, fdms, a}
+	return &FixtData{helper, fdms, a, cr}
 }
 
 func (f *cellularFixture) Reset(ctx context.Context) error { return nil }
@@ -788,6 +815,9 @@ func (f *cellularFixture) TearDown(ctx context.Context, s *testing.FixtState) {
 			s.Fatalf("Failed to start %q: %s", uiJobName, err)
 		}
 		s.Logf("Started %q", uiJobName)
+	}
+	if f.hasChrome && f.cr != nil {
+		f.cr.Close(ctx)
 	}
 	if f.sf != nil {
 		if err := f.sf.Teardown(ctx); err != nil {
