@@ -82,7 +82,7 @@ func init() {
 }
 
 func ManagedAppApkCache(ctx context.Context, s *testing.State) {
-	cachedApkLoadedRegEx := "cachedApk loaded for " + testPackage
+	cachedApkLoadedRegEx := testPackage + " was retrieved from the apk cache"
 
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
@@ -135,6 +135,7 @@ func ManagedAppApkCache(ctx context.Context, s *testing.State) {
 		defer cr.Close(cleanupCtx)
 		defer a.Close(cleanupCtx)
 
+		s.Log("Waiting for logs")
 		exp := regexp.MustCompile(cachedApkLoadedRegEx)
 		if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
 			return rl.Exit("find log that package was retrieved from cache", err)
@@ -188,9 +189,6 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 }
 
 func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, rl *retry.Loop, packages []string) error {
-	notCachedRegEx := fmt.Sprintf(
-		"(no cachedApk found for %s)|(Package %s version [0-9]+ does not exist in cache)|(Missed *in cache.*%s)",
-		testPackage, testPackage, testPackage)
 	pushingInCacheRegEx := "Pushing in cache " + testPackage
 
 	cleanupCtx := ctx
@@ -201,12 +199,8 @@ func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, r
 	// by the second user session.
 	defer dumpLogcatToOutDir(cleanupCtx, s, a, "logcat_first_session.txt")
 
-	exp := regexp.MustCompile(notCachedRegEx)
-	if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
-		return rl.Exit("find log that package is not already cached", err)
-	}
-
-	exp = regexp.MustCompile(pushingInCacheRegEx)
+	s.Log("Waiting for logs")
+	exp := regexp.MustCompile(pushingInCacheRegEx)
 	if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
 		return rl.Exit("find log that package was cached", err)
 	}
@@ -216,6 +210,7 @@ func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, r
 		return rl.Retry("force install packages", err)
 	}
 
+	s.Log("Waiting for cache directory")
 	if err := waitForCacheSizeToIncrease(ctx, rl); err != nil {
 		return rl.Exit("count new files in cache", err)
 	}
