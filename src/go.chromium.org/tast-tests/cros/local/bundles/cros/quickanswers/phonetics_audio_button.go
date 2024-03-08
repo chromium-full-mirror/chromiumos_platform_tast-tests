@@ -101,7 +101,7 @@ func PhoneticsAudioButton(ctx context.Context, s *testing.State) {
 	// Right click the selected word and ensure the Quick Answers UI shows up with the phonetics audio button.
 	// Left click the phonetics audio button to play the audio.
 	quickAnswers := nodewith.ClassName("QuickAnswersView")
-	audioButton := nodewith.ClassName("ImageButton").Name("Listen")
+	audioButton := nodewith.ClassName("ImageButton").Name("Listen to pronunciation")
 	if err := uiauto.Combine("Show context menu",
 		ui.RightClick(query),
 		ui.WaitUntilExists(quickAnswers),
