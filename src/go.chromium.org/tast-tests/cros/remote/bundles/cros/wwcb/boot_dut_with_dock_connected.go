@@ -36,7 +36,7 @@ func init() {
 			Name: "tablet_mode",
 			Val:  true,
 		}, {
-			Name:      "smoke",
+			Name:      "fast",
 			ExtraAttr: []string{"pasit_fast"},
 			Val:       true,
 		}},

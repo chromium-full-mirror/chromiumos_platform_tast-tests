@@ -44,7 +44,7 @@ func init() {
 		Data:         []string{sampleTXT},
 		Params: []testing.Param{
 			{
-				Name:      "smoke",
+				Name:      "fast",
 				ExtraAttr: []string{"pasit_fast"},
 			}},
 	})

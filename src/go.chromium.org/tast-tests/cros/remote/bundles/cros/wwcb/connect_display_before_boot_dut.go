@@ -28,7 +28,7 @@ func init() {
 		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp"},
 		Params: []testing.Param{
 			{
-				Name:      "smoke",
+				Name:      "fast",
 				ExtraAttr: []string{"pasit_fast"},
 			}},
 	})

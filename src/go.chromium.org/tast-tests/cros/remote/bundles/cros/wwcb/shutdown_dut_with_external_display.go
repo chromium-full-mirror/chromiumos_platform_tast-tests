@@ -43,7 +43,7 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
-				Name:      "smoke",
+				Name:      "full",
 				ExtraAttr: []string{"pasit_full"},
 			}},
 	})

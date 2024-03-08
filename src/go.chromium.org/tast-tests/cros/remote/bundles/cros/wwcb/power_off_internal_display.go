@@ -33,7 +33,7 @@ func init() {
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService", "tast.cros.wwcb.DisplayService"},
 		Params: []testing.Param{
 			{
-				Name:      "smoke",
+				Name:      "fast",
 				ExtraAttr: []string{"pasit_fast"},
 			}},
 	})
