@@ -65,9 +65,17 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 		tf.rebootOnTeardown = false
 	}
 
+	d := s.DUT()
+	if !d.Connected(ctx) {
+		s.Log("Reconnecting to DUT")
+		if err := d.Connect(ctx); err != nil {
+			s.Fatal("Failed to connect to DUT: ", err)
+		}
+	}
+
 	if tf.rebootOnSetup && hasStartupRebootUptime(ctx, s) {
 		s.Log("Rebooting DUT")
-		if err := s.DUT().Reboot(ctx); err != nil {
+		if err := d.Reboot(ctx); err != nil {
 			s.Fatal("Failed to reboot: ", err)
 		}
 	}
