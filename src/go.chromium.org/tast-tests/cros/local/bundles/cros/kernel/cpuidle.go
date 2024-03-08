@@ -23,7 +23,7 @@ func init() {
 			"swboyd@chromium.org",
 		},
 		BugComponent: "b:167279",
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline"},
 		SoftwareDeps: []string{"cpuidle_teo"},
 	})
 }
