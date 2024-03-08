@@ -42,7 +42,7 @@ func init() {
 		Data: []string{utils.VideoFile},
 		Params: []testing.Param{
 			{
-				Name:      "smoke",
+				Name:      "full",
 				ExtraAttr: []string{"pasit_full"},
 			}},
 	})
