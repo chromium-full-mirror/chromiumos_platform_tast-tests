@@ -60,7 +60,7 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
 	ui := uiauto.New(tconn)
-	setupButton := nodewith.Name("Set up with Android phone").Role(role.Button)
+	setupButton := nodewith.NameContaining("Android phone").Role(role.Button)
 	if err := ui.LeftClick(setupButton)(ctx); err != nil {
 		s.Fatal("Failed to click the Quick Start setup button: ", err)
 	}
