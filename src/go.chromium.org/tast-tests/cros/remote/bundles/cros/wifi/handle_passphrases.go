@@ -426,7 +426,7 @@ func expectNetworkRemembered(ctx context.Context, conn *grpc.ClientConn, _ *wifi
 func expectAttemptToConnect(ctx context.Context, conn *grpc.ClientConn, ssid string) error {
 	uiSvc := ui.NewAutomationServiceClient(conn)
 
-	wifiIcon := ui.Node().NameRegex(fmt.Sprintf("^Connecting to %s$", ssid)).Role(ui.Role_ROLE_IMAGE).HasClass("TrayItemView").Finder()
+	wifiIcon := ui.Node().NameRegex(fmt.Sprintf("^Connecting to %s$", ssid)).Role(ui.Role_ROLE_IMAGE).Finder()
 	// Verify the ChromeOS is attempting to connect to the network by checking UI.
 	if _, err := uiSvc.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{
 		Finder: wifiIcon,
