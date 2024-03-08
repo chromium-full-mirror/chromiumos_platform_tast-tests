@@ -307,7 +307,8 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	badRemoteAddress := false
 	matchCount := 0
 	var failedFields []string
-
+	var bFlows []*xdr.NetworkFlowEvent
+	bExecs := make(map[uint64]*xdr.ProcessExecEvent)
 	for _, method := range calledMethods {
 		if len(method.Arguments) == 0 {
 			continue
@@ -323,56 +324,85 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 
 		s.Logf("Destination is %s", enq.GetRecord().GetDestination())
 
-		// Only focus on network event.
+		// Save off matching ProcessExecs.
+		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_PROCESS {
+			pe := &xdr.XdrProcessEvent{}
+			if err := proto.Unmarshal(enq.GetRecord().GetData(), pe); err != nil {
+				s.Fatal("Failed to unmarshal data for a Destination_CROS_SECURITY_PROCESS record: ", err)
+			}
+			for _, v := range pe.GetBatchedEvents() {
+				if v.GetProcessExec() != nil {
+					pid := v.GetProcessExec().GetSpawnProcess().GetCanonicalPid()
+					if _, ok := cmdPids[pid]; ok {
+						bExecs[pid] = v.GetProcessExec()
+					}
+				}
+			}
+		}
+		// Save off network event data.
 		if enq.GetRecord().GetDestination() == rep.Destination_CROS_SECURITY_NETWORK {
 			ne := &xdr.XdrNetworkEvent{}
 			if err := proto.Unmarshal(enq.GetRecord().GetData(), ne); err != nil {
 				s.Fatal("Failed to unmarshal data for a Destination_CROS_SECURITY_NETWORK record: ", err)
 			}
-			var bFlows []*xdr.NetworkFlowEvent
 			for _, v := range ne.GetBatchedEvents() {
 				if v.GetNetworkFlow() != nil {
 					bFlows = append(bFlows, v.GetNetworkFlow())
 				}
-
 				if err := secagentdcommon.CheckCommon(v.GetCommon()); err != nil {
 					s.Error("Invalid common field: ", err)
 				}
 			}
 
-			pidFound := false
-			for _, flow := range bFlows {
-				failedFields = nil
-				pidFound = false
-				if localAddress[flow.NetworkFlow.GetRemoteIp()] {
-					s.Log("Detected an event flow that has a local ip address as its remote address:", flow.NetworkFlow.String())
-					badRemoteAddress = true
-				}
-				if flow.GetProcess() != nil {
-					if _, ok := cmdPids[flow.GetProcess().GetCanonicalPid()]; ok {
+		}
+	}
+
+	pidFound := false
+	for _, flow := range bFlows {
+		failedFields = nil
+		pidFound = false
+		if localAddress[flow.NetworkFlow.GetRemoteIp()] {
+			s.Log("Detected an event flow that has a local ip address as its remote address:", flow.NetworkFlow.String())
+			badRemoteAddress = true
+		}
+		if flow.GetProcess() != nil {
+			pid := flow.GetProcess().GetCanonicalPid()
+			if _, ok := cmdPids[pid]; ok {
+				if _, ok := bExecs[pid]; ok {
+					// MetaFirstAppearance from an exec and a network event
+					// are typically different. If you catch a process exec
+					// then MetaFirstAppearance is probably true.
+					// A process principle in a network event shouldn't even contain
+					// MetaFirstAppearance.
+					bExecs[pid].GetSpawnProcess().MetaFirstAppearance = nil
+					flow.GetProcess().MetaFirstAppearance = nil
+					if proto.Equal(flow.GetProcess(), bExecs[pid].GetSpawnProcess()) {
 						pidFound = true
-						delete(cmdPids, flow.GetProcess().GetCanonicalPid())
-					}
-				}
-				if pidFound {
-					if *flow.NetworkFlow.Protocol != details.protocol {
-						failedFields = append(failedFields, fmt.Sprintf("Protocol=%s expected %s", *flow.NetworkFlow.Protocol, details.protocol))
-					}
-					if details.ipAddr != "" && *flow.NetworkFlow.RemoteIp != details.ipAddr {
-						failedFields = append(failedFields, fmt.Sprintf("IP Address=%q expected %q", *flow.NetworkFlow.RemoteIp, details.ipAddr))
-					}
-					if *flow.NetworkFlow.Direction != details.expectedDirection {
-						failedFields = append(failedFields, fmt.Sprintf("Direction=%s expected %s", flow.NetworkFlow.Direction.String(), details.expectedDirection.String()))
-					}
-					if len(failedFields) == 0 {
-						matchCount++
 					} else {
-						s.Logf("Match failure:%s :%s", strings.Join(failedFields, ","), flow)
+						s.Logf("PID matched but processes did not match: Expected %s, Actual:%s", bExecs[pid].GetSpawnProcess(), flow.GetProcess())
 					}
 				}
+				delete(cmdPids, pid)
+			}
+		}
+		if pidFound {
+			if *flow.NetworkFlow.Protocol != details.protocol {
+				failedFields = append(failedFields, fmt.Sprintf("Protocol=%s expected %s", *flow.NetworkFlow.Protocol, details.protocol))
+			}
+			if details.ipAddr != "" && *flow.NetworkFlow.RemoteIp != details.ipAddr {
+				failedFields = append(failedFields, fmt.Sprintf("IP Address=%q expected %q", *flow.NetworkFlow.RemoteIp, details.ipAddr))
+			}
+			if *flow.NetworkFlow.Direction != details.expectedDirection {
+				failedFields = append(failedFields, fmt.Sprintf("Direction=%s expected %s", flow.NetworkFlow.Direction.String(), details.expectedDirection.String()))
+			}
+			if len(failedFields) == 0 {
+				matchCount++
+			} else {
+				s.Logf("Match failure:%s :%s", strings.Join(failedFields, ","), flow)
 			}
 		}
 	}
+
 	if badRemoteAddress {
 		s.Error("Found one or more flows where the remote address in the flow is the same as a local ip address")
 	}
