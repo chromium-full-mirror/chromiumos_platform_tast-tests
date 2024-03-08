@@ -9,18 +9,23 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"encoding/binary"
 	"fmt"
 	"io"
+	"io/ioutil"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/process"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
+	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -45,6 +50,7 @@ const (
 type MitmProxy struct {
 	binaryPath   string
 	port         int
+	host         string
 	outDir       string
 	dumpFileName string
 	confDir      string
@@ -55,6 +61,7 @@ type MitmProxy struct {
 	healthCheck  bool
 	scriptPaths  []string // Addon scripts used by mitmproxy.
 	options      []string // Other options provided by users. We will add --set option to command.
+	lifelineFD   *os.File // Used by pathcpanel to track the lifetime of the proxy server.
 }
 
 // New creates a new MitmDump instance with default configuration.
@@ -117,16 +124,28 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to create %q for mitmdump output dir", mp.outDir)
 	}
 
+	// The pid of the proxy process is required to configure the isolated network namespace in which the process runs.
+	// The mitmdump process forks, resulting in two running processes. The pid addon will ensure the pid of the actual
+	// proxy server process will be used to configure the network namespace.
+	pidPath, err := mp.configurePidAddon()
+	if err != nil {
+		return errors.Wrap(err, "failed to configure pid addon")
+	}
+
 	// Create a new config file in the current config directory.
 	configFilePath := filepath.Join(mp.confDir, "config.yaml")
-	if err := mp.writeConfigFile(ctx, configFilePath); err != nil {
+	if err = mp.configureMitmdump(ctx, configFilePath); err != nil {
 		return errors.Wrapf(err, "failed to create config file at %s", configFilePath)
 	}
 
-	cmd := testexec.CommandContext(ctx, "/sbin/minijail0", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
+	cmd := testexec.CommandContext(ctx, "/sbin/minijail0", "-e", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
 
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to launch proxy server")
+	}
+
+	if err = mp.configureNetwork(ctx, pidPath); err != nil {
+		return errors.Wrap(err, "failed to configure the proxy server network namespace")
 	}
 
 	if mp.healthCheck {
@@ -144,7 +163,7 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 	return nil
 }
 
-// writeConfigFile creates the mitmdump configuration file from the existing mp.options and mp.scripts.
+// configureMitmdump creates the mitmdump configuration file from the existing mp.options and mp.scripts.
 // The mitmdump config file format is yaml. Config file example:
 //
 // ---
@@ -153,7 +172,7 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 // scripts:
 // - /usr/local/share/tast/data_pushed/go.chromium.org/tast-tests/cros/local/bundles/cros/meta/data/allowed_endpoints.py
 // - /usr/local/share/tast/data_pushed/go.chromium.org/tast-tests/cros/local/bundles/cros/meta/data/allowed_endpoints_yaml.py
-func (mp *MitmProxy) writeConfigFile(ctx context.Context, path string) error {
+func (mp *MitmProxy) configureMitmdump(ctx context.Context, path string) error {
 	configs := []string{"---"}
 	configs = append(configs, fmt.Sprintf(`listen_port: %d`, mp.port))
 	configs = append(configs, mp.options...)
@@ -178,6 +197,102 @@ func (mp *MitmProxy) writeConfigFile(ctx context.Context, path string) error {
 		return errors.Wrap(err, "failed to write config file")
 	}
 	return nil
+}
+
+// configureNetwork calls patchpanel to setup the network namespace for the local proxy.
+func (mp *MitmProxy) configureNetwork(ctx context.Context, pidPath string) error {
+	pc, err := patchpanel.New(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create patchpanel client")
+	}
+
+	pid, err := mp.getPidFromPath(ctx, pidPath)
+	if err != nil {
+		return errors.Wrap(err, "failed to get mitmproxy process pid")
+	}
+
+	if err != nil {
+		return errors.Wrap(err, "failed to fetch the mitmproxy processes")
+	}
+
+	fd, resp, err := pc.ConnectNamespace(ctx, int32(pid), "", true)
+	if err != nil {
+		return err
+	}
+	mp.lifelineFD = fd
+
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(resp.PeerIpv4Address))
+	ip := net.IP(b)
+	mp.host = ip.String()
+
+	return nil
+}
+
+// getPidFromPath reads the pid of the proxy process from `pidPath`. The pid is required by
+// patchpanel to setup an isolated network namespace for the proxy server with it's own network
+// address.
+func (mp *MitmProxy) getPidFromPath(ctx context.Context, pidPath string) (int, error) {
+	var pid int
+	// Wait for the proxy service to write the PID at `pidPath`.
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		dat, err := ioutil.ReadFile(pidPath)
+		if err != nil {
+			return errors.Wrap(err, "failed to read proxy process pid")
+		}
+		pid, err = strconv.Atoi(strings.TrimSpace(string(dat)))
+		if err != nil {
+			return errors.Wrap(err, "failed to parse process pid")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
+		return 0, err
+	}
+
+	return pid, nil
+}
+
+// configurePidAddon creates a mitmproxy addon script which writes the pid
+// of the proxy process to a file and returns the path to the file.
+func (mp *MitmProxy) configurePidAddon() (string, error) {
+	// Create a temp dir where configuration and pid files can be saved.
+	pidFile, err := mp.createTempFile("mitmpid")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create PID file")
+	}
+
+	pidScript, err := mp.createTempFile("mitma_add_on*.py")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create add on file")
+	}
+
+	script := fmt.Sprintf(`import os
+
+def running():
+	with open("%s","w+") as f:
+		f.write(str(os.getpid()))
+`, pidFile)
+	err = os.WriteFile(pidScript, []byte(script), 775)
+
+	if err != nil {
+		return "", errors.Wrap(err, "failed to write add on file")
+	}
+	mp.scriptPaths = append(mp.scriptPaths, pidScript)
+	return pidFile, nil
+}
+
+// createTempFile creates a temporary file in proxy server's config directory and returns the
+// path.
+func (mp *MitmProxy) createTempFile(name string) (string, error) {
+	file, err := ioutil.TempFile(mp.confDir, name)
+	if err != nil {
+		return "", errors.Wrap(err, "failed create temp file")
+	}
+	defer file.Close()
+	if err := os.Chmod(file.Name(), 0755); err != nil {
+		return "", errors.Wrapf(err, "failed to chmod %v", file.Name())
+	}
+	return file.Name(), nil
 }
 
 // verifyProxyStart verifies that the proxy starts successfully by get youtube home page.
@@ -255,7 +370,7 @@ func (mp *MitmProxy) RootCertificate(ctx context.Context) (string, error) {
 
 // ProxyAddress returns the proxy address to be set in browser.
 func (mp *MitmProxy) ProxyAddress() string {
-	return fmt.Sprintf("localhost:%d", mp.port)
+	return fmt.Sprintf("%s:%d", mp.host, mp.port)
 }
 
 // Close closes proxy.
@@ -274,6 +389,10 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 	} else {
 		mp.isRunning = false
 	}
+
+	// Closing the fd will signal to patchpanel that it needs to tear down the network namespace
+	// for the local proxy server.
+	mp.lifelineFD.Close()
 
 	// Compress dump file.
 	if mp.compressDump {
