@@ -31,6 +31,8 @@ type testOptions struct {
 	// Foundational tests that should run on all devices. These tests should be lightweight enough
 	// to be stable enough to run on low performance devices.
 	foundation bool
+	// TODO(b/328698041): Remove this after removal of bind mount is released.
+	noDownloadsBindMount bool
 }
 
 const DefaultStandardTimeout = 7 * time.Minute
@@ -77,7 +79,7 @@ var standardTests = map[string]testOptions{
 	"run_with_arc.go":                   {requiresARC: true},
 	"shared_font_files.go":              {foundation: true},
 	"share_downloads_add_files.go":      {},
-	"share_downloads.go":                {},
+	"share_downloads.go":                {noDownloadsBindMount: true},
 	"share_files_cancel.go":             {},
 	"share_files_manage.go":             {},
 	"share_files_ok.go":                 {foundation: true},
@@ -107,11 +109,12 @@ func TestFixTestParams(t *testing.T) {
 			customTimeout = DefaultStandardTimeout
 		}
 		params := crostini.MakeTestParamsFromList(t, []crostini.Param{{
-			Timeout:          customTimeout,
-			UseFixture:       true,
-			OnlyStableBoards: !options.foundation,
-			LowPerfEligible:  options.foundation,
-			RequiresARC:      options.requiresARC,
+			Timeout:                  customTimeout,
+			UseFixture:               true,
+			OnlyStableBoards:         !options.foundation,
+			LowPerfEligible:          options.foundation,
+			RequiresARC:              options.requiresARC,
+			TestNoDownloadsBindMount: options.noDownloadsBindMount,
 		}})
 		genparams.Ensure(t, filename, params)
 	}

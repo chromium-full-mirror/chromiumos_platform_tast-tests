@@ -45,6 +45,18 @@ func init() {
 				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
 				Fixture:           "crostiniBookworm",
 				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "bullseye_stable_no_downloads_bind_mount",
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "crostiniBullseyeNoDownloadsBindMount",
+				Timeout:           7 * time.Minute,
+			}, {
+				Name:              "bookworm_stable_no_downloads_bind_mount",
+				ExtraSoftwareDeps: []string{"dlc"},
+				ExtraHardwareDeps: crostini.CrostiniOptimalPerf,
+				Fixture:           "crostiniBookwormNoDownloadsBindMount",
+				Timeout:           7 * time.Minute,
 			},
 		},
 	})

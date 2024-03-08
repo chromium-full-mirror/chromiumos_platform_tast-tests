@@ -76,6 +76,31 @@ func init() {
 		Vars:            []string{"keepState"},
 	})
 
+	// chromeLoggedInForCrostiniNoDownloadsBindMount is similar to
+	// chromeLoggedInForCrostini, except that it has removeBindMountFixture as
+	// its parent.
+	// TODO(b/328698041): Remove this after removal of bind mount is released.
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeLoggedInForCrostiniNoDownloadsBindMount",
+		Desc:     "Logged into a session without downloads bind mount",
+		Contacts: []string{"chromeos-files-syd@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			opts := generateChromeOpts(s)
+			if arc.Supported() {
+				opts = append(opts, chrome.ARCEnabled())
+				opts = append(opts, chrome.ExtraArgs(arc.DisableSyncFlags()...))
+			} else {
+				opts = append(opts, chrome.ARCDisabled())
+			}
+			return opts, nil
+		}),
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Vars:            []string{"keepState"},
+		Parent:          "removeBindMountFixture",
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeLoggedInWithGaiaForCrostini",
 		Desc:     "Logged into a session with Gaia user",
@@ -178,6 +203,23 @@ func init() {
 		Data: []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
 	})
 
+	// crostiniBullseyeNoDownloadsBindMount is similar to crostiniBullseye, except
+	// that it has chromeLoggedInForCrostiniNoDownloadsBindMount as its parent.
+	// TODO(b/328698041): Remove this after removal of bind mount is released.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBullseyeNoDownloadsBindMount",
+		Desc:            "Install Crostini with Bullseye without downloads bind mount",
+		Contacts:        []string{"chromeos-files-syd@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBullseye},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniNoDownloadsBindMount",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bullseye", false), GetContainerRootfsArtifact("bullseye", false)},
+	})
+
 	testing.AddFixture(&testing.Fixture{
 		Name:            "crostiniBullseyeWithoutArc",
 		Desc:            "Install Crostini with Bullseye without ARC enabled",
@@ -202,6 +244,23 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		TearDownTimeout: uninstallationTimeout,
 		Parent:          "chromeLoggedInForCrostini",
+		Vars:            []string{"keepState"},
+		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
+	})
+
+	// crostiniBookwormNoDownloadsBindMount is similar to crostiniBookworm, except
+	// that it has chromeLoggedInForCrostiniNoDownloadsBindMount as its parent.
+	// TODO(b/328698041): Remove this after removal of bind mount is released.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "crostiniBookwormNoDownloadsBindMount",
+		Desc:            "Install Crostini with Bookworm without downloads bind mount",
+		Contacts:        []string{"chromeos-files-syd@google.com"},
+		Impl:            &crostiniFixture{preData: preTestDataBookworm},
+		SetUpTimeout:    installationTimeout + uninstallationTimeout,
+		ResetTimeout:    checkContainerTimeout,
+		PostTestTimeout: postTestTimeout,
+		TearDownTimeout: uninstallationTimeout,
+		Parent:          "chromeLoggedInForCrostiniNoDownloadsBindMount",
 		Vars:            []string{"keepState"},
 		Data:            []string{GetContainerMetadataArtifact("bookworm", false), GetContainerRootfsArtifact("bookworm", false)},
 	})
