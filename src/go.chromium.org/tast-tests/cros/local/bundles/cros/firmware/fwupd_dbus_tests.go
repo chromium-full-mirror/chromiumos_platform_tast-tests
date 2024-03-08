@@ -57,23 +57,27 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 	var expectedReleases = []fwupd.Release{
 		fwupd.Release{
 			Name:       fwupd.FakeWebcamReleaseName,
-			Version:    "1.2.7",
-			TrustFlags: fwupd.TrustedReportsReleaseFlagBit,
-		},
-		fwupd.Release{
-			Name:       fwupd.FakeWebcamReleaseName,
-			Version:    "1.2.6",
-			TrustFlags: 0,
-		},
-		fwupd.Release{
-			Name:       fwupd.FakeWebcamReleaseName,
 			Version:    "1.2.4",
 			TrustFlags: fwupd.TrustedReportsReleaseFlagBit,
+			RemoteId:   "lvfs",
+		},
+		fwupd.Release{
+			Name:       fwupd.FakeWebcamReleaseName,
+			Version:    "1.2.2",
+			TrustFlags: 0,
+			RemoteId:   "fwupd-tests",
 		},
 		fwupd.Release{
 			Name:       fwupd.FakeWebcamReleaseName,
 			Version:    "1.2.1",
 			TrustFlags: 0,
+			RemoteId:   "fwupd-tests",
+		},
+		fwupd.Release{
+			Name:       fwupd.FakeWebcamReleaseName,
+			Version:    "1.2.0",
+			TrustFlags: fwupd.TrustedReportsReleaseFlagBit,
+			RemoteId:   "fwupd-tests",
 		},
 	}
 	// Get device using GUID
@@ -88,7 +92,7 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 	var releases []*fwupd.Release
 	if action == paramUpdates {
 		releases, err = fwupd.UpdatesForDeviceID(ctx, testDeviceID)
-		expectedReleases = expectedReleases[:3]
+		expectedReleases = expectedReleases[:1]
 	} else {
 		releases, err = fwupd.ReleasesForDeviceID(ctx, testDeviceID)
 	}

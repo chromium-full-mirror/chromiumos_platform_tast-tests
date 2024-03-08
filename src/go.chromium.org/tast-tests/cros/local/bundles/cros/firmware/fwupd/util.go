@@ -145,6 +145,7 @@ type Device struct {
 // values.
 type Release struct {
 	Name       string
+	RemoteId   string // NOLINT
 	TrustFlags uint64
 	Version    string
 }
