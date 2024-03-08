@@ -48,7 +48,11 @@ func init() {
 		},
 		// ChromeOS > Software > ARC++ > Performance
 		BugComponent: "b:168382",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{
+			// Disabled by TORA.  See: b/310965165
+			//	"group:mainline",
+			//	"informational"
+		},
 		SoftwareDeps: []string{"arc_android_data_cros_access", "chrome", "no_arc_userdebug"},
 		ServiceDeps:  []string{"tast.cros.arc.GmsCoreCacheService", "tast.cros.arc.TTSCacheService"},
 		Params: []testing.Param{{
