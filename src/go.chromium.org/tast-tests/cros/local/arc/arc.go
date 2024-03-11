@@ -1073,8 +1073,8 @@ func (a *ARC) EnsurePostBootDexOptFinished(ctx context.Context, timeout time.Dur
 	if err != nil {
 		return errors.Wrap(err, "failed to get SDK version")
 	}
-	if sdkVersion >= SDKR {
-		testing.ContextLog(ctx, "Waiting for dexopt on boot to finish")
+	testing.ContextLog(ctx, "Waiting for dexopt on boot to finish")
+	if sdkVersion >= SDKT {
 		dexOptFinished, err := a.isPostBootDexOptFinished(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to check PostBootDexOptFinished statu")
@@ -1100,6 +1100,11 @@ func (a *ARC) EnsurePostBootDexOptFinished(ctx context.Context, timeout time.Dur
 
 			return nil
 		}, &testing.PollOptions{Interval: time.Second})
+	} else if sdkVersion >= SDKR {
+		const prop = "dev.arc.boot_dexopt_complete"
+		if err := waitProp(ctx, prop, "1", reportTiming); err != nil {
+			return errors.Wrapf(err, "property %s not set", prop)
+		}
 	} else {
 		// TODO(b/293899461): remove the dependency on CPU idle wait once the dex opt on boot complete
 		// property exists in P.
