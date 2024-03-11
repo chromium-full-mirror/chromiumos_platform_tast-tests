@@ -5,32 +5,25 @@
 package ti50
 
 import (
-	"bytes"
 	"context"
-	"os"
-	"path/filepath"
 	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/serial"
 	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 )
 
 // BufferedConsole represents a UART console that can be read or written to.
 type BufferedConsole struct {
-	filename   string
 	readBuf    []byte
 	readBufLen int
 	portOpener serial.PortOpener
 	port       serial.Port
-	logfile    *os.File
 }
 
 // NewBufferedConsole returns a new buffered console.
-func NewBufferedConsole(filename string, bufMax int, portOpener serial.PortOpener) *BufferedConsole {
+func NewBufferedConsole(bufMax int, portOpener serial.PortOpener) *BufferedConsole {
 	return &BufferedConsole{
-		filename:   filename,
 		readBuf:    make([]byte, bufMax),
 		portOpener: portOpener,
 	}
@@ -44,21 +37,6 @@ func (c *BufferedConsole) Open(ctx context.Context) error {
 	p, err := c.portOpener.OpenPort(ctx)
 	if err != nil {
 		return err
-	}
-	dir, ok := testing.ContextOutDir(ctx)
-	if !ok {
-		c.port.Close(ctx)
-		return errors.New("failed to get directory for saving files")
-	}
-	if c.filename != "" {
-		f, err := os.OpenFile(filepath.Join(dir, c.filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-		if err != nil {
-			c.port.Close(ctx)
-			return err
-		}
-		c.logfile = f
-	} else {
-		c.logfile = nil
 	}
 	c.port = p
 	return nil
@@ -74,10 +52,6 @@ func (c *BufferedConsole) Close(ctx context.Context) error {
 	// Pull everything from console we can and write to file, but ignore error if encountered
 	_ = c.ClearInput(ctx)
 
-	if c.logfile != nil {
-		c.logfile.Close()
-		c.logfile = nil
-	}
 	if c.port != nil {
 		err := c.port.Close(ctx)
 		c.port = nil
@@ -88,16 +62,6 @@ func (c *BufferedConsole) Close(ctx context.Context) error {
 	return nil
 }
 
-func (c *BufferedConsole) appendToLogFile(ctx context.Context, buf []byte) error {
-	if c.logfile == nil {
-		return errors.New("Logfile not opened")
-	}
-	ts := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
-	buf = bytes.ReplaceAll(buf, []byte("\n"), []byte("\n"+ts+" "))
-	_, err := c.logfile.Write(buf)
-	return err
-}
-
 func (c *BufferedConsole) readSerial(ctx context.Context) error {
 	if c.port == nil {
 		return errors.New("BufferedConsole not open")
@@ -106,11 +70,6 @@ func (c *BufferedConsole) readSerial(ctx context.Context) error {
 		return errors.New("buffer full")
 	}
 	n, err := c.port.Read(ctx, c.readBuf[c.readBufLen:])
-	if n > 0 && c.filename != "" {
-		if err := c.appendToLogFile(ctx, c.readBuf[c.readBufLen:c.readBufLen+n]); err != nil {
-			testing.ContextLog(ctx, "Log file error: ", err)
-		}
-	}
 	c.readBufLen += n
 	if err != nil {
 		return errors.Wrap(err, "port read error")

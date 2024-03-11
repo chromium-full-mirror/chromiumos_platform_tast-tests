@@ -16,7 +16,7 @@ import (
 )
 
 func createDut(ctrl *gomock.Controller, bufLen int) (*BufferedConsole, *mocks.MockPort) {
-	dut := NewBufferedConsole("", bufLen, nil)
+	dut := NewBufferedConsole(bufLen, nil)
 	p := mocks.NewMockPort(ctrl)
 	dut.port = p
 	return dut, p

@@ -5,8 +5,11 @@
 package ti50
 
 import (
+	"bytes"
 	"context"
 	"io"
+	"os"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/serial"
@@ -52,6 +55,8 @@ type DUTControlRawUARTPortOpener struct {
 	DataLen int
 	// The timeout for a read operation.
 	ReadTimeout time.Duration
+	// The name of a log file for all data in the receive direction.
+	LogName string
 }
 
 // DUTControlCCDPortOpener opens a CCD serial interface through the dutcontrol grpc client.
@@ -66,10 +71,20 @@ type DUTControlCCDPortOpener struct {
 	DataLen int
 	// The timeout for a read operation.
 	ReadTimeout time.Duration
+	// The name of a log file for all data in the receive direction.
+	LogName string
 }
 
 // openDUTControlConsole opens a console and returns its data and write result receive channels.
-func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, req *dutcontrol.ConsoleRequest) (<-chan *dutcontrol.ConsoleSerialData, <-chan *dutcontrol.ConsoleSerialWriteResult, error) {
+func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, dir, filename string, req *dutcontrol.ConsoleRequest) (<-chan *dutcontrol.ConsoleSerialData, <-chan *dutcontrol.ConsoleSerialWriteResult, error) {
+	var logfile *os.File
+	if filename != "" {
+		f, err := os.OpenFile(filepath.Join(dir, filename), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, nil, errors.Wrap(err, "error opening log file")
+		}
+		logfile = f
+	}
 	if err := stream.Send(req); err != nil {
 		return nil, nil, errors.Wrap(err, "send request")
 	}
@@ -98,6 +113,11 @@ func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, req *dutc
 			}
 			switch op := resp.Type.(type) {
 			case *dutcontrol.ConsoleResponse_SerialData:
+				if logfile != nil {
+					ts := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
+					buf := bytes.ReplaceAll(op.SerialData.Data, []byte("\n"), []byte("\n"+ts+" "))
+					_, _ = logfile.Write(buf)
+				}
 				if len(data) == qSize {
 					testing.ContextLog(stream.Context(), "WARNING: Dutcontrol data queue full, could block future operations")
 				}
@@ -112,6 +132,9 @@ func openDUTControlConsole(stream dutcontrol.DutControl_ConsoleClient, req *dutc
 				break Loop
 			}
 		}
+		if logfile != nil {
+			logfile.Close()
+		}
 		close(data)
 		close(write)
 	}()
@@ -124,8 +147,14 @@ func (c *DUTControlRawUARTPortOpener) OpenPort(ctx context.Context) (serial.Port
 	if err != nil {
 		return nil, err
 	}
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get directory for saving files")
+	}
 
 	data, write, err := openDUTControlConsole(stream,
+		dir,
+		c.LogName,
 		&dutcontrol.ConsoleRequest{
 			Operation: &dutcontrol.ConsoleRequest_Open{
 				Open: &dutcontrol.ConsoleOpen{
@@ -145,8 +174,14 @@ func (c *DUTControlCCDPortOpener) OpenPort(ctx context.Context) (serial.Port, er
 	if err != nil {
 		return nil, err
 	}
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok {
+		return nil, errors.New("failed to get directory for saving files")
+	}
 
 	data, write, err := openDUTControlConsole(stream,
+		dir,
+		c.LogName,
 		&dutcontrol.ConsoleRequest{
 			Operation: &dutcontrol.ConsoleRequest_Open{
 				Open: &dutcontrol.ConsoleOpen{

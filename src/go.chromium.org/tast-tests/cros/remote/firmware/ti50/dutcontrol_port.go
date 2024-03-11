@@ -108,5 +108,19 @@ func (p *DUTControlPort) Flush(ctx context.Context) error {
 // Close closes the port.
 func (p *DUTControlPort) Close(ctx context.Context) error {
 	testing.ContextLog(ctx, "Closing DUTControlPort")
-	return p.stream.CloseSend()
+	if err := p.stream.CloseSend(); err != nil {
+		return err
+	}
+	for {
+		select {
+		case _, more := <-p.written:
+			if !more {
+				// Gorotine has closed the channel, meaning that it has also
+				// finished writing transcript log to disk.
+				return nil
+			}
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	}
 }

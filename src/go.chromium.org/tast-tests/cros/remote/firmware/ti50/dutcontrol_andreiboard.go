@@ -440,19 +440,20 @@ func (a *DUTControlAndreiboard) PhysicalUart(name common.UartName) common.Serial
 	if name == common.UartConsole {
 		readTimeout = common.UartConsoleTimeout
 	}
+	// Record all of the raw uarts as "uart_<NAME>.log" except main console as "gsc.log"
+	logName := "uart_" + string(name) + ".log"
+	if name == common.UartConsole {
+		logName = "gsc.log"
+	}
 	uartOpener := &DUTControlRawUARTPortOpener{
 		Client:      a.client,
 		Uart:        string(name),
 		Baud:        UartBaud,
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
+		LogName:     logName,
 	}
-	// Record all of the raw uarts as "uart_<NAME>.log" expect main console as "gsc.log"
-	logName := "uart_" + string(name) + ".log"
-	if name == common.UartConsole {
-		logName = "gsc.log"
-	}
-	return common.NewBufferedConsole(logName, consoleQueueSize, uartOpener)
+	return common.NewBufferedConsole(consoleQueueSize, uartOpener)
 }
 
 // CcdSerialInterface opens a handle for communication to/from a USB interface on the chip under
@@ -479,8 +480,9 @@ func (a *DUTControlAndreiboard) CcdSerialInterface(name common.UartName, readTim
 		Baud:        UartBaud,
 		DataLen:     consoleDataLen,
 		ReadTimeout: readTimeout,
+		LogName:     "ccd_" + string(name) + ".log",
 	}
-	return common.NewBufferedConsole("ccd_"+string(name)+".log", consoleQueueSize, uartOpener)
+	return common.NewBufferedConsole(consoleQueueSize, uartOpener)
 }
 
 // CCDFlashromRead reads the SPI flash chip via CCD.
