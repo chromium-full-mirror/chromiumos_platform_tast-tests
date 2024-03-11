@@ -27,7 +27,6 @@ func init() {
 		Desc:         "Checks Web Handwriting Recognition API works correctly with ml_service",
 		Contacts: []string{
 			"chrome-knowledge-eng@google.com",
-			"qjw@chromium.org",
 		},
 		BugComponent: "b:187682",
 		Timeout:      1 * time.Minute,
