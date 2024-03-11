@@ -20,10 +20,10 @@ type CleanupCallback func(context.Context) error
 
 // PowerTestSetup is a util function that allows power fixtures and other
 // fixtures / tests to set up the DUT for power testing.
-func PowerTestSetup(ctx context.Context, name string, tconn *chrome.TestConn, powerTestOptions *PowerTestOptions) (cleanup CleanupCallback, err error) {
+func PowerTestSetup(ctx context.Context, name string, tconn *chrome.TestConn, powerTestOptions *PowerTestOptions) (cleanup CleanupCallback, discharge bool, err error) {
 	su, cleanup := New(name)
 
-	discharge := false
+	discharge = false
 	if _, err := metrics.SysfsBatteryPath(ctx); err == nil {
 		discharge = true
 	} else if errors.Is(err, metrics.ErrNoBattery) {
@@ -36,9 +36,9 @@ func PowerTestSetup(ctx context.Context, name string, tconn *chrome.TestConn, po
 	su.Add(PowerTest(ctx, tconn, *powerTestOptions, NewBatteryDischarge(discharge, true /*ignoreErr*/, DefaultDischargeThreshold)))
 	if err := su.Check(ctx); err != nil {
 		cleanup(ctx)
-		return nil, errors.Wrap(err, "power test options setup failed for fixture "+name)
+		return nil, discharge, errors.Wrap(err, "power test options setup failed for fixture "+name)
 	}
-	return cleanup, nil
+	return cleanup, discharge, nil
 }
 
 // Nested is used by setup items that have multiple stages that need separate

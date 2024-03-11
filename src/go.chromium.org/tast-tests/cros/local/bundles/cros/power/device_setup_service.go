@@ -88,7 +88,7 @@ func (d *DeviceSetupService) Setup(ctx context.Context, req *power.DeviceSetupRe
 		opt.Bluetooth = setup.DoNotChangeBluetooth
 	}
 
-	cleanup, err := setup.PowerTestSetup(ctx, setupName, nil, opt)
+	cleanup, _, err := setup.PowerTestSetup(ctx, setupName, nil, opt)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to setup power test")
 	}

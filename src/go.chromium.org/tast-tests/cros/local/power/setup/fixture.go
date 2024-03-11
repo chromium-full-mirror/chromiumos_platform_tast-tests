@@ -773,6 +773,11 @@ type powerNoUIFixture struct {
 	cleanup          func(context.Context) error
 }
 
+// PowerNoUIFixtureData is return back to tests.
+type PowerNoUIFixtureData struct {
+	Discharge bool
+}
+
 // NewPowerNoUIFixture returns a FixtureImpl to set device to various power test
 // options.
 func NewPowerNoUIFixture(pto PowerTestOptions) testing.FixtureImpl {
@@ -785,7 +790,7 @@ func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 	defer cancel()
 
 	// Set up the testing environment.
-	cleanup, err := PowerTestSetup(ctx, "powerNoUIFixture", nil, f.powerTestOptions)
+	cleanup, discharge, err := PowerTestSetup(ctx, "powerNoUIFixture", nil, f.powerTestOptions)
 	if err != nil {
 		s.Fatal("Power fixture failed: ", err)
 	}
@@ -797,7 +802,7 @@ func (f *powerNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) inte
 
 	f.cleanup = cleanup
 
-	return nil
+	return PowerNoUIFixtureData{Discharge: discharge}
 }
 
 func (f *powerNoUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {
@@ -906,9 +911,10 @@ type powerUIFixture struct {
 
 // PowerUIFixtureData is return back to tests.
 type PowerUIFixtureData struct {
-	Bt  browser.Type
-	Cr  *chrome.Chrome
-	ARC *arc.ARC
+	Discharge bool
+	Bt        browser.Type
+	Cr        *chrome.Chrome
+	ARC       *arc.ARC
 }
 
 // NewPowerUIFixture returns a FixtureImpl to set device to use the specified
@@ -1015,7 +1021,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	}
 
 	// Set up the testing environment.
-	cleanup, err := PowerTestSetup(ctx, "powerUIFixture", tconn, powerTestOptions)
+	cleanup, discharge, err := PowerTestSetup(ctx, "powerUIFixture", tconn, powerTestOptions)
 	if err != nil {
 		s.Fatal("Power fixture failed: ", err)
 	}
@@ -1030,7 +1036,7 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 	f.arc = a
 	f.cleanup = cleanup
 
-	return PowerUIFixtureData{Bt: bt, Cr: f.cr, ARC: f.arc}
+	return PowerUIFixtureData{Discharge: discharge, Bt: bt, Cr: f.cr, ARC: f.arc}
 }
 
 func (f *powerUIFixture) TearDown(ctx context.Context, s *testing.FixtState) {

@@ -540,7 +540,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
-		cleanup, err := powerFixture.PowerTestSetup(ctx, "ccaPowerTest", tconn, opt)
+		cleanup, _, err := powerFixture.PowerTestSetup(ctx, "ccaPowerTest", tconn, opt)
 		if err != nil {
 			s.Fatal("Power fixture failed: ", err)
 		}

@@ -42,7 +42,7 @@ func ManualPower(ctx context.Context, s *testing.State) {
 	options := &setup.PowerTestOptions{
 		KeyboardBrightness: setup.SetKbBrightnessToZero,
 	}
-	cleanup, err := setup.PowerTestSetup(ctx, "setup", nil, options)
+	cleanup, _, err := setup.PowerTestSetup(ctx, "setup", nil, options)
 	if err != nil {
 		s.Fatal("Power setup failed: ", err)
 	}
