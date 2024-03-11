@@ -33,6 +33,23 @@ type testParams struct {
 	Counts      dlputil.EventsCounts // which and how many report events to expect
 }
 
+// eventsCountsToMode returns the mode associated with the given events counts.
+func eventsCountsToMode(count *dlputil.EventsCounts) dlp.Mode {
+	if count.Block > 0 {
+		return dlp.Mode_BLOCK
+	}
+	if count.Report > 0 {
+		return dlp.Mode_REPORT
+	}
+	if count.WarnProceed > 0 {
+		return dlp.Mode_WARN_PROCEED
+	}
+	if count.Warn > 0 {
+		return dlp.Mode_WARN_CANCEL
+	}
+	return dlp.Mode_ALLOW
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         DlpReporting,
@@ -294,6 +311,7 @@ func DlpReporting(ctx context.Context, s *testing.State) {
 		if _, err := service.FilesDriveCopyPaste(ctx, &dlp.ActionRequest{
 			BrowserType: params.BrowserType,
 			DataPath:    d.Path,
+			Mode:        eventsCountsToMode(&params.Counts),
 		}); err != nil {
 			s.Fatal("Failed to test FilesCopyPaste: ", err)
 		}

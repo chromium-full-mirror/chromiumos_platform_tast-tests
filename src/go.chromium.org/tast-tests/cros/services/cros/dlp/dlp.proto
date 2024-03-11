@@ -15,17 +15,11 @@ message EnrollAndLoginRequest {
   bool enable_lacros = 6;
 }
 
-message ClientIdResponse {
-  string clientId = 1;
-}
+message ClientIdResponse { string clientId = 1; }
 
-message CreateTempDirResponse {
-  string path = 1;
-}
+message CreateTempDirResponse { string path = 1; }
 
-message RemoveTempDirRequest {
-  string path = 1;
-}
+message RemoveTempDirRequest { string path = 1; }
 
 enum BrowserType {
   ASH = 0;
@@ -44,13 +38,13 @@ enum Mode {
 message ActionRequest {
   BrowserType browser_type = 1;
   string dataPath = 2;
+  Mode mode = 3;
 }
 
-message TestCopyFileToDriveRequest {
-  string dataPath = 1;
-}
+message TestCopyFileToDriveRequest { string dataPath = 1; }
 
-// DataLeakPreventionService provides RPC methods to run data leak prevention related operations.
+// DataLeakPreventionService provides RPC methods to run data leak prevention
+// related operations.
 service DataLeakPreventionService {
   rpc EnrollAndLogin(EnrollAndLoginRequest) returns (google.protobuf.Empty) {}
   rpc StopChrome(google.protobuf.Empty) returns (google.protobuf.Empty) {}
@@ -62,6 +56,6 @@ service DataLeakPreventionService {
   rpc Screenshot(ActionRequest) returns (google.protobuf.Empty) {}
   rpc Screenshare(ActionRequest) returns (google.protobuf.Empty) {}
   rpc FilesDriveCopyPaste(ActionRequest) returns (google.protobuf.Empty) {}
-  rpc TestCopyFileToDrive(TestCopyFileToDriveRequest) returns (google.protobuf.Empty) {}
+  rpc TestCopyFileToDrive(TestCopyFileToDriveRequest)
+      returns (google.protobuf.Empty) {}
 }
-

@@ -519,8 +519,16 @@ func (service *DataLeakPreventionService) FilesDriveCopyPaste(ctx context.Contex
 		}
 	}(cleanupCtx)
 
-	if err := uiauto.Combine("paste managed file", filesApp.PasteFileFromClipboard(keyboard), filesApp.WaitForFile(dlFileName))(ctx); err != nil {
-		return &empty.Empty{}, errors.Wrap(err, "failed to paste managed the file")
+	if req.Mode == pb.Mode_BLOCK || req.Mode == pb.Mode_WARN_CANCEL {
+		// We do not expect the file to be pasted.
+		if err := uiauto.Combine("paste managed file", filesApp.PasteFileFromClipboard(keyboard), filesApp.EnsureFileGone(dlFileName, 10*time.Second))(ctx); err != nil {
+			return &empty.Empty{}, errors.Wrap(err, "failed to check that the managed file is not pasted")
+		}
+	} else {
+		// We expect the file to be pasted.
+		if err := uiauto.Combine("paste managed file", filesApp.PasteFileFromClipboard(keyboard), filesApp.WaitForFile(dlFileName))(ctx); err != nil {
+			return &empty.Empty{}, errors.Wrap(err, "failed to check that the managed file is pasted")
+		}
 	}
 
 	return &empty.Empty{}, nil
