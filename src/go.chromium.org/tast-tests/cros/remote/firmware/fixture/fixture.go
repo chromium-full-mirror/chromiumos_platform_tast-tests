@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net"
 	"strconv"
+	"strings"
 	"time"
 
 	common "go.chromium.org/tast-tests/cros/common/firmware"
@@ -24,149 +25,114 @@ import (
 
 // Fixture names for the tests to use.
 const (
-	NormalMode              = "bootModeNormal"
-	DevMode                 = "bootModeDev"
-	DevModeGBB              = "bootModeDevGBB"
-	DevModeWPEnabledZeroGBB = "boolModeDevWPEnabledZeroGBB"
-	USBDevModeNoServices    = "bootModeUSBDevNoServices"
-	USBDevModeGBBNoServices = "bootModeUSBDevGBBNoServices"
-	USBDevModeGBB           = "bootModeUSBDevGBB"
-	DevRecModeNoServices    = "bootModeDevRecNoServices"
-	RecModeNoServices       = "bootModeRecNoServices"
-	RecModeCopyServices     = "bootModeRecModeCopyServices"
+	FirmwareBase            = "firmwareBase"
+	BootModeBase            = "bootMode"
+	NormalMode              = BootModeBase + "." + "Normal"
+	DevMode                 = BootModeBase + "." + "Dev"
+	DevModeGBB              = BootModeBase + "." + "DevGBB"
+	DevModeWPEnabledZeroGBB = BootModeBase + "." + "DevWPEnabledZeroGBB"
+	USBDevModeNoServices    = BootModeBase + "." + "USBDevNoServices"
+	USBDevModeGBBNoServices = BootModeBase + "." + "USBDevGBBNoServices"
+	USBDevModeGBB           = BootModeBase + "." + "USBDevGBB"
+	DevRecModeNoServices    = BootModeBase + "." + "DevRecNoServices"
+	RecModeNoServices       = BootModeBase + "." + "RecNoServices"
+	RecModeCopyServices     = BootModeBase + "." + "RecModeCopyServices"
 	USBDevModeWithReinstall = "bootModeUSBDevGBBAndReinstall"
 )
 
+func bootModeFixtureName(val string) string {
+	v, _ := strings.CutPrefix(val, BootModeBase+".")
+	return v
+}
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
-		Name:            NormalMode,
-		Desc:            "Reboot into normal mode before test",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeNormal, false, true),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
+		Name:            FirmwareBase,
+		Desc:            "Basic common fixture",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "czapiga@google.com"},
+		Impl:            &impl{value: &BaseValue{}},
+		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "noSSH"},
 		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
+		PreTestTimeout:  10 * time.Second,
+		PostTestTimeout: 10 * time.Second,
+		TearDownTimeout: 10 * time.Second,
 		Data:            []string{firmware.ConfigFile},
 	})
 	testing.AddFixture(&testing.Fixture{
-		Name:            DevMode,
-		Desc:            "Reboot into dev mode before test",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeDev, false, true),
+		Name:            BootModeBase,
+		Desc:            "Boot into selected boot-mode",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com", "czapiga@google.com"},
+		Impl:            &bootModeImpl{value: &Value{}},
 		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    10 * time.Second,
 		ResetTimeout:    10 * time.Second,
 		PreTestTimeout:  15 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            DevModeGBB,
-		Desc:            "Reboot into dev mode using GBB flags before test",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeDev, true, true),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    10 * time.Second,
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            DevModeWPEnabledZeroGBB,
-		Desc:            "Reboot while ensuring HW and SW write protect are enabled and that GBB is set to zero. Device must already be in developer mode",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newWPEnabledZeroGBBFixture(),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    10 * time.Second,
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            USBDevModeNoServices,
-		Desc:            "Reboot into usb-dev mode before test, ServiceDeps are not supported",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeUSBDev, false, false),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            USBDevModeGBBNoServices,
-		Desc:            "Reboot into usb-dev mode using GBB flags before test, ServiceDeps are not supported",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeUSBDev, true, false),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            DevRecModeNoServices,
-		Desc:            "Reboot into dev recovery mode before test, ServiceDeps are not supported",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "digehlot@google.com"},
-		Impl:            newFixture(common.BootModeRecovery, true, false),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            RecModeNoServices,
-		Desc:            "Reboot into recovery mode before test, ServiceDeps are not supported",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeRecovery, false, false),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            RecModeCopyServices,
-		Desc:            "Reboot into recovery mode before test",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeRecovery, false, true),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name:            USBDevModeGBB,
-		Desc:            "Reboot into usb-dev mode using GBB flags before test",
-		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com"},
-		Impl:            newFixture(common.BootModeUSBDev, true, true),
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
-		SetUpTimeout:    60 * time.Minute, // Setting up USB key is slow
-		ResetTimeout:    10 * time.Second,
-		PreTestTimeout:  15 * time.Minute,
-		PostTestTimeout: 10 * time.Minute,
-		TearDownTimeout: 10 * time.Minute,
-		Data:            []string{firmware.ConfigFile},
+		Parent:          FirmwareBase,
+		Params: []testing.FixtureParam{
+			{
+				// Reboot into normal mode before test
+				Name:         bootModeFixtureName(NormalMode),
+				Val:          newBootModeFixture(common.BootModeNormal, false, true),
+				SetUpTimeout: 10 * time.Second,
+			},
+			{
+				// Reboot into dev mode before test
+				Name:         bootModeFixtureName(DevMode),
+				Val:          newBootModeFixture(common.BootModeDev, false, true),
+				SetUpTimeout: 10 * time.Second,
+			},
+			{
+				// Reboot into dev mode using GBB flags before test
+				Name:         bootModeFixtureName(DevModeGBB),
+				Val:          newBootModeFixture(common.BootModeDev, true, true),
+				SetUpTimeout: 10 * time.Second,
+			},
+			{
+				// Reboot while ensuring HW and SW write protect are enabled and that GBB is set to zero. Device must already be in developer mode
+				Name:         bootModeFixtureName(DevModeWPEnabledZeroGBB),
+				Val:          newBootModeWPEnabledZeroGBBFixture(),
+				SetUpTimeout: 10 * time.Second,
+			},
+			{
+				// Reboot into usb-dev mode before test, ServiceDeps are not supported
+				Name:         bootModeFixtureName(USBDevModeNoServices),
+				Val:          newBootModeFixture(common.BootModeUSBDev, false, false),
+				SetUpTimeout: 60 * time.Minute, // USB key setup is slow
+			},
+			{
+				// Reboot into usb-dev mode using GBB flags before test, ServiceDeps are not supported
+				Name:         bootModeFixtureName(USBDevModeGBBNoServices),
+				Val:          newBootModeFixture(common.BootModeUSBDev, true, false),
+				SetUpTimeout: 60 * time.Minute, // USB key setup is slow
+			},
+			{
+				// Reboot into dev recovery mode before test, ServiceDeps are not supported
+				Name:         bootModeFixtureName(DevRecModeNoServices),
+				Val:          newBootModeFixture(common.BootModeRecovery, true, false),
+				SetUpTimeout: 60 * time.Minute, // USB key setup is slow
+			},
+			{
+				// Reboot into recovery mode before test, ServiceDeps are not supported
+				Name:         bootModeFixtureName(RecModeNoServices),
+				Val:          newBootModeFixture(common.BootModeRecovery, false, false),
+				SetUpTimeout: 60 * time.Minute, // USB key setup is slow
+			},
+			{
+				// Reboot into recovery mode before test, ServiceDeps are not supported
+				Name:         bootModeFixtureName(RecModeCopyServices),
+				Val:          newBootModeFixture(common.BootModeRecovery, false, true),
+				SetUpTimeout: 60 * time.Minute, // USB key setup is slow
+			},
+			{
+				// Reboot into usb-dev mode using GBB flags before test
+				Name:         bootModeFixtureName(USBDevModeGBB),
+				Val:          newBootModeFixture(common.BootModeUSBDev, true, true),
+				SetUpTimeout: 60 * time.Minute, // USB key setup is slow
+			},
+		},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            USBDevModeWithReinstall,
@@ -176,6 +142,11 @@ func init() {
 		Parent:          USBDevModeGBB,
 		TearDownTimeout: 30 * time.Minute,
 	})
+}
+
+// BaseValue contains fields used by firmwareBase fixture.
+type BaseValue struct {
+	Helper *firmware.Helper
 }
 
 // Value contains fields that are useful for tests.
@@ -190,37 +161,46 @@ type Value struct {
 
 // impl contains fields that are useful for Fixture methods.
 type impl struct {
+	value       *BaseValue
+	disallowSSH bool
+}
+
+// bootModeImpl contains fields used by bootMode fixtures.
+type bootModeImpl struct {
 	value         *Value
+	disallowSSH   bool
 	origBootMode  *common.BootMode
 	origGBBFlags  *pb.GBBFlagsState
 	copyTastFiles bool
-	disallowSSH   bool
 }
 
-// newFixture creates an instance of firmware Fixture.
-func newFixture(mode common.BootMode, forceDev, copyTastFiles bool) testing.FixtureImpl {
-	return &impl{
-		value: &Value{
-			BootMode:      mode,
-			ForcesDevMode: forceDev,
-			ForceZeroGBB:  false,
-			ForceWPEnable: false,
-		},
+type bootModeParamVal struct {
+	mode          common.BootMode
+	forceDev      bool
+	copyTastFiles bool
+	zeroGBB       bool
+	forceWPEnable bool
+}
+
+func newBootModeFixture(mode common.BootMode, forceDev, copyTastFiles bool) bootModeParamVal {
+	return bootModeParamVal{
+		mode:          mode,
+		forceDev:      forceDev,
 		copyTastFiles: copyTastFiles,
+		zeroGBB:       false,
+		forceWPEnable: false,
 	}
 }
 
-// newWPEnabledZeroGBBFixture creates an instance of firmware Fixture with WP enabled and zero GBB.
-func newWPEnabledZeroGBBFixture() testing.FixtureImpl {
-	return &impl{
-		value: &Value{
-			BootMode:      common.BootModeDev,
-			ForcesDevMode: false,
-			ForceZeroGBB:  true,
-			ForceWPEnable: true,
-		},
+func newBootModeWPEnabledZeroGBBFixture() bootModeParamVal {
+	return bootModeParamVal{
+		mode:          common.BootModeDev,
+		forceDev:      false,
 		copyTastFiles: true,
+		zeroGBB:       true,
+		forceWPEnable: true,
 	}
+
 }
 
 func varToBool(s *testing.FixtState, varName string) (bool, error) {
@@ -248,6 +228,30 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	s.Log("Creating a new firmware Helper instance for fixture: ", i.String())
 	i.initHelper(ctx, s)
 
+	return i.value
+}
+
+// SetUp is called by the framework to set up the environment with possibly heavy-weight
+// operations.
+func (i *bootModeImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var err error
+	i.disallowSSH, err = varToBool(s, "noSSH")
+	if err != nil {
+		s.Fatal("noSSH: ", err)
+	}
+
+	v := s.Param().(bootModeParamVal)
+	i.value.Helper = s.ParentValue().(*BaseValue).Helper
+	i.value.BootMode = v.mode
+	i.value.ForcesDevMode = v.forceDev
+	i.value.ForceWPEnable = v.forceWPEnable
+	i.value.ForceZeroGBB = v.zeroGBB
+	i.copyTastFiles = v.copyTastFiles
+
+	if !i.copyTastFiles {
+		i.value.Helper.DisallowServices()
+	}
+
 	if i.disallowSSH {
 		s.Log("Skipping GBB and reboot because noSSH var was set")
 		return i.value
@@ -260,10 +264,9 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 
 	flags := pb.GBBFlagsState{Clear: common.NonpreciousGBBFlags(), Set: common.FAFTGBBFlags()}
 	if i.value.ForcesDevMode {
+		common.GBBAddFlag(&flags, pb.GBBFlag_FORCE_DEV_SWITCH_ON, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)
 		if i.value.BootMode == common.BootModeUSBDev {
-			common.GBBAddFlag(&flags, pb.GBBFlag_FORCE_DEV_SWITCH_ON, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY, pb.GBBFlag_FORCE_DEV_BOOT_USB)
-		} else {
-			common.GBBAddFlag(&flags, pb.GBBFlag_FORCE_DEV_SWITCH_ON, pb.GBBFlag_DEV_SCREEN_SHORT_DELAY)
+			common.GBBAddFlag(&flags, pb.GBBFlag_FORCE_DEV_BOOT_USB)
 		}
 	}
 	noECSync, err := varToBool(s, "firmware.no_ec_sync")
@@ -310,6 +313,12 @@ func (i *impl) Reset(ctx context.Context) error {
 	i.value.Helper.CloseServo(ctx)
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
+	return nil
+}
+
+// Reset is called by the framework after each test (except for the last one) to do a
+// light-weight reset of the environment to the original state.
+func (i *bootModeImpl) Reset(ctx context.Context) error {
 	return nil
 }
 
@@ -384,7 +393,10 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 		s.Log("EC is active")
 	}
+}
 
+// PreTest is called by the framework before each test to do a light-weight set up for the test.
+func (i *bootModeImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	if i.disallowSSH {
 		return
 	}
@@ -538,6 +550,10 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := i.value.Helper.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servod: ", err)
 	}
+}
+
+// PostTest is called by the framework after each test to tear down changes PreTest made.
+func (i *bootModeImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := i.value.Helper.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("DUT is offline after test end: ", err)
 	}
@@ -549,8 +565,12 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 
 // TearDown is called by the framework to tear down the environment SetUp set up.
 func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
+	i.closeHelper(ctx, s)
+}
+
+// TearDown is called by the framework to tear down the environment SetUp set up.
+func (i *bootModeImpl) TearDown(ctx context.Context, s *testing.FixtState) {
 	defer func(ctx context.Context) {
-		i.closeHelper(ctx, s)
 		i.origBootMode = nil
 		i.origGBBFlags = nil
 	}(ctx)
@@ -647,6 +667,11 @@ func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 
 // String identifies this fixture.
 func (i *impl) String() string {
+	return "firmware-base"
+}
+
+// String identifies this fixture.
+func (i *bootModeImpl) String() string {
 	name := string(i.value.BootMode)
 	if i.value.ForcesDevMode {
 		name += "-gbb"
@@ -675,9 +700,6 @@ func (i *impl) initHelper(ctx context.Context, s *testing.FixtState) {
 			powerunitOutlet, _ := s.Var("powerunitOutlet")
 			hydraHostname, _ := s.Var("hydraHostname")
 			i.value.Helper = firmware.NewHelper(s.DUT(), s.RPCHint(), s.DataPath(firmware.ConfigFile), servoSpec, dutHostname, powerunitHostname, powerunitOutlet, hydraHostname)
-			if !i.copyTastFiles {
-				i.value.Helper.DisallowServices()
-			}
 		}
 	}
 }
