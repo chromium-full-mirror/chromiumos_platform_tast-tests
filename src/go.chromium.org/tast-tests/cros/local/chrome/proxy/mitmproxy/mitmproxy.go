@@ -102,9 +102,6 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
 	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
 
-	logFileName := fmt.Sprintf("mitmproxy_%s.log", nowStr)
-	logFilePath := filepath.Join(mp.outDir, logFileName)
-
 	// If root certificate is not present,
 	// we should delete the folder and then mitmproxy will recreate them.
 	if _, err := mp.RootCertificate(ctx); err != nil {
@@ -120,26 +117,13 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to create %q for mitmdump output dir", mp.outDir)
 	}
 
-	args := []string{
-		"--set", fmt.Sprintf("listen_port=%d", mp.port),
-		"--set", fmt.Sprintf("confdir=%s", mp.confDir),
-		"-w", dumpFilePath,
+	// Create a new config file in the current config directory.
+	configFilePath := filepath.Join(mp.confDir, "config.yaml")
+	if err := mp.writeConfigFile(ctx, configFilePath); err != nil {
+		return errors.Wrapf(err, "failed to create config file at %s", configFilePath)
 	}
 
-	for _, path := range mp.scriptPaths {
-		args = append(args, "-s", path)
-	}
-
-	for _, option := range mp.options {
-		args = append(args, "--set", option)
-	}
-
-	// We redirect mitmproxy output to file.
-	// We run proxy in a non-block way, so we cannot print logs until cmd is killed.
-	// To avoid any log loss, we rediret log to file to make debug easier.
-	proxyStart := fmt.Sprintf("%s %s > %s", mp.binaryPath, strings.Join(args, " "), logFilePath)
-	testing.ContextLogf(ctx, "command to start proxy is %s", proxyStart)
-	cmd := testexec.CommandContext(ctx, "bash", "-c", proxyStart)
+	cmd := testexec.CommandContext(ctx, "/sbin/minijail0", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
 
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to launch proxy server")
@@ -157,6 +141,42 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 	mp.dumpFileName = dumpFileName
 	mp.isRunning = true
 
+	return nil
+}
+
+// writeConfigFile creates the mitmdump configuration file from the existing mp.options and mp.scripts.
+// The mitmdump config file format is yaml. Config file example:
+//
+// ---
+// listen_port: 4040
+// allowed_endpoints_yaml: /usr/local/share/tast/data_pushed/go.chromium.org/tast-tests/cros/local/bundles/cros/meta/data/endpoints.yml
+// scripts:
+// - /usr/local/share/tast/data_pushed/go.chromium.org/tast-tests/cros/local/bundles/cros/meta/data/allowed_endpoints.py
+// - /usr/local/share/tast/data_pushed/go.chromium.org/tast-tests/cros/local/bundles/cros/meta/data/allowed_endpoints_yaml.py
+func (mp *MitmProxy) writeConfigFile(ctx context.Context, path string) error {
+	configs := []string{"---"}
+	configs = append(configs, fmt.Sprintf(`listen_port: %d`, mp.port))
+	configs = append(configs, mp.options...)
+
+	if len(mp.scriptPaths) > 0 {
+		scripts := append([]string{"scripts:"}, mp.scriptPaths...)
+		configs = append(configs, strings.Join(scripts, "\n - "))
+	}
+
+	yamlConfig := strings.Join(configs, "\n")
+	testing.ContextLog(ctx, "Using the mitmproxy configuration: ", yamlConfig)
+
+	f, err := os.Create(path)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to create config file")
+	}
+	defer f.Close()
+
+	_, err = f.WriteString(yamlConfig)
+	if err != nil {
+		return errors.Wrap(err, "failed to write config file")
+	}
 	return nil
 }
 
