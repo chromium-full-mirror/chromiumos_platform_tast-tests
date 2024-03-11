@@ -123,15 +123,9 @@ func PinUnlockMaximumLength(ctx context.Context, s *testing.State) {
 				s.Fatal("Could not find the Continue button: ", err)
 			}
 
-			// Find the node info for the Continue button
-			nodeInfo, err := ui.Info(ctx, continueButton)
-			if err != nil {
-				s.Fatal("Could not get info for the Continue button: ", err)
-			}
-
 			if len(param.warning) == 0 {
 				// If no warning is expected, check that the Continue button is enabled.
-				if nodeInfo.Restriction == restriction.Disabled {
+				if err := ui.WaitUntilEnabled(continueButton)(ctx); err != nil {
 					s.Error("Continue button should be enabled")
 				}
 			} else {
@@ -141,8 +135,8 @@ func PinUnlockMaximumLength(ctx context.Context, s *testing.State) {
 				}
 
 				// Also check that Continue button is disabled.
-				if nodeInfo.Restriction != restriction.Disabled {
-					s.Fatal("Continue button should be disabled")
+				if err := ui.WaitForRestriction(continueButton, restriction.Disabled)(ctx); err != nil {
+					s.Fatal("Failed to wait for continueButton disabled: ", err)
 				}
 
 				// Press backspace to remove 1 digit to get a good PIN.
@@ -150,15 +144,16 @@ func PinUnlockMaximumLength(ctx context.Context, s *testing.State) {
 					s.Fatal("Failed to press backspace: ", err)
 				}
 
-				// PIN is good again so Continue button should be enabled.
-				nodeInfo, err = ui.Info(ctx, continueButton)
-				if err != nil {
-					s.Fatal("Could not get new info for the Continue button: ", err)
+				// After removing a digit the warning should be disappear.
+				if err := ui.WaitUntilGone(nodewith.Name(param.warning).Role(role.StaticText))(ctx); err != nil {
+					s.Fatal("Failed to wait the warning message is gone: ", err)
 				}
 
-				if nodeInfo.Restriction == restriction.Disabled {
-					s.Error("Continue button should be enabled again")
+				// Wait until the Continue button is enabled again.
+				if err := ui.WaitUntilEnabled(continueButton)(ctx); err != nil {
+					s.Error("Continue button should be enabled")
 				}
+
 			}
 		})
 	}
