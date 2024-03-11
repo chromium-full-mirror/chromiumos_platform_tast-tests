@@ -31,22 +31,31 @@ import (
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Clipboard,
-		LacrosStatus: testing.LacrosVariantNeeded,
+		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests copying and pasting from Chrome to Android and vice versa",
 		Contacts:     []string{"arc-framework+tast@google.com", "yhanada@chromium.org"},
 		// ChromeOS > Software > ARC++ > Framework > Chrome Integration
 		BugComponent: "b:537221",
-
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      "arcBooted",
 		Data:         []string{"clipboard.html", "clipboard_image.html"},
 		Attr:         []string{"group:mainline"},
+		Timeout:      chrome.LoginTimeout + arc.BootTimeout + 1*time.Minute,
 		Params: []testing.Param{{
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_container"},
+			Val:               browser.TypeAsh,
 		}, {
 			Name:              "vm",
+			Fixture:           "arcBooted",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			Val:               browser.TypeAsh,
+		}, {
+			Name:              "lacros_vm",
+			Fixture:           "lacrosWithArcBooted",
+			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
+			ExtraAttr:         []string{"informational", "group:hw_agnostic"},
+			Val:               browser.TypeLacros,
 		}},
 	})
 }
@@ -312,8 +321,7 @@ func Clipboard(ctx context.Context, s *testing.State) {
 	}
 	defer keyboard.Close(ctx)
 
-	// TODO(b/246024883): Add TypeLacros case.
-	browser, closeBrowser, err := browserfixt.SetUp(ctx, cr, browser.TypeAsh)
+	browser, closeBrowser, err := browserfixt.SetUp(ctx, cr, s.Param().(browser.Type))
 	if err != nil {
 		s.Fatal("Failed to create the browser: ", err)
 	}
@@ -387,18 +395,18 @@ func Clipboard(ctx context.Context, s *testing.State) {
 
 		// Copy in Chrome, so the registered observer should paste the clipboard content in Android.
 		const content = "<b>observer</b> should paste this"
-		const new_content = "<html><head></head><body><b>observer</b> should paste this</body></html>"
+		const newContent = "<html><head></head><body><b>observer</b> should paste this</body></html>"
 		chromeCopy := prepareCopyInChrome(browser, uia, keyboard, "text/html", content, server.URL)
 		if err := chromeCopy(ctx); err != nil {
 			s.Fatal("Failed to copy in Chrome: ", err)
 		}
 
 		// Paste and Verify the result.
-		// TODO(crbug.com/1510998): Remove new_content once Chromium changes are submitted.
+		// TODO(crbug.com/1510998): Remove newContent once Chromium changes are submitted.
 		pasteAndroid := preparePasteInAndroid(d, textViewID)
 		if html, err := pasteAndroid(ctx); err != nil {
 			s.Fatal("Failed to obtain pasted text: ", err)
-		} else if html != content && html != new_content {
+		} else if html != content && html != newContent {
 			s.Errorf("Failed to copy HTML from Chrome to Android: got %q; want %q", html, content)
 		}
 	})
