@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -50,7 +51,8 @@ func init() {
 				arc.WithExtraString("in_api", "aaudio"),
 				arc.WithExtraString("out_api", "aaudio"),
 			},
-			Fixture: "arcBootedWithPvSchedEnabled",
+			Fixture:           "arcBootedWithPvSchedEnabled",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}, {
 			Name: "opensles",
 			Val: []arc.ActivityStartOption{
@@ -65,7 +67,8 @@ func init() {
 				arc.WithExtraString("in_api", "opensles"),
 				arc.WithExtraString("out_api", "opensles"),
 			},
-			Fixture: "arcBootedWithPvSchedEnabled",
+			Fixture:           "arcBootedWithPvSchedEnabled",
+			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 		}},
 	})
 }
