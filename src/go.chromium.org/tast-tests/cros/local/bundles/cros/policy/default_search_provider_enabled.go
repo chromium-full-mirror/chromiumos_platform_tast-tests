@@ -31,7 +31,6 @@ func init() {
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
 			"dp-chromeos-eng@google.com",
-			"anastasiian@chromium.org",
 		},
 		BugComponent: "b:1129862",
 		SoftwareDeps: []string{"chrome"},

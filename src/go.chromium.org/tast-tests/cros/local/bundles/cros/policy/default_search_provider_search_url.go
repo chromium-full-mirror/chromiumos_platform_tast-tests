@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Behavior of DefaultSearchProviderSearchURL policy: check if provided search provider is being used",
 		Contacts: []string{
 			"cros-engprod-muc@google.com",
-			"anastasiian@chromium.org", // Test author
+			"dp-chromeos-eng@google.com",
 		},
 		BugComponent: "b:1263917",
 		SoftwareDeps: []string{"chrome"},
