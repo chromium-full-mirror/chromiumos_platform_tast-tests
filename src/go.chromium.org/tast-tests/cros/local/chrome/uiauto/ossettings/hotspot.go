@@ -40,9 +40,7 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 
 	s.SetToggleOption(cr, toggleName, expected)(ctx)
 
-	statusLabel := HotspotOffSublabel
 	if expected {
-		statusLabel = HotspotOnSublabel
 		const notificationTitle = "With hotspot on, Wi-Fi is off"
 		if _, err := ash.WaitForNotification(ctx, tconn, time.Minute, ash.WaitTitle(notificationTitle)); err != nil {
 			return errors.Wrap(err, "failed to wait for notification with title: With hotspot on, Wi-Fi is off")
@@ -52,9 +50,10 @@ func (s *OSSettings) ToggleHotspot(ctx context.Context, tconn *chrome.TestConn, 
 		if err := ash.CloseNotifications(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to close all notifications after toggling hotspot")
 		}
+		return nil
 	}
 
-	if err := s.ui.WaitUntilExists(statusLabel)(ctx); err != nil {
+	if err := s.ui.WaitUntilExists(HotspotOffSublabel)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find expected hotspot status label")
 	}
 
