@@ -48,6 +48,34 @@ func (s *Servo) ServoSendDataSwapRequest(ctx context.Context) (pdControlMsgType,
 	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
 }
 
+// ServoSendPowerSwapRequest sends power swap request to be initiated by the Servo.
+func (s *Servo) ServoSendPowerSwapRequest(ctx context.Context) (pdControlMsgType, error) {
+	// Enable PD message so we can check the response from the DUT.
+	err := s.RunServoCommand(ctx, "pd dump 2")
+	if err != nil {
+		return PDCtrlReserved, errors.Wrap(err, "failed to send enable PD debug")
+	}
+	// Always disable PD commands on exit.
+	defer s.RunServoCommand(ctx, "pd dump 0")
+
+	out, err := s.RunServoCommandGetOutput(ctx, "pd 1 swap power", []string{reEcPdRecv})
+	if err != nil {
+		return PDCtrlReserved, errors.Wrap(err, "failed to send servo data swap")
+	}
+
+	recvMsg, err := strconv.ParseUint(out[0][1], 16, 32)
+	if err != nil {
+		return PDCtrlReserved, errors.Wrapf(err, "failed to convert swap RECV message %q", out[0][1])
+	}
+
+	replyValue := int(recvMsg & PdControlMsgMask)
+	if reply, ok := pdControlMsg[replyValue]; ok {
+		return reply, nil
+	}
+
+	return PDCtrlReserved, errors.Errorf("unknown PD control message value %q", replyValue)
+}
+
 // RequireChargerAttached verifies that the Servo charger port (#0) is an active sink
 func (s *Servo) RequireChargerAttached(ctx context.Context) error {
 

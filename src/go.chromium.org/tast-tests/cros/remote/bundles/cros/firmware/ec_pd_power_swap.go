@@ -144,10 +144,13 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 		curPowerRole = string(pdState.PowerRole)
 	}
 
-	if err := h.Servo.SendPowerSwapRequest(ctx); err != nil {
+	if dutResponseMsg, err := h.Servo.ServoSendPowerSwapRequest(ctx); err != nil {
 		if powerSwapSupported {
 			s.Fatal("Send Power Swap failed: ", err)
 		}
+	} else if powerSwapSupported && dutResponseMsg != servo.PDCtrlAccept ||
+		!powerSwapSupported && dutResponseMsg != servo.PDCtrlReject {
+		s.Fatalf("Expected PRS support = %t, but DUT responded %q", powerSwapSupported, dutResponseMsg)
 	}
 
 	if powerSwapSupported {
