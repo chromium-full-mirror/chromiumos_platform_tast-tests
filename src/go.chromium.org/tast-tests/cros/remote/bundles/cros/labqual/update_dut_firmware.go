@@ -126,13 +126,13 @@ func UpdateDutFirmware(ctx context.Context, s *testing.State) {
 
 	tmpFwDir := fmt.Sprintf("%s-%s", tmpFirmwareDir, uuid)
 	s.Logf("Servo tmp dir: %s", tmpFwDir)
-	if err := h.ServoProxy.RunCommand(ctx, false, "mkdir", "-p", tmpFwDir); err != nil {
+	if err := h.ServoProxy.RunCommand(ctx, true, "mkdir", "-p", tmpFwDir); err != nil {
 		s.Fatalf("Failed to create temp directory %s on servo for saving existing firmware: %s", tmpFwDir, err)
 	}
 	// Delete the tmp directory on the servo at the end
 	defer func() {
 		s.Log("Deleting tmp directory on servo: ", tmpFwDir)
-		if err := h.ServoProxy.RunCommand(ctx, false, "rm", "-rf", tmpFwDir); err != nil {
+		if err := h.ServoProxy.RunCommand(ctx, true, "rm", "-rf", tmpFwDir); err != nil {
 			s.Fatal("Failed to delete temp directory on servo for saving existing firmware: ", err)
 		}
 	}()
