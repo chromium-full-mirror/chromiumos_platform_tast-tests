@@ -28,7 +28,7 @@ func init() {
 			"emaxx@chromium.org",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:mainline", "group:cryptohome"},
+		Attr:         []string{"group:mainline", "group:cryptohome", "group:hw_agnostic"},
 		Fixture:      "ussAuthSessionFixture",
 	})
 }

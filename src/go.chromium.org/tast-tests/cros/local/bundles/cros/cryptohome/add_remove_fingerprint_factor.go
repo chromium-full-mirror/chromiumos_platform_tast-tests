@@ -28,7 +28,7 @@ func init() {
 			"lziest@google.com",
 		},
 		BugComponent: "b:1088399", // ChromeOS > Security > Cryptohome
-		Attr:         []string{"group:mainline", "informational", "group:cryptohome"},
+		Attr:         []string{"group:mainline", "informational", "group:cryptohome", "group:hw_agnostic"},
 		SoftwareDeps: []string{"pinweaver"},
 		Fixture:      "fakeBiometricsFixture",
 	})
