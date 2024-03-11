@@ -30,6 +30,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:mainline",
+			"informational",
 		},
 		Params: []testing.Param{{
 			Name: "gstatic",

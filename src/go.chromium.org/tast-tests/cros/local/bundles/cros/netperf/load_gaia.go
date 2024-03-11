@@ -31,6 +31,8 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:mainline",
+			"informational",
 		},
 		SoftwareDeps: []string{
 			"chrome",
