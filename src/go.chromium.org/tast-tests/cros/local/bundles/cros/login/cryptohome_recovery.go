@@ -14,8 +14,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/login/signinutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -69,7 +72,8 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 			chrome.DontSkipOOBEAfterLogin(),
 			chrome.EnableFeatures("CryptohomeRecovery"),
-			chrome.DisableFeatures("CryptohomeRecoveryBeforeFlowSplit"),
+			// TODO(b/315829727): Remove this as a part of post-launch cleanup.
+			chrome.EnableFeatures("LocalPasswordsForConsumers"),
 		)
 		if err != nil {
 			s.Fatal("Chrome login failed: ", err)
@@ -104,6 +108,24 @@ func CryptohomeRecovery(ctx context.Context, s *testing.State) {
 
 		if err := signinutil.WaitForRecoverySetup(ctx, oobeConn); err != nil {
 			s.Fatal("Failed to wait for recovery setup to be finished: ", err)
+		}
+
+		s.Log("Waiting for the password selection screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordSelectionScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the password selection screen to be visible: ", err)
+		}
+
+		if err := oobeConn.Eval(ctx, "OobeAPI.screens.PasswordSelectionScreen.selectGaiaPassword()", nil); err != nil {
+			s.Fatal("Failed to select GAIA password: ", err)
+		}
+
+		ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+		nextButton := nodewith.Name("Next").Role(role.Button)
+		if err := uiauto.Combine("click next on the password selection screen",
+			ui.WaitUntilEnabled(nextButton),
+			ui.LeftClick(nextButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to click password selection screen next button: ", err)
 		}
 
 		if err := oobeConn.Eval(ctx, "OobeAPI.skipPostLoginScreens()", nil); err != nil {
