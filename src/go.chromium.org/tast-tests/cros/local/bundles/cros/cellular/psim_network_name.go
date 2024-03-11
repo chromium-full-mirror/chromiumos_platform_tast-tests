@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/network/netconfigtypes"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/local/cellular"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
@@ -30,22 +29,16 @@ func init() {
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
 		SoftwareDeps: []string{"chrome"},
 		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active"},
-		Fixture:      "cellular",
+		Fixture:      "cellularWithChrome",
 	})
 }
 
 // PSimNetworkName ensures that PSim network is disconnected and then
 // verifies that network name is displayed correctly in Settings.
 func PSimNetworkName(ctx context.Context, s *testing.State) {
-	cr, err := chrome.New(ctx)
-	if err != nil {
-		s.Fatal("Failed to create a new instance of Chrome: ", err)
-	}
+	cr := s.FixtValue().(*cellular.FixtData).Chrome
 
-	helper, err := cellular.NewHelper(ctx)
-	if err != nil {
-		s.Fatal("Failed to create cellular.Helper: ", err)
-	}
+	helper := s.FixtValue().(*cellular.FixtData).Helper
 
 	// Wait for any Cellular service to be selected and connected.
 	selectedService, err := helper.Device.WaitForSelectedService(ctx, shillconst.DefaultTimeout)
