@@ -7,6 +7,7 @@ package arc
 import (
 	"context"
 	"encoding/json"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -14,9 +15,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/motioninput"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -61,16 +64,21 @@ func PointerCapture(ctx context.Context, s *testing.State) {
 		test.tconn = tconn
 		test.d = d
 
+		// Reserves a few seconds for running deferred cleanups and taking a screenshot on failure.
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
 		act, err := arc.NewActivity(a, motioninput.Package, motioninput.AutoPointerCaptureActivity)
 		if err != nil {
 			s.Fatal("Failed to create an activity: ", err)
 		}
-		defer act.Close(ctx)
+		defer act.Close(cleanupCtx)
 
 		if err := act.StartWithDefaultOptions(ctx, tconn); err != nil {
 			s.Fatal("Failed to start an activity: ", err)
 		}
-		defer act.Stop(ctx, tconn)
+		defer act.Stop(cleanupCtx, tconn)
 
 		if err := ash.WaitForVisible(ctx, tconn, motioninput.Package); err != nil {
 			s.Fatal("Failed to wait for activity to be visible: ", err)
@@ -80,7 +88,7 @@ func PointerCapture(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create mouse device: ", err)
 		}
-		defer test.mew.Close(ctx)
+		defer test.mew.Close(cleanupCtx)
 
 		s.Log("Enabling pointer capture")
 		if err := enablePointerCapture(ctx, tconn); err != nil {
@@ -99,7 +107,7 @@ func PointerCapture(ctx context.Context, s *testing.State) {
 		subtestFunc(ctx, s, test)
 	}
 
-	for _, subtest := range []struct {
+	for i, subtest := range []struct {
 		Name string
 		Func pointerCaptureSubtestFunc
 	}{
@@ -121,6 +129,7 @@ func PointerCapture(ctx context.Context, s *testing.State) {
 		},
 	} {
 		s.Run(ctx, subtest.Name, func(ctx context.Context, s *testing.State) {
+			defer faillog.SaveScreenshotToFileOnError(ctx, cr, s.OutDir(), s.HasError, strconv.Itoa(i)+"-screenshot.png")
 			runSubtest(ctx, s, subtest.Func)
 		})
 	}
