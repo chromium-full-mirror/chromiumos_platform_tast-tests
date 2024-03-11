@@ -59,7 +59,6 @@ func init() {
 		Desc:         "Browser profile gets auto-created for the user, user is automatically logged into the profile",
 		Contacts: []string{
 			"lacros-team@google.com",
-			"anastasiian@chromium.org", // Test author
 		},
 		BugComponent: "b:1456869",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

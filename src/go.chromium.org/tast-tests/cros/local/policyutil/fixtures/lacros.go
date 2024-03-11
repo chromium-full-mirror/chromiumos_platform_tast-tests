@@ -90,7 +90,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            fixture.LacrosPolicyLoggedInRealUser,
 		Desc:            "Fixture for a running FakeDMS with lacros with a real managed user logged on",
-		Contacts:        []string{"anastasiian@chromium.org", "chromeos-commercial-remote-management@google.com"},
+		Contacts:        []string{"chromeos-commercial-remote-management@google.com"},
 		Impl:            &policyRealUserFixture{},
 		SetUpTimeout:    chrome.LoginTimeout + 7*time.Minute,
 		ResetTimeout:    chrome.ResetTimeout,

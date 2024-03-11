@@ -31,7 +31,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Contacts: []string{
 			"lacros-team@google.com",
-			"anastasiian@chromium.org", // Test author
 		},
 		BugComponent: "b:1456869",
 		SoftwareDeps: []string{"chrome", "lacros"},
