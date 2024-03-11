@@ -48,10 +48,20 @@ func PointerCapture(ctx context.Context, s *testing.State) {
 	a := p.ARC
 	d := p.UIDevice
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
 	}
+
+	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
+	if err != nil {
+		s.Fatal("Failed to set device to clamshell mode: ", err)
+	}
+	defer cleanup(cleanupCtx)
 
 	s.Log("Installing apk ", motioninput.APK)
 	if err := a.Install(ctx, arc.APKPath(motioninput.APK)); err != nil {
