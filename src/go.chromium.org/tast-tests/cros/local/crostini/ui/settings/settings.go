@@ -64,7 +64,7 @@ var (
 	// We may need to update this if more 'Turn on' buttons are added to Settings, but there isn't a good way to make this more specific yet.
 	TurnOnButton          = nodewith.NameRegex(regexp.MustCompile(`Turn on|Set Up|Set up`)).Role(role.Button).Ancestor(ossettings.WindowFinder).First()
 	DevelopersButton      = nodewith.Name("Developers").Role(role.Button).Ancestor(ossettings.WindowFinder)
-	LinuxText             = nodewith.Name("Linux development environment").Role(role.StaticText).Ancestor(ossettings.WindowFinder)
+	LinuxText             = nodewith.Name("Linux development environment").Role(role.StaticText).Ancestor(ossettings.WindowFinder).First()
 	nextButton            = nodewith.Name("Next").Role(role.Button).Onscreen()
 	settingsHead          = nodewith.Name("Settings").Role(role.Heading).Onscreen()
 	emptySharedFoldersMsg = nodewith.Name("Shared folders will appear here").Role(role.StaticText).Onscreen()
