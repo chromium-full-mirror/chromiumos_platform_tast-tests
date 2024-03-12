@@ -18,7 +18,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/display"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosinfo"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/perfutil"
@@ -241,25 +240,6 @@ func HotseatAnimation(ctx context.Context, s *testing.State) {
 
 		if err := ash.WaitForHotseatAnimatingToIdealState(ctx, tconn, ash.ShelfShownHomeLauncher); err != nil {
 			return err
-		}
-
-		// For lacros browser, wait for the lacros to finish terminating before
-		// attempting browser launch in the next iteration of the test as a workaround
-		// for https://crbug.com/1385579.
-		// TODO(neis): Add an abstraction for this waiter.
-		if bt == browser.TypeLacros {
-			if err := testing.Poll(ctx, func(ctx context.Context) error {
-				info, err := lacrosinfo.Snapshot(ctx, tconn)
-				if err != nil {
-					return testing.PollBreak(errors.Wrap(err, "failed to get lacros info"))
-				}
-				if !info.KeepAlive && info.State != lacrosinfo.LacrosStateStopped {
-					return errors.Wrap(err, "lacros not yet stopped")
-				}
-				return nil
-			}, &testing.PollOptions{Timeout: 10 * time.Second}); err != nil {
-				return errors.Wrap(err, "lacros unexpectedly not yet stopped")
-			}
 		}
 
 		return nil
