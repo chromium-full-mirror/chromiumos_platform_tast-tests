@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.bug.st/serial"
+	"go.bug.st/serial/enumerator"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -165,9 +166,33 @@ func InitFixture(ctx context.Context) error {
 	return nil
 }
 
+// PrintDetailedPort shows more details of the serial port.
+func PrintDetailedPort(ctx context.Context, uid, port string) error {
+	dports, err := enumerator.GetDetailedPortsList()
+	if err != nil {
+		return errors.Wrap(err, "get the detailed ports list")
+	}
+	found := false
+	for _, p := range dports {
+		if p.Name == port {
+			testing.ContextLogf(ctx, "uid:%s name:%s PID:%s VID:%s Product:%s SerialNumber:%s IsUSB:%v", uid, p.Name, p.PID, p.VID, p.Product, p.SerialNumber, p.IsUSB)
+			found = true
+			break
+		}
+
+	}
+	if !found {
+		return errors.Errorf("couldn't find the uid:%s details", uid)
+	}
+	return nil
+}
+
 // TestAllFixtures tests all fixtures are alive.
 func TestAllFixtures(ctx context.Context) error {
 	for uid, port := range fixtureOnline {
+		if err := PrintDetailedPort(ctx, uid, port); err != nil {
+			return errors.Wrap(err, "failed to print details")
+		}
 		resp, err := requestSerialPort(ctx, port, "i")
 		if err != nil {
 			return errors.Wrap(err, "request serial port")
