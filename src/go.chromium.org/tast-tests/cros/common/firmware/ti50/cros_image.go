@@ -52,6 +52,8 @@ var (
 	usbAdcStateRE = regexp.MustCompile(`(PHY [AB])|ADC: (disconnected)|connected: ([\S]+)`)
 	usbAdcCc1RE   = regexp.MustCompile(`ADC: CC1 = ([0-9]+) mV`)
 	usbAdcCc2RE   = regexp.MustCompile(`ADC: CC2 = ([0-9]+) mV`)
+	// RMA regex
+	rmaAuthChallengeRE = regexp.MustCompile(`([AE][A-Z0-9]+)|(RMA Auth error)|(Must wait)`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -895,4 +897,31 @@ func matchUsbAdcInfo(s string) (UsbAdcInfo, error) {
 	ret.Cc2Mv = uint(cc2)
 
 	return ret, nil
+}
+
+// GetRmaAuth runs the `rma_auth` command and returns the generate RMA challenge
+// string. The method returns an empty string if a rma_auth rate limiting
+// timeout has been triggered.
+func (i *CrOSImage) GetRmaAuth(ctx context.Context) (string, error) {
+	output, err := i.Command(ctx, "rma_auth")
+	if err != nil {
+		return "", errors.Wrap(err, "failed to run GSC `usb` command")
+	}
+
+	return matchRmaChallenge(output)
+}
+
+func matchRmaChallenge(s string) (string, error) {
+	matches := rmaAuthChallengeRE.FindStringSubmatch(s)
+	if len(matches) != 4 {
+		return "", errors.New("regex failed to get correct rma auth matches from: " + s)
+	}
+
+	if matches[1] != "" {
+		return matches[1], nil
+	} else if matches[2] != "" || matches[3] != "" {
+		return "", nil
+	}
+
+	return "", errors.New("regex failed to process rma auth matches from: " + s)
 }

@@ -578,3 +578,45 @@ func testMatchUsbAdcInfo(t *testing.T, input string, expected UsbAdcInfo) {
 		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", out, expected)
 	}
 }
+
+func TestRmaChallenge1(t *testing.T) {
+	input := `
+rma_auth
+[20.834407 tpm_reset_now: done]
+generated challenge:
+
+AH9CDTMQXHPF8EHZDW6KV2YGSFT262DMZU9WTQXGFWR7MUXXZWQFW9KQW59L99999W2WECCCTS6ELUNM
+
+`
+	expected := "AH9CDTMQXHPF8EHZDW6KV2YGSFT262DMZU9WTQXGFWR7MUXXZWQFW9KQW59L99999W2WECCCTS6ELUNM"
+	testMatchRmaChallenge(t, input, expected)
+}
+
+func TestRmaChallenge2(t *testing.T) {
+	input := `
+rma_auth
+RMA Auth error 0x504
+`
+	expected := ""
+	testMatchRmaChallenge(t, input, expected)
+}
+
+func TestRmaChallenge3(t *testing.T) {
+	input := `
+rma_auth
+Must wait to generate another code.
+Command 'rma_auth' failed: Unknown
+`
+	expected := ""
+	testMatchRmaChallenge(t, input, expected)
+}
+
+func testMatchRmaChallenge(t *testing.T, input, expected string) {
+	out, err := matchRmaChallenge(input)
+	if err != nil {
+		t.Fatal("error processing rma auth:", err)
+	}
+	if out != expected {
+		t.Fatalf("output mismatch:\ngot      %v\nexpected %v", out, expected)
+	}
+}
