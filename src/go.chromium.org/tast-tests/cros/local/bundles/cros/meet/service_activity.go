@@ -29,7 +29,7 @@ func init() {
 			"joshuapius@google.com", // Test author
 		},
 		BugComponent: "b:543707", // Communications > Video (Meet) > Platforms > Rooms > Core Devices (OS & Hardware)
-		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
+		Attr:         []string{"group:meet", "group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "meets_device"},
 	})
 }
