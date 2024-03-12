@@ -161,7 +161,7 @@ func selectYesterdayFilter(ctx context.Context, tconn *chrome.TestConn) error {
 	beforeButton := nodewith.Name("Before with no date selected").Role(role.Button)
 	calendarRegion := nodewith.Name("Calendar").Role(role.Region)
 	yesterday := time.Now().AddDate(0, 0, -1)
-	yesterdayStr := fmt.Sprintf("%d-%d-%.2d", yesterday.Year(), yesterday.Month(), yesterday.Day())
+	yesterdayStr := fmt.Sprintf("%d-%.2d-%.2d", yesterday.Year(), yesterday.Month(), yesterday.Day())
 	yesterdayButtonStr := fmt.Sprintf("%s %.2d", yesterday.Month().String(), yesterday.Day())
 	yesterdayButton := nodewith.Name(yesterdayButtonStr).Role(role.Button).Ancestor(calendarRegion).First()
 	yesterdayText := nodewith.Name(yesterdayStr).Role(role.StaticText)
