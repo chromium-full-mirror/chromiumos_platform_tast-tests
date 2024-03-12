@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unsafe"
 
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -75,6 +76,35 @@ func FindPhysicalStylusBatteryLevel(ctx context.Context) (bool, int, error) {
 		return false, -1, errors.Wrapf(err, "%s/capacity (%v) cannot be converted to an integer", queryString, dataStr)
 	}
 	return true, level, nil
+}
+
+// FindPhysicalStylusResolution returns the resolution that can be used to convert stylus touch values in pixels to cm.
+// Note: 1st return value is width resolution, 2nd is height resolution
+func FindPhysicalStylusResolution(ctx context.Context) (uint32, uint32, error) {
+	_, path, err := FindPhysicalStylus(ctx)
+	if err != nil {
+		return 0, 0, errors.Wrap(err, "could not find physical stylus")
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		return 0, 0, errors.Wrapf(err, "could not open stylus path (%s)", path)
+	}
+	defer f.Close()
+
+	var infoX, infoY absInfo
+	for _, entry := range []struct {
+		ec  EventCode
+		dst *absInfo
+	}{
+		{ABS_X, &infoX},
+		{ABS_Y, &infoY},
+	} {
+		if err := ioctl(int(f.Fd()), evIOCGAbs(uint(entry.ec)), uintptr(unsafe.Pointer(entry.dst))); err != nil {
+			return 0, 0, errors.Wrap(err, "failed system call to request resolution from stylus")
+		}
+	}
+	return infoX.resolution, infoY.resolution, nil
 }
 
 // parseHIDName parses and returns the HID device name from a /sys/devices path.
