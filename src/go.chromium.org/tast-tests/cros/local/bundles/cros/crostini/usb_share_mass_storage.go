@@ -33,7 +33,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Share and unshare a virtual usb mass storage device with Crostini, verify read/write to usb mass storage inside Crostini",
 		Contacts:     []string{"clumptini+oncall@google.com"},
-		Attr:         []string{"group:mainline", "informational"},
+		// TODO(b/317944073): Re-enable the test after this bug is fixed.
+		// USB mass-storage sharing has not been working correctly since before this test is introduced.
+		Attr:         []string{},
 		SoftwareDeps: []string{"chrome", "vm_host"},
 		BugComponent: "b:1122570",
 		Params: []testing.Param{
