@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -46,6 +47,7 @@ func (rtc RTC) Write(ctx context.Context, t time.Time) error {
 	// hwclock likes "JAN", but t.Format give "Jan" for the month.
 	dateString := strings.ToUpper(t.Format(hwclockDateFormat))
 	args = append(args, "--date="+dateString)
+	testing.ContextLogf(ctx, "RTC Write hwclock date string: %s", dateString) // Print logs for b/328147118.
 
 	ctx, cancel := context.WithTimeout(ctx, HwclockTimeout)
 	defer cancel()
@@ -64,6 +66,7 @@ func (rtc RTC) Read(ctx context.Context) (time.Time, error) {
 	if err != nil {
 		return time.Time{}, err
 	}
+	testing.ContextLogf(ctx, "RTC Read hwclock output: %s", bytes) // Print logs for b/328147118.
 	return time.Parse(hwclockOutputFormat, strings.TrimSpace(string(bytes)))
 }
 
