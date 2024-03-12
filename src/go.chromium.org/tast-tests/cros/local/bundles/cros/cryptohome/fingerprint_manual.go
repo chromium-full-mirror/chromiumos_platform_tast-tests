@@ -309,7 +309,7 @@ func authFingerLockout(ctx context.Context, client *hwsec.CryptohomeClient, auth
 			if reply, err := client.AuthenticateFingerprintAuthFactor(ctx, authSessionID, fingerLabels); err != nil {
 				var expectedAction uda.PrimaryAction
 				if i == lockoutWrongAttempts {
-					expectedAction = uda.PrimaryAction_PRIMARY_LE_LOCKED_OUT
+					expectedAction = uda.PrimaryAction_PRIMARY_FACTOR_LOCKED_OUT
 				} else {
 					expectedAction = uda.PrimaryAction_PRIMARY_INCORRECT_AUTH
 				}

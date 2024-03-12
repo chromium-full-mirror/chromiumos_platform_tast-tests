@@ -213,7 +213,7 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	if ec := replyWithError.GetError(); ec != uda.CryptohomeErrorCode_CRYPTOHOME_ERROR_TPM_DEFEND_LOCK {
 		s.Fatal("AuthenticateAuthFactor indicates that the TPM is not locked out: ", ec)
 	}
-	if pa := replyWithError.GetErrorInfo().PrimaryAction; pa != uda.PrimaryAction_PRIMARY_LE_LOCKED_OUT {
+	if pa := replyWithError.GetErrorInfo().PrimaryAction; pa != uda.PrimaryAction_PRIMARY_FACTOR_LOCKED_OUT {
 		s.Fatal("Incorrect pin should result in LeLockedOut primary action, but got: ", pa)
 	}
 
