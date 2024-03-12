@@ -9,7 +9,6 @@ import (
 	"encoding/hex"
 	"math"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -202,8 +201,8 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to fetch StatusUpdateSignal after a new AuthSession is established after the user is locked out with error: ", err)
 	}
-	if err = ensurePINLockedOut(ctx, testUser1, client); err != nil {
-		s.Fatal("Failed to run ensurePINLockedOut with error: ", err)
+	if err = ensurePINLockedOutInListAuthFactors(ctx, testUser1, client); err != nil {
+		s.Fatal("Failed to run ensurePINLockedOutInListAuthFactors with error: ", err)
 	}
 
 	// After the PIN lock out we should not be able to authenticate with correct PIN.
@@ -218,17 +217,8 @@ func PINWeaver(ctx context.Context, s *testing.State) {
 		s.Fatal("Incorrect pin should result in LeLockedOut primary action, but got: ", pa)
 	}
 
-	// Check to make sure that PIN AuthFactor does not appear in StartAuthSessionReply.
-	reply, authSessionID, err = cryptohomeHelper.StartAuthSession(ctx, testUser1, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
-	if err != nil {
-		s.Fatal("Failed to start auth session when searching for PIN factor in reply: ", err)
-	}
-	defer cryptohomeHelper.InvalidateAuthSession(ctx, authSessionID)
-	// Search for PIN-based AuthFactor in reply.
-	for _, authFactor := range reply.AuthFactors {
-		if authFactor.Type == uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN {
-			s.Fatal("PIN-based AuthFactor was found in StartAuthSessionReply")
-		}
+	if err = ensurePINLockedOutInStartSession(ctx, testUser1, client); err != nil {
+		s.Fatal("Failed to run ensurePINLockedOutInStartSession with error: ", err)
 	}
 
 	/** Ensure that testUser2 can still use PIN **/
@@ -465,7 +455,34 @@ func removeLeCredential(ctx, ctxForCleanUp context.Context, testUser, label stri
 	return nil
 }
 
-func ensurePINLockedOut(ctx context.Context, testUser string, cryptohomeClient *hwsec.CryptohomeClient) error {
+func ensurePINLockedOutInStartSession(ctx context.Context, testUser string, cryptohomeClient *hwsec.CryptohomeClient) error {
+	// Check to make sure that PIN AuthFactor does not appear in StartAuthSessionReply.
+	reply, authSessionID, err := cryptohomeClient.StartAuthSession(ctx, testUser, false /*isEphemeral*/, uda.AuthIntent_AUTH_INTENT_DECRYPT)
+	if err != nil {
+		return errors.Wrap(err, "failed to start auth session")
+	}
+	defer cryptohomeClient.InvalidateAuthSession(ctx, authSessionID)
+
+	// Search for the first PIN-based AuthFactor, and parse if it is locked out.
+	var pinAuthFactor *uda.AuthFactorWithStatus
+	for _, authFactor := range reply.ConfiguredAuthFactorsWithStatus {
+		if authFactor.AuthFactor.Type == uda.AuthFactorType_AUTH_FACTOR_TYPE_PIN {
+			pinAuthFactor = authFactor
+			break
+		}
+	}
+
+	if pinAuthFactor != nil {
+		var statusInfo = pinAuthFactor.StatusInfo
+		if statusInfo.TimeAvailableIn != math.MaxUint64 {
+			return errors.Errorf("Pin not locked for indefinite amount of time, available in %d", statusInfo.TimeAvailableIn)
+		}
+		return nil
+	}
+	return errors.New(testUser + " does not have any PIN-based AuthFactors.")
+}
+
+func ensurePINLockedOutInListAuthFactors(ctx context.Context, testUser string, cryptohomeClient *hwsec.CryptohomeClient) error {
 	output, err := cryptohomeClient.ListAuthFactors(ctx, testUser)
 	if err != nil {
 		return errors.Wrap(err, "failed to list auth factors")
@@ -481,15 +498,9 @@ func ensurePINLockedOut(ctx context.Context, testUser string, cryptohomeClient *
 	}
 
 	if pinAuthFactor != nil {
-		for _, authIntent := range pinAuthFactor.AvailableForIntents {
-			if authIntent == uda.AuthIntent_AUTH_INTENT_DECRYPT {
-				return errors.New("PIN not locked when it should have been")
-			}
-		}
-
 		var statusInfo = pinAuthFactor.StatusInfo
 		if statusInfo.TimeAvailableIn != math.MaxUint64 {
-			return errors.New("Pin not locked for indefinite amount of time, available in " + strconv.FormatUint(statusInfo.TimeAvailableIn, 10))
+			return errors.Errorf("Pin not locked for indefinite amount of time, available in %d", statusInfo.TimeAvailableIn)
 		}
 		return nil
 	}
