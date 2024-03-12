@@ -204,7 +204,10 @@ func createChrome(ctx context.Context, gaia chrome.Option, param testParam) (*ch
 		lacrosfixt.NewConfig(),
 		chrome.ARCSupported(),
 		gaia,
-		chrome.ExtraArgs(args...))
+		chrome.ExtraArgs(args...),
+		// To measure ARC session start up time, we should not defer for
+		// user session start up tasks.
+		chrome.DisableFeatures("DeferArcActivationUntilUserSessionStartUpTaskCompletion"))
 	if err != nil {
 		return nil, nil, err
 	}

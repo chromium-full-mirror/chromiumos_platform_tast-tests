@@ -47,7 +47,10 @@ func (c *PerfBootService) WaitUntilCPUCoolDown(ctx context.Context, req *empty.E
 func (c *PerfBootService) GetPerfValues(ctx context.Context, req *empty.Empty) (*perfpb.Values, error) {
 	// TODO(niwa): Check if we should use GAIA login instead of fake login.
 	cr, err := chrome.New(ctx, chrome.ARCEnabled(),
-		chrome.ExtraArgs("--disable-arc-data-wipe", "--ignore-arcvm-dev-conf"))
+		chrome.ExtraArgs("--disable-arc-data-wipe", "--ignore-arcvm-dev-conf"),
+		// To measure ARC session start up time, we should not defer for
+		// user session start up tasks.
+		chrome.DisableFeatures("DeferArcActivationUntilUserSessionStartUpTaskCompletion"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to connect to Chrome")
 	}

@@ -187,17 +187,20 @@ func RegularBoot(ctx context.Context, s *testing.State) {
 // performArcInitialBoot performs initial boot that includes ARC provisioning and returns GAIA
 // credentials to use for regular boot wih preserved state.
 func performArcInitialBoot(ctx context.Context, credPool string, chromeArgs []string) (chrome.Creds, error) {
-	// Disable ArcWindowPredictor to let chrome record the necessary histograms.
-	// TODO(b/259517082): Stop disabling ArcWindowPredictor.
-	chromeArgs = append(chromeArgs, "--disable-features=ArcWindowPredictor")
-	chromeArgs = append(chromeArgs, arc.DisableSyncFlags()...)
-
 	// Options are tuned for the fastest boot, we don't care about
 	// initial provisioning performance, which is monitored in other tests.
 	opts := []chrome.Option{
 		chrome.ARCSupported(),
 		chrome.GAIALoginPool(credPool),
-		chrome.ExtraArgs(chromeArgs...)}
+		chrome.ExtraArgs(chromeArgs...),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
+		chrome.DisableFeatures(
+			// Disable ArcWindowPredictor to let chrome record the necessary histograms.
+			// TODO(b/259517082): Stop disabling ArcWindowPredictor.
+			"ArcWindowPredictor",
+			// To measure ARC session start up time, we should not defer for
+			// user session start up tasks.
+			"DeferArcActivationUntilUserSessionStartUpTaskCompletion")}
 
 	testing.ContextLog(ctx, "Create initial Chrome")
 	cr, err := chrome.New(ctx, opts...)
@@ -265,10 +268,14 @@ func performArcRegularBoot(ctx context.Context, testDir string, creds chrome.Cre
 		chrome.GAIALogin(creds),
 		chrome.KeepState(),
 		chrome.ExtraArgs(chromeArgs...),
-		chrome.ExtraArgs(append(arc.DisableSyncFlags(),
+		chrome.ExtraArgs(arc.DisableSyncFlags()...),
+		chrome.DisableFeatures(
 			// Disable ArcWindowPredictor to let chrome record the necessary histograms.
 			// TODO(b/259517082): Stop disabling ArcWindowPredictor.
-			"--disable-features=ArcWindowPredictor")...)}
+			"ArcWindowPredictor",
+			// To measure ARC session start up time, we should not defer for
+			// user session start up tasks.
+			"DeferArcActivationUntilUserSessionStartUpTaskCompletion")}
 
 	testing.ContextLog(ctx, "Create Chrome")
 	cr, err := chrome.New(ctx, opts...)
