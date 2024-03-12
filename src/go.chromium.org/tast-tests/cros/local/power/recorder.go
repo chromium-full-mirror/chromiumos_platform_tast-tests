@@ -43,8 +43,13 @@ const (
 	// recorder destruction and data post-processing.
 	RecorderTimeout = RecorderCooldownTimeout + 13*time.Minute
 
-	// OptionalRecorderArgCustomPerfKey is the key used to get optional custom perf values.
+	// OptionalRecorderArgCustomPerfKey is the key used to get optional custom
+	// perf values.
 	OptionalRecorderArgCustomPerfKey = "custom_perf"
+
+	// OptionalRecorderArgDischargeWatchdogKey is the arg name to enable
+	// discharge watchdog in recorder.
+	OptionalRecorderArgDischargeWatchdogKey = "enable_watchdog"
 )
 
 // Recorder is a utility to measure power metrics during tests.
@@ -56,11 +61,12 @@ type Recorder struct {
 	optionalArgs []OptionalRecorderArg
 
 	// Fields used internally by the recorder.
-	dataSources []perf.TimelineDatasource
-	metrics     *perf.Timeline
-	checkpoints *perf.Checkpoints
-	isRecording bool
-	perfValues  *perf.Values
+	dataSources             []perf.TimelineDatasource
+	metrics                 *perf.Timeline
+	checkpoints             *perf.Checkpoints
+	enableDischargeWatchdog bool
+	isRecording             bool
+	perfValues              *perf.Values
 }
 
 // OptionalRecorderArg is used for denoting optional args for recorder.
@@ -120,6 +126,10 @@ func (r *Recorder) Start(ctx context.Context) error {
 		return errors.New("recorder has already started recording")
 	}
 
+	if r.enableDischargeWatchdog {
+		r.StartDischargeWatchdog(ctx)
+	}
+
 	metrics, err := perf.NewTimeline(ctx, r.dataSources, perf.Interval(r.interval))
 	if err != nil {
 		return errors.Wrap(err, "failed to build metrics timeline")
@@ -153,6 +163,8 @@ func (r *Recorder) Stop(ctx context.Context) (*perf.Values, error) {
 		return nil, errors.New("recorder is not recording")
 	}
 	r.isRecording = false
+	// Stop watching for battery discharge either way.
+	r.enableDischargeWatchdog = false
 	p, err := r.metrics.StopRecording(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed while recording metrics or stopping recorder")
@@ -274,6 +286,33 @@ func (r *Recorder) EndCheckpoint(section *perf.Section) {
 	r.checkpoints.EndSection(section)
 }
 
+// StartDischargeWatchdog starts a goroutine that makes sure the device is on
+// discharge to keep guard of chargeoverride reset out of AC charger connection
+// flakiness.
+func (r *Recorder) StartDischargeWatchdog(ctx context.Context) {
+	var checkInterval = 10 * time.Second
+	go func() {
+		for r.enableDischargeWatchdog {
+			status, err := GetStatus(ctx)
+			if err != nil {
+				testing.ContextLog(ctx, "Discharge watchdog failed to read power status: ", err)
+				return
+			}
+			if IsLinePowerConnected(status) {
+				testing.ContextLog(ctx, "Discharge watchdog detected power supply on, force discharge again")
+				err = util.SimpleForceDischarge(ctx)
+				if err != nil {
+					testing.ContextLogf(ctx, "Discharge watchdog unable to set discharge: %s", err)
+					return
+				}
+			}
+			// GoBigSleepLint: Sleep this thread that aims to do periodic check.
+			testing.Sleep(ctx, checkInterval)
+		}
+		return
+	}()
+}
+
 // NewRecorder creates and returns a new Recorder.
 // In:
 // ctx: context for the test.
@@ -284,13 +323,22 @@ func (r *Recorder) EndCheckpoint(section *perf.Section) {
 // Out:
 // Recorder: collect power metrics in the test.
 func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName string, args ...OptionalRecorderArg) *Recorder {
+	// Enable discharge watchdog if force discharge succeeds.
+	discharge := false
+	for _, optionalRecorderArg := range args {
+		if optionalRecorderArg.argName == OptionalRecorderArgDischargeWatchdogKey {
+			discharge = optionalRecorderArg.argValue.(bool)
+		}
+	}
 	return &Recorder{
 		interval:     interval,
 		outDir:       outDir,
 		testName:     testName,
 		optionalArgs: args,
-		dataSources:  metrics.TestMetrics(),
-		isRecording:  false,
+
+		dataSources:             metrics.TestMetrics(),
+		enableDischargeWatchdog: discharge,
+		isRecording:             false,
 	}
 }
 

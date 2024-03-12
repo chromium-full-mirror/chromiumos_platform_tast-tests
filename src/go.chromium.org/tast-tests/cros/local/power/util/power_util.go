@@ -17,6 +17,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/graphics/hardwareprobe"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -667,6 +668,25 @@ func SupportChargeOverride() bool {
 		}
 	}
 	return true
+}
+
+// SimpleForceDischarge is a shortened implementation of SetBatteryDischarge()
+// under local/power/setup. This function doesn't handle cleanup.
+// If you are looking to force device on battery in a test, please prioritize
+// using power/setup package over this function.
+func SimpleForceDischarge(ctx context.Context) error {
+	if SupportChargeOverride() {
+		_, stderr, err := testexec.CommandContext(ctx, "ectool", "chargeoverride", "dontcharge").SeparatedOutput(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrapf(err, "unable to force discharge, got error %s", string(stderr))
+		}
+	} else {
+		_, stderr, err := testexec.CommandContext(ctx, "ectool", "chargecontrol", "discharge").SeparatedOutput(testexec.DumpLogOnError)
+		if err != nil {
+			return errors.Wrapf(err, "unable to force discharge, got error %s", string(stderr))
+		}
+	}
+	return nil
 }
 
 // SupportChromeEC returns a boolean indicating if a device supports Chrome EC.
