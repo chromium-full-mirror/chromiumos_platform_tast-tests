@@ -209,6 +209,10 @@ public class ArcTestVpnService extends VpnService {
         mTunFd = new VpnService.Builder()
                 .addAddress("192.168.2.2", 24)
                 .addRoute("0.0.0.0", 0)
+                // Useful so ARC doesn't use the host's DNS servers as a fallback. This shouldn't
+                // functionally change the VPN behavior, but may affect ARC's networking behavior
+                // on syncing host->ARC DNS servers.
+                .addDnsServer("8.8.8.8")
                 .establish();
     }
 
