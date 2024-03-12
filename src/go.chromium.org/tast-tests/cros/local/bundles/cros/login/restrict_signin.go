@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/state"
 	"go.chromium.org/tast-tests/cros/local/chrome/userutil"
+	"go.chromium.org/tast-tests/cros/local/session"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -109,6 +110,18 @@ func RestrictSignin(ctx context.Context, s *testing.State) {
 			defer settings.Close(cleanUpCtx)
 		}
 
+		// Waiting for PropertyChangeComplete signal for the ShowUserNames setting
+		// to confirm it has been written to disk.
+		sessionManager, err := session.NewSessionManager(ctx)
+		if err != nil {
+			s.Fatal("Failed to create session_manager binding: ", err)
+		}
+		settingsWatcher, err := sessionManager.WatchPropertyChangeComplete(ctx)
+		if err != nil {
+			s.Fatal("Failed to start watching PropertyChangeComplete signal: ", err)
+		}
+		defer settingsWatcher.Close(cleanUpCtx)
+
 		ui := uiauto.New(tconn)
 
 		if err := uiauto.Combine("limit sign-in to existing users only",
@@ -116,6 +129,22 @@ func RestrictSignin(ctx context.Context, s *testing.State) {
 			ui.WaitUntilExists(nodewith.NameStartingWith(signinutil.GetUsernameFromEmail(deviceOwner)).NameContaining("owner").Role(role.StaticText)),
 		)(ctx); err != nil {
 			s.Fatal("Failed to limit sign-in: ", err)
+		}
+
+		select {
+		case <-settingsWatcher.Signals:
+		case <-ctx.Done():
+			s.Fatal("Timed out waiting for PropertyChangeComplete signal: ", ctx.Err())
+		}
+
+		setting, err := session.RetrieveSettings(ctx, sessionManager)
+
+		if err != nil {
+			s.Fatal("Failed to retrieve settings: ", err)
+		}
+
+		if setting.AllowNewUsers.GetAllowNewUsers() {
+			s.Fatal("Failed to toggle AllowNewUsers value")
 		}
 	}()
 
