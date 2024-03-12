@@ -17,7 +17,7 @@ const (
 	testfile1_1 = "/home/user/%s/testfile1"
 	testfile1_2 = "/home/.shadow/%s/mount/user/testfile1"
 	testfile1_3 = "/home/chronos/u-%s/testfile1"
-	testfile2_1 = "/home/user/%s/Downloads/testfile2"
+	testfile2_1 = "/home/user/%s/MyFiles/Downloads/testfile2"
 	testfile2_2 = "/home/.shadow/%s/mount/user/MyFiles/Downloads/testfile2"
 	testfile3_1 = "/home/chronos/u-%s/MyFiles/Downloads/testfile3"
 	testfile3_2 = "/home/.shadow/%s/mount/user/MyFiles/Downloads/testfile3"
