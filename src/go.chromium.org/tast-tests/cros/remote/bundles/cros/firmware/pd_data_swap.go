@@ -25,7 +25,6 @@ func init() {
 			"keithshort@chromium.org",  // Test author
 		},
 		BugComponent: "b:792402", // ChromeOS > Platform > Enablement > Firmware > FAFT
-		// TODO: When stable, move to firmware_pd.
 		Data:         []string{firmware.ConfigFile},
 		Vars:         []string{"servo"},
 		Fixture:      fixture.NormalMode,
@@ -67,7 +66,7 @@ func init() {
 				DTS:      firmware.DTSModeOn,
 				Shutdown: true,
 			},
-		}}, []string{"group:firmware", "firmware_pd_unstable"}),
+		}}, []string{"group:firmware", "firmware_pd"}),
 	})
 }
 
