@@ -8,8 +8,8 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/local/rtc"
 	"go.chromium.org/tast-tests/cros/local/upstart"
+	"go.chromium.org/tast-tests/cros/local/wilco"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -48,7 +48,7 @@ func ECRTC(ctx context.Context, s *testing.State) {
 		tolerance      = 2 * time.Second
 	)
 
-	wilcoECRTC := rtc.RTC{DevName: "rtc1", LocalTime: true, NoAdjfile: true}
+	wilcoECRTC := wilco.RTC{DevName: "rtc1", LocalTime: true, NoAdjfile: true}
 
 	readECRTC := func() time.Time {
 		for i := 1; ; i++ {

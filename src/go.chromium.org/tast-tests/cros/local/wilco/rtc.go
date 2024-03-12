@@ -2,8 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package rtc provides access to a device's Real Time Clock (hardware clock)
-package rtc
+// Provides access to a device's Real Time Clock (hardware clock)
+
+package wilco
 
 import (
 	"context"

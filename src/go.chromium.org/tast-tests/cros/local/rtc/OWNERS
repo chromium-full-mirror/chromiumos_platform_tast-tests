@@ -1,7 +1,0 @@
-set noparent
-
-hiroh@chromium.org
-paulhsia@chromium.org
-
-# Tast team for bulk/emergencies
-include /OWNERS.tast
