@@ -667,21 +667,6 @@ func init() {
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
 			}, {
-				// 16p with jamboard test.
-				Name:    "16p_jamboard",
-				Timeout: meetcuj.DefaultTestTimeout + 15*time.Minute,
-				Val: meetcuj.MeetTest{
-					Bots:          []int{15},
-					Layout:        googlemeet.TiledLayout,
-					Jamboard:      true,
-					Split:         true,
-					Cam:           true,
-					ZoomOut:       true,
-					BrowserType:   browser.TypeAsh,
-					FakeCamHALCfg: meetcuj.FakeCamHALCfg720p,
-				},
-				Fixture: "loggedInToCUJUserWithWebRTCEventLogging",
-			}, {
 				// 49p with vp8 video codec.
 				Name:    "49p_vp8",
 				Timeout: meetcuj.DefaultTestTimeout,
@@ -758,7 +743,7 @@ func init() {
 // Pre-preparation:
 //   - Open a Meet window.
 //   - Create and enter the meeting code.
-//   - Open a Google Docs/Jamboard window (if necessary).
+//   - Open a Google Docs window (if necessary).
 //   - Enter split mode (if necessary).
 //   - Turn off camera (if necessary).
 //
@@ -768,7 +753,7 @@ func init() {
 //   - Set up the layout.
 //   - Max out the number of the maximum tiles (if necessary).
 //   - Start to present (if necessary).
-//   - Input notes to Google Docs file or draw on Jamboard (if necessary).
+//   - Input notes to Google Docs file (if necessary).
 //   - Navigate to Google Slides and input notes to file (if necessary).
 //   - Navigate to Google Sheets and input notes to file (if necessary).
 //   - Wait for 30 seconds before ending the meeting.

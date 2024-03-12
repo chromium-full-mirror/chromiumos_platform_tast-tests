@@ -83,11 +83,10 @@ type MeetTest struct {
 	Bots []int
 
 	Layout            googlemeet.LayoutOption // Type of the layout in the meeting.
-	Present           bool                    // Whether it is presenting the Google Docs/Jamboard window.
+	Present           bool                    // Whether it is presenting the Google Docs window.
 	Docs              bool                    // Whether it is running with a Google Docs window.
 	Slides            bool                    // Whether it is running with a Google Slides window.
 	Sheets            bool                    // Whether it is running with a Google Sheets window.
-	Jamboard          bool                    // Whether it is running with a Jamboard window.
 	Split             bool                    // Whether it is in split screen mode. It can not be true if docs is false.
 	Cam               bool                    // Whether the camera is on or not.
 	Effects           bool                    // Whether to turn on visual effects within Meet.
@@ -128,7 +127,7 @@ var FakeCamHALCfg720p = &fakeCameraHALCfg{
 // Pre-preparation:
 //   - Open a Meet window.
 //   - Create and enter the meeting code.
-//   - Open a Google Docs/Jamboard window (if necessary).
+//   - Open a Google Docs window (if necessary).
 //   - Enter split mode (if necessary).
 //   - Turn off camera (if necessary).
 //
@@ -138,7 +137,7 @@ var FakeCamHALCfg720p = &fakeCameraHALCfg{
 //   - Set up the layout.
 //   - Max out the number of the maximum tiles (if necessary).
 //   - Start to present (if necessary).
-//   - Input notes to Google Docs file or draw on Jamboard (if necessary).
+//   - Input notes to Google Docs file (if necessary).
 //   - Navigate to Google Slides and input notes to file (if necessary).
 //   - Navigate to Google Sheets and input notes to file (if necessary).
 //   - Wait for 30 seconds before ending the meeting.
@@ -153,15 +152,11 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		// addBotRetries is the local retry number for adding bots.
 		addBotRetries  = 3
 		defaultDocsURL = "https://docs.new/"
-		jamboardURL    = "https://jamboard.google.com"
 		newTabTitle    = "New Tab"
 	)
 
 	notes := strings.Split("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", "")
 
-	if meet.Docs && meet.Jamboard {
-		return pv, errors.New("tried to open both Google Docs and Jamboard at the same time")
-	}
 	if meet.TabSwitchDocs && !meet.Docs {
 		return pv, errors.New("cannot tab switch docs without opening a Google Doc")
 	}
@@ -739,8 +734,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		return pv, err
 	}
 
-	var cleanUpDoc, cleanUpJamboard bool
-	var docsHref, jamboardHref string
+	var cleanUpDoc bool
+	var docsHref string
 	// Shorten the context to cleanup document.
 	// Some low-end devices take a long time to delete docs, so extend
 	// timeout to one minute.
@@ -755,20 +750,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			}
 		}
 	}(cleanUpDocCtx)
-	// Shorten the context to cleanup jamboard.
-	// Some low-end devices take a long time to delete jamboard, so extend
-	// timeout to one minute.
-	cleanUpJamboardCtx := ctx
-	ctx, cancel = ctxutil.Shorten(ctx, time.Minute)
-	defer cancel()
-	defer func(ctx context.Context) {
-		if cleanUpJamboard && jamboardHref != "" {
-			if err := googledocs.DeleteJamboardWithURL(tconn, cr, jamboardHref)(ctx); err != nil {
-				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return true }, cr, "cleanup_jamboard")
-				testing.ContextLog(ctx, "Failed to delete jamboard: ", err)
-			}
-		}
-	}(cleanUpJamboardCtx)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) (retErr error) {
 		// Open up the collab window inside the recorder to collect
@@ -829,32 +810,10 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			if err := googledocs.ShowTheDocMenus(tconn, kw)(ctx); err != nil {
 				return errors.Wrap(err, "failed to show the doc menus")
 			}
-		} else if meet.Jamboard {
-			// Create another browser window and open a new Jamboard file.
-			recorder.Annotate(ctx, "Open_Jamboard_window")
-			collaborationConn, err = recorder.NewConn(ctx, br, "Jamboard", jamboardURL, browser.WithNewWindow())
-			if err != nil {
-				return errors.Wrap(err, "failed to open the Jamboard website")
-			}
-			defer collaborationConn.Close()
-			testing.ContextLog(ctx, "Creating a Jamboard window")
-			if err := ui.LeftClick(nodewith.Name("New Jam").Role(role.Button))(ctx); err != nil {
-				return errors.Wrap(err, "failed to click the new jam button")
-			}
-			collaborationRE = regexp.MustCompile(`\bJamboard\b`)
-
-			if err := webutil.WaitForQuiescence(ctx, collaborationConn, 30*time.Second); err != nil {
-				return errors.Wrap(err, "failed to wait for the page to load")
-			}
-
-			if err := collaborationConn.Eval(ctx, "window.location.href", &jamboardHref); err != nil {
-				return errors.Wrap(err, "failed to get Jamboard URL")
-			}
-			cleanUpJamboard = true
 		}
 
 		var collaborationWindow *ash.Window
-		if meet.Docs || meet.Jamboard {
+		if meet.Docs {
 			collaborationWindow, err = ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return collaborationRE.MatchString(w.Title) })
 			if err != nil {
 				return errors.Wrap(err, "failed to find the collaboration window")
@@ -934,8 +893,8 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 		}
 
 		if meet.Present {
-			if !meet.Docs && !meet.Jamboard {
-				return errors.New("need a Google Docs or Jamboard tab to present")
+			if !meet.Docs {
+				return errors.New("need a Google Docs tab to present")
 			}
 
 			// Start an annotation section for opening the screen share window
@@ -943,9 +902,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 			endPresentSection := recorder.AnnotateSection(ctx, "Screenshare")
 
 			presentTabTitle := "Untitled document"
-			if meet.Jamboard {
-				presentTabTitle = "Untitled Jam"
-			}
 			if err := startPresenting(ctx, collaborationConn, ui, meetHelper, kw, presentTabTitle); err != nil {
 				return errors.Wrap(err, "failed to start screen sharing")
 			}
@@ -1255,39 +1211,6 @@ func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func
 					return errors.Wrap(err, "failed to stop snapshot for Google Docs")
 				}
 			}
-		} else if meet.Jamboard {
-			// Simulate mouse input on jamboard.
-			if err := ui.LeftClick(nodewith.Name("Pen").Role(role.ToggleButton))(ctx); err != nil {
-				return errors.Wrap(err, "failed to click the pen toggle button")
-			}
-			contentArea, err := ui.Location(ctx, nodewith.ClassName("jam-content-area").Role(role.GenericContainer))
-			if err != nil {
-				return errors.Wrap(err, "failed to find the location of jamboard content area")
-			}
-			centerX, centerY, offsetX, offsetY := contentArea.CenterPoint().X, contentArea.CenterPoint().Y, 10, 10
-			end := time.Now().Add(meetTimeout)
-
-			startTracingRoutine(ctx)
-
-			// Start an annotation section for interacting with the Jamboard.
-			endJamboardInteractions := recorder.AnnotateSection(ctx, "Jamboard_interactions")
-			for end.Sub(time.Now()).Seconds() > 42 {
-				for i := 1; i <= 10; i++ {
-					if err := uiauto.Combine(
-						"simulate mouse movement",
-						mouse.Move(tconn, coords.NewPoint(centerX-i*offsetX, centerY-i*offsetY), 0),
-						mouse.Press(tconn, mouse.LeftButton),
-						mouse.Move(tconn, coords.NewPoint(centerX-i*offsetX, centerY+i*offsetY), time.Second),
-						mouse.Move(tconn, coords.NewPoint(centerX+i*offsetX, centerY+i*offsetY), time.Second),
-						mouse.Move(tconn, coords.NewPoint(centerX+i*offsetX, centerY-i*offsetY), time.Second),
-						mouse.Move(tconn, coords.NewPoint(centerX-i*offsetX, centerY-i*offsetY), time.Second),
-						mouse.Release(tconn, mouse.LeftButton),
-					)(ctx); err != nil {
-						return errors.Wrap(err, "failed to simulate mouse movement on jamboard")
-					}
-				}
-			}
-			endJamboardInteractions(ctx)
 		} else {
 			startTracingRoutine(ctx)
 		}
