@@ -864,7 +864,7 @@ func (f *powerMetricsNoUIFixture) PostTest(ctx context.Context, s *testing.FixtT
 // Test accounts reuse accounts from autotest.
 func gaiaLoginOption(ctx context.Context) (chrome.Option, error) {
 	const (
-		pltpBaseURL = "https://sites.google.com/a/chromium.org/dev/chromium-os/testing/power-testing/pltp"
+		pltpBaseURL = "https://storage.googleapis.com/chromiumos-test-assets-public/power_LoadTest/pltp"
 		pltuURL     = pltpBaseURL + "/pltu_rand"
 		pltpURL     = pltpBaseURL + "/pltp_rand"
 	)
