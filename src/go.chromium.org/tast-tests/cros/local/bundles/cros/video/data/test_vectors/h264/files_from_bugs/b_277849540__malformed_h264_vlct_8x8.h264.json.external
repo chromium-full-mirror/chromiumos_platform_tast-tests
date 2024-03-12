@@ -1,5 +1,5 @@
 {
-  "sha256sum": "d975c8361f7d2377d23607b35a278cf115360fbbd659e8e85e2ccc87a05f5b45",
+  "sha256sum": "9fe4377e36cba48b90d2ac56e9d4355b17f500f6b9888615ebf4fe5c5ff988e6",
   "size": 310,
-  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8_20230418.h264.json"
+  "url": "gs://chromiumos-test-assets-public/tast/cros/video/test_vectors/h264/files_from_bugs/b_277849540__malformed_h264_vlct_8x8_20240312.h264.json"
 }
