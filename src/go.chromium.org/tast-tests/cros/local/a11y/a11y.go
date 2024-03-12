@@ -234,28 +234,6 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 		return crastestclient.Unmute(cleanupCtx)
 	})
 
-	// Setup a browser.
-	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
-	if err != nil {
-		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to setup browser")
-	}
-	tdown.Append(func() error {
-		return closeBrowser(cleanupCtx)
-	})
-
-	brConn, err := NewTabWithURL(ctx, br, url)
-	if err != nil {
-		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with URL")
-	}
-	tdown.Append(func() error {
-		return brConn.Close()
-	})
-
-	// Close the extra new tab page.
-	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
-		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to close new tab page")
-	}
-
 	if err := SetFeatureEnabled(ctx, tconn, feature, true); err != nil {
 		return newNoOpTTSFeatureData(tdown), errors.Wrapf(err, "failed to enable feature: %s", feature)
 	}
@@ -277,6 +255,28 @@ func SetUpTTSFeature(tfi TTSFeatureInputs) (tfd TTSFeatureData, e error) {
 
 	if err := tts.SetRate(ctx, tconn, 1.0); err != nil {
 		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to change TTS rate")
+	}
+
+	// Setup a browser.
+	br, closeBrowser, err := browserfixt.SetUp(ctx, cr, bt)
+	if err != nil {
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to setup browser")
+	}
+	tdown.Append(func() error {
+		return closeBrowser(cleanupCtx)
+	})
+
+	brConn, err := NewTabWithURL(ctx, br, url)
+	if err != nil {
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to open a new tab with URL")
+	}
+	tdown.Append(func() error {
+		return brConn.Close()
+	})
+
+	// Close the extra new tab page.
+	if err := br.CloseWithURL(ctx, chrome.NewTabURL); err != nil {
+		return newNoOpTTSFeatureData(tdown), errors.Wrap(err, "failed to close new tab page")
 	}
 
 	return TTSFeatureData{ctx, tconn, sm, tdown, brConn}, nil
