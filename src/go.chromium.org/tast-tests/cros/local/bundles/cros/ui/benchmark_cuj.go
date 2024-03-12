@@ -47,6 +47,17 @@ func init() {
 				},
 			},
 			{
+				Name:      "speedometer3",
+				ExtraAttr: []string{"group:cuj", "group:crosbolt", "cuj_experimental"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.Speedometer3Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
 				Name:      "lacros_speedometer",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,
@@ -54,6 +65,18 @@ func init() {
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeLacros,
 					BenchmarkInfo: benchmarkcuj.SpeedometerInfo,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:      "lacros_speedometer3",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.Speedometer3Info,
 					RecorderMode:  cujrecorder.Benchmark,
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
@@ -82,10 +105,10 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:      "vulkan_motionmark",
-				ExtraAttr: []string{"group:cuj"},
-				Timeout:   defaultTimeout,
-				Fixture:   "loggedInToCUJUserWithVulkanWithoutCooldown",
+				Name:              "vulkan_motionmark",
+				ExtraAttr:         []string{"group:cuj"},
+				Timeout:           defaultTimeout,
+				Fixture:           "loggedInToCUJUserWithVulkanWithoutCooldown",
 				ExtraSoftwareDeps: []string{"vulkan_composite"},
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,
@@ -186,10 +209,10 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			{
-				Name:      "vulkan_webxprt4",
-				ExtraAttr: []string{"group:cuj", "cuj_weekly"},
-				Timeout:   30*time.Minute + cujrecorder.CooldownTimeout,
-				Fixture:   "loggedInToCUJUserWithVulkanWithoutCooldown",
+				Name:              "vulkan_webxprt4",
+				ExtraAttr:         []string{"group:cuj", "cuj_weekly"},
+				Timeout:           30*time.Minute + cujrecorder.CooldownTimeout,
+				Fixture:           "loggedInToCUJUserWithVulkanWithoutCooldown",
 				ExtraSoftwareDeps: []string{"vulkan_composite"},
 				Val: benchmarkcuj.BenchmarkTest{
 					BrowserType:   browser.TypeAsh,

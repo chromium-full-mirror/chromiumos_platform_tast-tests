@@ -32,6 +32,16 @@ var SpeedometerInfo = benchmarkInfo{
 	params:         []string{iterationsVar},
 }
 
+// Speedometer3Info contains the information for running Speedometer 3.0 Benchmark.
+var Speedometer3Info = benchmarkInfo{
+	name:           "Speedometer3",
+	windowState:    ash.WindowStateMaximized,
+	benchmarkURL:   "https://browserbench.org/Speedometer3.0/?developerMode=true",
+	benchmarkRun:   RunSpeedometer,
+	benchmarkScore: RetrieveSpeedometerScore,
+	params:         []string{iterationsVar},
+}
+
 // RunSpeedometer runs the Speedometer test.
 func RunSpeedometer(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.Context, params map[string]string) error {
 	// Speedometer benchmark defaults with 10 iterations.
@@ -48,15 +58,25 @@ func RunSpeedometer(ctx context.Context, benchmarkConn *chrome.Conn, ac *uiauto.
 
 	if err := benchmarkConn.Eval(ctx, fmt.Sprintf(`
 	new Promise(resolve => {
+		// This has been deprecated in Speedometer 3, and controlled through either a query string
+		// or through the developer mode iterations setting. We use the latter here.
 		benchmarkClient.iterationCount = %d;
+		if (benchmarkClient._developerModeContainer !== undefined) {
+			benchmarkClient._developerModeContainer.querySelector('input[type="range"]').value = benchmarkClient.iterationCount;
+		}
 		// Overwrite this function to include the resolve statement at the end.
 		benchmarkClient.originalLastFunction = benchmarkClient.didFinishLastIteration;
-		benchmarkClient.didFinishLastIteration = function() {
-			benchmarkClient.originalLastFunction();
+		benchmarkClient.didFinishLastIteration = function(...arguments) {
+			benchmarkClient.originalLastFunction.call(this, ...arguments);
 			resolve();
 		};
-		startTest();
-	})`, iter), nil); err != nil {
+		if ("startTest" in window) {
+			startTest();
+		}
+		else {
+			document.querySelector('.start-tests-button').click();
+		}
+  })`, iter), nil); err != nil {
 		return errors.Wrap(err, "failed to run Speedometer")
 	}
 	return nil
