@@ -135,20 +135,11 @@ func joinWifiSetSecurity(tconn *chrome.TestConn, ui *uiauto.Context, kb *input.K
 		securityOptionName = "PSK (WPA or RSN)"
 		passwordTextField := nodewith.Name("Password").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
 		authenticateAction = setTextField(ui, kb, passwordTextField, req.GetPsk())
-	case *wifi.JoinWifiRequest_EapTls:
+	case *wifi.JoinWifiRequest_EapTls, *wifi.JoinWifiRequest_EapPeap:
 		securityOptionName = "EAP"
-		eapMethodComboBox := nodewith.Name("EAP method").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
-		caComboBox := nodewith.Name("Server CA certificate").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
-		userComboBox := nodewith.Name("User certificate").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
-		identityTextField := nodewith.Name("Identity").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
-		authenticateAction = uiauto.Combine("set EAP certificates",
-			dropdown.SelectDropDownOption(tconn, eapMethodComboBox, "EAP-TLS"),
-			dropdown.SelectDropDownOption(tconn, caComboBox, req.GetEapTls().GetCaCert()),
-			dropdown.SelectDropDownOption(tconn, userComboBox, req.GetEapTls().GetClientCert()),
-			// Any non-empty string would work for EAP-TLS.
-			setTextField(ui, kb, identityTextField, "test"),
-		)
+		authenticateAction = joinEapNetworkHelper(tconn, ui, kb, req, joinWiFiNetworkDialogRoot)
 	}
+
 	var setAsSharedAction uiauto.Action
 	switch req.ShareWithOtherUsers {
 	case wifi.JoinWifiRequest_Default:
@@ -186,6 +177,7 @@ func joinWifiSetSecurity(tconn *chrome.TestConn, ui *uiauto.Context, kb *input.K
 	)
 }
 
+// KnownNetworksControls opens the OS-Settings at "Known Networks" page and interacts/controls the known networks.
 func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetworksControlsRequest) (_ *emptypb.Empty, retErr error) {
 	res, err := s.initializeRuntimeResources(ctx)
 	if err != nil {
@@ -388,4 +380,30 @@ func waitUntilConnected(tconn *chrome.TestConn, settings *ossettings.OSSettings)
 			return nil
 		}, &testing.PollOptions{Timeout: 15 * time.Second, Interval: 300 * time.Millisecond})
 	}
+}
+
+func joinEapNetworkHelper(tconn *chrome.TestConn, ui *uiauto.Context, kb *input.KeyboardEventWriter, req *wifi.JoinWifiRequest, joinWiFiNetworkDialogRoot *nodewith.Finder) (authenticateAction uiauto.Action) {
+	eapMethodComboBox := nodewith.Name("EAP method").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
+	caComboBox := nodewith.Name("Server CA certificate").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
+	identityTextField := nodewith.Name("Identity").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
+	switch req.Security.(type) {
+	case *wifi.JoinWifiRequest_EapTls:
+		userComboBox := nodewith.Name("User certificate").Role(role.ComboBoxSelect).Ancestor(joinWiFiNetworkDialogRoot)
+		authenticateAction = uiauto.Combine("set EAP-TLS certificates",
+			dropdown.SelectDropDownOption(tconn, eapMethodComboBox, "EAP-TLS"),
+			dropdown.SelectDropDownOption(tconn, caComboBox, req.GetEapTls().GetCaCert()),
+			dropdown.SelectDropDownOption(tconn, userComboBox, req.GetEapTls().GetClientCert()),
+			// Any non-empty string would work for EAP-TLS.
+			setTextField(ui, kb, identityTextField, "test"),
+		)
+	case *wifi.JoinWifiRequest_EapPeap:
+		passwordTextField := nodewith.Name("Password").Role(role.TextField).Ancestor(joinWiFiNetworkDialogRoot)
+		authenticateAction = uiauto.Combine("set EAP-PEAP certificates",
+			dropdown.SelectDropDownOption(tconn, eapMethodComboBox, "PEAP"),
+			dropdown.SelectDropDownOption(tconn, caComboBox, req.GetEapPeap().GetCaCert()),
+			setTextField(ui, kb, identityTextField, req.GetEapPeap().Identity),
+			setTextField(ui, kb, passwordTextField, req.GetEapPeap().Password),
+		)
+	}
+	return authenticateAction
 }

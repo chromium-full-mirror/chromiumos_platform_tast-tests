@@ -16,11 +16,13 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/wifi";
 service WifiService {
   // JoinWifiFromQuickSettings joins to the specified wifi network from
   // Quick Settings.
-  rpc JoinWifiFromQuickSettings(JoinWifiRequest) returns (google.protobuf.Empty) {}
+  rpc JoinWifiFromQuickSettings(JoinWifiRequest)
+      returns (google.protobuf.Empty) {}
 
   // KnownNetworksControls opens the OS-Settings at "Known Networks" page and
   // interacts/controls the known networks.
-  rpc KnownNetworksControls(KnownNetworksControlsRequest) returns (google.protobuf.Empty) {}
+  rpc KnownNetworksControls(KnownNetworksControlsRequest)
+      returns (google.protobuf.Empty) {}
 
   // WifiPageControl opens the OS-Settings at "Wi-Fi" page and
   // interacts/controls the WiFi networks.
@@ -31,6 +33,12 @@ message JoinWifiRequest {
   message SecurityEapTls {
     string client_cert = 1;
     string ca_cert = 2;
+  }
+
+  message SecurityEapPeap {
+    string identity = 1;
+    string password = 2;
+    string ca_cert = 3;
   }
 
   enum SharedOption {
@@ -44,9 +52,11 @@ message JoinWifiRequest {
     google.protobuf.Any none = 2;
     string psk = 3;
     SecurityEapTls eap_tls = 4;
+    SecurityEapPeap eap_peap = 6;
   }
 
-  // shareWithOtherUsers indicates if this network should be added as a shared network.
+  // shareWithOtherUsers indicates if this network should be added as a shared
+  // network.
   SharedOption shareWithOtherUsers = 5;
 }
 

@@ -9,11 +9,13 @@ import (
 	"regexp"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/crypto/certificate"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/tunneled1x"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -40,6 +42,7 @@ import (
 type shareNetworkTestScenario struct {
 	loginAs        shareNetworkTestUser
 	networksToJoin []*shareNetworkTestNetwork
+	shareOption    wifi.JoinWifiRequest_SharedOption
 	verifications  []func(*rpc.Client) action.Action
 }
 
@@ -60,13 +63,17 @@ type shareNetworkTestNetwork struct {
 }
 
 type shareNetworkTestNetworkConfigs struct {
-	ssidPrefix          string
-	options             []hostapd.Option
-	securityConfig      security.ConfigFactory
-	sharedWithOtherUser bool
+	ssidPrefix     string
+	options        []hostapd.Option
+	securityConfig security.ConfigFactory
 }
 
-const shareNetworkTestNetworkPsk = "chromeos"
+const (
+	shareNetworkTestNetworkPsk      = "chromeos"
+	shareNetworkTestNetworkIdentity = "identity"
+)
+
+var shareNetworkTestNetworkCert = certificate.TestCert1()
 
 var (
 	openNetwork = &shareNetworkTestNetwork{
@@ -77,7 +84,6 @@ var (
 				hostapd.Channel(1),
 				hostapd.HTCaps(hostapd.HTCapHT20),
 			},
-			sharedWithOtherUser: true,
 		},
 		routerID: 0,
 		joinRequest: &wifi.JoinWifiRequest{
@@ -96,12 +102,11 @@ var (
 				hostapd.HTCaps(hostapd.HTCapHT20),
 				hostapd.PMF(hostapd.PMFOptional),
 			},
-			sharedWithOtherUser: false,
 		},
 		routerID: 0,
 		joinRequest: &wifi.JoinWifiRequest{
 			Security:            &wifi.JoinWifiRequest_Psk{Psk: shareNetworkTestNetworkPsk},
-			ShareWithOtherUsers: wifi.JoinWifiRequest_TurnOff,
+			ShareWithOtherUsers: wifi.JoinWifiRequest_Default,
 		},
 	}
 
@@ -115,14 +120,48 @@ var (
 				hostapd.HTCaps(hostapd.HTCapHT20),
 				hostapd.PMF(hostapd.PMFOptional),
 			},
-			sharedWithOtherUser: false,
 		},
 		routerID: 1,
 		joinRequest: &wifi.JoinWifiRequest{
 			Security:            &wifi.JoinWifiRequest_Psk{Psk: shareNetworkTestNetworkPsk},
-			ShareWithOtherUsers: wifi.JoinWifiRequest_TurnOff,
+			ShareWithOtherUsers: wifi.JoinWifiRequest_Default,
 		},
 	}
+
+	eapNetwork = &shareNetworkTestNetwork{
+		configs: &shareNetworkTestNetworkConfigs{
+			ssidPrefix: "Test_EAP_network_",
+			securityConfig: tunneled1x.NewConfigFactory(
+				shareNetworkTestNetworkCert.CACred.Cert,
+				shareNetworkTestNetworkCert.ServerCred,
+				shareNetworkTestNetworkCert.CACred.Cert,
+				shareNetworkTestNetworkIdentity,
+				shareNetworkTestNetworkPsk,
+			),
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.Channel(1),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+			},
+		},
+		routerID: 1,
+		joinRequest: &wifi.JoinWifiRequest{
+			Security: &wifi.JoinWifiRequest_EapPeap{
+				EapPeap: &wifi.JoinWifiRequest_SecurityEapPeap{
+					Identity: shareNetworkTestNetworkIdentity,
+					Password: shareNetworkTestNetworkPsk,
+					CaCert:   wifiutil.CertificateComboBoxOptionDoNotCheck,
+				}},
+			ShareWithOtherUsers: wifi.JoinWifiRequest_Default,
+		},
+	}
+)
+
+type sharedStatus string
+
+const (
+	shareToOtherUsers    sharedStatus = "Other users on this device can also use this network"
+	sharedFromOtherUsers sharedStatus = "This network is shared with you"
 )
 
 // In each test scenario, we check for network sharing up to 1 time,
@@ -132,17 +171,18 @@ const testScenarioTimeout = 2 * time.Minute
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ShareNetwork,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Verify the share property of a network across different users",
+		Func:         ShareNetwork,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify the share property of a network across different users",
 		Contacts: []string{
 			"alfredyu@cienet.com",
+			"cj.tsai@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell", "wificell_e2e"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
+		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		LifeCycleStage: testing.LifeCycleInDevelopment,
+		Attr:           []string{"group:wificell", "wificell_e2e"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
@@ -158,6 +198,7 @@ func init() {
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
 		Params: []testing.Param{
 			{
+				Name: "default_share_property",
 				Val: []*shareNetworkTestScenario{
 					// Login as device owner, join 2 different networks (one shared and one non-shared) and then ensure the shared network is connected.
 					{
@@ -166,6 +207,7 @@ func init() {
 							secureNetwork,
 							openNetwork,
 						},
+						shareOption: wifi.JoinWifiRequest_Default,
 						verifications: []func(*rpc.Client) action.Action{
 							openNetwork.checkConnected,
 							openNetwork.forgetButtonAvailable, // Any user should be able to forget a shared network.
@@ -187,6 +229,7 @@ func init() {
 						networksToJoin: []*shareNetworkTestNetwork{
 							secureNetwork2,
 						},
+						shareOption: wifi.JoinWifiRequest_Default,
 					},
 					// Verify that the shared network is shared with guest user and non-shared networks are not shared with guest user.
 					{
@@ -216,6 +259,94 @@ func init() {
 				},
 				// There are a total of 6 test scenarios.
 				Timeout: 3*time.Minute + 6*testScenarioTimeout,
+			}, {
+				Name:      "set_shared_by_device_owner",
+				ExtraAttr: []string{"wificell_e2e_unstable"},
+				Val: []*shareNetworkTestScenario{
+					// Login as device owner, join 4 different networks and set as share network.
+					{
+						loginAs: deviceOwner,
+						networksToJoin: []*shareNetworkTestNetwork{
+							openNetwork,
+							secureNetwork,
+							secureNetwork2,
+							eapNetwork,
+						},
+						shareOption: wifi.JoinWifiRequest_TurnOn,
+						verifications: []func(*rpc.Client) action.Action{
+							openNetwork.checkSharedStatus(shareToOtherUsers),
+							secureNetwork.checkSharedStatus(shareToOtherUsers),
+							secureNetwork2.checkSharedStatus(shareToOtherUsers),
+							eapNetwork.checkSharedStatus(shareToOtherUsers),
+						},
+					},
+					// Login as another user and verify the networks can be connected and shown as shared network.
+					{
+						loginAs: normalUser,
+						verifications: []func(*rpc.Client) action.Action{
+							openNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork2.checkSharedStatus(sharedFromOtherUsers),
+							eapNetwork.checkSharedStatus(sharedFromOtherUsers),
+						},
+					},
+					// Login as guest user and verify the networks can be connected and shown as shared network.
+					{
+						loginAs: guest,
+						verifications: []func(*rpc.Client) action.Action{
+							openNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork2.checkSharedStatus(sharedFromOtherUsers),
+							eapNetwork.checkSharedStatus(sharedFromOtherUsers),
+						},
+					},
+				},
+				// There are a total of 3 test scenarios.
+				Timeout: 3*time.Minute + 3*testScenarioTimeout,
+			}, {
+				Name:      "set_shared_by_normal_user",
+				ExtraAttr: []string{"wificell_e2e_unstable"},
+				Val: []*shareNetworkTestScenario{
+					// Login another user, join 4 different networks and set as share network.
+					{
+						loginAs: normalUser,
+						networksToJoin: []*shareNetworkTestNetwork{
+							openNetwork,
+							secureNetwork,
+							secureNetwork2,
+							eapNetwork,
+						},
+						shareOption: wifi.JoinWifiRequest_TurnOn,
+						verifications: []func(*rpc.Client) action.Action{
+							openNetwork.checkSharedStatus(shareToOtherUsers),
+							secureNetwork.checkSharedStatus(shareToOtherUsers),
+							secureNetwork2.checkSharedStatus(shareToOtherUsers),
+							eapNetwork.checkSharedStatus(shareToOtherUsers),
+						},
+					},
+					// Login as device owner and verify the networks can be connected and shown as shared network.
+					{
+						loginAs: deviceOwner,
+						verifications: []func(*rpc.Client) action.Action{
+							openNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork2.checkSharedStatus(sharedFromOtherUsers),
+							eapNetwork.checkSharedStatus(sharedFromOtherUsers),
+						},
+					},
+					// Login as guest user and verify the networks can be connected and shown as shared network.
+					{
+						loginAs: guest,
+						verifications: []func(*rpc.Client) action.Action{
+							openNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork.checkSharedStatus(sharedFromOtherUsers),
+							secureNetwork2.checkSharedStatus(sharedFromOtherUsers),
+							eapNetwork.checkSharedStatus(sharedFromOtherUsers),
+						},
+					},
+				},
+				// There are a total of 3 test scenarios.
+				Timeout: 3*time.Minute + 3*testScenarioTimeout,
 			},
 		},
 	})
@@ -281,7 +412,7 @@ func ShareNetwork(ctx context.Context, s *testing.State) {
 			actions = append(actions, correctShillProfileIsLoaded(rpcClient, s.DUT()))
 		}
 		if len(test.networksToJoin) > 0 {
-			actions = append(actions, joinNetworks(rpcClient, test.networksToJoin))
+			actions = append(actions, joinNetworks(rpcClient, test.networksToJoin, test.shareOption))
 		}
 		for _, verification := range test.verifications {
 			actions = append(actions, verification(rpcClient))
@@ -335,10 +466,11 @@ func configureNetworks(tf *wificell.TestFixture, networks []*shareNetworkTestNet
 	}
 }
 
-func joinNetworks(rpcClient *rpc.Client, networks []*shareNetworkTestNetwork) action.Action {
+func joinNetworks(rpcClient *rpc.Client, networks []*shareNetworkTestNetwork, shareOption wifi.JoinWifiRequest_SharedOption) action.Action {
 	wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
 	return func(ctx context.Context) error {
 		for _, network := range networks {
+			network.joinRequest.ShareWithOtherUsers = shareOption
 			if _, err := wifiSvc.JoinWifiFromQuickSettings(ctx, network.joinRequest); err != nil {
 				return errors.Wrap(err, "failed to join WiFi from Quick Settings")
 			}
@@ -354,6 +486,50 @@ func (network *shareNetworkTestNetwork) checkConnected(rpcClient *rpc.Client) ac
 	}
 	return func(ctx context.Context) error {
 		return wifiClient.WaitForConnected(ctx, network.Config().SSID, true /* expect connected */)
+	}
+}
+
+// checkSharedStatus verifies a network can be reconnected by clicking the "Connect" button and shown as shared.
+func (network *shareNetworkTestNetwork) checkSharedStatus(sharedStatus sharedStatus) func(rpcClient *rpc.Client) action.Action {
+	return func(rpcClient *rpc.Client) action.Action {
+		wifiSvc := wifi.NewWifiServiceClient(rpcClient.Conn)
+		ossettingsSvc := ossettings.NewOsSettingsServiceClient(rpcClient.Conn)
+		uiauto := ui.NewAutomationServiceClient(rpcClient.Conn)
+		return func(ctx context.Context) (retErr error) {
+			cleanupCtx := ctx
+			ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+			defer cancel()
+
+			// Verify that the network can be reconnected without passphrase.
+			if _, err := wifiSvc.KnownNetworksControls(ctx, &wifi.KnownNetworksControlsRequest{
+				Ssids:   []string{network.Config().SSID},
+				Control: wifi.KnownNetworksControlsRequest_Connect,
+			}); err != nil {
+				return errors.Wrap(err, "failed to verify the network is listed in known networks")
+			}
+
+			if _, err := ossettingsSvc.OpenNetworkDetailPage(ctx, &ossettings.OpenNetworkDetailPageRequest{
+				NetworkName: network.Config().SSID,
+				NetworkType: ossettings.OpenNetworkDetailPageRequest_WIFI,
+			}); err != nil {
+				return errors.Wrap(err, "failed to launch OS Settings and navigate to the specific page")
+			}
+			defer func(ctx context.Context) {
+				if retErr != nil {
+					faillogSvc := ui.NewChromeUIServiceClient(rpcClient.Conn)
+					faillogSvc.DumpUITreeWithScreenshotToFile(ctx, &ui.DumpUITreeWithScreenshotToFileRequest{
+						FilePrefix: "network_is_shared",
+					})
+				}
+				ossettingsSvc.Close(ctx, &emptypb.Empty{})
+			}(cleanupCtx)
+
+			node := ui.Node().Name(string(sharedStatus)).Role(ui.Role_ROLE_STATIC_TEXT).Finder()
+			if _, err := uiauto.WaitUntilExists(ctx, &ui.WaitUntilExistsRequest{Finder: node}); err != nil {
+				return errors.Wrap(err, "failed to wait for share text")
+			}
+			return nil
+		}
 	}
 }
 
