@@ -54,7 +54,7 @@ const (
 	homeDataNameManagedRvcX86Virtiofs = "data_migration_managed_rvc_x86_64_virtiofs"
 	arcDataMigrationUnmanagedPool     = "arc_data_migration_unmanaged"
 	arcDataMigrationManagedPool       = "arc_data_migration_managed"
-	dataMigrationTestTimeout          = 10 * time.Minute
+	dataMigrationTestTimeout          = 10*time.Minute + chrome.GAIALoginTimeout
 )
 
 type dataMigrationTestParams struct {
@@ -187,6 +187,26 @@ func DataMigration(ctx context.Context, s *testing.State) {
 	params := s.Param().(dataMigrationTestParams)
 	homeDataPath := s.DataPath(params.dataFileName)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Create an account manager and lease a test account for the duration of the test.
+	accManager, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte(s.RequiredVar(tape.ServiceAccountVar)), false, tape.WithTimeout(int32(dataMigrationTestTimeout.Seconds())), tape.WithPoolID(params.poolID))
+	if err != nil {
+		s.Fatal("Failed to create an account manager and lease an account: ", err)
+	}
+	defer accManager.CleanUp(cleanupCtx)
+
+	creds := chrome.Creds{User: acc.Username, Pass: acc.Password}
+
+	// Create the profile of the test account.
+	cr, err := chrome.New(ctx, chrome.GAIALogin(creds))
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
 	rl := &retry.Loop{Attempts: 1,
 		MaxAttempts: 2,
 		DoRetries:   true,
@@ -194,14 +214,14 @@ func DataMigration(ctx context.Context, s *testing.State) {
 		Logf:        s.Logf}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
-		return tryDataMigration(ctx, s.RequiredVar(tape.ServiceAccountVar), params, homeDataPath, rl, s.OutDir())
+		return tryDataMigration(ctx, creds, params, homeDataPath, rl, s.OutDir())
 	}, nil); err != nil {
 		s.Fatal("Failed to verify data migration flow: ", err)
 	}
 }
 
 // tryDataMigration attempts a migration or returns a retirable error.
-func tryDataMigration(ctx context.Context, serviceAccount string, params dataMigrationTestParams, homeDataPath string, rl *retry.Loop, outDir string) error {
+func tryDataMigration(ctx context.Context, creds chrome.Creds, params dataMigrationTestParams, homeDataPath string, rl *retry.Loop, outDir string) error {
 	const (
 		// One of the apps reported by b/173835269.
 		appToInstall        = "com.roblox.client"
@@ -213,20 +233,13 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 	ctx, cancel := ctxutil.Shorten(ctx, 1*time.Minute)
 	defer cancel()
 
-	// Create an account manager and lease a test account for the duration of the test.
-	accHelper, acc, err := tape.NewOwnedTestAccountManager(ctx, []byte(serviceAccount), false, tape.WithTimeout(int32(dataMigrationTestTimeout.Seconds())), tape.WithPoolID(params.poolID))
-	if err != nil {
-		return rl.Exit("create an account manager and lease an account", err)
-	}
-	defer accHelper.CleanUp(cleanupCtx)
-
 	// Ensure to sign out before executing MountVaultWithArchivedHomeData().
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		return rl.Exit("sign out", err)
 	}
 
 	// Unarchive the home data under vault before signing in.
-	cleanupFunc, err := datamigration.MountVaultWithArchivedHomeData(ctx, homeDataPath, acc.Username, acc.Password)
+	cleanupFunc, err := datamigration.MountVaultWithArchivedHomeData(ctx, homeDataPath, creds.User, creds.Pass)
 	if err != nil {
 		return rl.Exit("mount home with archived data", err)
 	}
@@ -234,7 +247,6 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 
 	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
 
-	creds := chrome.Creds{User: acc.Username, Pass: acc.Password}
 	opts := []chrome.Option{
 		chrome.GAIALogin(creds),
 		chrome.ARCSupported(),
@@ -269,7 +281,7 @@ func tryDataMigration(ctx context.Context, serviceAccount string, params dataMig
 	}
 	defer a.Close(ctx)
 
-	systemSdkVersion, err := checkSdkVersionsInPackagesXML(ctx, a, acc.Username)
+	systemSdkVersion, err := checkSdkVersionsInPackagesXML(ctx, a, creds.User)
 	if err != nil {
 		return rl.Exit("check SDK version in packages.xml", err)
 	}

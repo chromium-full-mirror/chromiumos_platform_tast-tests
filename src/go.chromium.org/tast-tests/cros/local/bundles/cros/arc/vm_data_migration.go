@@ -44,7 +44,7 @@ const (
 	vmDataMigrationHomeDataRvcArm = "vm_data_migration_rvc_arm64"
 
 	vmDataMigrationTestImageFilename = "capybara.jpg"
-	vmDataMigrationTestTimeout       = 10 * time.Minute
+	vmDataMigrationTestTimeout       = 10*time.Minute + chrome.GAIALoginTimeout
 
 	vmDataMigrationProjinheritTestFilePath = "data/media/0/Pictures/projinherittest"
 	inodeFlagPROJINHERIT                   = 0x20000000
@@ -138,7 +138,7 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	// Create an account manager and lease a test account for the duration of the test.
-	accHelper, acc, err := tape.NewOwnedTestAccountManager(
+	accManager, acc, err := tape.NewOwnedTestAccountManager(
 		ctx,
 		[]byte(s.RequiredVar(tape.ServiceAccountVar)),
 		false,
@@ -147,9 +147,18 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create an account manager and lease an account: ", err)
 	}
-	defer accHelper.CleanUp(cleanupCtx)
+	defer accManager.CleanUp(cleanupCtx)
 
-	// Ensure to sign out before setting up the pre-migration state.
+	creds := chrome.Creds{User: acc.Username, Pass: acc.Password}
+
+	// Create the profile of the test account.
+	cr, err := chrome.New(ctx, chrome.GAIALogin(creds))
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	defer cr.Close(cleanupCtx)
+
+	// Sign out before setting up the pre-migration state.
 	if err := upstart.RestartJob(ctx, "ui"); err != nil {
 		s.Fatal("Failed to sign out: ", err)
 	}
@@ -162,7 +171,6 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupFunc(cleanupCtx)
 
-	creds := chrome.Creds{User: acc.Username, Pass: acc.Password}
 	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
 	chromeOpts := []chrome.Option{
 		chrome.GAIALogin(creds),
