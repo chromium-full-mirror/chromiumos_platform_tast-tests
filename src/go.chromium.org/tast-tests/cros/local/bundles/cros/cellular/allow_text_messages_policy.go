@@ -157,13 +157,10 @@ func AllowTextMessagesPolicy(ctx context.Context, s *testing.State) {
 		chrome.GAIALogin(chrome.Creds{User: gaiaCreds.User, Pass: gaiaCreds.Pass}),
 		chrome.DMSPolicy(fdms.URL),
 		chrome.KeepEnrollment())
-	if uiHelper != nil && uiHelper.Tconn != nil {
-		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
-	}
 	if err != nil {
 		s.Fatal("Failed to create cellular.NewUiHelper: ", err)
 	}
-
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
 	// Apply the GNC policy.
 	testOpts := s.Param().(allowTextMessagesPolicyTestParam)
 

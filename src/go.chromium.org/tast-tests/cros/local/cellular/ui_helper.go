@@ -55,7 +55,7 @@ func NewUIHelperWithOpts(ctx context.Context, opts ...chrome.Option) (*UIHelper,
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return &helper, errors.Wrap(err, "failed to connect test api")
+		return nil, errors.Wrap(err, "failed to connect test api")
 	}
 	helper.Tconn = tconn
 
@@ -65,7 +65,7 @@ func NewUIHelperWithOpts(ctx context.Context, opts ...chrome.Option) (*UIHelper,
 	// uiHandler will be assigned with different instances for clamshell and tablet mode.
 	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
 	if err != nil {
-		return &helper, errors.Wrap(err, "failed to create clamshell action handler")
+		return nil, errors.Wrap(err, "failed to create clamshell action handler")
 	}
 	helper.UIHandler = uiHandler
 

@@ -95,13 +95,10 @@ func UIOtaBasicSms(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to parse cellular user creds: ", err)
 	}
 	uiHelper, err := cellular.NewUIHelper(ctx, gaiaCreds.User, gaiaCreds.Pass)
-	if uiHelper != nil && uiHelper.Tconn != nil {
-		defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
-	}
 	if err != nil {
 		s.Fatal("Failed to create cellular.NewUiHelper: ", err)
 	}
-
+	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, uiHelper.Tconn)
 	s.Log("open google voice web page")
 
 	// Keyboard to input key inputs.

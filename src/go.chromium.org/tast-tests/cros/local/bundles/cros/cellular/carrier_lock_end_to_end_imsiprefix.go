@@ -108,9 +108,9 @@ func CarrierLockEndToEndIMSIPrefix(ctx context.Context, s *testing.State) {
 
 	uiHelper, err := cellular.NewUIHelper(ctx, gaiaCreds.User, gaiaCreds.Pass)
 	if err != nil {
-		faillog.DumpUITree(ctx, s.OutDir(), uiHelper.Tconn)
 		s.Fatal("Failed to create cellular.NewUiHelper: ", err)
 	}
+	defer faillog.DumpUITree(ctx, s.OutDir(), uiHelper.Tconn)
 	uiHelper.LaunchChromeWithCarrierLock(ctx, gaiaCreds.User, gaiaCreds.Pass)
 
 	if carrier == "NETWORK_VERIZON" && strings.HasPrefix(modemImsi, "3114806") {
