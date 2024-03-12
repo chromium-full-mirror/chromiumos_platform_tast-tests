@@ -494,10 +494,12 @@ func (h *Helper) WaitForModemRegisteredAfterReset(ctx context.Context, timeout t
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		modem, err := modemmanager.NewModem(ctx)
 		if err != nil {
-			return errors.Wrap(err, "failed to get modem info after enabling tethering")
+			registeredTime = time.Time{}
+			return errors.Wrap(err, "failed to get modem info")
 		}
 		isRegistered, err := modem.IsRegistered(ctx)
 		if err != nil {
+			registeredTime = time.Time{}
 			return errors.Wrap(err, "failed to fetch registration state")
 		}
 		if !isRegistered {
