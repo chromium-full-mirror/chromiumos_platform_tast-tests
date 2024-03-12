@@ -7,7 +7,7 @@ package arc
 import (
 	"bufio"
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -266,7 +266,7 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 	out, err := testexec.CommandContext(ctx, "top", "-n1", "-b").Output(testexec.DumpLogOnError)
 	if err == nil {
 		s.Log("Saving `top` results to top.txt")
-		ioutil.WriteFile(filepath.Join(s.OutDir(), "top.txt"), []byte(out), 0644)
+		os.WriteFile(filepath.Join(s.OutDir(), "top.txt"), []byte(out), 0644)
 	}
 
 	if hasarc {
@@ -277,7 +277,7 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 		out, err := arc.BootstrapCommand(ctx, "/system/bin/top", "-n1", "-b").Output()
 		if err == nil {
 			s.Log("Saving `android-sh -c top` results to arc-top.txt")
-			ioutil.WriteFile(filepath.Join(s.OutDir(), "arc-top.txt"), []byte(out), 0644)
+			os.WriteFile(filepath.Join(s.OutDir(), "arc-top.txt"), []byte(out), 0644)
 		}
 	}
 

@@ -6,7 +6,7 @@ package cpu
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -68,13 +68,13 @@ func DefaultCoolDownConfig(mode CoolDownMode) CoolDownConfig {
 }
 
 // IdleCoolDownConfig returns the config to wait for the machine to cooldown for PowerIdlePerf test.
-// This overrides the default config timeout (5 minutes) and temperature threshold (46 C)
-// settings to reduce test flakes on low-end devices.
+// This overrides the default config timeout (5 minutes) to reduce test flakes on low-end devices.
+// Config also overrides temp (46C) to 42C to prevent increased power draw during initial measurements.
 func IdleCoolDownConfig() CoolDownConfig {
 	cdConfig := DefaultCoolDownConfig(CoolDownPreserveUI)
-	cdConfig.PollTimeout = 7 * time.Minute
-	cdConfig.TemperatureThreshold = 60000
-	cdConfig.TemperatureThresholdMode = TemperatureThresholdFixed
+	cdConfig.PollTimeout = 10 * time.Minute
+	cdConfig.PollInterval = 5 * time.Second
+	cdConfig.TemperatureThreshold = 42000
 	return cdConfig
 }
 
@@ -100,14 +100,14 @@ func Temperature(ctx context.Context) (int, string, error) {
 	}
 
 	for _, zonePath := range zonePaths {
-		b, err := ioutil.ReadFile(filepath.Join(zonePath, "mode"))
+		b, err := os.ReadFile(filepath.Join(zonePath, "mode"))
 		// No need to return on error because mode file doesn't always exist.
 		if err == nil && strings.TrimSpace(string(b)) == "disabled" {
 			continue
 		}
 
 		zoneTypePath := filepath.Join(zonePath, "type")
-		b, err = ioutil.ReadFile(zoneTypePath)
+		b, err = os.ReadFile(zoneTypePath)
 		if err != nil {
 			return 0, "", errors.Wrapf(err, "failed to read %q", zoneTypePath)
 		}
@@ -124,7 +124,7 @@ func Temperature(ctx context.Context) (int, string, error) {
 		}
 
 		zoneTempPath := filepath.Join(zonePath, "temp")
-		b, err = ioutil.ReadFile(zoneTempPath)
+		b, err = os.ReadFile(zoneTempPath)
 		if err != nil {
 			return 0, "", errors.Wrapf(err, "failed to read %q", zoneTempPath)
 		}

@@ -353,6 +353,14 @@ func vmTimeDiff(ctx context.Context, a *arc.ARC) (int64, error) {
 	return i, nil
 }
 
+// coolDownConfig returns the config to wait for the machine to cooldown for input performance tests.
+func coolDownConfig() cpu.CoolDownConfig {
+	cdConfig := cpu.IdleCoolDownConfig()
+	cdConfig.TemperatureThreshold = 60000
+	cdConfig.TemperatureThresholdMode = cpu.TemperatureThresholdFixed
+	return cdConfig
+}
+
 // WaitForCPUStabilized waits until the CPU is stable enough for capturing input latency metrics
 func WaitForCPUStabilized(ctx context.Context) error {
 	idleConfig := cpu.DefaultIdleConfig()
@@ -360,6 +368,6 @@ func WaitForCPUStabilized(ctx context.Context) error {
 	// default ones to make sure the tests can pass consistently while having stable metric
 	// results.
 	idleConfig.CPUUsagePercentMax = 40
-	_, err := cpu.WaitUntilStabilizedWithIdleConfig(ctx, cpu.IdleCoolDownConfig(), idleConfig)
+	_, err := cpu.WaitUntilStabilizedWithIdleConfig(ctx, coolDownConfig(), idleConfig)
 	return err
 }
