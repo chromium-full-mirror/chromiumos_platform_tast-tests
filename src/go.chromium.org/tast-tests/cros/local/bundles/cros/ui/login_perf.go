@@ -67,10 +67,13 @@ const (
 	loginPerfTraceConfigFileName                          = "login_perf_trace_config.pbtxt"
 )
 
-// Supported ARC modes
 const (
+	// Supported ARC modes
 	noarc      = "noarc"
 	arcenabled = "arcenabled"
+
+	// Alias for deferring ARC for readability.
+	deferARC = "DeferArcActivationUntilUserSessionStartUpTaskCompletion"
 )
 
 var disableARCSyncOption = chrome.ExtraArgs(arc.DisableSyncFlags()...)
@@ -85,6 +88,8 @@ type loginPerfTestParam struct {
 	forkZygotes        bool             // Whether to fork Zygotes at login screen when preloadLacros is true
 	dropCaches         bool             // Whether to drop block caches before starting test.
 	sleepAtLoginScreen time.Duration    // Test will sleep at the login screen for the specified duration.
+	disabledFeatures   []string         // Controls ash-chrome features to be disabled.
+	enabledFeatures    []string         // Controls ash-chrome features to be enabled.
 }
 
 func init() {
@@ -115,10 +120,12 @@ func init() {
 				true,                        // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
-				false, // preloadLacros
-				false, // forkZygotes
-				false, // dropCaches
-				0,     // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				false,              // dropCaches
+				0,                  // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:      "ash_chrome_delay_login",
@@ -130,10 +137,12 @@ func init() {
 				false,                       // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
-				false,           // preloadLacros
-				false,           // forkZygotes
-				false,           // dropCaches
-				5 * time.Second, // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				false,              // dropCaches
+				5 * time.Second,    // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:      "ash_chrome_cold_boot",
@@ -145,10 +154,12 @@ func init() {
 				false,                       // checkTabletMode
 				browser.TypeAsh,
 				lacros.NotSelected,
-				false, // preloadLacros
-				false, // forkZygotes
-				true,  // dropCaches
-				0,     // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				true,               // dropCaches
+				0,                  // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only",
@@ -161,10 +172,12 @@ func init() {
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				false, // preloadLacros
-				false, // forkZygotes
-				false, // dropCaches
-				0,     // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				false,              // dropCaches
+				0,                  // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_cold_boot",
@@ -177,10 +190,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				false, // preloadLacros
-				false, // forkZygotes
-				true,  // dropCaches
-				0,     // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				true,               // dropCaches
+				0,                  // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_delay_login",
@@ -193,10 +208,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				false,           // preloadLacros
-				false,           // forkZygotes
-				false,           // dropCaches
-				5 * time.Second, // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				false,              // dropCaches
+				5 * time.Second,    // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_cold_boot_delay_login",
@@ -209,10 +226,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				false,           // preloadLacros
-				false,           // forkZygotes
-				true,            // dropCaches
-				5 * time.Second, // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				true,               // dropCaches
+				5 * time.Second,    // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload",
@@ -225,10 +244,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true,  // preloadLacros
-				false, // forkZygotes
-				false, // dropCaches
-				0,     // sleepAtLoginScreen
+				true,               // preloadLacros
+				false,              // forkZygotes
+				false,              // dropCaches
+				0,                  // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload_delay_login",
@@ -241,10 +262,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true,            // preloadLacros
-				false,           // forkZygotes
-				false,           // dropCaches
-				5 * time.Second, // sleepAtLoginScreen
+				true,               // preloadLacros
+				false,              // forkZygotes
+				false,              // dropCaches
+				5 * time.Second,    // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot",
@@ -257,10 +280,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true,  // preloadLacros
-				false, // forkZygotes
-				true,  // dropCaches
-				0,     // sleepAtLoginScreen
+				true,               // preloadLacros
+				false,              // forkZygotes
+				true,               // dropCaches
+				0,                  // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload_cold_boot_delay_login",
@@ -273,10 +298,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true,            // preloadLacros
-				false,           // forkZygotes
-				true,            // dropCaches
-				5 * time.Second, // sleepAtLoginScreen
+				true,               // preloadLacros
+				false,              // forkZygotes
+				true,               // dropCaches
+				5 * time.Second,    // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name:              "lacros_chrome_root_fs_only_enable_preload_fork_zygotes_cold_boot_delay_login",
@@ -289,10 +316,12 @@ func init() {
 				false, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Rootfs,
-				true,            // preloadLacros
-				true,            // forkZygotes
-				true,            // dropCaches
-				5 * time.Second, // sleepAtLoginScreen
+				true,               // preloadLacros
+				true,               // forkZygotes
+				true,               // dropCaches
+				5 * time.Second,    // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
 			},
 		}, {
 			Name: "lacros_chrome_omaha_only",
@@ -307,10 +336,31 @@ func init() {
 				true, // checkTabletMode
 				browser.TypeLacros,
 				lacros.Omaha,
-				false, // preloadLacros
-				false, // forkZygotes
-				false, // dropCaches
-				0,     // sleepAtLoginScreen
+				false,              // preloadLacros
+				false,              // forkZygotes
+				false,              // dropCaches
+				0,                  // sleepAtLoginScreen
+				[]string{deferARC}, // disabledFeatures
+				[]string{},         // enabledFeatures
+			},
+		}, {
+			// Planned configuration for our production.
+			Name:              "lacros_chrome_rootfs_prod",
+			ExtraAttr:         []string{"group:cuj", "cuj_loginperf"},
+			ExtraSoftwareDeps: []string{"lacros"},
+			Timeout:           40 * time.Minute,
+			Val: loginPerfTestParam{
+				[]int{2, 8},
+				[]string{arcenabled},
+				false, // checkTabletMode
+				browser.TypeLacros,
+				lacros.Rootfs,
+				true,               // preloadLacros
+				true,               // forkZygotes
+				true,               // dropCaches
+				5 * time.Second,    // sleepAtLoginScreen
+				[]string{},         // disabledFeatures
+				[]string{deferARC}, // enabledFeatures
 			},
 		}},
 	})
@@ -348,6 +398,8 @@ func loginPerfStartToLoginScreen(
 		chrome.HideCrashRestoreBubble(), // Ignore possible incomplete shutdown.
 		// Disable whats-new page. See crbug.com/1271436.
 		chrome.DisableFeatures("ChromeWhatsNewUI"),
+		chrome.DisableFeatures(testConfig.param.disabledFeatures...),
+		chrome.EnableFeatures(testConfig.param.enabledFeatures...),
 	}
 	if testConfig.param.bt == browser.TypeLacros {
 		defaultOpts, err := testConfig.lacrosCfg.Opts()
@@ -693,7 +745,8 @@ func initializeLoginPerfTest(ctx context.Context,
 		chrome.SkipForceOnlineSignInForTesting(),
 		chrome.EnableWebAppInstall(),
 		// Disable whats-new page. See crbug.com/1271436.
-		chrome.DisableFeatures("ChromeWhatsNewUI"),
+		// Disable deferring ARC.
+		chrome.DisableFeatures("ChromeWhatsNewUI", deferARC),
 		// --disable-sync disables test account info sync, eg. Wi-Fi credentials,
 		// so that each test run does not remember info from last test run.
 		chrome.ExtraArgs("--disable-sync"),
@@ -1099,7 +1152,7 @@ func LoginPerf(ctx context.Context, s *testing.State) {
 			switch arcMode {
 			case noarc:
 			case arcenabled:
-				arcOpt = []chrome.Option{chrome.ARCEnabled(),
+				arcOpt = []chrome.Option{chrome.ARCSupported(),
 					chrome.DisableFeatures("ArcExternalStorageAccess"),
 					disableARCSyncOption}
 			default:
