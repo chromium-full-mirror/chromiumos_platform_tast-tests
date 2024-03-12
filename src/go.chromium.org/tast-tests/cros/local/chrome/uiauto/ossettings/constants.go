@@ -351,7 +351,10 @@ var (
 	CreateNewApnMenuBtn = nodewith.Name("Create new APN").HasClass("dropdown-item").Role(role.MenuItem)
 
 	// DiscoverKnownApnsMenuBtn is the finder for the "Discover known APNs" menu item.
-	DiscoverKnownApnsMenuBtn = nodewith.Name("Discover known APNs").HasClass("dropdown-item").Role(role.MenuItem)
+	DiscoverKnownApnsMenuBtn = nodewith.Name("Discover more APNs").HasClass("dropdown-item").Role(role.MenuItem)
+
+	// UseThisApnBtn is the finder for the "Use this APN" menu item.
+	UseThisApnBtn = nodewith.Name("Use this APN").Role(role.Button)
 
 	// APNLimitTooltip is the finder for the tooltip of the new APN button when number of APN hit the max limit.
 	APNLimitTooltip = nodewith.Name("Remove an APN to add a new APN").Role(role.Tooltip)

@@ -449,6 +449,68 @@ func (s *OSSettings) VerifyAPNSubpageConnectedApnUI(ctx context.Context, tconn *
 	return nil
 }
 
+// VerifyOnlyThisAPNEnabled verifies that only the specified |apn| is enabled.
+func VerifyOnlyThisAPNEnabled(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome, apn string) error {
+	ui := uiauto.New(tconn)
+
+	moreActionsButtonOfAPNFinder := nodewith.NameContaining(apn).NameRegex(regexp.MustCompile("APN is (connected|enabled)")).Role(role.Button).HasClass("icon-more-vert")
+	moreOptionsButtons, err := ui.NodesInfo(ctx, moreActionsButtonOfAPNFinder)
+	if err != nil {
+		return errors.Wrap(err, "failed to find more options button")
+	}
+
+	if len(moreOptionsButtons) == 0 {
+		return errors.Wrap(err, "failed to find an enabled or connected APN")
+	}
+	if len(moreOptionsButtons) > 1 {
+		return errors.Wrap(err, "failed to find exactly one enabled or connected APN")
+	}
+
+	return nil
+}
+
+// OpenDiscoverAPNDialogFromAPNSubpage opens the discover new APNs dialog when in the APN subpage
+func OpenDiscoverAPNDialogFromAPNSubpage(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn)
+
+	if err := uiauto.Combine("Open discover APNs dialog",
+		ui.LeftClick(MoreApnActionsTridot),
+		ui.WithTimeout(10*time.Second).WaitUntilExists(DiscoverKnownApnsMenuBtn),
+		ui.LeftClick(DiscoverKnownApnsMenuBtn),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to open discover APNs dialog")
+	}
+	return nil
+}
+
+// SelectAPNFromDialog selects the provided |apnName| when the discover new APNs dialog is open.
+func SelectAPNFromDialog(ctx context.Context, tconn *chrome.TestConn, apnName string) error {
+	apnSelection := nodewith.NameContaining(apnName).Role(role.StaticText)
+
+	ui := uiauto.New(tconn)
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(apnSelection)(ctx); err != nil {
+		return errors.Wrapf(err, "%q does does not show as a known APN", apnName)
+	}
+
+	if err := uiauto.Combine("Add known APN",
+		ui.LeftClick(apnSelection),
+		ui.LeftClick(UseThisApnBtn),
+		ui.WithTimeout(10*time.Second).WaitUntilGone(UseThisApnBtn),
+	)(ctx); err != nil {
+		return errors.Wrapf(err, "failed to  known APN %q", apnName)
+	}
+
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilGone(nodewith.Name("Automatically detected").Role(role.StaticText))(ctx); err != nil {
+		return errors.Wrap(err, "failed to remove automatically detected APN")
+	}
+
+	if err := ui.EnsureGoneFor(nodewith.Name("Automatically detected").Role(role.StaticText), 10*time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "failed to remove automatically detected APN")
+	}
+
+	return nil
+}
+
 // VerifyAPNMoreActionsMenuItemsPresent verifies the presence of more actions APN menu items.
 func VerifyAPNMoreActionsMenuItemsPresent(ctx context.Context, tconn *chrome.TestConn, userFriendlyAPNName string, hasEnable, hasDisable, hasRemove bool) error {
 	ui := uiauto.New(tconn)
