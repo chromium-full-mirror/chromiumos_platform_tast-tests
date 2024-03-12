@@ -6,7 +6,6 @@ package bruschetta
 
 import (
 	"context"
-	"os"
 	"regexp"
 	"strings"
 	"time"
@@ -54,12 +53,10 @@ func USBStorage(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	// Set up an environment variable used by vmc
 	hash, err := cryptohome.UserHash(ctx, cr.NormalizedUser())
 	if err != nil {
 		s.Fatal("Failed to get user hash: ", err)
 	}
-	os.Setenv("CROS_USER_ID_HASH", hash)
 
 	// Create a virtual USB mass storage device
 	usbMassStorage := usbdevice.NewUSBMassStorage()
@@ -90,8 +87,17 @@ func USBStorage(ctx context.Context, s *testing.State) {
 
 	// Attach the device to bruschetta
 	// This command must be run by chronos user due to permission reason
-	output, err := testexec.CommandContext(ctx, "sudo", "-u", "chronos", "vmc", "usb-attach", vm.DefaultBruschettaVMName,
-		device.BusNumber+":"+device.DevNumber).Output(testexec.DumpLogOnError)
+	cmd, err := testexec.CommandContextUser(ctx, "chronos",
+		"vmc", "usb-attach", vm.DefaultBruschettaVMName,
+		device.BusNumber+":"+device.DevNumber)
+	if err != nil {
+		s.Fatal("Failed to create command: ", err)
+	}
+
+	// Add an environment variable for vmc
+	cmd.Cmd.Env = append(cmd.Environ(), "CROS_USER_ID_HASH="+hash)
+
+	output, err := cmd.Output(testexec.DumpLogOnError)
 	if err != nil {
 		s.Fatal("Failed to run command: ", err)
 	}
@@ -130,9 +136,16 @@ func USBStorage(ctx context.Context, s *testing.State) {
 
 	// Detach the device from bruschetta
 	// This command must be run by chronos user due to permission reason
-	output, err = testexec.CommandContext(ctx, "sudo", "-u", "chronos", "vmc", "usb-detach", vm.DefaultBruschettaVMName,
-		port).Output(testexec.DumpLogOnError)
+	cmd, err = testexec.CommandContextUser(ctx, "chronos",
+		"vmc", "usb-detach", vm.DefaultBruschettaVMName, port)
 	if err != nil {
+		s.Fatal("Failed to create command: ", err)
+	}
+
+	// Add an environment variable for vmc
+	cmd.Cmd.Env = append(cmd.Environ(), "CROS_USER_ID_HASH="+hash)
+
+	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
 		s.Fatal("Failed to detach the device: ", err)
 	}
 
