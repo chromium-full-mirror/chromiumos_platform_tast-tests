@@ -581,6 +581,23 @@ func CheckValidFlashState(ctx context.Context, d *rpcdut.RPCDUT, fpBoard fp.Boar
 
 // InitializeHWAndSWWriteProtect ensures hardware and software write protect are initialized as requested.
 func InitializeHWAndSWWriteProtect(ctx context.Context, d *rpcdut.RPCDUT, pxy *servo.Proxy, fpBoard fp.BoardName, enableHWWP, enableSWWP bool) error {
+	// TODO(b/328066864): We can get stuck in a state where we can't enable software write protection.
+	// This workaround fixes the FPMCU state so that it will work again.
+	if fpBoard == fp.BoardNameHelipilot && enableSWWP {
+		testing.ContextLog(ctx, "TODO(b/328066864): Applying flashprotect workaround")
+		if err := SetHardwareWriteProtect(ctx, pxy, false); err != nil {
+			return err
+		}
+
+		if err := RebootFpmcu(ctx, d.DUT(), ImageTypeRW); err != nil {
+			return err
+		}
+
+		if err := SetSoftwareWriteProtect(ctx, d.DUT(), true); err != nil {
+			return err
+		}
+	}
+
 	testing.ContextLogf(ctx, "Initializing HW WP to %t, SW WP to %t", enableHWWP, enableSWWP)
 	// The HW write protect level must match the desired SW write protect
 	// level prior to modifying SW write protect. Once the SW write protect
