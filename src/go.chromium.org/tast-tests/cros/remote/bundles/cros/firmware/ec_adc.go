@@ -70,17 +70,19 @@ func ECADC(ctx context.Context, s *testing.State) {
 	for i := 1; i <= readCount; i++ {
 		ecTemperatureOut, err := h.Servo.RunECCommandGetOutput(ctx, "temps", []string{`.*(>|~\$)`})
 		if err != nil {
-			s.Fatal("Failed to read EC temperature sensors: ", err)
+			s.Error("Failed to read EC temperature sensors: ", err)
+			continue
 		}
 		ecTempsParsed, err := parseTempsOutput(ctx, ecTemperatureOut[0][0])
 		if err != nil {
-			s.Fatalf("Failed to parse temperature reading (%s): %s",
-				ecTemperatureOut[0][1],
+			s.Errorf("Failed to parse temperature reading (%s): %s",
+				ecTemperatureOut[0][0],
 				err)
+			continue
 		}
 		for _, ecTemperature := range ecTempsParsed {
 			if ecTemperature.TempKelvin > maxECTemp || ecTemperature.TempKelvin < minECTemp {
-				s.Fatalf("Abnormal EC temperature: %+v", ecTemperature)
+				s.Errorf("%d: Abnormal EC temperature: %+v raw: %q", i, ecTemperature, ecTemperatureOut[0][0])
 			}
 		}
 	}
