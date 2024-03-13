@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/bond"
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googlemeet"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
@@ -775,5 +776,12 @@ func init() {
 // After recording:
 //   - Record and save metrics.
 func MeetCUJ(ctx context.Context, s *testing.State) {
-	meetcuj.Run(ctx, s)
+	// Ensure that the Meet test parameters are properly formed.
+	meet := s.Param().(meetcuj.MeetTest)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	creds := s.RequiredVar("ui.MeetCUJ.bond_credentials")
+
+	if _, err := meetcuj.Run(ctx, meet, cr, s.Var, s.DataPath, s.OutDir(), creds); err != nil {
+		s.Fatal(ctx, "Failed to run MeetCUJ: ", err)
+	}
 }

@@ -145,7 +145,7 @@ var FakeCamHALCfg720p = &fakeCameraHALCfg{
 //
 // After recording:
 //   - Record and save metrics.
-func Run(ctx context.Context, s *testing.State) *perf.Values {
+func Run(ctx context.Context, meet MeetTest, cr *chrome.Chrome, testCaseVar func(string) (string, bool), dataPath func(string) string, outDir, creds string) (pv *perf.Values, retErr error) {
 	const (
 		// The addBotTimeout allows 3 2-minute BondAPI request retries by the
 		// Bond lib.
@@ -159,19 +159,17 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	notes := strings.Split("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.", "")
 
-	// Ensure that the Meet test parameters are properly formed.
-	meet := s.Param().(MeetTest)
 	if meet.Docs && meet.Jamboard {
-		s.Fatal("Tried to open both Google Docs and Jamboard at the same time")
+		return pv, errors.New("tried to open both Google Docs and Jamboard at the same time")
 	}
 	if meet.TabSwitchDocs && !meet.Docs {
-		s.Fatal("Cannot tab switch docs without opening a Google Doc")
+		return pv, errors.New("cannot tab switch docs without opening a Google Doc")
 	}
 	if len(meet.Bots) == 0 {
-		s.Fatal("Must have at least 1 bot count")
+		return pv, errors.New("must have at least 1 bot count")
 	}
 	if meet.Bots[0] == 0 {
-		s.Fatal("First bot count must have at least 1 bot, to add the spotlight bot")
+		return pv, errors.New("first bot count must have at least 1 bot, to add the spotlight bot")
 	}
 
 	// Determines the Meet call duration. Use the Meet duration specified in
@@ -181,15 +179,15 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		meetTimeout = meet.Duration
 	}
 
-	if testDuration, ok := s.Var("ui.MeetCUJ.duration"); ok {
+	if testDuration, ok := testCaseVar("ui.MeetCUJ.duration"); ok {
 		var err error
 		meetTimeout, err = time.ParseDuration(testDuration)
 		if err != nil {
-			s.Fatalf("Failed to parse command-line arg ui.MeetCUJ.duration=%q: %v", testDuration, err)
+			return pv, errors.Wrapf(err, "failed to parse command-line arg ui.MeetCUJ.duration=%q", testDuration)
 		}
 	}
 
-	s.Log("Run meeting for ", meetTimeout)
+	testing.ContextLog(ctx, "Run meeting for ", meetTimeout)
 
 	// Shorten context to allow for cleanup. Reserve one minute in case of power
 	// test.
@@ -204,14 +202,14 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 		// Configure CrOS to use only fake HAL camera.
 		if err := testutil.SetupTestConfig(ctx, testutil.UseFakeHALCamera); err != nil {
-			s.Fatal("Failed to set up camera test config: ", err)
+			return pv, errors.Wrap(err, "failed to set up camera test config")
 		}
 		defer testutil.RemoveTestConfig(closeCtx)
 
 		// Copy the fake camera video to where the camera module can access.
-		dutFakeHALPath, err := testutil.CopyFakeHALFrameImage(s.DataPath(meet.FakeCamHALCfg.videoFileName))
+		dutFakeHALPath, err := testutil.CopyFakeHALFrameImage(dataPath(meet.FakeCamHALCfg.videoFileName))
 		if err != nil {
-			s.Fatal("Failed to copy fake camera input: ", err)
+			return pv, errors.Wrap(err, "failed to copy fake camera input")
 		}
 		defer os.Remove(dutFakeHALPath)
 
@@ -228,25 +226,23 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			Cameras: []testutil.FakeCameraConfig{fakeCameraConfig},
 		}
 		if err := testutil.WriteFakeHALConfig(ctx, fakeHALConfig); err != nil {
-			s.Fatal("Failed to configure HAL camera: ", err)
+			return pv, errors.Wrap(err, "failed to configure HAL camera")
 		}
 		defer testutil.RemoveFakeHALConfig(closeCtx)
 
 		if err := upstart.RestartJob(ctx, cameraService); err != nil {
-			s.Fatalf("Failed to restart %s after camera setup: %v", cameraService, err)
+			return pv, errors.Wrapf(err, "failed to restart %s after camera setup", cameraService)
 		}
 	}
 
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
+		return pv, errors.Wrap(err, "failed to capture device snapshot")
 	}
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to the test API connection: ", err)
+		return pv, errors.Wrap(err, "failed to connect to the test API connection")
 	}
 
 	if meet.ZoomOut {
@@ -259,7 +255,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// show all of the participants.
 		revertZoom, err := display.MinimizePrimaryDisplayZoomFactor(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to set the zoom factor of the primary display to minimum: ", err)
+			return pv, errors.Wrap(err, "failed to set the zoom factor of the primary display to minimum")
 		}
 		defer revertZoom(closeCtx, tconn)
 	}
@@ -272,14 +268,14 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// Launch lacros.
 		l, err := lacros.Launch(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to launch lacros: ", err)
+			return pv, errors.Wrap(err, "failed to launch lacros")
 		}
 		defer l.Close(closeCtx)
 		cs = l
 		br = l.Browser()
 
 		if bTconn, err = l.TestAPIConn(ctx); err != nil {
-			s.Fatal("Failed to get lacros TestAPIConn: ", err)
+			return pv, errors.Wrap(err, "failed to get lacros TestAPIConn")
 		}
 	case browser.TypeAsh:
 		cs = cr
@@ -287,35 +283,34 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		bTconn = tconn
 	}
 
-	creds := s.RequiredVar("ui.MeetCUJ.bond_credentials")
 	bc, err := bond.NewClient(ctx, bond.WithCredsJSON([]byte(creds)))
 	if err != nil {
-		s.Fatal("Failed to create a bond client: ", err)
+		return pv, errors.Wrap(err, "failed to create a bond client")
 	}
 	defer bc.Close()
 
 	meetingCode, err := bc.CreateConference(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a conference room: ", err)
+		return pv, errors.Wrap(err, "failed to create a conference room")
 	}
-	s.Log("Created a room with the code ", meetingCode)
+	testing.ContextLog(ctx, "Created a room with the code ", meetingCode)
 
 	sctx, cancel := context.WithTimeout(ctx, addBotTimeout)
 	defer cancel()
 	defer func(ctx context.Context) {
-		s.Log("Removing all bots from the call")
+		testing.ContextLog(ctx, "Removing all bots from the call")
 		if _, _, err := bc.RemoveAllBots(ctx, meetingCode); err != nil {
-			s.Log("Failed to remove all bots: ", err)
+			testing.ContextLog(ctx, "Failed to remove all bots: ", err)
 		}
 	}(closeCtx)
 
 	// Create a bot with spotlight layout to request HD video.
 	spotlightBotList, _, err := bc.AddBots(sctx, meetingCode, 1, meetTimeout+30*time.Minute, append(meet.BotsOptions, bond.WithLayout("SPOTLIGHT"))...)
 	if err != nil {
-		s.Fatal("Failed to create bot with spotlight layout: ", err)
+		return pv, errors.Wrap(err, "failed to create bot with spotlight layout")
 	}
 	if len(spotlightBotList) != 1 {
-		s.Fatalf("Unexpected number of bots with spotlight layout successfully started; got %d, expected 1", len(spotlightBotList))
+		return pv, errors.Wrapf(err, "unexpected number of bots with spotlight layout successfully started; got %d, expected 1", len(spotlightBotList))
 	}
 
 	// Keep track of how many bots are already in the call, so we can add the
@@ -337,15 +332,15 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		for i := 0; i < addBotRetries; i++ {
 			// GoBigSleepLint: A short sleep before next call to Bond API.
 			if err := testing.Sleep(ctx, wait); err != nil {
-				s.Errorf("Failed to sleep for %v: %v", wait, err)
+				return errors.Wrapf(err, "failed to sleep for %v", wait)
 			}
 			// Add 30 minutes to the bot duration, to ensure that the bots stay long
 			// enough for the test to get info from chrome://webrtc-internals.
 			botList, numFailures, err := bc.AddBots(sctx, meetingCode, botsToAdd, meetTimeout+30*time.Minute, meet.BotsOptions...)
 			if err != nil {
-				s.Fatalf("Failed to create %d bots: %v", botsToAdd, err)
+				return errors.Wrapf(err, "failed to create %d bots", botsToAdd)
 			}
-			s.Logf("%d bots started, %d bots failed", len(botList), numFailures)
+			testing.ContextLogf(ctx, "%d bots started, %d bots failed", len(botList), numFailures)
 			botsToAdd -= len(botList)
 			if botsToAdd <= 0 {
 				break
@@ -360,13 +355,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	numBotsToAdd := meet.Bots[0] - botsInCall
 	if err := addBots(ctx, numBotsToAdd); err != nil {
-		s.Fatalf("Failed to initially add %d bots: %v", numBotsToAdd, err)
+		return pv, errors.Wrapf(err, "failed to initially add %d bots", numBotsToAdd)
 	}
 	botsInCall += numBotsToAdd
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, bTconn)
 	if err != nil {
-		s.Fatal("Failed to create TabCrashChecker: ", err)
+		return pv, errors.Wrap(err, "failed to create TabCrashChecker")
 	}
 
 	// Ensure that even if the Meet call crashes outside of our direct
@@ -377,60 +372,61 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			return
 		}
 		if err := tabChecker.Check(ctx); err != nil {
-			s.Log("Tab renderer crashed: ", err)
+			testing.ContextLog(ctx, "Tab renderer crashed")
 		}
 	}(ctx)
 
-	assertTabActive := func(ctx context.Context) {
+	assertTabActive := func(ctx context.Context) error {
 		if err := tabChecker.Check(ctx); err != nil {
 			caughtTabCrash = true
-			s.Fatal("Tab renderer crashed: ", err)
+			return errors.Wrap(err, "tab renderer crashed")
 		}
+		return nil
 	}
 
 	meetHelper := googlemeet.NewHRTelemetryHelper(cs, tconn)
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
-		s.Fatal("Failed to create the recorder: ", err)
+		return pv, errors.Wrap(err, "failed to create the recorder")
 	}
 
 	if err := recorder.AddCollectedMetrics(bTconn, meet.BrowserType,
 		cujrecorder.NewCustomMetricConfig("Cras.MissedCallbackFrequencyInput", "millisecond", perf.SmallerIsBetter),
 		cujrecorder.NewCustomMetricConfig("Cras.MissedCallbackFrequencyOutput", "millisecond", perf.SmallerIsBetter)); err != nil {
-		s.Fatal("Failed to add metrics to recorder: ", err)
+		return pv, errors.Wrap(err, "failed to add metrics to recorder")
 	}
 
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
-		s.Fatal("Failed to add common metrics to recorder: ", err)
+		return pv, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
 	// Take a screenshot every 2 minutes up to a maximum of 5
 	// screenshots, to ensure we capture any bots that drop during
 	// the call and any issues that come up with the collab window.
 	if err := recorder.AddScreenshotRecorder(ctx, 2*time.Minute, 5); err != nil {
-		s.Log("Failed to add screenshot recorder: ", err)
+		testing.ContextLog(ctx, "Failed to add screenshot recorder")
 	}
 
 	defer func() {
 		if err := recorder.Close(closeCtx); err != nil {
-			s.Error("Failed to stop recorder: ", err)
+			testing.ContextLog(ctx, "Failed to stop recorder: ", err)
 		}
 	}()
 
 	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
-		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
+		return pv, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
 
 	// Open chrome://webrtc-internals now so it will collect data on the meeting's streams.
 	webrtcInternals, err := recorder.NewConn(ctx, br, "WebRTC_Internals", "chrome://webrtc-internals", browser.WithNewWindow())
 	if err != nil {
-		s.Fatal("Failed to open chrome://webrtc-internals: ", err)
+		return pv, errors.Wrap(err, "failed to open chrome://webrtc-internals")
 	}
 	defer webrtcInternals.Close()
 
 	webRTCInternalsWindow, err := ash.FindOnlyWindow(ctx, tconn, ash.BrowserTitleMatch(meet.BrowserType, "WebRTC Internals"))
 	if err != nil {
-		s.Fatal("Failed to find the WebRTC Internals window: ", err)
+		return pv, errors.Wrap(err, "failed to find the WebRTC Internals window")
 	}
 
 	// Maximize the WebRTC Internals window now, in preparation to take
@@ -438,7 +434,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// the test. That screenshot is for investigation of b/255343902.
 	// TODO(b/255343902): Remove this when the bug is fixed.
 	if err := ash.SetWindowStateAndWait(ctx, tconn, webRTCInternalsWindow.ID, ash.WindowStateMaximized); err != nil {
-		s.Log("Failed to ensure that the WebRTC Internals window is maximized: ", err)
+		testing.ContextLog(ctx, "Failed to ensure that the WebRTC Internals window is maximized: ", err)
 	}
 
 	// Lacros specific setup.
@@ -448,10 +444,10 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			return strings.HasPrefix(w.Title, newTabTitle) && strings.HasPrefix(w.Name, "ExoShellSurface")
 		})
 		if err != nil {
-			s.Fatal("Failed to find New Tab window: ", err)
+			return pv, errors.Wrap(err, "failed to find New Tab window")
 		}
 		if err := w.CloseWindow(ctx, tconn); err != nil {
-			s.Fatal("Failed to close New Tab window: ", err)
+			return pv, errors.Wrap(err, "failed to close New Tab window")
 		}
 	}
 
@@ -459,7 +455,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// Ensure docs offline support is enabled to avoid docs page hitting
 		// fatal network error. See http://b/254914987
 		if err := cuj.EnsureDocsOfflineEnabled(ctx, br, tconn); err != nil {
-			s.Fatal("Failed to enable docs offline support: ", err)
+			return pv, errors.Wrap(err, "failed to enable docs offline support")
 		}
 	}
 
@@ -473,23 +469,23 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		}
 		// Close the windows to finish the meeting.
 		if err := ash.CloseAllWindows(closeCtx, tconn); err != nil {
-			s.Error("Failed to close all windows: ", err)
+			testing.ContextLog(ctx, "Failed to close all windows: ", err)
 		}
 	}()
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	// Autorelease the automation tree when it is not used so that excessive
 	// automation events in lacros runs do not consumer too much cpu/power.
 	// See b/278649596.
 	automationAutoRelease, err := uiauto.NewScopedAutoRelease(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to create automation ScopedAutoRelease: ", err)
+		return pv, errors.Wrap(err, "failed to create automation ScopedAutoRelease")
 	}
 	defer automationAutoRelease.Reset(ctx)
 
 	if err := cuj.ExpandCreateDumpSection(ctx, tconn); err != nil {
-		s.Fatal("Failed to expand Create Dump section of chrome://webrtc-internals: ", err)
+		return pv, errors.Wrap(err, "failed to expand Create Dump section of chrome://webrtc-internals")
 	}
 
 	var names []string
@@ -498,11 +494,11 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	}
 	webRTCMetricsRecorder, err := metrics.StartRecorder(ctx, bTconn, names...)
 	if err != nil {
-		s.Fatal("Failed to start recording WebRTC metrics: ", err)
+		return pv, errors.Wrap(err, "failed to start recording WebRTC metrics")
 	}
 
 	if err := meetHelper.JoinMeeting(ctx, meetingCode, browser.WithNewWindow()); err != nil {
-		s.Fatal("Failed to open the hangout meet website: ", err)
+		return pv, errors.Wrap(err, "failed to open the hangout meet website")
 	}
 	defer meetHelper.Close(closeCtx)
 
@@ -510,13 +506,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	meetRE := regexp.MustCompile(`\bMeet\b|\bmeet\.\b`)
 	meetWindow, err := ash.FindOnlyWindow(ctx, tconn, func(w *ash.Window) bool { return meetRE.MatchString(w.Title) })
 	if err != nil {
-		s.Fatal("Failed to find the Meet window: ", err)
+		return pv, errors.Wrap(err, "failed to find the Meet window")
 	}
 
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
-	s.Logf("Is in tablet-mode: %t", inTabletMode)
+	testing.ContextLogf(ctx, "Is in tablet-mode: %t", inTabletMode)
 	if err != nil {
-		s.Fatal("Failed to detect it is in tablet-mode or not: ", err)
+		return pv, errors.Wrap(err, "failed to detect it is in tablet-mode or not")
 	}
 	var pc pointer.Context
 	var mw *input.MouseEventWriter
@@ -525,35 +521,35 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// TODO(crbug/1135239): test portrait orientation as well.
 		orientation, err := display.GetOrientation(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to get display orientation: ", err)
+			return pv, errors.Wrap(err, "failed to get display orientation")
 		}
 		if orientation.Type == display.OrientationPortraitPrimary {
 			info, err := display.GetPrimaryInfo(ctx, tconn)
 			if err != nil {
-				s.Fatal("Failed to get the primary display info: ", err)
+				return pv, errors.Wrap(err, "failed to get the primary display info")
 			}
-			s.Log("Rotating display 90 degrees")
+			testing.ContextLog(ctx, "Rotating display 90 degrees")
 			if err := display.SetDisplayRotationSync(ctx, tconn, info.ID, display.Rotate90); err != nil {
-				s.Fatal("Failed to rotate display: ", err)
+				return pv, errors.Wrap(err, "failed to rotate display")
 			}
 			defer display.SetDisplayRotationSync(closeCtx, tconn, info.ID, display.Rotate0)
 		}
 		pc, err = pointer.NewTouch(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to create a touch controller: ", err)
+			return pv, errors.Wrap(err, "failed to create a touch controller")
 		}
 	} else {
 		// Make it into a maximized window if it is in clamshell-mode.
 		if err := ash.ForEachWindow(ctx, tconn, func(w *ash.Window) error {
 			return ash.SetWindowStateAndWait(ctx, tconn, w.ID, ash.WindowStateMaximized)
 		}); err != nil {
-			s.Fatal("Failed to turn all windows into maximized state: ", err)
+			return pv, errors.Wrap(err, "failed to turn all windows into maximized state")
 		}
 		pc = pointer.NewMouse(tconn)
 
 		mw, err = input.Mouse(ctx)
 		if err != nil {
-			s.Fatal("Failed to create a mouse: ", err)
+			return pv, errors.Wrap(err, "failed to create a mouse")
 		}
 		defer mw.Close(ctx)
 	}
@@ -561,7 +557,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a keyboard: ", err)
+		return pv, errors.Wrap(err, "failed to create a keyboard")
 	}
 	defer kw.Close(closeCtx)
 
@@ -577,13 +573,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		prompts.AllowAVPermissionPrompt,
 		prompts.AllowMicrophoneAndCameraPermissionPrompt,
 	)(ctx); err != nil {
-		s.Fatal("Failed to grant permissions: ", err)
+		return pv, errors.Wrap(err, "failed to grant permissions")
 	}
 
 	// Ensure to check that we are properly in the meeting before trying
 	// to apply visual effects.
 	if err := meetHelper.IsInMeeting(ctx, time.Minute); err != nil {
-		s.Fatal("Failed to wait to enter the meeting: ", err)
+		return pv, errors.Wrap(err, "failed to wait to enter the meeting")
 	}
 
 	expectedParticipantCount := botsInCall + 1
@@ -608,10 +604,10 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// Set a longer timer here.
 		uiLongWait.WaitUntilExists(participantText),
 	)(ctx); err != nil {
-		s.Fatal("Failed to wait for participant info: ", err)
+		return pv, errors.Wrap(err, "failed to wait for participant info")
 	}
 	if err := checkParticipantCount(ctx, expectedParticipantCount); err != nil {
-		s.Fatal("The number of bots is unexpected: ", err)
+		return pv, errors.Wrap(err, "the number of bots is unexpected")
 	}
 
 	doDefaultMoreOptions := func(ctx context.Context) error {
@@ -639,7 +635,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 				if err != nil {
 					return errors.Wrap(err, "failed to find 'Turn off visual effects' button")
 				}
-				s.Log("Turn off visual effects")
+				testing.ContextLog(ctx, "Turn off visual effects")
 				if turnOffEffectsButton == popUpButton {
 					nodeInfo, err := ui.Info(ctx, turnOffEffectsButton)
 					if err != nil {
@@ -677,13 +673,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		)(ctx)
 	}
 	if meet.Effects {
-		s.Log("Turn on visual effects")
+		testing.ContextLog(ctx, "Turn on visual effects")
 		if err := setEffect(ctx, blur); err != nil {
-			s.Fatal("Failed to turn on visual effects: ", err)
+			return pv, errors.Wrap(err, "failed to turn on visual effects")
 		}
 	} else {
 		if err := setEffect(ctx, turnOffEffects); err != nil {
-			s.Fatal("Failed to turn off visual effects: ", err)
+			return pv, errors.Wrap(err, "failed to turn off visual effects")
 		}
 	}
 
@@ -691,7 +687,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		meet.AdjustLighting ||
 		meet.BackgroundBlur ||
 		meet.NoiseCancellation {
-		s.Log("Toggling platform VC effects")
+		testing.ContextLog(ctx, "Toggling platform VC effects")
 		vct := vctray.New(ctx, tconn)
 		blur := vctray.BackgroundBlurOff
 		if meet.BackgroundBlur {
@@ -703,18 +699,18 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			vct.SetBackgroundBlur(blur),
 			vct.SetNoiseCancellation(meet.NoiseCancellation),
 		)(ctx); err != nil {
-			s.Fatal("Failed to configure platform VC effects: ", err)
+			return pv, errors.Wrap(err, "failed to configure platform VC effects")
 		}
 	}
 
-	s.Log("Resetting browser zoom to 100%")
+	testing.ContextLog(ctx, "Resetting browser zoom to 100%")
 	zoomNode := nodewith.HasClass("ZoomView")
 	if err := uiauto.Combine(
 		"reset zoom and wait for zoom indicator to be absent",
 		kw.AccelAction("Ctrl+0"),
 		ui.WaitUntilGone(zoomNode),
 	)(ctx); err != nil {
-		s.Fatal("Failed to press Ctrl+0 to reset the zoom: ", err)
+		return pv, errors.Wrap(err, "failed to press Ctrl+0 to reset the zoom")
 	}
 
 	if meet.ZoomOut {
@@ -724,22 +720,24 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// be visible. Pressing Ctrl+Minus 5 times results in the zoom going from
 		// 100% -> 90% -> 80% -> 75% -> 67% -> 50%.
 		if err := inputsimulations.RepeatKeyPress(ctx, kw, "Ctrl+-", 3*time.Second, 5); err != nil {
-			s.Fatal("Failed to repeatedly press Ctrl+Minus to zoom out: ", err)
+			return pv, errors.Wrap(err, "failed to repeatedly press Ctrl+Minus to zoom out")
 		}
 
 		// Verify that we zoomed correctly.
 		zoomInfo, err := ui.Info(ctx, zoomNode)
 		if err != nil {
-			s.Fatal("Failed to find the current browser zoom: ", err)
+			return pv, errors.Wrap(err, "failed to find the current browser zoom")
 		}
 		if zoomInfo.Name != "Zoom: 50%" {
-			s.Fatalf(`Unexpected zoom value: got %s; want "Zoom: 50%%"`, zoomInfo.Name)
+			return pv, errors.Wrapf(err, `unexpected zoom value: got %s; want "Zoom: 50%%"`, zoomInfo.Name)
 		}
-		s.Log("Zoomed browser window to 50%")
+		testing.ContextLog(ctx, "Zoomed browser window to 50%")
 	}
 
 	// Make sure the Meet call window hasn't crashed before starting the recorder.
-	assertTabActive(ctx)
+	if err := assertTabActive(ctx); err != nil {
+		return pv, err
+	}
 
 	var cleanUpDoc, cleanUpJamboard bool
 	var docsHref, jamboardHref string
@@ -752,8 +750,8 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	defer func(ctx context.Context) {
 		if cleanUpDoc && docsHref != "" {
 			if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
-				faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return true }, cr, "cleanup_doc")
-				s.Log("Failed to delete doc: ", err)
+				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return true }, cr, "cleanup_doc")
+				testing.ContextLog(ctx, "Failed to delete doc: ", err)
 			}
 		}
 	}(cleanUpDocCtx)
@@ -766,8 +764,8 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	defer func(ctx context.Context) {
 		if cleanUpJamboard && jamboardHref != "" {
 			if err := googledocs.DeleteJamboardWithURL(tconn, cr, jamboardHref)(ctx); err != nil {
-				faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return true }, cr, "cleanup_jamboard")
-				s.Log("Failed to delete jamboard: ", err)
+				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return true }, cr, "cleanup_jamboard")
+				testing.ContextLog(ctx, "Failed to delete jamboard: ", err)
 			}
 		}
 	}(cleanUpJamboardCtx)
@@ -780,7 +778,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		if meet.Docs {
 			recorder.Annotate(ctx, "Open_Google_Doc")
 			docsURL := defaultDocsURL
-			if docsURLOverride, ok := s.Var("ui.MeetCUJ.doc"); ok {
+			if docsURLOverride, ok := testCaseVar("ui.MeetCUJ.doc"); ok {
 				docsURL = docsURLOverride
 			}
 
@@ -796,7 +794,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			// because sometimes reaching quiescence can take a really long
 			// time, even when the doc is interactable.
 			if err := webutil.WaitForQuiescence(ctx, collaborationConn, 15*time.Second); err != nil {
-				s.Log("Failed to wait for Google Docs to quiesce: ", err)
+				testing.ContextLog(ctx, "Failed to wait for Google Docs to quiesce: ", err)
 			}
 
 			if docsURL == defaultDocsURL {
@@ -824,7 +822,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			defer cancel()
 			defer func(ctx context.Context) {
 				if err := docsBlockerConn.Eval(ctx, "ForceDocsOffline(false)", nil); err != nil {
-					s.Log("Failed to call docs blocker to restore: ", err)
+					testing.ContextLog(ctx, "Failed to call docs blocker to restore: ", err)
 				}
 			}(docsBlockerCleanupCtx)
 
@@ -839,7 +837,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 				return errors.Wrap(err, "failed to open the Jamboard website")
 			}
 			defer collaborationConn.Close()
-			s.Log("Creating a Jamboard window")
+			testing.ContextLog(ctx, "Creating a Jamboard window")
 			if err := ui.LeftClick(nodewith.Name("New Jam").Role(role.Button))(ctx); err != nil {
 				return errors.Wrap(err, "failed to click the new jam button")
 			}
@@ -926,13 +924,13 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// that the test user will have to provide HD video.
 		login, err := loginstatus.GetLoginStatus(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to get login status: ", err)
+			return errors.Wrap(err, "failed to get login status")
 		}
 		if !login.IsLoggedIn {
-			s.Fatal("Expect to see a user is logged in in login status")
+			return errors.Wrap(err, "expect to see a user is logged in in login status")
 		}
 		if err := bc.ExecuteScript(ctx, fmt.Sprintf("@b%d pin_participant_by_name %q", spotlightBotList[0], *login.DisplayName), meetingCode); err != nil {
-			s.Fatal("Failed to direct the spotlight bot to pin the test user: ", err)
+			return errors.Wrap(err, "failed to direct the spotlight bot to pin the test user")
 		}
 
 		if meet.Present {
@@ -957,7 +955,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		}
 
 		errc := make(chan error)
-		s.Log("Keeping the meet session for ", meetTimeout)
+		testing.ContextLog(ctx, "Keeping the meet session for ", meetTimeout)
 		async.Run(ctx, func(ctx context.Context) {
 			// Using goroutine to measure GPU counters asynchronously because:
 			// - we will add some other test scenarios (controlling windows / meet sessions).
@@ -1059,7 +1057,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 				return
 			}
 			if err := stopSnapshot(ctx); err != nil {
-				s.Log("Failed to stop final snapshot: ", err)
+				testing.ContextLog(ctx, "Failed to stop final snapshot: ", err)
 			}
 		}(ctx)
 
@@ -1077,7 +1075,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 		startTracingRoutine := func(ctx context.Context) {
 			async.Run(ctx, func(ctx context.Context) {
-				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				if err := recorder.StartTracing(ctx, outDir, dataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
 					tracingErr = errors.Wrap(err, "failed to start tracing")
 					return
 				}
@@ -1244,7 +1242,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			defer docsBlockerConn.Close()
 
 			if err := docsBlockerConn.Eval(ctx, "ForceDocsOffline(false)", nil); err != nil {
-				s.Log("Failed to call docs blocker to restore: ", err)
+				testing.ContextLog(ctx, "Failed to call docs blocker to restore: ", err)
 			}
 
 			if err := kw.Accel(ctx, "Alt+Tab"); err != nil {
@@ -1260,11 +1258,11 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		} else if meet.Jamboard {
 			// Simulate mouse input on jamboard.
 			if err := ui.LeftClick(nodewith.Name("Pen").Role(role.ToggleButton))(ctx); err != nil {
-				s.Fatal("Failed to click the pen toggle button: ", err)
+				return errors.Wrap(err, "failed to click the pen toggle button")
 			}
 			contentArea, err := ui.Location(ctx, nodewith.ClassName("jam-content-area").Role(role.GenericContainer))
 			if err != nil {
-				s.Fatal("Failed to find the location of jamboard content area: ", err)
+				return errors.Wrap(err, "failed to find the location of jamboard content area")
 			}
 			centerX, centerY, offsetX, offsetY := contentArea.CenterPoint().X, contentArea.CenterPoint().Y, 10, 10
 			end := time.Now().Add(meetTimeout)
@@ -1285,7 +1283,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 						mouse.Move(tconn, coords.NewPoint(centerX-i*offsetX, centerY-i*offsetY), time.Second),
 						mouse.Release(tconn, mouse.LeftButton),
 					)(ctx); err != nil {
-						s.Fatal("Failed to simulate mouse movement on jamboard: ", err)
+						return errors.Wrap(err, "failed to simulate mouse movement on jamboard")
 					}
 				}
 			}
@@ -1446,7 +1444,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 		return nil
 	}); err != nil {
-		s.Fatal("Failed to conduct the recorder task: ", err)
+		return pv, errors.Wrap(err, "failed to conduct the recorder task")
 	}
 
 	// Before recording the metrics, check if there is any tab crashed.
@@ -1455,58 +1453,57 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// Sometimes the nodes on the background window cannot be found.
 	// Activate the window to download the dump from the WebRTC-internals window.
 	if err := webRTCInternalsWindow.ActivateWindow(ctx, tconn); err != nil {
-		s.Fatal("Failed to activate the WebRTC-internals window: ", err)
+		return pv, errors.Wrap(err, "failed to activate the WebRTC-internals window")
 	}
 	// Some DUTs need more time to wait for quiescence. Add log for debugging
 	// loading duration.
 	startTime := time.Now()
 	if err := webutil.WaitForQuiescence(ctx, webrtcInternals, 2*time.Minute); err != nil {
-		s.Fatal("Failed to wait for quiescence: ", err)
+		return pv, errors.Wrap(err, "failed to wait for quiescence")
 	}
 	testing.ContextLog(ctx, "Loading page took: ", time.Since(startTime))
 
 	// Report info from chrome://webrtc-internals.
-	if path, err := cuj.DumpWebRTCInternals(ctx, tconn, ui, cr.NormalizedUser()); err != nil {
-		s.Error("Failed to download dump from chrome://webrtc-internals: ", err)
+	path, err := cuj.DumpWebRTCInternals(ctx, tconn, ui, cr.NormalizedUser())
+	if err != nil {
 		// Take a screenshot with the chrome://webrtc-internals tab in
 		// the foreground, to facilitate investigation of b/255343902.
 		// TODO(b/255343902): Remove this when the bug is fixed.
 		recorder.CustomScreenshot(ctx)
-	} else {
-		dump, readErr := os.ReadFile(path)
-		if readErr != nil {
-			s.Error("Failed to read WebRTC internals dump from Downloads folder: ", readErr)
+		return pv, errors.Wrap(err, "failed to download dump from chrome://webrtc-internals")
+	}
+	dump, readErr := os.ReadFile(path)
+	if readErr != nil {
+		return pv, errors.Wrap(readErr, "failed to read WebRTC internals dump from Downloads folder")
+	}
+	if err := os.Remove(path); err != nil {
+		return pv, errors.Wrap(err, "failed to remove WebRTC internals dump from Downloads folder")
+	}
+	if readErr == nil {
+		if err := os.WriteFile(filepath.Join(outDir, "webrtc-internals.json"), dump, 0644); err != nil {
+			return pv, errors.Wrap(err, "failed to write WebRTC internals dump to test results folder")
 		}
-		if err := os.Remove(path); err != nil {
-			s.Error("Failed to remove WebRTC internals dump from Downloads folder: ", err)
+		webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], meet.Present)
+		if err != nil {
+			return pv, errors.Wrap(err, "failed to report info from WebRTC internals dump to performance metrics")
 		}
-		if readErr == nil {
-			if err := os.WriteFile(filepath.Join(s.OutDir(), "webrtc-internals.json"), dump, 0644); err != nil {
-				s.Error("Failed to write WebRTC internals dump to test results folder: ", err)
-			}
-			webRTCInternalsPV, err := reportWebRTCInternals(ctx, dump, meetingCode, meet.Bots[len(meet.Bots)-1], meet.Present)
-			if err != nil {
-				s.Error("Failed to report info from WebRTC internals dump to performance metrics: ", err)
-			} else {
-				pv.Merge(webRTCInternalsPV)
-			}
-		}
+		pv.Merge(webRTCInternalsPV)
 	}
 
 	// Activate the Meet window to clean up browser zoom and effect settings.
 	if err := meetWindow.ActivateWindow(ctx, tconn); err != nil {
-		s.Fatal("Failed to activate the Meet window: ", err)
+		return pv, errors.Wrap(err, "failed to activate the Meet window")
 	}
 
 	// Reset the browser zoom, because the browser retains the zoom
 	// across test variants.
 	if err := kw.Accel(ctx, "Ctrl+0"); err != nil {
-		s.Log("Failed to reset browser zoom to 100%")
+		testing.ContextLog(ctx, "Failed to reset browser zoom to 100%")
 	}
 
 	if meet.Effects {
 		if err := setEffect(ctx, turnOffEffects); err != nil {
-			s.Log("Failed to turn off visual effects: ", err)
+			testing.ContextLog(ctx, "Failed to turn off visual effects: ", err)
 		}
 	}
 
@@ -1515,72 +1512,73 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// because the metrics are recorded when the video streams are ended.
 	closedMeet = true
 	if err := meetWindow.CloseWindow(closeCtx, tconn); err != nil {
-		s.Error("Failed to close the meeting: ", err)
+		return pv, errors.Wrap(err, "failed to close the meeting")
 	}
 	if err := ui.WaitUntilGone(nodewith.NameContaining("VideoStream").First())(ctx); err != nil {
-		s.Error("Failed to wait for video stream info to disappear: ", err)
+		return pv, errors.Wrap(err, "failed to wait for video stream info to disappear")
 	}
-	if hists, err := webRTCMetricsRecorder.Histogram(ctx, bTconn); err != nil {
-		s.Error("Failed to gather WebRTC metrics for video streams: ", err)
-	} else {
-		for _, hist := range hists {
-			count := hist.TotalCount()
-			if count == 0 {
+	hists, err := webRTCMetricsRecorder.Histogram(ctx, bTconn)
+	if err != nil {
+		return pv, errors.Wrap(err, "failed to gather WebRTC metrics for video streams")
+	}
+
+	for _, hist := range hists {
+		count := hist.TotalCount()
+		if count == 0 {
+			continue
+		}
+
+		info := cujrecorder.WebRTCMetricInfo[hist.Name]
+		pv.Set(perf.Metric{
+			Name:      hist.Name,
+			Unit:      info.Unit,
+			Direction: info.Direction,
+		}, float64(hist.Sum))
+
+		var bucketMinima []float64
+		var bucketMaxima []float64
+		for _, bucket := range hist.Buckets {
+			// Only report the bucket max + mins if there's more than 1
+			// element in the bucket.
+			if bucket.Count <= 1 {
 				continue
 			}
 
-			info := cujrecorder.WebRTCMetricInfo[hist.Name]
+			for i := int64(0); i < bucket.Count; i++ {
+				bucketMinima = append(bucketMinima, float64(bucket.Min))
+				bucketMaxima = append(bucketMaxima, float64(bucket.Max))
+			}
+
 			pv.Set(perf.Metric{
 				Name:      hist.Name,
+				Variant:   "bucket_minima",
 				Unit:      info.Unit,
 				Direction: info.Direction,
-			}, float64(hist.Sum))
-
-			var bucketMinima []float64
-			var bucketMaxima []float64
-			for _, bucket := range hist.Buckets {
-				// Only report the bucket max + mins if there's more than 1
-				// element in the bucket.
-				if bucket.Count <= 1 {
-					continue
-				}
-
-				for i := int64(0); i < bucket.Count; i++ {
-					bucketMinima = append(bucketMinima, float64(bucket.Min))
-					bucketMaxima = append(bucketMaxima, float64(bucket.Max))
-				}
-
-				pv.Set(perf.Metric{
-					Name:      hist.Name,
-					Variant:   "bucket_minima",
-					Unit:      info.Unit,
-					Direction: info.Direction,
-					Multiple:  true,
-				}, bucketMinima...)
-				pv.Set(perf.Metric{
-					Name:      hist.Name,
-					Variant:   "bucket_maxima",
-					Unit:      info.Unit,
-					Direction: info.Direction,
-					Multiple:  true,
-				}, bucketMaxima...)
-			}
+				Multiple:  true,
+			}, bucketMinima...)
+			pv.Set(perf.Metric{
+				Name:      hist.Name,
+				Variant:   "bucket_maxima",
+				Unit:      info.Unit,
+				Direction: info.Direction,
+				Multiple:  true,
+			}, bucketMaxima...)
 		}
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {
-		s.Fatal("Failed to record the data: ", err)
+		return pv, errors.Wrap(err, "failed to record the data")
 	}
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
-	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
-		s.Error("Failed to save histogram raw data: ", err)
+	if err := recorder.SaveHistograms(outDir); err != nil {
+		return pv, errors.Wrap(err, "failed to save histogram raw data")
 	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to save the perf data: ", err)
+	if err := pv.Save(outDir); err != nil {
+		return pv, errors.Wrap(err, "failed to save the perf data")
 	}
-	return pv
+	return pv, nil
 }
 
 // toggleFileMenuButton toggles the "File" menu button for press and release metrics.
