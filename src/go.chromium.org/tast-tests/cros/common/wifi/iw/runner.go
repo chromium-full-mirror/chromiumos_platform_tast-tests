@@ -474,7 +474,9 @@ func (r *Runner) RadioConfig(ctx context.Context, iface string) (*ChannelConfig,
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get interface information")
 	}
-	m, err := extractMatch(`(?m)^\s*channel (\d+) \((\d+) MHz\), width: (\d{2}) MHz, center1: (\d+) MHz`, string(out))
+	// Sample output:
+	// channel 1 (2412 MHz), width: 20 MHz (no HT), center1: 2412 MHz
+	m, err := extractMatch(`(?m)^\s*channel (\d+) \((\d+) MHz\), width: (\d{2}) MHz .*, center1: (\d+) MHz`, string(out))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to pase radio config")
 	}
