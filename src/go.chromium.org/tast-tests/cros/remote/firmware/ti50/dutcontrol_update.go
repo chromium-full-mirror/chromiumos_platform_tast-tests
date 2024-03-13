@@ -29,19 +29,7 @@ func (b *DUTControlAndreiboard) DirectUpdate(ctx context.Context, imagePath stri
 		return errors.Wrap(err, "update slot 1")
 	}
 
-	testing.ContextLog(ctx, "Sleeping for 61 seconds to avoid update too soon error")
-	// GoBigSleepLint sleeping for known required period of time.
-	testing.Sleep(ctx, 61*time.Second)
-
-	if err := b.UpdateOnce(ctx, imagePath, imageVer); err != nil {
-		return errors.Wrap(err, "update slot 2")
-	}
-
-	if err := b.CheckEqualConsoleVersions(ctx); err != nil {
-		return errors.Wrap(err, "console versions are equal")
-	}
-
-	return nil
+	return b.FlashDuplicateImage(ctx, imagePath, imageVer)
 }
 
 // Rollback performs rollback by flashing to debug image, then running rollback command on the debug image.
@@ -121,15 +109,21 @@ func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, imagePath, d
 		return errors.Wrap(err, "rollback")
 	}
 
+	return b.FlashDuplicateImage(ctx, imagePath, imageVer)
+}
+
+// FlashDuplicateImage flashes the inactive slot and verifies RW_A and RW_B are
+// running the same version after update.
+func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, imagePath string, imageVer GSCVersion) error {
 	testing.ContextLog(ctx, "Sleeping for 61 seconds to avoid update too soon error")
 	// GoBigSleepLint sleeping for known required period of time.
 	testing.Sleep(ctx, 61*time.Second)
 
-	if err = b.UpdateOnce(ctx, imagePath, imageVer); err != nil {
+	if err := b.UpdateOnce(ctx, imagePath, imageVer); err != nil {
 		return errors.Wrap(err, "update inactive 2 to image")
 	}
 
-	if err = b.CheckEqualConsoleVersions(ctx); err != nil {
+	if err := b.CheckEqualConsoleVersions(ctx); err != nil {
 		return errors.Wrap(err, "version equality after updating both slots")
 	}
 	return nil
