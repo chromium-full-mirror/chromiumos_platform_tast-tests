@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/inputs/inaccessible-text-in-three-page_20240314.pdf",
+  "size": 49982,
+  "sha256sum": "aa8c1c98d552790d06c38cb8e31089f72e786f0f75ee092c39c66b6781569938"
+}

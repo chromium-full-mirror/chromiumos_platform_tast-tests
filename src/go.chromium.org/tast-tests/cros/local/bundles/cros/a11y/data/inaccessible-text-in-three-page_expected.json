@@ -1,0 +1,35 @@
+{
+  "pages": [
+    {
+      "expected": [
+        "Hello, world!"
+      ],
+      "expected_text": [
+        "Hello, world!"
+      ],
+      "number": 1
+    },
+    {
+      "expected": [
+        "Paragraph 1 on Page 2",
+        "Paragraph 2 on Page 2"
+      ],
+      "expected_text": [
+        "Paragraph 1 on Page 2",
+        "Paragraph 2 on Page 2"
+      ],
+      "number": 2
+    },
+    {
+      "expected": [
+        "Paragraph 1 on Page 3",
+        "Paragraph 2 on Page 3"
+      ],
+      "expected_text": [
+        "Paragraph 1 on Page 3",
+        "Paragraph 2 on Page 3"
+      ],
+      "number": 3
+    }
+  ]
+}

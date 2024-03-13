@@ -59,10 +59,10 @@ const (
 	TestPDFName = "inaccessible-text.pdf"
 	// Inaccessible text embedded in an image in the testing PDF file
 	TextInPDFImage = "Hello, world!"
-	// Eight-page document PDF including inaccessible text
-	MultiPagePDFName = "building_chromium.pdf"
-	// JSON file that contains expected texts from `RealPDFName`
-	MultiPagePDFExpectedTextJSONName = "building_chromium_expected.json"
+	// Three-page document PDF including inaccessible text
+	MultiPagePDFName = "inaccessible-text-in-three-page.pdf"
+	// JSON file that contains expected texts from `MultiPagePDFName`
+	MultiPagePDFExpectedTextJSONName = "inaccessible-text-in-three-page_expected.json"
 )
 
 // DlcFailureSetUpData contains necessary objects for PDF OCR tests with dlc

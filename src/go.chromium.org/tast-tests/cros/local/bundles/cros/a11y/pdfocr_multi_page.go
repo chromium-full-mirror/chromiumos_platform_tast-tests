@@ -28,7 +28,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         PDFOCRMultiPage,
 		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Check PDF OCR with a eight-page PDF example",
+		Desc:         "Check PDF OCR with a three-page PDF example",
 		Contacts: []string{
 			"chrome-screen-ai@google.com", // Mailing list
 			"kyungjunlee@google.com",      // Test author
