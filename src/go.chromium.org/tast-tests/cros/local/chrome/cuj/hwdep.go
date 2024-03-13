@@ -13,7 +13,7 @@ import (
 func Experimental8GBModelConditions() []hwdep.Condition {
 	return []hwdep.Condition{
 		// The list of target models.
-		hwdep.Model("redrix", "kano", "yaviks", "yavikso", "joxer", "screebo", "pujjoteen15w"),
+		hwdep.Model("redrix", "kano", "yaviks", "yavikso", "joxer", "screebo", "marasov", "karis"),
 		// Target on 8GB devices.
 		hwdep.MinMemory(7000), hwdep.MaxMemory(9000)}
 }
