@@ -88,8 +88,6 @@ func init() {
 		}, {
 			Name:              "sae",
 			ExtraSoftwareDeps: []string{"wpa3_sae"},
-			// TODO: b/323077686 - Stabilize wifi.RoamFT.sae and wpa3_eap tests
-			ExtraAttr: []string{"wificell_unstable"},
 			Val: roamFTparam{
 				apOpts: []hostapd.Option{
 					hostapd.PMF(hostapd.PMFRequired),
@@ -102,8 +100,6 @@ func init() {
 		}, {
 			Name:              "mixed_sae",
 			ExtraSoftwareDeps: []string{"wpa3_sae"},
-			// TODO: b/323077686 - Stabilize wifi.RoamFT.sae and wpa3_eap tests
-			ExtraAttr: []string{"wificell_unstable"},
 			Val: roamFTparam{
 				apOpts: []hostapd.Option{
 					hostapd.PMF(hostapd.PMFRequired),
