@@ -1,0 +1,7 @@
+set noparent
+
+# QuickAnswers team
+include /src/go.chromium.org/tast-tests/cros/local/quickanswers/OWNERS
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
