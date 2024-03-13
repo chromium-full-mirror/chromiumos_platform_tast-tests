@@ -443,7 +443,7 @@ func (r *Router) StartHostapd(ctx context.Context, name string, confs ...*hostap
 	defer st.End()
 	var ifaces []*hostapd.Iface
 	for _, conf := range confs {
-		nd, err := r.netDev(ctx, conf.Channel, iw.IfTypeManaged)
+		nd, err := r.netDev(ctx, conf.Channel, conf.OpClass, iw.IfTypeManaged)
 		if err != nil {
 			return nil, err
 		}
@@ -488,12 +488,12 @@ func (r *Router) StopHostapd(ctx context.Context, hs *hostapd.Server) error {
 	return firstErr
 }
 
-// netDev finds an available interface suitable for the given channel and type.
-func (r *Router) netDev(ctx context.Context, channel int, t iw.IfType) (*iw.NetDev, error) {
+// netDev finds an available interface suitable for the given channel, opclass and type.
+func (r *Router) netDev(ctx context.Context, channel, opClass int, t iw.IfType) (*iw.NetDev, error) {
 	ctx, st := timing.Start(ctx, "netDev")
 	defer st.End()
 
-	phyID, err := r.phy(ctx, channel, t)
+	phyID, err := r.phy(ctx, channel, opClass, t)
 	if err != nil {
 		return nil, err
 	}
@@ -520,10 +520,10 @@ func (r *Router) createWifiIface(ctx context.Context, phyID int, t iw.IfType) (*
 	return r.im.Create(ctx, phyName, phyID, t)
 }
 
-// phy finds a suitable phy for the given channel and target interface type t.
+// phy finds a suitable phy for the given channel, opclass and target interface type t.
 // The selected phy index is returned.
-func (r *Router) phy(ctx context.Context, channel int, t iw.IfType) (int, error) {
-	freq, err := hostapd.ChannelToFrequency(channel)
+func (r *Router) phy(ctx context.Context, channel, opClass int, t iw.IfType) (int, error) {
+	freq, err := hostapd.ChannelToFrequencyWithOpClass(channel, opClass)
 	if err != nil {
 		return 0, errors.Errorf("channel %d not available", channel)
 	}
@@ -542,7 +542,7 @@ func (r *Router) phy(ctx context.Context, channel int, t iw.IfType) (int, error)
 			return id, nil
 		}
 	}
-	return 0, errors.Errorf("cannot find supported phy for channel=%d", channel)
+	return 0, errors.Errorf("cannot find supported phy for channel=%d, opclass=%d", channel, opClass)
 }
 
 // phySupportsFrequency returns true if any band of the given phy supports
@@ -663,7 +663,7 @@ func (r *Router) StopHTTP(ctx context.Context, httpServer *http.Server) error {
 
 // StartCapture starts a packet capturer.
 func (r *Router) StartCapture(ctx context.Context, name string, ch, opClass int, freqOps []iw.SetFreqOption, pcapOps ...pcap.Option) (_ *pcap.Capturer, retErr error) {
-	nd, err := r.netDev(ctx, ch, iw.IfTypeMonitor)
+	nd, err := r.netDev(ctx, ch, opClass, iw.IfTypeMonitor)
 	if err != nil {
 		return nil, err
 	}
