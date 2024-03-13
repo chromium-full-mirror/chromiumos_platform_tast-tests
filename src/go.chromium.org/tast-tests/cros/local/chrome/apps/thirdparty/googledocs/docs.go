@@ -170,7 +170,7 @@ func DeleteDocWithURL(tconn *chrome.TestConn, cr *chrome.Chrome, url string) act
 		defer conn.Close()
 		defer conn.CloseTarget(cleanupCtx)
 
-		if err := webutil.WaitForQuiescence(ctx, conn, 30*time.Second); err != nil {
+		if err := webutil.WaitForQuiescence(ctx, conn, pageLoadTimeout); err != nil {
 			return errors.Wrap(err, "failed to wait for the page to load")
 		}
 		return DeleteDoc(tconn)(ctx)

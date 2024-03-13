@@ -7,11 +7,14 @@ package googlesheetscuj
 
 import (
 	"context"
+	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/apps/thirdparty/googledocs"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
@@ -58,7 +61,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		imageCopyRepeatTimes = 150
 	)
 
-	sheetURL, err := cuj.GetTestSheetsURL(ctx)
+	sampleSheetURL, err := cuj.GetTestSheetsURL(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get Google Sheets URL")
 	}
@@ -163,6 +166,15 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
+
+	copySheetsStartTime := time.Now()
+	sheetURL, err := copySheets(ctx, br, tconn, sampleSheetURL, outDir)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to copy sheets from %s", sampleSheetURL)
+	}
+	testing.ContextLog(ctx, "Copied Google Sheets file in ", time.Since(copySheetsStartTime))
+
+	defer googledocs.DeleteSheetsWithURL(tconn, cr, sheetURL, outDir)(closeCtx)
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open Google Sheets file.
@@ -325,4 +337,46 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		}
 	}
 	return pv, saveDataErr
+}
+
+// copySheets creates a new copy of the sample sheets and returns the URL of the copy.
+func copySheets(ctx context.Context, br *browser.Browser, tconn *chrome.TestConn, sampleSheetURL, outDir string) (copiedURL string, retErr error) {
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// Replace the "/edit" suffix with "/copy" to enter the sheets copy page.
+	sheetURLReg := regexp.MustCompile(`\/edit(.*)`)
+	sampleSheetURL = sheetURLReg.ReplaceAllString(sampleSheetURL, `/copy`)
+	conn, err := br.NewConn(ctx, sampleSheetURL, browser.WithNewWindow())
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to open the sample sheets: %s", sampleSheetURL)
+	}
+	defer conn.Close()
+	defer conn.CloseTarget(cleanupCtx)
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, tconn, "copy_sheets")
+
+	ui := uiauto.New(tconn)
+	copyButton := nodewith.Name("Make a copy").Role(role.Button)
+	if err := ui.LeftClick(copyButton)(ctx); err != nil {
+		return "", errors.Wrap(err, "failed to copy the sample sheets")
+	}
+
+	var sheetURL string
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		if err := conn.Eval(ctx, "window.location.href", &sheetURL); err != nil {
+			return errors.Wrap(err, "failed to access the address of the sheets")
+		}
+
+		// The address of the copied sheets will contain the parameter "fromCopy=true".
+		// Check if the address has been updated.
+		if strings.Contains(sheetURL, "fromCopy=true") {
+			return nil
+		}
+		return errors.New("the sheets address has not been updated")
+	}, &testing.PollOptions{Timeout: time.Minute}); err != nil {
+		return "", errors.Wrap(err, "failed to get the URL of the copied Sheets")
+	}
+
+	return sheetURL, nil
 }

@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	longUITimeout      = time.Minute     // Used for situations where UI elements that need more time to appear.
-	shortUITimeout     = 5 * time.Second // Used for situations where UI response are faster.
-	saveToDriveTimeout = 5 * time.Second // saveToDriveTimeout indicates the maximum waiting time for Google to save to Drive.
-	retryTimes         = 3               // Used for some operations that need to be retried.
+	longUITimeout      = time.Minute      // Used for situations where UI elements that need more time to appear.
+	pageLoadTimeout    = 30 * time.Second // Used for waiting for page to load.
+	shortUITimeout     = 5 * time.Second  // Used for situations where UI response are faster.
+	saveToDriveTimeout = 5 * time.Second  // saveToDriveTimeout indicates the maximum waiting time for Google to save to Drive.
+	retryTimes         = 3                // Used for some operations that need to be retried.
 )
 
 // waitForDocumentSaved waits for the document state to "Saved to Drive".

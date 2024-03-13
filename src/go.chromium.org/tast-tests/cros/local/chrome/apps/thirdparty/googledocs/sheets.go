@@ -12,8 +12,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
 
@@ -21,6 +24,29 @@ import (
 const sheetsName = "Google Sheets"
 
 var sheetsWebArea = nodewith.NameContaining(sheetsName).Role(role.RootWebArea)
+
+// DeleteSheetsWithURL returns an action to open the sheets url and delete the document.
+func DeleteSheetsWithURL(tconn *chrome.TestConn, cr *chrome.Chrome, url, outDir string) action.Action {
+	return func(ctx context.Context) (retErr error) {
+		cleanupCtx := ctx
+		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+		defer cancel()
+
+		conn, err := cr.NewConn(ctx, url)
+		if err != nil {
+			return errors.Wrapf(err, "failed to open %s", url)
+		}
+		defer conn.Close()
+		defer conn.CloseTarget(cleanupCtx)
+		// Dump the UI tree and the screenshot before closing the sheets page.
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, cr, "delete_sheets")
+
+		if err := webutil.WaitForQuiescence(ctx, conn, pageLoadTimeout); err != nil {
+			return errors.Wrap(err, "failed to wait for the page to load")
+		}
+		return DeleteSheets(tconn)(ctx)
+	}
+}
 
 // DeleteSheets returns an action to delete the document.
 func DeleteSheets(tconn *chrome.TestConn) action.Action {
@@ -36,6 +62,7 @@ func DeleteSheets(tconn *chrome.TestConn) action.Action {
 		cuj.ExpandMenu(tconn, fileButton, menu, 400),
 		ui.DoDefault(moveToTrash),
 		ui.DoDefault(goToSheetsHome),
+		ui.WaitUntilGone(goToSheetsHome),
 	)
 }
 
