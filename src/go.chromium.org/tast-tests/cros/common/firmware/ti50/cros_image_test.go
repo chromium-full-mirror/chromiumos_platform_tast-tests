@@ -151,6 +151,56 @@ func testVersionInfoMatcher(t *testing.T, input string, expected VersionCommandI
 	}
 }
 
+func TestRunningSameRW(t *testing.T) {
+	input := VersionCommandInfo{
+		RwA: RwInfo{Empty: false, Active: true, Version: "0.3.22", Branch: Unknown},
+		RwB: RwInfo{Empty: false, Active: false, Version: "0.3.22", Branch: Unknown},
+	}
+
+	// Verify checking the active slot works
+	testValidateVersionInfo(t, input, "0.3.22", false, false, true)
+	// Verify checking both slots works
+	testValidateVersionInfo(t, input, "0.3.22", false, true, true)
+}
+
+func TestRunningDifferentRW(t *testing.T) {
+	input := VersionCommandInfo{
+		RwA: RwInfo{Empty: false, Active: true, Version: "0.6.211", Branch: PrePvt},
+		RwB: RwInfo{Empty: false, Active: false, Version: "1.6.205", Branch: ToT},
+	}
+	testValidateVersionInfo(t, input, "0.6.211", false, false, true)
+	// Verify the isDebug mismatch doesn't match
+	testValidateVersionInfo(t, input, "0.6.211", true, false, false)
+	// Verify checking both slots doesn't match
+	testValidateVersionInfo(t, input, "0.6.211", false, true, false)
+	// Verify it doesn't match RW_B
+	testValidateVersionInfo(t, input, "1.6.205", false, false, false)
+}
+
+func TestRunningDebugRW(t *testing.T) {
+	input := VersionCommandInfo{
+		RwA: RwInfo{Empty: false, Active: false, Version: "0.6.211", Branch: PrePvt},
+		RwB: RwInfo{Empty: false, Active: true, Debug: true, Version: "1.6.205", Branch: ToT},
+	}
+	testValidateVersionInfo(t, input, "1.6.205", true, false, true)
+	// Verify the isDebug doesn't match
+	testValidateVersionInfo(t, input, "1.6.205", false, false, false)
+	// Verify checking both slots doesn't match
+	testValidateVersionInfo(t, input, "1.6.205", true, true, false)
+	// Verify it doesn't match RW_A
+	testValidateVersionInfo(t, input, "0.6.211", false, false, false)
+}
+
+func testValidateVersionInfo(t *testing.T, input VersionCommandInfo, expectedVersion string, isDebug, checkBothSlots, expectMatch bool) {
+	matches := ValidateVersionInfo(input, expectedVersion, isDebug, checkBothSlots)
+	if expectMatch && !matches {
+		t.Fatalf("unexpected mismatch: %+v did not match %s isDebug(%t) bothSlots(%t)", input, expectedVersion, isDebug, checkBothSlots)
+	}
+	if !expectMatch && matches {
+		t.Fatalf("unexpected match: %+v matched %s isDebug(%t) bothSlots(%t)", input, expectedVersion, isDebug, checkBothSlots)
+	}
+}
+
 func TestRoInfoMatcherInvalidInput(t *testing.T) {
 	if _, err := matchRoInfo(`RO_A:    0.0.22/ffc7a523`, SlotB); err == nil {
 		t.Fatal("expected error")

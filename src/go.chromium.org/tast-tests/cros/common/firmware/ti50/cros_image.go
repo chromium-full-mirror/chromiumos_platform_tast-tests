@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // CCDLevel contains possible CCD levels.
@@ -475,6 +476,39 @@ func (i *CrOSImage) GetVersionInfo(ctx context.Context) (VersionCommandInfo, err
 		return VersionCommandInfo{}, errors.Wrap(err, "failed to run GSC version command")
 	}
 	return matchVersionInfo(output)
+}
+
+// CheckRW returns an error if the rw information doesn't match the expected value.
+func CheckRW(rw RwInfo, expectedVersion string, expectedDebug bool) bool {
+	return expectedVersion == rw.Version && expectedDebug == rw.Debug
+}
+
+// ValidateVersionInfo validates the expected version is running.
+func ValidateVersionInfo(version VersionCommandInfo, expectedVersion string, expectedDebug, checkBothSlots bool) bool {
+	if version.RwA.Active || checkBothSlots {
+		matches := CheckRW(version.RwA, expectedVersion, expectedDebug)
+		if !matches || !checkBothSlots {
+			return matches
+		}
+	}
+	return CheckRW(version.RwB, expectedVersion, expectedDebug)
+}
+
+// CheckRunningVersion validates the expected version is running.
+func (i *CrOSImage) CheckRunningVersion(ctx context.Context, expectedVersion string, expectedDebug, checkBothSlots bool) (bool, error) {
+	versionInfo, err := i.GetVersionInfo(ctx)
+	if err != nil {
+		return false, err
+	}
+	matches := ValidateVersionInfo(versionInfo, expectedVersion, expectedDebug, checkBothSlots)
+	desc := "Running"
+	if !matches {
+		desc = "Not running"
+	}
+	testing.ContextLogf(ctx, "RW_A: %+v", versionInfo.RwA)
+	testing.ContextLogf(ctx, "RW_B: %+v", versionInfo.RwB)
+	testing.ContextLogf(ctx, "%s %s", desc, expectedVersion)
+	return matches, nil
 }
 
 func matchRoInfo(s string, slot GscSlot) (RoInfo, error) {
