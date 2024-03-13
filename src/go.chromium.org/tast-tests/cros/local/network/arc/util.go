@@ -12,10 +12,13 @@ import (
 	"strings"
 	"time"
 
+	pp "go.chromium.org/chromiumos/system_api/patchpanel_proto"
+
 	"go.chromium.org/tast-tests/cros/common/action"
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
+	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -182,4 +185,22 @@ func CreateNetworkDumpsysErrorHandler(ctx context.Context, a *arc.ARC) func(stri
 			testing.ContextLog(ctx, "Failed to save ARC network dumpsys: ", err)
 		}
 	}
+}
+
+// GetARCInterfaceName finds the interface name inside ARC given the host physical interface name.
+func GetARCInterfaceName(ctx context.Context, hostIfname string) (string, error) {
+	pc, err := patchpanel.New(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create patchpanel client")
+	}
+	response, err := pc.GetDevices(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get patchpanel devices")
+	}
+	for _, device := range response.Devices {
+		if (device.GuestType == pp.NetworkDevice_ARCVM || device.GuestType == pp.NetworkDevice_ARC) && device.PhysIfname == hostIfname {
+			return device.GuestIfname, nil
+		}
+	}
+	return "", errors.Errorf("no ARC device matching %s is found", hostIfname)
 }

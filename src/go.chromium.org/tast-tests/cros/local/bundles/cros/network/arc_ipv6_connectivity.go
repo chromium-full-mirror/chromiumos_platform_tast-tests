@@ -8,13 +8,10 @@ import (
 	"context"
 	"time"
 
-	pp "go.chromium.org/chromiumos/system_api/patchpanel_proto"
-
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	arcnet "go.chromium.org/tast-tests/cros/local/network/arc"
-	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/shill"
@@ -114,7 +111,7 @@ func ARCIPv6Connectivity(ctx context.Context, s *testing.State) {
 	}
 
 	vethName := testEnv.Router.VethOutName
-	arcIfname, err := getARCInterfaceName(ctx, vethName)
+	arcIfname, err := arcnet.GetARCInterfaceName(ctx, vethName)
 	if err != nil {
 		s.Fatalf("Failed to get ARC interface name corresponding to %s: %v", vethName, err)
 	}
@@ -147,21 +144,4 @@ func ARCIPv6Connectivity(ctx context.Context, s *testing.State) {
 			}
 		}
 	}
-}
-
-func getARCInterfaceName(ctx context.Context, hostIfname string) (string, error) {
-	pc, err := patchpanel.New(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to create patchpanel client")
-	}
-	response, err := pc.GetDevices(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "failed to get patchpanel devices")
-	}
-	for _, device := range response.Devices {
-		if (device.GuestType == pp.NetworkDevice_ARCVM || device.GuestType == pp.NetworkDevice_ARC) && device.PhysIfname == hostIfname {
-			return device.GuestIfname, nil
-		}
-	}
-	return "", errors.Errorf("no ARC device matching %s is found", hostIfname)
 }
