@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/crosca/libtinfo.so.5_arm64_20240312",
+  "size": 143752,
+  "sha256sum": "79d1e54c01fb5af7a5f7c4cb9141ab32178c27e41972308f4cb873a0ab728207"
+}

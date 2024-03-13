@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/crosca/libstdc.so.6_x86_64_20240312",
+  "size": 21101992,
+  "sha256sum": "0cdbbe17f4481981b1e10c5b0307a80756067151b8bcdc5b52638c7ef8336a38"
+}

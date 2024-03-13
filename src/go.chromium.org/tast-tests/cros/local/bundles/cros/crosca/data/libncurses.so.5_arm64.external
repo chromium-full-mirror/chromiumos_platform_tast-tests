@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/crosca/libncurses.so.5_arm64_20240312",
+  "size": 97824,
+  "sha256sum": "3f004bd57760e8f3fc463c3ae90397789fa3effcf0d96faef4fa87b0b82b83d4"
+}
