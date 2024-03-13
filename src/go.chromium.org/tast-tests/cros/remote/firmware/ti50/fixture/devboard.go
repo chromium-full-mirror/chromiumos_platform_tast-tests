@@ -158,6 +158,7 @@ func (i *devboardFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 }
 
 // setupCr50Image uses gsctool to flash the cr50 image.
+// The GSC UART must be closed before calling this method since it opens it to issue commands to the board.
 // TODO(b/140534392): Support changing the board id.
 func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTControlAndreiboard, imagePath string, fwConfigJsons []string,
 	testbedProperties remoteTi50.TestbedProperties) {
@@ -191,6 +192,14 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	_, imageVer, _, _, err := board.GSCToolBinVersion(ctx, imagePath)
 	mustSucceed(s, err, "parse bin version")
 
+	gscConsole := board.PhysicalUart(ti50.UartConsole)
+
+	i, err := ti50.OpenCrOSImage(ctx, gscConsole)
+	if err != nil {
+		s.Fatal("Unable to open gsc console: ", err)
+	}
+	defer i.Close(ctx)
+
 	if imageVer.Less(rw) {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
 
@@ -202,10 +211,10 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 		debugImage, err := downloadToTempFile(ctx, "debug image", debugImageURL)
 		mustSucceed(s, err, "download debug image")
 
-		mustSucceed(s, board.RollbackUpdate(ctx, imagePath, debugImage), "rollback update to image")
+		mustSucceed(s, board.RollbackUpdate(ctx, i, imagePath, debugImage), "rollback update to image")
 	} else {
 		testing.ContextLogf(ctx, "Direct gsctool update for %s to %s", rw, imageVer)
-		mustSucceed(s, board.DirectUpdate(ctx, imagePath), "direct updateto image")
+		mustSucceed(s, board.DirectUpdate(ctx, i, imagePath), "direct updateto image")
 	}
 }
 

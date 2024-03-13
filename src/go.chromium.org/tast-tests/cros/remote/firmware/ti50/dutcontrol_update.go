@@ -15,7 +15,7 @@ import (
 
 // DirectUpdate updates the DUT when rollback is not required.
 // TODO(b/323024317): Ensure method works for ti50 as well.
-func (b *DUTControlAndreiboard) DirectUpdate(ctx context.Context, imagePath string) error {
+func (b *DUTControlAndreiboard) DirectUpdate(ctx context.Context, i *common.CrOSImage, imagePath string) error {
 	_, imageVer, _, rwb, err := b.GSCToolBinVersion(ctx, imagePath)
 	if err != nil {
 		return errors.Wrap(err, "parse bin version")
@@ -29,21 +29,12 @@ func (b *DUTControlAndreiboard) DirectUpdate(ctx context.Context, imagePath stri
 		return errors.Wrap(err, "update slot 1")
 	}
 
-	return b.FlashDuplicateImage(ctx, imagePath, imageVer)
+	return b.FlashDuplicateImage(ctx, i, imagePath, imageVer)
 }
 
 // Rollback performs rollback by flashing to debug image, then running rollback command on the debug image.
-// The GSC UART must be closed before calling this method since it opens it to issue commands to the board.
-func (b *DUTControlAndreiboard) Rollback(ctx context.Context) error {
-	gscConsole := b.PhysicalUart(common.UartConsole)
-
-	i, err := common.OpenCrOSImage(ctx, gscConsole)
-	if err != nil {
-		return errors.Wrap(err, "open cros image")
-	}
-	defer i.Close(ctx)
-
-	if err = i.WaitUntilBooted(ctx); err != nil {
+func (b *DUTControlAndreiboard) Rollback(ctx context.Context, i *common.CrOSImage) error {
+	if err := i.WaitUntilBooted(ctx); err != nil {
 		return errors.Wrap(err, "wait for debug image to boot")
 	}
 
@@ -84,12 +75,11 @@ func (b *DUTControlAndreiboard) Rollback(ctx context.Context) error {
 }
 
 // RollbackUpdate performs rollback update by flashing to debug image, inactive with image, then running rollback command on the debug image.
-// The GSC UART must be closed before calling this method since it opens it to issue commands to the board.
 // TODO(b/323024317): Ensure method works for ti50 as well.
-func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, imagePath, debugImage string) error {
+func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, i *common.CrOSImage, imagePath, debugImage string) error {
 	_, imageVer, _, _, err := b.GSCToolBinVersion(ctx, imagePath)
 	if err != nil {
-		return errors.Wrap(err, "parse bin version")
+		return err
 	}
 
 	_, debugVer, _, _, err := b.GSCToolBinVersion(ctx, debugImage)
@@ -105,16 +95,16 @@ func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, imagePath, d
 		return errors.Wrap(err, "update inactive 1 to image")
 	}
 
-	if err = b.Rollback(ctx); err != nil {
+	if err = b.Rollback(ctx, i); err != nil {
 		return errors.Wrap(err, "rollback")
 	}
 
-	return b.FlashDuplicateImage(ctx, imagePath, imageVer)
+	return b.FlashDuplicateImage(ctx, i, imagePath, imageVer)
 }
 
 // FlashDuplicateImage flashes the inactive slot and verifies RW_A and RW_B are
 // running the same version after update.
-func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, imagePath string, imageVer GSCVersion) error {
+func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, i *common.CrOSImage, imagePath string, imageVer GSCVersion) error {
 	testing.ContextLog(ctx, "Sleeping for 61 seconds to avoid update too soon error")
 	// GoBigSleepLint sleeping for known required period of time.
 	testing.Sleep(ctx, 61*time.Second)
@@ -123,7 +113,7 @@ func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, imagePa
 		return errors.Wrap(err, "update inactive 2 to image")
 	}
 
-	if err := b.CheckEqualConsoleVersions(ctx); err != nil {
+	if err := b.CheckEqualConsoleVersions(ctx, i); err != nil {
 		return errors.Wrap(err, "version equality after updating both slots")
 	}
 	return nil
@@ -153,16 +143,8 @@ func (b *DUTControlAndreiboard) UpdateOnce(ctx context.Context, imagePath string
 
 // CheckEqualConsoleVersions ensures that both slots have the same version as reported
 // with the "version" command.  GSC console must be closed before call.
-func (b *DUTControlAndreiboard) CheckEqualConsoleVersions(ctx context.Context) error {
-	gscConsole := b.PhysicalUart(common.UartConsole)
-
-	i, err := common.OpenCrOSImage(ctx, gscConsole)
-	if err != nil {
-		return errors.Wrap(err, "open cros image")
-	}
-	defer i.Close(ctx)
-
-	if err = i.WaitUntilBooted(ctx); err != nil {
+func (b *DUTControlAndreiboard) CheckEqualConsoleVersions(ctx context.Context, i *common.CrOSImage) error {
+	if err := i.WaitUntilBooted(ctx); err != nil {
 		return errors.Wrap(err, "wait image to boot")
 	}
 
