@@ -118,7 +118,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "aec_nc_ast_44100hz",
@@ -132,7 +132,7 @@ func init() {
 					},
 				},
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "nc_ast",
@@ -143,7 +143,7 @@ func init() {
 					expectedRMSTolerance:     0.01,
 				},
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "nc_ast_44100hz",
@@ -154,7 +154,7 @@ func init() {
 					expectedRMSTolerance:     0.01,
 				},
 				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
-				ExtraAttr:         []string{"informational"},
+				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 		},
 	})
