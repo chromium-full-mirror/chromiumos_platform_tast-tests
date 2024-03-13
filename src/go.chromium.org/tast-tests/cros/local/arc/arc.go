@@ -1172,12 +1172,17 @@ func CheckNoDex2Oat(outDir string) error {
 	if sdkVersion >= SDKR {
 		dexPrefix = rvcPlusDexPrefix
 	}
+	var unoptimizedPackages []string
 	m := regexp.MustCompile(dexPrefix).FindAllStringSubmatch(string(dump), -1)
 	for _, match := range m {
 		res := match[1]
 		if !strings.HasPrefix(res, "/data/") {
-			return errors.Errorf("failed due to system resource %q not pre-optimized", res)
+			unoptimizedPackages = append(unoptimizedPackages, res)
 		}
+	}
+
+	if len(unoptimizedPackages) != 0 {
+		return errors.Errorf("failed due to system resources not pre-optimized: %s ", strings.Join(unoptimizedPackages, "\n"))
 	}
 
 	return nil
