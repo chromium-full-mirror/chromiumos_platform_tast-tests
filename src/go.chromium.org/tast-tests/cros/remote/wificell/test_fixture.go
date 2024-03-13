@@ -2541,11 +2541,11 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 		pcap.TypeFilter(layers.LayerTypeDot11MgmtAuthentication,
 			func(layer gopacket.Layer) bool {
 				// Check fixed parameter:
-				//   contents[0:1]: Authentication Algorithm Number – 0 for Open System, 3 for SAE
+				//   contents[0:1]: Authentication Algorithm Number – 0 for Open System, 2 for FT, 3 for SAE
 				//   contents[2:3]: Authentication Transaction Sequence Number
 				//   contents[4:5]: Status Code - 0 for Successful or Reserved
 				contents := layer.LayerContents()
-				if len(contents) < 6 || (contents[0] != 0 && contents[0] != 3) || contents[1] != 0 || contents[4] != 0 {
+				if len(contents) < 6 || (contents[0] != 0 && contents[0] != 2 && contents[0] != 3) || contents[1] != 0 || contents[4] != 0 {
 					return false
 				}
 				return true
@@ -2559,6 +2559,7 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 	testing.ContextLog(ctx, "Total packets found: ", len(packets))
 
 	var openAuthCount uint16 = 0
+	var ftAuthCount uint16 = 0
 	var saeAuthCount uint16 = 0
 
 	for _, p := range packets {
@@ -2572,23 +2573,32 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 				// Open System:
 				// Sequence == 1 for Open Authentication Request.
 				// Sequence == 2 for Open Authentication Response.
+				// Fast BSS Transition:
+				// Sequence == 1 for FT Authentication Request.
+				// Sequence == 2 for FT Authentication Response.
 				// SAE:
 				// Sequence == 1 for SAE Commit Request and Response.
 				// Sequence == 2 for SAE Confirm Request and Response.
-				if auth.Algorithm == 0 {
+				switch auth.Algorithm {
+				case 0:
 					openAuthCount++
-				} else if auth.Algorithm == 3 {
+				case 2:
+					ftAuthCount++
+				case 3:
 					saeAuthCount++
 				}
 			}
 		}
 	}
 
-	// Either one of auth algorithms but not both.
-	if openAuthCount == 2 && saeAuthCount == 0 {
+	// Only one of the auth algorithms.
+	if openAuthCount == 2 && ftAuthCount == 0 && saeAuthCount == 0 {
 		return wpa.AuthAlgoOpen, nil
 	}
-	if openAuthCount == 0 && saeAuthCount == 4 {
+	if openAuthCount == 0 && ftAuthCount == 2 && saeAuthCount == 0 {
+		return wpa.AuthAlgoFT, nil
+	}
+	if openAuthCount == 0 && ftAuthCount == 0 && saeAuthCount == 4 {
 		return wpa.AuthAlgoSAE, nil
 	}
 
