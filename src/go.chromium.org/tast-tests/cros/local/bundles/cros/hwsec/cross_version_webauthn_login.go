@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
 	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/common/u2fd"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/fixture"
@@ -17,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/input"
 	localu2fd "go.chromium.org/tast-tests/cros/local/u2fd"
 	"go.chromium.org/tast/core/ctxutil"
@@ -219,6 +221,33 @@ func testWebauthnLogin(ctx context.Context, config *util.CrossVersionLoginConfig
 		return errors.Wrap(err, "failed to get keyboard")
 	}
 	defer keyboard.Close(ctx)
+
+	// TODO(b/329367144): Below is a dirty hack: since PINs created by the CLI aren't compatible with
+	// those created by Chrome, we can't enroll/test WebAuthn credentials using PIN auth. In addition,
+	// WebAuthn UI doesn't support choosing password over PIN if PIN is available. Therefore, a hacky
+	// workaround is that we lock-out PIN first, so that the WebAuthn auth routine below can use
+	// password for WebAuthn UI (as PIN isn't available).
+	cmdRunner := hwseclocal.NewCmdRunner()
+	helper, err := hwseclocal.NewHelper(cmdRunner)
+	if err != nil {
+		return errors.Wrap(err, "failed to create hwsec local helper")
+	}
+	cryptohome := helper.CryptohomeClient()
+	if err := cryptohome.WithAuthSession(ctx, username, false, uda.AuthIntent_AUTH_INTENT_DECRYPT, func(authID string) error {
+		for _, key := range config.ExtraVaultKeys {
+			if key.LowEntropy {
+				for i := 0; i < 5; i++ {
+					_, err := cryptohome.AuthenticatePinAuthFactor(ctx, authID, key.KeyLabel, key.Password+"-wrong")
+					if err == nil {
+						return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
+					}
+				}
+			}
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
 
 	authCallback := func(ctx context.Context, ui *uiauto.Context) error {
 		// Check if the UI is correct.

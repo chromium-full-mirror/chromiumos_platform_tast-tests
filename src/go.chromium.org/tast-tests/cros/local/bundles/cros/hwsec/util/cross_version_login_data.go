@@ -198,6 +198,7 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 		extraPass  = "extraPass"
 		extraLabel = "extraLabel"
 		pin        = "123456"
+		wrongPin   = "111111"
 		pinLabel   = "pinLabel"
 	)
 	// Add the new password login data. Enforce the usage of ecryptfs, so that we can take a usable snapshot of encrypted files.
@@ -239,6 +240,18 @@ func createPasswordData(ctx context.Context, cryptohome *hwsec.CryptohomeClient,
 		if supportsLE {
 			if err := config.AddVaultKeyData(ctx, cryptohome, authID, NewVaultKeyInfo(pin, pinLabel, true)); err != nil {
 				return errors.Wrap(err, "failed to add vault key data of pin")
+			}
+			// TODO(b/329367144): Below is a dirty hack: since PINs created by the CLI aren't compatible with
+			// those created by Chrome, we can't enroll/test WebAuthn credentials using PIN auth. In addition,
+			// WebAuthn UI doesn't support choosing password over PIN if PIN is available. Therefore, a hacky
+			// workaround is that we lock-out PIN first, so that the |addWebAuthnData| routine below can use
+			// password for WebAuthn UI (as PIN isn't available). On success password WebAuthn auth, PIN lockout
+			// will be reset so overall this has no effect on the prepared vault data.
+			for i := 0; i < 5; i++ {
+				_, err := cryptohome.AuthenticatePinAuthFactor(ctx, authID, pinLabel, wrongPin)
+				if err == nil {
+					return errors.Wrap(err, "authentication with wrong PIN succeeded unexpectedly")
+				}
 			}
 		}
 		return nil
