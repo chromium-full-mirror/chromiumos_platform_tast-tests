@@ -7,6 +7,7 @@ package fixture
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -65,9 +66,10 @@ const (
 	postSubmitArtifactsBuilder        = "chromeos-image-archive/firmware-ti50-postsubmit"
 
 	// Cr50QualBranch is the latest qual candidate for Cr50
-	Cr50QualBranch     string = "cr50qual"
-	cr50LatestQualFile        = "chromeos-localmirror-private/distfiles/chromeos-cr50-QUAL_VERSION"
-	cr50QualFolder            = "chromeos-localmirror-private/distfiles/cr50"
+	Cr50QualBranch         string = "cr50qual"
+	cr50LatestQualFile            = "chromeos-localmirror-private/distfiles/chromeos-cr50-QUAL_VERSION"
+	cr50QualFolder                = "chromeos-localmirror-private/distfiles/cr50"
+	cr50DebugImageTemplate        = "gs://chromeos-localmirror-private/distfiles/chromeos-cr50-debug-0.0.11/h1_shield/cr50.dbg.0x%s_0x%s.bin.*"
 
 	imageDownloadTimeout = 30 * time.Second
 	imageDeleteTimeout   = 5 * time.Second
@@ -343,6 +345,27 @@ func qualVersionToGsGlob(qualVersion, prefix string) (string, error) {
 	return prefix + ".*.w" + m[1] + "_" + m[2] + "_" + m[3] + "_" + m[4] + ".tbz2", nil
 }
 
+// findGSCImage finds the image with the given gsTemplate.
+func findGSCImage(ctx context.Context, gsTemplate string) (string, error) {
+	gsURL, err := gsLs(ctx, "list gsc images", gsTemplate)
+	if err != nil || len(gsURL) != 1 {
+		return "", errors.New("find gsc image")
+	}
+
+	return gsURL[0], nil
+}
+
+// findCr50DebugImage finds the debug image for cr50 board.
+func findCr50DebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
+	devIds := strings.Split(testbedProperties.UsbSerial, "-")
+	if len(devIds) != 2 {
+		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
+	}
+
+	debugImageGlob := fmt.Sprintf(cr50DebugImageTemplate, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
+	return findGSCImage(ctx, debugImageGlob)
+}
+
 // lookupLatestCr50QualTbz2 downloads the image binary indicated in the qual file.
 func lookupLatestCr50QualTbz2(ctx context.Context) (string, error) {
 	v, err := cmd(ctx, "read qual file", "gsutil", "cat", gsPrefix+cr50LatestQualFile)
@@ -354,17 +377,7 @@ func lookupLatestCr50QualTbz2(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	// find unique qual image tbz2
-	urls, err := gsLs(ctx, "cr50 quals", gsPrefix+cr50QualFolder+"/"+pat)
-	if err != nil {
-		return "", err
-	}
-	if len(urls) != 1 {
-		return "", errors.Errorf("non-unique qual image: %v", urls)
-	}
-
-	return urls[0], nil
+	return findGSCImage(ctx, gsPrefix+cr50QualFolder+"/"+pat)
 }
 
 // extractCr50QualImageFromTbz2 extracts the image binary from bz2 archive.

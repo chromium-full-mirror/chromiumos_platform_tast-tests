@@ -7,16 +7,13 @@ package fixture
 
 import (
 	"context"
-	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/common/firmware/ti50"
 	remoteTi50 "go.chromium.org/tast-tests/cros/remote/firmware/ti50"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -40,8 +37,6 @@ const (
 	tearDownTimeout = 5 * time.Second
 	preTestTimeout  = 15 * time.Second
 	postTestTimeout = 5 * time.Second
-
-	cr50DebugImageTemplate = "gs://chromeos-localmirror-private/distfiles/chromeos-cr50-debug-0.0.11/h1_shield/cr50.dbg.0x%s_0x%s.bin.*"
 )
 
 type extraPreTestMethod func(ctx context.Context, board ti50.DevBoard) error
@@ -225,22 +220,6 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 		testing.ContextLogf(ctx, "Direct gsctool update for %s to %s", rw, imageVer)
 		mustSucceed(s, board.DirectUpdate(ctx, i, imagePath), "direct updateto image")
 	}
-}
-
-// findCr50DebugImage finds the debug image for cr50 board.
-func findCr50DebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
-	devIds := strings.Split(testbedProperties.UsbSerial, "-")
-	if len(devIds) != 2 {
-		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
-	}
-
-	debugImageGlob := fmt.Sprintf(cr50DebugImageTemplate, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
-	debugImageURL, err := gsLs(ctx, "list debug image", debugImageGlob)
-	if err != nil || len(debugImageURL) != 1 {
-		return "", errors.New("find debug image")
-	}
-
-	return debugImageURL[0], nil
 }
 
 func (i *devboardFixture) Reset(ctx context.Context) error {
