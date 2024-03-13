@@ -98,7 +98,6 @@ func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, i *common.Cr
 	if err = b.Rollback(ctx, i); err != nil {
 		return errors.Wrap(err, "rollback")
 	}
-
 	return b.FlashDuplicateImage(ctx, i, imagePath, imageVer)
 }
 
@@ -113,7 +112,7 @@ func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, i *comm
 		return errors.Wrap(err, "update inactive 2 to image")
 	}
 
-	if err := b.CheckEqualConsoleVersions(ctx, i); err != nil {
+	if err := b.CheckEqualConsoleVersions(ctx, i, imageVer); err != nil {
 		return errors.Wrap(err, "version equality after updating both slots")
 	}
 	return nil
@@ -143,19 +142,17 @@ func (b *DUTControlAndreiboard) UpdateOnce(ctx context.Context, imagePath string
 
 // CheckEqualConsoleVersions ensures that both slots have the same version as reported
 // with the "version" command.  GSC console must be closed before call.
-func (b *DUTControlAndreiboard) CheckEqualConsoleVersions(ctx context.Context, i *common.CrOSImage) error {
+func (b *DUTControlAndreiboard) CheckEqualConsoleVersions(ctx context.Context, i *common.CrOSImage, imageVer GSCVersion) error {
 	if err := i.WaitUntilBooted(ctx); err != nil {
 		return errors.Wrap(err, "wait image to boot")
 	}
 
-	consoleVer, err := i.GetVersionInfo(ctx)
+	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), false, true)
 	if err != nil {
-		return errors.Wrap(err, "get version from gsc console")
+		return err
 	}
-
-	if consoleVer.RwA.Version != consoleVer.RwB.Version || consoleVer.RwA.Branch != consoleVer.RwB.Branch {
-		return errors.Errorf("slot A and B version differ, A: %v, B: %v", consoleVer.RwA, consoleVer.RwB)
+	if !matched {
+		return errors.Errorf("GSC is not runnning %s in both slots", imageVer)
 	}
-
 	return nil
 }
