@@ -30,12 +30,10 @@ func init() {
 			Name:              "tpm1",
 			ExtraSoftwareDeps: []string{"tpm1", "no_tpm_dynamic"},
 			ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
-			Timeout:           4 * time.Minute,
 		}, {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"tpm2", "qemu"},
 			ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
-			Timeout:           4 * time.Minute,
 		}, {
 			Name:              "tpm2",
 			ExtraSoftwareDeps: []string{"tpm2", "no_qemu", "no_tpm_dynamic"},
@@ -45,13 +43,13 @@ func init() {
 			ExtraSoftwareDeps: []string{"tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm1()),
 			ExtraAttr:         []string{"group:hwsec", "hwsec_nightly"},
-			Timeout:           4 * time.Minute,
 		}, {
 			Name:              "tpm_dynamic_2",
 			ExtraSoftwareDeps: []string{"no_qemu", "tpm_dynamic"},
 			ExtraHardwareDeps: hwdep.D(hwdep.HasTpm2()),
 			ExtraAttr:         []string{"group:mainline"},
 		}},
+		Timeout: 4 * time.Minute,
 	})
 }
 
@@ -100,21 +98,21 @@ func DaemonsRestartStress(ctx context.Context, s *testing.State) {
 	// Restart TPM related daemons multiple times.
 	for i := 0; i < 10; i++ {
 		func() {
-			defer func() {
+			defer func(ctx context.Context) {
 				if err := daemonController.EnsureDaemons(ctx, hwsec.HighLevelTPMDaemons); err != nil {
 					testing.ContextLog(ctx, "Failed to ensure high-level TPM daemons: ", err)
 				}
-			}()
+			}(ctxForResumeDaemons)
 
 			if err := daemonController.TryStopDaemons(ctx, hwsec.HighLevelTPMDaemons); err != nil {
 				s.Fatal("Failed to try to stop high-level TPM daemons: ", err)
 			}
 
-			defer func() {
+			defer func(ctx context.Context) {
 				if err := daemonController.EnsureDaemons(ctx, hwsec.LowLevelTPMDaemons); err != nil {
 					testing.ContextLog(ctx, "Failed to ensure low-level TPM daemons: ", err)
 				}
-			}()
+			}(ctxForResumeDaemons)
 
 			if err := daemonController.TryStopDaemons(ctx, hwsec.LowLevelTPMDaemons); err != nil {
 				s.Fatal("Failed to try to stop low-level TPM daemons: ", err)
