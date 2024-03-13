@@ -42,6 +42,7 @@ func init() {
 			Name:              "vm",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraData: []string{
+				"VtsHalKeymasterV3_0TargetTest_rvc_arm64",
 				"VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64",
 				"VtsHalKeymasterV3_0TargetTest_arm",
 				"VtsHalKeymasterV3_0TargetTest_arm64",
@@ -85,6 +86,8 @@ func vtsTestExecName(ctx context.Context, a *arc.ARC, isARCVM bool) (string, err
 	arch := strings.TrimSpace(string(output))
 	if isARCVM && arch == "x86_64" {
 		return "VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64", nil
+	} else if isARCVM && arch == "aarch64" {
+		return "VtsHalKeymasterV3_0TargetTest_rvc_arm64", nil
 	} else if arch == "armv7l" || arch == "armv8l" {
 		return "VtsHalKeymasterV3_0TargetTest_arm", nil
 	} else if arch == "aarch64" {
