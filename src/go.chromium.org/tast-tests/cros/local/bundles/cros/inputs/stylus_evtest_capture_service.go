@@ -50,6 +50,12 @@ func (svc *StylusEvtestCaptureService) StartStylusDataCapture(ctx context.Contex
 		return nil, errors.New("no stylus could be found")
 	}
 
+	// Collects the dimensions of the screen in pixels to be used to transform touch data into mm.
+	widthResolution, heightResolution, err := input.FindPhysicalStylusResolution(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	svc.touchLogTempDir, err = os.MkdirTemp(os.TempDir(), "stylus_evtest_capture")
 	if err != nil {
 		return nil, err
@@ -98,7 +104,7 @@ func (svc *StylusEvtestCaptureService) StartStylusDataCapture(ctx context.Contex
 		return nil, errors.New("no touch events were logged")
 	}
 
-	return &pb.StylusEvtestCaptureResponse{StylusLogPath: touchLogFilePath}, nil
+	return &pb.StylusEvtestCaptureResponse{StylusLogPath: touchLogFilePath, WidthResolution: widthResolution, HeightResolution: heightResolution}, nil
 }
 
 // startCaptureProcesses starts an evtest and awk subprocess to capture the DUT's touch stylus events, and write them to a file.

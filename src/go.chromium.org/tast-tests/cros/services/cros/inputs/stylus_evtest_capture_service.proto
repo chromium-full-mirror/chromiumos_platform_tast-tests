@@ -17,10 +17,14 @@ service StylusEvtestCaptureService {
   rpc StartStylusDataCapture(google.protobuf.Empty)
       returns (StylusEvtestCaptureResponse) {}
 
-  rpc StopStylusDataCapture(google.protobuf.Empty) returns (google.protobuf.Empty) {
-  }
+  rpc StopStylusDataCapture(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 
   rpc CleanUp(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 }
 
-message StylusEvtestCaptureResponse { string StylusLogPath = 1; }
+message StylusEvtestCaptureResponse {
+  string StylusLogPath = 1;
+  uint32 WidthResolution = 2;
+  uint32 HeightResolution = 3;
+}

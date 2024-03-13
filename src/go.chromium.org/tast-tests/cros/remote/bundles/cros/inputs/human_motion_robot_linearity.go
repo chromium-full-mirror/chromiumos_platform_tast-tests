@@ -38,6 +38,12 @@ const (
 	maxNumParts = 5
 )
 
+type serviceResponse struct {
+	widthResolution  uint32
+	heightResolution uint32
+	err              error
+}
+
 var (
 	hmrTouchhostHostname = testing.RegisterVarString(
 		"inputs.hmr_touchhost_hostname",
@@ -135,24 +141,24 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Fatalf("Gcode file (%s) not found on HMR", gcodeFileName)
 	}
 
-	serviceChannel := make(chan error)
+	serviceChannel := make(chan serviceResponse)
 	DutEvtestService := inputspb.NewStylusEvtestCaptureServiceClient(client.Conn)
 
 	go func() {
 		// Start recording evtest stylus touch data from DUT.
 		dutResponse, err := DutEvtestService.StartStylusDataCapture(ctx, &empty.Empty{})
 		if err != nil {
-			serviceChannel <- errors.Wrap(err, "failed to run StartStylusDataCapture")
+			serviceChannel <- serviceResponse{widthResolution: 0, heightResolution: 0, err: errors.Wrap(err, "failed to run StartStylusDataCapture")}
 			return
 		}
 		// Copy file from DUT to Host machine.
 		dutTouchLogFilePath := dutResponse.GetStylusLogPath()
 		err = linuxssh.GetFile(ctx, s.DUT().Conn(), dutTouchLogFilePath, hostRawTouchLogFilePath, linuxssh.PreserveSymlinks)
 		if err != nil {
-			serviceChannel <- errors.Wrap(err, "failed to copy file from DUT to Host")
+			serviceChannel <- serviceResponse{widthResolution: 0, heightResolution: 0, err: errors.Wrap(err, "failed to copy file from DUT to Host")}
 			return
 		}
-		serviceChannel <- nil
+		serviceChannel <- serviceResponse{widthResolution: dutResponse.GetWidthResolution(), heightResolution: dutResponse.GetHeightResolution(), err: nil}
 	}()
 
 	// Begins executing HMR motions on DUT.
@@ -189,9 +195,9 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to run StopStylusDataCapture: ", err)
 	}
 	// Wait until stylus touch data file has been copied from DUT to Host.
-	err = <-serviceChannel
-	if err != nil {
-		s.Fatal("Failed to collect touch logs from DUT: ", err)
+	serviceResponse := <-serviceChannel
+	if serviceResponse.err != nil {
+		s.Fatal("Failed to collect touch logs from DUT: ", serviceResponse.err)
 	}
 
 	// Delete stylus touch data file from DUT.
@@ -205,7 +211,7 @@ func HumanMotionRobotLinearity(ctx context.Context, s *testing.State) {
 		s.Error("Failed to clean raw touchlog file: ", err)
 	}
 
-	results, err := input.DetermineSingleLineVerdict(hostTouchLogFilePath)
+	results, err := input.DetermineSingleLineVerdict(hostTouchLogFilePath, float64(serviceResponse.widthResolution), float64(serviceResponse.heightResolution))
 	if err != nil {
 		s.Error("Error occurred whilst generating verdict: ", err)
 	}

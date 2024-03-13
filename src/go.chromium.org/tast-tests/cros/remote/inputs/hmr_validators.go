@@ -60,7 +60,7 @@ func validate(value, limit, tolerance float64, comparator comparatorType) (Valid
 }
 
 func validateMaxLinearity(value float64) (ValidationResult, error) {
-	result, err := validate(value, 128.0, 64.0, le)
+	result, err := validate(value, 2, 1, le)
 	if err != nil {
 		return result, errors.Wrap(err, "Max Linearity Validation")
 	}
