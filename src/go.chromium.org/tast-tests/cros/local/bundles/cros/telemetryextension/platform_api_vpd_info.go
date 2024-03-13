@@ -33,7 +33,7 @@ func init() {
 			"group:complementary",
 			"group:mainline", "informational",
 		},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "vpd"},
 		Params: []testing.Param{
 			{
 				Name:    "ash",
