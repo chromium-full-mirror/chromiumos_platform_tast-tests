@@ -68,7 +68,7 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}, {
 			// Contact: byronlee@google.com
@@ -77,7 +77,7 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}, {
 			// Contact: byronlee@google.com
@@ -86,7 +86,7 @@ func init() {
 			// Bluetooth v2 routines are only supported when Floss is enabled.
 			Fixture: "crosHealthdRunningAndBluetoothEnabledWithFloss",
 			// TODO(b/303370425): Promote tast to critical
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"bluetooth_floss"},
 		}}})
 }
