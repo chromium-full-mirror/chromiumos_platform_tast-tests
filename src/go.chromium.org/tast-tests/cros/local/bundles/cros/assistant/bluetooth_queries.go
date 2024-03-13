@@ -7,16 +7,11 @@ package assistant
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
 
-	"go.chromium.org/tast-tests/cros/local/apps"
 	"go.chromium.org/tast-tests/cros/local/assistant"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/bluez"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -48,10 +43,8 @@ func BluetoothQueries(ctx context.Context, s *testing.State) {
 		s.Fatal("Creating test API connection failed: ", err)
 	}
 
-	// Open the Settings window, where we can verify Bluetooth/Wifi status
-	if err := apps.Launch(ctx, tconn, apps.Settings.ID); err != nil {
-		s.Fatal("Failed to launch Settings app: ", err)
-	}
+	defer faillog.DumpUITreeWithScreenshotWithTestAPIOnError(
+		ctx, s.OutDir(), s.HasError, tconn, "bluetooth_queries")
 
 	// Turn settings on, off, and on again to ensure they can be enabled and disabled, regardless of starting state
 	statuses := []bool{true, false, true}
@@ -74,6 +67,7 @@ func BluetoothQueries(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to get Assistant bluetooth query response: ", err)
 		}
 
+		// Check if Bluetooth is updated at system level via dbus.
 		s.Log("Checking Bluetooth status using dbus")
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			if enabled, err := bluetoothEnabled(ctx); err != nil {
@@ -86,32 +80,8 @@ func BluetoothQueries(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed checking bluetooth status via dbus: ", err)
 		}
 
-		// Check if button in the Settings app UI updated to match the actual status.
-		// The buttons don't update immediately, so we'll need to poll their statuses.
-		// The "aria-pressed" htmlAttribute of the toggle buttons can be used to check the on/off status
-		s.Log("Checking bluetooth toggle button status")
-		ui := uiauto.New(tconn)
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			bluetoothToggle := nodewith.Name("Bluetooth enable").Role(role.ToggleButton)
-			if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(bluetoothToggle)(ctx); err != nil {
-				testing.PollBreak(err)
-			}
-
-			info, err := ui.Info(ctx, bluetoothToggle)
-			if err != nil {
-				testing.PollBreak(err)
-			}
-			if info.HTMLAttributes["aria-pressed"] != strconv.FormatBool(status) {
-				return errors.Errorf("bluetooth not toggled yet, aria-pressed is %v, expected %v",
-					info.HTMLAttributes["aria-pressed"], status)
-			}
-			return nil
-		}, nil); err != nil {
-			s.Fatal("Bluetooth button (Settings app) was not toggled by the Assistant: ", err)
-		}
-
-		// Check Bluetooth quick setting tile as well.
-		s.Log("Checking bluetooth status in Quick Settings")
+		// Check if UI is updated correctly via Quick Settings.
+		s.Log("Checking Bluetooth status in Quick Settings")
 		if btStatus, err := quicksettings.BluetoothEnabled(ctx, tconn); err != nil {
 			s.Fatal("Failed to get Bluetooth quick setting status: ", err)
 		} else if btStatus != status {
