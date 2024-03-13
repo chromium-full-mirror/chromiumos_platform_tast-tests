@@ -17,5 +17,6 @@ func DetermineSingleLineVerdict(fileName string, widthResolution, heightResoluti
 
 	initialTouchRemovedPoints := removeInitialTouch(scaledPoints, 3.0)
 	stationaryPointsRemoved := removeStationaryPoints(initialTouchRemovedPoints, 2.0)
-	return analyzeLinearity(stationaryPointsRemoved)
+	transformedPoints := transformToNormalizedCoordinates(stationaryPointsRemoved)
+	return analyzeLinearity(transformedPoints)
 }
