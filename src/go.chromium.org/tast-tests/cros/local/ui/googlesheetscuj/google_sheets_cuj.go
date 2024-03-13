@@ -41,7 +41,7 @@ type TestParam struct {
 
 // Run opens up a Google Sheets file, and use mousewheel/trackpad/keypress to
 // scroll the sheets file, to test the Google Sheets performance.
-func Run(ctx context.Context, s *testing.State) *perf.Values {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath string) (pv *perf.Values, retErr error) {
 	const (
 		timeout                 = 10 * time.Second
 		overallScrollTimeout    = 10 * time.Minute
@@ -51,7 +51,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	sheetURL, err := cuj.GetTestSheetsURL(ctx)
 	if err != nil {
-		s.Fatal("Failed to get Google Sheets URL: ", err)
+		return nil, errors.Wrap(err, "failed to get Google Sheets URL")
 	}
 
 	// Shorten context a bit to allow for cleanup.
@@ -59,63 +59,60 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
+	pv, err = localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
+		return nil, errors.Wrap(err, "failed to capture device snapshot")
 	}
-
-	testParam := s.Param().(TestParam)
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	sheetConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.BrowserType, chrome.BlankURL)
 	if err != nil {
-		s.Fatal("Failed to setup Chrome: ", err)
+		return nil, errors.Wrap(err, "failed to setup Chrome")
 	}
 	defer closeBrowser(closeCtx)
 	defer sheetConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API connection: ", err)
+		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to browser test API connection: ", err)
+		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
 	}
 
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to detect it is in tablet-mode or not: ", err)
+		return nil, errors.Wrap(err, "failed to detect it is in tablet-mode or not")
 	}
 
 	var pc pointer.Context
 	if inTabletMode {
 		pc, err = pointer.NewTouch(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to create a touch controller: ", err)
+			return nil, errors.Wrap(err, "failed to create a touch controller")
 		}
 	} else {
 		pc = pointer.NewMouse(tconn)
 	}
 	defer pc.Close(ctx)
-	s.Logf("Is in tablet-mode: %t", inTabletMode)
+	testing.ContextLogf(ctx, "Is in tablet-mode: %t", inTabletMode)
 
 	ui := uiauto.New(tconn)
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
-		s.Fatal("Failed to create a CUJ recorder: ", err)
+		return nil, errors.Wrap(err, "failed to create a CUJ recorder")
 	}
 	defer recorder.Close(closeCtx)
 
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
-		s.Fatal("Failed to add common metrics to recorder: ", err)
+		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
 	// Add an empty screenshot recorder.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
-		s.Log("Failed to add screenshot recorder: ", err)
+		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
 	}
 
 	// Get a small set of metrics to track across each scroll phase.
@@ -124,38 +121,38 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// Create a virtual trackpad.
 	tpw, err := input.Trackpad(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a trackpad device: ", err)
+		return nil, errors.Wrap(err, "failed to create a trackpad device")
 	}
 	defer tpw.Close(ctx)
 	tw, err := tpw.NewMultiTouchWriter(2)
 	if err != nil {
-		s.Fatal("Failed to create a multi touch writer: ", err)
+		return nil, errors.Wrap(err, "failed to create a multi touch writer")
 	}
 	defer tw.Close()
 
 	// Create a virtual keyboard.
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a keyboard: ", err)
+		return nil, errors.Wrap(err, "failed to create a keyboard")
 	}
 	defer kw.Close(ctx)
 
 	// Create a virtual mouse.
 	mw, err := input.Mouse(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a mouse: ", err)
+		return nil, errors.Wrap(err, "failed to create a mouse")
 	}
 	defer mw.Close(ctx)
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get the primary display info: ", err)
+		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
-		s.Fatal("Failed to wait for valid account in cookie jar: ", err)
+		return nil, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
@@ -171,7 +168,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			return errors.Wrap(err, "failed to click the spreadsheet privacy button")
 		}
 
-		s.Logf("Scrolling down the Google Sheets file for %s", overallScrollTimeout)
+		testing.ContextLogf(ctx, "Scrolling down the Google Sheets file for %s", overallScrollTimeout)
 
 		for _, scroller := range []struct {
 			// description is a string that can be used with
@@ -239,7 +236,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 			// See go/trace-in-cuj-tests about rules for tracing.
 			if scroller.recordTrace {
-				if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+				if err := recorder.StartTracing(ctx, outDir, systemTraceConfigPath); err != nil {
 					return errors.Wrap(err, "failed to start tracing")
 				}
 			}
@@ -297,20 +294,26 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 		return nil
 	}); err != nil {
-		s.Fatal("Failed to run the test scenario: ", err)
+		return nil, errors.Wrap(err, "failed to run the test scenario")
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {
-		s.Fatal("Failed to record the data: ", err)
+		return nil, errors.Wrap(err, "failed to record the data")
 	}
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to save the perf data: ", err)
+	// Try to save both perf data and histogram raw data and return the first error if any.
+	var saveDataErr error
+	if err := pv.Save(outDir); err != nil {
+		testing.ContextLog(ctx, "Failed to save the perf data: ", err)
+		saveDataErr = errors.Wrap(err, "failed to save the perf data")
 	}
-	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
-		s.Error("Failed to save histogram raw data: ", err)
+	if err := recorder.SaveHistograms(outDir); err != nil {
+		testing.ContextLog(ctx, "Failed to save histogram raw data: ", err)
+		if saveDataErr == nil {
+			saveDataErr = errors.Wrap(err, "failed to save histogram raw data")
+		}
 	}
-	return pv
+	return pv, saveDataErr
 }
