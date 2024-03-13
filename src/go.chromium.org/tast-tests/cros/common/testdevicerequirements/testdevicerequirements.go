@@ -611,4 +611,7 @@ const (
 
 	// RemovableStorageSeqTp with The ChromeOS device MUST support >= 40 MBps throughput to external storage devices.
 	RemovableStorageSeqTp = "rmvbl-general-0001-v01"
+
+	// CardReader with The Chrome device MAY have a multi-card reader.
+	CardReader = "mhRdr-gen-0001-v01"
 )

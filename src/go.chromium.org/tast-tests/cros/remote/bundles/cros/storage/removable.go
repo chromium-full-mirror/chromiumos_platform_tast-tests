@@ -27,7 +27,7 @@ func init() {
 		SoftwareDeps: []string{"crossystem"},
 		Timeout:      90 * time.Minute,
 		Requirements: []string{
-			tdreq.StorageStable, tdreq.StorageEndurancePerf,
+			tdreq.CardReader,
 		},
 	})
 }
