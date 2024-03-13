@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/hwsec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/hwsec/util"
 	hwseclocal "go.chromium.org/tast-tests/cros/local/hwsec"
 	"go.chromium.org/tast-tests/cros/local/u2fd"
@@ -80,86 +81,13 @@ func xverFixtParamFactory(hsmName string, milestone int, dataPrefix string) test
 }
 
 func genXverFixtParams() (params []testing.FixtureParam) {
-	// Data prefixes for cross version with TPM2.0
-	tpm2DataPrefixes := map[int]string{
-		88:  "R88-13597.108.0-custombuild20220717_betty_20220719",
-		89:  "R89-13729.85.0-custombuild20220715_betty_20220719",
-		90:  "R90-13816.106.0-custombuild20220712_betty_20220719",
-		91:  "R91-13904.98.0-custombuild20220712_betty_20220719",
-		92:  "R92-13982.89.0-custombuild20220712_betty_20220719",
-		93:  "R93-14092.106.0-custombuild20220713_betty_20220719",
-		94:  "R94-14150.592.0-custombuild20220714_betty_20220720",
-		96:  "R96-14268.94.0-custombuild20220714_betty_20220719",
-		97:  "R97-14324.81.0-custombuild20220715_betty_20220719",
-		98:  "R98-14388.65.0-custombuild20220715_betty_20220719",
-		99:  "R99-14469.76.0-custombuild20220717_betty_20220719",
-		100: "R100-14526.122.0-custombuild20220718_betty_20220719",
-		101: "R101-14588.134.0-custombuild20220718_betty_20220719",
-		102: "R102-14695.114.0-custombuild20220718_betty_20220719",
-		103: "R103-14816.99.0_betty_20220712",
-		104: "R104-14909.132.0_betty_20221202",
-		105: "R105-14989.107.0_betty_20221202",
-		106: "R106-15054.114.0_betty_20221129",
-		107: "R107-15117.112.0_betty_20221129",
-		108: "R108-15183.69.0_betty_20221221",
-		109: "R109-15236.82.0_novato_20230216",
-		110: "R110-15278.66.0_novato_20230216",
-		111: "R111-15329.61.0_novato_20230329",
-		112: "R112-15359.49.0_novato_20230410",
-		113: "R113-15393.65.0_novato_20230627",
-		114: "R114-15437.60.0_novato_20230627",
-		115: "R115-15474.84.0_novato_20230830",
-		116: "R116-15509.71.0_novato_20230830",
-		117: "R117-15572.63.0_novato_20231031",
-		118: "R118-15604.33.0_novato_20231123",
-		119: "R119-15633.69.0_amd64-generic_20231212",
-	}
-	// Data prefixes for cross version with TPM dynamic
-	tpmDynamicDataPrefixes := map[int]string{
-		96:  "R96-14268.94.0-custombuild20220715_reven-vmtest_20220719",
-		97:  "R97-14324.81.0-custombuild20220716_reven-vmtest_20220719",
-		98:  "R98-14388.65.0-custombuild20220719_reven-vmtest_20220719",
-		99:  "R99-14469.76.0-custombuild20220718_reven-vmtest_20220719",
-		100: "R100-14526.122.0-custombuild20220718_reven-vmtest_20220719",
-		101: "R101-14588.134.0-custombuild20220718_reven-vmtest_20220719",
-		102: "R102-14695.114.0-custombuild20220718_reven-vmtest_20220719",
-		103: "R103-14816.99.0_reven-vmtest_20220712",
-		104: "R104-14909.132.0_reven-vmtest_20221202",
-		105: "R105-14989.108.0_reven-vmtest_20221202",
-		106: "R106-15054.114.0_reven-vmtest_20221129",
-		107: "R107-15117.112.0_reven-vmtest_20221129",
-		108: "R108-15183.69.0_reven-vmtest_20221221",
-		109: "R109-15236.82.0_reven-vmtest_20230216",
-		110: "R110-15278.66.0_reven-vmtest_20230216",
-		111: "R111-15329.61.0_reven-vmtest_20230329",
-		112: "R112-15359.49.0_reven-vmtest_20230410",
-		113: "R113-15393.65.0_reven-vmtest_20230627",
-		114: "R114-15437.60.0_reven-vmtest_20230627",
-		115: "R115-15474.84.0_reven-vmtest_20230830",
-		116: "R116-15509.71.0_reven-vmtest_20230830",
-		117: "R117-15572.63.0_reven-vmtest_20231031",
-		118: "R118-15604.60.0_reven-vmtest_20231123",
-		119: "R119-15633.69.0_reven-vmtest_20231212",
-	}
-	// Data prefixes for cross version with Ti50 emulator
-	ti50DataPrefixes := map[int]string{
-		112: "R112-15359.49.0_betty_20230410",
-		113: "R113-15393.65.0_betty_20230627",
-		114: "R114-15437.60.0_betty_20230627",
-		115: "R115-15474.84.0_betty_20230830",
-		116: "R116-15509.71.0_betty_20230830",
-		117: "R117-15572.63.0_betty_20231031",
-		118: "R118-15604.60.0_betty_20231123",
-		119: "R119-15633.69.0_betty_20231212",
-	}
-
-	for milestone, dataPrefix := range tpm2DataPrefixes {
+	for milestone, dataPrefix := range hwsec.Tpm2DataPrefixes {
 		params = append(params, xverFixtParamFactory("tpm2", milestone, dataPrefix))
 	}
-	for milestone, dataPrefix := range tpmDynamicDataPrefixes {
+	for milestone, dataPrefix := range hwsec.TpmDynamicDataPrefixes {
 		params = append(params, xverFixtParamFactory("tpm_dynamic", milestone, dataPrefix))
 	}
-	for milestone, dataPrefix := range ti50DataPrefixes {
+	for milestone, dataPrefix := range hwsec.Ti50DataPrefixes {
 		params = append(params, xverFixtParamFactory("ti50", milestone, dataPrefix))
 	}
 	// Param for testing loading the data from the current device to itself
