@@ -16,7 +16,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:    Ti50ECReset,
+		Func:    GSCECReset,
 		Desc:    "Test workaround for EC double reset",
 		Timeout: 30 * time.Second,
 		Contacts: []string{
@@ -25,7 +25,7 @@ func init() {
 		},
 		BugComponent: "b:715469", // ChromeOS > Platform > System > Hardware Security > HwSec GSC > Ti50
 		Attr: []string{"group:gsc",
-			"gsc_dt_ab", "gsc_dt_shield", "gsc_ot_shield",
+			"gsc_dt_ab", "gsc_dt_shield", "gsc_h1_shield", "gsc_ot_shield",
 			"gsc_image_ti50",
 			"gsc_nightly"},
 		Fixture: fixture.GSCOpenCCD,
@@ -42,7 +42,7 @@ func init() {
 	})
 }
 
-func Ti50ECReset(ctx context.Context, s *testing.State) {
+func GSCECReset(ctx context.Context, s *testing.State) {
 	subTest := s.Param().(func(context.Context, *testing.State, utils.DevboardHelper, *ti50.CrOSImage, utils.FirmwareTestingHelper))
 	b := utils.NewDevboardHelper(s)
 	th := utils.FirmwareTestingHelper{FirmwareTestingHelperDelegate: s}
