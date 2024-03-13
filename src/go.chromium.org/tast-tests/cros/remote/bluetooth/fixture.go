@@ -117,10 +117,11 @@ const (
 
 // Chrome features.
 const (
-	chromeFeatureOobeHidDetectionRevamp = "OobeHidDetectionRevamp"
-	chromeFeatureFastPair               = "FastPair"
-	chromeFeatureFastPairSavedDevices   = "FastPairSavedDevices"
-	chromeFeatureFastPairHID            = "FastPairHID"
+	chromeFeatureOobeHidDetectionRevamp     = "OobeHidDetectionRevamp"
+	chromeFeatureFastPair                   = "FastPair"
+	chromeFeatureFastPairSavedDevices       = "FastPairSavedDevices"
+	chromeFeatureFastPairHID                = "FastPairHID"
+	chromeFeatureBluetoothDisconnectWarning = "BluetoothDisconnectWarning"
 
 	// chromeFeatureFloss is enabled when FlossEnabled fixture feature is true,
 	// and disabled when it is false.

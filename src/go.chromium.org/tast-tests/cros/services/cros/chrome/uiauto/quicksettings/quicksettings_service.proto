@@ -25,6 +25,23 @@ service QuickSettingsService {
   rpc NavigateToHotspotDetailedView(google.protobuf.Empty)
       returns (google.protobuf.Empty) {}
 
+  // ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog will click on
+  // Bluetooth feature pod toggle and also select the "Keep on" option from
+  // Bluetooth warning dialog.
+  rpc ToggleBluetoothAndSelectKeepOnInBluetoothWarningDialog(
+      google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog will click on
+  // Bluetooth feature pod toggle and also select the "Turn Off" option from
+  // Bluetooth warning dialog.
+  rpc ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog(
+      google.protobuf.Empty) returns (google.protobuf.Empty) {}
+
+  // ToggleBluetoothFromFeaturePod will click on Bluetooth feature pod in quick
+  // settings and toggles Bluetooth state.
+  rpc ToggleBluetoothFromFeaturePod(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
+
   // IsHotspotTileShown returns whether the Hotspot feature tile is shown in
   // quick settings.
   rpc IsHotspotTileShown(google.protobuf.Empty)

@@ -147,3 +147,13 @@ var HotspotOnNoDeviceConnectedText = nodewith.Name("No devices connected").Role(
 
 // HotspotTurningOnText is the finder for the text that showing hotspot is turning on in Hotspot detailed view.
 var HotspotTurningOnText = nodewith.NameStartingWith("Turning on").Role(role.StaticText)
+
+// BluetoothWarningDialog is the finder for the Bluetooth warning dialog.
+var BluetoothWarningDialog = nodewith.NameContaining("Turn off Bluetooth?").Role(role.Dialog).First()
+
+// BluetoothWarningDialogKeepOn is the finder for the "Keep on" button Bluetooth warning dialog.
+var BluetoothWarningDialogKeepOn = nodewith.NameContaining("Keep on").Role(role.Button).Ancestor(BluetoothWarningDialog)
+
+// BluetoothWarningDialogTurnOff is the finder for the "Keep off" button on Bluetooth warning
+// dialog.
+var BluetoothWarningDialogTurnOff = nodewith.NameContaining("Turn off").Role(role.Button).Ancestor(BluetoothWarningDialog)

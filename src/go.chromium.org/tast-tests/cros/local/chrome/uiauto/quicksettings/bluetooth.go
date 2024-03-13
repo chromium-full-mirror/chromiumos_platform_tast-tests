@@ -89,3 +89,56 @@ func EnsureBluetoothPairingDialogIsOpened(tconn *chrome.TestConn) uiauto.Action 
 		return nil
 	}
 }
+
+// ToggleBluetoothAndSelectKeepOnInBluetoothWarningDialog will click on
+// Bluetooth feature pod toggle and selects the "Keep on" option from Bluetooth
+// warning dialog. Bluetooth should be powered on before calling this function.
+func ToggleBluetoothAndSelectKeepOnInBluetoothWarningDialog(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
+	if err := ToggleBluetoothFromFeaturePod(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to click Toggle Bluetooth from feature pod./")
+	}
+
+	if err := uiauto.Combine("Click on 'Keep on' option in warning dialog",
+		ui.WaitUntilExists(BluetoothWarningDialog),
+		ui.LeftClickUntil(BluetoothWarningDialogKeepOn, ui.Gone(BluetoothWarningDialog)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the 'Keep on' in warning dialog")
+	}
+	return nil
+}
+
+// ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog will click on
+// Bluetooth feature pod toggle and also select the "Turn Off" option from
+// Bluetooth warning dialog. Bluetooth should be powered on before calling this
+// function.
+func ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
+	if err := ToggleBluetoothFromFeaturePod(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to click Toggle Bluetooth from feature pod./")
+	}
+
+	if err := uiauto.Combine("Click on 'Turn off' option in warning dialog",
+		ui.WaitUntilExists(BluetoothWarningDialog),
+		ui.LeftClickUntil(BluetoothWarningDialogTurnOff, ui.Gone(BluetoothWarningDialog)),
+	)(ctx); err != nil {
+		return errors.Wrap(err, "ailed to click the 'Turn off' in warning dialog")
+	}
+	return nil
+}
+
+// ToggleBluetoothFromFeaturePod will click on Bluetooth feature pod in quick
+// settings and toggles Bluetooth state.
+func ToggleBluetoothFromFeaturePod(ctx context.Context, tconn *chrome.TestConn) error {
+	ui := uiauto.New(tconn).WithTimeout(5 * time.Second)
+
+	if err := Show(ctx, tconn); err != nil {
+		return err
+	}
+
+	if err := ui.LeftClick(FeatureTileBluetoothToggle)(ctx); err != nil {
+		return errors.Wrap(err, "failed to click the Bluetooth feature pod icon button")
+	}
+
+	return nil
+}

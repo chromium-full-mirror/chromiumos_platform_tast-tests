@@ -1043,4 +1043,62 @@ func init() {
 			serviceDepUpstartService,
 		},
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossDisabled",
+		Desc: "Logs into a user session, enables Bluetooth and Bluetooth warning dialog, and connects to 2 btpeers",
+		Contacts: []string{
+			"tjohnsonkanu@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
+			BTPeerCount:     2,
+			EnableFeatures:  []string{chromeFeatureBluetoothDisconnectWarning},
+			DisableFeatures: []string{},
+			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
+			FlossEnabled:    false,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
+		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+		},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "chromeLoggedInWith2BTPeersBluetoothWarningEnabledFlossEnabled",
+		Desc: "Logs into a user session, enables Bluetooth and Bluetooth warning dialog, and connects to 2 btpeers",
+		Contacts: []string{
+			"chadduffin@chromium.org",
+			"cros-connectivity@google.com",
+		},
+		Impl: newFixture(&fixtureFeatures{
+			EnableChromeUI:  true,
+			BTPeerCount:     2,
+			EnableFeatures:  []string{chromeFeatureBluetoothDisconnectWarning},
+			DisableFeatures: []string{},
+			LoginMode:       ui.LoginMode_LOGIN_MODE_FAKE_LOGIN,
+			FlossEnabled:    true,
+		}),
+		Vars: []string{
+			fixtureVarBTPeers,
+		},
+		SetUpTimeout:    setUpTimeout + 2*btpeerSetUpBuffer + enableChromeUISetUpAndResetBuffer,
+		ResetTimeout:    resetTimeout + 2*btpeerResetBuffer + enableChromeUISetUpAndResetBuffer,
+		TearDownTimeout: tearDownTimeout + 2*btpeerResetBuffer,
+		PostTestTimeout: postTestTimeout,
+		ServiceDeps: []string{
+			serviceDepBluetoothUIService,
+			serviceDepBluetoothService,
+			serviceDepChromeService,
+			serviceDepUpstartService,
+		},
+	})
 }

@@ -62,6 +62,30 @@ func (s *Service) NavigateToHotspotDetailedView(ctx context.Context, e *empty.Em
 	})
 }
 
+// ToggleBluetoothAndSelectKeepOnInBluetoothWarningDialog will click on Bluetooth feature pod
+// toggle and selects the "Keep on" option from Bluetooth warning dialog.
+func (s *Service) ToggleBluetoothAndSelectKeepOnInBluetoothWarningDialog(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		return &emptypb.Empty{}, ToggleBluetoothAndSelectKeepOnInBluetoothWarningDialog(ctx, tconn)
+	})
+}
+
+// ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog will click on Bluetooth feature pod
+// toggle and also select the "Turn Off" option from Bluetooth warning dialog.
+func (s *Service) ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		return &emptypb.Empty{}, ToggleBluetoothAndSelectTurnOffInBluetoothWarningDialog(ctx, tconn)
+	})
+}
+
+// ToggleBluetoothFromFeaturePod will click on Bluetooth feature pod in quick
+// settings and toggles Bluetooth state.
+func (s *Service) ToggleBluetoothFromFeaturePod(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {
+	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
+		return &emptypb.Empty{}, ToggleBluetoothFromFeaturePod(ctx, tconn)
+	})
+}
+
 // IsHotspotTileShown returns whether the Hotspot feature tile is shown in quick settings.
 func (s *Service) IsHotspotTileShown(ctx context.Context, e *empty.Empty) (*pb.IsHotspotTileShownResponse, error) {
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (_ *pb.IsHotspotTileShownResponse, retErr error) {
