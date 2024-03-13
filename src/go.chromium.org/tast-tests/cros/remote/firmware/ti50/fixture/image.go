@@ -157,7 +157,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 	inputURL, _ := s.Var(BuildURL)
 	iv := &ImageValue{}
 
-	fw := findFwName(testbedProperties.TestbedType)
+	fw := FindFwName(testbedProperties.TestbedType)
 	// For inputURL that is in the form of release-*, extract the version and lookup the corresponding GS path.
 	if strings.HasPrefix(inputURL, ReleasePrefix) {
 		v := inputURL[len(ReleasePrefix):]
@@ -438,7 +438,7 @@ func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.Testbed
 		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
 	}
 
-	fwName := findFwName(testbedProperties.TestbedType)
+	fwName := FindFwName(testbedProperties.TestbedType)
 	debugImageGlob := fmt.Sprintf(debugImageTemplate, fwName, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
 	return findGSCImage(ctx, debugImageGlob)
 }
@@ -446,7 +446,7 @@ func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.Testbed
 // findGSCEFIImage finds the eraseflashinfo image for cr50 board.
 func findGSCEFIImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
 	efiDevidStr := strings.ToLower(testbedProperties.UsbSerial)
-	fwName := findFwName(testbedProperties.TestbedType)
+	fwName := FindFwName(testbedProperties.TestbedType)
 	efiImageGlob := fmt.Sprintf(efiImageTemplate, fwName, efiDevidStr)
 	return findGSCImage(ctx, efiImageGlob)
 }
@@ -582,8 +582,8 @@ func ti50ImageDirectory(t ti50.TestbedType, i ImageType) (string, error) {
 	}
 }
 
-// findFwName returns the firmware name for the board.
-func findFwName(t ti50.TestbedType) string {
+// FindFwName returns the firmware name for the board.
+func FindFwName(t ti50.TestbedType) string {
 	if t == ti50.GscH1Shield {
 		return "cr50"
 	}
@@ -617,7 +617,7 @@ func defaultConfigPath(s *testing.FixtState, testbedType ti50.TestbedType, image
 
 	switch imageType {
 	case SystemImage, SystemTestAutoImage, SystemTestAuto2Image:
-		fw = findFwName(testbedType)
+		fw = FindFwName(testbedType)
 	default:
 		s.Fatal("Unknown image type: ", string(imageType))
 	}
