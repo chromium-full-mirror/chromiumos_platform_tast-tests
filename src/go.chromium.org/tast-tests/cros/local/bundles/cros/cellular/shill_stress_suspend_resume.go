@@ -8,9 +8,9 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/cellular"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -41,7 +41,6 @@ func ShillStressSuspendResume(ctx context.Context, s *testing.State) {
 
 	const totalAttempts = 100
 	const iterations = 5
-	const suspendTimeSec = 10
 	stressConnection := func(ctx context.Context) error {
 		for i := 1; i <= iterations; i++ {
 			s.Logf("Test iteration: #%d", i)
@@ -59,7 +58,7 @@ func ShillStressSuspendResume(ctx context.Context, s *testing.State) {
 				return errors.Wrapf(err, "Connect failed on attempt %d", i)
 			}
 
-			if _, err := suspend.ForDuration(ctx, suspendTimeSec*time.Second); err != nil {
+			if err := testexec.CommandContext(ctx, "powerd_dbus_suspend", "--suspend_for_sec=10").Run(); err != nil {
 				return errors.Wrap(err, "failed to perform system suspend")
 			}
 
