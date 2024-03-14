@@ -232,6 +232,7 @@ func Display(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	// Open a window with about:blank tab on the target browser.
@@ -283,7 +284,7 @@ func Display(ctx context.Context, s *testing.State) {
 		s.Errorf("Not an valid brightness flag: %q", dp.Brightness)
 	}
 
-	r := power.NewRecorder(ctx, dp.DisplayTimeParams.Interval, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, dp.DisplayTimeParams.Interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 
 	// Fixture already set brightness to default level, only need to set when it's max.

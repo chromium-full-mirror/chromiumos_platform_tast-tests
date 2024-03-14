@@ -109,6 +109,7 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	interval := s.Param().(power.TimeParams).Interval
@@ -136,8 +137,9 @@ func ExampleUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to maximize the browser window: ", err)
 	}
 
-	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
+
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}

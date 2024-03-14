@@ -371,6 +371,7 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
@@ -429,7 +430,7 @@ func VideoPlayback(ctx context.Context, s *testing.State) {
 		s.Fatalf("Can't copy video from %s to %s : %v", filePathOnDisk, filePathOnRAM, err)
 	}
 
-	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
 	r.RegisterMetrics(pm.NewVideoFpsMetrics(conn))

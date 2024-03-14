@@ -93,6 +93,7 @@ func ManualUI(ctx context.Context, s *testing.State) {
 		manualTestDuration = time.Duration(value) * time.Minute
 	}
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
 	// Reserve some time to cleanup, even if it fails due to ctx timeout.
@@ -118,7 +119,7 @@ func ManualUI(ctx context.Context, s *testing.State) {
 	}
 
 	testing.ContextLog(ctx, "Start setting up the power recorder")
-	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, time.Second, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Failed to cooldown before the manual setup: ", err)

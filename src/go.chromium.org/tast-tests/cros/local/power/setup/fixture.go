@@ -832,10 +832,12 @@ func (f *powerNoUIFixture) PostTest(ctx context.Context, s *testing.FixtTestStat
 }
 
 type powerMetricsNoUIFixture struct {
-	recorder *power.Recorder
+	discharge bool
+	recorder  *power.Recorder
 }
 
 func (f *powerMetricsNoUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	f.discharge = s.ParentValue().(PowerNoUIFixtureData).Discharge
 	return nil
 }
 
@@ -847,7 +849,7 @@ func (f *powerMetricsNoUIFixture) Reset(ctx context.Context) error {
 }
 
 func (f *powerMetricsNoUIFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
-	recorder := power.NewRecorder(ctx, 1*time.Second, s.OutDir(), s.TestName())
+	recorder := power.NewRecorder(ctx, 1*time.Second, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(f.discharge))
 	if err := recorder.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)
 	}

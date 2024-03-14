@@ -185,6 +185,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 
@@ -300,7 +301,7 @@ func Browsing(ctx context.Context, s *testing.State) {
 		tabDataList = []tabData{tab1, tab2, tab3, tab4, tab5}
 	}
 
-	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 	if err := r.Cooldown(ctx); err != nil {
 		s.Error("Cooldown failed: ", err)

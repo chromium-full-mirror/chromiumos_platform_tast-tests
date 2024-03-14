@@ -79,6 +79,8 @@ func init() {
 
 // GamingApp collects power metrics of gaming app.
 func GamingApp(ctx context.Context, s *testing.State) {
+
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	a := s.FixtValue().(setup.PowerUIFixtureData).ARC
 
@@ -109,7 +111,7 @@ func GamingApp(ctx context.Context, s *testing.State) {
 		}
 	}
 	// Run the app and collect the power data in the meantime.
-	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), playTime); err != nil {
+	if err := gameapp.Run(ctx, cr, a, d, game, s.OutDir(), s.TestName(), playTime, discharge); err != nil {
 		s.Fatal("Failed to run game app: ", err)
 	}
 }

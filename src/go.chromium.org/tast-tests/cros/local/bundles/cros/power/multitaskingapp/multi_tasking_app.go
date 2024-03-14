@@ -41,6 +41,7 @@ type TestParams struct {
 	OutDir        string
 	ElementAPKURL string
 	DataPath      func(string) string
+	Discharge     bool
 	TabletMode    bool
 	BrowserTime   time.Duration
 	SocialAppTime time.Duration
@@ -89,6 +90,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 		testName      = params.TestName
 		elementAPKURL = params.ElementAPKURL
 		dataPath      = params.DataPath
+		discharge     = params.Discharge
 		browserTime   = params.BrowserTime
 		socialAppTime = params.SocialAppTime
 		videoAppTime  = params.VideoAppTime
@@ -145,7 +147,7 @@ func Run(ctx context.Context, resources *TestResources, params *TestParams) (ret
 	defer cleanupFile()
 
 	const recordInterval = 5 * time.Second
-	recorder := power.NewRecorder(ctx, recordInterval, outDir, testName)
+	recorder := power.NewRecorder(ctx, recordInterval, outDir, testName, power.DischargeWatchdogOption(discharge))
 	defer recorder.Close(closeCtx)
 	if err := recorder.Cooldown(ctx); err != nil {
 		return errors.Wrap(err, "failed to cool down the device")

@@ -81,6 +81,12 @@ func (r *Recorder) AddOptionalRecorderArg(key string, val interface{}) {
 	r.optionalArgs = append(r.optionalArgs, OptionalRecorderArg{key, val})
 }
 
+// DischargeWatchdogOption returns a new instance of OptionalRecorderArg that
+// controls if recorder enables discharge watchdog.
+func DischargeWatchdogOption(discharge bool) OptionalRecorderArg {
+	return OptionalRecorderArg{OptionalRecorderArgDischargeWatchdogKey, discharge}
+}
+
 // Cooldown device before running test load.
 // In:
 // ctx: context for the test.

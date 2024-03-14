@@ -52,6 +52,7 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	interval := s.Param().(power.TimeParams).Interval
@@ -90,7 +91,7 @@ func ExampleHistogram(ctx context.Context, s *testing.State) {
 		s.Fatal("Error with creating EventWriter from keyboard: ", err)
 	}
 
-	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 	// Register two histogram metrics: one has samples along the timeline, and
 	// the other one only has an average value.

@@ -233,6 +233,7 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 30*time.Second)
 	defer cancel()
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	a := s.FixtValue().(setup.PowerUIFixtureData).ARC
 
@@ -298,7 +299,7 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupFile()
 
-	recorder := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	recorder := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer recorder.Close(cleanupCtx)
 
 	if err := recorder.Cooldown(ctx); err != nil {

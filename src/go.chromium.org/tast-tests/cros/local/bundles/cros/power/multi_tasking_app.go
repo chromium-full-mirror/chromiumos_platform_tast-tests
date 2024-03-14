@@ -63,6 +63,7 @@ func init() {
 
 // MultiTaskingApp collects power related data when device do multi tasking with several apps.
 func MultiTaskingApp(ctx context.Context, s *testing.State) {
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	a := s.FixtValue().(setup.PowerUIFixtureData).ARC
@@ -134,6 +135,7 @@ func MultiTaskingApp(ctx context.Context, s *testing.State) {
 		TestName:      s.TestName(),
 		ElementAPKURL: elementAPKURL,
 		DataPath:      s.DataPath,
+		Discharge:     discharge,
 		TabletMode:    tabletMode,
 		BrowserTime:   browserTime,
 		SocialAppTime: socialAppTime,

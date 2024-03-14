@@ -25,7 +25,7 @@ import (
 // Run runs a specific game app test for a specific duration.
 // game is the game app for testing.
 // playTime is the time to play the game and record power consumption.
-func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *androidui.Device, game GameApp, outDir, testName string, playTime time.Duration) (retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *androidui.Device, game GameApp, outDir, testName string, playTime time.Duration, discharge bool) (retErr error) {
 	if err := game.Install(ctx); err != nil {
 		return errors.Wrap(err, "failed to install Game")
 	}
@@ -52,7 +52,7 @@ func Run(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *androidui.Device
 	testing.ContextLog(ctx, "Start setting up the power recorder")
 	const recordInterval = 5 * time.Second
 
-	r := power.NewRecorder(ctx, recordInterval, outDir, testName)
+	r := power.NewRecorder(ctx, recordInterval, outDir, testName, power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 
 	if err := r.Cooldown(ctx); err != nil {

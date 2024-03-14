@@ -58,6 +58,7 @@ func init() {
 
 // SocialApp operates the social apps and collects the power-related data.
 func SocialApp(ctx context.Context, s *testing.State) {
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	a := s.FixtValue().(setup.PowerUIFixtureData).ARC
 
@@ -119,7 +120,7 @@ func SocialApp(ctx context.Context, s *testing.State) {
 	}
 	defer app.Uninstall(closeCtx)
 
-	recorder := power.NewRecorder(ctx, socialAppMeasurementInterval, s.OutDir(), s.TestName())
+	recorder := power.NewRecorder(ctx, socialAppMeasurementInterval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer recorder.Close(closeCtx)
 
 	if err := recorder.Cooldown(ctx); err != nil {

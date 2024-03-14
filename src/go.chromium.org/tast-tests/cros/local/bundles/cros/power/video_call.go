@@ -84,6 +84,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
+	discharge := s.FixtValue().(setup.PowerUIFixtureData).Discharge
 	bt := s.FixtValue().(setup.PowerUIFixtureData).Bt
 	cr := s.FixtValue().(setup.PowerUIFixtureData).Cr
 	interval := s.Param().(power.TimeParams).Interval
@@ -148,7 +149,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	}
 	defer kb.Close(cleanupCtx)
 
-	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName(), power.DischargeWatchdogOption(discharge))
 	defer r.Close(cleanupCtx)
 	// Register test specific metrics.
 	r.RegisterMetrics(
