@@ -21,6 +21,8 @@ func init() {
 		// ChromeOS > Security > Hardening
 		BugComponent: "b:1040049",
 		Attr:         []string{"group:mainline"},
+		// Alt-syscall kernel code is only enabled on container-based ARC++.
+		SoftwareDeps: []string{"android_container"},
 	})
 }
 
