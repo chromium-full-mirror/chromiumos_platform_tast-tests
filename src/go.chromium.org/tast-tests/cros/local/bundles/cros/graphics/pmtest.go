@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 type pmTestParam struct {
@@ -32,7 +33,9 @@ func init() {
 		},
 		Fixture: "gpuWatchDog",
 		Timeout: 3 * time.Minute,
-		Attr:    []string{"group:graphics", "graphics_stress"},
+		// TODO(b/328563082): Remove it once cellular in the lab is replaced.
+		HardwareDeps: hwdep.D(hwdep.NoCellular()),
+		Attr:         []string{"group:graphics", "graphics_stress"},
 		Params: []testing.Param{
 			// Run the mode from less invasive mode to most invasive mode.
 			{
