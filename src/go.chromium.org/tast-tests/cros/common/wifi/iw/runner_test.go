@@ -1040,3 +1040,40 @@ func TestAddInterface(t *testing.T) {
 		})
 	}
 }
+
+func TestIsSetTxPowerSupported(t *testing.T) {
+	testcases := []struct {
+		iface     string
+		supported bool
+		out       string
+	}{
+		{
+			iface:     "ra0",
+			supported: false,
+			out:       `*  0 dBm (   1 mW)`,
+		},
+		{
+			iface:     "wlan0",
+			supported: true,
+			out: `   0 dBm (   1 mW)
+   1 dBm (   1 mW)
+   2 dBm (   1 mW)
+   3 dBm (   1 mW)
+   9 dBm (   7 mW)
+  10 dBm (  10 mW)
+  20 dBm ( 100 mW)
+* 23 dBm ( 199 mW)
+`,
+		},
+	}
+
+	mock := &stubCmdRunner{}
+	r := &Runner{cmd: mock}
+	for i, tc := range testcases {
+		mock.out = []byte(tc.out)
+		isSupported, _ := r.IsSetTxPowerSupported(context.Background(), tc.iface)
+		if isSupported != tc.supported {
+			t.Errorf("case#%d, got isSupported: %t, expected: %t", i, isSupported, tc.supported)
+		}
+	}
+}

@@ -593,8 +593,10 @@ func (r *Router) startHostapdOnIfaces(ctx context.Context, name string, ifaces [
 	defer cancel()
 
 	for _, iface := range ifaces {
-		if err := r.iwr.SetTxPowerAuto(ctx, iface.Name()); err != nil {
-			return nil, errors.Wrapf(err, "failed to set txpower on interface %s to auto", iface.Name())
+		if isSupported, err := r.iwr.IsSetTxPowerSupported(ctx, iface.Name()); err == nil && isSupported {
+			if err := r.iwr.SetTxPowerAuto(ctx, iface.Name()); err != nil {
+				return nil, errors.Wrapf(err, "failed to set txpower on interface %s to auto", iface.Name())
+			}
 		}
 	}
 	return hs, nil

@@ -600,6 +600,19 @@ func (r *Runner) SetTxPowerAuto(ctx context.Context, iface string) error {
 	return nil
 }
 
+// IsSetTxPowerSupported checks if the setting txpower is supported.
+func (r *Runner) IsSetTxPowerSupported(ctx context.Context, iface string) (bool, error) {
+	out, err := r.cmd.Output(ctx, "iwinfo", iface, "txpower")
+	if err != nil {
+		return false, errors.Wrap(err, "failed to get txpower iwinfo")
+	}
+	re := regexp.MustCompile(`\d+ dBm \((?: +)\d+ mW\)`)
+	if matches := re.FindAllStringSubmatch(string(out), -1); matches != nil {
+		return len(matches) > 1, nil
+	}
+	return false, errors.New("could not determine if SetTxPower is supported")
+}
+
 // ChWidth is the type of channel width setting (e.g. HT40+, 80 ...).
 type ChWidth string
 
