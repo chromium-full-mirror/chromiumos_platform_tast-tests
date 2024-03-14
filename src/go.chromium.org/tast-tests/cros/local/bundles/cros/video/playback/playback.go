@@ -431,7 +431,7 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 	}()
 	go func() {
 		defer wg.Done()
-		fdErr = graphics.MeasureFdCount(ctx, measurementDuration, p)
+		fdErr = graphics.MeasureFdCount(ctx, graphics.GPUProcess, measurementDuration, p)
 	}()
 	go func() {
 		defer wg.Done()

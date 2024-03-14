@@ -19,6 +19,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/shirou/gopsutil/v3/process"
+
 	"go.chromium.org/tast-tests/cros/common/chrome/histogram"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	pb "go.chromium.org/tast-tests/cros/common/power/powerpb"
@@ -841,12 +843,23 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 	return nil
 }
 
-// MeasureFdCount counts the average and peak number of open FDs by the GPU
-// process(es) during playback. Polls every 1 seconds up until the duration
-// given.
-func MeasureFdCount(ctx context.Context, duration time.Duration, p perfValueInterface) error {
+// ProcessType is used to indicate to MeasureFdCount the process type to look for.
+type ProcessType int
+
+const (
+	GPUProcess      ProcessType = iota // GPU process (lacros- or ash-)
+)
+
+// MeasureFdCount counts the average and peak number of open FDs by the
+// processType process(es) during playback. Polls every 1 seconds up until the
+// duration given.
+func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.Duration, p perfValueInterface) error {
 	testing.ContextLog(ctx, "Measuring open file descriptors for ", duration)
-	processes, err := chromeproc.GetGPUProcesses()
+	var processes []*process.Process
+	var err error
+	if processType == GPUProcess {
+		processes, err = chromeproc.GetGPUProcesses()
+	}
 	if err != nil {
 		return errors.Wrap(err, "failed to get gpu process")
 	}
