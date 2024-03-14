@@ -6,12 +6,13 @@ package camera
 
 import (
 	"context"
+	"path/filepath"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -58,8 +59,10 @@ func Suspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for Camera Socket: ", err)
 	}
 
-	cmd := testexec.CommandContext(ctx, "cros_camera_connector_test", "--gtest_filter=ConnectorTest/CaptureTest.OneFrame/NV12_640x480_30fps")
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+	t := gtest.New("cros_camera_connector_test",
+		gtest.Logfile(filepath.Join(s.OutDir(), "gtest-before.log")),
+		gtest.Filter("ConnectorTest/CaptureTest.OneFrame/NV12_640x480_30fps"))
+	if _, err := t.Run(ctx); err != nil {
 		s.Fatal("Failed to use camera before suspend: ", err)
 	}
 
@@ -72,8 +75,10 @@ func Suspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for Camera Socket after suspend: ", err)
 	}
 
-	cmd = testexec.CommandContext(ctx, "cros_camera_connector_test", "--gtest_filter=ConnectorTest/CaptureTest.OneFrame/NV12_640x480_30fps")
-	if err := cmd.Run(testexec.DumpLogOnError); err != nil {
+	t = gtest.New("cros_camera_connector_test",
+		gtest.Logfile(filepath.Join(s.OutDir(), "gtest-after.log")),
+		gtest.Filter("ConnectorTest/CaptureTest.OneFrame/NV12_640x480_30fps"))
+	if _, err := t.Run(ctx); err != nil {
 		s.Fatal("Failed to use camera after suspend: ", err)
 	}
 }
