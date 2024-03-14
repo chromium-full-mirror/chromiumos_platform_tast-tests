@@ -116,7 +116,7 @@ func init() {
 					BatteryDischargeMode: setup.ForceBatteryDischarge,
 				},
 				ExtraSoftwareDeps: []string{"android_vm"},
-				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge()),
+				ExtraHardwareDeps: hwdep.D(hwdep.ForceDischarge(), hwdep.HasParavirtSchedControl()),
 				Fixture:           "arcBootedWithDisableExternalStoragePvSchedEnabled",
 			},
 			{
