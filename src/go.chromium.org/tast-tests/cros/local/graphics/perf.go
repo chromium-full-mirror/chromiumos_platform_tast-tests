@@ -398,16 +398,16 @@ func collectPackagePerformanceCounters(ctx context.Context, interval time.Durati
 		outputName string
 		necessary  bool
 	}{
-		{"/sys/devices/cstate_pkg/events/c1-residency", "cstate_pkg/c1-residency/", "c1", false},
-		{"/sys/devices/cstate_pkg/events/c2-residency", "cstate_pkg/c2-residency/", "c2", false},
-		{"/sys/devices/cstate_pkg/events/c3-residency", "cstate_pkg/c3-residency/", "c3", false},
-		{"/sys/devices/cstate_pkg/events/c4-residency", "cstate_pkg/c4-residency/", "c4", false},
-		{"/sys/devices/cstate_pkg/events/c5-residency", "cstate_pkg/c5-residency/", "c5", false},
-		{"/sys/devices/cstate_pkg/events/c6-residency", "cstate_pkg/c6-residency/", "c6", false},
-		{"/sys/devices/cstate_pkg/events/c7-residency", "cstate_pkg/c7-residency/", "c7", false},
-		{"/sys/devices/cstate_pkg/events/c8-residency", "cstate_pkg/c8-residency/", "c8", false},
-		{"/sys/devices/cstate_pkg/events/c9-residency", "cstate_pkg/c9-residency/", "c9", false},
-		{"/sys/devices/cstate_pkg/events/c10-residency", "cstate_pkg/c10-residency/", "c10", false},
+		{"/sys/devices/cstate_pkg/events/c1-residency", "cstate_pkg/c1-residency/", "pc1", false},
+		{"/sys/devices/cstate_pkg/events/c2-residency", "cstate_pkg/c2-residency/", "pc2", false},
+		{"/sys/devices/cstate_pkg/events/c3-residency", "cstate_pkg/c3-residency/", "pc3", false},
+		{"/sys/devices/cstate_pkg/events/c4-residency", "cstate_pkg/c4-residency/", "pc4", false},
+		{"/sys/devices/cstate_pkg/events/c5-residency", "cstate_pkg/c5-residency/", "pc5", false},
+		{"/sys/devices/cstate_pkg/events/c6-residency", "cstate_pkg/c6-residency/", "pc6", false},
+		{"/sys/devices/cstate_pkg/events/c7-residency", "cstate_pkg/c7-residency/", "pc7", false},
+		{"/sys/devices/cstate_pkg/events/c8-residency", "cstate_pkg/c8-residency/", "pc8", false},
+		{"/sys/devices/cstate_pkg/events/c9-residency", "cstate_pkg/c9-residency/", "pc9", false},
+		{"/sys/devices/cstate_pkg/events/c10-residency", "cstate_pkg/c10-residency/", "pc10", false},
 		// TSC (Time StampCounter) is necessary to give dimension to all others.
 		{"/sys/devices/msr/events/tsc", "msr/tsc/", "tsc", true},
 	}
@@ -616,8 +616,8 @@ func MeasureGPUCounters(ctx context.Context, t time.Duration, p perfValueInterfa
 // period of time t into p. Package C-States counters report how many cycles the
 // package was in a given state, with a larger index corresponding to deeper
 // sleep states. The total elapsed cycles is available under the first CPU's TSC
-// (Time Stamp Counter) register. The "active " state, which would be c0, is the
-// remaining cycles. See e.g. https://en.wikichip.org/wiki/acpi/c-states.
+// (Time Stamp Counter) register. The "active " state, which would be pc0, is
+// the remaining cycles. See e.g. https://en.wikichip.org/wiki/acpi/c-states.
 func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p perfValueInterface) error {
 	testing.ContextLog(ctx, "Measuring Package C-State residency for ", t)
 	counters, err := collectPackagePerformanceCounters(ctx, t)
@@ -641,10 +641,10 @@ func MeasurePackageCStateCounters(ctx context.Context, t time.Duration, p perfVa
 		testing.ContextLogf(ctx, "%s: %f%%", name, cStatePercent)
 		reportMetric(name, "percent", cStatePercent, perf.BiggerIsBetter, p)
 	}
-	// The amount of cycles not in any sleep state is the active state, "c0".
-	c0Percent := 100 * float64(counters["tsc"]-accu) / float64(counters["tsc"])
-	testing.ContextLogf(ctx, "c0: %f%%", c0Percent)
-	reportMetric("c0", "percent", c0Percent, perf.SmallerIsBetter, p)
+	// The amount of cycles not in any sleep state is the active state, "pc0".
+	pc0Percent := 100 * float64(counters["tsc"]-accu) / float64(counters["tsc"])
+	testing.ContextLogf(ctx, "pc0: %f%%", pc0Percent)
+	reportMetric("pc0", "percent", pc0Percent, perf.SmallerIsBetter, p)
 
 	return nil
 }
