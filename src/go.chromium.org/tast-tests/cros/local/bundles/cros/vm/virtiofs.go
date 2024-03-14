@@ -28,8 +28,7 @@ func init() {
 		Desc:         "Tests that the crosvm virtio-fs device works correctly",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
-		// b:238260020 - disable aged (>1y) unpromoted informational tests
-		// Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{runPjdfstest},
 		Timeout:      20 * time.Minute,
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
