@@ -160,8 +160,14 @@ var (
 	SavedDevicesNoDevicesText = nodewith.NameRegex(regexp.MustCompile("^No devices saved to .*")).Role(role.StaticText)
 )
 
-// mobileButton is the finder for the Mobile Data page button UI in network page.
-var mobileButton = nodewith.Name("Mobile data").Role(role.Button)
+// WifiButton is the finder for the Wi-Fi page button UI in network page.
+var WifiButton = nodewith.Name("Wi-Fi").Role(role.Button)
+
+// MobileButton is the finder for the Mobile Data page button UI in network page.
+var MobileButton = nodewith.Name("Mobile data").Role(role.Button)
+
+// AddConnectionButton is the finder for the "add connection" button in the network page.
+var AddConnectionButton = nodewith.Name("Add network connection").Role(role.Button)
 
 // MobileDataToggle is the finder for the mobile data toggle UI in the Mobile data subpage.
 var MobileDataToggle = nodewith.NameStartingWith("Mobile data").Role(role.ToggleButton)

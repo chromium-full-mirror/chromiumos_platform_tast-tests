@@ -64,7 +64,7 @@ func OpenJoinVPNDialog(ctx context.Context, tconn *chrome.TestConn, cr *chrome.C
 	}
 
 	if err := uiauto.Combine(`open the "Join VPN network" dialog`,
-		settings.LeftClick(nodewith.Name("Add network connection").Role(role.Button)),
+		settings.LeftClick(AddConnectionButton),
 		settings.LeftClick(nodewith.NameContaining("Add built-in VPN").Role(role.Button)),
 	)(ctx); err != nil {
 		return nil, err

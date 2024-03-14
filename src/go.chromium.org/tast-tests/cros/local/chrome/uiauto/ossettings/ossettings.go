@@ -174,7 +174,7 @@ func OpenMobileDataSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chro
 
 	if err := uiauto.Combine("Go to mobile data page",
 		ui.LeftClick(networkFinder),
-		ui.LeftClick(mobileButton),
+		ui.LeftClick(MobileButton),
 	)(ctx); err != nil {
 		mobileDataLinkNode := nodewith.Name("Mobile data").Role(role.Heading)
 		if err := NetworkPage.NavigateToPageURL(ctx, cr, "networks?type=Cellular", ui.WaitUntilExists(mobileDataLinkNode)); err != nil {

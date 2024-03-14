@@ -63,7 +63,7 @@ func ToggleBluetoothFromOSSettings(ctx context.Context, s *testing.State) {
 
 	ui := uiauto.New(tconn)
 
-	if err := ui.WaitUntilExists(ossettings.OsSettingsBluetoothToggleButton)(ctx); err != nil {
+	if err := ui.WaitUntilExists(ossettings.OSSettingsBluetoothToggleButton)(ctx); err != nil {
 		s.Fatal("Failed to find the Bluetooth toggle: ", err)
 	}
 
@@ -72,7 +72,7 @@ func ToggleBluetoothFromOSSettings(ctx context.Context, s *testing.State) {
 	for i := 0; i < iterations; i++ {
 		s.Logf("Toggling Bluetooth (iteration %d of %d)", i+1, iterations)
 
-		if err := ui.LeftClick(ossettings.OsSettingsBluetoothToggleButton)(ctx); err != nil {
+		if err := ui.LeftClick(ossettings.OSSettingsBluetoothToggleButton)(ctx); err != nil {
 			s.Fatal("Failed to click the Bluetooth toggle: ", err)
 		}
 		if err := bt.PollForAdapterState(ctx, state); err != nil {

@@ -18,8 +18,8 @@ import (
 // that a user can click to navigate to the Bluetooth Settings subpage.
 var BluetoothSettingsSubpageButton = nodewith.HasClass("subpage-arrow").NameContaining("Bluetooth").Role(role.Button)
 
-// OsSettingsBluetoothToggleButton is the Bluetooth toggle on the OS Settings page.
-var OsSettingsBluetoothToggleButton = nodewith.NameContaining("Bluetooth").Role(role.ToggleButton)
+// OSSettingsBluetoothToggleButton is the Bluetooth toggle on the OS Settings page.
+var OSSettingsBluetoothToggleButton = nodewith.NameContaining("Bluetooth").Role(role.ToggleButton)
 
 // BluetoothPairNewDeviceButton is the "pair new device" button within the OS Settings and Bluetooth Settings.
 var BluetoothPairNewDeviceButton = nodewith.NameContaining("Pair new device").Role(role.Button)
