@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -511,16 +512,37 @@ func isChromeGPUCrash(filename string) (bool, error) {
 }
 
 // getGPUCrash returns gpu related crash files found in system.
-func (f *gpuWatchDogFixture) getGPUCrash() ([]string, error) {
+func (f *gpuWatchDogFixture) getGPUCrash(ctx context.Context) ([]string, error) {
 	crashFiles, err := crash.GetCrashes(crash.DefaultDirs()...)
 	if err != nil {
 		return nil, err
 	}
+
+	isGPUStateEmpty := func(filename string) bool {
+		output, err := testexec.CommandContext(ctx, "sh", "-c", "xz --robot --list "+filename).Output()
+		if err != nil {
+			// Failed to determine if it is empty, assume it is not.
+			return false
+		}
+		// Example output
+		// name    chrome.20240304.101635.28891.4909.i915_error_state.log.xz
+		// file    1       0       32      0       ---     CRC64   0
+		// totals  1       0       32      0       ---     CRC64   0       1
+		re := regexp.MustCompile(`totals\s+\d+\s+\d+\s+\d+\s+(\d+)`)
+		for _, line := range strings.Split(string(output), "\n") {
+			if match := re.FindStringSubmatch(line); match != nil && match[1] == "0" {
+				return true
+			}
+		}
+		return false
+	}
+
 	// Filter the gpu related crash.
 	var crashes []string
 	for _, file := range crashFiles {
 		isGPUCrash := false
-		if strings.HasSuffix(file, crash.GPUStateExt) {
+		// Sometimes we see crash reporter generated an empty i915_error_state file as part of chrome crash. Ignore it if it is empty.
+		if strings.HasSuffix(file, crash.GPUStateExt) && !isGPUStateEmpty(file) {
 			isGPUCrash = true
 		} else if isGPUCrash, err = isChromeGPUCrash(file); err != nil {
 			return nil, err
@@ -535,7 +557,7 @@ func (f *gpuWatchDogFixture) getGPUCrash() ([]string, error) {
 
 // checkNewCrashes checks the difference between the oldCrashes and the current crashes. It will try to save the new crash to outDir and return error if fails to retrieve current crashes or the list is mismatched.
 func (f *gpuWatchDogFixture) checkNewCrashes(ctx context.Context, oldCrashes []string, outDir string) error {
-	crashes, err := f.getGPUCrash()
+	crashes, err := f.getGPUCrash(ctx)
 	if err != nil {
 		return err
 	}
@@ -572,7 +594,7 @@ func (f *gpuWatchDogFixture) checkNewCrashes(ctx context.Context, oldCrashes []s
 func (f *gpuWatchDogFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
 	f.postFunc = nil
 	// Record PreTest crashes.
-	crashes, err := f.getGPUCrash()
+	crashes, err := f.getGPUCrash(ctx)
 	if err != nil {
 		s.Log("Failed to get gpu crashes: ", err)
 	} else {
