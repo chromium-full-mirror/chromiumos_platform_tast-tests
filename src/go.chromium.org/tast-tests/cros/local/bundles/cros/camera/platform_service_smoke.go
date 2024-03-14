@@ -25,8 +25,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational", "group:camera-libcamera", "group:cq-medium", "group:camera-stability", "group:camera-kernelnext"},
 		SoftwareDeps: []string{"arc_camera3", "chrome", caps.BuiltinCamera},
 		// TODO(b/243048705): skip the test on faulty flash. Remove the first three entries when resolved.
-		// TODO(b/323099045): skip on unstable camera (0408:a098). Remove the last entry when resolved.
-		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnCameraUSBModule("0408:3028", "0408:4021", "05c8:03f4", "0408:a098")),
+		HardwareDeps: hwdep.D(hwdep.CameraEnumerated(), hwdep.SkipOnCameraUSBModule("0408:3028", "0408:4021", "05c8:03f4")),
 		Fixture:      "chromeNotLoggedIn",
 	})
 }
