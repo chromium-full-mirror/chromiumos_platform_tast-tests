@@ -536,10 +536,7 @@ func BackupRootfsVerityHash(ctx context.Context, rootDevWithoutPart string, part
 		return 0, 0, "", errors.Errorf("failed to parse dm table for rootfs, got output: %v", string(out))
 	}
 
-	sectorSize, err := getSectorSize(ctx, kernelTable.PartitionPath)
-	if err != nil {
-		return 0, 0, "", errors.Wrap(err, "failed to get size of sectors")
-	}
+	sectorSize := int64(512)
 
 	hashStartBlock, _ := strconv.ParseInt(string(match[2]), 10, 64)
 	// Multiplying by sector size converts from block count to bytes.
@@ -743,22 +740,6 @@ func SetKernelHeaderMagic(ctx context.Context, rootDevWithoutPart, label string,
 		}
 	}
 	return nil
-}
-
-func getSectorSize(ctx context.Context, rootDevWithPart string) (int64, error) {
-	out, err := testexec.CommandContext(ctx, "fdisk", "-l", rootDevWithPart).Output(testexec.DumpLogOnError)
-	if err != nil {
-		return -1, errors.Wrapf(err, "failed to get fdisk output for disk %q", rootDevWithPart)
-	}
-
-	// Example output: "Units: sectors of 1 * 512 = 512 bytes".
-	sizePattern := regexp.MustCompile(`Units: sectors of (\d+) \* (\d+) = (\d+) bytes`)
-	match := sizePattern.FindStringSubmatch(string(out))
-	if match == nil {
-		return -1, errors.Errorf("failed to get size of sectors, got output: %v", string(out))
-	}
-
-	return strconv.ParseInt(match[3], 10, 64)
 }
 
 func forcePartitionBootable(ctx context.Context, rootDevWithPart string, priority int) error {
