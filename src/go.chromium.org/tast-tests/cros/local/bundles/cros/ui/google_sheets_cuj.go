@@ -34,20 +34,20 @@ func init() {
 			"ui.GoogleSheetsCUJ.duration",
 		},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
-		Timeout:      15 * time.Minute,
+		Timeout:      15*time.Minute + cujrecorder.CooldownTimeout,
 		Params: []testing.Param{
 			{
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUser",
+				Fixture: "loggedInToCUJUserWithoutCooldown",
 			},
 			{
 				Name: "lacros",
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture:           "loggedInToCUJUserLacros",
+				Fixture:           "loggedInToCUJUserLacrosWithoutCooldown",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 
@@ -58,7 +58,7 @@ func init() {
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserWithFieldTrials",
+				Fixture: "loggedInToCUJUserWithFieldTrialsWithoutCooldown",
 			},
 			{
 				Name:      "battery_saver",
@@ -66,7 +66,7 @@ func init() {
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserWithBatterySaver",
+				Fixture: "loggedInToCUJUserWithBatterySaverWithoutCooldown",
 			},
 		},
 	})
