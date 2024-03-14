@@ -92,9 +92,23 @@ func MTU(ctx context.Context, s *testing.State) {
 		s.Fatal("Unable to fetch IP configuration properties: ", err)
 	}
 
-	if ipProps.MTU != mtuExpected {
-		err := cellular.TagKnownBugOnModem(ctx, nil, "b/292770737", cellular.ModemFwFilterL850MR7AndLower)
-		s.Fatalf("Unexpected MTU value for service: got %v, want %v. %s", ipProps.MTU, mtuExpected, cellular.ErrorToCleanString(err))
+	const mtuDefault = 1500
+	if ipProps.MTU > mtuExpected {
+		var err error
+		if ipProps.MTU == mtuDefault {
+			err = cellular.TagKnownBugOnModem(ctx, err, "b/292770737", cellular.ModemFwFilterL850MR8AndLower)
+		}
+		s.Fatalf("Unexpected MTU value for service: got %v, want at most %v. %s", ipProps.MTU, mtuExpected, cellular.ErrorToCleanString(err))
+	} else if ipProps.MTU < mtuExpected {
+		// This may be for a number of reasons. The two most common are:
+		// * The modem hardcodes MTUs required by spec for some carriers and otherwise
+		//   ignores the network MTU and returns 1500 (this may also be a failure case
+		//   if the network MTU is lower, see above)
+		// * The kernel driver responsible for the network interface refuses to set the
+		//   MTU above 1500.
+		// Either way, if the MTU is lower than the network MTU, we won't have issues.
+		// Just log it for bookkeeping purposes.
+		testing.ContextLogf(ctx, "Service MTU %v is lower than network MTU %v", ipProps.MTU, mtuExpected)
 	}
 
 	configuredMTU, err := getConfiguredMTU(ctx, service)
