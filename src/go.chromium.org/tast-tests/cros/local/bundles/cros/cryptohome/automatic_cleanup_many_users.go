@@ -42,6 +42,7 @@ func init() {
 				"group:hardware",
 				"group:complementary",
 				"group:cryptohome",
+				"group:hw_agnostic",
 			},
 			Timeout: 3 * time.Minute,
 		}, {

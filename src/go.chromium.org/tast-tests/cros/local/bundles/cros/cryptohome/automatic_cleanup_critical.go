@@ -41,10 +41,11 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
-		SoftwareDeps: []string{"reboot", "chrome", "tpm_clear_allowed"},
+		SoftwareDeps: []string{"reboot", "chrome", "tpm_clear_allowed", "vpd"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.DeviceRunAutomaticCleanupOnLogin{}, pci.VerifiedFunctionalityOS),
 		},

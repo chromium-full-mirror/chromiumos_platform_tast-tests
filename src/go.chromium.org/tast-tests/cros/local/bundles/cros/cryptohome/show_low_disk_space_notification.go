@@ -34,6 +34,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:cryptohome",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),

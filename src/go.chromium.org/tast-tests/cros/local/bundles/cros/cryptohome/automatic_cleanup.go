@@ -32,6 +32,7 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
 		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 	})
