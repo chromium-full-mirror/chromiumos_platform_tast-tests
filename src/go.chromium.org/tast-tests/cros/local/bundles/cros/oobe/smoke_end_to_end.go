@@ -24,8 +24,9 @@ import (
 )
 
 type oobeTestArgs struct {
-	isAddPersonFlow bool
-	preprod         bool // whether to run against preprod versions of dependencies (default: false)
+	isAddPersonFlow       bool
+	preprod               bool // whether to run against preprod versions of dependencies (default: false)
+	isMetricsClientIDTest bool
 }
 
 func init() {
@@ -49,21 +50,42 @@ func init() {
 		Timeout: chrome.GAIALoginTimeout + 5*time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr: []string{"group:criticalstaging"},
-			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, isMetricsClientIDTest: false},
 		}, {
 			Name:      "add_person_flow",
 			ExtraAttr: []string{"group:criticalstaging"},
-			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false},
+			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: false, isMetricsClientIDTest: false},
 		}, {
 			ExtraAttr: []string{"group:testenv_preprod"},
 			Name:      "preprod",
-			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: true},
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: true, isMetricsClientIDTest: false},
 		}, {
 			ExtraAttr: []string{"group:testenv_preprod"},
 			Name:      "preprod_add_person_flow",
-			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: true},
+			Val:       oobeTestArgs{isAddPersonFlow: true, preprod: true, isMetricsClientIDTest: false},
+		}, {
+			ExtraAttr: []string{"group:mainline", "informational"},
+			Name:      "metrics_client_id",
+			Val:       oobeTestArgs{isAddPersonFlow: false, preprod: false, isMetricsClientIDTest: true},
 		}},
 	})
+}
+
+func getMetricsClientID(ctx context.Context, s *testing.State, oobeConn *chrome.Conn) string {
+	if err := oobeConn.Eval(ctx, "OobeAPI.requestMetricsClientID()", nil); err != nil {
+		s.Fatal("Failed to evaluate `OobeAPI.requestMetricsClientID()` method: ", err)
+	}
+
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.isMetricsClientIdAvailable()"); err != nil {
+		s.Fatal("Failed to wait for the metrics client ID to be available: ", err)
+	}
+
+	var id string
+	if err := oobeConn.Eval(ctx, "OobeAPI.getMetricsClientID()", &id); err != nil {
+		s.Fatal("Failed to evaluate `OobeAPI.getMetricsClientID()` method: ", err)
+	}
+
+	return id
 }
 
 func SmokeEndToEnd(ctx context.Context, s *testing.State) {
@@ -137,6 +159,12 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 	defer faillog.DumpUITreeOnError(cleanupCtx, s.OutDir(), s.HasError, tconn)
 
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
+
+	isMetricsClientIDTest := s.Param().(oobeTestArgs).isMetricsClientIDTest
+	var initialMetricsClientID string
+	if isMetricsClientIDTest {
+		initialMetricsClientID = getMetricsClientID(ctx, s, oobeConn)
+	}
 
 	focusedButton := nodewith.State(state.Focused, true).Role(role.Button)
 
@@ -532,6 +560,15 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 			ui.LeftClick(focusedButton),
 		)(ctx); err != nil {
 			s.Fatal("Failed to continue on the theme selection screen: ", err)
+		}
+	}
+
+	// Check that the metrics client ID did not change since the start of OOBE. This has to be done before proceeding
+	// through the last OOBE screen since the `getMetricsClientID()` method will not work if OOBE is already dismissed.
+	if isMetricsClientIDTest {
+		currentMetricsClientID := getMetricsClientID(ctx, s, oobeConn)
+		if currentMetricsClientID != initialMetricsClientID {
+			s.Fatal("Metrics client ID at the end of OOBE flow does not match the ID at the start of OOBE")
 		}
 	}
 
