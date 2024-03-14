@@ -60,10 +60,11 @@ func init() {
 			Name:              "lacros",
 			Val:               testParam{false, false, browser.TypeLacros},
 			ExtraSoftwareDeps: []string{"lacros"},
-		}, {
-			Name:              "shortcut_lacros",
-			Val:               testParam{true, false, browser.TypeLacros},
-			ExtraSoftwareDeps: []string{"lacros"},
+			// Disabled by TORA.  See: b/312845426
+			//}, {
+			//	Name:              "shortcut_lacros",
+			//	Val:               testParam{true, false, browser.TypeLacros},
+			//	ExtraSoftwareDeps: []string{"lacros"},
 		}, {
 			Name:              "check_crashes_lacros",
 			Val:               testParam{false, true, browser.TypeLacros},
