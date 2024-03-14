@@ -27,7 +27,6 @@ func init() {
 		Contacts: []string{
 			"chromeos-apps-foundation-team@google.com",
 			"lacros-team@google.com",
-			"mxcai@google.com",
 		},
 		BugComponent: "b:1389084",
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},

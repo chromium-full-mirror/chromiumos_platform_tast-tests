@@ -194,7 +194,7 @@ func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:     "lacrosKeepAlive",
 		Desc:     "Lacros Chrome with KeepAlive enabled",
-		Contacts: []string{"mxcai@chromium.org", "hidehiko@chromium.org"},
+		Contacts: []string{"hidehiko@chromium.org"},
 		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 			return NewConfig(KeepAlive(true)).Opts()
 		}),
