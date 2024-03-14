@@ -207,7 +207,7 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	if imageVer.Less(rw) {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
 
-		debugImageURL, err := findCr50DebugImage(ctx, testbedProperties)
+		debugImageURL, err := findGSCDebugImage(ctx, testbedProperties, "cr50")
 		if err != nil {
 			s.Fatal("find cr50 debug image failed: ", err)
 		}

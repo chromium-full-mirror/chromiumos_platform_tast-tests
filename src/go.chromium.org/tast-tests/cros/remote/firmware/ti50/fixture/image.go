@@ -66,10 +66,21 @@ const (
 	postSubmitArtifactsBuilder        = "chromeos-image-archive/firmware-ti50-postsubmit"
 
 	// Cr50QualBranch is the latest qual candidate for Cr50
-	Cr50QualBranch         string = "cr50qual"
-	cr50LatestQualFile            = "chromeos-localmirror-private/distfiles/chromeos-cr50-QUAL_VERSION"
-	cr50QualFolder                = "chromeos-localmirror-private/distfiles/cr50"
-	cr50DebugImageTemplate        = "gs://chromeos-localmirror-private/distfiles/chromeos-cr50-debug-0.0.11/h1_shield/cr50.dbg.0x%s_0x%s.bin.*"
+	Cr50QualBranch string = "cr50qual"
+
+	// Remote image paths
+	cr50LatestQualFile = "chromeos-localmirror-private/distfiles/chromeos-cr50-QUAL_VERSION"
+	debugImageTemplate = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/*_shield/*.dbg.0x%s_0x%s.bin.*"
+	efiImageTemplate   = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/*_shield/*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
+	qualPrivateBucket  = "chromeos-localmirror-private/distfiles/"
+	qualBucket         = "chromeos-localmirror/distfiles/"
+
+	// GSC filenames
+	cr50Release          = "cr50.r0.0.*.w%s.tbz2"
+	cr50BIDLockedRelease = "cr50.r0.0.*.w%s_%s_%s_%s.tbz2"
+	// Ti50 changed formats. This works with old and new versions.
+	ti50Release          = "ti50.r*w*%s.tar.xz"
+	ti50BIDLockedRelease = "ti50.r*w*%s_%s_%s_%s.tar.xz"
 
 	imageDownloadTimeout = 30 * time.Second
 	imageDeleteTimeout   = 5 * time.Second
@@ -92,7 +103,9 @@ var (
 	defaultFwConfigs = []string{"cr50_h1.json", "ti50_dt.json", "ti50_he.json", "ti50_ot.json"}
 
 	// reQualVersion extracts relevant contents of qual files.
-	reQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):0x(.*)`)
+	reQualVersion = regexp.MustCompile(`(.*)`)
+	// reBIDLockedQualVersion extracts relevant contents of qual files.
+	reBIDLockedQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):0x(.*)`)
 
 	// reTestbedTypeParts extracts relevant parts of the testbed type string.
 	reTestbedTypeParts = regexp.MustCompile(`gsc_([[:alnum:]]*)`)
@@ -337,33 +350,89 @@ func downloadToTempFile(ctx context.Context, desc, url string) (string, error) {
 }
 
 // qualVersionToGsGlob converts contents of qual file to a glob expression of its .tbz2 file.
-func qualVersionToGsGlob(qualVersion, prefix string) (string, error) {
-	m := reQualVersion.FindStringSubmatch(qualVersion)
-	if m == nil {
-		return "", errors.New("qual version not recognized: " + qualVersion)
+func qualVersionToGsGlob(qualVersion, fwName string) (string, error) {
+	releaseFormat := cr50Release
+	releaseBIDLockedFormat := cr50BIDLockedRelease
+	if fwName == "ti50" {
+		releaseFormat = ti50Release
+		releaseBIDLockedFormat = ti50BIDLockedRelease
 	}
-	return prefix + ".*.w" + m[1] + "_" + m[2] + "_" + m[3] + "_" + m[4] + ".tbz2", nil
+	m := reBIDLockedQualVersion.FindStringSubmatch(qualVersion)
+	if m == nil {
+		m = reQualVersion.FindStringSubmatch(qualVersion)
+		if m == nil {
+			return "", errors.New("qual version not recognized: " + qualVersion)
+		}
+		return fmt.Sprintf(releaseFormat, m[1]), nil
+	}
+	return fmt.Sprintf(releaseBIDLockedFormat, m[1], m[2], m[3], m[4]), nil
 }
 
 // findGSCImage finds the image with the given gsTemplate.
 func findGSCImage(ctx context.Context, gsTemplate string) (string, error) {
 	gsURL, err := gsLs(ctx, "list gsc images", gsTemplate)
 	if err != nil || len(gsURL) != 1 {
-		return "", errors.New("find gsc image")
+		return "", errors.Errorf("failed to find GSC image: %s", gsTemplate)
 	}
 
 	return gsURL[0], nil
 }
 
-// findCr50DebugImage finds the debug image for cr50 board.
-func findCr50DebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties) (string, error) {
+// findGSCDebugImage finds the debug image for cr50 board.
+func findGSCDebugImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, fwName string) (string, error) {
 	devIds := strings.Split(testbedProperties.UsbSerial, "-")
 	if len(devIds) != 2 {
 		return "", errors.New("usb_serial parse error " + testbedProperties.UsbSerial)
 	}
 
-	debugImageGlob := fmt.Sprintf(cr50DebugImageTemplate, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
+	debugImageGlob := fmt.Sprintf(debugImageTemplate, fwName, strings.ToLower(devIds[0]), strings.ToLower(devIds[1]))
 	return findGSCImage(ctx, debugImageGlob)
+}
+
+// findGSCEFIImage finds the eraseflashinfo image for cr50 board.
+func findGSCEFIImage(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, fwName string) (string, error) {
+	efiDevidStr := strings.ToLower(testbedProperties.UsbSerial)
+	efiImageGlob := fmt.Sprintf(efiImageTemplate, fwName, efiDevidStr)
+	return findGSCImage(ctx, efiImageGlob)
+}
+
+// DownloadGSCTestImages finds the debug and eraseflashinfo images for gsc board.
+func DownloadGSCTestImages(ctx context.Context, testbedProperties remoteTi50.TestbedProperties, fwName string) (string, string, error) {
+	// Download the debug image.
+	debugImageURL, err := findGSCDebugImage(ctx, testbedProperties, fwName)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to find gsc debug image")
+	}
+	debugImage, err := downloadToTempFile(ctx, "debug image", debugImageURL)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to download the debug image")
+	}
+
+	// Download the eraseflashinfo image.
+	efiImageURL, err := findGSCEFIImage(ctx, testbedProperties, fwName)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to find gsc efi image")
+	}
+	efiImage, err := downloadToTempFile(ctx, "efi image", efiImageURL)
+	if err != nil {
+		return "", "", errors.Wrap(err, "failed to download the efi image")
+	}
+	return debugImage, efiImage, nil
+}
+
+// LookupGSCReleaseTarball downloads the image binary indicated by the version.
+func LookupGSCReleaseTarball(ctx context.Context, version, fwName string) (string, error) {
+	pat, err := qualVersionToGsGlob(version, fwName)
+	if err != nil {
+		return "", err
+	}
+	// Check for the image in the public bucket first.
+	gsURL, err := findGSCImage(ctx, gsPrefix+qualBucket+pat)
+	if err == nil {
+		return gsURL, err
+	}
+	// Check for the image in the private bucket, if it's not found in the public one.
+	return findGSCImage(ctx, gsPrefix+qualPrivateBucket+fwName+"/"+pat)
 }
 
 // lookupLatestCr50QualTbz2 downloads the image binary indicated in the qual file.
@@ -372,32 +441,33 @@ func lookupLatestCr50QualTbz2(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	pat, err := qualVersionToGsGlob(v, "cr50")
-	if err != nil {
-		return "", err
-	}
-	return findGSCImage(ctx, gsPrefix+cr50QualFolder+"/"+pat)
+	return LookupGSCReleaseTarball(ctx, v, "cr50")
 }
 
-// extractCr50QualImageFromTbz2 extracts the image binary from bz2 archive.
-func extractCr50QualImageFromTbz2(ctx context.Context, tbz2 string) (string, error) {
-	// extract qual image tbz2
-	d, err := os.MkdirTemp("", "cr50qual")
+// ExtractGSCQualImage extracts the image binary from the release archive.
+func ExtractGSCQualImage(ctx context.Context, tarball, fwName string) (string, error) {
+	// extract qual image
+	d, err := os.MkdirTemp("", fwName+"qual")
 	if err != nil {
-		return "", errors.Wrap(err, "create temp file for cr50 qual image")
+		return "", errors.Wrap(err, "create temp file for gsc qual image")
 	}
-	//tar -jxvf cr50.r0.0.12.w0.6.210_FFFF_00000000_00000010.tbz2 -C ./asdf
-	if _, err := cmd(ctx, "extract qual image", "tar", "-jxvf", tbz2, "-C", d); err != nil {
+	//tar -xf cr50.r0.0.12.w0.6.210_FFFF_00000000_00000010.tbz2 -C ./asdf
+	if _, err := cmd(ctx, "extract qual image", "tar", "-xf", tarball, "-C", d); err != nil {
 		return "", err
 	}
 
 	// check bin was extracted
-	bin, err := cmd(ctx, "find extracted cr50.bin.prod", "find", d, "-name", "cr50.bin.prod")
+	name := fwName + ".bin.prod"
+	bin, err := cmd(ctx, "find extracted "+name, "find", d, "-name", name)
 	if err != nil {
 		return "", err
 	}
 	return strings.TrimSpace(bin), nil
+}
+
+// extractCr50QualImageFromTbz2 extracts the image binary from bz2 archive.
+func extractCr50QualImageFromTbz2(ctx context.Context, tbz2 string) (string, error) {
+	return ExtractGSCQualImage(ctx, tbz2, "cr50")
 }
 
 // cmd runs cmd and returns the output.  Desc is used for logging and error description.
