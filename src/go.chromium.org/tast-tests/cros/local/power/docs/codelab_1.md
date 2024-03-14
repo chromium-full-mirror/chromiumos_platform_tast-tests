@@ -153,6 +153,24 @@ for the following reasons:
 		s.Fatal("Cannot start collecting power metrics: ", err)
 	}
 ```
+### Collect a specific subset of power metrics
+
+You can collect a specific subset of power metrics by calling the Recorder method `UseMetrics(classes ...metrics.MetricClass)` after creating a NewRecorder. Available metric class flags can be found here: [metrics.go]
+
+```
+	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
+	defer r.Close(cleanupCtx)
+
+	if err := r.UseMetrics(ctx, metrics.MetricClass{Class: metrics.RAPLPowerClass}, metrics.MetricClassFlag{Class: metrics.MemoryClass}, ... ); err != nil {
+		s.Fatal("Failed to override metrics: ", err)
+	}
+
+	// Continue with Cooldown, Start
+```
+
+
+
+[metrics.go]: https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/power/metrics/metrics.go
 
 ## Run the test workload
 

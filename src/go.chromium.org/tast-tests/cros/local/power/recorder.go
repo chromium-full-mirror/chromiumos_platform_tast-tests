@@ -289,10 +289,19 @@ func NewRecorder(ctx context.Context, interval time.Duration, outDir, testName s
 		outDir:       outDir,
 		testName:     testName,
 		optionalArgs: args,
-
-		dataSources: metrics.TestMetrics(),
-		isRecording: false,
+		dataSources:  metrics.TestMetrics(),
+		isRecording:  false,
 	}
+}
+
+// UseMetrics will rewrite recorder datasources
+// to use only metrics specified by each metric class flag.
+func (r *Recorder) UseMetrics(ctx context.Context, classes ...metrics.MetricClass) error {
+	if len(classes) == 0 {
+		return errors.New("no metric class flags were passed")
+	}
+	r.dataSources = metrics.TestMetrics(classes...)
+	return nil
 }
 
 // SaveScreenshot takes a screenshot and saves to test output.
