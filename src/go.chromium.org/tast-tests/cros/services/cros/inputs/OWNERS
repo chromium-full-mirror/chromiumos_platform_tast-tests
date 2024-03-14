@@ -1,0 +1,7 @@
+set noparent
+
+per-file stylus_evtest_capture_service.pb.go=file:chromiumos/owners:v1:/platform/OWNERS.p12s
+per-file stylus_evtest_capture_service.proto=file:chromiumos/owners:v1:/platform/OWNERS.p12s
+
+# Tast team for bulk/emergencies
+include /OWNERS.tast
