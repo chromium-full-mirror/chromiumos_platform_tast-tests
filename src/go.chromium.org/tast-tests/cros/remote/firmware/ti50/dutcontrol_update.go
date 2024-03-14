@@ -25,7 +25,7 @@ func (b *DUTControlAndreiboard) DirectUpdate(ctx context.Context, i *common.CrOS
 		return errors.Errorf("imageVer a and b differ: %s != %s", imageVer, rwb)
 	}
 
-	if err := b.UpdateOnce(ctx, imagePath, imageVer); err != nil {
+	if err := b.UpdateOnce(ctx, i, imagePath, imageVer); err != nil {
 		return errors.Wrap(err, "update slot 1")
 	}
 
@@ -33,42 +33,25 @@ func (b *DUTControlAndreiboard) DirectUpdate(ctx context.Context, i *common.CrOS
 }
 
 // Rollback performs rollback by flashing to debug image, then running rollback command on the debug image.
-func (b *DUTControlAndreiboard) Rollback(ctx context.Context, i *common.CrOSImage) error {
+func (b *DUTControlAndreiboard) Rollback(ctx context.Context, i *common.CrOSImage, imageVer GSCVersion) error {
 	if err := i.WaitUntilBooted(ctx); err != nil {
 		return errors.Wrap(err, "wait for debug image to boot")
 	}
 
-	consoleVer, err := i.GetVersionInfo(ctx)
-	if err != nil {
-		return errors.Wrap(err, "get version from gsc console")
-	}
-
-	if consoleVer.RwA.Active == consoleVer.RwB.Active {
-		return errors.Errorf("slot A and B are similarly active: %v", consoleVer.RwA)
-	}
-
-	var inactiveVer common.RwInfo
-	if !consoleVer.RwA.Active {
-		inactiveVer = consoleVer.RwA
-	} else {
-		inactiveVer = consoleVer.RwB
-	}
-
-	if _, err = i.Command(ctx, "rollback"); err != nil {
+	if _, err := i.Command(ctx, "rollback"); err != nil {
 		return errors.Wrap(err, "rollback")
 	}
 
-	if err = b.GSCToolWaitUntilReady(ctx); err != nil {
+	if err := b.GSCToolWaitUntilReady(ctx); err != nil {
 		return errors.Wrap(err, "wait until gsc ready after rollback")
 	}
 
-	_, rw, err := b.GSCToolCurrentFwVersion(ctx)
+	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), false, false)
 	if err != nil {
-		return errors.Wrap(err, "get current fwver after rollback")
+		return errors.Wrap(err, "failed to get current fwver after rollback")
 	}
-
-	if rw.String() != inactiveVer.Version {
-		return errors.Errorf("Version after rollback not correct, got %s, want %s", rw.String(), inactiveVer.Version)
+	if !matched {
+		return errors.Wrap(err, "image not running after rollback")
 	}
 
 	return nil
@@ -87,16 +70,27 @@ func (b *DUTControlAndreiboard) RollbackUpdate(ctx context.Context, i *common.Cr
 		return err
 	}
 
-	if err = b.UpdateOnce(ctx, debugImage, debugVer); err != nil {
-		return errors.Wrap(err, "update to debug image")
+	// Update to the debug image if it's not running or if there's an error getting the version.
+	matched, err := i.CheckRunningVersion(ctx, imageVer.String(), false, true)
+	if err != nil || !matched {
+		if err != nil {
+			testing.ContextLogf(ctx, "Failed to get version: %s", err)
+		}
+		if err = b.UpdateOnce(ctx, i, debugImage, debugVer); err != nil {
+			return errors.Wrap(err, "failed to update to debug image")
+		}
 	}
 
-	if err = b.GSCToolUpdate(ctx, imagePath); err != nil {
-		return errors.Wrap(err, "update inactive 1 to image")
+	if err = b.GSCToolUpdate(ctx, i, imagePath); err != nil {
+		return errors.Wrap(err, "failed to update inactive 1 to image")
 	}
 
-	if err = b.Rollback(ctx, i); err != nil {
-		return errors.Wrap(err, "rollback")
+	if err = b.GSCToolWaitUntilReady(ctx); err != nil {
+		return errors.Wrap(err, "failed wait until gsc ready after image update")
+	}
+
+	if err = b.Rollback(ctx, i, imageVer); err != nil {
+		return errors.Wrapf(err, "failed to rollback to %s", imageVer.String())
 	}
 	return b.FlashDuplicateImage(ctx, i, imagePath, imageVer)
 }
@@ -108,7 +102,7 @@ func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, i *comm
 	// GoBigSleepLint sleeping for known required period of time.
 	testing.Sleep(ctx, 61*time.Second)
 
-	if err := b.UpdateOnce(ctx, imagePath, imageVer); err != nil {
+	if err := b.UpdateOnce(ctx, i, imagePath, imageVer); err != nil {
 		return errors.Wrap(err, "update inactive 2 to image")
 	}
 
@@ -119,8 +113,8 @@ func (b *DUTControlAndreiboard) FlashDuplicateImage(ctx context.Context, i *comm
 }
 
 // UpdateOnce updates and checks the version using gsctool.
-func (b *DUTControlAndreiboard) UpdateOnce(ctx context.Context, imagePath string, wantVer GSCVersion) error {
-	if err := b.GSCToolUpdate(ctx, imagePath); err != nil {
+func (b *DUTControlAndreiboard) UpdateOnce(ctx context.Context, i *common.CrOSImage, imagePath string, wantVer GSCVersion) error {
+	if err := b.GSCToolUpdate(ctx, i, imagePath); err != nil {
 		return errors.Wrap(err, "image update")
 	}
 

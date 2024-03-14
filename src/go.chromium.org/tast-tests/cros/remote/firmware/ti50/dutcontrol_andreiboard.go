@@ -261,10 +261,10 @@ func (a *DUTControlAndreiboard) GSCToolWaitUntilReady(ctx context.Context, timeo
 }
 
 // GSCToolUpdate uses gsctool to update the image.
-func (a *DUTControlAndreiboard) GSCToolUpdate(ctx context.Context, imagePath string) error {
+func (a *DUTControlAndreiboard) GSCToolUpdate(ctx context.Context, i *common.CrOSImage, imagePath string) error {
 	out, err := a.GSCToolCommand(ctx, imagePath)
 	if reGsctoolUpdateSuccess.Match(out) {
-		return nil
+		return i.WaitUntilBooted(ctx)
 	}
 	return errors.Wrap(err, "gsctool update")
 }
