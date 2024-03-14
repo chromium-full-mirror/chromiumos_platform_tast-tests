@@ -931,6 +931,27 @@ func init() {
 		Vars:            []string{"ui.cujAccountPool"},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithFieldTrialsWithoutCooldown",
+		Desc: "CUJ fixture with all field trials enabled without CPU cooldown",
+		Contacts: []string{
+			"ramsaroop@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.ExtraArgs("--enable-field-trial-config"),
+			},
+			bt: browser.TypeAsh,
+		},
+		Parent:          "prepareForCUJWithoutCooldown",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+
+	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithBatterySaverParent",
 		Desc: "CUJ test fixture with battery saver without Android",
 		Contacts: []string{
