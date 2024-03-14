@@ -67,10 +67,17 @@ func ECADC(ctx context.Context, s *testing.State) {
 	}()
 
 	s.Logf("Reading EC temperature sensors for %d iterations", readCount)
-	for i := 1; i <= readCount; i++ {
-		ecTemperatureOut, err := h.Servo.RunECCommandGetOutput(ctx, "temps", []string{`.*(>|~\$)`})
+	extraTries := 0
+	for i := 1; i <= readCount+extraTries; i++ {
+		ecTemperatureOut, err := h.Servo.RunECCommandGetOutput(ctx, "temps", []string{`temps\r?\n.*(>|~\$)`})
 		if err != nil {
-			s.Error("Failed to read EC temperature sensors: ", err)
+			// Ignore up to 20 regex failures, but after that start failing.
+			if extraTries > 20 {
+				s.Error("Failed to read EC temperature sensors: ", err)
+			} else {
+				extraTries++
+				s.Log("Failed to read EC temperature sensors, retrying: ", err)
+			}
 			continue
 		}
 		ecTempsParsed, err := parseTempsOutput(ctx, ecTemperatureOut[0][0])
