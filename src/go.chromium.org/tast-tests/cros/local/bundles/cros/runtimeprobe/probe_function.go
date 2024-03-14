@@ -95,7 +95,7 @@ func probe(ctx context.Context, request *rppb.ProbeRequest) (*rppb.ProbeResult, 
 // is not found or is an invalid JSON string, this function returns an
 // error.
 func hostInfoLabels(s *testing.State) ([]string, error) {
-	labelsStr, ok := s.Var("autotest_host_info_labels")
+	labelsStr, ok := s.Var("autotesthostinfolabels")
 	if !ok {
 		return nil, errors.New("no labels")
 	}
@@ -299,7 +299,7 @@ func init() {
 		BugComponent: "b:606088",
 		Attr:         []string{"group:racc", "racc_config_installed"},
 		SoftwareDeps: []string{"racc"},
-		VarDeps:      []string{"autotest_host_info_labels"},
+		VarDeps:      []string{"autotesthostinfolabels"},
 		Params: []testing.Param{
 			{
 				Name:              "battery",
