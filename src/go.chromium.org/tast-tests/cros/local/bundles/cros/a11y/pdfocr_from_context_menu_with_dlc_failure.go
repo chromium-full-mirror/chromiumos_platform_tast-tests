@@ -32,9 +32,7 @@ func init() {
 			"kyungjunlee@google.com",      // Test author
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
-		// TODO(b/309545302): add back `[]string{"group:mainline", "informational"}`
-		// to `Attr` to re-enable this test.
-		Attr:         []string{},
+		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{pdfocr.TestPDFName}, // Testing PDF containing inaccessible text
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      6 * time.Minute,
@@ -149,6 +147,7 @@ func PDFOCRFromContextMenuWithDlcFailure(ctx context.Context, s *testing.State) 
 				status := nodewith.Name(pdfocr.StatusReadyMessage).Role(role.Status)
 				ocredText := nodewith.Name(pdfocr.TextInPDFImage).Role(role.StaticText)
 				if err := uiauto.Combine("Check OCR result",
+					ui.WithTimeout(30*time.Second).WaitUntilExists(pdfRoot),
 					ui.WithTimeout(30*time.Second).WaitUntilExists(status),
 					ui.WithTimeout(30*time.Second).WaitUntilExists(ocredText),
 				)(ctx); err != nil {

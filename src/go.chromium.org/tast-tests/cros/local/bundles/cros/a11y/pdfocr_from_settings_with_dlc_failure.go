@@ -33,9 +33,7 @@ func init() {
 			"kyungjunlee@google.com",      // Test author
 		},
 		BugComponent: "b:1272894", // ChromeOS Public Tracker > Experiences > Accessibility > Machine Intelligence
-		// TODO(b/309545302): add back `[]string{"group:mainline", "informational"}`
-		// to `Attr` to re-enable this test.
-		Attr:         []string{},
+		Attr:         []string{"group:mainline", "informational"},
 		Data:         []string{pdfocr.TestPDFName}, // Testing PDF containing inaccessible text
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,

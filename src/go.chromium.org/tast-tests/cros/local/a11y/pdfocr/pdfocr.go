@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/dlc"
+	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/fsutil"
@@ -110,6 +111,19 @@ type TestStep struct {
 // DlcFailureSetUpData for more information.
 func SetUpDlcFailure(ctx context.Context) (DlcFailureSetUpData, error) {
 	setupData := DlcFailureSetUpData{"", &a11y.TearDownHelper{}}
+
+	// Turn off WiFi; otherwise, the screen-ai dlc may be downloaded from Omaha.
+	wifiManager, err := shill.NewWifiManager(ctx, nil)
+	if err != nil {
+		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to create shill Wi-Fi manager")
+	}
+	if err := wifiManager.Enable(ctx, false); err != nil {
+		return DlcFailureSetUpData{}, errors.Wrap(err, "failed to disable Wi-Fi")
+	}
+
+	if err := dlc.Purge(ctx, ScreenAiDlcID); err != nil {
+		return DlcFailureSetUpData{}, errors.Wrapf(err, "failed to purge dlc %q", ScreenAiDlcID)
+	}
 
 	if err := upstart.StopJob(ctx, dlc.JobName); err != nil {
 		return DlcFailureSetUpData{}, errors.Wrapf(err, "failed to stop %q", dlc.JobName)
@@ -223,11 +237,20 @@ func SetUpHTTPServer(ctx, cleanupCtx context.Context, dataFS http.FileSystem, bt
 // TurnOnFromContextMenu turns on PDF OCR from the Context menu in PDF Viewer.
 func TurnOnFromContextMenu(ctx context.Context, ui *uiauto.Context, pdfRoot *nodewith.Finder) error {
 	pdfOCRMenuEntry := nodewith.Name(ContextMenuName).Role(role.MenuItemCheckBox)
-	if err := uiauto.Combine("Turn on PDF OCR from the Context Menu",
-		ui.WithTimeout(5*time.Second).RightClick(pdfRoot),
+	// In the scenario of DLC failure, it sometimes need to retry turning on PDF
+	// OCR from the Context Menu after recovering the DLC failure.
+	if err := uiauto.Retry(3, uiauto.NamedCombine("Turn on PDF OCR from the Context Menu",
+		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfRoot),
+		ui.RightClick(pdfRoot),
 		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfOCRMenuEntry),
-		ui.WithTimeout(5*time.Second).LeftClick(pdfOCRMenuEntry),
-	)(ctx); err != nil {
+		ui.LeftClick(pdfOCRMenuEntry),
+		// Need to wait for pdfRoot again as turning on PDF OCR re-creates a PDF a11y tree.
+		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfRoot),
+		ui.RightClick(pdfRoot),
+		ui.WithTimeout(5*time.Second).WaitUntilExists(pdfOCRMenuEntry),
+		ui.WithTimeout(5*time.Second).WaitUntilCheckedState(pdfOCRMenuEntry, true),
+		ui.LeftClick(pdfRoot),
+	))(ctx); err != nil {
 		return errors.Wrap(err, "failed to turn on PDF OCR from the Context Menu")
 	}
 
