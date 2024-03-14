@@ -847,7 +847,8 @@ func MeasureSteadyStateSystemPowerConsumption(ctx context.Context, c *chrome.Tes
 type ProcessType int
 
 const (
-	GPUProcess      ProcessType = iota // GPU process (lacros- or ash-)
+	GPUProcess   ProcessType = iota // GPU process (lacros- or ash-)
+	VideoProcess                    // Utility Video process.
 )
 
 // MeasureFdCount counts the average and peak number of open FDs by the
@@ -857,8 +858,13 @@ func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.
 	testing.ContextLog(ctx, "Measuring open file descriptors for ", duration)
 	var processes []*process.Process
 	var err error
+	var processName string
 	if processType == GPUProcess {
 		processes, err = chromeproc.GetGPUProcesses()
+		processName = "GPU"
+	} else if processType == VideoProcess {
+		processes, err = chromeproc.GetUtilityProcesses()
+		processName = "Video"
 	}
 	if err != nil {
 		return errors.Wrap(err, "failed to get gpu process")
@@ -873,7 +879,18 @@ func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.
 		for _, process := range processes {
 			numFds, err := process.NumFDsWithContext(ctx)
 			if err != nil {
-				return errors.Wrap(err, "failed to get fds for process")
+				// Sometimes, specially for ephemeral Utility processes, the |process|
+				// /proc/ entry disappears before calling NumFDsWithContext(). That's
+				// not an error and we should just skip that |process|.
+				continue
+			}
+			cmdLine, err := process.CmdlineWithContext(ctx)
+			if err != nil {
+				continue
+			}
+			// Skip all Utility processes except the Video one.
+			if processType == VideoProcess && !strings.Contains(cmdLine, "StableVideoDecoder") {
+				continue
 			}
 			fdCount += numFds
 		}
@@ -890,8 +907,11 @@ func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.
 		return errors.New("Still polling the open FDs")
 	}, &testing.PollOptions{Timeout: duration, Interval: time.Second})
 
-	reportMetric("peakOpenFds", "count", float64(peakFds), perf.SmallerIsBetter, p)
-	reportMetric("averageOpenFds", "count", float64(totalFds)/float64(iterations), perf.SmallerIsBetter, p)
+	testing.ContextLogf(ctx, "openFDsAverage%s %f", processName, float64(totalFds)/float64(iterations))
+	testing.ContextLogf(ctx, "openFDsPeak%s %d", processName, peakFds)
+
+	reportMetric("openFDsPeak"+processName, "count", float64(peakFds), perf.SmallerIsBetter, p)
+	reportMetric("openFDsAverage"+processName, "count", float64(totalFds)/float64(iterations), perf.SmallerIsBetter, p)
 	return nil
 }
 

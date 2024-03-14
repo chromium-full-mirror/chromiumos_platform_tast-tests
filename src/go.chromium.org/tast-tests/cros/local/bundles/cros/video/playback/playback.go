@@ -410,9 +410,9 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 	measurementDuration := params.duration
 
 	var roughness float64
-	var gpuErr, i915IRQErr, cStateErr, cpuErr, fdErr, wakeupErr, dramErr, batErr, roughnessErr error
+	var gpuErr, i915IRQErr, cStateErr, cpuErr, fdVideoErr, fdGPUErr, wakeupErr, dramErr, batErr, roughnessErr error
 	var wg sync.WaitGroup
-	wg.Add(8)
+	wg.Add(9)
 	go func() {
 		defer wg.Done()
 		gpuErr = graphics.MeasureGPUCounters(ctx, measurementDuration, p)
@@ -431,7 +431,11 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 	}()
 	go func() {
 		defer wg.Done()
-		fdErr = graphics.MeasureFdCount(ctx, graphics.GPUProcess, measurementDuration, p)
+		fdGPUErr = graphics.MeasureFdCount(ctx, graphics.GPUProcess, measurementDuration, p)
+	}()
+	go func() {
+		defer wg.Done()
+		fdVideoErr = graphics.MeasureFdCount(ctx, graphics.VideoProcess, measurementDuration, p)
 	}()
 	go func() {
 		defer wg.Done()
@@ -485,8 +489,11 @@ func measurePerformance(ctx context.Context, params measureParams) error {
 	if cpuErr != nil {
 		return errors.Wrap(cpuErr, "failed to measure CPU/Package power")
 	}
-	if fdErr != nil {
-		return errors.Wrap(fdErr, "failed to measure open FD count")
+	if fdGPUErr != nil {
+		return errors.Wrap(fdGPUErr, "failed to measure open FD count in the GPU process")
+	}
+	if fdVideoErr != nil {
+		return errors.Wrap(fdVideoErr, "failed to measure open FD count in the Video process")
 	}
 	if wakeupErr != nil {
 		return errors.Wrap(wakeupErr, "failed to measure unnecessary wakeups of ThreadPool")
