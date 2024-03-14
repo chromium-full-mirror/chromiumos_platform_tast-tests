@@ -858,13 +858,14 @@ func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.
 	testing.ContextLog(ctx, "Measuring open file descriptors for ", duration)
 	var processes []*process.Process
 	var err error
-	var processName string
+
+	var metric perf.Metric
 	if processType == GPUProcess {
 		processes, err = chromeproc.GetGPUProcesses()
-		processName = "GPU"
+		metric = perf.Metric{Name: "openFDsGPU", Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}
 	} else if processType == VideoProcess {
 		processes, err = chromeproc.GetUtilityProcesses()
-		processName = "Video"
+		metric = perf.Metric{Name: "openFDsVideo", Unit: "count", Direction: perf.SmallerIsBetter, Multiple: true}
 	}
 	if err != nil {
 		return errors.Wrap(err, "failed to get gpu process")
@@ -873,9 +874,10 @@ func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.
 		return errors.New("no processes found")
 	}
 
-	var peakFds, totalFds, iterations int32
+	var peakFds, iterations int32
+	var totalFds float64
 	_ = testing.Poll(ctx, func(ctx context.Context) error {
-		var fdCount int32
+		var fdCount float64
 		for _, process := range processes {
 			numFds, err := process.NumFDsWithContext(ctx)
 			if err != nil {
@@ -892,14 +894,13 @@ func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.
 			if processType == VideoProcess && !strings.Contains(cmdLine, "StableVideoDecoder") {
 				continue
 			}
-			fdCount += numFds
-		}
+			p.Append(metric, float64(numFds))
+			fdCount += float64(numFds)
 
-		if fdCount > peakFds {
-			peakFds = fdCount
+			if numFds > peakFds {
+				peakFds = numFds
+			}
 		}
-		// TODO(b/215719663) Consider adding safeguards or switching to rolling
-		// average to make sure |totalFds| doesn't hit integer overflow.
 		totalFds += fdCount
 		iterations++
 		// Always return an error. We let the timeout handle the duration for which
@@ -907,11 +908,7 @@ func MeasureFdCount(ctx context.Context, processType ProcessType, duration time.
 		return errors.New("Still polling the open FDs")
 	}, &testing.PollOptions{Timeout: duration, Interval: time.Second})
 
-	testing.ContextLogf(ctx, "openFDsAverage%s %f", processName, float64(totalFds)/float64(iterations))
-	testing.ContextLogf(ctx, "openFDsPeak%s %d", processName, peakFds)
-
-	reportMetric("openFDsPeak"+processName, "count", float64(peakFds), perf.SmallerIsBetter, p)
-	reportMetric("openFDsAverage"+processName, "count", float64(totalFds)/float64(iterations), perf.SmallerIsBetter, p)
+	testing.ContextLogf(ctx, "%s, average: %f, peak: %d", metric.Name, totalFds/float64(iterations), peakFds)
 	return nil
 }
 
