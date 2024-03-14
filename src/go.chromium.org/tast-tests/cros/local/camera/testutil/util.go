@@ -11,6 +11,8 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -276,4 +278,44 @@ func GetUsbCameraVersion(ctx context.Context, device string) (UsbCameraVersion, 
 	}
 	fw.BcdDevice = strings.TrimSuffix(string(out), "\n")
 	return fw, nil
+}
+
+// Resolution is the dimensions of a camera stream.
+type Resolution struct {
+	Width  int
+	Height int
+}
+
+// GetMaxCameraResolution returns the maximum output resolution of the cameras on the device.
+func GetMaxCameraResolution(ctx context.Context) (Resolution, error) {
+	result := Resolution{Width: 0, Height: 0}
+	cmd := testexec.CommandContext(ctx, "cros_camera_connector_test", "--gtest_filter=ConnectorTest.GetInfo")
+	out, err := cmd.CombinedOutput(testexec.DumpLogOnError)
+	if err != nil {
+		return result, errors.Wrap(err, "failed to run cros_camera_connector_test")
+	}
+	// Parse output logs in the form
+	// ... DumpCameraInfo(): Format  0: MJPG 1920x1080  30fps
+	// ... DumpCameraInfo(): Format  1: NV12 1920x1080  30fps
+	// ... DumpCameraInfo(): Format  2: MJPG 1280x 960  30fps
+	// TODO(kamesan): Consider making the test output json formatted data.
+	re := regexp.MustCompile(`DumpCameraInfo\(\): Format\s+\d+:\s+\w+\s+(\d+)x\s*(\d+)`)
+	matches := re.FindAllStringSubmatch(string(out), -1)
+	if len(matches) == 0 {
+		return result, errors.New("no stream format found in camera info")
+	}
+	for _, match := range matches {
+		width, err := strconv.Atoi(match[1])
+		if err != nil {
+			return result, errors.Wrap(err, "failed to parse stream width")
+		}
+		height, err := strconv.Atoi(match[2])
+		if err != nil {
+			return result, errors.Wrap(err, "failed to parse stream height")
+		}
+		if width*height > result.Width*result.Height {
+			result = Resolution{Width: width, Height: height}
+		}
+	}
+	return result, nil
 }
