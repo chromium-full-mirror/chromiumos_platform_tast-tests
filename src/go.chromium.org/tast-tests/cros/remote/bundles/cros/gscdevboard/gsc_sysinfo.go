@@ -34,6 +34,7 @@ func init() {
 }
 
 var devIDRegexp = regexp.MustCompile(`DEV_ID: *0x([0-9a-fA-F]+) +0x([0-9a-fA-F]+)`)
+var prodKeyLadder = regexp.MustCompile(`Key Ladder:  prod`)
 
 func GSCSysinfo(ctx context.Context, s *testing.State) {
 	b := utils.NewDevboardHelper(s)
@@ -58,5 +59,30 @@ func GSCSysinfo(ctx context.Context, s *testing.State) {
 		s.Error("Did not find DEV_ID among sysinfo output: ", output)
 	} else {
 		s.Log("DEV_ID: ", match[1], ":", match[2])
+	}
+	version, err := i.GetVersionInfo(ctx)
+	if err != nil {
+		s.Fatal("Unable to get version output: ", err)
+	}
+	isReleaseBranch := false
+	if version.Build.Branch == ti50.MP || version.Build.Branch == ti50.PrePvt {
+		s.Log("Image was built from a release branch")
+		isReleaseBranch = true
+	}
+
+	match = prodKeyLadder.FindStringSubmatch(output)
+	if match != nil {
+		if version.RwA.Active {
+			s.Logf("%+v is using the prod key ladder", version.RwA)
+		} else if version.RwB.Active {
+			s.Logf("%+v is using the prod key ladder", version.RwB)
+		}
+
+		if b.TestbedType == ti50.GscH1Shield && !isReleaseBranch {
+			// Images from the H1 TOT branch should not use the prod keyladder.
+			s.Fatal("Found prod Key Ladder in a non-release H1 image: ", output)
+		}
+	} else if isReleaseBranch {
+		s.Fatal("Did not find prod Key Ladder in release image: ", output)
 	}
 }

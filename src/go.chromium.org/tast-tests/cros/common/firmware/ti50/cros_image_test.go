@@ -341,6 +341,12 @@ func TestBuildInfoMatcher5(t *testing.T) {
 	testBuildInfoMatcher(t, input, expected)
 }
 
+func TestBuildInfoMatcher6(t *testing.T) {
+	input := `Build:   0.6.241/cr50_v4.08_pp.61-a50884addc`
+	expected := BuildInfo{Branch: PrePvt}
+	testBuildInfoMatcher(t, input, expected)
+}
+
 func testBuildInfoMatcher(t *testing.T, input string, expected BuildInfo) {
 	out, err := matchBuildInfo(input)
 	if err != nil {
