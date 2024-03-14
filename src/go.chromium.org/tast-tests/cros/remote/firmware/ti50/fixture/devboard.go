@@ -200,6 +200,15 @@ func setupCr50Image(ctx context.Context, s TestingState, board *remoteTi50.DUTCo
 	}
 	defer i.Close(ctx)
 
+	isRunningRelease, err := i.CheckRunningVersion(ctx, imageVer.String(), false, true)
+	if err != nil {
+		testing.ContextLogf(ctx, "Unable to get the cr50 version: %s", err)
+	} else if isRunningRelease {
+		testing.ContextLog(ctx, "Cr50 is already running the release")
+		return
+	}
+	testing.ContextLog(ctx, "Updating Cr50")
+
 	if imageVer.Less(rw) {
 		testing.ContextLogf(ctx, "Rollback required for flashing %s to %s", rw, imageVer)
 
