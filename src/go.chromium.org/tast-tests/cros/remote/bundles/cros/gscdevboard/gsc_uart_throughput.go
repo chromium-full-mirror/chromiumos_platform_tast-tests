@@ -7,6 +7,7 @@ package gscdevboard
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"github.com/google/go-tpm/tpm2"
@@ -124,8 +125,9 @@ func GSCUARTThroughput(ctx context.Context, s *testing.State) {
 
 	// Flush out any "DATA LOST" message along with other queued-up data.
 	for _, console := range consoles {
-		console.uart.WriteSerial(ctx, []byte(crLf))
-		th.MustSucceed(console.ccd.ClearInput(ctx), "Error clearing buffer")
+		console.uart.WriteSerial(ctx, []byte("AB\r\n"))
+		_, err := console.ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
+		th.MustSucceed(err, "Error clearing buffer")
 		th.MustSucceed(console.uart.ClearInput(ctx), "Error clearing buffer")
 	}
 
