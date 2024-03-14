@@ -23,9 +23,10 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         NearbyShareAllowed,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Test NearbyShareAllowed policy",
+		Func:           NearbyShareAllowed,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Desc:           "Test NearbyShareAllowed policy",
 		Contacts: []string{
 			"dp-chromeos-eng@google.com",
 			"chiav@google.com",
@@ -33,8 +34,6 @@ func init() {
 		BugComponent: "b:1129862",
 		Attr: []string{
 			"group:golden_tier",
-			"group:mainline",
-			"informational",
 			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
