@@ -199,13 +199,21 @@ func (c *Concierge) sendStartVMRequest(ctx context.Context, vm *VM, diskPath str
 		Cpus:      cpus,
 	}
 
-	const startVMRequestMethodName = conciergeInterface + ".StartVm"
+	const startVMRequestMethodName = conciergeInterface + ".StartVm2"
 	resp := &vmpb.StartVmResponse{}
-	var err error
+
 	if vm.IsTermina() {
-		if err = dbusutil.CallProtoMethod(ctx, c.conciergeObj, startVMRequestMethodName,
-			&request, resp); err != nil {
-			return resp, err
+		requestBuf, err := proto.Marshal(&request)
+		if err != nil {
+			return resp, errors.Wrapf(err, "failed marshaling %s request", startVMRequestMethodName)
+		}
+		var respBuf []byte
+		if err := c.conciergeObj.CallWithContext(ctx, startVMRequestMethodName, 0,
+			&requestBuf, []dbus.UnixFD{}).Store(&respBuf); err != nil {
+			return resp, errors.Wrapf(err, "failed reading %s response", startVMRequestMethodName)
+		}
+		if err := proto.Unmarshal(respBuf, resp); err != nil {
+			return resp, errors.Wrapf(err, "failed unmarshaling %s response", startVMRequestMethodName)
 		}
 	} else {
 		request.Fds = append(request.Fds, vmpb.StartVmRequest_KERNEL, vmpb.StartVmRequest_ROOTFS)
@@ -214,23 +222,24 @@ func (c *Concierge) sendStartVMRequest(ctx context.Context, vm *VM, diskPath str
 		if err != nil {
 			return resp, errors.Wrapf(err, "failed to open kernel file %s", vm.kernel)
 		}
-		kernelFd := dbus.UnixFD(kernelFile.Fd())
 		defer kernelFile.Close()
 
 		rootfsFile, err := os.Open(vm.rootfs)
 		if err != nil {
 			return resp, errors.Wrapf(err, "failed to open rootfs file %s", vm.rootfs)
 		}
-		rootfsFd := dbus.UnixFD(rootfsFile.Fd())
 		defer rootfsFile.Close()
 
-		newBuf, err := proto.Marshal(&request)
+		requestBuf, err := proto.Marshal(&request)
 		if err != nil {
 			return resp, errors.Wrapf(err, "failed marshaling %s request", startVMRequestMethodName)
 		}
 
+		fds := []dbus.UnixFD{
+			dbus.UnixFD(kernelFile.Fd()), dbus.UnixFD(rootfsFile.Fd())}
+
 		var respBuf []byte
-		if err = c.conciergeObj.CallWithContext(ctx, startVMRequestMethodName, 0, newBuf, kernelFd, rootfsFd).Store(&respBuf); err != nil {
+		if err = c.conciergeObj.CallWithContext(ctx, startVMRequestMethodName, 0, requestBuf, fds).Store(&respBuf); err != nil {
 			return resp, errors.Wrapf(err, "failed reading %s response", startVMRequestMethodName)
 		}
 
