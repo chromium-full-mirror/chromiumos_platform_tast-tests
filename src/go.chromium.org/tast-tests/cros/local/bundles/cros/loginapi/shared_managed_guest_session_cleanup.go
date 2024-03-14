@@ -48,8 +48,9 @@ func init() {
 			"group:medium_low_tier",
 			"group:hardware",
 			"group:complementary",
+			"group:hw_agnostic",
 		},
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
 		Fixture:      fixture.FakeDMSEnrolled,
 		Data:         []string{cleanupTestPageHTML},
 		SearchFlags: []*testing.StringPair{
