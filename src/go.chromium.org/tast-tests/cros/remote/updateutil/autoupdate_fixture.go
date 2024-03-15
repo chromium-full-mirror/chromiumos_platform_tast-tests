@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 
 	"go.chromium.org/tast/core/lsbrelease"
-	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -120,11 +119,11 @@ func (au *autoupdateFixt) PostTest(ctx context.Context, s *testing.FixtTestState
 	checkCtx, cancel := context.WithTimeout(ctx, checkTimeout)
 	defer cancel()
 
-	// Check the connection to the DUT.
-	if out, err := s.DUT().Conn().CommandContext(checkCtx, "echo", "1").Output(ssh.DumpLogOnError); err != nil {
-		s.Fatal("Failed to run command over SSH: ", err)
-	} else if string(out) != "1\n" {
-		s.Fatalf("Invalid output when running command over SSH: got %q; want %q", string(out), "1")
+	// Reestablish the connection to the DUT if we lost it.
+	if !s.DUT().Connected(checkCtx) {
+		if err := s.DUT().WaitConnect(checkCtx); err != nil {
+			s.Fatal("Failed to reconnect DUT: ", err)
+		}
 	}
 
 	// Check the image version.
