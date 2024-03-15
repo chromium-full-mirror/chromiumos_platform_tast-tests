@@ -49,14 +49,23 @@ func WithMsgHandler(handler MsgHandler) Option {
 	}
 }
 
+// WithListenConfig change the ListenConfig to create the listen socket. See
+// comments for net.ListenConfig for details.
+func WithListenConfig(config *net.ListenConfig) Option {
+	return func(s *server) {
+		s.listenConfig = config
+	}
+}
+
 // New creates a new TCP/UDP server. The returned object should be passed to
 // Env.StartServer; its lifetime will be managed by the environment. Note that
 // the TCP server can only accept one connection at most now.
 func New(fam Family, port int, opts ...Option) *server {
 	s := &server{
-		fam:     fam,
-		port:    port,
-		bufSize: defaultBufSize,
+		fam:          fam,
+		port:         port,
+		bufSize:      defaultBufSize,
+		listenConfig: &net.ListenConfig{},
 	}
 	for _, opt := range opts {
 		opt(s)
@@ -104,13 +113,14 @@ type closeHandler interface {
 }
 
 type server struct {
-	fam     Family
-	port    int
-	bufSize int
-	conns   []closeHandler
-	handler MsgHandler
-	addr    string
-	run     bool
+	fam          Family
+	port         int
+	bufSize      int
+	listenConfig *net.ListenConfig
+	conns        []closeHandler
+	handler      MsgHandler
+	addr         string
+	run          bool
 }
 
 func (s *server) String() string {
@@ -128,9 +138,19 @@ func (s *server) addrPort() string {
 	}
 }
 
-// Start enters the netns of the virtualnet environment, starts listening on the desired port,
-// and runs the handling loop until Stop is called.
+type routineSetupFunc func(context.Context) (cleanup func() error, err error)
+
+// Start enters the netns of the virtualnet environment, starts listening on the
+// desired port, and runs the handling loop until Stop is called.
 func (s *server) Start(ctx context.Context, env *env.Env) error {
+	return s.StartWithServerRoutineSetup(ctx, env.EnterNetNS)
+}
+
+// StartWithServerRoutineSetup runs routineSetup and defers its cleanup, starts
+// listening on the desired port, and runs the handling loop until Stop is
+// called. Prefer using Start() if the server is supposed to be used together
+// with virtualnet.
+func (s *server) StartWithServerRoutineSetup(ctx context.Context, routineSetup routineSetupFunc) error {
 	if s.run {
 		return errors.Errorf("%s server already running", s)
 	}
@@ -141,12 +161,16 @@ func (s *server) Start(ctx context.Context, env *env.Env) error {
 	ec := make(chan error)
 
 	go func() {
-		cleanup, err := env.EnterNetNS(ctx)
+		cleanup, err := routineSetup(ctx)
 		if err != nil {
-			ec <- errors.Wrapf(err, "failed to enter ns %s", env.NetNSName)
+			ec <- errors.Wrap(err, "failed to do goroutine setup")
 			return
 		}
-		defer cleanup()
+		defer func() {
+			if err := cleanup(); err != nil {
+				testing.ContextLog(ctx, "Failed to do goroutine cleanup")
+			}
+		}()
 
 		switch s.fam {
 		case TCP, TCP4, TCP6:
@@ -164,16 +188,12 @@ func (s *server) Start(ctx context.Context, env *env.Env) error {
 }
 
 func (s *server) handleTCP(ctx context.Context, ec chan error) {
-	addr, err := net.ResolveTCPAddr(s.fam.String(), s.addrPort())
-	if err != nil {
-		ec <- errors.Wrapf(err, "failed to resolve %s addr", s)
-		return
-	}
 	// bind() call may fail here, perhaps because the interface is still not
 	// ready. Use Poll() to retry. See b/259179849#comment13.
-	var listener *net.TCPListener
+	var listener net.Listener
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		listener, err = net.ListenTCP(s.fam.String(), addr)
+		var err error
+		listener, err = s.listenConfig.Listen(ctx, s.fam.String(), s.addrPort())
 		return err
 	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
 		ec <- errors.Wrapf(err, "failed to listen on %s network", s)
@@ -182,7 +202,7 @@ func (s *server) handleTCP(ctx context.Context, ec chan error) {
 	s.conns = append(s.conns, listener)
 	ec <- nil
 
-	var conn *net.TCPConn
+	var conn net.Conn
 	in := make([]byte, s.bufSize)
 
 	// Only accept one connection at the same time.
@@ -192,7 +212,8 @@ func (s *server) handleTCP(ctx context.Context, ec chan error) {
 		}
 
 		if conn == nil {
-			conn, err = listener.AcceptTCP()
+			var err error
+			conn, err = listener.Accept()
 			if err != nil {
 				testing.ContextLogf(ctx, "Failed to accept on %s network", s)
 				return
@@ -225,16 +246,12 @@ func (s *server) handleTCP(ctx context.Context, ec chan error) {
 }
 
 func (s *server) handleUDP(ctx context.Context, ec chan<- error) {
-	addr, err := net.ResolveUDPAddr(s.fam.String(), s.addrPort())
-	if err != nil {
-		ec <- errors.Wrapf(err, "failed to resolve %s addr", s)
-		return
-	}
 	// bind() call may fail here, perhaps because the interface is still not
 	// ready. Use Poll() to retry. See b/259179849#comment13.
-	var conn *net.UDPConn
+	var conn net.PacketConn
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		conn, err = net.ListenUDP(s.fam.String(), addr)
+		var err error
+		conn, err = s.listenConfig.ListenPacket(ctx, s.fam.String(), s.addrPort())
 		return err
 	}, &testing.PollOptions{Timeout: 2 * time.Second}); err != nil {
 		ec <- errors.Wrapf(err, "failed to listen on %s network", s)
@@ -248,7 +265,7 @@ func (s *server) handleUDP(ctx context.Context, ec chan<- error) {
 		if !s.run {
 			return
 		}
-		n, addr, err := conn.ReadFromUDP(in)
+		n, addr, err := conn.ReadFrom(in)
 		if err != nil {
 			if s.run {
 				testing.ContextLogf(ctx, "%s read failed: %v", s, err)
@@ -259,7 +276,7 @@ func (s *server) handleUDP(ctx context.Context, ec chan<- error) {
 		if out == nil {
 			continue
 		}
-		if _, err := conn.WriteToUDP(out, addr); err != nil {
+		if _, err := conn.WriteTo(out, addr); err != nil {
 			if s.run {
 				testing.ContextLogf(ctx, "%s write failed: %v", s, err)
 			}
