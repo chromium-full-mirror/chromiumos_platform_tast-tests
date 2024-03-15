@@ -7,12 +7,16 @@ package graphics
 import (
 	"encoding/hex"
 	"regexp"
+	"unicode"
 
 	"go.chromium.org/tast/core/errors"
 )
 
 // Edid structure is used to describe the structure of Edid
 type Edid struct {
+	ManufacturerName string // Manufacturer name
+	ModelNumber      uint16 // Model number
+
 	VsyncRateMin uint16 // Minimum vsync rate in Hz
 	VsyncRateMax uint16 // Maximum vsync rate in Hz
 
@@ -41,6 +45,12 @@ func EdidStringToBytes(edidString string) ([]byte, error) {
 
 // ParseEdid parses the provided EDID byte array into a structured type
 func ParseEdid(edid []byte) Edid {
+	parsedEdid := Edid{}
+
+	parsedEdid.ManufacturerName = getManufacturerName(edid)
+	parsedEdid.ModelNumber = getModelNumber(edid)
+
+	// bytes 54-125: 4 18-byte descriptors.
 	const (
 		descriptorOffset             = 54
 		numDescriptors               = 4
@@ -48,9 +58,6 @@ func ParseEdid(edid []byte) Edid {
 		displayRangeLimitsDescriptor = 0xfd
 	)
 
-	parsedEdid := Edid{}
-
-	// bytes 54-125: 4 18-byte descriptors.
 	for i := 0; i < numDescriptors; i++ {
 		if len(edid) < descriptorOffset+(i+1)*descriptorLength {
 			break
@@ -95,4 +102,24 @@ func ParseEdid(edid []byte) Edid {
 	// Parse additional descriptors as needed.
 
 	return parsedEdid
+}
+
+func getManufacturerName(x []byte) string {
+	manufacturerNameOffset := 0x08
+	name := make([]byte, 4)
+
+	name[0] = ((x[manufacturerNameOffset+0] & 0x7c) >> 2) + '@'
+	name[1] = ((x[manufacturerNameOffset+0] & 0x03) << 3) + ((x[manufacturerNameOffset+1] & 0xe0) >> 5) + '@'
+	name[2] = (x[manufacturerNameOffset+1] & 0x1f) + '@'
+	name[3] = 0
+
+	if !(unicode.IsUpper(rune(name[0])) && unicode.IsUpper(rune(name[1])) && unicode.IsUpper(rune(name[2]))) {
+		return "Unknown Manufacturer"
+	}
+
+	return string(name)
+}
+
+func getModelNumber(x []byte) uint16 {
+	return uint16(x[0x0a]) + (uint16(x[0x0b]) << 8)
 }
