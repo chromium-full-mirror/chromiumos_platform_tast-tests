@@ -270,6 +270,13 @@ func AuthPerf(ctx context.Context, s *testing.State) {
 		}
 	}()
 
+	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics.
+	cleanup, err := setup.DisableMulticastSetup(ctx)
+	if err != nil {
+		s.Fatal("Could not disable multicast: ", err)
+	}
+	defer cleanup(ctx)
+
 	errorCount := 0
 	var playStoreShownTimes []float64
 	var checkinTimes []float64
@@ -451,13 +458,6 @@ func bootARC(ctx context.Context, s *testing.State, cr *chrome.Chrome, tconn *ch
 	if err := waitForARCStopped(ctx); err != nil {
 		return v, err
 	}
-
-	// Disable multicast to make sure CPU can be stabilized for capturing performance metrics.
-	cleanup, err := setup.DisableMulticastSetup(ctx)
-	if err != nil {
-		s.Fatal("Could not disable multicast: ", err)
-	}
-	defer cleanup(ctx)
 
 	var sess *tracing.Session
 	if tracingEnabled {
