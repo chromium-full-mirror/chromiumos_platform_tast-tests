@@ -178,6 +178,8 @@ const (
 	VideoProfileSelect UIComponentName = "videoProfileSelect"
 	// VideoSnapshotButton is the button for taking video snapshot during recording.
 	VideoSnapshotButton UIComponentName = "videoSnapshotButton"
+	// WarningMessage is the message of warning when CCA is not working
+	WarningMessage UIComponentName = "warningMessage"
 	// ZoomInButton is the button for zoom in preview.
 	ZoomInButton UIComponentName = "zoomInButton"
 	// ZoomOutButton is the button for zoom out preview.

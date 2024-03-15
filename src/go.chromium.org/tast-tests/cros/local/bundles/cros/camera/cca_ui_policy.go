@@ -156,7 +156,11 @@ func testBlockVideoCapture(ctx context.Context, cr *chrome.Chrome, outDir string
 	defer tb.TearDown(ctx)
 
 	app, err := cca.New(ctx, cr, outDir, tb)
+
 	if err == nil {
+		if err := app.WaitForVisibleState(ctx, cca.WarningMessage, true); err != nil {
+			return errors.Wrap(err, "failed to detect warning message")
+		}
 		var errJS *cca.ErrJS
 		if err := app.Close(ctx); err != nil && !errors.As(err, &errJS) {
 			// It is acceptable that there are errors in CCA since the video
