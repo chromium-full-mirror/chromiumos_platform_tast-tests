@@ -36,7 +36,11 @@ var (
 	// when suspending. b/324533891
 	namiFilteredModels = []string{"sona"}
 
-	allFilteredModels = append(nofwupdFilteredModels, namiFilteredModels...)
+	// These octopus models are filtered out because they have a touchpad issue
+	// on kernel-upstream (b/329161200)
+	octopusFilteredModels = []string{"foob", "foob360"}
+
+	allFilteredModels = append(append(nofwupdFilteredModels, namiFilteredModels...), octopusFilteredModels...)
 )
 
 func init() {
