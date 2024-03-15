@@ -51,7 +51,7 @@ func CrasRecord(ctx context.Context, s *testing.State) {
 	}
 	if err := cras.SetActiveNodeByType(ctx, "INTERNAL_MIC"); err != nil {
 		crastestclient.DumpAudioDiagnostics(ctx, s.OutDir())
-		s.Fatal("Failed to set internal speaker to active: ", err)
+		s.Fatal("Failed to set internal mic to active: ", err)
 	}
 
 	// Set timeout to duration + 3s, which is the time buffer to complete the normal execution.
