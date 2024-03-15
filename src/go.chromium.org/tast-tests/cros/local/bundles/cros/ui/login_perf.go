@@ -42,7 +42,6 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -277,22 +276,6 @@ func init() {
 				browser.TypeLacros, // browserType
 				lacros.Rootfs,      // lacrosSelection
 				true,               // preloadLacros
-				[]string{deferARC}, // disabledFeatures
-				[]string{},         // enabledFeatures
-			},
-		}, {
-			Name: "lacros_chrome_omaha_only",
-			// Disabled per b/246818834.
-			ExtraAttr:         []string{},
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("kasumi", "vilboz" /* amd64 */, "krane" /* arm */)),
-			ExtraSoftwareDeps: []string{"lacros"},
-			Val: loginPerfTestParam{
-				8,                  // windows
-				arcenabled,         // arcMode
-				false,              // tabletMode
-				browser.TypeLacros, // browserType
-				lacros.Omaha,       // lacrosSelection
-				false,              // preloadLacros
 				[]string{deferARC}, // disabledFeatures
 				[]string{},         // enabledFeatures
 			},
