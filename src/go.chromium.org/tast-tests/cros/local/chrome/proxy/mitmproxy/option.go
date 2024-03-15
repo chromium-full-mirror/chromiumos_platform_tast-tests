@@ -27,7 +27,8 @@ func CustomOptions(opts ...string) Option {
 	}
 }
 
-// OutDir is an option to set outDir in MitmProxy.
+// OutDir is an option to set outDir where all the logs are saved.
+// Practically this option should not need to be set in most tests except for a RPC service that starts a proxy using its own background context.
 func OutDir(path string) Option {
 	return func(mp *MitmProxy) error {
 		mp.outDir = path

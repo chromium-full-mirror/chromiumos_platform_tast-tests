@@ -36,14 +36,11 @@ const (
 	DefaultListenPort = 4040
 	// DefaultBinaryPath is the default binary path to be used.
 	DefaultBinaryPath = "/usr/local/bin/mitmdump"
-	// MitmdumpBinFile is the name of mitmdump binary.
-	MitmdumpBinFile = "mitmdump_bin"
 )
 
 const (
-	defaultConfDir = "/usr/local/tmp/mitmproxy"
-	certFile       = "mitmproxy-ca-cert.pem"
-	defaultOutDir  = "/usr/local/tmp/mitmproxy"
+	defaultCertFile = "mitmproxy-ca-cert.pem"
+	defaultConfDir  = "/usr/local/tmp/mitmproxy"
 )
 
 // MitmProxy represents a structure of mitmproxy.
@@ -52,7 +49,7 @@ type MitmProxy struct {
 	port         int
 	host         string
 	outDir       string
-	dumpFileName string
+	dumpFilePath string
 	confDir      string
 	compressDump bool
 	cmd          *testexec.Cmd
@@ -64,19 +61,25 @@ type MitmProxy struct {
 	lifelineFD   *os.File // Used by pathcpanel to track the lifetime of the proxy server.
 }
 
-// New creates a new MitmDump instance with default configuration.
-func New(opts ...Option) (*MitmProxy, error) {
+// New creates a new MitmProxy instance with default configuration and option overrides.
+func New(ctx context.Context, opts ...Option) (*MitmProxy, error) {
 	mp := &MitmProxy{
 		binaryPath:   DefaultBinaryPath,
 		port:         DefaultListenPort,
 		confDir:      defaultConfDir,
-		outDir:       defaultOutDir,
 		compressDump: true,
 		removeCert:   true,
 		healthCheck:  true,
 		scriptPaths:  []string{},
 		options:      []string{},
 	}
+
+	// OutDir should be set in the test context for saving logs and dump files per-test.
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return nil, errors.New("No output dir exists")
+	}
+	mp.outDir = outDir
 
 	// Get values from command line.
 	if proxy.ScriptPath() != "" {
@@ -99,30 +102,28 @@ func (mp *MitmProxy) IsRunning() bool {
 }
 
 // Start launches the mitmproxy.
-func (mp *MitmProxy) Start(ctx context.Context) error {
-	if err := killProcessesIfFound(ctx); err != nil {
-		return errors.Wrap(err, "fail to cleanup existing mitmproxy process")
+func (mp *MitmProxy) Start(ctx context.Context) (retErr error) {
+	if err := killProcesses(ctx); err != nil {
+		return errors.Wrap(err, "failed to kill running mitmproxy processes")
 	}
-
-	nowStr := time.Now().Format("20060102-150405")
-
-	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
-	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
 
 	// If root certificate is not present,
 	// we should delete the folder and then mitmproxy will recreate them.
 	if _, err := mp.RootCertificate(ctx); err != nil {
-		if err = mp.cleanupCert(); err != nil {
-			return errors.Wrap(err, "root certificate is not present, but fail to delete conf folder")
+		if err = mp.removeCertDir(); err != nil {
+			return errors.Wrap(err, "root certificate not present, failed to delete conf dir")
 		}
 	}
 
 	if err := os.MkdirAll(mp.confDir, 0700); err != nil {
 		return errors.Wrapf(err, "failed to create %q for mitmdump config", mp.confDir)
 	}
-	if err := os.MkdirAll(mp.outDir, 0700); err != nil {
-		return errors.Wrapf(err, "failed to create %q for mitmdump output dir", mp.outDir)
-	}
+	// Clean up when it fails to Start.
+	defer func() {
+		if retErr != nil {
+			mp.Close(ctx)
+		}
+	}()
 
 	// The pid of the proxy process is required to configure the isolated network namespace in which the process runs.
 	// The mitmdump process forks, resulting in two running processes. The pid addon will ensure the pid of the actual
@@ -138,8 +139,12 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		return errors.Wrapf(err, "failed to create config file at %s", configFilePath)
 	}
 
-	cmd := testexec.CommandContext(ctx, "/sbin/minijail0", "-e", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
-
+	// Run a proxy server process in non-interactive mode (mitmdump).
+	nowStr := time.Now().Format("20060102-150405")
+	dumpFilePath := filepath.Join(mp.outDir, fmt.Sprintf("mitmproxy_%s.dump", nowStr))
+	cmd := testexec.CommandContext(ctx,
+		"/sbin/minijail0", "-e", "--", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
+	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to launch proxy server")
 	}
@@ -154,12 +159,10 @@ func (mp *MitmProxy) Start(ctx context.Context) error {
 		}
 	}
 
-	testing.ContextLog(ctx, "Mitmproxy is successfully launched. Streaming to ", dumpFilePath)
-
+	testing.ContextLog(ctx, "mitmproxy: started successfully, stream to: ", dumpFilePath)
 	mp.cmd = cmd
-	mp.dumpFileName = dumpFileName
+	mp.dumpFilePath = dumpFilePath
 	mp.isRunning = true
-
 	return nil
 }
 
@@ -284,7 +287,7 @@ def running():
 // createTempFile creates a temporary file in proxy server's config directory and returns the
 // path.
 func (mp *MitmProxy) createTempFile(name string) (string, error) {
-	file, err := ioutil.TempFile(mp.confDir, name)
+	file, err := os.CreateTemp(mp.confDir, name)
 	if err != nil {
 		return "", errors.Wrap(err, "failed create temp file")
 	}
@@ -295,7 +298,9 @@ func (mp *MitmProxy) createTempFile(name string) (string, error) {
 	return file.Name(), nil
 }
 
-// verifyProxyStart verifies that the proxy starts successfully by get youtube home page.
+// verifyProxyStart verifies that the proxy starts with a root certificate successfully
+// by checking the magic domain (mitm.it) served locally by mitmproxy.
+// However, this check can be bypassed via `HealthCheck` option in case the domain won't work with a user's allowlist or blocklist.
 func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	// Get cert.
 	certFilePath, err := mp.RootCertificate(ctx)
@@ -355,7 +360,7 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 
 // RootCertificate returns the file path of the root certificate and ensures its existence.
 func (mp *MitmProxy) RootCertificate(ctx context.Context) (string, error) {
-	certFilePath := filepath.Join(mp.confDir, certFile)
+	certFilePath := filepath.Join(mp.confDir, defaultCertFile)
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		if _, err := os.Stat(certFilePath); err != nil {
 			return errors.Wrapf(err, "%s is unavailable", certFilePath)
@@ -376,47 +381,55 @@ func (mp *MitmProxy) ProxyAddress() string {
 // Close closes proxy.
 func (mp *MitmProxy) Close(ctx context.Context) error {
 	if !mp.isRunning {
-		testing.ContextLog(ctx, "mitmproxy is not running before close")
+		testing.ContextLog(ctx, "mitmproxy: already closed, safe to ignore")
 		return nil
 	}
 
 	var cleanupErrs []error
-	dumpFilePath := filepath.Join(mp.outDir, mp.dumpFileName)
 
 	// Terminate mitmproxy.
+	// TODO(b/302244608): Figure out how to terminate all forked processes gracefully.
 	if err := mp.cmd.Kill(); err != nil {
 		cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to terminate mitmproxy"))
-	} else {
-		mp.isRunning = false
 	}
 
 	// Closing the fd will signal to patchpanel that it needs to tear down the network namespace
 	// for the local proxy server.
-	mp.lifelineFD.Close()
+	if mp.lifelineFD != nil {
+		mp.lifelineFD.Close()
+		mp.lifelineFD = nil
+	}
 
 	// Compress dump file.
 	if mp.compressDump {
-		targetTar := dumpFilePath + ".tar.gz"
-		if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.outDir, mp.dumpFileName, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
-			cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to compress mitmproxy dump"))
+		if _, err := os.Stat(mp.dumpFilePath); err == nil {
+			targetTar := mp.dumpFilePath + ".tar.gz"
+			if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.outDir, mp.dumpFilePath, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
+				cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to compress mitmproxy dump"))
+			}
 		}
 	}
 
 	if mp.removeCert {
 		// Remove config files, such as certificates generated by Mitmproxy launch.
-		if err := mp.cleanupCert(); err != nil {
+		if err := mp.removeCertDir(); err != nil {
 			cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to clean mitmproxy config"))
 		}
 	}
 
-	return errors.Join(cleanupErrs...)
-}
-
-func (mp *MitmProxy) cleanupCert() error {
-	if err := os.RemoveAll(mp.confDir); err != nil {
+	mp.isRunning = false
+	if err := errors.Join(cleanupErrs...); err != nil {
+		testing.ContextLog(ctx, "mitmproxy: closed with errors: ", err)
 		return err
 	}
+	testing.ContextLog(ctx, "mitmproxy: closed successfully")
+	return nil
+}
 
+func (mp *MitmProxy) removeCertDir() error {
+	if _, err := os.Stat(mp.confDir); err == nil {
+		return os.RemoveAll(mp.confDir)
+	}
 	return nil
 }
 
@@ -432,7 +445,7 @@ func processes(ctx context.Context) ([]*process.Process, error) {
 	})
 }
 
-func killProcessesIfFound(ctx context.Context) error {
+func killProcesses(ctx context.Context) error {
 	procs, err := processes(ctx)
 	// ErrNotFound is returned when no proc is found.
 	if err == procutil.ErrNotFound {

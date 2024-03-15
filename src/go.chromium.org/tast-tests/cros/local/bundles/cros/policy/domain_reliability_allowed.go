@@ -118,8 +118,7 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			mp, err := mitmproxy.New(
-				mitmproxy.OutDir(s.OutDir()),
+			mp, err := mitmproxy.New(ctx,
 				mitmproxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
 			)
 			if err != nil {

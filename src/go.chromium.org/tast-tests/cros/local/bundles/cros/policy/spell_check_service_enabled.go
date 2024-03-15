@@ -98,7 +98,7 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			mp, err := mitmproxy.New(mitmproxy.OutDir(s.OutDir()))
+			mp, err := mitmproxy.New(ctx)
 			if err != nil {
 				s.Fatal("Failed to create MitmProxy: ", err)
 			}
