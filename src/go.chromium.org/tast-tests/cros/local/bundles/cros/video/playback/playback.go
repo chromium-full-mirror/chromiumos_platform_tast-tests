@@ -11,17 +11,14 @@ import (
 	"math"
 	"net/http"
 	"net/http/httptest"
-	"regexp"
 	"sort"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/mafredri/cdp/protocol/media"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -32,9 +29,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/graphics"
 	"go.chromium.org/tast-tests/cros/local/media/devtools"
-	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast-tests/cros/local/tracing"
-
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -240,122 +235,6 @@ func getPlayingTime(ctx context.Context, conn *chrome.Conn) (float64, error) {
 		return 0, errors.Wrap(err, "failed to get current playing time")
 	}
 	return curTime, nil
-}
-
-func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) (*chrome.Conn, error) {
-	// Reconnect to Chrome.
-	testing.ContextLog(ctx, "Reconnect to browser connection")
-	if err := cr.Reconnect(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to reconnect to Chrome")
-	}
-	// Reconnect to browser.
-	br, _, err := browserfixt.Connect(ctx, cr, browserType)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to reconnect to browser")
-	}
-	conn, err := br.NewConnForTarget(ctx, func(t *chrome.Target) bool {
-		return strings.HasSuffix(t.URL, "video.html")
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to establish browser connection")
-	}
-	testing.ContextLog(ctx, "Browser connection is established")
-	return conn, nil
-}
-
-// suspendSystem suspends the system and checks the validity of syslog and video after system resumes.
-func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader, config Config, testName string) error {
-	// Check syslog for GPU hangs and decoding errors before we start suspend/resume.
-	if err := graphics.CheckSysLog(ctx, testName, reader); err != nil {
-		return errors.Wrap(err, "syslog signature found")
-	}
-	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--count", "1").Output(testexec.DumpLogOnError)
-	testing.ContextLogf(ctx, "%v", string(out))
-	if err != nil {
-		return errors.Wrap(err, "suspend_stress_test failed")
-	}
-	if match := regexp.MustCompile(`(?m)^(Suspend failed.*)$`).FindSubmatch(out); len(match) > 0 {
-		return errors.Errorf("suspend_stress_test failed: %v", string(match[1]))
-	}
-	conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
-	// Check |currentTime| variable is changing.
-	originalPlayingTime, err := getPlayingTime(ctx, conn)
-	if err != nil {
-		return errors.Wrap(err, "failed to get original playing time")
-	}
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		playingTime, err := getPlayingTime(ctx, conn)
-		if err != nil {
-			return errors.Wrap(err, "failed to get playing time")
-		}
-		if playingTime == originalPlayingTime {
-			return errors.Errorf("playing time %v is the same as original time %v", playingTime, originalPlayingTime)
-		}
-		return nil
-	}, nil); err != nil {
-		return errors.Wrap(err, "video playing time is not advancing")
-	}
-	// Check syslog for GPU hangs and decoding errors after the video starts playing.
-	if err := graphics.CheckSysLog(ctx, testName, reader); err != nil {
-		return errors.Wrap(err, "syslog signature found")
-	}
-	return nil
-}
-
-// suspendResume tests video playback continuity after system goes through suspend/resume cycle.
-func suspendResume(ctx context.Context, cr *chrome.Chrome, config Config, testName string) (resultErr error) {
-	var wg sync.WaitGroup
-	wg.Add(1)
-	errChan := make(chan error)
-	quit := make(chan bool)
-
-	// Start reading the syslog so we can stop the tests as soon as any GPU hangs/decode errors are found.
-	reader, err := syslog.NewReader(ctx, syslog.Severities(syslog.Info, syslog.Warning, syslog.Err))
-	if err != nil {
-		return errors.Wrap(err, "failed to get syslog reader")
-	}
-	defer reader.Close()
-	go func() {
-		defer wg.Done()
-		for i := 0; ; i++ {
-			select {
-			case <-quit:
-				return
-			default:
-				testing.ContextLogf(ctx, "Executing [%v] suspend ", i)
-			}
-
-			suspendCtx, cancel := context.WithTimeout(ctx, SuspendSystemTimeout)
-			defer cancel()
-			if err := suspendSystem(suspendCtx, cr, reader, config, testName); err != nil {
-				errChan <- errors.Wrapf(err, "suspend [%v] failed", i)
-				return
-			}
-			if suspendCtx.Err() != nil {
-				errChan <- errors.Wrapf(err, "suspend/resume cycle took more than %v", SuspendSystemTimeout)
-				return
-			}
-			// GoBigSleepLint: Add a suspend intervals so video can progress.
-			if err := testing.Sleep(ctx, SuspendSystemInterval); err != nil {
-				errChan <- errors.Wrap(err, "failed to sleep after suspend")
-				return
-			}
-		}
-	}()
-
-	// Wait either suspend fails or playbackDuration is passed.
-	select {
-	case resultErr = <-errChan:
-		break
-	case <-ctx.Done():
-		quit <- true
-		return ctx.Err()
-	case <-time.After(config.Duration):
-		testing.ContextLog(ctx, "playback duration hit, stopping suspend_resume loop")
-		quit <- true
-	}
-	wg.Wait()
-	return
 }
 
 type measureParams struct {
