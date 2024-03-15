@@ -112,7 +112,6 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"generic_cpu"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			Name: "ec_component",
 			Val: verifySandboxTestParams{
