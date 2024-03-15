@@ -37,8 +37,12 @@ type PerfBootService struct {
 	s *testing.ServiceState
 }
 
-func (c *PerfBootService) WaitUntilCPUCoolDown(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
-	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.DefaultCoolDownConfig(cpu.CoolDownStopUI)); err != nil {
+func (c *PerfBootService) WaitUntilCPUCoolDown(ctx context.Context, req *arcpb.CPUCoolDownRequest) (*empty.Empty, error) {
+	mode := cpu.CoolDownStopUI
+	if req.Mode == arcpb.CoolDownMode_PRESERVE_UI {
+		mode = cpu.CoolDownPreserveUI
+	}
+	if _, err := cpu.WaitUntilCoolDown(ctx, cpu.DefaultCoolDownConfig(mode)); err != nil {
 		return nil, errors.Wrap(err, "failed to wait until CPU is cooled down")
 	}
 	return &empty.Empty{}, nil

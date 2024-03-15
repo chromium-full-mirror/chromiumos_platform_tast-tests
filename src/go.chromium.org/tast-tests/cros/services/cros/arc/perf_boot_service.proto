@@ -12,12 +12,27 @@ import "values.proto";
 
 option go_package = "go.chromium.org/tast-tests/cros/services/cros/arc";
 
+enum CoolDownMode {
+  UNKNOWN = 0;
+  // PRESERV_UI defines the mode when current Chrome UI is preserved.
+  PRESERVE_UI = 1;
+  // STOP_UI defines the mode when current Chrome UI is stopped in order
+  // to get cool down faster. However, in this mode current Chrome state
+  // is lost.
+  STOP_UI = 2;
+}
+
+message CPUCoolDownRequest { CoolDownMode mode = 1; }
+
 // PerfBootService provides RPC methods to be used by PerfBoot remote test.
 service PerfBootService {
   // WaitUntilCPUCoolDown internally calls power.WaitUntilCPUCoolDown on DUT
   // and waits until CPU is cooled down.
-  rpc WaitUntilCPUCoolDown (google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc WaitUntilCPUCoolDown(CPUCoolDownRequest) returns (google.protobuf.Empty) {
+  }
 
-  // GetPerfValues signs in to DUT and measures Android boot performance metrics.
-  rpc GetPerfValues (google.protobuf.Empty) returns (tast.common.perf.perfpb.Values) {}
+  // GetPerfValues signs in to DUT and measures Android boot performance
+  // metrics.
+  rpc GetPerfValues(google.protobuf.Empty)
+      returns (tast.common.perf.perfpb.Values) {}
 }

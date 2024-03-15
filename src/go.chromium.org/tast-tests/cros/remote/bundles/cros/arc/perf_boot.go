@@ -59,7 +59,7 @@ func perfBootOnce(ctx context.Context, s *testing.State, saveDir string) *perfpb
 
 	service := arc.NewPerfBootServiceClient(cl.Conn)
 
-	if _, err := service.WaitUntilCPUCoolDown(ctx, &empty.Empty{}); err != nil {
+	if _, err := service.WaitUntilCPUCoolDown(ctx, &arc.CPUCoolDownRequest{}); err != nil {
 		s.Fatal("PerfBootService.WaitUntilCPUCoolDown returned an error: ", err)
 	}
 

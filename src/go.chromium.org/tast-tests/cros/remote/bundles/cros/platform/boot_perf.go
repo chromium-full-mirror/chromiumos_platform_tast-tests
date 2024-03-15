@@ -113,7 +113,9 @@ func preReboot(ctx context.Context, s *testing.State) {
 
 	arcPerfBootService := arc.NewPerfBootServiceClient(cl.Conn)
 	// Wait until CPU cools down with shortCtx.
-	if _, err = arcPerfBootService.WaitUntilCPUCoolDown(shortCtx, &empty.Empty{}); err != nil {
+	if _, err = arcPerfBootService.WaitUntilCPUCoolDown(shortCtx, &arc.CPUCoolDownRequest{
+		Mode: arc.CoolDownMode_PRESERVE_UI,
+	}); err != nil {
 		// DUT is unable to cool down, probably timed out. Treat this as a non-fatal error and continue the test with a warning.
 		s.Log("Warning: PerfBootService.WaitUntilCPUCoolDown returned an error: ", err)
 	}
