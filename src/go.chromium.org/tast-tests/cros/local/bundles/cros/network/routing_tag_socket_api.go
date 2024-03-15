@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"runtime"
 	"strings"
 	"syscall"
@@ -15,6 +16,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
+	"go.chromium.org/tast-tests/cros/local/network/permissionbroker"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/l4server"
@@ -49,7 +51,8 @@ func init() {
 
 type routingTagSocketAPITestCase struct {
 	desc          string          // description of this test case
-	l4serverEnv   *virtualnet.Env // where the l4server should be running
+	targetEnv     *virtualnet.Env // one peer of the socket connection
+	service       *shill.Service  // another peer of the socket connection
 	uid           int             // socket owner
 	tagSocketOpts []patchpanel.TagSocketOption
 	expectBlocked bool // whether the connection should be blocked
@@ -71,16 +74,22 @@ type routingTagSocketAPITestCase struct {
 // In the VPN lockdown test, VPN server will be set up but the service property
 // will be modified so that the connection cannot be established.
 //
-// To verify that "call TagSocket on a socket will make the packets from this
+// In the tests for tagging socket for connect() (as a client):
+//
+// a) To verify that "call TagSocket on a socket will make the packets from this
 // socket routed on a specific network", this test will set up a TCP/UDP server
 // on the corresponding env only reachable from the specific network (default
 // route is required to reach them), and verify that the connection can be
 // established.
 //
-// To verify that "connection will be blocked in the VPN lockdown mode", this
+// b) To verify that "connection will be blocked in the VPN lockdown mode", this
 // test will set up TCP/UDP server on the env which is supposed to be reachable
 // without the VPN lockdown, and verify that the connection cannot be
 // established.
+//
+// In the tests for tagging socket for listen() (as a server), the TCP/UDP
+// server will be set up in the root netns instead, and the connection will
+// initiated from the corresponding env.
 //
 // Subtest is used in this test since they share the same set up code, but the
 // set up code is too specified to have a fixture for it.
@@ -201,10 +210,16 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 	// Network ids used in the test cases.
 	lowPrioNetworkIndex := getIfIdx(testEnv.BaseRouter.VethOutName)
 
-	// Envs for setting up the l4servers in the test cases.
+	// Envs for setting up one peer of the socket connection in the test cases.
 	lowPrioNetworkServerEnv := testEnv.BaseServer
 	highPrioNetworkServerEnv := testEnv.TestServer
 	vpnReachableServerEnv := vpnPrivateEnv
+
+	// Services (actually the corresponding interfaces) for setting up another
+	// peer of the socket connection in the test cases.
+	lowPrioService := testEnv.BaseService
+	highPrioService := testEnv.TestService
+	vpnService := vpnConn.Service()
 
 	// Make sure that port is different in each subtest, to avoid potential with
 	// port collision or connection pinning. Use a closure here to avoid exposing
@@ -225,41 +240,46 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 
 		tcs = []routingTagSocketAPITestCase{
 			{
-				desc:        "system traffic will be routed to low priority network with setting network_id",
-				l4serverEnv: lowPrioNetworkServerEnv,
-				uid:         rootUID,
+				desc:      "system traffic will be routed to low priority network with setting network_id",
+				targetEnv: lowPrioNetworkServerEnv,
+				service:   lowPrioService,
+				uid:       rootUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
 				},
 			},
 			{
-				desc:        "user traffic will be routed to low priority network with setting network_id",
-				l4serverEnv: lowPrioNetworkServerEnv,
-				uid:         chronosUID,
+				desc:      "user traffic will be routed to low priority network with setting network_id",
+				targetEnv: lowPrioNetworkServerEnv,
+				service:   lowPrioService,
+				uid:       chronosUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
 				},
 			},
 			{
-				desc:        "system traffic will be routed to vpn with setting network_id",
-				l4serverEnv: vpnReachableServerEnv,
-				uid:         rootUID,
+				desc:      "system traffic will be routed to vpn with setting network_id",
+				targetEnv: vpnReachableServerEnv,
+				service:   vpnService,
+				uid:       rootUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketNetworkID(vpnNetworkIndex),
 				},
 			},
 			{
-				desc:        "system traffic will be routed to vpn with policy=ROUTE_ON_VPN",
-				l4serverEnv: vpnReachableServerEnv,
-				uid:         rootUID,
+				desc:      "system traffic will be routed to vpn with policy=ROUTE_ON_VPN",
+				targetEnv: vpnReachableServerEnv,
+				service:   vpnService,
+				uid:       rootUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketRouteOnVPN(),
 				},
 			},
 			{
-				desc:        "user traffic will be routed to high priority network with policy=BYPASS_VPN",
-				l4serverEnv: highPrioNetworkServerEnv,
-				uid:         chronosUID,
+				desc:      "user traffic will be routed to high priority network with policy=BYPASS_VPN",
+				targetEnv: highPrioNetworkServerEnv,
+				service:   highPrioService,
+				uid:       chronosUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketBypassVPN(),
 				},
@@ -268,43 +288,48 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 	} else {
 		tcs = []routingTagSocketAPITestCase{
 			{
-				desc:        "system traffic will be routed to low priority network with setting network_id",
-				l4serverEnv: lowPrioNetworkServerEnv,
-				uid:         rootUID,
+				desc:      "system traffic will be routed to low priority network with setting network_id",
+				targetEnv: lowPrioNetworkServerEnv,
+				service:   lowPrioService,
+				uid:       rootUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
 				},
 			},
 			{
-				desc:        "user traffic will be blocked with setting network_id",
-				l4serverEnv: lowPrioNetworkServerEnv,
-				uid:         chronosUID,
+				desc:      "user traffic will be blocked with setting network_id",
+				targetEnv: lowPrioNetworkServerEnv,
+				service:   lowPrioService,
+				uid:       chronosUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
 				},
 				expectBlocked: true,
 			},
 			{
-				desc:        "system traffic will be blocked with policy=ROUTE_ON_VPN",
-				l4serverEnv: highPrioNetworkServerEnv,
-				uid:         rootUID,
+				desc:      "system traffic will be blocked with policy=ROUTE_ON_VPN",
+				targetEnv: highPrioNetworkServerEnv,
+				service:   highPrioService,
+				uid:       rootUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketRouteOnVPN(),
 				},
 				expectBlocked: true,
 			},
 			{
-				desc:        "user traffic will be routed to high priority network with policy=BYPASS_VPN",
-				l4serverEnv: highPrioNetworkServerEnv,
-				uid:         chronosUID,
+				desc:      "user traffic will be routed to high priority network with policy=BYPASS_VPN",
+				targetEnv: highPrioNetworkServerEnv,
+				service:   highPrioService,
+				uid:       chronosUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketBypassVPN(),
 				},
 			},
 			{
-				desc:        "user traffic will be routed to low priority network with setting network_id and policy=BYPASS_VPN",
-				l4serverEnv: lowPrioNetworkServerEnv,
-				uid:         chronosUID,
+				desc:      "user traffic will be routed to low priority network with setting network_id and policy=BYPASS_VPN",
+				targetEnv: lowPrioNetworkServerEnv,
+				service:   lowPrioService,
+				uid:       chronosUID,
 				tagSocketOpts: []patchpanel.TagSocketOption{
 					patchpanel.WithTagSocketNetworkID(lowPrioNetworkIndex),
 					patchpanel.WithTagSocketBypassVPN(),
@@ -316,17 +341,20 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 	for _, tc := range tcs {
 		s.Run(ctx, tc.desc, func(ctx context.Context, s *testing.State) {
 			if err := testConnect(ctx, tc, getNextPort); err != nil {
-				s.Error("Failed to verify socket connection: ", err)
+				s.Error("Failed to verify socket connection as client: ", err)
+			}
+			if err := testListen(ctx, tc, getNextPort); err != nil {
+				s.Error("Failed to verify socket connection as server: ", err)
 			}
 		})
 	}
 }
 
-// testConnect sets up a TCP/UDP server in the virtualnet Env, calls TagSocket
-// API to create the socket, and verifies the connection to this server from the
-// host. Connections of {TCP, UDP} x {IPv4, IPv6} will be verified.
+// testConnect sets up a TCP/UDP server in tc.targetEnv, calls TagSocket API to
+// create the socket, and verifies the connection to this server from the host.
+// Connections of {TCP, UDP} x {IPv4, IPv6} will be verified.
 func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort func() int) (retErr error) {
-	ipAddrs, err := tc.l4serverEnv.WaitForVethInAddrs(ctx, true /*ipv4*/, true /*ipv6*/)
+	ipAddrs, err := tc.targetEnv.WaitForVethInAddrs(ctx, true /*ipv4*/, true /*ipv6*/)
 	if err != nil {
 		return errors.Wrap(err, "failed to get IP addrs from the base server")
 	}
@@ -350,7 +378,7 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 		port := getPort()
 
 		server := l4server.New(family, port, l4server.WithMsgHandler(l4server.Reflector()))
-		if err := tc.l4serverEnv.StartServer(ctx, server.String(), server); err != nil {
+		if err := tc.targetEnv.StartServer(ctx, server.String(), server); err != nil {
 			return errors.Wrapf(err, "failed to start %s server", server.String())
 		}
 
@@ -359,7 +387,7 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 			peerSocketAddr = fmt.Sprintf("[%s]:%d", ipAddrs.IPv6Addrs[0], port)
 		}
 
-		testing.ContextLogf(ctx, "Verifying %s connection to %s", family, peerSocketAddr)
+		testing.ContextLogf(ctx, "Verifying %s connection to %s as client", family, peerSocketAddr)
 
 		// Create a Dialer with modifying its behavior to call TagSocket.
 		dialer := &net.Dialer{
@@ -380,6 +408,115 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 			return errors.Wrap(err, "failed to trigger socket IO")
 		}
 	}
+	return nil
+}
+
+// testListen sets up a TCP/UDP server in the root netns with calling TagSocket
+// API (to simulate that the client code create a listen socket), creates a
+// socket from tc.targetEnv, and verifies the connection to the server on the
+// host from this socket host. Connections of {TCP, UDP} x {IPv4, IPv6} will be
+// verified.
+func testListen(ctx context.Context, tc routingTagSocketAPITestCase, getPort func() int) error {
+	ipv4Addr, err := tc.service.GetIPv4Address(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get IPv4 address on the host side")
+	}
+	ipv6Addr, err := tc.service.GetIPv6Address(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get IPv6 address on the host side")
+	}
+
+	isTCP := func(f l4server.Family) bool { return f == l4server.TCP4 || f == l4server.TCP6 }
+
+	pp, err := patchpanel.New(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create patchpanel client")
+	}
+
+	permBroker, err := permissionbroker.NewClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create permission broker client")
+	}
+
+	for _, family := range []l4server.Family{l4server.TCP4, l4server.TCP6, l4server.UDP4, l4server.UDP6} {
+		port := getPort()
+
+		// Request permission broker to open the port at first. Close the lifeline
+		// fd to release the port.
+		var err error
+		var lifelineFD *os.File
+		if isTCP(family) {
+			lifelineFD, err = permBroker.RequestTCPPortAccess(ctx, uint16(port), "")
+		} else {
+			lifelineFD, err = permBroker.RequestUDPPortAccess(ctx, uint16(port), "")
+		}
+		if err != nil {
+			return errors.Wrapf(err, "failed to open port %d", port)
+		}
+		defer func() {
+			if err := lifelineFD.Close(); err != nil {
+				testing.ContextLog(ctx, "Failed to close lifeline fd for port access")
+			}
+		}()
+
+		// Start l4server in the root netns, with switching uid to tc.uid and
+		// tagging the socket for the listen socket.
+		server := l4server.New(family, port,
+			l4server.WithMsgHandler(l4server.Reflector()),
+			l4server.WithListenConfig(&net.ListenConfig{Control: createControlFunc(ctx, pp, tc.tagSocketOpts...)}),
+		)
+		routineSetup := func(ctx context.Context) (func() error, error) {
+			return switchUser(ctx, tc.uid)
+		}
+		if err := server.StartWithServerRoutineSetup(ctx, routineSetup); err != nil {
+			return errors.Wrap(err, "failed to start l4server locally")
+		}
+		defer server.Stop(ctx)
+
+		// GoBigSleepLint: Give some time to let the l4server setup finish, and then
+		// switch the user back to root, otherwise we cannot enter the other netns
+		// below. This is a workaround -- unix.Setreuid() should be mapped to the
+		// direct syscall on Linux, so the uid change only be applied to the current
+		// thread, but it seems that the uid change is spreading to other threads
+		// now. We need to figure out if this is the expected behavior or not. If
+		// not, we need to use another solution in this test. Sleeping here is not
+		// ideal since it may not be enough.
+		testing.Sleep(ctx, 1*time.Second)
+		if err := unix.Setreuid(0, 0); err != nil {
+			return errors.Wrap(err, "failed to setuid back to root")
+		}
+
+		// Enter the netns of targetEnv to initiate the socket connection.
+		exitNetNS, err := tc.targetEnv.EnterNetNS(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to enter netns to start client")
+		}
+		defer func() {
+			if err := exitNetNS(); err != nil {
+				testing.ContextLog(ctx, "Failed to go back to the root netns: ", err)
+			}
+		}()
+
+		peerSocketAddr := fmt.Sprintf("%s:%d", ipv4Addr, port)
+		if family == l4server.TCP6 || family == l4server.UDP6 {
+			peerSocketAddr = fmt.Sprintf("[%s]:%d", ipv6Addr, port)
+		}
+
+		testing.ContextLogf(ctx, "Verifying %s connection to %s as server", family, peerSocketAddr)
+
+		err = triggerSocketIO(ctx, &net.Dialer{}, family.String(), peerSocketAddr)
+		if tc.expectBlocked && err == nil {
+			return errors.New("unexpected connection success")
+		} else if tc.expectBlocked && err != nil {
+			if strings.Contains(err.Error(), "i/o timeout") {
+				continue
+			}
+			return errors.Wrap(err, "unexpected connection error")
+		} else if err != nil {
+			return errors.Wrap(err, "failed to trigger socket IO")
+		}
+	}
+
 	return nil
 }
 
