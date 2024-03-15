@@ -86,8 +86,10 @@ func Swap(ctx context.Context, s *testing.State) {
 	// minimized. The best we can do for a negative check like this is sleep and
 	// then check.
 	testing.Sleep(ctx, 5*time.Second)
-	if err := swap.WaitForStatus(ctx, socketPath, []swap.Status{swap.Ready}); err != nil {
-		s.Fatal("Failed to wait for swap to be enabled: ", err)
+	if status, err := swap.CurrentStatus(ctx, socketPath); err != nil {
+		s.Fatal("Failed to get current swap status: ", err)
+	} else if status != swap.Ready {
+		s.Fatal("Vmm-swap is not disabled. status: ", status)
 	}
 
 	// Stop the minimized activity and verify that swap is re-enabled
