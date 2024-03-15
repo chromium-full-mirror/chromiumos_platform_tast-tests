@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/modemmanager"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"golang.org/x/exp/slices"
 )
 
 const (
@@ -110,6 +111,35 @@ func (s *Service) GetIPConfigs(ctx context.Context) ([]*IPConfig, error) {
 		ret = append(ret, ipconfig)
 	}
 	return ret, nil
+}
+
+func (s *Service) getIPAddressWithMethod(ctx context.Context, methods []string) (string, error) {
+	ipconfigs, err := s.GetIPConfigs(ctx)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed to get ipconfigs associated to %s", s.ObjectPath())
+	}
+	for _, ipconfig := range ipconfigs {
+		props, err := ipconfig.GetIPProperties(ctx)
+		if err != nil {
+			return "", errors.Wrapf(err, "failed to get properties from %s", ipconfig.ObjectPath())
+		}
+		if slices.Contains(methods, props.Method) {
+			return props.Address, nil
+		}
+	}
+	return "", errors.Wrapf(err, "failed to get address with %v for %s", methods, s.ObjectPath())
+}
+
+// GetIPv4Address returns the IPv4 address on the Service. Return err if not exist.
+func (s *Service) GetIPv4Address(ctx context.Context) (string, error) {
+	return s.getIPAddressWithMethod(ctx, []string{"ipv4", "dhcp"})
+}
+
+// GetIPv6Address returns the IPv6 address on the service. Return err if not
+// exist. Note that currently there will be at most one IPv6 address on a
+// Service due to the implementation in shill.
+func (s *Service) GetIPv6Address(ctx context.Context) (string, error) {
+	return s.getIPAddressWithMethod(ctx, []string{"ipv6"})
 }
 
 // GetSignalStrength return the current signal strength
