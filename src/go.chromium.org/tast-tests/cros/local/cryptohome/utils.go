@@ -28,7 +28,11 @@ func DownloadsExistAsBindMount(ctx context.Context) (bool, error) {
 	if err != nil {
 		return false, errors.Wrap(err, "failed to run findmnt command")
 	}
-	return strings.Contains(string(result), "Downloads"), nil
+	// Use "/home/chronos/user/MyFiles/Downloads" instead of "Downloads" here
+	// because for ARC++ devices there exists another downloads bind-mount which
+	// uses "/home/user/<HASH>/MyFiles/Downloads", so checking "Downloads" only
+	// will also match that one.
+	return strings.Contains(string(result), "/home/chronos/user/MyFiles/Downloads"), nil
 }
 
 // VerifyFileContent reads the `filePath` and compare its content with the
