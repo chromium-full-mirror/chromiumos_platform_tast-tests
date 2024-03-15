@@ -325,11 +325,24 @@ func RoutingTagSocketAPI(ctx context.Context, s *testing.State) {
 // testConnect sets up a TCP/UDP server in the virtualnet Env, calls TagSocket
 // API to create the socket, and verifies the connection to this server from the
 // host. Connections of {TCP, UDP} x {IPv4, IPv6} will be verified.
-func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort func() int) error {
+func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort func() int) (retErr error) {
 	ipAddrs, err := tc.l4serverEnv.WaitForVethInAddrs(ctx, true /*ipv4*/, true /*ipv6*/)
 	if err != nil {
 		return errors.Wrap(err, "failed to get IP addrs from the base server")
 	}
+
+	pp, err := patchpanel.New(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create patchpanel client")
+	}
+
+	switchToRootFunc, err := switchUser(ctx, tc.uid)
+	if err != nil {
+		return errors.Wrap(err, "failed to switch uid in setup")
+	}
+	defer func() {
+		retErr = switchToRootFunc()
+	}()
 
 	isTCP := func(f l4server.Family) bool { return f == l4server.TCP4 || f == l4server.TCP6 }
 
@@ -348,86 +361,57 @@ func testConnect(ctx context.Context, tc routingTagSocketAPITestCase, getPort fu
 
 		testing.ContextLogf(ctx, "Verifying %s connection to %s", family, peerSocketAddr)
 
-		conn, err := dialWithTagSocket(ctx, family.String(), peerSocketAddr, tc.uid, tc.tagSocketOpts...)
-		if tc.expectBlocked && isTCP(family) {
-			// TCP will fail at connect().
-			if err == nil {
-				return errors.New("unexpected connect success")
+		// Create a Dialer with modifying its behavior to call TagSocket.
+		dialer := &net.Dialer{
+			Control: createControlFunc(ctx, pp, tc.tagSocketOpts...),
+		}
+
+		err = triggerSocketIO(ctx, dialer, family.String(), peerSocketAddr)
+		if tc.expectBlocked && err == nil {
+			return errors.New("unexpected connection success")
+		} else if tc.expectBlocked && err != nil {
+			if isTCP(family) && strings.Contains(err.Error(), "connection refused") {
+				continue
+			} else if !isTCP(family) && strings.Contains(err.Error(), "operation not permitted") {
+				continue
 			}
-			if !strings.Contains(err.Error(), "connection refused") {
-				return errors.Wrap(err, "got unexpected connect error")
-			}
-			continue // to the test for the next family
+			return errors.Wrap(err, "unexpected connection error")
 		} else if err != nil {
-			return errors.Wrap(err, "failed to create socket connection")
-		}
-
-		// Send msg and read the response. Verify that they are the same.
-		const msg = "hello"
-		if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
-			return errors.Wrap(err, "failed to set write deadline on connection")
-		}
-		_, err = conn.Write([]byte(msg))
-		if tc.expectBlocked && !isTCP(family) {
-			// UDP will fail when sending the first packet.
-			if err == nil {
-				return errors.New("unexpected write success")
-			}
-			if !strings.Contains(err.Error(), "operation not permitted") {
-				return errors.Wrap(err, "got unexpected write error")
-			}
-			continue // to the test for the next family
-		} else if err != nil {
-			return errors.Wrap(err, "failed to write")
-		}
-
-		in := make([]byte, len(msg))
-		if err := conn.SetReadDeadline(time.Now().Add(2 * time.Second)); err != nil {
-			return errors.Wrap(err, "failed to set read deadline on connection")
-		}
-		if _, err = conn.Read(in); err != nil {
-			return errors.Wrap(err, "failed to read")
-		}
-
-		inStr := string(in)
-		if string(in) != msg {
-			return errors.Errorf("received msg does not match the sent one: got %s, expect %s", inStr, msg)
+			return errors.Wrap(err, "failed to trigger socket IO")
 		}
 	}
 	return nil
 }
 
-// dialWithTagSocket connects to the address on the named network. The socket
-// will be created with owner uid, and before connect, it will call TagSocket on
-// patchpanel to modify the socket parameters. Except for the uid and TagSocket
-// parts, this function provides the same interface with net.Dial() from the
-// standard library.
-func dialWithTagSocket(ctx context.Context, network, address string, uid int, tagSocketOpts ...patchpanel.TagSocketOption) (_ net.Conn, retErr error) {
-	pp, err := patchpanel.New(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to create patchpanel client")
+// createControlFunc returns a function can be used as the Control function in
+// net.Dialer. This function will do the proper socket tagging with
+// tagSocketOpts.
+func createControlFunc(ctx context.Context, pp *patchpanel.Client, tagSocketOpts ...patchpanel.TagSocketOption) func(network, address string, conn syscall.RawConn) error {
+	return func(network, address string, conn syscall.RawConn) error {
+		// This function will be called after the socket is created, before
+		// connect() is called.
+		var tagSocketErr error
+		if err := conn.Control(func(fd uintptr) {
+			tagSocketErr = pp.TagSocket(ctx, int32(fd), tagSocketOpts...)
+		}); err != nil {
+			return err
+		}
+		return tagSocketErr
 	}
+}
 
-	// Create a Dialer with modifying its behavior to call TagSocket.
-	dialer := &net.Dialer{
-		ControlContext: func(ctx context.Context, network, address string, conn syscall.RawConn) error {
-			// This function will be called after the socket is created, before
-			// connect() is called.
-			var tagSocketErr error
-			if err := conn.Control(func(fd uintptr) {
-				tagSocketErr = pp.TagSocket(ctx, int32(fd), tagSocketOpts...)
-			}); err != nil {
-				return err
-			}
-			return tagSocketErr
-		},
-	}
-
-	// Call setreuid() to switch to target user before creating the socket. Lock
-	// the goroutine to a thread at first since setreuid() only affects the
+// switchUser calls setreuid to switch the euid to uid, and returns a callback
+// to switch the user back to root.
+func switchUser(ctx context.Context, uid int) (cleanupFunc func() error, retErr error) {
+	// Lock the goroutine to a thread at first since setreuid() only affects the
 	// current thread.
 	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
+	defer func() {
+		// Make sure to unlock if this function return error.
+		if retErr != nil {
+			runtime.UnlockOSThread()
+		}
+	}()
 
 	// Note that we only need to change euid instead of ruid, otherwise we won't
 	// be able to switch back. The following code assumes we are running as root
@@ -435,12 +419,50 @@ func dialWithTagSocket(ctx context.Context, network, address string, uid int, ta
 	if err := unix.Setreuid(0, uid); err != nil {
 		return nil, errors.Wrapf(err, "failed to setuid to %d", uid)
 	}
-	defer func() {
-		// Switch back to root.
-		if err := unix.Setreuid(0, 0); err != nil {
-			retErr = errors.Wrap(err, "failed to reset uid to root")
-		}
-	}()
 
-	return dialer.Dial(network, address)
+	return func() error {
+		var setUIDErr error
+		if err := unix.Setreuid(0, 0); err != nil {
+			setUIDErr = errors.Wrap(err, "failed to reset uid to root")
+		}
+		runtime.UnlockOSThread()
+		return setUIDErr
+	}, nil
+}
+
+// triggerSocketIO performs the following operations:
+// 1. Use dialer to connect to address on network.
+// 2. Send a message via the connection.
+// 3. Receive a message via the connection.
+// 4. Verify that the two messages are the same.
+func triggerSocketIO(ctx context.Context, dialer *net.Dialer, network, address string) error {
+	// Always set timeout to a smaller value since both peers are on the DUT.
+	dialer.Timeout = 3 * time.Second
+	conn, err := dialer.DialContext(ctx, network, address)
+	if err != nil {
+		return errors.Wrapf(err, "failed to dial to %s %s", network, address)
+	}
+
+	const msg = "hello"
+	if err := conn.SetWriteDeadline(time.Now().Add(2 * time.Second)); err != nil {
+		return errors.Wrap(err, "failed to set write deadline on connection")
+	}
+	if _, err := conn.Write([]byte(msg)); err != nil {
+		return errors.Wrap(err, "failed to write")
+	}
+
+	in := make([]byte, len(msg))
+	if err := conn.SetReadDeadline(time.Now().Add(2 * time.Second)); err != nil {
+		return errors.Wrap(err, "failed to set read deadline on connection")
+	}
+	if _, err := conn.Read(in); err != nil {
+		return errors.Wrap(err, "failed to read")
+	}
+
+	inStr := string(in)
+	if string(in) != msg {
+		return errors.Errorf("received msg does not match the sent one: got %s, expect %s", inStr, msg)
+	}
+
+	return nil
 }
