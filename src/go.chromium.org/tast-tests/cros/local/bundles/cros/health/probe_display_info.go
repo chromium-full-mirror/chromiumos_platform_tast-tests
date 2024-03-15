@@ -9,6 +9,7 @@ import (
 	"math"
 	"regexp"
 	"strconv"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/croshealthd"
@@ -17,6 +18,11 @@ import (
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
+
+type displayInfoTestParams struct {
+	// Whether DUT has a privacy screen.
+	hasPrivacyScreen bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -29,10 +35,23 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		// TODO(b/326832237): Promote to critical.
-		Attr:         []string{"group:mainline", "informational", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"diagnostics"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Fixture:      "crosHealthdRunning",
+		Params: []testing.Param{{
+			Val: displayInfoTestParams{
+				hasPrivacyScreen: false,
+			},
+			ExtraAttr:         []string{"group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.NoPrivacyScreen()),
+		}, {
+			Name: "has_privacy_screen",
+			Val: displayInfoTestParams{
+				hasPrivacyScreen: true,
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.PrivacyScreen()),
+		}},
 	})
 }
 
@@ -325,6 +344,58 @@ func verifyEmbeddedDisplayInfoWithoutEdidInfo(ctx context.Context, edp *embedded
 	return nil
 }
 
+var privacyScreenStateValueRegexp = regexp.MustCompile(`.*value: (\d)`)
+
+func verifyPrivacyScreenInfo(ctx context.Context, edp *embeddedDisplayInfo) error {
+	if !edp.PrivacyScreenSupported {
+		return errors.New("cros_healthd reports privacy screen is not supported on supported model")
+	}
+
+	b, err := testexec.CommandContext(ctx, "modetest", "-c").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return errors.Wrap(err, "failed to run modetest command")
+	}
+	modetestOutput := string(b)
+
+	// Example output of modetest for privacy screen information:
+	// ...
+	// Connectors:
+	// id      encoder status          name            size (mm)       modes   encoders
+	// 95      0       connected       eDP-1           290x190         1       94
+	// ...
+	// props:
+	//       ...
+	//       103 privacy-screen hw-state:
+	//               flags: immutable enum
+	//               enums: Disabled=0 Enabled=1 Disabled-locked=2 Enabled-locked=3
+	//               value: 0
+	stateStartLine := -1
+	lines := strings.Split(modetestOutput, "\n")
+	for idx, line := range lines {
+		if strings.Contains(line, "privacy-screen hw-state") {
+			stateStartLine = idx
+			break
+		}
+	}
+
+	// State value will be at stateStartLine + 3.
+	if stateStartLine == -1 || stateStartLine+3 >= len(lines) {
+		return errors.Errorf("failed to locate the privacy-screen hw-state line, modetest output: %s", modetestOutput)
+	}
+	if valueMatch := privacyScreenStateValueRegexp.FindStringSubmatch(lines[stateStartLine+3]); valueMatch != nil {
+		// valueMatch[0] is guaranteed to be an integer after parsing, no need to deal with the error.
+		value, _ := strconv.ParseUint(valueMatch[0], 10, 32)
+		enabled := uint32(value) == 1
+		if enabled != edp.PrivacyScreenEnabled {
+			return errors.Errorf("privacy screen state is incorrect. cros_healthd reports [%v] which modetest reports [%v]", enabled, edp.PrivacyScreenEnabled)
+		}
+	} else {
+		return errors.Errorf("failed to parse the privacy screen state, state line: %s", lines[stateStartLine+3])
+	}
+
+	return nil
+}
+
 func ProbeDisplayInfo(ctx context.Context, s *testing.State) {
 	params := croshealthd.TelemParams{Category: croshealthd.TelemCategoryDisplay}
 	var display displayInfo
@@ -351,6 +422,17 @@ func ProbeDisplayInfo(ctx context.Context, s *testing.State) {
 		s.Log("Verify display info without EDID information")
 		if err := verifyEmbeddedDisplayInfoWithoutEdidInfo(ctx, &display.EDP); err != nil {
 			s.Fatal("Failed to validate embedded display info without edid info, err: ", err)
+		}
+	}
+
+	testParam := s.Param().(displayInfoTestParams)
+	if testParam.hasPrivacyScreen {
+		if err := verifyPrivacyScreenInfo(ctx, &display.EDP); err != nil {
+			s.Fatal("Failed to verify privacy screen state, err: ", err)
+		}
+	} else {
+		if display.EDP.PrivacyScreenEnabled || display.EDP.PrivacyScreenSupported {
+			s.Fatal("Privacy screen states are true on no privacy screen model")
 		}
 	}
 }
