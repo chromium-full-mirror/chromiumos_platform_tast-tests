@@ -47,6 +47,38 @@ func isGAIASignInURL(u string) bool {
 		strings.HasPrefix(u, sandboxGAIASignInURLPrefix)
 }
 
+// waitForGaiaSigninScreen waits for Gaia signin screen to be visible and ready
+// for one poll interval.
+func waitForGaiaSigninScreen(ctx context.Context, oobeConn *driver.Conn, timeout time.Duration) error {
+	po := &testing.PollOptions{
+		Timeout:  timeout,
+		Interval: 2 * time.Second,
+	}
+
+	// TODO(b/329888700): Use a proper state instead of the private `readyFired_` member.
+	js := `(function() {
+		gaiaSignin = $('gaia-signin');
+		return !gaiaSignin.hidden && gaiaSignin.authenticator.readyFired_;
+	})()`
+
+	var last bool
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		var current bool
+		if err := oobeConn.Eval(ctx, js, &current); err != nil {
+			return errors.Wrap(err, "failed to check Gaia ready")
+		}
+
+		// Consider Gaia signin screen is ready when both `current` and `last` are
+		// true.
+		if current && last {
+			return nil
+		}
+
+		last = current
+		return errors.New("gaia signin not ready")
+	}, po)
+}
+
 // connectToSingleGAIAWebview polls until it finds a matching WebView target with the specified
 // TargetMatcher function, creates a connection to it and finds the username field, or until timeout.
 // Returns the last polled error. An error is returned if the TargetMatcher finds more or less than one
@@ -207,6 +239,12 @@ func performGAIALogin(ctx context.Context, cfg *config.Config, sess *driver.Sess
 		if err != nil {
 			return err
 		}
+	}
+
+	// Waits for Gaia screen to be visible and ready.
+	testing.ContextLog(ctx, "Waiting for GAIA signin screen")
+	if err := waitForGaiaSigninScreen(ctx, oobeConn, pollOpts.Timeout); err != nil {
+		return errors.Wrap(err, "failed to wait for Gaia signin screen ready")
 	}
 
 	gaiaConn, err := connectToSingleGAIAWebview(ctx, sess, MatchSignInGAIAWebView(ctx, sess), pollOpts.Timeout)
