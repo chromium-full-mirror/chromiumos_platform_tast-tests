@@ -144,7 +144,7 @@ func ZeroStateDesksBar(ctx context.Context, s *testing.State) {
 		pc.DragTo(firstDeskMiniViewLoc.CenterPoint(), time.Second))(ctx); err != nil {
 		s.Fatal("Failed to drag and drop desks: ", err)
 	}
-	closeDeskButton := nodewith.ClassName("CloseButton")
+	closeDeskButton := nodewith.ClassName("DeskActionButton")
 	if err := ac.LeftClick(closeDeskButton)(ctx); err != nil {
 		s.Fatal("Failed to delete new desk: ", err)
 	}
