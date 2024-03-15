@@ -57,7 +57,7 @@ func init() {
 			"multipaste-eng@google.com",
 			"cros-system-ui-eng@google.com",
 			"chromeos-sw-engprod@google.com",
-			"ckincaid@google.com",
+			"newcomer@google.com",
 		},
 		Attr:         []string{"group:mainline", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
