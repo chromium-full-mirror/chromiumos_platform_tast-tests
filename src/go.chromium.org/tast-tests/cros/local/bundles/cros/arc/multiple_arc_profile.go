@@ -137,8 +137,7 @@ func MultipleArcProfile(ctx context.Context, s *testing.State) {
 
 // openARCSettings opens the ARC Settings Page from Chrome Settings.
 func openARCSettings(ctx context.Context, tconn *chrome.TestConn) error {
-	settings, err := ossettings.LaunchAtPage(ctx, tconn,
-		nodewith.Name("Apps").Role(role.Heading))
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Apps)
 	if err != nil {
 		return errors.Wrap(err, "failed to open settings page")
 	}
