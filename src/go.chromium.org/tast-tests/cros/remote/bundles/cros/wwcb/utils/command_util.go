@@ -257,7 +257,7 @@ func FindDockEthernet(ctx context.Context, dut *dut.DUT, defaultEth []string) (s
 			return errors.Errorf("unexpected number of Ethernet detected; got %d, want 1", len(diff))
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
+	}, &testing.PollOptions{Timeout: sshPollingTimeout, Interval: 200 * time.Millisecond}); err != nil {
 		return "", err
 	}
 	return diff[0], nil

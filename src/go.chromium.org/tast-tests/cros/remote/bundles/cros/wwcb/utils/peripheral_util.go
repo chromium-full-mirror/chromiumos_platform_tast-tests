@@ -17,6 +17,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+const (
+	sshPollingTimeout = 20 * time.Second
+)
+
 // ConnectPeripheralsViaDock connects the peripherals via the dock, verifies each connection and returns the list of USB devices.
 // Peripherals devices such as external display, ethernet, USB (audio) devices.
 func ConnectPeripheralsViaDock(ctx context.Context, dut *dut.DUT, extDispID, ethernetID string, usbTypeADeviceIDs []string) ([]string, error) {
@@ -64,7 +68,7 @@ func GetStableUSBDevices(ctx context.Context, dut *dut.DUT) ([]string, error) {
 			return errors.Errorf("expect the list of USB devices is stable for 2s, but it's not; got %v", strings.Join(current, "\n"))
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 2 * time.Second}); err != nil {
+	}, &testing.PollOptions{Timeout: sshPollingTimeout, Interval: 2 * time.Second}); err != nil {
 		return nil, err
 	}
 	return previous, nil
