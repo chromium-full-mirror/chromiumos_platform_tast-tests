@@ -30,8 +30,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp"},
+		Vars:         []string{"DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService"},
+		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -64,14 +65,6 @@ func ChangeExternalDisplayResolution(ctx context.Context, s *testing.State) {
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 
-	if _, ok := s.Var("DockingID"); ok {
-		// Open IP power to supply docking power.
-		if err := utils.OpenIppower(ctx, []int{1}); err != nil {
-			s.Fatal("Failed to open IP power: ", err)
-		}
-		defer utils.CloseIppower(cleanupCtx, []int{1})
-	}
-
 	// Initialize fixtures to find the connected devices.
 	if err := utils.InitFixture(ctx); err != nil {
 		s.Fatal("Failed to initialize fixtures: ", err)
@@ -89,6 +82,18 @@ func ChangeExternalDisplayResolution(ctx context.Context, s *testing.State) {
 	}
 
 	if dockingID, ok := s.Var("DockingID"); ok {
+		// Open IP power to supply docking power.
+		if err := utils.OpenIppower(ctx, []int{1}); err != nil {
+			s.Fatal("Failed to open IP power: ", err)
+		}
+		defer utils.CloseIppower(cleanupCtx, []int{1})
+
+		if _, ok := s.Var("newTestItem"); ok {
+			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+				s.Fatal("Failed to verify the docking station interface: ", err)
+			}
+		}
+
 		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 			s.Fatal("Failed to connect docking station: ", err)
 		}

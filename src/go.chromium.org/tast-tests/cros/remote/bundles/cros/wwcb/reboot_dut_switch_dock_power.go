@@ -31,8 +31,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp"},
-		Timeout:      5 * time.Minute,
+		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Data:         []string{"Capabilities.json"},
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
@@ -122,16 +123,56 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+
+		if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the usb devices speed: ", err)
+		}
+	}
+
 	if err := powerOffOn(ctx, dut, ippowerPorts, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after power off/on the docking station: ", err)
+	}
+
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+
+		if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the usb devices speed: ", err)
+		}
 	}
 
 	if err := rebootDUT(ctx, dut, ippowerPorts, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after reboot DUT: ", err)
 	}
 
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+
+		if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the usb devices speed: ", err)
+		}
+	}
+
 	if err := powerOffRebootOn(ctx, dut, ippowerPorts, USBDevices); err != nil {
 		s.Fatal("Failed to verify peripherals after power off dock, reboot DUT, power on dock: ", err)
+	}
+
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+
+		if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the usb devices speed: ", err)
+		}
 	}
 }
 

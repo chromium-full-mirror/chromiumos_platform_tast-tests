@@ -39,8 +39,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "ExtDispID1", "ExtDispID2", "wwcbIPPowerIp"},
+		Vars:         []string{"DockingID", "ExtDispID1", "ExtDispID2", "wwcbIPPowerIp", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.apps.AppsService", "tast.cros.browser.ChromeService"},
+		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -98,6 +99,12 @@ func WindowsPersistenceWithDualDisplay(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power on the docking station: ", err)
 		}
 		defer utils.CloseIppower(cleanupCtx, ipPowerPorts)
+
+		if _, ok := s.Var("newTestItem"); ok {
+			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+				s.Fatal("Failed to verify the docking station interface: ", err)
+			}
+		}
 
 		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 			s.Fatal("Failed to connect to the docking station: ", err)

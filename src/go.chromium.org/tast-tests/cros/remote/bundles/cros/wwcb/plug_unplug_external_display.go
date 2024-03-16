@@ -33,14 +33,14 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1"},
+		Vars:         []string{"servo", "DockingID", "ExtDispID1", "newTestItem"},
 		ServiceDeps: []string{
 			"tast.cros.browser.ChromeService",
 			"tast.cros.apps.AppsService",
 			"tast.cros.ui.AutomationService",
 			"tast.cros.wwcb.DisplayService",
 		},
-		Data: []string{utils.VideoFile},
+		Data: []string{"Capabilities.json", utils.VideoFile},
 		Params: []testing.Param{
 			{
 				Name:      "full",
@@ -89,6 +89,12 @@ func PlugUnplugExternalDisplay(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to power on the docking station: ", err)
 		}
 		defer utils.CloseIppower(cleanupCtx, ippowerPorts)
+
+		if _, ok := s.Var("newTestItem"); ok {
+			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+				s.Fatal("Failed to verify the docking station interface: ", err)
+			}
+		}
 
 		if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 			s.Fatal("Failed to connect to the docking station: ", err)

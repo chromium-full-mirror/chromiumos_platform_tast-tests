@@ -33,8 +33,9 @@ func init() {
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp"},
-		Timeout:      5 * time.Minute,
+		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Data:         []string{"Capabilities.json"},
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
@@ -135,6 +136,16 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+
+		if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the usb devices speed: ", err)
+		}
+	}
+
 	for _, test := range []struct {
 		ctrl string
 		desc string
@@ -156,6 +167,16 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 
 		if err := utils.VerifyPeripheralsConnection(ctx, dut, true, usbDevices); err != nil {
 			s.Fatal("Failed to verify connection of the peripherals: ", err)
+		}
+
+		if _, ok := s.Var("newTestItem"); ok {
+			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+				s.Fatal("Failed to verify the docking station interface: ", err)
+			}
+
+			if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+				s.Fatal("Failed to verify the usb devices speed: ", err)
+			}
 		}
 	}
 }

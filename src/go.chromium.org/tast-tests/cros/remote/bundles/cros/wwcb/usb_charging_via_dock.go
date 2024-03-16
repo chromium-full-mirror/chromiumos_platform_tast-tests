@@ -31,8 +31,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp"},
+		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.wwcb.DisplayService", "tast.cros.browser.ChromeService"},
+		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -100,6 +101,17 @@ func USBChargingViaDock(ctx context.Context, s *testing.State) {
 
 	if err := utils.ControlFixture(ctx, extDispID, "on"); err != nil {
 		s.Fatal("Failed to connect external display: ", err)
+	}
+
+	if _, ok := s.Var("newTestItem"); ok {
+		dockPowerPath, err := utils.FindDockingPowerPath(ctx, dut)
+		if err != nil {
+			s.Fatal("Failed to find the docking power path: ", err)
+		}
+		testing.ContextLog(ctx, "Found the docking power path: ", dockPowerPath)
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
 	}
 
 	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {

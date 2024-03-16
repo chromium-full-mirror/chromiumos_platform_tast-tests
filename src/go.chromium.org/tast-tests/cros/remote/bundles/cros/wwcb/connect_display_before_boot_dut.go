@@ -25,7 +25,8 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp"},
+		Vars:         []string{"servo", "DockingID", "ExtDispID1", "wwcbIPPowerIp", "newTestItem"},
+		Data:         []string{"Capabilities.json"},
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -95,5 +96,13 @@ func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 
 	if err := utils.VerifyDisplayCount(ctx, dut, 2); err != nil {
 		s.Fatal("Failed to verify that the external display is connected: ", err)
+	}
+
+	if dockingID, ok := s.Var("DockingID"); ok {
+		if _, ok := s.Var("newTestItem"); ok {
+			if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+				s.Fatal("Failed to verify the docking station interface: ", err)
+			}
+		}
 	}
 }

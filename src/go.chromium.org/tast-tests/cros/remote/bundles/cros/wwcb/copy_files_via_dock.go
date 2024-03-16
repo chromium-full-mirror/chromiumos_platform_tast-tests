@@ -43,9 +43,9 @@ func init() {
 		BugComponent: "b:1289112", // ChromeOS > External > WWCB > Allion > Automation
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
-		Vars:         []string{"DockingID", "USBTypeAIDArray", "wwcbIPPowerIp"},
+		Vars:         []string{"DockingID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
 		ServiceDeps:  []string{"tast.cros.browser.ChromeService"},
-		Data:         []string{sampleTXT},
+		Data:         []string{"Capabilities.json", sampleTXT},
 		Params: []testing.Param{
 			{
 				Name:      "fast",
@@ -137,6 +137,16 @@ func CopyFilesViaDock(ctx context.Context, s *testing.State) {
 		return nil
 	}, &testing.PollOptions{Timeout: 10 * time.Second, Interval: 200 * time.Millisecond}); err != nil {
 		s.Fatal("Failed to check number of USB devices: ", err)
+	}
+
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+
+		if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the usb devices speed: ", err)
+		}
 	}
 
 	// Push file to remote.

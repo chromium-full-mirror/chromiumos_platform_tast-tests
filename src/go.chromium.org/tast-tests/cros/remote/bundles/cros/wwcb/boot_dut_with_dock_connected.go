@@ -28,8 +28,9 @@ func init() {
 		Attr:         []string{"group:wwcb", "group:pasit"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
-		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp"},
-		Timeout:      5 * time.Minute,
+		Vars:         []string{"servo", "DockingID", "ExtDispID1", "EthernetID", "USBTypeAIDArray", "wwcbIPPowerIp", "newTestItem"},
+		Data:         []string{"Capabilities.json"},
+		Timeout:      10 * time.Minute,
 		Params: []testing.Param{{
 			Name: "clamshell_mode",
 			Val:  false,
@@ -150,5 +151,15 @@ func BootDUTWithDockConnected(ctx context.Context, s *testing.State) {
 	}
 	if len(afterConnectPeripherals) <= len(beforeShutdwonDUT) {
 		s.Fatalf("Unexpect USB device; before shutdwon DUT: %v, after connect peripherals: %v", strings.Join(beforeShutdwonDUT, "\n"), strings.Join(afterConnectPeripherals, "\n"))
+	}
+
+	if _, ok := s.Var("newTestItem"); ok {
+		if err := utils.VerifyDockingInterface(ctx, s.DUT(), dockingID, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the docking station interface: ", err)
+		}
+
+		if err := utils.VerifyUSBTypeADeviceSpeed(ctx, dut, s.DataPath("Capabilities.json")); err != nil {
+			s.Fatal("Failed to verify the usb devices speed: ", err)
+		}
 	}
 }
