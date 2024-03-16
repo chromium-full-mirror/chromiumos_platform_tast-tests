@@ -76,7 +76,7 @@ var standardTestCases = []searchSettingsTestCase{
 	},
 	{
 		searchTerm:        "Add Google account",
-		searchResult:      "Add Google Account, My accounts",
+		searchResult:      "Add Google Account, Accounts",
 		wantValue:         nodewith.Name("Add Google Account").Role(role.Button),
 		passwordProtected: false,
 	},
