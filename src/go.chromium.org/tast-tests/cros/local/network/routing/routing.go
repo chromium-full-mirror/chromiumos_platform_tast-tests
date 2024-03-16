@@ -106,9 +106,9 @@ func (e *TestEnv) SetUp(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to disable portal detection on ethernet")
 	}
-	testing.ContextLog(ctx, "Resetting ethernet ephemeral priority")
-	if err := virtualnet.ResetEthernetEphemeralPriority(ctx, e.Manager); err != nil {
-		return errors.Wrap(err, "failed to reset ethernet ephemeral priority")
+	testing.ContextLog(ctx, "Resetting ethernet properties")
+	if err := virtualnet.ResetEthernetProperties(ctx, e.Manager); err != nil {
+		return errors.Wrap(err, "failed to reset ethernet properties")
 	}
 
 	opts := virtualnet.EnvOptions{

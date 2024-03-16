@@ -104,19 +104,27 @@ type EnvOptions struct {
 	CapportURL string
 }
 
-// ResetEthernetEphemeralPriority sets Ethernet services EphemeralPriority to 0,
-// otherwise the physical network may have a higher priority than the one
-// created in virtualnet. Note that EphemeralPriority shouldn't be set on the
-// physical Ethernet service in the test code, but it may happen automatically
-// in some corner cases because of our ethernet_any service implementation.
-func ResetEthernetEphemeralPriority(ctx context.Context, m *shill.Manager) error {
+// ResetEthernetProperties resets all properties which can affect test runs to
+// the default values, on all Ethernet services. Note that resetting the
+// properties on a single service may not be reliable, due to our implementation
+// of the ethernet_any service, and thus we do a global reset here.
+func ResetEthernetProperties(ctx context.Context, m *shill.Manager) error {
 	svcs, _, err := m.ServicesByTechnology(ctx, shill.TechnologyEthernet)
 	if err != nil {
 		return errors.Wrap(err, "failed to get Ethernet services")
 	}
 	for _, svc := range svcs {
+		// Reset EphemeralPriority to 0, otherwise the physical network may have a
+		// higher priority than the one created in virtualnet.
 		if err := svc.SetProperty(ctx, shillconst.ServicePropertyEphemeralPriority, 0); err != nil {
 			return errors.Wrapf(err, "failed to reset EphemeralPriority on %s", svc.ObjectPath())
+		}
+		// Reset CheckPortal to "auto". CheckPortal Service property has a higher
+		// priority over the CheckPortalList Manager priority. If its value is
+		// "true", our disable portal detection logic in the test code won't take
+		// effect, i.e., portal detection will still be ran on this service.
+		if err := svc.SetProperty(ctx, shillconst.ServicePropertyCheckPortal, "auto"); err != nil {
+			return errors.Wrapf(err, "failed to reset CheckPortal on %s", svc.ObjectPath())
 		}
 	}
 	return nil

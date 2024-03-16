@@ -510,9 +510,9 @@ func NewEnv(ctx context.Context, pool *subnet.Pool) (env *Env, err error) {
 	if err := e.manager.SetProperty(ctx, shillconst.ProfilePropertyCheckPortalList, "wifi,cellular"); err != nil {
 		return nil, errors.Wrap(err, "failed to disable portal detection on ethernet")
 	}
-	testing.ContextLog(ctx, "Resetting ethernet ephemeral priority")
-	if err := virtualnet.ResetEthernetEphemeralPriority(ctx, e.manager); err != nil {
-		return nil, errors.Wrap(err, "failed to reset ethernet ephemeral priority")
+	testing.ContextLog(ctx, "Resetting ethernet properties")
+	if err := virtualnet.ResetEthernetProperties(ctx, e.manager); err != nil {
+		return nil, errors.Wrap(err, "failed to reset ethernet properties")
 	}
 
 	// Install test certificates for HTTPS server. In doing so, virtualnet/certs will mount a test certificate directory.

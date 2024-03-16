@@ -112,7 +112,7 @@ func resetShillVPNState(ctx context.Context) {
 		logErr(err)
 	}
 
-	if err := virtualnet.ResetEthernetEphemeralPriority(ctx, m); err != nil {
+	if err := virtualnet.ResetEthernetProperties(ctx, m); err != nil {
 		logErr(err)
 	}
 }
