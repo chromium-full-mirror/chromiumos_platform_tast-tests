@@ -27,10 +27,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningLvmCacheRemovalShowsNotification,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that a notification is shown when the LVM cache partition is removed",
-		BugComponent: "b:167289",
+		Func:           BulkPinningLvmCacheRemovalShowsNotification,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verify that a notification is shown when the LVM cache partition is removed",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",

@@ -24,10 +24,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningLowDiskSpaceTogglesOff,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that bulk pinning turns off when 2GB threshold is breached",
-		BugComponent: "b:167289",
+		Func:           BulkPinningLowDiskSpaceTogglesOff,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verify that bulk pinning turns off when 2GB threshold is breached",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",

@@ -33,10 +33,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningHostedAvailableOffline,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verify that after bulk pinning enabled, hosted files can be opened offline",
-		BugComponent: "b:167289",
+		Func:           BulkPinningHostedAvailableOffline,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verify that after bulk pinning enabled, hosted files can be opened offline",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",

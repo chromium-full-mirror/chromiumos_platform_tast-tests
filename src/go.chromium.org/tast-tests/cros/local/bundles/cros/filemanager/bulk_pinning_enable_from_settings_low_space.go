@@ -24,10 +24,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningEnableFromSettingsLowSpace,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the bulk pinning can't be enabled from settings with low disk space",
-		BugComponent: "b:167289",
+		Func:           BulkPinningEnableFromSettingsLowSpace,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verify that the bulk pinning can't be enabled from settings with low disk space",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",

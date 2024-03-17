@@ -25,10 +25,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningDrivePinningChoobeScreen,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the the CHOOBE screen shows for consumer users",
-		BugComponent: "b:167289",
+		Func:           BulkPinningDrivePinningChoobeScreen,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verify that the the CHOOBE screen shows for consumer users",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",

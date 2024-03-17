@@ -24,10 +24,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningEnableFromSettings,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the bulk pinning feature can be enabled via settings",
-		BugComponent: "b:167289",
+		Func:           BulkPinningEnableFromSettings,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verify that the bulk pinning feature can be enabled via settings",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",

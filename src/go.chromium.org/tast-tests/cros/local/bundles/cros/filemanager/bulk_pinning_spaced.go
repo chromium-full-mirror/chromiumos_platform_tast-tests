@@ -23,10 +23,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningSpaced,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that the spaced CLI is called by Drivefs",
-		BugComponent: "b:167289",
+		Func:           BulkPinningSpaced,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verify that the spaced CLI is called by Drivefs",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",

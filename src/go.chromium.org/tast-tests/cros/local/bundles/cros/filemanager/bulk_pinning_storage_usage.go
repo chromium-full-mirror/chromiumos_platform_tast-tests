@@ -34,10 +34,11 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         BulkPinningStorageUsage,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verify that offline storage usage is increased after enabling bulk pinning",
-		BugComponent: "b:167289",
+		Func:           BulkPinningStorageUsage,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verify that offline storage usage is increased after enabling bulk pinning",
+		BugComponent:   "b:167289",
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"benreich@google.com",
