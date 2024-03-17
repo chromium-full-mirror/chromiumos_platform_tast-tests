@@ -26,14 +26,12 @@ func init() {
 		Desc:         "Tests the printscan_debug D-bus methods",
 		Contacts: []string{
 			"project-bolton@google.com",
-			"masonwilde@google.com",
+			"pmoy@google.com",
 		},
 		// ChromeOS > Platform > baseOS > Printing
 		BugComponent: "b:167231",
 		Attr: []string{
 			"group:mainline",
-			"informational",
-			"group:criticalstaging",
 			"group:paper-io",
 			"paper-io_printing",
 			"group:hw_agnostic",
