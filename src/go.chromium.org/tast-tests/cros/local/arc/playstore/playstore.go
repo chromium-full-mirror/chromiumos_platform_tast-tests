@@ -287,11 +287,11 @@ func installOrUpdate(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName stri
 
 		// If the version isn't compatible with the device, no install button will be available.
 		// Fail immediately.
-		if err := d.Object(ui.TextMatches(versionText)).Exists(ctx); err == nil {
-			return testing.PollBreak(errors.New("device not compatible with this version"))
-		}
-		if err := d.Object(ui.TextMatches(incompatibleText)).Exists(ctx); err == nil {
-			return testing.PollBreak(errors.New("device not compatible with this app"))
+		versionTextView := d.Object(ui.TextMatches(versionText))
+		versionDescView := d.Object(ui.DescriptionMatches(versionText))
+		incompatibleTextView := d.Object(ui.TextMatches(incompatibleText))
+		if _, err := findAnyExists(ctx, defaultUITimeout, versionTextView, versionDescView, incompatibleTextView); err == nil {
+			return testing.PollBreak(errors.New("device not compatible with this version or this app"))
 		}
 
 		// If retry button appears, reopen the Play Store page by sending the same intent again.

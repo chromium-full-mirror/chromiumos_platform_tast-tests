@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/apputil"
+	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade"
 	"go.chromium.org/tast-tests/cros/local/bluetooth/facade/common"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -145,6 +146,7 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 		bluetoothSwitchID = idPrefix + "on_off_switch"
 
 		defaultUITimeout = 15 * time.Second
+		retryTimes       = 3
 	)
 
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
@@ -155,7 +157,15 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create the instance of app: ", err)
 	}
 
-	if err := app.Install(ctx); err != nil {
+	if err := uiauto.Retry(retryTimes, func(ctx context.Context) error {
+		if err := app.Install(ctx); err != nil {
+			if err := optin.ClosePlayStore(ctx, tconn); err != nil {
+				s.Log("Failed to close Play Store: ", err)
+			}
+			return err
+		}
+		return nil
+	})(ctx); err != nil {
 		s.Fatalf("Failed to install %q: %v", app.AppName, err)
 	}
 
