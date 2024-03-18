@@ -6,7 +6,7 @@ package sysutil
 
 import (
 	"context"
-	"strings"
+	"path/filepath"
 
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/ssh/linuxssh"
@@ -17,15 +17,26 @@ import (
 // Instead, introduce a new dependency describing the required feature:
 // https://chromium.googuesource.com/chromiumos/platform/tast/+/HEAD/docs/test_dependencies.md
 func IsRunningOnVM(ctx context.Context, d *dut.DUT) bool {
-	const sysVendor = "/sys/devices/virtual/dmi/id/sys_vendor"
-	// Currently only checks for QEMU but more kinds can be added here in the
-	// future.
-	const vmVendor = "QEMU"
-	vendor, err := linuxssh.ReadFile(ctx, d.Conn(), sysVendor)
+	const dmiDir = "/sys/devices/virtual/dmi/id"
+	productPath := filepath.Join(dmiDir, "product_name")
+	vendorPath := filepath.Join(dmiDir, "sys_vendor")
+
+	// Check the product name to determine if running under VMLab, which
+	// runs on GCE.
+	product, err := linuxssh.ReadFile(ctx, d.Conn(), productPath)
 	if err != nil {
-		// Assume that the read failed because the remote file doesn't exist;
-		// which indicates that we're not running on a VM.
+		// Assume not a VM.
 		return false
 	}
-	return strings.TrimSuffix(string(vendor), "\n") == vmVendor
+	if string(product) == "Google Compute Engine\n" {
+		return true
+	}
+
+	// Check the system vendor to determine if running under QEMU.
+	vendor, err := linuxssh.ReadFile(ctx, d.Conn(), vendorPath)
+	if err != nil {
+		// Assume not a VM.
+		return false
+	}
+	return string(vendor) == "QEMU\n"
 }
