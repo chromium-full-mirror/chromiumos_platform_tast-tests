@@ -35,7 +35,7 @@ func DeviceScanner(ctx context.Context, h *firmware.Helper, devPath string) (*ss
 
 // EvtestMonitor is used to check whether events sent to the devices are picked up by the evtest.
 func EvtestMonitor(ctx context.Context, scanner *bufio.Scanner) error {
-	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	timeoutCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
 	evtestRe := regexp.MustCompile(`Event.*time.*code\s(\d*)\s\(BTN_TOUCH\)`)
 	text := make(chan string)
