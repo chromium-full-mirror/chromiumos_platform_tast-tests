@@ -189,13 +189,18 @@ func sendHIDReportAndVerify(ctx context.Context, dut *dut.DUT, sendReport action
 	// 	Event: time 1686880566.986645, type 1 (EV_KEY), code 272 (BTN_LEFT), value 1
 	reg := regexp.MustCompile(fmt.Sprintf(`Event: time \d+\.\d+, type \d+ \(.*\), code \d+ \(%s\), value \d+`, expectedEvent))
 
+	// The BlueZ service on the chameleon device could take up to a minute to be ready
+	// before sending out a Bluetooth/BLE HID report.
+	// (refer to Python class "chameleond.utils.raspi_bluez_service.BluezService")
+	waitForReportTimeout := time.Minute
+
 	// Retry a few times, just in case of wireless communication latency or performance issue.
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		if reg.MatchString(outBuffer.String()) {
 			return nil
 		}
 		return errors.New("failed to find the expected HID event log in the output of the evtest command-line tool")
-	}, &testing.PollOptions{Timeout: 5 * time.Second, Interval: time.Second})
+	}, &testing.PollOptions{Timeout: waitForReportTimeout, Interval: time.Second})
 }
 
 // fetchDevicePath returns device path that can be used by evtest command-line tool.
