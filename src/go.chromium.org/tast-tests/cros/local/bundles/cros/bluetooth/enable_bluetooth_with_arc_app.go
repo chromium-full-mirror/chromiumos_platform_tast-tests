@@ -7,9 +7,11 @@ package bluetooth
 import (
 	"context"
 	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -28,6 +30,9 @@ const (
 	androidVMT string = "android_vm_t"
 )
 
+// Match the old version string of "1.x.x", "2.0.x" or "2.1.x".
+var regexpOldVersionOfBluetoothApp = regexp.MustCompile(`^(1\.\d+|2\.(0|1))\.\d+`)
+
 type testParam struct {
 	stackType  common.BluetoothStackType
 	androidDep string
@@ -35,10 +40,9 @@ type testParam struct {
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           EnableBluetoothWithArcApp,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleOwnerMonitored,
-		Desc:           "Verify that user can turn Bluetooth on with an ARC++ app",
+		Func:         EnableBluetoothWithArcApp,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify that user can turn Bluetooth on with an ARC++ app",
 		Contacts: []string{
 			// "cros-connectivity@google.com",
 			// "chromeos-connectivity-engprod@google.com",
@@ -46,9 +50,10 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		// ChromeOS > Software > System Services > Connectivity > Bluetooth
-		BugComponent: "b:1131776",
-		Attr:         []string{"group:bluetooth"},
-		SoftwareDeps: []string{"chrome", "arc"},
+		BugComponent:   "b:1131776",
+		LifeCycleStage: testing.LifeCycleInDevelopment,
+		Attr:           []string{"group:bluetooth"},
+		SoftwareDeps:   []string{"chrome", "arc"},
 		Params: []testing.Param{{
 			Name:              "android_p_bluez",
 			Fixture:           "arcBootedWithPlayStoreAndBluetoothBlueZ",
@@ -139,7 +144,6 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 
 	const (
 		// The ARC++ app used for controlling Bluetooth.
-		appName = "Bluetooth Pair"
 		pkgName = "com.manjul.bluetoothsdp"
 
 		idPrefix          = pkgName + ":id/"
@@ -152,7 +156,10 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
 	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "screen_recording.webm"), s.HasError)
 
-	app, err := apputil.NewApp(ctx, kb, tconn, a, d, appName, pkgName)
+	// We do not provide a name when installing the app since it is not required.
+	// Further, the name as shown in the Play Store may not match the actual name of the app itself.
+	// To handle this edge-case we determine the correct name to use based on the version of the app that we install.
+	app, err := apputil.NewApp(ctx, kb, tconn, a, d, "" /* appName */, pkgName)
 	if err != nil {
 		s.Fatal("Failed to create the instance of app: ", err)
 	}
@@ -166,8 +173,14 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 		}
 		return nil
 	})(ctx); err != nil {
-		s.Fatalf("Failed to install %q: %v", app.AppName, err)
+		s.Fatal("Failed to install the bluetooth app: ", err)
 	}
+
+	appName, err := appNameBasedOnVersion(ctx, app)
+	if err != nil {
+		s.Fatal("Failed to get the app name: ", err)
+	}
+	app.AppName = appName
 
 	s.Log("Turning Bluetooth off")
 	if err := btFacade.SetPowered(ctx, false); err != nil {
@@ -241,4 +254,28 @@ func EnableBluetoothWithArcApp(ctx context.Context, s *testing.State) {
 	} else if !isBtOn {
 		s.Fatal("Bluetooth is not ON")
 	}
+}
+
+// appNameBasedOnVersion returns the app name based on the version of the app.
+//
+// The method is included as the name of the app can be different across different versions and the version of the app available on the Play Store could be different as well.
+// The known mapping of app name to app version is:
+//   - Bluetooth Pair: 2.1.x and before
+//   - Bluetooth Finder: 2.2.0 and later
+//
+// This method can be deprecated once the the app available on the Play Store is fixed.
+func appNameBasedOnVersion(ctx context.Context, app *apputil.App) (string, error) {
+	appVersion, err := app.GetVersion(ctx)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get app version")
+	}
+
+	const (
+		oldAppName = "Bluetooth Pair"
+		newAppName = "Bluetooth Finder"
+	)
+	if regexpOldVersionOfBluetoothApp.MatchString(appVersion) {
+		return oldAppName, nil
+	}
+	return newAppName, nil
 }
