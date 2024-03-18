@@ -32,6 +32,10 @@ import (
 
 const arcInstallLoggingTestTimeout = 13 * time.Minute
 
+type managedAppInstallLoggingParam struct {
+	UseEncryptedReportingPipelineToReportArcAppInstallEvents bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ManagedAppInstallLogging,
@@ -50,28 +54,90 @@ func init() {
 		},
 		Params: []testing.Param{
 			{
+				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
+				},
 			},
 			{
+				// Report and log events using the encrypted reporting pipeline.
+				Name:              "using_encrypted_reporting",
+				ExtraSoftwareDeps: []string{"android_container", "no_qemu"},
+				ExtraAttr:         []string{"group:enterprise-reporting-daily", "group:enterprise-reporting"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
+				},
+			},
+			{
+				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				Name:              "vm",
 				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
+				},
 			},
 			{
+				Name:              "vm_using_encrypted_reporting",
+				ExtraSoftwareDeps: []string{"android_vm", "no_android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
+				},
+			},
+			{
+				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				Name:              "x",
 				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
 				ExtraAttr:         []string{"informational"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
+				},
 			},
 			{
+				Name:              "x_using_encrypted_reporting",
+				ExtraSoftwareDeps: []string{"android_vm_t", "no_qemu"},
+				ExtraAttr:         []string{"informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
+				},
+			},
+			{
+				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				Name:              "betty",
 				ExtraSoftwareDeps: []string{"android_container", "qemu"},
 				ExtraAttr:         []string{"informational"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
+				},
 			},
 			{
+				Name:              "betty_using_encrypted_reporting",
+				ExtraSoftwareDeps: []string{"android_container", "qemu"},
+				ExtraAttr:         []string{"informational", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
+				},
+			},
+			{
+				// TODO(b/306175841): remove this test once the UseEncryptedReportingPipelineToReportArcAppInstallEvents experiment is rolled out.
 				Name:              "betty_vm",
 				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
 				ExtraAttr:         []string{"informational", "group:hw_agnostic"},
-			}},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: false,
+				},
+			},
+			{
+				Name:              "betty_vm_using_encrypted_reporting",
+				ExtraSoftwareDeps: []string{"android_vm", "qemu"},
+				ExtraAttr:         []string{"informational", "group:hw_agnostic", "group:enterprise-reporting-daily", "group:enterprise-reporting"},
+				Val: managedAppInstallLoggingParam{
+					UseEncryptedReportingPipelineToReportArcAppInstallEvents: true,
+				},
+			},
+		},
 	})
 }
 
@@ -122,6 +188,14 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 	// Login to Chrome and allow to launch ARC if allowed by user policy.
 	// Flag --arc-install-event-chrome-log-for-tests logs ARC install events to chrome log.
 	args := append(arc.DisableSyncFlags(), "--arc-install-event-chrome-log-for-tests")
+
+	useEncryptedReportingPipeline := s.Param().(managedAppInstallLoggingParam).UseEncryptedReportingPipelineToReportArcAppInstallEvents
+
+	if useEncryptedReportingPipeline {
+		// Use the encrypted reporting pipeline instead of the realtime reporting pipeline to report events.
+		args = append(args, "--enable-features=UseEncryptedReportingPipelineToReportArcAppInstallEvents")
+	}
+
 	if err := testing.Poll(ctx, func(ctx context.Context) (retErr error) {
 		creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 		if err != nil {
@@ -165,7 +239,7 @@ func ManagedAppInstallLogging(ctx context.Context, s *testing.State) {
 		}
 
 		// Check if required sequence appears in chrome log.
-		if err := waitForLoggedEvents(ctx, cr, testPackage); err != nil {
+		if err := waitForLoggedEvents(ctx, cr, testPackage, useEncryptedReportingPipeline); err != nil {
 			return rl.Exit("log required events", err)
 		}
 		return nil
@@ -201,13 +275,19 @@ func statusCodeToEvent(code string) eventType {
 }
 
 // readLoggedEvents reads logged events from /var/log/chrome/chrome file.
-func readLoggedEvents(packageName string) ([]eventType, error) {
+func readLoggedEvents(packageName string, useEncryptedReportingPipeline bool) ([]eventType, error) {
 	logContent, err := ioutil.ReadFile(syslog.ChromeLogFile)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to read "+syslog.ChromeLogFile)
 	}
 
-	r := regexp.MustCompile(fmt.Sprintf(`Add ARC install event: %s, (.*)`, packageName))
+	arcInstallLogRegex := `Add ARC install event: %s, (.*)`
+	if useEncryptedReportingPipeline {
+		// ERP uses a different logging format.
+		arcInstallLogRegex = `Enqueued ARC install event: package = %s event type = (.*) enqueue status = (.*)`
+	}
+	r := regexp.MustCompile(fmt.Sprintf(arcInstallLogRegex, packageName))
+
 	matches := r.FindAllStringSubmatch(string(logContent), -1)
 	if matches == nil {
 		return nil, errors.New("no event logged yet")
@@ -215,22 +295,33 @@ func readLoggedEvents(packageName string) ([]eventType, error) {
 
 	var events []eventType
 	for _, m := range matches {
-		events = append(events, statusCodeToEvent(m[1]))
+		// TODO(b/306175841) Verify that the enqeue status is  "OK" (i.e. m[2] == "OK").
+		// Can't do this at the moment because the encryption key needs to be sent from the reporting server,
+		// so we either need to figure out how to use the fake reporting server with GAIA credentials
+		// or find another solution, For now, use go.chromium.org/tast-tests/cros/remote/bundles/cros/policy/heartbeat_reporting.go
+		// to verify that events are able to be enqueued and sent from managed devices.
+		eventType := m[1]
+		events = append(events, statusCodeToEvent(eventType))
 	}
 	return events, nil
 }
 
 // waitForLoggedEvents waits for desired sequence to appear in chrome log.
-func waitForLoggedEvents(ctx context.Context, cr *chrome.Chrome, packageName string) error {
-	var expectedEvents = []eventType{serverRequest, installationStarted, installationFinished, success}
+func waitForLoggedEvents(ctx context.Context, cr *chrome.Chrome, packageName string, useEncryptedReportingPipeline bool) error {
 
 	ctx, st := timing.Start(ctx, "wait_logged_events")
 	defer st.End()
 
 	return testing.Poll(ctx, func(ctx context.Context) error {
-		loggedEvents, err := readLoggedEvents(packageName)
+		loggedEvents, err := readLoggedEvents(packageName, useEncryptedReportingPipeline)
 		if err != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to read chrome log"))
+			return err
+		}
+
+		var expectedEvents = []eventType{serverRequest, installationStarted, installationFinished, success}
+		if useEncryptedReportingPipeline {
+			// ERP does not report `installationFinished` events because the reporting server ignores them.
+			expectedEvents = []eventType{serverRequest, installationStarted, success}
 		}
 
 		eventsMap := make(map[eventType]bool)
