@@ -127,6 +127,7 @@ func init() {
 		Desc:         "Verifies that DUT respects rules for SSIDs blocked by device policy",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com",
+			"olsa@google.com",
 		},
 		BugComponent: "b:1000044", // ChromeOS > Software > Commercial (Enterprise) > Commercial Networking
 		SearchFlags: []*testing.StringPair{

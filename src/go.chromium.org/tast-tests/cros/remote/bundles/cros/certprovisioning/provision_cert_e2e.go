@@ -49,7 +49,8 @@ func init() {
 		Desc:         "Provision a client certificate with real DMServer",
 		Contacts: []string{
 			"chromeos-commercial-networking@google.com", // Team
-			"pmarko@google.com",
+			"gschwarz@google.com",
+			"miersh@google.com",
 		},
 		BugComponent: "b:1000044",
 		Attr:         []string{"group:tape-daily"},
