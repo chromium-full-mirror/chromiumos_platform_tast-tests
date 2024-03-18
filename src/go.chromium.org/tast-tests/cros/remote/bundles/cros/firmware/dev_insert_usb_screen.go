@@ -167,9 +167,17 @@ func DevInsertUSBScreen(ctx context.Context, s *testing.State) {
 		}
 		reconnectTimeout = h.Config.USBImageBootTimeout
 	case mainDiskBootFromDevScreen:
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
+		}
 		s.Log("Selecting \"Back\"")
 		if err := menuNavigator.SelectOption(ctx); err != nil {
 			s.Fatal("Failed to press \"Back\": ", err)
+		}
+		// GoBigSleepLint: Sleep for model specific time.
+		if err := testing.Sleep(ctx, h.Config.KeypressDelay); err != nil {
+			s.Fatalf("Failed to sleep for %s (KeypressDelay): %v", h.Config.KeypressDelay, err)
 		}
 		s.Log("Selecting \"Boot from internal disk\"")
 		if err := menuBypasser.BypassDevMode(ctx); err != nil {
