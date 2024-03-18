@@ -45,6 +45,7 @@ func init() {
 			"chromeos-dlp@google.com", // Feature owners.
 		},
 		BugComponent: "b:892101",
+		Attr:         []string{"group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome", "lacros"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{"text_1.html", "editable_text_box.html"},
