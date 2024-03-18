@@ -62,7 +62,7 @@ func ToggleBluetoothFromBluetoothSettings(ctx context.Context, s *testing.State)
 
 	bt := s.FixtValue().(bluetooth.HasBluetoothImpl).BluetoothImpl()
 
-	app, err := ossettings.NavigateToBluetoothSettingsPage(ctx, tconn, bt)
+	app, err := ossettings.NavigateToBluetoothSettingsSubpage(ctx, tconn, bt)
 	defer app.Close(cleanupCtx)
 
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")
