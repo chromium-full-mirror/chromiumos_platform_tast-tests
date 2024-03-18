@@ -65,8 +65,7 @@ func init() {
 		}, {
 			Name: "user_not_logged_in",
 			// Ensure that the test does not run in guest mode.
-			Fixture:   "crosHealthdRunningWithChromeNotLoggedIn",
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			Fixture: "crosHealthdRunningWithChromeNotLoggedIn",
 		}},
 	})
 }
