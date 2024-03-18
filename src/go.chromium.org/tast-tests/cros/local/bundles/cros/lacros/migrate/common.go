@@ -337,7 +337,7 @@ func setupBookmark(ctx context.Context, ui *uiauto.Context, br *browser.Browser,
 		return errors.Wrap(err, "failed to type bookmark name")
 	}
 	// Make sure that the bookmark is saved to 'Bookmarks bar' where its visible.
-	folderButton := nodewith.Name("Folder").Role(role.PopUpButton)
+	folderButton := nodewith.Name("Folder").Role(role.ComboBoxSelect)
 	bookmarksBarOption := nodewith.Name(bookmarkFolderName).Role(role.MenuItem)
 	if err := uiauto.Combine("Select 'Bookmarks bar' folder",
 		ui.LeftClick(folderButton),
