@@ -81,6 +81,9 @@ var (
 	}
 
 	allCheckers = []sysLogChecker{{
+		// NB: http://shortn/_xXhPgTm1aW (Google-internal link) ***MUST*** be
+		// kept updated to any changes made to the checkers below. Also note
+		// any subsequent changes needed to said file if adding a category.
 		// Checker to check GPU hangs.
 		category: SysLogGpuHangs,
 		re: regexp.MustCompile(strings.Join([]string{
@@ -103,6 +106,10 @@ var (
 			// mediatek
 			`mtk-mdp.*: cmdq timeout`,
 			`scp ipi .* ack time out !`,
+			// mediatek/PowerVR
+			`PVR_K:.*CheckForStalledCCB.*CCCB has not progressed`,   // b/303630620
+			`Possible stalled client RGX contexts detected`,
+			`PVR_K:.*Trying to identify stalled context...\(force\)`,
 		}, "|")),
 	}, {
 		// Checker to check amd drivers error.
