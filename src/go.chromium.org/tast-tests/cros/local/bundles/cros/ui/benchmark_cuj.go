@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/benchmarkcuj"
@@ -520,5 +521,15 @@ func init() {
 }
 
 func BenchmarkCUJ(ctx context.Context, s *testing.State) {
-	benchmarkcuj.Run(ctx, s)
+	testParam := s.Param().(benchmarkcuj.BenchmarkTest)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	pv, err := benchmarkcuj.Run(ctx, cr, testParam, s.Var)
+	if err != nil {
+		s.Fatal("Failed to run benchmark: ", err)
+	}
+
+	if err := pv.Save(s.OutDir()); err != nil {
+		s.Fatal("Failed to store values: ", err)
+	}
 }

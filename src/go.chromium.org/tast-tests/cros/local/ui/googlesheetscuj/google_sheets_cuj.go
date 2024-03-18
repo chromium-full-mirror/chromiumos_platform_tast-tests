@@ -41,12 +41,21 @@ type TestParam struct {
 
 // Run opens up a Google Sheets file, and use mousewheel/trackpad/keypress to
 // scroll the sheets file, to test the Google Sheets performance.
-func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath string) (pv *perf.Values, retErr error) {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, systemTraceConfigPath string, args func(string) (string, bool)) (pv *perf.Values, retErr error) {
+	overallScrollTimeout := 10 * time.Minute
+	if testDuration, ok := args("ui.GoogleSheetsCUJ.duration"); ok {
+		var err error
+		overallScrollTimeout, err = time.ParseDuration(testDuration)
+		if err != nil {
+			return nil, errors.Wrapf(err, "failed to parse command-line arg ui.GoogleSheetsCUJ.duration=%v", testDuration)
+		}
+	}
+
+	individualScrollTimeout := overallScrollTimeout / 4
+
 	const (
-		timeout                 = 10 * time.Second
-		overallScrollTimeout    = 10 * time.Minute
-		individualScrollTimeout = overallScrollTimeout / 4
-		imageCopyRepeatTimes    = 150
+		timeout              = 10 * time.Second
+		imageCopyRepeatTimes = 150
 	)
 
 	sheetURL, err := cuj.GetTestSheetsURL(ctx)

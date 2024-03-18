@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -57,54 +58,55 @@ type benchmarkInfo struct {
 }
 
 // Run runs the Benchmark CUJ by running the benchmark and recording the result.
-func Run(ctx context.Context, s *testing.State) *perf.Values {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam BenchmarkTest, cmdLineArgs func(string) (string, bool)) (pv *perf.Values, retErr error) {
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
+		return nil, errors.Wrap(err, "failed to capture device snapshot")
 	}
 
-	testParam := s.Param().(BenchmarkTest)
 	benchmarkParam := testParam.BenchmarkInfo
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	benchmarkConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr,
 		testParam.BrowserType, benchmarkParam.benchmarkURL)
 	if err != nil {
-		s.Fatalf("Failed to setup Chrome with %s: %v", benchmarkParam.benchmarkURL, err)
+		return nil, errors.Wrapf(err, "failed to setup Chrome with %s", benchmarkParam.benchmarkURL)
 	}
 	defer closeBrowser(closeCtx)
 	defer benchmarkConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to the test API connection: ", err)
+		return nil, errors.Wrap(err, "failed to connect to the test API connection")
 	}
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Falied to connect to browser test API connection: ", err)
+		return nil, errors.Wrap(err, "falied to connect to browser test API connection")
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	dir, ok := testing.ContextOutDir(ctx)
+	if !ok || dir == "" {
+		return nil, errors.New("failed to get the out directory")
+	}
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, dir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	// Set window to benchmark's preferred window state.
 	windows, err := ash.GetAllWindows(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get all windows: ", err)
+		return nil, errors.Wrap(err, "failed to get all windows")
 	}
 
 	// Make sure the benchmark page is the only window opened.
 	if len(windows) != 1 {
-		s.Fatalf("Unexpected number of windows; got %d, expected 1", len(windows))
+		return nil, errors.Errorf("unexpected number of windows; got %d, expected 1", len(windows))
 	}
 
 	if err := ash.SetWindowStateAndWait(ctx, tconn, windows[0].ID, benchmarkParam.windowState); err != nil {
-		s.Fatalf("Failed to set window state to %v: %v", benchmarkParam.windowState, err)
+		return nil, errors.Wrapf(err, "failed to set window state to %v", benchmarkParam.windowState)
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
@@ -114,45 +116,45 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	})
 
 	if err != nil {
-		s.Fatal("Failed to create a recorder: ", err)
+		return nil, errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(closeCtx)
 
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 1); err != nil {
-		s.Log("Failed to add screenshot recorder: ", err)
+		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
 	}
 
 	ac := uiauto.New(tconn)
 
 	if benchmarkParam.benchmarkSetUp != nil {
-		s.Logf("Setting up %s", benchmarkParam.name)
+		testing.ContextLogf(ctx, "Setting up %s", benchmarkParam.name)
 		if err := benchmarkParam.benchmarkSetUp(ctx, ac); err != nil {
-			s.Fatal("Failed to setup benchmark: ", err)
+			return nil, errors.Wrap(err, "failed to setup benchmark")
 		}
 	}
 
 	params := make(map[string]string)
 	for _, param := range benchmarkParam.params {
-		if val, ok := s.Var(iterationsVar); ok {
+		if val, ok := cmdLineArgs(iterationsVar); ok {
 			params[param] = val
 		}
 	}
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
-		s.Logf("Running %s", benchmarkParam.name)
+		testing.ContextLogf(ctx, "Running %s", benchmarkParam.name)
 		return benchmarkParam.benchmarkRun(ctx, benchmarkConn, ac, params)
 	}); err != nil {
-		s.Fatal("Failed to conduct the recorder task: ", err)
+		return nil, errors.Wrap(err, "failed to conduct the recorder task")
 	}
 
 	scores := make(map[string]Score)
-	s.Logf("Retrieving %s scores", benchmarkParam.name)
+	testing.ContextLogf(ctx, "Retrieving %s scores", benchmarkParam.name)
 	if err := benchmarkParam.benchmarkScore(ctx, benchmarkConn, scores); err != nil {
-		s.Fatal("Failed to retrieve benchmark scores: ", err)
+		return nil, errors.Wrap(err, "failed to retrieve benchmark scores")
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {
-		s.Fatal("Failed to report: ", err)
+		return nil, errors.Wrap(err, "failed to report")
 	}
 
 	for metric, score := range scores {
@@ -165,8 +167,5 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		}, score.values...)
 	}
 
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to store values: ", err)
-	}
-	return pv
+	return pv, nil
 }

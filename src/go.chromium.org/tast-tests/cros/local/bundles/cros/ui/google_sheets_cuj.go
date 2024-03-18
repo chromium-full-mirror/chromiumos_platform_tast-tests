@@ -29,6 +29,10 @@ func init() {
 		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
+		Vars: []string{
+			// Parsable test duration, like 10m or 60s, to run the test.
+			"ui.GoogleSheetsCUJ.duration",
+		},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
@@ -74,7 +78,7 @@ func GoogleSheetsCUJ(ctx context.Context, s *testing.State) {
 	testParam := s.Param().(googlesheetscuj.TestParam)
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	if _, err := googlesheetscuj.Run(ctx, cr, testParam, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile)); err != nil {
+	if _, err := googlesheetscuj.Run(ctx, cr, testParam, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile), s.Var); err != nil {
 		s.Fatal("Failed to run GoogleSheetsCUJ: ", err)
 	}
 }
