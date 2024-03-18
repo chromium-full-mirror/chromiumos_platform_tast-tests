@@ -18,6 +18,7 @@ group("all") {
     "ArcClipboardTest:ArcClipboardTest",
     "ArcConfigChangesTest:ArcConfigChangesTest",
     "ArcConnectivityTest:ArcConnectivityTest",
+    "ArcDevicePolicyTest:ArcDevicePolicyTest",
     "ArcDockedMagnifierTest:ArcDockedMagnifierTest",
     "ArcDownloadManagerTest:ArcDownloadManagerTest",
     "ArcDragSourceTest:ArcDragSourceTest",

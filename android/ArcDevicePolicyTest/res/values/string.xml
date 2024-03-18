@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+   Copyright 2024 The ChromiumOS Authors
+   Use of this source code is governed by a BSD-style license that can be
+   found in the LICENSE file.
+-->
+<resources>
+    <string name="test_button_text">Test</string>
+    <string name="app_name">ARC DevicePolicy Test</string>
+</resources>
