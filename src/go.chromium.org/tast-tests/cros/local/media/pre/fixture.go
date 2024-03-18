@@ -1030,6 +1030,7 @@ func init() {
 			return []chrome.Option{
 				chrome.ExtraArgs(chromeVideoArgs...),
 				chrome.EnableFeatures("EnableIntelMediaCompression"),
+				chrome.DisableFeatures("UseOutOfProcessVideoDecoding"),
 			}, nil
 		}),
 		Parent:          "gpuWatchDog",
