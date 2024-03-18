@@ -268,6 +268,25 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to continue on the sync screen: ", err)
 	}
 
+	shouldSkipHWDataCollection := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.HWDataCollectionScreen.shouldSkip()", &shouldSkipHWDataCollection); err != nil {
+		s.Fatal("Failed to evaluate whether to skip HW Data Collection screen: ", err)
+	}
+	if shouldSkipHWDataCollection {
+		s.Log("Skipping the HW Data Collection screen")
+	} else {
+		s.Log("Waiting for the HW Data Collection screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.HWDataCollectionScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the HW Data Collection screen to be visible: ", err)
+		}
+		if err := uiauto.Combine("click next on the HW Data Collection screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to skip on the HW Data Collection screen: ", err)
+		}
+	}
+
 	s.Log("Waiting for the password selection screen")
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordSelectionScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the password selection screen to be visible: ", err)
