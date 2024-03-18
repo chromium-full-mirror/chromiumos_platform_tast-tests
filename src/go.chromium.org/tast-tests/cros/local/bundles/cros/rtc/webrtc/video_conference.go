@@ -110,6 +110,11 @@ func TestFiles() []string {
 	}
 }
 
+var graphicsHistograms = []string{
+	// This event needs UI animation change. We collect this metric only mouse test cases.
+	"Graphics.Smoothness.PercentDroppedFrames3.AllSequences",
+}
+
 var mouseHistograms = []string{
 	"EventLatency.MouseDragged.TotalLatency",
 	// MouseMoved.TotalLatency is not recorded probably due to blink issue.
@@ -194,17 +199,9 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 
 	var histNames []string
 	if params.Mouse {
-		histNames = mouseHistograms
+		histNames = append(graphicsHistograms, mouseHistograms...)
 	} else if params.Text {
 		histNames = keyInputHistograms
-	}
-	var err error
-	var startHists []*histogram.Histogram
-	if len(histNames) > 0 {
-		startHists, err = metrics.GetHistograms(ctx, bTconn, histNames)
-		if err != nil {
-			return errors.Wrap(err, "failed to get histograms")
-		}
 	}
 
 	if params.Mouse {
@@ -245,6 +242,15 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 		return errors.Wrap(err, "failed collecting webrtc stats")
 	}
 
+	var err error
+	var startHists []*histogram.Histogram
+	if len(histNames) > 0 {
+		startHists, err = metrics.GetHistograms(ctx, bTconn, histNames)
+		if err != nil {
+			return errors.Wrap(err, "failed to get histograms")
+		}
+	}
+
 	if err := pr.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}
@@ -267,7 +273,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 		if err != nil {
 			return errors.Wrap(err, "get histograms")
 		}
-		histPerfs, err := chromeLatencyMetrics(diffHists)
+		histPerfs, err := chromeHistogramMetrics(diffHists)
 		if err != nil {
 			return errors.Wrap(err, "compute histogram metrics")
 		}
@@ -286,7 +292,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 	return nil
 }
 
-func chromeLatencyMetrics(hists []*histogram.Histogram) (*perf.Values, error) {
+func chromeHistogramMetrics(hists []*histogram.Histogram) (*perf.Values, error) {
 	// Check histograms is not empty.
 	for _, hist := range hists {
 		if hist.TotalCount() == 0 {
