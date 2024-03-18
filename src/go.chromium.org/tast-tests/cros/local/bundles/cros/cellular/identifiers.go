@@ -92,7 +92,10 @@ func Identifiers(ctx context.Context, s *testing.State) {
 	if err := validateIdentifiers("ICCID", iccid, simIdentifier, 0, 20); err != nil {
 		s.Fatal("ICCID validation failed: ", err)
 	}
-
+	// Make sure Shill get to modem enabled state and serving operator has been updated
+	if err := helper.WaitForEnabledState(ctx, true); err != nil {
+		s.Fatal("Failed to enable modem: err")
+	}
 	_, servingOperatorCode, err := helper.GetServingOperatorFromShill(ctx)
 	if err != nil {
 		s.Fatal("Could not get current IMSI from shill: ", err)
@@ -101,12 +104,8 @@ func Identifiers(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to read SIM Imsi: ", err)
 	}
-	// If the modem is not in a registered state, modemmanager will not expose this property.
-	// In that case let's not validate it.
-	if operatorCode != "" {
-		if err := validateIdentifiers("ServingOperator.Code", servingOperatorCode, operatorCode, 5, 6); err != nil {
-			s.Fatal("ServingOperator.Code validation failed: ", err)
-		}
+	if err := validateIdentifiers("ServingOperator.Code", servingOperatorCode, operatorCode, 5, 6); err != nil {
+		s.Fatal("ServingOperator.Code validation failed: ", err)
 	}
 }
 
