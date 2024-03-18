@@ -59,7 +59,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: webUIJSErrorsParams{
 				browserType:          browser.TypeLacros,
