@@ -26,7 +26,6 @@ func init() {
 			"yichenz@chromium.org",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		Vars: []string{
@@ -40,29 +39,30 @@ func init() {
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserWithoutCooldown",
+				ExtraAttr: []string{"group:cuj"},
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
 			},
 			{
 				Name: "lacros",
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeLacros,
 				},
+				ExtraAttr:         []string{"group:cuj"},
 				Fixture:           "loggedInToCUJUserLacrosWithoutCooldown",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 
 			// Experimental variants.
 			{
-				Name:      "field_trials",
-				ExtraAttr: []string{"cuj_experimental"},
+				Name: "field_trials",
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUserWithFieldTrialsWithoutCooldown",
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Fixture:   "loggedInToCUJUserWithFieldTrialsWithoutCooldown",
 			},
 			{
-				Name:      "battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
+				Name: "battery_saver",
 				Val: googlesheetscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},

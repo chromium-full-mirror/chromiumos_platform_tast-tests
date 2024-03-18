@@ -24,7 +24,6 @@ func init() {
 		Desc:         "Measures the performance of critical user journey for virtual desks",
 		Contacts:     []string{"cros-sw-perf@google.com", "ramsaroop@google.com"},
 		BugComponent: "b:1045832",
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
@@ -50,7 +49,7 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
 			}, {
@@ -58,23 +57,15 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeLacros,
 				},
+				ExtraAttr:         []string{"group:cuj"},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
-			},
-			{
-				Name:      "lacros_virtio_balloon",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val: deskscuj.TestParam{
-					BrowserType: browser.TypeLacros,
-				},
-				ExtraSoftwareDeps: []string{"lacros"},
-				Fixture:           "loggedInToCUJUserLacrosWithVirtioBalloon",
 			},
 
 			// Experimental variants.
 			{
 				Name:      "field_trials",
-				ExtraAttr: []string{"cuj_experimental"},
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
@@ -82,7 +73,7 @@ func init() {
 			},
 			{
 				Name:      "battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
+				ExtraAttr: []string{"group:cuj"},
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
@@ -95,7 +86,7 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr: []string{"cuj_experimental"},
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithRoundedWindows",
 			},
 			{
@@ -104,7 +95,7 @@ func init() {
 					BrowserType: browser.TypeLacros,
 				},
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				Fixture:           "loggedInToCUJUserLacrosWithRoundedWindows",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
@@ -114,6 +105,7 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture:           "loggedInToCUJUserVulkan",
+				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			{
@@ -121,7 +113,6 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MB",
 			},
@@ -130,7 +121,6 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
 			},
@@ -139,7 +129,6 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
 			},
@@ -148,7 +137,6 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
 			},
@@ -157,7 +145,6 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
 			},

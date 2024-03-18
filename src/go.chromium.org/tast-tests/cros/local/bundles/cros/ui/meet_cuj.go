@@ -339,8 +339,7 @@ func init() {
 					Effects:     true,
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
-				Fixture:   "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
+				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
 			},
 			{
 				Name:      "docs_enterprise",

@@ -25,39 +25,40 @@ func init() {
 			"ramsaroop@google.com",
 		},
 		BugComponent: "b:1045832", // ChromeOS > Software > Performance > TPS
-		Attr:         []string{"group:cuj"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{cujrecorder.SystemTraceConfigFile},
 		HardwareDeps: hwdep.D(hwdep.InternalDisplay()),
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
-				Val:     browser.TypeAsh,
-				Fixture: "loggedInToCUJUser",
+				Val:       browser.TypeAsh,
+				ExtraAttr: []string{"group:cuj"},
+				Fixture:   "loggedInToCUJUser",
 			}, {
 				Name:              "lacros",
 				Val:               browser.TypeLacros,
+				ExtraAttr:         []string{"group:cuj"},
 				Fixture:           "loggedInToCUJUserLacros",
 				ExtraSoftwareDeps: []string{"lacros"},
 			},
 			// Experimental variants.
 			{
 				Name:      "field_trials",
-				ExtraAttr: []string{"cuj_experimental"},
 				Val:       browser.TypeAsh,
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithFieldTrials",
 			},
 			{
-				Name:      "battery_saver",
-				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithBatterySaver",
+				Name:    "battery_saver",
+				Val:     browser.TypeAsh,
+				Fixture: "loggedInToCUJUserWithBatterySaver",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
 				Name:              "vulkan",
 				Val:               browser.TypeAsh,
 				Fixture:           "loggedInToCUJUserVulkan",
+				ExtraAttr:         []string{"group:cuj"},
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			{
@@ -65,7 +66,7 @@ func init() {
 				Val:               browser.TypeAsh,
 				BugComponent:      "b:167279",
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
-				ExtraAttr:         []string{"cuj_experimental"},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 			},
 		},
