@@ -14,9 +14,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 )
 
-// osBluetoothSettingsButton is the arrow button on the OS Settings that a user
-// can click to navigate to the Bluetooth Settings.
-var osBluetoothSettingsButton = nodewith.HasClass("subpage-arrow").NameContaining("Bluetooth").Role(role.Button)
+// BluetoothSettingsSubpageButton is the arrow button on the OS Settings page
+// that a user can click to navigate to the Bluetooth Settings subpage.
+var BluetoothSettingsSubpageButton = nodewith.HasClass("subpage-arrow").NameContaining("Bluetooth").Role(role.Button)
 
 // OsSettingsBluetoothToggleButton is the Bluetooth toggle on the OS Settings page.
 var OsSettingsBluetoothToggleButton = nodewith.NameContaining("Bluetooth").Role(role.ToggleButton)
@@ -38,25 +38,20 @@ var BluetoothForgetDeviceButton = nodewith.NameContaining("Forget").HasClass("ca
 // after clicking BluetoothForgetDeviceButton.
 var BluetoothConfirmForgetButton = nodewith.NameContaining("Forget").HasClass("action-button").Role(role.Button)
 
-// NavigateToBluetoothSettingsPage will navigate to the Bluetooth sub-page
-// within the OS Settings by clicking the sub-page button. This is safe to call
-// when the OS Settings are already open.
-func NavigateToBluetoothSettingsPage(ctx context.Context, tconn *chrome.TestConn, bt bluetooth.Bluetooth) (*OSSettings, error) {
+// NavigateToBluetoothSettingsSubpage will navigate to the Bluetooth settings
+// subpage within the OS Settings.
+// NOTE: When the OsSettingsRevampWayfinding feature flag is enabled, the
+// Bluetooth settings subpage is automatically up-leveled, in place of the
+// top-level Bluetooth page.
+// TODO(b/309808834) Once the top-level bluetooth page is revamped, update this
+// helper method to navigate to the top-level page instead.
+func NavigateToBluetoothSettingsSubpage(ctx context.Context, tconn *chrome.TestConn, bt bluetooth.Bluetooth) (*OSSettings, error) {
 	app, err := LaunchAtPage(ctx, tconn, Bluetooth)
 	if err != nil {
 		return app, err
 	}
 
 	if err := bt.Enable(ctx); err != nil {
-		return app, err
-	}
-
-	ui := uiauto.New(tconn)
-
-	if err := uiauto.Combine("Focus and click the Bluetooth Settings button",
-		ui.FocusAndWait(osBluetoothSettingsButton),
-		ui.LeftClickUntil(osBluetoothSettingsButton, ui.Gone(osBluetoothSettingsButton)),
-	)(ctx); err != nil {
 		return app, err
 	}
 
@@ -77,8 +72,8 @@ func NavigateToBluetoothDeviceDetailsPage(ctx context.Context, tconn *chrome.Tes
 	var connectedDevice = BluetoothConnectedDeviceRows.NameContaining(deviceName)
 
 	if err := uiauto.Combine("Focus and click the Bluetooth Settings button and the Connected device's Device Details subpage button",
-		ui.FocusAndWait(osBluetoothSettingsButton),
-		ui.LeftClick(osBluetoothSettingsButton),
+		ui.FocusAndWait(BluetoothSettingsSubpageButton),
+		ui.LeftClick(BluetoothSettingsSubpageButton),
 		ui.FocusAndWait(connectedDevice),
 		ui.LeftClick(connectedDevice),
 	)(ctx); err != nil {
@@ -100,8 +95,8 @@ func NavigateToBluetoothSavedDevicesSubpage(ctx context.Context, tconn *chrome.T
 	ui := uiauto.New(tconn)
 
 	if err := uiauto.Combine("Navigate to the Bluetooth Saved Devices subpage",
-		ui.FocusAndWait(osBluetoothSettingsButton),
-		ui.LeftClick(osBluetoothSettingsButton),
+		ui.FocusAndWait(BluetoothSettingsSubpageButton),
+		ui.LeftClick(BluetoothSettingsSubpageButton),
 		ui.LeftClick(SavedDevicesSubpageLink),
 	)(ctx); err != nil {
 		return nil, err
