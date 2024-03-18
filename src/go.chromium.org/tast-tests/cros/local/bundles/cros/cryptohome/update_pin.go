@@ -80,7 +80,7 @@ func UpdatePin(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return authSessionID, errors.Wrap(err, "failed to authenticate with auth session")
 		}
-		if err := cryptohomecommon.ExpectAuthIntents(authReply.AuthorizedFor, []uda.AuthIntent{
+		if err := cryptohomecommon.ExpectAuthIntents(authReply.AuthProperties.AuthorizedFor, []uda.AuthIntent{
 			uda.AuthIntent_AUTH_INTENT_DECRYPT,
 			uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
 		}); err != nil {

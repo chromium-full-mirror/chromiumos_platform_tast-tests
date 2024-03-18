@@ -376,7 +376,7 @@ func authenticateAuthFactor(ctx context.Context, cryptohome *hwsec.CryptohomeCli
 	if err != nil {
 		return false, errors.Wrap(err, "failed to authenticate with auth session")
 	}
-	if err := cryptohomecommon.ExpectContainsAuthIntent(authReply.AuthorizedFor,
+	if err := cryptohomecommon.ExpectContainsAuthIntent(authReply.AuthProperties.AuthorizedFor,
 		uda.AuthIntent_AUTH_INTENT_DECRYPT); err != nil {
 		return false, errors.Wrap(err, "unexpected AuthSession authorized intents")
 	}

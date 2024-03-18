@@ -94,7 +94,7 @@ func AuthSessionUnlockEphemeral(ctx context.Context, s *testing.State) {
 			return errors.Wrap(err, "failed to authenticate user")
 		}
 		if err := cryptohomecommon.ExpectContainsAuthIntent(
-			authReply.AuthorizedFor, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
+			authReply.AuthProperties.AuthorizedFor, uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY,
 		); err != nil {
 			return errors.Wrap(err, "unexpected AuthSession authorized intents")
 		}

@@ -220,7 +220,7 @@ func UssMigrationChallengeCredential(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to test lock screen unlock with smartcard")
 			}
 			// Check that reply matches with the lock screen AuthIntent.
-			if err = cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY}); err != nil {
+			if err = cryptohomecommon.ExpectAuthIntents(reply.AuthProperties.AuthorizedFor, []uda.AuthIntent{uda.AuthIntent_AUTH_INTENT_VERIFY_ONLY}); err != nil {
 				return errors.Wrap(err, "unexpected AuthSession authorized intents")
 			}
 			return nil

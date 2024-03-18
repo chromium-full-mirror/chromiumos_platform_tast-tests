@@ -283,7 +283,7 @@ func authenticateWithSmartCard(ctx context.Context, testUser string, userParam s
 	if authIntent == uda.AuthIntent_AUTH_INTENT_DECRYPT {
 		setOfExpectedIntents = append(setOfExpectedIntents, uda.AuthIntent_AUTH_INTENT_DECRYPT)
 	}
-	if err := cryptohomecommon.ExpectAuthIntents(reply.AuthorizedFor, setOfExpectedIntents); err != nil {
+	if err := cryptohomecommon.ExpectAuthIntents(reply.AuthProperties.AuthorizedFor, setOfExpectedIntents); err != nil {
 		return authSessionID, errors.Wrap(err, "unexpected AuthSession authorized intents")
 	}
 

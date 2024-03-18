@@ -434,9 +434,9 @@ func (u *CryptohomeClient) checkVaultWithAuthFactor(ctx context.Context, label s
 	}
 	// Check that reply authenticatied with correct AuthIntent.
 	less := func(a, b uda.AuthIntent) bool { return a < b }
-	diff := cmp.Diff(result.AuthorizedFor, expectedResult, cmpopts.SortSlices(less))
+	diff := cmp.Diff(result.AuthProperties.AuthorizedFor, expectedResult, cmpopts.SortSlices(less))
 	if diff != "" {
-		return false, errors.Errorf("authenticated with incorrect AuthIntent: %q", result.AuthorizedFor)
+		return false, errors.Errorf("authenticated with incorrect AuthIntent: %q", result.AuthProperties.AuthorizedFor)
 	}
 	return true, nil
 }
@@ -1074,8 +1074,8 @@ func (u *CryptohomeClient) UpdateRecoveryAuthFactor(
 	return err
 }
 
-// Remove the flag file `/run/cryptohome/crd_detected_on_login_screen` after calling this function.
 // LockRecoveryFactorUntilReboot locks the recovery auth factor for all users for the authentication operation until system reboots.
+// Remove the flag file `/run/cryptohome/crd_detected_on_login_screen` after calling this function.
 func (u *CryptohomeClient) LockRecoveryFactorUntilReboot(
 	ctx context.Context) error {
 	_, err := u.binary.lockRecoveryFactorUntilReboot(ctx)
