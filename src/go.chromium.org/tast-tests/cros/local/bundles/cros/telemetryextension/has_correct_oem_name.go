@@ -15,7 +15,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           HasOEMName,
+		Func:           HasCorrectOEMName,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verifies that DUT has correct OEM name",
 		Contacts:       []string{"chromeos-oem-services@google.com"},
@@ -42,11 +42,11 @@ func init() {
 	})
 }
 
-// HasOEMName tests that DUT has correct OEM name which comes from
+// HasCorrectOEMName tests that DUT has correct OEM name which comes from
 //   - /sys/devices/virtual/dmi/id/sys_vendor (old approach) or
 //   - /sys/firmware/vpd/ro/oem_name (new approach for unreleased models) or
 //   - CrOSConfig (new approach).
-func HasOEMName(ctx context.Context, s *testing.State) {
+func HasCorrectOEMName(ctx context.Context, s *testing.State) {
 	oemName, ok := s.Param().(string)
 	if !ok {
 		s.Fatal("Failed to convert params value into string: ", s.Param())
