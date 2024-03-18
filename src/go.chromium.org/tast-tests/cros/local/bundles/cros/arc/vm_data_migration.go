@@ -98,7 +98,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"informational"},
 			ExtraData:         []string{vmDataMigrationHomeDataPiArm},
-			ExtraSoftwareDeps: []string{"arm"},
+			ExtraSoftwareDeps: []string{"android_vm_r", "arm"},
 		}, {
 			// Migrate from virtio-fs /data created on ARC R (for arm) without
 			// interruption.
@@ -110,7 +110,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"informational"},
 			ExtraData:         []string{vmDataMigrationHomeDataRvcArm},
-			ExtraSoftwareDeps: []string{"arm"},
+			ExtraSoftwareDeps: []string{"android_vm_r", "arm"},
 		}, {
 			// Migrate from virtio-fs /data created on ARC R (for arm). The
 			// migration will be interrupted once in the middle and resumed.
@@ -122,7 +122,7 @@ func init() {
 			},
 			ExtraAttr:         []string{"informational"},
 			ExtraData:         []string{vmDataMigrationHomeDataRvcArm},
-			ExtraSoftwareDeps: []string{"arm"},
+			ExtraSoftwareDeps: []string{"android_vm_r", "arm"},
 		}},
 	})
 }
