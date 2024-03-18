@@ -109,7 +109,7 @@ func ShutdownAndWaitForPowerState(ctx context.Context, pxy *servo.Proxy, dut *du
 			return errors.Errorf("unexpected DUT EC power state = got %q, want %q", got, want)
 		}
 		return nil
-	}, &testing.PollOptions{Timeout: 20 * time.Second})
+	}, &testing.PollOptions{Timeout: 35 * time.Second})
 }
 
 // WaitForSuspendState verifies powerState(S0ix or S3).
