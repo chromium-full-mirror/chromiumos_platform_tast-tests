@@ -40,7 +40,7 @@ func init() {
 			ExtraHardwareDeps: crostini.CrostiniStable,
 			ExtraSoftwareDeps: []string{"vm_host", "android_vm"},
 		}, {
-			Name:              "arc",
+			Name:              "arc_vm",
 			Pre:               multivm.ArcStartedNoSync(),
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
