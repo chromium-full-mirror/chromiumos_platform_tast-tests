@@ -24,6 +24,9 @@ var storageNotProbable = []string{"anahera", "bobba", "chronicler", "dewatt", "p
 // The plan for these device is undecided, the progress is tracked in b/317670344.
 var displayPanelNotProbable = []string{"starmie"}
 
+// Wifi is an essential component and should be probed in this test. The following platforms requires custom probe statement. The progress is tracked in b/261355069.
+var customProbePlatforms = []string{"trogdor", "strongbad"}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         HWIDDatabase,
@@ -36,7 +39,7 @@ func init() {
 		Timeout:      2 * time.Minute,
 		Fixture:      fixture.EnsureToolkit,
 		// Skip "nyan_kitty" due to slow reboot speed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kitty")),
+		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kitty"), hwdep.SkipOnPlatform(customProbePlatforms...)),
 		SoftwareDeps: append([]string{"factory_flow"}, fixture.EnsureToolkitSoftwareDeps...),
 		Params: []testing.Param{
 			testing.Param{
