@@ -96,7 +96,7 @@ func (a *AllowlistService) CheckArcAppInstalled(ctx context.Context, req *networ
 			return nil
 		}
 		return errors.New("failed to install 3rd party app")
-	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 180 * time.Second}); err != nil {
+	}, &testing.PollOptions{Interval: 1 * time.Second, Timeout: 2 * time.Minute}); err != nil {
 		return nil, err
 	}
 

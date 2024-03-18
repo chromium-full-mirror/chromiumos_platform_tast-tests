@@ -151,6 +151,16 @@ func (mp *MitmProxy) Start(ctx context.Context) (retErr error) {
 	cmd := testexec.CommandContext(ctx,
 		"/sbin/minijail0", "-e", "--", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
 	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
+
+	// Required for remote tast tests. mitmproxy is written in Python and uses the PyInstaller
+	// to bundle the mitmproxy scripts and all its dependencies into a single file. The file
+	// is written in a temp directory named "_MEI<random-number>" which is re-created for every
+	// execution. The default location for the temp directory is the OS temp directory (/tmp on
+	// Chrome OS). On Chrome OS, executables cannot be ran from the TMP file (b/40615995) so
+	// local tast tests change the tmp dir to /usr/local/tmp; for remote tests, the temp dir
+	// has to be manually changed.
+	cmd.Env = append(cmd.Env, "TMPDIR=/usr/local/tmp")
+
 	if err := cmd.Start(); err != nil {
 		return errors.Wrap(err, "failed to launch proxy server")
 	}

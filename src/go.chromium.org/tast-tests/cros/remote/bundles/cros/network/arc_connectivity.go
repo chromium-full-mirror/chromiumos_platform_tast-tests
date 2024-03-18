@@ -6,6 +6,8 @@ package network
 
 import (
 	"context"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -40,7 +42,7 @@ func init() {
 		Timeout:      arcConnectivityTestTimeout,
 		SoftwareDeps: []string{"reboot", "chrome", "chrome_internal", "tpm2"},
 		Params: []testing.Param{{
-			ExtraSoftwareDeps: []string{"android_vm_r"},
+			ExtraSoftwareDeps: []string{"android_vm"},
 		}},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -80,22 +82,27 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to read hostnames: ", err)
 	}
 
-	const port uint32 = 3129
-
 	// Start an HTTP proxy instance on the DUT which only allows connections to
 	// the allowlisted hostnames.
 	proxyClient := network.NewProxyServiceClient(cl.Conn)
 	response, err := proxyClient.StartServer(ctx,
 		&network.StartServerRequest{
-			Port:      port,
 			Allowlist: allowlist,
 		})
+
 	if err != nil {
 		s.Fatal("Failed to start a local proxy on the DUT: ", err)
 	}
 
+	portStr := strings.Split(response.HostAndPort, ":")[1]
+	port, err := strconv.ParseUint(portStr, 10, 32)
+
+	if err != nil {
+		s.Fatal("Failed to parse proxy server port: ", err)
+	}
+
 	al := network.NewAllowlistServiceClient(cl.Conn)
-	if _, err := al.SetupFirewall(ctx, &network.SetupFirewallRequest{AllowedPort: port}); err != nil {
+	if _, err := al.SetupFirewall(ctx, &network.SetupFirewallRequest{AllowedPort: uint32(port)}); err != nil {
 		s.Fatal("Failed to setup a firewall on the DUT: ", err)
 	}
 
