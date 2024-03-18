@@ -30,6 +30,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/vkb"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -290,6 +291,21 @@ func resizeSubTest(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestCon
 	testing.ContextLogf(ctx, "Waiting for the window of App %q to be shown and stabilized", resizeApp.Name)
 	if err := waitUntilWindowStable(ctx, tconn, resizeApp); err != nil {
 		return errors.Wrap(err, "failed to wait for window to be shown")
+	}
+
+	// Ensure virtual keyboard is not active so that resizing window can proceed successfully.
+	// NOTE: on devices without physical keyboard, virtual keyboard may be activated if any text
+	// field has the input focus, e.g. address bar of Chrome browser.
+	vkbCtx := vkb.NewContext(cr, tconn)
+	shouldHideVkb, err := vkbCtx.IsShown(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to check if virtual keyboard is shown")
+	}
+	if shouldHideVkb {
+		testing.ContextLog(ctx, "Closing virtual keyboard")
+		if err := vkbCtx.HideVirtualKeyboard()(ctx); err != nil {
+			return errors.Wrap(err, "failed to close virtual keyboard")
+		}
 	}
 
 	// Minimize the window in advance to avoid its border being off-screen after the window has been dragged to the center of screen.
