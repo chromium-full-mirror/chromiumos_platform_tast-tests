@@ -100,7 +100,7 @@ func VideoCall(ctx context.Context, s *testing.State) {
 	// TODO(b/280888518): Add preset
 	const (
 		urlVideo            = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall.webrtc.html?preset=high"
-		urlDoc              = "http://crospower.page.link/power_VideoCall_doc"
+		urlDoc              = "https://storage.googleapis.com/chromiumos-test-assets-public/power_VideoCall/power_VideoCall_doc.html"
 		permBubbleName      = "storage.googleapis.com wants to"
 		cameraDataNameRegex = "id : camera_.* fps: .*"
 		titleDoc            = "power_VideoCall Doc"
