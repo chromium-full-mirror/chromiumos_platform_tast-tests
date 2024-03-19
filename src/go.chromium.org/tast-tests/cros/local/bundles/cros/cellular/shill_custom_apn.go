@@ -207,7 +207,15 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 			optionalAPNExist = true
 		}
 		testing.ContextLog(ctx, "Testing APN: ", knownAPN.APNInfo[shillconst.DevicePropertyCellularAPNInfoApnName])
-		if err := helper.ConnectToServiceWithTimeout(ctx, service, 60*time.Second); err != nil {
+		// 40 seconds is enough to skip the wrong-apn, and then register with the correct one
+		if err := helper.WaitForModemRegisteredAfterReset(ctx, 40*time.Second); err != nil {
+			if knownAPN.Optional {
+				continue
+			}
+			s.Fatal("Modem is not registered")
+		}
+		service, err = helper.ConnectWithTimeout(ctx, 10*time.Second)
+		if err != nil {
 			if knownAPN.Optional {
 				continue
 			}
