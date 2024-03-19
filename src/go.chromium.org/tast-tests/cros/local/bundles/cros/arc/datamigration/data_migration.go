@@ -48,11 +48,9 @@ func MountVaultWithArchivedHomeData(ctx context.Context, homeDataPath, username,
 		return func(context.Context) {}, errors.Wrap(err, "failed to unarchive home data under vault")
 	}
 
-	// TODO(b/284921319): Mount virtio-blk /data as writable at
-	// |filepath.Join(vaultPath, "root/android-data/data")| when we add virtio-blk variants of
-	// R->T upgrade test cases to arc.DataMigration.
-
-	// Remove adb_temp_keys.xml to avoid invalidating test adb key in T+ (b/289798262).
+	// Remove adb_temp_keys.xml from virtio-fs /data to avoid invalidating test adb key in T+
+	// (b/289798262). For virtio-blk /data test cases running on T+, the file is already removed
+	// before taking the snapshot.
 	// For ARC R and earlier, this should be no-op.
 	if err := os.RemoveAll(filepath.Join(vaultPath, "root/android-data/data/misc/adb/adb_temp_keys.xml")); err != nil {
 		return func(context.Context) {}, errors.Wrap(err, "failed to remove adb_temp_keys.xml")

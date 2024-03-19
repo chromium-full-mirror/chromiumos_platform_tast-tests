@@ -23,7 +23,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/datamigration"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/retry"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -35,21 +34,31 @@ import (
 
 // How to create archived home data to be used by this test:
 //  1. Flash the previous version of ARC++ (e.g. ARC++ P).
-//  2. Sign in with the specified test account (See arc.DataMigration.yaml for username/password).
-//  3. Wait until ARC++ boots and uninstall all unnecessary apps. For managed test cases, make sure
+//  2. (only for virtio-blk /data on crosvm disk test cases) Create a large file in the stateful
+//     partition to adjust the size of the disk image so that it would fit in devices with small
+//     storage (e.g., 32GB)
+//  3. Sign in with the specified test account (See arc.DataMigration.yaml for username/password).
+//  4. Wait until ARC++ boots and uninstall all unnecessary apps. For managed test cases, make sure
 //     that the app to be installed during the test is available on the Play Store.
-//  4. (optional) Populate files under /data/ or install apps.
-//  5. ssh to DUT and create .tbz2 file by
-//     `cd /home/.shadow/<hash>/mount && tar --xattrs --selinux -cjf /tmp/<dest_file_name>.tbz2 .`
-//     Only for R->T test cases, run `settings put secure user_setup_complete 0` right before taking
-//     the snapshot to work around the Play Store reauthentication issue (b/285820960).
-//  6. Upload the tbz2 file into gs://chromiumos-test-assets-public/tast/cros/arc/ and update
+//  5. (optional) Populate files under /data/ or install apps.
+//  6. (only for ->T+ test cases) On the DUT, remove test adb key to work around b/289798262 by
+//     enabling adb root with go/adb-root-on-arcvm-user-builds and running
+//     `adb shell rm /data/misc/adb/adb_temp_keys.xml`.
+//  7. (only for ->T+ test cases) On the DUT, run the following commands on adb to work around the
+//     Play Store reauthenticaiton issue (b/285820960) right before the next step. The latter
+//     command requires adb root.
+//     # settings put secure user_setup_complete 0
+//     # setprop persist.sys.arc.force_reauth 1
+//  8. On the DUT, create a .tbz2 file by
+//     `cd /home/.shadow/<hash>/mount && tar --xattrs --selinux -Scjf /tmp/<dest_file_name>.tbz2 .`
+//  9. Upload the tbz2 file into gs://chromiumos-test-assets-public/tast/cros/arc/ and update
 //     the .external file (See tast/local/bundles/cros/arc/data/data_migration_pi_x86_64.external).
 const (
 	homeDataNameNycX86                = "data_migration_nyc_x86_64"
 	homeDataNamePiX86                 = "data_migration_pi_x86_64"
 	homeDataNamePiArm                 = "data_migration_pi_arm64"
 	homeDataNameRvcX86Virtiofs        = "data_migration_rvc_x86_64_virtiofs"
+	homeDataNameRvcArmVirtioBlk       = "data_migration_rvc_arm_virtioblk"
 	homeDataNameManagedPiX86          = "data_migration_managed_pi_x86_64"
 	homeDataNameManagedRvcX86Virtiofs = "data_migration_managed_rvc_x86_64_virtiofs"
 	arcDataMigrationUnmanagedPool     = "arc_data_migration_unmanaged"
@@ -134,6 +143,23 @@ func init() {
 				"android_vm_t",
 				"amd64",
 				"no_arcvm_virtio_blk_data",
+			},
+		}, {
+			// Launch ARC T with crosvm virtio-blk /data created on ARC R (for arm).
+			// Note: This doesn't support boards with virtio-blk /data on logical volumes.
+			Name: "r_to_t_arm_virtioblk",
+			Val: dataMigrationTestParams{
+				poolID:       arcDataMigrationUnmanagedPool,
+				dataFileName: homeDataNameRvcArmVirtioBlk,
+				managed:      false,
+			},
+			// Use arc_core so that this test case runs on ARC variant boards.
+			ExtraAttr: []string{"group:arc", "arc_core", "group:arc-functional"},
+			ExtraData: []string{homeDataNameRvcArmVirtioBlk},
+			ExtraSoftwareDeps: []string{
+				"android_vm_t",
+				"arm",
+				"no_lvm_stateful_partition",
 			},
 		}, {
 			// Launch ARC R with /data created on ARC P for managed user(for x86).
@@ -344,6 +370,10 @@ func checkSdkVersionsInPackagesXML(ctx context.Context, a *arc.ARC, username str
 		packagesXMLPath = "/data/system/packages.xml"
 	)
 
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+
 	// SDK version of ARC running currently.
 	systemVersionRegexp := regexp.MustCompile(`\<version sdkVersion="(\d+)"`)
 	systemVersion := 0
@@ -352,15 +382,21 @@ func checkSdkVersionsInPackagesXML(ctx context.Context, a *arc.ARC, username str
 	dataVersionRegexp := regexp.MustCompile(`\<version volumeUuid="\w+" sdkVersion="(\d+)"`)
 	dataVersion := 0
 
+	cleanupFunc, err := arc.MountVirtioBlkDataDiskImageReadOnlyIfUsed(ctx, username)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to make /data accessible from host")
+	}
+	defer cleanupFunc(cleanupCtx)
+
 	testing.ContextLogf(ctx, "Checking SDK versions in %s", packagesXMLPath)
 
-	rootCryptDir, err := cryptohome.SystemPath(ctx, username)
+	androidDataDir, err := arc.AndroidDataDir(ctx, username)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to get the cryptohome directory for the user")
+		return 0, errors.Wrap(err, "failed to get android-data dir")
 	}
 
 	// /home/root/<hash>/android-data/data/system/packages.xml
-	b, err := a.ReadXMLFile(ctx, filepath.Join(rootCryptDir, "android-data", packagesXMLPath))
+	b, err := a.ReadXMLFile(ctx, filepath.Join(androidDataDir, packagesXMLPath))
 
 	for _, l := range strings.Split(string(b), "\n") {
 		m := systemVersionRegexp.FindStringSubmatch(l)
