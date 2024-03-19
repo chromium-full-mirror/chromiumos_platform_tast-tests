@@ -144,6 +144,27 @@ func (t *TpmHandle) NvUndefineSpace(p tpm2.TPMSNVPublic) error {
 	return err
 }
 
+// TpmvInvalidateInactiveRW invalidates the gsc image in the inactive RW.
+func (t *TpmHandle) TpmvInvalidateInactiveRW() error {
+	var tpmvInvalidateInactiveRW, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
+		"0000000c" + // size
+		"20000000" + // ordinal: vendor
+		"0014") // subcommand: InvalidateInactiveRW
+
+	response, err := t.Send(tpmvInvalidateInactiveRW)
+	if err != nil {
+		return err
+	}
+	errorCode, err := getTPMVResponseStatus(response)
+	if err != nil {
+		return err
+	}
+	if errorCode != 0 {
+		return errors.Errorf("InvalidateInactiveRW command returned error: 0x%x", errorCode)
+	}
+	return nil
+}
+
 // TpmvGetBootMode reads boot mode via TPM GetBootMode vendor command.
 func (t *TpmHandle) TpmvGetBootMode() (byte, error) {
 	var tpmvGetBootMode, _ = hex.DecodeString("8001" + // tag: TPM_ST_NO_SESSIONS
