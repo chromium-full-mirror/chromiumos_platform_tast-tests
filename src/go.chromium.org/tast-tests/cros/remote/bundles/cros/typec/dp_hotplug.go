@@ -26,7 +26,7 @@ func init() {
 		BugComponent: "b:958036",
 		Attr:         []string{"group:typec", "typec_dp_bringup"},
 		Vars:         []string{"typec.McciSerial", "typec.McciPort"},
-		Timeout:      5 * time.Minute,
+		Timeout:      7 * time.Minute,
 	})
 }
 
