@@ -26,6 +26,31 @@ func hasState(toggleInfo *uiauto.NodeInfo, state state.State) bool {
 	return false
 }
 
+func privacyAndSecurityLink() *nodewith.Finder {
+	return nodewith.NameStartingWith("Privacy and security").Role("link")
+}
+
+func privacyControlsLink() *nodewith.Finder {
+	return nodewith.NameStartingWith("Privacy controls")
+}
+
+func navigateToToggle(ctx context.Context, tconn *browser.TestConn, toggleLabel string) (*nodewith.Finder, *uiauto.NodeInfo, error) {
+	ui := uiauto.New(tconn)
+	toggleLabelNode := nodewith.NameStartingWith(toggleLabel).Role(role.ToggleButton)
+	// Wait for the toggle to appear.
+	if err := uiauto.Combine("Access the toggle in Privacy Hub",
+		ui.WaitUntilExists(privacyAndSecurityLink()),
+		ui.DoDefault(privacyAndSecurityLink()),
+		ui.WaitUntilExists(privacyControlsLink()),
+		ui.DoDefault(privacyControlsLink()),
+		ui.WaitUntilExists(toggleLabelNode),
+	)(ctx); err != nil {
+		return nil, nil, errors.Wrap(err, "couldn't access"+toggleLabel+"toggle in Privacy Hub")
+	}
+	nodeInfo, err := ui.Info(ctx, toggleLabelNode)
+	return toggleLabelNode, nodeInfo, err
+}
+
 // IsToggleOn checks if a toggle with the given label in Privacy Controls is on.
 func IsToggleOn(ctx context.Context, tconn *browser.TestConn, toggleLabel string) (bool, error) {
 	settings, err := ossettings.Launch(ctx, tconn)
@@ -35,20 +60,12 @@ func IsToggleOn(ctx context.Context, tconn *browser.TestConn, toggleLabel string
 	defer settings.Close(ctx)
 
 	ui := uiauto.New(tconn)
-	privacyMenu := nodewith.NameStartingWith("Privacy controls")
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
+
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyAndSecurityLink())(ctx); err != nil {
 		return false, err
 	}
-	toggleLabelNode := nodewith.NameStartingWith(toggleLabel).Role(role.ToggleButton)
-	// Wait for the toggle to appear.
-	if err := uiauto.Combine("Access the toggle in Privacy Hub",
-		ui.DoDefault(privacyMenu),
-		ui.WaitUntilExists(toggleLabelNode),
-	)(ctx); err != nil {
-		return false, errors.Wrap(err, "couldn't access"+toggleLabel+"toggle in Privacy Hub")
-	}
 
-	toggleInfo, err := ui.Info(ctx, toggleLabelNode)
+	_, toggleInfo, err := navigateToToggle(ctx, tconn, toggleLabel)
 	if err != nil {
 		return false, errors.Wrap(err, "couldn't access"+toggleLabel+"toggle state")
 	}
@@ -76,18 +93,13 @@ func ClickToggle(ctx context.Context, tconn *browser.TestConn, toggleLabel strin
 	defer settings.Close(ctx)
 
 	var ui *uiauto.Context = uiauto.New(tconn)
-	privacyMenu := nodewith.NameStartingWith("Privacy controls")
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyMenu)(ctx); err != nil {
+	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(privacyAndSecurityLink())(ctx); err != nil {
 		return err
 	}
-	// Check that the Privacy Hub section contains the required buttons.
-	toggleLabelNode := nodewith.NameStartingWith(toggleLabel).Role(role.ToggleButton)
 	// Wait for the specified toggle to appear.
-	if err := uiauto.Combine("Access "+toggleLabel+" toggle in Privacy Hub",
-		ui.DoDefault(privacyMenu),
-		ui.WaitUntilExists(toggleLabelNode),
-	)(ctx); err != nil {
-		return errors.Wrap(err, "couldn't access"+toggleLabel+"toggle in Privacy Hub")
+	toggleLabelNode, _, err := navigateToToggle(ctx, tconn, toggleLabel)
+	if err != nil {
+		return errors.Wrap(err, "couldn't access"+toggleLabel+"toggle state")
 	}
 
 	// Toggle the specified toggle.
