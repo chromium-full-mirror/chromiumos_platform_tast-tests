@@ -41,7 +41,7 @@ func init() {
 
 const (
 	hwisTimeFileName          = "/var/lib/flex_hwis_tool/time"
-	hwisSuccessResponse       = "flex_hwis_tool ran successfully"
+	hwisSuccessResponse       = "flex_hwis_tool sent successfully"
 	hwisNotAuthorizedResponse = "flex_hwis_tool wasn't authorized to send data"
 )
 
@@ -82,7 +82,7 @@ func HWIS(ctx context.Context, s *testing.State) {
 			// specified time. To ensure that the service can run, remove possible
 			// time file before running the command.
 			os.Remove(hwisTimeFileName)
-			out, err := testexec.CommandContext(ctx, "flex_hwis_tool", "--debug").CombinedOutput()
+			out, err := testexec.CommandContext(ctx, "flex_hwis_tool", "--debug", "--send").CombinedOutput()
 			// The flex_hwis_tool service will create a file to record the time after
 			// successfully running. The service will not run again within the specified
 			// time period. To ensure the test can run at any time, the time file must be
