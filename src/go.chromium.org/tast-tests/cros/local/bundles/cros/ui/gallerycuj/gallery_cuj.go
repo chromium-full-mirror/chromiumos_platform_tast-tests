@@ -37,9 +37,9 @@ import (
 const (
 	pngZipFile = "gallery_image.zip"
 	pdfZipFile = "gallery_pdf.zip"
-	videoFile1 = "gallery_h264_4k_60fps.mp4"
-	videoFile2 = "gallery_vp8_4k_60fps.webm"
-	videoFile3 = "gallery_vp9_4k_60fps.webm"
+	videoFile1 = "gallery_video1.mp4"
+	videoFile2 = "gallery_video2.mp4"
+	videoFile3 = "gallery_video3.mp4"
 	audioFile1 = "gallery_five_minute_audio.mp3"
 	audioFile2 = "gallery_audio.mp3"
 	audioFile3 = "gallery_audio.wav"
