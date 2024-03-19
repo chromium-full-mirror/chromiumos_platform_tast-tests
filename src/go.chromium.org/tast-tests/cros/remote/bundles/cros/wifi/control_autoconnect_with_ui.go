@@ -8,59 +8,120 @@ import (
 	"context"
 	"time"
 
-	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/action"
+	"go.chromium.org/tast-tests/cros/common/tbdep"
+	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wifi/wifiutil"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
+	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
+	"go.chromium.org/tast-tests/cros/services/cros/platform"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // A sub test sets up the auto-connect property for up to 2 networks (series of UI actions)
 // and wait for the connect status of 2 networks to be expected (wireless connection could take a while to respond)
 const subTestTimeout = 2 * time.Minute
 
+type controlAutoconnectWithUIParam struct {
+	testFunc func(context.Context, *wificell.TestFixture) error
+	wpaMode  wpa.ModeEnum
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:           ControlAutoconnectWithUI,
-		LacrosStatus:   testing.LacrosVariantUnneeded,
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Desc:           "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
+		Func:         ControlAutoconnectWithUI,
+		LacrosStatus: testing.LacrosVariantUnneeded,
+		Desc:         "Verify user should be able to specify whether or not a particular network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep",
 		Contacts: []string{
 			"alfredyu@cienet.com",
+			"vivian.chen@cienet.com",
 			"chromeos-connectivity-cienet-external@google.com",
 		},
-		BugComponent: "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
-		Attr:         []string{"group:wificell", "wificell_e2e_unstable"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
+		BugComponent:   "b:1578688", // ChromeOS > External > Cienet > Manual Test Automation > Test stabilization
+		LifeCycleStage: testing.LifeCycleInDevelopment,
+		Attr:           []string{"group:wificell", "wificell_e2e_unstable"},
+		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.BluetoothStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps: []string{
 			wificell.ShillServiceName,
 			"tast.cros.browser.ChromeService",
 			"tast.cros.chrome.uiauto.ossettings.OsSettingsService",
 			"tast.cros.wifi.WifiService",
 			wifiutil.FaillogServiceName,
+			"tast.cros.platform.UpstartService",
 		},
 		SoftwareDeps: []string{"chrome"},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesWithUI),
+		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
 		Params: []testing.Param{
 			{
-				Name:    "cycle_wifi",
-				Val:     cycleWifi,
+				Name: "cycle_wifi_wpa2",
+				Val: controlAutoconnectWithUIParam{
+					testFunc: cycleWifi,
+					wpaMode:  wpa.ModePureWPA2,
+				},
 				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
 			}, {
-				Name:    "suspend_and_wake",
-				Val:     suspendAndWake,
+				Name: "cycle_wifi_wpa3",
+				// Marvell Wi-Fi chip does not support WPA3 (b/313946503).
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				Val: controlAutoconnectWithUIParam{
+					testFunc: cycleWifi,
+					wpaMode:  wpa.ModePureWPA3,
+				},
+				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
+
+			}, {
+				Name: "suspend_and_wake_wpa2",
+				Val: controlAutoconnectWithUIParam{
+					testFunc: suspendAndWake,
+					wpaMode:  wpa.ModePureWPA2,
+				},
 				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
 			}, {
-				Name:    "reboot_dut",
-				Val:     rebootDUT,
+				Name:              "suspend_and_wake_wpa3",
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				Val: controlAutoconnectWithUIParam{
+					testFunc: suspendAndWake,
+					wpaMode:  wpa.ModePureWPA3,
+				},
+				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
+			}, {
+				Name: "reboot_dut_wpa2",
+				Val: controlAutoconnectWithUIParam{
+					testFunc: rebootDUT,
+					wpaMode:  wpa.ModePureWPA2,
+				},
 				Timeout: 3*time.Minute + 4*subTestTimeout + wificell.DUTRebootTimeout, // Each test performs 4 sub tests.
+			}, {
+				Name:              "reboot_dut_wpa3",
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				Val: controlAutoconnectWithUIParam{
+					testFunc: rebootDUT,
+					wpaMode:  wpa.ModePureWPA3,
+				},
+				Timeout: 3*time.Minute + 4*subTestTimeout + wificell.DUTRebootTimeout, // Each test performs 4 sub tests.
+			}, {
+				Name: "re_login_wpa2",
+				Val: controlAutoconnectWithUIParam{
+					testFunc: logoutDUT,
+					wpaMode:  wpa.ModePureWPA2,
+				},
+				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
+			}, {
+				Name:              "re_login_wpa3",
+				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
+				Val: controlAutoconnectWithUIParam{
+					testFunc: logoutDUT,
+					wpaMode:  wpa.ModePureWPA3,
+				},
+				Timeout: 3*time.Minute + 4*subTestTimeout, // Each test performs 4 sub tests.
 			},
 		},
 	})
@@ -76,7 +137,7 @@ const (
 )
 
 // ControlAutoconnectWithUI verifies user should be able to specify whether or not a particular
-// network can auto-connect after turning WiFi off/on, rebooting and waking up from sleep.
+// network can auto-connect after turning WiFi off/on, login/logout, rebooting and waking up from sleep.
 func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 	tf := s.FixtValue().(*wificell.TestFixture)
 
@@ -94,8 +155,58 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 	}
 	defer cr.Close(cleanupCtx, &emptypb.Empty{})
 
-	for _, id := range []apIdentifier{primaryAP, anotherAP, notUsedAP1, notUsedAP2} {
-		accessPoint, err := tf.ConfigureAP(ctx, wificell.DefaultOpenNetworkAPOptions(), nil)
+	param := s.Param().(controlAutoconnectWithUIParam)
+
+	apConfig := wpa.NewConfigFactory("password", wpa.Mode(param.wpaMode), wpa.Ciphers2(wpa.CipherCCMP))
+	for _, cfg := range []struct {
+		// id is the identifier of the network.
+		id apIdentifier
+		// options is the configuration to start hostapd on a router.
+		// Note that `hostapd.Channel` is essential and it is suggested to have only one network on a channel (b/320811867#comment3).
+		options []hostapd.Option
+		// routerID is the index of the router to set up the network for.
+		// Note that it is suggested to configure a maximum of two networks on a router (b/320811867#comment3).
+		routerID wificell.RouterIdx
+	}{
+		{
+			id: primaryAP,
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.PMF(hostapd.PMFOptional),
+				hostapd.Channel(1),
+			},
+			routerID: 0,
+		}, {
+			id: anotherAP,
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.PMF(hostapd.PMFOptional),
+				hostapd.Channel(48),
+			},
+			routerID: 0,
+		}, {
+			id: notUsedAP1,
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.PMF(hostapd.PMFOptional),
+				hostapd.Channel(1),
+			},
+			routerID: 1,
+		}, {
+			id: notUsedAP2,
+			options: []hostapd.Option{
+				hostapd.Mode(hostapd.Mode80211nPure),
+				hostapd.HTCaps(hostapd.HTCapHT20),
+				hostapd.PMF(hostapd.PMFOptional),
+				hostapd.Channel(48),
+			},
+			routerID: 1,
+		},
+	} {
+		accessPoint, err := tf.ConfigureAPOnRouterID(ctx, cfg.routerID, cfg.options, apConfig, false, false)
 		if err != nil {
 			s.Fatal("Failed to setup an AP: ", err)
 		}
@@ -106,7 +217,7 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 		defer cancel()
 		defer tf.DeconfigAP(cleanupCtx, accessPoint)
 
-		ap[id] = &apUtil{APIface: accessPoint, tf: tf}
+		ap[cfg.id] = &apUtil{APIface: accessPoint, tf: tf}
 	}
 	cleanupCtx = ctx
 	ctx, cancel = tf.ReserveForDisconnect(ctx)
@@ -166,8 +277,7 @@ func ControlAutoconnectWithUI(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to setup for test: ", err)
 			}
 
-			action := s.Param().(func(context.Context, *wificell.TestFixture) error)
-			if err := action(ctx, tf); err != nil {
+			if err := param.testFunc(ctx, tf); err != nil {
 				s.Fatal("Failed to perform the action that triggers WiFi to be restarted: ", err)
 			}
 
@@ -286,4 +396,12 @@ func suspendAndWake(ctx context.Context, tf *wificell.TestFixture) error {
 
 func rebootDUT(ctx context.Context, tf *wificell.TestFixture) error {
 	return tf.RebootDUT(ctx, wificell.DefaultDUT)
+}
+
+// logoutDUT logouts the DUT by restarting the UI.
+func logoutDUT(ctx context.Context, tf *wificell.TestFixture) error {
+	conn := tf.DUTRPC(wificell.DefaultDUT).Conn
+	upstartService := platform.NewUpstartServiceClient(conn)
+	_, err := upstartService.RestartJob(ctx, &platform.RestartJobRequest{JobName: "ui"})
+	return err
 }
