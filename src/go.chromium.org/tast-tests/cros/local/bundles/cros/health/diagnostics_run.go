@@ -148,9 +148,17 @@ func init() {
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.SkipOnModel("faffy")),
 			// TODO(b/279707249): Promote to critical.
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
+		}, {
+			// Contact: dennyh@google.com
+			// TODO(b/324001664): Fix the issue on faffy.
+			Name:              "emmc_lifetime_unstable",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
+			Fixture:           "crosHealthdRunning",
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.Model("faffy")),
+			ExtraAttr:         []string{"informational"},
 		}},
 	})
 }

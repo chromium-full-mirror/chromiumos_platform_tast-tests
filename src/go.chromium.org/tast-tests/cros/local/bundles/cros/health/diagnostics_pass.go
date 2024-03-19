@@ -133,8 +133,16 @@ func init() {
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			Fixture:           "crosHealthdRunning",
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.SkipOnModel("faffy")),
+		}, {
+			// Contact: dennyh@google.com
+			// TODO(b/324001664): Fix the issue on faffy.
+			Name:              "emmc_lifetime_unstable",
+			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
+			Fixture:           "crosHealthdRunning",
 			ExtraAttr:         []string{"informational"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Emmc()),
+			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.Model("faffy")),
 		}, {
 			// Contact: byronlee@google.com
 			Name:              "bluetooth_power",
