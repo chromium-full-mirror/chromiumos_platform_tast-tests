@@ -68,6 +68,7 @@ const (
 	maxResuspendResumeTime = 10 // Sets time range between [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime).
 	suspendDuration        = 15
 	powerdDelayDur         = 3
+	checkFrequency         = 100 // Sets how often (in iterations) login, tpm, and ectool are checked. Always checked on last iteration.
 )
 
 func SuspendStress(ctx context.Context, s *testing.State) {
@@ -126,7 +127,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	}
 
 	for i := 0; i < numIters; i++ {
-		s.Logf("Running iteration %d out of %d ", i+1, numIters)
+		s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
 
 		s.Logf("Suspending dut for %d seconds", suspendDuration)
 		// The --wakup_timeout automatically unsuspends after given time.
@@ -152,18 +153,21 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			logFailure("Failed to reconnnect to DUT after waking from suspend", err, i)
 		}
 
-		// Note the original autotest for power_SuspendStress only ran these at the end of the test, but here it runs every iteration.
-		// This slows down the test notably, so if it needs to be run for many iterations, it might be worthwhile temporarily moving this to only run at the end.
-		if err := testLoginSuccess(ctx, h); err != nil {
-			logFailure("Failed to test Chrome login", err, i)
-		}
+		if (i+1)%checkFrequency == 0 || i == numIters-1 {
+			s.Log("Checking login, TPM, and ECTool on iteration ", i+1)
+			// Note the original autotest for power_SuspendStress only ran these at the end of the test, but here it runs every iteration.
+			// This slows down the test notably, so if it needs to be run for many iterations, it might be worthwhile temporarily moving this to only run at the end.
+			if err := testLoginSuccess(ctx, h); err != nil {
+				logFailure("Failed to test Chrome login", err, i)
+			}
 
-		if err := testTPM(ctx, h); err != nil {
-			logFailure("Failed to test TPM state", err, i)
-		}
+			if err := testTPM(ctx, h); err != nil {
+				logFailure("Failed to test TPM state", err, i)
+			}
 
-		if err := testEctool(ctx, h); err != nil {
-			logFailure("Failed to test ectool", err, i)
+			if err := testEctool(ctx, h); err != nil {
+				logFailure("Failed to test ectool", err, i)
+			}
 		}
 
 		// if something went wrong during some iteration, reset so other iterations remain independent.
