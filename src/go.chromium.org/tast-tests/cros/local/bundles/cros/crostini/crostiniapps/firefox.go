@@ -102,8 +102,8 @@ func VerifyFirefoxLaunchAndClose(ctx context.Context, tconn *chrome.TestConn, ke
 	if err := uiauto.Combine("verify Firefox",
 		ui.WaitUntilExists(firefoxWindow),
 		uiauto.IfFailThen(
-			ud.WaitUntilExists(uidetection.TextBlock([]string{"Welcome", "to", "Firefox"}).WithinA11yNode(firefoxWindow).First()),
-			ud.WaitUntilExists(uidetection.TextBlock([]string{"Get", "started"}).WithinA11yNode(firefoxWindow).First()),
+			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock([]string{"Welcome", "to", "Firefox"}).WithinA11yNode(firefoxWindow).First()),
+			ud.WithScreenshotStrategy(uidetection.ImmediateScreenshot).WaitUntilExists(uidetection.TextBlock([]string{"Get", "started"}).WithinA11yNode(firefoxWindow).First()),
 		),
 	)(ctx); err != nil {
 		return err
