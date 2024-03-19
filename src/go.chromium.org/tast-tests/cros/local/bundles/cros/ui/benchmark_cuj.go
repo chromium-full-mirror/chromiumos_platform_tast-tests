@@ -118,6 +118,41 @@ func init() {
 				},
 			},
 			{
+				Name:      "motionmark1_3",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
+				Name:      "lacros_motionmark1_3",
+				ExtraAttr: []string{"group:cuj"},
+				Timeout:   defaultTimeout,
+				Fixture:   "loggedInToCUJUserLacrosWithoutCooldown",
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeLacros,
+					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+				ExtraSoftwareDeps: []string{"lacros"},
+			},
+			{
+				Name:              "vulkan_motionmark1_3",
+				ExtraAttr:         []string{"group:cuj"},
+				Timeout:           defaultTimeout,
+				Fixture:           "loggedInToCUJUserWithVulkanWithoutCooldown",
+				ExtraSoftwareDeps: []string{"vulkan_composite"},
+				Val: benchmarkcuj.BenchmarkTest{
+					BrowserType:   browser.TypeAsh,
+					BenchmarkInfo: benchmarkcuj.MotionMark1_3Info,
+					RecorderMode:  cujrecorder.Benchmark,
+				},
+			},
+			{
 				Name:      "jetstream",
 				ExtraAttr: []string{"group:cuj"},
 				Timeout:   defaultTimeout,

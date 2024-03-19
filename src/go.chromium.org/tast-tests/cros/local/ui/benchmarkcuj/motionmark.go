@@ -6,11 +6,14 @@ package benchmarkcuj
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -24,6 +27,30 @@ var MotionMarkInfo = benchmarkInfo{
 	benchmarkURL:   "https://browserbench.org/MotionMark1.2/",
 	benchmarkRun:   RunMotionMark,
 	benchmarkScore: RetrieveMotionMarkScore,
+}
+
+// MotionMark1_3Info contains the information for running MotionMark 1.3 Benchmark.
+var MotionMark1_3Info = benchmarkInfo{
+	name:           "MotionMark1.3",
+	windowState:    ash.WindowStateFullscreen,
+	benchmarkURL:   "https://browserbench.org/MotionMark1.3/",
+	benchmarkSetUp: SetUpMotionMark,
+	benchmarkRun:   RunMotionMark,
+	benchmarkScore: RetrieveMotionMarkScore,
+}
+
+// SetUpMotionMark makes sure the test is ready to run.
+func SetUpMotionMark(ctx context.Context, ac *uiauto.Context) error {
+
+	// Wait for up to 2 minutes for MotionMark to detect framerate.
+	const detectWaitTime = 2 * time.Minute
+
+	framerateText := nodewith.NameContaining("Framerate").Role(role.StaticText)
+	if err := ac.WithTimeout(detectWaitTime).WaitUntilExists(framerateText)(ctx); err != nil {
+		return errors.Wrap(err, "benchmark failed to detect framerate")
+	}
+
+	return nil
 }
 
 // RunMotionMark runs the MotionMark test.
