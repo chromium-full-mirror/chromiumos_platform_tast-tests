@@ -71,7 +71,7 @@ func init() {
 						"--effects=aec",
 					},
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 			{
 				Name: "aec_nc_44100hz",
@@ -84,7 +84,7 @@ func init() {
 						"--effects=aec",
 					},
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 			{
 				Name: "nc",
@@ -94,7 +94,7 @@ func init() {
 					expectedRMS:              0.03,
 					expectedRMSTolerance:     0.01,
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 			{
 				Name: "nc_44100hz",
@@ -104,7 +104,7 @@ func init() {
 					expectedRMS:              0.03,
 					expectedRMSTolerance:     0.01,
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 			},
 			{
 				Name: "aec_nc_ast",
@@ -117,7 +117,7 @@ func init() {
 						"--effects=aec",
 					},
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
@@ -131,7 +131,7 @@ func init() {
 						"--effects=aec",
 					},
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
@@ -142,7 +142,7 @@ func init() {
 					expectedRMS:              0.03,
 					expectedRMSTolerance:     0.01,
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
@@ -153,7 +153,7 @@ func init() {
 					expectedRMS:              0.03,
 					expectedRMSTolerance:     0.01,
 				},
-				ExtraSoftwareDeps: []string{"ap_noise_cancellation"},
+				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
 				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 		},
@@ -180,9 +180,6 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 
 	// Start chrome.
 	chromeOpts := param.extraChromeOpts
-	if param.noiseCancellationEnabled {
-		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioAPNoiseCancellation"))
-	}
 	if param.styleTransferEnabled {
 		chromeOpts = append(chromeOpts, chrome.EnableFeatures("CrOSLateBootAudioStyleTransfer"))
 	}
@@ -212,11 +209,6 @@ func CrasNoiseCancellation(ctx context.Context, s *testing.State) {
 	cras, err := audio.NewCras(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect to CRAS: ", err)
-	}
-	if param.noiseCancellationEnabled {
-		if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioAPNoiseCancellation", true); err != nil {
-			s.Fatal("Feature flag not propagated to CRAS: ", err)
-		}
 	}
 	if param.styleTransferEnabled {
 		if err := cras.WaitUntilFeatureFlagHasValue(ctx, "CrOSLateBootAudioStyleTransfer", true); err != nil {
