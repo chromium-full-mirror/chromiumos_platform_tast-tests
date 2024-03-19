@@ -117,6 +117,11 @@ func RemoveDownloadsBindMountNoUI(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to read test file %q: %v", testFilePath, err)
 	}
 
+	// Unmount user vault before restarting cryptohomed.
+	if err := cryptohome.UnmountVault(ctx, fakeUser); err != nil {
+		s.Error("Failed to unmount user vault: ", err)
+	}
+
 	// Restart cryptohomed with no_downloads_bind_mount.
 	if err := cryptohome.RestartCryptohomed(ctx, false /*enableDownloadsBindMount*/); err != nil {
 		s.Fatal("Failed to restart cryptohomed for migration: ", err)
@@ -158,6 +163,11 @@ func RemoveDownloadsBindMountNoUI(ctx context.Context, s *testing.State) {
 	// Verify test file content after migration.
 	if err := cryptohome.VerifyFileContent(testFilePath, string(fileContentBeforeMigration)); err != nil {
 		s.Fatal("Failed to migrate: test file content doesn't match after migration: ", err)
+	}
+
+	// Unmount user vault before restarting cryptohomed.
+	if err := cryptohome.UnmountVault(ctx, fakeUser); err != nil {
+		s.Error("Failed to unmount user vault: ", err)
 	}
 
 	// Restart cryptohomed with downloads bind mount ON.
