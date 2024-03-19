@@ -123,6 +123,22 @@ func init() {
 				},
 			},
 			{
+				Name: "rr12_1thread_10ms_double_loop_count",
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   rrSched,
+						Priority: crasPriority,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops * 2,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
+					ShouldFail:          true,
+				},
+			},
+			{
 				Name: "rr10_1thread_10ms",
 				Val: cyclicTestParameters{
 					Config: schedConfig{
