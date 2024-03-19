@@ -32,6 +32,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/media/webrtc"
 	"go.chromium.org/tast-tests/cros/local/power"
+	pm "go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -410,6 +411,16 @@ func runVCPerf(ctx context.Context, cs ash.ConnSource, tconn, bTconn *chrome.Tes
 
 	r := power.NewRecorder(ctx, powerInterval, s.OutDir(), s.TestName())
 	defer r.Close(closeCtx)
+
+	if err := r.UseMetrics(ctx,
+		pm.CPUIdleStateClass,
+		pm.MemoryClass,
+		pm.PackageCStatesClass,
+		pm.ProcfsCPUClass,
+		pm.RAPLPowerClass,
+		pm.SysfsBatteryClass); err != nil {
+		return err
+	}
 
 	conn, err := cs.NewConn(ctx, vcURL)
 	if err != nil {
