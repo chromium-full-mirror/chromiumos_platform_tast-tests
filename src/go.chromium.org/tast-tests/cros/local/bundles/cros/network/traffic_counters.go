@@ -301,7 +301,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			})
 	}
 
-	vmTest := func(srcs []pp.TrafficCounter_Source, f func() error) {
+	vmTest := func(srcs []pp.TrafficCounter_Source, f func(addr net.IP) error) {
 		handler := func(resp http.ResponseWriter, req *http.Request) {
 			// Request payload is unused. Log any error on failure though to help
 			// debug if the test fails.
@@ -324,14 +324,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			}
 			test(expected,
 				func() {
-					if err := f(); err != nil {
+					if err := f(svr.addr); err != nil {
 						s.Fatalf("Failed to run HTTP i/o test for %v:%v: %v", svr.fam.String(), svr.dst(), err)
 					}
 				})
 		}
 	}
-
-	const targetURL = "http://foo.bar"
 
 	// Test traffic originating from Crostini.
 	if param.cros {
@@ -339,12 +337,12 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_CROSTINI_VM},
-			func() error {
+			func(addr net.IP) error {
 				// Use curl to generate some traffic to/from the HTTP server.
 				args := []string{
 					"curl",
 					"-X", "PUT",
-					targetURL,
+					"http://" + addr.String(),
 					"--connect-timeout", "5",
 					"-d", fmt.Sprintf(`{"msg":%s}`, msg),
 				}
@@ -358,7 +356,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 
 		vmTest(
 			[]pp.TrafficCounter_Source{pp.TrafficCounter_ARC},
-			func() error {
+			func(addr net.IP) error {
 				// Use dumpsys to generate some traffic to/from the HTTP server.
 				// - "host_default" to force using the default network on the host since
 				//   the network selection in ARC might not be the same as the host on
@@ -369,7 +367,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 				args := []string{
 					"wifi",
 					"tools", "http", "host_default",
-					targetURL,
+					"http://" + addr.String(),
 				}
 				return a.Command(ctx, "dumpsys", args...).Run(testexec.DumpLogOnError)
 			})
