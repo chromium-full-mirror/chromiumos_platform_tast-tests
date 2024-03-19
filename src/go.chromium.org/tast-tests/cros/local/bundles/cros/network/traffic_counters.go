@@ -325,7 +325,7 @@ func TrafficCounters(ctx context.Context, s *testing.State) {
 			test(expected,
 				func() {
 					if err := f(); err != nil {
-						s.Errorf("Failed to run HTTP i/o test for %v:%v: %v", svr.fam.String(), svr.dst(), err)
+						s.Fatalf("Failed to run HTTP i/o test for %v:%v: %v", svr.fam.String(), svr.dst(), err)
 					}
 				})
 		}
