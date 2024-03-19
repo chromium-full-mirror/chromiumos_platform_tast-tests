@@ -60,6 +60,13 @@ func (*UpstartService) StopJob(ctx context.Context, request *platform.StopJobReq
 	return &empty.Empty{}, upstart.StopJob(ctx, request.JobName, args...)
 }
 
+// RestartJob restarts the job (single-instance) or the specified instance of
+// the job (multiple-instance).
+func (*UpstartService) RestartJob(ctx context.Context, request *platform.RestartJobRequest) (*empty.Empty, error) {
+	args := unpackRequestArgs(request.GetArgs())
+	return &empty.Empty{}, upstart.RestartJob(ctx, request.JobName, args...)
+}
+
 // EnableJob enables an upstart job that was previously disabled.
 func (*UpstartService) EnableJob(ctx context.Context, request *platform.EnableJobRequest) (*empty.Empty, error) {
 	return &empty.Empty{}, upstart.EnableJob(ctx, request.JobName)

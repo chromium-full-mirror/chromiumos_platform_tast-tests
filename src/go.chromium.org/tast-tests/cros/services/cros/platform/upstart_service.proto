@@ -21,14 +21,19 @@ service UpstartService {
   rpc StartJob(StartJobRequest) returns (google.protobuf.Empty) {}
   // StopJob stops job. If it is not currently running, this is a no-op.
   rpc StopJob(StopJobRequest) returns (google.protobuf.Empty) {}
+  // RestartJob restarts the job (single-instance) or the specified instance of
+  // the job (multiple-instance).
+  rpc RestartJob(RestartJobRequest) returns (google.protobuf.Empty) {}
   // EnableJob enables an upstart job that was previously disabled.
   rpc EnableJob(EnableJobRequest) returns (google.protobuf.Empty) {}
   // DisableJob disables an upstart job, which takes effect on the next reboot.
   rpc DisableJob(DisableJobRequest) returns (google.protobuf.Empty) {}
   // IsJobEnabled checks if the given upstart job is enabled.
   rpc IsJobEnabled(IsJobEnabledRequest) returns (IsJobEnabledResponse) {}
-  // WaitForJobStatus waits for the given upstart job to have the status described by goal/state.
-  rpc WaitForJobStatus(WaitForJobStatusRequest) returns (google.protobuf.Empty) {}
+  // WaitForJobStatus waits for the given upstart job to have the status
+  // described by goal/state.
+  rpc WaitForJobStatus(WaitForJobStatusRequest)
+      returns (google.protobuf.Empty) {}
 }
 
 message CheckJobRequest {
@@ -60,21 +65,18 @@ message StopJobRequest {
   repeated Arg args = 2;
 }
 
-message EnableJobRequest {
+message RestartJobRequest {
   string job_name = 1;
+  repeated Arg args = 2;
 }
 
-message DisableJobRequest {
-  string job_name = 1;
-}
+message EnableJobRequest { string job_name = 1; }
 
-message IsJobEnabledRequest {
-  string job_name = 1;
-}
+message DisableJobRequest { string job_name = 1; }
 
-message IsJobEnabledResponse {
-  bool enabled = 1;
-}
+message IsJobEnabledRequest { string job_name = 1; }
+
+message IsJobEnabledResponse { bool enabled = 1; }
 
 message WaitForJobStatusRequest {
   string job_name = 1;
