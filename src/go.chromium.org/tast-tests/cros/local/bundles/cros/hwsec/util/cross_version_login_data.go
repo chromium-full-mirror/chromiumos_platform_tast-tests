@@ -292,6 +292,28 @@ func setInstallAttributes(ctx context.Context, cryptohome *hwsec.CryptohomeClien
 	return nil
 }
 
+func preparePinWeaverData(ctx context.Context, helper hwsec.CmdHelper) (*util.PinWeaverLabelsInfo, error) {
+	pinweaver := helper.PinWeaverManagerClient()
+	var normalLabels, lockedOutLabels []int
+
+	// Insert 5 fresh labels and 5 locked out labels
+	for i := 1; i <= 5; i++ {
+		normalLabel, err := pinweaver.CreateDefaultCredential(ctx)
+		if err != nil {
+			return nil, err
+		}
+		normalLabels = append(normalLabels, normalLabel)
+
+		lockedOutLabel, err := pinweaver.CreateLockedOutCredential(ctx)
+		if err != nil {
+			return nil, err
+		}
+		lockedOutLabels = append(lockedOutLabels, lockedOutLabel)
+	}
+
+	return &util.PinWeaverLabelsInfo{NormalLabels: normalLabels, LockedOutLabels: lockedOutLabels}, nil
+}
+
 // PrepareCrossVersionLoginData prepares the login data and config for CrossVersionLogin and saves them to dataPath and configPath respectively
 func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, helper hwsec.CmdHelper, dataPath, configPath, webauthnURL string) (retErr error) {
 	daemonController := helper.DaemonController()
@@ -331,6 +353,12 @@ func PrepareCrossVersionLoginData(ctx context.Context, lf hwsec.LogFunc, helper 
 		return errors.Wrap(err, "failed to create password data")
 	}
 	config.InstallAttrs = InstallAttrsContents
+
+	pinWeaverLabelsInfo, err := preparePinWeaverData(ctx, helper)
+	if err != nil {
+		return errors.Wrap(err, "failed to create pinweaver label data")
+	}
+	config.PinWeaverLabels = pinWeaverLabelsInfo
 	configList = append(configList, *config)
 
 	if err := daemonController.Restart(ctx, hwsec.UIDaemon); err != nil {

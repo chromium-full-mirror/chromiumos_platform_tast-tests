@@ -29,18 +29,25 @@ func NewVaultKeyInfo(password, label string, lowEntropy bool) *VaultKeyInfo {
 	}
 }
 
+// PinWeaverLabelsInfo contains the information of the PinWeaver hash tree
+type PinWeaverLabelsInfo struct {
+	NormalLabels    []int
+	LockedOutLabels []int
+}
+
 // VaultFSType indicates the type of the file system used for the user vault.
 type VaultFSType int
 
 // CrossVersionLoginConfig contains the information for cross-version login
 type CrossVersionLoginConfig struct {
-	AuthConfig     hwsec.AuthConfig
-	RsaKey         *rsa.PrivateKey
-	KeyLabel       string
-	ExtraVaultKeys []VaultKeyInfo
-	VaultFSType    VaultFSType
-	WebAuthnCred   *u2fd.WebAuthnCredential
-	InstallAttrs   map[string]string
+	AuthConfig      hwsec.AuthConfig
+	RsaKey          *rsa.PrivateKey
+	KeyLabel        string
+	ExtraVaultKeys  []VaultKeyInfo
+	VaultFSType     VaultFSType
+	WebAuthnCred    *u2fd.WebAuthnCredential
+	InstallAttrs    map[string]string
+	PinWeaverLabels *PinWeaverLabelsInfo
 }
 
 // NewPassAuthCrossVersionLoginConfig creates cross version-login config from password auth config
