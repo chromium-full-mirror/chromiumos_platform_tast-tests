@@ -488,23 +488,24 @@ func SelectAPNFromDialog(ctx context.Context, tconn *chrome.TestConn, apnName st
 	apnSelection := nodewith.NameContaining(apnName).Role(role.StaticText)
 
 	ui := uiauto.New(tconn)
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(apnSelection)(ctx); err != nil {
+	if err := ui.WithTimeout(3 * time.Second).WaitUntilExists(apnSelection)(ctx); err != nil {
 		return errors.Wrapf(err, "%q does does not show as a known APN", apnName)
 	}
 
 	if err := uiauto.Combine("Add known APN",
 		ui.LeftClick(apnSelection),
 		ui.LeftClick(UseThisApnBtn),
-		ui.WithTimeout(10*time.Second).WaitUntilGone(UseThisApnBtn),
+		ui.WithTimeout(3*time.Second).WaitUntilGone(UseThisApnBtn),
+		ui.EnsureGoneFor(UseThisApnBtn, 5*time.Second),
 	)(ctx); err != nil {
 		return errors.Wrapf(err, "failed to  known APN %q", apnName)
 	}
 
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilGone(nodewith.Name("Automatically detected").Role(role.StaticText))(ctx); err != nil {
+	if err := ui.WaitUntilGone(nodewith.Name("Automatically detected").Role(role.StaticText))(ctx); err != nil {
 		return errors.Wrap(err, "failed to remove automatically detected APN")
 	}
 
-	if err := ui.EnsureGoneFor(nodewith.Name("Automatically detected").Role(role.StaticText), 10*time.Second)(ctx); err != nil {
+	if err := ui.EnsureGoneFor(nodewith.Name("Automatically detected").Role(role.StaticText), 3*time.Second)(ctx); err != nil {
 		return errors.Wrap(err, "failed to remove automatically detected APN")
 	}
 
@@ -903,8 +904,10 @@ func VerifyAPNStabilized(ctx context.Context, tconn *chrome.TestConn, name strin
 func GoConnectIfNotConnectedThenReturnApnSubpage(ctx context.Context, tconn *chrome.TestConn) error {
 	ui := uiauto.New(tconn)
 
-	if err := ui.LeftClick(BackArrowBtn)(ctx); err != nil {
-		return errors.Wrap(err, "failed to navigate back to mobile data subpage from APN subpage")
+	if err := ui.EnsureExistsFor(nodewith.NameContaining("Manage network APN settings").Role(role.StaticText), 5*time.Second)(ctx); err == nil {
+		if err := ui.LeftClick(BackArrowBtn)(ctx); err != nil {
+			return errors.Wrap(err, "failed to navigate back to mobile data subpage from APN subpage")
+		}
 	}
 
 	if err := ui.Exists(ConnectButton)(ctx); err == nil {
