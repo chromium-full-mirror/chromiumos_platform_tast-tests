@@ -286,9 +286,11 @@ func (d *dnsmasq) Start(ctx context.Context, env *env.Env) error {
 		}
 		addressLines = append(addressLines, fmt.Sprintf("/%v/%v", hostName, toIP))
 
-		if resolvedHost.ToIP != nil && resolvedHost.Domain != "" {
-			localLines = append(localLines, resolvedHost.Domain)
-		}
+		// Queries other than A queries should not send upstream, since there is no
+		// upstream in virtualnet. Without this line, AAAA query will get REFUSED
+		// response instead of NODATA, and NODATA is more common is in the real
+		// world.
+		localLines = append(localLines, hostName)
 	}
 
 	if d.enableDNS {
