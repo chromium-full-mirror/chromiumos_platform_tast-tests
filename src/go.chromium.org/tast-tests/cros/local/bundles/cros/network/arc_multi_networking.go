@@ -73,6 +73,10 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	const (
 		networkInitializationPollTimeout = 10 * time.Second // The time to wait for patchpaneld to set up virtual network after physical network changes.
 		networkRemovalPollTimeout        = 1 * time.Second  // The time to wait for configurations after physical network is removed.
+		// b:329799545: Delay added to simulate the actual delay when
+		// physical devices are added. Virtual device added simultaneously may
+		// be mismatched in ARC guest.
+		networkAdditionDelay = 400 * time.Millisecond // The time to wait before adding each network device.
 	)
 
 	// Reserve some time for cleanup code.
@@ -167,6 +171,11 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	}
 	routerA := createRouterServerWrapper(routerAOpt, pool)
 	defer cleanRouterServerWrapper(cleanupCtx, routerA)
+	// b:329799545: Delay added to simulate the actual delay when physical
+	// devices are added. Virtual device added simultaneously may be mismatched
+	// in ARC guest.
+	// GoBigSleepLint: Wait between consequent NIC addition.
+	testing.Sleep(ctx, networkAdditionDelay)
 	routerB := createRouterServerWrapper(routerBOpt, pool)
 	defer cleanRouterServerWrapper(cleanupCtx, routerB)
 
@@ -216,6 +225,11 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	s.Log("Recreating network interface and topology")
 	routerBNew := createRouterServerWrapper(routerBOpt, pool)
 	defer cleanRouterServerWrapper(cleanupCtx, routerBNew)
+	// b:329799545: Delay added to simulate the actual delay when physical
+	// devices are added. Virtual device added simultaneously may be mismatched
+	// in ARC guest.
+	// GoBigSleepLint: Wait between consequent NIC addition.
+	testing.Sleep(ctx, networkAdditionDelay)
 	routerANew := createRouterServerWrapper(routerAOpt, pool)
 	defer cleanRouterServerWrapper(cleanupCtx, routerANew)
 	checkARCConnect(routerANew, a)
