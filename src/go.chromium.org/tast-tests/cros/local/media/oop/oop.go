@@ -44,11 +44,8 @@ func VerifyOneUtilityEncoderProcessWasStarted() error {
 		}
 	}
 
-	// numUtilProcs should be two here because the video encoder sandbox
-	// opens a broker process with the same --utility-sub-type as the
-	// utility process.
-	if numUtilProcs != 2 {
-		return errors.Errorf("expected 2 processes (broker + utility) but got %d", numUtilProcs)
+	if numUtilProcs != 1 {
+		return errors.Errorf("expected 1 video utility process but got %d", numUtilProcs)
 	}
 
 	return nil
