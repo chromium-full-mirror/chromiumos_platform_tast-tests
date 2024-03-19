@@ -767,6 +767,6 @@ func MeetCUJ(ctx context.Context, s *testing.State) {
 	creds := s.RequiredVar("ui.MeetCUJ.bond_credentials")
 
 	if _, err := meetcuj.Run(ctx, meet, cr, s.Var, s.DataPath, s.OutDir(), creds); err != nil {
-		s.Fatal(ctx, "Failed to run MeetCUJ: ", err)
+		s.Fatal("Failed to run MeetCUJ: ", err)
 	}
 }
