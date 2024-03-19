@@ -262,6 +262,9 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to wait until CPU is stabilized: ", err)
 	}
+	if err := cpu.WaitUntilPkgStateIdleWithConfig(ctx, cpu.DefaultPkgIdleConfig()); err != nil {
+		s.Fatal("Failed to wait until CPU package c-state is idle: ", err)
+	}
 
 	out, err := testexec.CommandContext(ctx, "top", "-n1", "-b").Output(testexec.DumpLogOnError)
 	if err == nil {

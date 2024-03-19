@@ -69,12 +69,12 @@ func DefaultCoolDownConfig(mode CoolDownMode) CoolDownConfig {
 
 // IdleCoolDownConfig returns the config to wait for the machine to cooldown for PowerIdlePerf test.
 // This overrides the default config timeout (5 minutes) to reduce test flakes on low-end devices.
-// Config also overrides temp (46C) to 42C to prevent increased power draw during initial measurements.
+// Config also overrides temp (46C) to 44C to prevent increased power draw during initial measurements.
 func IdleCoolDownConfig() CoolDownConfig {
 	cdConfig := DefaultCoolDownConfig(CoolDownPreserveUI)
-	cdConfig.PollTimeout = 10 * time.Minute
+	cdConfig.PollTimeout = 9 * time.Minute
 	cdConfig.PollInterval = 5 * time.Second
-	cdConfig.TemperatureThreshold = 42000
+	cdConfig.TemperatureThreshold = 44000
 	return cdConfig
 }
 
@@ -182,10 +182,10 @@ func WaitUntilCoolDown(ctx context.Context, config CoolDownConfig) (time.Duratio
 	return duration, nil
 }
 
-// Cooldown thoroughly cools down for power measurement
+// Cooldown thoroughly cools down for power measurement.
 func Cooldown(ctx context.Context) error {
 	// Wait until CPU is cooled down and idle.
-	if _, err := WaitUntilCoolDown(ctx, IdleCoolDownConfig()); err != nil {
+	if _, err := WaitUntilCoolDown(ctx, DefaultCoolDownConfig(CoolDownPreserveUI)); err != nil {
 		return errors.Wrap(err, "CPU failed to cool down")
 	}
 	if err := WaitUntilIdle(ctx); err != nil {
