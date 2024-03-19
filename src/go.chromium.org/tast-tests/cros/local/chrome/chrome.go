@@ -288,6 +288,9 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 	// TODO(b/281865378): Remove once InputDeviceSettingsSplit flag is enabled by default in Chromium.
 	opts = append(opts, EnableFeatures("InputDeviceSettingsSplit"))
 
+	// Override privacy sandbox dialog feature to hide it (crbug.com/330241089).
+	opts = append(opts, EnableFeatures("PrivacySandboxSettings4"))
+
 	opts = append(opts, ExtraArgs("--cryptohome-ignore-cleanup-ownership-for-testing"))
 
 	cfg, err := config.NewConfig(opts)
