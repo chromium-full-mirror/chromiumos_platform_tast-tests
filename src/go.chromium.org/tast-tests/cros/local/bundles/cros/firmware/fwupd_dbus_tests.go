@@ -7,7 +7,9 @@ package firmware
 import (
 	"context"
 
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/firmware/fwupd"
+	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -80,6 +82,14 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 			RemoteId:   "fwupd-tests",
 		},
 	}
+	// Refresh LVFS metadata.
+	// TODO(rishabhagr): Remove after b/328637488 is fixed
+	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "refresh")
+	_, err = cmd.Output(testexec.DumpLogOnError)
+	if err != nil && err.Error() != "exit status 2" {
+		s.Errorf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
+	}
+
 	// Get device using GUID
 	var device *fwupd.Device
 	device, err = fwupd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
