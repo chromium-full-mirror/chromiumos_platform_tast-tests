@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
@@ -39,25 +40,33 @@ func init() {
 		Timeout: 30 * time.Minute,
 		Params: []testing.Param{
 			{
-				Val:     browser.TypeAsh,
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				Fixture: "loggedInToCUJUser",
 			}, {
-				Name:              "pvsched",
-				BugComponent:      "b:167279",
-				Val:               browser.TypeAsh,
+				Name:         "pvsched",
+				BugComponent: "b:167279",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
 				Fixture:           "loggedInToCUJUserWithPvSchedEnabled",
 			}, {
-				Name:              "lacros",
-				Val:               browser.TypeLacros,
+				Name: "lacros",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeLacros,
+				},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacros",
 			},
 			{
-				Name:              "lacros_virtio_balloon",
-				ExtraAttr:         []string{"cuj_experimental"},
-				Val:               browser.TypeLacros,
+				Name:      "lacros_virtio_balloon",
+				ExtraAttr: []string{"cuj_experimental"},
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeLacros,
+				},
 				ExtraSoftwareDeps: []string{"lacros"},
 				Fixture:           "loggedInToCUJUserLacrosWithVirtioBalloon",
 			},
@@ -66,68 +75,88 @@ func init() {
 			{
 				Name:      "field_trials",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithFieldTrials",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithFieldTrials",
 			},
 			{
 				Name:      "battery_saver",
 				ExtraAttr: []string{"cuj_experimental"},
-				Val:       browser.TypeAsh,
-				Fixture:   "loggedInToCUJUserWithBatterySaver",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture: "loggedInToCUJUserWithBatterySaver",
 			},
 			// TODO(b/302748186): Remove rounded window tests once A/B testing
 			// for rounded windows is done.
 			{
-				Name:      "rounded_windows",
-				Val:       browser.TypeAsh,
+				Name: "rounded_windows",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				ExtraAttr: []string{"cuj_experimental"},
 				Fixture:   "loggedInToCUJUserWithRoundedWindows",
 			},
 			{
-				Name:              "rounded_windows_lacros",
-				Val:               browser.TypeLacros,
+				Name: "rounded_windows_lacros",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeLacros,
+				},
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraAttr:         []string{"cuj_experimental"},
 				Fixture:           "loggedInToCUJUserLacrosWithRoundedWindows",
 			},
 			// TODO(b/292249282): Remove when Vulkan is launched on brya, volteer, and skyrim
 			{
-				Name:              "vulkan",
-				Val:               browser.TypeAsh,
+				Name: "vulkan",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				Fixture:           "loggedInToCUJUserVulkan",
 				ExtraHardwareDeps: hwdep.D(hwdep.Model("redrix", "drobit", "frostflow")),
 			},
 			{
-				Name:              "blt_50mb",
-				Val:               browser.TypeAsh,
+				Name: "blt_50mb",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad50MB",
 			},
 			{
-				Name:              "blt_1gb",
-				Val:               browser.TypeAsh,
+				Name: "blt_1gb",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad1GB",
 			},
 			{
-				Name:              "blt_2gb",
-				Val:               browser.TypeAsh,
+				Name: "blt_2gb",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad2GB",
 			},
 			{
-				Name:              "blt_3gb",
-				Val:               browser.TypeAsh,
+				Name: "blt_3gb",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad3GB",
 			},
 			{
-				Name:              "blt_4gb",
-				Val:               browser.TypeAsh,
+				Name: "blt_4gb",
+				Val: deskscuj.TestParam{
+					BrowserType: browser.TypeAsh,
+				},
 				ExtraAttr:         []string{"cuj_experimental"},
 				ExtraHardwareDeps: hwdep.D(cuj.Experimental8GBModelConditions()...),
 				Fixture:           "loggedInToCUJUserWithBackgroundLoad4GB",
@@ -137,5 +166,15 @@ func init() {
 }
 
 func DesksCUJ(ctx context.Context, s *testing.State) {
-	deskscuj.Run(ctx, s, cujrecorder.SystemTraceConfigFile)
+	// Ensured the DesksCUJ test params are properly formed.
+	testParam := s.Param().(deskscuj.TestParam)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+
+	pv, err := deskscuj.Run(ctx, cr, testParam, s.Var, s.OutDir(), s.DataPath(cujrecorder.SystemTraceConfigFile))
+	if err != nil {
+		s.Fatal("Failed to run DesksCUJ: ", err)
+	}
+	if err := pv.Save(s.OutDir()); err != nil {
+		s.Error("Failed to save the perf data: ", err)
+	}
 }

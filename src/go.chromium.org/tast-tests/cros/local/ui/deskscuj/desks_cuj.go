@@ -31,20 +31,25 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+// TestParam is the test parameters for DesksCUJ.
+type TestParam struct {
+	BrowserType browser.Type
+}
+
 // Run runs the desks CUJ by opening up 4 different desks and switching
 // between them using various workflows.
-func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *perf.Values {
+func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, args func(string) (string, bool), outDir, systemTraceConfigPath string) (pv *perf.Values, retErr error) {
 	deskCUJTestDuration := 10 * time.Minute
-	if testDuration, ok := s.Var("ui.DesksCUJ.duration"); ok {
+	if testDuration, ok := args("ui.DesksCUJ.duration"); ok {
 		var err error
 		deskCUJTestDuration, err = time.ParseDuration(testDuration)
 		if err != nil {
-			s.Fatalf("Failed to parse command-line arg ui.DesksCUJ.duration=%q: %v", testDuration, err)
+			return nil, errors.Wrapf(err, "failed to parse command-line arg ui.DesksCUJ.duration=%q", testDuration)
 		}
 	}
 
 	// deskSwitchingDuration is how long we should run each workflow for.
-	// To have the full test run in 10 minutes,  we want to have each of
+	// To have the full test run in 10 minutes, we want to have each of
 	// the 3 workflows run in 10/3 minutes.
 	var deskSwitchingDuration = deskCUJTestDuration / 3
 
@@ -55,55 +60,53 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
+		return nil, errors.Wrap(err, "failed to capture device snapshot")
 	}
 
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
-
-	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	blankConn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, testParam.BrowserType, chrome.BlankURL)
 	if err != nil {
-		s.Fatal("Failed to set up Chrome: ", err)
+		return nil, errors.Wrap(err, "failed to set up Chrome")
 	}
 	defer closeBrowser(cleanupCtx)
 	defer blankConn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API connection: ", err)
+		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to browser test API connection: ", err)
+		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
 	}
 
 	cleanup, err := ash.EnsureTabletModeEnabled(ctx, tconn, false)
 	if err != nil {
-		s.Fatal("Failed to ensure clamshell mode: ", err)
+		return nil, errors.Wrap(err, "failed to ensure clamshell mode")
 	}
 	defer cleanup(cleanupCtx)
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to get the keyboard: ", err)
+		return nil, errors.Wrap(err, "failed to get the keyboard")
 	}
 	defer kw.Close(ctx)
 
 	mw, err := input.Mouse(ctx)
 	if err != nil {
-		s.Fatal("Failed to get the mouse: ", err)
+		return nil, errors.Wrap(err, "failed to get the mouse")
 	}
 	defer mw.Close(ctx)
 
 	tpw, err := input.Trackpad(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a trackpad device: ", err)
+		return nil, errors.Wrap(err, "failed to create a trackpad device")
 	}
 	defer tpw.Close(ctx)
 
 	tw, err := tpw.NewMultiTouchWriter(2)
 	if err != nil {
-		s.Fatal("Failed to create a multi-touch writer with 2 touches: ", err)
+		return nil, errors.Wrap(err, "failed to create a multi-touch writer with 2 touches")
 	}
 	defer tw.Close()
 
@@ -112,28 +115,28 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 	// The above preparation may take several minutes. Ensure that the
 	// display is awake and will stay awake for the performance measurement.
 	if err := power.TurnOnDisplay(ctx); err != nil {
-		s.Fatal("Failed to wake display: ", err)
+		return nil, errors.Wrap(err, "failed to wake display")
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
-		s.Fatal("Failed to create the recorder: ", err)
+		return nil, errors.Wrap(err, "failed to create the recorder")
 	}
 	defer recorder.Close(cleanupCtx)
 
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
-		s.Fatal("Failed to add common metrics to recorder: ", err)
+		return nil, errors.Wrap(err, "failed to add common metrics to recorder")
 	}
 
 	// Take a screenshot every 2 minutes up to a maximum of 5
 	// screenshots, to capture the state of the device during each of the
 	// desk switching workflows.
 	if err := recorder.AddScreenshotRecorder(ctx, 2*time.Minute, 5); err != nil {
-		s.Log("Failed to add screenshot recorder: ", err)
+		return nil, errors.Wrap(err, "failed to add screenshot recorder")
 	}
 
 	defer ash.CleanUpDesks(cleanupCtx, tconn)
-	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_dump")
+	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	// Shorten the context to cleanup document.
 	// Some low-end devices take a long time to delete docs, so extend
@@ -146,27 +149,27 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 	// unique user input actions that will be performed on each desk.
 	onVisitActions, expectedNumWindows, cleanUpDesks, err := setUpDesks(ctx, tconn, bTconn, br, kw, mw, tpw, tw)
 	if err != nil {
-		s.Fatal("Failed to set up desks: ", err)
+		return nil, errors.Wrap(err, "failed to set up desks")
 	}
 	defer func(ctx context.Context) {
 		if err := cleanUpDesks(ctx); err != nil {
-			s.Log("Failed to clean up desks: ", err)
+			testing.ContextLog(ctx, "Failed to clean up desks: ", err)
 		}
 	}(cleanUpDeskCtx)
 
 	topRow, err := input.KeyboardTopRowLayout(ctx, kw)
 	if err != nil {
-		s.Fatal("Failed to obtain the top-row layout: ", err)
+		return nil, errors.Wrap(err, "failed to obtain the top-row layout")
 	}
 	setOverviewModeAndWait := func(ctx context.Context) error {
 		if err := kw.Accel(ctx, topRow.SelectTask); err != nil {
-			s.Fatal("Failed to hit overview key: ", err)
+			return errors.Wrap(err, "failed to hit overview key")
 		}
 		return ash.WaitForOverviewState(ctx, tconn, ash.Shown, time.Minute)
 	}
 
 	if err := browser.CloseTabByTitle(ctx, bTconn, "about:blank"); err != nil {
-		s.Fatal(`Failed to close blank tab: `, err)
+		return nil, errors.Wrap(err, "failed to close blank tab")
 	}
 
 	// Get a list of metrics to collect for each test phase.
@@ -220,7 +223,7 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 				// See go/trace-in-cuj-tests about rules for tracing.
 				if deskSwitcher.recordTrace {
 					if cycles == 0 {
-						if err := recorder.StartTracing(ctx, s.OutDir(), s.DataPath(systemTraceConfigFile)); err != nil {
+						if err := recorder.StartTracing(ctx, outDir, systemTraceConfigPath); err != nil {
 							return errors.Wrap(err, "failed to start tracing")
 						}
 					} else if cycles == 4 {
@@ -245,7 +248,7 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 				// Give a few seconds for the current desk to stabilize
 				// before interacting with it.
 				if err := ac.WithInterval(time.Second).WithTimeout(5*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-					s.Log("Failed to wait for current desk to stabilize: ", err)
+					testing.ContextLog(ctx, "Failed to wait for current desk to stabilize: ", err)
 				}
 
 				if err := onVisitActions[activeDesk](ctx); err != nil {
@@ -268,7 +271,7 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 				return errors.Errorf("unexpected number of open windows, got %d, expected %d", len(ws), expectedNumWindows)
 			}
 
-			s.Logf("Switched desk by %s %d times", deskSwitcher.name, cycles)
+			testing.ContextLogf(ctx, "Switched desk by %s %d times", deskSwitcher.name, cycles)
 		}
 
 		// Activate the desk where Google Slides is at.
@@ -301,20 +304,17 @@ func Run(ctx context.Context, s *testing.State, systemTraceConfigFile string) *p
 		}
 		return nil
 	}); err != nil {
-		s.Fatal("Failed to conduct the recorder task: ", err)
+		return nil, errors.Wrap(err, "failed to conduct the recorder task")
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {
-		s.Fatal("Failed to record the performance data: ", err)
+		return nil, errors.Wrap(err, "failed to record the performance data")
 	}
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
-	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
-		s.Error("Failed to save histogram raw data: ", err)
+	if err := recorder.SaveHistograms(outDir); err != nil {
+		testing.ContextLog(ctx, "Failed to save histogram raw data: ", err)
 	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Fatal("Failed to save the performance data: ", err)
-	}
-	return pv
+	return pv, nil
 }
