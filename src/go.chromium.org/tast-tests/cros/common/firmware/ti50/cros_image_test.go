@@ -114,6 +114,33 @@ Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
 
 	testVersionInfoMatcher(t, input, expected)
 }
+
+func TestVersionCommandCr50Processor4(t *testing.T) {
+	input := `
+Chip:    g cr50 B2-D
+Board:   0
+RO_A:    0.0.11/bc74f7dc
+RO_B:  * 0.0.12/9eb618de
+RW_A:    Error
+RW_B:  * 0.6.230/cr50_v3.94_pp.259-e20fb86af1
+BID A:   46464646:00000000:00000010 Yes
+BID B:   46464646:00000000:00000010 Yes
+Build:   0.6.230/cr50_v3.94_pp.259-e20fb86af1
+         tpm2:v1.9308_26_0.90-28e6aec
+         pinweaver:v0.0.155-fe9e86a
+         2024-02-09 04:22:10 @chromeos-ci-firmware-us-central1-b-
+`
+	expected := VersionCommandInfo{
+		RoA:   RoInfo{Active: false, Version: "0.0.11", ImageCheck: "bc74f7dc"},
+		RoB:   RoInfo{Active: true, Version: "0.0.12", ImageCheck: "9eb618de"},
+		RwA:   RwInfo{Empty: true},
+		RwB:   RwInfo{Empty: false, Active: true, Version: "0.6.230", Branch: PrePvt},
+		Bid:   BidInfo{Empty: false, BidType: 0x46464646, Mask: 0, Flags: 0x10},
+		Build: BuildInfo{Branch: PrePvt, Debug: false},
+	}
+
+	testVersionInfoMatcher(t, input, expected)
+}
 func testVersionInfoMatcher(t *testing.T, input string, expected VersionCommandInfo) {
 	out, err := matchVersionInfo(input)
 	if err != nil {
@@ -194,6 +221,12 @@ func TestRwInfoMatcher5(t *testing.T) {
 	input := `RW_A:  * 0.3.22/cr50_v1.9308_26_0.596-e6b91d6`
 	expected := RwInfo{Active: true, Empty: false, Version: "0.3.22", Branch: Unknown}
 	testRwInfoMatcher(t, input, SlotA, expected)
+}
+
+func TestRwInfoMatcher6(t *testing.T) {
+	input := `RW_B:    Error`
+	expected := RwInfo{Empty: true}
+	testRwInfoMatcher(t, input, SlotB, expected)
 }
 
 func testRwInfoMatcher(t *testing.T, input string, slot GscSlot, expected RwInfo) {

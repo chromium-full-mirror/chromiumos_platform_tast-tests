@@ -505,7 +505,7 @@ func matchRwInfo(s string, slot GscSlot) (RwInfo, error) {
 		slotStr = "B"
 	}
 
-	verRE := regexp.MustCompile(`RW_` + slotStr + `:\s+([\s|*])\s(([0-9.]+)(/DBG)?/(` + verRWGSCStrRE + `)|Empty)`)
+	verRE := regexp.MustCompile(`RW_` + slotStr + `:\s+([\s|*])\s(([0-9.]+)(/DBG)?/(` + verRWGSCStrRE + `)|Empty|Error)`)
 	matches := verRE.FindStringSubmatch(s)
 
 	// Manually figure out how many matches we got since `regexp` only returns
