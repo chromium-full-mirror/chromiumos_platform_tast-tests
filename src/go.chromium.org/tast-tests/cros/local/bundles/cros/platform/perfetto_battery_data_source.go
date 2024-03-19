@@ -29,8 +29,7 @@ func init() {
 		Desc: "Verifies the linux.sysfs_power data source of traced_probes",
 		Contacts: []string{
 			"baseos-perf@google.com",
-			"chinglinyu@chromiupm.org",
-			"chenghaoyang@chromium.org",
+			"chinglinyu@chromium.org",
 		},
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		Data: []string{batteryTraceConfigFile,
