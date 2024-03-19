@@ -87,6 +87,10 @@ func UIOtaCellularDisconnectSms(ctx context.Context, s *testing.State) {
 	}
 	s.Logf("Phone number: %s to send message: %s", phoneNumber, messageToSend)
 
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Unable to connect to cellular service: ", err)
+	}
+
 	s.Log("Disconnect Cellular")
 	if _, err = helper.Disconnect(ctx); err != nil {
 		s.Fatal("Cellular Disconnect failed: ", err)
@@ -133,16 +137,8 @@ func UIOtaCellularDisconnectSms(ctx context.Context, s *testing.State) {
 	}
 
 	// Find connectable Cellular service and trigger Connect.
-	service, err := helper.FindServiceForDevice(ctx)
-	if err != nil {
-		s.Fatal("Unable to find Cellular Service for Device: ", err)
-	}
-	if isConnected, err := service.IsConnected(ctx); err != nil {
-		s.Fatal("Unable to get IsConnected for Service: ", err)
-	} else if !isConnected {
-		if _, err := helper.ConnectToDefault(ctx); err != nil {
-			s.Fatal("Unable to Connect to Service: ", err)
-		}
+	if _, err := helper.Connect(ctx); err != nil {
+		s.Fatal("Unable to connect to cellular service: ", err)
 	}
 
 	s.Log("Check for SMS message")
