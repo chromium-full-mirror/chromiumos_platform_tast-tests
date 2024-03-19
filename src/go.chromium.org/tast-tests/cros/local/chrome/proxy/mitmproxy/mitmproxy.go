@@ -74,13 +74,6 @@ func New(ctx context.Context, opts ...Option) (*MitmProxy, error) {
 		options:      []string{},
 	}
 
-	// OutDir should be set in the test context for saving logs and dump files per-test.
-	outDir, ok := testing.ContextOutDir(ctx)
-	if !ok || outDir == "" {
-		return nil, errors.New("No output dir exists")
-	}
-	mp.outDir = outDir
-
 	// Get values from command line.
 	if proxy.ScriptPath() != "" {
 		mp.scriptPaths = []string{proxy.ScriptPath()}
@@ -91,6 +84,19 @@ func New(ctx context.Context, opts ...Option) (*MitmProxy, error) {
 		if err := opt(mp); err != nil {
 			return nil, err
 		}
+	}
+
+	// Set OutDir for saving logs and dump files per-test.
+	// OutDir could be set by the context or the `OutDir` option passed in as args. If both are set, the option takes precedence.
+	// In most cases, it is just okay to use the context by default except for
+	// when a local RPC server calls this func with context.Background() that has no OutDir associated.
+	// In this case, the `OutDir` option should be used explicitly.
+	if mp.outDir == "" {
+		outDir, ok := testing.ContextOutDir(ctx)
+		if !ok || outDir == "" {
+			return nil, errors.New("OutDir should be set in the context or in the option")
+		}
+		mp.outDir = outDir
 	}
 
 	return mp, nil
