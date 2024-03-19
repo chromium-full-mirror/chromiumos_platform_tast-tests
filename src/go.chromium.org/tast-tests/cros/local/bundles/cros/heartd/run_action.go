@@ -26,6 +26,7 @@ func init() {
 		},
 		BugComponent: "b:982097", // ChromeOS > Platform > Enablement > Health
 		Attr:         []string{"group:heartd", "heartd_perbuild"},
+		SoftwareDeps: []string{"no_arm"},
 		Params: []testing.Param{{
 			Name: "sync_data",
 			Val:  "kSyncData", // Action enum string in heartd.
