@@ -489,7 +489,7 @@ func (h *Helper) SetServiceAutoConnect(ctx context.Context, autoConnect bool) (b
 // This is done to ensure the modem is registered after shill has updated the initial EPS bearer settings.
 func (h *Helper) WaitForModemRegisteredAfterReset(ctx context.Context, timeout time.Duration) error {
 	const pollPeriod = 100 * time.Millisecond
-	window := 2 * time.Second
+	window := 5 * time.Second
 	registeredTime := time.Time{}
 	return testing.Poll(ctx, func(ctx context.Context) error {
 		modem, err := modemmanager.NewModem(ctx)
