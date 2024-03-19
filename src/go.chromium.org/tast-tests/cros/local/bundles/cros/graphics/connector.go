@@ -39,6 +39,7 @@ var dpPlusModels = []string{
 	"akali", "akali360", "bard", "ekko", "pantheon", "sona", "syndra", "vayne",
 	// octopus family
 	"dorp",
+	"garfour",
 	// puff family
 	"duffy", "faffy", "kaisa", "noibat", "puff", "wyvern",
 	// rammus family
