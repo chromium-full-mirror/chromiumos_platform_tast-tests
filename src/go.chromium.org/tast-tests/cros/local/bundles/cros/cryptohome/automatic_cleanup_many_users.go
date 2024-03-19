@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/syslog"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 	"go.chromium.org/tast/core/timing"
 )
 
@@ -49,6 +50,7 @@ func init() {
 			ExtraAttr: []string{"group:crosbolt", "crosbolt_nightly"},
 			Timeout:   10 * time.Minute,
 		}},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 	})
 }
 

@@ -13,6 +13,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -32,6 +33,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 		},
+		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 	})
 }
 

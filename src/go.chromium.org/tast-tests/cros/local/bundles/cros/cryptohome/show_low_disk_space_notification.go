@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome/cleanup"
 	"go.chromium.org/tast-tests/cros/local/disk"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -36,6 +37,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Pre:          chrome.LoggedIn(),
+		HardwareDeps: hwdep.D(hwdep.MinStorage(16)),
 	})
 }
 
