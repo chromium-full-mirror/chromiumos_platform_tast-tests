@@ -22,12 +22,12 @@ This document lists the metrics collected in power package through TestMetrics()
 | drm_rank${rank}\_memory_${type}                     | KiB     | The amount of memory that a GPU process is using, ranked by GPU utilization. Types include _total, active, shared_.                                 |
 | **RAPL Power**      |
 | Name                        | Unit  | Note                                                                         |
-| package-0                   | W     | Energy consumption across the entire SoC.                                    |
-| non_SoC                     | W     | Energy consumption of all subsystems (system total minus SoC).               |
+| package-0                   | W     | Running average power consumption across the entire SoC.                     |
+| non_SoC                     | W     | Running average power consumption of all subsystems (system total minus SoC).|
 | PL1                         | W     | A threshold that power should not exceed on average in a longer span of time.|
-| core                        | W     | Energy consumption across all cpu cores.                                     |
-| uncore                      | W     | Energy consumption across integrated graphics.                               |
-| dram                        | W     | Energy consumption across the DRAM.                                          |
+| core                        | W     | Running average power consumption across all cpu cores.                      |
+| uncore                      | W     | Running average power consumption across integrated graphics.                |
+| dram                        | W     | Running average power consumption across the DRAM.                           |
 | **Sysfs Battery**   |
 | Name                        | Unit  | Note                                                                         |
 | system                      | W     | Instantaneous power consumption out of the battery.                          |
