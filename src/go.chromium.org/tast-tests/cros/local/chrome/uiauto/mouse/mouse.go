@@ -57,6 +57,7 @@ func DoubleClick(tconn *chrome.TestConn, location coords.Point, doubleClickInter
 		if err := tconn.Call(ctx, nil, "tast.promisify(chrome.autotestPrivate.mouseClick)", LeftButton); err != nil {
 			return err
 		}
+		// GoBigSleepLint: Sleep is necessary for double click to be recognized as such.
 		if err := testing.Sleep(ctx, doubleClickInterval); err != nil {
 			return errors.Wrap(err, "failed to wait for the gap between the double click")
 		}
@@ -97,12 +98,22 @@ func Move(tconn *chrome.TestConn, location coords.Point, duration time.Duration)
 // end (i.e. the duration of the drag), and the movement to the start happens
 // instantly.
 func Drag(tconn *chrome.TestConn, start, end coords.Point, duration time.Duration) func(ctx context.Context) error {
+	return DragWithDelay(tconn, start, end, duration, 0)
+}
+
+// DragWithDelay is identical to Drag, but adds a short wait before starting to move the mouse.
+func DragWithDelay(tconn *chrome.TestConn, start, end coords.Point, duration, delay time.Duration) func(ctx context.Context) error {
 	return func(ctx context.Context) error {
 		if err := Move(tconn, start, 0)(ctx); err != nil {
 			return errors.Wrap(err, "failed to move to the start location")
 		}
 		if err := Press(tconn, LeftButton)(ctx); err != nil {
 			return errors.Wrap(err, "failed to press the button")
+		}
+		// GoBigSleepLint: On slower devices the drag operation may not be recognized if we move
+		// too fast. So wait a bit before moving.
+		if err := testing.Sleep(ctx, delay); err != nil {
+			return errors.Wrap(err, "failed to wait between click and drag")
 		}
 		if err := Move(tconn, end, duration)(ctx); err != nil {
 			return errors.Wrap(err, "failed to drag")

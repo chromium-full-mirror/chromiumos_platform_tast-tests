@@ -272,7 +272,7 @@ func dragFromCrostini(ctx context.Context, pre crostini.FixtureData, files *file
 		Y: filesWindow.BoundsInRoot.Bottom() - 100,
 	}
 	dragDrop := func(ctx context.Context) error {
-		if err = mouse.Drag(tconn, dragPoint, dropPoint, time.Second)(ctx); err != nil {
+		if err = mouse.DragWithDelay(tconn, dragPoint, dropPoint, time.Second, 200*time.Millisecond)(ctx); err != nil {
 			return errors.Wrap(err, "drag and drop")
 		}
 		return nil
