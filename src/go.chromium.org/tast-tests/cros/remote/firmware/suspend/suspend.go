@@ -18,6 +18,8 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/exec"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -63,10 +65,9 @@ type Context struct {
 // This also does some setup to make any power_manager changes last until reboot.
 func NewContext(ctx context.Context, h *firmware.Helper) (*Context, error) {
 	err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf("mkdir -p %s && "+
-		"echo 0 > %s/suspend_to_idle && "+
 		"mount --bind %s /var/lib/power_manager && "+
 		"restart powerd",
-		tmpPowerManagerPath, tmpPowerManagerPath, tmpPowerManagerPath)).Run()
+		tmpPowerManagerPath, tmpPowerManagerPath)).Run(exec.DumpLogOnError)
 
 	if err != nil {
 		return nil, err
@@ -80,6 +81,7 @@ func NewContext(ctx context.Context, h *firmware.Helper) (*Context, error) {
 }
 
 // SuspendDUT attempts to suspend a DUT to the given state.
+// Don't use this. Devices support only one mode (S3 or S0ix), so don't change it.
 func (s *Context) SuspendDUT(state State, args SuspendArgs) error {
 	if err := s.setSuspendToIdle(state == StateS0ix); err != nil {
 		return err
@@ -195,12 +197,14 @@ func (s *Context) Close() error {
 }
 
 // setSuspendToIdle sets the suspend_to_idle value which controls if powerd will suspend to S0ix
+// Don't use this. Devices support only one mode (S3 or S0ix), so don't change it.
 func (s *Context) setSuspendToIdle(value bool) error {
 	idleValue := "0"
 	if value {
 		idleValue = "1"
 	}
 
+	testing.ContextLog(s.ctx, "Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 	return s.h.DUT.Conn().CommandContext(s.ctx, "sh", "-c", fmt.Sprintf("echo %s > %s/suspend_to_idle",
 		idleValue, tmpPowerManagerPath)).Run()
 }

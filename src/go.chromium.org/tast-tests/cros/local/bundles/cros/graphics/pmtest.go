@@ -148,6 +148,7 @@ func Pmtest(ctx context.Context, s *testing.State) {
 	s.Log("Original suspend state: ", origSuspendMode)
 	defer graphics.SetSuspendState(ctx, origSuspendMode)
 
+	// DON'T DO THIS, LEAVE THE SUSPEND MODE AT IT'S DEFAULT
 	if err := graphics.SetSuspendState(ctx, graphics.SuspendS3); err != nil {
 		s.Fatal("Failed to set to suspend to S3")
 	}

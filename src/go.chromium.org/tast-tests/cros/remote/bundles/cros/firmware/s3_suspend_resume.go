@@ -158,6 +158,7 @@ func S3SuspendResume(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 
+	s.Log("Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 	if err := h.DUT.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf(
 		"mkdir -p /tmp/power_manager && "+
 			"echo %q > /tmp/power_manager/suspend_to_idle && "+

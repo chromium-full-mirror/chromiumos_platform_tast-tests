@@ -115,7 +115,9 @@ func GetSuspendState(ctx context.Context) SuspendMode {
 }
 
 // SetSuspendState configure powerd to suspend to S0ix or S3.
+// Don't call this. The default value is always correct.
 func SetSuspendState(ctx context.Context, t SuspendMode) error {
+	testing.ContextLog(ctx, "Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 	if err := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo %d > /var/lib/power_manager/suspend_to_idle", t)).Run(testexec.DumpLogOnError); err != nil {
 		return errors.Wrap(err, "failed to set suspend_to_idle")
 	}

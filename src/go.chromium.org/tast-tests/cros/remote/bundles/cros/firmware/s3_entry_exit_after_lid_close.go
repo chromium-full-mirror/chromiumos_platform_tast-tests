@@ -82,14 +82,16 @@ func S3EntryExitAfterLidClose(ctx context.Context, s *testing.State) {
 	)
 
 	const (
-		S3DmesgCmd       = "dmesg | grep S3"
-		ClrDemsgCmd      = "dmesg -C"
+		S3DmesgCmd  = "dmesg | grep S3"
+		ClrDemsgCmd = "dmesg -C"
+		// DON'T DO THIS, LEAVE THE SUSPEND MODE AT IT'S DEFAULT
 		SwitchToS3Cmd    = "echo 0 > /var/lib/power_manager/suspend_to_idle"
 		RestartPowerdCmd = "restart powerd"
 		S3MemSleepCmd    = "echo deep > /sys/power/mem_sleep"
-		SwitchToS0ixCmd  = "echo 1 > /var/lib/power_manager/suspend_to_idle"
-		S0ixMemSleepCmd  = "echo s2idle > /sys/power/mem_sleep"
-		PowerdConfigCmd  = "check_powerd_config --suspend_to_idle; echo $?"
+		// DON'T DO THIS, LEAVE THE SUSPEND MODE AT IT'S DEFAULT
+		SwitchToS0ixCmd = "echo 1 > /var/lib/power_manager/suspend_to_idle"
+		S0ixMemSleepCmd = "echo s2idle > /sys/power/mem_sleep"
+		PowerdConfigCmd = "check_powerd_config --suspend_to_idle; echo $?"
 	)
 
 	// Get the initial tablet_mode_angle settings to restore at the end of test.
@@ -129,6 +131,7 @@ func S3EntryExitAfterLidClose(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to clear event log: ", err)
 	}
 
+	s.Log("Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", SwitchToS3Cmd).Run(); err != nil {
 		s.Fatalf("Failed to execute %q command: %v", SwitchToS3Cmd, err)
 	}
@@ -162,6 +165,7 @@ func S3EntryExitAfterLidClose(ctx context.Context, s *testing.State) {
 			}
 		}
 
+		s.Log("Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 		if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", SwitchToS0ixCmd).Run(); err != nil {
 			s.Fatalf("Failed to execute %q command: %v", SwitchToS0ixCmd, err)
 		}

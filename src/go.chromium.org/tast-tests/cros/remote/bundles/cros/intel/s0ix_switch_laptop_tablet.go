@@ -80,6 +80,7 @@ func S0ixSwitchLaptopTablet(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Suspending DUT")
+	// DON'T DO THIS, LEAVE THE SUSPEND MODE AT IT'S DEFAULT
 	if err := suspendCtx.SuspendDUT(suspend.StateS0ix, suspend.DefaultSuspendArgs()); err != nil {
 		s.Fatalf("Failed to suspend DUT: %s", err)
 	}
@@ -103,6 +104,7 @@ func S0ixSwitchLaptopTablet(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Suspending DUT")
+	// DON'T DO THIS, LEAVE THE SUSPEND MODE AT IT'S DEFAULT
 	if err := suspendCtx.SuspendDUT(suspend.StateS0ix, suspend.DefaultSuspendArgs()); err != nil {
 		s.Fatalf("Failed to suspend DUT: %s", err)
 	}

@@ -139,6 +139,7 @@ func S0ixStabilityCheck(ctx context.Context, s *testing.State) {
 
 	}(ctxForCleanUp)
 
+	s.Log("Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 	if err := dut.Conn().CommandContext(ctx, "sh", "-c", fmt.Sprintf(
 		"mkdir -p /tmp/power_manager && "+
 			"echo 1 > /tmp/power_manager/suspend_to_idle && "+

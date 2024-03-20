@@ -91,6 +91,7 @@ func DUTWakeS3UsingPowerButton(ctx context.Context, s *testing.State) {
 			}
 		}
 		// Perform switching back to S0ix state.
+		s.Log("Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 		if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", configSuspendModeS0ix).Run(); err != nil {
 			s.Fatal("Failed to switch to S0ix: ", err)
 		}
@@ -108,6 +109,7 @@ func DUTWakeS3UsingPowerButton(ctx context.Context, s *testing.State) {
 	}(ctxCleanup)
 
 	// Perform switching back to S3 state.
+	s.Log("Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
 	if err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", configSuspendModeS3).Run(); err != nil {
 		s.Fatal("Failed to switch to S3: ", err)
 	}
