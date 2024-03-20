@@ -485,7 +485,6 @@ func (m *Modem) IsRegistered(ctx context.Context) (bool, error) {
 	}
 	simpleProps := dbusutil.NewProperties(props)
 	modemState, err := simpleProps.GetUint32(mmconst.SimpleModemPropertyRegState)
-	testing.ContextLogf(ctx, "SimpleModem regstate is %d", modemState)
 	if err != nil {
 		return false, errors.Wrap(err, "missing 3gpp reg state property")
 	}

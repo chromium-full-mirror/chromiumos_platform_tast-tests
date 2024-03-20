@@ -491,29 +491,42 @@ func (h *Helper) WaitForModemRegisteredAfterReset(ctx context.Context, timeout t
 	const pollPeriod = 100 * time.Millisecond
 	window := 5 * time.Second
 	registeredTime := time.Time{}
-	return testing.Poll(ctx, func(ctx context.Context) error {
+	var lastValue bool
+	statePrinted := false
+	registeredLongEnough := func() (bool, error) {
 		modem, err := modemmanager.NewModem(ctx)
 		if err != nil {
 			registeredTime = time.Time{}
-			return errors.Wrap(err, "failed to get modem info")
+			return false, errors.Wrap(err, "failed to get modem info")
 		}
 		isRegistered, err := modem.IsRegistered(ctx)
 		if err != nil {
 			registeredTime = time.Time{}
-			return errors.Wrap(err, "failed to fetch registration state")
+			return isRegistered, errors.Wrap(err, "failed to fetch registration state")
 		}
 		if !isRegistered {
 			registeredTime = time.Time{}
-			return errors.New("modem not registered")
+			return isRegistered, errors.New("modem not registered")
 		}
 		if registeredTime.IsZero() {
 			registeredTime = time.Now()
 		}
 
 		if time.Now().Sub(registeredTime) < window {
-			return errors.New("modem not yet registered for enough time")
+			return isRegistered, errors.New("modem not yet registered for enough time")
 		}
-		return nil
+		return isRegistered, nil
+	}
+
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		isRegistered, err := registeredLongEnough()
+		if !statePrinted || (isRegistered != lastValue) {
+			testing.ContextLogf(ctx, "Modem is registered: %t", isRegistered)
+			lastValue = isRegistered
+			statePrinted = true
+		}
+		return err
+
 	}, &testing.PollOptions{
 		Timeout:  timeout,
 		Interval: pollPeriod,
