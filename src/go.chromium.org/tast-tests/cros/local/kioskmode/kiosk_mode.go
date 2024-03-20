@@ -92,6 +92,7 @@ const (
 type Kiosk struct {
 	cr            *chrome.Chrome
 	fdms          *fakedms.FakeDMS
+	policyBlob    *policy.Blob
 	localAccounts *policy.DeviceLocalAccounts
 	// extraCleanup is a nullable function used to clean resources, like HTTP servers for web Kiosk.
 	extraCleanup cleanupFunc
@@ -172,6 +173,7 @@ func New(ctx context.Context, fdms *fakedms.FakeDMS, signinTestExtensionManifest
 	return &Kiosk{
 		cr:                             cr,
 		fdms:                           fdms,
+		policyBlob:                     policyBlob,
 		localAccounts:                  deviceLocalAccounts,
 		extraCleanup:                   cleanup,
 		reader:                         reader,
@@ -244,6 +246,23 @@ func (k *Kiosk) Close(ctx context.Context) (retErr error) {
 		}
 	}
 	return retErr
+}
+
+// PolicyBlob returns the policy.Blob created for this Kiosk session. It can be used
+// to update the policies in effect during the session. For example, to enable a policy
+// only after the Kiosk app is running:
+//
+//	kiosk, cr, err := kioskmode.New(ctx, ...)
+//	...
+//	err := kiosk.WaitLaunchLogs(ctx)
+//	...
+//	pb := kiosk.GetPolicyBlob()
+//	if err := pb.AddPolicy(newPolicy); err != nil { ... }
+//	if err := policyutil.ServeBlobAndRefresh(ctx, fdms, cr, pb); err != nil { ... }
+//
+// Tests may need to wait until the policy changes fully propagate.
+func (k *Kiosk) PolicyBlob() *policy.Blob {
+	return k.policyBlob
 }
 
 // WaitLaunchLogs is the same as WaitLaunchLogsWithReader below, but uses the reader stored in this
