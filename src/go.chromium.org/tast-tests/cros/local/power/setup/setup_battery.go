@@ -266,7 +266,7 @@ func drainBattery(ctx context.Context, targetPercentage float64) error {
 		return errors.Wrap(err, "timed out while waiting for DUT to start discharging")
 	}
 
-	stopStressTest, err := stressCPU(ctx, runtime.NumCPU(), "/tmp")
+	stopStressTest, err := StressCPU(ctx, runtime.NumCPU(), "/tmp")
 	if err != nil {
 		return errors.Wrap(err, "unable to start stress-ng to drain battery")
 	}
@@ -310,7 +310,8 @@ func WaitUntilPowerSourceChanges(ctx context.Context, acConnected bool) error {
 	})
 }
 
-func stressCPU(ctx context.Context, nCores int, tempPath string) (CleanupCallback, error) {
+// StressCPU generates heavy load on a specified number of cores.
+func StressCPU(ctx context.Context, nCores int, tempPath string) (CleanupCallback, error) {
 	cmd := testexec.CommandContext(ctx, "stress-ng", "--cpu", strconv.Itoa(nCores), "--temp-path", tempPath)
 	err := cmd.Start()
 	if err != nil {
