@@ -8,7 +8,6 @@ import (
 	"context"
 	"time"
 
-	factorycommon "go.chromium.org/tast-tests/cros/common/factory"
 	factoryservice "go.chromium.org/tast-tests/cros/services/cros/factory"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
@@ -69,7 +68,7 @@ func (e *ensureToolkitFixt) SetUp(ctx context.Context, s *testing.FixtState) int
 
 func (e *ensureToolkitFixt) TearDown(ctx context.Context, s *testing.FixtState) {
 	dut := s.DUT()
-	removeEnabledCmd := dut.Conn().CommandContext(ctx, "rm", "-rf", factorycommon.ToolkitEnabledPath)
+	removeEnabledCmd := dut.Conn().CommandContext(ctx, "factory_disable")
 	if err := removeEnabledCmd.Run(ssh.DumpLogOnError); err != nil {
 		s.Fatal("Disable toolkit fail: ", err)
 	}
