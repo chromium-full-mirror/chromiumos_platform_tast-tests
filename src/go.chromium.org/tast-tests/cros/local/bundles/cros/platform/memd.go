@@ -17,6 +17,8 @@ import (
 
 	metrics_event "go.chromium.org/chromiumos/system_api/metrics_event_proto"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
+	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
+	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -101,16 +103,40 @@ func checkClipFiles(s *testing.State, pattern string) error {
 	return errors.New("no events found")
 }
 
+// memoryMbToBps converts memory in MiB to basis points. 1 basis point is 0.01%.
+// E.g., 400 MiB in system with 4000 MiB total memory is 10% of total memory and
+// is 1000 basis points.
+func memoryMbToBps(marginMb uint64) (uint64, error) {
+	memInfo, err := kernelmeter.MemInfo()
+	if err != nil {
+		return 0, errors.Wrap(err, "cannot obtain memory info")
+	}
+	memTotalMb := memInfo.Total / 1024 / 1024
+	marginBps := marginMb * 10000 / uint64(memTotalMb)
+	return marginBps, nil
+}
+
+func setResourcedMemoryMargin(ctx context.Context, rm *resourced.Client, marginMb int) error {
+	criticalMarginBps, err := memoryMbToBps(uint64(marginMb))
+	if err != nil {
+		return errors.Wrap(err, "cannot convert memory MB to Bps")
+	}
+	if err = rm.SetMemoryMarginsBps(ctx, uint32(criticalMarginBps), uint32(criticalMarginBps+100)); err != nil {
+		return errors.Wrap(err, "failed to set memory margins")
+	}
+	return nil
+}
+
 func Memd(ctx context.Context, s *testing.State) {
 	const (
 		// This value should be the same as LOW_MEM_DANGER_THRESHOLD_MB
 		// in memd/src/main.rs.
-		dangerThreshold  = 600
-		lowMemDirPath    = "/sys/kernel/mm/chromeos-low_mem/"
-		availablePath    = lowMemDirPath + "available"
-		marginPath       = lowMemDirPath + "margin"
-		clipFilesPattern = "/var/log/memd/memd.clip*.log"
-		memdJob          = "memd"
+		dangerThresholdMb = 600
+		lowMemDirPath     = "/sys/kernel/mm/chromeos-low_mem/"
+		availablePath     = lowMemDirPath + "available"
+		clipFilesPattern  = "/var/log/memd/memd.clip*.log"
+		memdJob           = "memd"
+		resourcedJob      = "resourced"
 	)
 
 	_, _, memdPID, err := upstart.JobStatus(ctx, memdJob)
@@ -121,25 +147,20 @@ func Memd(ctx context.Context, s *testing.State) {
 		s.Fatal("memd is not running")
 	}
 
-	originalMargin, err := ioutil.ReadFile(marginPath)
-	if err != nil {
-		s.Fatalf("Cannot read %v: %v", marginPath, err)
-	}
-
 	// Set up actions to be taken on exit (either normal exit or fatal
 	// error) to restore the original state, which is: memd must be
 	// running, and the low-mem margin must have its original value.  This
 	// requires reading originalMargin first.
 	defer func() {
-		// Restore the original margin.  (We don't know if it has been
-		// changed yet, but it doesn't matter.)
-		if err := ioutil.WriteFile(marginPath, originalMargin, 0644); err != nil {
-			s.Errorf("Cannot write %v: %v", marginPath, err)
-		}
 		// Restart memd to pick up the original margin.  Note that
 		// upstart.Restart is not the same as 'initctl restart' and
 		// tolerates a stopped job, which may be the case here.
 		if err = upstart.RestartJob(ctx, memdJob); err != nil {
+			s.Error("Cannot restart memd: ", err)
+		}
+
+		// Restart resourced to pick the original margins.
+		if err = upstart.RestartJob(ctx, resourcedJob); err != nil {
 			s.Error("Cannot restart memd: ", err)
 		}
 	}()
@@ -155,35 +176,39 @@ func Memd(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	available, err := readAsInt(availablePath)
+	availableMb, err := readAsInt(availablePath)
 	if err != nil {
 		s.Fatalf("Cannot read %v: %v", availablePath, err)
+	}
+
+	rm, err := resourced.NewClient(ctx)
+	if err != nil {
+		s.Fatal("Failed to create Resource Manager client: ", err)
 	}
 
 	// Raise notification margin so that memd starts running in fast poll
 	// mode.  Add 100 to the minimum required value because available
 	// memory may change.  Try multiple times.
 	success := false
-	var margin int
+	var marginMb int
 	for triesCount := 0; triesCount < 3; triesCount++ {
-		margin = available - dangerThreshold + 100
-		if err := ioutil.WriteFile(marginPath,
-			[]byte(strconv.Itoa(margin)), 0644); err != nil {
-			s.Fatalf("Cannot write %v: %v", marginPath, err)
+		marginMb = availableMb - dangerThresholdMb + 100
+		if err := setResourcedMemoryMargin(ctx, rm, marginMb); err != nil {
+			s.Fatal("Cannot set margin to resourced: ", err)
 		}
-		available, err = readAsInt(availablePath)
+		availableMb, err = readAsInt(availablePath)
 		if err != nil {
 			s.Fatalf("Cannot read %v: %v", availablePath, err)
 		}
-		if margin+dangerThreshold > available {
+		if marginMb+dangerThresholdMb > availableMb {
 			success = true
 			break
 		}
 	}
 	if !success {
 		s.Fatalf("Cannot adjust margin: available = %v, margin = %v, "+
-			"dangerThreshold = %v (MB)", available, margin,
-			dangerThreshold)
+			"dangerThreshold = %v (MB)", availableMb, marginMb,
+			dangerThresholdMb)
 	}
 
 	// Restart memd to pick up the new margin.
@@ -191,10 +216,10 @@ func Memd(ctx context.Context, s *testing.State) {
 		s.Fatal("Cannot restart memd: ", err)
 	}
 
-	// Wait some time to ensure memd goes into fast-poll mode and starts
-	// filling the ring buffer.  The wait must be longer than
-	// SLOW_POLL_PERIOD_DURATION in memd/src/main.rs.
 	s.Log("Waiting for memd to enter fast-poll mode")
+	// GoBigSleepLint: Wait some time to ensure memd goes into fast-poll mode
+	// and starts filling the ring buffer.  The wait must be longer than
+	// SLOW_POLL_PERIOD_DURATION in memd/src/main.rs.
 	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
 		s.Fatal("Failed waiting for memd: ", err)
 	}
