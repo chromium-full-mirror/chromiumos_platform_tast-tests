@@ -3285,6 +3285,18 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 		}
 	}(cleanupCtx)
 
+	capabilities, err := manager.P2PCapabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+	p2pSupported, err := capabilities.GetBool(shillconst.P2PCapabilitiesP2PSupportedProperty)
+	if err != nil {
+		return nil, err
+	}
+	if p2pSupported != true {
+		return nil, errors.New("no support for P2P on this device")
+	}
+
 	props := map[string]interface{}{
 		shillconst.P2PDeviceFrequency: request.Data.Freq,
 	}
@@ -3406,6 +3418,18 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 			retErr = errors.Join(retErr, errors.Wrap(err, "failed disable P2P"))
 		}
 	}(cleanupCtx)
+
+	capabilities, err := manager.P2PCapabilities(ctx)
+	if err != nil {
+		return nil, err
+	}
+	p2pSupported, err := capabilities.GetBool(shillconst.P2PCapabilitiesP2PSupportedProperty)
+	if err != nil {
+		return nil, err
+	}
+	if p2pSupported != true {
+		return nil, errors.New("no support for P2P on this device")
+	}
 
 	props := map[string]interface{}{
 		shillconst.P2PDeviceSSID:       string(request.Data.Ssid),
