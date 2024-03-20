@@ -37,11 +37,12 @@ func init() {
 			"gwendal@chromium.org", // Lead for ChromeOS Storage
 		},
 		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
-			"group:hw_agnostic",
+			// Disabled by TORA.  See: b/313356042
+			//	"group:golden_tier",
+			//	"group:medium_low_tier",
+			//	"group:hardware",
+			//	"group:complementary",
+			//	"group:hw_agnostic",
 		},
 		Fixture:      fixture.FakeDMSEnrolled,
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
