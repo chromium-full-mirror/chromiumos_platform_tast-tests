@@ -37,12 +37,13 @@ func init() {
 			"eariassoto@google.com", // Test author
 		},
 		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		SoftwareDeps: []string{"reboot", "chrome"},
+		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
 		Attr: []string{
 			"group:complementary",
 			"group:golden_tier",
 			"group:hardware",
 			"group:medium_low_tier",
+			"group:hw_agnostic",
 		},
 		Timeout: 3 * time.Minute,
 		Fixture: fixture.FakeDMSEnrolled,
