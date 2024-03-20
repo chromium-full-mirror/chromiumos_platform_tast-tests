@@ -11,7 +11,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"go.chromium.org/tast-tests/cros/common/android/ui"
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/common/utils"
@@ -32,7 +31,7 @@ func InstallApp(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *andr
 		return errors.Wrapf(err, "failed to install %s", pkgName)
 	}
 
-	return logAppVersion(ctx, a, d, pkgName)
+	return logAppVersion(ctx, a, pkgName)
 }
 
 // InstallAppFromAPKURL installs the app from the given APK URL.
@@ -57,7 +56,7 @@ func InstallAppFromAPKURL(ctx context.Context, a *arc.ARC, d *androidui.Device, 
 	if err := a.Install(ctx, apkPath); err != nil {
 		return errors.Wrapf(err, "failed to install %s from apk", pkgName)
 	}
-	return logAppVersion(ctx, a, d, pkgName)
+	return logAppVersion(ctx, a, pkgName)
 }
 
 // InstallAppFromAPKPath installs the app from the given APK path.
@@ -71,14 +70,24 @@ func InstallAppFromAPKPath(ctx context.Context, a *arc.ARC, d *androidui.Device,
 	if err := a.Install(ctx, apkPath); err != nil {
 		return errors.Wrapf(err, "failed to install %s from apk", pkgName)
 	}
-	return logAppVersion(ctx, a, d, pkgName)
+	return logAppVersion(ctx, a, pkgName)
 }
 
 // logAppVersion prints app version name.
-func logAppVersion(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string) error {
-	out, err := a.Command(ctx, "dumpsys", "package", pkgName).Output(testexec.DumpLogOnError)
+func logAppVersion(ctx context.Context, a *arc.ARC, pkgName string) error {
+	versionName, err := GetAppVersion(ctx, a, pkgName)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "failed to get app version for %s", pkgName)
+	}
+	testing.ContextLogf(ctx, "App version: %s", versionName)
+	return nil
+}
+
+// GetAppVersion gets app version name.
+func GetAppVersion(ctx context.Context, a *arc.ARC, appPkgName string) (string, error) {
+	out, err := a.Command(ctx, "dumpsys", "package", appPkgName).Output(testexec.DumpLogOnError)
+	if err != nil {
+		return "", err
 	}
 
 	output := string(out)
@@ -87,11 +96,10 @@ func logAppVersion(ctx context.Context, a *arc.ARC, d *ui.Device, pkgName string
 	for splitLine := range splitOutput {
 		if strings.Contains(splitOutput[splitLine], versionNamePrefix) {
 			versionName := strings.Split(splitOutput[splitLine], "=")[1]
-			testing.ContextLogf(ctx, "App version: %s", versionName)
-			break
+			return versionName, nil
 		}
 	}
-	return nil
+	return "", errors.Errorf("%s is not found in the output", versionNamePrefix)
 }
 
 // UninstallApp uninstalls the app if it has been installed.

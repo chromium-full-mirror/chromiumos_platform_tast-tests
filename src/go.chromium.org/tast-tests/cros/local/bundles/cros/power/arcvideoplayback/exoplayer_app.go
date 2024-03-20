@@ -69,6 +69,11 @@ func (e *ExoPlayerApp) Uninstall(ctx context.Context) error {
 	return util.UninstallApp(ctx, e.a, exoPlayerPkg)
 }
 
+// GetAppVersion returns the version of the ExoPlayer app.
+func (e *ExoPlayerApp) GetAppVersion(ctx context.Context) (string, error) {
+	return util.GetAppVersion(ctx, e.a, exoPlayerPkg)
+}
+
 // CopyFileToFolder copies the video file to Android temp directory and check if
 // the file has finished copying. Remember to call the cleanup function to delete
 // the file created in this function.

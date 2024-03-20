@@ -78,6 +78,11 @@ func (m *MxPlayerApp) Uninstall(ctx context.Context) error {
 	return util.UninstallApp(ctx, m.a, mxPlayerPackage)
 }
 
+// GetAppVersion returns the version of the MX Player app.
+func (m *MxPlayerApp) GetAppVersion(ctx context.Context) (string, error) {
+	return util.GetAppVersion(ctx, m.a, mxPlayerPackage)
+}
+
 // CopyFileToFolder copies the video file to the 'Downloads' folder and check if
 // the file has finished copying. Remember to call the cleanup function to delete the file
 // created in this function.

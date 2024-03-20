@@ -7,10 +7,13 @@ package power
 import (
 	"context"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	androidui "go.chromium.org/tast-tests/cros/common/android/ui"
+	"go.chromium.org/tast-tests/cros/common/perf"
+	cp "go.chromium.org/tast-tests/cros/common/power"
 	"go.chromium.org/tast-tests/cros/local/arc"
 	arcvpb "go.chromium.org/tast-tests/cros/local/bundles/cros/power/arcvideoplayback"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -20,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -271,6 +275,17 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 	}
 	defer videoApp.Uninstall(cleanupCtx)
 
+	configValues := perf.NewValues()
+	appVersion, err := videoApp.GetAppVersion(ctx)
+	if err != nil {
+		s.Error("Failed to get video app version: ", err)
+	}
+	appVersionNum, err := convertAppVersionToFloat(appVersion)
+	if err != nil {
+		s.Error("Failed to convert app version from string to float: ", err)
+	}
+	configValues.Set(perf.Metric{Name: cp.GeneralPerfMetricType + "arc_video_app_version", Unit: "unit", Direction: perf.BiggerIsBetter}, appVersionNum)
+
 	// Use default value for timeParam if not set.
 	defaultTimeParams := power.TimeParams{Interval: 5 * time.Second, Total: time.Hour}
 	if interval == time.Duration(0) {
@@ -337,7 +352,29 @@ func ARCVideoPlayback(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sleep while video is playing: ", err)
 	}
 
+	// Save custom perf values to power logs and results-chart.json.
+	recorder.AddOptionalRecorderArg(cp.OptionalRecorderArgPowerLogCustomPerfKey, configValues)
 	if err := recorder.Finish(ctx); err != nil {
-		s.Fatal("Failed to finish collecting power metrics: ", err)
+		s.Error("Cannot finish collecting power metrics: ", err)
 	}
+}
+
+// convertAppVersionToFloat converts the app version from string to float
+// for easier comparisons within the power dashboard.
+func convertAppVersionToFloat(appVersion string) (float64, error) {
+	// The version format of ExoPlayer app is "1.4.0-alpha01".
+	// Replace the "-alpha" with "." to convert it to float.
+	const exoplayerVerStr = "-alpha"
+	appVersion = strings.Replace(appVersion, exoplayerVerStr, ".", 1)
+
+	var appVersionNum float64
+	appVersionSlice := strings.Split(appVersion, ".")
+	for _, n := range appVersionSlice {
+		num, err := strconv.ParseFloat(n, 64)
+		if err != nil {
+			return 0, errors.Wrapf(err, "failed to convert %q to float", n)
+		}
+		appVersionNum = appVersionNum*1000 + num
+	}
+	return appVersionNum, nil
 }

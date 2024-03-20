@@ -14,6 +14,7 @@ import (
 type VideoApp interface {
 	Install(ctx context.Context) error
 	Uninstall(ctx context.Context) error
+	GetAppVersion(ctx context.Context) (string, error)
 	Launch(ctx context.Context) error
 	CopyFileToFolder(ctx context.Context, videoPath string) (cleanup func() error, retErr error)
 	PlayVideoInFullScreen(video string) uiauto.Action
