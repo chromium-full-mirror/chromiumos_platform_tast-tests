@@ -155,7 +155,9 @@ for the following reasons:
 ```
 ### Collect a specific subset of power metrics
 
-You can collect a specific subset of power metrics by calling the Recorder method `UseMetrics(classes ...metrics.MetricClass)` after creating a NewRecorder. Available metric class flags can be found here: [metrics.go]
+You can collect a specific subset of power metrics by calling the Recorder
+method `UseMetrics(classes ...metrics.MetricClass)` after creating a NewRecorder.
+Available metric class flags can be found here: [metrics.go]
 
 ```
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
