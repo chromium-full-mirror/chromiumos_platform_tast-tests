@@ -7,6 +7,7 @@ package login
 
 import (
 	"context"
+	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast/core/errors"
@@ -61,8 +62,17 @@ func SetupLocalPassword(ctx context.Context, oobeConn *chrome.Conn, password str
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.isReadyForTesting()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the LocalPasswordSetupScreen to be visible")
 	}
-	if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPassword(pw); }`, password); err != nil {
+	if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPasswordToFirstInput(pw); }`, password); err != nil {
 		return errors.Wrap(err, "failed to enter local password")
+	}
+	if err := oobeConn.Call(ctx, nil, `(pw) => { OobeAPI.screens.LocalPasswordSetupScreen.enterPasswordToConfirmInput(pw); }`, password); err != nil {
+		return errors.Wrap(err, "failed to enter local password")
+	}
+	if err := oobeConn.WaitForExprWithTimeout(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.nextButton.isEnabled()", 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to wait for the next button being enabled")
+	}
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.LocalPasswordSetupScreen.nextButton.click()", nil); err != nil {
+		return errors.Wrap(err, "failed to click on the next button")
 	}
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.PasswordFactorSuccessScreen.isDone()"); err != nil {
 		return errors.Wrap(err, "failed to wait for the done step to be visible")
