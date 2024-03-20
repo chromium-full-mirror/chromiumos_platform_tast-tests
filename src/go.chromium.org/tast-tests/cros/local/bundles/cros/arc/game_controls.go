@@ -60,9 +60,9 @@ func GameControls(ctx context.Context, s *testing.State) {
 		}
 		defer mouse.Close(ctx)
 
-		gameControlsTile := nodewith.Name("Controls").HasClass("GameDashboardMainMenuView::GameControlsDetailsRow")
-		addButtonContainer := nodewith.Name("Assign another control").HasClass("EditingList::AddContainerButton")
-		menuDoneButton := nodewith.Name("done").HasClass("DoneButton")
+		gameControlsTile := nodewith.Name("Edit game controls").HasClass("GameDashboardMainMenuView::GameControlsDetailsRow")
+		addButtonContainer := nodewith.Name("Create another control").HasClass("EditingList::AddContainerButton")
+		menuDoneButton := nodewith.Name("Done").HasClass("DoneButton")
 		listDoneButton := nodewith.Name("Done editing").HasClass("PillButton")
 
 		const assignedKey = "r"
