@@ -83,13 +83,13 @@ const (
 )
 
 var (
-	// rwNewID contains the RW firmware version ID available on the DUT.
-	// This version would be the to-be-qualified RW_new firmware.
-	rwNewID string
+	// rwNewID and roNewID contain the AP RW and RO firmware version IDs available on the DUT.
+	// These versions would be the to-be-qualified RW_new and RO_new firmware, respectively.
+	rwNewID, roNewID string
 
-	// roNewID contains the RO firmware version ID available on the DUT.
-	// This version would be the to-be-qualified RO_new firmware.
-	roNewID string
+	// ecROID and ecRWID contain the EC RO and RW version IDs
+	// available in the binary file to be flashed.
+	ecROID, ecRWID string
 )
 
 func init() {
@@ -333,6 +333,16 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get fmap info for section B: ", err)
 	}
 
+	// Get the area_offset and area_size of the RO and RW section from EC bin file.
+	ecRO, err := getOffsetSizeName(ctx, s.DUT().Conn(), ecBackupData.Path, bios.ROFRIDImageSection)
+	if err != nil {
+		s.Fatal("Failed to get fmap info for EC RO section: ", err)
+	}
+	ecRW, err := getOffsetSizeName(ctx, s.DUT().Conn(), ecBackupData.Path, bios.RWFWIDImageSection)
+	if err != nil {
+		s.Fatal("Failed to get fmap info for EC RW section: ", err)
+	}
+
 	// Store the backup in the host.
 	s.Log("Saving the AP firmware")
 	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), apBackupData.Path, filepath.Join(tmpDir, apFwBackup), linuxssh.DereferenceSymlinks); err != nil {
@@ -389,7 +399,7 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Restoring firmware at the end of the test")
-		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), apFwBackup, ecFwBackup, "", tmpDir, fwpb.ImageSection_EmptyImageSection); err != nil {
+		if _, _, err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), apFwBackup, ecFwBackup, "", tmpDir, fwpb.ImageSection_EmptyImageSection, ecRO, ecRW); err != nil {
 			s.Fatal("Failed while flashing DUT to restore firmware at the end of test: ", err)
 		}
 
@@ -416,8 +426,8 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 	// Flash the latest shipped RO and RW firmware.
 	s.Log("Setting RO_old + RW_old (EC_old)")
-	if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), firmwareFilesToFlash.APFirmwareFile, firmwareFilesToFlash.ECFirmwareFile, firmwareFilesToFlash.MonitorFile, tmpDir, fwpb.ImageSection_EmptyImageSection); err != nil {
-		s.Fatalf("Failed to flash RO_old + RW_old ( %s + %s ) [EC_old]: %v", shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID, err)
+	if ecROID, ecRWID, err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), firmwareFilesToFlash.APFirmwareFile, firmwareFilesToFlash.ECFirmwareFile, firmwareFilesToFlash.MonitorFile, tmpDir, fwpb.ImageSection_EmptyImageSection, ecRO, ecRW); err != nil {
+		s.Fatalf("Failed to flash RO_old + RW_old ( %s + %s ) [EC_old](%s,%s): %v", shippedFwVersions[len(shippedFwVersions)-1].FwID, shippedFwVersions[len(shippedFwVersions)-1].FwID, ecROID, ecRWID, err)
 	}
 
 	// Verify RO/RW firmware versions are the latest shipped firmware after flashing.
@@ -448,8 +458,8 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 		// This will leave the DUT with the latest RO shipped fw and
 		// the to-be-qualified new RW firmware (i.e., RO_old + RW_new).
 		s.Log("Setting RO_old + RW_new (EC_old)")
-		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), apFwBackup, "", "", tmpDir, testArgs.imageSectionRW); err != nil {
-			s.Fatalf("Failed to flash RO_old + RW_new ( %s + %s ) [EC_old]: %v", shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID, err)
+		if _, _, err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), apFwBackup, "", "", tmpDir, testArgs.imageSectionRW, ecRO, ecRW); err != nil {
+			s.Fatalf("Failed to flash RO_old + RW_new ( %s + %s ) [EC_old](%s,%s): %v", shippedFwVersions[len(shippedFwVersions)-1].FwID, rwNewID, ecROID, ecRWID, err)
 		}
 
 		// Verify that the RO firmware has not been modified and RW has the RW_new after the flashing process.
@@ -479,8 +489,8 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 
 		n := len(shippedFwVersions) - i - 1
 		s.Logf("Setting RO_old-%d + RW_new (EC_old-%d)", n, n)
-		if err := flashDUTAndReboot(ctx, h, s.DUT().Conn(), firmwareFilesToFlash.APFirmwareFile, firmwareFilesToFlash.ECFirmwareFile, firmwareFilesToFlash.MonitorFile, tmpDir, testArgs.imageSectionRO); err != nil {
-			s.Fatalf("Failed to flash RO_old-%d + RW_new ( %s + %s ) [EC_old-%d]: %v", n, shippedFwVersions[i].FwID, rwNewID, n, err)
+		if ecROID, ecRWID, err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), firmwareFilesToFlash.APFirmwareFile, firmwareFilesToFlash.ECFirmwareFile, firmwareFilesToFlash.MonitorFile, tmpDir, testArgs.imageSectionRO, ecRO, ecRW); err != nil {
+			s.Fatalf("Failed to flash RO_old-%d + RW_new ( %s + %s ) [EC_old-%d](%s,%s): %v", n, shippedFwVersions[i].FwID, rwNewID, n, ecROID, ecRWID, err)
 		}
 
 		s.Log("Verifying the firmware versions after flash")
@@ -505,8 +515,8 @@ func APROBootabilityPerformance(ctx context.Context, s *testing.State) {
 	} else {
 		// Testing scenario RO/RW with the to-be-qualified firmware (i.e., RO_new + RW_new).
 		s.Log("Setting RO_new + RW_new (EC_new)")
-		if err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), apFwBackup, ecFwBackup, "", tmpDir, testArgs.imageSectionRO); err != nil {
-			s.Fatalf("Failed to flash RO_new + RW_new ( %s + %s ) [EC_new]: %v", roNewID, rwNewID, err)
+		if ecROID, ecRWID, err = flashDUTAndReboot(ctx, h, s.DUT().Conn(), apFwBackup, ecFwBackup, "", tmpDir, testArgs.imageSectionRO, ecRO, ecRW); err != nil {
+			s.Fatalf("Failed to flash RO_new + RW_new ( %s + %s ) [EC_new](%s,%s): %v", roNewID, rwNewID, ecROID, ecRWID, err)
 		}
 
 		s.Log("Verifying the firmware versions are the to-be-qualified new RO/RW after flash")
@@ -633,7 +643,7 @@ func downloadAndUntarFwFile(ctx context.Context, s *testing.State, h *firmware.H
 
 // flashDUTAndReboot will send the bin files to a directory in the DUT, flash the files into the DUT with the bios service 'WriteImageFromMultiSectionFile'
 // and reboot the DUT so that the flash takes effect.
-func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, apFile, ecFile, monitorFile, tmpDir string, section fwpb.ImageSection) error {
+func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, apFile, ecFile, monitorFile, tmpDir string, section fwpb.ImageSection, ecRO, ecRW secInfo) (ecROID, ecRWID string, err error) {
 	flashingCtx, cancelflashingCtx := context.WithTimeout(ctx, flashingTime)
 	defer cancelflashingCtx()
 
@@ -642,8 +652,16 @@ func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, 
 			testing.ContextLogf(flashingCtx, "Sending firmware bin file %q to DUT", fileName)
 			completeFilePath := filepath.Join(tmpDir, fileName)
 			if _, err := linuxssh.PutFiles(flashingCtx, conn, map[string]string{completeFilePath: completeFilePath}, linuxssh.DereferenceSymlinks); err != nil {
-				return errors.Wrap(err, "failed to send bin file to DUT")
+				return "", "", errors.Wrap(err, "failed to send bin file to DUT")
 			}
+		}
+	}
+
+	if ecFile != "" {
+		// Getting the EC RO and RW versions from the binary file.
+		ecROID, ecRWID, err = getFWIDFromBinFile(ctx, filepath.Join(tmpDir, ecFile), ecRO, ecRW)
+		if err != nil {
+			return "", "", errors.Wrap(err, "failed to get EC IDs")
 		}
 	}
 
@@ -657,17 +675,17 @@ func flashDUTAndReboot(ctx context.Context, h *firmware.Helper, conn *ssh.Conn, 
 			testing.ContextLogf(flashingCtx, "Flashing DUT with file: %s using section: %v", fileName, section)
 			bs := fwpb.NewBiosServiceClient(h.RPCClient.Conn)
 			if _, err := bs.WriteImageFromMultiSectionFile(flashingCtx, &fwpb.FWSectionInfo{Programmer: targetProgrammer, Path: filepath.Join(tmpDir, fileName), Section: section}); err != nil {
-				return errors.Wrap(err, "failed to flash DUT with the multi-section bin file")
+				return ecROID, ecRWID, errors.Wrap(err, "failed to flash DUT with the multi-section bin file")
 			}
 		}
 	}
 
 	// Reboot DUT for flash to take effect.
 	if err := safeReboot(flashingCtx, h); err != nil {
-		return errors.Wrap(err, "while rebooting after flash")
+		return ecROID, ecRWID, errors.Wrap(err, "while rebooting after flash")
 	}
 
-	return nil
+	return ecROID, ecROID, nil
 }
 
 // safeReboot will close RPC connection, reboot DUT and Open a new RPC connection.
@@ -809,19 +827,18 @@ func collectShippedFws(h *firmware.Helper, filepath string) ([]jsonFwInfo, error
 	return shippedFws, nil
 }
 
-// getNewestRWIDAvailable identifies which is the newest firmware ID available
-// in the DUT by dissecting the AP bin file.
-func getNewestRWIDAvailable(ctx context.Context, pathToFile string, rwA, rwB secInfo) (string, fwpb.ImageSection, error) {
+// getFWIDFromBinFile returns a string representation of the data poited by secInfo from a bin file.
+func getFWIDFromBinFile(ctx context.Context, pathToFile string, section1, section2 secInfo) (string, string, error) {
 	// Open and read the bin file.
 	binFile, err := os.Open(pathToFile)
 	if err != nil {
-		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to open AP bin file")
+		return "", "", errors.Wrap(err, "failed to open AP bin file")
 	}
 	defer binFile.Close()
 
 	fileInfo, err := binFile.Stat()
 	if err != nil {
-		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to read AP bin file")
+		return "", "", errors.Wrap(err, "failed to read AP bin file")
 	}
 	reader := bufio.NewReader(binFile)
 	buf := make([]byte, fileInfo.Size())
@@ -829,17 +846,29 @@ func getNewestRWIDAvailable(ctx context.Context, pathToFile string, rwA, rwB sec
 		_, err := reader.Read(buf)
 		if err != nil {
 			if err != io.EOF {
-				return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "unexpected error")
+				return "", "", errors.Wrap(err, "unexpected error")
 			}
 			break
 		}
 	}
-	// Get only the firmware IDs numbers from section A and B.
-	splitRWA := strings.Split(strings.Trim(string(buf[rwA.offset:rwA.offset+rwA.size]), "\x00"), ".")
-	splitRWB := strings.Split(strings.Trim(string(buf[rwB.offset:rwB.offset+rwB.size]), "\x00"), ".")
+	// Get only the firmware IDs numbers from required sections.
+	section1ID := strings.Trim(string(buf[section1.offset:section1.offset+section1.size]), "\x00")
+	section2ID := strings.Trim(string(buf[section2.offset:section2.offset+section2.size]), "\x00")
 
-	testing.ContextLogf(ctx, "Found RW ID = %s, in section = %s", splitRWA, rwA.name)
-	testing.ContextLogf(ctx, "Found RW ID = %s, in section = %s", splitRWB, rwB.name)
+	testing.ContextLogf(ctx, "Found ID = %s, in section = %s", section1ID, section1.name)
+	testing.ContextLogf(ctx, "Found ID = %s, in section = %s", section2ID, section2.name)
+	return section1ID, section2ID, nil
+}
+
+// getNewestRWIDAvailable identifies which is the newest firmware ID available
+// in the DUT by dissecting the AP bin file.
+func getNewestRWIDAvailable(ctx context.Context, pathToFile string, rwA, rwB secInfo) (string, fwpb.ImageSection, error) {
+	apRWA, apRWB, err := getFWIDFromBinFile(ctx, pathToFile, rwA, rwB)
+	if err != nil {
+		return "", fwpb.ImageSection_EmptyImageSection, errors.Wrap(err, "failed to get ID from bin file")
+	}
+	splitRWA := strings.Split(apRWA, ".")
+	splitRWB := strings.Split(apRWB, ".")
 
 	// Compare the firmware IDs from section A and B to identify which is the newer.
 	// If they are the same, use section A as default.
