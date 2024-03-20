@@ -101,6 +101,13 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 
 	testParams := s.Param().(firmware.PDTestParams)
 
+	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
+		s.Fatal("Failed to configure Servo for PD testing: ", err)
+	}
+
+	if testParams.Suspend && testParams.Shutdown {
+		s.Fatal("Suspend and shutdown can't both be enabled at the same time")
+	}
 	if testParams.Suspend {
 		if suspendContext, err := suspend.NewContext(ctx, h); err != nil {
 			s.Fatal("Failed to create suspend context: ", err)
@@ -111,13 +118,7 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 				s.Fatal("Failed to suspend DUT: ", err)
 			}
 		}
-	}
-
-	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
-		s.Fatal("Failed to configure Servo for PD testing: ", err)
-	}
-
-	if testParams.Shutdown {
+	} else if testParams.Shutdown {
 		if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
 			s.Fatal("Could not set servo power role to Sink: ", err)
 		}
