@@ -32,7 +32,10 @@ func init() {
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:  []string{wificell.ShillServiceName},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
-		HardwareDeps: hwdep.D(hwdep.WifiP2P()),
+		HardwareDepsForAll: map[string]hwdep.Deps{
+			"":    hwdep.D(hwdep.WifiP2P()),
+			"cd1": hwdep.D(hwdep.WifiP2P()),
+		},
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
 	})
 }
