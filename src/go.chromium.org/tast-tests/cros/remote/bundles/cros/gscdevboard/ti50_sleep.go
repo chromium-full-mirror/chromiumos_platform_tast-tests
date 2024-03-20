@@ -80,32 +80,7 @@ var (
 )
 
 type wakeSource string
-
-const (
-	wakeSourceGpio  wakeSource = "00000001"
-	wakeSourceRbox  wakeSource = "00000004"
-	wakeSourceAdc   wakeSource = "00000008"
-	wakeSourceUart1 wakeSource = "00000010"
-	wakeSourceUart2 wakeSource = "00000020"
-	wakeSourceUart3 wakeSource = "00000040"
-	wakeSourceUart4 wakeSource = "00000080"
-	wakeSourceUart5 wakeSource = "00000100"
-)
-
 type whichPin string
-
-var (
-	whichPinWPSense      whichPin = "0000000000000004"
-	whichPinPltRstL      whichPin = "0000000000000800"
-	whichPinEcPacketMode whichPin = "0000000001000000"
-	whichPinLidOpen      whichPin = "0000000002000000"
-	whichPinGscUart      whichPin = "0000010000000000"
-	whichPinCcdMode      whichPin = "0000080000000000"
-
-	whichPinTpmSpi whichPin = "0200000000000000"
-	whichPinTpmI2C whichPin = "0000000000000003"
-	whichPinTpmBus whichPin = "set_after_test_start"
-)
 
 func logCurrent(ctx context.Context, s *testing.State, b utils.DevboardHelper, pv *perf.Values, label string) {
 	for n := 1; n <= 5; n++ {
@@ -244,7 +219,42 @@ func Ti50Sleep(ctx context.Context, s *testing.State) {
 	defer i.Close(ctx)
 	pv := perf.NewValues()
 
+	// Wake source and pin values for DT chip.
+	var (
+		wakeSourceGpio wakeSource = "00000001"
+		wakeSourceRbox wakeSource = "00000004"
+		wakeSourceAdc  wakeSource = "00000008"
+
+		whichPinWPSense      whichPin = "0000000000000004"
+		whichPinPltRstL      whichPin = "0000000000000800"
+		whichPinEcPacketMode whichPin = "0000000001000000"
+		whichPinLidOpen      whichPin = "0000000002000000"
+		whichPinGscUart      whichPin = "0000010000000000"
+		whichPinCcdMode      whichPin = "0000080000000000"
+
+		whichPinTpmSpi whichPin = "0200000000000000"
+		whichPinTpmI2C whichPin = "0000000000000003"
+	)
+
+	// Wake source and pin values for OT chip.
+	if b.TestbedType == ti50.GscOTShield {
+		wakeSourceGpio = "00000004"
+		wakeSourceRbox = "00000001"
+		wakeSourceAdc = "00000002"
+
+		whichPinWPSense = "0000000000000020"
+		whichPinPltRstL = "0000000000000001"
+		whichPinEcPacketMode = "0000000000000010"
+		whichPinLidOpen = "0000000000000002"
+		whichPinGscUart = "0000000000000008"
+		whichPinCcdMode = "0000000000000004"
+
+		whichPinTpmSpi = "todo"
+		whichPinTpmI2C = "00000000000000c0"
+	}
+
 	// Set the correct TPM wake up pins based on test parameters
+	var whichPinTpmBus whichPin
 	if testParams.tpmStrapping == ti50.TpmI2c {
 		whichPinTpmBus = whichPinTpmI2C
 	} else if testParams.tpmStrapping == ti50.TpmSpi {
