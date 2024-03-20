@@ -93,7 +93,7 @@ const (
 	WaitForBiodToStartTimeout = 30 * time.Second
 	// timeForCleanup is the amount of time to reserve for cleaning up firmware tests.
 	timeForCleanup       = 2 * time.Minute
-	flashFpMcuTimeout    = 105 * time.Second
+	flashFpMcuTimeout    = 115 * time.Second
 	biodUpstartJobName   = "biod"
 	powerdUpstartJobName = "powerd"
 	disableFpUpdaterPath = "/var/lib/bio_fw_updater/.disable_fp_updater"
