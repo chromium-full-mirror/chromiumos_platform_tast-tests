@@ -33,37 +33,54 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: firmware.AddPDPorts([]testing.Param{{
 			Name: "normal",
+			Val:  firmware.PDTestParams{},
+		}, {
+			Name: "normal_snk",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: false,
+				PowerRole: firmware.RoleSink,
 			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("boxy")),
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityFlipped,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: false,
+				CC: firmware.CCPolarityFlipped,
 			},
+		}, {
+			Name: "flipcc_snk",
+			Val: firmware.PDTestParams{
+				CC:        firmware.CCPolarityFlipped,
+				PowerRole: firmware.RoleSink,
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("boxy")),
 		}, {
 			Name: "dtsoff",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOff,
-				Shutdown: false,
+				DTS: firmware.DTSModeOff,
 			},
+		}, {
+			Name: "dtsoff_snk",
+			Val: firmware.PDTestParams{
+				DTS:       firmware.DTSModeOff,
+				PowerRole: firmware.RoleSink,
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("boxy")),
 		}, {
 			Name: "flipcc_dtsoff",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityFlipped,
-				DTS:      firmware.DTSModeOff,
-				Shutdown: false,
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOff,
 			},
+		}, {
+			Name: "flipcc_dtsoff_snk",
+			Val: firmware.PDTestParams{
+				CC:        firmware.CCPolarityFlipped,
+				DTS:       firmware.DTSModeOff,
+				PowerRole: firmware.RoleSink,
+			},
+			ExtraHardwareDeps: hwdep.D(hwdep.SkipOnModel("boxy")),
 		}, {
 			Name: "shutdown",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOn,
 				Shutdown: true,
 			},
 		}}, []string{"group:firmware", "firmware_pd"}),
@@ -73,18 +90,12 @@ func init() {
 const (
 	pdDataRolePollTimeout  time.Duration = 5 * time.Second
 	pdDataRolePollInterval time.Duration = 100 * time.Millisecond
-	pdDataRoleSwapCount    int           = 10
 )
 
-// dataSwapSrc determines which PD partner initiates the data swap.
-type dataSwapSrc int
-
-const (
-	dutDataSwap dataSwapSrc = iota
-	servoDataSwap
-)
-
-// PDDataSwap performs a USB PD data role swap test.
+// PDDataSwap requests a single data role swap from the servo. The test is successful if the swap
+// works or is rejected but the servo stays in UFP. In practice the servo should already be UFP,
+// so all the swaps will be rejected. This is the only scenario that is actually supported as
+// ChromeOS always wants to be in the DFP role.
 func PDDataSwap(ctx context.Context, s *testing.State) {
 	h := s.FixtValue().(*fixture.Value).Helper
 
@@ -98,33 +109,14 @@ func PDDataSwap(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 
-	pdState, err := h.Servo.GetServoPDState(ctx)
-	if err != nil {
-		s.Fatal("Failed to get Servo PD state: ", err)
+	if err := dataRoleSwap(ctx, h); err != nil {
+		s.Error("Data role swap failed: ", err)
 	}
-
-	// Verify that the DUT supports data swap, as reported in the servo's partner flags.
-	if pdState.PEFlags&servo.PartnerDualRoleData != 0 {
-		s.Logf("DUT supports data role swap, attempting %d swaps", pdDataRoleSwapCount)
-		var swapSrc dataSwapSrc
-		for i := 0; i < pdDataRoleSwapCount; i++ {
-			// Every 2 swaps, switch which partner initiates the data role swap.
-			if i&2 == 0 {
-				swapSrc = dutDataSwap
-			} else {
-				swapSrc = servoDataSwap
-			}
-			err := dataRoleSwap(ctx, h, swapSrc)
-			if err != nil {
-				s.Error("Data role swap failed: ", err)
-			}
-		}
-	}
-	// TODO: b/194910842 - [faft-pd] Convert firmware_PDDataSwap to TAST
-	// Need to verify data role swap is rejected.
 }
 
-func dataRoleSwap(ctx context.Context, h *firmware.Helper, swapSrc dataSwapSrc) error {
+// dataRoleSwap tests data role swaps from servo.
+// As the DUT always wants to be DFP (servo is UFP), we count it as success if the swap is successful, or if it is rejected and servo is UFP.
+func dataRoleSwap(ctx context.Context, h *firmware.Helper) error {
 	// Get the servo's current role.
 	pdState, err := h.Servo.GetServoPDState(ctx)
 	if err != nil {
@@ -134,34 +126,33 @@ func dataRoleSwap(ctx context.Context, h *firmware.Helper, swapSrc dataSwapSrc) 
 	servoRoleBefore := pdState.DataRole
 	testing.ContextLog(ctx, "Servo data role before: ", servoRoleBefore)
 
-	if swapSrc == servoDataSwap {
-		// Initiate swap from the servo.
-		testing.ContextLog(ctx, "Servo initiates data swap")
-		reply, err := h.Servo.ServoSendDataSwapRequest(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to initiate data swap on servo")
-		}
-
-		testing.ContextLogf(ctx, "DUT swap response %q", reply)
-
-		if reply == servo.PDCtrlReject {
-			// A PD device is allowed to reject a data swap request.
-			// The DUT may reject a data swap if it is already in its
-			// preferred role.
-			// Fall through and perform a swap from the DUT side.
-			testing.ContextLog(ctx, "DUT rejected data swap (expected)")
-
-			swapSrc = dutDataSwap
-		}
+	// Initiate swap from the servo.
+	reply, err := h.Servo.ServoSendDataSwapRequest(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to initiate data swap on servo")
 	}
 
-	if swapSrc == dutDataSwap {
-		// Initiate swap from the DUT.
-		testing.ContextLog(ctx, "DUT initiates data swap")
-		err = h.Servo.SendDataSwapRequest(ctx)
-		if err != nil {
-			return errors.Wrap(err, "failed to initiate data swap on DUT")
+	testing.ContextLogf(ctx, "DUT swap response %q", reply)
+
+	if reply == servo.PDCtrlReject && servoRoleBefore == servo.DataRoleUFP {
+		// A PD device is allowed to reject a data swap request.
+		// The DUT may reject a data swap if it is already in its
+		// preferred role. The DUT's preferred role should always be DFP.
+		testing.ContextLog(ctx, "DUT rejected data swap (expected)")
+		// GoBigSleepLint: Sleep for pdDataRolePollTimeout to make sure the data role doesn't spontaneously change.
+		if err := testing.Sleep(ctx, pdDataRolePollTimeout); err != nil {
+			return errors.Wrap(err, "sleep failed")
 		}
+		if pdState, err = h.Servo.GetServoPDState(ctx); err == nil {
+			if pdState.DataRole != servo.DataRoleUFP {
+				return errors.Errorf("incorrect role got %q, want %q", pdState.DataRole, servo.DataRoleUFP)
+			}
+		} else {
+			return errors.Wrap(err, "failed to get servo PD state after rejected data swap")
+		}
+
+		testing.ContextLog(ctx, "Servo data role after: ", pdState.DataRole)
+		return nil
 	}
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
