@@ -59,17 +59,7 @@ func UIOtaLongSms(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to delete all messages: ", err)
 	}
 
-	// Device properties from host info store labels.
-	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-	if err != nil {
-		s.Fatal("Failed to read autotest_host_info_labels: ", err)
-	}
-
 	helper := s.FixtValue().(*cellular.FixtData).Helper
-	if err := helper.GetHostInfoLabels(ctx, labels); err != nil {
-		s.Fatal("Unable to read labels: ", err)
-	}
-
 	iccid, err := helper.GetCurrentICCID(ctx)
 	if err != nil {
 		s.Fatal("Could not get current ICCID: ", err)

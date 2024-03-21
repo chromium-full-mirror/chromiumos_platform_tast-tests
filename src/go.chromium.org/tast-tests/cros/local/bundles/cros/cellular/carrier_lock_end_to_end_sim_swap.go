@@ -47,13 +47,13 @@ func CarrierLockEndToEndSIMSwap(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Could not create cellular helper: ", err)
 	}
-	labels, err := cellular.GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-	if err != nil {
-		s.Fatal("Failed to read autotest_host_info_labels: ", err)
+
+	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err != nil {
+		helper.GetDutConfig(dutConfig)
+	} else if err := helper.GetHostInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
+		s.Fatal("Failed to get SIM info labels: ", err)
 	}
-	if err := helper.GetHostInfoLabels(ctx, labels); err != nil {
-		s.Fatal("Unable to read labels: ", err)
-	}
+
 	helper.PrintSIMInfo(ctx)
 
 	starfish, _, _, err := starfish.NewStarfish(ctx)

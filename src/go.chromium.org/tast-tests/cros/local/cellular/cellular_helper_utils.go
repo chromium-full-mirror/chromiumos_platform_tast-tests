@@ -21,6 +21,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 
+	labapi "go.chromium.org/chromiumos/config/go/test/lab/api"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/cellularconst"
@@ -196,21 +197,24 @@ func EnsureDaemonUptime(ctx context.Context, job string, duration time.Duration)
 }
 
 // GetModemInfoFromHostInfoLabels populate Modem info from host_info_labels
-func GetModemInfoFromHostInfoLabels(ctx context.Context, labels []string) *ModemInfo {
-	var modemInfo ModemInfo
+func GetModemInfoFromHostInfoLabels(ctx context.Context, labels []string) *labapi.ModemInfo {
+	var modemInfo labapi.ModemInfo
 	d := getLabelMap(labels)
-	if c, ok := getLastStringValue(d, "modem_type"); ok {
-		modemInfo.Type = c
+	if v, ok := getLastStringValue(d, "modem_type"); ok {
+		if p, ok := labapi.ModemType_value[v]; ok {
+			modemInfo.Type = labapi.ModemType(p)
+		}
+		delete(d, "modem_type")
 	}
 	if c, ok := getLastStringValue(d, "modem_imei"); ok {
-		modemInfo.IMEI = c
+		modemInfo.Imei = c
 	}
 	if c, ok := getLastStringValue(d, "modem_supported_bands"); ok {
 		modemInfo.SupportedBands = c
 	}
 	if c, ok := getLastStringValue(d, "modem_sim_count"); ok {
-		if v, err := strconv.Atoi(c); err == nil {
-			modemInfo.SimCount = v
+		if j, err := strconv.ParseInt(c, 10, 32); err == nil {
+			modemInfo.SimCount = int32(j)
 		} else {
 			modemInfo.SimCount = 0
 		}
@@ -219,23 +223,29 @@ func GetModemInfoFromHostInfoLabels(ctx context.Context, labels []string) *Modem
 }
 
 // GetSIMInfoFromHostInfoLabels populate SIM info from host_info_labels
-func GetSIMInfoFromHostInfoLabels(ctx context.Context, labels []string) []*SIMInfo {
+func GetSIMInfoFromHostInfoLabels(ctx context.Context, labels []string) []*labapi.SIMInfo {
 	d := getLabelMap(labels)
 	numSim := len(d["sim_slot_id"])
-	simInfo := make([]*SIMInfo, numSim)
+	simInfo := make([]*labapi.SIMInfo, numSim)
 
 	for i, v := range d["sim_slot_id"] {
 		simID := v
-		s := &SIMInfo{}
-		if j, err := strconv.Atoi(v); err == nil {
-			s.SlotID = j
+		s := &labapi.SIMInfo{}
+		if j, err := strconv.ParseInt(v, 10, 32); err == nil {
+			s.SlotId = int32(j)
 		}
 
+		// Example: sim_1_type:SIM_PHYSICAL
 		lv := "sim_" + simID + "_type"
-		d = assignLastStringValueAndDropKey(d, &s.Type, lv)
+		if v, ok := getLastStringValue(d, lv); ok {
+			if p, ok := labapi.SIMType_value[v]; ok {
+				s.Type = labapi.SIMType(p)
+			}
+			delete(d, lv)
+		}
 
 		lv = "sim_" + simID + "_eid"
-		d = assignLastStringValueAndDropKey(d, &s.EID, lv)
+		d = assignLastStringValueAndDropKey(d, &s.Eid, lv)
 
 		lv = "sim_" + simID + "_test_esim"
 		d = assignLastBoolValueAndDropKey(d, &s.TestEsim, lv)
@@ -244,12 +254,12 @@ func GetSIMInfoFromHostInfoLabels(ctx context.Context, labels []string) []*SIMIn
 		numProfiles := 0
 		d = assignLastIntValueAndDropKey(d, &numProfiles, lv)
 
-		s.ProfileInfo = make([]*SIMProfileInfo, numProfiles)
+		s.ProfileInfo = make([]*labapi.SIMProfileInfo, numProfiles)
 		for j := 0; j < numProfiles; j++ {
-			s.ProfileInfo[j] = &SIMProfileInfo{}
+			s.ProfileInfo[j] = &labapi.SIMProfileInfo{}
 			profileID := strconv.Itoa(j)
 			lv = "sim_" + simID + "_" + profileID + "_iccid"
-			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].ICCID, lv)
+			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].Iccid, lv)
 
 			lv = "sim_" + simID + "_" + profileID + "_pin"
 			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].SimPin, lv)
@@ -257,8 +267,14 @@ func GetSIMInfoFromHostInfoLabels(ctx context.Context, labels []string) []*SIMIn
 			lv = "sim_" + simID + "_" + profileID + "_puk"
 			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].SimPuk, lv)
 
+			// Example: sim_1_0_carrier_name:NETWORK_TMOBILE
 			lv = "sim_" + simID + "_" + profileID + "_carrier_name"
-			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].CarrierName, lv)
+			if v, ok := getLastStringValue(d, lv); ok {
+				if c, ok := labapi.NetworkProvider_value[v]; ok {
+					s.ProfileInfo[j].CarrierName = labapi.NetworkProvider(c)
+				}
+				delete(d, lv)
+			}
 
 			lv = "sim_" + simID + "_" + profileID + "_own_number"
 			d = assignLastStringValueAndDropKey(d, &s.ProfileInfo[j].OwnNumber, lv)

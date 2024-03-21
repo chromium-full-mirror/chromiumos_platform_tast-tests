@@ -50,6 +50,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture(),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularNoUI",
@@ -61,6 +62,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setStopUI(true),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularRebootSetupLocal",
@@ -73,6 +75,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Parent:          "cellularRebootSetupRemote",
 		Impl:            newCellularFixture(),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularSuspendLocal",
@@ -85,6 +88,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Parent:          "cellularSuspendRemote",
 		Impl:            newCellularFixture(),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularStressLocal",
@@ -97,6 +101,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Parent:          "cellularStressRemote",
 		Impl:            newCellularFixture(),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularE2ELocal",
@@ -109,6 +114,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Parent:          "cellularE2ERemote",
 		Impl:            newCellularFixture(),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularTestESIM",
@@ -120,6 +126,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setUseTestESIM(true),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolled",
@@ -132,6 +139,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setUseFakeDMS(true),
 		Parent:          fixture.FakeDMSEnrolled,
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndTestSIM",
@@ -144,6 +152,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setUseTestESIM(true),
 		Parent:          fixture.FakeDMSEnrolled,
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndFunctioningSIM",
@@ -156,6 +165,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setUseFakeDMS(true).setCheckSIM(true),
 		Parent:          fixture.FakeDMSEnrolled,
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFakeDMSEnrolledAndSIMLockCleared",
@@ -183,6 +193,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setRestartMM(true).setRestartOnFailure([]string{modemmanager.JobName}).setDaemonUptimeBeforeTest(0 * time.Second).setDisableCellularInShill(true),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularResetShillProfileOnPostTest",
@@ -197,6 +208,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name: "cellularNoUIResetShillProfileOnPostTest",
@@ -211,6 +223,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setRestartOnFailure([]string{modemmanager.JobName}).setResetShillProfileOnPostTest(true).setDaemonUptimeBeforeTest(0 * time.Second).setStopUI(true),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularArcBooted",
@@ -223,6 +236,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setHasArc(true),
 		Parent:          "arcBooted",
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningRoamingSim",
@@ -234,6 +248,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setUseRoaming(true).setCheckSIM(true),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularWithFunctioningSim",
@@ -245,6 +260,7 @@ func init() {
 		PostTestTimeout: 3 * time.Minute,
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setCheckSIM(true),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularPower",
@@ -257,6 +273,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Impl:            newCellularFixture().setCheckSIM(true),
 		Parent:          "powerMetricsNoUI",
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            "cellularSIMLockCleared",
@@ -281,6 +298,7 @@ func init() {
 		TearDownTimeout: 5 * time.Second,
 		Parent:          "cellularE2ERemote",
 		Impl:            newCellularFixture().setHasChrome(true),
+		Vars:            []string{"autotest_host_info_labels"},
 	})
 }
 
@@ -493,16 +511,31 @@ func (f *cellularFixture) SetUp(ctx context.Context, s *testing.FixtState) inter
 	}
 	f.helper = helper
 
+	// Always load labels into helper.
+	hasDUTInfo := false
+	if dutConfig, err := s.ChromeOSDUTLabConfig(""); err == nil {
+		helper.GetDutConfig(dutConfig)
+		hasDUTInfo = true
+		s.Log("Loaded DUT info from lab config")
+	} else if err := helper.GetHostInfoFromStringArgs(ctx, s.Var, "autotest_host_info_labels"); err != nil {
+		// Not fatal unless labels are required.
+		s.Log("Failed to get SIM info labels: ", err)
+	} else {
+		hasDUTInfo = true
+		s.Log("Loaded DUT info from autotest_host_info_labels")
+	}
+
+	if hasDUTInfo {
+		helper.PrintSIMInfo(ctx)
+		helper.PrintModemInfo(ctx)
+	}
+
 	if f.clearSIMLock {
 		// Clear the SIM lock in SetUp and TearDown to attempt to recover any
 		// DUT left in a SIM locked state. Since not all tests run on a SIM that
 		// supports SIM lock, only do this in fixtures that require SIM locking.
-		labels, err := GetLabelsAsStringArray(ctx, s.Var, "autotest_host_info_labels")
-		if err != nil {
-			s.Fatal("Failed to read autotest_host_info_labels: ", err)
-		}
-		if err := helper.GetHostInfoLabels(ctx, labels); err != nil {
-			s.Fatal("Failed to read host info labels: ", err)
+		if !hasDUTInfo {
+			s.Fatal("Cannot clear SIM lock, DUT configuration not available")
 		}
 		if err := helper.ClearSIMLockFromHostInfo(ctx); err != nil {
 			s.Fatal("Failed to clear SIM lock: ", err)
