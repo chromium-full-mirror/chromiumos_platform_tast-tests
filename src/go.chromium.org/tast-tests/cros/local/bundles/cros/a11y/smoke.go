@@ -27,7 +27,7 @@ func init() {
 		Func:         Smoke,
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests that a11y nodes on various browsers are accessible in Tast using the test extension from Ash",
-		Contacts:     []string{"chromeos-a11y-eng@google.com", "chromeos-sw-engprod@google.com", "hyungtaekim@chromium.org"},
+		Contacts:     []string{"chromeos-a11y-eng@google.com", "chromeos-sw-engprod@google.com", "xiuwen@google.com"},
 		BugComponent: "b:1272672",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
 		SoftwareDeps: []string{"chrome"},
