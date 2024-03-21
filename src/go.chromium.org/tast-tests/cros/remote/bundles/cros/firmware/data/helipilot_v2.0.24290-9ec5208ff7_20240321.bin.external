@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromeos-test-assets-private/tast/cros/firmware/helipilot_v2.0.24290-9ec5208ff7_20240321.bin",
+  "size": 1048576,
+  "sha256sum": "75b773bfbbd9c414d0f74dbafb13b93c592f36841b4db7006e281fe227f2b2da"
+}
