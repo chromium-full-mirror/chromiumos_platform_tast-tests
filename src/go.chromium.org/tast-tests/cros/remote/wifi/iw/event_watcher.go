@@ -7,6 +7,7 @@ package iw
 import (
 	"bufio"
 	"context"
+	"fmt"
 	"io"
 	"math"
 	"regexp"
@@ -59,6 +60,29 @@ type EventWatcherOption func(*eventWatcherConfig)
 // EventsBufferSize returns a Option that sets the buffer size of the events channel.
 func EventsBufferSize(size int) EventWatcherOption {
 	return func(c *eventWatcherConfig) { c.eventsBufferSize = size }
+}
+
+// String is implementation of Stringer interface for EventType.
+func (et EventType) String() string {
+	switch et {
+	case EventTypeDisconnect:
+		return "Disconnect"
+	case EventTypeChanSwitch:
+		return "Switch"
+	case EventTypeScanStart:
+		return "ScanStart"
+	case EventTypeConnected:
+		return "Connected"
+	case EventTypeUnknown:
+		return "Unknown"
+	default:
+		return "[Unrecognized event found]"
+	}
+}
+
+// String is implementation of Stringer interface for Event.
+func (ev *Event) String() string {
+	return fmt.Sprintf("{%v:%v (%v) %v}", ev.Timestamp, ev.Interface, ev.Type, ev.Message)
 }
 
 // NewEventWatcher creates and starts a new EventWatcher.
