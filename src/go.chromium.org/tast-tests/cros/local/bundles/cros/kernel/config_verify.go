@@ -350,6 +350,15 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		builtin = append(builtin, "DEBUG_CREDENTIALS")
 	}
 
+	// Security: Prevents certain kinds of UAF in linked lists in the kernel.
+	// backported to 6.1:
+	// https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=aebc7b0d8d91bbc69e976909963046bc48bca4fd
+	if ver.IsOrLater(6, 1) {
+		builtin = append(builtin, "LIST_HARDENED")
+	} else {
+		builtin = append(builtin, "DEBUG_LIST")
+	}
+
 	isX86Family := regexp.MustCompile(`^i\d86$`).MatchString(arch) || arch == "x86_64"
 	if isX86Family {
 		// Kernel: make sure port 0xED is the one used for I/O delay.
