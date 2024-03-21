@@ -109,7 +109,7 @@ func MemoryPressureModerate(ctx context.Context, s *testing.State) {
 
 	bt := s.Param().(memoryPressureModerateParams).bt
 
-	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, bt, s.DataPath(mempressure.WPRArchiveName))
+	testEnv, err := mempressure.NewTestEnv(ctx, s.OutDir(), enableARC, useHugePages, false, bt, s.DataPath(mempressure.WPRArchiveName))
 	if err != nil {
 		s.Fatal("Failed creating the test environment: ", err)
 	}

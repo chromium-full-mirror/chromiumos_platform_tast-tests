@@ -966,7 +966,7 @@ type TestEnv struct {
 }
 
 // NewTestEnv creates a new TestEnv, creating new WPR, Chrome, and ARC instances to use.
-func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages bool, bt browser.Type, archive string) (_ *TestEnv, errRet error) {
+func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages bool, useVulkan bool, bt browser.Type, archive string) (_ *TestEnv, errRet error) {
 	te := &TestEnv{}
 
 	success := false
@@ -992,6 +992,10 @@ func NewTestEnv(ctx context.Context, outDir string, enableARC, useHugePages bool
 
 	if useHugePages {
 		opts = append(opts, chrome.HugePagesEnabled())
+	}
+
+	if useVulkan {
+		opts = append(opts, chrome.EnableFeatures("Vulkan", "DefaultANGLEVulkan", "VulkanFromANGLE"))
 	}
 
 	te.cr, te.br, te.closeBrowser, err = browserfixt.SetUpWithNewChrome(ctx, bt, lacrosfixt.NewConfig(), opts...)
