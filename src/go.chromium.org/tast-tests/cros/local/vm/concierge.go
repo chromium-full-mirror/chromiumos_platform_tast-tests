@@ -211,7 +211,7 @@ func (c *Concierge) sendStartVMRequest(ctx context.Context, vm *VM, diskPath str
 		Cpus:      cpus,
 	}
 
-	const startVMRequestMethodName = conciergeInterface + ".StartVm2"
+	const startVMRequestMethodName = conciergeInterface + ".StartVm"
 	resp := &vmpb.StartVmResponse{}
 
 	if vm.IsTermina() {
