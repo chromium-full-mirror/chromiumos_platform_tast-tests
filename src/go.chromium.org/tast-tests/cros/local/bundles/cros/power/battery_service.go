@@ -116,7 +116,11 @@ func (b *BatteryService) PowerSettingInIdleMode(ctx context.Context, req *empty.
 	}
 
 	ui := uiauto.New(tconn)
-	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Power").Role(role.Link))
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("System preferences").Role(role.Link))
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to launch os-settings System preferences page")
+	}
+	settings, err = ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Power").Role(role.Link))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch os-settings Power page")
 	}
