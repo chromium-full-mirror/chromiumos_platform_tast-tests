@@ -11,6 +11,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -26,6 +27,9 @@ func init() {
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
+		// Skip on form factors where a warning dialog may be shown when disabling Bluetooth due to all known HID devices being connected via Bluetooth.
+		// These form factors are covered by another test see b/319492526
+		HardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothEnabledWithBlueZ",

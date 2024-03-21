@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // bluetoothSettingsBluetoothToggleButton is the Bluetooth toggle within the Bluetooth Settings page.
@@ -35,6 +36,9 @@ func init() {
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
 		Attr:         []string{"group:bluetooth"},
 		SoftwareDeps: []string{"chrome"},
+		// Skip on form factors where a warning dialog may be shown when disabling Bluetooth due to all known HID devices being connected via Bluetooth.
+		// These form factors are covered by another test see b/319492526
+		HardwareDeps: hwdep.D(hwdep.SkipOnFormFactor(hwdep.Chromebase, hwdep.Chromebox, hwdep.Chromebit)),
 		Params: []testing.Param{{
 			Name:      "floss_disabled",
 			Fixture:   "bluetoothEnabledWithBlueZ",
