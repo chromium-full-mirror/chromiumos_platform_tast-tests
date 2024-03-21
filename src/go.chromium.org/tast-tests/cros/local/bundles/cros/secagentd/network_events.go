@@ -535,7 +535,7 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType,
 			senderCmds:        cmd,
 			receiverCmd:       nil,
 			protocol:          xdr.NetworkProtocol_UDP,
-			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN,
+			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN, // UDP is directionless.
 			ipAddr:            externIP,
 			pipeInText:        "Hello UDP",
 		}, nil
@@ -548,7 +548,7 @@ func getNetworkProtocolDetails(ctx context.Context, network networkType,
 			senderCmds:        cmd,
 			receiverCmd:       nil,
 			protocol:          xdr.NetworkProtocol_UDP,
-			expectedDirection: xdr.NetworkFlow_OUTGOING,
+			expectedDirection: xdr.NetworkFlow_DIRECTION_UNKNOWN, // UDP is directionless.
 			ipAddr:            externIP,
 			pipeInText:        "Hello UDPv6",
 		}, nil
