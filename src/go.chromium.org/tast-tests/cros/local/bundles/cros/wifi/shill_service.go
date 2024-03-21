@@ -3299,6 +3299,7 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 
 	props := map[string]interface{}{
 		shillconst.P2PDeviceFrequency: request.Data.Freq,
+		shillconst.P2PDevicePriority:  request.Data.Priority,
 	}
 
 	// Only now we can create the group.
@@ -3435,6 +3436,7 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 		shillconst.P2PDeviceSSID:       string(request.Data.Ssid),
 		shillconst.P2PDevicePassphrase: string(request.Data.Key),
 		shillconst.P2PDeviceFrequency:  request.Data.Freq,
+		shillconst.P2PDevicePriority:   request.Data.Priority,
 	}
 
 	// Only now we can create the group.

@@ -27,6 +27,9 @@ import (
 // defaultRPCInvokeMethod is a default method to invoke commands sent by RPC.
 var defaultRPCInvokeMethod wifi.InvokeMethodEnum = wifi.InvokeMethodEnum_SHILL_API
 
+// defaultP2PInterfacePriority is creation priority based on go/cros-wifi-concurrency.
+const defaultP2PInterfacePriority = 2
+
 // dutData contains all information necessary to configure ChromeOS DUT (Chromebook/Chromebox).
 type dutData struct {
 	dut              *dut.DUT
@@ -150,7 +153,8 @@ func (dd *dutData) P2PGroupCreate(ctx context.Context, ops ...p2p.GroupOption) e
 	request := &wifi.P2PGroupCreateRequest{
 		Method: defaultRPCInvokeMethod,
 		Data: &wifi.P2PData{
-			Freq: uint32(p2p.Freq(ops...)),
+			Freq:     uint32(p2p.Freq(ops...)),
+			Priority: defaultP2PInterfacePriority,
 		},
 	}
 	ret, err := dd.wifiClient.P2PGroupCreate(ctx, request)
@@ -187,9 +191,10 @@ func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice, op
 	request := &wifi.P2PGroupConnectRequest{
 		Method: defaultRPCInvokeMethod,
 		Data: &wifi.P2PData{
-			Freq: uint32(p2p.Freq(ops...)),
-			Ssid: device.P2PSSID(),
-			Key:  device.P2PPassphrase(),
+			Freq:     uint32(p2p.Freq(ops...)),
+			Ssid:     device.P2PSSID(),
+			Key:      device.P2PPassphrase(),
+			Priority: defaultP2PInterfacePriority,
 		},
 	}
 
