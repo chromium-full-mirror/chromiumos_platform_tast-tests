@@ -139,6 +139,9 @@ func (cfg *Config) Opts() ([]chrome.Option, error) {
 	// Suppress experimental Lacros infobar and possible others as well.
 	opts = append(opts, chrome.LacrosExtraArgs("--test-type"))
 
+	// Override privacy sandbox dialog feature to hide it (crbug.com/330241089).
+	opts = append(opts, chrome.LacrosEnableFeatures("PrivacySandboxSettings4"))
+
 	// The What's-New feature automatically redirects the browser to a WebUI page to display the
 	// new feature if this is first time the user opens the browser or the user has upgraded
 	// Chrome to a different milestone. Disables the feature in testing to make the test
