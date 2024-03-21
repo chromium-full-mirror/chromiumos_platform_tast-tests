@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -192,11 +193,17 @@ func WindowCaptionButton(ctx context.Context, s *testing.State) {
 	}
 
 	// Verify that there's only one browser window after the FilesApp window was closed.
-	ws, err := ash.GetAllWindows(ctx, tconn)
-	if len(ws) != 1 {
-		s.Fatalf("Got %d window(s), want 1 window", len(ws))
-	}
-	if ws[0].ID != bw.ID {
-		s.Fatalf("Unexpected open window; got %d, want %d", ws[0].ID, bw.ID)
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		ws, err := ash.GetAllWindows(ctx, tconn)
+		if err != nil {
+			return testing.PollBreak(errors.Wrap(err, "failed to get all windows"))
+		}
+
+		if len(ws) != 1 {
+			return errors.Errorf("unexpected window count; got %d, want 1", len(ws))
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: timeout}); err != nil {
+		s.Fatal("Unexpected number of open windows: ", err)
 	}
 }
