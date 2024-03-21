@@ -235,7 +235,6 @@ func PowerIdlePerf(ctx context.Context, s *testing.State) {
 			UI:                 setup.DoNotChangeUI,
 			Multicast:          setup.DisableMulticast,
 			Ramfs:              setup.DoNotSetupRamfs,
-			Powerd:             setup.DoNotChangePowerd,
 			UpdateEngine:       setup.DisableUpdateEngine,
 			VNC:                setup.DisableVNC,
 			Avahi:              setup.DisableAvahi,
