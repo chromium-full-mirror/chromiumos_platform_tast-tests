@@ -7,8 +7,10 @@ package secagentd
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	rep "go.chromium.org/chromiumos/reporting"
 	xdr "go.chromium.org/chromiumos/xdr/secagentd"
 
@@ -54,7 +56,7 @@ func init() {
 				ExtraSoftwareDeps: []string{"secagentd_auth_stable"},
 			}, {
 				Name:      "informational",
-				ExtraAttr: []string{"informational"},
+				ExtraAttr: []string{"informational", "group:criticalstaging"},
 			},
 		},
 	})
@@ -156,10 +158,18 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 			if err := secagentdcommon.CheckCommon(event.GetCommon()); err != nil {
 				s.Error("Invalid common field: ", err)
 			}
+			if *event.Common.DeviceUser == "" {
+				s.Error("Device user is empty")
+			} else if !strings.HasPrefix(*event.Common.DeviceUser, "UnaffiliatedUser-") {
+				s.Errorf("Device user does not have unaffiliated prefix. Actual: %s", *event.Common.DeviceUser)
+			} else if _, err := uuid.Parse((*event.Common.DeviceUser)[len("UnaffiliatedUser-"):]); err != nil {
+				s.Errorf("Device user does not contain valid UUID. Actual: %s", *event.Common.DeviceUser)
+			}
+
 			// Verify that all device users UUID are the same because it is same account.
 			if deviceUser == "" {
 				deviceUser = *event.Common.DeviceUser
-			} else if *event.Common.DeviceUser != "" && *event.Common.DeviceUser != deviceUser {
+			} else if *event.Common.DeviceUser != deviceUser {
 				s.Errorf("Device user does not match. Expected: %s, Actual: %s", deviceUser, *event.Common.DeviceUser)
 			}
 
