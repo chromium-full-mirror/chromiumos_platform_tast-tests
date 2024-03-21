@@ -121,6 +121,7 @@ var keyIDMap = map[string]KeyType{
 
 	// helipilot.
 	"ff60ba1fe2cf13f60d0debfb350f7c321115e59a": KeyTypePreMp,
+	"3c0b147809e06f279ba0cf221c18995d7b4e3f1a": KeyTypeMp,
 }
 
 // Map of attributes for a given board's various firmware file releases.
