@@ -392,7 +392,7 @@ func GetDeviceEventMouse(ctx context.Context, dut *dut.DUT) ([]string, error) {
 func LaunchCroshApp(ctx context.Context, appsSvc pb.AppsServiceClient, uiautoSvc ui.AutomationServiceClient, kb inputs.KeyboardServiceClient) error {
 	croshFinder := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_HasClass{HasClass: "ash/ShelfAppButton"}},
+			{Value: &ui.NodeWith_Nth{Nth: 0}},
 			{Value: &ui.NodeWith_Name{Name: "crosh"}},
 		},
 	}
@@ -412,7 +412,7 @@ func LaunchCroshApp(ctx context.Context, appsSvc pb.AppsServiceClient, uiautoSvc
 func CloseCroshApp(ctx context.Context, uiautoSvc ui.AutomationServiceClient, kb inputs.KeyboardServiceClient) {
 	croshFinder := &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
-			{Value: &ui.NodeWith_HasClass{HasClass: "ash/ShelfAppButton"}},
+			{Value: &ui.NodeWith_Nth{Nth: 0}},
 			{Value: &ui.NodeWith_Name{Name: "crosh"}},
 		},
 	}
