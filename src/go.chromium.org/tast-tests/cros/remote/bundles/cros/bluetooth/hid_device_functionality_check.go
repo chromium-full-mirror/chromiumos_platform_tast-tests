@@ -13,6 +13,9 @@ import (
 	"regexp"
 	"time"
 
+	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/emptypb"
+
 	"go.chromium.org/tast-tests/cros/common/action"
 	cbt "go.chromium.org/tast-tests/cros/common/chameleon/devices/common/bluetooth"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
@@ -21,6 +24,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
@@ -109,6 +113,57 @@ func HIDDeviceFunctionalityCheck(ctx context.Context, s *testing.State) {
 	}); err != nil {
 		s.Fatalf("Failed to pair the Bluetooth device %q with quick settings: %v", device.String(), err)
 	}
+
+	resp, err := fv.BluetoothService.StackType(ctx, &emptypb.Empty{})
+	if err != nil {
+		s.Fatal("Failed to fetch bluetooth stack set from fixture: ", err)
+	}
+
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	rpcClient, err := rpc.Dial(ctx, s.DUT(), s.RPCHint())
+	if err != nil {
+		s.Fatal("Failed to create a new rpc client: ", err)
+	}
+	defer rpcClient.Close(cleanupCtx)
+
+	// Terminate the goroutine before the test ends.
+	monitorCtx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
+	defer cancel()
+
+	// TODO(b/334806604): Remove this block once the cause of the issue is identified.
+	// It's observed that BT peer does not listed as an input device after it's paired and connected to ChromeOS,
+	// this block is for monitoring if the BT peer ever gets disconnected during the entire test, to further identify the cause.
+	go func(ctx context.Context, rpcClient *rpc.Client) {
+		// Avoid using the service client initialized by the fixture, as it is shared with other tests and may cause unexpected leaks.
+		bluetoothService := bts.NewBluetoothServiceClient(rpcClient.Conn)
+		if _, err := bluetoothService.SetBluetoothStack(ctx, &bts.SetBluetoothStackRequest{
+			StackType: resp.GetStackType(),
+		}); err != nil {
+			s.Log("Failed to initialize the new bluetooth service: ", err)
+			return
+		}
+
+		deadline, ok := ctx.Deadline()
+		if !ok {
+			s.Log("Failed to obtain test context deadline")
+			return
+		}
+		if _, err := bluetoothService.WaitForConnectState(ctx, &bts.WaitForConnectStateRequest{
+			DeviceAddress:        device.LocalBluetoothAddress(),
+			ExpectedConnectState: false,
+			Timeout:              durationpb.New(deadline.Sub(time.Now())),
+		}); err != nil {
+			if errors.As(err, &context.Canceled) {
+				return
+			}
+			s.Log("Failed to monitor Bluetooth device connection status: ", err)
+			return
+		}
+		s.Log("Bluetooth device disconnected unexpectedly during the test")
+	}(monitorCtx, rpcClient)
 
 	// This is the map of [input event ID] to [send HID report action],
 	// indicates that by sending a HID report should be able to observe an expected input event.
