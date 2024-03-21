@@ -41,7 +41,7 @@ func init() {
 			{
 				Name:              "lacros",
 				ExtraSoftwareDeps: []string{"lacros"},
-				ExtraAttr:         []string{"group:criticalstaging"},
+				ExtraAttr:         []string{"informational"},
 				Val:               browser.TypeLacros,
 			},
 		},
