@@ -407,9 +407,9 @@ def flash_image(image_path: str, local_port: int, dut: str):
         flash_command,
         stdin=subprocess.PIPE,
         cwd=CHROMEOS_CHECKOUT_PATH,
-        check=True,
+        check=False,
     )
-    logging.info("\n[Flash] Flashed image from %s to DUT\n", image_path)
+    logging.info("[Flash] Flashed image from %s to DUT\n", image_path)
 
     logging.info(
         "[Flash] Waiting for 60 seconds and reconnecting to the DUT..."
@@ -417,6 +417,11 @@ def flash_image(image_path: str, local_port: int, dut: str):
     kill_ssh_tunnel(local_port)
     time.sleep(60)
     start_ssh_tunnel(dut, local_port)
+    dut_builder_path = get_builder_path(dut)
+    if dut_builder_path not in image_path:
+        raise ValueError(
+            f"[Flash] Flash failed. Expected {image_path} but got {dut_builder_path}."
+        )
 
 
 def reboot_dut(dut: str):
@@ -445,7 +450,8 @@ def run_tast_tests(
         "cros_sdk",
         "tast",
         "run",
-        "--build=false",
+        "-build=false",
+        "-downloadprivatebundles=true",
     ]
     if variables:
         for var in variables:
@@ -767,6 +773,16 @@ def parse_arguments(argv) -> argparse.Namespace:
         help=("If set, the dut will be rebooted before running `tast run`."),
     )
     parser.add_argument(
+        "--reboot-wait",
+        nargs="?",
+        type=int,
+        default=60,
+        help=(
+            "If set, wait --reboot-wait seconds for reboot,"
+            " default is %(default)s."
+        ),
+    )
+    parser.add_argument(
         "--vars",
         nargs="+",
         help="Tast runtime variables.",
@@ -855,8 +871,10 @@ def main(argv) -> Optional[int]:
 
         if opts.reboot:
             reboot_dut(dut)
-            logging.info("[DUT] Waiting 60 seconds for DUT to reboot")
-            time.sleep(60)
+            logging.info(
+                "[DUT] Waiting %s seconds for DUT to reboot", opts.reboot_wait
+            )
+            time.sleep(opts.reboot_wait)
             start_ssh_tunnel(dut, opts.local_port)
         if opts.cooldown > 0:
             logging.info(
