@@ -72,6 +72,25 @@ func OweUpgrade(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get DUT interface: ", err)
 	}
 
+	// Additional scans are not a problem during security upgrades but for the downgrade
+	// (owe->public) there is possible following race scenario:
+	// - we deconfigure OWE AP,
+	// - flush the BSSes,
+	// - the background scan results come with BSSID of just deconfigured AP
+	// Then the security of the service will be still be matching the higher security (OWE)
+	// while the actual connection will be made to the public endpoint (since those late results
+	// are not really available).  To avoid that problem let's turn off autonomous scanning for
+	// the test and rely on explicit requests.
+	ctx, restoreBgAndFg, err := tf.DUTWifiClient(wificell.DefaultDUT).TurnOffBgAndFgscan(ctx)
+	if err != nil {
+		s.Fatal("Failed to turn off the background and/or foreground scan: ", err)
+	}
+	defer func() {
+		if err := restoreBgAndFg(); err != nil {
+			s.Error("Failed to restore the background and/or foreground scan config: ", err)
+		}
+	}()
+
 	connectAP := func(ctx context.Context, apDef *apDef) (retErr error) {
 		var ap *wificell.APIface
 		var cleanupCtx context.Context
