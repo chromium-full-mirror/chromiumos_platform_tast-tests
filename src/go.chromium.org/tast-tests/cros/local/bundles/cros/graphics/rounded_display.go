@@ -64,7 +64,8 @@ func init() {
 		Data:         []string{"d-canvas/main.html", "d-canvas/2d.js", "d-canvas/webgl.js"},
 		Fixture:      "gpuWatchHangs",
 		Params: []testing.Param{{
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("dedede")),
+
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("bugzzy")),
 			Val: roundedDisplayTestParams{
 				panelRadii: panelRadii{18, 18, 18, 18},
 				displayRotations: []display.RotationAngle{
