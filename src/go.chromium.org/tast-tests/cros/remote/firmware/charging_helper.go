@@ -33,8 +33,6 @@ func GetChargingState(ctx context.Context, h *Helper) (map[string]string, error)
 
 	var (
 		category string
-		key      string
-		value    string
 	)
 
 	cstateMap := make(map[string]string)
@@ -66,17 +64,18 @@ func GetChargingState(ctx context.Context, h *Helper) (map[string]string, error)
 		if strings.Contains(line, "*") {
 			category = strings.Split(line, ".")[0]
 		}
-		if strings.Contains(line, "=") {
+		if strings.Contains(line, " = ") {
 			if !strings.HasPrefix(line, "\t") {
 				category = "global"
 			}
 
 			line = strings.TrimSuffix(line, "\n")
 			line = strings.TrimSpace(line)
-			key = strings.Split(line, " = ")[0]
-			value = strings.Split(line, " = ")[1]
-
+			parts := strings.SplitN(line, " = ", 2)
+			key := parts[0]
+			value := parts[1]
 			cstateMap[category+"."+key] = value
+
 		}
 	}
 
