@@ -11,9 +11,6 @@ import (
 	"regexp"
 	"time"
 
-	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
-	"go.chromium.org/tast/core/testing"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 
@@ -30,6 +27,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
+	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 func init() {
@@ -238,10 +238,10 @@ func (s *Service) KnownNetworksControls(ctx context.Context, req *wifi.KnownNetw
 				return &emptypb.Empty{}, err
 			}
 		case wifi.KnownNetworksControlsRequest_ShownAsShared:
-			// The label will be "You are sharing this network with other users of this device" for primary user,
+			// The label will be "Other users on this device can also use this network" for primary user,
 			// and "This network is shared with you" for other users.
 			// Both of them indicate this network is shared.
-			r := regexp.MustCompile(`(You are sharing this network with other users of this device|This network is shared with you)`)
+			r := regexp.MustCompile(`(Other users on this device can also use this network|This network is shared with you)`)
 
 			if err := uiauto.Combine("check network is shown as shared",
 				settings.LeftClick(networkItem),
