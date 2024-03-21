@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
@@ -42,6 +41,10 @@ func ECSystemLocked(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to connect to servod")
 	}
 
+	if err := h.RequireConfig(ctx); err != nil {
+		s.Fatal("Failed to get config")
+	}
+
 	state, err := h.Servo.GetString(ctx, servo.FWWPState)
 	if err != nil {
 		s.Fatal("Failed to get initial write protect state: ", err)
@@ -55,12 +58,12 @@ func ECSystemLocked(ctx context.Context, s *testing.State) {
 		setFWWriteProtectStateAndReboot(ctx, h, s, initialState)
 	}()
 	s.Log("FW initial write protect state: ", state)
-	if err = verifySysinfoLocked(ctx, h, initialState); err != nil {
+	if err = verifyECWPStatus(ctx, h, initialState); err != nil {
 		s.Error("EC lockstate wrong: ", err)
 	}
 
 	setFWWriteProtectStateAndReboot(ctx, h, s, !initialState)
-	if err = verifySysinfoLocked(ctx, h, !initialState); err != nil {
+	if err = verifyECWPStatus(ctx, h, !initialState); err != nil {
 		s.Error("EC lockstate wrong: ", err)
 	}
 }
@@ -100,7 +103,7 @@ func setFWWriteProtectStateAndReboot(ctx context.Context, h *firmware.Helper, s 
 			s.Fatal("Failed to disable flashwp: ", err)
 		}
 	}
-	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 2*time.Minute)
+	waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, h.Config.DelayRebootToPing)
 	defer cancelWaitConnect()
 	if err := h.WaitConnect(waitConnectCtx); err != nil {
 		s.Fatal("Failed to reconnect to the DUT: ", err)
@@ -130,7 +133,7 @@ func verifyFWWriteProtectState(state string) (bool, error) {
 	}
 }
 
-func verifySysinfoLocked(ctx context.Context, h *firmware.Helper, expectLocked bool) error {
+func verifyECWPStatus(ctx context.Context, h *firmware.Helper, expectLocked bool) error {
 	out, err := h.Servo.RunECCommandGetOutput(ctx, "sysinfo", []string{`Flags:\s+(locked|unlocked)[^\n]*\n`})
 	if err != nil {
 		return errors.Wrap(err, "sysinfo failed")
@@ -140,6 +143,17 @@ func verifySysinfoLocked(ctx context.Context, h *firmware.Helper, expectLocked b
 	}
 	if !expectLocked && out[0][1] != "unlocked" {
 		return errors.Errorf("sysinfo reported wrong flags, got %v want %v", out[0][1], "unlocked")
+	}
+
+	out, err = h.Servo.RunECCommandGetOutput(ctx, "flashinfo", []string{`wp_gpio_asserted:\s+(ON|OFF)\s*`})
+	if err != nil {
+		return errors.Wrap(err, "flashinfo failed")
+	}
+	if expectLocked && out[0][1] != "ON" {
+		return errors.New("flashinfo reported wp_gpio_asserted OFF when expecting ON, check wp gpio config")
+	}
+	if !expectLocked && out[0][1] != "OFF" {
+		return errors.New("flashinfo reported wp_gpio_asserted ON when expecting OFF, check wp gpio config")
 	}
 	return nil
 }
