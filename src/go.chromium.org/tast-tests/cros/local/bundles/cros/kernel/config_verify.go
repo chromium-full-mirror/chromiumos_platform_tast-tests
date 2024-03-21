@@ -126,6 +126,8 @@ func newCommonKernelConfigCheck(ver *sysutil.KernelVersion, arch string) *kernel
 		"MSDOS_PARTITION",
 
 		// Kernel hardening.
+		"BUG_ON_DATA_CORRUPTION",
+
 		// Settings that are commented out need to be enabled in the kernel first.
 		// TODO(crbug.com/1061514): Start enabling these.
 
