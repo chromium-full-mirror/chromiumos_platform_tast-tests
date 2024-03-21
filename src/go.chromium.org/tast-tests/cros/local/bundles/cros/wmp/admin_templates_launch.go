@@ -41,7 +41,7 @@ func init() {
 		// Chrome OS Server Projects > Enterprise Management > Commercial Productivity
 		BugComponent: "b:1020793",
 		Attr:         []string{"group:mainline", "group:hw_agnostic"},
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Timeout:      chrome.GAIALoginTimeout + arc.BootTimeout + 180*time.Second,
 		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Data:         []string{"admin_desk_template.json"},
