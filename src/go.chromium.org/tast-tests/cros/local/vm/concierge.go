@@ -209,19 +209,20 @@ func (c *Concierge) sendStartVMRequest(ctx context.Context, vm *VM, diskPath str
 		}
 	} else {
 		request.Fds = append(request.Fds, vmpb.StartVmRequest_KERNEL, vmpb.StartVmRequest_ROOTFS)
-		kernelFile, err := os.OpenFile(vm.kernel, os.O_RDONLY, 0755)
+
+		kernelFile, err := os.Open(vm.kernel)
 		if err != nil {
 			return resp, errors.Wrapf(err, "failed to open kernel file %s", vm.kernel)
 		}
 		kernelFd := dbus.UnixFD(kernelFile.Fd())
 		defer kernelFile.Close()
 
-		rootfsFile, err := os.OpenFile(vm.rootfs, os.O_RDONLY, 0755)
+		rootfsFile, err := os.Open(vm.rootfs)
 		if err != nil {
 			return resp, errors.Wrapf(err, "failed to open rootfs file %s", vm.rootfs)
 		}
 		rootfsFd := dbus.UnixFD(rootfsFile.Fd())
-		defer kernelFile.Close()
+		defer rootfsFile.Close()
 
 		newBuf, err := proto.Marshal(&request)
 		if err != nil {
