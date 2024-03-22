@@ -47,6 +47,7 @@ const (
 	CarrierVodafoneUK
 	CarrierRoger
 	CarrierTelus
+	CarrierCBRS
 )
 
 const (
@@ -86,6 +87,7 @@ var (
 		"44011":  CarrierRakuten,
 		"44020":  CarrierSoftbank,
 		"44051":  CarrierKDDI,
+		"99940":  CarrierCBRS,
 	}
 )
 
@@ -149,6 +151,9 @@ func initializeCarrierAPNs() map[Carrier][]KnownAPN {
 		CarrierTelus: []KnownAPN{
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "isp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "sp.telus.com", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
+		},
+		CarrierCBRS: []KnownAPN{
+			KnownAPN{Optional: true, APNInfo: map[string]interface{}{apn: "", ipType: ipv4v6}, APNTypes: []string{typeDefault}},
 		},
 	}
 }
