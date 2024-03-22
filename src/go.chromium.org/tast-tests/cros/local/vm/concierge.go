@@ -147,16 +147,28 @@ func (c *Concierge) listVMDisksSize(ctx context.Context, vmName string) (size ui
 
 // CreateDiskImage created a disk image of size |diskSize| for the VM of name |vmName|.
 func (c *Concierge) CreateDiskImage(ctx context.Context, diskSize uint64, vmName string) (diskPath string, err error) {
+	createDiskImageMethodName := conciergeInterface + ".CreateDiskImage2"
+
 	resp := &vmpb.CreateDiskImageResponse{}
-	if err = dbusutil.CallProtoMethod(ctx, c.conciergeObj, conciergeInterface+".CreateDiskImage",
-		&vmpb.CreateDiskImageRequest{
-			CryptohomeId:    c.ownerID,
-			VmName:          vmName,
-			DiskSize:        diskSize,
-			ImageType:       vmpb.DiskImageType_DISK_IMAGE_AUTO,
-			StorageLocation: vmpb.StorageLocation_STORAGE_CRYPTOHOME_ROOT,
-		}, resp); err != nil {
-		return "", err
+	request := vmpb.CreateDiskImageRequest{
+		CryptohomeId:    c.ownerID,
+		VmName:          vmName,
+		DiskSize:        diskSize,
+		ImageType:       vmpb.DiskImageType_DISK_IMAGE_AUTO,
+		StorageLocation: vmpb.StorageLocation_STORAGE_CRYPTOHOME_ROOT,
+	}
+
+	requestBuf, err := proto.Marshal(&request)
+	if err != nil {
+		return "", errors.Wrapf(err, "failed marshaling %s request", createDiskImageMethodName)
+	}
+	var respBuf []byte
+	if err := c.conciergeObj.CallWithContext(ctx, createDiskImageMethodName, 0,
+		&requestBuf, []dbus.UnixFD{}).Store(&respBuf); err != nil {
+		return "", errors.Wrapf(err, "failed to call %s", createDiskImageMethodName)
+	}
+	if err := proto.Unmarshal(respBuf, resp); err != nil {
+		return "", errors.Wrapf(err, "failed unmarshaling %s response", createDiskImageMethodName)
 	}
 
 	diskStatus := resp.GetStatus()
