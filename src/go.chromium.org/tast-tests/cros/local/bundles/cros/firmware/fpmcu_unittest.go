@@ -68,119 +68,119 @@ func init() {
 		Params: []testing.Param{{
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_aes",
-			Val:       testMetadata{name: "bloonchipper/test-aes.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_compile_time_macros",
-			Val:       testMetadata{name: "bloonchipper/test-compile_time_macros.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_crc",
-			Val:       testMetadata{name: "bloonchipper/test-crc.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_flash_physical",
-			Val:       testMetadata{name: "bloonchipper/test-flash_physical.bin", image: imageTypeRO},
+			Val:       testMetadata{image: imageTypeRO},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_flash_write_protect",
-			Val:       testMetadata{name: "bloonchipper/test-flash_write_protect.bin", image: imageTypeRO, hwWriteProtect: true},
+			Val:       testMetadata{image: imageTypeRO, hwWriteProtect: true},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_fpsensor_spi_ro",
-			Val:       testMetadata{name: "bloonchipper/test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"spi"}},
+			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"spi"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_fpsensor_spi_rw",
-			Val:       testMetadata{name: "bloonchipper/test-fpsensor.bin", testArgs: []string{"spi"}},
+			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"spi"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_fpsensor_uart_ro",
-			Val:       testMetadata{name: "bloonchipper/test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"uart"}},
+			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"uart"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_fpsensor_uart_rw",
-			Val:       testMetadata{name: "bloonchipper/test-fpsensor.bin", testArgs: []string{"uart"}},
+			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"uart"}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_fpsensor_hw",
-			Val:       testMetadata{name: "bloonchipper/test-fpsensor_hw.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_mpu_ro",
-			Val:       testMetadata{name: "bloonchipper/test-mpu.bin", image: imageTypeRO, finishRegexes: []*regexp.Regexp{dataAccessViolation20000000Regex}},
+			Val:       testMetadata{name: "test-mpu.bin", image: imageTypeRO, finishRegexes: []*regexp.Regexp{dataAccessViolation20000000Regex}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_mpu_rw",
-			Val:       testMetadata{name: "bloonchipper/test-mpu.bin", finishRegexes: []*regexp.Regexp{dataAccessViolation20000000Regex}},
+			Val:       testMetadata{name: "test-mpu.bin", finishRegexes: []*regexp.Regexp{dataAccessViolation20000000Regex}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_mutex",
-			Val:       testMetadata{name: "bloonchipper/test-mutex.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_pingpong",
-			Val:       testMetadata{name: "bloonchipper/test-pingpong.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_printf",
-			Val:       testMetadata{name: "bloonchipper/test-printf.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_queue",
-			Val:       testMetadata{name: "bloonchipper/test-queue.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_rollback_region0",
-			Val:       testMetadata{name: "bloonchipper/test-rollback.bin", testArgs: []string{"region0"}, finishRegexes: []*regexp.Regexp{dataAccessViolation8020000Regex}},
+			Val:       testMetadata{name: "test-rollback.bin", testArgs: []string{"region0"}, finishRegexes: []*regexp.Regexp{dataAccessViolation8020000Regex}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_rollback_region1",
-			Val:       testMetadata{name: "bloonchipper/test-rollback.bin", testArgs: []string{"region1"}, finishRegexes: []*regexp.Regexp{dataAccessViolation8040000Regex}},
+			Val:       testMetadata{name: "test-rollback.bin", testArgs: []string{"region1"}, finishRegexes: []*regexp.Regexp{dataAccessViolation8040000Regex}},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_rollback_entropy",
-			Val:       testMetadata{name: "bloonchipper/test-rollback_entropy.bin", image: imageTypeRO},
+			Val:       testMetadata{image: imageTypeRO},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_rsa3",
-			Val:       testMetadata{name: "bloonchipper/test-rsa3.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_rtc",
-			Val:       testMetadata{name: "bloonchipper/test-rtc.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_scratchpad",
-			Val:       testMetadata{name: "bloonchipper/test-scratchpad.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_sha256",
-			Val:       testMetadata{name: "bloonchipper/test-sha256.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_sha256_unrolled",
-			Val:       testMetadata{name: "bloonchipper/test-sha256_unrolled.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_static_if",
-			Val:       testMetadata{name: "bloonchipper/test-static_if.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_rtc_stm32f4",
-			Val:       testMetadata{name: "bloonchipper/test-rtc_stm32f4.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_timer_dos",
-			Val:       testMetadata{name: "bloonchipper/test-timer_dos.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_utils",
-			Val:       testMetadata{name: "bloonchipper/test-utils.bin"},
+			Val:       testMetadata{},
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_utils_str",
-			Val:       testMetadata{name: "bloonchipper/test-utils_str.bin"},
+			Val:       testMetadata{},
 		}},
 	})
 }
@@ -360,6 +360,21 @@ func scanConsole(ctx context.Context, scanner *bufio.Scanner, console *os.File, 
 
 func FpmcuUnittest(ctx context.Context, s *testing.State) {
 	metadata := s.Param().(testMetadata)
+
+	// Test bin path is not complete, derive it from the tast test name.
+	if !strings.Contains(metadata.name, "/") {
+		// Tast test name usually has format firmware.FpmcuUnittest.<board>_<test>
+		parts := strings.Split(s.TestName(), ".")
+		parts = strings.Split(parts[len(parts)-1], "_")
+		boardName, testName := parts[0], strings.Join(parts[1:], "_")
+		// Default test bin is "test-<part after boardname_>.bin"
+		if len(metadata.name) == 0 {
+			metadata.name = "test-" + testName + ".bin"
+		}
+		// The test bin is by default inside the "<boardname>/" directory
+		metadata.name = boardName + "/" + metadata.name
+		s.Logf("Derived test bin: %s", metadata.name)
+	}
 
 	cmdServod, err := setupServo(ctx, metadata.name)
 	if err != nil {
