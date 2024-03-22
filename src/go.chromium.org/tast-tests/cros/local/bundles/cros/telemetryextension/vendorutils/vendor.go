@@ -29,11 +29,13 @@ func FetchVendor(ctx context.Context) (string, error) {
 		return string(got), nil
 	}
 
-	vendorBytes, err := os.ReadFile("/sys/devices/virtual/dmi/id/sys_vendor")
-	if err != nil {
-		return "", errors.Wrap(err, "failed to read vendor name")
+	// DMI is present only on x86 devices. Report an empty vendor name when the
+	// DMI file is missing.
+	if got, err := os.ReadFile("/sys/devices/virtual/dmi/id/sys_vendor"); err != nil && !os.IsNotExist(err) {
+		return "", errors.Wrap(err, "failed to get OEM name from DMI")
+	} else if err == nil {
+		return strings.TrimSpace(string(got)), nil
 	}
 
-	vendor := strings.TrimSpace(string(vendorBytes))
-	return vendor, nil
+	return "", nil
 }
