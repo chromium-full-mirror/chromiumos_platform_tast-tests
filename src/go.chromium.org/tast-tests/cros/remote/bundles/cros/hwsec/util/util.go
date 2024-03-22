@@ -20,12 +20,6 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// PowerButtonHelper is a helper interface that can press the power button
-// on the device.
-type PowerButtonHelper interface {
-	PressAndRelease(ctx context.Context) error
-}
-
 // ServoPowerButtonHelper presses the power button using servo key press.
 // Note that this will only work on specific test suites where servo-micro
 // is connected (e.g., firmware_cr50).
@@ -41,39 +35,6 @@ func NewServoPowerButtonHelper(svo *servo.Servo) ServoPowerButtonHelper {
 // PressAndRelease implements PowerButtonHelper.PressAndRelease.
 func (helper ServoPowerButtonHelper) PressAndRelease(ctx context.Context) error {
 	return helper.svo.KeypressWithDuration(ctx, servo.PowerKey, servo.DurTab)
-}
-
-// SocketPowerButtonHelper presses the power button by sending bytes to
-// the GPIO power button socket. Note that this will only work on VMs
-// running ti50-emulator (dependencies "tpm2-simulator" + "gsc").
-type SocketPowerButtonHelper struct {
-	cmd hwsec.CmdRunner
-}
-
-// NewSocketPowerButtonHelper creates a new SocketPowerButtonHelper.
-func NewSocketPowerButtonHelper(cmd hwsec.CmdRunner) SocketPowerButtonHelper {
-	return SocketPowerButtonHelper{cmd}
-}
-
-// PressAndRelease implements PowerButtonHelper.PressAndRelease.
-func (helper SocketPowerButtonHelper) PressAndRelease(ctx context.Context) error {
-	const (
-		socketCommandTempl string = "echo -e %s | socat -t1 unix-connect:/run/tpm2-simulator/sockets/gpioPwrBtn -"
-		zero               string = "0"
-		one                string = "1"
-	)
-
-	// Sending the character zero to the socket triggers a power button pressed
-	// signal, while sending the character one triggers a power button released
-	// signal.
-	if _, err := helper.cmd.Run(ctx, "sh", "-c", fmt.Sprintf(socketCommandTempl, one)); err != nil {
-		return errors.Wrap(err, "failed to press power button")
-	}
-	testing.Sleep(ctx, 500*time.Millisecond)
-	if _, err := helper.cmd.Run(ctx, "sh", "-c", fmt.Sprintf(socketCommandTempl, zero)); err != nil {
-		return errors.Wrap(err, "failed to release power button")
-	}
-	return nil
 }
 
 // SetU2fdFlags sets the flags and restarts u2fd, which will re-create the u2f device.

@@ -70,7 +70,7 @@ func IntegratedU2F(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create hwsec remote helper: ", err)
 	}
 
-	var pbHelper util.PowerButtonHelper
+	var pbHelper hwsec.PowerButtonHelper
 	if !s.Param().(integratedU2fParam).isSimulator {
 		// Connect to servo.
 		servoSpec, _ := s.Var("servo")
@@ -85,7 +85,8 @@ func IntegratedU2F(ctx context.Context, s *testing.State) {
 		}
 		pbHelper = util.NewServoPowerButtonHelper(svo)
 	} else {
-		pbHelper = util.NewSocketPowerButtonHelper(cmdRunner)
+		simulatorController := hwsec.NewTi50EmulatorController(cmdRunner)
+		pbHelper = simulatorController.PowerButtonHelper()
 	}
 
 	// Ensure TPM is ready before running the tests.
@@ -174,7 +175,7 @@ func IntegratedU2F(ctx context.Context, s *testing.State) {
 }
 
 // runU2Test runs the U2FTest with the U2F device.
-func runU2Test(ctx context.Context, dut *dut.DUT, device string, pbHelper util.PowerButtonHelper) (retErr error) {
+func runU2Test(ctx context.Context, dut *dut.DUT, device string, pbHelper hwsec.PowerButtonHelper) (retErr error) {
 	const (
 		u2fTestPath = "/usr/local/bin/U2FTest"
 		trigger     = "Touch device and hit enter."
