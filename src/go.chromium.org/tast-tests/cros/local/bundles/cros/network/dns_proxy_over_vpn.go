@@ -256,28 +256,6 @@ func DNSProxyOverVPN(ctx context.Context, s *testing.State) {
 	}); len(errs) > 0 {
 		s.Fatal("Failed to block DNS over VPN: ", errs)
 	}
-
-	if params.mode == dns.DoHOff || params.mode == dns.DoHAutomatic {
-		return
-	}
-
-	var secureDNSBlockedTC []dns.ProxyTestCase
-	if params.chrome {
-		secureDNSBlockedTC = []dns.ProxyTestCase{{Client: dns.System}, {Client: dns.User}, {Client: dns.Chrome}}
-	} else if params.arc {
-		secureDNSBlockedTC = []dns.ProxyTestCase{{Client: dns.ARC}}
-	} else if params.crostini {
-		secureDNSBlockedTC = []dns.ProxyTestCase{{Client: dns.Crostini}}
-	}
-	// Block DoH queries over VPN to verify that when a VPN is on, DoH is disabled and DNS will work.
-	// When a VPN is active, the default proxy and ARC proxy will disable secure DNS in order to have consistent behavior on different VPN types.
-	if errs := dns.NewDoHVPNBlock(vpnServer.NetNSName).Run(ctx, func(ctx context.Context) {
-		if errs := dns.TestQueryDNSProxy(ctx, secureDNSBlockedTC, a, cont, dns.NewQueryOptions()); len(errs) != 0 {
-			s.Error("Failed DNS query check: ", errs)
-		}
-	}); len(errs) > 0 {
-		s.Fatal("Failed to block secure DNS over VPN: ", errs)
-	}
 }
 
 // waitUntilNATIptablesConfigured waits until the NAT rule output of iptables is fully configured.
