@@ -169,6 +169,9 @@ func (a *ARC) Close(ctx context.Context) error {
 	if err := a.cleanUpLogcatFile(); err != nil {
 		errs = append(errs, err)
 	}
+	if err := adb.KillADBLocalServer(ctx); err != nil {
+		errs = append(errs, err)
+	}
 	if len(errs) != 0 {
 		return errs[0]
 	}
