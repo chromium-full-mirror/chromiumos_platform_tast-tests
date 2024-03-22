@@ -112,7 +112,7 @@ func init() {
 			"xiuwen@google.com",
 			"ml-service-team@google.com",
 		},
-		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{}},
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"LauncherSystemInfoAnswerCards"}}, //remove flag once answer card released.
 		SetUpTimeout:    launcherSearchSetUpTestTimeout + arcOptinTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
