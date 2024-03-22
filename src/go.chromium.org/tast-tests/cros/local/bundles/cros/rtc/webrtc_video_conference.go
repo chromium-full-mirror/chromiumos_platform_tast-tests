@@ -154,6 +154,18 @@ func init() {
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
+				Name: "4p_present_text_noise_cancellation",
+				Val: webrtc.VCTestParams{
+					NumPeople:         4,
+					Text:              true,
+					Present:           true,
+					NoiseCancellation: true,
+					BrowserType:       browser.TypeAsh,
+				},
+				Fixture:   "chromeRTCPerf",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
 				Name: "4p_mouse",
 				Val: webrtc.VCTestParams{
 					NumPeople:   4,
@@ -170,6 +182,18 @@ func init() {
 					Mouse:       true,
 					Present:     true,
 					BrowserType: browser.TypeAsh,
+				},
+				Fixture:   "chromeRTCPerf",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "4p_present_mouse_noise_cancellation",
+				Val: webrtc.VCTestParams{
+					NumPeople:         4,
+					Mouse:             true,
+					Present:           true,
+					NoiseCancellation: true,
+					BrowserType:       browser.TypeAsh,
 				},
 				Fixture:   "chromeRTCPerf",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
