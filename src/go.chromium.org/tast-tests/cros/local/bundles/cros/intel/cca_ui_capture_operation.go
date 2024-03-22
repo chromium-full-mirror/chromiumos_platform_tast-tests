@@ -6,10 +6,14 @@ package intel
 
 import (
 	"context"
+	"fmt"
 	"os"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/media/caps"
+	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
@@ -56,17 +60,17 @@ func init() {
 		}, {
 			Name:      "user_facing_video_bronze",
 			Val:       cameraStressTestParams{cca.FacingFront, 360, false},
-			Timeout:   30 * time.Minute,
+			Timeout:   40 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-bronze"},
 		}, {
 			Name:      "user_facing_video_silver",
 			Val:       cameraStressTestParams{cca.FacingFront, 540, false},
-			Timeout:   45 * time.Minute,
+			Timeout:   50 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-silver"},
 		}, {
 			Name:      "user_facing_video_gold",
 			Val:       cameraStressTestParams{cca.FacingFront, 720, false},
-			Timeout:   60 * time.Minute,
+			Timeout:   160 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-gold"},
 		}, {
 			Name:      "env_facing_image_bronze",
@@ -86,7 +90,7 @@ func init() {
 		}, {
 			Name:      "env_facing_video_bronze",
 			Val:       cameraStressTestParams{cca.FacingBack, 360, false},
-			Timeout:   30 * time.Minute,
+			Timeout:   40 * time.Minute,
 			ExtraAttr: []string{"group:intel-reliability-bronze"},
 		}, {
 			Name:      "env_facing_video_silver",
@@ -131,6 +135,64 @@ func CCAUICaptureOperation(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
+	var prevPC2Value string
+	const cstateFile = "/sys/kernel/debug/pmc_core/package_cstate_show"
+
+	capturePC2Values := func() {
+		out := filepath.Join(s.OutDir(), "package.txt")
+		output, err := os.ReadFile(cstateFile)
+		if err != nil {
+			s.Fatal("Failed to read cstate file: ", err)
+		}
+
+		top, err := testexec.CommandContext(ctx, "top", "-n", "1", "-b").Output()
+		if err != nil {
+			s.Fatalf("Failed to execute %q command: %v", "top", err)
+		}
+
+		// Example string for matching regexp: Package C2 : 740826146.
+		re := regexp.MustCompile(`Package C2 : (\d+)`)
+		matches := re.FindStringSubmatch(string(output))
+		if len(matches) < 2 {
+			s.Fatalf("Failed to find package C2 values in %s ", string(output))
+		}
+		currPC2Value := matches[1]
+		if prevPC2Value == currPC2Value {
+			s.Fatalf("Failed to increment PC2 value, Previous value: %q, Current value: %q", prevPC2Value, currPC2Value)
+		}
+		prevPC2Value = currPC2Value
+
+		// Open the file in append mode.
+		file, err := os.OpenFile(out, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+		if err != nil {
+			s.Fatal("Failed to open file: ", err)
+		}
+		defer file.Close()
+
+		currentTime := time.Now()
+
+		// Append the output to the file.
+		_, err = file.WriteString(fmt.Sprintf("%s\n%s\n%s", currentTime, output, top))
+		if err != nil {
+			s.Fatal("Failed to write data into file: ", err)
+		}
+	}
+
+	interval := 20 * time.Second
+	t := time.NewTicker(interval)
+	defer t.Stop()
+
+	go func() {
+		capturePC2Values()
+		for {
+			select {
+			case <-t.C:
+				capturePC2Values()
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 
 	cr := s.FixtValue().(cca.FixtureData).Chrome
 	app := s.FixtValue().(cca.FixtureData).App()
@@ -187,6 +249,9 @@ func captureImage(ctx context.Context, app *cca.App) error {
 func captureVideo(ctx context.Context, app *cca.App) error {
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		return errors.Wrap(err, "failed to switch to video mode")
+	}
+	if err := app.WaitForVideoActive(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait for video to be active")
 	}
 	fileInfo, err := app.RecordVideo(ctx, cca.TimerOff, 3*time.Second)
 	if err != nil {
