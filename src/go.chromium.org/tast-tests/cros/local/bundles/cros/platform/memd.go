@@ -9,7 +9,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -33,15 +32,6 @@ func init() {
 		SoftwareDeps: []string{"memd"},
 		Attr:         []string{"group:mainline"},
 	})
-}
-
-func readAsInt(filename string) (int, error) {
-	bytes, err := ioutil.ReadFile(filename)
-	if err != nil {
-		return 0, err
-	}
-	str := strings.TrimSpace(string(bytes))
-	return strconv.Atoi(str)
 }
 
 // emitDBusSignal emits a D-Bus signal for comsumption by memd. The name
@@ -127,13 +117,19 @@ func setResourcedMemoryMargin(ctx context.Context, rm *resourced.Client, marginM
 	return nil
 }
 
+func availableMemoryMB(ctx context.Context, rm *resourced.Client) (int, error) {
+	availableKB, err := rm.AvailableMemoryKB(ctx)
+	if err != nil {
+		return 0, err
+	}
+	return int(availableKB / 1024), nil
+}
+
 func Memd(ctx context.Context, s *testing.State) {
 	const (
 		// This value should be the same as LOW_MEM_DANGER_THRESHOLD_MB
 		// in memd/src/main.rs.
 		dangerThresholdMb = 600
-		lowMemDirPath     = "/sys/kernel/mm/chromeos-low_mem/"
-		availablePath     = lowMemDirPath + "available"
 		clipFilesPattern  = "/var/log/memd/memd.clip*.log"
 		memdJob           = "memd"
 		resourcedJob      = "resourced"
@@ -176,14 +172,14 @@ func Memd(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	availableMb, err := readAsInt(availablePath)
-	if err != nil {
-		s.Fatalf("Cannot read %v: %v", availablePath, err)
-	}
-
 	rm, err := resourced.NewClient(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Resource Manager client: ", err)
+	}
+
+	availableMb, err := availableMemoryMB(ctx, rm)
+	if err != nil {
+		s.Fatal("Cannot get available memory: ", err)
 	}
 
 	// Raise notification margin so that memd starts running in fast poll
@@ -196,9 +192,9 @@ func Memd(ctx context.Context, s *testing.State) {
 		if err := setResourcedMemoryMargin(ctx, rm, marginMb); err != nil {
 			s.Fatal("Cannot set margin to resourced: ", err)
 		}
-		availableMb, err = readAsInt(availablePath)
+		availableMb, err := availableMemoryMB(ctx, rm)
 		if err != nil {
-			s.Fatalf("Cannot read %v: %v", availablePath, err)
+			s.Fatal("Cannot get available memory: ", err)
 		}
 		if marginMb+dangerThresholdMb > availableMb {
 			success = true
