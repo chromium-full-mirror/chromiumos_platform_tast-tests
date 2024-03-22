@@ -10,6 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/camera/cca"
 
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -73,6 +74,7 @@ func testCancelTimer(ctx context.Context, app *cca.App) error {
 		return err
 	}
 
+	start := time.Now()
 	testing.ContextLog(ctx, "Click on cancel shutter")
 	if err := app.ClickShutter(ctx); err != nil {
 		return err
@@ -80,5 +82,20 @@ func testCancelTimer(ctx context.Context, app *cca.App) error {
 	if err := app.WaitForState(ctx, "taking", false); err != nil {
 		return err
 	}
+
+	dir, err := app.SavedDir(ctx)
+	if err != nil {
+		return err
+	}
+
+	// GoBigSleepLint: Wait until the 3 seconds timer expires
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		return errors.Wrap(err, "failed to sleep for three seconds")
+	}
+
+	if _, err := app.WaitForFileSaved(ctx, dir, cca.PhotoPattern, start); err == nil {
+		return errors.New("failed to cancel the timer, picture was saved")
+	}
+
 	return nil
 }
