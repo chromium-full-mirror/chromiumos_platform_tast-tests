@@ -169,11 +169,11 @@ var firmwareVersionMap = map[fp.BoardName]map[string]firmwareMetadata{
 		},
 	},
 	fp.BoardNameHelipilot: {
-		"helipilot_v2.0.23333-f354f1b380-RO_v2.0.23333-f354f1b380-RW.bin": {
-			sha256sum: "a321f63560eba1e6d6f6b1771a94c7a5e053c5c1eca5fcb5eeaf7996b0fe2d0b",
-			roVersion: "helipilot_v2.0.23333-f354f1b380",
-			rwVersion: "helipilot_v2.0.23333-f354f1b380",
-			keyID:     "ff60ba1fe2cf13f60d0debfb350f7c321115e59a",
+		"helipilot_v2.0.24337-2726e9f149.bin": {
+			sha256sum: "ab6a3561676c58c8ce0f37e85b8ffa762259dd2f7dab15890750a2a1f6f369b1",
+			roVersion: "helipilot_v2.0.24337-2726e9f149",
+			rwVersion: "helipilot_v2.0.24337-2726e9f149",
+			keyID:     "3c0b147809e06f279ba0cf221c18995d7b4e3f1a",
 		},
 	},
 }
