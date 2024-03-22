@@ -97,23 +97,26 @@ func ECRTC(ctx context.Context, s *testing.State) {
 	}()
 
 	// Set the RTC to a fake time for consistency.
-	startTime := time.Date(2001, time.January, 1, 12, 0, 0, 0, time.Now().Location())
-	s.Log("Start RTC time:", startTime)
+	fakeStartTime := time.Date(2001, time.January, 1, 12, 0, 0, 0, time.Now().Location())
+	s.Log("fake start time:", fakeStartTime)
 
 	// Set the RTC, sleep a bit, and the RTC better have updated itself.
-	writeECRTC(mainCtx, startTime)
+	writeECRTC(mainCtx, fakeStartTime)
+
+	rtcStartTime := readECRTC()
+	s.Log("RTC start time:", rtcStartTime)
 	realStartTime := time.Now()
 
 	// GoBigSleepLint: It's used to check the RTC elapsed time.
 	testing.Sleep(mainCtx, sleepTime)
 
-	endTime := readECRTC()
-	s.Log("End RTC time:", endTime)
+	rtcEndTime := readECRTC()
+	s.Log("RTC end time:", rtcEndTime)
 
-	elapsed := endTime.Sub(startTime)
+	rtcElapsed := rtcEndTime.Sub(rtcStartTime)
 	realElapsed := time.Now().Sub(realStartTime)
 
-	if elapsed < realElapsed-tolerance || elapsed > realElapsed+tolerance {
-		s.Fatalf("RTC did not update properly: got %v; want in [%v, %v]", elapsed, realElapsed-tolerance, realElapsed+tolerance)
+	if rtcElapsed < realElapsed-tolerance || rtcElapsed > realElapsed+tolerance {
+		s.Fatalf("RTC did not update properly: got %v; want in [%v, %v]", rtcElapsed, realElapsed-tolerance, realElapsed+tolerance)
 	}
 }
