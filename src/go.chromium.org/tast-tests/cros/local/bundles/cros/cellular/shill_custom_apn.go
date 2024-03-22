@@ -114,11 +114,6 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to enable cellular: ", err)
 	}
 
-	service, err := helper.FindServiceForDevice(ctx)
-	if err != nil {
-		s.Fatal("Unable to find Cellular Service for Device: ", err)
-	}
-
 	// Check that shill recognizes the MCCMNC in |modbOverrideProto|.
 	if _, _, err = helper.GetHomeProviderFromShill(ctx); err != nil {
 		s.Fatal("Failed to get HomeProvider from shill: ", err)
@@ -140,6 +135,11 @@ func ShillCustomApn(ctx context.Context, s *testing.State) {
 	optionalAPNSucceeded := false
 	counter := 0
 	for _, knownAPN := range knownAPNs {
+
+		service, err := helper.FindServiceForDevice(ctx)
+		if err != nil {
+			s.Fatal("Unable to find Cellular Service for Device: ", err)
+		}
 
 		isConnected, err := service.IsConnected(ctx)
 		if err != nil {
