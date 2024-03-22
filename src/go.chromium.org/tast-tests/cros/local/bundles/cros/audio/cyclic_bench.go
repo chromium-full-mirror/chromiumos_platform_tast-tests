@@ -57,6 +57,7 @@ type cyclicTestParameters struct {
 	MaxLatencyThreshold time.Duration // Max latency threshold.
 	StressConfig        *schedConfig  // The schedule config of the stress process. if `StressConfig` is nil, no stress process will be run.
 	ShouldFail          bool          // Whether the test should fail based on the threshold. This should only be true for tests that simulate actual CRAS specs to prevent noise.
+	UI                  bool          // Test with UI running or not.
 }
 
 const (
@@ -120,6 +121,25 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 					ShouldFail:          true,
+					UI:                  true,
+				},
+			},
+			{
+				Name:    "rr12_1thread_10ms_ui_stopped",
+				Fixture: "uiStopped",
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   rrSched,
+						Priority: crasPriority,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
+					ShouldFail:          true,
+					UI:                  false,
 				},
 			},
 			{
@@ -136,6 +156,7 @@ func init() {
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 					ShouldFail:          true,
+					UI:                  true,
 				},
 			},
 			{
@@ -151,6 +172,7 @@ func init() {
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 			},
 			{
@@ -166,6 +188,7 @@ func init() {
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 			},
 			{
@@ -181,6 +204,7 @@ func init() {
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 			},
 			{
@@ -200,6 +224,7 @@ func init() {
 						Policy:   rrSched,
 						Priority: defaultStressPriority,
 					},
+					UI: true,
 				},
 			},
 			{
@@ -219,6 +244,7 @@ func init() {
 						Policy:   otherSched,
 						Priority: 0,
 					},
+					UI: true,
 				},
 			},
 			{
@@ -234,6 +260,7 @@ func init() {
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: 10000 * time.Microsecond,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 			},
 			{
@@ -249,6 +276,7 @@ func init() {
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: 5000 * time.Microsecond,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 			},
 			{
@@ -264,6 +292,7 @@ func init() {
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: 20000 * time.Microsecond,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 			},
 			{
@@ -283,6 +312,7 @@ func init() {
 						Policy:   otherSched,
 						Priority: 0,
 					},
+					UI: true,
 				},
 			},
 			{
@@ -298,6 +328,7 @@ func init() {
 					Affinity:            smallCore,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
@@ -314,6 +345,7 @@ func init() {
 					Affinity:            bigCore,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
+					UI:                  true,
 				},
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
@@ -334,16 +366,17 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
 
-	chrome, err := chrome.New(
-		ctx,
-		chrome.GuestLogin(),
-	)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer chrome.Close(cleanupCtx)
-
 	param := s.Param().(cyclicTestParameters)
+	if param.UI {
+		chrome, err := chrome.New(
+			ctx,
+			chrome.GuestLogin(),
+		)
+		if err != nil {
+			s.Fatal("Failed to start Chrome: ", err)
+		}
+		defer chrome.Close(cleanupCtx)
+	}
 
 	cmdStr := []string{"cyclic_bench.py",
 		"--policy=" + param.Config.Policy.String(),
