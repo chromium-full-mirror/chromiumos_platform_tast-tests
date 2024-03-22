@@ -33,12 +33,21 @@ const (
 	maxFlashAttempts           = 2
 )
 
+// dragonclaw regexes
 var dataAccessViolation8020000Regex = regexp.MustCompile(
 	"Data access violation, mfar = 8020000")
 var dataAccessViolation8040000Regex = regexp.MustCompile(
 	"Data access violation, mfar = 8040000")
 var dataAccessViolation20000000Regex = regexp.MustCompile(
 	"Data access violation, mfar = 20000000")
+
+// helipilot regexes
+var dataAccessViolation200b0000Regex = regexp.MustCompile(
+	"Data access violation, mfar = 200b0000")
+var dataAccessViolation64020000Regex = regexp.MustCompile(
+	"Data access violation, mfar = 64020000")
+var dataAccessViolation64030000Regex = regexp.MustCompile(
+	"Data access violation, mfar = 64030000")
 
 type testMetadata struct {
 	name           string
@@ -65,7 +74,7 @@ func init() {
 		// Flashing the FPMCU can take 2 minutes, so allow more time.
 		Timeout:      4 * time.Minute,
 		LacrosStatus: testing.LacrosVariantUnneeded,
-		Params: []testing.Param{{
+		Params: []testing.Param{{ //bloonchipper
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_aes",
 			Val:       testMetadata{},
@@ -180,6 +189,122 @@ func init() {
 		}, {
 			ExtraAttr: []string{"fingerprint-mcu_dragonclaw"},
 			Name:      "bloonchipper_utils_str",
+			Val:       testMetadata{},
+		}, { // helipilot
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_aes",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_compile_time_macros",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_crc",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_flash_physical",
+			Val:       testMetadata{image: imageTypeRO},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_flash_write_protect",
+			Val:       testMetadata{image: imageTypeRO, hwWriteProtect: true},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_fpsensor_spi_ro",
+			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"spi"}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_fpsensor_spi_rw",
+			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"spi"}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_fpsensor_uart_ro",
+			Val:       testMetadata{name: "test-fpsensor.bin", image: imageTypeRO, testArgs: []string{"uart"}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_fpsensor_uart_rw",
+			Val:       testMetadata{name: "test-fpsensor.bin", testArgs: []string{"uart"}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_fpsensor_hw",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_mpu_ro",
+			Val:       testMetadata{name: "test-mpu.bin", image: imageTypeRO, finishRegexes: []*regexp.Regexp{dataAccessViolation200b0000Regex}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_mpu_rw",
+			Val:       testMetadata{name: "test-mpu.bin", finishRegexes: []*regexp.Regexp{dataAccessViolation200b0000Regex}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_mutex",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_pingpong",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_printf",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_queue",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_rollback_region0",
+			Val:       testMetadata{name: "test-rollback.bin", testArgs: []string{"region0"}, finishRegexes: []*regexp.Regexp{dataAccessViolation64020000Regex}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_rollback_region1",
+			Val:       testMetadata{name: "test-rollback.bin", testArgs: []string{"region1"}, finishRegexes: []*regexp.Regexp{dataAccessViolation64030000Regex}},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_rollback_entropy",
+			Val:       testMetadata{image: imageTypeRO},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_rsa3",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_rtc",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_rtc_npcx9",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_scratchpad",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_sha256",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_sha256_unrolled",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_static_if",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_timer_dos",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_utils",
+			Val:       testMetadata{},
+		}, {
+			ExtraAttr: []string{"fingerprint-mcu_quincy"},
+			Name:      "helipilot_utils_str",
 			Val:       testMetadata{},
 		}},
 	})
@@ -428,6 +553,13 @@ func FpmcuUnittest(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to flash unittest binary: ", err)
 	}
 
+	// TODO(b/295890620): quincy will be powered off after flash_ec.
+	if strings.HasPrefix(metadata.name, "helipilot") {
+		if err := fpmcuPower(ctx, true); err != nil {
+			s.Fatal("Failed to power on FPMCU after flash: ", err)
+		}
+	}
+
 	s.Log("Waiting for FPMCU to reboot after flashing")
 	// Two seconds should be more than enough for the chip to boot.
 	// GoBigSleepLint: during reboot no response is expected.
@@ -490,7 +622,16 @@ func FpmcuUnittest(ctx context.Context, s *testing.State) {
 	}()
 
 	finished := false
-	for scanner.Scan() {
+	for {
+		if !scanner.Scan() {
+			if finished {
+			} else if err := scanner.Err(); err != nil {
+				s.Error("Error while scanning FPMCU console for finish regexes: ", scanner.Err())
+			} else {
+				s.Error("EOF while scanning FPMCU console for finish regexes")
+			}
+			break
+		}
 		line := scanner.Text()
 		if _, err := logWriter.WriteString(line + "\n"); err != nil {
 			s.Error("Failed to write line to ", consoleOutputPath)
