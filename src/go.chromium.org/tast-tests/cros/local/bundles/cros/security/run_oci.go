@@ -26,7 +26,7 @@ func init() {
 			"chromeos-hardening@google.com",
 		},
 		BugComponent: "b:1040049",
-		SoftwareDeps: []string{"oci"},
+		SoftwareDeps: []string{"android_container", "oci"},
 		Attr:         []string{"group:mainline"},
 	})
 }
