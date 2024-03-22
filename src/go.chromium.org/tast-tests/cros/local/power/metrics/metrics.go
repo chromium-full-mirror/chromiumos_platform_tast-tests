@@ -9,32 +9,22 @@ import (
 	"go.chromium.org/tast-tests/cros/common/perf"
 )
 
-// MetricClassName is the name of a class of metrics.
-type MetricClassName string
-
-// MetricName describes one metric in a metric class.
-type MetricName string
-
-// MetricClass is a type for user to specify metric class+name subsets.
-type MetricClass struct {
-	Class MetricClassName
-	// TODO: b/293221069 - add per-class metric filtering.
-	// names []MetricName
-}
+// MetricClass is the name of a class of metrics.
+type MetricClass string
 
 // List of MetricClass available.
 const (
-	CPUIdleStateClass   MetricClassName = "cpu_idle_state"
-	RAPLPowerClass      MetricClassName = "rapl_power"
-	SysfsThermalClass   MetricClassName = "sysfs_thermal"
-	PackageCStatesClass MetricClassName = "package_cstates"
-	ProcfsCPUClass      MetricClassName = "procfs_cpu"
-	FanClass            MetricClassName = "fan"
-	GPUUsageClass       MetricClassName = "gpu_usage"
-	GPUFreqClass        MetricClassName = "gpu_freq"
-	ZramIOClass         MetricClassName = "zram_io"
-	MemoryClass         MetricClassName = "memory"
-	SysfsBatteryClass   MetricClassName = "sysfs_battery"
+	CPUIdleStateClass   MetricClass = "cpu_idle_state"
+	RAPLPowerClass      MetricClass = "rapl_power"
+	SysfsThermalClass   MetricClass = "sysfs_thermal"
+	PackageCStatesClass MetricClass = "package_cstates"
+	ProcfsCPUClass      MetricClass = "procfs_cpu"
+	FanClass            MetricClass = "fan"
+	GPUUsageClass       MetricClass = "gpu_usage"
+	GPUFreqClass        MetricClass = "gpu_freq"
+	ZramIOClass         MetricClass = "zram_io"
+	MemoryClass         MetricClass = "memory"
+	SysfsBatteryClass   MetricClass = "sysfs_battery"
 )
 
 // TestMetrics returns a slice of metrics that should be used for power tests.
@@ -46,7 +36,7 @@ func TestMetrics(classes ...MetricClass) []perf.TimelineDatasource {
 
 	var metrics []perf.TimelineDatasource
 	for _, class := range classes {
-		switch class.Class {
+		switch class {
 		case CPUIdleStateClass:
 			metrics = append(metrics, NewCpuidleStateMetrics())
 		case RAPLPowerClass:

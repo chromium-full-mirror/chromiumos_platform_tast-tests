@@ -163,7 +163,7 @@ Available metric class flags can be found here: [metrics.go]
 	r := power.NewRecorder(ctx, interval, s.OutDir(), s.TestName())
 	defer r.Close(cleanupCtx)
 
-	if err := r.UseMetrics(ctx, metrics.MetricClass{Class: metrics.RAPLPowerClass}, metrics.MetricClassFlag{Class: metrics.MemoryClass}, ... ); err != nil {
+	if err := r.UseMetrics(ctx, metrics.RAPLPowerClass, metrics.MemoryClass, ... ); err != nil {
 		s.Fatal("Failed to override metrics: ", err)
 	}
 
