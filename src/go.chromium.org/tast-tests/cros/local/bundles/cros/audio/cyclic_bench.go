@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
-	"go.chromium.org/tast-tests/cros/local/tracing"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"golang.org/x/exp/slices"
@@ -58,6 +57,7 @@ type cyclicTestParameters struct {
 	StressConfig        *schedConfig  // The schedule config of the stress process. if `StressConfig` is nil, no stress process will be run.
 	ShouldFail          bool          // Whether the test should fail based on the threshold. This should only be true for tests that simulate actual CRAS specs to prevent noise.
 	UI                  bool          // Test with UI running or not.
+	Tracer              bool          // Test with ftrace running or not.
 }
 
 const (
@@ -125,6 +125,25 @@ func init() {
 				},
 			},
 			{
+				Name:      "rr12_1thread_10ms_with_tracer",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   rrSched,
+						Priority: crasPriority,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
+					ShouldFail:          false,
+					UI:                  true,
+					Tracer:              true,
+				},
+			},
+			{
 				Name:    "rr12_1thread_10ms_ui_stopped",
 				Fixture: "uiStopped",
 				Val: cyclicTestParameters{
@@ -143,6 +162,26 @@ func init() {
 				},
 			},
 			{
+				Name:      "rr12_1thread_10ms_ui_stopped_with_tracer",
+				Fixture:   "uiStopped",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Val: cyclicTestParameters{
+					Config: schedConfig{
+						Policy:   rrSched,
+						Priority: crasPriority,
+					},
+					Threads:             1,
+					Interval:            defaultInterval,
+					Loops:               defaultLoops,
+					Affinity:            defaultAff,
+					MaxLatencyThreshold: defaultMaxLatencyThreshold,
+					StressConfig:        nil,
+					ShouldFail:          false,
+					UI:                  false,
+					Tracer:              true,
+				},
+			},
+			{
 				Name: "rr12_1thread_10ms_double_loop_count",
 				Val: cyclicTestParameters{
 					Config: schedConfig{
@@ -157,6 +196,7 @@ func init() {
 					StressConfig:        nil,
 					ShouldFail:          true,
 					UI:                  true,
+					Tracer:              false,
 				},
 			},
 			{
@@ -362,6 +402,7 @@ func (a affinity) String() string {
 }
 
 func CyclicBench(ctx context.Context, s *testing.State) {
+	const tracingOverhead = 100 * time.Microsecond
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
@@ -387,6 +428,11 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		"--affinity=" + param.Affinity.String(),
 		"--json",
 	}
+	if param.Tracer {
+		cmdStr = append(cmdStr,
+			fmt.Sprintf("--breaktrace=%d", int((param.MaxLatencyThreshold+tracingOverhead)/time.Microsecond)),
+			"--tracemark")
+	}
 	if param.StressConfig != nil {
 		cmdStr = append(cmdStr,
 			"--stress_policy="+param.StressConfig.Policy.String(),
@@ -394,23 +440,13 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			"--workers_per_cpu="+strconv.Itoa(defaultStressWorker))
 	}
 
-	testing.ContextLog(ctx, "Start tracing")
-	cleanupTraceCtx := ctx
-	ctx, cancel2 := ctxutil.Shorten(ctx, 30*time.Second)
-	defer cancel2()
+	if param.Tracer {
+		testing.ContextLog(ctx, "Start trace-cmd")
 
-	filepath := filepath.Join(
-		s.OutDir(),
-		fmt.Sprintf("perfetto-%d.pb", time.Now().Unix()))
-
-	session, err := tracing.StartSession(ctx, s.DataPath("perfetto_trace.txtpb"),
-		tracing.WithTraceDataPath(filepath),
-		tracing.WithCompression(),
-	)
-	if err != nil {
-		s.Error(err, "failed to start tracing")
+		if err := testexec.CommandContext(ctx, "trace-cmd", "start", "-e", "sched", "-e", "timer", "-e", "irq", "-e", "irq_vectors", "-e", "irq_matrix", "-e", "softirq_raise", "-R", "stacktrace", "-b", "1500", "-C", "local").Run(testexec.DumpLogOnError); err != nil {
+			s.Error("Cannot run trace-cmd start: ", err)
+		}
 	}
-	defer session.Finalize(cleanupTraceCtx)
 
 	testing.ContextLog(ctx, "Start to execute cyclic_bench.py")
 	out, err := testexec.CommandContext(ctx, cmdStr[0], cmdStr[1:]...).Output(testexec.DumpLogOnError)
@@ -418,9 +454,18 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to execute cyclic_bench.py: ", err)
 	}
 
-	testing.ContextLog(ctx, "Stop tracing: "+filepath)
-	if err := session.Stop(); err != nil {
-		s.Error(err, "failed to stop tracing")
+	if param.Tracer {
+		filepath := filepath.Join(s.OutDir(), fmt.Sprintf("trace-cyclic-%d.dat", time.Now().Unix()))
+		testing.ContextLog(ctx, "Start trace-cmd extract")
+		traceExtractCmd := testexec.CommandContext(ctx, "trace-cmd", "extract", "-o", filepath)
+		traceExtractCmd.Dir = "/tmp"
+		if err := traceExtractCmd.Run(testexec.DumpLogOnError); err != nil {
+			s.Fatal("Failed to execute trace-cmd extract: ", err)
+		}
+		testing.ContextLog(ctx, "Stop trace-cmd")
+		if err := testexec.CommandContext(ctx, "trace-cmd", "stop").Run(testexec.DumpLogOnError); err != nil {
+			s.Error("Cannot run trace-cmd stop: ", err)
+		}
 	}
 
 	stats := struct {
@@ -433,8 +478,7 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		} `json:"stats"`
 	}{}
 
-	err = json.Unmarshal(out, &stats)
-	if err != nil {
+	if err := json.Unmarshal(out, &stats); err != nil {
 		s.Error("Failed to parse result file: ", err)
 	}
 
