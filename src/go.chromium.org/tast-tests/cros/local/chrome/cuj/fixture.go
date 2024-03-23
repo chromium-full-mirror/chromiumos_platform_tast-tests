@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/chrome/credconfig"
+	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/policy"
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -834,6 +835,46 @@ func init() {
 			enableBSM:   true,
 		},
 		Parent:          "prepareForCUJ",
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  CPUStablizationTimeout,
+		PostTestTimeout: postTestTimeout,
+		Vars:            []string{"ui.cujAccountPool"},
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "prepareForCUJSchedRT",
+		Desc: "The fixture to set sched RT before CUJ tests",
+		Contacts: []string{
+			"hsinyi@google.com",
+			"joelaf@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Impl:            &prepareCUJFixture{},
+		PreTestTimeout:  CPUStablizationTimeout + 3*time.Second,
+		PostTestTimeout: postTestTimeout,
+		Parent:          fixture.SchedRTGpuWatchHangs,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: "loggedInToCUJUserWithWebRTCEventLoggingWithSchedRT",
+		Desc: "CUJ test fixture with WebRTC event logging and deadline server",
+		Contacts: []string{
+			"hsinyi@google.com",
+			"joelaf@google.com",
+			"cros-sw-perf@google.com",
+		},
+		Data: docsBlockerFiles,
+		Impl: &loggedInToCUJUserFixture{
+			chromeExtraOpts: []chrome.Option{
+				chrome.EnableFeatures("SetThreadBgForBgProcess"),
+				chrome.EnableFeatures("SetRtForDisplayThreads"),
+				chrome.ExtraArgs(webRTCEventLogCommandFlag),
+			},
+			bt:          browser.TypeAsh,
+			docsBlocker: true,
+			disableARC:  true,
+		},
+		Parent:          "prepareForCUJSchedRT",
 		SetUpTimeout:    setUpTimeout,
 		ResetTimeout:    resetTimeout,
 		TearDownTimeout: resetTimeout,

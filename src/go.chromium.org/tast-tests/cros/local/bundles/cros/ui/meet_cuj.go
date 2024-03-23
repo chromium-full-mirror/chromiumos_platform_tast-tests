@@ -340,8 +340,24 @@ func init() {
 					BrowserType: browser.TypeAsh,
 				},
 				Fixture: "loggedInToCUJUserWithWebRTCEventLoggingWithBatterySaver",
-			},
-			{
+			}, {
+				Name:    "docs_sched_rt",
+				Timeout: meetcuj.DefaultTestTimeout,
+				Val: meetcuj.MeetTest{
+					Bots:        []int{1, 3, 15},
+					Layout:      googlemeet.TiledLayout,
+					Present:     true,
+					Docs:        true,
+					Split:       true,
+					Cam:         true,
+					ZoomOut:     true,
+					Effects:     true,
+					BrowserType: browser.TypeAsh,
+				},
+				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
+				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithSchedRT",
+				ExtraHardwareDeps: hwdep.D(hwdep.HasSchedRTControl()),
+			}, {
 				Name:      "docs_enterprise",
 				Timeout:   meetcuj.DefaultTestTimeout,
 				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
