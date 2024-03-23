@@ -5,21 +5,50 @@
    found in the LICENSE file.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:app="http://schemas.android.com/apk/res-auto"
-              xmlns:tools="http://schemas.android.com/tools"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:orientation="vertical"
-              tools:context=".MainActivity">
-    <EditText android:id="@+id/txtInput"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:inputType="text"/>
-    <Button android:id="@+id/btnTest"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:text="@string/test_button_text" />
-   <TextView android:id="@+id/txtOutput"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content" />
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <Spinner
+      android:id="@+id/lstPolicies"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:entries="@array/policies" />
+
+    <ToggleButton
+        android:id="@+id/btnEnabled"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:checked="true"
+        android:textOff="@string/enable_button_disabled"
+        android:textOn="@string/enable_button_enabled" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="15dp"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/btnTest"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/test_button_text" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/txtOutput"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"/>
+
+    <TextView
+        android:id="@+id/txtError"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"/>
 </LinearLayout>

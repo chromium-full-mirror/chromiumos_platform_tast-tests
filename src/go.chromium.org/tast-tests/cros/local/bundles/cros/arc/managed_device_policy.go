@@ -6,6 +6,7 @@ package arc
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -15,7 +16,11 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/imagehelpers"
+	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/policyutil/externaldata"
 	"go.chromium.org/tast/core/ctxutil"
+	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -32,8 +37,10 @@ func init() {
 		VarDeps: []string{
 			arcent.LoginPoolVar,
 		},
+		Data: []string{"wallpaper_image.jpeg"},
 		SearchFlags: []*testing.StringPair{
 			pci.SearchFlag(&policy.ArcEnabled{}, pci.VerifiedFunctionalityOS),
+			pci.SearchFlag(&policy.WallpaperImage{}, pci.VerifiedFunctionalityUI),
 		},
 		Params: []testing.Param{
 			{
@@ -64,18 +71,21 @@ func init() {
 	})
 }
 
+type arcPolicyFactory func() (policy.Policy, func(ctx context.Context), error)
+
 func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	const (
 		apk = "ArcDevicePolicyTest.apk"
 		pkg = "org.chromium.arc.testapp.devicepolicy"
 		cls = pkg + ".MainActivity"
-
-		inputTextID  = pkg + ":id/txtInput"
-		testButtonID = pkg + ":id/btnTest"
-		outputTextID = pkg + ":id/txtOutput"
-
-		defaultTimeout = 30 * time.Second
 	)
+
+	packages := []string{pkg}
+	arcPolicyMap := map[string]arcPolicyFactory{
+		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
+			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
+		},
+	}
 
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar(arcent.LoginPoolVar))
 	if err != nil {
@@ -87,7 +97,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	login := chrome.GAIALogin(creds)
-	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, []string{pkg}, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
+	fdms, err := arcent.SetupPolicyServerWithArcApps(ctx, s.OutDir(), creds.User, packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
 	if err != nil {
 		s.Fatal("Failed to setup fake policy server: ", err)
 	}
@@ -110,7 +120,6 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start ARC by policy: ", err)
 	}
 	defer a.Close(cleanupCtx)
-
 	if err := arcent.WaitForProvisioning(ctx, a, 1 /*attempt*/); err != nil {
 		s.Fatal("Failed to wait for provisioning: ", err)
 	}
@@ -126,7 +135,6 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create a new activity: ", err)
 	}
 	defer act.Close(cleanupCtx)
-
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create test API connection: ", err)
@@ -136,33 +144,120 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 	defer act.Stop(cleanupCtx, tconn)
 
+	s.Log("Testing policies without restrictions")
 	d, err := a.NewUIDevice(ctx)
 	if err != nil {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
 	defer d.Close(cleanupCtx)
-
-	txtInput := d.Object(ui.ID(inputTextID))
-	if err := txtInput.WaitForExists(ctx, defaultTimeout); err != nil {
-		s.Fatal("Failed to wait for input text to exist: ", err)
+	for policyName := range arcPolicyMap {
+		if err := testPolicyEnforcement(ctx, d, policyName, true /*shouldSucceed*/); err != nil {
+			s.Fatalf("Test for policy %s failed: %v", policyName, err)
+		}
 	}
 
-	if err := txtInput.SetText(ctx, "hello"); err != nil {
-		s.Fatal("Failed to set input message text: ", err)
+	s.Log("Updating policies to apply restrictions")
+	arcPolicy := arcent.CreateArcPolicyWithApps(packages, arcent.InstallTypeAvailable, arcent.PlayStoreModeAllowList)
+	arcEnabledPolicy := &policy.ArcEnabled{Val: true}
+	policies := []policy.Policy{arcEnabledPolicy, arcPolicy}
+	for policyName := range arcPolicyMap {
+		newPolicy, cleanup, err := arcPolicyMap[policyName]()
+		if err != nil {
+			s.Fatalf("Failed to create %s policy: %v", policyName, err)
+		}
+		defer cleanup(cleanupCtx)
+		policies = append(policies, newPolicy)
+	}
+
+	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, policies); err != nil {
+		s.Fatal("Failed to update policies: ", err)
+	}
+
+	s.Log("Testing policies with restrictions")
+	for policyName := range arcPolicyMap {
+		if err := testPolicyEnforcement(ctx, d, policyName, false /*shouldSucceed*/); err != nil {
+			s.Fatalf("Test for policy %s failed: %v", policyName, err)
+		}
+	}
+}
+
+func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, func(ctx context.Context), error) {
+	jpegBytes, err := imagehelpers.GetJPEGBytesFromFilePath(imgPath)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to read wallpaper image")
+	}
+
+	eds, err := externaldata.NewServer(ctx)
+	if err != nil {
+		return nil, nil, errors.Wrap(err, "failed to create external data server")
+	}
+	cleanup := func(ctx context.Context) { eds.Stop(ctx) }
+
+	iurl, ihash := eds.ServePolicyData(jpegBytes)
+
+	policy := &policy.WallpaperImage{Val: &policy.WallpaperImageValue{Url: iurl, Hash: ihash}}
+
+	return policy, cleanup, nil
+}
+
+func testPolicyEnforcement(ctx context.Context, d *ui.Device, policy string, shouldSucceed bool) error {
+	const (
+		pkg = "org.chromium.arc.testapp.devicepolicy"
+
+		policiesListID = pkg + ":id/lstPolicies"
+		testButtonID   = pkg + ":id/btnTest"
+		outputTextID   = pkg + ":id/txtOutput"
+		errorTextID    = pkg + ":id/txtError"
+	)
+
+	if err := selectSpinnerItem(ctx, d, policiesListID, policy); err != nil {
+		return err
 	}
 
 	btnTest := d.Object(ui.ID(testButtonID))
 	if err := btnTest.Click(ctx); err != nil {
-		s.Fatal("Failed to click test: ", err)
+		return errors.Wrap(err, "failed to click test")
 	}
 
 	txtOutput := d.Object(ui.ID(outputTextID))
 	output, err := txtOutput.GetText(ctx)
 	if err != nil {
-		s.Fatal("Failed to get output: ", err)
+		return errors.Wrap(err, "failed to get output")
 	}
 
-	if output != "hello" {
-		s.Fatal("Unexpected output " + output)
+	txtError := d.Object(ui.ID(errorTextID))
+	errMessage, err := txtError.GetText(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get error message")
 	}
+
+	if output != fmt.Sprintf("%v", shouldSucceed) {
+		return errors.Errorf("unexpected output: %s, error: %s", output, errMessage)
+	}
+
+	return nil
+}
+
+func selectSpinnerItem(ctx context.Context, d *ui.Device, spinnerId, itemText string) error {
+	const defaultTimeout = 30 * time.Second
+
+	spinner := d.Object(ui.ID(spinnerId))
+	if err := spinner.WaitForExists(ctx, defaultTimeout); err != nil {
+		return errors.Wrap(err, "failed to find the spinner")
+	}
+
+	if err := spinner.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to open the spinner")
+	}
+
+	item := d.Object(ui.Text(itemText))
+	if err := item.WaitForExists(ctx, defaultTimeout); err != nil {
+		return errors.Wrapf(err, "failed to find %s in the spinner", itemText)
+	}
+
+	if err := item.Click(ctx); err != nil {
+		return errors.Wrapf(err, "failed to select %s in the spinner", itemText)
+	}
+
+	return nil
 }
