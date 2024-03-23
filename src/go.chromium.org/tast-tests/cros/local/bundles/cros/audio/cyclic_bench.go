@@ -102,13 +102,13 @@ func init() {
 		Desc:         "Benchmarks for scheduling latency with cyclictest binary",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "eddyhsu@chromium.org", "paulhsia@chromium.org", "cychiang@chromium.org"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		Data:         []string{"perfetto_trace.txtpb"},
 		SoftwareDeps: []string{"cras", "chrome"},
-		Timeout:      15 * time.Minute,
 		Params: []testing.Param{
 			{
-				Name: "rr12_1thread_10ms",
+				Name:      "rr12_1thread_10ms",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -127,6 +127,7 @@ func init() {
 			{
 				Name:      "rr12_1thread_10ms_with_tracer",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -144,8 +145,10 @@ func init() {
 				},
 			},
 			{
-				Name:    "rr12_1thread_10ms_ui_stopped",
-				Fixture: "uiStopped",
+				Name:      "rr12_1thread_10ms_ui_stopped",
+				Fixture:   "uiStopped",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -165,6 +168,7 @@ func init() {
 				Name:      "rr12_1thread_10ms_ui_stopped_with_tracer",
 				Fixture:   "uiStopped",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -182,7 +186,8 @@ func init() {
 				},
 			},
 			{
-				Name: "rr12_1thread_10ms_double_loop_count",
+				Name:    "rr12_1thread_10ms_double_loop_count",
+				Timeout: 150 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -190,17 +195,19 @@ func init() {
 					},
 					Threads:             1,
 					Interval:            defaultInterval,
-					Loops:               defaultLoops * 2,
+					Loops:               defaultLoops * 10, // The pass rate is 0.6, we need to run 10X to make the pass rate < 0.01
 					Affinity:            defaultAff,
 					MaxLatencyThreshold: defaultMaxLatencyThreshold,
 					StressConfig:        nil,
 					ShouldFail:          true,
 					UI:                  true,
-					Tracer:              false,
+					Tracer:              true,
 				},
 			},
 			{
-				Name: "rr10_1thread_10ms",
+				Name:      "rr10_1thread_10ms",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -216,7 +223,9 @@ func init() {
 				},
 			},
 			{
-				Name: "rr12_4thread_10ms",
+				Name:      "rr12_4thread_10ms",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -232,7 +241,9 @@ func init() {
 				},
 			},
 			{
-				Name: "rr10_4thread_10ms",
+				Name:      "rr10_4thread_10ms",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -248,7 +259,9 @@ func init() {
 				},
 			},
 			{
-				Name: "rr12_1thread_10ms_stress_rr8_2workers_per_cpu",
+				Name:      "rr12_1thread_10ms_stress_rr8_2workers_per_cpu",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -268,7 +281,9 @@ func init() {
 				},
 			},
 			{
-				Name: "rr12_1thread_10ms_stress_nice_p0_2workers_per_cpu",
+				Name:      "rr12_1thread_10ms_stress_nice_p0_2workers_per_cpu",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -288,7 +303,9 @@ func init() {
 				},
 			},
 			{
-				Name: "nice_p0_1thread_10ms",
+				Name:      "nice_p0_1thread_10ms",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   otherSched,
@@ -304,7 +321,9 @@ func init() {
 				},
 			},
 			{
-				Name: "nice_n20_1thread_10ms",
+				Name:      "nice_n20_1thread_10ms",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   otherSched,
@@ -320,7 +339,9 @@ func init() {
 				},
 			},
 			{
-				Name: "nice_p19_1thread_10ms",
+				Name:      "nice_p19_1thread_10ms",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   otherSched,
@@ -336,7 +357,9 @@ func init() {
 				},
 			},
 			{
-				Name: "nice_p0_1thread_10ms_stress_nice_p0_2workers_per_cpu",
+				Name:      "nice_p0_1thread_10ms_stress_nice_p0_2workers_per_cpu",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   otherSched,
@@ -356,7 +379,9 @@ func init() {
 				},
 			},
 			{
-				Name: "rr12_1thread_10ms_small_core",
+				Name:      "rr12_1thread_10ms_small_core",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
@@ -373,7 +398,9 @@ func init() {
 				ExtraSoftwareDeps: []string{"cpu_heterogeneous"},
 			},
 			{
-				Name: "rr12_1thread_10ms_big_core",
+				Name:      "rr12_1thread_10ms_big_core",
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
 					Config: schedConfig{
 						Policy:   rrSched,
