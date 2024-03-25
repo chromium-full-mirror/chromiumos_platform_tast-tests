@@ -22,7 +22,6 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/wificell"
 	"go.chromium.org/tast-tests/cros/remote/wificell/hostapd"
 	"go.chromium.org/tast-tests/cros/services/cros/wifi"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -197,6 +196,8 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to start capturer: ", err)
 		}
+		ctx, cancel := pcapRouter.ReserveForStopCapture(ctx, capturer)
+		defer cancel()
 		if checkEap {
 			skippedRecver, err = tf.WifiClient().EAPAuthSkipped(ctx)
 			if err != nil {
@@ -208,8 +209,6 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 		// Check the auth algo used in the authentication during
 		// invocation of action.
-		ctx, cancel := pcapRouter.ReserveForStopCapture(ctx, capturer)
-		defer cancel()
 		if err := pcapRouter.StopCapture(ctx, capturer); err != nil {
 			s.Error("Failed to stop capturer: ", err)
 
@@ -276,9 +275,33 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 	roamProps := func(bssid string) []*wificell.ShillProperty {
 		return []*wificell.ShillProperty{{
+			Property:       shillconst.ServicePropertyWiFiRoamState,
+			ExpectedValues: []interface{}{shillconst.RoamStateConfiguration},
+			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
+		}, {
+			Property:       shillconst.ServicePropertyWiFiRoamState,
+			ExpectedValues: []interface{}{shillconst.RoamStateReady},
+			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
+		}, {
+			Property:       shillconst.ServicePropertyWiFiRoamState,
+			ExpectedValues: []interface{}{shillconst.RoamStateIdle},
+			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
+		}, {
 			Property:       shillconst.ServicePropertyWiFiBSSID,
 			ExpectedValues: []interface{}{bssid},
+			Method:         wifi.ExpectShillPropertyRequest_CHECK_ONLY,
+		}}
+	}
+
+	reconnectProps := func(bssid string) []*wificell.ShillProperty {
+		return []*wificell.ShillProperty{{
+			Property:       shillconst.ServicePropertyState,
+			ExpectedValues: []interface{}{shillconst.ServiceStateReady},
 			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
+		}, {
+			Property:       shillconst.ServicePropertyWiFiBSSID,
+			ExpectedValues: []interface{}{bssid},
+			Method:         wifi.ExpectShillPropertyRequest_CHECK_ONLY,
 		}}
 	}
 
@@ -401,7 +424,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 	// Expect EAP or authentication is not skipped during DUT's association to
 	// newly configured AP1.
-	checkAuthSkipped(roamCtx, s, tc.authAlgo, tc.checkEap, ftEnabled, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
+	checkAuthSkipped(ctx, s, tc.authAlgo, tc.checkEap, ftEnabled, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
 		// Configure AP1 after ExpectShillProperty() because a roaming
 		// may happen automatically right after AP1 is up.
 		ap1, err = tf.ConfigureAPOnRouterIDWithConfs(actionCtx, wificell.DefaultRouter, [][]hostapd.Option{ap1Opts}, []security.ConfigFactory{tc.secConfFac}, "", !ftEnabled, false, false)
@@ -439,22 +462,10 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get Freq Opts: ", err)
 	}
 
-	pollVerifyConnection := func(ctx context.Context, ap *wificell.APIface) error {
-		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			return tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, ap)
-		}, &testing.PollOptions{
-			Timeout:  time.Second * 20,
-			Interval: time.Second,
-		}); err != nil {
-			return errors.Wrap(err, "failed to verify the connection")
-		}
-		return nil
-	}
-
 	if !ftEnabled {
 		// Expect EAP or authentication is skipped during DUT roaming back to
 		// previously connected AP0.
-		checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap0Channel, ap0FreqOps, func(actionCtx context.Context) {
+		checkAuthSkipped(ctx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap0Channel, ap0FreqOps, func(actionCtx context.Context) {
 			req := requestParams
 			req.Neighbors = []string{ap0BSSID}
 
@@ -469,17 +480,17 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 			}
 		})
 
-		// Expect the DUT to roam to AP1 within timeout.
-		roamCtx, cancel = context.WithTimeout(ctx, roamTimeout)
+		// Expect the DUT to reconnect to AP1 within timeout.
+		reconnectCtx, cancel := context.WithTimeout(ctx, roamTimeout)
 		defer cancel()
-		waitForRoam, err = tf.WifiClient().ExpectShillProperty(roamCtx, connResp.ServicePath, roamProps(ap1BSSID), nil)
+		waitForReconnect, err := tf.WifiClient().ExpectShillProperty(reconnectCtx, connResp.ServicePath, reconnectProps(ap1BSSID), nil)
 		if err != nil {
 			s.Fatal("Failed to create a property watcher on DUT: ", err)
 		}
 
-		// Expect EAP or authentication is skipped during DUT roaming back to
+		// Expect EAP or authentication is skipped during DUT reconnecting to
 		// previously connected AP1 after deconfiguring AP0.
-		checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
+		checkAuthSkipped(ctx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
 			s.Log("Tearing down AP0")
 			if err := tf.DeconfigAP(actionCtx, ap0); err != nil {
 				s.Fatal("Failed to deconfig AP: ", err)
@@ -487,18 +498,21 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 			ap0 = nil
 
 			s.Log("Waiting for falling back to AP1")
-			if _, err := waitForRoam(); err != nil {
+			if _, err := waitForReconnect(); err != nil {
 				s.Fatal("Failed to wait for falling back to AP1: ", err)
 			}
 		})
 
-		if err = pollVerifyConnection(ctx, ap1); err != nil {
+		if err = tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, ap1); err != nil {
 			s.Error("Failed to wait for the connection to recover: ", err)
 		}
 	} else {
-		// Expect EAP or authentication is skipped during DUT roaming back to
-		// previously connected AP1 after deconfiguring AP0.
-		checkAuthSkipped(roamCtx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap0Channel, ap0FreqOps, func(actionCtx context.Context) {
+		reconnectCtx, cancel := context.WithTimeout(ctx, roamTimeout)
+		defer cancel()
+		waitForReconnect, err := tf.WifiClient().ExpectShillProperty(reconnectCtx, connResp.ServicePath, reconnectProps(ap0BSSID), nil)
+		// Expect authentication is skipped during DUT reconnecting to
+		// previously connected AP0 after deconfiguring AP1.
+		checkAuthSkipped(ctx, s, wpa.AuthAlgoOpen, tc.checkEap, true, ap0Channel, ap0FreqOps, func(actionCtx context.Context) {
 			s.Log("Tearing down AP1")
 			if err := tf.DeconfigAP(actionCtx, ap1); err != nil {
 				s.Fatal("Failed to deconfig AP: ", err)
@@ -506,11 +520,11 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 			ap1 = nil
 
 			s.Log("Waiting for falling back to AP0")
-			if _, err := waitForRoam(); err != nil {
+			if _, err := waitForReconnect(); err != nil {
 				s.Fatal("Failed to wait for falling back to AP0: ", err)
 			}
 		})
-		if err = pollVerifyConnection(ctx, ap0); err != nil {
+		if err = tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, ap0); err != nil {
 			s.Error("Failed to wait for the connection to recover: ", err)
 		}
 	}
