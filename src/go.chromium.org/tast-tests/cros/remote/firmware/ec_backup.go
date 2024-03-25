@@ -119,6 +119,7 @@ func (bs *BackupState) Flash(ctx context.Context, h *Helper, imagePath string) (
 		return nil, nil, errors.Wrap(err, "failed to read ecflash.log")
 	}
 	if m := flashromExitCodeRe.FindSubmatch(out); m == nil || string(m[1]) != "0" {
+		testing.ContextLogf(ctx, "ecflash.log:%s", out)
 		return nil, nil, errors.Wrap(err, "flashrom failed")
 	}
 	m := hashBeforeRe.FindSubmatch(out)
