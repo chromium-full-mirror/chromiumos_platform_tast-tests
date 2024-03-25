@@ -48,7 +48,8 @@ const (
 type feature string
 
 const (
-	autoQR feature = "CameraAppAutoQRDetection"
+	autoQR      feature = "CameraAppAutoQRDetection"
+	digitalZoom feature = "CameraAppDigitalZoom"
 )
 
 var (
@@ -302,6 +303,19 @@ func init() {
 		ResetTimeout:    testBridgeSetUpTimeout,
 		TearDownTimeout: powerTearDownTimeout,
 	})
+
+	// TODO(b/225112054): Remove the fixture once digital zoom and super resolution are enabled by default.
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedWithDigitalZoomAndSuperRes",
+		Desc:            "Launched CCA with digital zoom and super resolution enabled",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "kamchonlathorn@chromium.org"},
+		Impl:            &fixture{launchCCA: true, forceEnableSuperRes: true, enableFeatures: []feature{digitalZoom}},
+		SetUpTimeout:    setUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: tearDownTimeout,
+	})
 }
 
 // DebugParams defines some useful flags for debug CCA tests.
@@ -381,6 +395,7 @@ type fixture struct {
 	guestMode              bool
 	launchCCAInCameraBox   bool
 	forceEnableAutoFraming bool
+	forceEnableSuperRes    bool
 	powerTest              bool
 	requireAudioLoopback   bool
 	debugParams            DebugParams
@@ -451,6 +466,9 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	}
 	if f.forceEnableAutoFraming {
 		chromeOpts = append(chromeOpts, chrome.ExtraArgs("--auto-framing-override=force-enabled"))
+	}
+	if f.forceEnableSuperRes {
+		chromeOpts = append(chromeOpts, chrome.ExtraArgs("--camera-super-res-override=force-enabled"))
 	}
 
 	// Enable assistant verbose logging for the CCAUIAssistant test. Since

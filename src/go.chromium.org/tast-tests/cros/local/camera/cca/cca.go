@@ -185,6 +185,18 @@ type Range struct {
 	Min int `json:"min"`
 }
 
+// PTZSettings represents the current values for pan, tilt, and zoom.
+type PTZSettings struct {
+	Pan  float64 `json:"pan"`
+	Tilt float64 `json:"tilt"`
+	Zoom float64 `json:"zoom"`
+}
+
+// Equal returns if PTZ settings a and b are equal.
+func (a *PTZSettings) Equal(b *PTZSettings) bool {
+	return a.Pan == b.Pan && a.Tilt == b.Tilt && a.Zoom == b.Zoom
+}
+
 // AspectRatio returns width divided by height as the aspect ratio of the resolution.
 func (r *Resolution) AspectRatio() float64 {
 	return float64(r.Width) / float64(r.Height)
@@ -1609,4 +1621,37 @@ func (a *App) GalleryButtonCoverURL(ctx context.Context) (string, error) {
 		return "", err
 	}
 	return url, nil
+}
+
+// CurrentPTZSettings returns the current PTZ settings.
+func (a *App) CurrentPTZSettings(ctx context.Context) (*PTZSettings, error) {
+	var settings PTZSettings
+	if err := a.conn.Call(ctx, &settings, "CCATest.getPTZSettings"); err != nil {
+		return nil, errors.Wrap(err, "failed to get current PTZ settings")
+	}
+	return &settings, nil
+}
+
+// ClickPTZButtonAndWaitSettingsUpdate clicks on the specified PTZ button, and
+// wait until the PTZ settings value are updated.
+func (a *App) ClickPTZButtonAndWaitSettingsUpdate(ctx context.Context, ui UIComponentName) (*PTZSettings, error) {
+	settings, err := a.CurrentPTZSettings(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if err := a.ClickPTZButton(ctx, ui); err != nil {
+		return nil, errors.Wrapf(err, "failed to click on %v button", ui)
+	}
+
+	// Wait until the PTZ values are updated.
+	var newSettings *PTZSettings
+	err = testing.Poll(ctx, func(ctx context.Context) error {
+		newSettings, err = a.CurrentPTZSettings(ctx)
+		if settings.Equal(newSettings) {
+			return errors.Errorf("PTZ values %v are not updated after clicking %v button", settings, ui)
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: 5 * time.Second})
+
+	return newSettings, err
 }
