@@ -55,10 +55,9 @@ func waitForGaiaSigninScreen(ctx context.Context, oobeConn *driver.Conn, timeout
 		Interval: 2 * time.Second,
 	}
 
-	// TODO(b/329888700): Use a proper state instead of the private `readyFired_` member.
 	js := `(function() {
 		gaiaSignin = $('gaia-signin');
-		return !gaiaSignin.hidden && gaiaSignin.authenticator.readyFired_;
+		return !gaiaSignin.hidden && gaiaSignin.uiStep === 'online-gaia';
 	})()`
 
 	var last bool
