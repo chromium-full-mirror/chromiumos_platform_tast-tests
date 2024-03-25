@@ -81,7 +81,7 @@ func PinMigration(ctx context.Context, s *testing.State) {
 
 	// Setup a new user with PIN while the modern pin is disabled.
 	if disableModernPinSetupErr := cryptochrome.WithModernPinDisabled(ctx, func() error {
-		if err := setupUserWithPIN(ctx, ctxForCleanup, testUsername, cmdRunner, helper); err != nil {
+		if err := setupUserWithLegacyPin(ctx, ctxForCleanup, testUsername, cmdRunner, helper); err != nil {
 			s.Fatal("Failed to set up a user with a pin auth factor while modern pin is disabled: ", err)
 		}
 		return nil
@@ -143,8 +143,8 @@ func PinMigration(ctx context.Context, s *testing.State) {
 	}
 }
 
-// setupUserWithPIN sets up a user with a password and a legacy pin.
-func setupUserWithPIN(ctx, ctxForCleanUp context.Context, userName string, cmdRunner *hwseclocal.CmdRunnerLocal, helper *hwseclocal.CmdHelperLocal) error {
+// setupUserWithLegacyPin sets up a user with a password and a legacy pin.
+func setupUserWithLegacyPin(ctx, ctxForCleanUp context.Context, userName string, cmdRunner *hwseclocal.CmdRunnerLocal, helper *hwseclocal.CmdHelperLocal) error {
 	cryptohomeHelper := helper.CryptohomeClient()
 
 	// Start an Auth session and get an authSessionID.

@@ -7,6 +7,7 @@ package hwsec
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -19,9 +20,16 @@ type PowerButtonHelper interface {
 	PressAndRelease(ctx context.Context) error
 }
 
+// TimerHelper is a helper interface that exposes time-related utilities.
+type TimerHelper interface {
+	// After calling this function, |duration| should have passed in the hwsec timer.
+	Sleep(ctx context.Context, duration time.Duration) error
+}
+
 // SimulatorController includes helpers to control the TPM simulator.
 type SimulatorController interface {
 	PowerButtonHelper() *PowerButtonHelper
+	TimerHelper() *TimerHelper
 }
 
 // Ti50EmulatorController implements SimulatorController for ti50-emulator.
@@ -29,6 +37,7 @@ type SimulatorController interface {
 // "tpm2-simulator" + "gsc").
 type Ti50EmulatorController struct {
 	powerButtonHelper SimulatedPowerButtonHelper
+	timerHelper       SimulatedTimerHelper
 }
 
 // SimulatedPowerButtonHelper presses the power button by sending bytes to
@@ -37,16 +46,28 @@ type SimulatedPowerButtonHelper struct {
 	cmd CmdRunner
 }
 
+// SimulatedTimerHelper controls the time by sending data to the timer_control
+// socket.
+type SimulatedTimerHelper struct {
+	cmd CmdRunner
+}
+
 // NewTi50EmulatorController creates a new Ti50EmulatorController.
 func NewTi50EmulatorController(cmd CmdRunner) Ti50EmulatorController {
 	return Ti50EmulatorController{
 		powerButtonHelper: SimulatedPowerButtonHelper{cmd},
+		timerHelper:       SimulatedTimerHelper{cmd},
 	}
 }
 
 // PowerButtonHelper exposes the power button helper of Ti50EmulatorController.
 func (c *Ti50EmulatorController) PowerButtonHelper() *SimulatedPowerButtonHelper {
 	return &c.powerButtonHelper
+}
+
+// TimerHelper exposes the timer button helper of Ti50EmulatorController.
+func (c *Ti50EmulatorController) TimerHelper() *SimulatedTimerHelper {
+	return &c.timerHelper
 }
 
 // PressAndRelease implements PowerButtonHelper.PressAndRelease.
@@ -67,6 +88,35 @@ func (helper SimulatedPowerButtonHelper) PressAndRelease(ctx context.Context) er
 	testing.Sleep(ctx, 500*time.Millisecond)
 	if _, err := helper.cmd.Run(ctx, "sh", "-c", fmt.Sprintf(socketCommandTempl, zero)); err != nil {
 		return errors.Wrap(err, "failed to release power button")
+	}
+	return nil
+}
+
+// Sleep implements TimerHelper.Sleep. Instead of actually sleeping, it sends
+// control signal to the emulator to fast forward the timer.
+func (helper SimulatedTimerHelper) Sleep(ctx context.Context, duration time.Duration) error {
+	const (
+		socketCommandTempl string = "echo '%s' | socat -t1 unix-connect:/run/tpm2-simulator/sockets/timer -"
+		getTime            string = `{"commands":[{"target":"TimerRTC","command":"GetTime"}]}`
+		setTimeTo          string = `{"commands":[{"target":"TimerRTC","command":{"SetTime":%d}}]}`
+	)
+
+	// Sending the getTime command to get the current ticks (in ms).
+	reply, err := helper.cmd.Run(ctx, "sh", "-c", fmt.Sprintf(socketCommandTempl, getTime))
+	// TODO(b/331120135): The ti50-emulator currently has some problems with
+	// gracefully shutting down the socket connection. Ignore the errors and
+	// continue as long as we receive some parseable reply.
+	if err != nil {
+		testing.ContextLog(ctx, "GetTime command failed: ", err)
+	}
+	timerMs, err := strconv.Atoi(string(reply))
+	if err != nil {
+		return errors.Wrap(err, "failed to parse time value")
+	}
+	setTime := fmt.Sprintf(setTimeTo, timerMs+int(duration.Milliseconds()))
+	_, err = helper.cmd.Run(ctx, "sh", "-c", fmt.Sprintf(socketCommandTempl, setTime))
+	if err != nil {
+		testing.ContextLog(ctx, "SetTime command failed: ", err)
 	}
 	return nil
 }
