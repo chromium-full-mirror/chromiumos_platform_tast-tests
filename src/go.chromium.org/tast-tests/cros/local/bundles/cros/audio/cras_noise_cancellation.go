@@ -118,7 +118,6 @@ func init() {
 					},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "aec_nc_ast_44100hz",
@@ -132,7 +131,6 @@ func init() {
 					},
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "nc_ast",
@@ -143,7 +141,6 @@ func init() {
 					expectedRMSTolerance:     0.01,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 			{
 				Name: "nc_ast_44100hz",
@@ -154,7 +151,6 @@ func init() {
 					expectedRMSTolerance:     0.01,
 				},
 				ExtraHardwareDeps: hwdep.D(hwdep.FeatureLevel(1)),
-				ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			},
 		},
 	})
