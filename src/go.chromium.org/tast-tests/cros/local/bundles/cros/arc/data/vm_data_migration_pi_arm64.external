@@ -1,5 +1,0 @@
-{
-  "url": "gs://chromeos-test-assets-private/tast/crosint/arc/vm_data_migration_pi_arm64_R112_15359_20230404.tbz2",
-  "size": 296857893,
-  "sha256sum": "9cb41f17998e059fe5ade67ab6ebcd872d2ee6d067fc3b613fcb90ac2cb97baa"
-}
