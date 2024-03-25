@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Verifies that all modem FWs compatible with a device can be installed",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_modem_fw"},
+		Attr:         []string{"group:cellular", "cellular_modem_fw", "cellular_modem_verification"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},
 		Timeout:      12 * time.Minute,

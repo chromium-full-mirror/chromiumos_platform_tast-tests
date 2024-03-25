@@ -17,7 +17,7 @@ func init() {
 		Desc:         "Verifies that the variant is known",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_modem_verification"},
 	})
 }
 

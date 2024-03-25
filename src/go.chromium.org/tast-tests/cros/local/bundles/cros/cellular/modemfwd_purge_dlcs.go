@@ -24,7 +24,7 @@ func init() {
 		Desc:         "Verifies that modemfwd removes all the unused modem DLCs",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_modem_verification"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},
 		Timeout:      1*time.Minute + modemfwd.PurgeDlcsDelay,

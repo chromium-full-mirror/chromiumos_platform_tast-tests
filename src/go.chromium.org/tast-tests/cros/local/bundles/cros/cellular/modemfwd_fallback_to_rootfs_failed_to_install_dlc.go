@@ -29,7 +29,7 @@ func init() {
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active"},
 		Fixture:      "cellular",
-		SoftwareDeps: []string{"modemfwd", "cellular_modem_dlcs_present"},
+		SoftwareDeps: []string{"modemfwd", "cellular_modem_dlcs_present", "cellular_modem_verification"},
 		Timeout:      2 * time.Minute,
 	})
 }

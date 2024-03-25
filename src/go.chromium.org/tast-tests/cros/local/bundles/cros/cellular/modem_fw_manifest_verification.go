@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies the validity of the firmware manifest",
 		Contacts:     []string{"chromeos-cellular-team@google.com", "andrewlassalle@google.com", "madhavadas@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
+		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl", "cellular_modem_verification"},
 		Fixture:      "cellular",
 		SoftwareDeps: []string{"modemfwd"},
 	})
