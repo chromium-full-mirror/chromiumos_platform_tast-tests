@@ -431,6 +431,7 @@ func verifyShortcut(ctx context.Context, ui *uiauto.Context, br *browser.Browser
 }
 
 // setupDownloads downloads an arbitrary file.
+// TODO(b/331191362): Use a fixed filename instead of the page title.
 func setupDownloads(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter) error {
 	// Navigate to the downloads page.
 	conn, err := br.NewConn(ctx, downloadsURL)
@@ -506,7 +507,7 @@ func verifyHistoryEntry(ctx context.Context, ui *uiauto.Context, br *browser.Bro
 
 const (
 	// chrome://downloads page title.
-	downloadsPageTitle = "Downloads"
+	downloadsPageTitle = "Download history"
 	// Arbitrary cookie.
 	cookie = "MyCookie1234=abcd"
 	// Arbitrary localStorage key.
@@ -630,6 +631,7 @@ func setupTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Br
 
 // verifyTabPageHistory verifies that the active tab has the tab history created by setupTabPageHistory.
 // The active tab should be the tab created by setupTabPageHistory when this function is called.
+// TODO(b/331191362): Use more stable node to identify the downloads page.
 func verifyTabPageHistory(ctx context.Context, ui *uiauto.Context, br *browser.Browser, kb *input.KeyboardEventWriter, page Page) error {
 	// Verify that the currently opened page is the downloads page.
 	title := nodewith.Name(downloadsPageTitle).First()
