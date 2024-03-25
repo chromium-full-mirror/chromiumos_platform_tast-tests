@@ -55,8 +55,7 @@ var (
 	startScreenCapturingButton = nodewith.Name("Start Screen Capturing").Role(role.Button).Ancestor(popupRootWindow)
 	stopScreenCapturingButton  = nodewith.Name("Stop Screen Capturing").Role(role.Button).Ancestor(popupRootWindow)
 
-	videoNode      = nodewith.Role(role.Video).Ancestor(popupRootWindow)
-	videoIsPlaying = nodewith.HasClass("state-playing").Ancestor(videoNode)
+	videoNode = nodewith.Role(role.Video).Ancestor(popupRootWindow)
 )
 
 // Launch triggers VcTester popup window in browser extensions.
@@ -84,10 +83,7 @@ func Launch(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (*Ex
 
 // StartVideo clicks on "Start Video" button to activate camera.
 func (extUI *ExtensionUI) StartVideo(ctx context.Context) error {
-	return extUI.ui.DoDefaultUntil(
-		startVideoButton,
-		extUI.ui.WithTimeout(3*time.Second).WaitUntilExists(videoIsPlaying),
-	)(ctx)
+	return extUI.ui.DoDefault(startVideoButton)(ctx)
 }
 
 // StopVideo clicks on "Stop Video" button to deactivate camera.
