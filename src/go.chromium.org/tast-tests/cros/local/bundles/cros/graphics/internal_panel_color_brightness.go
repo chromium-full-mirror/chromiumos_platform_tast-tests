@@ -200,7 +200,18 @@ func savePerfMetrics(ratioGreen, ratioOff float64, s *testing.State) {
 		}
 	}()
 
-	ratio := ratioGreen / ratioOff
+	var ratio float64
+	if ratioOff == 0 {
+		if ratioGreen == 0 {
+			ratio = 0
+		} else {
+			// 100 is a relatively high ratio to represent inf, which happens when ratioOff is 0, at a very black screen.
+			ratio = 100
+		}
+	} else {
+		ratio = ratioGreen / ratioOff
+	}
+
 	pv.Set(perf.Metric{
 		Name:      "green_to_off_ratio",
 		Unit:      "ratio",
