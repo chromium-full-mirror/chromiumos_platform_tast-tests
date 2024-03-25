@@ -25,11 +25,9 @@ import (
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/datamigration"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/lockscreen"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/filesystem"
-	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/screenshot"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
@@ -83,10 +81,7 @@ func init() {
 		},
 		Data:    []string{vmDataMigrationTestImageFilename},
 		Timeout: vmDataMigrationTestTimeout,
-		VarDeps: []string{
-			tape.ServiceAccountVar,
-			"ui.signinProfileTestExtensionManifestKey",
-		},
+		VarDeps: []string{tape.ServiceAccountVar},
 		Params: []testing.Param{{
 			// Migrate from virtio-fs /data created on ARC P (for arm) without
 			// interruption.
@@ -171,18 +166,7 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupFunc(cleanupCtx)
 
-	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
-	chromeOpts := []chrome.Option{
-		chrome.GAIALogin(creds),
-		chrome.ARCSupported(),
-		chrome.KeepState(),
-		chrome.UnRestrictARCCPU(),
-		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
-		chrome.RemoveNotification(false),
-		chrome.ExtraArgs(args...),
-	}
-
-	testImageAttrs := signinAndMigrate(ctx, s, creds, chromeOpts, params.resume)
+	testImageAttrs := signinAndMigrate(ctx, s, creds, params.resume)
 
 	// Check that the file attributes are correctly migrated by checking the
 	// following:
@@ -202,13 +186,13 @@ func VMDataMigration(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to sign out: ", err)
 	}
 
-	reSignInAndVerifyMigration(ctx, s, creds, chromeOpts)
+	reSignInAndVerifyMigration(ctx, s, creds)
 }
 
 // signinAndMigrate signs in to the test account and performs the migration.
 // Also returns the file attributes of the |vmDataMigrationTestImageFilename| in
 // the pre-migration /data.
-func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option, resume bool) vmDataMigrationFileAttributes {
+func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds, resume bool) vmDataMigrationFileAttributes {
 	// The offset for UID and GID shift in virtio-fs /data.
 	const (
 		androidUIDOffset = 655360
@@ -220,9 +204,9 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := chrome.New(ctx, chromeOpts...)
+	cr, err := reSignInChrome(ctx, creds)
 	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
+		s.Fatal("Failed to re-sign in: ", err)
 	}
 	defer func() {
 		if cr != nil {
@@ -319,7 +303,7 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 
 	cr.Close(ctx)
 
-	if cr, err = reSignInChrome(ctx, s, creds, chromeOpts); err != nil {
+	if cr, err = reSignInChrome(ctx, creds); err != nil {
 		s.Fatal("Failed to re-sign in: ", err)
 	}
 
@@ -350,7 +334,7 @@ func signinAndMigrate(ctx context.Context, s *testing.State, creds chrome.Creds,
 	return attrs
 }
 
-func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option) {
+func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chrome.Creds) {
 	const provisioningTimeout = 5 * time.Minute
 
 	// Use a shortened context for test operations to reserve time for cleanup.
@@ -358,7 +342,7 @@ func reSignInAndVerifyMigration(ctx context.Context, s *testing.State, creds chr
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	cr, err := reSignInChrome(ctx, s, creds, chromeOpts)
+	cr, err := reSignInChrome(ctx, creds)
 	if err != nil {
 		s.Fatal("Failed to re-sign in: ", err)
 	}
@@ -579,32 +563,17 @@ func proceedMigrationScreens(ctx context.Context, cr *chrome.Chrome, tconn *chro
 	return nil
 }
 
-func reSignInChrome(ctx context.Context, s *testing.State, creds chrome.Creds, chromeOpts []chrome.Option) (*chrome.Chrome, error) {
-	opts := append(chromeOpts,
-		chrome.NoLogin(),
-		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
+func reSignInChrome(ctx context.Context, creds chrome.Creds) (*chrome.Chrome, error) {
+	args := append(arc.DisableSyncFlags(), "--disable-arc-data-wipe")
+	return chrome.New(ctx,
+		chrome.GAIALogin(creds),
+		chrome.ARCSupported(),
+		chrome.KeepState(),
+		chrome.UnRestrictARCCPU(),
+		chrome.DisableFeatures("ArcEnableVirtioBlkForData"),
+		chrome.RemoveNotification(false),
+		chrome.ExtraArgs(args...),
 	)
-	cr, err := chrome.New(ctx, opts...)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to start Chrome")
-	}
-
-	tconn, err := cr.SigninProfileTestAPIConn(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to re-establish test API connection")
-	}
-
-	keyboard, err := input.Keyboard(ctx)
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to get keyboard")
-	}
-	defer keyboard.Close(ctx)
-
-	if err = lockscreen.UnlockWithPassword(ctx, tconn, creds.User, creds.Pass, keyboard, 10*time.Second, chrome.LoginTimeout); err != nil {
-		return nil, errors.Wrap(err, "failed to unlock user")
-	}
-
-	return cr, nil
 }
 
 func verifyPreMigrationAndroidData(ctx context.Context, a *arc.ARC, username, expectedImageDataPath string) error {
