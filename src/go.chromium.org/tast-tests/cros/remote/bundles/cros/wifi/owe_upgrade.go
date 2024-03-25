@@ -7,6 +7,8 @@ package wifi
 import (
 	"context"
 
+	"github.com/golang/protobuf/ptypes/empty"
+
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/common/wifi/security"
@@ -115,7 +117,7 @@ func OweUpgrade(ctx context.Context, s *testing.State) {
 		// Discover the lastly configured BSS to make sure everything is up and running.
 		bssid := ap.Config().BSSID
 		ssid := ap.Config().SSID
-		if err := tf.WifiClient().DiscoverBSSID(ctx, bssid, clientIface, []byte(ssid)); err != nil {
+		if err := tf.DUTWifiClient(wificell.DefaultDUT).DiscoverBSSID(ctx, bssid, clientIface, []byte(ssid)); err != nil {
 			return errors.Wrap(err, "failed to discover AP")
 		}
 		connResp, err := tf.ConnectWifiAPFromDUT(ctx, wificell.DefaultDUT, ap)
@@ -137,7 +139,7 @@ func OweUpgrade(ctx context.Context, s *testing.State) {
 			return errors.Errorf("Service path has changed: got %s, want %s", connResp.ServicePath, servicePath)
 		}
 
-		srvcResp, err := tf.WifiClient().QueryService(ctx)
+		srvcResp, err := tf.DUTWifiClient(wificell.DefaultDUT).QueryService(ctx)
 		if err != nil {
 			return errors.Wrap(err, "failed to get service properties")
 		}
@@ -200,8 +202,19 @@ func OweUpgrade(ctx context.Context, s *testing.State) {
 		if err = connectAP(ctx, &apDefs[idx]); err != nil {
 			s.Fatal("Failure during AP connection: ", err)
 		}
+		// The connectAP function above disconnects and deconfigures the
+		// AP, but on disconnect shill triggers the scan automatically,
+		// so it might catch existing BSSes right before they get
+		// removed.  If the scan takes long time these results might
+		// come after we have flushed BSSes below and after configuring
+		// the new APs (in the next connectAP invocation) giving
+		// incorrect view of the RF environment.  To avoid that let's
+		// wait until the scan finishes before continuing.
+		if _, err := tf.DUTWifiClient(wificell.DefaultDUT).WaitScanIdle(ctx, &empty.Empty{}); err != nil {
+			s.Fatal("Failed to wait for current scan to be done: ", err)
+		}
 		s.Log("Flushing BSS cache")
-		if err := tf.WifiClient().FlushBSS(ctx, clientIface, 0); err != nil {
+		if err := tf.DUTWifiClient(wificell.DefaultDUT).FlushBSS(ctx, clientIface, 0); err != nil {
 			s.Fatal("Failed to flush BSS list: ", err)
 		}
 	}
