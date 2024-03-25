@@ -49,7 +49,6 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		// Disabled due to 98%-99% failure rate and preventing other tests from running. TODO(b/242478571): fix and re-enable.
 		//Attr:         []string{"group:mainline", "informational"},
-		Attr:         []string{"group:intel-sleep"},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService", "tast.cros.inputs.KeyboardService"},
 		Vars: []string{"servo",
@@ -60,7 +59,7 @@ func init() {
 			Name:      "reboot",
 			Val:       bootupTimes{bootType: reboot},
 			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "reboot_tablet_mode",
 			Val:       bootupTimes{bootType: reboot, tabletMode: true},
@@ -70,17 +69,17 @@ func init() {
 			Name:      "vt2_reboot",
 			Val:       bootupTimes{bootType: vt2Reboot},
 			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "lid_close_open",
 			Val:       bootupTimes{bootType: lidCloseOpen},
 			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "power_button",
 			Val:       bootupTimes{bootType: powerButton},
 			Timeout:   5 * time.Minute,
-			ExtraAttr: []string{"group:intel-nda"},
+			ExtraAttr: []string{"group:intel-sleep"},
 		}, {
 			Name:      "power_button_tablet_mode",
 			Val:       bootupTimes{bootType: powerButton, tabletMode: true},
@@ -91,13 +90,13 @@ func init() {
 			Val:               bootupTimes{bootType: bootFromS5},
 			Timeout:           5 * time.Minute,
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-			ExtraAttr:         []string{"group:intel-nda"},
+			ExtraAttr:         []string{"group:intel-sleep"},
 		}, {
 			Name:              "refresh_power",
 			Val:               bootupTimes{bootType: refreshPower},
 			Timeout:           5 * time.Minute,
 			ExtraHardwareDeps: hwdep.D(hwdep.ChromeEC()),
-			ExtraAttr:         []string{"group:intel-nda"},
+			ExtraAttr:         []string{"group:intel-sleep"},
 		}},
 	})
 }
