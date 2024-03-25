@@ -44,7 +44,7 @@ func init() {
 			wificell.ShillServiceName,
 		},
 		HardwareDeps: hwdep.D(hwdep.WifiSAP(), hwdep.Cellular(), hwdep.Model(hotspotutil.CellularModels...)),
-		SoftwareDeps: []string{"chrome"},
+		SoftwareDeps: []string{"chrome", "hotspot"},
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCapture | wificell.TFFeaturesCellular),
 		Requirements: []string{tdreq.WiFiGenSupportWiFi, tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates},
 		Timeout:      7 * time.Minute,
