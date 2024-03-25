@@ -12,7 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

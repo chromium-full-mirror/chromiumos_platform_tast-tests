@@ -16,9 +16,9 @@ import (
 	"go.chromium.org/tast-tests/cros/common/policy/fakedms"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

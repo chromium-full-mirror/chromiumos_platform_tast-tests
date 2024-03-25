@@ -40,12 +40,12 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )

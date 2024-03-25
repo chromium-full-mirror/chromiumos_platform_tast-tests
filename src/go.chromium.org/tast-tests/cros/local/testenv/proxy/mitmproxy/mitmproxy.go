@@ -24,9 +24,9 @@ import (
 
 	"github.com/shirou/gopsutil/v3/process"
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/procutil"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )

@@ -10,7 +10,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 )
 
 // PolicySetting is the key for a test case of a service, indicating the policy

@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"

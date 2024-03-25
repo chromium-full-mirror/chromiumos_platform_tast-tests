@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy"
-	"go.chromium.org/tast-tests/cros/local/chrome/proxy/mitmproxy"
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
 	"go.chromium.org/tast/core/errors"
 )
 
