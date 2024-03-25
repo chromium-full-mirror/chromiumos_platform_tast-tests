@@ -25,6 +25,7 @@ import (
 	"sync"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -498,27 +499,6 @@ func readFirstIntFromFile(filename string) (int, error) {
 	return x, nil
 }
 
-// ChromeosLowMem returns sysfs information from the chromeos low-mem module.
-func ChromeosLowMem() (available, criticalMargin MemSize, ramWeight int, err error) {
-	sysdir := "/sys/kernel/mm/chromeos-low_mem/"
-	a, err := readIntFromFile(sysdir + "available")
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	m, err := readFirstIntFromFile(sysdir + "margin")
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	r, err := readIntFromFile(sysdir + "ram_vs_swap_weight")
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	available = NewMemSizeMiB(a)
-	criticalMargin = NewMemSizeMiB(m)
-	ramWeight = r
-	return
-}
-
 // ProcessMemory returns the approximate amount of virtual memory (swapped or
 // not) currently allocated by processes.
 func ProcessMemory() (allocated MemSize, err error) {
@@ -548,10 +528,14 @@ func HasZram() bool {
 
 // LogMemoryParameters logs various kernel parameters as well as some
 // calculated quantities to help understand the memory manager behavior.
-func LogMemoryParameters(ctx context.Context, ratio float64) error {
-	available, margin, ramWeight, err := ChromeosLowMem()
+func LogMemoryParameters(ctx context.Context, ratio float64, rm *resourced.Client) error {
+	availableKiB, err := rm.AvailableMemoryKB(ctx)
 	if err != nil {
-		return errors.Wrap(err, "cannot obtain low-mem info")
+		return errors.Wrap(err, "cannot get available memory")
+	}
+	margins, err := rm.MemoryMarginsKB(ctx)
+	if err != nil {
+		return errors.Wrap(err, "cannot get memory margins")
 	}
 	hasZram := HasZram()
 	if !hasZram {
@@ -578,29 +562,11 @@ func LogMemoryParameters(ctx context.Context, ratio float64) error {
 		testing.ContextLog(ctx, "Cannot compute watermarks: ", err)
 	}
 
-	// swapReduction is the amount to be taken out of swapTotal because we
-	// start discarding before swap is full.  If ramWeight is large, free
-	// swap has little or no influence on available, and we assume all swap
-	// space can be used.
-	var swapReduction MemSize
-	if margin > wm.totalReserve {
-		swapReduction = (margin - wm.totalReserve) * MemSize(ramWeight)
-		if swapReduction > totalSwap {
-			swapReduction = 0
-		}
-	}
-	usableSwap := totalSwap - swapReduction
-	// maxProcess is the amount of allocated process memory at which the
-	// low-mem device triggers.
-	maxProcess := total - wm.totalReserve + MemSize(float64(usableSwap)*(1-ratio))
-	if maxProcess < process {
-		return errors.Errorf("bad process size calculation: max %v , current %v ", maxProcess, process)
-	}
 	testing.ContextLog(ctx, "Metrics: all memory sizes (RAM, swap, process) are in MiB")
 	testing.ContextLogf(ctx, "Metrics: meminfo: total %v, has zram %v", total, hasZram)
-	testing.ContextLogf(ctx, "Metrics: swap: total %v, used %d, usable %v", totalSwap, usedSwap, usableSwap)
-	testing.ContextLogf(ctx, "Metrics: low-mem: available %v, margin %v, RAM weight %v", available, margin, ramWeight)
+	testing.ContextLogf(ctx, "Metrics: swap: total %v, used %d", totalSwap, usedSwap)
+	testing.ContextLogf(ctx, "Metrics: low-mem: available %v KiB, critical margin %v KiB", availableKiB, margins.CriticalKB)
 	testing.ContextLogf(ctx, "Metrics: watermarks %v %v %v, total reserve %v", wm.min, wm.low, wm.high, wm.totalReserve)
-	testing.ContextLogf(ctx, "Metrics: process allocation: current %v, max %v, compression ratio %v", process, maxProcess, ratio)
+	testing.ContextLogf(ctx, "Metrics: process allocation: current %v, compression ratio %v", process, ratio)
 	return nil
 }

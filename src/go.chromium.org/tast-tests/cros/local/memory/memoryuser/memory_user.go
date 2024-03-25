@@ -23,6 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
+	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/ctxutil"
@@ -122,7 +123,7 @@ func prepareMemdLogging(ctx context.Context) error {
 
 // resetAndLogStats logs the VM stats from the provided kernelmeter with the identifying label,
 // then resets the meter.
-func resetAndLogStats(ctx context.Context, meter *kernelmeter.Meter, label string) {
+func resetAndLogStats(ctx context.Context, meter *kernelmeter.Meter, rm *resourced.Client, label string) {
 	defer meter.Reset()
 	stats, err := meter.VMStats()
 	if err != nil {
@@ -142,8 +143,8 @@ func resetAndLogStats(ctx context.Context, meter *kernelmeter.Meter, label strin
 	if swapInfo, err := mem.SwapMemory(); err == nil {
 		testing.ContextLogf(ctx, "Metrics: %s: free swap %v MiB", label, (swapInfo.Total-swapInfo.Used)/(1<<20))
 	}
-	if availableMiB, _, _, err := kernelmeter.ChromeosLowMem(); err == nil {
-		testing.ContextLogf(ctx, "Metrics: %s: available %v MiB", label, availableMiB)
+	if availableKiB, err := rm.AvailableMemoryKB(ctx); err == nil {
+		testing.ContextLogf(ctx, "Metrics: %s: available %v MiB", label, availableKiB/1024)
 	}
 	if m, err := kernelmeter.MemInfo(); err == nil {
 		testing.ContextLogf(ctx, "Metrics: %s: free %v MiB, anon %v MiB, file %v MiB", label, m.Free, m.Anon, m.File)
@@ -319,7 +320,7 @@ func startVM(ctx context.Context, te *TestEnv) error {
 }
 
 // runTask runs a MemoryTask.
-func runTask(ctx, taskCtx context.Context, task MemoryTask, te *TestEnv) error {
+func runTask(ctx, taskCtx context.Context, task MemoryTask, te *TestEnv, rm *resourced.Client) error {
 	taskMeter := kernelmeter.New(ctx)
 	defer taskMeter.Close(ctx)
 	if task.NeedVM() {
@@ -330,7 +331,7 @@ func runTask(ctx, taskCtx context.Context, task MemoryTask, te *TestEnv) error {
 	if err := task.Run(taskCtx, te); err != nil {
 		return errors.Wrapf(err, "failed to run memory task %s", task.String())
 	}
-	resetAndLogStats(ctx, taskMeter, task.String())
+	resetAndLogStats(ctx, taskMeter, rm, task.String())
 	return nil
 }
 
@@ -411,6 +412,11 @@ func RunTest(ctx context.Context, outDir string, tasks []MemoryTask, p *RunParam
 	testMeter := kernelmeter.New(ctx)
 	defer testMeter.Close(ctx)
 
+	rm, err := resourced.NewClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Resource Manager client")
+	}
+
 	taskCtx, taskCancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer taskCancel()
 
@@ -422,7 +428,7 @@ func RunTest(ctx context.Context, outDir string, tasks []MemoryTask, p *RunParam
 					task.Close(ctx, testEnv)
 					ch <- struct{}{}
 				}()
-				err = runTask(ctx, taskCtx, task, testEnv)
+				err = runTask(ctx, taskCtx, task, testEnv, rm)
 				if err != nil {
 					testing.ContextLog(ctx, "Failed to run task: ", err)
 					if errRet == nil {
@@ -440,7 +446,7 @@ func RunTest(ctx context.Context, outDir string, tasks []MemoryTask, p *RunParam
 		}
 	} else {
 		for _, task := range tasks {
-			err = runTask(ctx, taskCtx, task, testEnv)
+			err = runTask(ctx, taskCtx, task, testEnv, rm)
 			if err != nil {
 				return errors.Wrap(err, "failed to run task")
 			}
@@ -456,7 +462,7 @@ func RunTest(ctx context.Context, outDir string, tasks []MemoryTask, p *RunParam
 	}
 
 	setPerfValues(testMeter, testEnv.p, "full_test")
-	resetAndLogStats(ctx, testMeter, "full test")
+	resetAndLogStats(ctx, testMeter, rm, "full test")
 	if p.ExistingPerfValues == nil {
 		if err = testEnv.p.Save(outDir); err != nil {
 			return errors.Wrap(err, "cannot save perf data")

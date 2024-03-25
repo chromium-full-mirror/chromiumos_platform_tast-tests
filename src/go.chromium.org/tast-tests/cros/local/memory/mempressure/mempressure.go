@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/memory/kernelmeter"
 	"go.chromium.org/tast-tests/cros/local/memory/metrics"
+	"go.chromium.org/tast-tests/cros/local/resourced"
 	"go.chromium.org/tast-tests/cros/local/wpr"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -473,7 +474,7 @@ func runTabSwitches(ctx context.Context, tabs []*tab, outDir, label string, repe
 
 // runAndLogSwapStats runs f and outputs swap stats that correspond to its
 // execution.
-func runAndLogSwapStats(ctx context.Context, f func() error, meter *kernelmeter.Meter) error {
+func runAndLogSwapStats(ctx context.Context, f func() error, meter *kernelmeter.Meter, rm *resourced.Client) error {
 	meter.Reset()
 	if err := f(); err != nil {
 		return err
@@ -489,8 +490,8 @@ func runAndLogSwapStats(ctx context.Context, f func() error, meter *kernelmeter.
 	if swapInfo, err := mem.SwapMemory(); err == nil {
 		testing.ContextLogf(ctx, "Metrics: free swap %v MiB", (swapInfo.Total-swapInfo.Used)/(1<<20))
 	}
-	if availableMiB, _, _, err := kernelmeter.ChromeosLowMem(); err == nil {
-		testing.ContextLogf(ctx, "Metrics: available %v MiB", availableMiB)
+	if availableKiB, err := rm.AvailableMemoryKB(ctx); err == nil {
+		testing.ContextLogf(ctx, "Metrics: available %v MiB", availableKiB/1024)
 	}
 	if m, err := kernelmeter.MemInfo(); err == nil {
 		testing.ContextLogf(ctx, "Metrics: free %v MiB, anon %v MiB, file %v MiB", m.Free, m.Anon, m.File)
@@ -514,7 +515,7 @@ func closeTabs(ctx context.Context, tabs []*tab) (errRet error) {
 
 // runPhase1 runs the first phase of the test, creating a memory pressure situation by loading multiple tabs
 // into Chrome until the first tab discard occurs. Various measurements are taken as the pressure increases.
-func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, perfValues *perf.Values, tag string) (
+func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, rm *resourced.Client, perfValues *perf.Values, tag string) (
 	pinnedTabs, workTabs []*tab, numOpenedTabs, numLostTabs int, errRet error) {
 	tconn, err := br.TestAPIConn(ctx)
 	if err != nil {
@@ -628,7 +629,7 @@ func runPhase1(ctx context.Context, outDir string, br *browser.Browser, p *RunPa
 					return errors.Wrap(err, "tab LRU refresh error")
 				}
 				return nil
-			}, switchMeter); err != nil {
+			}, switchMeter, rm); err != nil {
 				return nil, nil, 0, 0, err
 			}
 		}
@@ -741,7 +742,7 @@ func runPhase3(ctx context.Context, outDir string, pinnedTabs []*tab, tabSwitchR
 }
 
 // runPhase1SeveralTimes runs phase1 p.OpenCloseRepeatCount times in a row, manually closing tabs between runs.
-func runPhase1SeveralTimes(ctx context.Context, outDir string, br *browser.Browser, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, perfValues *perf.Values, basemem *metrics.BaseMemoryStats, arc *arc.ARC) (
+func runPhase1SeveralTimes(ctx context.Context, outDir string, br *browser.Browser, p *RunParameters, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount int, fullMeter *kernelmeter.Meter, rm *resourced.Client, perfValues *perf.Values, basemem *metrics.BaseMemoryStats, arc *arc.ARC) (
 	errRet error) {
 	var openedTabCounts []int
 	totalOpenedTabs := 0
@@ -754,7 +755,7 @@ func runPhase1SeveralTimes(ctx context.Context, outDir string, br *browser.Brows
 
 	for i := 0; i < p.OpenCloseRepeatCount; i++ {
 		tag := fmt.Sprintf("_loop%d", i)
-		pinnedTabs, workTabs, numOpenedTabs, numLostTabs, err := runPhase1(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, perfValues, tag)
+		pinnedTabs, workTabs, numOpenedTabs, numLostTabs, err := runPhase1(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, tag)
 		if err != nil {
 			return err
 		}
@@ -877,6 +878,11 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	fullMeter := kernelmeter.New(ctx)
 	defer fullMeter.Close(ctx)
 
+	rm, err := resourced.NewClient(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create Resource Manager client")
+	}
+
 	perfValues := perf.NewValues()
 	defer func() {
 		if err = perfValues.Save(outDir); err != nil && errRet == nil {
@@ -886,7 +892,7 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 
 	// Log various system measurements, to help understand the memory
 	// manager behavior.
-	if err := kernelmeter.LogMemoryParameters(ctx, p.PageFileCompressionRatio); err != nil {
+	if err := kernelmeter.LogMemoryParameters(ctx, p.PageFileCompressionRatio, rm); err != nil {
 		return errors.Wrap(err, "cannot log memory parameters")
 	}
 
@@ -903,13 +909,13 @@ func Run(ctx context.Context, outDir string, br *browser.Browser, arc *arc.ARC, 
 	}
 
 	if p.OpenCloseRepeatCount != 0 {
-		return runPhase1SeveralTimes(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, perfValues, basemem, arc)
+		return runPhase1SeveralTimes(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, basemem, arc)
 	}
 
 	// -----------------
 	// Phase 1: Open several pinned tabs, and then continue to open more tabs until a tab is discarded.
 	// -----------------
-	pinnedTabs, workTabs, _, _, err := runPhase1(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, perfValues, "")
+	pinnedTabs, workTabs, _, _, err := runPhase1(ctx, outDir, br, p, initialTabSetSize, recentTabSetSize, tabSwitchRepeatCount, fullMeter, rm, perfValues, "")
 
 	defer func() {
 		tabs := append(pinnedTabs, workTabs...)
