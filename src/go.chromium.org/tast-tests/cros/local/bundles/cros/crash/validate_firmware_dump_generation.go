@@ -335,18 +335,19 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 		s.Fatal("Firmware dump file not generated error: ", e)
 	}
 
-	// Fail if no firmware dump is generated even when allowed by policy.
-	if !exist && firmwareDumpExpectedByPolicy(policyVal) {
-		s.Fatal("Firmware dump file not generated")
-	}
-
-	if exist {
-		// Fatal error if firmware dump is created when not allowed by policy.
-		if !firmwareDumpExpectedByPolicy(policyVal) {
-			s.Fatal("Firmware dump generated when not allowed by policy")
+	if !exist {
+		// Fail if no firmware dump is generated even when allowed by policy.
+		if firmwareDumpExpectedByPolicy(policyVal) {
+			s.Fatal("Firmware dump file not generated")
 		}
-		s.Log("Firmware dump file successfully generated")
+		s.Log("Firmware dump file not generated, as expected since policy disables the feature")
+		return nil
 	}
 
+	// Fatal error if firmware dump is created when not allowed by policy.
+	if !firmwareDumpExpectedByPolicy(policyVal) {
+		s.Fatal("Firmware dump generated when not allowed by policy")
+	}
+	s.Log("Firmware dump file successfully generated")
 	return nil
 }
