@@ -42,7 +42,6 @@ func init() {
 		SoftwareDeps: []string{
 			"chrome",
 			"android_vm",
-			"virtual_susupend_time_injection",
 			"no_qemu", /* TODO(b/209400676): Remove this once the issue on betty is fixed. */
 		},
 		ServiceDeps: []string{"tast.cros.arc.SuspendService"},
