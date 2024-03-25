@@ -156,6 +156,24 @@ func initChromeCaptureBaseFixtures() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     "chromeZeroCopyTabCaptureAndSWEncoding",
+		Desc:     "Logged into a user session with flag so that Chrome always picks the current tab for getDisplayMedia(), bypassing the picker UI with software encoding",
+		Contacts: []string{"chromeos-gfx-video@google.com"},
+		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
+			return []chrome.Option{
+				chrome.ExtraArgs(chromeVideoArgs...),
+				// Chrome automatically selects a tab page whose title contains "test".
+				chrome.ExtraArgs("--auto-select-tab-capture-source-by-title=test"),
+				chrome.ExtraArgs("--enable-features=ZeroCopyTabCapture"),
+				chrome.ExtraArgs("--disable-accelerated-video-encode"),
+			}, nil
+		}),
+		Parent:          "gpuWatchDog",
+		SetUpTimeout:    chrome.FixtureSetUpTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
 }
 
 func initChromeCaptureLacrosFixtures() {

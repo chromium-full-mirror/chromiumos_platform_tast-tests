@@ -1160,6 +1160,36 @@ func init() {
 				Fixture:           "chromeZeroCopyScreenCapture",
 			},
 			{
+				Name: "av1_1080p_tab_zero_copy_sw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifySWEncoderUsed,
+					Profile:           "AV1",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					DisplayMediaType:  peerconnection.CaptureTab,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_dec_av1_1080_30"},
+				Fixture:           "chromeZeroCopyTabCaptureAndSWEncoding",
+			},
+			{
+				Name: "av1_1080p_tab_zero_copy_hw_enc_hw_dec",
+				Val: peerconnection.RTCTestParams{
+					VerifyDecoderMode: peerconnection.VerifyHWDecoderUsed,
+					VerifyEncoderMode: peerconnection.VerifyHWEncoderUsed,
+					Profile:           "AV1",
+					StreamWidth:       1920,
+					StreamHeight:      1080,
+					DisplayMediaType:  peerconnection.CaptureTab,
+					BrowserType:       browser.TypeAsh,
+					TraceChromeEvents: true,
+				},
+				ExtraSoftwareDeps: []string{"autotest-capability:hw_enc_av1_1080_30", "autotest-capability:hw_dec_av1_1080_30"},
+				Fixture:           "chromeZeroCopyTabCapture",
+			},
+			{
 				Name: "h264_720p_hw_oopve_hw_dec",
 				Val: peerconnection.RTCTestParams{
 					VerifyDecoderMode:                     peerconnection.VerifyHWDecoderUsed,

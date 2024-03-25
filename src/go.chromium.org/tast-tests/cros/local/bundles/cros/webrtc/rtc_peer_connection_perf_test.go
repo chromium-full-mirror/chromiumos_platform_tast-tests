@@ -328,6 +328,33 @@ func TestRTCPeerConnectionPerfParams(t *testing.T) {
 			}
 		}
 	}
+
+	// AV1 screen sharing test cases.
+	for _, enc := range []encoderImpl{swEnc, hwEnc} {
+		dec := hwDec
+		paramData := rtcTestParamsData{
+			VerifyDecoderMode: toVerifyDecoderMode(dec),
+			VerifyEncoderMode: toVerifyEncoderMode(enc),
+			Profile:           "AV1",
+			StreamWidth:       k1080p.Width,
+			StreamHeight:      k1080p.Height,
+			DisplayMediaType:  "peerconnection.CaptureTab",
+			BrowserType:       "browser.TypeAsh",
+			TraceChromeEvents: true,
+		}
+		fixture := "chromeZeroCopyTabCapture"
+		if enc == swEnc {
+			fixture = "chromeZeroCopyTabCaptureAndSWEncoding"
+		}
+		sourceData := rtcPerfTestSourceData{
+			Name:         fmt.Sprintf("av1_1080p_tab_zero_copy_%s_hw_dec", enc),
+			ParamData:    paramData,
+			SoftwareDeps: softwareCodecsDeps("av1", enc, dec),
+			Fixture:      fixture,
+		}
+		sourceDatas = append(sourceDatas, sourceData)
+	}
+
 	// INP-VD and OOP-VE test cases.
 	for _, codec := range []string{"h264", "vp8", "vp9", "av1"} {
 		for _, ed := range [][]interface{}{
