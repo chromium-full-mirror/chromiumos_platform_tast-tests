@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"google.golang.org/grpc"
@@ -113,6 +114,12 @@ func PlugUnplugFlipDock(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to power on the docking station: ", err)
 	}
 	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
+		}
+	}(ctx)
 
 	usbDevices, err := utils.ConnectPeripheralsViaDock(ctx, dut, extDispID, ethernetID, usbDeviceIDs)
 	if err != nil {

@@ -13,6 +13,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/remote/dutfs"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
@@ -102,6 +103,12 @@ func DisconnectDisplayWhileShutdownDUT(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect to the docking station: ", err)
 		}
 	}
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
+		}
+	}(ctx)
 
 	displaySvc := wwcb.NewDisplayServiceClient(cl.Conn)
 	appsSvc := pb.NewAppsServiceClient(cl.Conn)

@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -92,6 +93,12 @@ func WindowsPersistenceWithSingleDisplay(ctx context.Context, s *testing.State) 
 			s.Fatal("Failed to connect docking station: ", err)
 		}
 	}
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
+		}
+	}(ctx)
 
 	if _, err := displaySvc.VerifyDisplayCount(ctx, &wwcb.QueryRequest{DisplayCount: 2}); err != nil {
 		s.Fatal("Failed to verify display count: ", err)

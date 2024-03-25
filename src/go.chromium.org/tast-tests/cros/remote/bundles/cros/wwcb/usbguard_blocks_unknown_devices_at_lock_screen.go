@@ -15,6 +15,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/services/cros/nearbyservice"
 	"go.chromium.org/tast/core/ctxutil"
@@ -89,6 +90,12 @@ func UsbguardBlocksUnknownDevicesAtLockScreen(ctx context.Context, s *testing.St
 		s.Fatal("Failed to initialize fixture: ", err)
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
+		}
+	}(ctx)
 
 	// Clear old crash file.
 	if err := dut.Conn().CommandContext(ctx, "sudo", "rm", "-r", "-f", "/var/spool/crash/").Run(exec.DumpLogOnError); err != nil {

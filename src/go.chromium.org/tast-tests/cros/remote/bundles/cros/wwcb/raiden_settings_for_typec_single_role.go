@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	pb "go.chromium.org/tast-tests/cros/services/cros/apps"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
@@ -94,6 +95,12 @@ func RaidenSettingsForTypecSingleRole(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to initialize fixture: ", err)
 	}
 	defer utils.CloseAllFixture(cleanupCtx)
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
+		}
+	}(ctx)
 
 	// Start Chrome on the DUT.
 	cs := ui.NewChromeServiceClient(cl.Conn)

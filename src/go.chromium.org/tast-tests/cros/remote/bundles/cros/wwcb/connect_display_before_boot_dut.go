@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 
 	"go.chromium.org/tast/core/ctxutil"
@@ -76,6 +77,12 @@ func ConnectDisplayBeforeBootDUT(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to connect to the docking station: ", err)
 		}
 	}
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
+		}
+	}(ctx)
 
 	waitCtx, cancel := context.WithTimeout(ctx, 120*time.Second)
 	defer cancel()

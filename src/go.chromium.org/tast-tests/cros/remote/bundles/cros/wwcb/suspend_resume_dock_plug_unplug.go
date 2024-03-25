@@ -11,6 +11,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/log"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/wwcb/utils"
 	"go.chromium.org/tast-tests/cros/services/cros/ui"
 	"go.chromium.org/tast/core/ctxutil"
@@ -109,6 +110,12 @@ func SuspendResumeDockPlugUnplug(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to power on the docking station: ", err)
 	}
 	defer utils.CloseIppower(cleanupCtx, ippowerPorts)
+
+	defer func(ctx context.Context) {
+		if s.HasError() {
+			log.CollectedLogs(ctx, s.DUT(), s.OutDir())
+		}
+	}(ctx)
 
 	if err := utils.ControlFixture(ctx, dockingID, "on"); err != nil {
 		s.Fatal("Failed to plug in the docking station: ", err)
