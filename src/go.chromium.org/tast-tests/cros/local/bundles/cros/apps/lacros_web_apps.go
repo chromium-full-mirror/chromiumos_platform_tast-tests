@@ -25,7 +25,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Tests installing and launching web apps with lacros",
 		Contacts: []string{
-			"chromeos-apps-foundation-team@google.com",
 			"lacros-team@google.com",
 		},
 		BugComponent: "b:1389084",
