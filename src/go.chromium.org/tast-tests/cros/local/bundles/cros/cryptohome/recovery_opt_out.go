@@ -40,6 +40,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:cryptohome",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"pinweaver"},
 		Fixture:      "ussAuthSessionFixture",

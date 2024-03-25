@@ -32,6 +32,7 @@ func init() {
 			"group:hardware",
 			"group:complementary",
 			"group:cryptohome",
+			"group:hw_agnostic",
 		},
 		Fixture: "ussAuthSessionFixture",
 		// For "no_tpm_dynamic" - see http://b/251789202.

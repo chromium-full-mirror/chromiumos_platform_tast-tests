@@ -41,7 +41,9 @@ func init() {
 			"group:golden_tier",
 			"group:medium_low_tier",
 			"group:hardware",
-			"group:complementary"},
+			"group:complementary",
+			"group:hw_agnostic",
+		},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
 			"ui.gaiaPoolDefault",
