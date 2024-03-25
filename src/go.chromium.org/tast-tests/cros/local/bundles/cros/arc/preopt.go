@@ -28,7 +28,7 @@ func init() {
 			ExtraSoftwareDeps: []string{"android_container"},
 		}, {
 			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
+			ExtraSoftwareDeps: []string{"android_vm", "no_qemu"},
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 30*time.Second,
 	})
