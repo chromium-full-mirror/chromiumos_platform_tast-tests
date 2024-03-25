@@ -152,19 +152,19 @@ func PasspointSubscriptionDetailUI(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify the domain name on the subscription detail page: ", err)
 	}
 
-	if err := ui.Exists(nodewith.NameContaining(passpoint.PasspointProvider).Role(role.GenericContainer))(ctx); err != nil {
+	if err := ui.Exists(nodewith.NameContaining(passpoint.PasspointProvider).Role(role.StaticText))(ctx); err != nil {
 		s.Fatal("Failed to verify the passpoint provider label on the subscription detail page: ", err)
 	}
 
-	if err := ui.Exists(nodewith.NameContaining(passpoint.PasspointApp).Role(role.GenericContainer))(ctx); err != nil {
+	if err := ui.Exists(nodewith.NameContaining(passpoint.PasspointApp).Role(role.StaticText))(ctx); err != nil {
 		s.Fatal("Failed to verify the passpoint app name on the subscription detail page: ", err)
 	}
 
-	if err := ui.Exists(nodewith.NameContaining(passpoint.TrustedCA).Role(role.GenericContainer))(ctx); err != nil {
+	if err := ui.Exists(nodewith.NameContaining(passpoint.TrustedCA).Role(role.StaticText))(ctx); err != nil {
 		s.Fatal("Failed to verify the trusted CA label on the subscription detail page: ", err)
 	}
 
-	if err := ui.Exists(nodewith.NameContaining(passpoint.SystemCA).Role(role.GenericContainer))(ctx); err != nil {
+	if err := ui.Exists(nodewith.NameContaining(passpoint.SystemCA).Role(role.StaticText))(ctx); err != nil {
 		s.Fatal("Failed to verify the cert provider name on the subscription detail page: ", err)
 	}
 
