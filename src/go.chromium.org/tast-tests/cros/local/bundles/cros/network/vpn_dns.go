@@ -12,6 +12,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/testexec"
+	"go.chromium.org/tast-tests/cros/local/network/dumputil"
 	"go.chromium.org/tast-tests/cros/local/network/ping"
 	"go.chromium.org/tast-tests/cros/local/network/routing"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet"
@@ -61,6 +62,10 @@ func VPNDNS(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer cancel()
+
+	// Dump network info on failure.
+	errorHandler := dumputil.CreateErrorHandler(cleanupCtx)
+	s.AttachErrorHandlers(errorHandler, errorHandler)
 
 	// Set up test topology:
 	// DUT---router---server (w/DNS: v?.foo.bar)
