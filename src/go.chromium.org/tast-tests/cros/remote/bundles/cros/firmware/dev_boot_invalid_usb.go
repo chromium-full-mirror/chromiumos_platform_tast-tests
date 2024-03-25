@@ -90,7 +90,7 @@ func init() {
 					firmware.MenuSwitcher: []fwCommon.FwScreenID{
 						fwCommon.DeveloperMode,
 						fwCommon.DeveloperInvalidDisk,
-						fwCommon.DeveloperBootExternal,
+						fwCommon.DeveloperMode,
 					},
 				},
 				expectedBootMode: fwCommon.BootModeUSBDev,
@@ -234,10 +234,9 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	case fromUSB:
 		devScreenBootSteps = []func(ctx context.Context, h *firmware.Helper) error{
 			ctrlUBootFromUSB,
+			enterKeyBackToDevScreen,
 			curUSBState.restoreUSB,
-		}
-		if h.Config.ModeSwitcherType != firmware.MenuSwitcher {
-			devScreenBootSteps = append(devScreenBootSteps, ctrlUBootFromUSB)
+			ctrlUBootFromUSB,
 		}
 		connectionTimeout = h.Config.USBImageBootTimeout
 	case fromInternal:
@@ -348,6 +347,7 @@ func (usb *usbState) restoreUSB(ctx context.Context, h *firmware.Helper) error {
 	if err := h.RestoreUSBKey(ctx); err != nil {
 		return errors.Wrap(err, "failed to restore the USB")
 	}
+	usb.isCorrupted = false
 	if err := returnToDeveloperScreen(ctx, h); err != nil {
 		return errors.Wrap(err, "failed to return to developer screen")
 	}
@@ -368,6 +368,17 @@ func ctrlUBootFromUSB(ctx context.Context, h *firmware.Helper) error {
 	testing.ContextLog(ctx, "Pressing Ctrl-U")
 	if err := h.Servo.KeypressWithDuration(ctx, servo.CtrlU, servo.DurTab); err != nil {
 		return errors.Wrap(err, "failed to press Ctrl-U")
+	}
+	return nil
+}
+
+func enterKeyBackToDevScreen(ctx context.Context, h *firmware.Helper) error {
+	if h.Config.ModeSwitcherType != firmware.MenuSwitcher {
+		return nil
+	}
+	testing.ContextLog(ctx, "Pressing Enter")
+	if err := h.Servo.KeypressWithDuration(ctx, servo.Enter, servo.DurTab); err != nil {
+		return errors.Wrap(err, "failed to press Enter")
 	}
 	return nil
 }
