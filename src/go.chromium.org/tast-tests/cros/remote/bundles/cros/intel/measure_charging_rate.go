@@ -32,7 +32,7 @@ type chargingRateTestParam struct {
 
 const (
 	requiredBatteryPercent = 70
-	maxBatteryPercent      = 100.00
+	maxBatteryPercent      = 97.00
 	chargeCheckInterval    = time.Minute
 	chargeCheckTimeout     = 90 * time.Minute
 	batteryLevelTimeout    = 20 * time.Second // default servo comm timeout is 10s, battery check requires two.
@@ -117,7 +117,7 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 		request := power.BatteryRequest{
 			MinPercentage:         minPercentage,
 			MaxPercentage:         requiredBatteryPercent,
-			DischargeOnCompletion: true,
+			DischargeOnCompletion: false,
 		}
 		if _, err := client.PrepareBattery(ctx, &request); err != nil {
 			s.Fatal("Failed to drain battery: ", err)
@@ -209,18 +209,18 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 		if err := waitForCharge(ctx, h, maxBatteryPercent); err != nil {
 			s.Fatalf("Failed to reach target %v%%, %v", maxBatteryPercent, err.Error())
 		}
-
 	} else {
 		slpOpSetPre, pkgOpSetPre, err := powercontrol.SlpAndC10PackageValues(ctx, h.DUT)
 		if err != nil {
 			s.Fatal("Failed to get SLP counter and C10 package values before suspend-resume: ", err)
 		}
 
+		startTime := time.Now()
+
 		// Emulate DUT lid closing.
 		if err := h.Servo.CloseLid(ctx); err != nil {
 			s.Fatal("Failed to close DUT's lid: ", err)
 		}
-
 		testing.Poll(ctx, func(ctx context.Context) error {
 			s.Log("Checking lid state after closing lid")
 			lidState, err := h.Servo.LidOpenState(ctx)
@@ -233,8 +233,8 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 10 * time.Second})
+		defer h.Servo.OpenLid(cleanupCtx)
 
-		startTime := time.Now()
 		chargeBeforeSleep, err := getChargePercentage(ctx, h)
 		if err != nil {
 			s.Fatal("Failed to get battery level: ", err)
@@ -263,6 +263,7 @@ func MeasureChargingRate(ctx context.Context, s *testing.State) {
 		if err := waitForCharge(ctx, h, maxBatteryPercent); err != nil {
 			s.Fatalf("Failed to reach target %v%%, %v", maxBatteryPercent, err.Error())
 		}
+
 		// Emulate DUT lid opening.
 		if err := h.Servo.OpenLid(ctx); err != nil {
 			s.Fatal("Failed to open DUT's lid: ", err)
