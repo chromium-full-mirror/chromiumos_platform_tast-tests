@@ -147,7 +147,7 @@ func (c *Concierge) listVMDisksSize(ctx context.Context, vmName string) (size ui
 
 // CreateDiskImage created a disk image of size |diskSize| for the VM of name |vmName|.
 func (c *Concierge) CreateDiskImage(ctx context.Context, diskSize uint64, vmName string) (diskPath string, err error) {
-	createDiskImageMethodName := conciergeInterface + ".CreateDiskImage2"
+	createDiskImageMethodName := conciergeInterface + ".CreateDiskImage"
 
 	resp := &vmpb.CreateDiskImageResponse{}
 	request := vmpb.CreateDiskImageRequest{
