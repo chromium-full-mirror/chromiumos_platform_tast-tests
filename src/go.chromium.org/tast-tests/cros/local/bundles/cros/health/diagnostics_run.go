@@ -57,15 +57,6 @@ func init() {
 			ExtraSoftwareDeps: []string{"nvme"},
 			ExtraHardwareDeps: hwdep.D(hwdep.Nvme(), hwdep.NvmeSelfTest()),
 		}, {
-			// Contact: dennyh@google.com
-			Name:    "nvme_wear_level",
-			Val:     croshealthd.NewRoutineParams(croshealthd.RoutineNVMEWearLevel),
-			Fixture: "crosHealthdRunning",
-			// nvme_wear_level requires specific offsets in the nvme log that
-			// are only currently defined for wilco devices.
-			ExtraSoftwareDeps: []string{"nvme", "wilco"},
-			ExtraHardwareDeps: hwdep.D(hwdep.Nvme()),
-		}, {
 			// Contact: weiluanwang@google.com
 			Name:      "captive_portal",
 			Val:       croshealthd.NewRoutineParams(croshealthd.RoutineCaptivePortal),

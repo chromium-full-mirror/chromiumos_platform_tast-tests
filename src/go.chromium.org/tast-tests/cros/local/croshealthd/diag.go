@@ -7,14 +7,12 @@ package croshealthd
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast-tests/cros/local/upstart"
@@ -33,7 +31,6 @@ const (
 	RoutineCPUCache                       = "cpu_cache"
 	RoutineCPUStress                      = "cpu_stress"
 	RoutineFloatingPointAccurary          = "floating_point_accuracy"
-	RoutineNVMEWearLevel                  = "nvme_wear_level"
 	RoutineNVMESelfTest                   = "nvme_self_test"
 	RoutineDiskRead                       = "disk_read"
 	RoutinePrimeSearch                    = "prime_search"
@@ -141,14 +138,7 @@ func RunDiagRoutine(ctx context.Context, params RoutineParams) (*RoutineResult, 
 	if params.Cancel {
 		diagParams = append(diagParams, "--force_cancel_at_percent=5")
 	}
-	if params.Routine == RoutineNVMEWearLevel {
-		const defaultNVMEWearLevelThreshold = 50
-		threshold, err := getNVMEWearLevelThreshold(ctx, defaultNVMEWearLevelThreshold)
-		if err != nil {
-			return nil, errors.Wrap(err, "failed to prepare NVME wear-level-threshold")
-		}
-		diagParams = append(diagParams, fmt.Sprintf("--wear_level_threshold=%d", threshold))
-	} else if params.Routine == RoutineBluetoothScanning {
+	if params.Routine == RoutineBluetoothScanning {
 		// Default runtime for Bluetooth scanning routine is 5 seconds.
 		diagParams = append(diagParams, "--length_seconds=5")
 	} else if params.Routine == RoutineMemory {
@@ -302,25 +292,6 @@ func runPowerButtonDiag(ctx context.Context, args []string) (string, error) {
 		return "", errors.Wrap(err, "failed to wait command")
 	}
 	return stdoutBuf.String(), nil
-}
-
-// getNVMEWearLevelThreshold reads the threshold value for NVME wear level from
-// cros-config. Fallback to `defaultValue` if the corresponding property is not
-// defined in cros-config.
-func getNVMEWearLevelThreshold(ctx context.Context, defaultValue int) (int, error) {
-	thresholdStr, err := crosconfig.Get(ctx, "/cros-healthd/routines/nvme-wear-level", "wear-level-threshold")
-	if err != nil {
-		if crosconfig.IsNotFound(err) {
-			return defaultValue, nil
-		}
-		return 0, errors.Wrap(err, "failed to invoke cros_config for wear-level-threshold")
-	}
-
-	threshold, err := strconv.Atoi(thresholdStr)
-	if err != nil {
-		return 0, errors.Wrapf(err, "Unable to parse wear-level-threshold in cros_config %q to int", thresholdStr)
-	}
-	return threshold, nil
 }
 
 // parseDiagOutput is a helper function that takes the `raw` output from running a
