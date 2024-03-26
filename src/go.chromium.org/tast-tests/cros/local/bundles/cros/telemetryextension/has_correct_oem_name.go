@@ -43,9 +43,8 @@ func init() {
 }
 
 // HasCorrectOEMName tests that DUT has correct OEM name which comes from
-//   - /sys/devices/virtual/dmi/id/sys_vendor (old approach) or
-//   - /sys/firmware/vpd/ro/oem_name (new approach for unreleased models) or
-//   - CrOSConfig (new approach).
+//   - CrOSConfig or
+//   - /sys/firmware/vpd/ro/oem_name (for unreleased models).
 func HasCorrectOEMName(ctx context.Context, s *testing.State) {
 	oemName, ok := s.Param().(string)
 	if !ok {
