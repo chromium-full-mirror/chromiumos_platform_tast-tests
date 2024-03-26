@@ -227,10 +227,10 @@ func (uda *Context) attemptClickUntilSuccess(s *Finder, button mouse.Button) uia
 }
 
 // clickUntil returns a function that uses the specified mouse button on the
-// finder until the condition returns no error.
+// finder until the condition returns no error. It always clicks at least once.
 func (uda *Context) clickUntil(finder *Finder, condition func(context.Context) error, button mouse.Button) uiauto.Action {
 	return func(ctx context.Context) error {
-		if err := uda.click(finder, button)(ctx); err != nil {
+		if err := uda.attemptClickUntilSuccess(finder, button)(ctx); err != nil {
 			return errors.Wrap(err, "failed to initially click the element")
 		}
 		// GoBigSleepLint: Wait a little bit before polling `condition`.
