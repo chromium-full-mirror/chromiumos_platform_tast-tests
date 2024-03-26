@@ -279,15 +279,27 @@ func verifyTestESIMProfileWasInstalled(ctx context.Context, e *mojo.Euicc, profi
 	if err != nil {
 		return errors.Wrap(err, "error requesting available profiles")
 	}
-	if len(availableProfiles) == 0 {
+	numProfiles := len(availableProfiles)
+	if numProfiles == 0 {
 		return errors.New("failed to get any profiles")
 	}
-
-	if availableProfiles[0].Iccid != profileICCID {
-		return errors.Errorf("profile ICCID mismatch, got=%s, want=%s", availableProfiles[0].Iccid, profileICCID)
+	if numProfiles > 1 {
+		testing.ContextLogf(ctx, "Expected 1 profile, found %d", numProfiles)
 	}
-
-	return nil
+	for _, profile := range availableProfiles {
+		if profile.Iccid != profileICCID {
+			continue
+		}
+		properties, err := profile.Properties(ctx)
+		if err != nil {
+			return errors.New("failed to retrieve properties for profile with matching ICCID")
+		}
+		if properties.State == mojo.ProfileStatePending || properties.State == mojo.ProfileStateInstalling {
+			return errors.Errorf("unexpected profile state, got: %d, want: %d or %d", properties.State, mojo.ProfileStateInactive, mojo.ProfileStateActive)
+		}
+		return nil
+	}
+	return errors.Errorf("failed to find installed profile with ICCID of %s", profileICCID)
 }
 
 func resetEUICCMemory(ctx context.Context, euicc *hermes.EUICC) error {
