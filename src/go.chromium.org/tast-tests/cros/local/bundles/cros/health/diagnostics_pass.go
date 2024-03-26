@@ -119,14 +119,12 @@ func init() {
 			Name:              "fingerprint",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
 			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
 			// Contact: kerker@google.com
 			Name:              "fingerprint_alive",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
 			Fixture:           "crosHealthdRunning",
-			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
 		}, {
 			// Contact: dennyh@google.com

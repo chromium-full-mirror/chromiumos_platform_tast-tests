@@ -128,22 +128,6 @@ func init() {
 			// TODO(b/280388091): Promote to critical.
 			ExtraAttr: []string{"informational"},
 		}, {
-			// Contact: kerker@google.com
-			Name:              "fingerprint",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprint),
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
-			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
-			// Contact: kerker@google.com
-			Name:              "fingerprint_alive",
-			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineFingerprintAlive),
-			Fixture:           "crosHealthdRunning",
-			ExtraHardwareDeps: hwdep.D(hwdep.FingerprintDiagSupported()),
-			// TODO(b/279374234): Promote to critical.
-			ExtraAttr: []string{"informational"},
-		}, {
 			// Contact: dennyh@google.com
 			Name:              "emmc_lifetime",
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
