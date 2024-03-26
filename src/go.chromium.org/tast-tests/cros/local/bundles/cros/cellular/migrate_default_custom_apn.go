@@ -29,7 +29,7 @@ func init() {
 			"hsuregan@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_amari_callbox"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_amari_callbox"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellularResetShillProfileOnPostTest",
 		Timeout:      10 * time.Minute,
