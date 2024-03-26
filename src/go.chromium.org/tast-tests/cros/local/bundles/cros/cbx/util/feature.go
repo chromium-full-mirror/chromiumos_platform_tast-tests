@@ -28,6 +28,7 @@ func CbxFeatures() []string {
 		"TimeOfDayWallpaper",
 		"FeatureAwareDeviceDemoMode",
 		"VideoConference",
+		"Orca",
 	}
 }
 
