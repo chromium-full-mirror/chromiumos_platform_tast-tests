@@ -88,16 +88,22 @@ func ConnectDisconnect(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get network detailed view: ", err)
 	}
 
-	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(networkDetailedView)
-	connectedQuickSettingsLabel := nodewith.Role(role.StaticText).NameRegex(regexp.MustCompile("Connected")).Ancestor(cellularNetworkQuickSettingsView)
+	// If there are multiple cellular networks with the same name, the currently connected network will always appear first in the list.
+	cellularNetworkQuickSettingsView := nodewith.Role(role.Button).NameRegex(regexp.MustCompile(networkName)).Ancestor(networkDetailedView).First()
+	connectedQuickSettingsLabel := nodewith.Role(role.StaticText).NameContaining("Connected").Ancestor(cellularNetworkQuickSettingsView)
 
 	if err := ui.WithTimeout(15 * time.Second).WaitUntilExists(connectedQuickSettingsLabel)(ctx); err != nil {
 		s.Fatal("Failed to verify network is connected in Quick Settings: ", err)
 	}
 
+	// Quicksettings may be blocking the settings view.
+	if err := quicksettings.Hide(ctx, tconn); err != nil {
+		s.Fatal("Failed to hide Quicksettings: ", err)
+	}
+
 	if err := uiauto.Combine("Disconnect network in OS Settings",
-		mdp.LeftClick(ossettings.DisconnectButton),
-		mdp.WithTimeout(15*time.Second).WaitUntilExists(ossettings.ConnectButton),
+		mdp.LeftClick(ossettings.DisconnectButton.Focusable()),
+		mdp.WithTimeout(15*time.Second).WaitUntilExists(ossettings.ConnectButton.Focusable()),
 	)(ctx); err != nil {
 		s.Fatal("Failed to disconnect cellular network in OS Settings: ", err)
 	}
