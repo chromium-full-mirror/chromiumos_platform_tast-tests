@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"net"
 	"path/filepath"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -579,8 +580,22 @@ func (r *Router) phy(ctx context.Context, channel, opClass int, t iw.IfType) (in
 	if err != nil {
 		return 0, errors.Errorf("channel %d not available", channel)
 	}
-	// Try to find an idle phy which is suitable.
-	for id, phy := range r.phys {
+
+	// Extract phy ids in ascending order from phys map.
+	// This ensures that phys are enumerated in ascending order from
+	// the 2.4ghz band.
+	var ids = []int{}
+	for id := range r.phys {
+		ids = append(ids, id)
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		return ids[i] < ids[j]
+	})
+
+	// Find the first idle phy (from phy list in ascending order) which is
+	// suitable.
+	for id := range ids {
+		phy := r.phys[id]
 		if r.im.IsPhyBusy(id, t) {
 			continue
 		}
@@ -588,8 +603,10 @@ func (r *Router) phy(ctx context.Context, channel, opClass int, t iw.IfType) (in
 			return id, nil
 		}
 	}
-	// Try to find any phy which is suitable, even a busy one.
-	for id, phy := range r.phys {
+	// Try to find the available phy (from phy list in ascending order), even
+	// a busy one.
+	for id := range ids {
+		phy := r.phys[id]
 		if phySupportsFrequency(phy, freq) {
 			return id, nil
 		}
