@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const osSettingsSurfaceName = "OS Settings"
@@ -63,8 +64,9 @@ func init() {
 				},
 			},
 			{
-				Name:      "os_settings__cellular",
-				ExtraAttr: []string{"group:cellular"},
+				Name:              "os_settings__cellular",
+				ExtraAttr:         []string{"group:cellular", "cellular_unstable"},
+				ExtraHardwareDeps: hwdep.D(hwdep.Cellular()),
 				Val: &connectivitySurfacesTestCase{
 					name: osSettingsSurfaceName,
 					openSurface: func(ctx context.Context, tconn *chrome.TestConn) (func(context.Context), error) {
