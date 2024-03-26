@@ -467,6 +467,10 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 			"--workers_per_cpu="+strconv.Itoa(defaultStressWorker))
 	}
 
+	//GoBigSleepLint: Wait for the system being stablized.
+	testing.ContextLog(ctx, "Sleep 60 seconds")
+	testing.Sleep(ctx, 60*time.Second)
+
 	if param.Tracer {
 		testing.ContextLog(ctx, "Start trace-cmd")
 
