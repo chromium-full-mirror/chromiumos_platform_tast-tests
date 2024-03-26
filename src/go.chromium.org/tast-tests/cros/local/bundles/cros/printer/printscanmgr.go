@@ -40,7 +40,7 @@ func init() {
 	})
 }
 
-func pageNotAPrinter(w http.ResponseWriter, req *http.Request) {
+func pageStatusCheck(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("It is not a printer!"))
@@ -48,7 +48,7 @@ func pageNotAPrinter(w http.ResponseWriter, req *http.Request) {
 
 func Printscanmgr(ctx context.Context, s *testing.State) {
 	// Start a local HTTP server on port 7001.
-	http.HandleFunc("/not_a_printer", pageNotAPrinter)
+	http.HandleFunc("/printscanmgr_status", pageStatusCheck)
 	server := &http.Server{Addr: ":7001"}
 	go server.ListenAndServe()
 	defer server.Shutdown(ctx)
@@ -118,7 +118,7 @@ func Printscanmgr(ctx context.Context, s *testing.State) {
 
 	// Make sure that the HTTP server on port 7001 is ready.
 	getPage := func(ctx context.Context) error {
-		httpReq, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:7001/not_a_printer", nil)
+		httpReq, err := http.NewRequestWithContext(ctx, "GET", "http://localhost:7001/printscanmgr_status", nil)
 		if err == nil {
 			var res *http.Response
 			res, err = http.DefaultClient.Do(httpReq)
