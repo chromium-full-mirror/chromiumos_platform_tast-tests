@@ -132,8 +132,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, system
 		return nil, errors.Wrap(err, "failed to enable Docs offline support")
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "failure")
-
 	// paragraphs will be all the paragraphs we will type during the test.
 	paragraphs := getParagraphs(pc, cr, tconn, conn, ac, kw)
 
@@ -188,11 +186,12 @@ func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, system
 		}
 	}(cleanUpDocCtx)
 
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "failure")
+
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		recorder.Annotate(ctx, "Open_new_Google_Doc")
 
 		const docsURL = "https://docs.new"
-		var docsHref string
 
 		if err := conn.Navigate(ctx, docsURL); err != nil {
 			return errors.Wrapf(err, "failed to navigate to %q", docsURL)
