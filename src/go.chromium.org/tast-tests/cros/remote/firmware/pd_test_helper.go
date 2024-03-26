@@ -222,10 +222,10 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 // ShutdownDUT is a helper function for commanding the DUT to shutdown and waiting
 // until it does so with a timeout.
 func ShutdownDUT(ctx context.Context, h *Helper) error {
-	// Run shutdown command via SSH
+	// Set power_state:off via servo
 	testing.ContextLog(ctx, "Shutting down DUT")
-	if err := h.DUT.Conn().CommandContext(ctx, "/sbin/shutdown", "-P", "now").Start(); err != nil {
-		return errors.Wrap(err, "failed to run `/sbin/shutdown -P now` cmd")
+	if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
+		return errors.Wrap(err, "failed to set power_state:off")
 	}
 
 	// Wait for shutdown
