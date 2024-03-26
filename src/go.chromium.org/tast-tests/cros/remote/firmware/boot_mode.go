@@ -813,13 +813,16 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			}
 		}
 	}
-	// TODO(b/265193946): Remove this when dedede RO is fixed.
-	if h.Board == "dedede" {
-		// According to Stainless, some DUTs were stuck at G3 while
-		// booting to recovery mode. Their ec logs reported that they
-		// were experiencing thermal shutdown. Match for the relevant
-		// texts and report in the returned error. If thermal shutdown
-		// is caught, attempt a few more retries to boot dut to recovery.
+	if h.Board == "dedede" || h.Board == "corsola" {
+		// According to the results on Testhaus, we found:
+		// 1. Some DUTs were stuck at G3 while booting to recovery mode.
+		// Their ec logs reported that they were experiencing thermal shutdown.
+		// 2. Some DUTs will do a soft reboot after capturing panic message
+		// such as "ASSERTION FAILURE at chip/npcx/flash.c" or
+		// "ZEPHYR FATAL ERROR 2: Stack overflow on CPU 0".
+		// Match for the relevant texts and report in the returned error.
+		// If these messages are caught, attempt a few more retries to boot
+		// dut to recovery screen.
 		var ecStream string
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
 			closeUART, err := h.Servo.EnableUARTCapture(ctx, servo.ECUARTCapture)
@@ -855,12 +858,16 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 			}
 			ecStream = out
 
-			// Based on chipset_shutdown_reason defined in ec_command.h found under the
-			// ec repo, 32776 would refer to thermal shutdown.
 			var (
+				// Based on chipset_shutdown_reason defined in ec_command.h found under the
+				// ec repo, 32776 would refer to thermal shutdown.
 				regexpThermalShutdown      = `(?i)thermal shutdown`
 				regexpShutdownReason       = `chipset_force_shutdown\(\)\s+32776`
 				regexpMatchThermalShutdown = `(` + regexpThermalShutdown + `|` + regexpShutdownReason + `)`
+
+				regexpAssertionFailure   = `ASSERTION FAILURE`
+				regexpMatchStackOverflow = `Stack overflow`
+				regexpPanicReason        = `(` + regexpAssertionFailure + `|` + regexpMatchStackOverflow + `)`
 			)
 			thermalShutdown := regexp.MustCompile(regexpMatchThermalShutdown).FindStringSubmatch(ecStream)
 			if len(thermalShutdown) != 0 {
@@ -872,6 +879,11 @@ func (ms *ModeSwitcher) EnableRecMode(ctx context.Context, recType servo.PowerSt
 				if currPowerState == "G3" {
 					return errors.Errorf("captured %s at G3 after rebooting dut to recovery", thermalShutdown)
 				}
+			}
+			panicReason := regexp.MustCompile(regexpPanicReason).FindStringSubmatch(ecStream)
+			if len(panicReason) != 0 {
+				testing.ContextLogf(ctx, "Warning!!! Captured %s", panicReason[1])
+				return errors.Errorf("captured %s after rebooting dut to recovery screen", panicReason[1])
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: 3 * time.Minute, Interval: 3 * time.Second}); err != nil {
