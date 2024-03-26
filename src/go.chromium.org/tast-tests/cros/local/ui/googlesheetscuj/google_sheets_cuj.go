@@ -161,8 +161,6 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
-
 	if err := cuj.WaitForValidAccountInCookieJar(ctx, br, tconn); err != nil {
 		return nil, errors.Wrap(err, "failed to wait for valid account in cookie jar")
 	}
@@ -175,6 +173,8 @@ func Run(ctx context.Context, cr *chrome.Chrome, testParam TestParam, outDir, sy
 	testing.ContextLog(ctx, "Copied Google Sheets file in ", time.Since(copySheetsStartTime))
 
 	defer googledocs.DeleteSheetsWithURL(tconn, cr, sheetURL, outDir)(closeCtx)
+
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "ui_dump")
 
 	if err := recorder.Run(ctx, func(ctx context.Context) error {
 		// Open Google Sheets file.
