@@ -69,7 +69,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}},
+						{effects: 0x11},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectEnabled,
@@ -88,7 +88,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x0"}},
+						{effects: 0x0},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
@@ -107,7 +107,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x10"}},
+						{effects: 0x10},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
@@ -126,8 +126,8 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x10"}},
-						{flags: []string{"--effects=0x11"}},
+						{effects: 0x10},
+						{effects: 0x11},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
@@ -146,10 +146,10 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{
-							"--effects=0x0",
-							"--client_type=5", // CRAS_CLIENT_TYPE_ARC
-						}},
+						{
+							effects:    0x0,
+							clientType: 5, // CRAS_CLIENT_TYPE_ARC
+						},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled,
@@ -168,8 +168,8 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}},
-						{flags: []string{"--effects=0x0"}},
+						{effects: 0x11},
+						{effects: 0x0},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
@@ -188,11 +188,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}},
-						{flags: []string{
-							"--effects=0x0",
-							"--client_type=5", // CRAS_CLIENT_TYPE_ARC
-						}},
+						{effects: 0x11},
+						{
+							effects:    0x0,
+							clientType: 5, // CRAS_CLIENT_TYPE_ARC
+						},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectEnabled,
@@ -211,7 +211,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}},
+						{effects: 0x11},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled, // Blocked by echo reference: user selection.
@@ -231,7 +231,7 @@ func init() {
 					outputDevice:             "INTERNAL_SPEAKER",
 					addPlaybackPinDevice:     "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}},
+						{effects: 0x11},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled, // Blocked by echo reference: playback.
@@ -251,7 +251,7 @@ func init() {
 					outputDevice:             "INTERNAL_SPEAKER",
 					addPlaybackPinDevice:     "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}},
+						{effects: 0x11},
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectEnabled,
@@ -271,7 +271,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectEnabled,
@@ -290,7 +290,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectEnabled,
@@ -309,7 +309,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled,
@@ -328,7 +328,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x11"}}, // Set AEC on to avoid blocking DSP NC.
+						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectDisabled,
@@ -348,7 +348,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
+						{effects: 0}, // Effects=0 should not block.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectUnavailable,
@@ -367,7 +367,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
+						{effects: 0}, // Effects=0 should not block.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectUnavailable,
@@ -386,7 +386,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0"}}, // Effects=0 should not block.
+						{effects: 0}, // Effects=0 should not block.
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					expectEffects: effects{
@@ -406,7 +406,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
+						{effects: 0x1}, // Effects=1 should not block.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectUnavailable,
@@ -425,7 +425,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
+						{effects: 0x1}, // Effects=1 should not block.
 					},
 					expectEffects: effects{
 						DSPAEC:  internal.EffectUnavailable,
@@ -444,7 +444,7 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{flags: []string{"--effects=0x1"}}, // Effects=1 should not block.
+						{effects: 0x1}, // Effects=1 should not block.
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					expectEffects: effects{
@@ -480,7 +480,18 @@ type effects struct {
 }
 
 type captureConfig struct {
-	flags []string
+	effects    uint
+	clientType uint
+}
+
+func (cc captureConfig) flags() []string {
+	flags := []string{
+		fmt.Sprintf("--effects=0x%x", cc.effects),
+	}
+	if cc.clientType != 0 {
+		flags = append(flags, fmt.Sprintf("--client_type=%d", cc.clientType))
+	}
+	return flags
 }
 
 func toggleInputNoiseCancellation(ctx context.Context, s *testing.State, tconn *chrome.TestConn, state checked.Checked) {
@@ -589,7 +600,7 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 				"-C", "/dev/null",
 				"--block_size=480",
 			)
-			cmd.Args = append(cmd.Args, config.flags...)
+			cmd.Args = append(cmd.Args, config.flags()...)
 			s.Log("Running capture with: ", cmd)
 			if err := cmd.Run(); err != nil && ctx.Err() == nil {
 				// Error happened not due to context cancelled.
