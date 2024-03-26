@@ -21,6 +21,7 @@ import (
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/ssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -64,11 +65,12 @@ func init() {
 }
 
 const (
-	minResuspendResumeTime = 5
-	maxResuspendResumeTime = 10 // Sets time range between [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime).
-	suspendDuration        = 15
-	powerdDelayDur         = 3
-	checkFrequency         = 100 // Sets how often (in iterations) login, tpm, and ectool are checked. Always checked on last iteration.
+	minSuspendResumeTime = 3
+	maxSuspendResumeTime = 10 // Sets time range between [minSuspendResumeTime, minSuspendResumeTime + maxSuspendResumeTime).
+	minResumeTime        = 3
+	maxResumeTime        = 5
+	powerdDelayDur       = 3
+	checkFrequency       = 100 // Sets how often (in iterations) login, tpm, and ectool are checked. Always checked on last iteration.
 )
 
 func SuspendStress(ctx context.Context, s *testing.State) {
@@ -95,13 +97,9 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	s.Log("Resetting DUT to clear any existing chrome sessions")
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateReset); err != nil {
-		s.Fatal("Failed to reset DUT: ", err)
-	}
-	s.Log("Reconnecting to DUT")
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT after reset at iteration: ", err)
+	// Restart UI to ensure no user is logged in, as this will change power state behaviour on suspend.
+	if err := h.DUT.Conn().CommandContext(ctx, "restart", "ui").Run(ssh.DumpLogOnError); err != nil {
+		s.Fatal("Failed to restart ui before test: ", err)
 	}
 
 	failures := make(map[int][]error, numIters)
@@ -129,6 +127,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 	for i := 0; i < numIters; i++ {
 		s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
 
+		suspendDuration := time.Duration(minSuspendResumeTime+rand.Intn(maxSuspendResumeTime)) * time.Second
 		s.Logf("Suspending dut for %d seconds", suspendDuration)
 		// The --wakup_timeout automatically unsuspends after given time.
 		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelayDur), fmt.Sprintf("--suspend_for_sec=%d", suspendDuration))
@@ -139,6 +138,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		h.DisconnectDUT(ctx)
 
 		s.Log("Checking for S0ix or S3 powerstate")
+		// After suspendDuration+powerDelayDur the DUT will return to S0 so if S0ix/S3 not detected in that duration, it failed to suspend.
 		if err := h.WaitForPowerStates(ctx, 250*time.Millisecond, time.Duration(suspendDuration+powerdDelayDur)*time.Second, "S0ix", "S3"); err != nil {
 			logFailure("Failed to get S0ix or S3 powerstate after suspend", err, i)
 		}
@@ -183,9 +183,9 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 			}
 		}
 
-		resuspendDelay := time.Duration(minResuspendResumeTime+rand.Intn(maxResuspendResumeTime)) * time.Second
+		resuspendDelay := time.Duration(minResumeTime+rand.Intn(maxResumeTime)) * time.Second
 		s.Logf("Sleeping for %s before next iteration", resuspendDelay)
-		// GoBigSleepLint: random duration in range [minResuspendResumeTime, minResuspendResumeTime+maxResuspendResumeTime) to wait between suspend iterations.
+		// GoBigSleepLint: random duration in range [minResumeTime, minResumeTime + maxResumeTime) to wait between suspend iterations.
 		if err := testing.Sleep(ctx, resuspendDelay); err != nil {
 			// Don't ignore this error even without fail fast set as it means context timed out.
 			s.Fatalf("Test timed out between suspends on iteration %d: %v", i+1, err)
@@ -254,11 +254,6 @@ func testTPM(ctx context.Context, h *firmware.Helper) (reterr error) {
 		for k, v := range m {
 			testing.ContextLogf(ctx, "  %v: %v", k, v)
 		}
-	}
-
-	h.DisconnectDUT(ctx)
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
 	}
 
 	if err := h.RequireTPMServiceClient(ctx); err != nil {
@@ -344,11 +339,6 @@ func testTPM(ctx context.Context, h *firmware.Helper) (reterr error) {
 }
 
 func testLoginSuccess(ctx context.Context, h *firmware.Helper) error {
-	h.DisconnectDUT(ctx)
-	if err := h.WaitConnect(ctx); err != nil {
-		return errors.Wrap(err, "failed to connect to DUT")
-	}
-
 	if err := h.RequireRPCUtils(ctx); err != nil {
 		return errors.Wrap(err, "failed requiring RPC utils")
 	}
