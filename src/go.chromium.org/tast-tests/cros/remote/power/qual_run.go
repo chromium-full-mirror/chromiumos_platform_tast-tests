@@ -147,6 +147,12 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			if !isPowerJSONLog(f) {
 				continue
 			}
+			if r.testPowers[t].Average.MinutesBatteryLife != 0 &&
+				r.testPowers[t].Average.MinutesBatteryLifeTested != 0 &&
+				r.testPowers[t].Average.DischargeRate != 0 &&
+				len(r.otherInfo) != 0 {
+				break
+			}
 			average, err := readPowerMetrics(path.Join(outputDir, f.Name()))
 			if err != nil {
 				testing.ContextLogf(ctx, "Failed to read power metrics for test %s", t)
@@ -163,14 +169,6 @@ func (r *QualRun) AddTestResults(ctx context.Context, tests, skippedTests []stri
 			if minutesBatteryLifeKeyOK && minutesBatteryLifeTestedKeyOK {
 				r.testPowers[t].Average.MinutesBatteryLife = average[power.MinutesBatteryLifeKey].(float64)
 				r.testPowers[t].Average.MinutesBatteryLifeTested = average[power.MinutesBatteryLifeTestedKey].(float64)
-			}
-
-			if _, browsingConfigversionKeyOK := average[power.BrowsingTestConfigVersionKey]; browsingConfigversionKeyOK {
-				r.testPowers[t].Average.BrowsingTestConfigVersion = average[power.BrowsingTestConfigVersionKey].(float64)
-			}
-
-			if _, browsingURLConfigversionKeyOK := average[power.BrowsingTestCachedSiteVersionKey]; browsingURLConfigversionKeyOK {
-				r.testPowers[t].Average.BrowsingTestCachedSiteVersion = average[power.BrowsingTestCachedSiteVersionKey].(float64)
 			}
 			// Record other average values.
 			for _, key := range []string{power.BacklightPercentNonlinearKey, power.BacklightPercentLinearKey} {
@@ -234,18 +232,6 @@ func (r *QualRun) GenerateReport(ctx context.Context, outputDir, testName string
 				Unit:      "minute",
 				Direction: perf.SmallerIsBetter,
 			}, power.Average.MinutesBatteryLifeTested)
-			if strings.Contains(t.Name, "browsing") {
-				pv.Set(perf.Metric{
-					Name:      p.Name + "." + t.Name + "." + "browsing_test_config_version",
-					Unit:      "unit",
-					Direction: perf.BiggerIsBetter,
-				}, power.Average.BrowsingTestConfigVersion)
-				pv.Set(perf.Metric{
-					Name:      p.Name + "." + t.Name + "." + "browsing_test_cached_site_version",
-					Unit:      "unit",
-					Direction: perf.BiggerIsBetter,
-				}, power.Average.BrowsingTestCachedSiteVersion)
-			}
 			persona.Tests = append(persona.Tests, result.Test{Name: t.Name, Weight: t.Weight, Power: *power})
 			minutesBatteryLifeValues = append(minutesBatteryLifeValues, power.Average.MinutesBatteryLife)
 			dischargeRateValues = append(dischargeRateValues, power.Average.DischargeRate)

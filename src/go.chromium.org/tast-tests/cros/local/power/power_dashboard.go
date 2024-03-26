@@ -89,14 +89,15 @@ func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName str
 	devInfo := GetDeviceInfo(ctx, args...)
 
 	metrics := CollectOneTimeMetrics(ctx)
+	if _, err := cp.CreateSaveUploadPowerLog(ctx, outDir, testName, "", values, checkpoints, devInfo, metrics); err != nil {
+		return errors.Wrap(err, "failed to save and upload power log and perf")
+	}
+
 	for _, optionalRecorderArg := range args {
 		if optionalRecorderArg.argName == OptionalRecorderArgCustomPerfKey {
 			t := optionalRecorderArg.argValue.(*perf.Values)
 			values.Merge(t)
 		}
-	}
-	if _, err := cp.CreateSaveUploadPowerLog(ctx, outDir, testName, "", values, checkpoints, devInfo, metrics); err != nil {
-		return errors.Wrap(err, "failed to save and upload power log and perf")
 	}
 
 	valuesCheckpoints, err := values.FilterTimelineByCheckpoints(checkpoints)

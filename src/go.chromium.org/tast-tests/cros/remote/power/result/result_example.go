@@ -30,9 +30,7 @@ const exampleResult = `{
 						"average": {
 							"minutes_battery_life": 320.5,
 							"minutes_battery_life_tested": 60,
-							"watt_discharge_rate": 5.5,
-							"browsing_test_config_version": 20230920,
-							"browsing_test_cached_site_version": 20230809
+							"watt_discharge_rate": 5.5
 						}
 					}
 				},
@@ -69,9 +67,7 @@ const exampleResult = `{
 						"average": {
 							"minutes_battery_life": 320.5,
 							"minutes_battery_life_tested": 60,
-							"watt_discharge_rate": 5.5,
-							"browsing_test_config_version": 20230920,
-							"browsing_test_cached_site_version": 20230809
+							"watt_discharge_rate": 5.5
 						}
 					}
 				},

@@ -21,7 +21,7 @@ func TestMarshalResult(t *gotesting.T) {
 				Power:   Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 120, DischargeRate: 5.5}},
 				Skipped: []string{"power.VideoPlayback.1080p_vp9"},
 				Tests: []Test{
-					{"power.Browsing", 0.6, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60, DischargeRate: 5.5, BrowsingTestConfigVersion: 20230920, BrowsingTestCachedSiteVersion: 20230809}}},
+					{"power.Browsing", 0.6, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60, DischargeRate: 5.5}}},
 					{"power.VideoPlayback.1080p_h264", 0.2, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60, DischargeRate: 5.5}}},
 				},
 			},
@@ -30,7 +30,7 @@ func TestMarshalResult(t *gotesting.T) {
 				Power:   Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 180, DischargeRate: 5.5}},
 				Skipped: []string{"power.VideoPlayback.1080p_vp9"},
 				Tests: []Test{
-					{"power.Browsing", 0.4, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60, DischargeRate: 5.5, BrowsingTestConfigVersion: 20230920, BrowsingTestCachedSiteVersion: 20230809}}},
+					{"power.Browsing", 0.4, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60, DischargeRate: 5.5}}},
 					{"power.VideoPlayback.1080p_h264", 0.2, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60, DischargeRate: 5.5}}},
 					{"power.YoutubeArc.1080p", 0.2, Power{Average{MinutesBatteryLife: 320.5, MinutesBatteryLifeTested: 60, DischargeRate: 5.5}}},
 				},
