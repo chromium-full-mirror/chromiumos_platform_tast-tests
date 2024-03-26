@@ -146,24 +146,24 @@ func VTSwitch(ctx context.Context, s *testing.State) {
 		}
 	}(ctx)
 
-	// Make sure we start in VT1.
-	if err := graphics.OpenVT1(ctx); err != nil {
-		s.Fatal("Failed to open VT1: ", err)
-	}
-
-	// Take VT1 screenshot
-	vt1Screenshot := filepath.Join(s.OutDir(), "Initial_VTSwitch_VT1.png")
-	if err := screenshot.Capture(ctx, vt1Screenshot); err != nil {
-		s.Error("Failed to take screenshot: ", err)
-	}
-
-	// Go to VT2 and take screenshot
+	// Go to VT2 and take screenshot.
 	if err := graphics.OpenVT2(ctx); err != nil {
 		s.Fatal("Failed to open VT2: ", err)
 	}
 
 	vt2Screenshot := filepath.Join(s.OutDir(), "Initial_VTSwitch_VT2.png")
 	if err := screenshot.Capture(ctx, vt2Screenshot); err != nil {
+		s.Error("Failed to take screenshot: ", err)
+	}
+
+	// switch to VT1 and take screenshot.
+	if err := graphics.OpenVT1(ctx); err != nil {
+		s.Fatal("Failed to open VT1: ", err)
+	}
+
+	// Take VT1 screenshot.
+	vt1Screenshot := filepath.Join(s.OutDir(), "Initial_VTSwitch_VT1.png")
+	if err := screenshot.Capture(ctx, vt1Screenshot); err != nil {
 		s.Error("Failed to take screenshot: ", err)
 	}
 
