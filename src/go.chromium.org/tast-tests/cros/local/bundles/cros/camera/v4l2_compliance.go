@@ -68,6 +68,8 @@ func V4L2Compliance(ctx context.Context, s *testing.State) {
 		"0c45:6a16": "b/287943727",
 		"0408:4041": "b/262499795",
 		"322e:2339": "b/327164074",
+		"5959:0131": "b/302211073",// Auto PLF missing
+		"2b7e:1085": "b/302211073",// Auto PLF missing
 	}
 
 	// Use a shorter context to save time for clean.
