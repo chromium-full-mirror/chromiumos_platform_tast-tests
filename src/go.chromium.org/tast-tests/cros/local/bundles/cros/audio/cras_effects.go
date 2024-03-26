@@ -19,12 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/chrome"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/checked"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/crosconfig"
 	"go.chromium.org/tast-tests/cros/local/dlc"
 	"go.chromium.org/tast/core/errors"
@@ -517,25 +511,6 @@ func (cc captureConfig) streamState() streamState {
 	return streamState{
 		effects:               cc.effects,
 		joinedActiveAPEffects: canonicalActiveAPEffectsString(cc.expectAPEffects),
-	}
-}
-
-func toggleInputNoiseCancellation(ctx context.Context, s *testing.State, tconn *chrome.TestConn, state checked.Checked) {
-	defer quicksettings.Hide(ctx, tconn)
-
-	if err := ossettings.LaunchOsSettingsAudioPageFromQuickSettings(ctx, tconn); err != nil {
-		s.Fatal("Failed to open OS Settings audio page from Quick Settings: ", err)
-	}
-
-	ui := uiauto.New(tconn).WithTimeout(3 * time.Second)
-
-	ncToggle := nodewith.Role(role.ToggleButton).NameContaining("Noise cancellation")
-
-	if err := uiauto.Combine("Press noise cancellation toggle",
-		ui.EnsureFocused(ncToggle),
-		ui.DoDefault(ncToggle),
-		ui.WaitUntilExists(ncToggle.Attribute("checked", state)))(ctx); err != nil {
-		s.Fatal("Failed to press noise cancellation toggle: ", err)
 	}
 }
 
