@@ -320,9 +320,9 @@ func init() {
 			Name:              "vm_r_branch_uprev",
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_r"},
-			// x86-64 ARC: akali360(nami-Intel)
+			// x86-64 ARC: akali(nami-Intel), akali360(nami-Intel), pantheon(nami-Intel), sona(nami-Intel)
 			// arm64 ARC: kodama(kukui), katsu(kukui), pompom(trogdor), pazquel(trogdor)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("akali360", "kodama", "katsu", "pompom", "pazquel")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("akali", "akali360", "pantheon", "sona", "kodama", "katsu", "pompom", "pazquel")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-rvc",
@@ -339,10 +339,10 @@ func init() {
 			ExtraAttr:         []string{"group:mainline", "informational"},
 			ExtraSoftwareDeps: []string{"android_vm_t"},
 			// x86-64 ARC: gimble(brya-Intel), kohaku(hatch-Intel), jinlon(hatch-Intel), berknip(zork-AMD), jelboz360(zork-AMD), vilboz(zork-AMD)
-			// x64only ARC: screebo4es(rex-Intel)
+			// x64only ARC: screebo(rex-Intel), karis(rex-Intel)
 			// arm64 ARC: steelix(corsola), magneton(corsola)
 			// arm64only ARC: starmie(staryu)
-			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "kohaku", "jinlon", "screebo4es", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
+			ExtraHardwareDeps: hwdep.D(hwdep.Model("gimble", "kohaku", "jinlon", "screebo", "karis", "berknip", "jelboz360", "vilboz", "steelix", "magneton", "starmie")),
 			Val: testParam{
 				vmEnabled:                     true,
 				androidPackage:                "android-vm-tm",
