@@ -31,7 +31,7 @@ func init() {
 			"hsuregan@google.com",
 		},
 		BugComponent: "b:1131774", // ChromeOS > Software > System Services > Connectivity > Cellular
-		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e", "cellular_carrier_dependent"},
+		Attr:         []string{"group:cellular", "cellular_unstable", "cellular_sim_active", "cellular_e2e"},
 		SoftwareDeps: []string{"chrome"},
 		Fixture:      "cellularResetShillProfileOnPostTest",
 		Timeout:      9 * time.Minute,
