@@ -45,14 +45,14 @@ func init() {
 			},
 		}, {
 			Name:      "field_trial_on",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 			Val: webUIJSErrorsParams{
 				browserType:          browser.TypeAsh,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
 		}, {
 			Name:      "field_trial_off",
-			ExtraAttr: []string{"informational"},
+			ExtraAttr: []string{"informational", "group:criticalstaging"},
 			Val: webUIJSErrorsParams{
 				browserType:          browser.TypeAsh,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
@@ -67,7 +67,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_field_trial_on",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: webUIJSErrorsParams{
 				browserType:          browser.TypeLacros,
@@ -75,7 +75,7 @@ func init() {
 			},
 		}, {
 			Name:              "lacros_field_trial_off",
-			ExtraAttr:         []string{"informational"},
+			ExtraAttr:         []string{"informational", "group:criticalstaging"},
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val: webUIJSErrorsParams{
 				browserType:          browser.TypeLacros,
