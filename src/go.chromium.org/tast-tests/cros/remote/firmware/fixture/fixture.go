@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -26,6 +27,7 @@ import (
 // Fixture names for the tests to use.
 const (
 	FirmwareBase            = "firmwareBase"
+	FirmwareBackupAP        = "firmwareBackupAP"
 	BootModeBase            = "bootMode"
 	NormalMode              = BootModeBase + "." + "Normal"
 	DevMode                 = BootModeBase + "." + "Dev"
@@ -45,6 +47,43 @@ func bootModeFixtureName(val string) string {
 	return v
 }
 
+// BootModeFixtureWithAPBackup returns name of bootMode* fixture with AP firmware auto-backup support.
+func BootModeFixtureWithAPBackup(val string) string {
+	return val + "-apBackup"
+}
+
+type bootModeFixtureParam struct {
+	Name         string
+	SetUpTimeout time.Duration
+	Val          bootModeParamVal
+}
+
+func prepareBootModeFixtures(params []bootModeFixtureParam) []testing.FixtureParam {
+	var out = []testing.FixtureParam{}
+	for _, p := range params {
+		bootModeVal := p.Val
+		bootModeVal.supportFWBackup = false
+		bootMode := testing.FixtureParam{
+			Name:         p.Name,
+			Parent:       FirmwareBase,
+			SetUpTimeout: p.SetUpTimeout,
+			Val:          bootModeVal,
+		}
+		out = append(out, bootMode)
+
+		bootModeWithAPBackupVal := p.Val
+		bootModeWithAPBackupVal.supportFWBackup = true
+		bootModeWithAPBackup := testing.FixtureParam{
+			Name:         BootModeFixtureWithAPBackup(p.Name),
+			Parent:       FirmwareBackupAP,
+			SetUpTimeout: p.SetUpTimeout,
+			Val:          bootModeWithAPBackupVal,
+		}
+		out = append(out, bootModeWithAPBackup)
+	}
+	return out
+}
+
 func init() {
 	testing.AddFixture(&testing.Fixture{
 		Name:            FirmwareBase,
@@ -60,18 +99,31 @@ func init() {
 		Data:            []string{firmware.ConfigFile},
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:            FirmwareBackupAP,
+		Desc:            "Backup AP firmware and provide copy to tests",
+		Contacts:        []string{"tast-fw-library-reviewers@google.com", "czapiga@google.com"},
+		Impl:            &firmwareBackupAPImpl{value: &FirmwareBackupAPValue{}},
+		Vars:            []string{"servo", "dutHostname", "noSSH"},
+		SetUpTimeout:    2 * time.Minute,
+		PreTestTimeout:  30 * time.Minute, // Backup via servo can take a long time.
+		PostTestTimeout: 30 * time.Minute, // Firmware restore in case of failure can take some time.
+		TearDownTimeout: 30 * time.Minute,
+		Data:            []string{firmware.ConfigFile},
+		Parent:          FirmwareBase,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:            BootModeBase,
 		Desc:            "Boot into selected boot-mode",
 		Contacts:        []string{"tast-fw-library-reviewers@google.com", "jbettis@google.com", "czapiga@google.com"},
 		Impl:            &bootModeImpl{value: &Value{}},
-		Vars:            []string{"servo", "dutHostname", "powerunitHostname", "powerunitOutlet", "hydraHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
+		Vars:            []string{"servo", "dutHostname", "firmware.no_ec_sync", "firmware.skipFlashUSB", "noSSH"},
 		ResetTimeout:    10 * time.Second,
 		PreTestTimeout:  15 * time.Minute,
 		PostTestTimeout: 10 * time.Minute,
 		TearDownTimeout: 10 * time.Minute,
 		Data:            []string{firmware.ConfigFile},
 		Parent:          FirmwareBase,
-		Params: []testing.FixtureParam{
+		Params: prepareBootModeFixtures([]bootModeFixtureParam{
 			{
 				// Reboot into normal mode before test
 				Name:         bootModeFixtureName(NormalMode),
@@ -132,7 +184,7 @@ func init() {
 				Val:          newBootModeFixture(common.BootModeUSBDev, true, true),
 				SetUpTimeout: 60 * time.Minute, // USB key setup is slow
 			},
-		},
+		}),
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:            USBDevModeWithReinstall,
@@ -149,7 +201,14 @@ type BaseValue struct {
 	Helper *firmware.Helper
 }
 
+// FirmwareBackupAPValue contains fields used by the firmwareBackup fixture.
+type FirmwareBackupAPValue struct {
+	Helper        *firmware.Helper
+	BackupManager *FirmwareBackupManager
+}
+
 // Value contains fields that are useful for tests.
+// BackupManager field is optional and will be populated only for fixtures with firmwareBackup fixture as their parent.
 type Value struct {
 	BootMode      common.BootMode
 	GBBFlags      *pb.GBBFlagsState
@@ -157,6 +216,7 @@ type Value struct {
 	ForcesDevMode bool
 	ForceZeroGBB  bool
 	ForceWPEnable bool
+	BackupManager *FirmwareBackupManager // Optional field for boot mode fixtures with firmware backup support
 }
 
 // impl contains fields that are useful for Fixture methods.
@@ -165,42 +225,50 @@ type impl struct {
 	disallowSSH bool
 }
 
+type firmwareBackupAPImpl struct {
+	value       *FirmwareBackupAPValue
+	disallowSSH bool
+}
+
 // bootModeImpl contains fields used by bootMode fixtures.
 type bootModeImpl struct {
-	value         *Value
-	disallowSSH   bool
-	origBootMode  *common.BootMode
-	origGBBFlags  *pb.GBBFlagsState
-	copyTastFiles bool
+	value           *Value
+	disallowSSH     bool
+	origBootMode    *common.BootMode
+	origGBBFlags    *pb.GBBFlagsState
+	copyTastFiles   bool
+	supportFWBackup bool
 }
 
 type bootModeParamVal struct {
-	mode          common.BootMode
-	forceDev      bool
-	copyTastFiles bool
-	zeroGBB       bool
-	forceWPEnable bool
+	mode            common.BootMode
+	forceDev        bool
+	copyTastFiles   bool
+	zeroGBB         bool
+	forceWPEnable   bool
+	supportFWBackup bool
 }
 
 func newBootModeFixture(mode common.BootMode, forceDev, copyTastFiles bool) bootModeParamVal {
 	return bootModeParamVal{
-		mode:          mode,
-		forceDev:      forceDev,
-		copyTastFiles: copyTastFiles,
-		zeroGBB:       false,
-		forceWPEnable: false,
+		mode:            mode,
+		forceDev:        forceDev,
+		copyTastFiles:   copyTastFiles,
+		zeroGBB:         false,
+		forceWPEnable:   false,
+		supportFWBackup: false,
 	}
 }
 
 func newBootModeWPEnabledZeroGBBFixture() bootModeParamVal {
 	return bootModeParamVal{
-		mode:          common.BootModeDev,
-		forceDev:      false,
-		copyTastFiles: true,
-		zeroGBB:       true,
-		forceWPEnable: true,
+		mode:            common.BootModeDev,
+		forceDev:        false,
+		copyTastFiles:   true,
+		zeroGBB:         true,
+		forceWPEnable:   true,
+		supportFWBackup: false,
 	}
-
 }
 
 func varToBool(s *testing.FixtState, varName string) (bool, error) {
@@ -231,6 +299,50 @@ func (i *impl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 	return i.value
 }
 
+// SetUp performs firmware backup before tests start.
+func (i *firmwareBackupAPImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	var err error
+	i.disallowSSH, err = varToBool(s, "noSSH")
+	if err != nil {
+		s.Fatal("noSSH: ", err)
+	}
+
+	// Get Helper from parent fixture
+	i.value.Helper = s.ParentValue().(*BaseValue).Helper
+
+	tempDir, err := os.MkdirTemp("", "fwBackup*")
+	if err != nil {
+		s.Fatal("Failed to create temporary directory for firmware backups: ", err)
+	}
+
+	i.value.BackupManager = NewFirmwareBackupManager(tempDir)
+
+	dut := i.value.Helper.DUT
+	if i.disallowSSH {
+		dut = nil
+	} else {
+		connectTimeout, cancel := context.WithTimeout(ctx, 1*time.Minute)
+		defer cancel()
+		if err := i.value.Helper.WaitConnect(connectTimeout); err != nil {
+			s.Error("Test did not run")
+			s.Fatal("Failed to connect to DUT: ", err)
+		}
+	}
+
+	if err := i.value.Helper.RequireServo(ctx); err != nil {
+		s.Error("Test did not run")
+		s.Fatal("Failed to connect to servod: ", err)
+	}
+
+	s.Log("Backing up AP firmware")
+	if err := i.value.BackupManager.backupFirmware(ctx, dut, i.value.Helper.ServoProxy, FirmwareAP); err != nil {
+		os.RemoveAll(tempDir)
+		s.Fatal("Failed to backup AP firmware: ", err)
+	}
+
+	return i.value
+}
+
 // SetUp is called by the framework to set up the environment with possibly heavy-weight
 // operations.
 func (i *bootModeImpl) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
@@ -241,12 +353,20 @@ func (i *bootModeImpl) SetUp(ctx context.Context, s *testing.FixtState) interfac
 	}
 
 	v := s.Param().(bootModeParamVal)
-	i.value.Helper = s.ParentValue().(*BaseValue).Helper
 	i.value.BootMode = v.mode
 	i.value.ForcesDevMode = v.forceDev
 	i.value.ForceWPEnable = v.forceWPEnable
 	i.value.ForceZeroGBB = v.zeroGBB
 	i.copyTastFiles = v.copyTastFiles
+	i.supportFWBackup = v.supportFWBackup
+
+	if i.supportFWBackup {
+		p := s.ParentValue().(*FirmwareBackupAPValue)
+		i.value.Helper = p.Helper
+		i.value.BackupManager = p.BackupManager
+	} else {
+		i.value.Helper = s.ParentValue().(*BaseValue).Helper
+	}
 
 	if !i.copyTastFiles {
 		i.value.Helper.DisallowServices()
@@ -313,6 +433,13 @@ func (i *impl) Reset(ctx context.Context) error {
 	i.value.Helper.CloseServo(ctx)
 	// Close the RPC client in case the DUT rebooted at some point, and it doesn't recover well.
 	i.value.Helper.CloseRPCConnection(ctx)
+	return nil
+}
+
+// Reset is called by the framework after each test (except for the last one) to do a
+// light-weight reset of the environment to the original state.
+func (i *firmwareBackupAPImpl) Reset(ctx context.Context) error {
+	// Nothing to do here.
 	return nil
 }
 
@@ -393,6 +520,11 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 		s.Log("EC is active")
 	}
+}
+
+// PreTest is called by the framework before each test to do a light-weight set up for the test.
+func (i *firmwareBackupAPImpl) PreTest(ctx context.Context, s *testing.FixtTestState) {
+	// Nothing to do here.
 }
 
 // PreTest is called by the framework before each test to do a light-weight set up for the test.
@@ -553,6 +685,11 @@ func (i *impl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 }
 
 // PostTest is called by the framework after each test to tear down changes PreTest made.
+func (i *firmwareBackupAPImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
+	// TODO(czapiga): Check if dut has correct firmware and if it requires restoration.
+}
+
+// PostTest is called by the framework after each test to tear down changes PreTest made.
 func (i *bootModeImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 	if err := i.value.Helper.EnsureDUTBooted(ctx); err != nil {
 		s.Fatal("DUT is offline after test end: ", err)
@@ -566,6 +703,12 @@ func (i *bootModeImpl) PostTest(ctx context.Context, s *testing.FixtTestState) {
 // TearDown is called by the framework to tear down the environment SetUp set up.
 func (i *impl) TearDown(ctx context.Context, s *testing.FixtState) {
 	i.closeHelper(ctx, s)
+}
+
+// TearDown is called by the framework to tear down the environment SetUp set up.
+func (i *firmwareBackupAPImpl) TearDown(ctx context.Context, s *testing.FixtState) {
+	i.value.BackupManager.cleanup()
+	os.RemoveAll(i.value.BackupManager.remoteBackupDir)
 }
 
 // TearDown is called by the framework to tear down the environment SetUp set up.
