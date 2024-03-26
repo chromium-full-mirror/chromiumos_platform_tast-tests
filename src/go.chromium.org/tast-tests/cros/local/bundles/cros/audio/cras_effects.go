@@ -11,10 +11,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/go-cmp/cmp"
+	"golang.org/x/exp/slices"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/audio"
+	"go.chromium.org/tast-tests/cros/local/audio/debug"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/audio/internal"
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -49,6 +50,12 @@ var (
 	}.Instance()
 )
 
+// AP effect names.
+const (
+	apAEC = "echo_cancellation"
+	apNC  = "noise_cancellation"
+)
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasEffects,
@@ -69,13 +76,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x11},
+						{effects: 0x11, expectAPEffects: nil},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectEnabled,
-						DSPNC:   internal.EffectEnabled,
-						CrasAPM: internal.EffectEnabled, // For DSP AEC.
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectEnabled,
+						NC:  internal.EffectEnabled,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -88,13 +93,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x0},
+						{effects: 0x0, expectAPEffects: []string{apNC}},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
-						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
-						CrasAPM: internal.EffectEnabled,  // For AP NC.
-						APNC:    internal.EffectEnabled,  // NC fallback.
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled, // DSP AEC blocked.
+						NC:  internal.EffectDisabled, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -107,13 +110,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x10},
+						{effects: 0x10, expectAPEffects: []string{apNC}},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
-						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
-						CrasAPM: internal.EffectEnabled,  // For AP NC.
-						APNC:    internal.EffectEnabled,  // NC fallback.
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled, // DSP AEC blocked.
+						NC:  internal.EffectDisabled, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -126,14 +127,12 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x10},
-						{effects: 0x11},
+						{effects: 0x10, expectAPEffects: []string{apNC}},
+						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
-						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
-						CrasAPM: internal.EffectEnabled,  // For AP NC.
-						APNC:    internal.EffectEnabled,  // NC fallback.
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled, // DSP AEC blocked.
+						NC:  internal.EffectDisabled, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -147,15 +146,14 @@ func init() {
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
 						{
-							effects:    0x0,
-							clientType: 5, // CRAS_CLIENT_TYPE_ARC
+							effects:         0x0,
+							clientType:      5,   // CRAS_CLIENT_TYPE_ARC
+							expectAPEffects: nil, // Effects applied on DSP.
 						},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled,
-						DSPNC:   internal.EffectEnabled, // NC enabled.
-						CrasAPM: internal.EffectDisabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectEnabled, // NC enabled.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -168,14 +166,12 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x11},
-						{effects: 0x0},
+						{effects: 0x11, expectAPEffects: []string{apNC, apAEC}},
+						{effects: 0x0, expectAPEffects: []string{apNC}},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled, // DSP AEC blocked.
-						DSPNC:   internal.EffectDisabled, // DSP AEC blocked.
-						CrasAPM: internal.EffectEnabled,  // For AP NC.
-						APNC:    internal.EffectEnabled,  // AP NC fallback.
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled, // DSP AEC blocked.
+						NC:  internal.EffectDisabled, // DSP AEC blocked.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -188,17 +184,16 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x11},
+						{effects: 0x11, expectAPEffects: nil},
 						{
-							effects:    0x0,
-							clientType: 5, // CRAS_CLIENT_TYPE_ARC
+							effects:         0x0,
+							clientType:      5, // CRAS_CLIENT_TYPE_ARC
+							expectAPEffects: nil,
 						},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectEnabled,
-						DSPNC:   internal.EffectEnabled, // NC enabled.
-						CrasAPM: internal.EffectEnabled, // For DSP AEC.
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectEnabled,
+						NC:  internal.EffectEnabled, // NC enabled.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -211,13 +206,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{effects: 0x11},
+						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled, // Blocked by echo reference: user selection.
-						DSPNC:   internal.EffectDisabled, // Blocked by echo reference: user selection.
-						CrasAPM: internal.EffectEnabled,  // CRAS AEC fallback.
-						APNC:    internal.EffectEnabled,  // CRAS NC fallback.
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled, // Blocked by echo reference: user selection.
+						NC:  internal.EffectDisabled, // Blocked by echo reference: user selection.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -231,13 +224,11 @@ func init() {
 					outputDevice:             "INTERNAL_SPEAKER",
 					addPlaybackPinDevice:     "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{effects: 0x11},
+						{effects: 0x11, expectAPEffects: []string{apAEC, apNC}},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled, // Blocked by echo reference: playback.
-						DSPNC:   internal.EffectDisabled, // Blocked by echo reference: playback.
-						CrasAPM: internal.EffectEnabled,  // CRAS AEC fallback.
-						APNC:    internal.EffectEnabled,  // CRAS NC fallback.
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled, // Blocked by echo reference: playback.
+						NC:  internal.EffectDisabled, // Blocked by echo reference: playback.
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -251,13 +242,11 @@ func init() {
 					outputDevice:             "INTERNAL_SPEAKER",
 					addPlaybackPinDevice:     "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x11},
+						{effects: 0x11, expectAPEffects: nil},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectEnabled,
-						DSPNC:   internal.EffectEnabled,
-						CrasAPM: internal.EffectEnabled, // CRAS APM required by DSP AEC.
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectEnabled,
+						NC:  internal.EffectEnabled,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -271,13 +260,14 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
+						{
+							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
+							expectAPEffects: nil,
+						},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectEnabled,
-						DSPNC:   internal.EffectEnabled,
-						CrasAPM: internal.EffectEnabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectEnabled,
+						NC:  internal.EffectEnabled,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -290,13 +280,14 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER",
 					captureClients: []captureConfig{
-						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
+						{
+							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
+							expectAPEffects: nil,
+						},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectEnabled,
-						DSPNC:   internal.EffectDisabled,
-						CrasAPM: internal.EffectEnabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectEnabled,
+						NC:  internal.EffectDisabled,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -309,13 +300,14 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
-						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
+						{
+							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
+							expectAPEffects: []string{apAEC, apNC},
+						},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled,
-						DSPNC:   internal.EffectDisabled,
-						CrasAPM: internal.EffectEnabled,
-						APNC:    internal.EffectEnabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -328,13 +320,14 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should block DSP AEC.
 					captureClients: []captureConfig{
-						{effects: 0x11}, // Set AEC on to avoid blocking DSP NC.
+						{
+							effects:         0x11, // Set AEC on to avoid blocking DSP NC.
+							expectAPEffects: []string{apAEC},
+						},
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectDisabled,
-						DSPNC:   internal.EffectDisabled,
-						CrasAPM: internal.EffectEnabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectDisabled,
+						NC:  internal.EffectDisabled,
 					},
 				},
 				Fixture:           crasEffectsHasAPNC,
@@ -348,13 +341,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
-						{effects: 0}, // Effects=0 should not block.
+						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectUnavailable,
-						DSPNC:   internal.EffectEnabled,
-						CrasAPM: internal.EffectDisabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectUnavailable,
+						NC:  internal.EffectEnabled,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -367,13 +358,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
-						{effects: 0}, // Effects=0 should not block.
+						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectUnavailable,
-						DSPNC:   internal.EffectDisabled,
-						CrasAPM: internal.EffectDisabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectUnavailable,
+						NC:  internal.EffectDisabled,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -386,14 +375,12 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{effects: 0}, // Effects=0 should not block.
+						{effects: 0, expectAPEffects: nil}, // Effects=0 should not block.
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
-					expectEffects: effects{
-						DSPAEC:  internal.EffectUnavailable,
-						DSPNC:   internal.EffectDisabled,
-						CrasAPM: internal.EffectDisabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectUnavailable,
+						NC:  internal.EffectDisabled,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -406,13 +393,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK", // Using non-internal speaker should allow DSP NC.
 					captureClients: []captureConfig{
-						{effects: 0x1}, // Effects=1 should not block.
+						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectUnavailable,
-						DSPNC:   internal.EffectEnabled,
-						CrasAPM: internal.EffectEnabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectUnavailable,
+						NC:  internal.EffectEnabled,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -425,13 +410,11 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
 					captureClients: []captureConfig{
-						{effects: 0x1}, // Effects=1 should not block.
+						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
-					expectEffects: effects{
-						DSPAEC:  internal.EffectUnavailable,
-						DSPNC:   internal.EffectDisabled,
-						CrasAPM: internal.EffectEnabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectUnavailable,
+						NC:  internal.EffectDisabled,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -444,14 +427,12 @@ func init() {
 					inputDevice:              "INTERNAL_MIC",
 					outputDevice:             "ALSA_LOOPBACK",
 					captureClients: []captureConfig{
-						{effects: 0x1}, // Effects=1 should not block.
+						{effects: 0x1, expectAPEffects: []string{apAEC}}, // Effects=1 should not block.
 					},
 					addPlaybackPinDevice: "INTERNAL_SPEAKER", // Using internal speaker should block DSP NC.
-					expectEffects: effects{
-						DSPAEC:  internal.EffectUnavailable,
-						DSPNC:   internal.EffectDisabled,
-						CrasAPM: internal.EffectEnabled,
-						APNC:    internal.EffectDisabled,
+					expectDSPEffects: dspEffects{
+						AEC: internal.EffectUnavailable,
+						NC:  internal.EffectDisabled,
 					},
 				},
 				Fixture:           crasEffectsHasNoAPNC,
@@ -467,21 +448,59 @@ type crasEffectsParam struct {
 	outputDevice             string
 	addPlaybackPinDevice     string
 	captureClients           []captureConfig
-	expectEffects            effects
+	expectDSPEffects         dspEffects
 }
 
-// effects observed and expected.
-// A effect is set to EffectEnabled if it is enabled for any stream.
-type effects struct {
-	DSPAEC  internal.EffectState
-	DSPNC   internal.EffectState
-	CrasAPM internal.EffectState
-	APNC    internal.EffectState
+// dspEffects observed and expected.
+type dspEffects struct {
+	AEC internal.EffectState
+	NC  internal.EffectState
+}
+
+type streamState struct {
+	effects               uint
+	joinedActiveAPEffects string
+}
+
+func canonicalActiveAPEffectsString(effects []string) string {
+	effects = slices.Clone(effects)
+	slices.Sort(effects)
+	return strings.Join(effects, " ")
+}
+
+func newStreamStateFromDebug(stream debug.Stream) streamState {
+	return streamState{
+		// Effects but remove the PRIVATE_DONT_CARE_APM_EFFECTS bit.
+		effects:               stream.Effects &^ (1 << 10),
+		joinedActiveAPEffects: canonicalActiveAPEffectsString(stream.ActiveAPEffects),
+	}
+}
+
+type effectState struct {
+	dsp dspEffects
+	// Count of streams in each stream state.
+	streams map[streamState]int
+}
+
+// satisfies checks whether es satisfies requirement.
+// Returns a non-nil error when not satisfied.
+func (es *effectState) satisfies(requirement *effectState) error {
+	if es.dsp != requirement.dsp {
+		return errors.New("dsp effect mismatch")
+	}
+	for ss, count := range requirement.streams {
+		if es.streams[ss] < count {
+			return errors.Errorf("want at least %d streams with %+v", count, ss)
+		}
+	}
+	return nil
 }
 
 type captureConfig struct {
 	effects    uint
 	clientType uint
+	// The expected AP effects on this stream.
+	expectAPEffects []string
 }
 
 func (cc captureConfig) flags() []string {
@@ -492,6 +511,13 @@ func (cc captureConfig) flags() []string {
 		flags = append(flags, fmt.Sprintf("--client_type=%d", cc.clientType))
 	}
 	return flags
+}
+
+func (cc captureConfig) streamState() streamState {
+	return streamState{
+		effects:               cc.effects,
+		joinedActiveAPEffects: canonicalActiveAPEffectsString(cc.expectAPEffects),
+	}
 }
 
 func toggleInputNoiseCancellation(ctx context.Context, s *testing.State, tconn *chrome.TestConn, state checked.Checked) {
@@ -573,16 +599,6 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to set noise cancellation: ", err)
 	}
 
-	m, err := internal.NewCrasProcessingMonitor(ctx)
-	if err != nil {
-		s.Fatal("Cannot create CrasProcessingMonitor: ", err)
-	}
-	defer func() {
-		if err := m.Close(); err != nil {
-			s.Error("Cannot close CrasProcessingMonitor: ", err)
-		}
-	}()
-
 	// Start capture clients.
 	crasClientCtx, cancelCapture := context.WithCancel(ctx)
 	defer cancelCapture()
@@ -633,7 +649,15 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		}(crasClientCtx)
 	}
 
-	currentProcessingState := func(ctx context.Context) effects {
+	requiredState := &effectState{
+		dsp:     param.expectDSPEffects,
+		streams: map[streamState]int{},
+	}
+	for _, client := range param.captureClients {
+		requiredState.streams[client.streamState()]++
+	}
+
+	currentProcessingState := func(ctx context.Context) *effectState {
 		dspAEC, err := internal.DSPEchoCancellationState(ctx)
 		if err != nil {
 			s.Fatal("Cannot get DSPEchoCancellationState: ", err)
@@ -642,21 +666,30 @@ func CrasEffects(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Cannot get DSPNoiseCancellationState: ", err)
 		}
-		snap, err := m.Snapshot(ctx)
+		debugInfo, err := debug.Dump(ctx)
 		if err != nil {
-			s.Fatal("Cannot get CrasProcessingState: ", err)
+			s.Fatal("Cannot get audio thread dump: ", err)
 		}
-		return effects{
-			DSPAEC:  dspAEC,
-			DSPNC:   dspNC,
-			CrasAPM: snap.CrasAPM,
-			APNC:    snap.APNC,
+		es := &effectState{
+			dsp: dspEffects{
+				AEC: dspAEC,
+				NC:  dspNC,
+			},
+			streams: map[streamState]int{},
 		}
+		for _, stream := range debugInfo.Streams {
+			es.streams[newStreamStateFromDebug(stream)]++
+		}
+		return es
 	}
 	checkCurrentProcessingState := func(ctx context.Context) error {
 		got := currentProcessingState(ctx)
-		if diff := cmp.Diff(param.expectEffects, got); diff != "" {
-			return errors.Errorf("-want; +got: %s%s", "\n", diff)
+		if err := got.satisfies(requiredState); err != nil {
+			return errors.Errorf("%v:%s%+v%s%+v",
+				err,
+				"\n  got:", got,
+				"\n  req:", requiredState,
+			)
 		}
 		return nil
 	}
