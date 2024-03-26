@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/tracing"
 
 	"go.chromium.org/tast/core/testing"
-	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 const (
@@ -38,8 +37,6 @@ func init() {
 		BugComponent: "b:1069482", // ChromeOS > Platform > System > Performance > CrOSetto (Tracing)
 		Data:         []string{tracing.TBMTracedProbesConfigFile},
 		Attr:         []string{"group:mainline"},
-		// TODO(b/208476320): Reenable when reven is fixed.
-		HardwareDeps: hwdep.D(hwdep.SkipOnPlatform("reven")),
 	})
 }
 
