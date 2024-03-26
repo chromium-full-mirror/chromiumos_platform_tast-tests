@@ -153,11 +153,14 @@ func CCAFacingCameraVideoCapture(ctx context.Context, s *testing.State) {
 	const (
 		wantVaapiDecoder    = "VaapiVideoDecoder"
 		wantPipelineDecoder = "VideoDecoderPipeline(ChromeOS)"
+		wantOOPVDecoder     = "OOPVideoDecoder"
 	)
 	if decoderName != wantVaapiDecoder {
 		if decoderName != wantPipelineDecoder {
-			s.Fatalf("Failed: Hardware decoding accelerator was expected with decoder name but wasn't used: got: %q, want: %q or %q",
-				decoderName, wantVaapiDecoder, wantPipelineDecoder)
+			if decoderName != wantOOPVDecoder {
+				s.Fatalf("Failed: Hardware decoding accelerator was expected with decoder name but wasn't used: got: %q, want: %q or %q or %q",
+					decoderName, wantVaapiDecoder, wantPipelineDecoder, wantOOPVDecoder)
+			}
 		}
 	}
 
