@@ -31,7 +31,6 @@ import (
 type loginScreenLaunchTestParam struct {
 	browserType     browser.Type
 	lacrosSelection lacros.Selection
-	forkZygotes     bool
 	keepAlive       bool // Ignored when browserType == TypeAsh.
 }
 
@@ -62,17 +61,6 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					true,  // Fork Zygotes.
-					false, // keepAlive disabled
-				},
-			},
-			{
-				Name:      "rootfs_no_zygotes",
-				ExtraAttr: []string{"group:mainline", "informational"},
-				Val: loginScreenLaunchTestParam{
-					browser.TypeLacros,
-					lacros.Rootfs,
-					false, // Don't fork Zygotes.
 					false, // keepAlive disabled
 				},
 			},
@@ -82,7 +70,6 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
-					true, // Fork Zygotes.
 					true, // keepAlive enabled
 				},
 			},
@@ -92,7 +79,6 @@ func init() {
 				Val: loginScreenLaunchTestParam{
 					browser.TypeAsh,
 					lacros.Rootfs,
-					true,  // ignored
 					false, // ignored
 				},
 			},
@@ -268,6 +254,7 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		chrome.KeepState(),
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		chrome.EnableFeatures("LacrosLaunchAtLoginScreen"),
+		chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"),
 		chrome.EnableFeatures("LacrosProfileMigrationForceOff"),
 		// Prelaunch Lacros regardless of whether there are users with Lacros enabled.
 		// We restart Chrome quickly after the first login, so the preference is
@@ -275,13 +262,7 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		chrome.ExtraArgs("--force-lacros-launch-at-login-screen-for-testing"),
 	}
 
-	// Fork zygotes at login screen if the corresponding param is enabled.
 	params := s.Param().(loginScreenLaunchTestParam)
-	if params.forkZygotes {
-		options = append(options, chrome.EnableFeatures("LacrosForkZygotesAtLoginScreen"))
-	} else {
-		options = append(options, chrome.DisableFeatures("LacrosForkZygotesAtLoginScreen"))
-	}
 
 	// Setup Lacros configuration.
 	lacrosCfg := lacrosfixt.NewConfig(
@@ -313,11 +294,8 @@ func LoginScreenLaunch(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get lacrosinfo.Snapshot: ", err)
 	}
 
-	// If Zygotes are forking at login screen, there will be 3 additional Chrome processes.
-	expectedProcesses := 1
-	if params.forkZygotes {
-		expectedProcesses += 3
-	}
+	// Browser process + 3 zygote processes.
+	expectedProcesses := 4
 	lacrosProcsAtLoginScreen, err := waitForLacrosProcs(ctx, info.LacrosPath, expectedProcesses)
 	if err != nil {
 		s.Fatal("Failed to get Lacros processes at login screen: ", err)
