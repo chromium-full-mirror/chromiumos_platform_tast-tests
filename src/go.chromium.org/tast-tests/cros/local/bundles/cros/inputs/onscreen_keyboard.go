@@ -46,14 +46,18 @@ func OnscreenKeyboard(ctx context.Context, s *testing.State) {
 	}
 	defer faillog.DumpUITreeOnError(ctx, s.OutDir(), s.HasError, tconn)
 
-	const onScreenKeyboard = "Keyboard and text input On-screen keyboard, dictation, Switch Access, and more"
-	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name(onScreenKeyboard).Role(role.Link))
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Accessibility").Role(role.Link))
 	if err != nil {
 		s.Fatal("Failed to launch os-settings on-screen keyboard page: ", err)
 	}
 	defer settings.Close(ctx)
 
 	cui := uiauto.New(tconn)
+	keyboardButton := nodewith.Name("Keyboard and text input On-screen keyboard, dictation, Switch Access, and more").Role(role.Link)
+	if err := cui.LeftClick(keyboardButton)(ctx); err != nil {
+		s.Fatal("Failed to find and click on Keyboard and text input On-screen keyboard button: ", err)
+	}
+
 	onscreenButton := nodewith.Name("On-screen keyboard").Role(role.ToggleButton)
 	if err := cui.LeftClick(onscreenButton)(ctx); err != nil {
 		s.Fatal("Failed to find and click on On-screen keyboard: ", err)
