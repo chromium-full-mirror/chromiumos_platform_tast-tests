@@ -136,7 +136,7 @@ func testForwarding(ctx context.Context, s *testing.State, b utils.DevboardHelpe
 	// Flush out any "DATA LOST" message along with other queued-up data.
 	if expectUartToUsb {
 		uart.WriteSerial(ctx, []byte("AB\r\n"))
-		_, err := ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
+		_, _, err := ccd.ReadSerialSubmatch(ctx, regexp.MustCompile(`AB\r\n`))
 		th.MustSucceed(err, "Error clearing buffer")
 	}
 

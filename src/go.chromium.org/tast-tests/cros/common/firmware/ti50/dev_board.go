@@ -106,8 +106,8 @@ type SerialChannel interface {
 	IsOpen() bool
 	// Close closes the port.
 	Close(ctx context.Context) error
-	// ReadSerialSubmatch reads from the port until regex is matched.
-	ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error)
+	// ReadSerialSubmatch reads from the port until one regex is matched.
+	ReadSerialSubmatch(ctx context.Context, re ...*regexp.Regexp) (whichRe int, output [][]byte, err error)
 	// ReadSerialBytes reads from the serial port until number of bytes have been read.
 	ReadSerialBytes(ctx context.Context, size int) (output []byte, err error)
 	// WriteSerial writes to the port.

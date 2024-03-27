@@ -80,19 +80,22 @@ func (c *BufferedConsole) readSerial(ctx context.Context) error {
 	return nil
 }
 
-// ReadSerialSubmatch reads from the serial port until regex is matched.
-func (c *BufferedConsole) ReadSerialSubmatch(ctx context.Context, re *regexp.Regexp) (output [][]byte, err error) {
+// ReadSerialSubmatch reads from the serial port until one regex is matched.
+func (c *BufferedConsole) ReadSerialSubmatch(ctx context.Context, regularExpressions ...*regexp.Regexp) (whichRegularExpression int, output [][]byte, err error) {
 	for {
-		indices := re.FindSubmatchIndex(c.readBuf[:c.readBufLen])
-		if indices != nil {
-			buf := make([]byte, indices[1])
-			copy(buf, c.readBuf[:indices[1]])
-			c.readBufLen = copy(c.readBuf, c.readBuf[indices[1]:c.readBufLen])
-			return re.FindSubmatch(buf), nil
+		for i := 0; i < len(regularExpressions); i++ {
+			re := regularExpressions[i]
+			indices := re.FindSubmatchIndex(c.readBuf[:c.readBufLen])
+			if indices != nil {
+				buf := make([]byte, indices[1])
+				copy(buf, c.readBuf[:indices[1]])
+				c.readBufLen = copy(c.readBuf, c.readBuf[indices[1]:c.readBufLen])
+				return i, re.FindSubmatch(buf), nil
+			}
 		}
 		err := c.readSerial(ctx)
 		if err != nil {
-			return nil, errors.Wrapf(err, "(wanted %s)", re)
+			return 0, nil, errors.Wrapf(err, "(wanted %s)", regularExpressions[0])
 		}
 	}
 }

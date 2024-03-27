@@ -37,8 +37,8 @@ func TestAndreiboard(t *testing.T) {
 		})
 	}
 
-	checkMatch := func(wErr error, wMatch ...string) func([][]byte, error) {
-		return func(gMatch [][]byte, gErr error) {
+	checkMatch := func(wErr error, wWhich int, wMatch ...string) func(int, [][]byte, error) {
+		return func(gWhich int, gMatch [][]byte, gErr error) {
 			t.Logf("Checking match %v, err %v", wMatch, wErr)
 			if gErr != nil && wErr != nil {
 				if gErr.Error() != wErr.Error() {
@@ -53,6 +53,10 @@ func TestAndreiboard(t *testing.T) {
 				} else {
 					return
 				}
+			}
+
+			if wWhich != gWhich {
+				t.Fatalf("Expected #%d to match, got #%d", wWhich, gWhich)
 			}
 
 			for i, s := range wMatch {
@@ -79,12 +83,12 @@ func TestAndreiboard(t *testing.T) {
 	t.Log("Read error should result in same error")
 	dut, port = createDut(ctrl, 5)
 	expectRead(port, 5, nil)
-	checkMatch(errors.New("(wanted abc): port read error: EOF"), "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abc")))
+	checkMatch(errors.New("(wanted abc): port read error: EOF"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abc")))
 
 	t.Log("Matched string should be returned")
 	dut, port = createDut(ctrl, 5)
 	expectRead(port, 5, []byte("abc"))
-	checkMatch(nil, "abc")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abc")))
+	checkMatch(nil, 0, "abc")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abc")))
 
 	t.Log("Matched string should be cleared from unread buffer")
 	dut, port = createDut(ctrl, 5)
@@ -93,9 +97,9 @@ func TestAndreiboard(t *testing.T) {
 		expectRead(port, 5, []byte("de")),
 		expectRead(port, 3, []byte("")),
 	)
-	checkMatch(nil, "ab")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("ab")))
-	checkMatch(nil, "c")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("c")))
-	checkMatch(errors.New("(wanted c): read nothing"), "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("c")))
+	checkMatch(nil, 0, "ab")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("ab")))
+	checkMatch(nil, 0, "c")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("c")))
+	checkMatch(errors.New("(wanted c): read nothing"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("c")))
 
 	t.Log("Unread buffer should be preserved if a match fails")
 	dut, port = createDut(ctrl, 5)
@@ -103,36 +107,36 @@ func TestAndreiboard(t *testing.T) {
 		expectRead(port, 5, []byte("ab")),
 		expectRead(port, 3, []byte("")),
 	)
-	checkMatch(errors.New("(wanted c): read nothing"), "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("c")))
-	checkMatch(nil, "ab")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("ab")))
+	checkMatch(errors.New("(wanted c): read nothing"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("c")))
+	checkMatch(nil, 0, "ab")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("ab")))
 
 	t.Log("Buffer full condition should result in error")
 	dut, port = createDut(ctrl, 5)
 	gomock.InOrder(
 		expectRead(port, 5, []byte("abcde")),
 	)
-	checkMatch(errors.New("(wanted f): buffer full"), "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("f")))
+	checkMatch(errors.New("(wanted f): buffer full"), 0, "")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("f")))
 
 	t.Log("Should be able to match after beginning of string")
 	dut, port = createDut(ctrl, 5)
 	gomock.InOrder(
 		expectRead(port, 5, []byte("abcde")),
 	)
-	checkMatch(nil, "cde")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("cde")))
+	checkMatch(nil, 0, "cde")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("cde")))
 
 	t.Log("Capture groups should work")
 	dut, port = createDut(ctrl, 5)
 	gomock.InOrder(
 		expectRead(port, 5, []byte("abcde")),
 	)
-	checkMatch(nil, "abcde", "ab", "cde")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("(..)(...)")))
+	checkMatch(nil, 0, "abcde", "ab", "cde")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("(..)(...)")))
 
 	t.Log("Multiline match should work")
 	dut, port = createDut(ctrl, 5)
 	gomock.InOrder(
 		expectRead(port, 5, []byte("ab\ncd")),
 	)
-	checkMatch(nil, "ab\ncd", "b\ncd")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("(?s)a(.*)")))
+	checkMatch(nil, 0, "ab\ncd", "b\ncd")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("(?s)a(.*)")))
 
 	t.Log("Write should work")
 	dut, port = createDut(ctrl, 5)
@@ -141,4 +145,14 @@ func TestAndreiboard(t *testing.T) {
 	if err != nil {
 		t.Fatal("Write error: ", err)
 	}
+
+	t.Log("Multiple regular expressions")
+	dut, port = createDut(ctrl, 5)
+	expectRead(port, 5, []byte("def"))
+	checkMatch(nil, 1, "def")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abc"), regexp.MustCompile("def")))
+
+	t.Log("Multiple regular expressions, first takes precedence")
+	dut, port = createDut(ctrl, 5)
+	expectRead(port, 5, []byte("abc"))
+	checkMatch(nil, 0, "abc")(dut.ReadSerialSubmatch(ctx, regexp.MustCompile("abc"), regexp.MustCompile("ab")))
 }

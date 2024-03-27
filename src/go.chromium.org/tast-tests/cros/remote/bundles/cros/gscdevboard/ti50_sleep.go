@@ -112,7 +112,7 @@ func verifyDeepSleep(ctx context.Context, s *testing.State, i *ti50.CrOSImage, t
 // only if Ti50 did wake up, which is useful for the top-level test script to know which state
 // Ti50 is in, in case it wants to continue testing other aspects.
 func verifyNormalWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession, expected wakeSource, expectedGpio *whichPin, trigger string) bool {
-	wakeMatch, err := b.ReadSerialSubmatch(ctx, reWakeSource)
+	_, wakeMatch, err := b.ReadSerialSubmatch(ctx, reWakeSource)
 	if err != nil {
 		s.Errorf("Waking on %s: Unable to recognize wake source", trigger)
 		return false
@@ -130,7 +130,7 @@ func verifyNormalWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage
 			s.Fatal("Could not write to serial: ", err)
 			return false
 		}
-		whichPinMatch, err := b.ReadSerialSubmatch(ctx, reWhichPin)
+		_, whichPinMatch, err := b.ReadSerialSubmatch(ctx, reWhichPin)
 		if err != nil {
 			s.Errorf("Waking on %s: Unable to recognize which pin source", trigger)
 			return true
@@ -154,18 +154,18 @@ func verifyNormalWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage
 // only if Ti50 did wake up, which is useful for the top-level test script to know which state
 // Ti50 is in, in case it wants to continue testing other aspects.
 func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, b utils.DevboardHelper, gpioMonitor utils.GpioMonitorSession, expectedWake wakeSource, expectedGpio *whichPin, trigger string) bool {
-	_, err := b.ReadSerialSubmatch(ctx, reBoot)
+	_, _, err := b.ReadSerialSubmatch(ctx, reBoot)
 	if err != nil {
 		s.Error("Ti50 did not wake up by ", trigger)
 		return false
 	}
-	resetMatch, err := b.ReadSerialSubmatch(ctx, reResetType)
+	_, resetMatch, err := b.ReadSerialSubmatch(ctx, reResetType)
 	if err != nil {
 		s.Errorf("Waking on %s: did not recognize reset type", trigger)
 		return true
 	}
 	if string(resetMatch[1]) == "Wake" {
-		wakeMatch, err := b.ReadSerialSubmatch(ctx, reWakeSource)
+		_, wakeMatch, err := b.ReadSerialSubmatch(ctx, reWakeSource)
 		if err != nil {
 			s.Errorf("Waking on %s: Unable to recognize wake source", trigger)
 			return true
@@ -176,7 +176,7 @@ func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 
 		// Verify GPIO wake source if specified
 		if expectedGpio != nil {
-			whichPinMatch, err := b.ReadSerialSubmatch(ctx, reWhichPin)
+			_, whichPinMatch, err := b.ReadSerialSubmatch(ctx, reWhichPin)
 			if err != nil {
 				s.Errorf("Waking on %s: Unable to recognize which pin source", trigger)
 				return true
@@ -189,7 +189,7 @@ func verifyDeepWakeup(ctx context.Context, s *testing.State, i *ti50.CrOSImage, 
 	} else {
 		s.Errorf("Waking on %s: Unexpected reset type: got %q, expected %q", trigger, string(resetMatch[1]), "Wake")
 	}
-	_, err = b.ReadSerialSubmatch(ctx, reConsole)
+	_, _, err = b.ReadSerialSubmatch(ctx, reConsole)
 	if err != nil {
 		s.Error("Console not enabled after wake up by ", trigger)
 		return true

@@ -67,14 +67,14 @@ func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 }
 
 func checkTestResults(ctx context.Context, s *testing.State, b utils.DevboardHelper, sectionName string) {
-	_, err := b.ReadSerialSubmatch(ctx, regexp.MustCompile("##"+regexp.QuoteMeta(sectionName)+" TESTS START"))
+	_, _, err := b.ReadSerialSubmatch(ctx, regexp.MustCompile("##"+regexp.QuoteMeta(sectionName)+" TESTS START"))
 	if err != nil {
 		s.Fatal("Failed to read section start: ", err)
 	}
 	endMarker := "##" + regexp.QuoteMeta(sectionName) + " TESTS END"
 	re := regexp.MustCompile("(" + endMarker + `|##TEST (SKIP|START) (\S+)\s)`)
 	for {
-		m, err := b.ReadSerialSubmatch(ctx, re)
+		_, m, err := b.ReadSerialSubmatch(ctx, re)
 		if err != nil {
 			s.Fatal("Failed to read next test: ", err)
 		}
@@ -105,7 +105,7 @@ func waitForTest(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 
 	var elapsedTime time.Duration
 	for ; elapsedTime < timeLimit; elapsedTime = time.Since(testTime) {
-		m, err := b.ReadSerialSubmatch(ctx, lineRe)
+		_, m, err := b.ReadSerialSubmatch(ctx, lineRe)
 		if err != nil {
 			// Tests might be silent for several seconds, so just
 			// try the read again.

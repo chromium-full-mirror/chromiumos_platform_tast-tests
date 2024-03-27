@@ -7,6 +7,7 @@ package ti50
 import (
 	"context"
 	"regexp"
+	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/errors"
@@ -24,6 +25,8 @@ var (
 	deepSleep   *regexp.Regexp = regexp.MustCompile(`Entering deep sleep zzz`)
 	anySleep    *regexp.Regexp = regexp.MustCompile(`Entering (deep|normal) sleep( zzz)?`)
 	roBoot      *regexp.Regexp = regexp.MustCompile(`(Starting ROM_EXT|Ravn4\|)`)
+	fatalMsg    *regexp.Regexp = regexp.MustCompile(
+		`(Kernel panicked|WATCHDOG RESET IMMINENT|app exit|app panic|FIXME).*\n`)
 )
 
 // CommandImage displays a prompt and responds to cli commands.
@@ -54,9 +57,13 @@ func (i *CommandImage) RawCommand(ctx context.Context, rawCmd string, re *regexp
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	match, err := i.ReadSerialSubmatch(ctx, re)
+	whichRegularExpression, match, err := i.ReadSerialSubmatch(ctx, re, fatalMsg)
 	if err != nil {
 		return nil, err
+	}
+	if whichRegularExpression > 0 {
+		// GSC printed a fatal message, report error to caller.
+		return nil, errors.New(strings.TrimRight(string(match[0]), "\r\n"))
 	}
 	ret := make([]string, 0)
 	for _, m := range match {
@@ -87,7 +94,11 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 		if err := ctx.Err(); err != nil {
 			return err
 		}
-		if err := i.getPrompt(ctx); err != nil {
+		success, err := i.getPrompt(ctx)
+		if err != nil {
+			return err
+		}
+		if !success {
 			continue
 		}
 		j++
@@ -101,19 +112,38 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, interval time.Duration) (output [][]byte, err error) {
 	pOpts := testing.PollOptions{Timeout: interval}
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		output, err = i.ReadSerialSubmatch(ctx, re)
-		return err
+		whichRegularExpression, match, err := i.ReadSerialSubmatch(ctx, re, fatalMsg)
+		if err != nil {
+			return err
+		}
+		if whichRegularExpression > 0 {
+			// GSC printed a fatal message, report error to caller.
+			return errors.New(strings.TrimRight(string(match[0]), "\r\n"))
+		}
+		output = match
+		return nil
 	}, &pOpts)
 	return output, err
 }
 
-// getPrompt gets a fresh prompt from the image by  the prompt.
-func (i *CommandImage) getPrompt(ctx context.Context) error {
+// getPrompt gets a fresh prompt from the image by the prompt.  Returns `true` if prompt was
+// detected, `false` on timeout without any prompt, and sets `err` in case of fatal errors.
+func (i *CommandImage) getPrompt(ctx context.Context) (success bool, err error) {
 	if err := i.ClearInput(ctx); err != nil {
-		return err
+		return false, err
 	}
 	ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
 	defer cancel()
-	_, err := i.Command(ctx, "")
-	return err
+	_, err = i.Command(ctx, "")
+	if err == nil {
+		return true, nil
+	}
+	if errors.Is(err, context.DeadlineExceeded) {
+		// This is an "expected" error, indicating that the GSC is simply not yet
+		// responsive.  This will be reported through the first return value, reserving
+		// `err` for truly unexpected cases, such as GSC panic, or HyperDebug malfunction,
+		// either of which should result in the test immediately aborting.
+		return false, nil
+	}
+	return false, err
 }
