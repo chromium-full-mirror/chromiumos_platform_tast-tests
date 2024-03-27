@@ -6,12 +6,15 @@ package hwsec
 
 import (
 	"context"
+	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/fsutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -42,6 +45,9 @@ var defaultBackupFiles = []string{
 var defaultIgnorePaths = []string{
 	"/home/.shadow/*/mount",
 }
+
+const defaultPinWeaverDataDir = "/home/.shadow/low_entropy_creds"
+const defaultTpm2SimulatorNVChipFile = "/mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip"
 
 func (h *CmdHelper) pathExistsInTar(ctx context.Context, tar, dataPath string) bool {
 	// We want to use relative path here.
@@ -114,7 +120,7 @@ func (h *CmdHelper) compressData(ctx context.Context, dst string, paths, ignoreP
 //
 //   - /home/.shadow
 //   - /home/chronos
-//   - /mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip (if includeTpm is set to true).
+//   - /mnt/stateful_partition/unencrypted/tpm2-simulator (if includeTpm is set to true).
 //   - /var/lib/device_management (for install-time attributes, starting from R119)
 func (h *CmdHelper) SaveLoginData(ctx context.Context, archivePath string, includeTpm bool) error {
 	if err := h.stopDaemons(ctx, includeTpm); err != nil {
@@ -129,7 +135,8 @@ func (h *CmdHelper) SaveLoginData(ctx context.Context, archivePath string, inclu
 	paths = append(paths, defaultBackupDirs...)
 	paths = append(paths, defaultBackupFiles...)
 	if includeTpm {
-		paths = append(paths, "/mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip")
+		// There are other NVChip* snapshot files for CrossVersionPinWeaver test's need, so backup the entire tpm2-simulator/ directory.
+		paths = append(paths, "/mnt/stateful_partition/unencrypted/tpm2-simulator/")
 	}
 
 	if err := h.compressData(ctx, archivePath, paths, defaultIgnorePaths); err != nil {
@@ -208,4 +215,67 @@ func (h *CmdHelper) ensureDaemons(ctx context.Context, includeTpm bool) {
 	if err := h.daemonController.Ensure(ctx, UIDaemon); err != nil {
 		testing.ContextLog(ctx, "Failed to ensure UI: ", err)
 	}
+}
+
+// CapturePinWeaverAndTpmSnapShot takes a snapshot of the on-disk PinWeaver hash tree
+// (/home/.shadow/low_entropy_creds folder) and the Tpm NVChip data
+// (/mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip), which includes PinWeaver's server side root hashlog entries
+func (h *CmdHelper) CapturePinWeaverAndTpmSnapShot(ctx context.Context, index int) error {
+	if err := h.stopDaemons(ctx, true /* includeTpm */); err != nil {
+		return err
+	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+	defer h.ensureDaemons(cleanupCtx, true /* includeTpm */)
+
+	srcPWHashTreeDir := defaultPinWeaverDataDir
+	dstPWHashTreeDir := srcPWHashTreeDir + "." + strconv.Itoa(index)
+	if err := os.RemoveAll(dstPWHashTreeDir); err != nil {
+		errors.Wrap(err, "failed to remove existing /home/.shadow/low_entropy_creds directory")
+	}
+	if err := fsutil.CopyDir(srcPWHashTreeDir, dstPWHashTreeDir); err != nil {
+		errors.Wrap(err, "failed to take snapshot of the PinWeaver on-disk hash tree")
+	}
+
+	srcTpmNVChipFile := defaultTpm2SimulatorNVChipFile
+	dstTpmNVChipFile := srcTpmNVChipFile + "." + strconv.Itoa(index)
+	if err := fsutil.CopyFile(srcTpmNVChipFile, dstTpmNVChipFile); err != nil {
+		errors.Wrap(err, "failed to take snapshot of the tpm2-simulator TPM state")
+	}
+
+	return nil
+}
+
+// RestorePinWeaverHashTreeSnapShot restore the on-disk PinWeaver hash tree data
+// (/home/.shadow/low_entropy_creds folder) from a previous snapshot.
+func (h *CmdHelper) RestorePinWeaverHashTreeSnapShot(ctx context.Context, index int) error {
+	dstPWHashTreeDir := defaultPinWeaverDataDir
+	srcPWHashTreeDir := dstPWHashTreeDir + "." + strconv.Itoa(index)
+	if err := os.RemoveAll(dstPWHashTreeDir); err != nil {
+		errors.Wrap(err, "failed to remove existing /home/.shadow/low_entropy_creds directory")
+	}
+	if err := fsutil.CopyDir(srcPWHashTreeDir, dstPWHashTreeDir); err != nil {
+		errors.Wrap(err, "failed to restore the PinWeaver on-disk hash tree from snapshot")
+	}
+	return nil
+}
+
+// RestoreTpmNVChipSnapShot restore the Tpm NVChip data
+// (/mnt/stateful_partition/unencrypted/tpm2-simulator/NVChip) from a previous snapshot.
+func (h *CmdHelper) RestoreTpmNVChipSnapShot(ctx context.Context, index int) error {
+	if err := h.stopDaemons(ctx, true /* includeTpm */); err != nil {
+		return err
+	}
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 20*time.Second)
+	defer cancel()
+	defer h.ensureDaemons(cleanupCtx, true /* includeTpm */)
+
+	dstTpmNVChipFile := defaultTpm2SimulatorNVChipFile
+	srcTpmNVChipFile := dstTpmNVChipFile + "." + strconv.Itoa(index)
+	if err := fsutil.CopyFile(srcTpmNVChipFile, dstTpmNVChipFile); err != nil {
+		errors.Wrap(err, "failed to restore the tpm2-simulator TPM state from snapshot")
+	}
+	return nil
 }

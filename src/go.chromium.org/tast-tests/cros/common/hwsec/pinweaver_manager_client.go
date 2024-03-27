@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 const (
@@ -40,6 +41,7 @@ func NewPinWeaverManagerClient(r CmdRunner) *PinWeaverManagerClient {
 // SyncHashTree retrieves the credential values of a leaf, and returns the tuple (value, error), whereby value is the label of the leaf, and error is nil iff the operation is successful, otherwise error is the error that occurred.
 func (u *PinWeaverManagerClient) SyncHashTree(ctx context.Context) error {
 	out, err := u.binary.syncHashTree(ctx)
+	testing.ContextLog(ctx, strings.Split(strings.TrimSpace(out), "\n"))
 	if err != nil {
 		return errors.Wrapf(err, "failed to sync pinweaver hash tree with the following output %q", out)
 	}

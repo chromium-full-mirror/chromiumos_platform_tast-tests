@@ -311,6 +311,49 @@ func preparePinWeaverData(ctx context.Context, helper hwsec.CmdHelper) (*util.Pi
 		lockedOutLabels = append(lockedOutLabels, lockedOutLabel)
 	}
 
+	// Create some more labels for testing log replay
+	var moreLabels []int
+	for i := 1; i <= 5; i++ {
+		label, err := pinweaver.CreateDefaultCredential(ctx)
+		if err != nil {
+			return nil, err
+		}
+		moreLabels = append(moreLabels, label)
+	}
+
+	if err := helper.CapturePinWeaverAndTpmSnapShot(ctx, 0); err != nil {
+		return nil, errors.Wrap(err, "failed to prepare snapshot 0")
+	}
+
+	// Log Replay Case #1: lost check(failed) + check(ok) on different labels
+	pinweaver.CheckCredential(ctx, moreLabels[0], hwsec.WrongSecret)
+	pinweaver.CheckCredential(ctx, moreLabels[1], hwsec.DefaultLeSecret)
+
+	if err := helper.CapturePinWeaverAndTpmSnapShot(ctx, 1); err != nil {
+		return nil, errors.Wrap(err, "failed to prepare snapshot 1")
+	}
+
+	// Log Replay Case #2: lost insert + remove on same label
+	label, _ := pinweaver.CreateDefaultCredential(ctx)
+	pinweaver.RemoveCredential(ctx, label)
+	if err := helper.CapturePinWeaverAndTpmSnapShot(ctx, 2); err != nil {
+		return nil, errors.Wrap(err, "failed to prepare snapshot 2")
+	}
+
+	// Log Replay Case #3: lost removes
+	pinweaver.RemoveCredential(ctx, moreLabels[2])
+	pinweaver.RemoveCredential(ctx, moreLabels[3])
+	if err := helper.CapturePinWeaverAndTpmSnapShot(ctx, 3); err != nil {
+		return nil, errors.Wrap(err, "failed to prepare snapshot 3")
+	}
+
+	// Log Replay Case #4: lost inserts
+	_, _ = pinweaver.CreateDefaultCredential(ctx)
+	_, _ = pinweaver.CreateDefaultCredential(ctx)
+	if err := helper.CapturePinWeaverAndTpmSnapShot(ctx, 4); err != nil {
+		return nil, errors.Wrap(err, "failed to prepare snapshot 4")
+	}
+
 	return &util.PinWeaverLabelsInfo{NormalLabels: normalLabels, LockedOutLabels: lockedOutLabels}, nil
 }
 

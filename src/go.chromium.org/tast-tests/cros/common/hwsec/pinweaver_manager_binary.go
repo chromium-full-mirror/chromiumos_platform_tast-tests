@@ -23,7 +23,7 @@ func newPinWeaverManagerBinary(r CmdRunner) *pinweaverManagerBinary {
 
 // call is a simple utility that helps to call device_management_client.
 func (c *pinweaverManagerBinary) call(ctx context.Context, args ...string) (string, error) {
-	out, err := c.runner.Run(ctx, "pinweaver_manager_client", args...)
+	out, err := c.runner.RunWithCombinedOutput(ctx, "pinweaver_manager_client", args...)
 	return string(out), err
 }
 

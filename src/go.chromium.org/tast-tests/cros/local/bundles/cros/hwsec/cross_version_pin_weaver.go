@@ -39,11 +39,53 @@ func init() {
 	})
 }
 
-func testPinWeaver(ctx context.Context, pinweaver *hwsec.PinWeaverManagerClient, config *util.CrossVersionLoginConfig) error {
+func testPinWeaverLogReplay(ctx context.Context, helper hwsec.CmdHelper, config *util.CrossVersionLoginConfig) error {
+	pinweaver := helper.PinWeaverManagerClient()
+
+	// Log Replay Case #1 [lost check(failed) + check(ok) on different label]
+	if err := helper.RestorePinWeaverHashTreeSnapShot(ctx, 0); err != nil {
+		return err
+	}
+	if err := helper.RestoreTpmNVChipSnapShot(ctx, 1); err != nil {
+		return err
+	}
+	if err := pinweaver.SyncHashTree(ctx); err != nil {
+		return errors.Wrap(err, "failed replay log test #1 [lost insert(failed) + insert(ok) on different label]")
+	}
+
+	// Log Replay Case #2 [lost insert + remove on same label]
+	if err := helper.RestoreTpmNVChipSnapShot(ctx, 2); err != nil {
+		return err
+	}
+	if err := pinweaver.SyncHashTree(ctx); err != nil {
+		return errors.Wrap(err, "failed replay log test #2 [lost insert + remove on same label]")
+	}
+
+	// Log Replay Case #3 [lost removes]
+	if err := helper.RestoreTpmNVChipSnapShot(ctx, 3); err != nil {
+		return err
+	}
+	if err := pinweaver.SyncHashTree(ctx); err != nil {
+		return errors.Wrap(err, "failed replay log test #3 [lost removes]")
+	}
+
+	// Log Replay Case #4 [lost inserts]
+	if err := helper.RestoreTpmNVChipSnapShot(ctx, 4); err != nil {
+		return err
+	}
+	if err := pinweaver.SyncHashTree(ctx); err != nil {
+		return errors.Wrap(err, "failed replay log test #4 [lost inserts]")
+	}
+	return nil
+}
+
+func testPinWeaver(ctx context.Context, helper hwsec.CmdHelper, config *util.CrossVersionLoginConfig) error {
 	normalLabels := config.PinWeaverLabels.NormalLabels
 	lockedOutLabels := config.PinWeaverLabels.LockedOutLabels
 	const usedNormalLabelCount = 3
 	const usedLockedOutLabelCount = 4
+
+	pinweaver := helper.PinWeaverManagerClient()
 
 	if len(normalLabels) < usedNormalLabelCount || len(lockedOutLabels) < usedLockedOutLabelCount {
 		return errors.New("PinWeaver labels prepared before migration aren't enough")
@@ -95,7 +137,7 @@ func testPinWeaver(ctx context.Context, pinweaver *hwsec.PinWeaverManagerClient,
 		return errors.Wrap(err, "failed to remove a label that is created before migration")
 	}
 
-	return nil
+	return testPinWeaverLogReplay(ctx, helper, config)
 }
 
 func CrossVersionPinWeaver(ctx context.Context, s *testing.State) {
@@ -104,14 +146,13 @@ func CrossVersionPinWeaver(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to create hwsec local helper: ", err)
 	}
-	pinweaver := helper.PinWeaverManagerClient()
 
 	fixtureData := s.FixtValue().(*fixture.CrossVersionLoginFixture)
 	for _, config := range fixtureData.ConfigList {
 		if config.PinWeaverLabels == nil {
 			continue
 		}
-		if err := testPinWeaver(ctx, pinweaver, &config); err != nil {
+		if err := testPinWeaver(ctx, helper.CmdHelper, &config); err != nil {
 			s.Fatal("Failed to test pinweaver: ", err)
 		}
 	}

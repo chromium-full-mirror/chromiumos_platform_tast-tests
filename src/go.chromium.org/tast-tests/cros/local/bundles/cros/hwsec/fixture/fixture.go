@@ -25,7 +25,7 @@ const (
 	crossVersionBackupSetUpTimeout    = 90 * time.Second
 	crossVersionBackupResetTimeout    = 30 * time.Second
 	crossVersionBackupTearDownTimeout = 1 * time.Minute
-	crossVersionSetUpTimeout          = 1 * time.Minute
+	crossVersionSetUpTimeout          = 2 * time.Minute
 	crossVersionCurrentSetUpTimeout   = crossVersionSetUpTimeout + 2*time.Minute // X-ver setup + extra preparation time for `useCurrent`.
 	crossVersionResetTimeout          = 30 * time.Second
 	crossVersionTearDownTimeout       = 30 * time.Second
