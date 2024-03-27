@@ -29,6 +29,7 @@ func CbxFeatures() []string {
 		"FeatureAwareDeviceDemoMode",
 		"VideoConference",
 		"Orca",
+		"LocalImageSearch",
 	}
 }
 
