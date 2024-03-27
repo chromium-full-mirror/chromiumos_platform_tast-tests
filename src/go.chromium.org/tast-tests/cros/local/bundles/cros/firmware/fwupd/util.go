@@ -6,27 +6,28 @@ package fwupd
 
 import (
 	"context"
-	"reflect"
 	"regexp"
 	"time"
 
-	"github.com/godbus/dbus/v5"
-
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+// CacheDir is mapped for fwupd running in jail.
+const CacheDir = "/var/cache/fwupd"
 
 // ReleaseURI contains the release URI of the test webcam device in the system.
 // The URI is coming from the fwupd website. Here is the link of the fake device
 // https://fwupd.org/lvfs/devices/org.fwupd.fakedevice.firmware. See v1.2.4
 const ReleaseURI = "https://storage.googleapis.com/chromeos-localmirror/lvfs/test/a92d4f433e925ea8e4a10d25dfa58e64ba1e68d07ee963605a2ccbaa2e3185aa-fakedevice124.cab"
 
-// ChargingStateTimeout has the time needed for polling battery charging state changes.
-// It takes Brya about 3 minutes for the state to change from fully charged to discharging.
-const ChargingStateTimeout = 10 * time.Minute
+// FakeWebcamBaseVersion is the default version of the test webcam device.
+const FakeWebcamBaseVersion = "1.2.2"
+
+// FakeWebcamUpdateVersion is the version of the expected update for the test webcam device.
+const FakeWebcamUpdateVersion = "1.2.4"
 
 // FakeWebcamGUID is the GUID of the Fakecam installed on test devices
 const FakeWebcamGUID string = "b585990a-003e-5270-89d5-3705a17f9a43"
@@ -37,12 +38,20 @@ const FakeWebcamName string = "Integrated Webcam™"
 // FakeWebcamReleaseName is the name of all the releases of the Fakecam installed on test devices
 const FakeWebcamReleaseName string = "FakeDevice"
 
-// FakeWebcamVersion is the version of the Fakecam installed on test devices
-const FakeWebcamVersion string = "1.2.2"
+// ChargingStateTimeout has the time needed for polling battery charging state changes.
+// It takes Brya about 3 minutes for the state to change from fully charged to discharging.
+const ChargingStateTimeout = 10 * time.Minute
 
 const (
 	// This is a string that appears when the computer is discharging.
 	dischargeString = `uint32 [0-9]\s+uint32 2`
+)
+
+const (
+	// TrustedReportsReleaseFlagBit (9th bit) represents Trusted Reports value
+	// in TrustFlags of the Release struct
+	// Defined here: https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums.h
+	TrustedReportsReleaseFlagBit = 1 << 8
 )
 
 // SetFwupdChargingState sets the battery charging state and polls for
@@ -120,267 +129,4 @@ func SetFwupdChargingState(ctx context.Context, charge bool) (setup.CleanupCallb
 	localCleanup = nil
 
 	return retCleanup, nil
-}
-
-// Device represents a hardware device supported by fwupd.
-// Names are aligned with dbus properties for reflections below.
-// See https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums-private.h
-type Device struct {
-	Guid          []string // NOLINT
-	DeviceId      string   // NOLINT
-	Name          string
-	InstanceIds   []string
-	Plugin        string
-	Problems      uint64
-	UpdateError   string
-	Version       string
-	VersionFormat uint32
-}
-
-// Release represents a release of a hardware device supported by fwupd.
-// Names are aligned with dbus properties for reflections below.
-// See https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums-private.h
-//
-// More values exist but for the purpose of these tests we only need these
-// values.
-type Release struct {
-	Name       string
-	RemoteId   string // NOLINT
-	TrustFlags uint64
-	Version    string
-}
-
-const (
-	// DbusName bus
-	DbusName = "org.freedesktop.fwupd"
-	// DbusPath object path
-	DbusPath = "/"
-	// DbusInterface interface
-	DbusInterface = "org.freedesktop.fwupd"
-	// GetDevicesMethod - Method name to get devices
-	GetDevicesMethod = "GetDevices"
-	// GetReleasesMethod - Method name to get releases
-	GetReleasesMethod = "GetReleases"
-	// GetUpdatesMethod - Method name to get updates
-	GetUpdatesMethod = "GetUpgrades"
-
-	// TrustedReportsReleaseFlagBit (9th bit) represents Trusted Reports value
-	// in TrustFlags of the Release struct
-	// Defined here: https://github.com/fwupd/fwupd/blob/main/libfwupd/fwupd-enums.h
-	TrustedReportsReleaseFlagBit = 1 << 8
-)
-
-func inspectDevice(ctx context.Context, rawDevice map[string]dbus.Variant) (device *Device, err error) {
-	testing.ContextLog(ctx, "Inspecting device: ", rawDevice)
-	device = new(Device)
-	devst := reflect.ValueOf(device).Elem()
-	if !devst.CanAddr() {
-		return nil, errors.New("cannot assign to the item passed, item must be a pointer in order to assign")
-	}
-
-	for i := 0; i < devst.NumField(); i++ {
-		name := devst.Type().Field(i).Name
-		if value, ok := rawDevice[name]; ok {
-			fieldT := reflect.ValueOf(device).Elem().Field(i)
-			fieldT.Set(reflect.ValueOf(value.Value()))
-		}
-	}
-
-	return device, err
-}
-
-func inspectRelease(ctx context.Context, rawRelease map[string]dbus.Variant) (release *Release, err error) {
-	testing.ContextLog(ctx, "Inspecting release: ", rawRelease)
-	release = new(Release)
-	relst := reflect.ValueOf(release).Elem()
-	if !relst.CanAddr() {
-		return nil, errors.New("cannot assign to the item passed, item must be a pointer in order to assign")
-	}
-
-	for i := 0; i < relst.NumField(); i++ {
-		name := relst.Type().Field(i).Name
-		if value, ok := rawRelease[name]; ok {
-			fieldT := reflect.ValueOf(release).Elem().Field(i)
-			fieldT.Set(reflect.ValueOf(value.Value()))
-		}
-	}
-
-	return release, err
-}
-
-func getDevices() ([]map[string]dbus.Variant, error) {
-	var devices []map[string]dbus.Variant
-	// Don't close the shared connection.
-	conn, err := dbusutil.SystemBus()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to system bus")
-	}
-
-	fwupd := conn.Object(DbusName, DbusPath)
-
-	if err = fwupd.Call(DbusInterface+"."+GetDevicesMethod, 0).Store(&devices); err != nil {
-		return nil, errors.Wrap(err, "failed to call "+GetDevicesMethod)
-	}
-
-	return devices, nil
-}
-
-func releasesForDbusCall(ctx context.Context, dbusMethod, deviceID string) ([]map[string]dbus.Variant, error) {
-	var releases []map[string]dbus.Variant
-	// Don't close the shared connection.
-	conn, err := dbusutil.SystemBus()
-	if err != nil {
-		return nil, errors.Wrap(err, "failed to connect to system bus")
-	}
-
-	fwupd := conn.Object(DbusName, DbusPath)
-
-	if err = fwupd.Call(DbusInterface+"."+dbusMethod, 0, deviceID).Store(&releases); err != nil {
-		return nil, errors.Wrap(err, "failed to call "+dbusMethod)
-	}
-
-	return releases, nil
-}
-
-// DeviceByGUID returns a fwupd Device as known to fwupd that has a GUID
-// matching the provided one.
-func DeviceByGUID(ctx context.Context, expectedGUID string) (*Device, error) {
-	devices, err := getDevices()
-	if err != nil {
-		return nil, err
-	}
-
-	// Scan all devices to locate one with the expected GUID.
-	for _, rawDevice := range devices {
-		device, err := inspectDevice(ctx, rawDevice)
-		if device == nil {
-			testing.ContextLogf(ctx, "Failed to inspect the device: %s, Error: %v", rawDevice, err)
-			continue
-		}
-		if err != nil {
-			return nil, err
-		}
-
-		for _, guid := range device.Guid {
-			if guid == expectedGUID {
-				testing.ContextLog(ctx, "Found device: ", device)
-				return device, nil
-			}
-		}
-	}
-
-	return nil, errors.New("No device found with GUID " + expectedGUID)
-}
-
-// DeviceByID returns a fwupd Device ID matching the provided one.
-func DeviceByID(ctx context.Context, expectedID string) (*Device, error) {
-	devices, err := getDevices()
-	if err != nil {
-		return nil, err
-	}
-	// Scan all devices to locate one with the expected GUID.
-	for _, rawDevice := range devices {
-		device, err := inspectDevice(ctx, rawDevice)
-		if device == nil {
-			testing.ContextLogf(ctx, "Failed to inspect the device: %s, Error: %v", rawDevice, err)
-			continue
-		}
-
-		if err != nil {
-			return nil, err
-		}
-
-		if device.DeviceId == expectedID {
-			testing.ContextLog(ctx, "Found device: ", device)
-			return device, nil
-		}
-	}
-
-	return nil, errors.New("No device found with ID " + expectedID)
-}
-
-// DeviceDowngradeVersion returns the first available version to downgrade.
-func DeviceDowngradeVersion(ctx context.Context, deviceID string) (string, error) {
-	// Don't close the shared connection.
-	conn, err := dbusutil.SystemBus()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to connect to system bus")
-	}
-	fwupd := conn.Object(DbusName, DbusPath)
-
-	var downgrades []map[string]dbus.Variant
-	if err := fwupd.Call(DbusInterface+".GetDowngrades", 0, deviceID).Store(&downgrades); err != nil {
-		return "", errors.Wrap(err, "error fetching downgrades for device "+deviceID)
-	}
-
-	// Using the first available downgrade version.
-	for _, downgrade := range downgrades {
-		testing.ContextLog(ctx, "Downgrade version:", downgrade["Version"])
-		if _, ok := downgrade["Version"]; ok {
-			var version string
-			if err := dbus.Store([]interface{}{downgrade["Version"]}, &version); err != nil {
-				return "", errors.Wrap(err, "failed to read version for downgrade")
-			}
-			return version, nil
-		}
-	}
-
-	return "", errors.New("No usable updates found for " + deviceID)
-}
-
-// Version returns the version of fwupd daemon.
-func Version(ctx context.Context) (string, error) {
-	// Don't close the shared connection.
-	conn, err := dbusutil.SystemBus()
-	if err != nil {
-		return "", errors.Wrap(err, "failed to connect to system bus")
-	}
-	fwupd := conn.Object(DbusName, DbusPath)
-
-	var version dbus.Variant
-	if version, err = fwupd.GetProperty(DbusInterface + ".DaemonVersion"); err != nil {
-		return "", errors.Wrap(err, "failed to get FWUPD version")
-	}
-
-	return version.String(), nil
-}
-
-// inspectReleases inspects a list of releases
-// Returns an error if even one release can not be inspected correctly
-func inspectReleases(ctx context.Context, rawReleases []map[string]dbus.Variant) (result []*Release, err error) {
-	for _, rawRelease := range rawReleases {
-		release, err := inspectRelease(ctx, rawRelease)
-		if err != nil {
-			return nil, errors.Wrapf(err, "failed to inspect the release: %s", rawRelease)
-		}
-		result = append(result, release)
-	}
-
-	return result, nil
-}
-
-// UpdatesForDeviceID returns the Releases available for the given DeviceID
-func UpdatesForDeviceID(ctx context.Context, deviceID string) (releases []*Release, err error) {
-	updateMap, err := releasesForDbusCall(ctx, GetUpdatesMethod, deviceID)
-	if err != nil {
-		return nil, err
-	}
-	releases, err = inspectReleases(ctx, updateMap)
-	if err != nil {
-		return nil, err
-	}
-	return releases, nil
-}
-
-// ReleasesForDeviceID returns all the Releases available for the given DeviceID
-func ReleasesForDeviceID(ctx context.Context, deviceID string) (releases []*Release, err error) {
-	releaseMap, err := releasesForDbusCall(ctx, GetReleasesMethod, deviceID)
-	if err != nil {
-		return nil, err
-	}
-	releases, err = inspectReleases(ctx, releaseMap)
-	if err != nil {
-		return nil, err
-	}
-	return releases, nil
 }

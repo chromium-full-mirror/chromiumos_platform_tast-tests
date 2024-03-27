@@ -50,7 +50,12 @@ func init() {
 // FwupdDbusTests checks for correct number of releases for the Fake Webcam.
 // It also checks if the Trusted Reports flag is set correctly
 func FwupdDbusTests(ctx context.Context, s *testing.State) {
-	fwupdVersion, err := fwupd.Version(ctx)
+	fwd, err := fwupd.Init()
+	if err != nil {
+		s.Fatal("Failed to connect to fwupd: ", err)
+	}
+
+	fwupdVersion, err := fwd.Version()
 	if err != nil {
 		s.Fatal("Unable to get FWUPD version: ", err)
 	}
@@ -92,7 +97,7 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 
 	// Get device using GUID
 	var device *fwupd.Device
-	device, err = fwupd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
+	device, err = fwd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
 	if err != nil {
 		s.Fatal("Failed to detect expected device using GUID: ", err)
 	}
@@ -101,10 +106,10 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 	action := s.Param().(int)
 	var releases []*fwupd.Release
 	if action == paramUpdates {
-		releases, err = fwupd.UpdatesForDeviceID(ctx, testDeviceID)
+		releases, err = fwd.UpdatesForDeviceID(ctx, testDeviceID)
 		expectedReleases = expectedReleases[:1]
 	} else {
-		releases, err = fwupd.ReleasesForDeviceID(ctx, testDeviceID)
+		releases, err = fwd.ReleasesForDeviceID(ctx, testDeviceID)
 	}
 	if err != nil {
 		s.Fatal("Failed to get releases: ", err)

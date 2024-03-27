@@ -40,7 +40,12 @@ func FwupdDetectRTD2142(ctx context.Context, s *testing.State) {
 		expectedPlugin           = "realtek_mst"
 	)
 
-	device, err := fwupd.DeviceByGUID(ctx, expectedDeviceGUID)
+	fwd, err := fwupd.Init()
+	if err != nil {
+		s.Fatal("Failed to connect to fwupd: ", err)
+	}
+
+	device, err := fwd.DeviceByGUID(ctx, expectedDeviceGUID)
 	if err != nil {
 		testing.ContextLog(ctx, "On some devices (particularly if in a"+
 			" pre-MP build phase), the MST firmware may be too"+

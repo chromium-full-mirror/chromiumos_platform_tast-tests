@@ -80,7 +80,11 @@ func init() {
 }
 
 func FwupdDeviceDfu(ctx context.Context, s *testing.State) {
-	fwupdVersion, err := fwupd.Version(ctx)
+	fwd, err := fwupd.Init()
+	if err != nil {
+		s.Fatal("Failed to connect to fwupd: ", err)
+	}
+	fwupdVersion, err := fwd.Version()
 	if err != nil {
 		s.Fatal("Unable to get FWUPD version: ", err)
 	}
@@ -92,13 +96,13 @@ func FwupdDeviceDfu(ctx context.Context, s *testing.State) {
 	// if both passed -- the device ID is preferable.
 	if expectedID, ok := s.Var("fwupd.deviceId"); ok {
 		s.Log("Expecting device ID: ", expectedID)
-		device, err = fwupd.DeviceByID(ctx, expectedID)
+		device, err = fwd.DeviceByID(ctx, expectedID)
 		if err != nil {
 			s.Fatal("Failed to detect expected device: ", err)
 		}
 		target = device.DeviceId
 	} else if expectedGUID, ok := s.Var("fwupd.deviceGuid"); ok {
-		device, err = fwupd.DeviceByGUID(ctx, expectedGUID)
+		device, err = fwd.DeviceByGUID(ctx, expectedGUID)
 		if err != nil {
 			s.Fatal("Failed to detect expected device: ", err)
 		}
@@ -119,7 +123,7 @@ func FwupdDeviceDfu(ctx context.Context, s *testing.State) {
 		opts = append(opts, target)
 	case paramDowngrade:
 		var fwVer string
-		if fwVer, err = fwupd.DeviceDowngradeVersion(ctx, device.DeviceId); err != nil {
+		if fwVer, err = fwd.DeviceDowngradeVersion(ctx, device.DeviceId); err != nil {
 			s.Fatal("Error fetching downgrades for device '" + device.Name + "': " + device.UpdateError)
 		}
 		s.Log("Found version for downgrade: ", fwVer)
@@ -154,7 +158,7 @@ func FwupdDeviceDfu(ctx context.Context, s *testing.State) {
 	}
 
 	// Check the version after flashing.
-	if device, err = fwupd.DeviceByID(ctx, device.DeviceId); err != nil {
+	if device, err = fwd.DeviceByID(ctx, device.DeviceId); err != nil {
 		s.Fatal("Unable to detect the device after flashing: ", err)
 	}
 

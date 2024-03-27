@@ -30,7 +30,12 @@ func init() {
 // FwupdGetDevices makes the dbus call `GetDevices` and searches through them to
 // find a specific fake device.
 func FwupdGetDevices(ctx context.Context, s *testing.State) {
-	fwupdVersion, err := fwupd.Version(ctx)
+	fwd, err := fwupd.Init()
+	if err != nil {
+		s.Fatal("Failed to connect to fwupd: ", err)
+	}
+
+	fwupdVersion, err := fwd.Version()
 	if err != nil {
 		s.Fatal("Unable to get FWUPD version: ", err)
 	}
@@ -38,14 +43,14 @@ func FwupdGetDevices(ctx context.Context, s *testing.State) {
 
 	// Get device using GUID
 	var device *fwupd.Device
-	device, err = fwupd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
+	device, err = fwd.DeviceByGUID(ctx, fwupd.FakeWebcamGUID)
 	if err != nil {
 		s.Fatal("Failed to detect expected device using GUID: ", err)
 	}
 	if device.Name != fwupd.FakeWebcamName {
 		s.Fatalf("Detected device name: %s is different from expected device name: %s", device.Name, fwupd.FakeWebcamName)
 	}
-	if device.Version != fwupd.FakeWebcamVersion {
-		s.Fatalf("Detected device version: %s is different from expected device version: %s", device.Version, fwupd.FakeWebcamVersion)
+	if device.Version != fwupd.FakeWebcamBaseVersion {
+		s.Fatalf("Detected device version: %s is different from expected device version: %s", device.Version, fwupd.FakeWebcamBaseVersion)
 	}
 }
