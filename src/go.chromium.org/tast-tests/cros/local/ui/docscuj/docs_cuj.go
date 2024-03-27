@@ -40,7 +40,7 @@ import (
 
 // Run opens up a new Google Doc, and types paragraphs in multiple
 // languages, speeds, and styles, to test the Google Docs performance.
-func Run(ctx context.Context, s *testing.State) *perf.Values {
+func Run(ctx context.Context, cr *chrome.Chrome, bt browser.Type, outDir, systemTraceConfigPath, testName string) (pv *perf.Values, retErr error) {
 	// Shorten context a bit to allow for cleanup.
 	closeCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
@@ -48,56 +48,54 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	pv, err := localPerf.CaptureDeviceSnapshot(ctx, "Initial")
 	if err != nil {
-		s.Fatal("Failed to capture device snapshot: ", err)
+		return nil, errors.Wrap(err, "failed to capture device snapshot")
 	}
-
-	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
 	// Set up an about:blank page, so that we can use the given
 	// tab conn to navigate to Google Docs within the recorder.
-	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, s.Param().(browser.Type), chrome.BlankURL)
+	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, bt, chrome.BlankURL)
 	if err != nil {
-		s.Fatal("Failed to setup Chrome: ", err)
+		return nil, errors.Wrap(err, "failed to setup Chrome")
 	}
 	defer closeBrowser(closeCtx)
 	defer conn.Close()
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to test API connection: ", err)
+		return nil, errors.Wrap(err, "failed to connect to test API connection")
 	}
 
 	bTconn, err := br.TestAPIConn(ctx)
 	if err != nil {
-		s.Fatal("Failed to connect to browser test API connection: ", err)
+		return nil, errors.Wrap(err, "failed to connect to browser test API connection")
 	}
 
 	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
 	if err != nil {
-		s.Fatal("Failed to create a recorder: ", err)
+		return nil, errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(closeCtx)
 
 	if err := recorder.AddCommonMetrics(tconn, bTconn); err != nil {
-		s.Fatal("Failed to add common metrics to the recorder: ", err)
+		return nil, errors.Wrap(err, "failed to add common metrics to the recorder")
 	}
 
 	// Add an empty screenshot recorder.
 	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
-		s.Log("Failed to add screenshot recorder: ", err)
+		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
 	}
 
 	inTabletMode, err := ash.TabletModeEnabled(ctx, tconn)
-	s.Logf("Is in tablet-mode: %t", inTabletMode)
+	testing.ContextLogf(ctx, "Is in tablet-mode: %t", inTabletMode)
 	if err != nil {
-		s.Fatal("Failed to detect if device is in tablet-mode or not: ", err)
+		return nil, errors.Wrap(err, "failed to detect if device is in tablet-mode or not")
 	}
 
 	var pc pointer.Context
 	if inTabletMode {
 		pc, err = pointer.NewTouch(ctx, tconn)
 		if err != nil {
-			s.Fatal("Failed to create a touch controller: ", err)
+			return nil, errors.Wrap(err, "failed to create a touch controller")
 		}
 	} else {
 		pc = pointer.NewMouse(tconn)
@@ -106,35 +104,35 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 	mw, err := input.Mouse(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a mouse: ", err)
+		return nil, errors.Wrap(err, "failed to create a mouse")
 	}
 	defer mw.Close(ctx)
 
 	kw, err := input.Keyboard(ctx)
 	if err != nil {
-		s.Fatal("Failed to create a keyboard: ", err)
+		return nil, errors.Wrap(err, "failed to create a keyboard")
 	}
 	defer kw.Close(ctx)
 
 	info, err := display.GetPrimaryInfo(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to get the primary display info: ", err)
+		return nil, errors.Wrap(err, "failed to get the primary display info")
 	}
 
 	ac := uiauto.New(tconn)
 
 	tabChecker, err := cuj.NewTabCrashChecker(ctx, bTconn)
 	if err != nil {
-		s.Fatal("Failed to create TabCrashChecker: ", err)
+		return nil, errors.Wrap(err, "failed to create TabCrashChecker")
 	}
 
 	// Install the Google Docs offline extension to ensure that the
 	// test continues to run despite any network difficulties.
 	if err := cuj.EnsureDocsOfflineEnabled(ctx, br, tconn); err != nil {
-		s.Fatal("Failed to enable Docs offline support: ", err)
+		return nil, errors.Wrap(err, "failed to enable Docs offline support")
 	}
 
-	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, s.OutDir(), s.HasError, cr, "failure")
+	defer faillog.DumpUITreeWithScreenshotOnError(closeCtx, outDir, func() bool { return retErr != nil }, cr, "failure")
 
 	// paragraphs will be all the paragraphs we will type during the test.
 	paragraphs := getParagraphs(pc, cr, tconn, conn, ac, kw)
@@ -146,7 +144,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// an action that always returns a nil error.
 	waitUntilStableAndLogError := func(ctx context.Context) error {
 		if err := ac.WithTimeout(10*time.Second).WaitUntilNoEvent(nodewith.Root(), event.LocationChanged)(ctx); err != nil {
-			s.Log("Root hasn't stabilized yet, continuing anyway: ", err)
+			testing.ContextLog(ctx, "Root hasn't stabilized yet, continuing anyway: ", err)
 		}
 		return nil
 	}
@@ -160,7 +158,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	// Before typing any paragraph, install all required languages.
 	for _, p := range paragraphs {
 		if err := p.language.Install(tconn)(ctx); err != nil {
-			s.Fatalf("Failed to install %s: %v", p.language.Name, err)
+			return nil, errors.Wrapf(err, "failed to install %s", p.language.Name)
 		}
 
 		if p.language != ime.DefaultInputMethod {
@@ -184,8 +182,8 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 	defer func(ctx context.Context) {
 		if cleanUpDoc && docsHref != "" {
 			if err := googledocs.DeleteDocWithURL(tconn, cr, docsHref)(ctx); err != nil {
-				faillog.DumpUITreeWithScreenshotOnError(ctx, s.OutDir(), func() bool { return true }, cr, "cleanup_doc")
-				s.Log("Failed to delete doc: ", err)
+				faillog.DumpUITreeWithScreenshotOnError(ctx, outDir, func() bool { return true }, cr, "cleanup_doc")
+				testing.ContextLog(ctx, "Failed to delete doc: ", err)
 			}
 		}
 	}(cleanUpDocCtx)
@@ -204,7 +202,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		// settle in that time frame, because the tab should be ready
 		// enough to proceed.
 		if err := webutil.WaitForQuiescence(ctx, conn, 30*time.Second); err != nil {
-			s.Log("Failed to wait for the tab to quiesce")
+			testing.ContextLog(ctx, "Failed to wait for the tab to quiesce")
 		}
 
 		if err := conn.Eval(ctx, "window.location.href", &docsHref); err != nil {
@@ -244,7 +242,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 
 		// Include the time in the title to make the document more
 		// unique, in case we ever wanted to refer back to it.
-		if err := googledocs.UpdateTitle(ctx, pc, ac, kw, fmt.Sprintf("%s %s", s.TestName(), time.Now())); err != nil {
+		if err := googledocs.UpdateTitle(ctx, pc, ac, kw, fmt.Sprintf("%s %s", testName, time.Now())); err != nil {
 			return errors.Wrap(err, "failed to update Google Doc title")
 		}
 
@@ -313,7 +311,7 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 			// See go/trace-in-cuj-tests about rules for tracing.
 			if p.tracingCfg != "" {
 				traceName := fmt.Sprintf("paragraph%d.data.gz", pIndex)
-				if err := recorder.StartTracingWithName(ctx, s.OutDir(), traceName, s.DataPath(p.tracingCfg)); err != nil {
+				if err := recorder.StartTracingWithName(ctx, outDir, traceName, systemTraceConfigPath); err != nil {
 					return errors.Wrap(err, "failed to start tracing")
 				}
 			}
@@ -394,20 +392,20 @@ func Run(ctx context.Context, s *testing.State) *perf.Values {
 		}
 		return nil
 	}); err != nil {
-		s.Fatal("Failed to conduct the recorder task: ", err)
+		return nil, errors.Wrap(err, "failed to conduct the recorder task")
 	}
 
 	if err := recorder.Record(ctx, pv); err != nil {
-		s.Fatal("Failed to report: ", err)
+		return nil, errors.Wrap(err, "failed to report")
 	}
 	if err := recorder.SaveTraceFiles(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to save trace files: ", err)
 	}
-	if err := recorder.SaveHistograms(s.OutDir()); err != nil {
-		s.Error("Failed to save histogram raw data: ", err)
+	if err := recorder.SaveHistograms(outDir); err != nil {
+		return nil, errors.Wrap(err, "failed to save histogram raw data")
 	}
-	if err := pv.Save(s.OutDir()); err != nil {
-		s.Error("Failed to store values: ", err)
+	if err := pv.Save(outDir); err != nil {
+		return nil, errors.Wrap(err, "failed to store values")
 	}
-	return pv
+	return pv, nil
 }

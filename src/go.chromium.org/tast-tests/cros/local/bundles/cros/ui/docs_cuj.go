@@ -8,6 +8,7 @@ import (
 	"context"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/ui/cujrecorder"
 	"go.chromium.org/tast-tests/cros/local/ui/docscuj"
@@ -66,5 +67,10 @@ func init() {
 }
 
 func DocsCUJ(ctx context.Context, s *testing.State) {
-	docscuj.Run(ctx, s)
+	cr := s.FixtValue().(chrome.HasChrome).Chrome()
+	bt := s.Param().(browser.Type)
+	traceConfigPath := s.DataPath(cujrecorder.SystemTraceConfigFile)
+	if _, err := docscuj.Run(ctx, cr, bt, s.OutDir(), traceConfigPath, s.TestName()); err != nil {
+		s.Fatal("Failed to run DocsCUJ: ", err)
+	}
 }
