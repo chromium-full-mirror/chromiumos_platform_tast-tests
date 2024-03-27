@@ -53,7 +53,7 @@ func init() {
 		Desc: "Verifies that AP can handle throughput without losses",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
-			"jck@semihalf.com",                // Test author
+			"jsiuda@google.com",               // Test author
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},

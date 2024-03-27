@@ -31,7 +31,7 @@ func init() {
 		Desc: "Verifies that SAP still works normally and there are no crash or resource leaks after multiple on/off cycles",
 		Contacts: []string{
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation
-			"jck@semihalf.com",                // Test author
+			"jsiuda@google.com",               // Test author
 		},
 		BugComponent: "b:893827", // ChromeOS > Platform > Connectivity > WiFi
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_sap", "wificell_cross_device_unstable"},
