@@ -2,18 +2,14 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package proxy defines proxy interface on Chrome for testing.
 package proxy
 
 import (
 	"context"
 )
 
-// Proxy defines interface of proxy.
+// Proxy defines all interfaces to abstract a proxy running in the test environment.
 type Proxy interface {
-	// Start starts the proxy.
-	Start(ctx context.Context) error
-
 	// Close closes proxy.
 	Close(ctx context.Context) error
 

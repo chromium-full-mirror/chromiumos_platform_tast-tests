@@ -14,7 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -72,11 +72,16 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	proxy, err := mitmproxy.New(ctx, proxyOpts(s)...)
-	if err := cr.LaunchAndApplyProxy(ctx, proxy); err != nil {
-		s.Fatal("Failed to launch and apply proxy: ", err)
+	mp, err := proxy.NewMitmProxy(ctx, proxyOpts(s)...)
+	if err != nil {
+		s.Fatal("Failed to start proxy: ", err)
 	}
-	defer cr.CleanupProxy(cleanupCtx)
+	defer mp.Close(cleanupCtx)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		s.Fatal("Failed to configure chrome for proxy: ", err)
+	}
+	defer reset(cleanupCtx, cr)
 
 	conn, br, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.example.com")
 	if err != nil {
@@ -121,24 +126,24 @@ func verifyPageContent(ctx context.Context, conn *chrome.Conn, expected string) 
 	return nil
 }
 
-func proxyOpts(s *testing.State) []mitmproxy.Option {
+func proxyOpts(s *testing.State) []proxy.Option {
 	testCase := s.Param().(string)
-	var opts []mitmproxy.Option
+	var opts []proxy.Option
 	switch testCase {
 	case "redirect":
-		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(httpRedirect)))
+		opts = append(opts, proxy.ScriptPath(s.DataPath(httpRedirect)))
 	case "error":
-		opts = append(opts, mitmproxy.ScriptPath(s.DataPath(httpErrorInject)))
+		opts = append(opts, proxy.ScriptPath(s.DataPath(httpErrorInject)))
 	case "diff":
 		opts = append(opts,
-			mitmproxy.ScriptPath(s.DataPath(allowedEndpoints), s.DataPath(extraConfig)),
-			mitmproxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml: %s", s.DataPath(endpoints))),
-			mitmproxy.HealthCheck(false), // Disable health check as it uses the local domain that won't work with the allowlist set for this test.
+			proxy.ScriptPath(s.DataPath(allowedEndpoints), s.DataPath(extraConfig)),
+			proxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml: %s", s.DataPath(endpoints))),
+			proxy.HealthCheck(false), // Disable health check as it uses the local domain that won't work with the allowlist set for this test.
 		)
 	case "discovery":
 		opts = append(opts,
-			mitmproxy.ScriptPath(s.DataPath(discoveryEndpoints)),
-			mitmproxy.CustomOptions(fmt.Sprintf("endpoint_info_folder: %s", s.OutDir()), fmt.Sprintf("patterns_to_record: \n  - %s", "example.com")),
+			proxy.ScriptPath(s.DataPath(discoveryEndpoints)),
+			proxy.CustomOptions(fmt.Sprintf("endpoint_info_folder: %s", s.OutDir()), fmt.Sprintf("patterns_to_record: \n  - %s", "example.com")),
 		)
 	}
 	return opts

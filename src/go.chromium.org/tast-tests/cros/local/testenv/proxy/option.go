@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-package mitmproxy
+package proxy
 
 // Option is a function that can be used to config MitmProxy.
 type Option func(*MitmProxy) error

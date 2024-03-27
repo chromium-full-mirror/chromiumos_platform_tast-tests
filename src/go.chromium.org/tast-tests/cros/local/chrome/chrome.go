@@ -31,7 +31,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/logsaver"
 	"go.chromium.org/tast-tests/cros/local/minidump"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/caller"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -198,8 +197,6 @@ type Chrome struct {
 	logsStartTime time.Time
 
 	loginPending bool // true if login is pending until ContinueLogin is called
-
-	proxy proxy.Proxy // Proxy applied on chrome.
 }
 
 // HasChrome is an interface for fixture values that contain a Chrome instance. It allows
@@ -347,13 +344,6 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		if retErr == nil || ctx.Err() == nil || origCtx.Err() != nil {
 			return
 		}
-
-		if c != nil {
-			if err := c.CleanupProxy(ctx); err != nil {
-				testing.ContextLog(ctx, "Failed to cleanup proxy: ", err)
-			}
-		}
-
 		ctx, st := timing.Start(ctx, "save_minidumps")
 		defer st.End()
 		testing.ContextLog(ctx, "Taking minidump snapshots to diagnose possible browser hang")
@@ -481,10 +471,6 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 // To avoid delays between tests, the ui job (and by extension, Chrome) is not restarted,
 // so the current user (if any) remains logged in.
 func (c *Chrome) Close(ctx context.Context) error {
-	if err := c.CleanupProxy(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to clean proxy: ", err)
-	}
-
 	if locked {
 		panic("Do not call Close while precondition is being used")
 	}

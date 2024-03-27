@@ -45,7 +45,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/quickanswers"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -486,14 +486,9 @@ func NetworkRequestMonitor(ctx context.Context, s *testing.State) {
 				PolicySetting: tcs.PolicyStatus}
 
 			if service.name == "domain_reliability" {
-				mp, err := mitmproxy.New(ctx,
-					mitmproxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
-				)
-				if err != nil {
-					s.Fatal("Failed to create MitmProxy: ", err)
+				params.ProxyOpts = []proxy.Option{
+					proxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
 				}
-
-				params.Proxy = mp
 			}
 
 			if err := service.trigger(ctx, params); err != nil {

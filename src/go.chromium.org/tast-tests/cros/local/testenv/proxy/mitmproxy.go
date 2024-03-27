@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// Package mitmproxy implements a wrapper of mitmproxy for testing.
-package mitmproxy
+package proxy
 
 import (
 	"context"
@@ -61,8 +60,8 @@ type MitmProxy struct {
 	lifelineFD   *os.File // Used by pathcpanel to track the lifetime of the proxy server.
 }
 
-// New creates a new MitmProxy instance with default configuration and option overrides.
-func New(ctx context.Context, opts ...Option) (*MitmProxy, error) {
+// NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
+func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 	mp := &MitmProxy{
 		binaryPath:   DefaultBinaryPath,
 		port:         DefaultListenPort,
@@ -94,7 +93,12 @@ func New(ctx context.Context, opts ...Option) (*MitmProxy, error) {
 		mp.outDir = outDir
 	}
 
-	return mp, nil
+	// Start a proxy automatically by default.
+	if err := mp.start(ctx); err != nil {
+		mp.Close(ctx)
+		return nil, errors.Wrap(err, "failed to start mitmproxy on New")
+	}
+	return Proxy(mp), nil
 }
 
 // IsRunning returns whether the proxy is running.
@@ -102,8 +106,8 @@ func (mp *MitmProxy) IsRunning() bool {
 	return mp.isRunning
 }
 
-// Start launches the mitmproxy.
-func (mp *MitmProxy) Start(ctx context.Context) (retErr error) {
+// start launches the mitmproxy.
+func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 	if err := killProcesses(ctx); err != nil {
 		return errors.Wrap(err, "failed to kill running mitmproxy processes")
 	}

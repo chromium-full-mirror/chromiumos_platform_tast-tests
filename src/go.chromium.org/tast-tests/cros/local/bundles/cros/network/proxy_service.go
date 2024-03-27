@@ -12,7 +12,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"google.golang.org/grpc"
 
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -29,14 +29,14 @@ func init() {
 // ProxyService implements the tast.cros.network.ProxyService gRPC service.
 type ProxyService struct {
 	s    *testing.ServiceState
-	p    *mitmproxy.MitmProxy
+	p    proxy.Proxy
 	pctx context.Context // a service-scoped context used for mitmproxy
 }
 
 // StartServer starts a new proxy server instance with a specific configuration.
 // This is the implementation of network.ProxyService/Start gRPC.
 func (s *ProxyService) StartServer(ctx context.Context, request *network.StartServerRequest) (resp *network.StartServerResponse, retErr error) {
-	var opts []mitmproxy.Option
+	var opts []proxy.Option
 
 	var ignoreList string
 
@@ -55,18 +55,14 @@ func (s *ProxyService) StartServer(ctx context.Context, request *network.StartSe
 		return nil, errors.New("OutDir should be set in the context")
 	}
 	opts = append(opts,
-		mitmproxy.CustomOptions(fmt.Sprintf("ignore_hosts: \n - %s", ignoreList)),
-		mitmproxy.OutDir(outDir),
-		mitmproxy.HealthCheck(false),
+		proxy.CustomOptions(fmt.Sprintf("ignore_hosts: \n - %s", ignoreList)),
+		proxy.OutDir(outDir),
+		proxy.HealthCheck(false),
 	)
 
-	p, err := mitmproxy.New(pctx, opts...)
+	p, err := proxy.NewMitmProxy(pctx, opts...)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create a local proxy on the DUT")
-	}
-	if err := p.Start(pctx); err != nil {
-		p.Close(pctx)
-		return nil, errors.Wrap(err, "failed to create a local proxy on the DUT")
+		return nil, errors.Wrap(err, "failed to start a local proxy on the DUT")
 	}
 	s.pctx = pctx
 	s.p = p

@@ -35,7 +35,7 @@ type OptionalServiceParams struct {
 	Server        *httptest.Server
 	BaseDirectory string
 	PolicySetting PolicySetting
-	Proxy         proxy.Proxy
+	ProxyOpts     []proxy.Option
 }
 
 // VariantName is type for the variants of the NetworkRequestMonitor test.

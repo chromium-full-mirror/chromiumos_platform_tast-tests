@@ -20,7 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/network/systemproxy"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast-tests/cros/services/cros/network"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -99,26 +99,21 @@ func (s *TestArcConnectivityAppService) RunTest(ctx context.Context, req *empty.
 	}
 
 	// Start an HTTP proxy instance on the DUT which requires username and password authentication.
-	var opts []mitmproxy.Option
+	var opts []proxy.Option
 
-	opts = append(opts, mitmproxy.CustomOptions(fmt.Sprintf("proxyauth: %s:%s", username, password)),
-		mitmproxy.CustomOptions(fmt.Sprintf("ignore_hosts: %s", "\n - .*")),
-		mitmproxy.HealthCheck(false))
+	opts = append(opts, proxy.CustomOptions(fmt.Sprintf("proxyauth: %s:%s", username, password)),
+		proxy.CustomOptions(fmt.Sprintf("ignore_hosts: %s", "\n - .*")),
+		proxy.HealthCheck(false))
 
-	proxy, err := mitmproxy.New(ctx, opts...)
+	mp, err := proxy.NewMitmProxy(ctx, opts...)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to create proxy server")
-	}
-
-	if err := proxy.Start(ctx); err != nil {
 		return nil, errors.Wrap(err, "failed to start proxy server")
 	}
-
-	defer proxy.Close(ctx)
+	defer mp.Close(ctx)
 
 	// Configure the proxy on the DUT via policy to point to the local proxy instance started via the `ProxyService`.
 	proxyModePolicy := &policy.ProxyMode{Val: "fixed_servers"}
-	proxyServerPolicy := &policy.ProxyServer{Val: fmt.Sprintf("http://%s", proxy.ProxyAddress())}
+	proxyServerPolicy := &policy.ProxyServer{Val: fmt.Sprintf("http://%s", mp.ProxyAddress())}
 
 	// Start system-proxy and configure it with the credentials of the local proxy instance.
 	systemProxySettingsPolicy := &policy.SystemProxySettings{

@@ -22,7 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -98,15 +98,16 @@ func SpellCheckServiceEnabled(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			mp, err := mitmproxy.New(ctx)
+			mp, err := proxy.NewMitmProxy(ctx)
 			if err != nil {
-				s.Fatal("Failed to create MitmProxy: ", err)
+				s.Fatal("Failed to start mitmproxy: ", err)
 			}
-
-			if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
-				s.Fatal("Failed to launch and apply proxy: ", err)
+			defer mp.Close(cleanupCtx)
+			reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+			if err != nil {
+				s.Fatal("Failed to configure chrome for proxy: ", err)
 			}
-			defer cr.CleanupProxy(cleanupCtx)
+			defer reset(cleanupCtx, cr)
 
 			if err := spellcheck.TriggerSpellCheck(ctx, networkrequestmonitor.OptionalServiceParams{
 				Server:        server,

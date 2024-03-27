@@ -23,7 +23,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/netexport"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/fixtures"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -118,18 +118,14 @@ func DomainReliabilityAllowed(ctx context.Context, s *testing.State) {
 			}
 			defer netExport.Cleanup(cleanupCtx)
 
-			mp, err := mitmproxy.New(ctx,
-				mitmproxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
-			)
-			if err != nil {
-				s.Fatal("Failed to create MitmProxy: ", err)
+			proxyOpts := []proxy.Option{
+				proxy.ScriptPath(s.DataPath("domain_reliability_500_requests.py")),
 			}
-
 			if err := domainreliability.TriggerDomainReliabilityAllowed(ctx,
 				networkrequestmonitor.OptionalServiceParams{
 					Chrome:        cr,
 					PolicySetting: key,
-					Proxy:         mp}); err != nil {
+					ProxyOpts:     proxyOpts}); err != nil {
 				s.Fatal("Failed to trigger and verify domain reliability: ", err)
 			}
 

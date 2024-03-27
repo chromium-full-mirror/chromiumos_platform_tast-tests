@@ -12,7 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy/mitmproxy"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 )
@@ -42,15 +42,17 @@ func NetworkMonitor(ctx context.Context, s *testing.State) {
 
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
-	mp, err := mitmproxy.New(ctx)
+	mp, err := proxy.NewMitmProxy(ctx)
 	if err != nil {
-		s.Fatal("Failed to create MitmProxy: ", err)
+		s.Fatal("Failed to start mitmproxy: ", err)
 	}
+	defer mp.Close(cleanupCtx)
 
-	if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
-		s.Fatal("Failed to launch and apply proxy: ", err)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		s.Fatal("Failed to configure chrome for proxy: ", err)
 	}
-	defer cr.CleanupProxy(cleanupCtx)
+	defer reset(cleanupCtx, cr)
 
 	// TODO: Add test logic here to monitor network traffic.
 	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, cr, browser.TypeAsh, "https://www.google.com")

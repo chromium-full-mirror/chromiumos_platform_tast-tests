@@ -15,6 +15,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 )
@@ -64,12 +65,17 @@ func TriggerDomainReliabilityAllowed(ctx context.Context, params networkrequestm
 	defer cancel()
 
 	cr := params.Chrome
-	mp := params.Proxy
+	proxyOpts := params.ProxyOpts
 
-	if err := cr.LaunchAndApplyProxy(ctx, mp); err != nil {
+	mp, err := proxy.NewMitmProxy(ctx, proxyOpts...)
+	if err != nil {
 		return errors.Wrap(err, "failed to launch and apply proxy")
 	}
-	defer cr.CleanupProxy(cleanupCtx)
+	reset, err := proxy.ConfigureChrome(ctx, mp, cr)
+	if err != nil {
+		return errors.Wrap(err, "failed to configure a proxy")
+	}
+	defer reset(cleanupCtx, cr)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
