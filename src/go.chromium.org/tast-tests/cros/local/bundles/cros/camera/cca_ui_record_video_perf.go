@@ -109,6 +109,10 @@ func CCAUIRecordVideoPerf(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupCtx)
 
+	if err := app.DisableVideoResolutionFilter(ctx); err != nil {
+		s.Fatal("Failed to disable video resolution filter: ", err)
+	}
+
 	if err := app.SwitchMode(ctx, cca.Video); err != nil {
 		s.Fatal("Failed to switch to video mode: ", err)
 	}

@@ -1542,6 +1542,15 @@ func (a *App) HideFloatingUI(ctx context.Context) error {
 	return nil
 }
 
+// DisableVideoResolutionFilter disables video resolution filter in CCA.
+func (a *App) DisableVideoResolutionFilter(ctx context.Context) error {
+	// TODO(pihsun): Remove the check after Chrome is upreved and the function always exist.
+	if err := a.conn.Eval(ctx, "CCATest.disableVideoResolutionFilter?.()", nil); err != nil {
+		return errors.Wrap(err, "failed to disable video resolution filter")
+	}
+	return nil
+}
+
 // Stop stops the given FPS observer and release the associated JS object.
 func (f *FPSObserver) Stop(ctx context.Context) error {
 	defer f.jsObj.Release(ctx)
