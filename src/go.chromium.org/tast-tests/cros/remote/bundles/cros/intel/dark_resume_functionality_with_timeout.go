@@ -38,7 +38,7 @@ func init() {
 		Vars:         []string{"servo"},
 		HardwareDeps: hwdep.D(hwdep.X86(), hwdep.ChromeEC()),
 		Fixture:      fixture.NormalMode,
-		Timeout:      10 * time.Minute,
+		Timeout:      15 * time.Minute,
 	})
 }
 
@@ -47,16 +47,17 @@ func DarkResumeFunctionalityWithTimeout(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
 
+	const (
+		enableDarkResumeCommand  = "echo 0 > /var/lib/power_manager/disable_dark_resume"
+		disableDarkResumeCommand = "echo 1 > /var/lib/power_manager/disable_dark_resume"
+		restartPowerdCommand     = "restart powerd"
+	)
+
 	dut := s.DUT()
 
 	firmwareHelper := s.FixtValue().(*fixture.Value).Helper
 	if err := firmwareHelper.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
-	}
-
-	// Performing chrome login.
-	if err := powercontrol.ChromeOSLogin(ctx, dut, s.RPCHint()); err != nil {
-		s.Fatal("Failed to login to chrome: ", err)
 	}
 
 	eventReporter := firmwareHelper.Reporter
@@ -70,11 +71,15 @@ func DarkResumeFunctionalityWithTimeout(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	const (
-		enableDarkResumeCommand  = "echo 0 > /var/lib/power_manager/disable_dark_resume"
-		disableDarkResumeCommand = "echo 1 > /var/lib/power_manager/disable_dark_resume"
-		restartPowerdCommand     = "restart powerd"
-	)
+	// This Coldboot is required to get uniform results and remove any flakiness.
+	if err := powercontrol.PerformColdboot(ctx, dut, firmwareHelper.ServoProxy); err != nil {
+		s.Fatal("Failed to perform coldboot: ", err)
+	}
+
+	// Performing chrome login.
+	if err := powercontrol.ChromeOSLogin(ctx, dut, s.RPCHint()); err != nil {
+		s.Fatal("Failed to login to chrome: ", err)
+	}
 
 	defer func(ctx context.Context) {
 		if !dut.Connected(ctx) {
@@ -118,35 +123,40 @@ func DarkResumeFunctionalityWithTimeout(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to perform dark resume suspend with ENTER key as wake source: ", err)
 	}
 
-	// Perform dark resume suspend with servo power button as wake source.
-	if err := performDarkResumeSuspend(ctx, firmwareHelper, dut, isPowerPress); err != nil {
-		s.Fatal("Failed to perform dark resume suspend with power button as wake source: ", err)
-	}
-
 	events, err := eventReporter.EventlogList(ctx)
 	if err != nil {
 		s.Fatal("Failed gathering events: ", err)
 	}
 
 	// requiredECEvents is expected list of EC events after suspend-resume.
-	var requiredECEvents = []string{"S0ix Enter",
+	var requiredECEventsKeyPress = []string{"S0ix Enter",
 		"S0ix Exit",
-		`Wake Source \| Power Button \| 0`,
-		`Wake Source \| GPE`,
+		`EC Event . Key Pressed|Wake Source . GPE`,
 	}
 
 	foundRequiredEvents := true
-	for _, requiredEvent := range requiredECEvents {
-		reRequiredEvent := regexp.MustCompile(requiredEvent)
-		if !eventMessageContainsMatch(ctx, events, reRequiredEvent) {
-			foundRequiredEvents = false
-			s.Errorf("Unexpected events: want %q, got %q", requiredECEvents, events)
-			break
-		}
+	if err := verifyElogToolList(ctx, requiredECEventsKeyPress, foundRequiredEvents, events); err != nil {
+		s.Fatal("Failed to verify EC events of key press: ", err)
 	}
 
-	if !foundRequiredEvents {
-		s.Error("Failed as required event missing")
+	// Perform dark resume suspend with servo power button as wake source.
+	if err := performDarkResumeSuspend(ctx, firmwareHelper, dut, isPowerPress); err != nil {
+		s.Fatal("Failed to perform dark resume suspend with power button as wake source: ", err)
+	}
+
+	events, err = eventReporter.EventlogList(ctx)
+	if err != nil {
+		s.Fatal("Failed gathering events: ", err)
+	}
+
+	var requiredECEventsPowerButton = []string{"S0ix Enter",
+		"S0ix Exit",
+		`EC Event . Power Button|Wake Source . GPE`,
+	}
+
+	foundRequiredEvents = true
+	if err := verifyElogToolList(ctx, requiredECEventsPowerButton, foundRequiredEvents, events); err != nil {
+		s.Fatal("Failed to verify EC events of key press: ", err)
 	}
 }
 
@@ -262,4 +272,18 @@ func wakeDUTWithEnterKeyPress(ctx context.Context, firmwareHelper *firmware.Help
 		}
 		return nil
 	}, &testing.PollOptions{Timeout: 2 * time.Minute})
+}
+
+func verifyElogToolList(ctx context.Context, ecEvents []string, foundRequiredEvents bool, events []reporters.Event) error {
+	for _, requiredEvent := range ecEvents {
+		reRequiredEvent := regexp.MustCompile(requiredEvent)
+		if !eventMessageContainsMatch(ctx, events, reRequiredEvent) {
+			foundRequiredEvents = false
+			return errors.Errorf("unexpected events: want %q, got %q", ecEvents, events)
+		}
+	}
+	if !foundRequiredEvents {
+		return errors.New("failed as required event missing")
+	}
+	return nil
 }

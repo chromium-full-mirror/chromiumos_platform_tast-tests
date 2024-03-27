@@ -316,3 +316,22 @@ func PerformPowerdbusSuspend(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy
 	}
 	return nil
 }
+
+// PerformColdboot performs coldboot and power normal press to wake DUT.
+func PerformColdboot(ctx context.Context, dut *dut.DUT, pxy *servo.Proxy) error {
+	powerOffCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+	if err := dut.Conn().CommandContext(powerOffCtx, "shutdown", "-h", "now").Run(); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		return errors.Wrap(err, "failed to execute shutdown command")
+	}
+	sdCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	if err := dut.WaitUnreachable(sdCtx); err != nil {
+		return errors.Wrap(err, "failed to wait for unreachable")
+	}
+
+	if err := PowerOntoDUT(ctx, pxy, dut); err != nil {
+		return errors.Wrap(err, "failed to power-on DUT")
+	}
+	return nil
+}
