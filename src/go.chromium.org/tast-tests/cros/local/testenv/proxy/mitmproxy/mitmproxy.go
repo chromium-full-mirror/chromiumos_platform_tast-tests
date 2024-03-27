@@ -87,10 +87,10 @@ func New(ctx context.Context, opts ...Option) (*MitmProxy, error) {
 		}
 	}
 
-	// Set OutDir for saving logs and dump files per-test.
+	// Set OutDir for saving per-test logs and dump files.
 	// OutDir could be set by the context or the `OutDir` option passed in as args. If both are set, the option takes precedence.
 	// In most cases, it is just okay to use the context by default except for
-	// when a local RPC server calls this func with context.Background() that has no OutDir associated.
+	// when a local RPC server calls this func with a service-scope context that has no OutDir associated.
 	// In this case, the `OutDir` option should be used explicitly.
 	if mp.outDir == "" {
 		outDir, ok := testing.ContextOutDir(ctx)

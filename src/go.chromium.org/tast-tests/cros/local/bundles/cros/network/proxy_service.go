@@ -28,8 +28,9 @@ func init() {
 
 // ProxyService implements the tast.cros.network.ProxyService gRPC service.
 type ProxyService struct {
-	s     *testing.ServiceState
-	proxy *mitmproxy.MitmProxy
+	s    *testing.ServiceState
+	p    *mitmproxy.MitmProxy
+	pctx context.Context // a service-scoped context used for mitmproxy
 }
 
 // StartServer starts a new proxy server instance with a specific configuration.
@@ -45,37 +46,43 @@ func (s *ProxyService) StartServer(ctx context.Context, request *network.StartSe
 		ignoreList = ".*" // allow all hostnames to bypass mitmproxy cert inspection
 	}
 
-	opts = append(opts, mitmproxy.CustomOptions(fmt.Sprintf("ignore_hosts: \n - %s", ignoreList)),
-		mitmproxy.HealthCheck(false))
+	// Create a service-scoped context for mitmproxy. The mitmproxy server is shutdown after the test is finished.
+	pctx := s.s.ServiceContext() // NOLINT: the proxy server needs to continue execution in the background, after the ctx is destroyed
 
-	proxy, err := mitmproxy.New(ctx, opts...)
+	// ServiceContext doesn't have OutDir associated. So, OutDir should explicitly be passed as an option to mitmproxy for saving its logs.
+	outDir, ok := testing.ContextOutDir(ctx)
+	if !ok || outDir == "" {
+		return nil, errors.New("OutDir should be set in the context")
+	}
+	opts = append(opts,
+		mitmproxy.CustomOptions(fmt.Sprintf("ignore_hosts: \n - %s", ignoreList)),
+		mitmproxy.OutDir(outDir),
+		mitmproxy.HealthCheck(false),
+	)
+
+	p, err := mitmproxy.New(pctx, opts...)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create a local proxy on the DUT")
 	}
-
-	// Create a service-scoped context for mitmproxy. The mitmproxy server is shutdown after the test is finished.
-	pctx := context.Background() // NOLINT: the proxy server needs to continue execution in the background, after the ctx is destroyed
-
-	if err := proxy.Start(pctx); err != nil {
-		proxy.Close(pctx)
+	if err := p.Start(pctx); err != nil {
+		p.Close(pctx)
 		return nil, errors.Wrap(err, "failed to create a local proxy on the DUT")
 	}
-
-	s.proxy = proxy
+	s.pctx = pctx
+	s.p = p
 
 	return &network.StartServerResponse{
-		HostAndPort: s.proxy.ProxyAddress(),
+		HostAndPort: s.p.ProxyAddress(),
 	}, nil
 }
 
 // StopServer stops a previously started server instance. Returns an error if no proxy server instance was started on the DUT.
 // This is the implementation of network.ProxyService/Stop gRPC.
 func (s *ProxyService) StopServer(ctx context.Context, request *empty.Empty) (*empty.Empty, error) {
-	if s.proxy == nil {
+	if s.p == nil {
 		return nil, errors.New("no proxy server instance was started")
 	}
-
-	if err := s.proxy.Close(ctx); err != nil {
+	if err := s.p.Close(s.pctx); err != nil {
 		return nil, errors.Wrap(err, "failed to stop proxy server")
 	}
 	return &empty.Empty{}, nil
