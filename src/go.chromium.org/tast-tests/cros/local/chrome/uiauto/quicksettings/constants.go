@@ -50,9 +50,8 @@ var FeatureTileDoNotDisturb = nodewith.Role(role.ToggleButton).HasClass("Feature
 // FeatureTileKeyboard is the finder for the "Keyboard" (IME) feature tile.
 var FeatureTileKeyboard = nodewith.HasClass("FeatureTile").NameContaining("keyboard")
 
-// FeatureTileNearbyShare is the finder for the "Nearby Share" feature tile.
-// TODO(b/314352172): Change string after flag is enabled.
-var FeatureTileNearbyShare = nodewith.HasClass("FeatureTile").NameContaining("Nearby Share")
+// FeatureTileNearbyShare is the finder for the "Quick Share" feature tile.
+var FeatureTileNearbyShare = nodewith.HasClass("FeatureTile").NameContaining("Quick Share")
 
 // FeatureTileNetwork is the finder for the network feature tile. Its name
 // varies so find it by class.

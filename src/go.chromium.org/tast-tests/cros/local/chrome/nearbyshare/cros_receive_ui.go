@@ -33,7 +33,7 @@ func StartHighVisibilityMode(ctx context.Context, tconn *chrome.TestConn, device
 	}
 
 	ui := uiauto.New(tconn).WithTimeout(10 * time.Second)
-	receiveWindow := nodewith.Role(role.RootWebArea).Name("Settings - Nearby Share")
+	receiveWindow := nodewith.Role(role.RootWebArea).Name("Settings - Quick Share")
 	if err := ui.WaitUntilExists(receiveWindow)(ctx); err != nil {
 		return errors.Wrap(err, "failed to find Nearby Share receiving window")
 	}
@@ -53,9 +53,8 @@ func StartHighVisibilityMode(ctx context.Context, tconn *chrome.TestConn, device
 
 // AcceptIncomingShareNotification waits for the incoming share notification from an in-contacts device and then accepts the share.
 func AcceptIncomingShareNotification(ctx context.Context, tconn *chrome.TestConn, senderName string, timeout time.Duration) error {
-	// TODO(b/314352172): Change string after flag is enabled.
 	if _, err := ash.WaitForNotification(ctx, tconn, timeout,
-		ash.WaitTitleContains("Nearby Share"),
+		ash.WaitTitleContains("Quick Share"),
 		ash.WaitMessageContains(senderName),
 	); err != nil {
 		return errors.Wrap(err, "failed to wait for incoming share notification")
@@ -70,8 +69,7 @@ func AcceptIncomingShareNotification(ctx context.Context, tconn *chrome.TestConn
 
 // AcceptFastInitiationNotification accepts an incoming fast initiation notification. Fast initiation notifications are shown when a nearby device is trying to discover a share target.
 func AcceptFastInitiationNotification(ctx context.Context, tconn *chrome.TestConn, timeout time.Duration, isSetupComplete bool) error {
-	// TODO(b/314352172): Change string after flag is enabled.
-	message := "Set up Nearby Share to receive and send files with people around you"
+	message := "Set up Quick Share to receive and send files with people around you"
 	btnName := "SET UP"
 	if isSetupComplete {
 		message = "To receive and accept files with people around you, become visible"
