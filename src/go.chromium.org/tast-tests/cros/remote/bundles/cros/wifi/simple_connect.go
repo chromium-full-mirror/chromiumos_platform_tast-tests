@@ -500,6 +500,173 @@ func init() {
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
 			}, {
+				// Verifies that DUT can connect to an OWE 802.11be network on 6GHz PSC channel 21 with a channel width of 20MHz.
+				Name:      "80211beehtowe_6ghz",
+				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr: []string{"wificell_unstable"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+							ap.EHTChWidth(ap.EHTChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired),
+							ap.EHTCenterChannel(21)},
+						SecConfFac: owe.NewConfigFactory(owe.ModePureOWE),
+					}},
+					expectedSecurity: shillconst.SecurityOWE,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraRequirements: []string{"wifi-sec-0008-v02", "wifi-cert-0004-v02"},
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11be network on 6GHz PSC channel 21 with a channel width of 20MHz.
+				Name:              "80211beeht20_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+							ap.EHTChWidth(ap.EHTChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired),
+							ap.EHTCenterChannel(21)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11be network on 6GHz PSC channel 21 with a channel width of 40MHz.
+				Name:              "80211beeht40_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.EHTCenterChannel(19),
+							ap.EHTChWidth(ap.EHTChWidth20Or40), ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11be network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
+				Name:              "80211beeht80mixed_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(7), ap.EHTChWidth(ap.EHTChWidth80),
+							ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11be network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz.
+				// The router is forced to use EHT WiFi standard.
+				Name:              "80211beeht80pure_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.EHTCenterChannel(7), ap.EHTChWidth(ap.EHTChWidth80),
+							ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11be network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
+				Name:              "80211beeht160mixed_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
+							ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11be network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz.
+				// The router is forced to use EHT WiFi standard.
+				Name:              "80211beeht160pure_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI160), ap.EHTCenterChannel(15), ap.EHTChWidth(ap.EHTChWidth160),
+							ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("mixed") 802.11be network on 6GHz PSC channel 5 with center channel of 31 and channel width of 320MHz.
+				// The router is forced to use EHT WiFi standard.
+				Name:              "80211beeht320mixed_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211beMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320),
+							ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
+				// Verifies that DUT can connect to a WPA3-SAE ("pure") 802.11be network on 6GHz PSC channel 5 with center channel of 31 and channel width of 320MHz.
+				// The router is forced to use EHT WiFi standard.
+				Name:              "80211beeht320pure_6ghz",
+				Fixture:           wificell.FixtureID(wificell.TFFeaturesCapture),
+				ExtraAttr:         []string{"wificell_unstable"},
+				ExtraSoftwareDeps: []string{"wpa3_sae"},
+				Val: []simpleConnectTestcase{{
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211bePure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.EHTCenterChannel(31), ap.EHTChWidth(ap.EHTChWidth320),
+							ap.Is6GHz(), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
+					expectedSecurity: shillconst.SecurityWPA3,
+				}},
+				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
+				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
+			}, {
 				// Verifies that DUT can connect to a WiFi5 GCMP-128 network on WPA3.
 				// TODO(b/337103884) Replace TestBedDep with GCMP-feature requirement once available.
 				Name:    "gcmp_128",
