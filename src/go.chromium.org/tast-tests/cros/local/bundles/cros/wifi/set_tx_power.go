@@ -45,7 +45,11 @@ func init() {
 }
 
 func SetTXPower(ctx context.Context, s *testing.State) {
-	const setTxPowerExe = "set_wifi_transmit_power"
+	const (
+		setTxPowerExe = "set_wifi_transmit_power"
+		// Vendor ID for Intel WiFi.
+		intelVendorID = "0x8086"
+	)
 
 	cmd := testexec.CommandContext(ctx, "check_powerd_config", "--set_wifi_transmit_power")
 	if err := cmd.Run(); err != nil {
@@ -102,6 +106,12 @@ func SetTXPower(ctx context.Context, s *testing.State) {
 						currentMode = mode
 					}
 					supported = len(staticMode) == 0 || (len(staticMode) != 0 && currentMode == staticMode)
+
+					// The Intel wifi driver requires that the presence of a non-tablet
+					// SAR table implies the presence of a tablet mode SAR table.
+					if currentMode == "tablet" && devInfo.Vendor == intelVendorID {
+						supported = true
+					}
 				}
 
 				// Supported modes must not fail, and unsupported modes must not succeed.
