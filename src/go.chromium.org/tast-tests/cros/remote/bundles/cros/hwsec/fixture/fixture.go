@@ -66,14 +66,16 @@ func init() {
 }
 
 func xverFixtParamFactory(hsmName string, milestone int, dataPrefix string) testing.FixtureParam {
+	dataDir := "cross_version_login/" + hsmName
 	return testing.FixtureParam{
 		Name: fmt.Sprintf("%s_r%d", hsmName, milestone),
 		Val: crossVersionFixtParamVal{
 			dataPrefix: dataPrefix,
+			dataDir:    dataDir,
 		},
 		ExtraData: []string{
-			"cross_version_login/" + dataPrefix + "_config.json",
-			"cross_version_login/" + dataPrefix + "_data.tar.gz",
+			dataDir + "/" + dataPrefix + "_config.json",
+			dataDir + "/" + dataPrefix + "_data.tar.gz",
 		},
 	}
 }
@@ -167,6 +169,7 @@ type crossVersionFixtImpl struct {
 
 type crossVersionFixtParamVal struct {
 	dataPrefix string
+	dataDir    string
 }
 
 // CrossVersionLoginFixture contains the config list for the login data used in cross version testing.
@@ -198,8 +201,8 @@ func (f *crossVersionFixtImpl) SetUp(ctx context.Context, s *testing.FixtState) 
 	var dataPath string
 	var configPath string
 
-	dataName := fmt.Sprintf("cross_version_login/%s_data.tar.gz", paramVal.dataPrefix)
-	configName := fmt.Sprintf("cross_version_login/%s_config.json", paramVal.dataPrefix)
+	dataName := fmt.Sprintf("%s/%s_data.tar.gz", paramVal.dataDir, paramVal.dataPrefix)
+	configName := fmt.Sprintf("%s/%s_config.json", paramVal.dataDir, paramVal.dataPrefix)
 	dataPath = filepath.Join(tmpDir, "data.tar.gz")
 	configPath = filepath.Join(tmpDir, "config.json")
 
