@@ -31,7 +31,11 @@ func init() {
 					TopRight:    18,
 					BottomLeft:  18,
 					BottomRight: 18,
-				})),
+				}),
+					// By only allowing SingleOnTop strategy, we insure that
+					// rounded display mask textures are always promoted.
+					// See b/331664214.
+					"--enable-hardware-overlays=single-on-top"),
 				chrome.EnableFeatures("RoundedDisplay"),
 			},
 		}),

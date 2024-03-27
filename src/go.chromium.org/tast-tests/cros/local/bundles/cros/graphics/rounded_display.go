@@ -79,7 +79,12 @@ func RoundedDisplay(ctx context.Context, s *testing.State) {
 	// the radii of display via the command-line flag.
 	cr, err := chrome.New(
 		ctx, chrome.EnableFeatures("RoundedDisplay"),
-		chrome.ExtraArgs(roundeddisplay.FormatDisplayPropertiesAsSwitch(params.panelRadii)))
+		chrome.ExtraArgs(
+			roundeddisplay.FormatDisplayPropertiesAsSwitch(params.panelRadii),
+			// By only allowing SingleOnTop strategy, we insure that rounded display
+			// mask textures are always promoted. See b/331664214.
+			"--enable-hardware-overlays=single-on-top",
+		))
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
