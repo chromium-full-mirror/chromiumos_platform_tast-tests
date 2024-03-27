@@ -24,16 +24,14 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"fwupd"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		Fixture:      "prepareFwupd",
 	})
 }
 
 // FwupdGetDevices makes the dbus call `GetDevices` and searches through them to
 // find a specific fake device.
 func FwupdGetDevices(ctx context.Context, s *testing.State) {
-	fwd, err := fwupd.Init()
-	if err != nil {
-		s.Fatal("Failed to connect to fwupd: ", err)
-	}
+	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
 
 	fwupdVersion, err := fwd.Version()
 	if err != nil {

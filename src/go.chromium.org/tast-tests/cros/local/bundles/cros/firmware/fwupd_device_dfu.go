@@ -54,37 +54,32 @@ func init() {
 				// Using install from URI instead of downgrade to avoid interactive mode.
 				opts: []string{"install", "--json", "--assume-yes", "--allow-older"},
 			},
-			Fixture: "ensureRemotes",
 		}, {
 			Name: "install_file",
 			Val: fwupdOp{
 				action: paramInstallFile,
 				opts:   []string{"install", "--json", "--assume-yes", "--allow-older", "--allow-reinstall"},
 			},
-			// Remotes are not needed for this test.
 		}, {
 			Name: "install_version",
 			Val: fwupdOp{
 				action: paramInstallVer,
 				opts:   []string{"install", "--json", "--assume-yes", "--allow-older", "--allow-reinstall"},
 			},
-			Fixture: "ensureRemotes",
 		}, {
 			Name: "update",
 			Val: fwupdOp{
 				action: paramUpdate,
 				opts:   []string{"update", "--json", "--assume-yes"},
 			},
-			Fixture: "ensureRemotes",
 		}},
+		Fixture: "prepareFwupd",
 	})
 }
 
 func FwupdDeviceDfu(ctx context.Context, s *testing.State) {
-	fwd, err := fwupd.Init()
-	if err != nil {
-		s.Fatal("Failed to connect to fwupd: ", err)
-	}
+	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
+
 	fwupdVersion, err := fwd.Version()
 	if err != nil {
 		s.Fatal("Unable to get FWUPD version: ", err)

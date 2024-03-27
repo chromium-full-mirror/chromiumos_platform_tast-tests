@@ -30,6 +30,8 @@ const (
 	GetRemotesMethod = "GetRemotes"
 	// GetUpdatesMethod - Method name to get updates
 	GetUpdatesMethod = "GetUpgrades"
+	// QuitMethod - Method name to stop fwupd
+	QuitMethod = "Quit"
 )
 
 // Fwupd structure maintains the auxiliary data needed for package methods.
@@ -67,9 +69,9 @@ type Release struct {
 	Uri        string // NOLINT
 }
 
-// Init opens connection to DBus and do any other initialization if needed.
+// New opens connection to DBus and do any other initialization if needed.
 // This methud must be called prior to other methods related to D-Bus.
-func Init() (fwupd *Fwupd, err error) {
+func New() (fwupd *Fwupd, err error) {
 	fwupd = new(Fwupd)
 
 	// Don't close the shared connection.
@@ -139,6 +141,22 @@ func (fwupd *Fwupd) releasesFromDbusCall(dbusMethod, deviceID string) ([]map[str
 	}
 
 	return releases, nil
+}
+
+// RestartDaemon restarts fwupd with the dbus method Quit call,
+// proces should be restarted by service automatically.
+func (fwupd *Fwupd) RestartDaemon(ctx context.Context) error {
+	// Stop daemon.
+	if call := fwupd.obj.Call(DbusInterface+"."+QuitMethod, 0); call.Err != nil {
+		return errors.Wrap(call.Err, "failed to stop fwupd")
+	}
+
+	// Wait for daemon restart.
+	if err := dbusutil.WaitForService(ctx, fwupd.conn, DbusName); err != nil {
+		return errors.Wrap(err, "failed to start fwupd")
+	}
+
+	return nil
 }
 
 // DeviceByGUID returns a fwupd Device as known to fwupd that has a GUID

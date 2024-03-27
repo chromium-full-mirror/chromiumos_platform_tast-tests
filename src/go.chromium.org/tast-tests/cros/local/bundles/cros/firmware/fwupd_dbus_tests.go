@@ -7,9 +7,7 @@ package firmware
 import (
 	"context"
 
-	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/firmware/fwupd"
-	"go.chromium.org/tast/core/shutil"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -44,16 +42,14 @@ func init() {
 				Val:  paramUpdates,
 			},
 		},
+		Fixture: "prepareFwupd",
 	})
 }
 
 // FwupdDbusTests checks for correct number of releases for the Fake Webcam.
 // It also checks if the Trusted Reports flag is set correctly
 func FwupdDbusTests(ctx context.Context, s *testing.State) {
-	fwd, err := fwupd.Init()
-	if err != nil {
-		s.Fatal("Failed to connect to fwupd: ", err)
-	}
+	fwd := s.FixtValue().(*fwupd.FixtData).Fwupd
 
 	fwupdVersion, err := fwd.Version()
 	if err != nil {
@@ -86,13 +82,6 @@ func FwupdDbusTests(ctx context.Context, s *testing.State) {
 			TrustFlags: fwupd.TrustedReportsReleaseFlagBit,
 			RemoteId:   "fwupd-tests",
 		},
-	}
-	// Refresh LVFS metadata.
-	// TODO(rishabhagr): Remove after b/328637488 is fixed
-	cmd := testexec.CommandContext(ctx, "/usr/bin/fwupdmgr", "refresh")
-	_, err = cmd.Output(testexec.DumpLogOnError)
-	if err != nil && err.Error() != "exit status 2" {
-		s.Errorf("%s failed: %v", shutil.EscapeSlice(cmd.Args), err)
 	}
 
 	// Get device using GUID

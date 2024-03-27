@@ -42,7 +42,7 @@ func FwupdDetectPS175(ctx context.Context, s *testing.State) {
 		expectedPlugin           = "parade_lspcon"
 	)
 
-	fwd, err := fwupd.Init()
+	fwd, err := fwupd.New()
 	if err != nil {
 		s.Fatal("Failed to connect to fwupd: ", err)
 	}

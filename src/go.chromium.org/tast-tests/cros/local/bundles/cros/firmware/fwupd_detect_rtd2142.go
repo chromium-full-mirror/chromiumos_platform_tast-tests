@@ -41,7 +41,7 @@ func FwupdDetectRTD2142(ctx context.Context, s *testing.State) {
 		expectedPlugin           = "realtek_mst"
 	)
 
-	fwd, err := fwupd.Init()
+	fwd, err := fwupd.New()
 	if err != nil {
 		s.Fatal("Failed to connect to fwupd: ", err)
 	}
