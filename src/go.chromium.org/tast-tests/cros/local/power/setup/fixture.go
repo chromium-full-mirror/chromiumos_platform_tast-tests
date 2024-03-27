@@ -941,6 +941,8 @@ func (f *powerUIFixture) SetUp(ctx context.Context, s *testing.FixtState) interf
 		chrome.ExtraArgs("--force-tablet-mode=clamshell"),
 		// b/228256145 to avoid powerd restart.
 		chrome.DisableFeatures("FirmwareUpdaterApp"),
+		// Hide privacy sandbox dialog.
+		chrome.EnableFeatures("PrivacySandboxSettings4"),
 	}
 	opts = append(opts, f.powerFixtureOption.BrowserExtraOpts...)
 
