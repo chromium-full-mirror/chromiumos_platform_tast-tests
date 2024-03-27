@@ -41,20 +41,25 @@ func S0ixSwitchLaptopTablet(ctx context.Context, s *testing.State) {
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to connect to servo: ", err)
 	}
-
+	dut := s.DUT()
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
+
+	r := h.Reporter
+	if err := r.ClearEventlog(ctx); err != nil {
+		s.Fatal("Failed to clear event log: ", err)
+	}
+
+	// This Coldboot is required to get uniform results and remove any flakiness.
+	if err := powercontrol.PerformColdboot(ctx, dut, h.ServoProxy); err != nil {
+		s.Fatal("Failed to perform coldboot: ", err)
+	}
 
 	// Perform a Chrome login.
 	s.Log("Login to Chrome")
 	if err := powercontrol.ChromeOSLogin(ctx, h.DUT, s.RPCHint()); err != nil {
 		s.Fatal("Failed to login to chrome: ", err)
-	}
-
-	r := h.Reporter
-	if err := r.ClearEventlog(ctx); err != nil {
-		s.Fatal("Failed to clear event log: ", err)
 	}
 
 	// Create our suspend context.
