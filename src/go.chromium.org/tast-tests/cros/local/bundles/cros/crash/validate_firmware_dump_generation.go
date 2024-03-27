@@ -6,6 +6,7 @@ package crash
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
@@ -29,11 +30,19 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
-// Firmware dump file pattern.
-const firmwareDumpFilePattern = "devcoredump_iwlwifi.*.devcore.gz"
-
-// This timeout will be adjusted when pseudonymization is enabled.
-const firmwareDumpProcessingTimeout = 5 * time.Second
+const (
+	// Firmware dump file pattern.
+	firmwareDumpFilePattern = "devcoredump_iwlwifi.*.devcore.gz"
+	// This timeout will be adjusted when pseudonymization is enabled.
+	firmwareDumpProcessingTimeout = 5 * time.Second
+	// File expiration configuration for fbpreprocessord.
+	firmwareDumpExpirationTimeConfig = 20 * time.Second
+	// Ensures fbpreprocessord deletes generated dump files after the configured
+	// expiration time for processed dumps. This is an extra 10s after file
+	// expiration to make sure the operation finishes.
+	firmwareDumpExpirationOpsTimeout = 10 * time.Second
+	firmwareDumpExpirationTimeout    = 2 * (firmwareDumpExpirationTimeConfig + firmwareDumpExpirationOpsTimeout)
+)
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -49,7 +58,7 @@ func init() {
 		SoftwareDeps:    []string{"chrome", "fbpreprocessord"},
 		HardwareDeps:    hwdep.D(hwdep.WifiIntel()),
 		Requirements:    []string{tdreq.WiFiProcPassFW, tdreq.WiFiProcPassAVL, tdreq.WiFiProcPassAVLBeforeUpdates, tdreq.WiFiProcPassMatfunc},
-		Timeout:         chrome.EnrollmentAndLoginTimeout,
+		Timeout:         chrome.EnrollmentAndLoginTimeout + firmwareDumpExpirationTimeout,
 		VarDeps:         []string{"connectivityfwdumps.gaiaLoginAccount"},
 		VariantCategory: `{"name": "WifiBtChipset_Soc_Kernel"}`,
 		SearchFlags: []*testing.StringPair{
@@ -205,6 +214,20 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
 	defer cancel()
 
+	s.Logf("Configuring the file expiration time to %v for fbpreprocessord", firmwareDumpExpirationTimeConfig)
+	// Restarts fbpreprocessord so that we can configure the file expiration
+	// time.
+	fileExpirationString := fmt.Sprintf("%v", firmwareDumpExpirationTimeConfig.Seconds())
+	if err := upstart.RestartJob(ctx, "fbpreprocessord", upstart.WithArg("FILE_EXPIRATION_SECS", fileExpirationString)); err != nil {
+		s.Fatal("Failed to restart and configure fbpreprocessord: ", err)
+	}
+	defer func(ctx context.Context, s *testing.State) {
+		s.Log("Restore fbpreprocessord file expiration time")
+		if err := upstart.RestartJob(ctx, "fbpreprocessord"); err != nil {
+			s.Fatal("Failed to restore fbpreprocessord: ", err)
+		}
+	}(cleanupCtx, s)
+
 	m, err := shill.NewManager(ctx)
 	if err != nil {
 		s.Fatal("Failed to create shill manager proxy: ", err)
@@ -349,5 +372,25 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 		s.Fatal("Firmware dump generated when not allowed by policy")
 	}
 	s.Log("Firmware dump file successfully generated")
+
+	s.Logf("Sleeping for %v until processed dump files expire", firmwareDumpExpirationTimeConfig)
+	// GoBigSleepLint: Wait till processed dump files expire, as part of the
+	// testing event flow.
+	testing.Sleep(ctx, firmwareDumpExpirationTimeConfig)
+
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Verify if firmware dump is deleted after expiration
+		exist, e = checkIfDumpFileExists(ctx, dumpPath, s, policyVal)
+		if e != nil {
+			return e
+		}
+		if exist {
+			return errors.New("firmware dump file not deleted after expiration")
+		}
+		return nil
+	}, &testing.PollOptions{Timeout: firmwareDumpExpirationOpsTimeout, Interval: 400 * time.Millisecond}); err != nil {
+		s.Fatal("Firmware dump file expiration test fails: ", err)
+	}
+	s.Log("Firmware dump successfully deleted after expiration")
 	return nil
 }
