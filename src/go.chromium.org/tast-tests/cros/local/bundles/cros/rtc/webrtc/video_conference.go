@@ -241,6 +241,15 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 		return errors.Wrap(err, "failed collecting webrtc stats")
 	}
 
+	const coolDownDuration = 10 * time.Second
+	testing.ContextLogf(ctx, "Sleep to eliminate the power effect on the start up (%v)", coolDownDuration)
+	// GoBigSleepLint: Sleep to eliminate the power effect on the stat up of the
+	// video conference workload and WebRTC stats measurement. The duration, 10
+	// seconds, is arbitrary selected and will be changed if necessary.
+	if err := testing.Sleep(ctx, coolDownDuration); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v", coolDownDuration)
+	}
+
 	var err error
 	var startHists []*histogram.Histogram
 	if len(histNames) > 0 {
@@ -249,7 +258,7 @@ func runNonStep(ctx context.Context, tconn, bTconn *chrome.TestConn, s *testing.
 			return errors.Wrap(err, "failed to get histograms")
 		}
 	}
-
+	testing.ContextLog(ctx, "Start collecting power metrics")
 	if err := pr.Start(ctx); err != nil {
 		return errors.Wrap(err, "cannot start collecting power metrics")
 	}
