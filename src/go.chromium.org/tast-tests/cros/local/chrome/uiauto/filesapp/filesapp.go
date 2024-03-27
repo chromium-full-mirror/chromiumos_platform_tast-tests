@@ -22,9 +22,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filepicker/vars"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/mouse"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/coords"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
@@ -825,27 +823,6 @@ func (f *FilesApp) Unmount(cr *chrome.Chrome, volumeID string) uiauto.Action {
 
 		return nil
 	}
-}
-
-// ConnectToOneDrive connects Files app with OneDrive through the Settings and makes
-// sure the ODFS shows in the Files's directory tree.
-func (f *FilesApp) ConnectToOneDrive(ctx context.Context, ms365App *ms365.Ms365) error {
-	settingsApp := ossettings.New(f.tconn)
-	cloudUpload := cloudupload.App(f.tconn, filesconsts.OneDrive)
-
-	oneDriveDisconnectedLink := nodewith.Name("OneDrive Add your Microsoft account").Role(role.Link)
-	connectAccountButton := nodewith.Name("Connect").Role(role.Button)
-	return uiauto.Combine("Connect to OneDrive via the Files settings page",
-		f.ClickMoreMenuItem("Files settings"),
-		settingsApp.WaitUntilExists(oneDriveDisconnectedLink),
-		settingsApp.LeftClickUntil(oneDriveDisconnectedLink, settingsApp.Exists(connectAccountButton)),
-		settingsApp.LeftClick(connectAccountButton),
-		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
-		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
-		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
-		settingsApp.Close,
-		f.WaitUntilExists(nodewith.Name(OneDrive).Role(role.TreeItem)),
-	)(ctx)
 }
 
 // GetOdfsFuseboxToken executes JS directly in the Files app to get the fusebox token for the ODFS.

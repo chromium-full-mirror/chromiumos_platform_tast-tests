@@ -9,14 +9,13 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/office"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/ctxutil"
@@ -116,12 +115,10 @@ func OdfsAskBeforeMoving(ctx context.Context, s *testing.State) {
 
 	// Disable "Ask before moving" for OneDrive in Settings.
 	settingsApp := ossettings.New(tconn)
-	ms365Link := nodewith.Role(role.Link).Name("Microsoft 365 Open Word, Excel, and PowerPoint files")
 	toggleOptionName := "Ask before copying or moving Microsoft files to Microsoft OneDrive"
 	if err := uiauto.Combine("Disable 'Ask before moving' for OneDrive in Settings",
-		files.ClickMoreMenuItem("Files settings"),
-		settingsApp.WaitUntilExists(ms365Link),
-		settingsApp.LeftClickUntil(ms365Link, settingsApp.WaitUntilToggleOption(cr, toggleOptionName, true /*=expected*/)),
+		office.LaunchOfficeFilesSettingsPage(cr, tconn),
+		settingsApp.WaitUntilToggleOption(cr, toggleOptionName, true /*=expected*/),
 		settingsApp.SetToggleOption(cr, toggleOptionName, false /*=expected*/),
 		settingsApp.Close,
 	)(ctx); err != nil {

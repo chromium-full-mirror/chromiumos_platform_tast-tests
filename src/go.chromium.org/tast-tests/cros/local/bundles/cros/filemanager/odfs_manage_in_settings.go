@@ -9,12 +9,14 @@ import (
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/cloudupload"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ossettings"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
+	"go.chromium.org/tast-tests/cros/local/filesconsts"
 	"go.chromium.org/tast-tests/cros/local/onedrive"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
@@ -83,15 +85,29 @@ func OdfsManageInSettings(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get instance of Ms365: ", err)
 	}
-	if err := filesApp.ConnectToOneDrive(ctx, ms365App); err != nil {
-		s.Fatal("Failed connect to OneDrive via the Files settings page: ", err)
+	settingsApp := ossettings.New(tconn)
+	cloudUpload := cloudupload.App(tconn, filesconsts.OneDrive)
+
+	oneDriveDisconnectedLink := nodewith.Name("OneDrive Add your Microsoft account").Role(role.Link)
+	connectAccountButton := nodewith.Name("Connect").Role(role.Button)
+	if err := uiauto.Combine("Connect to OneDrive via the Files settings page",
+		filesApp.ClickMoreMenuItem("Files settings"),
+		settingsApp.WaitUntilExists(oneDriveDisconnectedLink),
+		settingsApp.LeftClickUntil(oneDriveDisconnectedLink, settingsApp.Exists(connectAccountButton)),
+		settingsApp.LeftClick(connectAccountButton),
+		cloudUpload.WaitConnectToOneDriveDialogAndClick(cloudupload.Next),
+		ms365App.LoginToMicrosoft365(cloudupload.OneDriveConnectedDialog, false /*=skipPassword*/),
+		cloudUpload.WaitOneDriveConnectedDialogAndClickClose(),
+		settingsApp.Close,
+		filesApp.WaitUntilExists(nodewith.Name(filesapp.OneDrive).Role(role.TreeItem)),
+	)(ctx); err != nil {
+		s.Fatal("Failed to connect to OneDrive via the Files settings page: ", err)
 	}
 
 	if err := filesApp.OpenOneDrive()(ctx); err != nil {
 		s.Fatal("Failed to navigate to OneDrive in Files App: ", err)
 	}
 
-	settingsApp := ossettings.New(tconn)
 	oneDriveConnectedLink := nodewith.NameStartingWith("OneDrive Signed in as").Role(role.Link)
 	disconnectButton := nodewith.Name("Remove access").Role(role.Button)
 	if err := uiauto.Combine("Disconnect from OneDrive via the Files settings page",

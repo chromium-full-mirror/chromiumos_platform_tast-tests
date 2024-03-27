@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/office"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
@@ -109,7 +110,7 @@ func OdfsCopyMove(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get instance of Ms365: ", err)
 	}
-	if err := files.ConnectToOneDrive(ctx, ms365App); err != nil {
+	if err := office.ConnectToOneDrive(cr, tconn, files, ms365App)(ctx); err != nil {
 		s.Fatal("Failed to connect to OneDrive: ", err)
 	}
 

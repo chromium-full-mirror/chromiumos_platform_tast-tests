@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/filemanager/office"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/filesapp"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/ms365"
@@ -69,6 +70,7 @@ func init() {
 func DrivefsOfficeOpenFromOdfs(ctx context.Context, s *testing.State) {
 	accountPool := s.RequiredVar("onedrive.accountPool")
 	data := s.FixtValue().(*onedrive.FixtureData)
+	cr := data.Chrome
 	tconn := data.TestAPIConn
 	driveFsClient := data.DriveFs
 
@@ -85,7 +87,7 @@ func DrivefsOfficeOpenFromOdfs(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to get instance of Ms365: ", err)
 	}
-	if err := filesApp.ConnectToOneDrive(ctx, ms365App); err != nil {
+	if err := office.ConnectToOneDrive(cr, tconn, filesApp, ms365App)(ctx); err != nil {
 		s.Fatal("Failed to connect to OneDrive: ", err)
 	}
 
