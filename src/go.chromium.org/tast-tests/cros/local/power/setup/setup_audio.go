@@ -50,8 +50,7 @@ func readAudioSettings(ctx context.Context) (*audioSettings, error) {
 type crasMuteArg string
 
 const (
-	crasMute        crasMuteArg = "--mute"
-	crasMuteCapture crasMuteArg = "--capture_mute"
+	crasMute crasMuteArg = "--mute"
 )
 
 func setAudioMuted(ctx context.Context, arg crasMuteArg, muted bool) error {
@@ -105,7 +104,6 @@ func MuteAudio(ctx context.Context) (CleanupCallback, error) {
 			return err
 		}
 		s.Add(setupAudioMuted(ctx, crasMute, true, prev.muted))
-		s.Add(setupAudioMuted(ctx, crasMuteCapture, true, prev.captureMuted))
 		s.Add(setupAudioVolume(ctx, 0, prev.volume))
 		return nil
 	})
