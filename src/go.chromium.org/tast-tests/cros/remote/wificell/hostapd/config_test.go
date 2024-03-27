@@ -925,6 +925,32 @@ func TestConfigFormat(t *testing.T) {
 				"ieee80211w":                   "2",
 			},
 		},
+		// Check 320 MHz channel.
+		{
+			conf: &Config{
+				SSID:             "ssid",
+				Mode:             Mode80211bePure,
+				Channel:          5,
+				Is6GHz:           true,
+				EHTCenterChannel: 31,
+				EHTChWidth:       EHTChWidth320,
+				SecurityConfig:   wpa3Conf,
+				PMF:              PMFRequired,
+			},
+			verify: map[string]string{
+				"hw_mode":                      "a",
+				"channel":                      "5",
+				"op_class":                     "137",
+				"ieee80211n":                   "1",
+				"ieee80211ac":                  "1",
+				"ieee80211ax":                  "1",
+				"eht_oper_chwidth":             "6",
+				"eht_oper_centr_freq_seg0_idx": "31",
+				"mld_ap":                       "1",
+				"sae_pwe":                      "1",
+				"ieee80211w":                   "2",
+			},
+		},
 		// Check PMF.
 		{
 			conf: &Config{

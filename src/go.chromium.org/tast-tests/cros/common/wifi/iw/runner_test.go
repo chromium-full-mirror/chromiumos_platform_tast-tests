@@ -689,6 +689,21 @@ func TestSetFreqOption(t *testing.T) {
 			args:  []string{"5200", "160", "5250"},
 		},
 		{
+			ctrlFreq: 6035,
+			ops:      []SetFreqOption{SetFreqChWidth(ChWidth320)},
+			valid:    true,
+			args:     []string{"6035", "320", "6105"},
+		},
+		{
+			ctrlFreq: 6095,
+			ops: []SetFreqOption{
+				SetFreqChWidth(ChWidth320),
+				SetFreqCenterFreq1(6105),
+			},
+			valid: true,
+			args:  []string{"6095", "320", "6105"},
+		},
+		{
 			ctrlFreq: 5240,
 			ops:      []SetFreqOption{SetFreqChWidth(ChWidth80P80)},
 			valid:    false,

@@ -718,13 +718,25 @@ func (c *setFreqConf) init() error {
 		if c.centerFreq2 != 0 {
 			return errors.Errorf("don't specify center frequency 2 for width=%s", c.width)
 		}
+	case ChWidth320:
+		// This needs center frequency 1.
+		if c.centerFreq1 == 0 {
+			cf, err := c.centerFreq320(c.ctrlFreq)
+			if err != nil {
+				return err
+			}
+			c.centerFreq1 = cf
+		}
+		if c.centerFreq2 != 0 {
+			return errors.Errorf("don't specify center frequency 2 for width=%s", c.width)
+		}
 	default:
 		return errors.Errorf("invalid channel width=%s", c.width)
 	}
 	return nil
 }
 
-// centerFreq80 derives the center frequency (in MHz) for the channel with
+// centerFreq80 derives the center frequency (in MHz) for the channel width
 // 80MHz width and control frequency = ctrlFreq MHz.
 func (c *setFreqConf) centerFreq80(ctrlFreq int) (int, error) {
 	vht80 := []int{5180, 5260, 5500, 5580, 5660, 5745, 5955, 6035, 6115, 6195, 6275, 6355, 6435, 6515, 6595, 6675, 6755, 6835, 6915, 6995}
@@ -736,7 +748,7 @@ func (c *setFreqConf) centerFreq80(ctrlFreq int) (int, error) {
 	return 0, errors.Errorf("invalid control frequency %d for 80MHz channel width", ctrlFreq)
 }
 
-// centerFreq160 derives the center frequency (in MHz) for the channel with
+// centerFreq160 derives the center frequency (in MHz) for the channel width
 // 160MHz width and control frequency = ctrlFreq MHz.
 func (c *setFreqConf) centerFreq160(ctrlFreq int) (int, error) {
 	vht160 := []int{5180, 5500, 5955, 6115, 6275, 6435, 6595, 6755, 6915}
@@ -748,6 +760,18 @@ func (c *setFreqConf) centerFreq160(ctrlFreq int) (int, error) {
 	return 0, errors.Errorf("invalid control frequency %d for 160MHz channel width", ctrlFreq)
 }
 
+// centerFreq320 derives the center frequency (in MHz) for the channel width
+// 320MHz width and control frequency = ctrlFreq MHz.
+func (c *setFreqConf) centerFreq320(ctrlFreq int) (int, error) {
+	vht320 := []int{5955, 6115, 6275, 6435, 6595, 6755}
+	for _, f := range vht320 {
+		if ctrlFreq >= f && ctrlFreq < f+320 {
+			return f + 150, nil
+		}
+	}
+	return 0, errors.Errorf("invalid control frequency %d for 320MHz channel width", ctrlFreq)
+}
+
 // toArgs formats the config to the arguments for iw "set freq" function.
 // The argument format can be found in the doc of init()
 func (c *setFreqConf) toArgs() []string {
@@ -755,7 +779,7 @@ func (c *setFreqConf) toArgs() []string {
 	switch c.width {
 	case ChWidthHT20, ChWidthHT40Plus, ChWidthHT40Minus:
 		args = append(args, string(c.width))
-	case ChWidth80, ChWidth160:
+	case ChWidth80, ChWidth160, ChWidth320:
 		args = append(args, string(c.width), strconv.Itoa(c.centerFreq1))
 	case ChWidth80P80:
 		args = append(args, string(c.width), strconv.Itoa(c.centerFreq1), strconv.Itoa(c.centerFreq2))

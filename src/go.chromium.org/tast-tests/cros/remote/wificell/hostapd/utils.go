@@ -100,10 +100,12 @@ const (
 	max6GHzChannel int = 233
 
 	// For verifying that operating class matches the channel number.
-	first6GHz20MHzChannel  int = 1
-	first6GHz40MHzChannel  int = 3
-	first6GHz80MHzChannel  int = 7
-	first6GHz160MHzChannel int = 15
+	first6GHz20MHzChannel   int = 1
+	first6GHz40MHzChannel   int = 3
+	first6GHz80MHzChannel   int = 7
+	first6GHz160MHzChannel  int = 15
+	first6GHz320MHzChannel  int = 31
+	second6GHz320MHzChannel int = 63
 )
 
 // OpClass6GHz maps channel width to operating class in the 6GHz band. Except
@@ -161,9 +163,8 @@ func Validate6GHzOpClass(ch int, opClass OpClass6GHzEnum) error {
 		return errors.New("operating class corresponds to unsupported 80+80 channel width")
 	} else if opClass == opClassCh2 && ch != 2 {
 		return errors.Errorf("channel %d does not match operating class 136", ch)
-	} else if opClass == opClass320MHz {
-		// TODO(b/314396114) Add 320 MHz channel width as an option for WiFi7 tests
-		return errors.New("operating class corresponds to unsupported 320MHz channel width for WiFi 6E")
+	} else if opClass == opClass320MHz && ((ch-first6GHz320MHzChannel)%64 != 0 && (ch-second6GHz320MHzChannel)%64 != 0) {
+		return errors.Errorf("channel %d does not match operating class which expects a 320 MHZ channel", ch)
 	}
 	return nil
 }
