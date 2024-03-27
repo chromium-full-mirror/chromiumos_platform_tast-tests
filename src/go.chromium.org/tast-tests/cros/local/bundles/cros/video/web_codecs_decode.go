@@ -20,6 +20,7 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnknown,
 		Desc:         "Verifies that WebCodecs API works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
+			"greenjustin@google.com",
 			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org", // Test author.
 		},

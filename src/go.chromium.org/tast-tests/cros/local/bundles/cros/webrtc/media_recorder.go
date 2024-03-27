@@ -31,8 +31,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that MediaRecorder uses video encode acceleration",
 		Contacts: []string{
+			"bchoobineh@google.com",
 			"chromeos-gfx-video@google.com",
-			"mcasas@chromium.org",
+			"mcasas@chromium.org", // Test author.
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

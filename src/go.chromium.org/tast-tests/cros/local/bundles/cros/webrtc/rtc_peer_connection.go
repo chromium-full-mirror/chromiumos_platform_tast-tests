@@ -28,9 +28,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Verifies that WebRTC RTCPeerConnection works, maybe verifying use of a hardware accelerator",
 		Contacts: []string{
+			"hiroh@chromium.org",
 			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org", // Test author.
-			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

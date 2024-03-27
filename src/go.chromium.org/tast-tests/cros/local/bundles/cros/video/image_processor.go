@@ -26,8 +26,9 @@ func init() {
 		Func: ImageProcessor,
 		Desc: "Runs ImageProcessor unit tests",
 		Contacts: []string{
+			"bchoobineh@google.com",
 			"chromeos-gfx-video@google.com",
-			"nhebert@google.com",
+			"nhebert@chromium.org", // Test author
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		Attr:         []string{"group:graphics", "graphics_video", "graphics_perbuild"},

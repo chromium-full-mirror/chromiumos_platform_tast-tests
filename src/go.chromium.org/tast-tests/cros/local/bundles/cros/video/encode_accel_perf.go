@@ -20,8 +20,8 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Measures hardware video encode performance by running the video_encode_accelerator_perf_tests binary",
 		Contacts: []string{
-			"chromeos-gfx-video@google.com",
 			"hiroh@chromium.org",
+			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video

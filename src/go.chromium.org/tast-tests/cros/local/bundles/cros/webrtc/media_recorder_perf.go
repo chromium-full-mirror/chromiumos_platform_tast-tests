@@ -31,9 +31,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantExists,
 		Desc:         "Captures performance data about MediaRecorder for both SW and HW",
 		Contacts: []string{
+			"bchoobineh@google.com",
 			"chromeos-gfx-video@google.com",
 			"mcasas@chromium.org", // Test author.
-			"hiroh@chromium.org",
 		},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
 		SoftwareDeps: []string{"chrome"},

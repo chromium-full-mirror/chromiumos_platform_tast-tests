@@ -30,8 +30,8 @@ func init() {
 		Func: ImageProcessorPerf,
 		Desc: "Runs ImageProcessorPerf tests",
 		Contacts: []string{
-			"chromeos-gfx-video@google.com",
 			"bchoobineh@google.com",
+			"chromeos-gfx-video@google.com",
 		},
 		SoftwareDeps: []string{"v4l2_codec"},
 		BugComponent: "b:168352", // ChromeOS > Platform > Graphics > Video
