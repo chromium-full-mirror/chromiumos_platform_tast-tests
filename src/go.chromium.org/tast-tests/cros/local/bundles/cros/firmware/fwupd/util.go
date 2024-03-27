@@ -6,6 +6,11 @@ package fwupd
 
 import (
 	"context"
+	"io"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
 	"regexp"
 	"time"
 
@@ -129,4 +134,44 @@ func SetFwupdChargingState(ctx context.Context, charge bool) (setup.CleanupCallb
 	localCleanup = nil
 
 	return retCleanup, nil
+}
+
+// DownloadFile downloads the firmware CAB file from the given uri if not previously downloaded.
+// Function returns the absolute path to the firmware file.
+func DownloadFile(ctx context.Context, uri, downloadPath string) (string, error) {
+	u, err := url.Parse(uri)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to parse URI")
+	}
+
+	cabFilePath := filepath.Join(downloadPath, filepath.Base(u.EscapedPath()))
+
+	// Check if the CAB file already exists.
+	if _, err := os.Stat(cabFilePath); os.IsExist(err) {
+		// Return the absolute path of the existing file object.
+		return cabFilePath, nil
+	}
+
+	cabFile, err := os.Create(cabFilePath)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to create file")
+	}
+	defer cabFile.Close()
+
+	resp, err := http.Get(uri)
+	if err != nil {
+		return "", errors.Wrap(err, "failed to download")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", errors.Errorf("failed to download: %s", resp.Status)
+	}
+
+	if _, err := io.Copy(cabFile, resp.Body); err != nil {
+		return "", errors.Wrap(err, "failed to copy the file")
+	}
+
+	// Return the absolute path of the new file.
+	return cabFilePath, nil
 }

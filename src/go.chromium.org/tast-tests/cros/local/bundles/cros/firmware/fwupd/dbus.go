@@ -6,6 +6,7 @@ package fwupd
 
 import (
 	"context"
+	"os"
 	"reflect"
 
 	"github.com/godbus/dbus/v5"
@@ -30,6 +31,8 @@ const (
 	GetRemotesMethod = "GetRemotes"
 	// GetUpdatesMethod - Method name to get updates
 	GetUpdatesMethod = "GetUpgrades"
+	// InstallMethod - Method for local CAB install
+	InstallMethod = "Install"
 	// QuitMethod - Method name to stop fwupd
 	QuitMethod = "Quit"
 )
@@ -141,6 +144,36 @@ func (fwupd *Fwupd) releasesFromDbusCall(dbusMethod, deviceID string) ([]map[str
 	}
 
 	return releases, nil
+}
+
+// Install opens the local file and calls the dbus Install method from `fwupd`.
+func (fwupd *Fwupd) Install(deviceID, cabFile string) error {
+	if !fwupd.conn.SupportsUnixFDs() {
+		return errors.New("Unix FDs are not supported")
+	}
+
+	f, err := os.OpenFile(cabFile, os.O_RDONLY, 0755)
+	if err != nil {
+		return errors.Wrap(err, "failed to open CAB file with firmware")
+	}
+	defer f.Close()
+
+	fdCab := dbus.UnixFD(f.Fd())
+
+	// Signature (sha{sv}):
+	// ID, UnixFD, array of options ("opt=value")
+	call := fwupd.obj.Call(DbusInterface+"."+InstallMethod,
+		0,
+		deviceID,
+		fdCab,
+		map[string]dbus.Variant{}, // Empty options
+	)
+
+	if call.Err != nil {
+		return errors.Wrap(call.Err, "failed to install firmware")
+	}
+
+	return nil
 }
 
 // RestartDaemon restarts fwupd with the dbus method Quit call,
@@ -271,4 +304,18 @@ func (fwupd *Fwupd) ReleasesForDeviceID(ctx context.Context, deviceID string) (r
 		return nil, err
 	}
 	return fwupd.createReleasesFromRaw(ctx, releaseMap)
+}
+
+// FindReleaseByVersion returns only the release for the requested version.
+func (fwupd *Fwupd) FindReleaseByVersion(ctx context.Context, deviceID, expectedVersion string) (*Release, error) {
+	releases, err := fwupd.ReleasesForDeviceID(ctx, deviceID)
+	if err != nil {
+		return nil, err
+	}
+	for _, release := range releases {
+		if release.Version == expectedVersion {
+			return release, nil
+		}
+	}
+	return nil, errors.Errorf("failed to find version: %s", expectedVersion)
 }
