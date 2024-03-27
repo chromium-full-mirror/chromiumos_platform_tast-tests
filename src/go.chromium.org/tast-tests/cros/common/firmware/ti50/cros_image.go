@@ -54,7 +54,7 @@ var (
 	usbAdcCc1RE   = regexp.MustCompile(`ADC: CC1 = ([0-9]+) mV`)
 	usbAdcCc2RE   = regexp.MustCompile(`ADC: CC2 = ([0-9]+) mV`)
 	// RMA regex
-	rmaAuthChallengeRE = regexp.MustCompile(`([AE][A-Z0-9]+)|(RMA Auth error)|(Must wait)`)
+	rmaAuthChallengeRE = regexp.MustCompile(`([A-Z0-9]{80})|(RMA Auth error)|(Must wait)`)
 )
 
 // TestlabState contains possible CCD testlab states.
@@ -939,7 +939,7 @@ func matchUsbAdcInfo(s string) (UsbAdcInfo, error) {
 func (i *CrOSImage) GetRmaAuth(ctx context.Context) (string, error) {
 	output, err := i.Command(ctx, "rma_auth")
 	if err != nil {
-		return "", errors.Wrap(err, "failed to run GSC `usb` command")
+		return "", errors.Wrap(err, "failed to run GSC `rma_auth` command")
 	}
 
 	return matchRmaChallenge(output)

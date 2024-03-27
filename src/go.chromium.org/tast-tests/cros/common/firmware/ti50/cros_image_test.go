@@ -694,6 +694,33 @@ Command 'rma_auth' failed: Unknown
 	testMatchRmaChallenge(t, input, expected)
 }
 
+func TestRmaChallenge4(t *testing.T) {
+	input := `
+rma_auth
+[10.278938 tpm_reset_now(0)]
+[10.282257 tpm_init]
+[10.283695 Skipping commit]
+[10.284729 tpm_manufactured: NOT manufactured]
+[10.289505 Skipping commit]
+[10.290397 get_decrypted_eps: getting eps]
+[10.322429 Skipping commit]
+[10.323318 tpm_endorse: RSA cert install success]
+[10.331787 Skipping commit]
+[10.332656 tpm_endorse: ECC cert install success]
+[10.333755 Skipping commit]
+[10.334430 endorsement_complete: SUCCESS]
+[10.335258 Endorsement succeeded (0)]
+[10.348663 tpm_reset_now: done]
+generated challenge:
+
+AH3PCEXSH9MY7RMRSA5B3ZEFSVUTP8P9ZDHEXVNNFGNHXQ69JR7CWD6BFB9Y99999SG763A7QWHH52SR
+
+>
+`
+	expected := "AH3PCEXSH9MY7RMRSA5B3ZEFSVUTP8P9ZDHEXVNNFGNHXQ69JR7CWD6BFB9Y99999SG763A7QWHH52SR"
+	testMatchRmaChallenge(t, input, expected)
+}
+
 func testMatchRmaChallenge(t *testing.T, input, expected string) {
 	out, err := matchRmaChallenge(input)
 	if err != nil {
