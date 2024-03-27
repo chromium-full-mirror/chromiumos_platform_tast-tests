@@ -447,27 +447,6 @@ func init() {
 		PostTestTimeout: postTestTimeout,
 		Vars:            []string{"ui.cujAccountPool"},
 	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserLacrosWithVirtioBalloon",
-		Desc: "Fixture used for lacros variation of UI CUJ tests with Virtio Balloon enabled",
-		Contacts: []string{
-			"andreaorru@chromium.org",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("CrOSLateBootVmMemoryManagementService"),
-			},
-			bt: browser.TypeLacros,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
 	// TODO(b/302748186): Remove rounded window fixtures.
 	testing.AddFixture(&testing.Fixture{
 		Name: "loggedInToCUJUserWithRoundedWindows",
@@ -1008,28 +987,6 @@ func init() {
 			bt:            browser.TypeAsh,
 			arcSupported:  true,
 			enablePvSched: true,
-		},
-		Parent:          "prepareForCUJ",
-		SetUpTimeout:    setUpWithOptinTimeout,
-		ResetTimeout:    resetTimeout,
-		TearDownTimeout: resetTimeout,
-		PreTestTimeout:  CPUStablizationTimeout,
-		PostTestTimeout: postTestTimeout,
-		Vars:            []string{"ui.cujAccountPool"},
-	})
-	testing.AddFixture(&testing.Fixture{
-		Name: "loggedInToCUJUserARCSupportedWithVirtioBalloon",
-		Desc: "CUJ fixture with ARC supported and Virtio Balloon enabled",
-		Contacts: []string{
-			"ramsaroop@google.com",
-			"cros-sw-perf@google.com",
-		},
-		Impl: &loggedInToCUJUserFixture{
-			chromeExtraOpts: []chrome.Option{
-				chrome.EnableFeatures("CrOSLateBootVmMemoryManagementService"),
-			},
-			bt:           browser.TypeAsh,
-			arcSupported: true,
 		},
 		Parent:          "prepareForCUJ",
 		SetUpTimeout:    setUpWithOptinTimeout,

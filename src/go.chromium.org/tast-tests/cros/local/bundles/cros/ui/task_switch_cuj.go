@@ -76,14 +76,6 @@ func init() {
 				Fixture: "loggedInToCUJUserARCSupportedWithFieldTrials",
 			},
 			{
-				Name:      "virtio_balloon",
-				ExtraAttr: []string{"cuj_experimental"},
-				Fixture:   "loggedInToCUJUserARCSupportedWithVirtioBalloon",
-				Val: taskswitchcuj.TaskSwitchTest{
-					BrowserType: browser.TypeAsh,
-				},
-			},
-			{
 				Name:              "pvsched",
 				BugComponent:      "b:167279",
 				ExtraAttr:         []string{"cuj_experimental"},
