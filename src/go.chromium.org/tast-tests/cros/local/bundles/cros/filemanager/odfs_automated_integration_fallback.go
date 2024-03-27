@@ -29,11 +29,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsAutomatedIntegrationFallback,
-		LacrosStatus: testing.LacrosVariantNeeded,
-		Desc:         "Verifies that the Microsoft OneDrive integration fallback flow works in case of an error during the automated integration",
-		BugComponent: "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
-		Timeout:      5 * time.Minute,
+		Func:           OdfsAutomatedIntegrationFallback,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantNeeded,
+		Desc:           "Verifies that the Microsoft OneDrive integration fallback flow works in case of an error during the automated integration",
+		BugComponent:   "b:1401215", // ChromeOS > Software > Commercial (Enterprise) > Identity > 3P IdP > Enterprise Clippy
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"cros-commercial-clippy-eng@google.com",
 			"lmasopust@google.com",

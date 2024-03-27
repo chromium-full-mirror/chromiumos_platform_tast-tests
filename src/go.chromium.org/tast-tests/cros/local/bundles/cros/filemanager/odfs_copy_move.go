@@ -28,11 +28,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsCopyMove,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies file/folder copy/move operations work in ODFS",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           OdfsCopyMove,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies file/folder copy/move operations work in ODFS",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

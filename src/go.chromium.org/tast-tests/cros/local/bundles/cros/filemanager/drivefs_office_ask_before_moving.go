@@ -24,11 +24,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DrivefsOfficeAskBeforeMoving,
-		LacrosStatus: testing.LacrosVariantUnneeded,
-		Desc:         "Verifies that toggling the 'Ask Before Moving to Google Drive' option makes the move interstitial disappear for Setup flow",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           DrivefsOfficeAskBeforeMoving,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantUnneeded,
+		Desc:           "Verifies that toggling the 'Ask Before Moving to Google Drive' option makes the move interstitial disappear for Setup flow",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

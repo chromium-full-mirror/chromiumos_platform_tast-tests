@@ -22,11 +22,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsWithOneDriveConnected,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies OneDrive can be connected separately before opening office files",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           OdfsWithOneDriveConnected,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies OneDrive can be connected separately before opening office files",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

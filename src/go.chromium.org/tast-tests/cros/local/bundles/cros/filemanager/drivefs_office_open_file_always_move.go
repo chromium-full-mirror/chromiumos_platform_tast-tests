@@ -20,11 +20,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DrivefsOfficeOpenFileAlwaysMove,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that docx, xlsx and pptx open in Google Drive and we can see 'always move' checkbox for 2nd time",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           DrivefsOfficeOpenFileAlwaysMove,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies that docx, xlsx and pptx open in Google Drive and we can see 'always move' checkbox for 2nd time",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

@@ -22,11 +22,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsManageInSettings,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that the user can connect and disconnect from OneDrive from Settings",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           OdfsManageInSettings,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies that the user can connect and disconnect from OneDrive from Settings",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"austinct@chromium.org",

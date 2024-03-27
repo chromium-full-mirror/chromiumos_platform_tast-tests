@@ -21,11 +21,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsReopenFile,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that docx, xlsx and pptx open in OneDrive",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           OdfsReopenFile,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies that docx, xlsx and pptx open in OneDrive",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

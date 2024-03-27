@@ -22,11 +22,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsCancelFlow,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that exiting Setup at various points restarts in the correct place",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           OdfsCancelFlow,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies that exiting Setup at various points restarts in the correct place",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

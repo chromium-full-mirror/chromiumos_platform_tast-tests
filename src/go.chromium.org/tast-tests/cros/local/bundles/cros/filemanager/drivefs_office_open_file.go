@@ -21,11 +21,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DrivefsOfficeOpenFile,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies docx, xlsx and pptx files can be open by Google Drive",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           DrivefsOfficeOpenFile,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies docx, xlsx and pptx files can be open by Google Drive",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

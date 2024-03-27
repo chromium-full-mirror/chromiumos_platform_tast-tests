@@ -21,11 +21,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         DrivefsOfficeReopenFile,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that office file can be open directly in Google Drive",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           DrivefsOfficeReopenFile,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies that office file can be open directly in Google Drive",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",

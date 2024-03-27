@@ -25,11 +25,12 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         OdfsAskBeforeMoving,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Verifies that toggling the 'Ask Before Moving to OneDrive' option makes the move interstitial disappear for Setup flow",
-		BugComponent: "b:1199143",
-		Timeout:      5 * time.Minute,
+		Func:           OdfsAskBeforeMoving,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Verifies that toggling the 'Ask Before Moving to OneDrive' option makes the move interstitial disappear for Setup flow",
+		BugComponent:   "b:1199143",
+		Timeout:        5 * time.Minute,
 		Contacts: []string{
 			"chromeos-files-syd@google.com",
 			"lucmult@chromium.org",
