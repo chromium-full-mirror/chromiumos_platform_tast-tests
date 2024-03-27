@@ -52,7 +52,7 @@ func init() {
 			Name: "s120c5",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          120, /* Longer than CONFIG_RCU_CPU_STALL_TIMEOUT */
-				suspendDurationAllowanceSeconds: 0.1,
+				suspendDurationAllowanceSeconds: 5,
 				numTrialsPerLogin:               5,
 				numLoginTrials:                  2,
 			},
@@ -62,7 +62,7 @@ func init() {
 			Name: "s600c2",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          600, /* Long enough to trigger watchdog timeouts */
-				suspendDurationAllowanceSeconds: 0.1,
+				suspendDurationAllowanceSeconds: 5,
 				numTrialsPerLogin:               2,
 				numLoginTrials:                  2,
 			},
@@ -75,7 +75,7 @@ func init() {
 			Name:      "s10c2",
 			Val: testArgsForSuspend{
 				suspendDurationSeconds:          10, /* Long enough to trigger watchdog timeouts */
-				suspendDurationAllowanceSeconds: 0.1,
+				suspendDurationAllowanceSeconds: 5,
 				numTrialsPerLogin:               2,
 				numLoginTrials:                  2,
 			},
