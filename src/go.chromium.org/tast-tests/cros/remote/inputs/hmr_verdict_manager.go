@@ -4,6 +4,12 @@
 
 package inputs
 
+import (
+	"fmt"
+
+	"go.chromium.org/tast/core/errors"
+)
+
 // DetermineSingleLineVerdict runs analysis over a HMR CSV output file and returns the result of all validations run.
 func DetermineSingleLineVerdict(fileName string, widthResolution, heightResolution float64) ([]ValidationResult, error) {
 	unscaledPoints, err := readCSV(fileName)
@@ -18,5 +24,22 @@ func DetermineSingleLineVerdict(fileName string, widthResolution, heightResoluti
 	initialTouchRemovedPoints := removeInitialTouch(scaledPoints, 3.0)
 	stationaryPointsRemoved := removeStationaryPoints(initialTouchRemovedPoints, 2.0)
 	transformedPoints := transformToNormalizedCoordinates(stationaryPointsRemoved)
-	return analyzeLinearity(transformedPoints)
+
+	var results []ValidationResult
+	var errs error
+
+	result, err := analyzeLinearity(transformedPoints)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	}
+	results = append(results, result...)
+
+	if errs != nil {
+		errs = errors.Wrap(errs, "Single Line Verdict")
+	}
+	for i, result := range results {
+		results[i].Message = fmt.Sprintf("Single Line Verdict: %v", result.Message)
+	}
+
+	return results, errs
 }

@@ -71,3 +71,11 @@ func validationWrapper(name string, value, limit, tolerance float64, comparator 
 func validateMaxLinearity(value float64) (ValidationResult, error) {
 	return validationWrapper("Max Linearity Validation", value, 2, 1, le)
 }
+
+func validateRMSLinearity(value float64) (ValidationResult, error) {
+	return validationWrapper("RMS Linearity Validation", value, 0.5, 0.5, le)
+}
+
+func validateAngle(value float64) (ValidationResult, error) {
+	return validationWrapper("Angle Error Validation", value, 2.5, 2.5, le)
+}

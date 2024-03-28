@@ -15,11 +15,10 @@ import (
 )
 
 // analyzeLinearity calculates linear fit for a single swipe line. It
-// validates max errors.
+// validates max errors, root mean squared error and angle error.
 func analyzeLinearity(points []*hmrNode) ([]ValidationResult, error) {
 	var linError []float64
-	var linErrorMax float64
-	// TODO: b/314209789 - Add RMS & Angle validation
+	var linErrorMax, linErrorRms, angleError float64
 
 	if len(points) == 0 {
 		return []ValidationResult{}, errors.New("no points to analyse")
@@ -58,11 +57,29 @@ func analyzeLinearity(points []*hmrNode) ([]ValidationResult, error) {
 
 	// Max deviation from fit line to data set.
 	linErrorMax = floats.Max(linError)
+	// Root mean squared deviation from fit line to data set.
+	linErrorRms = math.Sqrt(stat.Mean(elementwisePower(linError, 2), nil))
+	// Angle from start point in data set to end point.
+	angleError = math.Abs(math.Atan(a) * 180 / math.Pi)
 
 	var errs error
 	var results []ValidationResult
 
 	result, err := validateMaxLinearity(linErrorMax)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	} else {
+		results = append(results, result)
+	}
+
+	result, err = validateRMSLinearity(linErrorRms)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	} else {
+		results = append(results, result)
+	}
+
+	result, err = validateAngle(angleError)
 	if err != nil {
 		errs = errors.Join(errs, err)
 	} else {
