@@ -59,11 +59,15 @@ func validate(value, limit, tolerance float64, comparator comparatorType) (Valid
 	return ValidationResult{Passed: true, Message: successMessage}, nil
 }
 
-func validateMaxLinearity(value float64) (ValidationResult, error) {
-	result, err := validate(value, 2, 1, le)
+func validationWrapper(name string, value, limit, tolerance float64, comparator comparatorType) (ValidationResult, error) {
+	result, err := validate(value, limit, tolerance, comparator)
 	if err != nil {
-		return result, errors.Wrap(err, "Max Linearity Validation")
+		return result, errors.Wrap(err, name)
 	}
-	result.Message = fmt.Sprintf("Max Linearity Validation: %v", result.Message)
+	result.Message = fmt.Sprintf("%v: %v", name, result.Message)
 	return result, nil
+}
+
+func validateMaxLinearity(value float64) (ValidationResult, error) {
+	return validationWrapper("Max Linearity Validation", value, 2, 1, le)
 }
