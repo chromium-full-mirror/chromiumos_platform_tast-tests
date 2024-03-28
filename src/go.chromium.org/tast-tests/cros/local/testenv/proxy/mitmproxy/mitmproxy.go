@@ -27,7 +27,6 @@ import (
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/procutil"
 	"go.chromium.org/tast-tests/cros/local/testenv"
-	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -73,11 +72,6 @@ func New(ctx context.Context, opts ...Option) (*MitmProxy, error) {
 		healthCheck:  true,
 		scriptPaths:  []string{},
 		options:      []string{},
-	}
-
-	// Get values from command line.
-	if proxy.ScriptPath() != "" {
-		mp.scriptPaths = []string{proxy.ScriptPath()}
 	}
 
 	// Override any value if users pass option from test.

@@ -379,7 +379,6 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		cr, err := reuseSession(reuseCtx, cfg)
 
 		if err == nil {
-			cr.CreateLaunchAndApplyProxy(ctx)
 			return cr, nil
 		}
 		testing.ContextLogf(ctx, "Current session is not reusable: %v; restarting a new session", err)
@@ -466,7 +465,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		}
 	}
 
-	c = &Chrome{
+	return &Chrome{
 		cfg:               *cfg,
 		deprecatedExtDirs: exts.DeprecatedDirs(),
 		agg:               agg,
@@ -475,11 +474,7 @@ func New(ctx context.Context, opts ...Option) (c *Chrome, retErr error) {
 		logMarker:         logsaver.NewMarkerNoOffset(logFilename),
 		logsStartTime:     logsStartTime,
 		loginPending:      loginPending,
-	}
-
-	c.CreateLaunchAndApplyProxy(ctx)
-
-	return c, nil
+	}, nil
 }
 
 // Close disconnects from Chrome and cleans up standard extensions.

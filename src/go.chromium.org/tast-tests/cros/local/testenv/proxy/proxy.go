@@ -7,9 +7,6 @@ package proxy
 
 import (
 	"context"
-	"strings"
-
-	"go.chromium.org/tast/core/testing"
 )
 
 // Proxy defines interface of proxy.
@@ -28,26 +25,4 @@ type Proxy interface {
 
 	// ProxyAddress returns the proxy address to be set in browser.
 	ProxyAddress() string
-}
-
-var enabledVar = testing.RegisterVarString(
-	"proxy.enable",
-	"false",
-	"proxy.enable indicates whether to enable the proxy",
-)
-
-var scriptPathVar = testing.RegisterVarString(
-	"proxy.scriptPath",
-	"",
-	"proxy.scriptPath indicates the path of addon script",
-)
-
-// IsProxyEnabled indicates whether to enable the proxy.
-func IsProxyEnabled() bool {
-	return strings.ToLower(enabledVar.Value()) == "true"
-}
-
-// ScriptPath indicates the path of addon script.
-func ScriptPath() string {
-	return scriptPathVar.Value()
 }
