@@ -37,7 +37,7 @@ func OutDir(path string) Option {
 }
 
 // HealthCheck is an option to check the proxy server health when it is started.
-// The magic domain (mitm.it) will be used for checking under the hood.
+// The magic domain will be used for checking under the hood.
 // If an allowlist or blocklist is set to block this domain, users can set `allow=false` to bypass the check.
 // default: true
 func HealthCheck(allow bool) Option {

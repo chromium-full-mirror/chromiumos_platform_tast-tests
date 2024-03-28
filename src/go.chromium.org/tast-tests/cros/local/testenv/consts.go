@@ -13,3 +13,7 @@ const (
 
 // ValidEnvs is a list of the environments used for the end-to-end testing
 var ValidEnvs = []string{Prod, Preprod}
+
+// MagicURL is a test URL locally served by mitmproxy to check that a mitmproxy starts with a root certificate successfully.
+// If a git hook complains about the term used, you might want to bypass the check with --no-verify for a change to this file.
+const MagicURL = "https://mitm.it/"

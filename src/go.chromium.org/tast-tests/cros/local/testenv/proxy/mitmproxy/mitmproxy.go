@@ -26,6 +26,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	patchpanel "go.chromium.org/tast-tests/cros/local/network/patchpanel_client"
 	"go.chromium.org/tast-tests/cros/local/procutil"
+	"go.chromium.org/tast-tests/cros/local/testenv"
 	"go.chromium.org/tast-tests/cros/local/testenv/proxy"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -315,7 +316,7 @@ func (mp *MitmProxy) createTempFile(name string) (string, error) {
 }
 
 // verifyProxyStart verifies that the proxy starts with a root certificate successfully
-// by checking the magic domain (mitm.it) served locally by mitmproxy.
+// by checking the magic domain served locally by mitmproxy.
 // However, this check can be bypassed via `HealthCheck` option in case the domain won't work with a user's allowlist or blocklist.
 func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	// Get cert.
@@ -349,16 +350,15 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 		},
 	}
 
-	// This would pass if the magic domain "mitm.it" returns a 200 OK without the following error message in response.
+	// This would pass if the magic domain returns a 200 OK without the following error message in response.
 	const respRootCANotInstalled = "traffic is not passing through mitmproxy"
-	const testURL = "https://mitm.it/"
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		resp, err := client.Get(testURL)
+		resp, err := client.Get(testenv.MagicURL)
 		if err != nil {
 			return errors.Wrap(err, "failed to visit the magic domain")
 		}
 		if resp.StatusCode != http.StatusOK {
-			return errors.Errorf("%s returns %v, want %v", testURL, resp.StatusCode, http.StatusOK)
+			return errors.Errorf("%s returns %v, want %v", testenv.MagicURL, resp.StatusCode, http.StatusOK)
 		}
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
