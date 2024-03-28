@@ -127,7 +127,7 @@ func init() {
 				family:       l4server.TCP4,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name: "relaxed_tcp",
 			Val: networkTypeParams{
@@ -135,7 +135,7 @@ func init() {
 				family:       l4server.TCP4,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name: "relaxed_tcp_v6",
 			Val: networkTypeParams{
@@ -143,7 +143,7 @@ func init() {
 				family:       l4server.TCP6,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name: "relaxed_udp",
 			Val: networkTypeParams{
@@ -151,7 +151,7 @@ func init() {
 				family:       l4server.UDP4,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}, {
 			Name: "relaxed_udp_v6",
 			Val: networkTypeParams{
@@ -159,7 +159,7 @@ func init() {
 				family:       l4server.UDP6,
 				processCount: 100,
 			},
-			ExtraAttr: []string{"group:mainline", "informational"},
+			ExtraAttr: []string{"group:mainline", "group:criticalstaging", "informational"},
 		}},
 	})
 }
@@ -358,6 +358,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	}
 
 	pidFound := false
+	var txHigh, txLow, rxHigh, rxLow uint64 = 0, ^uint64(0), 0, ^uint64(0)
 	for _, flow := range bFlows {
 		failedFields = nil
 		pidFound = false
@@ -396,6 +397,18 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 				failedFields = append(failedFields, fmt.Sprintf("Direction=%s expected %s", flow.NetworkFlow.Direction.String(), details.expectedDirection.String()))
 			}
 			if len(failedFields) == 0 {
+				txBytes := *flow.NetworkFlow.TxBytes
+				rxBytes := *flow.NetworkFlow.RxBytes
+				if txBytes > txHigh {
+					txHigh = txBytes
+				} else if txBytes < txLow {
+					txLow = txBytes
+				}
+				if rxBytes > rxHigh {
+					rxHigh = rxBytes
+				} else if rxBytes < rxLow {
+					rxLow = rxBytes
+				}
 				matchCount++
 			} else {
 				s.Logf("Match failure:%s :%s", strings.Join(failedFields, ","), flow)
@@ -411,6 +424,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 			pidText, details.ipAddr, details.protocol.String(), details.expectedDirection.String())
 	}
 	s.Logf("Matched %d/%d", matchCount, processCount)
+	s.Logf("maxTx:%d minTx:%d maxRx:%d minRx:%d", txHigh, txLow, rxHigh, rxLow)
 }
 
 func setupL4server(ctx context.Context, network networkType, networkFam l4server.Family) (*routing.SimpleNetworkEnv, *server, error) {
