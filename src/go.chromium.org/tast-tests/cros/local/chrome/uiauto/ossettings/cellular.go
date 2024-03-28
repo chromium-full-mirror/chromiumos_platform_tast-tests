@@ -337,7 +337,11 @@ func EnterPreRevampOtherAPNDetails(ctx context.Context, tconn *chrome.TestConn, 
 	}
 
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(SaveButton.Focusable())(ctx); err != nil {
-		return errors.Wrap(err, "Save button failed to become/remain focusable after modifying custom APN")
+		return errors.Wrap(err, "Save button failed to become focusable after modifying custom APN")
+	}
+
+	if err := ui.EnsureExistsFor(SaveButton.Focusable(), 5*time.Second)(ctx); err != nil {
+		return errors.Wrap(err, "Save button failed to remain focusable after modifying custom APN")
 	}
 
 	return nil
