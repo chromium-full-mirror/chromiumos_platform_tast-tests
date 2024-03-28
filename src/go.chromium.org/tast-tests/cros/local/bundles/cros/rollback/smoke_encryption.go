@@ -36,8 +36,6 @@ func init() {
 		Timeout:      1 * time.Minute,
 		Data:         []string{"rollback_smoke_metrics_file"},
 		Fixture:      fixture.CleanOwnership,
-		// CleanOwnership doesn't work on reven/flex.
-		HardwareDeps: hwdep.D(hwdep.SkipOnModel("reven")),
 		Params: []testing.Param{{
 			Name: "oobe_config_restore_running",
 			Val:  oobeConfigRestoreRunningTest,
