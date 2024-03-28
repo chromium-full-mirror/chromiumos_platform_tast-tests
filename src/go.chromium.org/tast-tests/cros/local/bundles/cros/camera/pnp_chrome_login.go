@@ -33,10 +33,10 @@ func init() {
 		Timeout:      initTimePNPChromeLogin + pnp.PNPTimeParams.Total + power.RecorderTimeout,
 		Params: []testing.Param{{
 			Name:    "ash",
-			Fixture: pnp.StablePowerAshGAIA,
+			Fixture: pnp.StablePowerAsh,
 		}, {
 			Name:    "lacros",
-			Fixture: pnp.StablePowerLacrosGAIA,
+			Fixture: pnp.StablePowerLacros,
 		}},
 	})
 }

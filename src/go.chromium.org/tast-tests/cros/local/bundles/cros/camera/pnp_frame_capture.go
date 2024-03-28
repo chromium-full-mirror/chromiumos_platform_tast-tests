@@ -73,7 +73,7 @@ func init() {
 		BugComponent: "b:167281", // ChromeOS > Platform > Technologies > Camera
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{caps.BuiltinCamera, "chrome", "camera_app"},
-		Fixture:      pnp.StablePowerLacrosGAIA,
+		Fixture:      pnp.StablePowerLacros,
 		Timeout:      initTimePNPFrameCapture + traceTimePNPFrameCapture + power.RecorderTimeout,
 	})
 }

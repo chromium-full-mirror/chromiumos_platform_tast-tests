@@ -22,10 +22,14 @@ import (
 )
 
 const (
+	// StablePowerAsh provide fixture with ash chrome
+	StablePowerAsh = "stablePowerAsh"
 	// StablePowerAshGAIA provide fixture with ash chrome with GAIA login
 	StablePowerAshGAIA = "stablePowerAshGAIA"
 	// StablePowerAshGAIAFakeHAL provide fixture with ash chrome with GAIA login and use fake HAL
 	StablePowerAshGAIAFakeHAL = "stablePowerAshGAIAFakeHAL"
+	// StablePowerLacros provide fixture with lacros chrome
+	StablePowerLacros = "stablePowerLacros"
 	// StablePowerLacrosGAIA provide fixture with lacros chrome with GAIA login
 	StablePowerLacrosGAIA = "stablePowerLacrosGAIA"
 	// StablePowerLacrosGAIAFakeHAL provide fixture with lacros chrome with GAIA login and use fake HAL
@@ -73,6 +77,23 @@ func init() {
 		PostTestTimeout: 1 * time.Second,
 	})
 	testing.AddFixture(&testing.Fixture{
+		Name:     StablePowerAsh,
+		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash chrome",
+		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Impl: powersetup.NewPowerUIFixture(
+			minPowerTestOptions,
+			powersetup.PowerFixtureOptions{
+				BrowserType:     browser.TypeAsh,
+				EnableGAIALogin: false,
+			}),
+		Parent:          cameraService,
+		SetUpTimeout:    powersetup.SetUpTimeout,
+		ResetTimeout:    powersetup.ResetTimeout,
+		TearDownTimeout: powersetup.TearDownTimeout,
+		PreTestTimeout:  powersetup.PreTestTimeout,
+		PostTestTimeout: powersetup.PostTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
 		Name:     StablePowerAshGAIA,
 		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash Chrome with GAIA login",
 		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
@@ -101,6 +122,23 @@ func init() {
 		TearDownTimeout: 1 * time.Second,
 		PreTestTimeout:  1 * time.Second,
 		PostTestTimeout: 1 * time.Second,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:     StablePowerLacros,
+		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome",
+		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
+		Impl: powersetup.NewPowerUIFixture(
+			minPowerTestOptions,
+			powersetup.PowerFixtureOptions{
+				BrowserType:     browser.TypeLacros,
+				EnableGAIALogin: false,
+			}),
+		Parent:          cameraService,
+		SetUpTimeout:    powersetup.SetUpTimeout,
+		ResetTimeout:    powersetup.ResetTimeout,
+		TearDownTimeout: powersetup.TearDownTimeout,
+		PreTestTimeout:  powersetup.PreTestTimeout,
+		PostTestTimeout: powersetup.PostTestTimeout,
 	})
 	testing.AddFixture(&testing.Fixture{
 		Name:     StablePowerLacrosGAIA,
