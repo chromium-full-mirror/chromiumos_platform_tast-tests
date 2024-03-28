@@ -133,15 +133,33 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to retrieve base memory stats: ", err)
 	}
 
-	umaFirstKill := chromeMetrics.NewHistogramMetrics(
-		"Memory.LowMemoryKiller.FirstKillLatency",
-		chromeMetrics.SetMeanHistogramMetricWriter("", "ms", perf.SmallerIsBetter),
-		chromeMetrics.SetPercentileHistogramMetricWriter(50, "_p50", "ms", perf.SmallerIsBetter),
-		chromeMetrics.SetPercentileHistogramMetricWriter(90, "_p90", "ms", perf.SmallerIsBetter),
-	)
+	umaMetrics := []*chromeMetrics.HistogramMetrics{
+		chromeMetrics.NewHistogramMetrics(
+			"Memory.LowMemoryKiller.FirstKillLatency",
+			chromeMetrics.SetMeanHistogramMetricWriter("", "ms", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(50, "_p50", "ms", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(90, "_p90", "ms", perf.SmallerIsBetter),
+			chromeMetrics.SetCountHistogramMetricWriter("_count", perf.SmallerIsBetter),
+		),
+		chromeMetrics.NewHistogramMetrics(
+			"ChromeOS.CWP.PSIMemPressure.Some",
+			chromeMetrics.SetMeanHistogramMetricWriter("", "per10000", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(50, "_p50", "per10000", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(90, "_p90", "per10000", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(100, "_max", "per10000", perf.SmallerIsBetter),
+			chromeMetrics.SetCountHistogramMetricWriter("_count", perf.SmallerIsBetter),
+		),
+		chromeMetrics.NewHistogramMetrics(
+			"ChromeOS.CWP.PSIMemPressure.Full",
+			chromeMetrics.SetMeanHistogramMetricWriter("", "per10000", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(50, "_p50", "per10000", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(90, "_p90", "per10000", perf.SmallerIsBetter),
+			chromeMetrics.SetPercentileHistogramMetricWriter(100, "_max", "per10000", perf.SmallerIsBetter),
+		),
+	}
 
-	if umaFirstKill.Start(ctx, tconn); err != nil {
-		s.Fatal("Failed to Start FirstKillLatency metric: ", err)
+	if chromeMetrics.StartHistogramMetrics(ctx, tconn, umaMetrics); err != nil {
+		s.Fatal("Failed to Start UMA metrics: ", err)
 	}
 
 	var server *memoryuser.MemoryStressServer
@@ -265,8 +283,8 @@ func LifecycleShifting(ctx context.Context, s *testing.State) {
 	if killsBefore != nil && killsAfter != nil {
 		killsAfter.Subtract(killsBefore).LogPerfMetrics(p, "")
 	}
-	if err := umaFirstKill.Write(ctx, tconn, p); err != nil {
-		s.Error("Failed to write FirstKillLatency metrics: ", err)
+	if err := chromeMetrics.WriteHistogramMetrics(ctx, tconn, p, umaMetrics); err != nil {
+		s.Error("Failed to write UMA metrics: ", err)
 	}
 	if err := p.Save(s.OutDir()); err != nil {
 		s.Error("Failed to save perf.Values: ", err)

@@ -191,3 +191,45 @@ func AppendPercentileHistogramMetricWriter(percentile int, suffix, unit string, 
 		return nil
 	}
 }
+
+// SetCountHistogramMetricWriter creates a HistogramMetricWriter that calls
+// perf.Values.Set with the count of samples in a histogram.
+//
+// The perf.Metric has the following properties:
+//
+//	Name: the histogram name with the suffix param appended
+//	Unit: "count"
+//	Direction: the direction param
+func SetCountHistogramMetricWriter(suffix string, direction perf.Direction) HistogramMetricWriter {
+	return func(pv *perf.Values, histogram *histogram.Histogram) error {
+		name := fmt.Sprintf("%s%s", histogram.Name, suffix)
+		pv.Set(perf.Metric{
+			Name:      name,
+			Unit:      "count",
+			Direction: direction,
+			Multiple:  false,
+		}, float64(histogram.TotalCount()))
+		return nil
+	}
+}
+
+// AppendCountHistogramMetricWriter creates a HistogramMetricWriter that calls
+// perf.Values.Append with the count of samples in a histogram.
+//
+// The perf.Metric has the following properties:
+//
+//	Name: the histogram name with the suffix param appended
+//	Unit: "count"
+//	Direction: the direction param
+func AppendCountHistogramMetricWriter(suffix string, direction perf.Direction) HistogramMetricWriter {
+	return func(pv *perf.Values, histogram *histogram.Histogram) error {
+		name := fmt.Sprintf("%s%s", histogram.Name, suffix)
+		pv.Append(perf.Metric{
+			Name:      name,
+			Unit:      "count",
+			Direction: direction,
+			Multiple:  true,
+		}, float64(histogram.TotalCount()))
+		return nil
+	}
+}
