@@ -73,8 +73,8 @@ const (
 	defaultLoops = 60000
 	// defaultMaxLatencyThreshold is the default max latency threshold allowed in cyclictest.
 	defaultMaxLatencyThreshold = 3000 * time.Microsecond
-	// defaultStressWorker is the number of workers spawned in the stress test per cpu thread.
-	defaultStressWorker = 2
+	// defaultStressWorker is the number of workers spawned in the stress test.
+	defaultStressWorker = 4
 )
 
 // TODO(b/297967956): Remove devices when latencies are stable
@@ -259,7 +259,7 @@ func init() {
 				},
 			},
 			{
-				Name:      "rr12_1thread_10ms_stress_rr8_2workers_per_cpu",
+				Name:      "rr12_1thread_10ms_stress_rr8_4workers",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
@@ -281,7 +281,7 @@ func init() {
 				},
 			},
 			{
-				Name:      "rr12_1thread_10ms_stress_nice_p0_2workers_per_cpu",
+				Name:      "rr12_1thread_10ms_stress_nice_p0_4workers",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
@@ -357,7 +357,7 @@ func init() {
 				},
 			},
 			{
-				Name:      "nice_p0_1thread_10ms_stress_nice_p0_2workers_per_cpu",
+				Name:      "nice_p0_1thread_10ms_stress_nice_p0_4workers",
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 				Timeout:   15 * time.Minute,
 				Val: cyclicTestParameters{
@@ -464,7 +464,7 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 		cmdStr = append(cmdStr,
 			"--stress_policy="+param.StressConfig.Policy.String(),
 			"--stress_priority="+strconv.Itoa(param.StressConfig.Priority),
-			"--workers_per_cpu="+strconv.Itoa(defaultStressWorker))
+			"--workers="+strconv.Itoa(defaultStressWorker))
 	}
 
 	//GoBigSleepLint: Wait for the system being stablized.
