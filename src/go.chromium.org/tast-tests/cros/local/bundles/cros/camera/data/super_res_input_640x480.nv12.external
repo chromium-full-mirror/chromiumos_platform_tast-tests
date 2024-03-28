@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/camera/super_res_input_640x480_20240327.nv12",
+  "size": 460800,
+  "sha256sum": "93906bf67865c0e078aab2b43d585d584710bdc230fb89cad7712a07e4c4cac1"
+}
