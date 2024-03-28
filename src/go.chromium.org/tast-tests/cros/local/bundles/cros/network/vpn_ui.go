@@ -36,15 +36,18 @@ func init() {
 		Contacts: []string{
 			"cros-networking@google.com",
 			"jiejiang@google.com",
-			"edgar.chang@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
-		BugComponent: "b:1493959",
-		Attr:         []string{"group:mainline", "informational"},
-		SoftwareDeps: []string{"chrome"},
-		Fixture:      "vpnEnvWithCertsAndChromeLoggedIn",
-		LacrosStatus: testing.LacrosVariantUnneeded,
+		BugComponent:   "b:1493959",
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:mainline", "informational"},
+		SoftwareDeps:   []string{"chrome"},
+		Fixture:        "vpnEnvWithCertsAndChromeLoggedIn",
+		LacrosStatus:   testing.LacrosVariantUnneeded,
 		Params: []testing.Param{{
 			Name: "ikev2_cert",
 			Val: vpnUITestCase{
