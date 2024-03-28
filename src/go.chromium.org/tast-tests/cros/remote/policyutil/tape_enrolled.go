@@ -6,14 +6,19 @@ package policyutil
 
 import (
 	"context"
+	"os"
+	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
 	"go.chromium.org/tast-tests/cros/common/fixture"
 	"go.chromium.org/tast-tests/cros/common/tape"
+	"go.chromium.org/tast-tests/cros/services/cros/graphics"
 	pspb "go.chromium.org/tast-tests/cros/services/cros/policy"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/rpc"
+	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -36,6 +41,7 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.baserpc.FileSystem",
 			"tast.cros.tape.Service",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -60,6 +66,7 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.baserpc.FileSystem",
 			"tast.cros.tape.Service",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -84,6 +91,7 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.baserpc.FileSystem",
 			"tast.cros.tape.Service",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -108,6 +116,7 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.baserpc.FileSystem",
 			"tast.cros.tape.Service",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -132,6 +141,7 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.baserpc.FileSystem",
 			"tast.cros.tape.Service",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -156,6 +166,7 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.baserpc.FileSystem",
 			"tast.cros.tape.Service",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -180,6 +191,7 @@ func init() {
 			"tast.cros.hwsec.OwnershipService",
 			"tast.cros.baserpc.FileSystem",
 			"tast.cros.tape.Service",
+			"tast.cros.graphics.ScreenshotService",
 		},
 		Vars: []string{
 			tape.ServiceAccountVar,
@@ -230,6 +242,35 @@ func (e *tapeEnrolledFixt) SetUp(ctx context.Context, s *testing.FixtState) inte
 			if err := tapeClient.DeprovisionHelper(ctx, rpcClient, e.account.CustomerID, e.account.OrgUnitPath); err != nil {
 				s.Fatal("Failed to deprovision device: ", err)
 			}
+		}
+	}(cleanupCtx)
+
+	// Always dump the logs.
+	defer func(ctx context.Context) {
+		screenshotService := graphics.NewScreenshotServiceClient(rpcClient.Conn)
+		if _, err := screenshotService.CaptureScreenshot(ctx,
+			&graphics.CaptureScreenshotRequest{FilePrefix: "enrollment"},
+		); err != nil {
+			testing.ContextLog(ctx, "Failed to capture screenshot: ", err)
+		}
+
+		chromeDir := path.Join(s.OutDir(), "Chrome")
+		if err := os.Mkdir(chromeDir, 0777); err != nil {
+			testing.ContextLog(ctx, "Failed to create Chrome dir: ", err)
+		}
+
+		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), "/var/log/chrome/chrome", filepath.Join(chromeDir, "chrome.log"), linuxssh.DereferenceSymlinks); err != nil {
+			testing.ContextLog(ctx, "Failed to dump Chrome log: ", err)
+		}
+
+		uiDir := "/var/log/ui"
+		uiDirHost := path.Join(s.OutDir(), "ui")
+		if err := os.Mkdir(uiDirHost, 0777); err != nil {
+			testing.ContextLog(ctx, "Failed to create ui dir: ", err)
+		}
+
+		if err := linuxssh.GetFile(ctx, s.DUT().Conn(), uiDir, uiDirHost, linuxssh.DereferenceSymlinks); err != nil {
+			testing.ContextLog(ctx, "Failed to dump ui dir: ", err)
 		}
 	}(cleanupCtx)
 
