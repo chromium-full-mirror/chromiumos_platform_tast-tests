@@ -6,18 +6,16 @@ package firmware
 
 import (
 	"context"
-	"os"
 	"time"
 
 	fwCommon "go.chromium.org/tast-tests/cros/common/firmware"
+	"go.chromium.org/tast-tests/cros/common/firmware/futility"
 	"go.chromium.org/tast-tests/cros/common/servo"
 	fwUtils "go.chromium.org/tast-tests/cros/remote/bundles/cros/firmware/utils"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	pb "go.chromium.org/tast-tests/cros/services/cros/firmware"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/ssh"
-	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -48,122 +46,122 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode_a_file_header",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_attributes",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_length",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_loaded_in_romstage",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_file_loaded_in_ramstage",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "normal_mode_a_depthcharge_file",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, true},
 			},
 			{
 				Name:    "normal_mode_b_file_header",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_attributes",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_length",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_loaded_in_romstage",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_file_loaded_in_ramstage",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "normal_mode_b_depthcharge_file",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, true},
 			},
 			{
 				Name:    "dev_mode_a_file_header",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_attributes",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_length",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_loaded_in_romstage",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_file_loaded_in_ramstage",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, false},
 			},
 			{
 				Name:    "dev_mode_a_depthcharge_file",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionA, true},
 			},
 			{
 				Name:    "dev_mode_b_file_header",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/romstage", pb.CBFSCorruptType_MAGIC, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_attributes",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_ATTRIBUTES, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_length",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_LENGTH, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_loaded_in_romstage",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/ramstage", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_file_loaded_in_ramstage",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"fallback/payload", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, false},
 			},
 			{
 				Name:    "dev_mode_b_depthcharge_file",
-				Fixture: fixture.DevMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevMode),
 				Val:     apCorruptCBFSMetadataConfig{"ecrw.hash", pb.CBFSCorruptType_DATA, fwCommon.RWSectionB, true},
 			},
 		},
@@ -171,6 +169,7 @@ func init() {
 }
 
 func CorruptFWCBFS(ctx context.Context, s *testing.State) {
+	b := s.FixtValue().(*fixture.Value).BackupManager
 	h := s.FixtValue().(*fixture.Value).Helper
 	if err := h.RequireServo(ctx); err != nil {
 		s.Fatal("Failed to init servo: ", err)
@@ -206,27 +205,6 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 	ctx, cancelCtx := ctxutil.Shorten(ctx, 15*time.Minute)
 	defer cancelCtx()
 
-	s.Log("Backup firmware section: ", fwVariant)
-	fwBackup, err := h.BiosServiceClient.BackupImageSection(ctx, &pb.FWSectionInfo{Section: sectionVariant, Programmer: pb.Programmer_BIOSProgrammer})
-	if err != nil {
-		s.Fatal("Failed to backup firmware section: ", fwVariant)
-	}
-	defer func(ctx context.Context) {
-		h.DUT.Conn().CommandContext(ctx, "rm", fwBackup.Path).Output(ssh.DumpLogOnError)
-	}(cleanupCtx)
-
-	s.Log("Copy backup files to the Host")
-	fwBackupHost, err := os.CreateTemp("", "fwBackup")
-	if err != nil {
-		s.Fatal("Failed to create temporary file for firmware sign A backup")
-	}
-	defer os.Remove(fwBackupHost.Name())
-	defer fwBackupHost.Close()
-
-	if err := linuxssh.GetFile(ctx, s.DUT().Conn(), fwBackup.Path, fwBackupHost.Name(), linuxssh.PreserveSymlinks); err != nil {
-		s.Fatal("Failed to copy backup firmware from DUT to the Host: ", err)
-	}
-
 	s.Log("Set the USB Mux direction to Host")
 	if err := h.Servo.SetUSBMuxState(ctx, servo.USBMuxHost); err != nil {
 		s.Fatal(err, "failed to set the USB Mux direction to the Host")
@@ -239,6 +217,10 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 	}
 
 	defer func(ctx context.Context) {
+		if err := h.RequireServo(ctx); err != nil {
+			s.Fatal("Failed to init servo: ", err)
+		}
+
 		if testConfig.RequireECSync {
 			if _, err := fwCommon.ClearAndSetGBBFlags(ctx, h.DUT, oldGBBFlags); err != nil {
 				s.Fatal("Failed to set gbb flag: ", err)
@@ -250,26 +232,36 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to set FW write protect state: ", err)
 		}
 
-		if err := h.RequireServo(ctx); err != nil {
-			s.Fatal("Failed to init servo: ", err)
+		backupOnDut := "/tmp/fwBackup.bin"
+		if err := b.CopyBackupToDut(ctx, h.DUT, fixture.FirmwareAP, backupOnDut); err != nil {
+			s.Fatal("Failed to copy backup firmware image to DUT: ", err)
 		}
 
-		s.Log("Syncing TAST File from HOST")
-		if err := h.SyncTastFilesToDUT(ctx); err != nil {
-			s.Log(err, "syncing Tast files to DUT after booting to recovery")
-		}
-
-		// Require again here since reboots in test cause nil pointer errors otherwise.
 		if err := h.RequireBiosServiceClient(ctx); err != nil {
 			s.Fatal("Requiring BiosServiceClient: ", err)
 		}
 
-		s.Log("Get back FW Signs backup from host to DUT")
-		if _, err := linuxssh.PutFiles(ctx, s.DUT().Conn(), map[string]string{fwBackupHost.Name(): fwBackup.Path}, linuxssh.PreserveSymlinks); err != nil {
-			s.Fatal("Failed to get backup files to DUT from Host")
+		s.Log("Restore firmware section: ", fwVariant)
+		futilityInstance, err := futility.NewLocalBuilder(h.DUT).Build()
+		if err != nil {
+			s.Fatal("Failed to create futility instance: ", err)
+		}
+		if _, err = futilityInstance.DumpFmapExtract(ctx, backupOnDut, map[string]string{
+			"FW_MAIN_A": "/tmp/fwMainA.bin",
+			"FW_MAIN_B": "/tmp/fwMainB.bin",
+		}); err != nil {
+			s.Fatal("Failed to extract section for recovery: ", err)
 		}
 
-		s.Log("Restore firmware section: ", fwVariant)
+		fwBackup := &pb.FWSectionInfo{
+			Section:    sectionVariant,
+			Programmer: pb.Programmer_BIOSProgrammer,
+		}
+		if sectionVariant == pb.ImageSection_FWBodyAImageSection {
+			fwBackup.Path = "/tmp/fwMainA.bin"
+		} else {
+			fwBackup.Path = "/tmp/fwMainB.bin"
+		}
 		if _, err := h.BiosServiceClient.RestoreImageSection(ctx, fwBackup); err != nil {
 			s.Fatalf("Failed to restore firmware section: %v. %v", fwVariant, err)
 		}
@@ -309,6 +301,10 @@ func CorruptFWCBFS(ctx context.Context, s *testing.State) {
 	// Always start from RW/A.
 	if err := fwUtils.ChangeFWVariant(ctx, h, ms, fwCommon.RWSectionA); err != nil {
 		s.Fatal("Failed to change FW variant: ", err)
+	}
+
+	if err := h.RequireBiosServiceClient(ctx); err != nil {
+		s.Fatal("Requiring BiosServiceClient: ", err)
 	}
 
 	s.Log("Corrupt firmware body")
