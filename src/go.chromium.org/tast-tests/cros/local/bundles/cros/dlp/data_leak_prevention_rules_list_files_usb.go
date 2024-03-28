@@ -376,6 +376,14 @@ func DataLeakPreventionRulesListFilesUSB(ctx context.Context, s *testing.State) 
 		if err := files.CancelWarningAndVerify(ctx, ui, tconnAsh, files.DlFileName); err != nil {
 			s.Fatal("Failed to cancel the warning: ", err)
 		}
+	case restrictionlevel.Blocked:
+		if filesApp.EnsureFileGone(files.DlFileName, 10*time.Second); err != nil {
+			s.Fatal("Failed to block file copy: ", err)
+		}
+	case restrictionlevel.Allowed:
+		if filesApp.WithTimeout(10 * time.Second).WaitForFile(files.DlFileName); err != nil {
+			s.Fatal("Expected file is missing: ", err)
+		}
 	}
 
 	// Eject all USB devices before force-unmounting.
