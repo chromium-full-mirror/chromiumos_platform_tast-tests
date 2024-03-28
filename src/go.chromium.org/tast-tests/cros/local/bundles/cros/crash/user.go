@@ -531,6 +531,7 @@ func checkCollectionFailure(ctx context.Context, testOption, failureString strin
 	opts := crash.DefaultCrasherOptions()
 	opts.Username = "root"
 	opts.ExpectCrashReporterFail = true
+	opts.ExpectedSeverity = "INFO"
 	result, err := crash.RunCrasherProcessAndAnalyze(ctx, opts)
 	if err != nil {
 		return errors.Wrap(err, "failed to call crasher")
