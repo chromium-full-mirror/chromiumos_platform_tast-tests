@@ -64,73 +64,67 @@ func VPNAreUserSpecified(ctx context.Context, s *testing.State) {
 	if _, err := certStore.InstallCertKeyPair(ctx, testCert.ClientCred.PrivateKey, testCert.ClientCred.Cert); err != nil {
 		s.Fatal("Failed to install client cert: ", err)
 	}
-	if _, err := certStore.InstallCertKeyPair(ctx, "", testCert.CACred.Cert); err != nil {
+	id, err := certStore.InstallCertKeyPair(ctx, "", testCert.CACred.Cert)
+	if err != nil {
 		s.Fatal("Failed to install CA cert: ", err)
 	}
 
-	// Prepares virtualnet environment for the VPN server.
-	networkEnv, err := vpn.CreateNetworkTopology(ctx)
-	if err != nil {
-		s.Fatal("Failed to create network topology: ", err)
-	}
-	defer func(ctx context.Context) {
-		if err := networkEnv.TearDown(ctx); err != nil {
-			s.Error("Failed to tear down network topology for VPN tests: ", err)
-		}
-	}(cleanupCtx)
-
-	// Prepares VPN server.
-	config := vpn.NewConfig(
-		vpn.TypeOpenVPN,
-		vpn.WithOpenVPNUseUserPassword(),
-	)
-
-	vpnServer, err := vpn.StartServerWithConfig(ctx, networkEnv.Server1, config)
-	if err != nil {
-		s.Fatal("Failed to start VPN server: ", err)
-	}
-	defer vpnServer.Exit(cleanupCtx)
-
-	res := &vpnAreUserSpecifiedResource{
-		outDir:              s.OutDir(),
-		vpnName:             "testVPN",
-		vpnClientCertUIName: fmt.Sprintf("%s [%s]", testCert.CACred.Info.CommonName, testCert.ClientCred.Info.CommonName),
-		vpnServer:           vpnServer,
-		vpnConfig:           config,
-	}
+	res := newVPNAreUserSpecifiedTestResource(vpn.NewCertVals(testCert, certStore.UserToken, id), s.OutDir())
+	defer res.cleanup(cleanupCtx)
 
 	// Use the user who has installed certificates through netcertstore package as
 	// primary user responsible for configuring the VPN service.
 	primaryUser := chrome.Creds{User: netcertstore.TestUsername, Pass: netcertstore.TestPassword}
-	if err := loginAndDoAction(ctx, res, []chrome.Option{
+	if err := loginAndDoAction(ctx, []chrome.Option{
 		chrome.KeepState(), // Avoid resetting TPM.
 		chrome.FakeLogin(primaryUser),
-		chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
+		// TODO(b/328576285): Enable the feature once it does not affect the Chrome
+		// logging process after the netcertstore setup.
+		chrome.DisableFeatures("LocalPasswordForConsumers"),
 	}, joinVPN(res)); err != nil {
 		s.Fatal("Failed to login primary user to prepare: ", err)
 	}
 
-	// Login as a different user and verify that another user does not have the VPN network configured.
-	if err := loginAndDoAction(ctx, res, []chrome.Option{
+	// Login as a different user and verify that another user does not have the VPN
+	// network configured.
+	if err := loginAndDoAction(ctx, []chrome.Option{
 		chrome.KeepState(),
 		chrome.GuestLogin(),
-		chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
+		// TODO(b/328576285): Enable the feature once it does not affect the Chrome
+		// logging process after the netcertstore setup.
+		chrome.DisableFeatures("LocalPasswordForConsumers"),
 	}, verifyVPNNotExist(res)); err != nil {
 		s.Fatal("Failed to verify VPN networks are user specified: ", err)
 	}
 }
 
-type vpnAreUserSpecifiedResource struct {
-	outDir, vpnName, vpnClientCertUIName string
+type vpnAreUserSpecifiedTestResource struct {
+	outDir string
 
-	cr    *chrome.Chrome
-	tconn *chrome.TestConn
+	certVals          vpn.CertVals
+	userCertsNameOnUI string
 
-	vpnServer *vpn.Server
-	vpnConfig *vpn.Config
+	cleanupVPNEnv uiauto.Action
 }
 
-func loginAndDoAction(ctx context.Context, res *vpnAreUserSpecifiedResource, opts []chrome.Option, action uiauto.Action) (retErr error) {
+func newVPNAreUserSpecifiedTestResource(certVals vpn.CertVals, outDir string) *vpnAreUserSpecifiedTestResource {
+	return &vpnAreUserSpecifiedTestResource{
+		outDir:            outDir,
+		certVals:          certVals,
+		userCertsNameOnUI: fmt.Sprintf("%s [%s]", certVals.CACred.Info.CommonName, certVals.ClientCred.Info.CommonName),
+	}
+}
+
+func (res *vpnAreUserSpecifiedTestResource) cleanup(ctx context.Context) {
+	if res.cleanupVPNEnv != nil {
+		res.cleanupVPNEnv(ctx)
+		res.cleanupVPNEnv = nil
+	}
+}
+
+type vpnAreUserSpecifiedTestAction func(context.Context, *chrome.Chrome, *chrome.TestConn) error
+
+func loginAndDoAction(ctx context.Context, opts []chrome.Option, action vpnAreUserSpecifiedTestAction) (retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, chrome.ResetTimeout)
 	defer cancel()
@@ -139,33 +133,41 @@ func loginAndDoAction(ctx context.Context, res *vpnAreUserSpecifiedResource, opt
 	if err != nil {
 		return errors.Wrap(err, "failed to start Chrome")
 	}
-	res.cr = cr
-	defer func(ctx context.Context) {
-		cr.Close(ctx)
-		res.cr = nil
-	}(cleanupCtx)
+	defer cr.Close(cleanupCtx)
 
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to create Test API connection")
 	}
-	res.tconn = tconn
-	defer func() { res.tconn = nil }()
 
-	return action(ctx)
+	return action(ctx, cr, tconn)
 }
 
-func joinVPN(res *vpnAreUserSpecifiedResource) uiauto.Action {
-	return func(ctx context.Context) (retErr error) {
+const vpnNetworkName = "VPNAreUserSpecified_testVPN"
+
+func joinVPN(res *vpnAreUserSpecifiedTestResource) vpnAreUserSpecifiedTestAction {
+	return func(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (retErr error) {
 		cleanupCtx := ctx
 		ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 		defer cancel()
 
-		// Retrieve the VPN server properties for configuration via UI.
-		vpnProps, err := vpn.CreateProperties(res.vpnServer, nil /* secondServer */)
+		cfg := vpn.NewConfig(
+			// Using OpenVPN to perform the test (this is only a random choice).
+			vpn.TypeOpenVPN,
+			// Password is required when configuring an OpenVPN network via UI.
+			vpn.WithOpenVPNUseUserPassword(),
+			vpn.WithCertVals(res.certVals),
+		)
+
+		_, vpnHelper, cleanup, err := ossettings.NewVPNDialogHelperWithVPNServer(ctx, cfg, vpnNetworkName)
 		if err != nil {
-			return errors.Wrap(err, "failed to generate D-Bus properties")
+			return errors.Wrap(err, "failed to prepare vpn env for testing")
 		}
+		defer func(ctx context.Context) {
+			if retErr != nil {
+				cleanup(ctx)
+			}
+		}(cleanupCtx)
 
 		kb, err := input.Keyboard(ctx)
 		if err != nil {
@@ -173,23 +175,18 @@ func joinVPN(res *vpnAreUserSpecifiedResource) uiauto.Action {
 		}
 		defer kb.Close(cleanupCtx)
 
-		settings, err := ossettings.OpenJoinVPNDialog(ctx, res.tconn, res.cr)
+		settings, err := ossettings.OpenJoinVPNDialog(ctx, tconn, cr)
 		if err != nil {
 			return errors.Wrap(err, "failed to open VPN dialog")
 		}
 		defer settings.Close(cleanupCtx)
-		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, res.cr, "vpn_settings_ui_dump")
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, cr, "vpn_settings_ui_dump")
 
-		vpnHelper, err := ossettings.NewVPNDialogHelper(res.vpnConfig.Type, vpnProps, res.vpnName, &res.vpnClientCertUIName)
-		if err != nil {
-			return errors.Wrap(err, "failed to create a UI helper")
-		}
-
-		if err := vpnHelper.FillInVPNConfigurations(ctx, res.cr, res.tconn, kb); err != nil {
+		if err := vpnHelper.FillInVPNConfigurations(ctx, cr, tconn, kb); err != nil {
 			return errors.Wrap(err, "failed to configure VPN service")
 		}
 
-		if err := vpnHelper.ConnectAndWait(ctx, res.tconn); err != nil {
+		if err := vpnHelper.ConnectAndWait(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to connect to VPN service")
 		}
 
@@ -201,65 +198,65 @@ func joinVPN(res *vpnAreUserSpecifiedResource) uiauto.Action {
 		// Verify the profile of the VPN service is saved.
 		if _, err := manager.WaitForServiceProperties(ctx, map[string]interface{}{
 			shillconst.ServicePropertyType:        shillconst.TypeVPN,
-			shillconst.ServicePropertyName:        res.vpnName,
+			shillconst.ServicePropertyName:        vpnNetworkName,
 			shillconst.ServicePropertyIsConnected: true,
 		}, shillconst.DefaultTimeout); err != nil {
-			return errors.Wrap(err, "failed to find the VPN service, VPN service is not saved")
+			return errors.Wrap(err, "failed to verify the VPN service is saved")
 		}
 
-		if err := ossettings.DisconnectVPN(ctx, res.tconn); err != nil {
+		if err := ossettings.DisconnectVPN(ctx, tconn); err != nil {
 			return errors.Wrap(err, "failed to disconnect from VPN service")
 		}
 
+		res.cleanupVPNEnv = cleanup
 		return nil
 	}
 }
 
-func verifyVPNNotExist(res *vpnAreUserSpecifiedResource) uiauto.Action {
-	return func(ctx context.Context) (retErr error) {
+func verifyVPNNotExist(res *vpnAreUserSpecifiedTestResource) vpnAreUserSpecifiedTestAction {
+	return func(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn) (retErr error) {
 		cleanupCtx := ctx
 		ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 		defer cancel()
 
-		settings, err := ossettings.Launch(ctx, res.tconn)
+		settings, err := ossettings.Launch(ctx, tconn)
 		if err != nil {
 			return errors.Wrap(err, "failed to launch the OS settings")
 		}
 		defer settings.Close(cleanupCtx)
-		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, res.cr, "ossettings_ui_dump")
+		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, cr, "ossettings_ui_dump")
 
-		if err := settings.NavigateToPageURL(ctx, res.cr, "internet", settings.Exists(ossettings.Internet)); err != nil {
+		if err := settings.NavigateToPageURL(ctx, cr, "internet", settings.Exists(ossettings.Internet)); err != nil {
 			return errors.Wrap(err, "failed to navigate to network page")
 		}
 
-		ui := uiauto.New(res.tconn)
+		ui := uiauto.New(tconn)
 		arrowFinder := nodewith.Role(role.Button).HasClass("subpage-arrow")
 
 		vpnNetworksPageArrow := arrowFinder.NameContaining("VPN")
 		if err = ui.WaitUntilExists(vpnNetworksPageArrow)(ctx); err != nil {
 			if nodewith.IsNodeNotFoundErr(err) {
-				// VPN networks page is available only if a VPN is configured, also,
-				//	1. VPN services configured by other users are expected to be
-				//	invisible.
-				//	2. Second user has not configured any other VPN service.
-				// Therefore, the absence of the subpage-arrow of the VPN networks page
-				// is expected, no further actions are required.
+				// VPN networks page is available when a VPN is configured, also,
+				// 	1. VPN configured by other users should be invisible.
+				// 	2. Second user has not configured any other VPN service.
+				// Therefore, the absence of the subpage-arrow of the VPN networks
+				// page is expected, no further actions are required.
 				return nil
 			}
 			return errors.Wrap(err, "failed to determine whether the VPN networks page is enabled")
 		}
 
-		// If the user has a VPN configured, enter the VPN networks page to verify if VPN
-		// configured by other users exists.
+		// If the user has a VPN configured, enter the VPN networks page to verify
+		// whether the VPN configured by other users does exist.
 		if err := ui.LeftClick(vpnNetworksPageArrow)(ctx); err != nil {
 			return errors.Wrap(err, "failed to enter VPN networks page")
 		}
 
-		vpnServicePageArrow := arrowFinder.NameContaining(res.vpnName)
+		vpnServicePageArrow := arrowFinder.NameContaining(vpnNetworkName)
 		if err := ui.WaitUntilExists(vpnServicePageArrow)(ctx); err != nil {
 			if nodewith.IsNodeNotFoundErr(err) {
-				// No further actions are required, as VPN services configured by other
-				// users are expected to be invisible.
+				// No further actions are required, as VPN services configured by
+				// other users are expected to be invisible.
 				return nil
 			}
 			return errors.Wrap(err, "failed to determine whether the VPN service page is found")

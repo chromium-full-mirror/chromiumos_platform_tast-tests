@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/vpn"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // DisconnectVPN disconnects from a VPN network and ensure it's disconnected.
@@ -130,6 +131,70 @@ func NewVPNDialogHelper(vpnType vpn.Type, props *vpn.ShillProperties, vpnName st
 	default:
 		return nil, errors.Errorf("unsupported VPN type: %q", vpnType.String())
 	}
+}
+
+// NewVPNDialogHelperWithVPNServer returns a helper to configure a specific VPN
+// network.
+// It starts a VPN server (and necessary network environment) based on the
+// specified configs, returns the started VPN server, the helper, and a cleanup
+// closure.
+// The returned helper will configure a VPN network, connect to the started VPN
+// server.
+// Caller MUST call the returned cleanup closure to clean up resources.
+// Note that vpnNameOnUI is only a name of this VPN network that end user
+// attempt to add through ChromeOS UI.
+func NewVPNDialogHelperWithVPNServer(ctx context.Context, vpnCfg *vpn.Config, vpnNameOnUI string) (vpnServer *vpn.Server, vpnDialogHelper VPNDialogHelper, cleanup uiauto.Action, retErr error) {
+	var cleanups []uiauto.Action
+
+	// This function will start some processes which are supposed to be kept
+	// running, so we do not want to use a shortened ctx or a ctx that will be
+	// canceled.
+	networkEnv, err := vpn.CreateNetworkTopology(ctx)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to create network topology for VPN tests")
+	}
+	defer func() {
+		if retErr != nil {
+			// Time is not reserved since we do not want to shorten the
+			// original ctx.
+			if err := networkEnv.TearDown(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to tear down the network topology: ", err)
+			}
+		}
+	}()
+	// Insert at front to reverse the cleanup order.
+	cleanups = append([]uiauto.Action{networkEnv.TearDown}, cleanups...)
+
+	// This function will start some processes which are supposed to be kept
+	// running, so we do not want to use a shortened ctx or a ctx that will be
+	// canceled.
+	vpnServer, err = vpn.StartServerWithConfig(ctx, networkEnv.Server1, vpnCfg)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to start a VPN server")
+	}
+	defer func() {
+		if retErr != nil {
+			// Time is not reserved since we do not want to shorten the
+			// original ctx.
+			if err := vpnServer.Exit(ctx); err != nil {
+				testing.ContextLog(ctx, "Failed to exit the vpn server: ", err)
+			}
+		}
+	}()
+	// Insert at front to reverse the cleanup order.
+	cleanups = append([]uiauto.Action{vpnServer.Exit}, cleanups...)
+
+	vpnProps, err := vpn.CreateProperties(vpnServer, nil /*secondServer*/)
+	if err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to generate D-Bus properties")
+	}
+
+	certName := fmt.Sprintf("%s [%s]", vpnCfg.CertVals.CACred.Info.CommonName, vpnCfg.CertVals.ClientCred.Info.CommonName)
+	if vpnDialogHelper, err = NewVPNDialogHelper(vpnServer.Config.Type, vpnProps, vpnNameOnUI, &certName); err != nil {
+		return nil, nil, nil, errors.Wrap(err, "failed to create a UI helper")
+	}
+
+	return vpnServer, vpnDialogHelper, uiauto.Combine("tear down VPN network topology and stop VPN server", cleanups...), nil
 }
 
 type vpnDialogHelperBase struct {

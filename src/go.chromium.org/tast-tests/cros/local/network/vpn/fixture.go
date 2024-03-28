@@ -169,13 +169,23 @@ type CertVals struct {
 	pin  string
 }
 
+// NewCertVals returns a new CertVals initialized.
+// id is the ID to the object when certificates inserted into the user token.
+// userToken is the PKCS#11 data related to the user token.
+func NewCertVals(cert certificate.CertStore, userToken netcertstore.Token, id string) CertVals {
+	return CertVals{
+		CertStore: cert,
+		id:        id,
+		slot:      fmt.Sprintf("%d", userToken.Slot),
+		pin:       userToken.Pin,
+	}
+}
+
 func installUserCert(ctx context.Context, certStore *netcertstore.Store) (CertVals, error) {
-	slot := fmt.Sprintf("%d", certStore.UserToken.Slot)
-	pin := certStore.UserToken.Pin
 	cert := certificate.TestCert1()
 	clientCred := cert.ClientCred
 	id, err := certStore.InstallCertKeyPair(ctx, clientCred.PrivateKey, clientCred.Cert)
-	return CertVals{cert, id, slot, pin}, err
+	return NewCertVals(cert, certStore.UserToken, id), err
 }
 
 func (f *vpnFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
