@@ -598,13 +598,14 @@ func init() {
 	})
 
 	// arcBootedWithGameDashboard is a fixture similar to arcBooted but
-	// with the dropdown panel flag enabled.
+	// with the `GameDashboard` and `DropdownPanel` feature flags enabled.
+	// TODO(b/331704817): In M126, remove the "DropdownPanel" feature flag as a Chrome arg.
 	fixtureConfig = DefaultBootedFixtureConfig()
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
 		return []chrome.Option{
 			chrome.ExtraArgs(DisableSyncFlags()...),
 			chrome.ExtraArgs("--disable-features=ArcExternalStorageAccess", "--disable-features=FirmwareUpdaterApp"),
-			chrome.ExtraArgs("--enable-features=DropdownPanel"),
+			chrome.ExtraArgs("--enable-features=DropdownPanel"), chrome.ExtraArgs("--enable-features=GameDashboard"),
 		}, nil
 	}
 	testing.AddFixture(&testing.Fixture{
