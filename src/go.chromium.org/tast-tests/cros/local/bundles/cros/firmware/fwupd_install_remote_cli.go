@@ -6,7 +6,6 @@ package firmware
 
 import (
 	"context"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"time"
@@ -19,7 +18,7 @@ import (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func: FwupdInstallRemote,
+		Func: FwupdInstallRemoteCLI,
 		Desc: "Checks that fwupd can install using a remote repository",
 		// ChromeOS > Platform > Services > Peripherals > Firmware Update - fwupd
 		BugComponent: "b:857851",
@@ -38,9 +37,9 @@ func init() {
 	})
 }
 
-// FwupdInstallRemote runs the fwupdtool utility and verifies that it
+// FwupdInstallRemoteCLI runs the fwupdtool utility in CLI (command line interface) and verifies that it
 // can update a device in the system using a remote repository.
-func FwupdInstallRemote(ctx context.Context, s *testing.State) {
+func FwupdInstallRemoteCLI(ctx context.Context, s *testing.State) {
 	// make sure dut battery is charging/charged
 	if cleanup, err := fwupd.SetFwupdChargingState(ctx, true); err != nil {
 		s.Fatal("Failed to set charging state: ", err)
@@ -58,7 +57,7 @@ func FwupdInstallRemote(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Errorf("%q failed: %v", cmd.Args, err)
 	}
-	if err := ioutil.WriteFile(filepath.Join(s.OutDir(), "fwupdmgr.txt"), output, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(s.OutDir(), "fwupdmgr.txt"), output, 0644); err != nil {
 		s.Error("Failed to write output from update: ", err)
 	}
 }
