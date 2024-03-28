@@ -222,7 +222,10 @@ func RestartChromeForTesting(ctx context.Context, cfg *config.Config, extArgs, l
 			// Disable ARC opt-in verification to test ARC with mock GAIA accounts.
 			"--disable-arc-opt-in-verification",
 			// Always start ARC to avoid unnecessarily stopping mini containers.
-			"--arc-start-mode=always-start-with-no-play-store")
+			"--arc-start-mode=always-start-with-no-play-store",
+			// Make files served by ARC (e.g., "Play files", DocumentsProvider) accessible from Files app.
+			"--arc-force-mount-android-volumes-in-files",
+		)
 	case config.ARCSupported:
 		// Allow ARC being enabled on the device to test ARC with real gaia accounts.
 		args = append(args, "--arc-availability=officially-supported")

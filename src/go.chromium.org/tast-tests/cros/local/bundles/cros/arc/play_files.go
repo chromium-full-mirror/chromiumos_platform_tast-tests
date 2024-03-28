@@ -12,8 +12,8 @@ import (
 	"path/filepath"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/android/ui"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/arc/storage"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
@@ -37,6 +37,7 @@ func init() {
 		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{"capybara.jpg"},
+		Fixture:      "arcBooted",
 		Params: []testing.Param{{
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val:               "/run/arc/sdcard/write/emulated/0",
@@ -46,7 +47,6 @@ func init() {
 			Val:               "/media/fuse/android_files",
 		}},
 		Timeout: chrome.LoginTimeout + arc.BootTimeout + 3*time.Minute,
-		VarDeps: []string{"ui.gaiaPoolDefault"},
 	})
 }
 
@@ -54,45 +54,16 @@ func init() {
 func PlayFiles(ctx context.Context, s *testing.State) {
 	crosPlayfilesPath := s.Param().(string)
 
-	// Shorten the context to make room for cleanup jobs.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
-	defer cancel()
-
-	args := arc.DisableSyncFlags()
-	cr, err := chrome.New(
-		ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		chrome.ARCSupported(),
-		chrome.ExtraArgs(args...),
-	)
-	if err != nil {
-		s.Fatal("Failed to connect to Chrome: ", err)
-	}
-	defer cr.Close(cleanupCtx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API connection: ", err)
-	}
-
-	// Optin is needed to enable the Play files feature.
-	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to optin to Play Store: ", err)
-	}
-
-	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(cleanupCtx)
+	a := s.FixtValue().(*arc.PreData).ARC
+	cr := s.FixtValue().(*arc.PreData).Chrome
+	d := s.FixtValue().(*arc.PreData).UIDevice
 
 	if err := arc.WaitForARCSDCardVolumeMount(ctx, a); err != nil {
 		s.Fatal("Failed to wait for the sdcard volume to be mounted in ARC: ", err)
 	}
 
 	testing.ContextLog(ctx, "Testing storage integration with apps")
-	if err := testStorageIntegrationForPlayfilesWithApps(ctx, cr, tconn, a, s.OutDir()); err != nil {
+	if err := testStorageIntegrationForPlayfilesWithApps(ctx, cr, a, d, s.OutDir()); err != nil {
 		s.Fatal("Storage integration test with apps failed: ", err)
 	}
 
@@ -108,17 +79,22 @@ func PlayFiles(ctx context.Context, s *testing.State) {
 //     edit the file with the app, and verify the modification with Files app.
 //  3. Open the file with a test Android app via SAF.
 //  4. Delete the file with Files app and verify the deletion from Android side.
-func testStorageIntegrationForPlayfilesWithApps(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, a *arc.ARC, outDir string) error {
+func testStorageIntegrationForPlayfilesWithApps(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *ui.Device, outDir string) error {
 	const (
 		filename    = "storage.txt"
 		fileContent = "this is a test"
 	)
 
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create test API connection")
+	}
+
 	if err := testCopyToPlayfiles(ctx, cr, tconn, a, filename, fileContent, outDir); err != nil {
 		return errors.Wrapf(err, "failed to copy %s to Play files", filename)
 	}
 
-	if err := testFilesAppIntegrationForPlayfiles(ctx, cr, a, filename, fileContent, outDir); err != nil {
+	if err := testFilesAppIntegrationForPlayfiles(ctx, cr, a, d, filename, fileContent, outDir); err != nil {
 		return errors.Wrapf(err, "failed to test Files app integration for %s in Play files", filename)
 	}
 
@@ -202,12 +178,7 @@ func copyFileInDownloadsToPlayfiles(ctx context.Context, tconn *chrome.TestConn,
 }
 
 // testFilesAppIntegrationForPlayfiles opens a file in Play files with an Android app and edits it.
-func testFilesAppIntegrationForPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, filename, fileContent, outDir string) error {
-	d, err := a.NewUIDevice(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to initialize UI Automator")
-	}
-
+func testFilesAppIntegrationForPlayfiles(ctx context.Context, cr *chrome.Chrome, a *arc.ARC, d *ui.Device, filename, fileContent, outDir string) error {
 	config := storage.TestConfig{
 		DirName:        filesapp.Playfiles,
 		SubDirectories: []string{"Pictures"},

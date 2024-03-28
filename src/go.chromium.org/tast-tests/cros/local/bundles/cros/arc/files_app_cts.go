@@ -13,10 +13,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/arc"
-	"go.chromium.org/tast-tests/cros/local/arc/optin"
-	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/cpu"
-	"go.chromium.org/tast-tests/cros/local/guestos"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/testing"
 )
@@ -76,10 +73,10 @@ func init() {
 		Contacts:     []string{"arc-storage@google.com", "youkichihosoi@google.com", "momohatt@google.com"},
 		// ChromeOS > Software > ARC++ > Storage
 		BugComponent: "b:516669",
+		Fixture:      "arcBootedWithoutUIAutomator",
 		Vars:         []string{filesAppCtsTestFilterVarName},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      20 * time.Minute,
-		VarDeps:      []string{"ui.gaiaPoolDefault"},
 		Params: []testing.Param{
 			{
 				Name:              "t",
@@ -113,43 +110,12 @@ func FilesAppCts(ctx context.Context, s *testing.State) {
 		s.Fatalf("Failed to complie regular expression %q: %s", filesAppCtsTestFilterVar.Value(), err)
 	}
 
-	cr, err := chrome.New(
-		ctx,
-		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
-		chrome.ARCSupported(),
-		chrome.UnRestrictARCCPU(),
-		chrome.ExtraArgs(arc.DisableSyncFlags()...),
-	)
-	if err != nil {
-		s.Fatal("Failed to start Chrome: ", err)
-	}
-	defer cr.Close(ctx)
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to create test API connection: ", err)
-	}
-
-	if err := optin.PerformAndClose(ctx, cr, tconn); err != nil {
-		s.Fatal("Failed to optin to Play store: ", err)
-	}
-
-	a, err := arc.New(ctx, s.OutDir(), cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to start ARC: ", err)
-	}
-	defer a.Close(ctx)
+	a := s.FixtValue().(*arc.PreData).ARC
 
 	for _, apkName := range params.apkNames {
 		if err := a.Install(ctx, s.DataPath(apkName)); err != nil {
 			s.Fatalf("Failed to install %s: %s", apkName, err)
 		}
-	}
-
-	// Test often fails when an automatic wallpaper change happens.
-	// Set wallpaper beforehand to prevent the automatic change.
-	if err := guestos.SetSolidColorWallpaper(ctx, tconn); err != nil {
-		s.Fatal("Failed to set solid wallpaper to avoid test flake: ", err)
 	}
 
 	keyboard, err := input.Keyboard(ctx)
