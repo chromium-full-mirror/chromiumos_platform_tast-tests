@@ -73,10 +73,12 @@ func parseYavtaEnumFormats(ctx context.Context, videoNode string) ([]captureMeta
 		return strings.Contains(":(", string(r))
 	}
 	frameSizeSplitter := func(r rune) bool {
-		return strings.Contains(":x(/)", string(r))
+		return strings.Contains(":x(/,)", string(r))
 	}
 	format := ""
 
+	// Camera name string is of the following style:
+	// Device `<camera_name>` on ...
 	cameraName := strings.FieldsFunc(lines[1], cameraNameSplitter)[1]
 	// perf.Values valid metric names only allow "^[a-zA-Z0-9._-]{1,256}$".
 	re := regexp.MustCompile("[^a-zA-Z0-9._-]")
@@ -84,8 +86,12 @@ func parseYavtaEnumFormats(ctx context.Context, videoNode string) ([]captureMeta
 
 	for _, line := range lines {
 		if strings.Contains(line, "Format") {
+			// Format string is of the following style:
+			// Format <index>: <format> (<format id>)
 			format = strings.TrimSpace(strings.FieldsFunc(line, formatSplitter)[1])
 		} else if strings.Contains(line, "Frame size") {
+			// Frame size string is of the following style:
+			// Frame size: <width>x<height>(1/<fps1>, 1/<fps2>,...).
 			token := strings.FieldsFunc(line, frameSizeSplitter)
 			width, err := strconv.ParseInt(strings.TrimSpace(token[1]), 10, 32)
 			if err != nil {
@@ -95,17 +101,20 @@ func parseYavtaEnumFormats(ctx context.Context, videoNode string) ([]captureMeta
 			if err != nil {
 				return ret, errors.Wrap(err, "failed to parse height to int")
 			}
-			fps, err := strconv.ParseInt(strings.TrimSpace(token[4]), 10, 32)
-			if err != nil {
-				return ret, errors.Wrap(err, "failed to parse fps to int")
+
+			for i := 4; i < len(token); i += 2 {
+				fps, err := strconv.ParseInt(strings.TrimSpace(token[i]), 10, 32)
+				if err != nil {
+					return ret, errors.Wrap(err, "failed to parse fps to int")
+				}
+				ret = append(ret, captureMetadata{
+					cameraName: cameraName,
+					format:     format,
+					width:      int32(width),
+					height:     int32(height),
+					fps:        int32(fps),
+				})
 			}
-			ret = append(ret, captureMetadata{
-				cameraName: cameraName,
-				format:     format,
-				width:      int32(width),
-				height:     int32(height),
-				fps:        int32(fps),
-			})
 		}
 	}
 	return ret, nil
