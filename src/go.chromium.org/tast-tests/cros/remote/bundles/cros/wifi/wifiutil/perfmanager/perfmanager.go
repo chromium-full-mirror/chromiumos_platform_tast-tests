@@ -165,9 +165,10 @@ func (p *TestManager) Config(routerType routerSupport.RouterType, testType TestT
 	case TestTypeTCPBidirectional:
 		// TCP bidirectional results reported by the client seem to be less reliable
 		// than server which still align with netperf and iperf3 results.
-		// Only use 2 ports with bidirectional since we end up with 2x as many threads.
+		//
+		// Running with only a single thread seems to be more stable than parallel (b/331280995).
 		options = append(options, iperf.BidirectionalOption(true),
-			iperf.FetchServerResultsOption(true), iperf.PortCountOption(2))
+			iperf.FetchServerResultsOption(true), iperf.PortCountOption(1))
 		// For bidirectional, use DUT as the client since we're interested in the results
 		// from the DUT's perspective.
 		return iperf.NewConfig(iperfTestType, p.testDevIPAdd, p.peerDevIPAdd, options...)
