@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros"
 	"go.chromium.org/tast-tests/cros/local/graphics"
+	"go.chromium.org/tast-tests/cros/local/media/pre"
 	"go.chromium.org/tast-tests/cros/local/power"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast/core/testing"
@@ -53,7 +54,7 @@ func init() {
 					NumPeople:   2,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "chromeRTCPerf",
+				Fixture: pre.ChromeRTCFixture(),
 			},
 			{
 				Name: "step",
@@ -61,7 +62,7 @@ func init() {
 					Step:        true,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "chromeRTCPerf",
+				Fixture: pre.ChromeRTCFixture(),
 			},
 			{
 				Name: "step_lacros",
@@ -69,8 +70,9 @@ func init() {
 					Step:        true,
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture:   "chromeRTCPerf",
-				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+				Fixture:           pre.ChromeRTCLacrosFixture(),
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
 				Name: "2p",
@@ -78,7 +80,7 @@ func init() {
 					NumPeople:   2,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -87,7 +89,7 @@ func init() {
 					NumPeople:   4,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -96,7 +98,7 @@ func init() {
 					NumPeople:   9,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -106,7 +108,7 @@ func init() {
 					Present:     true,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -117,7 +119,7 @@ func init() {
 					NoiseCancellation: true,
 					BrowserType:       browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -129,7 +131,7 @@ func init() {
 					StyleTransfer:     true,
 					BrowserType:       browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -139,7 +141,7 @@ func init() {
 					Text:        true,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -150,7 +152,7 @@ func init() {
 					Text:        true,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -162,7 +164,7 @@ func init() {
 					NoiseCancellation: true,
 					BrowserType:       browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -172,7 +174,7 @@ func init() {
 					Mouse:       true,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -183,7 +185,7 @@ func init() {
 					Present:     true,
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -195,7 +197,7 @@ func init() {
 					NoiseCancellation: true,
 					BrowserType:       browser.TypeAsh,
 				},
-				Fixture:   "chromeRTCPerf",
+				Fixture:   pre.ChromeRTCFixture(),
 				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
 			{
@@ -204,7 +206,7 @@ func init() {
 					NumPeople:   4,
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture:           "chromeRTCPerfLacros",
+				Fixture:           pre.ChromeRTCLacrosFixture(),
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
@@ -215,7 +217,7 @@ func init() {
 					Text:        true,
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture:           "chromeRTCPerfLacros",
+				Fixture:           pre.ChromeRTCLacrosFixture(),
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
@@ -226,7 +228,7 @@ func init() {
 					Mouse:       true,
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture:           "chromeRTCPerfLacros",
+				Fixture:           pre.ChromeRTCLacrosFixture(),
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
@@ -238,7 +240,7 @@ func init() {
 					Present:     true,
 					BrowserType: browser.TypeLacros,
 				},
-				Fixture:           "chromeRTCPerfLacros",
+				Fixture:           pre.ChromeRTCLacrosFixture(),
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
