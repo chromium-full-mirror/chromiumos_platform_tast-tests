@@ -50,6 +50,14 @@ func TestParseDiagOutputV2(t *testing.T) {
 				Output:   "{\"bytes_tested\":\"4096\"}",
 			},
 		},
+		// Passed routine with running info.
+		{
+			"\rRunning Progress: 0\rWaiting: kWaitingToBeScheduled\n\rRunning Progress: 0, {...}\rRunning Progress: 99, {...}\rRunning Progress: 100, {...}\nStatus: Passed",
+			RoutineResultV2{
+				Progress: 100,
+				Status:   StatusPassed,
+			},
+		},
 	}
 	for _, c := range cases {
 		got, err := parseDiagOutputV2(context.Background(), c.rawInput)

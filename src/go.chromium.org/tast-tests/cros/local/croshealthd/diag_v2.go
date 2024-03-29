@@ -221,12 +221,13 @@ func parseDiagOutputV2(ctx context.Context, raw string) (RoutineResultV2, error)
 		case "Status":
 			status = value
 		case "Running Progress":
-			i, err := strconv.Atoi(value)
+			runningInfo := strings.Split(value, ",")
+			newProgress, err := strconv.Atoi(runningInfo[0])
 			if err != nil {
-				return RoutineResultV2{}, errors.Wrapf(err, "Unable to parse Progress value %q as int", value)
+				return RoutineResultV2{}, errors.Wrapf(err, "Unable to parse running progress info: %q", value)
 			}
 			// Override the old value because only the last progress will be reported.
-			progress = i
+			progress = newProgress
 		case "Output":
 			output = value
 		case "Error":
