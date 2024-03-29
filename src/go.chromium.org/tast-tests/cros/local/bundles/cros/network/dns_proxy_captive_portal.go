@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/certs"
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -117,6 +118,16 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	}
 	defer cleanupCerts(cleanupCtx)
 
+	relog := s.Param().(dnsProxyCaptivePortalTestParams).relog
+	if relog {
+		// If the test requires a relog virtualnet must be started
+		// with Chrome logged out (b/300208832).
+		// Restart UI to force the logged out state.
+		if err := upstart.RestartJob(ctx, "ui"); err != nil {
+			s.Fatal("Failed to restart ui: ", err)
+		}
+	}
+
 	opts := virtualnet.EnvOptions{
 		// No need to set Priority, since there is only 1 Ethernet in this test.
 		NameSuffix:                 "",
@@ -135,7 +146,6 @@ func DNSProxyCaptivePortal(ctx context.Context, s *testing.State) {
 	defer portalEnv.Cleanup(cleanupCtx)
 
 	var a *arc.ARC
-	relog := s.Param().(dnsProxyCaptivePortalTestParams).relog
 	if relog {
 		// Start Chrome.
 		cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU())
