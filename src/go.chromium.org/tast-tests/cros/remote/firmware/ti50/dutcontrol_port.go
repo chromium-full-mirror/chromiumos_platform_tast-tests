@@ -32,9 +32,12 @@ nonblock:
 	for {
 		select {
 		case d, more := <-p.data:
-			p.unreadBuf = append(p.unreadBuf, d.Data...)
+			if d != nil {
+				p.unreadBuf = append(p.unreadBuf, d.Data...)
+			}
 			if !more {
 				err = io.EOF
+				break nonblock
 			}
 			if err == nil && d.Err != "" {
 				err = errors.New(d.Err)
@@ -57,7 +60,9 @@ nonblock:
 
 	select {
 	case d, more := <-p.data:
-		p.unreadBuf = append(p.unreadBuf, d.Data...)
+		if d != nil {
+			p.unreadBuf = append(p.unreadBuf, d.Data...)
+		}
 		if !more {
 			err = io.EOF
 		} else if d.Err != "" {
