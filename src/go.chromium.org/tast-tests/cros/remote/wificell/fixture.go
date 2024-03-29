@@ -15,6 +15,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/empty"
 
+	"go.chromium.org/tast-tests/cros/common/android"
 	"go.chromium.org/tast-tests/cros/common/perf"
 	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/policyutil"
@@ -99,6 +100,7 @@ func init() {
 	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP] = "Wificell setup with companion Chromebook DUT and a self managed AP"
 	params[TFFeaturesCompanionDUT|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and packet capture from the pcap device"
 	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCapture] = "Wificell setup with companion Chromebook DUT and a self managed AP and packet capture from the pcap device"
+	params[TFFeaturesCompanionDUT|TFFeaturesSelfManagedAP|TFFeaturesCompanionAndroid] = "Wificell setup with companion Chromebook DUT, Android Device and a self managed AP"
 	params[TFFeaturesPower] = "Default wificell setup with power diagnostics"
 	params[TFFeaturesCellular] = "Wificell setup on a cellular capable device"
 	params[TFFeaturesCompanionDUT|TFFeaturesCellular] = "Wificell setup on a cellular capable device with companion chromebook DUT"
@@ -185,6 +187,8 @@ const (
 	TFFeaturesEnroll
 	// TFFeaturesCompanionDUT is a feature that spawns companion DUT in TestFixture.
 	TFFeaturesCompanionDUT
+	// TFFeaturesCompanionAndroid is a feature that spawns companion Android Devices in TestFixture.
+	TFFeaturesCompanionAndroid
 	// TFFeaturesSelfManagedAP is a feature that uses a companion DUT and a self managed AP.
 	TFFeaturesSelfManagedAP
 	// TFFeaturesPower is a feature that enables power measurements.
@@ -229,6 +233,10 @@ func (enum TFFeatures) String() string {
 	if enum&TFFeaturesCompanionDUT != 0 {
 		ret = append(ret, "CompanionDut")
 		enum ^= TFFeaturesCompanionDUT
+	}
+	if enum&TFFeaturesCompanionAndroid != 0 {
+		ret = append(ret, "AndroidDevices")
+		enum ^= TFFeaturesCompanionAndroid
 	}
 	if enum&TFFeaturesSelfManagedAP != 0 {
 		ret = append(ret, "SelfManagedAP")
@@ -558,6 +566,17 @@ func (f *tastFixtureImpl) SetUp(ctx context.Context, s *testing.FixtState) inter
 			if err := f.recoverUnhealthyDUT(ctx, cd, s); err != nil {
 				s.Fatalf("Failed to recover unhealthy DUT %s: %s", role, err)
 			}
+		}
+	}
+
+	// Read Android Devices.
+	if f.features&TFFeaturesCompanionAndroid != 0 {
+		// Get Android companion DUT info
+		companions, err := android.Companions()
+		if err != nil {
+			s.Fatal("Failed to find Android companion devices: ", err)
+		} else {
+			ops.LabstationTarget(companions[0].AssociatedHostname, companions)
 		}
 	}
 

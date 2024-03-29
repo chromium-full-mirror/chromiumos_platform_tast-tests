@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"go.chromium.org/tast-tests/cros/common/android"
 	"go.chromium.org/tast/core/dut"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -24,6 +25,9 @@ type TFOptions struct {
 	// duts stores the dut.DUT and testing.RPCHint for each dut in DutTargets as
 	// they are passed in TFOptionDutTargets for later use in TestFixture.
 	duts []*dutData
+
+	// AndroidDevices stores the android device info for each device in AndroidDeviceTargets.
+	AndroidDevices []*androidDeviceData
 
 	// PrimaryRouterTargets are the hostnames of the routers to use as the primary
 	// routers.
@@ -46,6 +50,11 @@ type TFOptions struct {
 	//
 	// Leave unset if no attenuator present or to not use it.
 	AttenuatorTarget string
+
+	// LabstationTarget is the hostname of the labstation to use with the fixture.
+	//
+	// Leave unset if no labstation present or to not use it.
+	LabstationTarget string
 
 	// HostUserOverrides is map of hostnames to usernames to use for host targets
 	// instead of the default "root" user. Useful for AsusWrt router hosts, as
@@ -132,6 +141,7 @@ func newTFOptions() *TFOptions {
 		PrimaryRouterTargets: nil,
 		PcapRouterTarget:     "",
 		AttenuatorTarget:     "",
+		LabstationTarget:     "",
 		HostUserOverrides:    nil,
 		RequirePrimaryRouter: true,
 		EnablePacketCapture:  false,
@@ -222,6 +232,15 @@ func (b *TFOptionsBuilder) PcapRouterTarget(pcapRouterTarget string) *TFOptionsB
 // AttenuatorTarget sets TFOptions.AttenuatorTarget.
 func (b *TFOptionsBuilder) AttenuatorTarget(attenuatorTarget string) *TFOptionsBuilder {
 	b.options.AttenuatorTarget = attenuatorTarget
+	return b
+}
+
+// LabstationTarget sets TFOptions.LabstationTarget.
+func (b *TFOptionsBuilder) LabstationTarget(labstationTarget string, androidDevs []android.Companion) *TFOptionsBuilder {
+	b.options.LabstationTarget = labstationTarget
+	for _, ac := range androidDevs {
+		b.options.AndroidDevices = append(b.options.AndroidDevices, &androidDeviceData{serialNumber: ac.SerialNumber, modelName: ac.ModelName, labstation: labstationData{target: labstationTarget, host: nil}})
+	}
 	return b
 }
 

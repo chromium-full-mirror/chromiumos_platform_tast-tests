@@ -192,11 +192,13 @@ type TestFixture struct {
 	// Wificell devices.
 	// Duts and the pcap must always be initialized, but routers may be empty if
 	// TFOptions.RequirePrimaryRouter is false in options.
-	duts         []*dutData
-	routers      []*routerData
-	pcap         *routerData
-	pcapIsRouter bool
-	attenuator   *attenuator.Attenuator
+	duts           []*dutData
+	routers        []*routerData
+	pcap           *routerData
+	pcapIsRouter   bool
+	androidDevices []*androidDeviceData
+	labstation     *labstationData
+	attenuator     *attenuator.Attenuator
 
 	// The following parameters (with prefix p2p*) are used with P2P tests.
 	p2pGO     P2PWiFiDevice
@@ -273,6 +275,9 @@ func NewTestFixture(fullCtx, daemonCtx context.Context, options *TFOptions) (ret
 		return nil, err
 	}
 	if err := tf.initializeAttenuator(ctx); err != nil {
+		return nil, err
+	}
+	if err := tf.initializeLabstation(ctx); err != nil {
 		return nil, err
 	}
 
@@ -491,6 +496,68 @@ func (tf *TestFixture) initializeAttenuator(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "failed to open attenuator")
 	}
+	return nil
+}
+
+func (tf *TestFixture) initializeLabstation(ctx context.Context) error {
+	if tf.options.LabstationTarget == "" {
+		testing.ContextLog(ctx, "Skipping opening of labstation: No labstationTarget specified for fixture")
+		return nil
+	}
+	testing.ContextLog(ctx, "Opening Labstation: ", tf.options.LabstationTarget)
+	// Connect to the labstation. Use ProxyCommand so you don't have to port forward.
+	sshOptions := &ssh.Options{
+		KeyDir:       tf.duts[DefaultDUT].dut.KeyDir(),
+		KeyFile:      tf.duts[DefaultDUT].dut.KeyFile(),
+		ProxyCommand: tf.duts[DefaultDUT].dut.ProxyCommand(),
+	}
+
+	if err := ssh.ParseTarget(tf.options.LabstationTarget, sshOptions); err != nil {
+		return errors.Wrap(err, "failed to parse labstation ssh target")
+	}
+	labstation, err := ssh.New(ctx, sshOptions)
+	if err != nil {
+		return errors.Wrap(err, "failed to connect to labstation phone host over ssh")
+	}
+
+	// Setup ADB on labstation.
+	if err := labstation.CommandContext(ctx, "adb", "kill-server").Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to kill any running adb server")
+	}
+
+	if err := labstation.CommandContext(ctx, "mkdir", "-p", "/run/arc/adb").Run(); err != nil {
+		return errors.New("failed to make arc dir")
+	}
+
+	// Start with pre-configured vendor keys.
+	cmdStrs := []string{
+		"ADB_VENDOR_KEYS=/var/lib/android_keys",
+		"adb start-server",
+	}
+
+	if err := labstation.CommandContext(ctx, "sh", "-c", strings.Join(cmdStrs, " ")).Run(ssh.DumpLogOnError); err != nil {
+		return errors.Wrap(err, "failed to start adb with correct permissions")
+	}
+
+	// Print the existing devices attached to the labstation.
+	if err := labstation.CommandContext(ctx, "adb", "root").Run(ssh.DumpLogOnError); err != nil {
+		return errors.New("failed to run adb root")
+	}
+
+	// Print the existing devices attached to the labstation.
+	out, err := labstation.CommandContext(ctx, "adb", "devices").Output()
+	if err != nil {
+		return errors.New("failed to run adb devices")
+	}
+	testing.ContextLog(ctx, string(out))
+
+	// Updates Android Devices labstaion data.
+	for _, dev := range tf.options.AndroidDevices {
+		dev.labstation.host = labstation
+	}
+
+	tf.androidDevices = append(make([]*androidDeviceData, 0), tf.options.AndroidDevices...)
+
 	return nil
 }
 
@@ -2382,6 +2449,11 @@ func (tf *TestFixture) Capturers(ap *APIface) (map[int]*pcap.Capturer, bool) {
 // Attenuator returns the Attenuator object in the fixture.
 func (tf *TestFixture) Attenuator() *attenuator.Attenuator {
 	return tf.attenuator
+}
+
+// Labstation returns the Labstation object in the fixture.
+func (tf *TestFixture) Labstation() *labstationData {
+	return tf.labstation
 }
 
 // WifiClient is a backwards-compatible version of DUTWifiClient. Deprecated.
