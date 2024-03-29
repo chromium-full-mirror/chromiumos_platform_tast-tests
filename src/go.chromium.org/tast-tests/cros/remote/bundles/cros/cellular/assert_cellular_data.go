@@ -75,9 +75,11 @@ func init() {
 			},
 			{
 				Name: "lte_cc3_x1x1x1_b3b7b20",
-				// 3CA not supported on FM101.
-				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnCellularModemType(cellularconst.ModemTypeFM101)),
-				ExtraAttr:         []string{"cellular_cmw_callbox", "cellular_cmx_callbox"},
+				// 3CA not supported on FM101 or EM060.
+				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnCellularModemType(
+					cellularconst.ModemTypeFM101, cellularconst.ModemTypeEM060),
+				),
+				ExtraAttr: []string{"cellular_cmw_callbox", "cellular_cmx_callbox"},
 				Val: &manager.ConfigureCallboxRequestBody{
 					CellularType: manager.CellularTechnologyLTE,
 					Parameters: []manager.CellConfiguration{
