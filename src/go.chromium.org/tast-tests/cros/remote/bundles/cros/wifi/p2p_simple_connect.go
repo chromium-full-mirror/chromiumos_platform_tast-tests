@@ -17,7 +17,9 @@ import (
 )
 
 type p2pSimpleConnectTestcase struct {
-	p2pOpts []p2p.GroupOption
+	p2pOpts         []p2p.GroupOption
+	p2pGODevice     wificell.P2PDevice
+	p2pClientDevice wificell.P2PDevice
 }
 
 func init() {
@@ -31,7 +33,6 @@ func init() {
 		Attr:         []string{"group:wificell_cross_device", "wificell_cross_device_p2p", "wificell_cross_device_unstable"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.PeripheralWifiStateWorking},
 		ServiceDeps:  []string{wificell.ShillServiceName},
-		Fixture:      wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 		HardwareDepsForAll: map[string]hwdep.Deps{
 			"":    hwdep.D(hwdep.WifiP2P()),
 			"cd1": hwdep.D(hwdep.WifiP2P()),
@@ -39,40 +40,80 @@ func init() {
 		Requirements: []string{tdreq.WiFiGenSupportWFD},
 		Params: []testing.Param{
 			{
-				// Verifies that DUT can connect to p2p group on 2.4GHz band.
-				Name: "2_4ghz",
+				// Verifies that the DUT can connect to another DUT p2p group owner on 2.4GHz band.
+				Name: "chromebook_chromebook_2_4ghz",
 				Val: p2pSimpleConnectTestcase{
-					p2pOpts: []p2p.GroupOption{p2p.SetFreq(2462)},
+					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(2462)},
+					p2pGODevice:     wificell.P2PDeviceDUT,
+					p2pClientDevice: wificell.P2PDeviceCompanionDUT,
 				},
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
 			}, {
-				// Verifies that DUT can connect to p2p group on 5GHz band.
-				Name: "5ghz",
+				// Verifies that the DUT can connect to another DUT p2p group owner on 5GHz band.
+				Name: "chromebook_chromebook_5ghz",
 				Val: p2pSimpleConnectTestcase{
-					p2pOpts: []p2p.GroupOption{p2p.SetFreq(5180)},
+					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(5180)},
+					p2pGODevice:     wificell.P2PDeviceDUT,
+					p2pClientDevice: wificell.P2PDeviceCompanionDUT,
 				},
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP),
+			}, {
+				// Verifies that the android device can connect to the DUT group owner  on 2.4GHz band.
+				Name: "chromebook_android_2_4ghz",
+				Val: p2pSimpleConnectTestcase{
+					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(2412)},
+					p2pGODevice:     wificell.P2PDeviceDUT,
+					p2pClientDevice: wificell.P2PDeviceAndroidDevice,
+				},
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCompanionAndroid),
+			}, {
+				// Verifies that the android device can connect to the DUT group owner on 5GHz band.
+				Name: "chromebook_android_5ghz",
+				Val: p2pSimpleConnectTestcase{
+					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(5180)},
+					p2pGODevice:     wificell.P2PDeviceDUT,
+					p2pClientDevice: wificell.P2PDeviceAndroidDevice,
+				},
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCompanionAndroid),
+			}, {
+				// Verifies that the DUT can connect to the android device group owner on 2.4GHz band.
+				Name: "android_chromebook_2_4ghz",
+				Val: p2pSimpleConnectTestcase{
+					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(2412)},
+					p2pGODevice:     wificell.P2PDeviceAndroidDevice,
+					p2pClientDevice: wificell.P2PDeviceCompanionDUT,
+				},
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCompanionAndroid),
+			}, {
+				// Verifies that the DUT can connect to the android device group owner on 5GHz band.
+				Name: "android_chromebook_5ghz",
+				Val: p2pSimpleConnectTestcase{
+					p2pOpts:         []p2p.GroupOption{p2p.SetFreq(5180)},
+					p2pGODevice:     wificell.P2PDeviceAndroidDevice,
+					p2pClientDevice: wificell.P2PDeviceCompanionDUT,
+				},
+				Fixture: wificell.FixtureID(wificell.TFFeaturesCompanionDUT | wificell.TFFeaturesSelfManagedAP | wificell.TFFeaturesCompanionAndroid),
 			}},
 	})
 }
 
 func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 	/*
-		This test checks the p2p connection between two chromebooks by using
+		This test checks the p2p connection between two devices by using
 		the following steps:
-		1- Configures the main DUT as a p2p group owner (GO).
-		2- Configures the Companion DUT as a p2p client.
-		3- Connects the the p2p client to the GO network.
-		4- Route the IP address in both GO and client.
+		1- Configures device A as a p2p group owner (GO).
+		2- Configures device B as a p2p client.
+		3- Connects the p2p client to the GO network.
 		5- Verify the p2p connection.
-		5-1- Run ping from the p2p GO.
-		5-2- Run ping from the p2p client.
-		6- Delete the IP route created in step 4.
-		7- Deconfigure the p2p client.
+		5-1- Run ping from the p2p GO to the p2p client.
+		5-2- Run ping from the p2p client to the p2p GO.
+		7- Disconnect p2p client from GO network.
 		8- Deconfigure the p2p GO.
 	*/
 	tf := s.FixtValue().(*wificell.TestFixture)
 	testcase := s.Param().(p2pSimpleConnectTestcase)
 
-	if err := tf.P2PConfigureGO(ctx, wificell.P2PDeviceDUT, testcase.p2pOpts...); err != nil {
+	if err := tf.P2PConfigureGO(ctx, testcase.p2pGODevice, testcase.p2pOpts...); err != nil {
 		s.Fatal("Failed to configure the p2p group owner (GO): ", err)
 	}
 	defer func(ctx context.Context) {
@@ -83,7 +124,7 @@ func P2PSimpleConnect(ctx context.Context, s *testing.State) {
 	ctx, cancel := tf.ReserveForDeconfigP2P(ctx)
 	defer cancel()
 
-	if err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT); err != nil {
+	if err := tf.P2PConnect(ctx, testcase.p2pClientDevice); err != nil {
 		s.Fatal("Failed to connect the p2p client to the p2p group owner (GO) network: ", err)
 	}
 	defer func(ctx context.Context) {

@@ -113,7 +113,8 @@ type P2PDevice int32
 const (
 	P2PDeviceDUT P2PDevice = iota
 	P2PDeviceCompanionDUT
-	// TODO(b/231261132): add Android phones as GO/Client options.
+	P2PDeviceAndroidDevice
+	P2PDeviceCompanionAndroidDevice
 )
 
 // DutIdx is the type used for DUT index in TestFixture.duts.
@@ -128,6 +129,20 @@ const (
 
 	// PeerDUT1 is the DutIdx of the first peer/companion dut.
 	PeerDUT1 DutIdx = 1
+)
+
+// AndroidDevIdx is the type used for DUT index in TestFixture.androidDevices.
+//
+// Use one of the known constants below rather than initializing this directly.
+type AndroidDevIdx int
+
+// Known AndroidDeviceIdx values.
+const (
+	// DefaultAndroidDevice is the AndroidDeviceIdx of the default android device.
+	DefaultAndroidDev AndroidDevIdx = 0
+
+	// AndroidDev1 is the AndroidDevIdx of the first peer android device.
+	AndroidDev1 AndroidDevIdx = 1
 )
 
 // RouterIdx is the type used for router index in TestFixture.routers.
@@ -1791,6 +1806,10 @@ func (tf *TestFixture) P2PDevice(ctx context.Context, device P2PDevice) (P2PWiFi
 		return tf.duts[DefaultDUT], nil
 	case P2PDeviceCompanionDUT:
 		return tf.duts[PeerDUT1], nil
+	case P2PDeviceAndroidDevice:
+		return tf.androidDevices[DefaultAndroidDev], nil
+	case P2PDeviceCompanionAndroidDevice:
+		return tf.androidDevices[AndroidDev1], nil
 	}
 	return nil, errors.Errorf("unexpected P2P device type: %d", device)
 }
@@ -1802,13 +1821,15 @@ func (tf *TestFixture) P2PConfigureGO(ctx context.Context, device P2PDevice, ops
 		return err
 	}
 
-	wpar := remotewpacli.NewRemoteRunner(tf.p2pGO.Conn())
+	if tf.p2pGO.Type() == CrOSDevice {
+		wpar := remotewpacli.NewRemoteRunner(tf.p2pGO.Conn())
 
-	// Make sure seeder BSSID is available in scan before asking to configure P2P.
-	// This should set regdomain, which otherwise may cause test flakes.
-	// Other tests are usually starting from scan anyway.
-	if err := wpar.DiscoverNetwork(ctx, tf.seederSSID); err != nil {
-		return err
+		// Make sure seeder BSSID is available in scan before asking to configure P2P.
+		// This should set regdomain, which otherwise may cause test flakes.
+		// Other tests are usually starting from scan anyway.
+		if err := wpar.DiscoverNetwork(ctx, tf.seederSSID); err != nil {
+			return err
+		}
 	}
 
 	err = tf.p2pGO.P2PGroupCreate(ctx, ops...)
