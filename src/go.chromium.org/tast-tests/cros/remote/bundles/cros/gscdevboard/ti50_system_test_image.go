@@ -67,16 +67,28 @@ func Ti50SystemTestImage(ctx context.Context, s *testing.State) {
 }
 
 func checkTestResults(ctx context.Context, s *testing.State, b utils.DevboardHelper, sectionName string) {
-	_, _, err := b.ReadSerialSubmatch(ctx, regexp.MustCompile("##"+regexp.QuoteMeta(sectionName)+" TESTS START"))
+	// Reporting fatal console output such as "Kernel panic" is a feature of
+	// CommandImage::WaitUntilMatch().  We cannot use that here, because system_test_auto does
+	// not support a command prompt.  Eventually, we want to either "upgrade" system_test_auto
+	// to have a prompt (something that has been proposed before for other reasons), or we
+	// could create a SerialOutputImage base class, move WaitUntilMatch() down into that one,
+	// and make CommandImage derive from it.
+	idx, m, err := b.ReadSerialSubmatch(ctx, ti50.FatalMsg, regexp.MustCompile("##"+regexp.QuoteMeta(sectionName)+" TESTS START"))
 	if err != nil {
 		s.Fatal("Failed to read section start: ", err)
+	}
+	if idx == 0 {
+		s.Fatal("Fatal output: ", strings.TrimRight(string(m[0]), "\r\n"))
 	}
 	endMarker := "##" + regexp.QuoteMeta(sectionName) + " TESTS END"
 	re := regexp.MustCompile("(" + endMarker + `|##TEST (SKIP|START) (\S+)\s)`)
 	for {
-		_, m, err := b.ReadSerialSubmatch(ctx, re)
+		idx, m, err := b.ReadSerialSubmatch(ctx, ti50.FatalMsg, re)
 		if err != nil {
 			s.Fatal("Failed to read next test: ", err)
+		}
+		if idx == 0 {
+			s.Fatal("Fatal output: ", strings.TrimRight(string(m[0]), "\r\n"))
 		}
 		match := string(m[0])
 		if match == endMarker {
@@ -105,11 +117,14 @@ func waitForTest(ctx context.Context, s *testing.State, b utils.DevboardHelper, 
 
 	var elapsedTime time.Duration
 	for ; elapsedTime < timeLimit; elapsedTime = time.Since(testTime) {
-		_, m, err := b.ReadSerialSubmatch(ctx, lineRe)
+		idx, m, err := b.ReadSerialSubmatch(ctx, ti50.FatalMsg, lineRe)
 		if err != nil {
 			// Tests might be silent for several seconds, so just
 			// try the read again.
 			continue
+		}
+		if idx == 0 {
+			s.Fatal("Fatal output: ", strings.TrimRight(string(m[0]), "\r\n"))
 		}
 		delay := time.Since(lineTime)
 		if delay > 10*time.Second {

@@ -80,7 +80,8 @@ func (c *BufferedConsole) readSerial(ctx context.Context) error {
 	return nil
 }
 
-// ReadSerialSubmatch reads from the serial port until one regex is matched.
+// ReadSerialSubmatch reads from the port until one regex is matched.  In case multiple
+// regexs match, the first (leftmost) one will be returned.
 func (c *BufferedConsole) ReadSerialSubmatch(ctx context.Context, regularExpressions ...*regexp.Regexp) (whichRegularExpression int, output [][]byte, err error) {
 	for {
 		for i := 0; i < len(regularExpressions); i++ {

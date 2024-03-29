@@ -25,7 +25,10 @@ var (
 	deepSleep   *regexp.Regexp = regexp.MustCompile(`Entering deep sleep zzz`)
 	anySleep    *regexp.Regexp = regexp.MustCompile(`Entering (deep|normal) sleep( zzz)?`)
 	roBoot      *regexp.Regexp = regexp.MustCompile(`(Starting ROM_EXT|Ravn4\|)`)
-	fatalMsg    *regexp.Regexp = regexp.MustCompile(
+
+	// FatalMsg is a regular expression.  If it ever matches any serial console output from
+	// the GSC, it should be reported as a test failure.
+	FatalMsg *regexp.Regexp = regexp.MustCompile(
 		`(Kernel panicked|WATCHDOG RESET IMMINENT|app exit|app panic|FIXME).*\n`)
 )
 
@@ -57,11 +60,11 @@ func (i *CommandImage) RawCommand(ctx context.Context, rawCmd string, re *regexp
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
-	whichRegularExpression, match, err := i.ReadSerialSubmatch(ctx, re, fatalMsg)
+	whichRegularExpression, match, err := i.ReadSerialSubmatch(ctx, FatalMsg, re)
 	if err != nil {
 		return nil, err
 	}
-	if whichRegularExpression > 0 {
+	if whichRegularExpression == 0 {
 		// GSC printed a fatal message, report error to caller.
 		return nil, errors.New(strings.TrimRight(string(match[0]), "\r\n"))
 	}
@@ -112,11 +115,11 @@ func (i *CommandImage) WaitUntilBooted(ctx context.Context, interval time.Durati
 func (i *CommandImage) WaitUntilMatch(ctx context.Context, re *regexp.Regexp, interval time.Duration) (output [][]byte, err error) {
 	pOpts := testing.PollOptions{Timeout: interval}
 	err = testing.Poll(ctx, func(ctx context.Context) error {
-		whichRegularExpression, match, err := i.ReadSerialSubmatch(ctx, re, fatalMsg)
+		whichRegularExpression, match, err := i.ReadSerialSubmatch(ctx, FatalMsg, re)
 		if err != nil {
 			return err
 		}
-		if whichRegularExpression > 0 {
+		if whichRegularExpression == 0 {
 			// GSC printed a fatal message, report error to caller.
 			return errors.New(strings.TrimRight(string(match[0]), "\r\n"))
 		}

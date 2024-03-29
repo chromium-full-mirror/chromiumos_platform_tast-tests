@@ -116,7 +116,7 @@ func Ti50CCDUpdate(ctx context.Context, s *testing.State) {
 		s.Fatalf("Wrong gsctool output for update too soon after 1st update: %s", out)
 	}
 
-	_, _, err = b.ReadSerialSubmatch(ctx, consoleUpdateTooSoonRegexp)
+	_, err = i.WaitUntilMatch(ctx, consoleUpdateTooSoonRegexp, time.Second*3)
 	if err != nil {
 		s.Fatal("Wrong console message for update too soon after 1st update: ", err)
 	}
