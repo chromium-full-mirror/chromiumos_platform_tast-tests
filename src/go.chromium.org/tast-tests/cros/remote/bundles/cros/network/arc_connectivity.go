@@ -93,6 +93,11 @@ func ArcConnectivity(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to start a local proxy on the DUT: ", err)
 	}
+	defer func() {
+		if _, err := proxyClient.StopServer(cleanupCtx, &empty.Empty{}); err != nil {
+			s.Log("Failed to stop a local proxy on the DUT: ", err)
+		}
+	}()
 
 	portStr := strings.Split(response.HostAndPort, ":")[1]
 	port, err := strconv.ParseUint(portStr, 10, 32)
