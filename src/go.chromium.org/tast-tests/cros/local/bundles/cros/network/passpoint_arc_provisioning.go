@@ -48,16 +48,21 @@ type passpointARCProvisioningTestCase struct {
 }
 
 func PasspointARCProvisioning(ctx context.Context, s *testing.State) {
-	// Fully qualified domain name used to connect to the AP.
-	// This value must match the domain of the certificate used by the AP, go.chromium.org/tast-tests/cros/common/crypto/certificate TestCert1().
-	// This is because ARC fills its EAP domain suffix match with Passpoint credentials' FQDN.
-	const fqdn = "chromelab-wifi-testbed-server.mtv.google.com"
+	const (
+		// Fully qualified domain name used to connect to the AP.
+		// This value must match the domain of the certificate used by the AP, go.chromium.org/tast-tests/cros/common/crypto/certificate TestCert1().
+		// This is because ARC fills its EAP domain suffix match with Passpoint credentials' FQDN.
+		fqdn = "chromelab-wifi-testbed-server.mtv.google.com"
+
+		// Keep the same SSID across multiple test cases to avoid lingering WiFi endpoints (b/328996658).
+		ssid = "passpoint-ssid"
+	)
 
 	var tcs = []passpointARCProvisioningTestCase{
 		{
 			desc: "TTLS with Home OI",
 			ap: passpoint.AccessPoint{
-				SSID:               "passpoint-ttls-home-oi",
+				SSID:               ssid,
 				Domain:             fqdn,
 				Realms:             []string{fqdn},
 				RoamingConsortiums: []string{passpoint.HomeOI},
@@ -72,7 +77,7 @@ func PasspointARCProvisioning(ctx context.Context, s *testing.State) {
 		{
 			desc: "TTLS with Roaming OI",
 			ap: passpoint.AccessPoint{
-				SSID:               "passpoint-ttls-roaming-oi",
+				SSID:               ssid,
 				Domain:             fqdn,
 				Realms:             []string{fqdn},
 				RoamingConsortiums: []string{passpoint.RoamingOI1},
@@ -88,7 +93,7 @@ func PasspointARCProvisioning(ctx context.Context, s *testing.State) {
 		{
 			desc: "TLS with Home OI",
 			ap: passpoint.AccessPoint{
-				SSID:               "passpoint-tls-home-oi",
+				SSID:               ssid,
 				Domain:             fqdn,
 				Realms:             []string{fqdn},
 				RoamingConsortiums: []string{passpoint.HomeOI},
@@ -103,7 +108,7 @@ func PasspointARCProvisioning(ctx context.Context, s *testing.State) {
 		{
 			desc: "TLS with Roaming OI",
 			ap: passpoint.AccessPoint{
-				SSID:               "passpoint-tls-roaming-oi",
+				SSID:               ssid,
 				Domain:             fqdn,
 				Realms:             []string{fqdn},
 				RoamingConsortiums: []string{passpoint.RoamingOI1},
