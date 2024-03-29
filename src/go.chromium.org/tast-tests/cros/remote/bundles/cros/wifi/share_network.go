@@ -28,6 +28,7 @@ import (
 	"go.chromium.org/tast/core/rpc"
 	"go.chromium.org/tast/core/ssh/linuxssh"
 	"go.chromium.org/tast/core/testing"
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 // shareNetworkTestScenario specifies the test scenario,
@@ -157,6 +158,7 @@ func init() {
 		},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		SoftwareDeps: []string{"chrome"},
+		HardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
 		Fixture:      wificell.FixtureID(wificell.TFFeaturesRouters),
 		Params: []testing.Param{
 			{
