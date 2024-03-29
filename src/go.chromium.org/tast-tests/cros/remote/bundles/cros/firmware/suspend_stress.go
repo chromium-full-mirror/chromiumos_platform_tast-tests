@@ -128,9 +128,9 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 		s.Logf("------ Running iteration %d out of %d ------", i+1, numIters)
 
 		suspendDuration := time.Duration(minSuspendResumeTime+rand.Intn(maxSuspendResumeTime)) * time.Second
-		s.Logf("Suspending dut for %d seconds", suspendDuration)
+		s.Logf("Suspending dut for %s", suspendDuration)
 		// The --wakup_timeout automatically unsuspends after given time.
-		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelayDur), fmt.Sprintf("--suspend_for_sec=%d", suspendDuration))
+		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", fmt.Sprintf("--delay=%d", powerdDelayDur), fmt.Sprintf("--suspend_for_sec=%d", int(suspendDuration.Seconds())))
 		if err := cmd.Start(); err != nil {
 			logFailure("Failed to initiate suspend on DUT", err, i)
 		}
@@ -139,7 +139,7 @@ func SuspendStress(ctx context.Context, s *testing.State) {
 
 		s.Log("Checking for S0ix or S3 powerstate")
 		// After suspendDuration+powerDelayDur the DUT will return to S0 so if S0ix/S3 not detected in that duration, it failed to suspend.
-		if err := h.WaitForPowerStates(ctx, 250*time.Millisecond, time.Duration(suspendDuration+powerdDelayDur)*time.Second, "S0ix", "S3"); err != nil {
+		if err := h.WaitForPowerStates(ctx, 250*time.Millisecond, suspendDuration+powerdDelayDur*time.Second, "S0ix", "S3"); err != nil {
 			logFailure("Failed to get S0ix or S3 powerstate after suspend", err, i)
 		}
 
