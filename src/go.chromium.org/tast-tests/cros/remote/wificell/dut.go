@@ -55,9 +55,15 @@ type p2pDutData struct {
 	netID      int32
 	ssid       string
 	passphrase string
+	frequency  uint32
 }
 
 // The below is WiFiDevice interface's implementation:
+
+// Type returns WiFiDeviceType. which in case of DUT is CrOSDevice.
+func (dd *dutData) Type() WiFiDeviceType {
+	return CrOSDevice
+}
 
 // Conn returns pointer to SSH connection object.
 func (dd *dutData) Conn() *ssh.Conn {
@@ -137,6 +143,7 @@ func (dd *dutData) Ping(ctx context.Context, addr string, ifType IfaceType, opts
 
 // P2PIfName returns P2P interface name of a particular
 func (dd *dutData) P2PIfName() string {
+	// TODO(b/333957851): Check frequency actively each time when called to cover the case of a channel switch.
 	return dd.p2p.ifName
 }
 
@@ -146,6 +153,10 @@ func (dd *dutData) P2PSSID() string {
 
 func (dd *dutData) P2PPassphrase() string {
 	return dd.p2p.passphrase
+}
+
+func (dd *dutData) P2PFrequency() uint32 {
+	return dd.p2p.frequency
 }
 
 // P2PGroupCreate creates WiFi Direct Group and takes its ownership.
@@ -165,6 +176,7 @@ func (dd *dutData) P2PGroupCreate(ctx context.Context, ops ...p2p.GroupOption) e
 	dd.p2p.ifName = ret.IfName
 	dd.p2p.ssid = ret.Data.Ssid
 	dd.p2p.passphrase = ret.Data.Key
+	dd.p2p.frequency = ret.Data.Freq
 	testing.ContextLogf(ctx, "P2P Group owner (GO): Configured in %vms",
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	return err
@@ -183,15 +195,16 @@ func (dd *dutData) P2PGroupDelete(ctx context.Context) error {
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	dd.p2p.id = ""
 	dd.p2p.ifName = ""
+	dd.p2p.frequency = 0
 	return nil
 }
 
 // P2PGroupConnect handles connection to the existing WiFi Direct Group.
-func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice, ops ...p2p.GroupOption) error {
+func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice) error {
 	request := &wifi.P2PGroupConnectRequest{
 		Method: defaultRPCInvokeMethod,
 		Data: &wifi.P2PData{
-			Freq:     uint32(p2p.Freq(ops...)),
+			Freq:     device.P2PFrequency(),
 			Ssid:     device.P2PSSID(),
 			Key:      device.P2PPassphrase(),
 			Priority: defaultP2PInterfacePriority,
@@ -205,6 +218,7 @@ func (dd *dutData) P2PGroupConnect(ctx context.Context, device P2PWiFiDevice, op
 	dd.p2p.id = ret.Id
 	dd.p2p.ifName = ret.IfName
 	dd.p2p.netID = ret.NetworkId
+	dd.p2p.frequency = device.P2PFrequency()
 	testing.ContextLogf(ctx, "The p2p client connected to the p2p group owner (GO) network in %vms",
 		ret.ExecutionTime.AsDuration().Milliseconds())
 	return err

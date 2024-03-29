@@ -77,7 +77,7 @@ func (r *Runner) p2pAddNetwork(ctx context.Context, ssid, passphrase string) (in
 
 // p2pGroupStartedWait waits for the group and returns group configuration.
 func (r *Runner) p2pGroupStartedWait(ctx context.Context, wpaMonitor *WPAMonitor) (
-	p2pGOIface, p2pGroupSSID, p2pGroupPassphrase string, _ error) {
+	p2pGOIface, p2pGroupSSID, p2pGroupPassphrase string, p2pFrequency int, _ error) {
 	const waitForP2PGroupStartedTimeout = 30 * time.Second
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		event, err := wpaMonitor.WaitForEvent(ctx)
@@ -92,20 +92,21 @@ func (r *Runner) p2pGroupStartedWait(ctx context.Context, wpaMonitor *WPAMonitor
 			p2pGOIface = evt.IfaceName
 			p2pGroupSSID = evt.SSID
 			p2pGroupPassphrase = evt.Passphrase
+			p2pFrequency = evt.Freq
 			return nil
 		}
 
 		return errors.New("no P2PGroupStartedEvent found")
 	}, &testing.PollOptions{Timeout: waitForP2PGroupStartedTimeout}); err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
-	return p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, nil
+	return p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, p2pFrequency, nil
 }
 
 // P2PGroupCreate brings up an auto-provisioned WiFi Direct group and assumes its ownership
 // (makes the host GO).
 func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...p2p.GroupOption) (iface,
-	ssid, key string, retErr error) {
+	ssid, key string, freq int, retErr error) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, time.Second)
 	defer cancel()
@@ -117,18 +118,18 @@ func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...p2p.
 	wpaMonitor := r.NewWPAMonitor()
 	stop, ctx, err := wpaMonitor.StartWPAMonitor(timeoutCtx, wpaMonitorStopTimeout)
 	if err != nil {
-		return "", "", "", errors.Wrap(err, "failed to start wpa monitor")
+		return "", "", "", 0, errors.Wrap(err, "failed to start wpa monitor")
 	}
 	defer stop()
 
 	// Add a P2P group owner (GO).
 	if err := r.p2pGroupAdd(ctx, ops...); err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 
-	p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, err := r.p2pGroupStartedWait(ctx, wpaMonitor)
+	p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, p2pFrequency, err := r.p2pGroupStartedWait(ctx, wpaMonitor)
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
@@ -138,7 +139,7 @@ func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...p2p.
 	}(cleanupCtx)
 
 	if err := ipr.SetLinkUp(ctx, p2pGOIface); err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 	defer func(ctx context.Context) {
 		if retErr != nil {
@@ -147,12 +148,12 @@ func (r *Runner) P2PGroupCreate(ctx context.Context, ipr *ip.Runner, ops ...p2p.
 	}(cleanupCtx)
 
 	if err := ipr.AddIP(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
-		return "", "", "", err
+		return "", "", "", 0, err
 	}
 
 	testing.ContextLogf(ctx, "P2P Group owner (GO) %s: Configured on %s", p2pGroupSSID, p2pGOIface)
 
-	return p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, nil
+	return p2pGOIface, p2pGroupSSID, p2pGroupPassphrase, p2pFrequency, nil
 }
 
 // P2PGroupConnect connects to an existing P2P Group.
@@ -188,7 +189,7 @@ func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
 		return "", -1, err
 	}
 
-	p2pClientIface, p2pGroupSSID, p2pGroupPassphrase, err := r.p2pGroupStartedWait(timeoutCtx, wpaMonitor)
+	p2pClientIface, p2pGroupSSID, p2pGroupPassphrase, p2pFrequency, err := r.p2pGroupStartedWait(timeoutCtx, wpaMonitor)
 	if err != nil {
 		return "", -1, err
 	}
@@ -200,9 +201,9 @@ func (r *Runner) P2PGroupConnect(ctx context.Context, ipr *ip.Runner,
 		}
 	}(cleanupCtx)
 
-	if p2pGroupSSID != string(ssid) || p2pGroupPassphrase != string(key) {
-		return "", -1, errors.Errorf("P2P Group brought up with a different parameters, got (%q/%q), want (%q/%q)",
-			p2pGroupSSID, p2pGroupPassphrase, string(ssid), string(key))
+	if p2pGroupSSID != string(ssid) || p2pGroupPassphrase != string(key) || p2pFrequency != p2p.Freq(ops...) {
+		return "", -1, errors.Errorf("P2P Group brought up with a different parameters, got (%q/%q/%q), want (%q/%q/%q)",
+			p2pGroupSSID, p2pGroupPassphrase, p2pFrequency, string(ssid), string(key), p2p.Freq(ops...))
 	}
 
 	if err := ipr.SetLinkUp(timeoutCtx, p2pClientIface); err != nil {

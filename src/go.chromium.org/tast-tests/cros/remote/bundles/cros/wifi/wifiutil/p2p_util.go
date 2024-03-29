@@ -42,7 +42,7 @@ func P2POnOffRound(ctx context.Context, tf *wificell.TestFixture, ops ...p2p.Gro
 	testing.ContextLog(ctx, "P2P Group started")
 
 	// Rest of the round is functionally identical to P2PConnectRound.
-	err = P2PConnectRound(ctx, tf, ops...)
+	err = P2PConnectRound(ctx, tf)
 	if err != nil {
 		return errors.Wrap(err, "failed to associate to DUT")
 	}
@@ -50,8 +50,8 @@ func P2POnOffRound(ctx context.Context, tf *wificell.TestFixture, ops ...p2p.Gro
 }
 
 // P2PConnectRound connects peer DUT to the P2P GO on the main DUT, then confirms connection by running a short ping burst.
-func P2PConnectRound(ctx context.Context, tf *wificell.TestFixture, ops ...p2p.GroupOption) (retErr error) {
-	err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT, ops...)
+func P2PConnectRound(ctx context.Context, tf *wificell.TestFixture) (retErr error) {
+	err := tf.P2PConnect(ctx, wificell.P2PDeviceCompanionDUT)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to P2P Group")
 	}

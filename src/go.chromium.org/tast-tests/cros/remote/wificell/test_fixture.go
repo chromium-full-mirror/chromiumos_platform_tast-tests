@@ -1757,13 +1757,13 @@ func (tf *TestFixture) P2PDeconfigureGO(ctx context.Context) (err error) {
 }
 
 // P2PConnect connects the p2p client to the p2p group owner (GO) network and waits for the service to be connected.
-func (tf *TestFixture) P2PConnect(ctx context.Context, device P2PDevice, ops ...p2p.GroupOption) error {
+func (tf *TestFixture) P2PConnect(ctx context.Context, device P2PDevice) error {
 	var err error
 	if tf.p2pClient, err = tf.P2PDevice(ctx, device); err != nil {
 		return err
 	}
 
-	err = tf.p2pClient.P2PGroupConnect(ctx, tf.p2pGO, ops...)
+	err = tf.p2pClient.P2PGroupConnect(ctx, tf.p2pGO)
 	if err != nil {
 		return errors.Wrap(err, "failed to connect to P2P Group")
 	}

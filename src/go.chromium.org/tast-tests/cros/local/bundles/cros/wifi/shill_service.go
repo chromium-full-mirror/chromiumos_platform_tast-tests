@@ -3201,14 +3201,14 @@ func (s *ShillService) p2pGroupCreateWPACLI(ctx context.Context, request *wifi.P
 		options = append(options, p2p.SetFreq(int(request.Data.Freq)))
 	}
 	// Ignore other options, not supported by WPA CLI yet.
-	iface, ssid, key, err := wpar.P2PGroupCreate(ctx, ipr, options...)
+	iface, ssid, key, freq, err := wpar.P2PGroupCreate(ctx, ipr, options...)
 	if err != nil {
 		return &wifi.P2PGroupCreateResponse{}, err
 	}
 	ret = &wifi.P2PGroupCreateResponse{
 		Id:     iface,
 		IfName: iface, // For wpa_cli this is the same.
-		Data:   &wifi.P2PData{Ssid: ssid, Key: key},
+		Data:   &wifi.P2PData{Ssid: ssid, Key: key, Freq: uint32(freq)},
 	}
 	return
 }

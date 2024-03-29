@@ -26,9 +26,23 @@ const (
 	APIfaceType
 )
 
+// WiFiDeviceType ...
+type WiFiDeviceType int
+
+// Known WiFiDevice types.
+const (
+	// CrOSDevice.
+	CrOSDevice WiFiDeviceType = iota
+	// AndroidDevice.
+	AndroidDevice
+)
+
 // WiFiDevice is any Device that can perform certain WiFi-related operations.
 // This can be Chromebook, Android, RPi, whatever.
 type WiFiDevice interface {
+	// Type returns WiFiDeviceType.
+	Type() WiFiDeviceType
+
 	// Conn returns SSH connection object for this device.
 	Conn() *ssh.Conn
 
@@ -52,12 +66,14 @@ type P2PWiFiDevice interface {
 	P2PSSID() string
 	// P2PPassphrase returns passphrase for P2p group handled by the device.
 	P2PPassphrase() string
+	// P2PFrequency returns frequency for P2p group handled by the device.
+	P2PFrequency() uint32
 	// P2PGroupCreate creates WiFi Direct Group and takes its ownership.
 	P2PGroupCreate(ctx context.Context, ops ...p2p.GroupOption) error
 	// P2PGroupDelete deletes the existing WiFi Direct Group.
 	P2PGroupDelete(ctx context.Context) error
 	// P2PGroupConnect handles connection to the existing WiFi Direct Group.
-	P2PGroupConnect(ctx context.Context, device P2PWiFiDevice, ops ...p2p.GroupOption) error
+	P2PGroupConnect(ctx context.Context, device P2PWiFiDevice) error
 	// P2PGroupDisconnect handles disconnection from the existing WiFi Direct Group.
 	P2PGroupDisconnect(ctx context.Context) error
 }
