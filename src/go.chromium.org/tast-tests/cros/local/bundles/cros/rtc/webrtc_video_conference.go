@@ -244,6 +244,34 @@ func init() {
 				ExtraSoftwareDeps: []string{"lacros"},
 				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 			},
+			{
+				Name: "4p_vsync_decoding",
+				Val: webrtc.VCTestParams{
+					NumPeople:   4,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:   pre.ChromeRTCFixture(pre.VsyncDecoding),
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "9p_vsync_decoding",
+				Val: webrtc.VCTestParams{
+					NumPeople:   9,
+					BrowserType: browser.TypeAsh,
+				},
+				Fixture:   pre.ChromeRTCFixture(pre.VsyncDecoding),
+				ExtraAttr: []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
+			{
+				Name: "9p_vsync_decoding_lacros",
+				Val: webrtc.VCTestParams{
+					NumPeople:   9,
+					BrowserType: browser.TypeLacros,
+				},
+				Fixture:           pre.ChromeRTCLacrosFixture(pre.VsyncDecoding),
+				ExtraSoftwareDeps: []string{"lacros"},
+				ExtraAttr:         []string{"group:crosbolt", "crosbolt_perbuild"},
+			},
 		},
 	})
 }
