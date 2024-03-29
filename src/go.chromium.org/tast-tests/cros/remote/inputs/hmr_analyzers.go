@@ -96,6 +96,49 @@ func analyzeLinearity(points []*hmrNode) ([]ValidationResult, error) {
 	return results, errs
 }
 
+// analyzeReportRate calculates the report rate in Hz.
+func analyzeReportRate(points []*hmrNode) ([]ValidationResult, error) {
+	var previousTimestamp float64
+	var reportRates []float64
+
+	if len(points) == 0 {
+		return []ValidationResult{}, errors.New("no points to analyse")
+	}
+
+	for i, point := range points {
+		if i == 0 {
+			previousTimestamp = point.time
+		} else {
+			delay := point.time - previousTimestamp
+			if delay > 0 {
+				reportRate := 1.0 / delay
+				reportRates = append(reportRates, reportRate)
+				previousTimestamp = point.time
+			}
+		}
+	}
+	meanReportRate := stat.Mean(reportRates, nil)
+
+	var errs error
+	var results []ValidationResult
+
+	result, err := validateReportRate(meanReportRate)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	} else {
+		results = append(results, result)
+	}
+
+	if errs != nil {
+		errs = errors.Wrap(errs, "Report Rate Analyzer")
+	}
+	for i, result := range results {
+		results[i].Message = fmt.Sprintf("Report Rate Analyzer: %v", result.Message)
+	}
+
+	return results, errs
+}
+
 func elementwiseAbsolute(vals []float64) []float64 {
 	res := make([]float64, len(vals))
 	for i, val := range vals {

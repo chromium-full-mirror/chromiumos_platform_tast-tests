@@ -79,3 +79,7 @@ func validateRMSLinearity(value float64) (ValidationResult, error) {
 func validateAngle(value float64) (ValidationResult, error) {
 	return validationWrapper("Angle Error Validation", value, 2.5, 2.5, le)
 }
+
+func validateReportRate(value float64) (ValidationResult, error) {
+	return validationWrapper("Report Rate Validation", value, 60, 0, ge)
+}
