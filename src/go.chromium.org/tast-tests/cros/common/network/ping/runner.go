@@ -77,19 +77,15 @@ func writeToPath(ctx context.Context, filePath string, content []byte) error {
 	return testutil.WriteFiles(outDir, map[string]string{filePath: string(content)})
 }
 
-// Ping performs a shell ping with parameters specified in Options.
-// If no Option is specified, default config (count=10, interval=0.5s) is used.
-// Notice that when no reply is received, this function will try to parse the
-// output and return a valid result instead of returning the error of non-zero
-// return code of ping.
-func (r *Runner) Ping(ctx context.Context, targetIP string, options ...Option) (*Result, error) {
+// Command returns the ping command including the args.
+func Command(ctx context.Context, targetIP string, options ...Option) (string, []string, *config, error) {
 	cfg := &config{count: 10, interval: 0.5}
 	for _, opt := range options {
 		opt(cfg)
 	}
 	args, err := cfg.cmdArgs(targetIP)
 	if err != nil {
-		return nil, err
+		return "", []string{}, cfg, err
 	}
 
 	command := pingCmd
@@ -97,6 +93,20 @@ func (r *Runner) Ping(ctx context.Context, targetIP string, options ...Option) (
 		command = "sudo"
 		userCmd := shutil.EscapeSlice(append([]string{pingCmd}, args...))
 		args = []string{"-u", cfg.user, "bash", "-c", userCmd}
+	}
+
+	return command, args, cfg, nil
+}
+
+// Ping performs a shell ping with parameters specified in Options.
+// If no Option is specified, default config (count=10, interval=0.5s) is used.
+// Notice that when no reply is received, this function will try to parse the
+// output and return a valid result instead of returning the error of non-zero
+// return code of ping.
+func (r *Runner) Ping(ctx context.Context, targetIP string, options ...Option) (*Result, error) {
+	command, args, cfg, err := Command(ctx, targetIP, options...)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create the ping command")
 	}
 
 	pingCtx := ctx
@@ -119,7 +129,7 @@ func (r *Runner) Ping(ctx context.Context, targetIP string, options ...Option) (
 	// ping will return non-zero value when no reply received. It would
 	// be convenient if the caller can distinguish the case from command
 	// error. Always try to parse the output here.
-	res, parseErr := parseOutput(string(output))
+	res, parseErr := ParseOutput(string(output))
 	if parseErr != nil {
 		if cmdErr != nil {
 			return nil, cmdErr
@@ -203,8 +213,8 @@ func (cfg *config) cmdArgs(targetIP string) ([]string, error) {
 	return args, nil
 }
 
-// parseOutput parses the output of `ping` commands into a single Result.
-func parseOutput(out string) (*Result, error) {
+// ParseOutput parses the output of `ping` commands into a single Result.
+func ParseOutput(out string) (*Result, error) {
 	m := sentRE.FindStringSubmatch(out)
 	if len(m) != 2 {
 		return nil, errors.New("parse error on sent packets")

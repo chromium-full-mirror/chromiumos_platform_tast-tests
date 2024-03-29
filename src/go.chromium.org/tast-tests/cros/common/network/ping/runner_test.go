@@ -90,7 +90,7 @@ rtt min/avg/max/mdev = 0.638/0.645/0.653/0.026 ms`,
 		},
 	}
 	for i := range testcases {
-		output, err := parseOutput(testcases[i].input)
+		output, err := ParseOutput(testcases[i].input)
 		if err != nil {
 			t.Errorf("testcase %d failed with err=%s", i, err.Error())
 		}
