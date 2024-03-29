@@ -38,10 +38,13 @@ const (
 	RecorderCooldownTimeout = RecorderTempCooldownTimeout + RecorderIdleStateCooldownTimeout +
 		RecorderPkgStateCooldownTimeout
 
+	// RecorderOverheadTimeout is the max amount of time needed for recorder &
+	// metrics construction, recorder destruction and data post-processing.
+	RecorderOverheadTimeout = 13 * time.Minute
+
 	// RecorderTimeout is the max amount of time that Recorder is expected to
-	// take. It includes recorder & metrics construction, recorder cooldown,
-	// recorder destruction and data post-processing.
-	RecorderTimeout = RecorderCooldownTimeout + 13*time.Minute
+	// take.
+	RecorderTimeout = RecorderCooldownTimeout + RecorderOverheadTimeout
 
 	// OptionalRecorderArgCustomPerfKey is the key used to get optional custom
 	// perf values.

@@ -224,8 +224,8 @@ func init() {
 		SetUpTimeout:    SetUpTimeout,
 		ResetTimeout:    ResetTimeout,
 		TearDownTimeout: TearDownTimeout,
-		PreTestTimeout:  PreTestTimeout + power.RecorderTimeout,
-		PostTestTimeout: PostTestTimeout,
+		PreTestTimeout:  PreTestTimeout + power.RecorderCooldownTimeout,
+		PostTestTimeout: PostTestTimeout + power.RecorderOverheadTimeout,
 		Parent:          "powerNoUIWiFi",
 	})
 
