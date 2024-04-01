@@ -165,7 +165,7 @@ func (h *HRTelemetryHelper) SetReceiveResolution720p(ctx context.Context) error 
 
 // OpenPresentDialog opens the presentation dialog with "A tab" mode.
 func (h *HRTelemetryHelper) OpenPresentDialog(ctx context.Context) error {
-	if err := h.meetConn.Eval(ctx, "hrTelemetryApi.presentation.presentTab()", nil); err != nil {
+	if err := h.meetConn.Eval(ctx, "hrTelemetryApi.presentation.present()", nil); err != nil {
 		return err
 	}
 	ui := uiauto.New(h.tconn)
