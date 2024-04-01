@@ -471,8 +471,10 @@ func enterMigrationScreen(ctx context.Context, cr *chrome.Chrome, tconn *chrome.
 		return errors.Wrap(err, "failed to prepare for Chrome restart")
 	}
 
-	// This might return ErrConnClosing as it restarts Chrome.
-	err := ui.DoDefault(enterMigrationScreenButton)(ctx)
+	// We can't use ui.DoDefault() here as it internally repeats clicking on the button with
+	// testing.Poll, but clicking |enterMigrationScreenButton| might return ErrConnClosing as it
+	// restarts Chrome.
+	err := ui.LeftClick(enterMigrationScreenButton)(ctx)
 	if err != nil && !errors.Is(err, rpcc.ErrConnClosing) {
 		return errors.Wrap(err, "failed to click migration confirmation button")
 	}
