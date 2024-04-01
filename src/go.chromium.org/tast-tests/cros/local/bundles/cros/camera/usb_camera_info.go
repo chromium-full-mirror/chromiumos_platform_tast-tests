@@ -85,5 +85,15 @@ func USBCameraInfo(ctx context.Context, s *testing.State) {
 		os.WriteFile(
 			fmt.Sprintf("%s/%s-%s-yavta-format.txt", s.OutDir(), vidPidBcd, videoNodeNum),
 			output, 0644)
+
+		v4l2ControlFormatCmd := testexec.CommandContext(
+			ctx, "v4l2-ctl", "--all", "-d", videoNode)
+		output, err = v4l2ControlFormatCmd.Output(testexec.DumpLogOnError)
+		if err != nil {
+			s.Fatal("Failed to run v4l2-ctl --all with videoNode = ", videoNode)
+		}
+		os.WriteFile(
+			fmt.Sprintf("%s/%s-%s-v4l2-ctl.txt", s.OutDir(), vidPidBcd, videoNodeNum),
+			output, 0644)
 	}
 }
