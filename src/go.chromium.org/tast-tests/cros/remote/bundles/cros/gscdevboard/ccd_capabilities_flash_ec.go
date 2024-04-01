@@ -80,6 +80,9 @@ func CCDCapabilitiesFlashEC(ctx context.Context, s *testing.State) {
 	// Make sure we disable the SPI bridge at the end of the test
 	defer b.GscUsbSpiBridge(ctx, ti50.DisableSpiBridge)
 
+	// Perform a read, right before the ITE waveform, and ensure that response
+	// size of ITE waveform request is correct (See b/322166906)
+	verifyI2CRead(ctx, s, &b)
 	verifyIteSyncCommand(ctx, s, &b, true)
 	verifyEcSpiBridgeEnable(ctx, s, &b, true)
 	verifySpiBridgeState(ctx, s, &b, true)
@@ -108,6 +111,21 @@ func verifyIteSyncCommand(ctx context.Context, s *testing.State, b *utils.Devboa
 	if !expectSuccess {
 		expectedResponse = []byte{6, 0, 0, 0}
 	}
+	if !bytes.Equal(expectedResponse, response) {
+		s.Errorf("Expected ITE I2C interface response %v, but got %v", expectedResponse, response)
+	}
+}
+
+func verifyI2CRead(ctx context.Context, s *testing.State, b *utils.DevboardHelper) {
+	// Read address 0x60 for 2 bytes. There is nothing at 0x60, so we should
+	// get a timeout error.
+	requestData := []byte{0, 0x60, 0, 2}
+	response, err := b.GscUsbI2cInterfaceTransaction(ctx, requestData)
+	if err != nil {
+		s.Fatalf("Got error: %s", err)
+	}
+	// Expected Timeout failure response
+	expectedResponse := []byte{1, 0, 0, 0, 0, 0}
 	if !bytes.Equal(expectedResponse, response) {
 		s.Errorf("Expected I2C interface response %v, but got %v", expectedResponse, response)
 	}
