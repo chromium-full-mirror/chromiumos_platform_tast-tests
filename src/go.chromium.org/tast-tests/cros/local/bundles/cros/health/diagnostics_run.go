@@ -124,8 +124,6 @@ func init() {
 			Val:               croshealthd.NewRoutineParams(croshealthd.RoutineEMMCLifetime),
 			Fixture:           "crosHealthdRunning",
 			ExtraHardwareDeps: hwdep.D(hwdep.Emmc(), hwdep.SkipOnModel("faffy")),
-			// TODO(b/279707249): Promote to critical.
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
 		}, {
 			// Contact: dennyh@google.com
 			// TODO(b/324001664): Fix the issue on faffy.
