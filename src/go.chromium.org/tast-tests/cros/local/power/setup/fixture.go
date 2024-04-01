@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc/optin"
 	"go.chromium.org/tast-tests/cros/local/audio/fixture"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
@@ -1072,6 +1073,18 @@ func (f *powerUIFixture) Reset(ctx context.Context) error {
 	}
 	if err := f.cr.ResetState(ctx); err != nil {
 		return errors.Wrap(err, "failed resetting existing Chrome session")
+	}
+
+	tconn, err := f.cr.TestAPIConn(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to get ash tconn")
+	}
+
+	// Ensures that there are no toplevel windows left open.
+	if all, err := ash.GetAllWindows(ctx, tconn); err != nil {
+		return errors.Wrap(err, "failed to call ash.GetAllWindows")
+	} else if len(all) != 0 {
+		return errors.Wrapf(err, "toplevel window (%q) stayed open, total %d left", all[0].Name, len(all))
 	}
 	return nil
 }
