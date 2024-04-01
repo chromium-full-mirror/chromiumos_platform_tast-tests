@@ -319,7 +319,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 
 	// Foreground full scan.
 	count := 0
-	var sum time.Duration
+	var maxScanTime time.Duration
 	threshold := fgFullScanThreshold
 	if requestScanType == shillconst.WiFiRequestScanTypePassive {
 		threshold = fgPassiveScanThreshold
@@ -337,16 +337,20 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			} else {
 				s.Logf("Foreground scan #(%d/%d) duration: %s", i, scanTimes, duration)
 			}
-			sum += duration
+			if duration > maxScanTime {
+				maxScanTime = duration
+			}
 			count++
 		}
 	}
 	if count == 0 {
 		s.Error("Failed to perform all full channel scans in foreground scan test")
 	} else {
-		avg := time.Duration(int64(sum) / int64(count))
-		s.Logf("Foreground scan average duration: %s", avg)
-		logDuration("scan_time_foreground_full", avg)
+		// Reports max value to crosbolt so that data from different vendors can
+		// be compared. Some vendors optimize 3-4 scans (shorter) in every 5
+		// scans so report the longest result (see discussion in b/284533163).
+		s.Logf("Max foreground scan duration: %s", maxScanTime)
+		logDuration("scan_time_foreground_full", maxScanTime)
 	}
 
 	// Background full scan.
@@ -382,7 +386,7 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 	s.Log("Connected")
 
 	count = 0
-	sum = 0
+	maxScanTime = 0
 	threshold = bgFullScanThreshold
 	if requestScanType == shillconst.WiFiRequestScanTypePassive {
 		threshold = bgPassiveScanThreshold
@@ -402,15 +406,19 @@ func ScanPerf(ctx context.Context, s *testing.State) {
 			} else {
 				s.Logf("Background scan #(%d/%d) duration: %s", i, scanTimes, duration)
 			}
-			sum += duration
+			if duration > maxScanTime {
+				maxScanTime = duration
+			}
 			count++
 		}
 	}
 	if count == 0 {
 		s.Error("Failed to perform all full channel scans in background scan test")
 	} else {
-		avg := time.Duration(int64(sum) / int64(count))
-		s.Logf("Background scan average duration: %s", avg)
-		logDuration("scan_time_background_full", avg)
+		// Reports max value to crosbolt so that data from different vendors can
+		// be compared. Some vendors optimize 3-4 scans (shorter) in every 5
+		// scans so report the longest result (see discussion in b/284533163).
+		s.Logf("Max background scan duration: %s", maxScanTime)
+		logDuration("scan_time_background_full", maxScanTime)
 	}
 }
