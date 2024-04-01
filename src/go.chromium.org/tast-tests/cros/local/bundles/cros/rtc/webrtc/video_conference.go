@@ -12,7 +12,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
-	"strconv"
+	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -656,6 +657,14 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 		testing.ContextLog(ctx, "Display capture resolution: ", dcResolution)
 	}
 
+	const webRTCCoolDownDuration = 5 * time.Second
+	testing.ContextLogf(ctx, "Sleep to eliminate the performance effect of rtc peer connection start up(%v)", webRTCCoolDownDuration)
+	// GoBigSleepLint: Sleep to eliminate the performance effect on the start
+	// up of rtc peer connection. The duration, 5 seconds, is arbitrary
+	// selected and will be changed if necessary.
+	if err := testing.Sleep(ctx, webRTCCoolDownDuration); err != nil {
+		return errors.Wrapf(err, "failed to sleep for %v", webRTCCoolDownDuration)
+	}
 	var wg sync.WaitGroup
 	cameraEncPerf := perf.NewValues()
 	var statErrs = make([]error, params.NumPeople-1)
@@ -700,8 +709,38 @@ func measureWebRTCStats(ctx context.Context, conn *chrome.Conn, rtcPerf *perf.Va
 		if statErrs[i] != nil {
 			return statErrs[i]
 		}
-		rtcPerf.MergeWithSuffix("_"+strconv.Itoa(i), decPerf)
+		var sb strings.Builder
+		sb.WriteString(fmt.Sprintf("decPerf[%d]: ", i))
+		j := 0
+		for metric, values := range decPerf.GetValues() {
+			if j != 0 {
+				sb.WriteString(", ")
+			}
+			sb.WriteString(fmt.Sprintf("{%s: %v}", metric.Name, values))
+			j++
+		}
+		testing.ContextLog(ctx, sb.String())
 	}
+	sort.Slice(decPerfs, func(i, j int) bool {
+		avgDecodeTime := func(p *perf.Values) float64 {
+			var decodeTimes []float64
+			for metric, values := range p.GetValues() {
+				if metric.Name == "rx.decode_time" {
+					decodeTimes = values
+					break
+				}
+			}
+			var sum float64
+			for _, d := range decodeTimes {
+				sum += d
+			}
+			return sum / float64(len(decodeTimes))
+		}
+
+		return avgDecodeTime(decPerfs[i]) < avgDecodeTime(decPerfs[j])
+	})
+	medDecPerf := decPerfs[len(decPerfs)/2]
+	rtcPerf.MergeWithSuffix("_median_dec", medDecPerf)
 	if presentStatErr != nil {
 		return presentStatErr
 	}

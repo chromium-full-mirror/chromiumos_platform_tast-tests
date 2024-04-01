@@ -261,7 +261,6 @@ func MeasureRTCEncodeStats(ctx context.Context, conn *chrome.Conn, readRTCReport
 		if err := readRTCReport(ctx, conn, false, &txm); err != nil {
 			return errors.Wrap(err, "failed to retrieve and/or parse getStats()")
 		}
-		testing.ContextLogf(ctx, "Measurement: %+v", txm)
 		txMeasurements = append(txMeasurements, txm)
 	}
 	framesPerSecond := perf.Metric{
@@ -308,7 +307,6 @@ func MeasureRTCDecodeStats(ctx context.Context, conn *chrome.Conn, streamWidth, 
 		if err := readRTCReport(ctx, conn, true, &rxm); err != nil {
 			return errors.Wrap(err, "failed to retrieve and/or parse getStats()")
 		}
-		testing.ContextLogf(ctx, "Measurement: %+v", rxm)
 		rxMeasurements = append(rxMeasurements, rxm)
 
 		if rxm.FramesDecoded == 0 {
