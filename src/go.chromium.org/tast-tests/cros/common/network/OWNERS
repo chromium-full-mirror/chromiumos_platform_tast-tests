@@ -8,7 +8,5 @@ include chromiumos/owners:v1:/platform/OWNERS.networking
 
 # ChromeOS Connectivity (Software)
 chadduffin@chromium.org
-hsuregan@google.com
-jiajunz@google.com
 
 include /OWNERS.tast
