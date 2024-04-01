@@ -344,7 +344,7 @@ func Pmtest(ctx context.Context, s *testing.State) {
 		if msg := parseSuspendStats(ctx); msg != "" {
 			s.Error("suspend_stats: ", msg)
 		}
-		s.Fatalf("Failed to suspend to %v: %v: ", origSuspendMode, string(match[1]))
+		s.Fatalf("Failed to suspend to %v: %v", origSuspendMode, string(match[1]))
 	}
 }
 
@@ -356,7 +356,7 @@ func parseSuspendStats(ctx context.Context) string {
 	testing.ContextLogf(ctx, "%v", string(out))
 
 	failRegex := regexp.MustCompile(`^fail: (\d+)`)
-	reasonRegex := regexp.MustCompile(`last_failed_dev:.*$`)
+	reasonRegex := regexp.MustCompile(`(last_failed_dev:.*)$`)
 	var reasons []string
 	var failed bool
 	for _, line := range strings.Split(string(out), "\n") {
@@ -369,7 +369,7 @@ func parseSuspendStats(ctx context.Context) string {
 				failed = true
 			}
 		}
-		if match := reasonRegex.FindStringSubmatch(line); match != nil {
+		if match := reasonRegex.FindStringSubmatch(line); match != nil && len(match) > 1 {
 			reasons = append(reasons, match[1])
 		}
 	}

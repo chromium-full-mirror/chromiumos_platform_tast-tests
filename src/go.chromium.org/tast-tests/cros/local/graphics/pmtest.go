@@ -10,7 +10,6 @@ import (
 	"regexp"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
-	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -112,22 +111,4 @@ func GetSuspendState(ctx context.Context) SuspendMode {
 		return SuspendS0ix
 	}
 	return SuspendS3
-}
-
-// SetSuspendState configure powerd to suspend to S0ix or S3.
-// Don't call this. The default value is always correct.
-func SetSuspendState(ctx context.Context, t SuspendMode) error {
-	testing.ContextLog(ctx, "Overriding system suspend_to_idle setting. THIS WILL BREAK SUSPEND ON HALF OF DEVICES. FIX THIS TEST")
-	if err := testexec.CommandContext(ctx, "sh", "-c", fmt.Sprintf("echo %d > /var/lib/power_manager/suspend_to_idle", t)).Run(testexec.DumpLogOnError); err != nil {
-		return errors.Wrap(err, "failed to set suspend_to_idle")
-	}
-	testing.ContextLogf(ctx, "Set suspend_to_idle to %v to suspend", t)
-	if err := upstart.RestartJob(ctx, "powerd"); err != nil {
-		return errors.Wrap(err, "failed to restart powerd")
-	}
-	mode := GetSuspendState(ctx)
-	if mode != t {
-		return errors.Errorf("failed to set suspend mode to %v", t)
-	}
-	return nil
 }
