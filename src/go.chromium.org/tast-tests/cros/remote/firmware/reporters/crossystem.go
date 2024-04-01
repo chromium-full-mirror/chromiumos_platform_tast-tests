@@ -144,3 +144,17 @@ func (r *Reporter) CheckFWVersion(ctx context.Context, expected string) (bool, e
 func (r *Reporter) GetMiniOSPriority(ctx context.Context) (string, error) {
 	return r.CrossystemParam(ctx, CrossystemParamMiniOSPriority)
 }
+
+// CrossystemChecker verifies if the provided crossystem key-value pairs match the actual device values.
+func (r *Reporter) CrossystemChecker(ctx context.Context, expected map[CrossystemParam]string) (bool, error) {
+	for key, expectedVal := range expected {
+		actualVal, err := r.CrossystemParam(ctx, key)
+		if err != nil {
+			return false, errors.Wrapf(err, "failed to get crossystem %v value", key)
+		}
+		if actualVal != expectedVal {
+			return false, nil
+		}
+	}
+	return true, nil
+}
