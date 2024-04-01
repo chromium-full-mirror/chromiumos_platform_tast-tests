@@ -181,22 +181,22 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	defer cleanRouterServerWrapper(cleanupCtx, routerB)
 
 	checkARCConnect := func(rsw *routerServerWrapper, a *arc.ARC) {
-		ipAddrs := []net.IP{rsw.routerAddr, rsw.serverAddr}
+		// Get corresponding ARC interface from patchpanel.
+		var arcIfName string
 		if err := testing.Poll(ctx, func(ctx context.Context) error {
-			arcIfName, err := arcnet.GetARCInterfaceName(ctx, rsw.ifName)
-			s.Logf("Check connection on %s, mapped to ARC interface %s", rsw.ifName, arcIfName)
-			if err != nil {
-				return errors.Wrap(err, "failed to get ARC interface name")
-			}
-			// Verify pinging to ipAddrs.
-			for _, ip := range ipAddrs {
-				if err := arcnet.ExpectPingSuccess(ctx, a, arcIfName, ip.String()); err != nil {
-					return errors.Wrapf(err, "failed to ping %s", ip.String())
-				}
-			}
-			return nil
+			arcIfName, err = arcnet.GetARCInterfaceName(ctx, rsw.ifName)
+			return err
 		}, &testing.PollOptions{Timeout: networkInitializationPollTimeout}); err != nil {
-			s.Fatalf("ARC Connectivity check failed for interface %s: %s", rsw.ifName, err)
+			s.Fatalf("Failed to get ARC interface name for %s: %s", rsw.ifName, err)
+		}
+
+		// Verify pinging from ARC.
+		s.Logf("Check connection on %s, mapped to ARC interface %s", rsw.ifName, arcIfName)
+		ipAddrs := []net.IP{rsw.routerAddr, rsw.serverAddr}
+		for _, ip := range ipAddrs {
+			if err := arcnet.ExpectPingSuccess(ctx, a, arcIfName, ip.String()); err != nil {
+				s.Fatalf("Failed to ping %s", ip.String())
+			}
 		}
 	}
 	checkARCConnect(routerA, a)
