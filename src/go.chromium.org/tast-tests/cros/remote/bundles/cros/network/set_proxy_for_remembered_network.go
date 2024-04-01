@@ -39,14 +39,14 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify that proxy settings can be set for shared or non-shared network",
 		Contacts: []string{
-			// "cros-connectivity@google.com",
-			// "chromeos-connectivity-engprod@google.com",
-			"edgar.chang@cienet.com",
-			"chromeos-connectivity-cienet-external@google.com",
+			"cros-connectivity@google.com",
+			"chromeos-connectivity-engprod@google.com",
+			"shijinabraham@google.com",
+			"chadduffin@chromium.org",
 		},
 		BugComponent:   "b:1318544", // ChromeOS > Software > System Services > Connectivity > General
-		LifeCycleStage: testing.LifeCycleInDevelopment,
-		Attr:           []string{"group:wificell", "wificell_e2e_unstable"},
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		Attr:           []string{"group:wificell", "wificell_e2e"},
 		TestBedDeps:    []string{tbdep.Wificell, tbdep.WifiStateNormal, tbdep.PeripheralWifiStateWorking},
 		VarDeps:        []string{"ui.signinProfileTestExtensionManifestKey"},
 		ServiceDeps: []string{
