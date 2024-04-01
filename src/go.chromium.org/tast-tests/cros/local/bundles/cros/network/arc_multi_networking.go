@@ -196,7 +196,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 			}
 			return nil
 		}, &testing.PollOptions{Timeout: networkInitializationPollTimeout}); err != nil {
-			s.Errorf("ARC Connectivity check failed for interface %s: %s", rsw.ifName, err)
+			s.Fatalf("ARC Connectivity check failed for interface %s: %s", rsw.ifName, err)
 		}
 	}
 	checkARCConnect(routerA, a)
@@ -217,7 +217,7 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 			}
 			return errors.Wrap(err, "failed to get arc interface")
 		}, &testing.PollOptions{Timeout: networkRemovalPollTimeout}); err != nil {
-			s.Errorf("Failed to verify interface removal for %s: %s", ifName, err)
+			s.Fatalf("Failed to verify interface removal for %s: %s", ifName, err)
 		}
 	}
 	expectInterfaceRemoved(routerA.ifName)
