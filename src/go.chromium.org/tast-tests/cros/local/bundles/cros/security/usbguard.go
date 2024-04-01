@@ -42,14 +42,15 @@ func USBGuard(ctx context.Context, s *testing.State) {
 		defaultUser = "testuser@gmail.com"
 		defaultPass = "testpass"
 
-		usbguardFeature    = "USBGuard"
-		usbbouncerFeature  = "USBBouncer"
-		usbguardJob        = "usbguard"
-		usbguardWrapperJob = "usbguard-wrapper"
-		usbguardProcess    = "usbguard-daemon"
-		usbguardPolicy     = "/run/usbguard/rules.conf"
-		usbguardUID        = 20123
-		usbguardGID        = 20123
+		usbguardFeature      = "USBGuard"
+		usbbouncerFeature    = "USBBouncer"
+		usbguardJob          = "usbguard"
+		usbguardOnlockTask   = "usbguard-on-lock"
+		usbguardProcess      = "usbguard-daemon"
+		usbguardOnunlockTask = "usbguard-on-unlock"
+		usbguardPolicy       = "/run/usbguard/rules.conf"
+		usbguardUID          = 20123
+		usbguardGID          = 20123
 
 		seccompPolicyFilename = "usbguard.policy"
 
@@ -89,10 +90,16 @@ func USBGuard(ctx context.Context, s *testing.State) {
 			if _, err := os.Stat(usbguardPolicy); err != nil {
 				return errors.Wrapf(err, "failed finding policy %v", usbguardPolicy)
 			}
-		} else if !onLockScreen {
-			err := upstart.WaitForJobStatus(ctx, usbguardWrapperJob, goal, state, upstart.TolerateWrongGoal, jobTimeout)
+			err := upstart.WaitForJobStatus(ctx, usbguardJob, goal, state, upstart.TolerateWrongGoal, jobTimeout)
 			if err != nil {
-				return errors.Wrapf(err, "failed to wait on job %v to stop", usbguardWrapperJob)
+				return errors.Wrapf(err, "failed to wait on job %v to stop", usbguardJob)
+			}
+		} else if !onLockScreen {
+			for _, job := range []string{usbguardOnlockTask, usbguardJob, usbguardOnunlockTask} {
+				err := upstart.WaitForJobStatus(ctx, job, goal, state, upstart.TolerateWrongGoal, jobTimeout)
+				if err != nil {
+					return errors.Wrapf(err, "failed to wait on job %v to stop", job)
+				}
 			}
 			if _, err := os.Stat(usbguardPolicy); err == nil {
 				return errors.Errorf("policy %v unexpectedly exists", usbguardPolicy)
