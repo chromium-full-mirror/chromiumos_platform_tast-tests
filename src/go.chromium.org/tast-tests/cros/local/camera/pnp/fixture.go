@@ -44,9 +44,10 @@ const (
 )
 
 // PNPTimeParams provide the probing frequency and total times.
-var PNPTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 60 * time.Second}
+var PNPTimeParams = power.TimeParams{Interval: 5 * time.Second, Total: 5 * time.Minute}
 
-var minPowerTestOptions = powersetup.PowerTestOptions{
+// MinPowerTestOptions provide an unified stable power environment.
+var MinPowerTestOptions = powersetup.PowerTestOptions{
 	Wifi:               powersetup.DisableWifiInterfaces,
 	NightLight:         powersetup.DisableNightLight,
 	DarkTheme:          powersetup.EnableLightTheme,
@@ -81,7 +82,7 @@ func init() {
 		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash chrome",
 		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		Impl: powersetup.NewPowerUIFixture(
-			minPowerTestOptions,
+			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
 				BrowserType:     browser.TypeAsh,
 				EnableGAIALogin: false,
@@ -98,7 +99,7 @@ func init() {
 		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Ash Chrome with GAIA login",
 		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		Impl: powersetup.NewPowerUIFixture(
-			minPowerTestOptions,
+			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
 				BrowserType:     browser.TypeAsh,
 				EnableGAIALogin: true,
@@ -128,7 +129,7 @@ func init() {
 		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome",
 		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		Impl: powersetup.NewPowerUIFixture(
-			minPowerTestOptions,
+			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
 				BrowserType:     browser.TypeLacros,
 				EnableGAIALogin: false,
@@ -145,7 +146,7 @@ func init() {
 		Desc:     "Disable unnessary or unstable utilities for power evaluation as much as possible using Lacros chrome with GAIA login",
 		Contacts: []string{"chromeos-camera-eng@google.com", "esker@chromium.org"},
 		Impl: powersetup.NewPowerUIFixture(
-			minPowerTestOptions,
+			MinPowerTestOptions,
 			powersetup.PowerFixtureOptions{
 				BrowserType:     browser.TypeLacros,
 				EnableGAIALogin: true,

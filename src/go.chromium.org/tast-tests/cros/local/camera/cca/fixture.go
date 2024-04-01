@@ -20,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/audio"
 	"go.chromium.org/tast-tests/cros/local/audio/crastestclient"
 	audioFixture "go.chromium.org/tast-tests/cros/local/audio/fixture"
+	"go.chromium.org/tast-tests/cros/local/camera/pnp"
 	"go.chromium.org/tast-tests/cros/local/camera/testutil"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -316,6 +317,28 @@ func init() {
 		PostTestTimeout: ccaTearDownTimeout,
 		TearDownTimeout: tearDownTimeout,
 	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedStableEnv",
+		Desc:            "Launched CCA with stable power environement",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@google.com"},
+		Impl:            &fixture{launchCCA: true, powerTest: true},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name:            "ccaLaunchedStableEnvFakeHALCamera",
+		Desc:            "Launched CCA with fake camera hal and stable power environement",
+		Contacts:        []string{"chromeos-camera-eng@google.com", "esker@google.com"},
+		Impl:            &fixture{launchCCA: true, useCameraType: testutil.UseFakeHALCamera, powerTest: true},
+		SetUpTimeout:    powerSetUpTimeout,
+		ResetTimeout:    testBridgeSetUpTimeout,
+		PreTestTimeout:  ccaSetUpTimeout,
+		PostTestTimeout: ccaTearDownTimeout,
+		TearDownTimeout: powerTearDownTimeout,
+	})
 }
 
 // DebugParams defines some useful flags for debug CCA tests.
@@ -550,11 +573,7 @@ func (f *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
 			s.Fatal("Failed to get test API: ", err)
 		}
 
-		opt := &powerFixture.PowerTestOptions{
-			NightLight:         powerFixture.DisableNightLight,
-			DarkTheme:          powerFixture.EnableLightTheme,
-			KeyboardBrightness: powerFixture.SetKbBrightnessToZero,
-		}
+		opt := &pnp.MinPowerTestOptions
 
 		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 		defer cancel()
