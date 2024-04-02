@@ -21,6 +21,11 @@ type hmrNode struct {
 	time     float64
 }
 
+// distance calculates the euclidean distance between two hmrNode points.
+func distance(pointA, pointB hmrNode) float64 {
+	return math.Sqrt(math.Pow(pointA.coorX-pointB.coorX, 2) + math.Pow(pointA.coorY-pointB.coorY, 2))
+}
+
 // readCSV reads a csv file with columns x, y, pressure and time.
 // Each line in the csv ends with a ','.
 func readCSV(fileName string) ([]*hmrNode, error) {

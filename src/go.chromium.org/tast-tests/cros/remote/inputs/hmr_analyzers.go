@@ -139,6 +139,52 @@ func analyzeReportRate(points []*hmrNode) ([]ValidationResult, error) {
 	return results, errs
 }
 
+// analyzeGapRatio calculates the relative size of gaps between touch events.
+// A large gap ratio indicates that a touch event may have been skipped.
+// Note: It's possible for gap ratio to be large in normal situations during small
+// movements and periods of acceleration, so these gaps are excluded from this analysis.
+func analyzeGapRatio(points []*hmrNode) ([]ValidationResult, error) {
+	var gaps, gapRatios []float64
+	gapLowerBound := 0.5
+	ratioThresholdCurrGapToNextGap := 1.2
+	gapRatios = append(gapRatios, 0)
+
+	for i := 0; i < len(points)-1; i++ {
+		gap := distance(*points[i], *points[i+1])
+		gaps = append(gaps, gap)
+	}
+
+	for i := 1; i < len(gaps)-1; i++ {
+		prevGap := math.Max(gaps[i-1], 0.1)
+		currGap := gaps[i]
+		nextGap := math.Max(gaps[i+1], 0.1)
+		// Only include gaps that occur from larger movements and are not accelerating.
+		if currGap >= gapLowerBound && currGap/nextGap > ratioThresholdCurrGapToNextGap {
+			gapRatios = append(gapRatios, currGap/prevGap)
+		}
+	}
+	maxGapRatio := floats.Max(gapRatios)
+
+	var errs error
+	var results []ValidationResult
+
+	result, err := validateGapRatio(maxGapRatio)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	} else {
+		results = append(results, result)
+	}
+
+	if errs != nil {
+		errs = errors.Wrap(errs, "Gap Ratio Analyzer")
+	}
+	for i, result := range results {
+		results[i].Message = fmt.Sprintf("Gap Ratio Analyzer: %v", result.Message)
+	}
+
+	return results, errs
+}
+
 func elementwiseAbsolute(vals []float64) []float64 {
 	res := make([]float64, len(vals))
 	for i, val := range vals {

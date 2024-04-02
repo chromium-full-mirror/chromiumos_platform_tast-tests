@@ -83,3 +83,7 @@ func validateAngle(value float64) (ValidationResult, error) {
 func validateReportRate(value float64) (ValidationResult, error) {
 	return validationWrapper("Report Rate Validation", value, 60, 0, ge)
 }
+
+func validateGapRatio(value float64) (ValidationResult, error) {
+	return validationWrapper("Gap Ratio Validaton", value, 1.8, 1, le)
+}

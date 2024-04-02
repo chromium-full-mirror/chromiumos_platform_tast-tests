@@ -40,6 +40,12 @@ func DetermineSingleLineVerdict(fileName string, widthResolution, heightResoluti
 	}
 	results = append(results, result...)
 
+	result, err = analyzeGapRatio(transformedPoints)
+	if err != nil {
+		errs = errors.Join(errs, err)
+	}
+	results = append(results, result...)
+
 	if errs != nil {
 		errs = errors.Wrap(errs, "Single Line Verdict")
 	}
