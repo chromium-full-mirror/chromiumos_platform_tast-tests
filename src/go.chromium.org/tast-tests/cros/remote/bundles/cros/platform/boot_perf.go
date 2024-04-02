@@ -51,7 +51,7 @@ func init() {
 			"briannorris@chromium.org",
 		},
 		BugComponent: "b:167279", // ChromeOS > Platform > System > Performance
-		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check"},
+		Attr:         []string{"group:crosbolt", "crosbolt_perbuild", "crosbolt_fsi_check", "crosbolt_release_gates"},
 		ServiceDeps:  []string{"tast.cros.arc.PerfBootService", "tast.cros.platform.BootPerfService", "tast.cros.security.BootLockboxService"},
 		// Deps of "chrome" is used to ensure the test doesn't boot to the OOBE screen.
 		SoftwareDeps: []string{"chrome"},

@@ -88,7 +88,7 @@ func init() {
 			}, {
 				Name:      "docs",
 				Timeout:   meetcuj.DefaultTestTimeout,
-				ExtraAttr: []string{"group:cuj"},
+				ExtraAttr: []string{"group:cuj", "group:crosbolt", "crosbolt_release_gates"},
 				Val: meetcuj.MeetTest{
 					Bots:        []int{1, 3, 15},
 					Layout:      googlemeet.TiledLayout,
