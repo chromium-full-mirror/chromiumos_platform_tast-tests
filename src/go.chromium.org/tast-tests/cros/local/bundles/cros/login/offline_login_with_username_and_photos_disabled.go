@@ -35,13 +35,12 @@ func init() {
 			"cros-oac@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		Attr:         []string{
-			// Disabled by TORA.  See: b/313203352
-			//	"group:golden_tier",
-			//	"group:medium_low_tier",
-			//	"group:hardware",
-			//	"group:complementary",
-			//	"group:hw_agnostic"
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
@@ -227,14 +226,15 @@ func (h *helper) restoreAllNetworkInterfaces(ctx context.Context) {
 	h.enableCellularFunc = nil
 }
 
+// fillTextField assumes that the text field will be autofocused.
+// This may not work correctly for pages with two fields.
 func fillTextField(ctx context.Context, s *testing.State, ui *uiauto.Context, kb *input.KeyboardEventWriter, nodeName, nodeValue string) {
 
 	textfield := nodewith.Name(nodeName).Role(role.TextField)
 
 	if err := uiauto.Combine("Fill the text field",
 		ui.WaitUntilExists(textfield),
-		ui.LeftClick(textfield),
-		ui.WaitUntilExists(textfield.Focused()),
+		ui.DoDefaultUntil(textfield, ui.Exists(textfield.Focused())),
 	)(ctx); err != nil {
 		s.Fatal("Failed to select the text field : ", err)
 	}
