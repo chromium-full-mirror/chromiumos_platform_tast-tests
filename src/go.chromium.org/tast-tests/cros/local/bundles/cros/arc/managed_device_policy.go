@@ -7,6 +7,8 @@ package arc
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -16,6 +18,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/arc"
 	"go.chromium.org/tast-tests/cros/local/arc/arcent"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/imagehelpers"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/externaldata"
@@ -71,16 +74,17 @@ func init() {
 	})
 }
 
+const devicePolicyPkg = "org.chromium.arc.testapp.devicepolicy"
+
 type arcPolicyFactory func() (policy.Policy, func(ctx context.Context), error)
 
 func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	const (
 		apk = "ArcDevicePolicyTest.apk"
-		pkg = "org.chromium.arc.testapp.devicepolicy"
-		cls = pkg + ".MainActivity"
+		cls = devicePolicyPkg + ".MainActivity"
 	)
 
-	packages := []string{pkg}
+	packages := []string{devicePolicyPkg}
 	arcPolicyMap := map[string]arcPolicyFactory{
 		"setWallpaper": func() (policy.Policy, func(ctx context.Context), error) {
 			return createWallpaperPolicy(ctx, s.DataPath("wallpaper_image.jpeg"))
@@ -130,7 +134,7 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Starting app")
-	act, err := arc.NewActivity(a, pkg, cls)
+	act, err := arc.NewActivity(a, devicePolicyPkg, cls)
 	if err != nil {
 		s.Fatal("Failed to create a new activity: ", err)
 	}
@@ -143,6 +147,9 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to start the activity: ", err)
 	}
 	defer act.Stop(cleanupCtx, tconn)
+
+	recorder := uiauto.CreateAndStartScreenRecorder(ctx, tconn)
+	defer uiauto.StopAndSaveOnError(cleanupCtx, recorder, filepath.Join(s.OutDir(), "recording.webm"), s.HasError)
 
 	s.Log("Testing policies without restrictions")
 	d, err := a.NewUIDevice(ctx)
@@ -202,12 +209,9 @@ func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, 
 
 func testPolicyEnforcement(ctx context.Context, d *ui.Device, policy string, shouldSucceed bool) error {
 	const (
-		pkg = "org.chromium.arc.testapp.devicepolicy"
-
-		policiesListID = pkg + ":id/lstPolicies"
-		testButtonID   = pkg + ":id/btnTest"
-		outputTextID   = pkg + ":id/txtOutput"
-		errorTextID    = pkg + ":id/txtError"
+		policiesListID = devicePolicyPkg + ":id/lstPolicies"
+		testButtonID   = devicePolicyPkg + ":id/btnTest"
+		errorTextID    = devicePolicyPkg + ":id/txtError"
 	)
 
 	if err := selectSpinnerItem(ctx, d, policiesListID, policy); err != nil {
@@ -219,10 +223,13 @@ func testPolicyEnforcement(ctx context.Context, d *ui.Device, policy string, sho
 		return errors.Wrap(err, "failed to click test")
 	}
 
-	txtOutput := d.Object(ui.ID(outputTextID))
-	output, err := txtOutput.GetText(ctx)
+	result, err := getPolicyTestResult(ctx, d)
 	if err != nil {
-		return errors.Wrap(err, "failed to get output")
+		return err
+	}
+
+	if result == fmt.Sprintf("%v", shouldSucceed) {
+		return nil
 	}
 
 	txtError := d.Object(ui.ID(errorTextID))
@@ -230,12 +237,37 @@ func testPolicyEnforcement(ctx context.Context, d *ui.Device, policy string, sho
 	if err != nil {
 		return errors.Wrap(err, "failed to get error message")
 	}
+	return errors.Errorf("unexpected result: %s, error: %s", result, errMessage)
+}
 
-	if output != fmt.Sprintf("%v", shouldSucceed) {
-		return errors.Errorf("unexpected output: %s, error: %s", output, errMessage)
+func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
+	const (
+		outputTextID   = devicePolicyPkg + ":id/txtOutput"
+		resultWaitTime = 30 * time.Second
+	)
+
+	resultRegex := regexp.MustCompile("true|false")
+
+	var output string
+	var err error
+	if err := testing.Poll(ctx, func(ctx context.Context) error {
+		txtOutput := d.Object(ui.ID(outputTextID))
+
+		output, err = txtOutput.GetText(ctx)
+		if err != nil {
+			return errors.Wrap(err, "failed to get output")
+		}
+
+		if !resultRegex.MatchString(output) {
+			return errors.New("Unexpected result :" + output)
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: resultWaitTime}); err != nil {
+		return "", err
 	}
 
-	return nil
+	return output, nil
 }
 
 func selectSpinnerItem(ctx context.Context, d *ui.Device, spinnerId, itemText string) error {
