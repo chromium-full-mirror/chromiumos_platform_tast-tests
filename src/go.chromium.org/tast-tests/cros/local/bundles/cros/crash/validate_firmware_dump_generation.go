@@ -95,18 +95,27 @@ func ValidateFirmwareDumpGeneration(ctx context.Context, s *testing.State) {
 	}
 }
 
-// getUserHash gets the user hash corresponding to username
-func getUserHash(ctx context.Context, userHash string) (string, error) {
-	sessionManager, err := session.NewSessionManager(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "couldn't start session manager")
-	}
-
-	_, userhash, err := sessionManager.RetrievePrimarySession(ctx)
-	if err != nil {
-		return "", errors.Wrap(err, "couldn't retrieve primary session")
-	}
-	return userhash, nil
+// getUserHash gets the user hash of the current user session
+func getUserHash(ctx context.Context, sm *session.SessionManager, creds credconfig.Creds) (string, error) {
+	var userHash string
+	// Ensure that the daemon-store directory is created for logged in user.
+	err := testing.Poll(ctx, func(ctx context.Context) error {
+		// Make session manager calls to get user hash to build up user's
+		// daemon store directory.
+		username, hash, e := sm.RetrievePrimarySession(ctx)
+		if e != nil {
+			return testing.PollBreak(errors.Wrap(e, "failed to get user hash"))
+		}
+		if hash == "" {
+			return errors.New("hash found to be empty")
+		}
+		if username != creds.User {
+			return errors.New("username doesn't match login credential")
+		}
+		userHash = hash
+		return nil
+	}, &testing.PollOptions{Timeout: cryptohome.WaitForUserTimeout, Interval: 400 * time.Millisecond})
+	return userHash, err
 }
 
 // checkIfDumpFileExists verifies that firmware dump file is created after firmware dump is triggered.
@@ -250,6 +259,11 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 		s.Fatalf("Failed to get the file information for %s: %v", fwDbgCollect, err)
 	}
 
+	sm, err := session.NewSessionManager(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to session manager: ", err)
+	}
+
 	creds, err := credconfig.PickRandomCreds(s.RequiredVar("connectivityfwdumps.gaiaLoginAccount"))
 	if err != nil {
 		s.Fatal("Failed to parse managed user creds: ", err)
@@ -289,24 +303,10 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 		return rl.Exit("verify UserFeedbackWithLowlevelDebugDataAllowed policy", err)
 	}
 
-	var hash string
-	var e error
 	// Ensure that the daemon-store directory is created for logged in user.
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		// Make session manager calls to get user hash to build up user's
-		// daemon store directory.
-		hash, e = getUserHash(ctx, creds.User)
-
-		if e != nil {
-			return testing.PollBreak(errors.Wrap(err, "failed to get user hash"))
-		}
-
-		if hash == "" {
-			return errors.New("hash found to be empty trying again")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: cryptohome.WaitForUserTimeout, Interval: 400 * time.Millisecond}); err != nil {
-		s.Fatal("Failed to get user hash, exiting the test")
+	hash, err := getUserHash(ctx, sm, creds)
+	if err != nil {
+		s.Fatal("Failed to get user hash, exiting the test: ", err)
 	}
 	dumpPath := filepath.Join(fbpreprocessordPath, hash, processedDumpPath)
 
@@ -353,9 +353,9 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 
 	var exist bool
 	// Verify if firmware dump is generated after firmware dump trigger
-	exist, e = checkIfDumpFileExists(ctx, dumpPath, s, policyVal)
-	if e != nil {
-		s.Fatal("Firmware dump file not generated error: ", e)
+	exist, err = checkIfDumpFileExists(ctx, dumpPath, s, policyVal)
+	if err != nil {
+		s.Fatal("Firmware dump file not generated error: ", err)
 	}
 
 	if !exist {
@@ -380,7 +380,7 @@ func firmwareDumpValidator(ctx context.Context, rl *retry.Loop, policyVal string
 
 	if err := testing.Poll(ctx, func(ctx context.Context) error {
 		// Verify if firmware dump is deleted after expiration
-		exist, e = checkIfDumpFileExists(ctx, dumpPath, s, policyVal)
+		exist, e := checkIfDumpFileExists(ctx, dumpPath, s, policyVal)
 		if e != nil {
 			return e
 		}
