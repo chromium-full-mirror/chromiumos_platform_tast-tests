@@ -168,6 +168,11 @@ func ECKeyboard(ctx context.Context, s *testing.State) {
 					testKeyMap["<f5>"] = "KEY_BRIGHTNESSDOWN"
 					testKeyMap["<f6>"] = "KEY_BRIGHTNESSUP"
 					testKeyMap["<f7>"] = "KEY_MICMUTE"
+				} else if h.Model == "hayato" {
+					s.Log("Testing non-vivaldi keys: KEY_SCALE, KEY_RIGHTNESSDOWN, KEY_BRIGHTNESSUP")
+					testKeyMap["<f5>"] = "KEY_SCALE"
+					testKeyMap["<f6>"] = "KEY_BRIGHTNESSDOWN"
+					testKeyMap["<f7>"] = "KEY_BRIGHTNESSUP"
 				} else if s.Features("").Hardware.HardwareFeatures.FwConfig.FwRoVersion.MajorVersion >= 13885 || h.Model == "pompom" || h.Model == "kingoftown" || h.Model == "pazquel" || h.Model == "pazquel360" {
 					s.Log("Testing non-vivaldi keys: KEY_SYSRQ, KEY_BRIGHTNESSDOWN, KEY_BRIGHTNESSUP")
 					testKeyMap["<f5>"] = "KEY_SYSRQ"
