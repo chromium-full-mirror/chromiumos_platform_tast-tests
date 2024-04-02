@@ -86,7 +86,12 @@ func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	startARC := func() *arc.ARC {
-		cr, err := chrome.New(ctx, chrome.ARCEnabled(), chrome.UnRestrictARCCPU())
+		// We don't need a fresh Chrome login, so use KeepState() to make it faster.
+		cr, err := chrome.New(
+			ctx, chrome.ARCEnabled(),
+			chrome.UnRestrictARCCPU(),
+			chrome.KeepState(),
+		)
 		if err != nil {
 			s.Fatal("Failed to connect to Chrome: ", err)
 		}
