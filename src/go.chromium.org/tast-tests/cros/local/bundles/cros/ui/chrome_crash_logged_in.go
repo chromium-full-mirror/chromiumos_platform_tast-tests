@@ -110,7 +110,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -122,7 +122,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -146,7 +146,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -158,7 +158,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -242,7 +242,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -254,7 +254,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -278,7 +278,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigEnable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
@@ -290,7 +290,7 @@ func init() {
 				consent:              crash.MockConsent,
 				fieldTrialConfigMode: chrome.FieldTrialConfigDisable,
 			},
-			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic", "informational", "group:criticalstaging"},
+			ExtraAttr:         []string{"group:mainline", "group:hw_agnostic"},
 			ExtraSoftwareDeps: []string{"crashpad", "lacros"},
 			Timeout:           chrome.MinLoginTimeout + time.Minute,
 		}, {
