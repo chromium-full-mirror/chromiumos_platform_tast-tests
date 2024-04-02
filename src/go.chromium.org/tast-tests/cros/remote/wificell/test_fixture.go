@@ -2537,6 +2537,7 @@ func (tf *TestFixture) CheckFullAuthFlow(ctx context.Context, capturer *pcap.Cap
 	// Filtering authentication frame.
 	filters := []pcap.Filter{
 		pcap.RejectLowSignal(),
+		pcap.RejectRetransmission(),
 		pcap.Dot11FCSValid(),
 		pcap.TypeFilter(layers.LayerTypeDot11MgmtAuthentication,
 			func(layer gopacket.Layer) bool {

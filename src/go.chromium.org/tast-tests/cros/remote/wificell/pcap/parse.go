@@ -69,6 +69,15 @@ func RejectLowSignal() Filter {
 		})
 }
 
+// RejectRetransmission returns a Filter which ignores retransmitted frames.
+func RejectRetransmission() Filter {
+	return TypeFilter(layers.LayerTypeDot11,
+		func(layer gopacket.Layer) bool {
+			dot11 := layer.(*layers.Dot11)
+			return !dot11.Flags.Retry()
+		})
+}
+
 // radioTapFCSValid returns a Filter which ensures the frame check sequence of
 // the encapsulated 802.11 frame is valid. Some devices may strip out of the FCS
 // field in the packets before NIC/Wireless feeding them to userspace. In which

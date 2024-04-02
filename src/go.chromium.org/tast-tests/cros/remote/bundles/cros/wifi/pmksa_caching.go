@@ -432,7 +432,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to configure AP1: ", err)
 		}
 		if err := tf.WifiClient().DiscoverBSSID(actionCtx, ap1BSSID, iface, []byte(ssid)); err != nil {
-			s.Fatal("Failed to discover AP1's BSSID: ", err)
+			s.Error("Failed to discover AP1's BSSID: ", err)
 		}
 
 		req := requestParams
@@ -445,7 +445,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 		s.Log("Waiting for roaming to AP1")
 		if _, err := waitForRoam(); err != nil {
-			s.Fatal("Failed to wait for roaming to AP1: ", err)
+			s.Error("Failed to wait for roaming to AP1: ", err)
 		}
 	})
 
@@ -476,7 +476,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 			s.Log("Waiting for falling back to AP0")
 			if _, err := waitForRoam(); err != nil {
-				s.Fatal("Failed to wait for falling back to AP0: ", err)
+				s.Error("Failed to wait for falling back to AP0: ", err)
 			}
 		})
 
@@ -499,7 +499,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 			s.Log("Waiting for falling back to AP1")
 			if _, err := waitForReconnect(); err != nil {
-				s.Fatal("Failed to wait for falling back to AP1: ", err)
+				s.Error("Failed to wait for falling back to AP1: ", err)
 			}
 		})
 
@@ -521,7 +521,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 
 			s.Log("Waiting for falling back to AP0")
 			if _, err := waitForReconnect(); err != nil {
-				s.Fatal("Failed to wait for falling back to AP0: ", err)
+				s.Error("Failed to wait for falling back to AP0: ", err)
 			}
 		})
 		if err = tf.VerifyConnectionFromDUT(ctx, wificell.DefaultDUT, ap0); err != nil {
