@@ -47,8 +47,16 @@ const (
 	RecorderTimeout = RecorderCooldownTimeout + RecorderOverheadTimeout
 
 	// OptionalRecorderArgCustomPerfKey is the key used to get optional custom
-	// perf values.
-	OptionalRecorderArgCustomPerfKey = "custom_perf"
+	// perf values saved only to results-chart.json.
+	// Be very careful when you add optional custom perf values with a timeline,
+	// it may overwrite the timeline in power recorder metrics.
+	OptionalRecorderArgCustomPerfKey = "custom_perf_results_chart"
+
+	// OptionalRecorderArgPowerLogCustomPerfKey is the key used to get optional
+	// custom perf values saved to both power logs and results-chart.json.
+	// Be very careful when you add custom perf values with a timeline,
+	// it may overwrite the timeline in power recorder metrics.
+	OptionalRecorderArgPowerLogCustomPerfKey = "custom_perf_power_log"
 
 	// OptionalRecorderArgDischargeWatchdogKey is the arg name to enable
 	// discharge watchdog in recorder.
@@ -79,7 +87,9 @@ type OptionalRecorderArg struct {
 	argValue interface{}
 }
 
-// AddOptionalRecorderArg adds optional args for recorder, for example pdash_note.
+// AddOptionalRecorderArg adds optional args for recorder. Examples:
+// 1. r.AddOptionalRecorderArg(OptionalRecorderArgPowerLogCustomPerfKey, yourCustomPerfValues).
+// 2. r.AddOptionalRecorderArg("pdash_note", strings.TrimSpace(pdashNoteVar.Value()))
 func (r *Recorder) AddOptionalRecorderArg(key string, val interface{}) {
 	r.optionalArgs = append(r.optionalArgs, OptionalRecorderArg{key, val})
 }
@@ -185,9 +195,24 @@ func (r *Recorder) Stop(ctx context.Context) (*perf.Values, error) {
 // Finish collecting power metrics and post-processing data.
 // In:
 // ctx: context for the test.
-// vs: additional custom perf values to publish.
+// vs: additional custom perf values to publish; they will be added to results-chart.json.
 // Out:
 // error: propagate back to the test.
+// TODO: b/332979331
+// Best practice to use Finish():
+// 1. If you wish to just add all your custom perf values to results-chart.json only,
+// simply call Finish(ctx, customPerfValues1, customPerfValues2...customPerfValuesN).
+// 2. If you wish to add some of your custom perf values to both, some only to results-chart.json,
+// in your tests you could add the following, then call Finish(ctx):
+// `r.AddOptionalRecorderArg(power.OptionalRecorderArgPowerLogCustomPerfKey, customPerfValues1)`
+// `r.AddOptionalRecorderArg(power.OptionalRecorderArgPowerLogCustomPerfKey, customPerfValues2)`
+// `r.AddOptionalRecorderArg(power.OptionalRecorderArgCustomPerfKey, customPerfValues3)`
+// In this case, customPerfValues1 and customPerfValues2 will be added to both power logs
+// and results-chart.json while customPerfValues3 only to results-chart.json.
+// Calling r.AddOptionalRecorderArg(power.OptionalRecorderArgPowerLogCustomPerfKey, customPerfValues)
+// and passing customPerfValues to Finish() do the same operation. Only call one of the two.
+// Please also make sure your custom perf value metrics follow power metric conventions
+// when adding them to power logs.
 func (r *Recorder) Finish(ctx context.Context, vs ...*perf.Values) error {
 	if r.perfValues == nil {
 		if _, err := r.Stop(ctx); err != nil {

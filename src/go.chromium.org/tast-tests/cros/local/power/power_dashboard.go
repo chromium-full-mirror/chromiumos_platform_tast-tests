@@ -84,11 +84,18 @@ func GeneratePowerLog(ctx context.Context, outDir, testName string, values *perf
 // GeneratePowerLogAndSaveToCrosbolt generates power_log.{json, html},
 // and uploads power_log to dashboard.
 // It will merge custom perf values passed as OptionalRecorderArg
-// and saves perf results to Crosbolt.
+// and saves perf results to Crosbolt and power_log.{json, html} accordingly.
 func GeneratePowerLogAndSaveToCrosbolt(ctx context.Context, outDir, testName string, values *perf.Values, checkpoints *perf.Checkpoints, args ...OptionalRecorderArg) error {
 	devInfo := GetDeviceInfo(ctx, args...)
-
 	metrics := CollectOneTimeMetrics(ctx)
+
+	for _, optionalRecorderArg := range args {
+		if optionalRecorderArg.argName == OptionalRecorderArgPowerLogCustomPerfKey {
+			t := optionalRecorderArg.argValue.(*perf.Values)
+			values.Merge(t)
+		}
+	}
+
 	if _, err := cp.CreateSaveUploadPowerLog(ctx, outDir, testName, "", values, checkpoints, devInfo, metrics); err != nil {
 		return errors.Wrap(err, "failed to save and upload power log and perf")
 	}
