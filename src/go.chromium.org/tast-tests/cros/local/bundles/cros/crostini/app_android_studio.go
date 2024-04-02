@@ -39,6 +39,7 @@ func init() {
 		Contacts:     []string{"clumptini+oncall@google.com"},
 		Attr:         []string{"group:mainline", "group:crostini_app_cq"},
 		SoftwareDeps: []string{"chrome", "vm_host", "amd64"},
+		VarDeps:      uidetection.UIDetectionVars,
 		// b/238714120: kohaku performance is insufficient
 		HardwareDeps: hwdep.D(hwdep.SkipOnModel("kohaku")),
 		BugComponent: "b:1122570",
