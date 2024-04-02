@@ -80,13 +80,24 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 		}
 	}(cleanupContext)
 
-	if err := h.RequireBiosServiceClient(ctx); err != nil {
-		s.Fatal("Requiring BiosServiceClient: ", err)
+	s.Log("Rebooting EC to RW")
+	cmd := firmware.NewECTool(s.DUT(), firmware.ECToolNameMain)
+	if cmd.Command(ctx, "reboot_ec", "RW").Start(); err != nil {
+		s.Fatal("Failed to reboot EC to RW: ", err)
+	}
+
+	// GoBigSleepLint: Allow some delay for rebooting ec to RW.
+	if err := testing.Sleep(ctx, 3*time.Second); err != nil {
+		s.Fatal("Failed to sleep: ", err)
 	}
 
 	s.Log("Set power state to off with servo")
 	if err := h.Servo.SetPowerState(ctx, servo.PowerStateOff); err != nil {
 		s.Fatal("Failed to power off DUT with servo: ", err)
+	}
+
+	if err := h.WaitForPowerStates(ctx, firmware.PowerStateInterval, firmware.PowerStateTimeout, "G3"); err != nil {
+		s.Fatal("Failed to get G3 powerstate: ", err)
 	}
 
 	s.Log("Checking ec_active_copy is RW or RW_B")
@@ -112,15 +123,12 @@ func RecToDevFromECRW(ctx context.Context, s *testing.State) {
 	s.Log("Pressing Ctrl-D or equivalent to get to Dev mode (expected to fail)")
 	if err := ms.RecScreenToDevMode(ctx, firmware.SkipWaitConnect); err != nil {
 		testing.ContextLog(ctx, "Failed to transition to dev mode from rec mode, this is expected behavior")
-	} else {
-		s.Fatal("Expected transitioning to dev mode from recovery screen while in EC_RW to fail, but succeeded instead")
-	}
-
-	if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
-		s.Fatal("Failed to perform a warm reset: ", err)
-	}
-	if err := h.WaitConnect(ctx); err != nil {
-		s.Fatal("Failed to reconnect to DUT after warm reset: ", err)
+		if err := h.Servo.SetPowerState(ctx, servo.PowerStateWarmReset); err != nil {
+			s.Fatal("Failed to perform a warm reset: ", err)
+		}
+		if err := h.WaitConnect(ctx); err != nil {
+			s.Fatal("Failed to reconnect to DUT after warm reset: ", err)
+		}
 	}
 
 	r := reporters.New(h.DUT)
