@@ -190,7 +190,7 @@ var pdStateCmdRegexp = map[TCPMVersion]string{
 	//      4 - Data role    -- DFP
 	//      5 - VConn (optional "-VC")
 	//      6 - PDC State    -- Attached.SNK (See `pdc_state_names` in the EC's pdc_power_mgmt.c)
-	PDC: `C(\d+)\s+(CC\d+),\s+Role:\s+(\w+)-(\w+)(-VC)?\s+PDC State:\s+([\w\. ]+)?`,
+	PDC: `C(\d+)\s+(CC\d+),\s+Role:\s+(\w+)-(\w+)(-VC)?\s+PDC State:\s+([\w\. ]+)?[\r\n]`,
 }
 
 const pdStateInvalidPortRegexp string = `Parameter (\d+) invalid`
