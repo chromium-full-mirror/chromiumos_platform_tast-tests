@@ -22,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         UncleanShutdownCollector,
 		Desc:         "Verify unclean shutdown produces collection",
-		Contacts:     []string{"chromeos-data-eng@google.com", "mutexlox@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "iby@chromium.org"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 	})

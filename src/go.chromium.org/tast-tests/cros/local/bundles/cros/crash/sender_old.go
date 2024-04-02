@@ -22,7 +22,6 @@ func init() {
 		Desc: "Check that old minidump crashes are uploaded",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"nya@chromium.org", // ported to Tast
 		},

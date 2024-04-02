@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Verify that active field trials in early boot are recorded as active in UMA",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@google.com",
+			"iby@chromium.org",
 		},
 		BugComponent: "b:1096648", // ChromeOS > Data > Engineering > Experimentation
 		Attr:         []string{"group:mainline"},

@@ -29,7 +29,6 @@ func init() {
 		Desc:         "Basic test to check that crash_sender runs on login",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@chromium.org",
 			"iby@chromium.org",
 		},
 		BugComponent: "b:1032705",

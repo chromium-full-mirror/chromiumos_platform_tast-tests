@@ -23,7 +23,7 @@ func init() {
 		Func:         KernelWarning,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Verify kernel warnings are logged as expected",
-		Contacts:     []string{"chromeos-data-eng@google.com", "mutexlox@google.com"},
+		Contacts:     []string{"chromeos-data-eng@google.com", "iby@chromium.org"},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},
 		// TODO(b/201790026): The lkdtm resides on the debugfs,

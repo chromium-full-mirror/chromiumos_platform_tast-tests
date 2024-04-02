@@ -32,8 +32,8 @@ func init() {
 		Contacts: []string{
 			// Crostini
 			"clumptini+oncall@google.com",
-			// Monitoring and forensics
-			"mutexlox@google.com",
+			// Data team
+			"iby@chromium.org",
 			"chromeos-data-eng@google.com",
 		},
 		SoftwareDeps: []string{"chrome", "vm_host"},

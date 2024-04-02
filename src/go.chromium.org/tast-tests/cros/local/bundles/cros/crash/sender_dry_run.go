@@ -23,7 +23,6 @@ func init() {
 		Desc:         "Basic test to check that dry run mode prints uploads.log entries",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@chromium.org",
 			"iby@chromium.org",
 		},
 		// ChromeOS > Data > Engineering > Crash Reporting

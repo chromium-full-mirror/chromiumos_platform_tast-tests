@@ -55,8 +55,8 @@ func init() {
 			// Crostini
 			"clumptini+oncall@google.com",
 			"sidereal@google.com",
-			// Telemetry
-			"mutexlox@google.com",
+			// Data team
+			"iby@chromium.org",
 			"chromeos-data-eng@google.com",
 		},
 		SoftwareDeps: []string{"chrome", "vm_host"},

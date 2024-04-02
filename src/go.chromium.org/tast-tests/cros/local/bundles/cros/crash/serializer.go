@@ -26,7 +26,7 @@ func init() {
 		Desc: "Basic test to check that minidump crashes are serialized",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@chromium.org",
+			"iby@chromium.org",
 		},
 		BugComponent: "b:1032705",
 		// We only care about crash_serializer on internal builds.

@@ -21,7 +21,6 @@ func init() {
 		Desc: "Check that crash_sender enforces the daily limit of crash report upload",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@chromium.org",
 			"iby@chromium.org",
 			"nya@chromium.org", // ported to Tast
 		},

@@ -23,8 +23,7 @@ func init() {
 		Desc: "Verify suspend failures are logged as expected",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"dbasehore@google.com",
-			"mutexlox@google.com",
+			"iby@chromium.org",
 		},
 		BugComponent: "b:1032705",
 		Attr:         []string{"group:mainline"},

@@ -24,7 +24,7 @@ func init() {
 		Desc: "Verify device coredumps are handled as expected",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@google.com",
+			"iby@chromium.org",
 			"chromeos-wifi-champs@google.com", // WiFi oncall rotation; or http://b/new?component=893827
 		},
 		BugComponent: "b:1032705",

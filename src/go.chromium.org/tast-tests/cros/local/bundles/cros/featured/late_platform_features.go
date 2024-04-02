@@ -29,7 +29,7 @@ func init() {
 		Desc:         "Verify platform-features.json enables features at login",
 		Contacts: []string{
 			"chromeos-data-eng@google.com",
-			"mutexlox@google.com",
+			"iby@chromium.org",
 		},
 		BugComponent: "b:1096648",
 		Attr:         []string{"group:mainline"},

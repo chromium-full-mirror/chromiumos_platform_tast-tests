@@ -23,8 +23,8 @@ func init() {
 			// ARC
 			"arc-core@google.com",
 			"jhorwich@google.com",
-			// Telemetry
-			"mutexlox@google.com",
+			// Data team
+			"iby@chromium.org",
 			"chromeos-data-eng@google.com",
 		},
 		BugComponent: "b:153255",
