@@ -88,7 +88,7 @@ func init() {
 			Name:              "h264_hw_vbr",
 			Val:               webcodecs.TestEncodeArgs{Codec: videotype.H264, Acceleration: webcodecs.PreferHardware, BitrateMode: "variable", BrowserType: browser.TypeAsh, NumOfEncoders: 1},
 			ExtraSoftwareDeps: []string{"proprietary_codecs", caps.HWEncodeH264VBR},
-			Fixture:           "chromeVideoWithHWVBREncoding",
+			Fixture:           "chromeVideo",
 		}, {
 			Name:    "vp8_sw",
 			Val:     webcodecs.TestEncodeArgs{Codec: videotype.VP8, Acceleration: webcodecs.PreferSoftware, BitrateMode: "constant", BrowserType: browser.TypeAsh, NumOfEncoders: 1},

@@ -184,23 +184,6 @@ func initChromeVideoBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithHWVBREncoding",
-		Desc:     "Similar to chromeVideo but also enables hardware VBR encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs("--enable-features=ChromeOSHWVBREncoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	// TODO(crbug.com/958166): Use simply ChromeVideoWithSWDecoding() when HDR is launched.
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithSWDecodingAndHDRScreen",

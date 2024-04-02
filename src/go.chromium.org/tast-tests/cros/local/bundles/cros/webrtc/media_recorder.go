@@ -60,12 +60,6 @@ func init() {
 			ExtraSoftwareDeps: []string{caps.HWEncodeH264, "proprietary_codecs", "lacros"},
 			Fixture:           "chromeVideoLacrosWithFakeWebcam",
 		}, {
-			// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
-			Name:              "h264_vbr",
-			Val:               mediaRecorderTest{profile: videotype.H264BaselineProf, browserType: browser.TypeAsh},
-			ExtraSoftwareDeps: []string{caps.HWEncodeH264VBR, "proprietary_codecs"},
-			Fixture:           "chromeVideoWithFakeWebcamAndHWVBREncoding",
-		}, {
 			Name:              "vp8",
 			Val:               mediaRecorderTest{profile: videotype.VP8Prof, browserType: browser.TypeAsh},
 			ExtraSoftwareDeps: []string{caps.HWEncodeVP8},

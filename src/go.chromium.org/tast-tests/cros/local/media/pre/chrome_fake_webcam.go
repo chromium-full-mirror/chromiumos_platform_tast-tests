@@ -124,24 +124,6 @@ func initChromeFakeWebCamBaseFixtures() {
 		TearDownTimeout: chrome.ResetTimeout,
 	})
 
-	// TODO(b/236546408): Remove once hardware variable bitrate encoding is enabled by default.
-	testing.AddFixture(&testing.Fixture{
-		Name:     "chromeVideoWithFakeWebcamAndHWVBREncoding",
-		Desc:     "Similar to chromeVideoWebCam but enabling hardware VBR encoding",
-		Contacts: []string{"chromeos-gfx-video@google.com"},
-		Impl: chrome.NewLoggedInFixture(func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.ExtraArgs(chromeVideoArgs...),
-				chrome.ExtraArgs(chromeFakeWebcamArgs...),
-				chrome.ExtraArgs("--enable-features=ChromeOSHWVBREncoding"),
-			}, nil
-		}),
-		Parent:          "gpuWatchDog",
-		SetUpTimeout:    chrome.FixtureSetUpTimeout,
-		ResetTimeout:    chrome.ResetTimeout,
-		TearDownTimeout: chrome.ResetTimeout,
-	})
-
 	testing.AddFixture(&testing.Fixture{
 		Name:     "chromeVideoWithFakeWebcamAndNoHwAcceleration",
 		Desc:     "Similar to chromeVideoWithFakeWebcam fixture but with both hardware decoding and encoding disabled",
