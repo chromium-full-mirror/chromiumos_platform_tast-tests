@@ -33,37 +33,26 @@ func init() {
 		Timeout:      15 * time.Minute,
 		Params: []testing.Param{{
 			Name: "normal",
-			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: false,
-			},
+			Val:  firmware.PDTestParams{},
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityFlipped,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: false,
+				CC: firmware.CCPolarityFlipped,
 			},
 		}, {
 			Name: "dtsoff",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOff,
-				Shutdown: false,
+				DTS: firmware.DTSModeOff,
 			},
 		}, {
 			Name: "flipcc_dtsoff",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityFlipped,
-				DTS:      firmware.DTSModeOff,
-				Shutdown: false,
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOff,
 			},
 		}, {
 			Name: "shutdown",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOn,
 				Shutdown: true,
 			},
 		}},
@@ -102,14 +91,8 @@ func PDResetHard(ctx context.Context, s *testing.State) {
 
 	testParams := s.Param().(firmware.PDTestParams)
 
-	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
-	}
-
-	if testParams.Shutdown {
-		if err := firmware.ShutdownDUT(ctx, h); err != nil {
-			s.Fatal("Could not shut down DUT: ", err)
-		}
 	}
 
 	//

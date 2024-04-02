@@ -39,6 +39,16 @@ const (
 	CCPolarityFlipped
 )
 
+// ServoPowerRole sets the servo's power role, default is RoleSource
+type ServoPowerRole int
+
+const (
+	// RoleSource tells the servo to provide power
+	RoleSource ServoPowerRole = iota
+	// RoleSink tells the servo to provide power
+	RoleSink
+)
+
 // PDTestParams contains common test params for PD tests.
 type PDTestParams struct {
 	CC           CCPolarity
@@ -46,6 +56,7 @@ type PDTestParams struct {
 	Shutdown     bool
 	Suspend      bool
 	RequiredPort *int
+	PowerRole    ServoPowerRole
 }
 
 // AddPDPorts takes a list of testing.Params that use PDTestParams as their value and populates the PVS requirements and creates parameterized tests for each PD port.
@@ -80,10 +91,15 @@ func AddPDPorts(params []testing.Param, attrs []string) []testing.Param {
 //  1. Make sure a suitable pair of Servos is attached (e.g. ServoV4 + Servo Micro)
 //  2. Call RequireDUTPDInfo to get info about the connected port.
 //  3. If the DUT has a battery, charge it up to >= 10%
-//  4. Configure DTS mode and CC polarity per user request
+//  4. Configure DTS mode, CC polarity, power role per user request
 //  5. Ensure a UDB-PD charger brick is attached and sourcing power
 //  6. Disable CCD Watchdogs
-func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMode DTSMode, requiredPort *int) error {
+//  7. Shutdown or suspend if needed
+func SetupPDTester(ctx context.Context, h *Helper, testParams PDTestParams) error {
+	if testParams.Suspend && testParams.Shutdown {
+		return errors.New("suspend and shutdown can't both be enabled at the same time")
+	}
+
 	if err := h.RequireServo(ctx); err != nil {
 		return errors.Wrap(err, "failed to require servo")
 	}
@@ -107,10 +123,17 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 		return errors.Wrap(err, "servo must have a charger attached that is sourcing")
 	}
 
-	// Make sure the Servo is a PD source from the DUT's perspective. This
+	// Set the requested servo PD role from the DUT's perspective. This
 	// helps in case a previous test left the port in a strange state.
-	if err := h.Servo.SetPDRole(ctx, servo.PDRoleSrc); err != nil {
-		return errors.Wrap(err, "servo must be sourcing power to the DUT")
+	role := servo.PDRoleSrc
+	if testParams.PowerRole == RoleSink {
+		role = servo.PDRoleSnk
+	}
+	if err := h.Servo.SetPDRole(ctx, role); err != nil {
+		return errors.Wrap(err, "failed to set pd role")
+	}
+	if err := h.Servo.SetPDCommunication(ctx, servo.On); err != nil {
+		return errors.Wrap(err, "failed to enable pd comms")
 	}
 
 	// Poll on the Servo C1 (DUT-facing) port until it is source-ready
@@ -124,8 +147,11 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 
 		testing.ContextLogf(ctx, "Servo DUT port (C1) PE State is %s", pdState.PEStateName)
 
-		if !pdState.IsSourceReady() {
+		if testParams.PowerRole == RoleSource && !pdState.IsSourceReady() {
 			return errors.New("Servo DUT port (C1) is not src-ready")
+		}
+		if testParams.PowerRole == RoleSink && !pdState.IsSinkReady() {
+			return errors.New("Servo DUT port (C1) is not sink-ready")
 		}
 
 		return nil
@@ -143,8 +169,8 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 		return errors.Wrap(err, "could not find active port after multiple attempts")
 	}
 
-	if requiredPort != nil && h.Servo.DUTPDPort() != *requiredPort {
-		return errors.Errorf("Incorrect PD port. Test wants port %d, got %d", *requiredPort, h.Servo.DUTPDPort())
+	if testParams.RequiredPort != nil && h.Servo.DUTPDPort() != *testParams.RequiredPort {
+		return errors.Errorf("Incorrect PD port. Test wants port %d, got %d", *testParams.RequiredPort, h.Servo.DUTPDPort())
 	}
 
 	// If a battery is present, ensure it is charged to at least minBattLevel percent
@@ -167,7 +193,7 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 
 	// Set DTS mode on the servo
 	var dts servo.OnOffValue
-	switch dtsMode {
+	switch testParams.DTS {
 	case DTSModeOn:
 		dts = servo.On
 	case DTSModeOff:
@@ -182,7 +208,7 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 
 	// Set USB-PD CC line polarity.
 	var cc string
-	switch ccPolarity {
+	switch testParams.CC {
 	case CCPolarityStandard:
 		cc = "cc1"
 	case CCPolarityFlipped:
@@ -203,8 +229,11 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 			return testing.PollBreak(err)
 		}
 		testing.ContextLogf(ctx, "Servo DUT port PE State: %s", pdState.PEStateName)
-		if !pdState.IsSourceReady() {
-			return errors.New("Servo DUT port is not ready")
+		if testParams.PowerRole == RoleSource && !pdState.IsSourceReady() {
+			return errors.New("Servo DUT port (C1) is not src-ready")
+		}
+		if testParams.PowerRole == RoleSink && !pdState.IsSinkReady() {
+			return errors.New("Servo DUT port (C1) is not sink-ready")
 		}
 		return nil
 	}, &testing.PollOptions{Interval: time.Second, Timeout: 20 * time.Second}); err != nil {
@@ -214,6 +243,22 @@ func SetupPDTester(ctx context.Context, h *Helper, ccPolarity CCPolarity, dtsMod
 	// Turn off CCD watchdogs as this can interfere with PD tests.
 	if err := h.Servo.RemoveCCDWatchdogs(ctx); err != nil {
 		return errors.Wrap(err, "failed to disable CCD watchdogs")
+	}
+
+	if testParams.Shutdown {
+		if err := ShutdownDUT(ctx, h); err != nil {
+			return errors.Wrap(err, "failed to shutdown")
+		}
+	}
+	if testParams.Suspend {
+		cmd := h.DUT.Conn().CommandContext(ctx, "powerd_dbus_suspend", "--delay=3")
+		if err := cmd.Start(); err != nil {
+			return errors.Wrap(err, "failed to invoke powerd_dbus_suspend")
+		}
+
+		if err := h.WaitForPowerStates(ctx, PowerStateInterval, PowerStateTimeout, "S3", "S0ix"); err != nil {
+			return errors.Wrap(err, "failed to suspend")
+		}
 	}
 
 	return nil

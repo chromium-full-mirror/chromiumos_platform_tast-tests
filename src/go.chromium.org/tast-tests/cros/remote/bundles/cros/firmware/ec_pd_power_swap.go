@@ -11,7 +11,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/servo"
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
-	"go.chromium.org/tast-tests/cros/remote/firmware/suspend"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -33,51 +32,33 @@ func init() {
 		Timeout:      20 * time.Minute,
 		Params: firmware.AddPDPorts([]testing.Param{{
 			Name: "normal",
-			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: false,
-				Suspend:  false,
-			},
+			Val:  firmware.PDTestParams{},
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityFlipped,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: false,
-				Suspend:  false,
+				CC: firmware.CCPolarityFlipped,
 			},
 		}, {
 			Name: "dtsoff",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOff,
-				Shutdown: false,
-				Suspend:  false,
+				DTS: firmware.DTSModeOff,
 			},
 		}, {
 			Name: "flipcc_dtsoff",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityFlipped,
-				DTS:      firmware.DTSModeOff,
-				Shutdown: false,
-				Suspend:  false,
+				CC:  firmware.CCPolarityFlipped,
+				DTS: firmware.DTSModeOff,
 			},
 		}, {
 			Name: "shutdown",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: true,
-				Suspend:  false,
+				Shutdown:  true,
+				PowerRole: firmware.RoleSink,
 			},
 		}, {
 			Name: "suspend",
 			Val: firmware.PDTestParams{
-				CC:       firmware.CCPolarityStandard,
-				DTS:      firmware.DTSModeOn,
-				Shutdown: false,
-				Suspend:  true,
+				Suspend: true,
 			},
 		}}, []string{"group:firmware", "firmware_pd"}),
 	})
@@ -101,30 +82,8 @@ func ECPDPowerSwap(ctx context.Context, s *testing.State) {
 
 	testParams := s.Param().(firmware.PDTestParams)
 
-	if err := firmware.SetupPDTester(ctx, h, testParams.CC, testParams.DTS, testParams.RequiredPort); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, testParams); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
-	}
-
-	if testParams.Suspend && testParams.Shutdown {
-		s.Fatal("Suspend and shutdown can't both be enabled at the same time")
-	}
-	if testParams.Suspend {
-		if suspendContext, err := suspend.NewContext(ctx, h); err != nil {
-			s.Fatal("Failed to create suspend context: ", err)
-		} else {
-			defer suspendContext.Close()
-			s.Log("Suspending DUT")
-			if err := suspendContext.SuspendDUTAllTypes(suspend.DefaultSuspendArgs()); err != nil {
-				s.Fatal("Failed to suspend DUT: ", err)
-			}
-		}
-	} else if testParams.Shutdown {
-		if err := h.Servo.SetPDRole(ctx, servo.PDRoleSnk); err != nil {
-			s.Fatal("Could not set servo power role to Sink: ", err)
-		}
-		if err := firmware.ShutdownDUT(ctx, h); err != nil {
-			s.Fatal("Could not shut down DUT: ", err)
-		}
 	}
 
 	if dualRole, err := h.Servo.GetDUTDualRoleState(ctx, servo.PDPortUnderTest); dualRole != servo.USBPdDualRoleOn {

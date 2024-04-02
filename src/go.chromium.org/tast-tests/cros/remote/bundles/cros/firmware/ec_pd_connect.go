@@ -33,20 +33,15 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: firmware.AddPDPorts([]testing.Param{{
 			Name: "normal",
-			Val: firmware.PDTestParams{
-				CC:  firmware.CCPolarityStandard,
-				DTS: firmware.DTSModeOn,
-			},
+			Val:  firmware.PDTestParams{},
 		}, {
 			Name: "flipcc",
 			Val: firmware.PDTestParams{
-				CC:  firmware.CCPolarityFlipped,
-				DTS: firmware.DTSModeOn,
+				CC: firmware.CCPolarityFlipped,
 			},
 		}, {
 			Name: "dtsoff",
 			Val: firmware.PDTestParams{
-				CC:  firmware.CCPolarityStandard,
 				DTS: firmware.DTSModeOff,
 			},
 		}, {
@@ -113,7 +108,7 @@ func ECPDConnect(ctx context.Context, s *testing.State) {
 	if err := h.RequireConfig(ctx); err != nil {
 		s.Fatal("Failed to create config: ", err)
 	}
-	if err := firmware.SetupPDTester(ctx, h, p.CC, p.DTS, p.RequiredPort); err != nil {
+	if err := firmware.SetupPDTester(ctx, h, p); err != nil {
 		s.Fatal("Failed to configure Servo for PD testing: ", err)
 	}
 	defer cleanup(ctx, s)
