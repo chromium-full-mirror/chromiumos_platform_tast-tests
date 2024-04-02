@@ -2449,10 +2449,10 @@ func (tf *TestFixture) DUTClientInterface(ctx context.Context, dutIdx DutIdx) (s
 	return tf.DUTWifiClient(dutIdx).Interface(ctx)
 }
 
-// InitializeRegdomainUS initializes the regulatory domain of phy0 on the DUT to US.
+// InitializeRegdomainUS initializes the regulatory domain of the phy on the DUT to US.
 func (tf *TestFixture) InitializeRegdomainUS(ctx context.Context) (string, error) {
 	iwr := iw.NewRemoteRunner(tf.DUT(0).Conn())
-	initialRegDomain, err := iwr.PhyRegulatoryDomain(ctx, "phy0")
+	initialRegDomain, err := iwr.SinglePhyRegulatoryDomain(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read the initial regulatory domain")
 	}
@@ -2489,7 +2489,7 @@ func (tf *TestFixture) InitializeRegdomainUS(ctx context.Context) (string, error
 		}
 	}
 
-	regdomain, err := iwr.PhyRegulatoryDomain(ctx, "phy0")
+	regdomain, err := iwr.SinglePhyRegulatoryDomain(ctx)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to read the regulatory regulatory domain")
 	}
@@ -2497,7 +2497,7 @@ func (tf *TestFixture) InitializeRegdomainUS(ctx context.Context) (string, error
 	return initialRegDomain, nil
 }
 
-// ResetRegdomain resets the regulatory domain of phy0 on the DUT to regDomain.
+// ResetRegdomain resets the regulatory domain of the phy on the DUT to regDomain.
 func (tf *TestFixture) ResetRegdomain(ctx context.Context, regDomain string) error {
 	iwr := iw.NewRemoteRunner(tf.DUT(0).Conn())
 	selfManaged, err := iwr.IsRegulatorySelfManaged(ctx)
@@ -2515,7 +2515,7 @@ func (tf *TestFixture) ResetRegdomain(ctx context.Context, regDomain string) err
 	if err := iwr.SetAndVerifyRegulatoryDomain(ctx, regDomain); err != nil {
 		return errors.Wrapf(err, "failed to reset the non-self-managed regulatory domain to %s", regDomain)
 	}
-	regdomain, err := iwr.PhyRegulatoryDomain(ctx, "phy0")
+	regdomain, err := iwr.SinglePhyRegulatoryDomain(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to read regulatory status")
 	}

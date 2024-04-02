@@ -3707,7 +3707,7 @@ func (s *ShillService) ScanAndFetchRegion(ctx context.Context, request *wifi.Sca
 			return errors.Wrap(err, "failed to scan")
 		}
 		// Make sure Regdomain is set now.
-		domain, err := local_iw.NewLocalRunner().PhyRegulatoryDomain(ctx, "phy0")
+		domain, err := local_iw.NewLocalRunner().SinglePhyRegulatoryDomain(ctx)
 		if err != nil {
 			return testing.PollBreak(errors.Wrap(err, "failed to read regulatory status"))
 		}

@@ -506,6 +506,19 @@ func (r *Runner) RadioConfig(ctx context.Context, iface string) (*ChannelConfig,
 	}, nil
 }
 
+// SinglePhyRegulatoryDomain gets the phy-specific regulatory domain code for
+// a device with only one phy.
+func (r *Runner) SinglePhyRegulatoryDomain(ctx context.Context) (string, error) {
+	ifaces, err := r.ListInterfaces(ctx)
+	if err != nil {
+		return "", err
+	}
+	if len(ifaces) != 1 {
+		return "", errors.Errorf("expected 1 phy, got %d", len(ifaces))
+	}
+	return r.PhyRegulatoryDomain(ctx, fmt.Sprintf("phy%d", ifaces[0].PhyNum))
+}
+
 // PhyRegulatoryDomain gets the phy-specific regulatory domain code.
 func (r *Runner) PhyRegulatoryDomain(ctx context.Context, phy string) (string, error) {
 	out, err := r.cmd.Output(ctx, "iw", "phy", phy, "reg", "get")
@@ -570,7 +583,7 @@ func (r *Runner) SetAndVerifyRegulatoryDomain(ctx context.Context, country strin
 	if err != nil {
 		return errors.Wrap(err, "failed to set country code")
 	}
-	domain, err := r.PhyRegulatoryDomain(ctx, "phy0")
+	domain, err := r.SinglePhyRegulatoryDomain(ctx)
 	if err != nil {
 		return errors.Wrap(err, "failed to read regulatory status")
 	}
