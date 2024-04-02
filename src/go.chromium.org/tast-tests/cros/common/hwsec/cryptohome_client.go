@@ -1009,6 +1009,25 @@ func (u *CryptohomeClient) PrepareAuthFpAuthFactor(ctx context.Context, authSess
 	return reply, nil
 }
 
+// PrepareRecoveryAuthFactor creates recovery request, returns the value of the request.
+func (u *CryptohomeClient) PrepareRecoveryAuthFactor(ctx context.Context, authSessionID, label, epochResponseHex string) (*uda.CryptohomeRecoveryPrepareOutput, error) {
+	reply := &uda.PrepareAuthFactorReply{}
+
+	binaryMsg, err := u.binary.prepareRecoveryAuthFactor(ctx, authSessionID, label, epochResponseHex)
+	if err != nil {
+		return nil, errors.Wrap(err, "PrepareAuthFactor for recovery failed")
+	}
+	if err := proto.Unmarshal(binaryMsg, reply); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal PrepareAuthFactor reply")
+	}
+	switch reply.GetPrepareOutput().Output.(type) {
+	case *uda.PrepareOutput_CryptohomeRecoveryOutput:
+		return reply.PrepareOutput.GetCryptohomeRecoveryOutput(), nil
+	default:
+		return nil, errors.Wrap(err, "failed to unmarshal PrepareAuthFactor reply")
+	}
+}
+
 // TerminateFpAuthFactor terminates the fingerprint auth factor.
 func (u *CryptohomeClient) TerminateFpAuthFactor(ctx context.Context, authSessionID string) (*uda.TerminateAuthFactorReply, error) {
 	reply := &uda.TerminateAuthFactorReply{}

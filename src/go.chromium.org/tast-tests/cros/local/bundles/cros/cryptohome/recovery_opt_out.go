@@ -6,6 +6,7 @@ package cryptohome
 
 import (
 	"context"
+	"encoding/hex"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -21,6 +22,10 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type recoveryOptOutParam struct {
+	useLegacyFetch bool
+}
 
 func init() {
 	testing.AddTest(&testing.Test{
@@ -44,6 +49,17 @@ func init() {
 		},
 		SoftwareDeps: []string{"pinweaver"},
 		Fixture:      "ussAuthSessionFixture",
+		Params: []testing.Param{{
+			Name: "",
+			Val: recoveryOptOutParam{
+				useLegacyFetch: false,
+			},
+		}, {
+			Name: "legacy",
+			Val: recoveryOptOutParam{
+				useLegacyFetch: true,
+			},
+		}},
 	})
 }
 
@@ -56,6 +72,8 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 		userGaiaID    = "123456789"
 		deviceUserID  = "123-456-AA-BB"
 	)
+
+	userParam := s.Param().(recoveryOptOutParam)
 
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -116,9 +134,18 @@ func RecoveryOptOut(ctx context.Context, s *testing.State) {
 		if err != nil {
 			return errors.Wrap(err, "failed to get fake epoch response")
 		}
-		requestHex, err := client.FetchRecoveryRequest(ctx, authSessionID, label, epoch)
-		if err != nil {
-			return errors.Wrap(err, "failed to get recovery request")
+		var requestHex string
+		if userParam.useLegacyFetch {
+			requestHex, err = client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)
+			if err != nil {
+				return errors.Wrap(err, "failed to get recovery request")
+			}
+		} else {
+			prepareOutput, err := client.PrepareRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch)
+			if err != nil {
+				return errors.Wrap(err, "failed to prepare recovery request")
+			}
+			requestHex = hex.EncodeToString(prepareOutput.RecoveryRequest)
 		}
 		response, err := testTool.FakeMediate(ctx, requestHex)
 		if err != nil {

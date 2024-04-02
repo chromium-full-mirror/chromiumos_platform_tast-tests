@@ -16,6 +16,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type recoveryErrorParam struct {
+	useLegacyFetch bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: RecoveryError,
@@ -35,6 +39,17 @@ func init() {
 			"group:hw_agnostic",
 		},
 		Fixture: "ussAuthSessionFixture",
+		Params: []testing.Param{{
+			Name: "",
+			Val: recoveryErrorParam{
+				useLegacyFetch: false,
+			},
+		}, {
+			Name: "legacy",
+			Val: recoveryErrorParam{
+				useLegacyFetch: true,
+			},
+		}},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"tpm", "no_tpm_dynamic"},
 	})
@@ -56,6 +71,7 @@ func RecoveryError(ctx context.Context, s *testing.State) {
 
 	fixture := s.FixtValue().(*cryptohome.AuthSessionFixture)
 	userName := fixture.TestUserName
+	userParam := s.Param().(recoveryErrorParam)
 
 	cmdRunner := hwseclocal.NewCmdRunner()
 	client := hwsec.NewCryptohomeClient(cmdRunner)
@@ -111,6 +127,18 @@ func RecoveryError(ctx context.Context, s *testing.State) {
 	epoch, err := testTool.FetchFakeEpochResponseHex(ctx)
 	if err != nil {
 		s.Fatal("Failed to get fake epoch response: ", err)
+	}
+
+	if userParam.useLegacyFetch {
+		_, err = client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)
+		if err != nil {
+			s.Fatal("Failed to get recovery request: ", err)
+		}
+	} else {
+		_, err := client.PrepareRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch)
+		if err != nil {
+			s.Fatal("Failed to prepare recovery request: ", err)
+		}
 	}
 
 	_, err = client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)

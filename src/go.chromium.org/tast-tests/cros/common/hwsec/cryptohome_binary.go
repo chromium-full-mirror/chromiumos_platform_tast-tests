@@ -436,6 +436,19 @@ func (c *cryptohomeBinary) prepareAuthFpAuthFactor(ctx context.Context, authSess
 	return c.call(ctx, args...)
 }
 
+// prepareRecoveryAuthFactor returns cryptohome recovery request to be sent to the mediator
+// by calling "cryptohome --action=prepare_recovery_auth_factor".
+func (c *cryptohomeBinary) prepareRecoveryAuthFactor(ctx context.Context, authSessionID, label, epochResponseHex string) ([]byte, error) {
+	args := []string{
+		"--output-format=binary-protobuf",
+		"--action=prepare_recovery_auth_factor",
+		"--auth_session_id=" + authSessionID,
+		"--key_label=" + label,
+		"--recovery_epoch_response=" + epochResponseHex,
+	}
+	return c.call(ctx, args...)
+}
+
 // terminateFpAuthFactor returns the responses by calling "cryptohome --action=terminate_auth_factor --fingerprint".
 func (c *cryptohomeBinary) terminateFpAuthFactor(ctx context.Context, authSessionID string) ([]byte, error) {
 	args := []string{"--output-format=binary-protobuf", "--action=terminate_auth_factor", "--fingerprint", "--auth_session_id=" + authSessionID}

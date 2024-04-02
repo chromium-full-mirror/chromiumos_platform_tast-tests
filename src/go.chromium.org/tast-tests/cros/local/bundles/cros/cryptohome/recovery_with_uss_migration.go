@@ -6,6 +6,7 @@ package cryptohome
 
 import (
 	"context"
+	"encoding/hex"
 	"time"
 
 	uda "go.chromium.org/chromiumos/system_api/user_data_auth_proto"
@@ -20,6 +21,10 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
+type recoveryWithUssMigrationParam struct {
+	useLegacyFetch bool
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         RecoveryWithUSSMigration,
@@ -31,6 +36,17 @@ func init() {
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
 		Attr:         []string{"group:mainline", "group:cryptohome"},
+		Params: []testing.Param{{
+			Name: "",
+			Val: recoveryWithUssMigrationParam{
+				useLegacyFetch: false,
+			},
+		}, {
+			Name: "legacy",
+			Val: recoveryWithUssMigrationParam{
+				useLegacyFetch: true,
+			},
+		}},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic", "chrome"},
 	})
@@ -52,6 +68,8 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 		recoveryDeviceUserID = "123-456-AA-BB"
 		ussFile              = "/user_secret_stash/uss.0"
 	)
+
+	userParam := s.Param().(recoveryWithUssMigrationParam)
 
 	ctxForCleanUp := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
@@ -200,9 +218,18 @@ func RecoveryWithUSSMigration(ctx context.Context, s *testing.State) {
 				return errors.Wrap(err, "failed to get fake epoch response")
 			}
 
-			requestHex, err := client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)
-			if err != nil {
-				return errors.Wrap(err, "failed to get recovery request")
+			var requestHex string
+			if userParam.useLegacyFetch {
+				requestHex, err = client.FetchRecoveryRequest(ctx, authSessionID, recoveryLabel, epoch)
+				if err != nil {
+					return errors.Wrap(err, "failed to get recovery request")
+				}
+			} else {
+				prepareOutput, err := client.PrepareRecoveryAuthFactor(ctx, authSessionID, recoveryLabel, epoch)
+				if err != nil {
+					return errors.Wrap(err, "failed to prepare recovery request")
+				}
+				requestHex = hex.EncodeToString(prepareOutput.RecoveryRequest)
 			}
 
 			response, err := testTool.FakeMediate(ctx, requestHex)
