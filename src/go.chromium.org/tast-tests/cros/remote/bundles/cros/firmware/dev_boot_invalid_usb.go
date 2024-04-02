@@ -169,14 +169,14 @@ func DevBootInvalidUSB(ctx context.Context, s *testing.State) {
 	defer cancel()
 
 	defer func(ctx context.Context) {
-		if err := devModeResetDUT(ctx, h, setServoChargerState.removeServoCharger); err != nil {
-			s.Fatal("Failed to reboot the DUT: ", err)
-		}
-		if s.HasError() {
+		if s.HasError() && h.DUT.Connected(ctx) {
 			saveLogPath := filepath.Join(s.OutDir(), "firmware.log")
 			if err := h.SaveCBMEMLogs(ctx, saveLogPath); err != nil {
 				s.Error("Failed to save firmware log: ", err)
 			}
+		}
+		if err := devModeResetDUT(ctx, h, setServoChargerState.removeServoCharger); err != nil {
+			s.Fatal("Failed to reboot the DUT: ", err)
 		}
 		if err := h.DisableDevBootUSB(ctx); err != nil {
 			s.Error("Failed to disable dev boot from USB: ", err)

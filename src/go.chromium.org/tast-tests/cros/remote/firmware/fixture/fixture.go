@@ -514,6 +514,10 @@ func (i *impl) PreTest(ctx context.Context, s *testing.FixtTestState) {
 		}
 
 		if err := rebootToMode(ctx, i.value.Helper, i.value.BootMode, opts...); err != nil {
+			if _, ok := err.(*firmware.GBBChangedRebootTimeoutError); ok {
+				s.Error("Test did not run")
+				s.Fatal("Failed to reconnect to DUT: ", err)
+			}
 			s.Fatalf("Failed to reboot to mode %q: %s", i.value.BootMode, err)
 		}
 	}
@@ -720,6 +724,9 @@ func rebootToMode(ctx context.Context, h *firmware.Helper, mode common.BootMode,
 	}
 	if err := ms.RebootToMode(ctx, mode, opts...); err != nil {
 		powerState := checkPowerState()
+		if _, ok := err.(*firmware.GBBChangedRebootTimeoutError); ok {
+			return err
+		}
 		return errors.Wrapf(err, "failed to reboot to mode %q, got power state %s", mode, powerState)
 	}
 

@@ -136,6 +136,13 @@ func msOptsContain(opts []ModeSwitchOption, want ModeSwitchOption) bool {
 	return false
 }
 
+// GBBChangedRebootTimeoutError is the error returned by RebootToMode
+// when it fails to reconnect to DUT after changing GBB flags and
+// rebooting the DUT.
+type GBBChangedRebootTimeoutError struct {
+	*errors.E
+}
+
 // RebootToMode reboots the DUT into the specified boot mode.
 // This has the side-effect of disconnecting the RPC client.
 // Requires `SoftwareDeps: []string{"crossystem", "flashrom"},`.
@@ -249,7 +256,7 @@ func (ms *ModeSwitcher) RebootToMode(ctx context.Context, toMode fwCommon.BootMo
 		waitConnectCtx, cancelWaitConnect := context.WithTimeout(ctx, 3*time.Minute)
 		defer cancelWaitConnect()
 		if err := h.WaitConnect(waitConnectCtx, waitConnectOpt...); err != nil {
-			return errors.Wrap(err, "failed to reconnect to DUT")
+			return &GBBChangedRebootTimeoutError{E: errors.Wrap(err, "failed to reconnect to DUT")}
 		}
 	}
 
