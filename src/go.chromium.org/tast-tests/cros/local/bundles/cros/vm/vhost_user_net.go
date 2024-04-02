@@ -32,7 +32,7 @@ func init() {
 		Desc:         "Tests crosvm's vhost-user net device",
 		Contacts:     []string{"cros-virt-devices-guests@google.com", "keiichiw@google.com"},
 		BugComponent: "b:1248538",
-		Attr:         []string{"group:mainline", "informational"},
+		Attr:         []string{"group:mainline"},
 		Data:         []string{runVhostUserNetTest},
 		SoftwareDeps: []string{"vm_host", "chrome", "dlc"},
 		Fixture:      "vmDLC",
