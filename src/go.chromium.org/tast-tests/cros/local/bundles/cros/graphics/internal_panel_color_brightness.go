@@ -6,7 +6,6 @@ package graphics
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -63,7 +62,7 @@ func InternalPanelColorBrightness(ctx context.Context, s *testing.State) {
 	}
 
 	// Get measurements when the screen is off and compare when the screen is supposedly on.
-	if err := setSystemBrightness(ctx, 0.0); err != nil {
+	if err := graphics.SetSystemBrightness(ctx, 0.0); err != nil {
 		s.Fatal("Failed to turn the brightness down: ", err)
 	}
 
@@ -74,7 +73,7 @@ func InternalPanelColorBrightness(ctx context.Context, s *testing.State) {
 	ratioOff := getGreenToOtherColorRatio(ctx, darkImgPath, s)
 
 	// Now compare when the screen is supposedly on to check if the brightness is actually changing.
-	if err := setSystemBrightness(ctx, 100.0); err != nil {
+	if err := graphics.SetSystemBrightness(ctx, 100.0); err != nil {
 		s.Fatal("Failed to turn the brightness up: ", err)
 	}
 
@@ -115,13 +114,6 @@ func openGreenFullScreen(ctx context.Context, cr *chrome.Chrome) error {
 
 	if err := kb.Accel(ctx, "f11"); err != nil {
 		return errors.Wrap(err, "failed to type fullscreen hotkey")
-	}
-	return nil
-}
-
-func setSystemBrightness(ctx context.Context, percent float64) error {
-	if err := testexec.CommandContext(ctx, "backlight_tool", fmt.Sprintf("--set_brightness_percent=%f", percent)).Run(); err != nil {
-		return errors.Wrapf(err, "failed to set %f%% brightness", percent)
 	}
 	return nil
 }

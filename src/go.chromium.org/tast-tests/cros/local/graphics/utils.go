@@ -565,3 +565,11 @@ func OpenVT2(ctx context.Context) error {
 	}
 	return nil
 }
+
+// SetSystemBrightness sets the screen brightness to the given percent value
+func SetSystemBrightness(ctx context.Context, percent float64) error {
+	if err := testexec.CommandContext(ctx, "backlight_tool", fmt.Sprintf("--set_brightness_percent=%f", percent)).Run(); err != nil {
+		return errors.Wrapf(err, "failed to set %f%% brightness", percent)
+	}
+	return nil
+}
