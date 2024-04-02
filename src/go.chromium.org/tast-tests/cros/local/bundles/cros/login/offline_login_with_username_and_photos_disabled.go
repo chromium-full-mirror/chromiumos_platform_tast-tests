@@ -35,7 +35,14 @@ func init() {
 			"cros-oac@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		Attr:         []string{"group:golden_tier", "group:medium_low_tier", "group:hardware", "group:complementary", "group:hw_agnostic"},
+		Attr:         []string{
+			// Disabled by TORA.  See: b/313203352
+			//	"group:golden_tier",
+			//	"group:medium_low_tier",
+			//	"group:hardware",
+			//	"group:complementary",
+			//	"group:hw_agnostic"
+		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps: []string{
 			"ui.signinProfileTestExtensionManifestKey",
