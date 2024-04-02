@@ -30,11 +30,15 @@ const (
 // List of fixture names for Essential Apps.
 const (
 	LoggedIn                               = "loggedIn"
+	LoggedInFieldTrialConfigDisable        = "loggedInFieldTrialConfigDisable"
+	LoggedInFieldTrialConfigEnable         = "loggedInFieldTrialConfigEnable"
 	LoggedInDisableInstall                 = "loggedInDisableAutoInstall"
 	LoggedInJP                             = "loggedInJP"
 	LoggedInGuest                          = "loggedInGuest"
 	ArcBootedWithGalleryPhotosImageFeature = "arcBootedWithGalleryPhotosImageFeature"
 	LacrosLoggedIn                         = "lacrosLoggedIn"
+	LacrosLoggedInFieldTrialConfigDisable  = "lacrosLoggedInFieldTrialConfigDisable"
+	LacrosLoggedInFieldTrialConfigEnable   = "lacrosLoggedInFieldTrialConfigEnable"
 	LacrosLoggedInDisableInstall           = "lacrosLoggedInDisableAutoInstall"
 	LacrosLoggedInJP                       = "lacrosLoggedInJP"
 )
@@ -45,6 +49,30 @@ func init() {
 		Desc:            "Logged into a user session for essential apps",
 		Contacts:        []string{"jinrongwu@google.com"},
 		Impl:            eaFixture(browser.TypeAsh, true),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInFieldTrialConfigDisable,
+		Desc:            "Logged into a user session for essential apps. And field trial test config disabled",
+		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Impl:            eaFixture(browser.TypeAsh, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            LoggedInFieldTrialConfigEnable,
+		Desc:            "Logged into a user session for essential apps. And field trial test config enabled",
+		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Impl:            eaFixture(browser.TypeAsh, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		SetUpTimeout:    chrome.LoginTimeout,
@@ -91,17 +119,17 @@ func init() {
 	fixtureConfig := arc.DefaultBootedFixtureConfig()
 	fixtureConfig.PlayStoreOptin = true
 	fixtureConfig.FOpts = func(ctx context.Context, s *testing.FixtState) ([]chrome.Option, error) {
-			return []chrome.Option{
-				chrome.EnableFeatures("MediaAppPhotosIntegrationImage:minPhotosVersionForImage/1.0"),
-				chrome.ExtraArgs(arc.DisableSyncFlags()...),
-				chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
-		}
+		return []chrome.Option{
+			chrome.EnableFeatures("MediaAppPhotosIntegrationImage:minPhotosVersionForImage/1.0"),
+			chrome.ExtraArgs(arc.DisableSyncFlags()...),
+			chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault"))}, nil
+	}
 	testing.AddFixture(&testing.Fixture{
-		Name:     ArcBootedWithGalleryPhotosImageFeature,
-		Desc:     "ARC is booted with the MediaAppPhotosIntegrationImage feature flag enabled",
-		Contacts: []string{"bugsnash@chromium.org", "jinrongwu@google.com"},
-		Vars:     []string{"ui.gaiaPoolDefault"},
-		Impl: arc.NewArcBootedFixture(fixtureConfig),
+		Name:            ArcBootedWithGalleryPhotosImageFeature,
+		Desc:            "ARC is booted with the MediaAppPhotosIntegrationImage feature flag enabled",
+		Contacts:        []string{"bugsnash@chromium.org", "jinrongwu@google.com"},
+		Vars:            []string{"ui.gaiaPoolDefault"},
+		Impl:            arc.NewArcBootedFixture(fixtureConfig),
 		SetUpTimeout:    chrome.LoginTimeout + arc.BootTimeout + ui.StartTimeout,
 		ResetTimeout:    arc.ResetTimeout,
 		PostTestTimeout: arc.PostTestTimeout,
@@ -116,6 +144,30 @@ func init() {
 		Desc:            "Logged into a user session with Lacros for essential apps",
 		Contacts:        []string{"alvinjia@google.com", "jinrongwu@google.com"},
 		Impl:            eaFixture(browser.TypeLacros, true),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.LoginTimeout + time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            LacrosLoggedInFieldTrialConfigDisable,
+		Desc:            "Logged into a user session with Lacros for essential apps. And field trial test config disabled",
+		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Impl:            eaFixture(browser.TypeLacros, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigDisable)),
+		PreTestTimeout:  preTestTimeout,
+		PostTestTimeout: postTestTimeout,
+		SetUpTimeout:    chrome.LoginTimeout + time.Minute,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            LacrosLoggedInFieldTrialConfigEnable,
+		Desc:            "Logged into a user session with Lacros for essential apps. And field trial test config enabled",
+		Contacts:        []string{"cros-ca-eng@google.com", "xiuwen@google.com"},
+		Impl:            eaFixture(browser.TypeLacros, true, chrome.FieldTrialConfig(chrome.FieldTrialConfigEnable)),
 		PreTestTimeout:  preTestTimeout,
 		PostTestTimeout: postTestTimeout,
 		SetUpTimeout:    chrome.LoginTimeout + time.Minute,

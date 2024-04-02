@@ -21,6 +21,11 @@ import (
 	"go.chromium.org/tast/core/testing/hwdep"
 )
 
+type testParams struct {
+	isOOBE           bool
+	fieldTrialConfig chrome.FieldTrialConfigMode
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         LaunchHelpAppOnManagedDevice,
@@ -33,27 +38,56 @@ func init() {
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
 		Params: []testing.Param{
 			{
-				Name:              "oobe_stable",
+				Name:              "oobe_stable_fieldtrial_testing_config_off",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				Val:               true,
-				ExtraAttr:         []string{"group:mainline"},
+				Val: testParams{
+					isOOBE:           true,
+					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				},
+				ExtraAttr: []string{"group:mainline"},
+			}, {
+				Name:              "oobe_stable_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				Val: testParams{
+					isOOBE:           true,
+					fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				},
+				// TODO(b/321306051): Promote to critical.
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 			}, {
 				Name:              "oobe_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
-				Val:               true,
+				Val: testParams{
+					isOOBE: true,
+				},
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 			}, {
-				Name:              "logged_in_stable",
+				Name:              "logged_in_stable_fieldtrial_testing_config_off",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 				Fixture:           "chromePolicyLoggedIn",
-				Val:               false,
-				ExtraAttr:         []string{"group:mainline"},
+				Val: testParams{
+					isOOBE:           false,
+					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				},
+				ExtraAttr: []string{"group:mainline"},
+			}, {
+				Name:              "logged_in_stable_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				Fixture:           "chromePolicyLoggedIn",
+				Val: testParams{
+					isOOBE:           false,
+					fieldTrialConfig: chrome.FieldTrialConfigEnable,
+				},
+				// TODO(b/321306051): Promote to critical.
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
 			}, {
 				Name:              "logged_in_unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
 				Fixture:           "chromePolicyLoggedIn",
-				Val:               false,
+				Val: testParams{
+					isOOBE: false,
+				},
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
 			},
@@ -62,7 +96,8 @@ func init() {
 
 // LaunchHelpAppOnManagedDevice verifies launching Showoff on a managed device.
 func LaunchHelpAppOnManagedDevice(ctx context.Context, s *testing.State) {
-	isOOBE := s.Param().(bool)
+	params := s.Param().(testParams)
+	isOOBE := params.isOOBE
 
 	var cr *chrome.Chrome
 	if isOOBE {
@@ -90,6 +125,7 @@ func LaunchHelpAppOnManagedDevice(ctx context.Context, s *testing.State) {
 			chrome.FakeLogin(chrome.Creds{User: policyFixt.Username, Pass: policyFixt.Password}),
 			chrome.DMSPolicy(fdms.URL), chrome.DontSkipOOBEAfterLogin(),
 			chrome.EnableFeatures("HelpAppFirstRun"),
+			chrome.FieldTrialConfig(params.fieldTrialConfig),
 		)
 		if err != nil {
 			s.Fatal("Failed to connect to Chrome: ", err)

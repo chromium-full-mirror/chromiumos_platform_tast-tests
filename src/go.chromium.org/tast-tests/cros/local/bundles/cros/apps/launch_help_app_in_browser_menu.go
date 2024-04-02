@@ -29,17 +29,24 @@ func init() {
 		},
 		BugComponent: "b:690873",
 		SoftwareDeps: []string{"chrome", "chrome_internal"},
-		Fixture:      fixture.LoggedIn,
 		Params: []testing.Param{
 			{
-				Name:              "stable",
+				Name:              "stable_fieldtrial_testing_config_off",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 				ExtraAttr:         []string{"group:mainline"},
+				Fixture:           fixture.LoggedInFieldTrialConfigDisable,
+			}, {
+				Name:              "stable_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				// TODO(b/321306051): Promote to critical.
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Fixture:   fixture.LoggedInFieldTrialConfigEnable,
 			}, {
 				Name:              "unstable",
 				ExtraHardwareDeps: hwdep.D(pre.AppsUnstableModels),
 				// b:238260020 - disable aged (>1y) unpromoted informational tests
 				// ExtraAttr:         []string{"group:mainline", "informational"},
+				Fixture: fixture.LoggedIn,
 			},
 		},
 	})

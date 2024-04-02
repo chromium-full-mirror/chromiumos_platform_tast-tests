@@ -20,8 +20,9 @@ import (
 
 // testParameters contains all the data needed to run a single test iteration.
 type testParameters struct {
-	tabletMode bool
-	oobe       bool
+	tabletMode       bool
+	oobe             bool
+	fieldTrialConfig chrome.FieldTrialConfigMode
 }
 
 func init() {
@@ -40,12 +41,23 @@ func init() {
 		Timeout:      chrome.GAIALoginTimeout + time.Minute,
 		Params: []testing.Param{
 			{
-				Name:              "clamshell_oobe_stable",
+				Name:              "clamshell_oobe_stable_fieldtrial_testing_config_off",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 				ExtraAttr:         []string{"group:mainline"},
 				Val: testParameters{
-					tabletMode: false,
-					oobe:       true,
+					tabletMode:       false,
+					oobe:             true,
+					fieldTrialConfig: chrome.FieldTrialConfigDisable,
+				},
+			}, {
+				Name:              "clamshell_oobe_stable_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				// TODO(b/321306051): Promote to critical.
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Val: testParameters{
+					tabletMode:       false,
+					oobe:             true,
+					fieldTrialConfig: chrome.FieldTrialConfigEnable,
 				},
 			}, {
 				Name:              "clamshell_oobe_unstable",
@@ -74,10 +86,20 @@ func init() {
 					oobe:       true,
 				},
 			}, {
-				Name:              "clamshell_logged_in_stable",
+				Name:              "clamshell_logged_in_stable_fieldtrial_testing_config_off",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
 				ExtraAttr:         []string{"group:mainline"},
-				Fixture:           fixture.LoggedIn,
+				Fixture:           fixture.LoggedInFieldTrialConfigDisable,
+				Val: testParameters{
+					tabletMode: false,
+					oobe:       false,
+				},
+			}, {
+				Name:              "clamshell_logged_in_stable_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				// TODO(b/321306051): Promote to critical.
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Fixture:   fixture.LoggedInFieldTrialConfigEnable,
 				Val: testParameters{
 					tabletMode: false,
 					oobe:       false,
@@ -112,17 +134,27 @@ func init() {
 					oobe:       false,
 				},
 			}, {
-				Name:              "clamshell_logged_in_stable_lacros",
+				Name:              "clamshell_logged_in_stable_lacros_fieldtrial_testing_config_off",
 				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
-				Fixture:           fixture.LacrosLoggedIn,
+				Fixture:           fixture.LacrosLoggedInFieldTrialConfigDisable,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
 				ExtraAttr:         []string{"group:mainline"},
 				Val: testParameters{
 					tabletMode: false,
 					oobe:       false,
 				},
-			},
-			{
+			}, {
+				Name:              "clamshell_logged_in_stable_lacros_fieldtrial_testing_config_on",
+				ExtraHardwareDeps: hwdep.D(pre.AppsStableModels),
+				Fixture:           fixture.LacrosLoggedInFieldTrialConfigEnable,
+				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
+				// TODO(b/321306051): Promote to critical.
+				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				Val: testParameters{
+					tabletMode: false,
+					oobe:       false,
+				},
+			}, {
 				Name:              "tablet_logged_in_stable_lacros",
 				Fixture:           fixture.LacrosLoggedIn,
 				ExtraSoftwareDeps: []string{"lacros", "lacros_stable"},
@@ -138,15 +170,16 @@ func init() {
 
 // LaunchHelpApp verifies launching Showoff after OOBE.
 func LaunchHelpApp(ctx context.Context, s *testing.State) {
-	if s.Param().(testParameters).oobe {
-		helpAppLaunchDuringOOBE(ctx, s, s.Param().(testParameters).tabletMode)
+	params := s.Param().(testParameters)
+	if params.oobe {
+		helpAppLaunchDuringOOBE(ctx, s, params.tabletMode, params.fieldTrialConfig)
 	} else {
-		helpAppLaunchAfterLogin(ctx, s, s.Param().(testParameters).tabletMode)
+		helpAppLaunchAfterLogin(ctx, s, params.tabletMode)
 	}
 }
 
 // helpAppLaunchDuringOOBE verifies help app launch during OOBE stage. Help app only launches with real user login in clamshell mode.
-func helpAppLaunchDuringOOBE(ctx context.Context, s *testing.State, isTabletMode bool) {
+func helpAppLaunchDuringOOBE(ctx context.Context, s *testing.State, isTabletMode bool, fieldTrialConfig chrome.FieldTrialConfigMode) {
 	var uiMode string
 	if isTabletMode {
 		uiMode = "--force-tablet-mode=touch_view"
@@ -158,7 +191,9 @@ func helpAppLaunchDuringOOBE(ctx context.Context, s *testing.State, isTabletMode
 		chrome.GAIALoginPool(s.RequiredVar("ui.gaiaPoolDefault")),
 		chrome.DontSkipOOBEAfterLogin(),
 		chrome.EnableFeatures("HelpAppFirstRun"),
-		chrome.ExtraArgs(uiMode))
+		chrome.ExtraArgs(uiMode),
+		chrome.FieldTrialConfig(fieldTrialConfig),
+	)
 
 	if err != nil {
 		s.Fatal("Failed to start Chrome: ", err)
