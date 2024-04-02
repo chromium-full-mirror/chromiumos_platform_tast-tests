@@ -7,7 +7,6 @@ package playback
 
 import (
 	"context"
-	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -21,6 +20,11 @@ import (
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
+
+type suspendConfig struct {
+	suspendMode graphics.SuspendMode
+	pmTestMode  graphics.PmTestMode
+}
 
 func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome, browserType browser.Type) (*chrome.Conn, error) {
 	// Reconnect to Chrome.
@@ -44,7 +48,7 @@ func reconnectToBrowser(ctx context.Context, cr *chrome.Chrome, browserType brow
 }
 
 // suspendSystem suspends the system and checks the validity of syslog and video after system resumes.
-func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader, config Config, testName string) error {
+func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader, config Config, sConfig suspendConfig, testName string) error {
 	// Check syslog for GPU hangs and decoding errors before we start suspend/resume.
 	if err := graphics.CheckSysLog(ctx, testName, reader); err != nil {
 		return errors.Wrap(err, "syslog signature found")
@@ -54,15 +58,19 @@ func suspendSystem(ctx context.Context, cr *chrome.Chrome, reader *syslog.Reader
 		return errors.New("failed to get output directory")
 	}
 
-	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--count", "1", "--nopremature_wake_fatal", "--record_dmesg_dir", outDir).Output(testexec.DumpLogOnError)
-	testing.ContextLogf(ctx, "%v", string(out))
-	if err != nil {
-		return errors.Wrap(err, "suspend_stress_test failed")
-	}
-	if match := regexp.MustCompile(`(?m)^(Suspend failed.*)$`).FindSubmatch(out); len(match) > 0 {
-		return errors.Errorf("suspend_stress_test failed: %v", string(match[1]))
+	if err := graphics.SetPMTest(ctx, sConfig.pmTestMode); err != nil {
+		return errors.Wrap(err, "failed to set pm_test")
 	}
 
+	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--count", "1", "--nopremature_wake_fatal", "--record_dmesg_dir", outDir).Output(testexec.DumpLogOnError)
+	testing.ContextLog(ctx, "suspend_stress_test Output: ", string(out))
+	if err != nil {
+		return errors.Wrapf(err, "suspend_stress_test to %v failed", sConfig.suspendMode)
+	}
+	msg, failed := graphics.GetSuspendStressTestError(ctx, sConfig.suspendMode, sConfig.pmTestMode, string(out))
+	if failed {
+		return errors.Errorf("suspend_stress_test error while suspend to %v: %v", sConfig.suspendMode, msg)
+	}
 	conn, err := reconnectToBrowser(ctx, cr, config.BrowserType)
 	// Check |currentTime| variable is changing.
 	originalPlayingTime, err := getPlayingTime(ctx, conn)
@@ -129,13 +137,12 @@ func suspendResume(ctx context.Context, cr *chrome.Chrome, config Config, testNa
 
 			// We tried to putting system into different pm_test state to help reveal problems.
 			// This switch the mode for every 2 suspend.
-			mode := pmModes[(i/2)%len(pmModes)]
-			if err := graphics.SetPMTest(ctx, mode); err != nil {
-				errChan <- errors.Wrap(err, "failed to set pm_test")
-				return
+			sConfig := suspendConfig{
+				suspendMode: suspendMode,
+				pmTestMode:  pmModes[(i/2)%len(pmModes)],
 			}
-			if err := suspendSystem(suspendCtx, cr, reader, config, testName); err != nil {
-				errChan <- errors.Wrapf(err, "suspend [%v] failed with pm_test mode [%v]", i, mode)
+			if err := suspendSystem(suspendCtx, cr, reader, config, sConfig, testName); err != nil {
+				errChan <- errors.Wrapf(err, "suspend [%v] failed with pm_test mode [%v]", i, sConfig.pmTestMode)
 				return
 			}
 			if suspendCtx.Err() != nil {

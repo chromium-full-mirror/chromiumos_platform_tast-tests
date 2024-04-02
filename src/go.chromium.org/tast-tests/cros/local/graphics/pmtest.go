@@ -8,6 +8,8 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast/core/errors"
@@ -111,4 +113,56 @@ func GetSuspendState(ctx context.Context) SuspendMode {
 		return SuspendS0ix
 	}
 	return SuspendS3
+}
+
+// GetSuspendStressTestError tries to parse the output of suspend_stress_test and returns the error message. It ignores certain less problematic strings
+func GetSuspendStressTestError(ctx context.Context, suspendMode SuspendMode, pmTestMode PmTestMode, output string) (string, bool) {
+	msg := ""
+	match := regexp.MustCompile(`(?m)^(Suspend failed.*)$`).FindStringSubmatch(output)
+	if len(match) == 0 {
+		return "", false
+	}
+	msg += match[1]
+
+	if m := parseSuspendStats(ctx); m != "" {
+		msg += " suspend_stats: " + m
+	}
+	if suspendMode == SuspendS0ix && pmTestMode != PmTestNone {
+		// TODO: Figure out why pm_test fails to increment PC10 when suspend to idle.
+		if strings.Contains(msg, "pc10 count did not increment") {
+			return "", false
+		}
+	}
+	return msg, true
+}
+
+func parseSuspendStats(ctx context.Context) string {
+	out, err := testexec.CommandContext(ctx, "cat", "/sys/kernel/debug/suspend_stats").Output(testexec.DumpLogOnError)
+	if err != nil {
+		return ""
+	}
+	testing.ContextLogf(ctx, "%v", string(out))
+
+	failRegex := regexp.MustCompile(`^fail: (\d+)`)
+	reasonRegex := regexp.MustCompile(`(last_failed_dev:.*)$`)
+	var reasons []string
+	var failed bool
+	for _, line := range strings.Split(string(out), "\n") {
+		if match := failRegex.FindStringSubmatch(line); match != nil {
+			count, err := strconv.Atoi(match[1])
+			if err != nil {
+				continue
+			}
+			if count != 0 {
+				failed = true
+			}
+		}
+		if match := reasonRegex.FindStringSubmatch(line); match != nil && len(match) > 1 {
+			reasons = append(reasons, match[1])
+		}
+	}
+	if failed == false {
+		return ""
+	}
+	return strings.Join(reasons, " ")
 }

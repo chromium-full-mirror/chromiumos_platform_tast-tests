@@ -7,9 +7,6 @@ package graphics
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
@@ -335,47 +332,10 @@ func Pmtest(ctx context.Context, s *testing.State) {
 	out, err := testexec.CommandContext(ctx, "suspend_stress_test", "--count", fmt.Sprintf("%v", params.count), "--nopremature_wake_fatal", "--record_dmesg_dir", s.OutDir()).Output(testexec.DumpLogOnError)
 	testing.ContextLog(ctx, "suspend_stress_test Output: ", string(out))
 	if err != nil {
-		if msg := parseSuspendStats(ctx); msg != "" {
-			s.Error("suspend_stats: ", msg)
-		}
-		s.Fatalf("Failed to suspend to %v: %v", origSuspendMode, err)
+		s.Fatalf("Failed to run suspend_stress_test to %v: %v", origSuspendMode, err)
 	}
-	if match := regexp.MustCompile(`(?m)^(Suspend failed.*)$`).FindSubmatch(out); len(match) > 0 {
-		if msg := parseSuspendStats(ctx); msg != "" {
-			s.Error("suspend_stats: ", msg)
-		}
-		s.Fatalf("Failed to suspend to %v: %v", origSuspendMode, string(match[1]))
+	msg, failed := graphics.GetSuspendStressTestError(ctx, origSuspendMode, mode, string(out))
+	if failed {
+		s.Fatalf("Failed to suspend to %v: %v", origSuspendMode, msg)
 	}
-}
-
-func parseSuspendStats(ctx context.Context) string {
-	out, err := testexec.CommandContext(ctx, "cat", "/sys/kernel/debug/suspend_stats").Output(testexec.DumpLogOnError)
-	if err != nil {
-		return ""
-	}
-	testing.ContextLogf(ctx, "%v", string(out))
-
-	failRegex := regexp.MustCompile(`^fail: (\d+)`)
-	reasonRegex := regexp.MustCompile(`(last_failed_dev:.*)$`)
-	var reasons []string
-	var failed bool
-	for _, line := range strings.Split(string(out), "\n") {
-		if match := failRegex.FindStringSubmatch(line); match != nil {
-			count, err := strconv.Atoi(match[1])
-			if err != nil {
-				continue
-			}
-			if count != 0 {
-				failed = true
-			}
-		}
-		if match := reasonRegex.FindStringSubmatch(line); match != nil && len(match) > 1 {
-			reasons = append(reasons, match[1])
-		}
-	}
-
-	if failed == false {
-		return ""
-	}
-	return strings.Join(reasons, " ")
 }
