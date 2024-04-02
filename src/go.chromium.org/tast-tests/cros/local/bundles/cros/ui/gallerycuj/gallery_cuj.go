@@ -90,6 +90,7 @@ type galleryCUJTestResource struct {
 	tconn         *chrome.TestConn
 	filesApp      *filesapp.FilesApp
 	kb            *input.KeyboardEventWriter
+	recorder      *cujrecorder.Recorder
 	downloadsPath string
 	outDir        string
 }
@@ -198,6 +199,11 @@ func Run(ctx context.Context, cr *chrome.Chrome, outDir string, dataPath func(st
 		return errors.Wrap(err, "failed to create a recorder")
 	}
 	defer recorder.Close(closeCtx)
+
+	if err := recorder.AddScreenshotRecorder(ctx, 0, 0); err != nil {
+		testing.ContextLog(ctx, "Failed to add screenshot recorder: ", err)
+	}
+	res.recorder = recorder
 
 	if err := recorder.AddCommonMetrics(tconn, tconn); err != nil {
 		return errors.Wrap(err, "failed to add common metrics to the recorder")
@@ -352,6 +358,9 @@ func testImages(ctx context.Context, res *galleryCUJTestResource) (retErr error)
 			return err
 		}
 	}
+	// Take a screenshot to see the state of testing images.
+	res.recorder.CustomScreenshot(ctx)
+
 	return nil
 }
 
@@ -471,6 +480,9 @@ func testPDF(ctx context.Context, res *galleryCUJTestResource) error {
 			return err
 		}
 	}
+	// Take a screenshot to see the state of testing PDF.
+	res.recorder.CustomScreenshot(ctx)
+
 	return nil
 }
 
@@ -546,6 +558,9 @@ func testVideoPlayback(ctx context.Context, res *galleryCUJTestResource) (retErr
 			return err
 		}
 	}
+	// Take a screenshot to see the state of testing video playback.
+	res.recorder.CustomScreenshot(ctx)
+
 	return nil
 }
 
@@ -615,5 +630,8 @@ func testAudioPlayback(ctx context.Context, res *galleryCUJTestResource) (retErr
 			return err
 		}
 	}
+	// Take a screenshot to see the state of testing audio playback.
+	res.recorder.CustomScreenshot(ctx)
+
 	return nil
 }
