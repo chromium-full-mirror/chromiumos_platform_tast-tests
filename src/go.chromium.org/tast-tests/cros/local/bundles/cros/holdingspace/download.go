@@ -13,6 +13,7 @@ import (
 	"path/filepath"
 	"time"
 
+	commonash "go.chromium.org/tast-tests/cros/common/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/chrome/ash"
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
@@ -26,7 +27,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/cryptohome"
 	"go.chromium.org/tast-tests/cros/local/input"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -376,7 +376,7 @@ func Download(ctx context.Context, s *testing.State) {
 
 	// Ensure all holding space chips associated with the underlying download are
 	// removed when the backing file is removed.
-	if err := holdingspace.DownloadChipHelper(holdingspace.Done).WaitUntilAllRemoved(arg.tconn, params.files)(ctx); err != nil {
+	if err := waitUntilAllDownloadChipsGone(arg)(ctx); err != nil {
 		s.Fatal("Chip exists: ", err)
 	}
 }
@@ -385,11 +385,11 @@ func testDownloadCancel(
 	arg *downloadArguments, unblockDownload uiauto.Action) uiauto.Action {
 	return uiauto.Combine("test cancel",
 		// Select all download chips.
-		selectAllDownloadChips(arg, holdingspace.Downloading),
+		selectAllDownloadChips(arg),
 
 		// Right click the download chip to show the context menu. Note that the
 		// download chip is currently bound to an in-progress download.
-		arg.ui.RightClick(holdingspace.DownloadChipHelper(holdingspace.Downloading).Finder(arg.files[0])),
+		arg.ui.RightClick(holdingspace.FindDownloadChip().First()),
 
 		// Left click the "Cancel" context menu item. Note that this will result in
 		// the underlying download being cancelled and the context menu being
@@ -402,7 +402,7 @@ func testDownloadCancel(
 		unblockDownload,
 
 		// Ensure the download chip is removed with its backing file.
-		holdingspace.DownloadChipHelper(holdingspace.Done).WaitUntilAllRemoved(arg.tconn, arg.files),
+		waitUntilAllDownloadChipsGone(arg),
 	)
 }
 
@@ -415,15 +415,14 @@ func testDownloadLaunch(
 
 		// Wait for and close the download complete notification as it may be atop
 		// holding space, blocking user interactions.
-		waitForAndCloseDownloadCompleteNotification(arg),
+		waitForAndCloseAllDownloadCompleteNotifications(arg),
 
 		// Select all download chips.
-		selectAllDownloadChips(arg, holdingspace.Done),
+		selectAllDownloadChips(arg),
 
-		// Launch file by keyboard event,
+		// Launch file by keyboard event.
 		arg.kb.AccelAction("enter"),
-
-		waitAllFilesLaunch(arg),
+		waitUntilAllFilesLaunched(arg),
 	)
 }
 
@@ -431,11 +430,11 @@ func testDownloadPauseAndResume(
 	arg *downloadArguments, unblockDownload uiauto.Action) uiauto.Action {
 	return uiauto.Combine("test pause and resume",
 		// Select all download chips.
-		selectAllDownloadChips(arg, holdingspace.Downloading),
+		selectAllDownloadChips(arg),
 
 		// Right click the download chip to show the context menu. Note that the
 		// download chip is currently bound to an in-progress download.
-		arg.ui.RightClick(holdingspace.DownloadChipHelper(holdingspace.Downloading).Finder(arg.files[0])),
+		arg.ui.RightClick(holdingspace.FindDownloadChip().First()),
 
 		// Left click the "Pause" context menu item. Note that this will result in
 		// the underlying download being paused and the context menu being closed.
@@ -443,7 +442,7 @@ func testDownloadPauseAndResume(
 
 		// Right click the download chip to show the context menu. Note that the
 		// download chip is currently bound to a paused download.
-		arg.ui.RightClick(holdingspace.DownloadChipHelper(holdingspace.Paused).Finder(arg.files[0])),
+		arg.ui.RightClick(holdingspace.FindDownloadChip().First()),
 
 		// Left click the "Resume" context menu item. Note that this will result in
 		// the underlying download being resumed and the context menu being closed.
@@ -454,7 +453,8 @@ func testDownloadPauseAndResume(
 		unblockDownload,
 
 		// Wait for the download to complete.
-		holdingspace.DownloadChipHelper(holdingspace.Done).WaitUntilAllExist(arg.tconn, arg.files),
+		waitForAndCloseAllDownloadCompleteNotifications(arg),
+		waitUntilAllDownloadChipsExist(arg),
 	)
 }
 
@@ -475,14 +475,14 @@ func testDownloadPinAndUnpin(
 
 		// Wait for and close the download complete notification as it may be atop
 		// holding space, blocking user interactions.
-		waitForAndCloseDownloadCompleteNotification(arg),
+		waitForAndCloseAllDownloadCompleteNotifications(arg),
 
 		// Select all download chips.
-		selectAllDownloadChips(arg, holdingspace.Done),
+		selectAllDownloadChips(arg),
 
 		// Right click the download chip to show the context menu. Note that this
 		// will wait until the underlying download has completed.
-		arg.ui.RightClick(holdingspace.DownloadChipHelper(holdingspace.Done).Finder(arg.files[0])),
+		arg.ui.RightClick(holdingspace.FindDownloadChip().First()),
 
 		// Left click the "Pin" context menu item. Note that this will result in
 		// a pinned holding space item being created for the underlying download and
@@ -490,10 +490,10 @@ func testDownloadPinAndUnpin(
 		arg.ui.LeftClick(pinOption),
 
 		// Ensure the pinned file chip is created.
-		holdingspace.PinnedChipHelper().WaitUntilAllExist(arg.tconn, arg.files),
+		waitUntilAllPinnedFileChipsExist(arg),
 
 		// Right click the download chip to show the context menu.
-		arg.ui.RightClick(holdingspace.DownloadChipHelper(holdingspace.Done).Finder(arg.files[0])),
+		arg.ui.RightClick(holdingspace.FindDownloadChip().First()),
 
 		// Verify that the context menu has the correct options.
 		assertOptions,
@@ -503,11 +503,11 @@ func testDownloadPinAndUnpin(
 		arg.ui.LeftClick(unpinOption),
 
 		// Ensure that the pinned file chip is removed.
-		holdingspace.PinnedChipHelper().WaitUntilAllRemoved(arg.tconn, arg.files),
+		waitUntilAllPinnedFileChipsGone(arg),
 
 		// Ensure that the download chip continues to exist despite the pinned
 		// holding space item associated with the same download being destroyed.
-		holdingspace.DownloadChipHelper(holdingspace.Done).WaitUntilAllExist(arg.tconn, arg.files),
+		waitUntilAllDownloadChipsExist(arg),
 	)
 }
 
@@ -520,14 +520,14 @@ func testDownloadRemove(
 
 		// Wait for and close the download complete notification as it may be atop
 		// holding space, blocking user interactions.
-		waitForAndCloseDownloadCompleteNotification(arg),
+		waitForAndCloseAllDownloadCompleteNotifications(arg),
 
 		// Select all download chips.
-		selectAllDownloadChips(arg, holdingspace.Done),
+		selectAllDownloadChips(arg),
 
 		// Right click the download chip to show the context menu. Note that this
 		// will wait until the underlying download has completed.
-		arg.ui.RightClick(holdingspace.DownloadChipHelper(holdingspace.Done).Finder(arg.files[0])),
+		arg.ui.RightClick(holdingspace.FindDownloadChip().First()),
 
 		// Left click the "Remove" context menu item. Note that this will result in
 		// the holding space item for the underlying download being removed and the
@@ -535,54 +535,78 @@ func testDownloadRemove(
 		arg.ui.LeftClick(removeOption),
 
 		// Ensure all download chips are removed.
-		holdingspace.DownloadChipHelper(holdingspace.Done).WaitUntilAllRemoved(arg.tconn, arg.files),
+		waitUntilAllDownloadChipsGone(arg),
 	)
 }
 
-func waitForAndCloseDownloadCompleteNotification(arg *downloadArguments) uiauto.Action {
+func forEachFile(arg *downloadArguments, f func(file string) uiauto.Action) uiauto.Action {
 	return func(ctx context.Context) error {
-		_, err := ash.WaitForNotification(
-			ctx, arg.tconn, 1*time.Second, ash.WaitTitle("Download complete"))
-		if err != nil {
-			return err
-		}
-		return ash.CloseNotifications(ctx, arg.tconn)
-	}
-}
-
-func selectAllDownloadChips(arg *downloadArguments, chipType holdingspace.ChipType) uiauto.Action {
-	return func(ctx context.Context) error {
-		cleanupCtx := ctx
-		ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
-		defer cancel()
-
-		if err := arg.kb.AccelPress(ctx, "shift"); err != nil {
-			return errors.Wrap(err, "failed to long-press shift")
-		}
-		defer arg.kb.AccelRelease(cleanupCtx, "shift")
-
 		for _, file := range arg.files {
-			chip := holdingspace.DownloadChipHelper(chipType).Finder(file)
-			if err := arg.ui.LeftClick(chip)(ctx); err != nil {
+			if err := f(file)(ctx); err != nil {
 				return err
 			}
 		}
-
 		return nil
 	}
 }
 
-// waitAllFilesLaunch waits for all specify files are launched.
-func waitAllFilesLaunch(arg *downloadArguments) uiauto.Action {
+func selectAllDownloadChips(arg *downloadArguments) uiauto.Action {
+	return uiauto.Combine("select all download chips",
+		arg.kb.AccelPressAction("shift"),
+		forEachFile(arg, func(file string) uiauto.Action {
+			return arg.ui.LeftClick(holdingspace.FindDownloadChip().NameContaining(file))
+		}),
+		arg.kb.AccelReleaseAction("shift"),
+	)
+}
+
+func waitForAndCloseAllDownloadCompleteNotifications(arg *downloadArguments) uiauto.Action {
+	return uiauto.Combine("wait for and close all download complete notifications",
+		forEachFile(arg, func(file string) uiauto.Action {
+			return func(ctx context.Context) error {
+				_, err := ash.WaitForNotification(
+					ctx, arg.tconn, 1*time.Second, ash.WaitTitleOrMessageContains(file),
+					func(notification *ash.Notification) bool {
+						// The `notification` will be of `Type` progress until completion.
+						return notification.Type != commonash.NotificationTypeProgress
+					})
+				return err
+			}
+		}),
+		func(ctx context.Context) error {
+			return ash.CloseNotifications(ctx, arg.tconn)
+		},
+	)
+}
+
+func waitUntilAllDownloadChipsExist(arg *downloadArguments) uiauto.Action {
+	return forEachFile(arg, func(file string) uiauto.Action {
+		return arg.ui.WaitUntilExists(holdingspace.FindDownloadChip().NameContaining(file))
+	})
+}
+
+func waitUntilAllDownloadChipsGone(arg *downloadArguments) uiauto.Action {
+	return forEachFile(arg, func(file string) uiauto.Action {
+		return arg.ui.WaitUntilGone(holdingspace.FindDownloadChip().NameContaining(file))
+	})
+}
+
+func waitUntilAllPinnedFileChipsExist(arg *downloadArguments) uiauto.Action {
+	return forEachFile(arg, func(file string) uiauto.Action {
+		return arg.ui.WaitUntilExists(holdingspace.FindPinnedFileChip().Name(file))
+	})
+}
+
+func waitUntilAllPinnedFileChipsGone(arg *downloadArguments) uiauto.Action {
+	return forEachFile(arg, func(file string) uiauto.Action {
+		return arg.ui.WaitUntilGone(holdingspace.FindPinnedFileChip().Name(file))
+	})
+}
+
+func waitUntilAllFilesLaunched(arg *downloadArguments) uiauto.Action {
 	browserNodeFinder := nodewith.Role(role.Window).HasClass("BrowserFrame")
 	tabNodeFinder := nodewith.Role(role.Tab).HasClass("Tab").Ancestor(browserNodeFinder)
-	return func(ctx context.Context) error {
-		for _, file := range arg.files {
-			tab := tabNodeFinder.NameStartingWith(file)
-			if err := arg.ui.WaitUntilExists(tab)(ctx); err != nil {
-				return errors.Wrapf(err, "failed to find tab %q", file)
-			}
-		}
-		return nil
-	}
+	return forEachFile(arg, func(file string) uiauto.Action {
+		return arg.ui.WaitUntilExists(tabNodeFinder.NameStartingWith(file))
+	})
 }
