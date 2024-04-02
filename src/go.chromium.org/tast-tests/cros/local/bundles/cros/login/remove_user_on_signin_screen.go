@@ -28,13 +28,12 @@ func init() {
 			"chromeos-sw-engprod@google.com",
 		},
 		BugComponent: "b:1207311", // ChromeOS > Software > Commercial (Enterprise) > Identity > LURS
-		Attr:         []string{
-			// Disabled by TORA.  See: b/309469938
-			//	"group:golden_tier",
-			//	"group:medium_low_tier",
-			//	"group:hardware",
-			//	"group:complementary",
-			//	"group:hw_agnostic"
+		Attr: []string{
+			"group:golden_tier",
+			"group:medium_low_tier",
+			"group:hardware",
+			"group:complementary",
+			"group:hw_agnostic",
 		},
 		SoftwareDeps: []string{"chrome"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
@@ -55,6 +54,10 @@ func RemoveUserOnSigninScreen(ctx context.Context, s *testing.State) {
 
 	signinVar := s.RequiredVar("ui.signinProfileTestExtensionManifestKey")
 
+	if err := userutil.ResetUsers(ctx); err != nil {
+		s.Fatal("Failed to clear state: ", err)
+	}
+
 	// Setup three users with the same password.
 	firstUser := "first-user@gmail.com"
 	secondUser := "second-user@gmail.com"
@@ -65,6 +68,7 @@ func RemoveUserOnSigninScreen(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to create user: ", err)
 		}
 	}
+	defer userutil.ResetUsers(ctx)
 
 	// Go to the login screen, remove second user and check that second user pod is gone.
 	func() {

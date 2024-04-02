@@ -35,6 +35,21 @@ func CreateUser(ctx context.Context, username, password string, extraOpts ...chr
 	return nil
 }
 
+// ResetUsers creates a new session and clears states and removes all users (default for Chrome.go)
+// considering extra options. This is a side effect of chrome.new without KeepState in options.
+// It immediately closes the session, so it should be used only for removing all users.
+func ResetUsers(ctx context.Context, extraOpts ...chrome.Option) error {
+	opts := append([]chrome.Option{chrome.NoLogin()}, extraOpts...)
+	cr, err := chrome.New(ctx, opts...)
+
+	if err != nil {
+		return errors.Wrap(err, "failed to reset users")
+	}
+
+	cr.Close(ctx)
+	return nil
+}
+
 // CreateDeviceOwner creates a user like the CreateUser function, but before closing the session
 // it waits until the user becomes device owner.
 func CreateDeviceOwner(ctx context.Context, username, password string, extraOpts ...chrome.Option) error {
