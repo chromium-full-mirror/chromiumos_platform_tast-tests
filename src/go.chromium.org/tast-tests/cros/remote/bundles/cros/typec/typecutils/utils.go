@@ -57,6 +57,7 @@ const (
 
 // USB Class Codes.
 const (
+	ClassHid         = 0x3
 	ClassMassStorage = 0x8
 )
 
@@ -402,4 +403,30 @@ func Usb3GetExternalStorageList(ctx context.Context, cl usb.SysfsServiceClient) 
 	}
 
 	return externalStorageList, nil
+}
+
+// Usb2GetHidDeviceList returns a list of currently connected external USB HID devices. The returned
+// value is an array of strings containing each devices address (example: "3-2.1.3").
+func Usb2GetHidDeviceList(ctx context.Context, cl usb.SysfsServiceClient) ([]string, error) {
+	var hidDeviceList []string
+
+	deviceMap, err := cl.GetDevices(ctx, &empty.Empty{})
+	if err != nil {
+		return hidDeviceList, errors.Wrap(err, "unable to get USB device map")
+	}
+
+	for addr, device := range deviceMap.Devices {
+		if device.Removable == usb.RemovableAttribute_REMOVABLE_ATTRIBUTE_FIXED || device.Speed > 480 {
+			continue
+		}
+
+		for _, interf := range device.Interfaces {
+			if interf.InterfaceClass == ClassHid {
+				hidDeviceList = append(hidDeviceList, addr)
+				break
+			}
+		}
+	}
+
+	return hidDeviceList, nil
 }
