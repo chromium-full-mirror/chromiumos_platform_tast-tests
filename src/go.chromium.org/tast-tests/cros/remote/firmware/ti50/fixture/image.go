@@ -48,7 +48,10 @@ const (
 	Slot = "slot"
 
 	// imageBin is the name of the image file, it is the same for both images.
-	imageBin = "ti50_Unknown_PrePVT_ti50-accessory-nodelocked-ro-premp.bin"
+	// It may be signed with the PrePVT or Nightly target
+	//     - ti50_Unknown_PrePVT_ti50-accessory-nodelocked-ro-premp.bin
+	//     - ti50_Unknown_Nightly_ti50-accessory-nodelocked-ro-premp.bin
+	imageBin = "ti50_Unknown_*_ti50-accessory-nodelocked-ro-premp.bin"
 
 	// branchImageBin is used instead of imageBin on branch builders.
 	branchImageBin = "ti50_Unknown_PrePVT_ti50-accessory-mp.bin"
@@ -212,6 +215,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 				}
 				fullURL = gsPrefix + filepath.Join(inputURL[len(gsPrefix):], subDir, bin)
 			}
+			testing.ContextLogf(ctx, "Found tast directory %s", fullURL)
 		}
 
 		downloadedBin, err := downloadToTempFile(ctx, "image bin", fullURL)
@@ -344,7 +348,7 @@ func downloadToTempFile(ctx context.Context, desc, url string) (string, error) {
 
 	if _, err := cmd(ctx, "download "+desc, "gsutil", "cp", url, f.Name()); err != nil {
 		os.Remove(f.Name())
-		return "", err
+		return "", errors.Wrapf(err, "failed to download %s %s", desc, url)
 	}
 	return f.Name(), nil
 }
