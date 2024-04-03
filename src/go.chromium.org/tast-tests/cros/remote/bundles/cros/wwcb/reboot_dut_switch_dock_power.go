@@ -96,6 +96,11 @@ func RebootDUTSwitchDockPower(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to plug in the docking station: ", err)
 	}
 
+	// Verify connection to DUT.
+	if err := testing.Poll(ctx, dut.Connect, &testing.PollOptions{Timeout: 60 * time.Second}); err != nil {
+		s.Fatal("Failed to connect to DUT: ", err)
+	}
+
 	USBDevices, err := utils.ConnectPeripheralsViaDock(ctx, dut, extDispID, ethernetID, USBTypeAIDArray)
 	if err != nil {
 		s.Fatal("Failed to connect peripherals via Dock: ", err)
