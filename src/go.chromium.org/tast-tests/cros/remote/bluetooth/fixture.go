@@ -636,13 +636,25 @@ func (tf *fixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} 
 
 	// Configure companion DUT.
 	if tf.features.RequireCompanionDUT {
-		companionDUT := s.CompanionDUT("cd1")
+		var companionDUTRoles []string
+		for role := range s.CompanionDUTs() {
+			companionDUTRoles = append(companionDUTRoles, role)
+		}
+		if len(companionDUTRoles) != 1 {
+			s.Fatalf(
+				"Failed to get companion DUT: expected 1 companion DUT, found %d: %s",
+				len(companionDUTRoles),
+				strings.Join(companionDUTRoles, ", "),
+			)
+		}
+		companionDUTRole := companionDUTRoles[0]
+		companionDUT := s.CompanionDUT(companionDUTRole)
 		if companionDUT == nil {
-			s.Fatal("Failed to get companion DUT cd1")
+			s.Fatalf("Failed to get companion DUT %q", companionDUTRole)
 		}
 		companionDUTConfig, err := newDUTConfig(s.FixtContext(), companionDUT, s.RPCHint())
 		if err != nil {
-			s.Fatal("Failed to configure companion DUT: ", err)
+			s.Fatalf("Failed to configure companion DUT %q: %v", companionDUTRole, err)
 		}
 		tf.fv.DUTConfigs = append(tf.fv.DUTConfigs, companionDUTConfig)
 	}
