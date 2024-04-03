@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/browser"
 	"go.chromium.org/tast-tests/cros/local/chrome/metrics"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/oobe"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -186,6 +187,7 @@ func oobeProvisioningPerfIteration(ctx context.Context, s *testing.State, gaia c
 
 	ui := uiauto.New(tconn)
 	if err := oobe.CompleteOnboardingFlow(ctx, ui); err != nil {
+		faillog.DumpUITree(ctx, s.OutDir(), tconn)
 		return &result, err
 	}
 

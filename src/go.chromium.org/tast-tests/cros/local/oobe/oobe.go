@@ -143,10 +143,11 @@ func AdvanceThroughConsolidatedConsentIfShown(ctx context.Context, oobeConn *chr
 // TODO(crbug.com/1327981): Use OOBE test API
 func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 	const (
-		termTimeout            = 60 * time.Second
-		anyDialogTimeout       = 10 * time.Second
-		anyActionButtonTimeout = 1 * time.Minute
-		acceptTimeout          = 3 * time.Second
+		termTimeout             = 60 * time.Second
+		anyDialogTimeout        = 10 * time.Second
+		anyActionButtonTimeout  = 1 * time.Minute
+		acceptTimeout           = 3 * time.Second
+		findActionButtonTimeout = 1 * time.Second
 	)
 	consolidatedConsentHeader := nodewith.Name("Review these terms and control your data").Role(role.Dialog)
 	if err := ui.WithTimeout(termTimeout).WaitUntilExists(consolidatedConsentHeader)(ctx); err != nil {
@@ -180,45 +181,56 @@ func CompleteOnboardingFlow(ctx context.Context, ui *uiauto.Context) error {
 	}
 	testing.ContextLog(ctx, "finish accept and continue")
 
-	anyDialog := nodewith.First().Role(role.Dialog)
-	anyActionButton := nodewith.NameRegex(regexp.MustCompile(
-		"Skip|" +
-			"No thanks|" +
-			"Next|" +
-			"Accept and continue|" +
-			"Turn on sync|" +
-			"Get started|" +
-			"Close")).First().Role(role.Button)
+	loginDialog := nodewith.NameRegex(regexp.MustCompile(
+		"Login Dialog")).First().Role(role.Window)
+
+	useGoogleAccount := nodewith.Name(
+		"Use Google Account password").First().Role(role.RadioButton)
+
+	actionButtons := []*nodewith.Finder{
+		nodewith.Name("Skip").First().Role(role.Button),
+		nodewith.Name("No thanks").First().Role(role.Button),
+		nodewith.Name("Next").First().Role(role.Button),
+		nodewith.Name("Accept and continue").First().Role(role.Button),
+		nodewith.Name("Turn on sync").First().Role(role.Button),
+		nodewith.Name("Get started").First().Role(role.Button),
+		nodewith.Name("Close").First().Role(role.Button),
+	}
+
+	if err := ui.WithTimeout(anyDialogTimeout).WaitUntilExists(loginDialog)(ctx); err != nil {
+		return errors.Wrap(err, "failed to wait login dialog is shown")
+	}
 
 	lastActionTime := time.Now()
 	for {
-		if err := ui.Exists(anyActionButton)(ctx); err == nil {
+		if err := ui.Gone(loginDialog)(ctx); err == nil {
+			testing.ContextLog(ctx, "Login dialog done")
+			break
+		}
+
+		if time.Since(lastActionTime) > anyActionButtonTimeout {
+			return errors.New("failed to detect action button")
+		}
+
+		if err := ui.Exists(useGoogleAccount)(ctx); err == nil {
+			testing.ContextLog(ctx, "Use google account found")
+			if err := ui.LeftClickUntil(useGoogleAccount, ui.EnsureFocused(useGoogleAccount))(ctx); err != nil {
+				return errors.Wrap(err, "failed to click use google account")
+			}
+			testing.ContextLog(ctx, "Use google account selected")
+		}
+
+		if actionButton, err := ui.WithTimeout(findActionButtonTimeout).FindAnyExists(ctx, actionButtons...); err == nil {
 			// Some action button is detected. Click it
-			testing.ContextLog(ctx, "Detected action button")
-			if err := ui.LeftClickUntil(anyActionButton, ui.Gone(anyActionButton))(ctx); err != nil {
+			testing.ContextLogf(ctx, "Detected action button %s", actionButton.Pretty())
+			if err := ui.LeftClickUntil(actionButton, ui.Gone(actionButton))(ctx); err != nil {
 				return errors.Wrap(err, "failed to click button")
 			}
 
-			testing.ContextLog(ctx, "Action button has been clicked")
+			testing.ContextLogf(ctx, "Action button has been clicked: %s", actionButton.Pretty())
 			lastActionTime = time.Now()
 			continue
 		}
-
-		if err := ui.WithTimeout(anyDialogTimeout).WaitUntilExists(anyDialog)(ctx); err == nil {
-			// Some dialog is still shown.
-			if time.Since(lastActionTime) > anyActionButtonTimeout {
-				return errors.New("failed to detect action button")
-			}
-			continue
-		}
-
-		// Double sure any dialog is gone.
-		if err := ui.Gone(anyDialog)(ctx); err != nil {
-			return errors.Wrap(err, "failed to confirm dialog is gone")
-		}
-
-		break
 	}
-
 	return nil
 }
