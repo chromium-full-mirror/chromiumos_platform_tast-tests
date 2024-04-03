@@ -1186,6 +1186,9 @@ func (a *App) ClickShutter(ctx context.Context) error {
 
 // SwitchCamera switches to next camera device.
 func (a *App) SwitchCamera(ctx context.Context) error {
+	if err := a.WaitForVisibleState(ctx, SwitchDeviceButton, true); err != nil {
+		return errors.Wrap(err, "failed to wait for switch device button to be visible")
+	}
 	if err := a.TriggerConfiguration(ctx, func() error {
 		return a.Click(ctx, SwitchDeviceButton)
 	}); err != nil {
