@@ -42,7 +42,8 @@ func init() {
 				Val: deskscuj.TestParam{
 					BrowserType: browser.TypeAsh,
 				},
-				Fixture: "loggedInToCUJUser",
+				ExtraAttr: []string{"group:cuj"},
+				Fixture:   "loggedInToCUJUser",
 			}, {
 				Name:         "pvsched",
 				BugComponent: "b:167279",
