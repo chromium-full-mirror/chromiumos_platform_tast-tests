@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"go.chromium.org/tast-tests/cros/common/tbdep"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -35,7 +36,8 @@ func init() {
 			"chromeos-connectivity-cienet-external@google.com",
 		},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_1"},
+		Attr:         []string{"group:bluetooth"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.bluetooth.BluetoothUIService",

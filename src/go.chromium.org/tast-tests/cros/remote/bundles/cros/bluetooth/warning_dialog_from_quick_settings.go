@@ -34,8 +34,8 @@ func init() {
 		},
 		VarDeps:      []string{"servo"},
 		BugComponent: "b:1131776", // ChromeOS > Software > System Services > Connectivity > Bluetooth
-		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_2"},
-		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
+		Attr:         []string{"group:bluetooth"},
+		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(2)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
 			"tast.cros.ui.AutomationService",

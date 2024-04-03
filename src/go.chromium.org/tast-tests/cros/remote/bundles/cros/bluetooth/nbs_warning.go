@@ -27,7 +27,7 @@ func init() {
 		Desc:         "Verifies when an NBS device is connected, a warning is shown in the QS",
 		Contacts:     []string{"chromeos-audio-bugs@google.com", "jrwu@google.com"},
 		BugComponent: "b:776546",
-		Attr:         []string{"group:bluetooth", "bluetooth_btpeers_1"},
+		Attr:         []string{"group:bluetooth"},
 		TestBedDeps:  []string{tbdep.Wificell, tbdep.BluetoothStateNormal, tbdep.WorkingBluetoothPeers(1)},
 		SoftwareDeps: []string{"chrome"},
 		ServiceDeps: []string{
