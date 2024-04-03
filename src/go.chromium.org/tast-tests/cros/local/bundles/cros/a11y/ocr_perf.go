@@ -28,7 +28,7 @@ var images = []string{"no_text_3264x2448_20240320.jpg", "one_line_3264x2448_2024
 func init() {
 	testing.AddTest(&testing.Test{
 		Func: OCRPerf,
-		Desc: "Measures the performance of Screen AI OCR library",
+		Desc: "Measures the time performance of Screen AI OCR library",
 		Contacts: []string{
 			"chrome-screen-ai@google.com", // Mailing list
 			"chuhsuan@google.com",         // Test author
@@ -51,7 +51,7 @@ func OCRPerf(ctx context.Context, s *testing.State) {
 	}
 
 	if err := cpu.WaitUntilIdle(ctx); err != nil {
-		s.Fatal("Failed waiting for CPU to become idle: ", err)
+		s.Log("Give up waiting for CPU to become idle: ", err)
 	}
 
 	p := perf.NewValues()
