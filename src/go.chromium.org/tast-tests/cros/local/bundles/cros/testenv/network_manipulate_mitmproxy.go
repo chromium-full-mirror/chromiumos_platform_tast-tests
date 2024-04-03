@@ -21,12 +21,12 @@ import (
 )
 
 const (
-	httpRedirect       = "mitmproxy_redirect_requests.py"
-	httpErrorInject    = "mitmproxy_inject_500_requests.py"
-	allowedEndpoints   = "allowed_endpoints.py"
-	extraConfig        = "allowed_endpoints_yaml.py"
-	endpoints          = "endpoints.yml"
-	discoveryEndpoints = "discovery_traffic.py"
+	httpRedirect     = "mitmproxy_redirect_requests.py"
+	httpErrorInject  = "mitmproxy_inject_500_requests.py"
+	allowedEndpoints = "allowed_endpoints.py"
+	extraConfig      = "allowed_endpoints_yaml.py"
+	endpoints        = "endpoints.yml"
+	dumphttpflow     = "dump_http_flow.py"
 )
 
 func init() {
@@ -54,9 +54,9 @@ func init() {
 			Val:       "error",
 			ExtraData: []string{httpErrorInject},
 		}, {
-			Name:      "discovery",
-			Val:       "discovery",
-			ExtraData: []string{discoveryEndpoints},
+			Name:      "dumphttpflow",
+			Val:       "dumphttpflow",
+			ExtraData: []string{dumphttpflow},
 		}, {
 			Name:      "diff",
 			Val:       "diff",
@@ -89,7 +89,7 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	}
 	br.ReloadActiveTab(ctx)
 
-	if err := verify(ctx, s, conn); err != nil {
+	if err := verify(ctx, s, conn, mp); err != nil {
 		s.Fatal("Failed to verify page: ", err)
 	}
 
@@ -97,12 +97,32 @@ func NetworkManipulateMitmproxy(ctx context.Context, s *testing.State) {
 	defer conn.Close()
 }
 
-func verify(ctx context.Context, s *testing.State, conn *chrome.Conn) error {
+func verify(ctx context.Context, s *testing.State, conn *chrome.Conn, mp proxy.Proxy) error {
 	switch s.Param().(string) {
 	case "redirect":
 		return verifyPageContent(ctx, conn, "google")
 	case "error":
 		return verifyPageContent(ctx, conn, "error injected by proxy")
+	case "dumphttpflow":
+		traffic, err := mp.DumpHTTPFlow(ctx, false, true)
+		if err != nil {
+			return err
+		}
+
+		// TODO(b/319732303): Update to Verifier when it's ready.
+		foundURL := false
+		for _, element := range traffic.URLs {
+			if element == "https://www.example.com/" {
+				foundURL = true
+				break
+			}
+		}
+
+		if !foundURL {
+			return errors.New("fail to find URl or Hostname")
+		}
+
+		return nil
 	default:
 		return nil
 	}
@@ -140,10 +160,9 @@ func proxyOpts(s *testing.State) []proxy.Option {
 			proxy.CustomOptions(fmt.Sprintf("allowed_endpoints_yaml: %s", s.DataPath(endpoints))),
 			proxy.HealthCheck(false), // Disable health check as it uses the local domain that won't work with the allowlist set for this test.
 		)
-	case "discovery":
+	case "dumphttpflow":
 		opts = append(opts,
-			proxy.ScriptPath(s.DataPath(discoveryEndpoints)),
-			proxy.CustomOptions(fmt.Sprintf("endpoint_info_folder: %s", s.OutDir()), fmt.Sprintf("patterns_to_record: \n  - %s", "example.com")),
+			proxy.DumpHTTPFlow(true, s.DataPath(dumphttpflow)),
 		)
 	}
 	return opts

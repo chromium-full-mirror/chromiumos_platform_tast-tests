@@ -4,6 +4,8 @@
 
 package proxy
 
+import "go.chromium.org/tast/core/errors"
+
 // Option is a function that can be used to config MitmProxy.
 type Option func(*MitmProxy) error
 
@@ -43,6 +45,26 @@ func OutDir(path string) Option {
 func HealthCheck(allow bool) Option {
 	return func(mp *MitmProxy) error {
 		mp.healthCheck = allow
+		return nil
+	}
+}
+
+// DumpHTTPFlow is an option to switch dumpHttpFlow when proxy starts.
+// Default value of allow is false.
+// When allow is true, user should pass dumpHTTPFlowAddonPath as well.
+// TODO(b/319732303): remove dumpHTTPFlowAddonPath later.
+func DumpHTTPFlow(allow bool, dumpHTTPFlowAddonPath string) Option {
+	return func(mp *MitmProxy) error {
+		if allow && len(dumpHTTPFlowAddonPath) == 0 {
+			return errors.New("Please pass dumpHTTPFlowAddonPath to enable dumpHTTPFlow")
+		}
+
+		if !allow && len(dumpHTTPFlowAddonPath) != 0 {
+			return errors.New("You cannot pass dumpHTTPFlowAddonPath when disable dumpHTTPFlow")
+		}
+
+		mp.dumpHTTPFlowEnabled = allow
+		mp.dumpHTTPFlowAddonPath = dumpHTTPFlowAddonPath
 		return nil
 	}
 }

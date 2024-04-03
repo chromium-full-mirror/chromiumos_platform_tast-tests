@@ -9,6 +9,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/binary"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -44,33 +45,37 @@ const (
 
 // MitmProxy represents a structure of mitmproxy.
 type MitmProxy struct {
-	binaryPath   string
-	port         int
-	host         string
-	outDir       string
-	dumpFilePath string
-	confDir      string
-	compressDump bool
-	cmd          *testexec.Cmd
-	isRunning    bool // Is the proxy running? It is set to true on starting proxy.
-	removeCert   bool // Should remove cert after test is completed?
-	healthCheck  bool
-	scriptPaths  []string // Addon scripts used by mitmproxy.
-	options      []string // Other options provided by users. We will add --set option to command.
-	lifelineFD   *os.File // Used by pathcpanel to track the lifetime of the proxy server.
+	binaryPath            string
+	port                  int
+	host                  string
+	outDir                string
+	dumpFileName          string
+	dumpFilePath          string
+	confDir               string
+	compressDump          bool
+	cmd                   *testexec.Cmd
+	isRunning             bool // Is the proxy running? It is set to true on starting proxy.
+	removeCert            bool // Should remove cert after test is completed?
+	healthCheck           bool
+	scriptPaths           []string // Addon scripts used by mitmproxy.
+	options               []string // Other options provided by users. We will add --set option to command.
+	lifelineFD            *os.File // Used by pathcpanel to track the lifetime of the proxy server.
+	dumpHTTPFlowEnabled   bool
+	dumpHTTPFlowAddonPath string
 }
 
 // NewMitmProxy creates a new MitmProxy instance with default configuration and option overrides.
 func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 	mp := &MitmProxy{
-		binaryPath:   DefaultBinaryPath,
-		port:         DefaultListenPort,
-		confDir:      defaultConfDir,
-		compressDump: true,
-		removeCert:   true,
-		healthCheck:  true,
-		scriptPaths:  []string{},
-		options:      []string{},
+		binaryPath:          DefaultBinaryPath,
+		port:                DefaultListenPort,
+		confDir:             defaultConfDir,
+		compressDump:        true,
+		removeCert:          true,
+		healthCheck:         true,
+		dumpHTTPFlowEnabled: false,
+		scriptPaths:         []string{},
+		options:             []string{},
 	}
 
 	// Override any value if users pass option from test.
@@ -78,6 +83,12 @@ func NewMitmProxy(ctx context.Context, opts ...Option) (Proxy, error) {
 		if err := opt(mp); err != nil {
 			return nil, err
 		}
+	}
+
+	// It's crucial to add the dump HTTP flow addon as the first script.
+	// MitmProxy executes addon scripts sequentially, so order directly impacts functionality.
+	if mp.dumpHTTPFlowEnabled {
+		mp.scriptPaths = []string{mp.dumpHTTPFlowAddonPath}
 	}
 
 	// Set OutDir for saving per-test logs and dump files.
@@ -146,9 +157,13 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 
 	// Run a proxy server process in non-interactive mode (mitmdump).
 	nowStr := time.Now().Format("20060102-150405")
-	dumpFilePath := filepath.Join(mp.outDir, fmt.Sprintf("mitmproxy_%s.dump", nowStr))
-	cmd := testexec.CommandContext(ctx,
-		"/sbin/minijail0", "-e", "--", mp.binaryPath, "--set", fmt.Sprintf("confdir=%s", mp.confDir), "-w", dumpFilePath)
+	dumpFileName := fmt.Sprintf("mitmproxy_%s.dump", nowStr)
+	dumpFilePath := filepath.Join(mp.outDir, dumpFileName)
+	logFileName := fmt.Sprintf("mitmproxy_%s.log", nowStr)
+	logFilePath := filepath.Join(mp.outDir, logFileName)
+
+	proxyCommands := fmt.Sprintf("/sbin/minijail0 -e -- %s --set confdir=%s -w %s > %s", mp.binaryPath, mp.confDir, dumpFilePath, logFilePath)
+	cmd := testexec.CommandContext(ctx, "bash", "-c", proxyCommands)
 	testing.ContextLogf(ctx, "mitmproxy: starting with cmd: %s", cmd)
 
 	// Required for remote tast tests. mitmproxy is written in Python and uses the PyInstaller
@@ -176,6 +191,7 @@ func (mp *MitmProxy) start(ctx context.Context) (retErr error) {
 
 	testing.ContextLog(ctx, "mitmproxy: started successfully, stream to: ", dumpFilePath)
 	mp.cmd = cmd
+	mp.dumpFileName = dumpFileName
 	mp.dumpFilePath = dumpFilePath
 	mp.isRunning = true
 	return nil
@@ -331,21 +347,10 @@ func (mp *MitmProxy) verifyProxyStart(ctx context.Context) error {
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(caCert)
 
-	// Get Proxy.
-	proxyURLStr := "http://" + mp.ProxyAddress()
-	proxyURL, err := url.Parse(proxyURLStr)
-	if err != nil {
-		return errors.Wrapf(err, "failed to parse url: %s", proxyURLStr)
-	}
-
 	// Setup http client.
-	client := &http.Client{
-		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{
-				RootCAs: caCertPool,
-			},
-			Proxy: http.ProxyURL(proxyURL),
-		},
+	client, err := mp.httpClient(caCertPool)
+	if err != nil {
+		return nil
 	}
 
 	// This would pass if the magic domain returns a 200 OK without the following error message in response.
@@ -418,7 +423,7 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 	if mp.compressDump {
 		if _, err := os.Stat(mp.dumpFilePath); err == nil {
 			targetTar := mp.dumpFilePath + ".tar.gz"
-			if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.outDir, mp.dumpFilePath, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
+			if err := testexec.CommandContext(ctx, "tar", "-czf", targetTar, "-C", mp.outDir, mp.dumpFileName, "--remove-files").Run(testexec.DumpLogOnError); err != nil {
 				cleanupErrs = append(cleanupErrs, errors.Wrap(err, "failed to compress mitmproxy dump"))
 			}
 		}
@@ -438,6 +443,82 @@ func (mp *MitmProxy) Close(ctx context.Context) error {
 	}
 	testing.ContextLog(ctx, "mitmproxy: closed successfully")
 	return nil
+}
+
+// DumpHTTPFlow extracts HTTP flow information for analysis. To use this method,
+// first enable the 'DumpHTTPFlow' option. Returns a map representing the HTTP flow
+// on success, or an error if anything goes wrong.
+//
+// Parameters:
+//   - reset (bool): If true, resets the HTTP flow data after extraction.
+//   - saveToFile (bool): If true, saves the extracted flow information to a file
+//     in 'outDir' in addition to returning the map.
+//
+// Returned DumpHTTPResponse pointer.
+func (mp *MitmProxy) DumpHTTPFlow(ctx context.Context, reset, saveToFile bool) (*DumpHTTPResponse, error) {
+	if !mp.dumpHTTPFlowEnabled {
+		return nil, errors.New("DumpHTTPFlow is disabled, please enabled it by DumpHTTPFlow option")
+	}
+
+	// Create an HTTP client.
+	client, err := mp.httpClient(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	baseURL := "http://proxy_server:8080/traffic"
+	params := url.Values{}
+	params.Set("reset", strconv.FormatBool(reset))
+	if saveToFile {
+		params.Set("outDir", mp.outDir)
+	}
+	fullURL := baseURL + "?" + params.Encode()
+
+	req, err := http.NewRequest("GET", fullURL, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to create new request")
+	}
+	req = req.WithContext(ctx)
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to send request")
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read response body")
+	}
+
+	var result DumpHTTPResponse
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil, errors.Wrapf(err, "failed to convert to map, raw data: %s", string(body))
+	}
+
+	return &result, nil
+}
+
+func (mp *MitmProxy) httpClient(pool *x509.CertPool) (*http.Client, error) {
+	proxyURLStr := "http://" + mp.ProxyAddress()
+	proxyURL, err := url.Parse(proxyURLStr)
+	if err != nil {
+		return nil, errors.Wrapf(err, "failed to parse url: %s", proxyURLStr)
+	}
+
+	transport := &http.Transport{
+		Proxy: http.ProxyURL(proxyURL),
+	}
+
+	if pool != nil {
+		transport.TLSClientConfig = &tls.Config{
+			RootCAs: pool,
+		}
+	}
+
+	return &http.Client{
+		Transport: transport,
+	}, nil
 }
 
 func (mp *MitmProxy) removeCertDir() error {

@@ -21,4 +21,12 @@ type Proxy interface {
 
 	// ProxyAddress returns the proxy address to be set in browser.
 	ProxyAddress() string
+
+	// DumpHTTPFlow returns the HTTP flow on success, or an error if anything goes wrong.
+	DumpHTTPFlow(ctx context.Context, reset, saveToFile bool) (*DumpHTTPResponse, error)
+}
+
+// DumpHTTPResponse is used to return DumpHTTPFlow response.
+type DumpHTTPResponse struct {
+	URLs []string `json:"url"`
 }
