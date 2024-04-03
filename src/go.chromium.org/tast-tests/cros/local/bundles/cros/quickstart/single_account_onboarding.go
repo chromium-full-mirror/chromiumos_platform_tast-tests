@@ -68,4 +68,21 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 	if err := androidDevice.AcceptFastPairHalfsheet(ctx); err != nil {
 		s.Fatal("Failed to accept fast pair half sheet: ", err)
 	}
+
+	// Wait for and click "For personal use" button
+	s.Log("Waiting for user creation screen")
+	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.UserCreationScreen.isVisible()"); err != nil {
+		s.Fatal("Failed to wait for the user creation screen to be visible: ", err)
+	}
+
+	s.Log("Selecting personal Google Account")
+	personalUseButton := nodewith.NameContaining("personal use").Role(role.RadioButton)
+	if err := ui.LeftClick(personalUseButton)(ctx); err != nil {
+		s.Fatal("Failed to click the personal Google Account radio button: ", err)
+	}
+
+	nextButton := nodewith.Name("Next").Role(role.Button)
+	if err := ui.LeftClick(nextButton)(ctx); err != nil {
+		s.Fatal("Failed to click Next on the user creation screen: ", err)
+	}
 }
