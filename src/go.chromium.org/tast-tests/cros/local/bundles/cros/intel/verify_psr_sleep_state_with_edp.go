@@ -13,12 +13,13 @@ import (
 
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/cuj"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/quicksettings"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
-	"go.chromium.org/tast-tests/cros/local/chrome/webutil"
 	"go.chromium.org/tast-tests/cros/local/input"
+	"go.chromium.org/tast-tests/cros/local/mtbf/youtube"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -40,6 +41,21 @@ func init() {
 func VerifyPsrSleepStateWithEdp(ctx context.Context, s *testing.State) {
 	cr := s.FixtValue().(chrome.HasChrome).Chrome()
 
+	// Shorten deadline to leave time for cleanup.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
+	defer cancel()
+	tconn, err := cr.TestAPIConn(ctx)
+	if err != nil {
+		s.Fatal("Failed to connect to test API: ", err)
+	}
+
+	kb, err := input.Keyboard(ctx)
+	if err != nil {
+		s.Fatal("Failed to get keyboard: ", err)
+	}
+	ui := uiauto.New(tconn)
+
 	videoStatus := "No video is playing"
 	if err := psrCompatibleStatus(ctx, "", videoStatus, true); err != nil {
 		s.Fatal("Failed to check psrCompatible data: ", err)
@@ -54,37 +70,32 @@ func VerifyPsrSleepStateWithEdp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify CRC in dmesg")
 	}
 
-	youtubeURL := "https://www.youtube.com/watch?v=aqz-KE-bpKQ"
-	ytbConn, err := cr.NewConn(ctx, youtubeURL)
+	var videoSource = youtube.VideoSrc{
+		URL:     "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+		Title:   "Big Buck Bunny 60fps 4K - Official Blender Foundation Short Film",
+		Quality: "2160p60",
+	}
+	uiHandler, err := cuj.NewClamshellActionHandler(ctx, tconn)
 	if err != nil {
-		s.Fatal("Failed to open url in chrome browser: ", err)
+		s.Fatal("Failed to create clamshell action handler: ", err)
 	}
-	defer ytbConn.Close()
+	defer uiHandler.Close(ctx)
 
-	if err := webutil.WaitForYoutubeVideo(ctx, ytbConn, 0); err != nil {
-		s.Fatal("Failed to wait for video element: ", err)
+	videoApp := youtube.NewYtWeb(cr.Browser(), tconn, kb, false, ui, uiHandler)
+	if err := videoApp.OpenAndPlayVideo(videoSource)(ctx); err != nil {
+		s.Fatalf("Failed to open %s: %v", videoSource.URL, err)
 	}
+	defer videoApp.Close(cleanupCtx)
 
-	if err := verifyVideoPlay(ctx, ytbConn); err != nil {
+	if err := videoApp.IsPlaying()(ctx); err != nil {
 		s.Fatal("Failed to play YouTube video: ", err)
 	}
 
-	kb, err := input.Keyboard(ctx)
-	if err != nil {
-		s.Fatal("Failed to wait for video element: ", err)
+	if err := videoApp.EnterFullScreen(ctx); err != nil {
+		s.Fatal("Failed to enter fullscreen: ", err)
 	}
 
-	if err := kb.Accel(ctx, "f"); err != nil {
-		s.Fatal("Failed to press f(fullscreen) key: ", err)
-	}
-
-	tconn, err := cr.TestAPIConn(ctx)
-	if err != nil {
-		s.Fatal("Failed to connect to test API: ", err)
-	}
-
-	ui := uiauto.New(tconn)
-	fullScreenText := nodewith.Name(`Exit full screen (f)`).Role(role.Button)
+	fullScreenText := nodewith.Name(`Entered full screen`).Role("alert")
 	if err := ui.WithTimeout(10 * time.Second).WaitUntilExists(fullScreenText)(ctx); err != nil {
 		s.Fatal("Failed to check the existence of Exit full screen to valiadte the full screen mode: ", err)
 	}
@@ -99,13 +110,8 @@ func VerifyPsrSleepStateWithEdp(ctx context.Context, s *testing.State) {
 	if err := psrCompatibleStatus(ctx, psrSleepStatus, videoStatus, false); err != nil {
 		s.Fatal("Failed to check psrCompatible data: ", err)
 	}
-
-	if err := kb.Accel(ctx, "k"); err != nil {
-		s.Fatal("Failed to press k(pause) key: ", err)
-	}
-
-	if err := verifyVideoPlay(ctx, ytbConn); err == nil {
-		s.Fatal("Failed to pause YouTube video: ", err)
+	if err := videoApp.Pause()(ctx); err != nil {
+		s.Fatal("Failed to pause video: ", err)
 	}
 
 	videoStatus = "video paused"
@@ -113,12 +119,8 @@ func VerifyPsrSleepStateWithEdp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify psrCompatible data: ", err)
 	}
 
-	if err := kb.Accel(ctx, "k"); err != nil {
-		s.Fatal("Failed to press k(play) key: ", err)
-	}
-
-	if err := verifyVideoPlay(ctx, ytbConn); err != nil {
-		s.Fatal("Failed to play YouTube video: ", err)
+	if err := videoApp.Play()(ctx); err != nil {
+		s.Fatal("Failed to play the video: ", err)
 	}
 
 	videoStatus = "video playing"
@@ -126,11 +128,12 @@ func VerifyPsrSleepStateWithEdp(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to check psrCompatible data: ", err)
 	}
 
-	if err := kb.Accel(ctx, "f"); err != nil {
-		s.Fatal("Failed to press f key: ", err)
+	if err := videoApp.ExitFullScreen(ctx); err != nil {
+		s.Fatal("Failed to exit full screen: ", err)
 	}
 
-	if err := ui.WithTimeout(10 * time.Second).WaitUntilGone(fullScreenText)(ctx); err != nil {
+	fullScreenExitText := nodewith.Name(`Exited full screen`).Role("alert")
+	if err := ui.WithTimeout(5 * time.Second).WaitUntilExists(fullScreenExitText)(ctx); err != nil {
 		s.Fatal("Failed to check the existence of Exit full screen to valiadte the full screen mode: ", err)
 	}
 
@@ -176,26 +179,6 @@ func psrCompatibleStatus(ctx context.Context, psrString, videoStatus string, sou
 		return nil
 	}, &testing.PollOptions{Timeout: 30 * time.Second, Interval: 250 * time.Millisecond}); err != nil {
 		return errors.Wrap(err, "failed to check psrCompatible data")
-	}
-	return nil
-}
-
-// verifyVideoPlay functions verifies video play status.
-func verifyVideoPlay(ctx context.Context, ytConn *chrome.Conn) error {
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		const playingState = 1 // Playing state of the YouTube player.
-		var playerState int
-		getPlayerState := `document.getElementById('movie_player').getPlayerState()`
-		if err := ytConn.Eval(ctx, getPlayerState, &playerState); err != nil {
-			return errors.Wrap(err, "failed to get YouTube player state")
-		}
-		if playerState != playingState {
-			return errors.New("YouTube video is not playing")
-		}
-		testing.ContextLog(ctx, "YouTube video is playing")
-		return nil
-	}, &testing.PollOptions{Timeout: 45 * time.Second, Interval: 2 * time.Second}); err != nil {
-		return errors.Wrap(err, "failed to verify video play status")
 	}
 	return nil
 }
