@@ -62,6 +62,29 @@ func LacrosCommonMetricConfigs() []MetricConfig {
 	return []MetricConfig{
 		// Smoothness.
 		NewCustomMetricConfig("Chrome.Lacros.Smoothness.PercentDroppedFrames_1sWindow2", "percent", perf.SmallerIsBetter),
+		NewEnumCustomMetricConfig("Viz.DelegatedCompositing.Status",
+			map[int64]string{
+				0:  "FullDelegation",
+				1:  "CompositedOther",
+				2:  "CompositedNotAxisAligned",
+				3:  "CompositedCheckOverlayFail",
+				4:  "CompositedNotOverlay",
+				5:  "CompositedTooManyQuads",
+				6:  "CompositedBackdropFilter",
+				7:  "CompositedCopyRequest",
+				8:  "CompositedNotAxisAligned3dTransform",
+				9:  "CompositedNotAxisAlignedShearTransform",
+				10: "CompositedNotAxisAlignedRotatedTransform",
+				11: "CompositedFeatureDisabled",
+				12: "CompositedCandidateFailedOther",
+				13: "CompositedCandidateBadBlendMode",
+				14: "CompositedCandidateBadQuadMaterial",
+				15: "CompositedCandidateBadBufferFormat",
+				16: "CompositedCandidateHasNearFilter",
+				17: "CompositedCandidateNotSharedImage",
+				18: "CompositedCandidateBadMaskFilter",
+				19: "CompositedCandidateHasTransformCantClip",
+				20: "CompositedCandidateIsRenderpassWithTransform"}),
 	}
 }
 
