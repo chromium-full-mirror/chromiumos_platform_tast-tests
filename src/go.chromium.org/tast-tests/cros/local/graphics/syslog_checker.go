@@ -130,7 +130,10 @@ var (
 	}, {
 		// Checker to check mediatek video driver errors.
 		category: SysLogMediatekVideoErrors,
-		re:       regexp.MustCompile(`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`),
+		re:       regexp.MustCompile(strings.Join([]string{
+			`\[MTK_(V4L2|VCODEC)\]\[ERROR\]`,
+			`mtk-vcodec-dec .*.vcodec: dma alloc of size .* failed`,
+		}, "|")),
 	}, {
 		// Checker to check qualcomm video errors.
 		category: SysLogQualcommVideoErrors,
