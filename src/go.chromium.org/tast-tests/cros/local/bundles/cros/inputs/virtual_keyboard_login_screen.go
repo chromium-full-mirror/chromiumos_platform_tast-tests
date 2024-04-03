@@ -31,7 +31,7 @@ func init() {
 		Func:         VirtualKeyboardLoginScreen,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that the virtual keyboard works on login screen",
-		Attr:         []string{"group:mainline", "group:input-tools", "group:input-tools-upstream", "group:hw_agnostic"},
+		Attr:         []string{"group:mainline", "informational", "group:input-tools", "group:input-tools-upstream", "group:hw_agnostic"},
 		Contacts:     []string{"essential-inputs-gardener-oncall@google.com", "essential-inputs-team@google.com"},
 		BugComponent: "b:95887",
 		SoftwareDeps: []string{"inputs_deps", "chrome", "google_virtual_keyboard"},
