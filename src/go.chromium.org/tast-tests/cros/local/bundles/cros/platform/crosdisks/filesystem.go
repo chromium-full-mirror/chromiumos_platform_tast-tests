@@ -17,6 +17,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/crosdisks"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -124,6 +125,12 @@ const loopbackSizeBytes = 16 * 1024 * 1024
 // RunFilesystemTests executes a set of tests which mount different filesystems
 // using CrosDisks.
 func RunFilesystemTests(ctx context.Context, s *testing.State) {
+	// Log out first to ensure consistent pre-test device states.
+	s.Log("Restarting ui")
+	if err := upstart.RestartJob(ctx, "ui"); err != nil {
+		s.Fatal("Failed to restart ui: ", err)
+	}
+
 	cd, err := crosdisks.New(ctx)
 	if err != nil {
 		s.Fatal("Failed to connect CrosDisks D-Bus service: ", err)
