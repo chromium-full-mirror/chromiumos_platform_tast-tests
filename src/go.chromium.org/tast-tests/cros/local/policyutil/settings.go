@@ -220,11 +220,16 @@ func CheckCertificateVisibleInSystemSettings(ctx context.Context, tconn *chrome.
 	OSSettingsPage(ctx, cr, "network")
 	ui := uiauto.New(tconn)
 
+	addVpnButton := nodewith.Name("Add built-in VPN…").Role(role.Button)
+	userCertSelector := nodewith.Name("User certificate").ClassName("md-select")
+
 	return uiauto.Combine("use system settings",
 		ui.DoDefault(nodewith.Name("Add network connection").Role(role.Button)),
-		ui.WaitUntilExists(nodewith.Name("Add built-in VPN…").Role(role.Button)),
-		ui.DoDefault(nodewith.Name("Add built-in VPN…").Role(role.Button)),
-		ui.WaitUntilExists(nodewith.Name("User certificate").ClassName("md-select")),
-		ui.DoDefault(nodewith.Name("User certificate").ClassName("md-select")),
+		ui.WaitUntilExists(addVpnButton),
+		ui.MakeVisible(addVpnButton),
+		ui.DoDefault(addVpnButton),
+		ui.WaitUntilExists(userCertSelector),
+		ui.MakeVisible(userCertSelector),
+		ui.DoDefault(userCertSelector),
 		ui.DoDefault(nodewith.Name(certName+" ["+certName+"]").Role(role.ListBoxOption)))(ctx)
 }
