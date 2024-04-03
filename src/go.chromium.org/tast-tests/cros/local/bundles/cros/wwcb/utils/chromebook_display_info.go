@@ -6,6 +6,7 @@ package utils
 
 import (
 	"context"
+	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/local/chrome"
@@ -80,24 +81,24 @@ func EnsureDisplayPrimary(ctx context.Context, tconn *chrome.TestConn, disp *dis
 func SetMirrorDisplay(ctx context.Context, tconn *chrome.TestConn, want checked.Checked) error {
 	ui := uiauto.New(tconn)
 
-	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.Name("Device").Role(role.Link))
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, nodewith.NameContaining("Device").Role(role.Link).First())
 	if err != nil {
 		return errors.Wrap(err, "failed to launch os-settings Device page")
 	}
 
-	displayFinder := nodewith.Name("Displays").Role(role.Link).Ancestor(ossettings.WindowFinder)
+	displayFinder := nodewith.Name("Display").Role(role.Link).First().Ancestor(ossettings.WindowFinder)
 	if err := ui.LeftClickUntil(displayFinder, ui.WithTimeout(3*time.Second).WaitUntilGone(displayFinder))(ctx); err != nil {
 		return errors.Wrap(err, "failed to launch display page")
 	}
-
-	mirrorFinder := nodewith.Name("Mirror Built-in display").Role(role.CheckBox).Ancestor(ossettings.WindowFinder)
-	// Find the node info for the mirror checkbox.
+	pattern := regexp.MustCompile("(?i)Mirror Built-in display")
+	mirrorFinder := nodewith.NameRegex(pattern).Role(role.ToggleButton).Ancestor(ossettings.WindowFinder)
+	// Find the node info for the mirror togglebutton.
 	nodeInfo, err := ui.Info(ctx, mirrorFinder)
 	if err != nil {
-		return errors.Wrap(err, "failed to get info for the mirror checkbox")
+		return errors.Wrap(err, "failed to get info for the mirror togglebutton")
 	}
 	if nodeInfo.Checked != want {
-		testing.ContextLog(ctx, "Click 'Mirror Built-in display' checkbox")
+		testing.ContextLog(ctx, "Click 'Mirror Built-in display' togglebutton")
 		if err := ui.LeftClick(mirrorFinder)(ctx); err != nil {
 			return errors.Wrap(err, "failed to click mirror display")
 		}
