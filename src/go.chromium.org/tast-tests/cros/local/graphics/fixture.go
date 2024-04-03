@@ -9,6 +9,8 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -20,6 +22,8 @@ import (
 	graphics_common "go.chromium.org/tast-tests/cros/common/graphics"
 	"go.chromium.org/tast-tests/cros/common/testexec"
 	"go.chromium.org/tast-tests/cros/local/chrome"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser"
+	"go.chromium.org/tast-tests/cros/local/chrome/browser/browserfixt"
 	"go.chromium.org/tast-tests/cros/local/chrome/lacros/lacrosfixt"
 	"go.chromium.org/tast-tests/cros/local/cpu"
 	"go.chromium.org/tast-tests/cros/local/crash"
@@ -216,6 +220,135 @@ func init() {
 		ResetTimeout:    chrome.ResetTimeout,
 		TearDownTimeout: chrome.ResetTimeout,
 	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:            "chromeGraphicsWebContent",
+		Desc:            "Logs into Chrome and launches a browser window with specific content, like playing WebGL Aquarium for instance",
+		Contacts:        []string{"ddmail@google.com", "chromeos-gfx@google.com"},
+		Parent:          "gpuWatchDog",
+		Impl:            &graphicsWebContentFixture{fOpt: []chrome.Option{chrome.ARCEnabled(), disableFirmwareUpdater}},
+		SetUpTimeout:    chrome.LoginTimeout,
+		ResetTimeout:    chrome.ResetTimeout,
+		TearDownTimeout: chrome.ResetTimeout,
+		Data:            []string{"webgl_aquarium_static_20221212.tar.zst"},
+		Params: []testing.FixtureParam{{
+			Name: "webglaquarium",
+			Val: graphicsWebContentVal{
+				data:       "webgl_aquarium_static_20221212.tar.zst",
+				serverName: "webgl_aquarium_static",
+				url:        "aquarium.html",
+			},
+		}},
+	})
+}
+
+// graphicsWebContentFixture starts Chrome, opens specific web content in the background.
+type graphicsWebContentFixture struct {
+	cr   *chrome.Chrome
+	fOpt []chrome.Option // Function to generate Chrome Options
+
+	server       *httptest.Server            // Server instance to serve the local data file.
+	conn         *chrome.Conn                // chrome connection to the opened web content.
+	closeBrowser func(context.Context) error // function to close the browser.
+	tempDir      string
+}
+
+type graphicsWebContentVal struct {
+	data       string // data is the zst file that contains the content.
+	serverName string // serverName is the uncompressed folder name that we should start httpServer on.
+	url        string // url is the url to access the main content.
+}
+
+func (f *graphicsWebContentFixture) Reset(ctx context.Context) error {
+	if crErr := f.cr.Responded(ctx); crErr != nil {
+		testing.ContextLog(ctx, "Reconnect to browser connection")
+		if err := f.cr.Reconnect(ctx); err != nil {
+			return errors.Wrap(err, "failed to reconnect to Chrome")
+		}
+		// Reconnect to browser.
+		br, _, err := browserfixt.Connect(ctx, f.cr, browser.TypeAsh)
+		if err != nil {
+			return errors.Wrap(err, "failed to reconnect to browser")
+		}
+		conn, err := br.NewConnForTarget(ctx, func(t *chrome.Target) bool {
+			return strings.HasSuffix(t.URL, "aquarium.html")
+		})
+		if err != nil {
+			return errors.Wrap(err, "failed to establish browser connection")
+		}
+		f.conn = conn
+	}
+	if err := f.conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+		return errors.Wrap(err, "page failed to load")
+	}
+	return nil
+}
+
+func (f *graphicsWebContentFixture) PreTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *graphicsWebContentFixture) PostTest(ctx context.Context, s *testing.FixtTestState) {
+}
+
+func (f *graphicsWebContentFixture) SetUp(ctx context.Context, s *testing.FixtState) interface{} {
+	cr, err := chrome.New(ctx, f.fOpt...)
+	if err != nil {
+		s.Fatal("Failed to start Chrome: ", err)
+	}
+	chrome.Lock()
+	f.cr = cr
+
+	val := s.Param().(graphicsWebContentVal)
+	if val.data != "" {
+		tempDir, err := os.MkdirTemp("/tmp", "")
+		if err != nil {
+			s.Fatal("Failed to created temp dir: ", err)
+		}
+		f.tempDir = tempDir
+		// Assuming it is zst compression.
+		srcFile := s.DataPath(val.data)
+		if err := testexec.CommandContext(ctx, "tar", "-xf", srcFile, "-C", f.tempDir).Run(testexec.DumpLogOnError); err != nil {
+			s.Fatalf("Failed to extract %s: %s", val.data, err)
+		}
+		server := httptest.NewServer(http.FileServer(http.Dir(f.tempDir + "/" + val.serverName)))
+		f.server = server
+		s.Logf("Extracted %s", val.data)
+	} else {
+		s.Fatal("Directly opening an url is not supported yet")
+	}
+
+	url := filepath.Join(f.server.URL, val.url)
+	conn, _, closeBrowser, err := browserfixt.SetUpWithURL(ctx, f.cr, browser.TypeAsh, url)
+	if err != nil {
+		s.Fatal("Failed to set up browser: ", err)
+	}
+	f.conn = conn
+	f.closeBrowser = closeBrowser
+
+	if err = f.conn.WaitForExpr(ctx, "document.readyState === 'complete'"); err != nil {
+		s.Fatal("Page failed to load: ", err)
+	}
+	return cr
+}
+
+func (f *graphicsWebContentFixture) TearDown(ctx context.Context, s *testing.FixtState) {
+	os.RemoveAll(f.tempDir)
+	f.tempDir = ""
+
+	f.server.Close()
+	f.server = nil
+
+	f.conn.Close()
+	f.conn = nil
+
+	f.closeBrowser(ctx)
+	f.closeBrowser = nil
+
+	chrome.Unlock()
+	if err := f.cr.Close(ctx); err != nil {
+		s.Log("Failed to close Chrome connection: ", err)
+	}
+	f.cr = nil
 }
 
 type graphicsNoChromeFixture struct {

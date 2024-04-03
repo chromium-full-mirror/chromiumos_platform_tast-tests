@@ -9,6 +9,7 @@ package graphics
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 
@@ -24,45 +25,64 @@ func TestPmTestParams(t *testing.T) {
 		PmMode      string
 		SuspendMode string
 		Timeout     time.Duration
+		Fixture     string
 	}
 	var pmtestParams []param
 
-	for _, suffix := range []string{"", "bringup"} {
+	for _, b := range []string{"", "bringup"} {
 		idx := 0
-		for _, pm := range []graphics.PmTestMode{graphics.PmTestNone, graphics.PmTestFreezer, graphics.PmTestDevices, graphics.PmTestPlatform, graphics.PmTestProcessors, graphics.PmTestCore} {
-			for _, suspendMode := range []string{"graphics.SuspendS0ix", "graphics.SuspendS3"} {
-				mode := "s0"
-				if suspendMode == "graphics.SuspendS3" {
-					mode = "s3"
-				}
-				name := fmt.Sprintf("%02d_%v_%v", idx, mode, pm)
-				if suffix != "" {
-					name += "_" + suffix
-				}
+		for _, variant := range []string{"", "chrome", "webglaquarium"} {
+			var s []string
+			if b != "" {
+				s = append(s, b)
+			}
+			if variant != "" {
+				s = append(s, variant)
+			}
+			suffix := strings.Join(s, "_")
+			for _, pm := range []graphics.PmTestMode{graphics.PmTestNone, graphics.PmTestFreezer, graphics.PmTestDevices, graphics.PmTestPlatform, graphics.PmTestProcessors, graphics.PmTestCore} {
+				for _, suspendMode := range []string{"graphics.SuspendS0ix", "graphics.SuspendS3"} {
+					mode := "s0"
+					if suspendMode == "graphics.SuspendS3" {
+						mode = "s3"
+					}
+					name := fmt.Sprintf("%02d_%v_%v", idx, mode, pm)
+					if suffix != "" {
+						name += "_" + suffix
+					}
 
-				attr := []string{"graphics_perbuild"}
-				if suffix == "bringup" {
-					attr = []string{"graphics_manual", "graphics_bringup"}
-				}
+					attr := []string{"graphics_perbuild"}
+					if suffix == "bringup" {
+						attr = []string{"graphics_manual", "graphics_bringup"}
+					}
 
-				loopCount := 2
-				if suffix == "bringup" {
-					loopCount = 100
-				}
+					loopCount := 2
+					if suffix == "bringup" {
+						loopCount = 100
+					}
 
-				timeout := 3 * time.Minute
-				if suffix == "bringup" {
-					timeout = 20 * time.Minute
+					timeout := 3 * time.Minute
+					if suffix == "bringup" {
+						timeout = 20 * time.Minute
+					}
+
+					fixture := "graphicsNoChrome"
+					if suffix == "webglaquarium" {
+						fixture = "chromeGraphicsWebContent.webglaquarium"
+					} else if suffix == "chrome" {
+						fixture = "chromeGraphics"
+					}
+					pmtestParams = append(pmtestParams, param{
+						Name:        name,
+						Attr:        attr,
+						SuspendMode: suspendMode,
+						PmMode:      string(pm),
+						LoopCount:   loopCount,
+						Timeout:     timeout,
+						Fixture:     fixture,
+					})
+					idx++
 				}
-				pmtestParams = append(pmtestParams, param{
-					Name:        name,
-					Attr:        attr,
-					SuspendMode: suspendMode,
-					PmMode:      string(pm),
-					LoopCount:   loopCount,
-					Timeout:     timeout,
-				})
-				idx++
 			}
 		}
 	}
@@ -73,6 +93,7 @@ func TestPmTestParams(t *testing.T) {
 		suspendMode: {{ .SuspendMode }},
 		count:  {{ .LoopCount | fmt }},
 	},
+	{{ if .Fixture }} Fixture: {{ .Fixture | fmt }}, {{ end }}
 	{{ if .Attr }}ExtraAttr: {{ .Attr | fmt }}, {{ end }}
 	Timeout: {{ .Timeout | fmt}},
   },
