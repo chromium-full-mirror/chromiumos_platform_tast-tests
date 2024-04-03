@@ -153,7 +153,9 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 	if err != nil {
 		s.Fatal("Failed to find the histogram window: ", err)
 	}
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+		Mode: cujrecorder.Benchmark,
+	})
 	if err != nil {
 		s.Fatal("Failed to create the recorder: ", err)
 	}

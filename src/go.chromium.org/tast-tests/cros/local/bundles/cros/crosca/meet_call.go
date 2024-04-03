@@ -77,7 +77,7 @@ type meetTest struct {
 var meetingCodeVarString = testing.RegisterVarString(
 	"crosca.MeetCall.meetingCode",
 	"",
-	"A integer value signifying the duration of video stream playback",
+	"A string value signifying the meeting code for joining meet call",
 )
 
 // crosca.MeetCall.meetingCode allows user to specify the duration of typing
@@ -85,7 +85,7 @@ var meetingCodeVarString = testing.RegisterVarString(
 var typingTimeoutVarString = testing.RegisterVarString(
 	"crosca.MeetCall.typingTimeout",
 	"",
-	"A integer value signifying the duration of video stream playback",
+	"A integer value signifying the duration of chat typing during the meet call",
 )
 
 // crosca.MeetCall.meetingCode allows user to specify whether to pin self
@@ -93,7 +93,7 @@ var typingTimeoutVarString = testing.RegisterVarString(
 var pinSelfVarString = testing.RegisterVarString(
 	"crosca.MeetCall.pinSelf",
 	"",
-	"A integer value signifying the duration of video stream playback",
+	"A BOOL value to indicate whether to pin self",
 )
 
 // crosca.MeetCall.meetingCode allows user to specify the brightness of
@@ -101,7 +101,7 @@ var pinSelfVarString = testing.RegisterVarString(
 var brightnessVarString = testing.RegisterVarString(
 	"crosca.MeetCall.brightness",
 	"",
-	"A integer value signifying the duration of video stream playback",
+	"A integer value signifying the brightness of the display",
 )
 
 // crosca.MeetCall.meetingCode allow user to specify delay after each character
@@ -109,7 +109,7 @@ var brightnessVarString = testing.RegisterVarString(
 var typingDelayVarString = testing.RegisterVarString(
 	"crosca.MeetCall.typingDelay",
 	"",
-	"A integer value signifying the duration of video stream playback",
+	"A integer value signifying the delay after typing each character in chat window",
 )
 
 func init() {
@@ -311,7 +311,9 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{})
+	recorder, err := cujrecorder.NewRecorder(ctx, cr, bTconn, nil, cujrecorder.RecorderOptions{
+		Mode: cujrecorder.Benchmark,
+	})
 	if err != nil {
 		s.Fatal("Failed to create the recorder: ", err)
 	}
