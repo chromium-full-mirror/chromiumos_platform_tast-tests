@@ -31,13 +31,13 @@ func init() {
 		Params: []testing.Param{{
 			Name:      "ash_kbbl",
 			Fixture:   setup.PowerAshKbbl,
-			ExtraAttr: []string{"group:power", "power_daily"},
+			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
 			Val:       exampleUITimeParams,
 			Timeout:   1*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:      "ash",
 			Fixture:   setup.PowerAsh,
-			ExtraAttr: []string{"group:power", "power_daily"},
+			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
 			Val:       exampleUI5minTimeParams,
 			Timeout:   6*time.Minute + power.RecorderTimeout,
 		}, {
@@ -70,21 +70,21 @@ func init() {
 			Name:              "lacros",
 			Fixture:           setup.PowerLacros,
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:power", "power_daily"},
+			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 			Val:               exampleUI5minTimeParams,
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:              "lacros_dark",
 			Fixture:           setup.PowerLacrosDark,
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:power", "power_daily"},
+			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 			Val:               exampleUI5minTimeParams,
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {
 			Name:              "lacros_night",
 			Fixture:           setup.PowerLacrosNightlight,
 			ExtraSoftwareDeps: []string{"lacros"},
-			ExtraAttr:         []string{"group:power", "power_daily"},
+			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 			Val:               exampleUI5minTimeParams,
 			Timeout:           6*time.Minute + power.RecorderTimeout,
 		}, {

@@ -81,7 +81,7 @@ func init() {
 			Name:      "display_off_bt_off_ash",
 			Fixture:   "powerAsh",
 			Val:       displayOffBTOff,
-			ExtraAttr: []string{"group:power", "power_daily"},
+			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
 		}, {
 			Name:    "display_on_bt_off_ash",
 			Fixture: "powerAsh",
@@ -129,7 +129,7 @@ func init() {
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               displayOffBTOff,
-			ExtraAttr:         []string{"group:power", "power_daily"},
+			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 		}, {
 			Name:              "display_on_bt_off_lacros",
 			Fixture:           "powerLacros",
@@ -140,7 +140,7 @@ func init() {
 			Fixture:           "powerLacros",
 			ExtraSoftwareDeps: []string{"lacros"},
 			Val:               displayOnBTOn,
-			ExtraAttr:         []string{"group:power", "power_daily"},
+			ExtraAttr:         []string{"group:power", "power_daily", "power_weekly"},
 		}, {
 			Name:              "display_off_bt_on_lacros",
 			Fixture:           "powerLacros",

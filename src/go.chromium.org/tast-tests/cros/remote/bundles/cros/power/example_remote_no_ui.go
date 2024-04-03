@@ -36,7 +36,7 @@ func init() {
 				Ui:               ps.UIMode_DISABLE_UI,
 				ScreenBrightness: ps.ScreenMode_ZERO_SCREEN_BRIGHTNESS,
 			},
-			ExtraAttr: []string{"group:power", "power_daily"},
+			ExtraAttr: []string{"group:power", "power_daily", "power_weekly"},
 		}, {
 			Name: "no_wifi",
 			Val: &ps.DeviceSetupRequest{

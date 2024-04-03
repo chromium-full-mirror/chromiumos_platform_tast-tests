@@ -39,7 +39,7 @@ func init() {
 		},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      5 * time.Minute,
-		Attr:         []string{"group:power", "power_daily"},
+		Attr:         []string{"group:power", "power_daily", "power_weekly"},
 	})
 }
 
