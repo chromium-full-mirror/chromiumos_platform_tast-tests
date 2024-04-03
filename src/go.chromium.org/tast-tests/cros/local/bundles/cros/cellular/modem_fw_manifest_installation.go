@@ -161,6 +161,12 @@ func cleanUp(ctx context.Context, s *testing.State) {
 	if err := upstart.StopJob(ctx, modemfwd.JobName); err != nil {
 		s.Fatal("Failed to stop modemfwd: ", err)
 	}
+	// Even though there is a defer call to clean up |DisableAutoUpdate| after the test completes,
+	// we need to enable auto update before starting modemfwd, otherwise the FW will not be updated
+	// before the next test is executed.
+	if modemfwd.GetAutoUpdatePrefValue(ctx) {
+		os.Remove(modemfwd.DisableAutoUpdatePref)
+	}
 	if err := modemfwd.StartAndWaitForQuiescence(ctx); err != nil {
 		s.Fatal("modemfwd failed during initialization: ", err)
 	}
