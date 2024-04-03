@@ -52,8 +52,9 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Params: []testing.Param{
 			{
-				Name:              "mainline",
-				ExtraSoftwareDeps: []string{"secagentd_auth_stable"},
+				Name: "mainline",
+				// TODO(b/332768539): Remove "boot_perf_info" so it runs on reven.
+				ExtraSoftwareDeps: []string{"secagentd_auth_stable", "boot_perf_info"},
 			}, {
 				Name:      "informational",
 				ExtraAttr: []string{"informational", "group:criticalstaging"},
@@ -157,8 +158,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		for _, event := range events.GetBatchedEvents() {
 			if err := secagentdcommon.CheckCommon(event.GetCommon()); err != nil {
 				s.Error("Invalid common field: ", err)
-			}
-			if *event.Common.DeviceUser == "" {
+			} else if *event.Common.DeviceUser == "" {
 				s.Error("Device user is empty")
 			} else if !strings.HasPrefix(*event.Common.DeviceUser, "UnaffiliatedUser-") {
 				s.Errorf("Device user does not have unaffiliated prefix. Actual: %s", *event.Common.DeviceUser)
@@ -167,7 +167,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 			}
 
 			// Verify that all device users UUID are the same because it is same account.
-			if deviceUser == "" {
+			if deviceUser == "" && *event.Common.DeviceUser != "Unknown" {
 				deviceUser = *event.Common.DeviceUser
 			} else if *event.Common.DeviceUser != deviceUser {
 				s.Errorf("Device user does not match. Expected: %s, Actual: %s", deviceUser, *event.Common.DeviceUser)
