@@ -203,17 +203,6 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		params = append(params, param)
 	}
 
-	// grid
-	// TODO(b/234643665): Reduce these to 2x2 1080p (as many pixels as 4K).
-	for _, codec := range []string{"h264", "hevc", "vp8", "vp9", "av1"} {
-		resolution, fps, dec := 720, 30, "hw"
-		param := genPlaybackPerfParam(codec, playback.GenDataPath(codec, resolution, fps),
-			resolution, fps, dec, "x9", "", nil)
-		param.Grid.Width = 3
-		param.Grid.Height = 3
-		params = append(params, param)
-	}
-
 	// lacros
 	for _, resolution := range []int{720, 1080, 2160} {
 		fpss := []int{30}
@@ -247,12 +236,26 @@ func TestPlaybackPerfConfig(t *testing.T) {
 		params = append(params, param)
 	}
 
-	for _, codec := range []string{"h264", "vp9"} {
-		// 1080p x 2 ~= 2K, 480p x 9  ~= 2K, 360p x 16 ~= 2K, 180p x 49 ~= 1260p
-		// TODO(b/237600904): Add {180, 7, 7} once the issue is resolved.
-		for _, resGrid := range [][3]int{{1080, 2, 1}, {480, 3, 3}, {360, 4, 4}} {
+	// All 1080p x 2, 720p x 4, 480p x 9 and 360p x 16 are equivalent to each
+	// other in number of pixels decoded per second. The next logical steps would
+	// be 240p x36 (6x6 grid) and maybe even 144p x100 (10x10 grid).
+	// TODO(b/237600904): Add more cases once the issue is resolved.
+	var resGrids = [][3]int{
+		{1080, 2, 1},
+		{720, 2, 2},
+		{480, 3, 3},
+		{360, 4, 4},
+	}
+	// Above this number of videos in the grid, we only run for codecs used in
+	// video conference applications.
+	const manyVideos = 9
+	for _, codec := range []string{"h264", "hevc", "vp8", "vp9", "av1"} {
+		for _, resGrid := range resGrids {
 			resolution, gridW, gridH := resGrid[0], resGrid[1], resGrid[2]
 			numVideos := gridW * gridH
+			if numVideos >= manyVideos && (codec == "hevc" || codec == "av1") {
+				continue
+			}
 			fps, dec := 30, "hw"
 			testNameSuffix := fmt.Sprintf("x%d", numVideos)
 			param := genPlaybackPerfParam(codec,
@@ -265,7 +268,10 @@ func TestPlaybackPerfConfig(t *testing.T) {
 				// More than 10 videos in parallel is too much for Grunt, see b/290637628.
 				param.HardwareDeps = "hwdep.SkipGPUFamily(\"stoney\")"
 			}
-			param.ExtraAttr = []string{"group:graphics", "graphics_video", "graphics_nightly"}
+			if resolution != 720 {
+				// "graphics_weekly" amounts to 2 or 3 times per week.
+				param.ExtraAttr = []string{"group:graphics", "graphics_video", "graphics_weekly"}
+			}
 			params = append(params, param)
 
 		}
