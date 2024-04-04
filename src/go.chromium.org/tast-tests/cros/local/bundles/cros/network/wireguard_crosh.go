@@ -27,11 +27,12 @@ func init() {
 		// For the test naming, we cannot use WireGuardCrosh because it is not
 		// consistent with the file name.
 		Func:     WireguardCrosh,
-		Desc:     "Verify using wireguard command in crosh to manage a wireguard setrvice",
+		Desc:     "Verify using wireguard command in crosh to manage a wireguard service",
 		Contacts: []string{"cros-networking@google.com", "jiejiang@google.com"},
 		// ChromeOS > Platform > System > Networking > Continuous Maintenance
 		BugComponent: "b:1493959",
-		Attr:         []string{"group:network", "network_platform"},
+		// This test mainly verifies the crosh interface so it's hw_agnostic.
+		Attr:         []string{"group:mainline", "group:criticalstaging", "informational", "group:hw_agnostic"},
 		SoftwareDeps: []string{"wireguard"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
 	})
