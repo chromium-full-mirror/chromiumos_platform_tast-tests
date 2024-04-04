@@ -7,8 +7,10 @@ package arc
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/android/ui"
@@ -176,8 +178,17 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		policies = append(policies, newPolicy)
 	}
 
+	lastSyncTimeStamp, err := getPolicySyncTimestamp(ctx, cr.NormalizedUser())
+	if err != nil {
+		s.Fatal("Failed to get policy sync time: ", err)
+	}
+
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, policies); err != nil {
 		s.Fatal("Failed to update policies: ", err)
+	}
+
+	if err := waitForPolicySync(ctx, a, cr.NormalizedUser(), lastSyncTimeStamp); err != nil {
+		s.Fatal("ARC policy not synced: ", err)
 	}
 
 	s.Log("Testing policies with restrictions")
@@ -205,6 +216,57 @@ func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, 
 	policy := &policy.WallpaperImage{Val: &policy.WallpaperImageValue{Url: iurl, Hash: ihash}}
 
 	return policy, cleanup, nil
+}
+
+func waitForPolicySync(ctx context.Context, a *arc.ARC, user string, lastSyncTimeStamp int64) error {
+	const policySyncTimeout = 30 * time.Second
+
+	testing.ContextLog(ctx, "Waiting for ARC policy to sync")
+
+	return arc.PollWithReadOnlyAndroidData(ctx, user, func(ctx context.Context) error {
+		currentSyncTimeStamp, err := getPolicySyncTimestamp(ctx, user)
+		if err != nil {
+			return errors.Wrap(err, "failed to get ARC policy sync time")
+		}
+
+		if currentSyncTimeStamp == lastSyncTimeStamp {
+			return errors.New("ARC policy not yet synced")
+		}
+
+		return nil
+	}, &testing.PollOptions{Timeout: policySyncTimeout, Interval: time.Second})
+}
+
+func getPolicySyncTimestamp(ctx context.Context, user string) (int64, error) {
+	const (
+		policyUpdateTimeout = 30 * time.Second
+		dpcPrefPath         = "data/data/com.google.android.apps.work.clouddpc.arc/shared_prefs/prefs.xml"
+	)
+	syncTimestampRe := regexp.MustCompile(`<long\sname="sync_timestamp"\s+value="(\d+)"\s*/>`)
+
+	androidDataDir, err := arc.AndroidDataDir(ctx, user)
+	if err != nil {
+		return -1, errors.Wrap(err, "failed to get android-data path")
+	}
+
+	dpcPrefFullPath := filepath.Join(androidDataDir, dpcPrefPath)
+	prefsText, err := ioutil.ReadFile(dpcPrefFullPath)
+	if err != nil {
+		return -1, err
+	}
+
+	timestamp := syncTimestampRe.FindStringSubmatch(string(prefsText))
+	if timestamp == nil {
+		return -1, errors.New("sync_timestamp not found")
+	}
+
+	// Epoch time in milliseconds.
+	epoch, err := strconv.ParseInt(timestamp[1], 10 /*base*/, 64 /*int64*/)
+	if err != nil {
+		return -1, errors.Wrapf(err, "failed to parse timestamp %q", timestamp[1])
+	}
+
+	return epoch, nil
 }
 
 func testPolicyEnforcement(ctx context.Context, d *ui.Device, policy string, shouldSucceed bool) error {
@@ -263,7 +325,7 @@ func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 		}
 
 		return nil
-	}, &testing.PollOptions{Timeout: resultWaitTime}); err != nil {
+	}, &testing.PollOptions{Timeout: resultWaitTime, Interval: time.Second}); err != nil {
 		return "", err
 	}
 
