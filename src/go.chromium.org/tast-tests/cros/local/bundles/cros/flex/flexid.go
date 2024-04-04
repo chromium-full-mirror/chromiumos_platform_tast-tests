@@ -37,15 +37,18 @@ func isAllASCII(output string) bool {
 }
 
 func FlexID(ctx context.Context, s *testing.State) {
-	out, err := testexec.CommandContext(ctx, "flex_id_tool").CombinedOutput()
-	status, ok := testexec.ExitCode(err)
+	var options = []string{"--type=id", "--type=state_key"}
+	for _, option := range options {
+		out, err := testexec.CommandContext(ctx, "flex_id_tool", option).CombinedOutput()
+		status, ok := testexec.ExitCode(err)
 
-	outString := string(out)
-	if !ok {
-		s.Fatalf("flex_id_tool exited with status %d: %s", status, outString)
-	}
+		outString := string(out)
+		if !ok {
+			s.Fatalf("flex_id_tool exited with status %d: %s", status, outString)
+		}
 
-	if !isAllASCII(outString) {
-		s.Errorf("%s contains non-ASCII characters", outString)
+		if !isAllASCII(outString) {
+			s.Errorf("%s contains non-ASCII characters", outString)
+		}
 	}
 }
