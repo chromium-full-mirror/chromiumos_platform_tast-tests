@@ -58,9 +58,17 @@ func charge(ctx context.Context, displayPercentage float64) error {
 	ctx, cancel := ctxutil.Shorten(ctx, 5*time.Second)
 	defer cancel()
 
+	setup.AllowBatteryCharging(ctx)
+
 	if err := setup.WaitUntilPowerSourceChanges(ctx, true); err != nil {
 		return err
 	}
+
+	// GoBigSleepLint: Give the battery state some time to settle to 'not
+	// discharging'. It is not enough to poll for the battery to switch to
+	// the target state, it is has been observed to bounce back in the
+	// first seconds.
+	testing.Sleep(ctx, 3*time.Second)
 
 	// Dimming DUT screen.
 	pm, err := power.NewPowerManager(ctx)
