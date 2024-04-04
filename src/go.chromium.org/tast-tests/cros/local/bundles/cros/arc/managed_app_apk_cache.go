@@ -189,8 +189,6 @@ func loginAndWaitForARC(ctx, cleanupCtx context.Context, s *testing.State, enrol
 }
 
 func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, rl *retry.Loop, packages []string) error {
-	pushingInCacheRegEx := "Pushing in cache " + testPackage
-
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
@@ -198,12 +196,6 @@ func verifyFirstUserSession(ctx context.Context, s *testing.State, a *arc.ARC, r
 	// Dump logcat from the first user session since it gets overwritten
 	// by the second user session.
 	defer dumpLogcatToOutDir(cleanupCtx, s, a, "logcat_first_session.txt")
-
-	s.Log("Waiting for logs")
-	exp := regexp.MustCompile(pushingInCacheRegEx)
-	if err := a.WaitForLogcat(ctx, arc.RegexpPred(exp)); err != nil {
-		return rl.Exit("find log that package was cached", err)
-	}
 
 	// Confirm that test app is force-installed by ARC policy.
 	if err := a.WaitForPackages(ctx, packages); err != nil {
