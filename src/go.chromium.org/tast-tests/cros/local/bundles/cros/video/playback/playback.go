@@ -167,8 +167,8 @@ func RunTest(ctx context.Context, s *testing.State, tconn *chrome.TestConn, conf
 	}
 
 	if config.PerfMeasurement {
-		// Wait for CPU to cool down before playing the video and recording metrics.
-		if err := cpu.Cooldown(ctx); err != nil {
+		// Wait for CPU to become idle before playing the video and recording metrics.
+		if err := cpu.WaitUntilIdle(ctx); err != nil {
 			s.Fatal("Failed to wait for cpu to cooldown: ", err)
 		}
 	}
