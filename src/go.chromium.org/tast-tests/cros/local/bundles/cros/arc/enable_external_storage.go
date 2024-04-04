@@ -133,8 +133,8 @@ func EnableExternalStorage(ctx context.Context, s *testing.State) {
 
 	if err := uiauto.Combine("Toggle External Storage Settings",
 		ui.FocusAndWait(externalStoragePreferenceButton),
-		ui.LeftClick(externalStoragePreferenceButton),
-		ui.LeftClick(myDiskButton),
+		ui.DoDefault(externalStoragePreferenceButton),
+		ui.DoDefault(myDiskButton),
 	)(ctx); err != nil {
 		s.Fatal("Failed to Open Storage Settings : ", err)
 	}
@@ -143,7 +143,8 @@ func EnableExternalStorage(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for the volume to be mounted in ARC: ", err)
 	}
 
-	// Need to wait more for media volume to be mounted.
+	// GoBigSleepLint: Need to wait more for media volume to be mounted.
+	// TODO: Remove the use of sleep here.
 	testing.Sleep(ctx, 5*time.Second)
 
 	s.Log("Restarting app")
