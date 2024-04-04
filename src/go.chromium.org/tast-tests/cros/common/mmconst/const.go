@@ -71,15 +71,18 @@ const (
 	BearerPropertyMultiplexed     = "Multiplexed"
 	BearerPropertyProperties      = "Properties"
 	// APN related properties
-	BearerPropertyAllowRoaming = "allow-roaming"
-	BearerPropertyAllowedAuth  = "allowed-auth"
-	BearerPropertyApn          = "apn"
-	BearerPropertyApnType      = "apn-type"
-	BearerPropertyIPType       = "ip-type"
-	BearerPropertyMultiplex    = "multiplex"
-	BearerPropertyPassword     = "password"
-	BearerPropertyUser         = "user"
-	BearerPropertyProfileID    = "profile-id"
+	BearerPropertyAllowRoaming   = "allow-roaming"
+	BearerPropertyAllowedAuth    = "allowed-auth"
+	BearerPropertyApn            = "apn"
+	BearerPropertyApnType        = "apn-type"
+	BearerPropertyIPType         = "ip-type"
+	BearerPropertyMultiplex      = "multiplex"
+	BearerPropertyPassword       = "password"
+	BearerPropertyUser           = "user"
+	BearerPropertyProfileEnabled = "profile-enabled"
+	BearerPropertyProfileID      = "profile-id"
+	BearerPropertyProfileName    = "profile-name"
+	BearerPropertyProfileSource  = "profile-source"
 	// IPConfig related properties
 	BearerPropertyIPMethod  = "method"
 	BearerPropertyIPAddress = "address"
@@ -137,6 +140,19 @@ const (
 	BearerMultiplexSupportNone      BearerMultiplexSupport = 1
 	BearerMultiplexSupportRequested BearerMultiplexSupport = 2
 	BearerMultiplexSupportRequired  BearerMultiplexSupport = 3
+)
+
+// BearerProfileSource Profile source from Modemmanager-enums.h
+type BearerProfileSource uint32
+
+// All the bearer profile sources
+const (
+	BearerProfileSourceUnknown  BearerProfileSource = 0
+	BearerProfileSourceAdmin    BearerProfileSource = 1
+	BearerProfileSourceUser     BearerProfileSource = 2
+	BearerProfileSourceOperator BearerProfileSource = 3
+	BearerProfileSourceModem    BearerProfileSource = 4
+	BearerProfileSourceDevice   BearerProfileSource = 5
 )
 
 // BearerAPNType APN types options from Modemmanager-enums.h

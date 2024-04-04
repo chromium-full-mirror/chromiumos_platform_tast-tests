@@ -12,6 +12,7 @@ import (
 	"go.chromium.org/tast-tests/cros/common/mmconst"
 	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast/core/errors"
+	"go.chromium.org/tast/core/testing"
 )
 
 // IPConfig represents a MM IPConfig dbus object
@@ -29,26 +30,34 @@ type IPConfig struct {
 
 // BearerProperties represents a MM Bearer properties dbus object
 type BearerProperties struct {
-	apn          string
-	allowRoaming bool
-	allowedAuth  uint32
-	apnType      uint32
-	ipType       uint32
-	multiplex    uint32
-	password     string
-	user         string
-	profile      *BearerProperties
-	profileID    int32
+	apn            string
+	allowRoaming   bool
+	allowedAuth    uint32
+	apnType        uint32
+	ipType         uint32
+	multiplex      uint32
+	password       string
+	profile        *BearerProperties
+	profileEnabled bool
+	profileID      int32
+	profileName    string
+	profileSource  uint32
+	user           string
+	dbusMap        map[string]interface{}
 	// Indicators of property existence
-	HasApn          bool
-	HasAllowRoaming bool
-	HasAllowedAuth  bool
-	HasApnType      bool
-	HasIPType       bool
-	HasMultiplex    bool
-	HasPassword     bool
-	HasUser         bool
-	HasProfileID    bool
+	HasApn            bool
+	HasAllowRoaming   bool
+	HasAllowedAuth    bool
+	HasApnType        bool
+	HasIPType         bool
+	HasMultiplex      bool
+	HasPassword       bool
+	HasProfileEnabled bool
+	HasProfileID      bool
+	HasProfileName    bool
+	HasProfileSource  bool
+	HasSource         bool
+	HasUser           bool
 }
 
 // InvalidProfileID is a sentinel value for profile ID when it is not present or when the profile is not valid.
@@ -206,10 +215,7 @@ func (b *Bearer) IsIPType(ctx context.Context, ipType mmconst.BearerIPFamily) (b
 // InvalidProfileID if it is not present.
 func (b *Bearer) GetProfileID(ctx context.Context) (int32, error) {
 	properties := b.Properties(ctx)
-	if !properties.HasProfileID {
-		return InvalidProfileID, errors.New("failed to read the profile ID")
-	}
-	return properties.profileID, nil
+	return properties.GetProfileID(ctx)
 }
 
 // Interface gets the Interface value
@@ -274,6 +280,43 @@ func (b *Bearer) IP6Config() *IPConfig {
 	return value
 }
 
+// GetProfileID gets the profile ID from the bearer properties or
+// InvalidProfileID if it is not present.
+func (bp *BearerProperties) GetProfileID(ctx context.Context) (int32, error) {
+	if !bp.HasProfileID {
+		return InvalidProfileID, errors.New("failed to read the profile ID")
+	}
+	return bp.profileID, nil
+}
+
+// GetProfileSource gets the profile source from the bearer properties if it exists.
+func (bp *BearerProperties) GetProfileSource(ctx context.Context) (uint32, error) {
+	if !bp.HasProfileSource {
+		return 0, errors.New("failed to read the profile source")
+	}
+	return bp.profileSource, nil
+}
+
+// IsProfileSource checks if the profile source of the bearer is of the type |profileSource|
+func (bp *BearerProperties) IsProfileSource(ctx context.Context, profileSource mmconst.BearerProfileSource) (bool, error) {
+	if !bp.HasProfileSource {
+		return false, errors.New("failed to read the profile source")
+	}
+	return (bp.profileSource & uint32(profileSource)) != 0, nil
+}
+
+// Print prints all the values from the dbus map.
+func (bp *BearerProperties) Print(ctx context.Context) {
+	testing.ContextLog(ctx, "Print profile: ")
+
+	if bp.dbusMap != nil {
+		for k, v := range bp.dbusMap {
+			testing.ContextLog(ctx, k, " : ", v)
+		}
+	}
+
+}
+
 // Properties gets the Properties value
 func (b *Bearer) Properties(ctx context.Context) BearerProperties {
 	innerPropsGet, err := b.props.Get(mmconst.BearerPropertyProperties)
@@ -284,117 +327,122 @@ func (b *Bearer) Properties(ctx context.Context) BearerProperties {
 	if !ok {
 		panic("failed to parse bearer properties")
 	}
+
+	return b.modem.loadBearerPropertiesFromMap(ctx, innerProps, true)
+}
+
+// loadBearerPropertiesFromMap creates a BearerProperties object from a dus property map.
+func (m *Modem) loadBearerPropertiesFromMap(ctx context.Context, dbusMap map[string]interface{}, loadProfiles bool) BearerProperties {
+
 	properties := BearerProperties{}
+	properties.dbusMap = dbusMap
 	// APN
-	value, ok := innerProps[mmconst.BearerPropertyApn]
+	value, ok := dbusMap[mmconst.BearerPropertyApn]
 	if ok {
 		properties.apn, ok = value.(string)
 	}
 	properties.HasApn = ok
 	// AllowRoaming
-	value, ok = innerProps[mmconst.BearerPropertyAllowRoaming]
+	value, ok = dbusMap[mmconst.BearerPropertyAllowRoaming]
 	if ok {
 		properties.allowRoaming, ok = value.(bool)
 	}
 	properties.HasAllowRoaming = ok
 	// AllowedAuth
-	value, ok = innerProps[mmconst.BearerPropertyAllowedAuth]
+	value, ok = dbusMap[mmconst.BearerPropertyAllowedAuth]
 	if ok {
 		properties.allowedAuth, ok = value.(uint32)
 	}
 	properties.HasAllowedAuth = ok
 	// APN type
-	value, ok = innerProps[mmconst.BearerPropertyApnType]
+	value, ok = dbusMap[mmconst.BearerPropertyApnType]
 	if ok {
 		properties.apnType, ok = value.(uint32)
 	}
 	properties.HasApnType = ok
 	// IP type
-	value, ok = innerProps[mmconst.BearerPropertyIPType]
+	value, ok = dbusMap[mmconst.BearerPropertyIPType]
 	if ok {
 		properties.ipType, ok = value.(uint32)
 	}
 	properties.HasIPType = ok
 	// Multiplex
-	value, ok = innerProps[mmconst.BearerPropertyMultiplex]
+	value, ok = dbusMap[mmconst.BearerPropertyMultiplex]
 	if ok {
 		properties.multiplex, ok = value.(uint32)
 	}
 	properties.HasMultiplex = ok
 	// Password
-	value, ok = innerProps[mmconst.BearerPropertyPassword]
+	value, ok = dbusMap[mmconst.BearerPropertyPassword]
 	if ok {
 		properties.password, ok = value.(string)
 	}
 	properties.HasPassword = ok
 	// User
-	value, ok = innerProps[mmconst.BearerPropertyUser]
+	value, ok = dbusMap[mmconst.BearerPropertyUser]
 	if ok {
 		properties.user, ok = value.(string)
 	}
 	properties.HasUser = ok
 	// Profile ID
-	value, ok = innerProps[mmconst.BearerPropertyProfileID]
+	value, ok = dbusMap[mmconst.BearerPropertyProfileID]
 	if ok {
 		properties.profileID, ok = value.(int32)
 	}
 	properties.HasProfileID = ok
+	// Profile name
+	value, ok = dbusMap[mmconst.BearerPropertyProfileName]
+	if ok {
+		properties.profileName, ok = value.(string)
+	}
+	properties.HasProfileName = ok
+	// Profile source
+	value, ok = dbusMap[mmconst.BearerPropertyProfileSource]
+	if ok {
+		properties.profileSource, ok = value.(uint32)
+	}
+	properties.HasProfileSource = ok
 
 	properties.profile = nil
-	// Read the inner properties of the profile if the bearer was created using a profile ID.
-	if properties.HasProfileID && properties.profileID != InvalidProfileID {
-		profiles, err := b.modem.GetProfiles(ctx)
-		if err != nil {
-			panic(err)
+
+	if loadProfiles {
+		// Read the inner properties of the profile if the bearer was created using a profile ID.
+		if properties.HasProfileID && properties.profileID != InvalidProfileID {
+			profiles, err := m.GetProfilesAsBearerProperties(ctx)
+			if err != nil {
+				panic(err)
+			}
+			for _, profile := range profiles {
+				// This is almost certainly a malformed profile if either of these fail, but
+				// it's not really what we're testing for here.
+				if !profile.HasProfileID {
+					continue
+				}
+
+				if properties.profileID != profile.profileID {
+					continue
+				}
+
+				properties.profile = &profile
+			}
 		}
-		for _, profile := range profiles {
-			// This is almost certainly a malformed profile if either of these fail, but
-			// it's not really what we're testing for here.
-			idProp, ok := profile[mmconst.BearerPropertyProfileID]
-			if !ok {
-				continue
-			}
-			id, ok := idProp.(int32)
-			if !ok {
-				continue
-			}
 
-			if properties.profileID != id {
-				continue
-			}
-
-			properties.profile = &BearerProperties{}
-			value, ok := profile[mmconst.BearerPropertyApn]
-			if ok {
-				properties.profile.apn, ok = value.(string)
-			}
-			properties.profile.HasApn = ok
-
-			value, ok = profile[mmconst.BearerPropertyApnType]
-			if ok {
-				properties.profile.apnType, ok = value.(uint32)
-			}
-			properties.profile.HasApnType = ok
-
-			value, ok = profile[mmconst.BearerPropertyAllowedAuth]
-			if ok {
-				properties.profile.allowedAuth, ok = value.(uint32)
-			}
-			properties.profile.HasAllowedAuth = ok
-
-			value, ok = profile[mmconst.BearerPropertyPassword]
-			if ok {
-				properties.profile.password, ok = value.(string)
-			}
-			properties.profile.HasPassword = ok
-
-			value, ok = profile[mmconst.BearerPropertyUser]
-			if ok {
-				properties.profile.user, ok = value.(string)
-			}
-			properties.profile.HasUser = ok
-		}
 	}
 
 	return properties
+}
+
+// GetProfilesAsBearerProperties gets the list of profiles
+func (m *Modem) GetProfilesAsBearerProperties(ctx context.Context) ([]BearerProperties, error) {
+	var allProperties []BearerProperties
+	profiles, err := m.GetProfiles(ctx)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get profiles")
+	}
+	for _, profile := range profiles {
+
+		allProperties = append(allProperties, m.loadBearerPropertiesFromMap(ctx, profile, false))
+	}
+
+	return allProperties, nil
 }
