@@ -11,7 +11,6 @@ import (
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
-	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -34,7 +33,6 @@ func init() {
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Fixture:      fixture.USBDevModeWithReinstall,
 		Requirements: []string{
 			tdreq.StorageStable,
 		},
@@ -61,7 +59,7 @@ func Stress(ctx context.Context, s *testing.State) {
 	bootIDChecker := util.NewBootIDChecker(ctx, s.DUT(), s)
 	defer util.FatalIfBootIDChanged(ctx, bootIDChecker, s)
 
-	disk, err := util.GetInternalStorage(ctx, s.DUT())
+	disk, err := util.GetStandbyRootfs(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}

@@ -10,7 +10,6 @@ import (
 
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 	"go.chromium.org/tast-tests/cros/remote/bundles/cros/storage/util"
-	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -30,7 +29,6 @@ func init() {
 		BugComponent: "b:974567", // ChromeOS > Platform > System > Storage
 		Data:         util.Configs,
 		SoftwareDeps: []string{"crossystem"},
-		Fixture:      fixture.USBDevModeWithReinstall,
 		Requirements: []string{
 			tdreq.StorageStable, tdreq.StorageEndurancePerf,
 		},
@@ -65,7 +63,7 @@ func StressWrite(ctx context.Context, s *testing.State) {
 	resultWriter := &util.FioResultWriter{}
 	defer resultWriter.Save(ctx, s.OutDir(), true)
 
-	disk, err := util.GetInternalStorage(ctx, s.DUT())
+	disk, err := util.GetStandbyRootfs(ctx, s.DUT())
 	if err != nil {
 		s.Fatal("Failed to get internal disk: ", err)
 	}
