@@ -23,6 +23,9 @@ import java.util.function.Supplier;
 
 public class MainActivity extends Activity {
     private static final String TAG = "ArcDevicePolicyTest";
+    private static final String POLICY_VALUE_KEY = "lstPolicies_value";
+    private static final String OUTPUT_VALUE_KEY = "txtOutput_value";
+    private static final String ERROR_VALUE_KEY = "txtError_value";
 
     private TextView txtOutput;
     private Button btnTest;
@@ -50,6 +53,26 @@ public class MainActivity extends Activity {
                         put("setWallpaper", () -> setWallpaper());
                     }
                 };
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt(POLICY_VALUE_KEY, lstPolicies.getSelectedItemPosition());
+        outState.putString(OUTPUT_VALUE_KEY, txtOutput.getText().toString());
+        outState.putString(ERROR_VALUE_KEY, txtError.getText().toString());
+    }
+
+    @Override
+    public void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+
+        if (savedInstanceState != null) {
+            lstPolicies.setSelection(savedInstanceState.getInt(POLICY_VALUE_KEY));
+            txtOutput.setText(savedInstanceState.getString(OUTPUT_VALUE_KEY));
+            txtError.setText(savedInstanceState.getString(ERROR_VALUE_KEY));
+        }
     }
 
     private void runTest() {
