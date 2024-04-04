@@ -31,6 +31,7 @@ const (
 const (
 	LauncherImageSearchIcaAndOcr = "launcherImageSearchIcaAndOcr"
 	LauncherImageSearchOcr       = "launcherImageSearchOcr"
+	LauncherImageSearchOcrNonCBX = "launcherImageSearchOcrNonCBX"
 	LauncherImageSearchIca       = "launcherImageSearchIca"
 	LauncherImageSearch          = "launcherImageSearch"
 	NormalLauncherSearch         = "normalLauncherSearch"
@@ -77,6 +78,18 @@ func init() {
 			"ml-service-team@google.com",
 		},
 		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr"}},
+		SetUpTimeout:    launcherSearchSetUpTestTimeout,
+		PreTestTimeout:  launcherSearchPreTestTimeout,
+		PostTestTimeout: launcherSearchPostTestTimeout,
+	})
+	testing.AddFixture(&testing.Fixture{
+		Name: LauncherImageSearchOcrNonCBX,
+		Desc: "Turn on LauncherImageSearchOcr on non cbx device",
+		Contacts: []string{
+			"xiuwen@google.com",
+			"ml-service-team@google.com",
+		},
+		Impl:            &launcherSearchFixtureImpl{featureFlags: []string{"ProductivityLauncherImageSearch", "LauncherImageSearch", "LauncherImageSearchOcr", "ICASupportedByHardware", "FeatureManagementLocalImageSearch"}},
 		SetUpTimeout:    launcherSearchSetUpTestTimeout,
 		PreTestTimeout:  launcherSearchPreTestTimeout,
 		PostTestTimeout: launcherSearchPostTestTimeout,
