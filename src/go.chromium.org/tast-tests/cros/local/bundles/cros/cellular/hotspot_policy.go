@@ -104,7 +104,7 @@ func HotspotPolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	hs, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Network)
+	hs, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Internet)
 	if err != nil {
 		s.Fatal("Failed to launch network page: ", err)
 	}

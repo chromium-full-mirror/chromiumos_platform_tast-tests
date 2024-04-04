@@ -230,7 +230,7 @@ func verifyVPNNotExist(res *vpnAreUserSpecifiedResource) uiauto.Action {
 		defer settings.Close(cleanupCtx)
 		defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, res.outDir, func() bool { return retErr != nil }, res.cr, "ossettings_ui_dump")
 
-		if err := settings.NavigateToPageURL(ctx, res.cr, "Network", settings.Exists(ossettings.Network)); err != nil {
+		if err := settings.NavigateToPageURL(ctx, res.cr, "internet", settings.Exists(ossettings.Internet)); err != nil {
 			return errors.Wrap(err, "failed to navigate to network page")
 		}
 

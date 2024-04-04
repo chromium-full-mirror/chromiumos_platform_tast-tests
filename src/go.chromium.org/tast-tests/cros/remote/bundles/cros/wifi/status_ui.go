@@ -374,7 +374,7 @@ func newOsSettingsPageTest(rpcClient *rpc.Client) *osSettingsPageTest {
 }
 
 func (s *osSettingsPageTest) openPage(ctx context.Context) error {
-	_, err := s.settingsSvc.LaunchAtNetwork(ctx, &emptypb.Empty{})
+	_, err := s.settingsSvc.LaunchAtInternet(ctx, &emptypb.Empty{})
 	return err
 }
 

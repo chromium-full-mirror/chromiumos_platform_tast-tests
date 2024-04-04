@@ -14,19 +14,21 @@ option go_package = "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto
 // OsSettingsService provides functions for interacting with the OS Settings on
 // ChromeOS devices.
 service OsSettingsService {
-  // LaunchAtNetwork will launch the OS Settings application at Network page.
-  rpc LaunchAtNetwork(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  // LaunchAtInternet will launch the OS Settings application at Network page.
+  rpc LaunchAtInternet(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // LaunchAtWifiPage will launch the OS Settings application at Wi-Fi page.
   rpc LaunchAtWifiPage(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // OpenNetworkDetailPage will open the OS Settings application and navigate
   // to the detail page for the specified network.
-  rpc OpenNetworkDetailPage(OpenNetworkDetailPageRequest) returns (google.protobuf.Empty) {}
+  rpc OpenNetworkDetailPage(OpenNetworkDetailPageRequest)
+      returns (google.protobuf.Empty) {}
 
   // OpenHotspotDetailPage will open the OS Settings application and navigate
   // to the Hotspot detail page.
-  rpc OpenHotspotDetailPage(google.protobuf.Empty) returns (google.protobuf.Empty) {}
+  rpc OpenHotspotDetailPage(google.protobuf.Empty)
+      returns (google.protobuf.Empty) {}
 
   // SetToggleOption clicks toggle option to enable or disable an option.
   // It does nothing if the option is already expected.
@@ -38,23 +40,27 @@ service OsSettingsService {
   rpc ToggleHotspot(ToggleHotspotRequest) returns (google.protobuf.Empty) {}
 
   // WaitUntilToggleOption waits until the toggle option enabled or disabled.
-  rpc WaitUntilToggleOption(WaitUntilToggleOptionRequest) returns (google.protobuf.Empty) {}
+  rpc WaitUntilToggleOption(WaitUntilToggleOptionRequest)
+      returns (google.protobuf.Empty) {}
 
   // Close will close the open OS Settings application.
   rpc Close(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
   // EvalJSWithShadowPiercer executes javascript in Settings app web page.
-  rpc EvalJSWithShadowPiercer(EvalJSWithShadowPiercerRequest) returns (google.protobuf.Value) {}
+  rpc EvalJSWithShadowPiercer(EvalJSWithShadowPiercerRequest)
+      returns (google.protobuf.Value) {}
 
-  // AvailableWifiNetworks looks for all available WiFi networks in the WiFi detail page,
-  // returns a list of SSID of available WiFi networks.
-  // This RPC requires the WiFi detail page to be opened, an error will be returned if
+  // AvailableWifiNetworks looks for all available WiFi networks in the WiFi
+  // detail page, returns a list of SSID of available WiFi networks. This RPC
+  // requires the WiFi detail page to be opened, an error will be returned if
   // the page is not opened.
-  rpc AvailableWifiNetworks(google.protobuf.Empty) returns (AvailableWifiNetworksResponse) {}
+  rpc AvailableWifiNetworks(google.protobuf.Empty)
+      returns (AvailableWifiNetworksResponse) {}
 
   // KnownWifiNetworks looks for all known WiFi networks in known network view,
   // returns a list of the SSID of known WiFi network.
-  rpc KnownWifiNetworks(google.protobuf.Empty) returns (KnownWifiNetworksResponse) {}
+  rpc KnownWifiNetworks(google.protobuf.Empty)
+      returns (KnownWifiNetworksResponse) {}
 }
 
 message OpenNetworkDetailPageRequest {
@@ -79,9 +85,7 @@ message SetToggleOptionRequest {
   bool enabled = 2;
 }
 
-message ToggleHotspotRequest {
-  bool enabled = 1;
-}
+message ToggleHotspotRequest { bool enabled = 1; }
 
 message WaitUntilToggleOptionRequest {
   // The name of the toggle option.
@@ -96,10 +100,6 @@ message EvalJSWithShadowPiercerRequest {
   string expression = 1;
 }
 
-message AvailableWifiNetworksResponse {
-  repeated string ssids = 1;
-}
+message AvailableWifiNetworksResponse { repeated string ssids = 1; }
 
-message KnownWifiNetworksResponse {
-  repeated string ssids = 1;
-}
+message KnownWifiNetworksResponse { repeated string ssids = 1; }

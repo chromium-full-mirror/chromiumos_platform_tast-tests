@@ -594,7 +594,7 @@ var file_ossettings_service_proto_goTypes = []interface{}{
 }
 var file_ossettings_service_proto_depIdxs = []int32{
 	0,  // 0: tast.cros.chrome.uiauto.ossettings.OpenNetworkDetailPageRequest.network_type:type_name -> tast.cros.chrome.uiauto.ossettings.OpenNetworkDetailPageRequest.NetworkType
-	8,  // 1: tast.cros.chrome.uiauto.ossettings.OsSettingsService.LaunchAtNetwork:input_type -> google.protobuf.Empty
+	8,  // 1: tast.cros.chrome.uiauto.ossettings.OsSettingsService.LaunchAtInternet:input_type -> google.protobuf.Empty
 	8,  // 2: tast.cros.chrome.uiauto.ossettings.OsSettingsService.LaunchAtWifiPage:input_type -> google.protobuf.Empty
 	1,  // 3: tast.cros.chrome.uiauto.ossettings.OsSettingsService.OpenNetworkDetailPage:input_type -> tast.cros.chrome.uiauto.ossettings.OpenNetworkDetailPageRequest
 	8,  // 4: tast.cros.chrome.uiauto.ossettings.OsSettingsService.OpenHotspotDetailPage:input_type -> google.protobuf.Empty
@@ -605,7 +605,7 @@ var file_ossettings_service_proto_depIdxs = []int32{
 	5,  // 9: tast.cros.chrome.uiauto.ossettings.OsSettingsService.EvalJSWithShadowPiercer:input_type -> tast.cros.chrome.uiauto.ossettings.EvalJSWithShadowPiercerRequest
 	8,  // 10: tast.cros.chrome.uiauto.ossettings.OsSettingsService.AvailableWifiNetworks:input_type -> google.protobuf.Empty
 	8,  // 11: tast.cros.chrome.uiauto.ossettings.OsSettingsService.KnownWifiNetworks:input_type -> google.protobuf.Empty
-	8,  // 12: tast.cros.chrome.uiauto.ossettings.OsSettingsService.LaunchAtNetwork:output_type -> google.protobuf.Empty
+	8,  // 12: tast.cros.chrome.uiauto.ossettings.OsSettingsService.LaunchAtInternet:output_type -> google.protobuf.Empty
 	8,  // 13: tast.cros.chrome.uiauto.ossettings.OsSettingsService.LaunchAtWifiPage:output_type -> google.protobuf.Empty
 	8,  // 14: tast.cros.chrome.uiauto.ossettings.OsSettingsService.OpenNetworkDetailPage:output_type -> google.protobuf.Empty
 	8,  // 15: tast.cros.chrome.uiauto.ossettings.OsSettingsService.OpenHotspotDetailPage:output_type -> google.protobuf.Empty
@@ -747,8 +747,8 @@ const _ = grpc.SupportPackageIsVersion6
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type OsSettingsServiceClient interface {
-	// LaunchAtNetwork will launch the OS Settings application at Network page.
-	LaunchAtNetwork(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	// LaunchAtInternet will launch the OS Settings application at Network page.
+	LaunchAtInternet(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// LaunchAtWifiPage will launch the OS Settings application at Wi-Fi page.
 	LaunchAtWifiPage(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// OpenNetworkDetailPage will open the OS Settings application and navigate
@@ -788,9 +788,9 @@ func NewOsSettingsServiceClient(cc grpc.ClientConnInterface) OsSettingsServiceCl
 	return &osSettingsServiceClient{cc}
 }
 
-func (c *osSettingsServiceClient) LaunchAtNetwork(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *osSettingsServiceClient) LaunchAtInternet(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
-	err := c.cc.Invoke(ctx, "/tast.cros.chrome.uiauto.ossettings.OsSettingsService/LaunchAtNetwork", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/tast.cros.chrome.uiauto.ossettings.OsSettingsService/LaunchAtInternet", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -889,8 +889,8 @@ func (c *osSettingsServiceClient) KnownWifiNetworks(ctx context.Context, in *emp
 
 // OsSettingsServiceServer is the server API for OsSettingsService service.
 type OsSettingsServiceServer interface {
-	// LaunchAtNetwork will launch the OS Settings application at Network page.
-	LaunchAtNetwork(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	// LaunchAtInternet will launch the OS Settings application at Network page.
+	LaunchAtInternet(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// LaunchAtWifiPage will launch the OS Settings application at Wi-Fi page.
 	LaunchAtWifiPage(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
 	// OpenNetworkDetailPage will open the OS Settings application and navigate
@@ -926,8 +926,8 @@ type OsSettingsServiceServer interface {
 type UnimplementedOsSettingsServiceServer struct {
 }
 
-func (*UnimplementedOsSettingsServiceServer) LaunchAtNetwork(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LaunchAtNetwork not implemented")
+func (*UnimplementedOsSettingsServiceServer) LaunchAtInternet(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method LaunchAtInternet not implemented")
 }
 func (*UnimplementedOsSettingsServiceServer) LaunchAtWifiPage(context.Context, *emptypb.Empty) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LaunchAtWifiPage not implemented")
@@ -964,20 +964,20 @@ func RegisterOsSettingsServiceServer(s *grpc.Server, srv OsSettingsServiceServer
 	s.RegisterService(&_OsSettingsService_serviceDesc, srv)
 }
 
-func _OsSettingsService_LaunchAtNetwork_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _OsSettingsService_LaunchAtInternet_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(OsSettingsServiceServer).LaunchAtNetwork(ctx, in)
+		return srv.(OsSettingsServiceServer).LaunchAtInternet(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/tast.cros.chrome.uiauto.ossettings.OsSettingsService/LaunchAtNetwork",
+		FullMethod: "/tast.cros.chrome.uiauto.ossettings.OsSettingsService/LaunchAtInternet",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OsSettingsServiceServer).LaunchAtNetwork(ctx, req.(*emptypb.Empty))
+		return srv.(OsSettingsServiceServer).LaunchAtInternet(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1167,8 +1167,8 @@ var _OsSettingsService_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*OsSettingsServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "LaunchAtNetwork",
-			Handler:    _OsSettingsService_LaunchAtNetwork_Handler,
+			MethodName: "LaunchAtInternet",
+			Handler:    _OsSettingsService_LaunchAtInternet_Handler,
 		},
 		{
 			MethodName: "LaunchAtWifiPage",

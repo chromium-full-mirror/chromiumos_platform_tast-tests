@@ -167,20 +167,20 @@ func ConfirmPassword(ctx context.Context, cr *chrome.Chrome, password string) er
 func OpenMobileDataSubpage(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome) (*OSSettings, error) {
 	ui := uiauto.New(tconn)
 
-	NetworkPage, err := LaunchAtPageURL(ctx, tconn, cr, "Network", ui.Exists(networkFinder))
+	InternetPage, err := LaunchAtPageURL(ctx, tconn, cr, "internet", ui.Exists(Internet))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch settings page")
 	}
 
 	if err := uiauto.Combine("Go to mobile data page",
-		ui.LeftClick(networkFinder),
+		ui.LeftClick(Internet),
 		ui.LeftClick(MobileButton),
 	)(ctx); err != nil {
 		mobileDataLinkNode := nodewith.Name("Mobile data").Role(role.Heading)
-		if err := NetworkPage.NavigateToPageURL(ctx, cr, "networks?type=Cellular", ui.WaitUntilExists(mobileDataLinkNode)); err != nil {
+		if err := InternetPage.NavigateToPageURL(ctx, cr, "networks?type=Cellular", ui.WaitUntilExists(mobileDataLinkNode)); err != nil {
 			return nil, errors.Wrap(err, "failed to go to mobile data page")
 		}
-		return NetworkPage, nil
+		return InternetPage, nil
 	}
 	return &OSSettings{tconn: tconn, ui: ui}, nil
 }
@@ -524,7 +524,7 @@ func UninstallApp(ctx context.Context, tconn *chrome.TestConn, cr *chrome.Chrome
 // CommonSections returns a map that contains *nodewith.Finder for OS-Settings UI elements of common sections.
 func CommonSections() map[string]*nodewith.Finder {
 	sections := map[string]*nodewith.Finder{
-		"Network":              Network,
+		"Internet":             Internet,
 		"Bluetooth":            Bluetooth,
 		"Connected devices":    ConnectedDevices,
 		"Accounts":             Accounts,

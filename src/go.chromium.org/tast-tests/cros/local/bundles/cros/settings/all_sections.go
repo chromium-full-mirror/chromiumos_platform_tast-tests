@@ -69,7 +69,7 @@ func AllSections(ctx context.Context, s *testing.State) {
 			name:   sectionName,
 			finder: sectionFinder,
 		}
-		if sectionFinder == ossettings.Network {
+		if sectionFinder == ossettings.Internet {
 			section.subSectionToExpand = "Add network connection"
 		}
 		if sectionFinder == ossettings.SystemPreferences {

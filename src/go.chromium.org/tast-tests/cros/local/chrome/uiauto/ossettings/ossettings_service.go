@@ -7,6 +7,7 @@ package ossettings
 import (
 	"context"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
+	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
@@ -55,10 +57,17 @@ func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest
 	}
 }
 
-// LaunchAtNetwork will launch the OS Settings application at Network page.
-func (s *Service) LaunchAtNetwork(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+// LaunchAtInternet will launch the OS Settings application at Internet page.
+func (s *Service) LaunchAtInternet(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
+	cr := s.sharedObject.Chrome
+	if cr == nil {
+		return &emptypb.Empty{}, errors.New("Chrome has not been started")
+	}
+
+	// TODO(b/333731224) clean up NameRegex after instant hotspot growth feature launch
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		_, err := LaunchAtPage(ctx, tconn, Network)
+		condition := New(tconn).Exists(nodewith.NameRegex(regexp.MustCompile("(Network|Internet)")).Role(role.Heading))
+		_, err := LaunchAtPageURL(ctx, tconn, cr, "internet", condition)
 		return &emptypb.Empty{}, err
 	})
 }

@@ -144,8 +144,8 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 	}
 
 	if testOpts.launchPage == networkPage {
-		if _, err := ossettingsSvc.LaunchAtNetwork(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatal("Failed to launch OS-Settings at Network page: ", err)
+		if _, err := ossettingsSvc.LaunchAtInternet(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to launch OS-Settings at Internet page: ", err)
 		}
 	} else if testOpts.launchPage == hotspotSubpage {
 		if _, err := ossettingsSvc.OpenHotspotDetailPage(ctx, &emptypb.Empty{}); err != nil {
@@ -197,10 +197,10 @@ func EnableHotspotWithOSSettings(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to verify client count update to 1 in hotspot subpage: ", err)
 	}
 
-	// Navigate back to Network page and toggle off hotspot
+	// Navigate back to Internet page and toggle off hotspot
 	if testOpts.launchPage == networkPage {
-		if _, err := ossettingsSvc.LaunchAtNetwork(ctx, &emptypb.Empty{}); err != nil {
-			s.Fatal("Failed to launch OS-Settings at Network page: ", err)
+		if _, err := ossettingsSvc.LaunchAtInternet(ctx, &emptypb.Empty{}); err != nil {
+			s.Fatal("Failed to launch OS-Settings at Internet page: ", err)
 		}
 	}
 	if _, err := ossettingsSvc.ToggleHotspot(ctx, &ossettings.ToggleHotspotRequest{Enabled: false}); err != nil {

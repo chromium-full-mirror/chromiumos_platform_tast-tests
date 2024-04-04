@@ -53,8 +53,9 @@ func getMenuItemFinder(name string) *nodewith.Finder {
 	return nodewith.Name(name).Role(role.Link).Focusable()
 }
 
-// Network is a subpage link.
-var Network = getMenuItemFinder("Network")
+// Internet is a subpage link.
+// TODO(b/333731224) clean up NameRegex after instant hotspot growth feature launch
+var Internet = nodewith.NameRegex(regexp.MustCompile("(Network|Internet)")).Role(role.Link).Focusable()
 
 // Bluetooth is a subpage link.
 var Bluetooth = getMenuItemFinder("Bluetooth")
@@ -135,9 +136,6 @@ var SearchFeedbackButton = nodewith.Name("Report this search result").Role(role.
 
 // FeedbackWindowFinder is the finder for the feedback app window.
 var FeedbackWindowFinder = nodewith.Name(apps.Feedback.Name).Role(role.Window)
-
-// networkFinder is the finder for the Network page UI in OS setting.
-var networkFinder = nodewith.Name("Network").Role(role.Link).Ancestor(WindowFinder)
 
 // SavedDevicesSubpageLink is a subpage link on the Bluetooth Settings subpage.
 var SavedDevicesSubpageLink = nodewith.Role(role.Link).NameStartingWith("Devices saved to your account").Focusable()

@@ -50,7 +50,7 @@ func HotspotUINotShownOnNonCellularDevice(ctx context.Context, s *testing.State)
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	if _, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Network); err != nil {
+	if _, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Internet); err != nil {
 		s.Fatal("Failed to launch Network page: ", err)
 	}
 	defer faillog.DumpUITreeWithScreenshotOnError(cleanupCtx, s.OutDir(), s.HasError, cr, "ui_tree")

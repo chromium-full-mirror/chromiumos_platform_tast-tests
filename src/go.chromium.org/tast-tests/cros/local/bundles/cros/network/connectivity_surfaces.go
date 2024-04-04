@@ -72,7 +72,7 @@ func init() {
 				Val: &connectivitySurfacesTestCase{
 					name: osSettingsSurfaceName,
 					openSurface: func(ctx context.Context, tconn *chrome.TestConn) (func(context.Context), error) {
-						return showOSSettingsPage(ctx, tconn, ossettings.Network)
+						return showOSSettingsPage(ctx, tconn, ossettings.Internet)
 					},
 					root: ossettings.WindowFinder,
 					finders: []*nodewith.Finder{
@@ -85,7 +85,7 @@ func init() {
 				Val: &connectivitySurfacesTestCase{
 					name: osSettingsSurfaceName,
 					openSurface: func(ctx context.Context, tconn *chrome.TestConn) (func(context.Context), error) {
-						return showOSSettingsPage(ctx, tconn, ossettings.Network)
+						return showOSSettingsPage(ctx, tconn, ossettings.Internet)
 					},
 					root: ossettings.WindowFinder,
 					finders: []*nodewith.Finder{
@@ -98,7 +98,7 @@ func init() {
 				Val: &connectivitySurfacesTestCase{
 					name: osSettingsSurfaceName,
 					openSurface: func(ctx context.Context, tconn *chrome.TestConn) (func(context.Context), error) {
-						return showOSSettingsPage(ctx, tconn, ossettings.Network)
+						return showOSSettingsPage(ctx, tconn, ossettings.Internet)
 					},
 					root: ossettings.WindowFinder,
 					finders: []*nodewith.Finder{

@@ -82,7 +82,7 @@ func HotspotAbortEnable(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	networkPage, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Network)
+	networkPage, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Internet)
 	if err != nil {
 		s.Fatal("Failed to launch Network page: ", err)
 	}

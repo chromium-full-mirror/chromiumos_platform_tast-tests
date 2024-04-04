@@ -220,8 +220,8 @@ func OpenJoinWiFiDialogFromQuickSettings(ctx context.Context, conn *grpc.ClientC
 // Instead, a closure will be returned for cleanup, separated cleanup closure also allows tests to capture UI tree and screenshot on error.
 func OpenJoinWiFiDialogFromOSSettings(ctx context.Context, conn *grpc.ClientConn) (func(context.Context), error) {
 	settings := ossettings.NewOsSettingsServiceClient(conn)
-	if _, err := settings.LaunchAtNetwork(ctx, &emptypb.Empty{}); err != nil {
-		return func(ctx context.Context) {}, errors.Wrap(err, `failed to launch OS-Settings at Network page`)
+	if _, err := settings.LaunchAtInternet(ctx, &emptypb.Empty{}); err != nil {
+		return func(ctx context.Context) {}, errors.Wrap(err, `failed to launch OS-Settings at Internet page`)
 	}
 
 	cleanup := func(ctx context.Context) { settings.Close(ctx, &emptypb.Empty{}) }
