@@ -83,6 +83,7 @@ func generateCmdArgs(outDir, filename string, parameters TestParams) []string {
 		filename,
 		filename + ".json",
 		"--output_folder=" + outDir,
+		"--single-process-tests",
 	}
 	if parameters.DecoderType == VDVDA {
 		args = append(args, "--use_vd_vda")
