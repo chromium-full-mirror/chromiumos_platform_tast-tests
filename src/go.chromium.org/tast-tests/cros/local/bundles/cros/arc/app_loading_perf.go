@@ -44,9 +44,10 @@ var (
 
 func init() {
 	testing.AddTest(&testing.Test{
-		Func:         AppLoadingPerf,
-		LacrosStatus: testing.LacrosVariantExists,
-		Desc:         "Captures set of apploading performance metrics and uploads them as perf metrics",
+		Func:           AppLoadingPerf,
+		LifeCycleStage: testing.LifeCycleOwnerMonitored,
+		LacrosStatus:   testing.LacrosVariantExists,
+		Desc:           "Captures set of apploading performance metrics and uploads them as perf metrics",
 		Contacts: []string{
 			"arc-performance@google.com",
 			"alanding@chromium.org",
