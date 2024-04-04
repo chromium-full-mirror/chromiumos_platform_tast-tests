@@ -177,10 +177,24 @@ func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
 	}
 
 	testing.ContextLog(ctx, "Verizon L850 device: Try fixing the default APN")
+	h, err := NewHelper(ctx)
+	if err != nil {
+		testing.ContextLog(ctx, "Failed to create helper: ", err)
+		return
+	}
+	// Ignore errors. Do best effort to fix the modem
+	if enabled, _ := h.Manager.IsEnabled(ctx, shill.TechnologyCellular); enabled {
+		_, _ = h.Disable(ctx)
+		defer h.Enable(ctx)
+	}
 
+	if err := modem.Enable(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to enable: ", err)
+	}
 	if err := modem.DisconnectAll(ctx); err != nil {
 		testing.ContextLog(ctx, "Failed to disconnect: ", err)
 	}
+	// We don't use the profile-id number here because we want to override the APN in the modem to fix an invalid APN if there is one.
 	if _, err := modem.Connect(ctx, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err != nil {
 		testing.ContextLog(ctx, "Failed to connect: ", err)
 	}
@@ -191,19 +205,12 @@ func CheckIfL850VerizonAndFixDefaultAPN(ctx context.Context) {
 	// Ensure we remove the bearer object created during the previous steps.
 	modem.DeleteAllBearers(ctx, modem)
 
-	// Disable/Enable the modem to ensure shill gets the new modem profiles, otherwise shill will
-	// use the previous value on the next connection attempt and it will override it again.
-	if err := modem.DisableUnchecked(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to disable: ", err)
-	}
-	if err := modem.EnableUnchecked(ctx); err != nil {
-		testing.ContextLog(ctx, "Failed to enable: ", err)
-	}
 	return
 }
 
 // RebootL850VerizonIfModemCanNoLongerConnect checks if the device has a L850GL modem with a verizon SIM card,
-// and tries to fix the modem by rebooting it if the device is stuck and cannot connect to vzwinternet(b/309953824).
+// and tries to fix the modem by rebooting it if the device is stuck and cannot connect to the default verizon profile(b/309953824),
+// which is the class 3 APN stored in the modem, or the modb APN.
 // Only returns an error if the modem object is not valid.
 func RebootL850VerizonIfModemCanNoLongerConnect(ctx context.Context, modemPtr **modemmanager.Modem) error {
 	if *modemPtr == nil {
@@ -214,12 +221,36 @@ func RebootL850VerizonIfModemCanNoLongerConnect(ctx context.Context, modemPtr **
 	if !isL850Verizon(ctx, modem) {
 		return nil
 	}
+	h, err := NewHelper(ctx)
+	if err != nil {
+		return errors.Wrap(err, "failed to create helper")
+	}
+	// Ignore errors. Do best effort to fix the modem
+	if enabled, _ := h.Manager.IsEnabled(ctx, shill.TechnologyCellular); enabled {
+		_, _ = h.Disable(ctx)
+		defer h.Enable(ctx)
+	}
+	if err := modem.Enable(ctx); err != nil {
+		testing.ContextLog(ctx, "Failed to enable: ", err)
+	}
 	// Delete all bearers to ensure the bearer error code is from the next connection attempt.
 	modem.DeleteAllBearers(ctx, modem)
 
 	testing.ContextLog(ctx, "Check if modem needs to be restarted on L850/Verizon")
-	var err error
-	if _, err := modem.Connect(ctx, map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}); err == nil {
+	// Use the modb APN, unless there is a modem profile.
+	apn := map[string]interface{}{"apn": "vzwinternet", "ip-type": mmconst.BearerIPFamilyIPv4v6}
+	// Get modem profiles
+	modemProfiles, err := modem.GetProfilesAsBearerProperties(ctx)
+	if err == nil {
+		for _, profile := range modemProfiles {
+			profileID, err := profile.GetProfileID(ctx)
+			if err == nil {
+				apn = map[string]interface{}{mmconst.BearerPropertyProfileID: profileID}
+				break
+			}
+		}
+	}
+	if _, err := modem.Connect(ctx, apn); err == nil {
 		if err := modem.DisconnectAll(ctx); err != nil {
 			testing.ContextLog(ctx, "Failed to disconnect: ", err)
 		}
