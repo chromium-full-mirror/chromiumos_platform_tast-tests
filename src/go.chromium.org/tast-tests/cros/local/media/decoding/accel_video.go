@@ -83,7 +83,6 @@ func generateCmdArgs(outDir, filename string, parameters TestParams) []string {
 		filename,
 		filename + ".json",
 		"--output_folder=" + outDir,
-		"--single-process-tests",
 	}
 	if parameters.DecoderType == VDVDA {
 		args = append(args, "--use_vd_vda")
@@ -133,6 +132,7 @@ func RunAccelVideoTest(ctx context.Context, outDir, filename string, parameters 
 
 	args := generateCmdArgs(outDir, filename, parameters)
 	args = append(args, logging.ChromeVmoduleFlag())
+	args = append(args, "--single-process-tests")
 	// By default MD5 validator is used, but we don't want that here.
 	args = append(args, "--validator_type=none")
 	if len(enabledFeatures) > 0 {
@@ -171,6 +171,7 @@ func RunAccelVideoTestWithTestVectors(ctx context.Context, outDir string, testVe
 	for _, file := range testVectors {
 		args := generateCmdArgs(outDir, file, TestParams{DecoderType: VD, LinearOutput: false})
 		args = append(args, logging.ChromeVmoduleFlag())
+		args = append(args, "--single-process-tests")
 		if validatorType == SSIM {
 			args = append(args, "--validator_type=ssim")
 		} else if validatorType == MD5 {
