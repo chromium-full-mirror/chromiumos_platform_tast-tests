@@ -148,6 +148,50 @@ func (c *AndroidDevice) SetPIN(ctx context.Context) error {
 	return nil
 }
 
+// WaitForPINVerificationPrompt waits for the PIN verification challenge screen.
+func (c *AndroidDevice) WaitForPINVerificationPrompt(ctx context.Context) error {
+	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
+	if err != nil {
+		return errors.Wrap(err, "failed initializing UI automator")
+	}
+	defer d.Close(ctx)
+
+	pinTextField := d.Object(ui.ResourceID("com.android.systemui:id/lockPassword"))
+	if err = pinTextField.WaitForExists(ctx, 10*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find the PIN verification prompt")
+	}
+
+	return nil
+}
+
+// EnterPIN enters the default PIN on the challenge screen.
+func (c *AndroidDevice) EnterPIN(ctx context.Context) error {
+	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
+	if err != nil {
+		return errors.Wrap(err, "failed initializing UI automator")
+	}
+	defer d.Close(ctx)
+
+	// Enter the default code '1234'
+	if err := c.Device.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_1))); err != nil {
+		return errors.Wrap(err, "failed to enter PIN")
+	}
+	if err := c.Device.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_2))); err != nil {
+		return errors.Wrap(err, "failed to enter PIN")
+	}
+	if err := c.Device.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_3))); err != nil {
+		return errors.Wrap(err, "failed to enter PIN")
+	}
+	if err := c.Device.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_4))); err != nil {
+		return errors.Wrap(err, "failed to enter PIN")
+	}
+	if err := c.Device.PressKeyCode(ctx, strconv.Itoa(int(ui.KEYCODE_ENTER))); err != nil {
+		return errors.Wrap(err, "failed to enter PIN")
+	}
+
+	return nil
+}
+
 // ClearPIN clears a screen lock PIN on Android.
 func (c *AndroidDevice) ClearPIN(ctx context.Context) error {
 	if err := c.Device.ClearPIN(ctx); err != nil {

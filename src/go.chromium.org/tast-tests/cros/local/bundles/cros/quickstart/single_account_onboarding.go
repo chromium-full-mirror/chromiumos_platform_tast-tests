@@ -50,6 +50,14 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to create OOBE connection: ", err)
 	}
 	defer oobeConn.Close()
+
+	// Set up a PIN on the phone (required for Quick Start)
+	if err := androidDevice.SetPIN(ctx); err != nil {
+		s.Fatal("Failed to set a lockscreen PIN on the phone: ", err)
+	}
+	defer androidDevice.ClearPIN(ctx)
+
+	// Begin the UI flow
 	s.Log("Waiting for the welcome screen")
 	if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.WelcomeScreen.isVisible()"); err != nil {
 		s.Fatal("Failed to wait for the welcome screen to be visible: ", err)
@@ -67,6 +75,15 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 	s.Log("Calling accept fast pair half sheet")
 	if err := androidDevice.AcceptFastPairHalfsheet(ctx); err != nil {
 		s.Fatal("Failed to accept fast pair half sheet: ", err)
+	}
+
+	// Wait for the PIN verification screen on the phone and enter the PIN
+	if err := androidDevice.WaitForPINVerificationPrompt(ctx); err != nil {
+		s.Fatal("Failed to wait for PIN verification screen on the phone: ", err)
+	}
+
+	if err := androidDevice.EnterPIN(ctx); err != nil {
+		s.Fatal("Failed to enter PIN on the phone: ", err)
 	}
 
 	// Wait for and click "For personal use" button
