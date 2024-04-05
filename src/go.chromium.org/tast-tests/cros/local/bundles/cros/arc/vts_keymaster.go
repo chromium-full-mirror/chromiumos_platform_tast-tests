@@ -39,8 +39,17 @@ func init() {
 				"VtsHalKeymasterV3_0TargetTest_x86_64",
 			},
 		}, {
-			Name:              "vm",
-			ExtraSoftwareDeps: []string{"android_vm"},
+			Name:              "container_r",
+			ExtraSoftwareDeps: []string{"android_container_r"},
+			ExtraData: []string{
+				"VtsHalKeymasterV3_0TargetTest_rvc_arm64",
+				"VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64",
+				"VtsHalKeymasterV3_0TargetTest_arm",
+				"VtsHalKeymasterV3_0TargetTest_arm64",
+			},
+		}, {
+			Name:              "vm_r",
+			ExtraSoftwareDeps: []string{"android_vm_r"},
 			ExtraData: []string{
 				"VtsHalKeymasterV3_0TargetTest_rvc_arm64",
 				"VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64",
@@ -54,7 +63,7 @@ func init() {
 func VTSKeymaster(ctx context.Context, s *testing.State) {
 	a := s.FixtValue().(*arc.PreData).ARC
 
-	testExecName, err := vtsTestExecName(ctx, a, isARCVM(s.SoftwareDeps()))
+	testExecName, err := vtsTestExecName(ctx, a)
 	if err != nil {
 		s.Fatal("Error finding test binary name: ", err)
 	}
@@ -66,27 +75,23 @@ func VTSKeymaster(ctx context.Context, s *testing.State) {
 	defer cleanup()
 }
 
-// isARCVM returns true if the test software dependencies include "android_vm".
-func isARCVM(softwareDeps []string) bool {
-	for _, dep := range softwareDeps {
-		if dep == "android_vm" {
-			return true
-		}
-	}
-	return false
-}
-
 // vtsTestExecName returns the test binary name to be used for the current architecture.
-func vtsTestExecName(ctx context.Context, a *arc.ARC, isARCVM bool) (string, error) {
+func vtsTestExecName(ctx context.Context, a *arc.ARC) (string, error) {
 	output, err := a.Command(ctx, "uname", "-m").Output(testexec.DumpLogOnError)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to determine container architecture")
 	}
 
+	sdkVersion, err := arc.SDKVersion()
+	if(err != nil) {
+		return "", errors.Errorf("failed to determine ARC SDK version")
+	}
+
+	isSDKR := sdkVersion == arc.SDKR
 	arch := strings.TrimSpace(string(output))
-	if isARCVM && arch == "x86_64" {
+	if isSDKR && arch == "x86_64" {
 		return "VtsHalKeymasterV3_0TargetTest_rvc_bertha_x86_64", nil
-	} else if isARCVM && arch == "aarch64" {
+	} else if isSDKR && arch == "aarch64" {
 		return "VtsHalKeymasterV3_0TargetTest_rvc_arm64", nil
 	} else if arch == "armv7l" || arch == "armv8l" {
 		return "VtsHalKeymasterV3_0TargetTest_arm", nil
