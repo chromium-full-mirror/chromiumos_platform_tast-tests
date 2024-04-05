@@ -102,4 +102,10 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 	if err := ui.LeftClick(nextButton)(ctx); err != nil {
 		s.Fatal("Failed to click Next on the user creation screen: ", err)
 	}
+
+	// Wait for the account confirmation screen on the phone and click the "Next" button
+	s.Log("Waiting for account confirmation screen")
+	if err := androidDevice.ConfirmGoogleAccount(ctx); err != nil {
+		s.Fatal("Failed to confirm Google Account: ", err)
+	}
 }

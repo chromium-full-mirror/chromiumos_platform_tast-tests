@@ -157,7 +157,7 @@ func (c *AndroidDevice) WaitForPINVerificationPrompt(ctx context.Context) error 
 	defer d.Close(ctx)
 
 	pinTextField := d.Object(ui.ResourceID("com.android.systemui:id/lockPassword"))
-	if err = pinTextField.WaitForExists(ctx, 10*time.Second); err != nil {
+	if err = pinTextField.WaitForExists(ctx, 30*time.Second); err != nil {
 		return errors.Wrap(err, "failed to find the PIN verification prompt")
 	}
 
@@ -688,5 +688,26 @@ func (c *AndroidDevice) AcceptFastPairHalfsheet(ctx context.Context) error {
 	if err = connectBtn.Click(ctx); err != nil {
 		return errors.Wrap(err, "failed to click on the Connect button for Fast Pair")
 	}
+	return nil
+}
+
+// ConfirmGoogleAccount waits for the appropriate screen to appear and
+// then clicks the "Next" button on the account confirmation screen in Quick Start.
+func (c *AndroidDevice) ConfirmGoogleAccount(ctx context.Context) error {
+	d, err := ui.NewDeviceWithRetry(ctx, c.Device)
+	if err != nil {
+		return errors.Wrap(err, "failed initializing UI automator")
+	}
+	defer d.Close(ctx)
+
+	nextBtn := d.Object(ui.Text("Next"))
+	if err := nextBtn.WaitForExists(ctx, 15*time.Second); err != nil {
+		return errors.Wrap(err, "failed to find the Next button")
+	}
+
+	if err := nextBtn.Click(ctx); err != nil {
+		return errors.Wrap(err, "failed to click on the Next button")
+	}
+
 	return nil
 }
