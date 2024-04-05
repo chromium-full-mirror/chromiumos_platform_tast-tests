@@ -9,6 +9,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
@@ -497,14 +498,22 @@ func setupL4server(ctx context.Context, network networkType, networkFam l4server
 
 func getNetworkProtocolDetails(ctx context.Context, network networkType,
 	externIP, externPort string, count uint) (networkProtocolDetails, error) {
-	const ncCmd = "/usr/local/bin/nc"
+	ncCmd, err := exec.LookPath("nc")
+	if err != nil {
+		return networkProtocolDetails{}, errors.Wrap(err, "unable to find nc command")
+	}
+
+	pingCmd, err := exec.LookPath("ping")
+	if err != nil {
+		return networkProtocolDetails{}, errors.Wrap(err, "unable to find ping command")
+	}
 
 	switch network {
 	case icmp:
 		ipAddr := externIP
 		var cmd []*testexec.Cmd
 		for i := uint(0); i < count; i++ {
-			cmd = append(cmd, testexec.CommandContext(ctx, "/bin/ping", ipAddr))
+			cmd = append(cmd, testexec.CommandContext(ctx, pingCmd, ipAddr))
 		}
 		return networkProtocolDetails{
 			senderCmds:        cmd,
