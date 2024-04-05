@@ -186,7 +186,7 @@ func (c *KioskService) UpdatePolicies(ctx context.Context, req *ppb.UpdatePolici
 	}
 
 	pb := policy.NewBlob()
-	pb.AddPolicy(c.kiosk.GetLocalAccounts())
+	pb.AddPolicy(c.kiosk.DeviceLocalAccounts())
 	if err := pb.UnmarshalJSON(req.PolicyJson); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal policy json")
 	}

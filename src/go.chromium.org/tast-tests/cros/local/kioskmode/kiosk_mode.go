@@ -411,8 +411,8 @@ func LaunchAppManually(ctx context.Context, tconn *chrome.TestConn, name string)
 	return nil
 }
 
-// GetLocalAccounts fetches DeviceLocalAccounts policy
-func (k *Kiosk) GetLocalAccounts() *policy.DeviceLocalAccounts {
+// DeviceLocalAccounts returns the DeviceLocalAccounts policy used in this Kiosk session.
+func (k *Kiosk) DeviceLocalAccounts() *policy.DeviceLocalAccounts {
 	return k.localAccounts
 }
 
