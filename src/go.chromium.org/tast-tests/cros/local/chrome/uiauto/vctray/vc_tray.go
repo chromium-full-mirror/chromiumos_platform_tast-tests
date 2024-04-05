@@ -42,9 +42,9 @@ var (
 	bgBlurLightButton          = nodewith.NameContaining("Light").Role(role.ToggleButton).Ancestor(panelSection)
 	bgBlurFullButton           = nodewith.NameContaining("Full").Role(role.ToggleButton).Ancestor(panelSection)
 	bgBlurImageButton          = nodewith.NameContaining("Image").Role(role.ToggleButton).Ancestor(panelSection)
+	createwWithAiButton        = nodewith.NameContaining("Create with AI").Role(role.Button).Ancestor(panelSection)
 	firstBackgroundImageButton = nodewith.ClassName("RecentlyUsedImageButton").Role(role.Button).First()
-
-	showAppsButton = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(panelSection)
+	showAppsButton             = nodewith.NameContaining("Used by").Role(role.Button).Ancestor(panelSection)
 )
 
 // VCTray represents the type of video conference tray.
@@ -240,6 +240,16 @@ func (vcTray VCTray) ReturnToApp(appName string) action.Action {
 
 		return vcTray.ui.DoDefault(appFinder)(ctx)
 	}
+}
+
+// OpenVcBackgroundApp clicks on the Create with AI button and opens the VcBackgroundApp.
+func (vcTray VCTray) OpenVcBackgroundApp() action.Action {
+	actionsToPerform := []action.Action{vcTray.ExpandPanel}
+	actionsToPerform = append(actionsToPerform, vcTray.ui.DoDefault(bgBlurImageButton))
+	actionsToPerform = append(actionsToPerform, vcTray.ui.DoDefault(createwWithAiButton))
+	return uiauto.Combine("OpenVcBackgroundApp",
+		actionsToPerform...,
+	)
 }
 
 // SetCameraEffects is a high level wrapper to setup camera effects from main screen.
