@@ -72,12 +72,18 @@ func init() {
 // 4. Reboot ARC, then check connection.
 func ARCMultiNetworking(ctx context.Context, s *testing.State) {
 	const (
-		networkInitializationPollTimeout = 10 * time.Second // The time to wait for patchpaneld to set up virtual network after physical network changes.
-		networkRemovalPollTimeout        = 1 * time.Second  // The time to wait for configurations after physical network is removed.
+		// The time to wait for patchpaneld to set up virtual network after physical
+		// network changes.
+		networkInitializationPollTimeout = 10 * time.Second
+		// The time to wait for configurations after physical network is removed.
+		// Use a slightly longer timeout since patchpanel can be busy on network
+		// change events.
+		networkRemovalPollTimeout = 3 * time.Second
+		// The time to wait before adding each network device.
 		// b:329799545: Delay added to simulate the actual delay when
 		// physical devices are added. Virtual device added simultaneously may
 		// be mismatched in ARC guest.
-		networkAdditionDelay = 400 * time.Millisecond // The time to wait before adding each network device.
+		networkAdditionDelay = 400 * time.Millisecond
 	)
 
 	// Reserve some time for cleanup code.
