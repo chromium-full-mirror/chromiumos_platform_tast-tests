@@ -94,6 +94,11 @@ public class MainActivity extends Activity {
 
     private Boolean setWallpaper() {
         final WallpaperManager manager = WallpaperManager.getInstance(getApplicationContext());
+        if (!manager.isSetWallpaperAllowed()) {
+            logError("Changing wallpaper not allowed", null);
+            return false;
+        }
+
         final int previousId = manager.getWallpaperId(WallpaperManager.FLAG_SYSTEM);
         try {
             manager.setResource(R.drawable.wallpaper);
