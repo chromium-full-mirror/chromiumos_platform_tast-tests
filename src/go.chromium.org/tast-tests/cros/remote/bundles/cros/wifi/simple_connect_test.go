@@ -23,14 +23,22 @@ import (
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
 )
 
-type simpleConnectParamsVal struct {
-	Doc []string
-
+type apConfigVal struct {
 	// APOpts is used if it is not empty; Otherwise CommonAPOptions is used instead.
 	APOpts          string // apOpts: []ap.Option{ %s },
 	CommonAPOptions string // apOpts: wifiutil.CommonAPOptions( %s ),
 
-	SecConfFac       string
+	SecConfFac string
+}
+
+type simpleConnectParamsVal struct {
+	Doc []string
+	// A slice of configs for colocated AP's that are controlled by one
+	// hostapd.
+	APConfigs []apConfigVal
+	// Override the SSIDs set by user or randomly generated in all hostapd
+	// confs with same one that are randomly pre-generated.
+	UseSameSSID      bool
 	PingOps          string
 	ExpectedFailure  bool
 	ExpectedSecurity string
@@ -79,7 +87,7 @@ func simpleConnect80211abg() []*simpleConnectParams {
 			if channelNeedsDfs(ch) {
 				opts += ", ap.SpectrumManagement()"
 			}
-			p[i].APOpts = opts
+			p[i].APConfigs = []apConfigVal{{APOpts: opts}}
 		}
 		return p
 	}
@@ -108,7 +116,7 @@ func simpleConnect80211n() []*simpleConnectParams {
 	mkOps := func(htCaps string, channels ...int) []simpleConnectParamsVal {
 		p := make([]simpleConnectParamsVal, len(channels))
 		for i, ch := range channels {
-			p[i].APOpts = fmt.Sprintf("ap.Mode(ap.Mode80211nPure), ap.Channel(%d), ap.HTCaps(ap.HTCap%s)", ch, htCaps)
+			p[i].APConfigs = []apConfigVal{{APOpts: fmt.Sprintf("ap.Mode(ap.Mode80211nPure), ap.Channel(%d), ap.HTCaps(ap.HTCap%s)", ch, htCaps)}}
 		}
 		return p
 	}
@@ -147,8 +155,8 @@ func simpleConnect80211nsgi() *simpleConnectParams {
 		Doc:       simpleConnectDocPref("an open 802.11n network on 5 GHz channel with short guard intervals enabled (both 20/40 Mhz)."),
 		ExtraAttr: []string{"wificell_cq"},
 		Val: []simpleConnectParamsVal{
-			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20, ap.HTCapSGI20)"},
-			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus, ap.HTCapSGI40)"},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20, ap.HTCapSGI20)"}}},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus, ap.HTCapSGI40)"}}},
 		},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}
@@ -159,38 +167,38 @@ func simpleConnect80211ac() []*simpleConnectParams {
 		Name:    "80211acvht20",
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("an open 802.11ac network on channel 40 with a channel width of 20MHz."),
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 			ap.VHTChWidth(ap.VHTChWidth20Or40),
-		`}},
+		`}}}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
 		Name:    "80211acvht40",
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("an open 802.11ac network on channel 48 with a channel width of 40MHz."),
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40),
 			ap.VHTChWidth(ap.VHTChWidth20Or40),
-		`}},
+		`}}}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
 		Name:    "80211acvht80mixed",
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("an open 802.11ac network on 5GHz channel 36 with center channel of 42 and channel width of 80MHz."),
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
-		`}},
+		`}}}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}, {
 		Name:    "80211acvht80pure",
 		Fixture: defaultFixture,
 		Doc: append(simpleConnectDocPref("an open 802.11ac network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use VHT WiFi standard."),
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211acPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-		`}},
+		`}}}},
 		ExtraRequirements: []string{tdreq.WiFiGenSupportLegacy},
 	}}
 }
@@ -201,10 +209,10 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on channel 40 with a channel width of 20MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211axPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 			ap.HEChWidth(ap.HEChWidth20Or40),
-		`}},
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
@@ -213,10 +221,10 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on channel 157 with a channel width of 40MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
 			ap.HEChWidth(ap.HEChWidth20Or40),
-		`}},
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
@@ -225,12 +233,10 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ax network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
-		Val: []simpleConnectParamsVal{{
-			APOpts: `
-				ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-				ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
-			`},
-		},
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
+			ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
@@ -240,12 +246,10 @@ func simpleConnect80211ax() []*simpleConnectParams {
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 		Doc: append(simpleConnectDocPref("an open 802.11ax network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use HE WiFi standard."),
-		Val: []simpleConnectParamsVal{{
-			APOpts: `
-				ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-				ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
-			`},
-		},
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
+			ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax())`,
 		ExtraRequirements:      []string{tdreq.WiFiGenSupport80211ax, tdreq.WiFiRfSupport80211ax},
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_AX},
@@ -258,10 +262,12 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an OWE 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz."),
 		ExtraAttr: []string{"wificell_unstable"},
-		Val: []simpleConnectParamsVal{{APOpts: `
-				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-				ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
-			SecConfFac:       "owe.NewConfigFactory(owe.ModePureOWE)",
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+					ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+				SecConfFac: "owe.NewConfigFactory(owe.ModePureOWE)",
+			}},
 			ExpectedSecurity: "shillconst.SecurityOWE",
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
@@ -273,11 +279,13 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 20MHz."),
 		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
-		Val: []simpleConnectParamsVal{{APOpts: `
-				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-				ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
-			SecConfFac: `wpa.NewConfigFactory("chromeos",
-				wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+					ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
@@ -289,11 +297,13 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 21 with a channel width of 40MHz."),
 		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
-		Val: []simpleConnectParamsVal{{APOpts: `
-				ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
-				ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
-			SecConfFac: `wpa.NewConfigFactory("chromeos",
-				wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
+					ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
+					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
@@ -305,12 +315,14 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
 		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
-		Val: []simpleConnectParamsVal{{APOpts: `
-				ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-				ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-				ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
-			SecConfFac: `wpa.NewConfigFactory("chromeos",
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
@@ -323,12 +335,14 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 5 with center channel of 7 and channel width of 80MHz."),
 			"The router is forced to use HE WiFi standard."),
-		Val: []simpleConnectParamsVal{{APOpts: `
-					ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 					ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
 					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
-			SecConfFac: `wpa.NewConfigFactory("chromeos",
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
@@ -340,12 +354,14 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Doc:               simpleConnectDocPref("a WPA3-SAE (\"mixed\") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
 		ExtraAttr:         []string{"wificell_unstable"},
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
-		Val: []simpleConnectParamsVal{{APOpts: `
-					ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 					ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
 					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
-			SecConfFac: `wpa.NewConfigFactory("chromeos",
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
@@ -358,12 +374,14 @@ func simpleConnect80211axe() []*simpleConnectParams {
 		Doc: append(simpleConnectDocPref("a WPA3-SAE (\"pure\") 802.11ax network on 6GHz PSC channel 5 with center channel of 15 and channel width of 160MHz."),
 			"The router is forced to use HE WiFi standard."),
 		ExtraSoftwareDeps: []string{"wpa3_sae"},
-		Val: []simpleConnectParamsVal{{APOpts: `
-					ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
 					ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
 					ap.OpClass(131), ap.PMF(ap.PMFRequired)`,
-			SecConfFac: `wpa.NewConfigFactory("chromeos",
+				SecConfFac: `wpa.NewConfigFactory("chromeos",
 					wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP),)`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA3`),
 		}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211ax6E())`,
@@ -378,10 +396,10 @@ func simpleConnect80211be() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11be network on channel 40 with a channel width of 20MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
 			ap.EHTChWidth(ap.EHTChWidth20Or40),
-		`}},
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}, {
@@ -389,10 +407,10 @@ func simpleConnect80211be() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11be network on channel 157 with a channel width of 40MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
 			ap.EHTChWidth(ap.EHTChWidth20Or40),
-		`}},
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}, {
@@ -400,11 +418,11 @@ func simpleConnect80211be() []*simpleConnectParams {
 		Fixture:   defaultFixture,
 		Doc:       simpleConnectDocPref("an open 802.11be network on 5GHz channel 157 with center channel of 155 and channel width of 80MHz."),
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
 			ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
-		`}},
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}, {
@@ -413,11 +431,11 @@ func simpleConnect80211be() []*simpleConnectParams {
 		ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 		Doc: append(simpleConnectDocPref("an open 802.11be network on channel 157 with center channel of 155 and channel width of 80MHz."),
 			"The router is forced to use EHT WiFi standard."),
-		Val: []simpleConnectParamsVal{{APOpts: `
+		Val: []simpleConnectParamsVal{{APConfigs: []apConfigVal{{APOpts: `
 			ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
 			ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
 			ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
-		`}},
+		`}}}},
 		ExtraHardwareDeps:      `hwdep.D(hwdep.Wifi80211be())`,
 		DepsWifiRouterFeatures: []api.WifiRouterFeature{api.WifiRouterFeature_WIFI_ROUTER_FEATURE_IEEE_802_11_BE},
 	}}
@@ -429,8 +447,10 @@ func simpleConnectOWE() []*simpleConnectParams {
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("an OWE network on 2.4GHz."),
 		Val: []simpleConnectParamsVal{{
-			APOpts:           simpleConnectCommonSecApOpts,
-			SecConfFac:       "owe.NewConfigFactory(owe.ModePureOWE)",
+			APConfigs: []apConfigVal{{
+				APOpts:     simpleConnectCommonSecApOpts,
+				SecConfFac: "owe.NewConfigFactory(owe.ModePureOWE)",
+			}},
 			ExpectedSecurity: "shillconst.SecurityOWE",
 		}},
 		ExtraHardwareDepsDoc: []string{"Skip Marvell WiFi since they do not support OWE."},
@@ -445,15 +465,15 @@ func simpleConnectHidden() []*simpleConnectParams {
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("a hidden network on 2.4GHz channel."),
 		Val: []simpleConnectParamsVal{
-			{APOpts: "ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()"},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()"}}},
 		},
 	}, {
 		Name:    "hidden5ht20",
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("a hidden network on 5GHz channels."),
 		Val: []simpleConnectParamsVal{
-			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"},
-			{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"}}},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()"}}},
 		},
 		ExtraHardwareDepsDoc: []string{"TODO(b/189972561) Enable this test on Trogdor once active scanning on 5 GHz channel is enabled."},
 		ExtraHardwareDeps:    `hwdep.D(hwdep.SkipOnPlatform("strongbad", "strongbad64", "strongbad-kernelnext", "trogdor", "trogdor64", "trogdor-kernelnext"))`,
@@ -472,8 +492,10 @@ func simpleConnectWEP() []*simpleConnectParams {
 		for _, algo := range []string{"Open", "Shared"} {
 			for key := 0; key < 4; key++ {
 				ret.Val = append(ret.Val, simpleConnectParamsVal{
-					APOpts:           simpleConnectCommonSecApOpts,
-					SecConfFac:       fmt.Sprintf("wep.NewConfigFactory(wep%dKeys(), wep.DefaultKey(%d), wep.AuthAlgs(wep.AuthAlgo%s))", keyLen, key, algo),
+					APConfigs: []apConfigVal{{
+						APOpts:     simpleConnectCommonSecApOpts,
+						SecConfFac: fmt.Sprintf("wep.NewConfigFactory(wep%dKeys(), wep.DefaultKey(%d), wep.AuthAlgs(wep.AuthAlgo%s))", keyLen, key, algo),
+					}},
 					ExpectedSecurity: `shillconst.SecurityWEP`,
 				})
 			}
@@ -488,8 +510,10 @@ func simpleConnectWEPHidden() *simpleConnectParams {
 	for _, keyLen := range []int{40, 104} {
 		for _, algo := range []string{"Open", "Shared"} {
 			p = append(p, simpleConnectParamsVal{
-				APOpts:           simpleConnectCommonSecApOpts + ", ap.Hidden()",
-				SecConfFac:       fmt.Sprintf("wep.NewConfigFactory(wep%dKeysHidden(), wep.AuthAlgs(wep.AuthAlgo%s))", keyLen, algo),
+				APConfigs: []apConfigVal{{
+					APOpts:     simpleConnectCommonSecApOpts + ", ap.Hidden()",
+					SecConfFac: fmt.Sprintf("wep.NewConfigFactory(wep%dKeysHidden(), wep.AuthAlgs(wep.AuthAlgo%s))", keyLen, algo),
+				}},
 				ExpectedSecurity: `shillconst.SecurityWEP`,
 			})
 		}
@@ -548,11 +572,13 @@ func simpleConnectWPA() []*simpleConnectParams {
 			cipher = append(cipher, "wpa.Ciphers2("+mkCipher(cipher2)+")")
 		}
 		return []simpleConnectParamsVal{{
-			APOpts: simpleConnectCommonSecApOpts + ", " + pmf,
-			SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
-				"chromeos", wpa.Mode(wpa.Mode%s),
-				%s,
-			)`, mode, strings.Join(cipher, ", ")),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts + ", " + pmf,
+				SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.Mode%s),
+					%s,
+				)`, mode, strings.Join(cipher, ", ")),
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(mode),
 		}}
 	}
@@ -594,18 +620,22 @@ func simpleConnectWPA() []*simpleConnectParams {
 			"And the client uses WPA-PSK-SHA256 for key management suite"),
 		ExtraRequirements: []string{tdreq.WiFiGenSupportPMF, tdreq.WiFiSecSupportWPA2Personal},
 		Val: []simpleConnectParamsVal{{
-			APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
-			SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
-				"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{wpa.KeyMgmtWPAPSKSHA256}),
-				wpa.Ciphers2(wpa.CipherCCMP),
-		            )`),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
+				SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{wpa.KeyMgmtWPAPSKSHA256}),
+					wpa.Ciphers2(wpa.CipherCCMP),
+				)`),
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA2`),
 		}, {
-			APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
-			SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
-				"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{%s, %s}),
-				wpa.Ciphers2(wpa.CipherCCMP),
-		            )`, "wpa.KeyMgmtWPAPSK", "wpa.KeyMgmtWPAPSKSHA256"),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts + ", ap.PMF(ap.PMFRequired)",
+				SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{%s, %s}),
+					wpa.Ciphers2(wpa.CipherCCMP),
+				)`, "wpa.KeyMgmtWPAPSK", "wpa.KeyMgmtWPAPSKSHA256"),
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA2`),
 		}},
 	}, {
@@ -632,15 +662,17 @@ func simpleConnectWPA() []*simpleConnectParams {
 func simpleConnectWPA3() []*simpleConnectParams {
 	mkOps := func(pmf, mode string) []simpleConnectParamsVal {
 		return []simpleConnectParamsVal{{
-			APOpts: fmt.Sprintf(`
-				ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
-				ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
-				ap.PMF(ap.PMF%s),
-			`, pmf),
-			SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
-				"chromeos", wpa.Mode(wpa.Mode%s),
-				wpa.Ciphers2(wpa.CipherCCMP),
-			)`, mode),
+			APConfigs: []apConfigVal{{
+				APOpts: fmt.Sprintf(`
+					ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+					ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
+					ap.PMF(ap.PMF%s),
+				`, pmf),
+				SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.Mode%s),
+					wpa.Ciphers2(wpa.CipherCCMP),
+				)`, mode),
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(mode),
 		}}
 	}
@@ -670,14 +702,13 @@ func simpleConnectWPAVHT80() *simpleConnectParams {
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("a protected 802.11ac network supporting for WPA."),
 		Val: []simpleConnectParamsVal{{
-			APOpts: `
-				ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
-				ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
-			`,
-			SecConfFac: `wpa.NewConfigFactory(
-				"chromeos", wpa.Mode(wpa.ModePureWPA),
-				wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP),
-			)`,
+			APConfigs: []apConfigVal{{
+				APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+					ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80)`,
+				SecConfFac: `wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.ModePureWPA),
+					wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP))`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA`),
 		}},
 	}
@@ -691,12 +722,16 @@ func simpleConnectWPAOddPassphrase() *simpleConnectParams {
 			%s,
 		)`
 		p = append(p, simpleConnectParamsVal{
-			APOpts:           simpleConnectCommonSecApOpts,
-			SecConfFac:       fmt.Sprintf(temp, pw, "PureWPA", "wpa.Ciphers(wpa.CipherTKIP)"),
+			APConfigs: []apConfigVal{{
+				APOpts:     simpleConnectCommonSecApOpts,
+				SecConfFac: fmt.Sprintf(temp, pw, "PureWPA", "wpa.Ciphers(wpa.CipherTKIP)"),
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity("PureWPA"),
 		}, simpleConnectParamsVal{
-			APOpts:           simpleConnectCommonSecApOpts,
-			SecConfFac:       fmt.Sprintf(temp, pw, "PureWPA2", "wpa.Ciphers2(wpa.CipherCCMP)"),
+			APConfigs: []apConfigVal{{
+				APOpts:     simpleConnectCommonSecApOpts,
+				SecConfFac: fmt.Sprintf(temp, pw, "PureWPA2", "wpa.Ciphers2(wpa.CipherCCMP)"),
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity("PureWPA2"),
 		})
 	}
@@ -717,11 +752,13 @@ func simpleConnectWPAHidden() *simpleConnectParams {
 		{"Mixed", "wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP), wpa.Ciphers2(wpa.CipherCCMP)"},
 	} {
 		p = append(p, simpleConnectParamsVal{
-			APOpts: simpleConnectCommonSecApOpts + ", ap.Hidden()",
-			SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
-				"chromeos", wpa.Mode(wpa.Mode%s),
-				%s,
-			)`, c.mode, c.cipher),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts + ", ap.Hidden()",
+				SecConfFac: fmt.Sprintf(`wpa.NewConfigFactory(
+					"chromeos", wpa.Mode(wpa.Mode%s),
+					%s,
+				)`, c.mode, c.cipher),
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(c.mode),
 		})
 	}
@@ -739,12 +776,13 @@ func simpleConnectRawPMK() *simpleConnectParams {
 		Fixture: defaultFixture,
 		Doc:     simpleConnectDocPref("a WPA network using a raw PMK value instead of an ASCII passphrase."),
 		Val: []simpleConnectParamsVal{{
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `wpa.NewConfigFactory(
-				strings.Repeat("0123456789abcdef", 4), // length = 64.
-				wpa.Mode(wpa.ModePureWPA),
-				wpa.Ciphers(wpa.CipherTKIP),
-			)`,
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `wpa.NewConfigFactory(
+					strings.Repeat("0123456789abcdef", 4), // length = 64.
+					wpa.Mode(wpa.ModePureWPA),
+					wpa.Ciphers(wpa.CipherTKIP))`,
+			}},
 			ExpectedSecurity: wpaModeToShillSecurity(`PureWPA`),
 		}},
 	}
@@ -759,8 +797,8 @@ func simpleConnectDFS() []*simpleConnectParams {
 			"See: https://en.wikipedia.org/wiki/Dynamic_frequency_selection, https://en.wikipedia.org/wiki/List_of_WLAN_channels"),
 		ExtraAttr: []string{"wificell_cq"},
 		Val: []simpleConnectParamsVal{
-			{APOpts: "ap.Mode(ap.Mode80211nMixed), ap.Channel(120), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()"},
-			{APOpts: "ap.Mode(ap.Mode80211nMixed), ap.Channel(136), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()"},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nMixed), ap.Channel(120), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()"}}},
+			{APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nMixed), ap.Channel(136), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()"}}},
 		},
 	}}
 }
@@ -772,8 +810,8 @@ func simpleConnectSSIDLimits() *simpleConnectParams {
 		Doc:       simpleConnectDocPref("a networks with the longest and shortest SSID."),
 		ExtraAttr: []string{"wificell_cq"},
 		Val: []simpleConnectParamsVal{
-			{CommonAPOptions: `ap.SSID("a")`},
-			{CommonAPOptions: `ap.SSID(strings.Repeat("MaxLengthSSID", 4)[:32])`},
+			{APConfigs: []apConfigVal{{CommonAPOptions: `ap.SSID("a")`}}},
+			{APConfigs: []apConfigVal{{CommonAPOptions: `ap.SSID(strings.Repeat("MaxLengthSSID", 4)[:32])`}}},
 		},
 	}
 }
@@ -791,26 +829,26 @@ func simpleConnectNonASCIISSID() *simpleConnectParams {
 					"TODO(crbug.com/1082582): shill don't allow leading 0x00 now, so let's append it in the",
 					"end to keep the coverage.",
 				},
-				CommonAPOptions: `ap.SSID(byteSequenceStr(1, 31) + "\x00")`,
+				APConfigs: []apConfigVal{{CommonAPOptions: `ap.SSID(byteSequenceStr(1, 31) + "\x00")`}},
 			},
-			{CommonAPOptions: "ap.SSID(byteSequenceStr(32, 63))"},
-			{CommonAPOptions: "ap.SSID(byteSequenceStr(64, 95))"},
-			{CommonAPOptions: "ap.SSID(byteSequenceStr(96, 127))"},
-			{CommonAPOptions: "ap.SSID(byteSequenceStr(128, 159))"},
-			{CommonAPOptions: "ap.SSID(byteSequenceStr(160, 191))"},
-			{CommonAPOptions: "ap.SSID(byteSequenceStr(192, 223))"},
-			{CommonAPOptions: "ap.SSID(byteSequenceStr(224, 255))"},
+			{APConfigs: []apConfigVal{{CommonAPOptions: "ap.SSID(byteSequenceStr(32, 63))"}}},
+			{APConfigs: []apConfigVal{{CommonAPOptions: "ap.SSID(byteSequenceStr(64, 95))"}}},
+			{APConfigs: []apConfigVal{{CommonAPOptions: "ap.SSID(byteSequenceStr(96, 127))"}}},
+			{APConfigs: []apConfigVal{{CommonAPOptions: "ap.SSID(byteSequenceStr(128, 159))"}}},
+			{APConfigs: []apConfigVal{{CommonAPOptions: "ap.SSID(byteSequenceStr(160, 191))"}}},
+			{APConfigs: []apConfigVal{{CommonAPOptions: "ap.SSID(byteSequenceStr(192, 223))"}}},
+			{APConfigs: []apConfigVal{{CommonAPOptions: "ap.SSID(byteSequenceStr(224, 255))"}}},
 			{
-				Doc:             []string{"Valid Unicode characters."},
-				CommonAPOptions: `ap.SSID("\xe4\xb8\xad\xe5\x9b\xbd")`,
-			},
-			{
-				Doc:             []string{"Single extended ASCII character (a-grave)."},
-				CommonAPOptions: `ap.SSID("\xe0")`,
+				Doc:       []string{"Valid Unicode characters."},
+				APConfigs: []apConfigVal{{CommonAPOptions: `ap.SSID("\xe4\xb8\xad\xe5\x9b\xbd")`}},
 			},
 			{
-				Doc:             []string{"Mix of ASCII and Unicode characters as SSID."},
-				CommonAPOptions: `ap.SSID("Chrome\xe7\xac\x94\xe8\xae\xb0\xe6\x9c\xac")`,
+				Doc:       []string{"Single extended ASCII character (a-grave)."},
+				APConfigs: []apConfigVal{{CommonAPOptions: `ap.SSID("\xe0")`}},
+			},
+			{
+				Doc:       []string{"Mix of ASCII and Unicode characters as SSID."},
+				APConfigs: []apConfigVal{{CommonAPOptions: `ap.SSID("Chrome\xe7\xac\x94\xe8\xae\xb0\xe6\x9c\xac")`}},
 			},
 		},
 	}
@@ -828,13 +866,14 @@ func simpleConnect8021xWEP() *simpleConnectParams {
 		ExtraHardwareDeps: `hwdep.D(hwdep.WifiNotMarvell(), hwdep.SkipOnPlatform("trogdor", "strongbad", "trogdor-kernelnext"), hwdep.WifiWEP())`,
 		ExtraRequirements: []string{tdreq.WiFiSecSupportWEP},
 		Val: []simpleConnectParamsVal{{
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `dynamicwep.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred,
-				dynamicwep.ClientCACert(eapCert1.CACred.Cert),
-				dynamicwep.ClientCred(eapCert1.ClientCred),
-				dynamicwep.RekeyPeriod(10),
-			)`,
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `dynamicwep.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred,
+					dynamicwep.ClientCACert(eapCert1.CACred.Cert),
+					dynamicwep.ClientCred(eapCert1.ClientCred),
+					dynamicwep.RekeyPeriod(10))`,
+			}},
 			PingOps:          "ping.Count(15), ping.Interval(1)",
 			ExpectedSecurity: `shillconst.SecurityWEP`,
 		}},
@@ -850,56 +889,62 @@ func simpleConnect8021xWPA() *simpleConnectParams {
 		ExtraHardwareDeps:    `hwdep.D(hwdep.SkipOnPlatform("banjo", "candy", "gnawty", "kip", "ninja", "sumo", "swanky", "winky"))`,
 		ExtraRequirements:    []string{tdreq.WiFiSecSupportWPA2Enterprise},
 		Val: []simpleConnectParamsVal{{
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `wpaeap.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred,
-				wpaeap.ClientCACert(eapCert1.CACred.Cert),
-				wpaeap.ClientCred(eapCert1.ClientCred),
-			)`,
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `wpaeap.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred,
+					wpaeap.ClientCACert(eapCert1.CACred.Cert),
+					wpaeap.ClientCred(eapCert1.ClientCred))`,
+			}},
 			ExpectedSecurity: `shillconst.SecurityWPAEnterprise`,
 		}, {
-			Doc:    []string{"Failure due to lack of CACert on client."},
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `wpaeap.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred,
-				wpaeap.ClientCred(eapCert1.ClientCred),
-			)`,
+			Doc: []string{"Failure due to lack of CACert on client."},
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `wpaeap.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred,
+					wpaeap.ClientCred(eapCert1.ClientCred))`,
+			}},
 			ExpectedFailure: true,
 		}, {
-			Doc:    []string{"Failure due to unmatched CACert."},
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `wpaeap.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred,
-				wpaeap.ClientCACert(eapCert2.CACred.Cert),
-				wpaeap.ClientCred(eapCert1.ClientCred),
-			)`,
+			Doc: []string{"Failure due to unmatched CACert."},
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `wpaeap.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred,
+					wpaeap.ClientCACert(eapCert2.CACred.Cert),
+					wpaeap.ClientCred(eapCert1.ClientCred))`,
+			}},
 			ExpectedFailure: true,
 		}, {
-			Doc:    []string{"Should succeed if we specify that we have no CACert."},
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `wpaeap.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred,
-				wpaeap.ClientCred(eapCert1.ClientCred),
-				wpaeap.NotUseSystemCAs(),
-			)`,
+			Doc: []string{"Should succeed if we specify that we have no CACert."},
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `wpaeap.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred,
+					wpaeap.ClientCred(eapCert1.ClientCred),
+					wpaeap.NotUseSystemCAs())`,
+			}},
 			ExpectedSecurity: `shillconst.SecurityWPAEnterprise`,
 		}, {
-			Doc:    []string{"Failure due to wrong certificate chain on client."},
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `wpaeap.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred,
-				wpaeap.ClientCACert(eapCert1.CACred.Cert),
-				wpaeap.ClientCred(eapCert2.ClientCred),
-			)`,
+			Doc: []string{"Failure due to wrong certificate chain on client."},
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `wpaeap.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred,
+					wpaeap.ClientCACert(eapCert1.CACred.Cert),
+					wpaeap.ClientCred(eapCert2.ClientCred))`,
+			}},
 			ExpectedFailure: true,
 		}, {
-			Doc:    []string{"Failure due to expired cert on server."},
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: `wpaeap.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ExpiredServerCred,
-				wpaeap.ClientCACert(eapCert1.CACred.Cert),
-				wpaeap.ClientCred(eapCert1.ClientCred),
-			)`,
+			Doc: []string{"Failure due to expired cert on server."},
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: `wpaeap.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ExpiredServerCred,
+					wpaeap.ClientCACert(eapCert1.CACred.Cert),
+					wpaeap.ClientCred(eapCert1.ClientCred))`,
+			}},
 			ExpectedFailure: true,
 		}},
 	}
@@ -908,13 +953,15 @@ func simpleConnect8021xWPA() *simpleConnectParams {
 func simpleConnect8021xWPA3() []*simpleConnectParams {
 	mkOps := func(pmf, mode string) []simpleConnectParamsVal {
 		return []simpleConnectParamsVal{{
-			APOpts: fmt.Sprintf("%s, ap.PMF(ap.PMF%s)", simpleConnectCommonSecApOpts, pmf),
-			SecConfFac: fmt.Sprintf(`wpaeap.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred,
-				wpaeap.ClientCACert(eapCert1.CACred.Cert),
-				wpaeap.ClientCred(eapCert1.ClientCred),
-				wpaeap.Mode(wpa.Mode%s),
-			)`, mode),
+			APConfigs: []apConfigVal{{
+				APOpts: fmt.Sprintf("%s, ap.PMF(ap.PMF%s)", simpleConnectCommonSecApOpts, pmf),
+				SecConfFac: fmt.Sprintf(`wpaeap.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred,
+					wpaeap.ClientCACert(eapCert1.CACred.Cert),
+					wpaeap.ClientCred(eapCert1.ClientCred),
+					wpaeap.Mode(wpa.Mode%s),
+				)`, mode),
+			}},
 			ExpectedSecurity: wpaModeToShillEntSecurity(mode),
 		}}
 	}
@@ -946,24 +993,28 @@ func simpleConnectTunneled1x() []*simpleConnectParams {
 			ExtraAttr: extraAttr,
 		}
 		ret.Val = append(ret.Val, simpleConnectParamsVal{
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
-				eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-				tunneled1x.Mode(wpa.ModePureWPA2),
-				tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
-				tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
-			)`, outer, inner),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
+					eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+					tunneled1x.Mode(wpa.ModePureWPA2),
+					tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
+					tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
+				)`, outer, inner),
+			}},
 			ExpectedSecurity: wpaModeToShillEntSecurity("PureWPA2"),
 		})
 		for i := 0; i < 3; i++ {
 			ret.Val = append(ret.Val, simpleConnectParamsVal{
-				APOpts: simpleConnectCommonSecApOpts,
-				SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
-					eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-					tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
-					tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
-					tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[%d]}),
-				)`, outer, inner, i),
+				APConfigs: []apConfigVal{{
+					APOpts: simpleConnectCommonSecApOpts,
+					SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
+						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+						tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
+						tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
+						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[%d]}),
+					)`, outer, inner, i),
+				}},
 				ExpectedSecurity: wpaModeToShillEntSecurity("PureWPA"),
 			})
 		}
@@ -973,23 +1024,27 @@ func simpleConnectTunneled1x() []*simpleConnectParams {
 				"For more information about how wpa_supplicant uses altsubject_match field:",
 				"https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf",
 			},
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
-				eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-				tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
-				tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
-				tunneled1x.AltSubjectMatch([]string{`+"`"+`{"Type":"DNS","Value":"wrong_dns.com"}`+"`"+`, eapCert3AltSub[0]}),
-			)`, outer, inner),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
+					eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+					tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
+					tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
+					tunneled1x.AltSubjectMatch([]string{`+"`"+`{"Type":"DNS","Value":"wrong_dns.com"}`+"`"+`, eapCert3AltSub[0]}),
+				)`, outer, inner),
+			}},
 			ExpectedSecurity: wpaModeToShillEntSecurity("PureWPA"),
 		})
 		ret.Val = append(ret.Val, simpleConnectParamsVal{
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
-				eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-				tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
-				tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
-				tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-			)`, outer, inner),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
+					eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+					tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
+					tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
+					tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+				)`, outer, inner),
+			}},
 			ExpectedSecurity: wpaModeToShillEntSecurity("PureWPA"),
 		})
 		ret.Val = append(ret.Val, simpleConnectParamsVal{
@@ -998,13 +1053,15 @@ func simpleConnectTunneled1x() []*simpleConnectParams {
 				"For more information about how wpa_supplicant uses domain_suffix_match field:",
 				"https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf",
 			},
-			APOpts: simpleConnectCommonSecApOpts,
-			SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
-				eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-				tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
-				tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
-				tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-			)`, outer, inner),
+			APConfigs: []apConfigVal{{
+				APOpts: simpleConnectCommonSecApOpts,
+				SecConfFac: fmt.Sprintf(`tunneled1x.NewConfigFactory(
+					eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+					tunneled1x.OuterProtocol(tunneled1x.Layer1Type%s),
+					tunneled1x.InnerProtocol(tunneled1x.Layer2Type%s),
+					tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+				)`, outer, inner),
+			}},
 			ExpectedSecurity: wpaModeToShillEntSecurity("PureWPA"),
 		})
 		return ret
@@ -1055,9 +1112,11 @@ func simpleConnectTunneled1x() []*simpleConnectParams {
 			)`},
 		} {
 			ret.Val = append(ret.Val, simpleConnectParamsVal{
-				Doc:             []string{v.doc},
-				APOpts:          simpleConnectCommonSecApOpts,
-				SecConfFac:      fmt.Sprintf(v.sec, outer, inner),
+				Doc: []string{v.doc},
+				APConfigs: []apConfigVal{{
+					APOpts:     simpleConnectCommonSecApOpts,
+					SecConfFac: fmt.Sprintf(v.sec, outer, inner),
+				}},
 				ExpectedFailure: true,
 			})
 		}
@@ -1085,23 +1144,19 @@ func simpleConnectPower() []*simpleConnectParams {
 		Fixture:   powerFixture,
 		Doc:       simpleConnectDocPref("an open 802.11n network on 5 GHz channel and records power measurements."),
 		ExtraAttr: []string{"wificell_unstable"},
-		Val: []simpleConnectParamsVal{
-			{
-				APOpts:  "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)",
-				PingOps: "ping.Count(100), ping.Interval(1)",
-			},
-		},
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{APOpts: "ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)"}},
+			PingOps:   "ping.Count(100), ping.Interval(1)",
+		}},
 	}, {
 		Name:      "powerac",
 		Fixture:   powerFixture,
 		Doc:       simpleConnectDocPref("an open 802.11ac network on channel 40 with a channel width of 20MHz and records power measurements."),
 		ExtraAttr: []string{"wificell_unstable"},
-		Val: []simpleConnectParamsVal{
-			{
-				APOpts:  `ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40),`,
-				PingOps: "ping.Count(100), ping.Interval(1)",
-			},
-		},
+		Val: []simpleConnectParamsVal{{
+			APConfigs: []apConfigVal{{APOpts: `ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)`}},
+			PingOps:   "ping.Count(100), ping.Interval(1)",
+		}},
 	}}
 }
 
@@ -1158,13 +1213,18 @@ func TestSimpleConnect(t *testing.T) {
 		{{ range .Doc }}
 		// {{ . }}
 		{{ end }}
-		{{ if .APOpts }}
-		apOpts: []ap.Option{ {{ .APOpts }} },
-		{{ else if .CommonAPOptions }}
-		apOpts: wifiutil.CommonAPOptions({{ .CommonAPOptions }}),
-		{{ end }}
-		{{ if .SecConfFac }}
-		secConfFac: {{ .SecConfFac }},
+		apConfigs: []ap.ApConfig{ {{ range .APConfigs }} {
+			{{ if .APOpts }}
+			ApOpts: []ap.Option{ {{ .APOpts }} },
+			{{ else if .CommonAPOptions }}
+			ApOpts: wifiutil.CommonAPOptions({{ .CommonAPOptions }}),
+			{{ end }}
+			{{ if .SecConfFac }}
+			SecConfFac: {{ .SecConfFac }},
+			{{ end }}
+		}, {{ end }} },
+		{{ if .UseSameSSID }}
+		useSameSSID: true,
 		{{ end }}
 		{{ if .PingOps }}
 		pingOps: []ping.Option{ {{ .PingOps }} },

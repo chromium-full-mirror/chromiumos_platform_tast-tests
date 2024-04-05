@@ -316,7 +316,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 			hostapd.Bridge(br[1]))
 	}
 
-	ap0, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, wificell.DefaultRouter, [][]hostapd.Option{ap0Opts}, []security.ConfigFactory{tc.secConfFac}, dhcpIface, true, false, false)
+	ap0, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, wificell.DefaultRouter, []hostapd.ApConfig{{ApOpts: ap0Opts, SecConfFac: tc.secConfFac}}, dhcpIface, true, false, false)
 	if err != nil {
 		s.Fatal("Failed to configure AP0: ", err)
 	}
@@ -407,7 +407,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 	checkAuthSkipped(ctx, s, tc.authAlgo, tc.checkEap, ftEnabled, ap1Channel, ap1FreqOps, func(actionCtx context.Context) {
 		// Configure AP1 after ExpectShillProperty() because a roaming
 		// may happen automatically right after AP1 is up.
-		ap1, err = tf.ConfigureAPOnRouterIDWithConfs(actionCtx, wificell.DefaultRouter, [][]hostapd.Option{ap1Opts}, []security.ConfigFactory{tc.secConfFac}, "", !ftEnabled, false, false)
+		ap1, err = tf.ConfigureAPOnRouterIDWithConfs(actionCtx, wificell.DefaultRouter, []hostapd.ApConfig{{ApOpts: ap1Opts, SecConfFac: tc.secConfFac}}, "", !ftEnabled, false, false)
 		if err != nil {
 			s.Fatal("Failed to configure AP1: ", err)
 		}

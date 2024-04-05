@@ -16,7 +16,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/dynamicwep"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/owe"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/tunneled1x"
@@ -33,9 +32,12 @@ import (
 )
 
 type simpleConnectTestcase struct {
-	apOpts []ap.Option
-	// If unassigned, use default security config: open network.
-	secConfFac       security.ConfigFactory
+	// A slice of configs for colocated AP's that are controlled by one
+	// hostapd.
+	apConfigs []ap.ApConfig
+	// Override the SSIDs set by user or randomly generated in all hostapd
+	// confs with same one that are randomly pre-generated.
+	useSameSSID      bool
 	pingOps          []ping.Option
 	expectedFailure  bool
 	expectedSecurity string
@@ -70,9 +72,13 @@ func init() {
 				Name:    "80211a",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211a), ap.Channel(48)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211a), ap.Channel(48)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211a), ap.Channel(157)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211a), ap.Channel(157)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01", "wifi-sec-0001-v01"},
 			}, {
@@ -80,11 +86,17 @@ func init() {
 				Name:    "80211b",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211b), ap.Channel(1)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211b), ap.Channel(1)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211b), ap.Channel(6)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211b), ap.Channel(6)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211b), ap.Channel(11)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211b), ap.Channel(11)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
@@ -92,11 +104,17 @@ func init() {
 				Name:    "80211g",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(6)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(6)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(11)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(11)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
@@ -104,11 +122,17 @@ func init() {
 				Name:    "80211n24ht20",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(1), ap.HTCaps(ap.HTCapHT20)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(6), ap.HTCaps(ap.HTCapHT20)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(6), ap.HTCaps(ap.HTCapHT20)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(11), ap.HTCaps(ap.HTCapHT20)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(11), ap.HTCaps(ap.HTCapHT20)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01", "wifi-gen-0007-v02"},
 			}, {
@@ -116,7 +140,9 @@ func init() {
 				Name:    "80211n24ht40",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(6), ap.HTCaps(ap.HTCapHT40)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(6), ap.HTCaps(ap.HTCapHT40)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01", "wifi-gen-0007-v02"},
 			}, {
@@ -124,7 +150,9 @@ func init() {
 				Name:    "80211n5ht20",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01", "wifi-gen-0007-v02"},
 			}, {
@@ -133,7 +161,9 @@ func init() {
 				Name:    "80211n5ht40",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01", "wifi-gen-0007-v02"},
 			}, {
@@ -142,9 +172,13 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20, ap.HTCapSGI20)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20, ap.HTCapSGI20)},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus, ap.HTCapSGI40)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40Minus, ap.HTCapSGI40)},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
@@ -152,10 +186,12 @@ func init() {
 				Name:    "80211acvht20",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
-						ap.VHTChWidth(ap.VHTChWidth20Or40),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
+							ap.VHTChWidth(ap.VHTChWidth20Or40),
+						},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
@@ -163,10 +199,12 @@ func init() {
 				Name:    "80211acvht40",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40),
-						ap.VHTChWidth(ap.VHTChWidth20Or40),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT40),
+							ap.VHTChWidth(ap.VHTChWidth20Or40),
+						},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
@@ -174,10 +212,12 @@ func init() {
 				Name:    "80211acvht80mixed",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
+						},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
@@ -186,10 +226,12 @@ func init() {
 				Name:    "80211acvht80pure",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211acPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+						},
+					}},
 				}},
 				ExtraRequirements: []string{"wifi-gen-0004-v01"},
 			}, {
@@ -198,10 +240,12 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
-						ap.HEChWidth(ap.HEChWidth20Or40),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211axPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
+							ap.HEChWidth(ap.HEChWidth20Or40),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
@@ -212,10 +256,12 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
-						ap.HEChWidth(ap.HEChWidth20Or40),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
+							ap.HEChWidth(ap.HEChWidth20Or40),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
@@ -226,10 +272,12 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211axMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
@@ -241,10 +289,12 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_ax"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211axPure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80), ap.HECenterChannel(155), ap.HEChWidth(ap.HEChWidth80),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax()),
 				ExtraRequirements: []string{"wifi-gen-0002-v01", "wifi-rf-0006-v01"},
@@ -255,10 +305,11 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
-					secConfFac:       owe.NewConfigFactory(owe.ModePureOWE),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+							ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						SecConfFac: owe.NewConfigFactory(owe.ModePureOWE),
+					}},
 					expectedSecurity: shillconst.SecurityOWE,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -271,11 +322,12 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
-						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapHT20),
+							ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -288,11 +340,12 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
-						ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(21), ap.HTCaps(ap.HTCapLDPC), ap.HECenterChannel(19),
+							ap.HEChWidth(ap.HEChWidth20Or40), ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -305,12 +358,13 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+							ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -324,12 +378,13 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.HECenterChannel(7), ap.HEChWidth(ap.HEChWidth80),
+							ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -342,12 +397,13 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axMixed), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+							ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -361,12 +417,13 @@ func init() {
 				ExtraAttr:         []string{"wificell_unstable"},
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
-						ap.OpClass(131), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory("chromeos",
-						wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211axPure), ap.Channel(5), ap.HTCaps(ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI160), ap.HECenterChannel(15), ap.HEChWidth(ap.HEChWidth160),
+							ap.OpClass(131), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory("chromeos",
+							wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211ax6E()),
@@ -378,10 +435,12 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
-						ap.EHTChWidth(ap.EHTChWidth20Or40),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211bePure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20),
+							ap.EHTChWidth(ap.EHTChWidth20Or40),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -391,10 +450,12 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
-						ap.EHTChWidth(ap.EHTChWidth20Or40),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40, ap.HTCapLDPC),
+							ap.EHTChWidth(ap.EHTChWidth20Or40),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -404,11 +465,13 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211beMixed), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+							ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -419,11 +482,13 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_unstable", "wificell_func_be"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
-						ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
-						ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
-					},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211bePure), ap.Channel(157), ap.HTCaps(ap.HTCapHT40Plus, ap.HTCapLDPC),
+							ap.VHTCaps(ap.VHTCapSGI80), ap.VHTCenterChannel(155), ap.VHTChWidth(ap.VHTChWidth80),
+							ap.EHTCenterChannel(155), ap.EHTChWidth(ap.EHTChWidth80),
+						},
+					}},
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.Wifi80211be()),
 				ExtraTestBedDeps:  []string{"wifi_router_features:WIFI_ROUTER_FEATURE_IEEE_802_11_BE"},
@@ -432,8 +497,10 @@ func init() {
 				Name:    "owe",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       owe.NewConfigFactory(owe.ModePureOWE),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: owe.NewConfigFactory(owe.ModePureOWE),
+					}},
 					expectedSecurity: shillconst.SecurityOWE,
 				}},
 				// Skip Marvell WiFi since they do not support OWE.
@@ -444,16 +511,22 @@ func init() {
 				Name:    "hidden24g",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(6), ap.Hidden()},
+					}},
 				}},
 			}, {
 				// Verifies that DUT can connect to a hidden network on 5GHz channels.
 				Name:    "hidden5ht20",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20), ap.Hidden()},
+					}},
 				}},
 				// TODO(b/189972561) Enable this test on Trogdor once active scanning on 5 GHz channel is enabled.
 				ExtraHardwareDeps: hwdep.D(hwdep.SkipOnPlatform("strongbad", "strongbad64", "strongbad-kernelnext", "trogdor", "trogdor64", "trogdor-kernelnext")),
@@ -462,36 +535,52 @@ func init() {
 				Name:    "wep40",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep40Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
@@ -501,36 +590,52 @@ func init() {
 				Name:    "wep104",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(0), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(1), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(2), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac:       wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wep.NewConfigFactory(wep104Keys(), wep.DefaultKey(3), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
@@ -540,20 +645,28 @@ func init() {
 				Name:    "wephidden",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac:       wep.NewConfigFactory(wep40KeysHidden(), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wep.NewConfigFactory(wep40KeysHidden(), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac:       wep.NewConfigFactory(wep40KeysHidden(), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wep.NewConfigFactory(wep40KeysHidden(), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac:       wep.NewConfigFactory(wep104KeysHidden(), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wep.NewConfigFactory(wep104KeysHidden(), wep.AuthAlgs(wep.AuthAlgoOpen)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}, {
-					apOpts:           []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac:       wep.NewConfigFactory(wep104KeysHidden(), wep.AuthAlgs(wep.AuthAlgoShared)),
+					apConfigs: []ap.ApConfig{{
+						ApOpts:     []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wep.NewConfigFactory(wep104KeysHidden(), wep.AuthAlgs(wep.AuthAlgoShared)),
+					}},
 					expectedSecurity: shillconst.SecurityWEP,
 				}},
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiWEP()),
@@ -563,11 +676,13 @@ func init() {
 				Name:    "wpatkip",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}},
 			}, {
@@ -575,11 +690,13 @@ func init() {
 				Name:    "wpaccmp",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}},
 			}, {
@@ -588,11 +705,13 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}},
 			}, {
@@ -600,11 +719,13 @@ func init() {
 				Name:    "wpa2tkip",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherTKIP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherTKIP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
 				ExtraRequirements: []string{"wifi-sec-0005-v01"},
@@ -615,11 +736,13 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0005-v01"},
@@ -630,18 +753,22 @@ func init() {
 				Name:    "wpa2pmfsha256",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{wpa.KeyMgmtWPAPSKSHA256}),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{wpa.KeyMgmtWPAPSKSHA256}),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{wpa.KeyMgmtWPAPSK, wpa.KeyMgmtWPAPSKSHA256}),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA2), wpa.KeyMgmt([]string{wpa.KeyMgmtWPAPSK, wpa.KeyMgmtWPAPSKSHA256}),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0005-v01"},
@@ -651,11 +778,13 @@ func init() {
 				Name:    "wpa2pmfoptional",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFOptional)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFOptional)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0005-v01"},
@@ -664,11 +793,13 @@ func init() {
 				Name:    "wpa2",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
 				ExtraRequirements: []string{"wifi-sec-0005-v01"},
@@ -677,11 +808,13 @@ func init() {
 				Name:    "wpamixed",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModeMixed),
-						wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP), wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModeMixed),
+							wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP), wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAWPA2,
 				}},
 			}, {
@@ -689,15 +822,17 @@ func init() {
 				Name:    "wpa3mixed",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
-						ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
-						ap.PMF(ap.PMFOptional),
-					},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModeMixedWPA3),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
+							ap.PMF(ap.PMFOptional),
+						},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModeMixedWPA3),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2WPA3,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
@@ -709,15 +844,17 @@ func init() {
 				// this will require a hardware dependency (crbug.com/1070299).
 				ExtraSoftwareDeps: []string{"wpa3_sae"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
-						ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
-						ap.PMF(ap.PMFRequired),
-					},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA3),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{
+							ap.Mode(ap.Mode80211acMixed), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
+							ap.PMF(ap.PMFRequired),
+						},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA3),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3,
 				}},
 				ExtraRequirements: []string{"wifi-gen-0006-v01", "wifi-sec-0002-v01"},
@@ -726,14 +863,13 @@ func init() {
 				Name:    "wpavht80",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{
-						ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
-						ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80),
-					},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(36), ap.HTCaps(ap.HTCapHT40Plus),
+							ap.VHTCenterChannel(42), ap.VHTChWidth(ap.VHTChWidth80)},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}},
 			}, {
@@ -741,46 +877,58 @@ func init() {
 				Name:    "wpaoddpassphrase",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"\xe4\xb8\x80\xe4\xba\x8c\xe4\xb8\x89", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"\xe4\xb8\x80\xe4\xba\x8c\xe4\xb8\x89", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"\xe4\xb8\x80\xe4\xba\x8c\xe4\xb8\x89", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"\xe4\xb8\x80\xe4\xba\x8c\xe4\xb8\x89", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"abcdef\xc2\xa2", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"abcdef\xc2\xa2", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						"abcdef\xc2\xa2", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							"abcdef\xc2\xa2", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						" !\"#$%&'()>*+,-./:;<=>?@[\\]^_{|}~", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							" !\"#$%&'()>*+,-./:;<=>?@[\\]^_{|}~", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						" !\"#$%&'()>*+,-./:;<=>?@[\\]^_{|}~", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							" !\"#$%&'()>*+,-./:;<=>?@[\\]^_{|}~", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}},
 			}, {
@@ -788,32 +936,40 @@ func init() {
 				Name:    "wpahidden",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModePureWPA2),
-						wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModePureWPA2),
+							wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
-					secConfFac: wpa.NewConfigFactory(
-						"chromeos", wpa.Mode(wpa.ModeMixed),
-						wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP), wpa.Ciphers2(wpa.CipherCCMP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.Hidden()},
+						SecConfFac: wpa.NewConfigFactory(
+							"chromeos", wpa.Mode(wpa.ModeMixed),
+							wpa.Ciphers(wpa.CipherTKIP, wpa.CipherCCMP), wpa.Ciphers2(wpa.CipherCCMP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAWPA2,
 				}},
 			}, {
@@ -821,12 +977,13 @@ func init() {
 				Name:    "raw_pmk",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpa.NewConfigFactory(
-						strings.Repeat("0123456789abcdef", 4), // length = 64.
-						wpa.Mode(wpa.ModePureWPA),
-						wpa.Ciphers(wpa.CipherTKIP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpa.NewConfigFactory(
+							strings.Repeat("0123456789abcdef", 4), // length = 64.
+							wpa.Mode(wpa.ModePureWPA),
+							wpa.Ciphers(wpa.CipherTKIP)),
+					}},
 					expectedSecurity: shillconst.SecurityWPA,
 				}},
 			}, {
@@ -837,9 +994,13 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(120), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(120), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()},
+					}},
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(136), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nMixed), ap.Channel(136), ap.HTCaps(ap.HTCapHT40), ap.SpectrumManagement()},
+					}},
 				}},
 			}, {
 				// Verifies that DUT can connect to a networks with the longest and shortest SSID.
@@ -847,9 +1008,13 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesCapture),
 				ExtraAttr: []string{"wificell_cq"},
 				Val: []simpleConnectTestcase{{
-					apOpts: wifiutil.CommonAPOptions(ap.SSID("a")),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID("a")),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(strings.Repeat("MaxLengthSSID", 4)[:32])),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(strings.Repeat("MaxLengthSSID", 4)[:32])),
+					}},
 				}},
 			}, {
 				// This test case verifies that the DUT accepts ascii and non-ascii type characters as the SSID.
@@ -858,30 +1023,52 @@ func init() {
 				Val: []simpleConnectTestcase{{
 					// TODO(crbug.com/1082582): shill don't allow leading 0x00 now, so let's append it in the
 					// end to keep the coverage.
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(1, 31) + "\x00")),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(1, 31) + "\x00")),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(32, 63))),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(32, 63))),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(64, 95))),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(64, 95))),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(96, 127))),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(96, 127))),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(128, 159))),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(128, 159))),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(160, 191))),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(160, 191))),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(192, 223))),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(192, 223))),
+					}},
 				}, {
-					apOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(224, 255))),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID(byteSequenceStr(224, 255))),
+					}},
 				}, {
 					// Valid Unicode characters.
-					apOpts: wifiutil.CommonAPOptions(ap.SSID("\xe4\xb8\xad\xe5\x9b\xbd")),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID("\xe4\xb8\xad\xe5\x9b\xbd")),
+					}},
 				}, {
 					// Single extended ASCII character (a-grave).
-					apOpts: wifiutil.CommonAPOptions(ap.SSID("\xe0")),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID("\xe0")),
+					}},
 				}, {
 					// Mix of ASCII and Unicode characters as SSID.
-					apOpts: wifiutil.CommonAPOptions(ap.SSID("Chrome\xe7\xac\x94\xe8\xae\xb0\xe6\x9c\xac")),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: wifiutil.CommonAPOptions(ap.SSID("Chrome\xe7\xac\x94\xe8\xae\xb0\xe6\x9c\xac")),
+					}},
 				}},
 				// TODO(b/158150763): Skip Marvell WiFi as there's a known issue to make the test always fail.
 				ExtraHardwareDeps: hwdep.D(hwdep.WifiNotMarvell()),
@@ -890,13 +1077,14 @@ func init() {
 				Name:    "8021xwep",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: dynamicwep.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						dynamicwep.ClientCACert(eapCert1.CACred.Cert),
-						dynamicwep.ClientCred(eapCert1.ClientCred),
-						dynamicwep.RekeyPeriod(10),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: dynamicwep.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							dynamicwep.ClientCACert(eapCert1.CACred.Cert),
+							dynamicwep.ClientCred(eapCert1.ClientCred),
+							dynamicwep.RekeyPeriod(10)),
+					}},
 					pingOps:          []ping.Option{ping.Count(15), ping.Interval(1)},
 					expectedSecurity: shillconst.SecurityWEP,
 				}},
@@ -911,56 +1099,62 @@ func init() {
 				Name:    "8021xwpa",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						wpaeap.ClientCACert(eapCert1.CACred.Cert),
-						wpaeap.ClientCred(eapCert1.ClientCred),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							wpaeap.ClientCACert(eapCert1.CACred.Cert),
+							wpaeap.ClientCred(eapCert1.ClientCred)),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Failure due to lack of CACert on client.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						wpaeap.ClientCred(eapCert1.ClientCred),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							wpaeap.ClientCred(eapCert1.ClientCred)),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to unmatched CACert.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						wpaeap.ClientCACert(eapCert2.CACred.Cert),
-						wpaeap.ClientCred(eapCert1.ClientCred),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							wpaeap.ClientCACert(eapCert2.CACred.Cert),
+							wpaeap.ClientCred(eapCert1.ClientCred)),
+					}},
 					expectedFailure: true,
 				}, {
 					// Should succeed if we specify that we have no CACert.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						wpaeap.ClientCred(eapCert1.ClientCred),
-						wpaeap.NotUseSystemCAs(),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							wpaeap.ClientCred(eapCert1.ClientCred),
+							wpaeap.NotUseSystemCAs()),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Failure due to wrong certificate chain on client.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						wpaeap.ClientCACert(eapCert1.CACred.Cert),
-						wpaeap.ClientCred(eapCert2.ClientCred),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							wpaeap.ClientCACert(eapCert1.CACred.Cert),
+							wpaeap.ClientCred(eapCert2.ClientCred)),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to expired cert on server.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ExpiredServerCred,
-						wpaeap.ClientCACert(eapCert1.CACred.Cert),
-						wpaeap.ClientCred(eapCert1.ClientCred),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ExpiredServerCred,
+							wpaeap.ClientCACert(eapCert1.CACred.Cert),
+							wpaeap.ClientCred(eapCert1.ClientCred)),
+					}},
 					expectedFailure: true,
 				}},
 				// TODO(b/189986748): Remove the skiplist once those flaky boards have reached AUE.
@@ -971,13 +1165,15 @@ func init() {
 				Name:    "8021xwpa3mixed",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFOptional)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						wpaeap.ClientCACert(eapCert1.CACred.Cert),
-						wpaeap.ClientCred(eapCert1.ClientCred),
-						wpaeap.Mode(wpa.ModeMixedWPA3),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFOptional)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							wpaeap.ClientCACert(eapCert1.CACred.Cert),
+							wpaeap.ClientCred(eapCert1.ClientCred),
+							wpaeap.Mode(wpa.ModeMixedWPA3),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2WPA3Enterprise,
 				}},
 				ExtraRequirements: []string{"wifi-sec-0003-v01"},
@@ -986,13 +1182,15 @@ func init() {
 				Name:    "8021xwpa3",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
-					secConfFac: wpaeap.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred,
-						wpaeap.ClientCACert(eapCert1.CACred.Cert),
-						wpaeap.ClientCred(eapCert1.ClientCred),
-						wpaeap.Mode(wpa.ModePureWPA3),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1), ap.PMF(ap.PMFRequired)},
+						SecConfFac: wpaeap.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred,
+							wpaeap.ClientCACert(eapCert1.CACred.Cert),
+							wpaeap.ClientCred(eapCert1.ClientCred),
+							wpaeap.Mode(wpa.ModePureWPA3),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA3Enterprise,
 				}},
 				ExtraRequirements: []string{"wifi-sec-0003-v01"},
@@ -1004,51 +1202,61 @@ func init() {
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					// Failure due to bad password.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.ClientPassword("wrongpassword"),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.ClientPassword("wrongpassword"),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to wrong client CA.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert2.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert2.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to expired server cred.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ExpiredServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ExpiredServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to that a subject alternative name (SAN) is set but does not match any of the server certificate SANs.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`}),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due the set domain suffix match that does not match any of the dNSName in the server certificate SANs.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain.com"}),
+						),
+					}},
 					expectedFailure: true,
 				}},
 			}, {
@@ -1056,73 +1264,87 @@ func init() {
 				Name:    "8021xpeap_mschapv2",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1130,73 +1352,87 @@ func init() {
 				Name:    "8021xpeap_md5",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1204,73 +1440,87 @@ func init() {
 				Name:    "8021xpeap_gtc",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypePEAP),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1281,51 +1531,61 @@ func init() {
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
 					// Failure due to bad password.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.ClientPassword("wrongpassword"),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.ClientPassword("wrongpassword"),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to wrong client CA.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert2.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert2.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to expired server cred.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ExpiredServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ExpiredServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due to that a subject alternative name (SAN) is set but does not match any of the server certificate SANs.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`}),
+						),
+					}},
 					expectedFailure: true,
 				}, {
 					// Failure due the set domain suffix match that does not match any of the dNSName in the server certificate SANs.
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain.com"}),
+						),
+					}},
 					expectedFailure: true,
 				}},
 			}, {
@@ -1333,73 +1593,87 @@ func init() {
 				Name:    "8021xttls_mschapv2",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMSCHAPV2),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1407,73 +1681,87 @@ func init() {
 				Name:    "8021xttls_md5",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeMD5),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1481,73 +1769,87 @@ func init() {
 				Name:    "8021xttls_gtc",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeGTC),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1555,73 +1857,87 @@ func init() {
 				Name:    "8021xttls_ttlsmschapv2",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAPV2),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1629,73 +1945,87 @@ func init() {
 				Name:    "8021xttls_ttlsmschap",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSMSCHAP),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1703,73 +2033,87 @@ func init() {
 				Name:    "8021xttls_ttlspap",
 				Fixture: wificell.FixtureID(wificell.TFFeaturesCapture),
 				Val: []simpleConnectTestcase{{
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
-						tunneled1x.Mode(wpa.ModePureWPA2),
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert1.CACred.Cert, eapCert1.ServerCred, eapCert1.CACred.Cert, "testuser", "password",
+							tunneled1x.Mode(wpa.ModePureWPA2),
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPA2Enterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[1]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
-						tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
+							tunneled1x.AltSubjectMatch([]string{eapCert3AltSub[2]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should success since having multiple entries in 'altsubject_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses altsubject_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
-						tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
+							tunneled1x.AltSubjectMatch([]string{`{"Type":"DNS","Value":"wrong_dns.com"}`, eapCert3AltSub[0]}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
-						tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
+							tunneled1x.DomainSuffixMatch(eapCert3DomainSuffix),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}, {
 					// Should succeed since having multiple entries in 'domain_suffix_match' is treated as OR, not AND.
 					// For more information about how wpa_supplicant uses domain_suffix_match field:
 					// https://w1.fi/cgit/hostap/plain/wpa_supplicant/wpa_supplicant.conf
-					apOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
-					secConfFac: tunneled1x.NewConfigFactory(
-						eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
-						tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
-						tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
-						tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
-					),
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211g), ap.Channel(1)},
+						SecConfFac: tunneled1x.NewConfigFactory(
+							eapCert3.CACred.Cert, eapCert3.ServerCred, eapCert3.CACred.Cert, "testuser", "password",
+							tunneled1x.OuterProtocol(tunneled1x.Layer1TypeTTLS),
+							tunneled1x.InnerProtocol(tunneled1x.Layer2TypeTTLSPAP),
+							tunneled1x.DomainSuffixMatch([]string{"wrongdomain1.com", eapCert3DomainSuffix[0], "wrongdomain1.com"}),
+						),
+					}},
 					expectedSecurity: shillconst.SecurityWPAEnterprise,
 				}},
 			}, {
@@ -1778,7 +2122,9 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesPower),
 				ExtraAttr: []string{"wificell_unstable"},
 				Val: []simpleConnectTestcase{{
-					apOpts:  []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211nPure), ap.Channel(48), ap.HTCaps(ap.HTCapHT20)},
+					}},
 					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
 				}},
 			}, {
@@ -1787,7 +2133,9 @@ func init() {
 				Fixture:   wificell.FixtureID(wificell.TFFeaturesPower),
 				ExtraAttr: []string{"wificell_unstable"},
 				Val: []simpleConnectTestcase{{
-					apOpts:  []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+					apConfigs: []ap.ApConfig{{
+						ApOpts: []ap.Option{ap.Mode(ap.Mode80211acPure), ap.Channel(40), ap.HTCaps(ap.HTCapHT20), ap.VHTChWidth(ap.VHTChWidth20Or40)},
+					}},
 					pingOps: []ping.Option{ping.Count(100), ping.Interval(1)},
 				}},
 			},
@@ -1805,8 +2153,8 @@ func SimpleConnect(ctx context.Context, s *testing.State) {
 		}
 	}()
 
-	testOnce := func(ctx context.Context, s *testing.State, options []ap.Option, fac security.ConfigFactory, pingOps []ping.Option, expectedFailure bool, expectedSecurity string) {
-		apIface, err := tf.ConfigureAP(ctx, options, fac)
+	testOnce := func(ctx context.Context, s *testing.State, apConfigs []ap.ApConfig, pingOps []ping.Option, expectedFailure bool, expectedSecurity string) {
+		apIface, err := tf.ConfigureMultiAP(ctx, wificell.DefaultRouter, apConfigs)
 		if err != nil {
 			s.Fatal("Failed to configure ap, err: ", err)
 		}
@@ -1919,7 +2267,15 @@ func SimpleConnect(ctx context.Context, s *testing.State) {
 	testcases := s.Param().([]simpleConnectTestcase)
 	for i, tc := range testcases {
 		subtest := func(ctx context.Context, s *testing.State) {
-			testOnce(ctx, s, tc.apOpts, tc.secConfFac, tc.pingOps, tc.expectedFailure, tc.expectedSecurity)
+			if tc.useSameSSID && tc.apConfigs != nil {
+				ssid := ap.RandomSSID("TAST_TEST_REUSE_")
+				for idx := range tc.apConfigs {
+					s.Logf("Overriding SSID set by user or randomly generated: use SSID=%s for hostapd conf at index=%d", ssid, idx)
+					tc.apConfigs[idx].ApOpts = append(tc.apConfigs[idx].ApOpts, ap.SSID(ssid))
+				}
+			}
+
+			testOnce(ctx, s, tc.apConfigs, tc.pingOps, tc.expectedFailure, tc.expectedSecurity)
 		}
 		if !s.Run(ctx, fmt.Sprintf("Testcase #%d", i), subtest) {
 			// Stop if any sub-test failed.

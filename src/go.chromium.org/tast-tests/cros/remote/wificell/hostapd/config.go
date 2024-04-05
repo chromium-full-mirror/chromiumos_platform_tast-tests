@@ -762,6 +762,13 @@ func NewConfig(ops ...Option) (*Config, error) {
 	return conf, nil
 }
 
+// ApConfig is the configuration of hostapd options and security options.
+type ApConfig struct {
+	ApOpts []Option
+	// If unassigned, use default security config: open network.
+	SecConfFac security.ConfigFactory
+}
+
 // Config is the configuration to start hostapd on a router.
 type Config struct {
 	SSID               string

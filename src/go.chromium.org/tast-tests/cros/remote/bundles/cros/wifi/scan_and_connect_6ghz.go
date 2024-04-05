@@ -12,7 +12,6 @@ import (
 	"go.chromium.org/tast-tests/cros/common/shillconst"
 	"go.chromium.org/tast-tests/cros/common/tbdep"
 	tdreq "go.chromium.org/tast-tests/cros/common/testdevicerequirements"
-	"go.chromium.org/tast-tests/cros/common/wifi/security"
 	"go.chromium.org/tast-tests/cros/common/wifi/security/wpa"
 	"go.chromium.org/tast-tests/cros/remote/network/ip"
 	"go.chromium.org/tast-tests/cros/remote/wificell"
@@ -156,22 +155,20 @@ func ScanAndConnect6GHz(ctx context.Context, s *testing.State) {
 			hostapd.Channel(apChannel), hostapd.SpectrumManagement(), hostapd.PMF(hostapd.PMFRequired)}
 		secConfFac := wpa.NewConfigFactory("chromeos",
 			wpa.Mode(wpa.ModePureWPA3), wpa.Ciphers2(wpa.CipherCCMP))
-		var opsList [][]hostapd.Option
-		var secConfFacList []security.ConfigFactory
+		var apConfigs []hostapd.ApConfig
 		if tc.isOutOfBand {
 			// Set up the 5 GHz AP for an out-of-band discovery, i.e., the 6 GHz AP is co-located
 			ap5GHzOpts := []hostapd.Option{hostapd.SSID(hostapd.RandomSSID("5GHz_")), hostapd.Mode(hostapd.Mode80211acPure),
 				hostapd.HTCaps(hostapd.HTCapHT20), hostapd.OpClass(0), hostapd.Channel(40), hostapd.SpectrumManagement()}
-			opsList = append(opsList, ap6GHzOpts, ap5GHzOpts)
-			secConfFacList = append(secConfFacList, secConfFac, nil)
+			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap6GHzOpts, SecConfFac: secConfFac})
+			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap5GHzOpts, SecConfFac: nil})
 		} else {
 			// Intel driver doesn't support FILS Discovery frame or unsolicited broadcast Probe Response frame transmission,
 			// set beacon interval to 20 TUs so that the DUT receives beacon frames within the channel dwell time
 			ap6GHzOpts = append(ap6GHzOpts, hostapd.BeaconInterval(20))
-			opsList = append(opsList, ap6GHzOpts)
-			secConfFacList = append(secConfFacList, secConfFac)
+			apConfigs = append(apConfigs, hostapd.ApConfig{ApOpts: ap6GHzOpts, SecConfFac: secConfFac})
 		}
-		ap, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, 0, opsList, secConfFacList, "", true, false, false)
+		ap, err := tf.ConfigureAPOnRouterIDWithConfs(ctx, 0, apConfigs, "", true, false, false)
 		if err != nil {
 			return nil, errors.Wrap(err, "failed to configure the APs")
 		}

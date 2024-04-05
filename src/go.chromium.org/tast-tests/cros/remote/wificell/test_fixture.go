@@ -917,24 +917,21 @@ func (tf *TestFixture) UniqueAPName() string {
 // ConfigureAPOnRouterID is an extended version of ConfigureAP, allowing to choose router
 // to establish the AP on.
 func (tf *TestFixture) ConfigureAPOnRouterID(ctx context.Context, idx RouterIdx, ops []hostapd.Option, fac security.ConfigFactory, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
-	return tf.ConfigureAPOnRouterIDWithConfs(ctx, idx, [][]hostapd.Option{ops}, []security.ConfigFactory{fac}, "", true, enableDNS, enableHTTP)
+	return tf.ConfigureAPOnRouterIDWithConfs(ctx, idx, []hostapd.ApConfig{{ApOpts: ops, SecConfFac: fac}}, "", true, enableDNS, enableHTTP)
 }
 
 // ConfigureAPOnRouterIDWithConfs is an extended version of ConfigureAPOnRouterID, allowing
 // to choose router and interfaces to establish the AP on, for example, hostapd controls multiple interfaces.
-// opsList[i] and facList[i] are the hostapd options and security configurations of Interface i
+// apConfigs[i].ApOpts and .SecConfFac are the hostapd options and security configurations of Interface i
 // If enableDHCP is true, the DHCP server is installed on dhcpIface
 // When dhcpIface is empty, the DHCP server uses the interface of the hostapd server if the hostapd server has
 // only one interface; otherwise it is installed on a bridge which connects all hostapd interfaces
-func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx RouterIdx, opsList [][]hostapd.Option, facList []security.ConfigFactory, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
+func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx RouterIdx, apConfigs []hostapd.ApConfig, dhcpIface string, enableDHCP, enableDNS, enableHTTP bool) (ret *APIface, retErr error) {
 	ctx, st := timing.Start(ctx, "tf.ConfigureAPOnRouterIDWithConfs")
 	defer st.End()
 
 	if len(tf.routers) <= int(idx) {
 		return nil, errors.Errorf("router index (%d) out of range [0, %d)", idx, len(tf.routers))
-	}
-	if len(opsList) != len(facList) {
-		return nil, errors.New("the number of hostapd option lists does not equal the number of security configurations")
 	}
 
 	r := tf.routers[idx].object
@@ -942,9 +939,9 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 
 	var configs []*hostapd.Config
 	capturers := make(map[int]*pcap.Capturer)
-	for i := 0; i < len(opsList); i++ {
-		ops := opsList[i]
-		fac := facList[i]
+	for i := 0; i < len(apConfigs); i++ {
+		ops := apConfigs[i].ApOpts
+		fac := apConfigs[i].SecConfFac
 		if fac != nil {
 			// Defer the securityConfig generation from test's init() to here because the step may emit error and that's not allowed in test init().
 			securityConfig, err := fac.Gen()
@@ -1020,6 +1017,15 @@ func (tf *TestFixture) ConfigureAPOnRouterIDWithConfs(ctx context.Context, idx R
 // use tf.ReserveForClose(ctx, ap) to reserve time for the deferred call.
 func (tf *TestFixture) ConfigureAP(ctx context.Context, ops []hostapd.Option, fac security.ConfigFactory) (ret *APIface, retErr error) {
 	return tf.ConfigureAPOnRouterID(ctx, DefaultRouter, ops, fac, false, false)
+}
+
+// ConfigureMultiAP configures the router[idx] to provide multiple WiFi services(AP's)
+// with corresponding ApConfigs specified. All AP's are colocated, which means there
+// is only one hostapd controlling all the AP's.
+// Note that after getting an APIface, ap, the caller should defer tf.DeconfigAP(ctx, ap) and
+// use tf.ReserveForClose(ctx, ap) to reserve time for the deferred call.
+func (tf *TestFixture) ConfigureMultiAP(ctx context.Context, idx RouterIdx, apConfigs []hostapd.ApConfig) (ret *APIface, retErr error) {
+	return tf.ConfigureAPOnRouterIDWithConfs(ctx, idx, apConfigs, "", true, false, false)
 }
 
 // ReserveForDeconfigAP returns a shorter ctx and cancel function for tf.DeconfigAP().
