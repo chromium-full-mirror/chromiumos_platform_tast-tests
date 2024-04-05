@@ -133,10 +133,11 @@ var pdStateFieldIndex = map[TCPMVersion]map[string]int{
 		"Full":       0,
 		"PortNumber": 1,
 		"CCPolarity": 2,
-		"PowerRole":  3,
-		"DataRole":   4,
-		"Vconn":      5,
-		"PDCState":   6,
+		"Connection": 3,
+		"PowerRole":  4,
+		"DataRole":   5,
+		"Vconn":      6,
+		"PDCState":   7,
 	},
 }
 
@@ -181,16 +182,17 @@ var pdStateCmdRegexp = map[TCPMVersion]string{
 	//     11 - Extra fields -- SPR
 	TCPMv2: `Port\s+C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(-VC)?\s+TC State:\s+([\w\.]+)?,\s+Flags:\s+0x(\w+)\s+PE State:\s+(\w+)?,\s+Flags:\s+0x(\w+)\s+(.*)[\r\n]`,
 	// For PDC DUTs
-	//   Example: "C1 CC1, Role: SNK-DFP PDC State: Attached.SNK"
+	//   Example: "C1 CC1, Enable - Role: SNK-DFP PDC State: Attached.SNK"
 	//   Match Index:
 	//      0 - Full match
 	//      1 - Port number  -- 1
 	//      2 - CC Polarity  -- CC1
-	//      3 - Power role   -- SNK
-	//      4 - Data role    -- DFP
-	//      5 - VConn (optional "-VC")
-	//      6 - PDC State    -- Attached.SNK (See `pdc_state_names` in the EC's pdc_power_mgmt.c)
-	PDC: `C(\d+)\s+(CC\d+),\s+Role:\s+(\w+)-(\w+)(-VC)?\s+PDC State:\s+([\w\. ]+)?[\r\n]`,
+	//      3 - Comm Status  -- Enable
+	//      4 - Power role   -- SNK
+	//      5 - Data role    -- DFP
+	//      6 - VConn (optional "-VC")
+	//      7 - PDC State    -- Attached.SNK (See `pdc_state_names` in the EC's pdc_power_mgmt.c)
+	PDC: `C(\d+)\s+(CC\d+),\s+(\S+)\s+-\s+Role:\s+(\w+)-(\w+)(-VC)?\s+PDC State:\s+([\w\. ]+)?[\r\n]`,
 }
 
 const pdStateInvalidPortRegexp string = `Parameter (\d+) invalid`
@@ -435,8 +437,14 @@ func (s *Servo) getPDStateByTargetAndVersion(
 		portState.VConn = false
 	}
 
+	connection, err := t.lookup("Connection", ver)
+	if err != nil {
+		return nil, err
+	}
+	portState.Connection = connectionValue(connection)
+
 	//
-	// PE state and flags, Connection state (TCPMv1 and TCPMv2 only)
+	// PE state and flags (TCPMv1 and TCPMv2 only)
 	//
 	if ver == TCPMv2 || ver == TCPMv1 {
 		// PE State name
@@ -451,13 +459,6 @@ func (s *Servo) getPDStateByTargetAndVersion(
 			return nil, errors.Wrap(err, "failed to convert PE flags number")
 		}
 		portState.PEFlags = uint32(flags64)
-
-		// Connection
-		connection, err := t.lookup("Connection", ver)
-		if err != nil {
-			return nil, err
-		}
-		portState.Connection = connectionValue(connection)
 	}
 
 	//
