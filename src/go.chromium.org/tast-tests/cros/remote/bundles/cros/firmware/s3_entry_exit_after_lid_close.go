@@ -16,6 +16,7 @@ import (
 	"go.chromium.org/tast-tests/cros/remote/firmware"
 	"go.chromium.org/tast-tests/cros/remote/firmware/fixture"
 	"go.chromium.org/tast-tests/cros/remote/firmware/reporters"
+	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast-tests/cros/services/cros/security"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/dut"
@@ -237,6 +238,10 @@ func S3EntryExitAfterLidClose(ctx context.Context, s *testing.State) {
 	s.Log("Opening lid")
 	if err := h.Servo.SetString(ctx, "lid_open", "yes"); err != nil {
 		s.Fatal("Failed to open lid: ", err)
+	}
+
+	if err := powercontrol.PowerOntoDUT(ctx, h.ServoProxy, dut); err != nil {
+		s.Fatal("Failed to wake up DUT: ", err)
 	}
 
 	dmesgOut, err := h.DUT.Conn().CommandContext(ctx, "bash", "-c", S3DmesgCmd).Output()
