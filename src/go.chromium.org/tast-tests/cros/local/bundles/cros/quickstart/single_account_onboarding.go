@@ -108,4 +108,11 @@ func SingleAccountOnboarding(ctx context.Context, s *testing.State) {
 	if err := androidDevice.ConfirmGoogleAccount(ctx); err != nil {
 		s.Fatal("Failed to confirm Google Account: ", err)
 	}
+
+	// Wait for the completion screen.
+	s.Log("Waiting for Quick Start completion screen")
+	completionScreenTitle := nodewith.NameContaining("Android quick setup is done").Role(role.Heading)
+	if err := ui.WaitUntilExists(completionScreenTitle)(ctx); err != nil {
+		s.Fatal("Failed to wait for completion screen to appear: ", err)
+	}
 }
