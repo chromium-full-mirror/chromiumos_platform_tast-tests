@@ -91,7 +91,7 @@ func AutomaticCleanupManyUsers(ctx context.Context, s *testing.State) {
 		if err != nil {
 			s.Fatal("Failed to create user with content: ", err)
 		}
-		defer cryptohome.RemoveVault(cleanupCtx, user)
+		defer cryptohome.ForceRemoveVault(cleanupCtx, user)
 
 		fillFiles = append(fillFiles, fillFile)
 	}
