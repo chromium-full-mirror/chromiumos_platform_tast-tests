@@ -275,26 +275,9 @@ func RoamFT(ctx context.Context, s *testing.State) {
 		}
 
 		s.Log("Connected to the first AP; Start roaming")
-		props := []*wificell.ShillProperty{{
-			Property:       shillconst.ServicePropertyWiFiRoamState,
-			ExpectedValues: []interface{}{shillconst.RoamStateConfiguration},
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-		}, {
-			Property:       shillconst.ServicePropertyWiFiRoamState,
-			ExpectedValues: []interface{}{shillconst.RoamStateReady},
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-		}, {
-			Property:       shillconst.ServicePropertyWiFiRoamState,
-			ExpectedValues: []interface{}{shillconst.RoamStateIdle},
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-		}, {
-			Property:       shillconst.ServicePropertyWiFiBSSID,
-			ExpectedValues: []interface{}{mac1.String()},
-			Method:         wifi.ExpectShillPropertyRequest_CHECK_ONLY,
-		}}
 		waitCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
-		waitForProps, err := tf.WifiClient().ExpectShillProperty(waitCtx, connResp.ServicePath, props, []string{shillconst.ServicePropertyIsConnected})
+		waitForProps, err := tf.WifiClient().GenerateRoamPropertyWatcher(waitCtx, mac1.String(), connResp.ServicePath)
 		if err != nil {
 			s.Fatal("Failed to create a property watcher: ", err)
 		}

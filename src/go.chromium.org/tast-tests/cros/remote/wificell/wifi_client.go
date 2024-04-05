@@ -239,6 +239,32 @@ func (cli *WifiClient) ExpectShillProperty(ctx context.Context, objectPath strin
 	return waitForProperties, nil
 }
 
+// GenerateRoamPropertyWatcher returns a property watcher for roam state changes
+// and whether WiFi.BSSID updates to roamBSSID.
+func (cli *WifiClient) GenerateRoamPropertyWatcher(waitCtx context.Context, roamBSSID, servicePath string) (func() ([]protoutil.ShillPropertyHolder, error), error) {
+	props := []*ShillProperty{{
+		Property:       shillconst.ServicePropertyWiFiRoamState,
+		ExpectedValues: []interface{}{shillconst.RoamStateConfiguration},
+		Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
+	}, {
+		Property:       shillconst.ServicePropertyWiFiRoamState,
+		ExpectedValues: []interface{}{shillconst.RoamStateReady},
+		Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
+	}, {
+		Property:       shillconst.ServicePropertyWiFiRoamState,
+		ExpectedValues: []interface{}{shillconst.RoamStateIdle},
+		Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
+	}, {
+		Property:       shillconst.ServicePropertyWiFiBSSID,
+		ExpectedValues: []interface{}{roamBSSID},
+		Method:         wifi.ExpectShillPropertyRequest_CHECK_ONLY,
+	}}
+
+	monitorProps := []string{shillconst.ServicePropertyIsConnected}
+	waitForProps, err := cli.ExpectShillProperty(waitCtx, servicePath, props, monitorProps)
+	return waitForProps, err
+}
+
 // WaitForConnected queries a WiFi service with specified |ssid|, and waits for
 // its shill property: "ServicePropertyIsConnected" to be the same as |expectedValue|.
 // Note that the network needs to be added in advance, this function will not attempt to add any network.

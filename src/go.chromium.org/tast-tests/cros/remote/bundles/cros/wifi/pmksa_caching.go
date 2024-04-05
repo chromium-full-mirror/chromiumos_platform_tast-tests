@@ -273,26 +273,6 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 		return
 	}
 
-	roamProps := func(bssid string) []*wificell.ShillProperty {
-		return []*wificell.ShillProperty{{
-			Property:       shillconst.ServicePropertyWiFiRoamState,
-			ExpectedValues: []interface{}{shillconst.RoamStateConfiguration},
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-		}, {
-			Property:       shillconst.ServicePropertyWiFiRoamState,
-			ExpectedValues: []interface{}{shillconst.RoamStateReady},
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-		}, {
-			Property:       shillconst.ServicePropertyWiFiRoamState,
-			ExpectedValues: []interface{}{shillconst.RoamStateIdle},
-			Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-		}, {
-			Property:       shillconst.ServicePropertyWiFiBSSID,
-			ExpectedValues: []interface{}{bssid},
-			Method:         wifi.ExpectShillPropertyRequest_CHECK_ONLY,
-		}}
-	}
-
 	reconnectProps := func(bssid string) []*wificell.ShillProperty {
 		return []*wificell.ShillProperty{{
 			Property:       shillconst.ServicePropertyState,
@@ -392,7 +372,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 	// Expect the DUT to roam to AP1 within timeout.
 	roamCtx, cancel := context.WithTimeout(ctx, roamTimeout)
 	defer cancel()
-	waitForRoam, err := tf.WifiClient().ExpectShillProperty(roamCtx, connResp.ServicePath, roamProps(ap1BSSID), nil)
+	waitForRoam, err := tf.WifiClient().GenerateRoamPropertyWatcher(roamCtx, ap1BSSID, connResp.ServicePath)
 	if err != nil {
 		s.Fatal("Failed to create a property watcher on DUT: ", err)
 	}
@@ -452,7 +432,7 @@ func PMKSACaching(ctx context.Context, s *testing.State) {
 	// Expect the DUT to roam to AP0 within timeout.
 	roamCtx, cancel = context.WithTimeout(ctx, roamTimeout)
 	defer cancel()
-	waitForRoam, err = tf.WifiClient().ExpectShillProperty(roamCtx, connResp.ServicePath, roamProps(ap0BSSID), nil)
+	waitForRoam, err = tf.WifiClient().GenerateRoamPropertyWatcher(roamCtx, ap0BSSID, connResp.ServicePath)
 	if err != nil {
 		s.Fatal("Failed to create a property watcher on DUT: ", err)
 	}

@@ -210,28 +210,9 @@ func MARBSSIDRoam(ctx context.Context, s *testing.State) {
 		s.Fatal("DUT: failed to verify connection: ", err)
 	}
 
-	props := []*wificell.ShillProperty{{
-		Property:       shillconst.ServicePropertyWiFiRoamState,
-		ExpectedValues: []interface{}{shillconst.RoamStateConfiguration},
-		Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-	}, {
-		Property:       shillconst.ServicePropertyWiFiRoamState,
-		ExpectedValues: []interface{}{shillconst.RoamStateReady},
-		Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-	}, {
-		Property:       shillconst.ServicePropertyWiFiRoamState,
-		ExpectedValues: []interface{}{shillconst.RoamStateIdle},
-		Method:         wifi.ExpectShillPropertyRequest_ON_CHANGE,
-	}, {
-		Property:       shillconst.ServicePropertyWiFiBSSID,
-		ExpectedValues: []interface{}{ap2BSSID},
-		Method:         wifi.ExpectShillPropertyRequest_CHECK_ONLY,
-	}}
-
 	waitCtx, cancel := context.WithTimeout(ctx, 60*time.Second)
 	defer cancel()
-	monitorProps := []string{shillconst.ServicePropertyIsConnected}
-	waitForProps, err := tf.WifiClient().ExpectShillProperty(waitCtx, servicePath, props, monitorProps)
+	waitForProps, err := tf.WifiClient().GenerateRoamPropertyWatcher(waitCtx, ap2BSSID, servicePath)
 	if err != nil {
 		s.Fatal("DUT: failed to create a property watcher, err: ", err)
 	}
