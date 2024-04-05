@@ -6,14 +6,12 @@ package intel
 
 import (
 	"context"
-	"regexp"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -33,7 +31,7 @@ func init() {
 		BugComponent: "b:157291", // ChromeOS > External > Intel
 		ServiceDeps:  []string{"tast.cros.security.BootLockboxService"},
 		SoftwareDeps: []string{"chrome", "reboot"},
-		Vars:         []string{"servo"},
+		Vars:         []string{"servo", "intel.sdCardDetectionName"},
 		HardwareDeps: hwdep.D(hwdep.ChromeEC()),
 		Attr:         []string{"group:intel-usb-set1"},
 		Timeout:      15 * time.Minute,
@@ -71,6 +69,8 @@ func SDCardFunctionality(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, 3*time.Minute)
 	defer cancel()
 
+	sdCardName := s.RequiredVar("intel.sdCardDetectionName")
+
 	dut := s.DUT()
 	servoSpec, ok := s.Var("servo")
 	if !ok {
@@ -97,9 +97,14 @@ func SDCardFunctionality(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to login to chrome: ", err)
 	}
 
+	if err := utils.PlugSDCardViaServo(ctx, pxy); err != nil {
+		s.Fatal("Failed to plug SD card via servo: ", err)
+	}
+	defer utils.UnplugSDCardViaServo(cleanupCtx, pxy)
+
 	for i := 1; i <= testOpt.iterCount; i++ {
 		s.Logf("Iteration: %d/%d", i, testOpt.iterCount)
-		if err := sdCardDetection(ctx, dut); err != nil {
+		if err := utils.WaitForSDCardDetection(ctx, dut, sdCardName); err != nil {
 			s.Fatal("Failed to detect SD card: ", err)
 		}
 
@@ -134,40 +139,4 @@ func SDCardFunctionality(ctx context.Context, s *testing.State) {
 			s.Fatal("Failed to validate previous sleep state: ", err)
 		}
 	}
-}
-
-// sdCardDetection performs SD card detection validation.
-func sdCardDetection(ctx context.Context, dut *dut.DUT) error {
-	const (
-		dmesgMmcCommand = "dmesg | grep mmc"
-		sdMmcSpecFile   = "/sys/kernel/debug/mmc0/ios"
-	)
-
-	sdCardRe := regexp.MustCompile(`mmcblk0: mmc0:[\d+\w+\s+]*`)
-	sdCardSpecRe := regexp.MustCompile(`timing spec:.[1-9]+.\(sd.*`)
-	if err := testing.Poll(ctx, func(ctx context.Context) error {
-		mmcDmesgOut, err := dut.Conn().CommandContext(ctx, "sh", "-c", dmesgMmcCommand).Output()
-		if err != nil {
-			return errors.Wrapf(err, "failed to execute %q command", dmesgMmcCommand)
-		}
-
-		if got := string(mmcDmesgOut); !sdCardRe.MatchString(got) {
-			return errors.Errorf("failed to get MMC info in dmesg = got %q, want match %q", got, sdCardRe)
-		}
-
-		sdCardSpecOut, err := dut.Conn().CommandContext(ctx, "cat", sdMmcSpecFile).Output()
-		if err != nil {
-			return errors.Wrapf(err, "failed to execute 'cat %s' command", sdMmcSpecFile)
-		}
-
-		if got := string(sdCardSpecOut); !sdCardSpecRe.MatchString(got) {
-			return errors.Errorf("failed to get MMC info in %q file = got %q, want match %q", sdMmcSpecFile, got, sdCardSpecRe)
-		}
-		return nil
-	}, &testing.PollOptions{
-		Timeout: 15 * time.Second,
-	}); err != nil {
-		return errors.Wrap(err, "unable to find micro SD card")
-	}
-	return nil
 }

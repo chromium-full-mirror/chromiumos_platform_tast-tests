@@ -6,14 +6,12 @@ package intel
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"go.chromium.org/tast-tests/cros/common/servo"
+	"go.chromium.org/tast-tests/cros/common/utils"
 	"go.chromium.org/tast-tests/cros/remote/powercontrol"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/dut"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 )
@@ -69,7 +67,7 @@ func SDCardPlugUnplugDuringSleep(ctx context.Context, s *testing.State) {
 				s.Error("Failed to power-on DUT at cleanup: ", err)
 			}
 		}
-		if err := unplugSDCardViaServo(ctx, pxy); err != nil {
+		if err := utils.UnplugSDCardViaServo(ctx, pxy); err != nil {
 			s.Error("Failed to unplug microSD card as cleanup: ", err)
 		}
 	}(cleanupCtx)
@@ -84,11 +82,11 @@ func SDCardPlugUnplugDuringSleep(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to get SLP counter and C10 package values before suspend-resume: ", err)
 	}
 
-	if err := plugSDCardViaServo(ctx, pxy); err != nil {
+	if err := utils.PlugSDCardViaServo(ctx, pxy); err != nil {
 		s.Fatal("Failed to plug microSD storage device to DUT: ", err)
 	}
 
-	if err := waitForSDCardDetection(ctx, dut, sdCardName); err != nil {
+	if err := utils.WaitForSDCardDetection(ctx, dut, sdCardName); err != nil {
 		s.Fatal("Failed to wait for microSD card detection: ", err)
 	}
 
@@ -109,12 +107,12 @@ func SDCardPlugUnplugDuringSleep(ctx context.Context, s *testing.State) {
 	isPlug := s.Param().(bool)
 	if isPlug {
 		s.Log("Plugging microSD after suspend")
-		if err := plugSDCardViaServo(ctx, pxy); err != nil {
+		if err := utils.PlugSDCardViaServo(ctx, pxy); err != nil {
 			s.Fatal("Failed to plug microSD storage device to DUT: ", err)
 		}
 	} else {
 		s.Log("Unplugging microSD after suspend")
-		if err := plugSDCardViaServo(ctx, pxy); err != nil {
+		if err := utils.UnplugSDCardViaServo(ctx, pxy); err != nil {
 			s.Fatal("Failed to unplug microSD storage device from DUT: ", err)
 		}
 	}
@@ -150,50 +148,8 @@ func SDCardPlugUnplugDuringSleep(ctx context.Context, s *testing.State) {
 	}
 
 	if isPlug {
-		if err := waitForSDCardDetection(ctx, dut, sdCardName); err != nil {
+		if err := utils.WaitForSDCardDetection(ctx, dut, sdCardName); err != nil {
 			s.Fatal("Failed to wait for microSD card detection after plug: ", err)
 		}
 	}
-}
-
-// plugSDCardViaServo perform microSD plug via servo.
-func plugSDCardViaServo(ctx context.Context, pxy *servo.Proxy) error {
-	if err := pxy.Servo().SetString(ctx, "sd_en", "on"); err != nil {
-		return errors.Wrap(err, "failed to set sd_en to on")
-	}
-	if err := pxy.Servo().SetString(ctx, "sd_pwr_en", "on"); err != nil {
-		return errors.Wrap(err, "failed to set sd_pwr_en to on")
-	}
-	if err := pxy.Servo().SetString(ctx, "sd_mux_sel", "dut_sees_usbkey"); err != nil {
-		return errors.Wrap(err, "failed to set sd_mux_sel to dut_sees_usbkey")
-	}
-
-	return nil
-}
-
-// unplugSDCardViaServo perform microSD unplug via servo.
-func unplugSDCardViaServo(ctx context.Context, pxy *servo.Proxy) error {
-	if err := pxy.Servo().SetString(ctx, "sd_en", "off"); err != nil {
-		return errors.Wrap(err, "failed to set sd_en to off")
-	}
-	if err := pxy.Servo().SetString(ctx, "sd_pwr_en", "off"); err != nil {
-		return errors.Wrap(err, "failed to set sd_pwr_en to off")
-	}
-
-	return nil
-}
-
-// waitForSDCardDetection waits for connected microSD card to detect with provided sdCardName.
-func waitForSDCardDetection(ctx context.Context, dut *dut.DUT, sdCardName string) error {
-	mediaRemovablePath := "/media/removable"
-	return testing.Poll(ctx, func(ctx context.Context) error {
-		out, err := dut.Conn().CommandContext(ctx, "ls", mediaRemovablePath).Output()
-		if err != nil {
-			return errors.Wrap(err, "failed to find connect microSD card in ls command")
-		}
-		if !strings.Contains(string(out), sdCardName) {
-			return errors.New("failed to find connected microSD card in ls command")
-		}
-		return nil
-	}, &testing.PollOptions{Timeout: 20 * time.Second})
 }
