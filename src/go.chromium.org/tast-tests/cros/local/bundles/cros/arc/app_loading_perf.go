@@ -61,34 +61,31 @@ func init() {
 		Data:         []string{apploading.X86ApkName, apploading.ArmApkName},
 		Timeout:      35 * time.Minute,
 		Params: []testing.Param{{
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
 			Val: testParameters{
-				binaryTranslation: false,
+				binaryTranslation: true,
 			},
 			Pre: arcAppLoadingBooted,
 		}, {
 			Name:              "lacros",
 			ExtraSoftwareDeps: []string{"android_container", "lacros"},
 			Val: testParameters{
-				binaryTranslation: false,
+				binaryTranslation: true,
 			},
 			Pre: arcAppLoadingBootedLacros,
 		}, {
 			Name:              "vm",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParameters{
-				binaryTranslation: false,
+				binaryTranslation: true,
 			},
 			Pre: arcAppLoadingBooted,
 		}, {
 			Name:              "vm_pvsched",
 			BugComponent:      "b:167279",
-			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_vm"},
 			Val: testParameters{
-				binaryTranslation: false,
+				binaryTranslation: true,
 			},
 			Pre:               arcAppLoadingBootedWithPvSchedEnabled,
 			ExtraHardwareDeps: hwdep.D(hwdep.HasParavirtSchedControl()),
@@ -96,23 +93,23 @@ func init() {
 			Name:              "vm_lacros",
 			ExtraSoftwareDeps: []string{"android_vm", "lacros"},
 			Val: testParameters{
-				binaryTranslation: false,
+				binaryTranslation: true,
 			},
 			Pre: arcAppLoadingBootedLacros,
 		}, {
-			Name:              "binarytranslation",
+			Name:              "x86",
 			ExtraSoftwareDeps: []string{"android_container"},
 			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 			Val: testParameters{
-				binaryTranslation: true,
+				binaryTranslation: false,
 			},
 			Pre: arcAppLoadingBooted,
 		}, {
-			Name:              "vm_binarytranslation",
+			Name:              "vm_x86",
 			ExtraSoftwareDeps: []string{"android_vm"},
 			ExtraHardwareDeps: hwdep.D(hwdep.X86()),
 			Val: testParameters{
-				binaryTranslation: true,
+				binaryTranslation: false,
 			},
 			Pre: arcAppLoadingBooted,
 		}},
@@ -245,7 +242,7 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 
 	// Many apps / games run with binary translation (b/169623350#comment8)
 	// and thus it's an important use case to exercise.
-	if param.binaryTranslation {
+	if param.binaryTranslation && apkName == apploading.X86ApkName {
 		config.ApkPath = s.DataPath(apploading.ArmApkName)
 	}
 
