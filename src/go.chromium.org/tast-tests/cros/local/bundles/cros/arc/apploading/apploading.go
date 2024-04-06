@@ -8,7 +8,7 @@ package apploading
 
 import (
 	"context"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -24,7 +24,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/power/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 
-	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
@@ -48,6 +47,9 @@ const (
 	X86ApkName = "ArcAppLoadingTest_x86.apk"
 	// ArmApkName is the name of the ArcAppLoadingTest APK for Arm devices.
 	ArmApkName = "ArcAppLoadingTest_arm.apk"
+
+	// Package name of the ArcAppLoadingTest APK.
+	packageName = "org.chromium.arc.testapp.apploading"
 )
 
 // Used to keep information for a key, identified by the array of possible suffixes.
@@ -88,39 +90,18 @@ func coolDownConfig() cpu.CoolDownConfig {
 	return cdConfig
 }
 
-// RunTest executes subset of tests in APK determined by the test class name.
-func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chrome) (retScore float64, retErr error) {
-	const (
-		packageName            = "org.chromium.arc.testapp.apploading"
-		tPowerSnapshotInterval = 10 * time.Second
-	)
-
-	testName := packageName + "." + config.ClassName
-	if config.Subtest != "" {
-		testName += "#" + config.Subtest
-	}
-
+// SetupTest initializes the test environment including setting up APK and power measurements.
+func SetupTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chrome) (retCleanup setup.CleanupCallback, retErr error) {
 	testing.ContextLog(ctx, "Starting setup")
-
-	// Shorten the test context so that even if the test times out
-	// there will be time to clean up.
-	cleanupCtx := ctx
-	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
-	defer cancel()
 
 	// Some configuration actions need a test connection to Chrome.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
-		return 0, errors.Wrap(err, "failed to connect to test API")
+		return nil, errors.Wrap(err, "failed to connect to test API")
 	}
 
-	// setup.Setup configures a DUT for a test, and cleans up after.
+	// setup.Setup configures a DUT for a test, and returns cleanup callback.
 	sup, cleanup := setup.New("apploading")
-	defer func() {
-		if err := cleanup(cleanupCtx); err != nil && retErr == nil {
-			retErr = errors.Wrap(err, "failed to cleanup after creating test")
-		}
-	}()
 
 	// Add the default power test configuration.
 	sup.Add(setup.PowerTest(ctx, tconn,
@@ -132,20 +113,31 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 		setup.NewBatteryDischarge(false /*discharge*/, true /*ignoreErr*/, setup.DefaultDischargeThreshold),
 	))
 	if err := sup.Check(ctx); err != nil {
-		return 0, errors.Wrap(err, "failed to setup power test")
+		return nil, errors.Wrap(err, "failed to setup power test")
 	}
 
 	testing.ContextLogf(ctx, "Installing APK: %s", config.ApkPath)
 	sup.Add(setup.InstallApp(ctx, a, config.ApkPath, packageName))
 	if err := sup.Check(ctx); err != nil {
-		return 0, errors.Wrap(err, "failed to install apk app")
+		return nil, errors.Wrap(err, "failed to install apk app")
 	}
+	testing.ContextLog(ctx, "Finished setup")
 
+	return cleanup, nil
+}
+
+// RunTest executes subset of tests in APK determined by the test class name.
+func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chrome) (retScore float64, retErr error) {
+	const tPowerSnapshotInterval = 10 * time.Second
+
+	testName := packageName + "." + config.ClassName
+	if config.Subtest != "" {
+		testName += "#" + config.Subtest
+	}
 	metrics, err := perf.NewTimeline(ctx, metrics.TestMetrics(), perf.Prefix(config.Prefix+"_"), perf.Interval(tPowerSnapshotInterval))
 	if err != nil {
 		return 0, errors.Wrap(err, "failed to build metrics")
 	}
-	testing.ContextLog(ctx, "Finished setup")
 
 	// Drop caches before starting test,
 	if err := disk.DropCaches(ctx); err != nil {
@@ -172,7 +164,7 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 	}
 
 	outputFile := filepath.Join(config.OutDir, config.Prefix+"_test_log.txt")
-	if err := ioutil.WriteFile(outputFile, []byte(out), 0644); err != nil {
+	if err := os.WriteFile(outputFile, []byte(out), 0644); err != nil {
 		return 0, errors.Wrapf(err, "failed to save test output: %s", outputFile)
 	}
 	testing.ContextLog(ctx, "Finished writing to log: ", outputFile)

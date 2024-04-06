@@ -19,6 +19,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/memory/metrics"
 	"go.chromium.org/tast-tests/cros/local/power/setup"
 	"go.chromium.org/tast-tests/cros/local/sysutil"
+	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
 
@@ -58,7 +59,7 @@ func init() {
 		Attr:         []string{"group:crosbolt", "crosbolt_perbuild"},
 		SoftwareDeps: []string{"chrome"},
 		Data:         []string{apploading.X86ApkName, apploading.ArmApkName},
-		Timeout:      40 * time.Minute,
+		Timeout:      35 * time.Minute,
 		Params: []testing.Param{{
 			ExtraAttr:         []string{"crosbolt_arc_perf_qual"},
 			ExtraSoftwareDeps: []string{"android_container"},
@@ -139,16 +140,22 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 		memoryTestName = "MemoryTest"
 	)
 
+	// Shorten the test context so that even if the test times out
+	// there will be time to clean up.
+	cleanupCtx := ctx
+	ctx, cancel := ctxutil.Shorten(ctx, time.Minute)
+	defer cancel()
+
 	// Start network helper to serve requests from the app.
 	conn, err := nethelper.Start(ctx, apploading.NethelperPort)
 	if err != nil {
 		s.Fatal("Failed to start nethelper: ", err)
 	}
-	defer func() {
+	defer func(ctx context.Context) {
 		if err := conn.Close(ctx); err != nil {
 			s.Logf("WARNING: Failed to close nethelper connection: %s", err)
 		}
-	}()
+	}(cleanupCtx)
 
 	// Add initial traffic control queuing discipline settings (b/169947243) for
 	// traffic shaping based on experiments with netem, RTT latency, and iperf3
@@ -247,6 +254,14 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 
 	groups := make(map[string][]float64)
 	cr := s.PreValue().(arc.PreData).Chrome
+
+	cleanup, setupErr := apploading.SetupTest(ctx, config, a, cr)
+	defer func(ctx context.Context) {
+		if err := cleanup(ctx); err != nil && setupErr == nil {
+			setupErr = errors.Wrap(err, "failed to cleanup after creating test")
+		}
+	}(cleanupCtx)
+
 	for _, test := range tests {
 		var basemem *metrics.BaseMemoryStats
 		if test.name == memoryTestName {
@@ -350,7 +365,7 @@ func calcGeometricMean(scores []float64) (float64, error) {
 
 // runAppLoadingTest will test each app loading subflow with timeout.
 func runAppLoadingTest(ctx context.Context, config apploading.TestConfig, a *arc.ARC, cr *chrome.Chrome) (float64, error) {
-	shorterCtx, cancel := context.WithTimeout(ctx, 510*time.Second)
+	shorterCtx, cancel := context.WithTimeout(ctx, 500*time.Second)
 	defer cancel()
 
 	// Each subflow should take no longer than 8.5 minutes based on stainless
