@@ -107,6 +107,7 @@ func VPNAreUserSpecified(ctx context.Context, s *testing.State) {
 	if err := loginAndDoAction(ctx, res, []chrome.Option{
 		chrome.KeepState(), // Avoid resetting TPM.
 		chrome.FakeLogin(primaryUser),
+		chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
 	}, joinVPN(res)); err != nil {
 		s.Fatal("Failed to login primary user to prepare: ", err)
 	}
@@ -115,6 +116,7 @@ func VPNAreUserSpecified(ctx context.Context, s *testing.State) {
 	if err := loginAndDoAction(ctx, res, []chrome.Option{
 		chrome.KeepState(),
 		chrome.GuestLogin(),
+		chrome.DisableFeatures("LocalPasswordForConsumers"), // b/328576285
 	}, verifyVPNNotExist(res)); err != nil {
 		s.Fatal("Failed to verify VPN networks are user specified: ", err)
 	}
