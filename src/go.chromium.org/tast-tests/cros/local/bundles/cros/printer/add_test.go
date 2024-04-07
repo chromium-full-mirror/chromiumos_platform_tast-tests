@@ -147,6 +147,7 @@ func TestAddParams(t *testing.T) {
 		test("unsupported_pin", "printer_unsupported_GenericPostScript.ppd.gz", "printer_pin_print_unsupported_golden.ps", ippprint.WithJobPassword("1234")),
 
 		// Receipt printers
+		iTestCustomInput("custom_modus3_ca", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.ppd.gz", "receipt_70mmx80mm.pdf", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.bin"),
 		iTestCustomInput("epson_thermal_receipt", "printer_add_epson_thermal_receipt.ppd", "receipt_70mmx80mm.pdf", "receipt_70mmx80mm.bin"),
 	})
 	genparams.Ensure(t, "add.go", code)

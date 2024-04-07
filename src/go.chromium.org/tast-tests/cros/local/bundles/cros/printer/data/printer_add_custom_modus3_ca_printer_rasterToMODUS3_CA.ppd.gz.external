@@ -1,0 +1,5 @@
+{
+  "url": "gs://chromiumos-test-assets-public/tast/cros/printer/printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA_20240408.ppd.gz",
+  "size": 1868,
+  "sha256sum": "771d2f2720c1750cbad93c8133bd76ab8a5f18ab966ae1857c137e5e6e4c5592"
+}

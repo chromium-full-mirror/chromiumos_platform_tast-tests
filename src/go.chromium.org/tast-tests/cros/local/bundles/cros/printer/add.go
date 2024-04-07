@@ -465,6 +465,15 @@ func init() {
 				},
 				ExtraData: []string{"to_print.pdf", "printer_unsupported_GenericPostScript.ppd.gz", "printer_pin_print_unsupported_golden.ps"},
 			}, {
+				Name: "custom_modus3_ca",
+				Val: &ippprint.Params{
+					PPDFile:      "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.ppd.gz",
+					PrintFile:    "receipt_70mmx80mm.pdf",
+					ExpectedFile: "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.bin",
+				},
+				ExtraData: []string{"receipt_70mmx80mm.pdf", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.ppd.gz", "printer_add_custom_modus3_ca_printer_rasterToMODUS3_CA.bin"},
+				ExtraAttr: []string{"informational"},
+			}, {
 				Name: "epson_thermal_receipt",
 				Val: &ippprint.Params{
 					PPDFile:      "printer_add_epson_thermal_receipt.ppd",
