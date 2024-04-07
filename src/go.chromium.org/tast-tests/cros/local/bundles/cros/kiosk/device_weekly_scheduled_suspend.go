@@ -33,15 +33,16 @@ import (
 // The policy name `DeviceWeeklyScheduledSuspend` is a slight deviation, as it
 // schedules sleep intervals.
 const (
-	policyPropagationDelay = 3 * time.Second
-	intervalBetweenSleeps  = 5 * time.Second
-	sleepShortDuration     = 3 * time.Second
-	sleepLongDuration      = 7 * time.Second
-	sleepPollTimeout       = policyPropagationDelay + intervalBetweenSleeps + sleepLongDuration
+	// sleepTolerance is how much a detected sleep duration can deviate from the
+	// scheduled duration. It is off by ~1s on fast devices, but could be off by 4s
+	// or more on slow devices. Larger values reduce flakiness, but prolong the test.
+	sleepTolerance = 5 * time.Second
 
-	// sleepTolerance is how much a duration reported by SuspendDone can deviate
-	// from the scheduled duration. In practice it's usually off by ~1 second.
-	sleepTolerance = 2 * time.Second
+	sleepShortDuration     = sleepTolerance + time.Second
+	sleepLongDuration      = sleepShortDuration * 2
+	intervalBetweenSleeps  = 30 * time.Second
+	policyPropagationDelay = 2 * time.Second
+	sleepPollTimeout       = policyPropagationDelay + intervalBetweenSleeps + sleepLongDuration
 )
 
 var (
@@ -55,14 +56,14 @@ func init() {
 		Func:         DeviceWeeklyScheduledSuspend,
 		LacrosStatus: testing.LacrosVariantUnneeded,
 		Desc:         "Checks that kiosk device sleeps on schedule with policy DeviceWeeklyScheduledSuspend",
-		Contacts:     []string{"chromeos-kiosk-eng+TAST@google.com"},
-		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
-		Attr: []string{
-			"group:golden_tier",
-			"group:medium_low_tier",
-			"group:hardware",
-			"group:complementary",
+		Contacts: []string{
+			"ghostbusters-reviews+TAST@google.com",
+			"chromeos-kiosk-eng+TAST@google.com",
 		},
+		BugComponent: "b:892153", // ChromeOS > Software > Commercial (Enterprise) > Kiosk
+		// This test can be limited to the golden tier, since it's only meant to cover the
+		// integration of the policy with powerd, and powerd is well covered by other tests.
+		Attr:         []string{"group:golden_tier"},
 		SoftwareDeps: []string{"reboot", "chrome", "vpd"},
 		VarDeps:      []string{"ui.signinProfileTestExtensionManifestKey"},
 		Fixture:      fixture.FakeDMSEnrolled,
