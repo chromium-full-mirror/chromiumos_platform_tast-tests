@@ -58,7 +58,7 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:      "rootfs",
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr: []string{"group:mainline", "informational"},
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
@@ -78,7 +78,7 @@ func init() {
 			},
 			{
 				Name:      "rootfs_keepalive",
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr: []string{"group:mainline", "informational"},
 				Val: loginScreenLaunchTestParam{
 					browser.TypeLacros,
 					lacros.Rootfs,
@@ -88,7 +88,7 @@ func init() {
 			},
 			{
 				Name:      "rootfs_disabled",
-				ExtraAttr: []string{"group:mainline", "informational", "group:criticalstaging"},
+				ExtraAttr: []string{"group:mainline", "informational"},
 				Val: loginScreenLaunchTestParam{
 					browser.TypeAsh,
 					lacros.Rootfs,
