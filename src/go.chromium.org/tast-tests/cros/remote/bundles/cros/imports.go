@@ -32,6 +32,7 @@ import (
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/inputs"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/intel"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/kernel"
+	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/kunit"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/labqual"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/lacros"
 	_ "go.chromium.org/tast-tests/cros/remote/bundles/cros/meet"
