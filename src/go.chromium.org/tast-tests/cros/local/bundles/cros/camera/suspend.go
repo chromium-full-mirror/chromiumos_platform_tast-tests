@@ -14,6 +14,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome"
 	"go.chromium.org/tast-tests/cros/local/gtest"
 	"go.chromium.org/tast-tests/cros/local/power/suspend"
+	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/testing"
 	"go.chromium.org/tast/core/testing/hwdep"
@@ -54,8 +55,11 @@ func Suspend(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(ctx, chrome.ResetTimeout)
 	defer cancel()
 
-	err = testutil.WaitForCameraServiceBinding(ctx)
-	if err != nil {
+	if err := upstart.EnsureJobRunning(ctx, "powerd"); err != nil {
+		s.Fatal("Failed to make powerd running: ", err)
+	}
+
+	if err := testutil.WaitForCameraServiceBinding(ctx); err != nil {
 		s.Fatal("Failed to wait for Camera Service Binding before suspend: ", err)
 	}
 
@@ -70,8 +74,7 @@ func Suspend(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to suspend: ", err)
 	}
 
-	err = testutil.WaitForCameraServiceBinding(ctx)
-	if err != nil {
+	if err := testutil.WaitForCameraServiceBinding(ctx); err != nil {
 		s.Fatal("Failed to wait for Camera Service Binding after suspend: ", err)
 	}
 
