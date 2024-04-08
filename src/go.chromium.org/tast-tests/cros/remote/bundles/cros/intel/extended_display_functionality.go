@@ -65,7 +65,7 @@ func init() {
 			Name: "typec_hdmi_powerbtn_tablet",
 			Val: extendedDisplayFunctionTestParams{
 				powerMode:              "powerbtn_shutdown",
-				ecStateToCheck:         "S5",
+				ecStateToCheck:         "G3",
 				expectedPrevSleepState: 5,
 				tabletmode:             true,
 			},
@@ -73,7 +73,7 @@ func init() {
 			Name: "typec_hdmi_powerbtn_clamshell",
 			Val: extendedDisplayFunctionTestParams{
 				powerMode:              "powerbtn_shutdown",
-				ecStateToCheck:         "S5",
+				ecStateToCheck:         "G3",
 				expectedPrevSleepState: 5,
 				tabletmode:             false,
 			},
@@ -159,7 +159,7 @@ func ExtendedDisplayFunctionality(ctx context.Context, s *testing.State) {
 		}
 	}
 
-	if testOpt.powerMode == "typec_hdmi_powerbtn" {
+	if testOpt.powerMode == "powerbtn_shutdown" {
 		testing.ContextLog(ctx, "Shutdown DUT with power button long press via servo")
 		if err := shutdownWithPowerButtonViaServo(ctx, pxy, dut); err != nil {
 			s.Fatal("Failed to shutdown DUT with power long press via servo: ", err)
