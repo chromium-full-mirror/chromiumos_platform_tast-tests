@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	crossVersionBackupSetUpTimeout    = 1 * time.Minute
+	crossVersionBackupSetUpTimeout    = 90 * time.Second
 	crossVersionBackupResetTimeout    = 30 * time.Second
 	crossVersionBackupTearDownTimeout = 1 * time.Minute
 	crossVersionSetUpTimeout          = 1 * time.Minute
