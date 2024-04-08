@@ -76,17 +76,15 @@ func NavigateToBluetoothSettingsSubpage(ctx context.Context, tconn *chrome.TestC
 // NavigateToBluetoothDeviceDetailsPage will navigate to the Bluetooth Device Details
 // subpage for the device specified by |deviceName|. This is safe to call when OS Settings
 // are already open.
-func NavigateToBluetoothDeviceDetailsPage(ctx context.Context, cr *chrome.Chrome, tconn *chrome.TestConn, deviceName string) (*OSSettings, error) {
-	condition := uiauto.New(tconn).Exists(nodewith.Name("Bluetooth subpage back button").Ancestor(WindowFinder))
-	app, err := LaunchAtPageURL(ctx, tconn, cr, "bluetoothDevices", condition)
+func NavigateToBluetoothDeviceDetailsPage(ctx context.Context, tconn *chrome.TestConn, deviceName string) (*OSSettings, error) {
+	app, err := LaunchAtPage(ctx, tconn, Bluetooth)
 	if err != nil {
 		return nil, err
 	}
 
-	ui := uiauto.New(tconn)
 	if err := uiauto.Combine("Focus and click the device's Device Details subpage button",
-		ui.FocusAndWait(BluetoothDeviceItemButtonOnBluetoothSettingsPage(deviceName)),
-		ui.LeftClick(BluetoothDeviceItemButtonOnBluetoothSettingsPage(deviceName)),
+		app.FocusAndWait(BluetoothDeviceItemButtonOnBluetoothSettingsPage(deviceName)),
+		app.LeftClick(BluetoothDeviceItemButtonOnBluetoothSettingsPage(deviceName)),
 	)(ctx); err != nil {
 		return nil, err
 	}
