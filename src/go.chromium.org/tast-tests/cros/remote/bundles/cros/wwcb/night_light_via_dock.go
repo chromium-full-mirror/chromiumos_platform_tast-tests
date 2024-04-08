@@ -48,7 +48,7 @@ var (
 	settingsDisplayLinkFinder = &ui.Finder{
 		NodeWiths: []*ui.NodeWith{
 			{Value: &ui.NodeWith_Role{Role: ui.Role_ROLE_LINK}},
-			{Value: &ui.NodeWith_Name{Name: "Displays"}},
+			{Value: &ui.NodeWith_NameContaining{NameContaining: "Display"}},
 			{Value: &ui.NodeWith_Ancestor{Ancestor: settingsWindowFinder}},
 		},
 	}
