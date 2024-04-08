@@ -19,7 +19,7 @@ func init() {
 		Desc:         "Checks that cgroups managed by resourced have the same value as before migration",
 		Contacts:     []string{"chromeos-memory@google.com", "kawasin@chromium.org"},
 		BugComponent: "b:167279", // ChromeOS > Platform > baseOS > Performance
-		Attr:         []string{"group:mainline", "group:criticalstaging", "informational"},
+		Attr:         []string{"group:mainline", "informational"},
 		SoftwareDeps: []string{"chrome"},
 		Timeout:      30 * time.Second,
 	})
