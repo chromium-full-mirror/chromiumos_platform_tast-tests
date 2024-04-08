@@ -118,23 +118,22 @@ func init() {
 				// COM_FOUND_CUJ11_TASK3_WF1.
 				Value: "screenplay-cbd3450e-2c0e-4da8-9d55-8977a34e5e4b",
 			}},
-			// TODO(b/303784408): Enable when M120 LTS rolls out and add
-			// CHROMEOS_RELEASE_VERSION verification.
-			// }, {
-			// 	Name:    "lts_omaha",
-			// 	Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
-			// 	Val: testParam{
-			// 		ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
-			// 		ExpectedPolicies: []policy.Policy{
-			// 			&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "lts-channel"},
-			// 		},
-			// 		expectedParameters: []string{"track=\"lts-channel\""},
+		}, {
+			Name:    "lts_omaha",
+			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
+			Val: testParam{
+				ReleaseChannelPolicy: tape.RELEASECHANNELWITHLTSENUM_RELEASE_CHANNEL_WITH_LTS_ENUM_LTS_CHANNEL,
+				ExpectedPolicies: []policy.Policy{
+					&policy.ChromeOsReleaseChannel{Stat: policy.StatusSet, Val: "lts-channel"},
+				},
+				expectedParameters: []string{"track=\"lts-channel\""},
 
-			// 		testOmaha: true,
-			// 		expectedLSBReleaseRegex: map[string]string{
-			// 			"CHROMEOS_RELEASE_TRACK": "^lts-channel$",
-			// 		},
-			// 	},
+				testOmaha: true,
+				expectedLSBReleaseRegex: map[string]string{
+					"CHROMEOS_RELEASE_TRACK":   "^lts-channel$",
+					"CHROMEOS_RELEASE_VERSION": "^15662[.].*",
+				},
+			},
 		}, {
 			Name:    "stable_omaha",
 			Timeout: omahaUpdateE2ETimeout + releaseChannelE2ETimeout,
