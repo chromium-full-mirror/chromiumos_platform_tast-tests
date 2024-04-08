@@ -860,10 +860,11 @@ func (h *Helper) ResetModem(ctx context.Context) (time.Duration, error) {
 
 	start := time.Now()
 
-	testing.ContextLog(ctx, "Attempting to restart modem")
-	if _, err := RestartModemWithHelper(ctx); err != nil {
-		return time.Since(start), errors.Wrap(err, "restart modem failed")
+	if err := h.Device.Reset(ctx); err != nil {
+		return time.Since(start), errors.Wrap(err, "reset modem failed")
 	}
+
+	testing.ContextLog(ctx, "Reset modem called")
 
 	if err := h.WaitForEnabledState(ctx, false); err != nil {
 		return time.Since(start), errors.Wrap(err, "expected enabled to become false")
