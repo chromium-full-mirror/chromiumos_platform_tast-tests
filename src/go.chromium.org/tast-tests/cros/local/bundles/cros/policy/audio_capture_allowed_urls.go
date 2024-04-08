@@ -149,7 +149,7 @@ func AudioCaptureAllowedUrls(ctx context.Context, s *testing.State) {
 				if err := uiauto.Combine("verify no prompts shows and permission is granted automatically",
 					// The 15 seconds duration is an arbitrary picked timeout, should be long enough to verify no prompt will appear.
 					ui.EnsureGoneFor(permissionWindow, 15*time.Second),
-					ui.WaitUntilExists(nodewith.Name("AudioCaptureAllowedUrls - Microphone recording").Role(role.Tab)),
+					ui.WaitUntilExists(nodewith.NameStartingWith("AudioCaptureAllowedUrls - Microphone recording").Role(role.Tab)),
 				)(ctx); err != nil {
 					s.Fatal("Failed to complete all actions: ", err)
 				}
