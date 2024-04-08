@@ -124,6 +124,8 @@ func (i *Instance) LoadFmap(ctx context.Context, inFile, outFile string, section
 		cmdArgs = append(cmdArgs, "-o", outFile)
 	}
 
+	cmdArgs = append(cmdArgs, inFile)
+
 	for sec, outFile := range sections {
 		cmdArgs = append(cmdArgs, fmt.Sprintf("%s:%s", sec, outFile))
 	}

@@ -297,7 +297,7 @@ func Test_LoadFmap_Success(t *testing.T) {
 		{"-o", "output.bin"},
 	}
 
-	if err = ti.assertCalledWith(append(loadFmapPositionalArgs, "SECTION:path.bin"), optionArgs, nil); err != nil {
+	if err = ti.assertCalledWith(append(loadFmapPositionalArgs, "input.bin", "SECTION:path.bin"), optionArgs, nil); err != nil {
 		t.Error(err)
 	}
 }
