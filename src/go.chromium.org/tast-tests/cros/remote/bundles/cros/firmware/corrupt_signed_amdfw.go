@@ -38,14 +38,14 @@ func init() {
 		Params: []testing.Param{
 			{
 				Name:    "normal_mode",
-				Fixture: fixture.NormalMode,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.NormalMode),
 				Val: &corruptSingleSectionVals{
 					bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection, bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection,
 				},
 			},
 			{
 				Name:    "dev_mode",
-				Fixture: fixture.DevModeGBB,
+				Fixture: fixture.BootModeFixtureWithAPBackup(fixture.DevModeGBB),
 				Val: &corruptSingleSectionVals{
 					bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection, bios.SignedAMDFWAImageSection, bios.SignedAMDFWBImageSection,
 				},
