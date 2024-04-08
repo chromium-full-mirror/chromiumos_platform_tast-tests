@@ -54,7 +54,6 @@ var (
 		"PageLoad.InteractiveTiming.InputDelay3",
 		"PageLoad.InteractiveTiming.TimeToNextPaint",
 		"PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart",
-		"Graphics.Smoothness.Jank.AllSequences",
 		"Graphics.Smoothness.Jank3.AllSequences",
 	}
 )
@@ -139,7 +138,7 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 
 	tabs, err := histogram.CreateHistogramTabs(ctx, cr, videoStreamingHistograms)
 	if err != nil {
-		s.Fatalf("Failed to create histogram tabs: %v", err)
+		s.Fatal("Failed to create histogram tabs")
 	}
 	defer func(ctx context.Context) {
 		for _, tab := range tabs {
@@ -274,6 +273,14 @@ func VideoStreaming(ctx context.Context, s *testing.State) {
 				// user the start of video stream and mouse actions.
 				testing.Sleep(ctx, 1*time.Second)
 			}
+		}
+
+		cras, err := audio.NewCras(ctx)
+		if err != nil {
+			s.Fatal("Failed to create cras: ", err)
+		}
+		if err := cras.SetInputMute(ctx, true); err != nil {
+			s.Fatal("Failed to mute cras: ", err)
 		}
 
 		if err := startVideoStreamingAndMouseAction(ctx, s, ui); err != nil {

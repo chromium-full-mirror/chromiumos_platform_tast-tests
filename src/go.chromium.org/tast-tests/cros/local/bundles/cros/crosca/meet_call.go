@@ -63,7 +63,6 @@ var (
 		"PageLoad.InteractiveTiming.InputDelay3",
 		"PageLoad.InteractiveTiming.TimeToNextPaint",
 		"PageLoad.Experimental.NavigationTiming.NavigationStartToFirstResponseStart",
-		"Graphics.Smoothness.Jank.AllSequences",
 		"Graphics.Smoothness.Jank3.AllSequences",
 	}
 )
@@ -187,10 +186,10 @@ func MeetCall(ctx context.Context, s *testing.State) {
 	typingTimeout := 2 * time.Minute
 	if strings.ToLower(typingTimeoutVarString.Value()) != "" {
 		typingTimeoutStr := strings.ToLower(typingTimeoutVarString.Value())
-		s.Log("crosca.VideoStreaming.playbackTime value: ", typingTimeoutStr)
+		s.Log("crosca.MeetCall.typingTimeout: ", typingTimeoutStr)
 		t, err := strconv.Atoi(typingTimeoutStr)
 		if err != nil {
-			s.Fatal("Failed to parse crosca.VideoStreaming.playbackTime: ", err)
+			s.Fatal("Failed to parse crosca.MeetCall.typingTimeout: ", err)
 		}
 		typingTimeout = time.Duration(t) * time.Minute
 	}
@@ -350,7 +349,7 @@ func MeetCall(ctx context.Context, s *testing.State) {
 	// Open histogram detail page for each of the metrics to match windows python test operations.
 	tabs, err := histogram.CreateHistogramTabs(ctx, cr, meetCallHistograms)
 	if err != nil {
-		s.Fatalf("Failed to create histogram tabs: %v", err)
+		s.Fatal("Failed to create histogram tabs: ", err)
 	}
 	defer func(ctx context.Context) {
 		for _, tab := range tabs {
@@ -482,6 +481,16 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to turn off camera: ", err)
 	}
 
+	// Mute default audio device
+	cras, err := audio.NewCras(ctx)
+	if err != nil {
+		s.Fatal("Failed to create cras for default audio device: ", err)
+	}
+	s.Log("Mute default audio device")
+	if err := cras.SetInputMute(ctx, true); err != nil {
+		s.Fatal("Failed to mute default audio device: ", err)
+	}
+
 	s.Log("Add 2s delay for display to be stabilized")
 	// GoBigSleepLint: A short delay is to allow all the background to be stablized.
 	testing.Sleep(ctx, 2*time.Second)
@@ -512,11 +521,9 @@ func MeetCall(ctx context.Context, s *testing.State) {
 		}
 		s.Log("Display brightness before typing: ", brightness)
 
-		for i := 0; i < 3; i++ {
-			s.Log("Start typing and beginning counter value before typing: ", counter)
-			// GoBigSleepLint: A short countdown to signal to user to start power meter manually.
-			testing.Sleep(ctx, 1*time.Second)
-		}
+		s.Log("Start typing and beginning counter value before typing: ", counter)
+		// GoBigSleepLint: A short countdown to signal to user to start power meter manually.
+		testing.Sleep(ctx, 1*time.Second)
 
 		perfCmd := testexec.CommandContext(ctx, "perf", "stat", "-a", "-e", "cycles,instructions,cache-references,cache-misses,bus-cycles,page-faults", "-o", "/var/log/perf_output.txt")
 		if err := perfCmd.Start(); err != nil {
@@ -526,8 +533,10 @@ func MeetCall(ctx context.Context, s *testing.State) {
 
 		for endTime := time.Now().Add(typingTimeout); time.Now().Before(endTime); {
 			for _, msg := range []string{
-				"Wear two pairs of thick socks. Wear two pairs of thick socks. Wear a pair of thick socks",
-				"Running on a cold and cloudy day Running on a cold rainy day Running on a cold rainy day",
+				// "Wear two pairs of thick socks. Wear two pairs of thick socks. Wear a pair of thick socks",
+				// "Running on a cold and cloudy day Running on a cold rainy day Running on a cold rainy day",
+				"Wear two pairs of thick socks",
+				"to run on a freezing cold day",
 			} {
 				strCounter := fmt.Sprintf("%v", counter)
 				if counter <= 9 {
@@ -537,7 +546,8 @@ func MeetCall(ctx context.Context, s *testing.State) {
 				} else {
 				}
 				// Type counter value to chat window to show progress to user.
-				msgWithCounter := msg + " " + strCounter + "_c_count"
+				msgWithCounter := msg + "-" + strCounter + "-c-count"
+				// msgWithCounter := msg + "-" + strCounter
 
 				if err := uiauto.Combine("send message to meeting",
 					typingInChat(ui, kb, msgWithCounter),
@@ -563,11 +573,9 @@ func MeetCall(ctx context.Context, s *testing.State) {
 			s.Log("perf command output end")
 		}
 
-		for i := 0; i < 3; i++ {
-			s.Log("completed typing and final counter value after typing: ", counter)
-			// GoBigSleepLint: A short countdown to allow user to stop power meter manually.
-			testing.Sleep(ctx, 1*time.Second)
-		}
+		s.Log("completed typing and final counter value after typing: ", counter)
+		// GoBigSleepLint: A short countdown to allow user to stop power meter manually.
+		testing.Sleep(ctx, 1*time.Second)
 
 		brightness, err = backlightBrightness(ctx)
 		if err != nil {
@@ -678,13 +686,15 @@ func typingInChat(ui *uiauto.Context, kb *input.KeyboardEventWriter, message str
 	// There may be multiple message texts, so add First() here.
 	messageRe := regexp.MustCompile("(?i)" + message)
 	messageText := nodewith.NameRegex(messageRe).Role(role.StaticText).First()
+	sendMessageButton := nodewith.Name("Send a message").Role(role.Button)
 	enterText := uiauto.Combine("type message",
 		ui.WithTimeout(longUITimeout).DoDefaultUntil(chatTextButton,
 			ui.WaitUntilExists(chatTextField.Editable().Focused())),
 		kb.TypeAction(message),
 		uiauto.Sleep(1*time.Second),
 		ui.WaitUntilExists(messageText),
-		kb.AccelAction("enter"),
+		// kb.AccelAction("enter"),
+		ui.DoDefault(sendMessageButton),
 		ui.WithTimeout(longUITimeout).WaitUntilExists(messageText),
 	)
 	chatPanelHeading := nodewith.Name("In-call messages").Role(role.Heading).Ancestor(meetRootWebArea)
