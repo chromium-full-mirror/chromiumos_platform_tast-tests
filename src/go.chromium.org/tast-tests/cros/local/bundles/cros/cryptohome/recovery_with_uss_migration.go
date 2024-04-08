@@ -30,7 +30,7 @@ func init() {
 			"hardikgoyal@chromium.org",
 		},
 		BugComponent: "b:1148604", // ChromeOS > Security > Cryptohome > Cryptohome Recovery
-		Attr:         []string{"informational", "group:mainline", "group:criticalstaging"},
+		Attr:         []string{"group:mainline", "group:cryptohome"},
 		// For "no_tpm_dynamic" - see http://b/251789202.
 		SoftwareDeps: []string{"pinweaver", "tpm", "no_tpm_dynamic", "chrome"},
 	})
