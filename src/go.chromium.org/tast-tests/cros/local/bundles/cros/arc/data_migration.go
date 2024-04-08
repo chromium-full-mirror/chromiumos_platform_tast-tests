@@ -33,38 +33,20 @@ import (
 	"go.chromium.org/tast/core/testing"
 )
 
-// How to create archived home data to be used by this test:
-//  1. Flash the previous version of ARC++ (e.g. ARC++ P).
-//  2. (only for virtio-blk /data on crosvm disk test cases) Create a large file in the stateful
-//     partition to adjust the size of the disk image so that it would fit in devices with small
-//     storage (e.g., 32GB)
-//  3. Sign in with the specified test account (See arc.DataMigration.yaml for username/password).
-//  4. Wait until ARC++ boots and uninstall all unnecessary apps. For managed test cases, make sure
-//     that the app to be installed during the test is available on the Play Store.
-//  5. (optional) Populate files under /data/ or install apps.
-//  6. (only for ->T+ test cases) On the DUT, remove test adb key to work around b/289798262 by
-//     enabling adb root with go/adb-root-on-arcvm-user-builds and running
-//     `adb shell rm /data/misc/adb/adb_temp_keys.xml`.
-//  7. (only for ->T+ test cases) On the DUT, run the following commands on adb to work around the
-//     Play Store reauthenticaiton issue (b/285820960) right before the next step. The latter
-//     command requires adb root.
-//     # settings put secure user_setup_complete 0
-//     # setprop persist.sys.arc.force_reauth 1
-//  8. On the DUT, create a .tbz2 file by
-//     `cd /home/.shadow/<hash>/mount && tar --xattrs --selinux -Scjf /tmp/<dest_file_name>.tbz2 .`
-//  9. Upload the tbz2 file into gs://chromiumos-test-assets-public/tast/cros/arc/ and update
-//     the .external file (See tast/local/bundles/cros/arc/data/data_migration_pi_x86_64.external).
 const (
-	homeDataNameNycX86                = "data_migration_nyc_x86_64"
-	homeDataNamePiX86                 = "data_migration_pi_x86_64"
-	homeDataNamePiArm                 = "data_migration_pi_arm64"
-	homeDataNameRvcX86Virtiofs        = "data_migration_rvc_x86_64_virtiofs"
-	homeDataNameRvcArmVirtioBlk       = "data_migration_rvc_arm_virtioblk"
-	homeDataNameManagedPiX86          = "data_migration_managed_pi_x86_64"
-	homeDataNameManagedRvcX86Virtiofs = "data_migration_managed_rvc_x86_64_virtiofs"
-	arcDataMigrationUnmanagedPool     = "arc_data_migration_unmanaged"
-	arcDataMigrationManagedPool       = "arc_data_migration_managed"
-	dataMigrationTestTimeout          = 10*time.Minute + chrome.GAIALoginTimeout
+	// See the following page for how these pre-migration home data snapshots were created:
+	// https://crsrc.org/o/src/platform/tast-tests/src/go.chromium.org/tast-tests/cros/local/bundles/cros/arc/data/data_migration/README.md
+	homeDataNameNycX86                = "data_migration/nyc_x86_64"
+	homeDataNamePiX86                 = "data_migration/pi_x86_64"
+	homeDataNamePiArm                 = "data_migration/pi_arm64"
+	homeDataNameRvcX86Virtiofs        = "data_migration/rvc_x86_64_virtiofs"
+	homeDataNameRvcArmVirtioBlk       = "data_migration/rvc_arm_virtioblk"
+	homeDataNameManagedPiX86          = "data_migration/managed_pi_x86_64"
+	homeDataNameManagedRvcX86Virtiofs = "data_migration/managed_rvc_x86_64_virtiofs"
+
+	arcDataMigrationUnmanagedPool = "arc_data_migration_unmanaged"
+	arcDataMigrationManagedPool   = "arc_data_migration_managed"
+	dataMigrationTestTimeout      = 10*time.Minute + chrome.GAIALoginTimeout
 )
 
 type dataMigrationTestParams struct {
