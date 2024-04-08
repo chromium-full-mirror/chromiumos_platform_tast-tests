@@ -474,7 +474,7 @@ func CyclicBench(ctx context.Context, s *testing.State) {
 	if param.Tracer {
 		testing.ContextLog(ctx, "Start trace-cmd")
 
-		if err := testexec.CommandContext(ctx, "trace-cmd", "start", "-e", "sched", "-e", "timer", "-e", "irq", "-e", "irq_vectors", "-e", "irq_matrix", "-e", "softirq_raise", "-R", "stacktrace", "-b", "1500", "-C", "local").Run(testexec.DumpLogOnError); err != nil {
+		if err := testexec.CommandContext(ctx, "trace-cmd", "start", "-e", "all", "-R", "stacktrace", "-b", "1500", "-C", "local").Run(testexec.DumpLogOnError); err != nil {
 			s.Error("Cannot run trace-cmd start: ", err)
 		}
 	}
