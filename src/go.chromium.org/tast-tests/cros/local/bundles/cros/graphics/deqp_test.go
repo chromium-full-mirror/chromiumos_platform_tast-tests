@@ -25,6 +25,7 @@ type dEQPGenParamData struct {
 	API            string        // string representation of graphics.APIType to run.
 	IsParallel     bool          // If set, run with the parallel_runner.
 	IsSmoke        bool          // If set, run with the handpicked subset of tests.
+	SoftwareDeps   []string      // List of softwareDeps for the test.
 	HardwareModels []string      // Models to run the test against.
 	SkipGPUFamily  []string      // GPU Families to skip it on.
 
@@ -91,6 +92,10 @@ func addTests(t *testing.T, p dEQPGenParamData) []dEQPGenParamData {
 		p.HardwareDeps = "hwdep.D(" + strings.Join(deps, ",") + ")"
 	}
 
+	if p.API == "graphics.VK" {
+		p.SoftwareDeps = append(p.SoftwareDeps, "vulkan")
+	}
+
 	for i := 0; i < p.ShardCount; i++ {
 		newParam := dEQPGenParamData{
 			Name:           p.Name,
@@ -100,6 +105,7 @@ func addTests(t *testing.T, p dEQPGenParamData) []dEQPGenParamData {
 			IsParallel:     p.IsParallel,
 			IsSmoke:        p.IsSmoke,
 			HardwareModels: p.HardwareModels,
+			SoftwareDeps:   p.SoftwareDeps,
 			ShardCount:     p.ShardCount,
 			ShardNum:       i + 1,
 			HardwareDeps:   p.HardwareDeps,
@@ -205,6 +211,9 @@ func TestDEQPParams(t *testing.T) {
 		{{ end }}
 		{{ if .HardwareDeps }}
 		ExtraHardwareDeps: {{ .HardwareDeps }},
+		{{ end }}
+		{{ if .SoftwareDeps }}
+		ExtraSoftwareDeps: {{ .SoftwareDeps | fmt }},
 		{{ end }}
 		Val: deqpParams {
 			{{ if .API }} api: {{ .API }}, {{ end }}
