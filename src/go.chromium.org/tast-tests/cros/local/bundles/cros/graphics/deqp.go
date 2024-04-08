@@ -651,11 +651,6 @@ func deqpNonParallel(ctx context.Context, s *testing.State, opts deqpParams) {
 }
 
 func deqpParallel(ctx context.Context, s *testing.State, opts deqpParams) {
-	tmpDir, err := os.MkdirTemp("", "")
-	if err != nil {
-		s.Fatal("Failed to created temp dir: ", err)
-	}
-	defer os.RemoveAll(tmpDir)
 	filters, err := deqprunner.GetCaseListFilters(ctx, deqprunner.Deqp, deqprunner.Host)
 	if err != nil {
 		s.Fatal("Could not get filters from file: ", err)
@@ -682,8 +677,7 @@ func deqpParallel(ctx context.Context, s *testing.State, opts deqpParams) {
 		val := strconv.Itoa(opts.shardCount)
 		cmd = append(cmd, "--fraction="+val)
 	}
-
-	commands, err := deqprunner.MakeFilterCmd(filters, tmpDir)
+	commands, err := deqprunner.MakeFilterCmd(filters, s.OutDir())
 	if err != nil {
 		s.Fatal("Could not make filter file(s) : ", err)
 	}
