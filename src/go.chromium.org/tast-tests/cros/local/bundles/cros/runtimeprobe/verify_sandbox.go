@@ -124,7 +124,7 @@ func init() {
 				probeConfig: probeConfig{[]probeStatement{
 					probeStatement{"tpm"},
 				}}},
-			ExtraAttr: []string{"informational", "group:criticalstaging"},
+			ExtraAttr: []string{"informational"},
 		}},
 	})
 }
