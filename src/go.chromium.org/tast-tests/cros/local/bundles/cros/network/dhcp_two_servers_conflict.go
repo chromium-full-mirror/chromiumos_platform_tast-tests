@@ -13,7 +13,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/network/virtualnet/subnet"
 	"go.chromium.org/tast-tests/cros/local/shill"
 	"go.chromium.org/tast/core/ctxutil"
-	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
 )
 
@@ -100,13 +99,13 @@ func DHCPTwoServersConflict(ctx context.Context, s *testing.State) {
 	rules[len(rules)-1].SetIsFinalHandler(true)
 
 	if _, errs := dhcp.RunTestWithEnv(ctx, rt, rules, func(ctx context.Context) error {
-		if err := svc.Reconnect(ctx); err != nil {
-			return errors.Wrap(err, "failed to reconnect the service")
-		}
-		if err := svc.WaitForConnectedOrError(ctx); err != nil {
-			return errors.Wrap(err, "failed to wait for service connected")
-		}
-		return nil
+		// There will be a 3-second delay in the test, for the first DHCPDISCOVER from
+		// dhcpcd is very likely to be missed by the test DHCP server. However, this is
+		// already the best thing we can do. We should not reconnect the device since
+		// it is possible that dhcpcd already sent out the DISCOVER packet and thus the
+		// test DHCP server will not respond to the DISCOVER packet after the
+		// reconnection, and this will make the test flaky (b/332186871).
+		return svc.WaitForConnectedOrError(ctx)
 	}); len(errs) > 0 {
 		for _, err := range errs {
 			s.Error("Failed to verify DHCP negotiation: ", err)

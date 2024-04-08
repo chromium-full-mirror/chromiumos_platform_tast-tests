@@ -26,6 +26,14 @@ func init() {
 		BugComponent: "b:1493959",
 		Attr:         []string{"group:mainline", "informational"},
 		LacrosStatus: testing.LacrosVariantUnneeded,
+		// The param value represents whether NAK comes first.
+		Params: []testing.Param{{
+			Name: "nak_first",
+			Val:  true,
+		}, {
+			Name: "ack_first",
+			Val:  false,
+		}},
 	})
 }
 
@@ -66,49 +74,37 @@ func DHCPTwoServersNAK(ctx context.Context, s *testing.State) {
 	}
 
 	dhcpOpts := dhcp.NewOptionMap(gatewayIP, intendedIP)
+	nakFirst := s.Param().(bool)
 
-	// Two cases simulate that DUT receives ACK at first or NAK at first.
-	tcs := []struct {
-		name     string
-		nakFirst bool
-	}{{
-		name:     "NAK first",
-		nakFirst: true,
-	}, {
-		name:     "ACK first",
-		nakFirst: false,
-	}}
+	discoverRule := dhcp.NewRespondToDiscovery(intendedIP.String(), gatewayIP.String(),
+		dhcpOpts, dhcp.FieldMap{}, true /*shouldRespond*/)
+	requestRule := dhcp.NewRejectAndRespondToRequest(intendedIP.String(), gatewayIP.String(),
+		dhcpOpts, dhcp.FieldMap{}, nakFirst)
+	requestRule.SetIsFinalHandler(true)
 
-	for _, tc := range tcs {
-		s.Run(ctx, tc.name, func(ctx context.Context, s *testing.State) {
-			discoverRule := dhcp.NewRespondToDiscovery(intendedIP.String(), gatewayIP.String(),
-				dhcpOpts, dhcp.FieldMap{}, true /*shouldRespond*/)
-			requestRule := dhcp.NewRejectAndRespondToRequest(intendedIP.String(), gatewayIP.String(),
-				dhcpOpts, dhcp.FieldMap{}, tc.nakFirst)
-			requestRule.SetIsFinalHandler(true)
+	if _, errs := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*discoverRule, *requestRule}, func(ctx context.Context) error {
+		// There will be a 3-second delay in the test, for the first DHCPDISCOVER from
+		// dhcpcd is very likely to be missed by the test DHCP server. However, this is
+		// already the best thing we can do. We should not reconnect the device since
+		// it is possible that dhcpcd already sent out the DISCOVER packet and thus the
+		// test DHCP server will not respond to the DISCOVER packet after the
+		// reconnection, and this will make the test flaky (b/332186871).
+		if err := svc.WaitForConnectedOrError(ctx); err != nil {
+			return errors.Wrap(err, "failed to wait for service connected")
+		}
 
-			if _, errs := dhcp.RunTestWithEnv(ctx, rt, []dhcp.HandlingRule{*discoverRule, *requestRule}, func(ctx context.Context) error {
-				if err := svc.Reconnect(ctx); err != nil {
-					return errors.Wrap(err, "failed to reconnect the service")
-				}
-				if err := svc.WaitForConnectedOrError(ctx); err != nil {
-					return errors.Wrap(err, "failed to wait for service connected")
-				}
-
-				// GoBigSleepLint: Sleep for a while and verify again to make sure the
-				// received NAK does not have any effect.
-				testing.Sleep(ctx, 3*time.Second)
-				if connected, err := svc.IsConnected(ctx); err != nil {
-					return errors.Wrap(err, "failed to get connected status")
-				} else if !connected {
-					return errors.New("service is not connected after sleep")
-				}
-				return nil
-			}); len(errs) > 0 {
-				for _, err := range errs {
-					s.Error("Failed to verify DHCP negotiation: ", err)
-				}
-			}
-		})
+		// GoBigSleepLint: Sleep for a while and verify again to make sure the
+		// received NAK does not have any effect.
+		testing.Sleep(ctx, 3*time.Second)
+		if connected, err := svc.IsConnected(ctx); err != nil {
+			return errors.Wrap(err, "failed to get connected status")
+		} else if !connected {
+			return errors.New("service is not connected after sleep")
+		}
+		return nil
+	}); len(errs) > 0 {
+		for _, err := range errs {
+			s.Error("Failed to verify DHCP negotiation: ", err)
+		}
 	}
 }
