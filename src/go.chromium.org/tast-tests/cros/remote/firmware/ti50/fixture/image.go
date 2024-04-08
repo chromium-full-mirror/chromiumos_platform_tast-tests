@@ -80,10 +80,10 @@ const (
 
 	// GSC filenames
 	cr50Release          = "cr50.r0.0.*.w%s.tbz2"
-	cr50BIDLockedRelease = "cr50.r0.0.*.w%s_%s_%s_%s.tbz2"
+	cr50BIDLockedRelease = "cr50.r0.0.*.w%s_%s_%08x_%08x.tbz2"
 	// Ti50 changed formats. This works with old and new versions.
 	ti50Release          = "ti50.r*w*%s.tar.xz"
-	ti50BIDLockedRelease = "ti50.r*w*%s_%s_%s_%s.tar.xz"
+	ti50BIDLockedRelease = "ti50.r*w*%s_%s_%08x_%08x.tar.xz"
 
 	imageDownloadTimeout = 30 * time.Second
 	imageDeleteTimeout   = 5 * time.Second
@@ -108,7 +108,7 @@ var (
 	// reQualVersion extracts relevant contents of qual files.
 	reQualVersion = regexp.MustCompile(`(.*)`)
 	// reBIDLockedQualVersion extracts relevant contents of qual files.
-	reBIDLockedQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):0x(.*)`)
+	reBIDLockedQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):(.*)`)
 
 	// reTestbedTypeParts extracts relevant parts of the testbed type string.
 	reTestbedTypeParts = regexp.MustCompile(`gsc_([[:alnum:]]*)`)
@@ -353,23 +353,47 @@ func downloadToTempFile(ctx context.Context, desc, url string) (string, error) {
 	return f.Name(), nil
 }
 
+// getBIDInt converts a board id mask or flag string to an int.
+func getBIDInt(b string) (int64, error) {
+	b = strings.TrimPrefix(b, "0x")
+	if len(b) > 8 {
+		return 0, errors.Errorf("%s is too long: BID fields are 32 bits", b)
+	}
+	return strconv.ParseInt(b, 16, 64)
+}
+
 // qualVersionToGsGlob converts contents of qual file to a glob expression of its .tbz2 file.
 func qualVersionToGsGlob(qualVersion, fwName string) (string, error) {
-	releaseFormat := cr50Release
-	releaseBIDLockedFormat := cr50BIDLockedRelease
-	if fwName == "ti50" {
+	var releaseFormat, releaseBIDLockedFormat string
+
+	switch fwName {
+	case "cr50":
+		releaseFormat = cr50Release
+		releaseBIDLockedFormat = cr50BIDLockedRelease
+	case "ti50":
 		releaseFormat = ti50Release
 		releaseBIDLockedFormat = ti50BIDLockedRelease
+	default:
+		return "", errors.Errorf("unknown fwName: %s", fwName)
 	}
+
 	m := reBIDLockedQualVersion.FindStringSubmatch(qualVersion)
 	if m == nil {
 		m = reQualVersion.FindStringSubmatch(qualVersion)
 		if m == nil {
 			return "", errors.New("qual version not recognized: " + qualVersion)
 		}
-		return fmt.Sprintf(releaseFormat, m[1]), nil
+		return fmt.Sprintf(releaseFormat, strings.TrimSuffix(m[1], "/")), nil
 	}
-	return fmt.Sprintf(releaseBIDLockedFormat, m[1], m[2], m[3], m[4]), nil
+	bIDMask, err := getBIDInt(m[3])
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid bid mask: %s", m[3])
+	}
+	bIDFlags, err := getBIDInt(m[4])
+	if err != nil {
+		return "", errors.Wrapf(err, "invalid bid flags: %s", m[4])
+	}
+	return fmt.Sprintf(releaseBIDLockedFormat, m[1], m[2], bIDMask, bIDFlags), nil
 }
 
 // findGSCImage finds the image with the given gsTemplate.
