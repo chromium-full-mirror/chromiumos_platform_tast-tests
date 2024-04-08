@@ -132,6 +132,10 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		chrome.LoadSigninProfileExtension(s.RequiredVar("ui.signinProfileTestExtensionManifestKey")),
 		// TODO(b/315829727): Remove this as a part of post-launch cleanup.
 		chrome.EnableFeatures("LocalPasswordsForConsumers"),
+		// TODO(b/333444345): Remove this as a part of post-launch cleanup.
+		chrome.EnableFeatures("OobeAiIntro"),
+		// TODO(b/333444345): Remove this as a part of post-launch cleanup.
+		chrome.EnableFeatures("OobeTuna"),
 	}
 	// Keep the user that was previously added for the 'AddPerson' flow.
 	if isAddPersonFlow {
@@ -349,6 +353,48 @@ func SmokeEndToEnd(ctx context.Context, s *testing.State) {
 		}
 	} else {
 		s.Log("Skipping the pin setup screen")
+	}
+
+	shouldSkipAiIntro := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.AiIntroScreen.shouldSkip()", &shouldSkipAiIntro); err != nil {
+		s.Fatal("Failed to evaluate whether to skip AiIntro screen: ", err)
+	}
+
+	if shouldSkipAiIntro {
+		s.Log("Skipping the AiIntro screen")
+	} else {
+		s.Log("Waiting for the AiIntro screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.AiIntroScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the AiIntro screen to be visible: ", err)
+		}
+
+		if err := uiauto.Combine("click next on the AiIntro screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to skip on the AiIntro screen: ", err)
+		}
+	}
+
+	shouldSkipTuna := false
+	if err := oobeConn.Eval(ctx, "OobeAPI.screens.TunaScreen.shouldSkip()", &shouldSkipTuna); err != nil {
+		s.Fatal("Failed to evaluate whether to skip Tuna screen: ", err)
+	}
+
+	if shouldSkipTuna {
+		s.Log("Skipping the Tuna screen")
+	} else {
+		s.Log("Waiting for the Tuna screen")
+		if err := oobeConn.WaitForExprFailOnErr(ctx, "OobeAPI.screens.TunaScreen.isVisible()"); err != nil {
+			s.Fatal("Failed to wait for the Tuna screen to be visible: ", err)
+		}
+
+		if err := uiauto.Combine("click next on the Tuna screen",
+			ui.WaitUntilExists(focusedButton),
+			ui.LeftClick(focusedButton),
+		)(ctx); err != nil {
+			s.Fatal("Failed to skip on the Tuna screen: ", err)
+		}
 	}
 
 	shouldSkipAssistant := false
