@@ -3339,12 +3339,6 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 	if err != nil {
 		return nil, err
 	}
-	// TODO(b/295056306) Currently L3 is not yet configured by shill.
-	// This should be removed once shill implementation is ready.
-	ipr := ip.NewLocalRunner()
-	if err := ipr.AddIP(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
-		return nil, err
-	}
 
 	testing.ContextLogf(ctx, "P2P Group owner (GO) %s: Configured on %s", p2pGOSsid, p2pGOIface)
 	ret = &wifi.P2PGroupCreateResponse{
@@ -3361,16 +3355,6 @@ func (s *ShillService) p2pGroupCreateShillAPI(ctx context.Context, request *wifi
 // p2pGroupDeleteShillAPI uses shill API to delete the existing WiFi Direct Group.
 func (s *ShillService) p2pGroupDeleteShillAPI(ctx context.Context, request *wifi.P2PGroupDeleteRequest) (
 	ret *wifi.P2PGroupDeleteResponse, retErr error) {
-	p2pGOIface, err := findP2PIface(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// TODO(b/295056306) Currently L3 is not yet configured by shill.
-	// This should be removed once shill implementation is ready.
-	ipr := ip.NewLocalRunner()
-	if err := ipr.DeleteIP(ctx, p2pGOIface, net.ParseIP(utils.P2PGOIPAddress), 24); err != nil {
-		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete IP Address"))
-	}
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
 		retErr = errors.Join(retErr, errors.Wrap(err, "failed to create shill manager proxy"))
@@ -3485,12 +3469,6 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 	if err != nil {
 		return nil, err
 	}
-	// TODO(b/327034803) Currently L3 is not yet configured by shill.
-	// This should be removed once shill implementation is ready.
-	ipr := ip.NewLocalRunner()
-	if err := ipr.AddIP(ctx, p2pClientIface, net.ParseIP(utils.P2PClientIPAddress), 24); err != nil {
-		return nil, err
-	}
 
 	testing.ContextLogf(ctx, "P2P Client: Connected to %s on %s", ssid, p2pClientIface)
 	ret = &wifi.P2PGroupConnectResponse{
@@ -3503,16 +3481,6 @@ func (s *ShillService) p2pGroupConnectShillAPI(ctx context.Context, request *wif
 // p2pGroupDisconnectShillAPI uses shill API to handle disconnection from the existing WiFi Direct Group.
 func (s *ShillService) p2pGroupDisconnectShillAPI(ctx context.Context, request *wifi.P2PGroupDisconnectRequest) (
 	ret *wifi.P2PGroupDisconnectResponse, retErr error) {
-	p2pClientIface, err := findP2PIface(ctx)
-	if err != nil {
-		return nil, err
-	}
-	// TODO(b/327034803) Currently L3 is not yet configured by shill.
-	// This should be removed once shill implementation is ready.
-	ipr := ip.NewLocalRunner()
-	if err := ipr.DeleteIP(ctx, p2pClientIface, net.ParseIP(utils.P2PClientIPAddress), 24); err != nil {
-		retErr = errors.Join(retErr, errors.Wrap(err, "failed to delete IP Address"))
-	}
 	manager, err := shill.NewManager(ctx)
 	if err != nil {
 		retErr = errors.Join(retErr, errors.Wrap(err, "failed to create shill manager proxy"))
