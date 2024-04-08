@@ -184,10 +184,11 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	// tests where group is not defined will be computed separately using the
 	// geometric means from other groups.
 	tests := []struct {
-		name    string
-		prefix  string
-		subtest string
-		group   string
+		name       string
+		prefix     string
+		subtest    string
+		group      string
+		iterations int
 	}{{
 		name:   memoryTestName,
 		prefix: "memory",
@@ -252,7 +253,7 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 	groups := make(map[string][]float64)
 	cr := s.PreValue().(arc.PreData).Chrome
 
-	cleanup, setupErr := apploading.SetupTest(ctx, config, a, cr)
+	cleanup, setupErr := apploading.SetupTest(ctx, &config, a, cr)
 	defer func(ctx context.Context) {
 		if err := cleanup(ctx); err != nil && setupErr == nil {
 			setupErr = errors.Wrap(err, "failed to cleanup after creating test")
@@ -273,8 +274,15 @@ func AppLoadingPerf(ctx context.Context, s *testing.State) {
 		config.ClassName = test.name
 		config.Prefix = test.prefix
 		config.Subtest = test.subtest
+		config.Iterations = test.iterations
+		if config.Iterations < 1 {
+			if config.Iterations < 0 {
+				s.Fatal("Invalid number of iterations used: ", config.Iterations)
+			}
+			config.Iterations = 1 // Set to 1 if not specified (0).
+		}
 
-		score, err := runAppLoadingTest(ctx, config, a, cr)
+		score, err := runAppLoadingTest(ctx, &config, a, cr)
 		if err != nil {
 			s.Fatal("Failed to run apploading test: ", err)
 		}
@@ -361,7 +369,7 @@ func calcGeometricMean(scores []float64) (float64, error) {
 }
 
 // runAppLoadingTest will test each app loading subflow with timeout.
-func runAppLoadingTest(ctx context.Context, config apploading.TestConfig, a *arc.ARC, cr *chrome.Chrome) (float64, error) {
+func runAppLoadingTest(ctx context.Context, config *apploading.TestConfig, a *arc.ARC, cr *chrome.Chrome) (float64, error) {
 	shorterCtx, cancel := context.WithTimeout(ctx, 500*time.Second)
 	defer cancel()
 

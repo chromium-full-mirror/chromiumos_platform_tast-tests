@@ -33,6 +33,7 @@ type TestConfig struct {
 	ClassName          string
 	Prefix             string
 	Subtest            string
+	Iterations         int
 	PerfValues         *perf.Values
 	WifiInterfacesMode setup.WifiInterfacesMode
 	ApkPath            string
@@ -91,7 +92,7 @@ func coolDownConfig() cpu.CoolDownConfig {
 }
 
 // SetupTest initializes the test environment including setting up APK and power measurements.
-func SetupTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chrome) (retCleanup setup.CleanupCallback, retErr error) {
+func SetupTest(ctx context.Context, config *TestConfig, a *arc.ARC, cr *chrome.Chrome) (retCleanup setup.CleanupCallback, retErr error) {
 	testing.ContextLog(ctx, "Starting setup")
 
 	// Some configuration actions need a test connection to Chrome.
@@ -127,7 +128,7 @@ func SetupTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Ch
 }
 
 // RunTest executes subset of tests in APK determined by the test class name.
-func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chrome) (retScore float64, retErr error) {
+func RunTest(ctx context.Context, config *TestConfig, a *arc.ARC, cr *chrome.Chrome) (retScore float64, retErr error) {
 	const tPowerSnapshotInterval = 10 * time.Second
 
 	testName := packageName + "." + config.ClassName
@@ -158,21 +159,30 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 		return 0, errors.Wrap(err, "failed to start recording")
 	}
 
-	out, err := a.Command(ctx, "am", "instrument", "-w", "-e", "class", testName, packageName).CombinedOutput()
-	if err != nil {
-		return 0, errors.Wrap(err, "failed to execute test")
-	}
+	var avgScore float64
+	for i := 0; i < config.Iterations; i++ {
+		out, err := a.Command(ctx, "am", "instrument", "-w", "-e", "class", testName, packageName).CombinedOutput()
+		if err != nil {
+			return 0, errors.Wrap(err, "failed to execute test")
+		}
 
-	outputFile := filepath.Join(config.OutDir, config.Prefix+"_test_log.txt")
-	if err := os.WriteFile(outputFile, []byte(out), 0644); err != nil {
-		return 0, errors.Wrapf(err, "failed to save test output: %s", outputFile)
-	}
-	testing.ContextLog(ctx, "Finished writing to log: ", outputFile)
+		var iterationSuffix string
+		if config.Iterations > 1 {
+			iterationSuffix = "_" + strconv.Itoa(i)
+		}
+		outputFile := filepath.Join(config.OutDir, config.Prefix+"_test_log"+iterationSuffix+".txt")
+		if err := os.WriteFile(outputFile, []byte(out), 0644); err != nil {
+			return 0, errors.Wrapf(err, "failed to save test output: %s", outputFile)
+		}
+		testing.ContextLog(ctx, "Finished writing to log: ", outputFile)
 
-	// Make sure test is completed successfully.
-	if !regexp.MustCompile(`\nOK \(\d+ tests?\)\n*$`).Match(out) {
-		return 0, errors.Errorf("test is not completed successfully, see: %s", outputFile)
+		score, err := analyzeResults(ctx, config, iterationSuffix, out)
+		if err != nil {
+			return 0, errors.Wrapf(err, "error while analyzing results, see: %s", outputFile)
+		}
+		avgScore += score
 	}
+	avgScore /= float64(config.Iterations)
 
 	powerPerfValues, err := metrics.StopRecording(ctx)
 	if err != nil {
@@ -182,49 +192,7 @@ func RunTest(ctx context.Context, config TestConfig, a *arc.ARC, cr *chrome.Chro
 	// Merge previous perf metrics with new power metrics.
 	config.PerfValues.Merge(powerPerfValues)
 
-	testing.ContextLog(ctx, "Analyzing results")
-
-	// total up all score from the test
-	var score float64
-
-	// Output may be prepended by other chars, and order of elements is not defined.
-	// Examples:
-	// INSTRUMENTATION_STATUS: MemoryTest_score=7834091.30
-	// .INSTRUMENTATION_STATUS: MemoryTest_byte_count=230989
-	// org.chromium.arc.testapp.apploading.ArcAppLoadTest:INSTRUMENTATION_STATUS: FileTest_duration=239890435.78
-	for _, m := range regexp.MustCompile(`INSTRUMENTATION_STATUS: (.+?)=(\d+.?\d*)`).FindAllStringSubmatch(string(out), -1) {
-		key := m[1]
-		value, err := strconv.ParseFloat(m[2], 64)
-		if err != nil {
-			return score, errors.Wrap(err, "failed to parse float")
-		}
-		if strings.HasSuffix(key, "_score") {
-			score += value
-			info, err := makeMetricInfo(key)
-			if err != nil {
-				return score, errors.Wrap(err, "failed to parse key")
-			}
-			config.PerfValues.Set(info, value)
-		}
-	}
-
-	var result int
-	// There may be several INSTRUMENTATION_STATUS_CODE: X (x = 0 or x = -1)
-	for _, m := range regexp.MustCompile(`INSTRUMENTATION_STATUS_CODE: (-?\d+)`).FindAllStringSubmatch(string(out), -1) {
-		if val, err := strconv.Atoi(m[1]); err != nil {
-			return score, errors.Wrapf(err, "failed to convert %q to integer", m[1])
-		} else if val == -1 {
-			result = val
-			break
-		}
-	}
-	testing.ContextLogf(ctx, "Finished test with result: %d", result)
-
-	if result != -1 {
-		return score, errors.New("failed to pass instrumentation test")
-	}
-
-	return score, nil
+	return avgScore, nil
 }
 
 // makeMetricInfo creates a metric description that can be supplied for reporting with the actual
@@ -245,4 +213,60 @@ func makeMetricInfo(key string) (perf.Metric, error) {
 	}
 
 	return perf.Metric{}, errors.Errorf("key could not be recognized: %s", key)
+}
+
+// analyzeResults parses the output of the test instrumentation, checks for errors,
+// and returns the benchmark score.
+func analyzeResults(ctx context.Context, config *TestConfig, suffix string, data []byte) (float64, error) {
+	// Make sure test is completed successfully.
+	if !regexp.MustCompile(`\nOK \(\d+ tests?\)\n*$`).Match(data) {
+		return 0, errors.New("test is not completed successfully")
+	}
+
+	testing.ContextLog(ctx, "Analyzing results")
+
+	// Total up all scores from the test.
+	var score float64
+
+	// Output may be prepended by other chars, and order of elements is not defined.
+	// Examples:
+	// INSTRUMENTATION_STATUS: MemoryTest_score=7834091.30
+	// .INSTRUMENTATION_STATUS: MemoryTest_byte_count=230989
+	// org.chromium.arc.testapp.apploading.ArcAppLoadTest:INSTRUMENTATION_STATUS: FileTest_duration=239890435.78
+	for _, m := range regexp.MustCompile(`INSTRUMENTATION_STATUS: (.+?)=(\d+.?\d*)`).FindAllStringSubmatch(string(data), -1) {
+		key := m[1]
+		value, err := strconv.ParseFloat(m[2], 64)
+		if err != nil {
+			return score, errors.Wrap(err, "failed to parse float")
+		}
+		if strings.HasSuffix(key, "_score") {
+			score += value
+			if suffix != "" {
+				key = config.Prefix + suffix + "." + key
+			}
+			info, err := makeMetricInfo(key)
+			if err != nil {
+				return score, errors.Wrap(err, "failed to parse key")
+			}
+			config.PerfValues.Set(info, value)
+		}
+	}
+
+	var result int
+	// There may be several INSTRUMENTATION_STATUS_CODE: X (x = 0 or x = -1)
+	for _, m := range regexp.MustCompile(`INSTRUMENTATION_STATUS_CODE: (-?\d+)`).FindAllStringSubmatch(string(data), -1) {
+		if val, err := strconv.Atoi(m[1]); err != nil {
+			return score, errors.Wrapf(err, "failed to convert %q to integer", m[1])
+		} else if val == -1 {
+			result = val
+			break
+		}
+	}
+	testing.ContextLogf(ctx, "Finished test with result: %d", result)
+
+	if result != -1 {
+		return score, errors.New("failed to pass instrumentation test")
+	}
+
+	return score, nil
 }
