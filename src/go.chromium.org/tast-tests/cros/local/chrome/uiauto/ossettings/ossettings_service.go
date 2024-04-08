@@ -19,7 +19,6 @@ import (
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/faillog"
 	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/nodewith"
-	"go.chromium.org/tast-tests/cros/local/chrome/uiauto/role"
 	"go.chromium.org/tast-tests/cros/local/common"
 	pb "go.chromium.org/tast-tests/cros/services/cros/chrome/uiauto/ossettings"
 	"go.chromium.org/tast/core/ctxutil"
@@ -58,14 +57,8 @@ func computeNetworkConfigNetworkType(networkType pb.OpenNetworkDetailPageRequest
 
 // LaunchAtNetwork will launch the OS Settings application at Network page.
 func (s *Service) LaunchAtNetwork(ctx context.Context, e *emptypb.Empty) (*emptypb.Empty, error) {
-	cr := s.sharedObject.Chrome
-	if cr == nil {
-		return &emptypb.Empty{}, errors.New("Chrome has not been started")
-	}
-
 	return common.UseTconn(ctx, s.sharedObject, func(tconn *chrome.TestConn) (*emptypb.Empty, error) {
-		condition := New(tconn).Exists(nodewith.Name("Network").Role(role.Heading))
-		_, err := LaunchAtPageURL(ctx, tconn, cr, "network", condition)
+		_, err := LaunchAtPage(ctx, tconn, Network)
 		return &emptypb.Empty{}, err
 	})
 }

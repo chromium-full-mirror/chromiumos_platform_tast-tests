@@ -357,7 +357,7 @@ func (bui *BtUIService) ensureDeviceIsPairing(ctx context.Context, deviceName st
 // for the device specified in the request, then click "Forget" to forget the
 // device.
 func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.ForgetBluetoothDeviceRequest) (_ *emptypb.Empty, retErr error) {
-	cr, tconn, err := bui.crAndTestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -366,7 +366,7 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	app, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, cr, tconn, request.DeviceName)
+	app, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, request.DeviceName)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", request.DeviceName)
 	}
@@ -393,7 +393,7 @@ func (bui *BtUIService) ForgetBluetoothDevice(ctx context.Context, request *pb.F
 // CollectDeviceList will attempt to collect and list all available Bluetooth devices
 // in the Bluetooth page.
 func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty) (_ *pb.CollectDeviceListResponse, retErr error) {
-	cr, tconn, err := bui.crAndTestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -402,8 +402,7 @@ func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty)
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	condition := uiauto.New(tconn).Exists(nodewith.Name("Bluetooth subpage back button").Ancestor(ossettings.WindowFinder))
-	settings, err := ossettings.LaunchAtPageURL(ctx, tconn, cr, "bluetoothDevices", condition)
+	settings, err := ossettings.LaunchAtPage(ctx, tconn, ossettings.Bluetooth)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to launch OS accessibility settings")
 	}
@@ -417,7 +416,16 @@ func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty)
 	// 	Device 2 of 3 named MOUSE_REF. Device is not connected. Device type is unknown.
 	// 	Device 3 of 3 named RenamedBT. Device is not connected. Device is a mouse.
 	r := regexp.MustCompile(`^Device \d+ of \d+ named (.*)\. Device is (connected|not connected)\. Device (type is|is a) \w+\.( Device has (\d+)% battery\.)?$`)
-	infos, err := settings.NodesInfo(ctx, nodewith.NameRegex(r).HasClass("list-item"))
+	bluetoothDeviceItem := nodewith.NameRegex(r).HasClass("list-item")
+
+	if err := settings.WaitUntilExists(bluetoothDeviceItem.First())(ctx); err != nil {
+		if !nodewith.IsNodeNotFoundErr(err) {
+			return nil, errors.Wrap(err, "failed to wait for Bluetooth device item")
+		}
+		bui.s.Log("No Bluetooth devices were found in the Bluetooth page in OS-Settings")
+	}
+
+	infos, err := settings.NodesInfo(ctx, bluetoothDeviceItem)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to get nodes information")
 	}
@@ -457,7 +465,7 @@ func (bui *BtUIService) CollectDeviceList(ctx context.Context, _ *emptypb.Empty)
 // BluetoothDeviceDetail will attempt to navigate to the Device Detail subpage for the device
 // specified in the request, then retrieves the information of this particular device.
 func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.BluetoothDeviceDetailRequest) (_ *pb.BluetoothDeviceDetailResponse, retErr error) {
-	cr, tconn, err := bui.crAndTestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -466,7 +474,7 @@ func (bui *BtUIService) BluetoothDeviceDetail(ctx context.Context, req *pb.Bluet
 	ctx, cancel := ctxutil.Shorten(ctx, 10*time.Second)
 	defer cancel()
 
-	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, cr, tconn, req.Name)
+	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, req.Name)
 	if err != nil {
 		return nil, errors.Wrapf(err, "failed to navigate to Bluetooth Device Details subpage for device %s", req.Name)
 	}
@@ -571,7 +579,7 @@ func (bui *BtUIService) RenameBluetoothDevice(ctx context.Context, req *pb.Renam
 		return &emptypb.Empty{}, errors.New("invalid custom name")
 	}
 
-	cr, tconn, err := bui.crAndTestAPIConn(ctx)
+	_, tconn, err := bui.crAndTestAPIConn(ctx)
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrap(err, "failed to obtain the Chrome instance and Test API connection")
 	}
@@ -581,7 +589,7 @@ func (bui *BtUIService) RenameBluetoothDevice(ctx context.Context, req *pb.Renam
 	defer cancel()
 
 	deviceName := req.Device.GetName()
-	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, cr, tconn, deviceName)
+	settings, err := ossettings.NavigateToBluetoothDeviceDetailsPage(ctx, tconn, deviceName)
 	if err != nil {
 		return &emptypb.Empty{}, errors.Wrapf(err, "failed to navigate to Bluetooth device %q detail page", deviceName)
 	}
