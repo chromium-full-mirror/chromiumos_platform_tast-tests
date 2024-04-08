@@ -70,9 +70,11 @@ const (
 
 	// Cr50QualBranch is the latest qual candidate for Cr50
 	Cr50QualBranch string = "cr50qual"
+	// Ti50QualBranch is the latest qual candidate for Ti50
+	Ti50QualBranch string = "ti50qual"
 
 	// Remote image paths
-	cr50LatestQualFile = "chromeos-localmirror-private/distfiles/chromeos-cr50-QUAL_VERSION"
+	latestQualFile     = "chromeos-localmirror-private/distfiles/chromeos-%s-QUAL_VERSION"
 	debugImageTemplate = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/*_shield/*.dbg.0x%s_0x%s.bin.*"
 	efiImageTemplate   = "gs://chromeos-localmirror-private/distfiles/chromeos-%s*/*_shield/*_Unknown_NodeLocked-%s_*-accessory-mp.bin"
 	qualPrivateBucket  = "chromeos-localmirror-private/distfiles/"
@@ -109,6 +111,8 @@ var (
 	reQualVersion = regexp.MustCompile(`(.*)`)
 	// reBIDLockedQualVersion extracts relevant contents of qual files.
 	reBIDLockedQualVersion = regexp.MustCompile(`(.*)/(.*):(.*):(.*)`)
+	// reGSCReleaseTarball extracts the firmware name from the tarball filename.
+	reGSCReleaseTarball = regexp.MustCompile(`(cr50|ti50).*(tar.xz|tbz2)`)
 
 	// reTestbedTypeParts extracts relevant parts of the testbed type string.
 	reTestbedTypeParts = regexp.MustCompile(`gsc_([[:alnum:]]*)`)
@@ -161,7 +165,12 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 			}
 			testing.ContextLogf(ctx, "Found %s for %s", latestURL, inputURL)
 		case Cr50QualBranch:
-			latestURL, err = lookupLatestCr50QualTbz2(ctx)
+			latestURL, err = lookupLatestGSCQualTarball(ctx, "cr50")
+			if err != nil {
+				return nil, err
+			}
+		case Ti50QualBranch:
+			latestURL, err = lookupLatestGSCQualTarball(ctx, "ti50")
 			if err != nil {
 				return nil, err
 			}
@@ -172,7 +181,7 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 	}
 
 	// For inputURL that is in the form of gs://*.tbz2, convert it to a local file by downloading.
-	if strings.HasPrefix(inputURL, gsPrefix) && strings.HasSuffix(inputURL, ".tbz2") {
+	if strings.HasPrefix(inputURL, gsPrefix) && reGSCReleaseTarball.FindStringSubmatch(inputURL) != nil {
 		downloadedFile, err := downloadToTempFile(ctx, "tbz2", inputURL)
 		if err != nil {
 			return nil, err
@@ -249,13 +258,9 @@ func downloadImage(ctx context.Context, testbedProperties remoteTi50.TestbedProp
 		// Disallow directories
 		if img.IsDir() {
 			return nil, errors.New("-var=" + BuildURL + " must be a file: " + inputURL)
-			// Extract tbz2 archive
-		} else if strings.HasSuffix(inputURL, ".tbz2") {
-			chip := testbedTypeToChip(testbedProperties.TestbedType)
-			if chip != "h1" {
-				return nil, errors.New("testbedType must be h1 for .tbz2 url: " + chip)
-			}
-			extractedFile, err := extractCr50QualImageFromTbz2(ctx, inputURL)
+			// Extract image from tarball
+		} else if reGSCReleaseTarball.FindStringSubmatch(inputURL) != nil {
+			extractedFile, err := ExtractGSCQualImageFromTarball(ctx, inputURL)
 			if err != nil {
 				return nil, err
 			}
@@ -463,18 +468,25 @@ func LookupGSCReleaseTarball(ctx context.Context, version, fwName string) (strin
 	return findGSCImage(ctx, gsPrefix+qualPrivateBucket+fwName+"/"+pat)
 }
 
-// lookupLatestCr50QualTbz2 downloads the image binary indicated in the qual file.
-func lookupLatestCr50QualTbz2(ctx context.Context) (string, error) {
-	v, err := cmd(ctx, "read qual file", "gsutil", "cat", gsPrefix+cr50LatestQualFile)
+// lookupLatestGSCQualTarball downloads the image binary indicated in the qual file.
+func lookupLatestGSCQualTarball(ctx context.Context, fwName string) (string, error) {
+	gsURL := gsPrefix + fmt.Sprintf(latestQualFile, fwName)
+	v, err := cmd(ctx, "read qual file", "gsutil", "cat", gsURL)
 	if err != nil {
 		return "", err
 	}
-	return LookupGSCReleaseTarball(ctx, v, "cr50")
+	return LookupGSCReleaseTarball(ctx, v, fwName)
 }
 
-// ExtractGSCQualImage extracts the image binary from the release archive.
-func ExtractGSCQualImage(ctx context.Context, tarball, fwName string) (string, error) {
-	// extract qual image
+// ExtractGSCQualImageFromTarball extracts the image binary from the release archive.
+func ExtractGSCQualImageFromTarball(ctx context.Context, tarball string) (string, error) {
+	m := reGSCReleaseTarball.FindStringSubmatch(tarball)
+	if m == nil {
+		return "", errors.Errorf("Unable to find fw name in %s", tarball)
+	}
+	fwName := m[1]
+
+	// extract image from tarball
 	d, err := os.MkdirTemp("", fwName+"qual")
 	if err != nil {
 		return "", errors.Wrap(err, "create temp file for gsc qual image")
@@ -491,11 +503,6 @@ func ExtractGSCQualImage(ctx context.Context, tarball, fwName string) (string, e
 		return "", err
 	}
 	return strings.TrimSpace(bin), nil
-}
-
-// extractCr50QualImageFromTbz2 extracts the image binary from bz2 archive.
-func extractCr50QualImageFromTbz2(ctx context.Context, tbz2 string) (string, error) {
-	return ExtractGSCQualImage(ctx, tbz2, "cr50")
 }
 
 // cmd runs cmd and returns the output.  Desc is used for logging and error description.
