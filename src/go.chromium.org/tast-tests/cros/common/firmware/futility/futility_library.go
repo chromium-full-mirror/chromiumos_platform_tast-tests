@@ -72,7 +72,7 @@ func (r *localRunner) runCommandLine(ctx context.Context, cmdArgs []string) (std
 	}
 
 	if err := cmd.Wait(); err != nil {
-		return nil, nil, errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
+		return outbuf.Bytes(), errbuf.Bytes(), errors.Wrapf(err, "command %q failed", strings.Join(cmd.Args, " "))
 	}
 
 	return outbuf.Bytes(), errbuf.Bytes(), nil
