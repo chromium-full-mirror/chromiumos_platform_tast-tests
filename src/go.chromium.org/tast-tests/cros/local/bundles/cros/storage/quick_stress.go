@@ -11,11 +11,7 @@ import (
 
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/storage/util"
 	"go.chromium.org/tast/core/testing"
-)
-
-const (
-	// Main storage device has to be >= 16GB.
-	minDeviceSizeBytes = 16 * 1024 * 1024 * 1024
+	"go.chromium.org/tast/core/testing/hwdep"
 )
 
 func init() {
@@ -27,6 +23,8 @@ func init() {
 		Attr:         []string{"group:storage-qual"},
 		Data:         util.Configs,
 		SoftwareDeps: []string{"storage_wearout_detect"},
+		// Since manufacturers talk in power of 10, be lenient and allow 15GiB devices.
+		HardwareDeps: hwdep.D(hwdep.MinStorage(15)),
 		Params: []testing.Param{{
 			Name:    "setup",
 			Val:     setup,
@@ -58,12 +56,6 @@ func setup(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed reading disk info: ", err)
 	}
 	s.Log("Disk info: ", info)
-
-	// Checking the size of the main storage device.
-	err = info.CheckMainDeviceSize(minDeviceSizeBytes)
-	if err != nil {
-		s.Fatal("Main storage disk is too small: ", err)
-	}
 
 	// Save storage info to results.
 	err = info.SaveDiskInfo(filepath.Join(s.OutDir(), "diskinfo.json"))
