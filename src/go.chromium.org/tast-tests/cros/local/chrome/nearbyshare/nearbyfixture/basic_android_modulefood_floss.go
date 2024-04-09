@@ -218,4 +218,48 @@ func addFlossModulefoodAndroidFixtures() {
 		PreTestTimeout:  resetTimeout,
 		PostTestTimeout: postTestTimeout,
 	})
+
+	// Fixtures for BLE V2 tests.
+	// TODO(b/333602803): Remove fixtures after BLE V2 is launched.
+	testing.AddFixture(&testing.Fixture{
+		Name:   "nearbyShareAllContactsBleV2Floss",
+		Desc:   "Nearby Share enabled on CrOS and Android, 'Visibility' set to 'All Contacts', using BLE V2",
+		Parent: "nearbyShareGAIALoginBleV2Floss",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOnline,
+			crosVisibility:             nearbycommon.VisibilityAllContacts,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_ONLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_ALL_CONTACTS,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name:   "nearbyShareNoOneBleV2Floss",
+		Desc:   "Nearby Share enabled on CrOS and Android, 'Visibility' set to 'No One', using BLE V2",
+		Parent: "nearbyShareGAIALoginBleV2Floss",
+		Impl: NewNearbyShareFixture(fixtureOptions{
+			crosDataUsage:              nearbycommon.DataUsageOnline,
+			crosVisibility:             nearbycommon.VisibilityNoOne,
+			androidDataUsage:           nearbysnippet.NearbySharingDataUsage_DATA_USAGE_ONLINE,
+			androidVisibility:          nearbysnippet.NearbySharingVisibility_VISIBILITY_HIDDEN,
+			crosSelectAndroidAsContact: false,
+		}),
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		SetUpTimeout:    3*time.Minute + crossdevice.BugReportDuration,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: postTestTimeout,
+	})
 }

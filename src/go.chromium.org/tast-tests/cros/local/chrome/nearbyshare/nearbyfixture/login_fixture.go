@@ -80,6 +80,7 @@ func init() {
 
 	flossOpt := []chrome.Option{chrome.EnableFeatures("Floss")}
 	selfShareOpt := []chrome.Option{chrome.EnableFeatures("NearbySharingSelfShare")}
+	bleV2Opt := []chrome.Option{chrome.EnableFeatures("EnableNearbyBleV2")}
 
 	// Basic login fixtures for general CrOS<->Android sharing. The Android account for these fixtures uses the modulefood version of Nearby Share.
 	testing.AddFixture(&testing.Fixture{
@@ -470,6 +471,52 @@ func init() {
 		},
 		Parent: "nearbyShareAndroidSetup",
 		Impl:   NewNearbyShareLogin(false, false, false, wlanOnly, flossOpt),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	// Fixtures for BLE V2 tests.
+	// TODO(b/333602803): Remove fixtures after BLE V2 is launched.
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginBleV2",
+		Desc: "CrOS login with GAIA; enable BLE V2 as discovery medium",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, bleV2Opt),
+		Vars: []string{
+			defaultCrOSUsername,
+			defaultCrOSPassword,
+			customCrOSUsername,
+			customCrOSPassword,
+			keepState,
+		},
+		SetUpTimeout:    3 * time.Minute,
+		ResetTimeout:    resetTimeout,
+		TearDownTimeout: resetTimeout,
+		PreTestTimeout:  resetTimeout,
+		PostTestTimeout: resetTimeout,
+	})
+
+	testing.AddFixture(&testing.Fixture{
+		Name: "nearbyShareGAIALoginBleV2Floss",
+		Desc: "CrOS login with GAIA; enable BLE V2 as discovery medium (floss)",
+		Contacts: []string{
+			"chromeos-sw-engprod@google.com",
+		},
+		Parent: "nearbyShareAndroidSetup",
+		Impl:   NewNearbyShareLogin(false, false, false, defaultMediums, append(flossOpt, bleV2Opt...)),
 		Vars: []string{
 			defaultCrOSUsername,
 			defaultCrOSPassword,
