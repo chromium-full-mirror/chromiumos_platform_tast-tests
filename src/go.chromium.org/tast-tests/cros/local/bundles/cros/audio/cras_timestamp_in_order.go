@@ -23,6 +23,13 @@ type crasTimestampInOrderParameters struct {
 	argument string
 }
 
+var unstableModelsTimestampInOrder = []string{
+	// TODO(b/333498840): Undo skip after fix.
+	"treeya", "liara", "kasumi360",
+	// TODO(b/333498998): Undo skip after fix.
+	"craaskbowl",
+}
+
 func init() {
 	testing.AddTest(&testing.Test{
 		Func:         CrasTimestampInOrder,
@@ -33,19 +40,34 @@ func init() {
 		Fixture:      "rebootForAudioDSPFixture",
 		Params: []testing.Param{{
 			Name:              "capture",
-			ExtraHardwareDeps: hwdep.D(hwdep.Microphone()),
+			ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.SkipOnModel(unstableModelsTimestampInOrder...)),
 			Val: crasTimestampInOrderParameters{
 				node:     "INTERNAL_MIC",
 				argument: "--capture_file=/dev/null",
 			},
-		}, {
-			Name:              "playback",
-			ExtraHardwareDeps: hwdep.D(hwdep.Speaker()),
-			Val: crasTimestampInOrderParameters{
-				node:     "INTERNAL_SPEAKER",
-				argument: "--playback_file=/dev/zero",
-			},
-		}},
+		},
+			{
+				Name:              "capture_unstable",
+				ExtraHardwareDeps: hwdep.D(hwdep.Microphone(), hwdep.Model(unstableModelsTimestampInOrder...)),
+				Val: crasTimestampInOrderParameters{
+					node:     "INTERNAL_MIC",
+					argument: "--capture_file=/dev/null",
+				},
+			}, {
+				Name:              "playback",
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.SkipOnModel(unstableModelsTimestampInOrder...)),
+				Val: crasTimestampInOrderParameters{
+					node:     "INTERNAL_SPEAKER",
+					argument: "--playback_file=/dev/zero",
+				},
+			}, {
+				Name:              "playback_unstable",
+				ExtraHardwareDeps: hwdep.D(hwdep.Speaker(), hwdep.Model(unstableModelsTimestampInOrder...)),
+				Val: crasTimestampInOrderParameters{
+					node:     "INTERNAL_SPEAKER",
+					argument: "--playback_file=/dev/zero",
+				},
+			}},
 	})
 }
 
