@@ -24,6 +24,7 @@ import (
 	"go.chromium.org/tast-tests/cros/local/imagehelpers"
 	"go.chromium.org/tast-tests/cros/local/policyutil"
 	"go.chromium.org/tast-tests/cros/local/policyutil/externaldata"
+	"go.chromium.org/tast-tests/cros/local/retry"
 	"go.chromium.org/tast/core/ctxutil"
 	"go.chromium.org/tast/core/errors"
 	"go.chromium.org/tast/core/testing"
@@ -153,8 +154,15 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed initializing UI Automator: ", err)
 	}
 	defer d.Close(cleanupCtx)
+
+	// No need to retry when testing policies without any changes.
+	rl := &retry.Loop{Attempts: 1,
+		MaxAttempts: 1,
+		DoRetries:   false,
+		Errorf:      s.Errorf,
+		Logf:        s.Logf}
 	for policyName := range arcPolicyMap {
-		if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, true /*shouldSucceed*/); err != nil {
+		if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, true /*shouldSucceed*/, rl); err != nil {
 			s.Fatalf("Test for policy %s failed: %v", policyName, err)
 		}
 	}
@@ -181,10 +189,19 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 	}
 
 	s.Log("Testing policies with restrictions")
+
+	// It can take time for the policies to apply so retry the first policy a few times until it succeeds.
+	firstTest := true
 	for policyName := range arcPolicyMap {
-		if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, false /*shouldSucceed*/); err != nil {
+		rl = &retry.Loop{Attempts: 1,
+			MaxAttempts: 5,
+			DoRetries:   firstTest,
+			Errorf:      s.Errorf,
+			Logf:        s.Logf}
+		if err := testPolicyEnforcement(ctx, tconn, a, d, policyName, false /*shouldSucceed*/, rl); err != nil {
 			s.Fatalf("Test for policy %s failed: %v", policyName, err)
 		}
+		firstTest = false
 	}
 }
 
@@ -260,12 +277,13 @@ func getPolicySyncTimestamp(ctx context.Context, user string) (int64, error) {
 	return epoch, nil
 }
 
-func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, policy string, shouldSucceed bool) error {
+func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.ARC, d *ui.Device, policy string, shouldSucceed bool, rl *retry.Loop) error {
 	const (
 		policiesListID  = devicePolicyPkg + ":id/lstPolicies"
 		testButtonID    = devicePolicyPkg + ":id/btnTest"
 		errorTextID     = devicePolicyPkg + ":id/txtError"
 		mainActivityCls = devicePolicyPkg + ".MainActivity"
+		testTimeout     = time.Second * 30
 	)
 
 	cleanupCtx := ctx
@@ -289,32 +307,34 @@ func testPolicyEnforcement(ctx context.Context, tconn *chrome.TestConn, a *arc.A
 		return err
 	}
 
-	btnTest := d.Object(ui.ID(testButtonID))
-	if err := btnTest.Click(ctx); err != nil {
-		return errors.Wrap(err, "failed to click test")
-	}
+	return testing.Poll(ctx, func(ctx context.Context) error {
+		btnTest := d.Object(ui.ID(testButtonID))
+		if err := btnTest.Click(ctx); err != nil {
+			return errors.Wrap(err, "failed to click test")
+		}
 
-	result, err := getPolicyTestResult(ctx, d)
-	if err != nil {
-		return err
-	}
+		result, err := getPolicyTestResult(ctx, d)
+		if err != nil {
+			return rl.Exit("get test result", err)
+		}
 
-	if result == fmt.Sprintf("%v", shouldSucceed) {
-		return nil
-	}
+		if result == fmt.Sprintf("%v", shouldSucceed) {
+			return nil
+		}
 
-	txtError := d.Object(ui.ID(errorTextID))
-	errMessage, err := txtError.GetText(ctx)
-	if err != nil {
-		return errors.Wrap(err, "failed to get error message")
-	}
-	return errors.Errorf("unexpected result: %s, error: %s", result, errMessage)
+		txtError := d.Object(ui.ID(errorTextID))
+		errMessage, err := txtError.GetText(ctx)
+		if err != nil {
+			return rl.Exit("get error message", err)
+		}
+		return rl.Retry(fmt.Sprintf("get expected result: %s, error: %s", result, errMessage), nil)
+	}, &testing.PollOptions{Timeout: testTimeout, Interval: time.Second})
 }
 
 func getPolicyTestResult(ctx context.Context, d *ui.Device) (string, error) {
 	const (
 		outputTextID   = devicePolicyPkg + ":id/txtOutput"
-		resultWaitTime = 30 * time.Second
+		resultWaitTime = 10 * time.Second
 	)
 
 	resultRegex := regexp.MustCompile("true|false")
