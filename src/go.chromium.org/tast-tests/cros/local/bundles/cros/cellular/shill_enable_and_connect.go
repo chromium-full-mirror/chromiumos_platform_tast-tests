@@ -20,7 +20,7 @@ func init() {
 		Func:           ShillEnableAndConnect,
 		LifeCycleStage: testing.LifeCycleOwnerMonitored,
 		Desc:           "Verifies that Shill can enable, disable, connect, and disconnect to a Cellular Service",
-		Contacts:       []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "stevenjb@google.com"},
+		Contacts:       []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "ejcaruso@google.com"},
 		BugComponent:   "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:           []string{"group:cellular", "cellular_sim_active"},
 		Fixture:        "cellularStressLocal",

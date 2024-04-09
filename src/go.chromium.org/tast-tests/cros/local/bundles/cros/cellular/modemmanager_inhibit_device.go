@@ -20,7 +20,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ModemmanagerInhibitDevice,
 		Desc:         "Verifies that ModemManager1.InhibitDevice succeeds",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_ota_avl"},
 		Fixture:      "cellularModemManager",

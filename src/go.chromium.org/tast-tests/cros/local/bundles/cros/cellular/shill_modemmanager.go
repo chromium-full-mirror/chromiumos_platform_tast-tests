@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillModemmanager,
 		Desc:         "Verifies that Shill behaves correctly when modemmanager is restarted",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
 		Fixture:      "cellular",

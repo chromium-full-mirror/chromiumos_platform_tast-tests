@@ -17,7 +17,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         ShillReady,
 		Desc:         "Verifies that Shill is running and that a Cellular Device and connectable Service are present",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "stevenjb@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "cros-network-health-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
 		Fixture:      "cellular",

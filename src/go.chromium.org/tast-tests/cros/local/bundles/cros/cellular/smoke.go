@@ -22,7 +22,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         Smoke,
 		Desc:         "Verifies that traffic can be sent over the Cellular network",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_carrier_dependent"},
 		Fixture:      "cellularDUTCheckLocal",

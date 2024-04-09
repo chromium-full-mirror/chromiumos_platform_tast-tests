@@ -18,7 +18,7 @@ func init() {
 	testing.AddTest(&testing.Test{
 		Func:         IsServiceUp,
 		Desc:         "Verifies that Cellular Device and Service properties match ModemManager SIM properties",
-		Contacts:     []string{"chromeos-cellular-team@google.com", "stevenjb@google.com", "pholla@google.com"},
+		Contacts:     []string{"chromeos-cellular-team@google.com", "ejcaruso@google.com", "pholla@google.com"},
 		BugComponent: "b:167157", // ChromeOS > Platform > Connectivity > Cellular
 		Attr:         []string{"group:cellular", "cellular_sim_active", "cellular_cq", "cellular_ota_avl"},
 		Fixture:      "cellular",
