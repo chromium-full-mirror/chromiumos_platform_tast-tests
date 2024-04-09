@@ -159,7 +159,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer func(ctx context.Context) {
-		secagentdupstart.RestartSecagentd(ctx)
+		secagentdupstart.RestartSecagentd(ctx, false)
 		cancel()
 	}(cleanupCtx)
 
@@ -167,7 +167,7 @@ func ProcessEvents(ctx context.Context, s *testing.State) {
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
 	s.Log("Restarting secagentd")
-	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx, false,
 		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),

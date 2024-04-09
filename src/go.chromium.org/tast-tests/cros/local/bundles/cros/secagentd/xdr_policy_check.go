@@ -72,7 +72,7 @@ func setXdrPolicy(ctx context.Context, s *testing.State, policyEnabled bool, tim
 	// an event. Bypassing this wait will make secagentd emit more than one
 	// event and will greatly reduce the chance of a flake. Similarly, reduce
 	// some internal poll delays to emit more events sooner.
-	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx, false,
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
 		upstart.WithArg("SET_HEARTBEAT_PERIOD_S_FOR_TESTING", timer),
 		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", timer))

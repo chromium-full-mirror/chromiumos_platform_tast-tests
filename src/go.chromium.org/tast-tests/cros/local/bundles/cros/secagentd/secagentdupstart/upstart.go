@@ -11,15 +11,29 @@ import (
 	"time"
 
 	upstartcommon "go.chromium.org/tast-tests/cros/common/upstart"
+	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentddbusmonitor"
 	"go.chromium.org/tast-tests/cros/local/bundles/cros/secagentd/secagentdprocfsscraper"
+	"go.chromium.org/tast-tests/cros/local/dbusutil"
 	"go.chromium.org/tast-tests/cros/local/upstart"
 	"go.chromium.org/tast/core/testing"
 )
 
 // RestartSecagentd restarts the daemon with the given upstart args, verifies
 // that it is running as expected and returns the daemon pid.
-func RestartSecagentd(ctx context.Context, args ...upstart.Arg) (uint64, error) {
+func RestartSecagentd(ctx context.Context, waitForAddMatchSignal bool, args ...upstart.Arg) (uint64, error) {
 	const name = "secagentd"
+
+	var addMatchWatcher *dbusutil.EventWatcher = nil
+	if waitForAddMatchSignal {
+		// Monitor for the AddMatch signal for UserDataAuth which signifies secagentd listening for AuthenticateAuthFactorCompleted signals from cryptohome.
+		watcher, addMatchCancel, err := secagentddbusmonitor.SetupAddMatchDbusWatcherWithTimeout(ctx, 15*time.Second)
+		addMatchWatcher = watcher
+		if err != nil {
+			addMatchCancel()
+			return 0, err
+		}
+		defer addMatchCancel()
+	}
 
 	if err := upstart.RestartJob(ctx, name, args...); err != nil {
 		return 0, err
@@ -39,6 +53,12 @@ func RestartSecagentd(ctx context.Context, args ...upstart.Arg) (uint64, error) 
 		return err
 	}, &testing.PollOptions{Timeout: 5 * time.Second}); err != nil {
 		return 0, err
+	}
+
+	if waitForAddMatchSignal {
+		if err := secagentddbusmonitor.WaitForAddMatchSignal(addMatchWatcher); err != nil {
+			return 0, err
+		}
 	}
 	return pid, nil
 }

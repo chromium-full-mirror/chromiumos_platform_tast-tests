@@ -180,7 +180,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 		}
 	}()
 	// Restart with default parameter.
-	defer secagentdupstart.RestartSecagentd(cleanupCtx)
+	defer secagentdupstart.RestartSecagentd(cleanupCtx, false)
 
 	localAddress := map[string]bool{}
 	addrs, err := net.InterfaceAddrs()
@@ -198,7 +198,7 @@ func NetworkEvents(ctx context.Context, s *testing.State) {
 	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
-	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx, false,
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
 		upstart.WithArg("PLUGIN_BATCH_INTERVAL_S_FOR_TESTING", strconv.Itoa(batchIntervalS)))

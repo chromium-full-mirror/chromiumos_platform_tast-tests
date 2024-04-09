@@ -212,12 +212,12 @@ func AgentEvents(ctx context.Context, s *testing.State) {
 	cleanupCtx := ctx
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 10*time.Second)
 	defer func(ctx context.Context) {
-		secagentdupstart.RestartSecagentd(ctx)
+		secagentdupstart.RestartSecagentd(ctx, false)
 		cancel()
 	}(cleanupCtx)
 
 	// Restart secagentd, have it ignore policy.
-	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx, false,
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"))
 	if err != nil {
 		s.Fatal("Failed to restart secagentd: ", err)

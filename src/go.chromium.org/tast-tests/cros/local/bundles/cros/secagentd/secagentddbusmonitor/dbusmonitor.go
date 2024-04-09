@@ -101,3 +101,34 @@ func SetupDbusWatcherWithTimeout(ctx context.Context, agentPid uint64, timeout t
 
 	return ew, cancel, nil
 }
+
+// SetupAddMatchDbusWatcherWithTimeout sets up dbus monitoring for AddMatch signals.
+// Returns the resulting DBusEventWatcher and the cancel function.
+func SetupAddMatchDbusWatcherWithTimeout(ctx context.Context, timeout time.Duration) (*dbusutil.EventWatcher, context.CancelFunc, error) {
+	m := []dbusutil.MatchSpec{{Type: "method_call",
+		Path:      dbus.ObjectPath("/org/freedesktop/DBus"),
+		Interface: "org.freedesktop.DBus",
+		Member:    "AddMatch", Sender: ""}}
+	evCtx, cancel := context.WithTimeout(ctx, timeout)
+	ew, err := dbusutil.NewEventWatcher(evCtx, m)
+	if err != nil {
+		cancel()
+		return nil, nil, errors.Wrap(err, "failed to create dbus addMatchMonitor")
+	}
+
+	return ew, cancel, nil
+}
+
+// WaitForAddMatchSignal monitors the event watcher for the UserDataAuth add match signal.
+func WaitForAddMatchSignal(addMatchWatcher *dbusutil.EventWatcher) error {
+	for {
+		event, ok := <-addMatchWatcher.Events()
+		if !ok {
+			return errors.New("failed to find AddMatch signal for UserDataAuth")
+		}
+		// Verify that it is UserDataAuth which is the relevant cryptohome dbus interface.
+		if event.Arguments[0] != nil && event.Arguments[0] == "type='signal', sender='org.chromium.UserDataAuth', interface='org.chromium.UserDataAuthInterface', path='/org/chromium/UserDataAuth'" {
+			return nil
+		}
+	}
+}

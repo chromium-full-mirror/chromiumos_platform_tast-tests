@@ -70,19 +70,18 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	ctx, cancel := ctxutil.Shorten(cleanupCtx, 15*time.Second)
 	defer cancel()
 	// Restart with default parameter.
-	defer secagentdupstart.RestartSecagentd(cleanupCtx)
+	defer secagentdupstart.RestartSecagentd(cleanupCtx, false)
 
-	// Restart chrome with the authenticate event feature.
-	cr, err := chrome.New(ctx, chrome.EnableFeatures("CrOSLateBootSecagentdXDRAuthenticateEvents"), chrome.DeferLogin())
+	cr, err := chrome.New(ctx, chrome.DeferLogin())
 	if err != nil {
-		s.Fatal("Failed to restart chrome: ", err)
+		s.Fatal("Failed to start chrome: ", err)
 	}
 	defer cr.Close(cleanupCtx)
 
 	const batchIntervalS = 5
 	// Restart secagentd and have it ignore policy and not wait for the first
 	// agent event to be enqueued successfully.
-	agentPid, err := secagentdupstart.RestartSecagentd(ctx,
+	agentPid, err := secagentdupstart.RestartSecagentd(ctx, true,
 		upstart.WithArg("SECAGENTD_LOG_LEVEL", "-1"),
 		upstart.WithArg("BYPASS_POLICY_FOR_TESTING", "true"),
 		upstart.WithArg("BYPASS_ENQ_OK_WAIT_FOR_TESTING", "true"),
@@ -116,12 +115,12 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to log in: ", err)
 	}
 
+	// 2: Lock.
 	tconn, err := cr.TestAPIConn(ctx)
 	if err != nil {
 		s.Fatal("Failed to create Test API connection: ", err)
 	}
 
-	// 2: Lock.
 	if err := lockscreen.Lock(ctx, tconn); err != nil {
 		s.Fatal("Failed to lock the screen: ", err)
 	}
@@ -157,7 +156,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 
 		for _, event := range events.GetBatchedEvents() {
 			if err := secagentdcommon.CheckCommon(event.GetCommon()); err != nil {
-				s.Error("Invalid common field: ", err)
+				s.Errorf("Invalid common field: %s\t Event: %s", err, event)
 			} else if *event.Common.DeviceUser == "" {
 				s.Error("Device user is empty")
 			} else if !strings.HasPrefix(*event.Common.DeviceUser, "UnaffiliatedUser-") {
@@ -167,10 +166,14 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 			}
 
 			// Verify that all device users UUID are the same because it is same account.
-			if deviceUser == "" && *event.Common.DeviceUser != "Unknown" {
-				deviceUser = *event.Common.DeviceUser
-			} else if *event.Common.DeviceUser != deviceUser {
-				s.Errorf("Device user does not match. Expected: %s, Actual: %s", deviceUser, *event.Common.DeviceUser)
+			if deviceUser == "" {
+				if *event.Common.DeviceUser != "Unknown" {
+					deviceUser = *event.Common.DeviceUser
+				}
+			} else {
+				if deviceUser != *event.Common.DeviceUser {
+					s.Errorf("Device user does not match. Actual: %s, Expected: %s", *event.Common.DeviceUser, deviceUser)
+				}
 			}
 
 			if event.GetLogon() != nil {
@@ -178,14 +181,14 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 				// The auth factor will sometimes report password and sometimes new user depending on the existing state of the device.
 				if len(event.GetLogon().Authentication.AuthFactor) == 0 ||
 					(event.GetLogon().Authentication.AuthFactor[0] != xdr.Authentication_AUTH_NEW_USER && event.GetLogon().Authentication.AuthFactor[0] != xdr.Authentication_AUTH_PASSWORD) {
-					s.Errorf("Logon event failed to match. Expected: AUTH_NEW_USER or AUTH_PASSWORD, Actual: %s", event.String())
+					s.Errorf("Logon event failed to match. Actual: %s, Expected: AUTH_NEW_USER or AUTH_PASSWORD", event.String())
 				}
 			} else if event.GetLock() != nil {
 				lock = true
 			} else if event.GetUnlock() != nil {
 				unlock = true
 				if !proto.Equal(event.GetUnlock(), &expUnlock) {
-					s.Errorf("Unlock event failed to match. Expected: %s, Actual: %s", expUnlock.String(), event.String())
+					s.Errorf("Unlock event failed to match. Actual: %s, Expected: %s", event.String(), expUnlock.String())
 				}
 			} else if event.GetLogoff() != nil {
 				logout = true
@@ -205,7 +208,7 @@ func AuthenticationEvents(ctx context.Context, s *testing.State) {
 	}
 
 	if actFailures != expFailures {
-		s.Errorf("Incorrect number of failure events. Expected: %d, Actual: %d", expFailures, actFailures)
+		s.Errorf("Incorrect number of failure events. Actual: %d, Expected: %d", actFailures, expFailures)
 	}
 
 	if !logout || !unlock || !lock || !login {
