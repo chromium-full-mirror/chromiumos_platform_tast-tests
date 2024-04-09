@@ -13,7 +13,10 @@ Before running this script:
   (1) Set up Google Cloud credentials, see
   https://chromium.googlesource.com/chromiumos/docs/+/HEAD/gsutil.md#setup
   (2) Make sure the Google Cloud bucket write permission is set
-  (3) Make sure the test device can be ssh into without passwords
+  (3) Make sure the test device can be ssh into without passwords, see
+  go/chromeos-lab-duts-ssh#setup-private-key-and-ssh-config
+  (4) Install corp-ssh-helper-helper, see
+  https://chromium.googlesource.com/chromiumos/platform/dev-util/+/HEAD/contrib/corp-ssh-helper-helper/README.md#corp_ssh_helper_helper
 """
 
 # [VPYTHON:BEGIN]
@@ -163,7 +166,7 @@ def get_model(dut: str) -> str:
     """
     cros_config_command = [
         "ssh",
-        f"root@{dut}",
+        dut,
         "cros_config",
         "/",
         "name",
@@ -188,7 +191,7 @@ def get_builder_path(dut: str) -> str:
     """
     cros_config_command = [
         "ssh",
-        f"root@{dut}",
+        dut,
         "cat",
         "/etc/lsb-release",
     ]
@@ -205,81 +208,25 @@ def get_builder_path(dut: str) -> str:
     return builder_path_matches[0].strip()
 
 
-def is_port_in_use(local_port: int) -> bool:
-    """Check if port `local_port` is in use"""
-    check_port_proc = subprocess.run(
-        ["lsof", f"-i:{local_port}"],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        # If no process is found, a non-zero status is return.
+def run_ssh_helper() -> None:
+    subprocess.run(
+        [
+            "src/platform/dev/contrib/corp-ssh-helper-helper/corp-ssh-helper-helper-server.py"
+        ],
+        cwd=CHROMEOS_CHECKOUT_PATH,
         check=False,
     )
-    return bool(check_port_proc.stdout)
 
 
-def wait_for_port(
-    local_port: int, in_use: bool, interval: int = 1, timeout: int = 5
-) -> bool:
-    """Wait until `local_port` to be in the expected `in_use` state.
-
-    Return true if `local_port` matches the expected `in_use` state before
-    `timeout` seconds have elapsed. Otherwise, return false.
-    """
-    start = datetime.datetime.now()
-    end = start + datetime.timedelta(seconds=timeout)
-    while (
-        is_port_in_use(local_port) != in_use and datetime.datetime.now() < end
-    ):
-        time.sleep(interval)
-    return is_port_in_use(local_port) == in_use
-
-
-def start_ssh_tunnel(dut: str, local_port: int) -> None:
-    """Start a SSH tunnel in the background"""
-    if not is_port_in_use(local_port):
-        logging.info("[SSH] Port %d is not in use", local_port)
-        ssh_tunnel_command = [
-            "ssh",
-            "-f",
-            "-N",
-            "-L",
-            f"{local_port}:localhost:22",
-            f"root@{dut}",
-        ]
-        subprocess.run(
-            ssh_tunnel_command,
-            check=True,
-        )
-        if not wait_for_port(local_port, in_use=True):
-            # Exit if it fails to start the SSH tunnel when `local_port`
-            # is available.
-            sys.exit(f"[SSH] Failed to start SSH tunnel from port {local_port}")
-        logging.info(
-            "[SSH] Started a SSH tunnel from local port %d to port 22 of %s",
-            local_port,
-            dut,
-        )
-
-
-def kill_ssh_tunnel(local_port: int) -> None:
-    """Kill the process running on port `local_port`"""
-    proc = subprocess.run(
-        ["lsof", "-i", f":{local_port}"],
-        capture_output=True,
-        encoding="utf-8",
-        # If no process is found, a non-zero status is return.
+def kill_ssh_helper() -> None:
+    subprocess.run(
+        [
+            "src/platform/dev/contrib/corp-ssh-helper-helper/corp-ssh-helper-helper-server.py",
+            "--kill",
+        ],
+        cwd=CHROMEOS_CHECKOUT_PATH,
         check=False,
     )
-    for process in proc.stdout.split("\n")[1:]:
-        data = [x for x in process.split(" ") if x]
-        if len(data) <= 1:
-            continue
-        os.kill(int(data[1]), signal.SIGKILL)
-    if not wait_for_port(local_port, in_use=False):
-        # Exit if it fails to kill the SSH tunnel
-        # when `local_port` is in use.
-        sys.exit(f"[SSH] Failed to kill process on port {local_port}")
-    logging.info("[SSH] Killed process on port %d", local_port)
 
 
 def upload_local_directory_to_gcs(
@@ -368,7 +315,7 @@ def crosfleet_dut_abandon():
     )
 
 
-def flash_image(image_path: str, local_port: int, dut: str):
+def flash_image(image_path: str, dut: str):
     """Flash image from `image` to `dut` via port `local_port`
 
     The image path has to be a xbuddy path or local path. For example,
@@ -401,7 +348,7 @@ def flash_image(image_path: str, local_port: int, dut: str):
         "flash",
         "--no-ping",
         f"ssh://{dut}",
-        f"{image_path}",
+        image_path,
     ]
     subprocess.run(
         flash_command,
@@ -414,9 +361,7 @@ def flash_image(image_path: str, local_port: int, dut: str):
     logging.info(
         "[Flash] Waiting for 60 seconds and reconnecting to the DUT..."
     )
-    kill_ssh_tunnel(local_port)
     time.sleep(60)
-    start_ssh_tunnel(dut, local_port)
     dut_builder_path = get_builder_path(dut)
     if dut_builder_path not in image_path:
         raise ValueError(
@@ -427,10 +372,10 @@ def flash_image(image_path: str, local_port: int, dut: str):
 def reboot_dut(dut: str):
     reboot_dut_command = [
         "ssh",
-        f"root@{dut}",
+        dut,
         "reboot",
     ]
-    logging.info("[DUT] Rebooting root@%s...", dut)
+    logging.info("[DUT] Rebooting %s...", dut)
     subprocess.run(
         reboot_dut_command,
         check=False,
@@ -438,7 +383,8 @@ def reboot_dut(dut: str):
 
 
 def run_tast_tests(
-    local_port: int,
+    dut: str,
+    no_build: bool,
     tests: list,
     results_dir: str = None,
     bundle: str = None,
@@ -450,9 +396,11 @@ def run_tast_tests(
         "cros_sdk",
         "tast",
         "run",
-        "-build=false",
-        "-downloadprivatebundles=true",
     ]
+    if no_build:
+        tast_run_command.extend(
+            ["-build=false", "-downloadprivatebundles=true"]
+        )
     if variables:
         for var in variables:
             tast_run_command.append(f"-var={var}")
@@ -461,7 +409,7 @@ def run_tast_tests(
     if results_dir:
         time_string = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         tast_run_command.append(f"-resultsdir={results_dir}/{time_string}")
-    tast_run_command.append(f"localhost:{local_port}")
+    tast_run_command.append(dut)
 
     tast_run_command.extend(tests)
     logging.info(f"Tast command: {tast_run_command}")
@@ -470,7 +418,6 @@ def run_tast_tests(
         stdout=subprocess.PIPE,
         stdin=subprocess.PIPE,
         cwd=CHROMEOS_CHECKOUT_PATH,
-        check=True,
     )
     stdout = process.stdout.decode("utf-8")
     logging.info(stdout)
@@ -481,8 +428,7 @@ def run_tast_tests(
     if len(tests_results_dir_matches) > 0:
         tests_results_dir = tests_results_dir_matches[0]
     else:
-        tests_results_dir = ""
-
+        raise ValueError("Failed to find tests results.")
     tests_statuses = []
     for line in io.BytesIO(process.stdout).readlines():
         if re.search("\[( PASS | FAIL | SKIP |NOTRUN)\]", line.decode("utf-8")):
@@ -495,7 +441,7 @@ def check_cpu_usage(dut: str, timeout: int = 60, interval: int = 1) -> None:
     logging.info("[DUT] Checking DUT's current cpu usage")
     top_command = [
         "ssh",
-        f"root@{dut}",
+        dut,
         "top",
         "-b",
         "-n",
@@ -522,7 +468,7 @@ def check_cpu_usage(dut: str, timeout: int = 60, interval: int = 1) -> None:
     logging.info(f"[DUT] DUT's current cpu usage is: {cpu_usage}")
 
 
-def write_local_dut_info(results_dir: Path) -> str:
+def write_local_dut_info(results_dir: Path, label: str) -> str:
     """Write DUT information to a json file"""
     #  Get the number of days since the Unix epoch.
     days_since_epoch = int(time.time() / 86400)
@@ -597,6 +543,7 @@ def write_local_dut_info(results_dir: Path) -> str:
         "hwid": f"{product}-{board}-{brand}",
         # Likely to be `localhost`.
         "dut_hostname": dut_hostname,
+        "label": label,
     }
 
     local_dut_info_json = json.dumps(local_dut_info, indent=4)
@@ -718,7 +665,7 @@ def parse_arguments(argv) -> argparse.Namespace:
         "--experiment-id",
         nargs="?",
         type=str,
-        default=DEFAULT_BUCKET_NAME,
+        default="",
         help=(
             "The unique experiment identifier string. Use the same id for"
             " the same experiment. If uploaded to GCS, the test results"
@@ -727,6 +674,18 @@ def parse_arguments(argv) -> argparse.Namespace:
             " for example,"
             " gs://sw-perf-cuj-experiment/yz-lacros-vs-ash-R124-round1/"
             "voxel/20240131-151301/..."
+        ),
+    )
+    parser.add_argument(
+        "--label",
+        nargs="?",
+        type=str,
+        default="",
+        help=(
+            "An arbitrary label that could be used to find the results"
+            " of the run. e.g. 'my_great_test_without_cpu_cooling'."
+            " This will be used to distinguish runs if other collected"
+            " information can't be the unique identifier"
         ),
     )
     parser.add_argument(
@@ -794,6 +753,14 @@ def parse_arguments(argv) -> argparse.Namespace:
         help=("Tast test bundle name."),
     )
     parser.add_argument(
+        "--no-build",
+        action="store_true",
+        help=(
+            "If set, Tast will use not build"
+            " and use the test bundled with DUT chromeos."
+        ),
+    )
+    parser.add_argument(
         "--results-dir",
         nargs="?",
         type=str,
@@ -826,8 +793,6 @@ def verify_arguments(opts, username):
         raise ValueError(
             "Need to specify --lease_dims or --lease_hostname or --dut_host."
         )
-    if not opts.local_port:
-        raise ValueError("Local port is required.")
 
     if not opts.auto_upload and check_experiment_id_existance(
         opts.bucket_name, username, opts.experiment_id
@@ -855,6 +820,8 @@ def main(argv) -> Optional[int]:
     logging.info("[User] %s starts run_cuj_tests.py...", username)
 
     try:
+        run_ssh_helper()
+
         if opts.lease_dims or opts.lease_hostname:
             dut = crosfleet_dut_lease(
                 opts.lease_hostname, opts.lease_dims, opts.lease_minutes
@@ -868,40 +835,37 @@ def main(argv) -> Optional[int]:
         results_dir = f"/tmp/tast/results/{dut_model}"
         if opts.results_dir:
             results_dir = opts.results_dir
-
         if opts.reboot:
             reboot_dut(dut)
             logging.info(
                 "[DUT] Waiting %s seconds for DUT to reboot", opts.reboot_wait
             )
             time.sleep(opts.reboot_wait)
-            start_ssh_tunnel(dut, opts.local_port)
         if opts.cooldown > 0:
             logging.info(
                 "[DUT] Waiting %s seconds for DUT to cooldown", opts.cooldown
             )
             time.sleep(opts.cooldown)
         if opts.image:
-            flash_image(opts.image, opts.local_port, dut)
+            flash_image(opts.image, dut)
         else:
             logging.info("[Flash] Not flashing image")
 
         check_cpu_usage(dut)
-        kill_ssh_tunnel(opts.local_port)
-        start_ssh_tunnel(dut, opts.local_port)
 
         test_statuses = []
         results_dir_paths = []
         for i in range(opts.repeat):
             logging.info(f"[Tast] #{i+1} Running tests {opts.pattern}...")
             results_dir_path, statuses = run_tast_tests(
-                opts.local_port,
+                dut,
+                opts.no_build,
                 opts.pattern,
                 results_dir,
                 opts.bundle,
                 opts.vars,
             )
-            write_local_dut_info(results_dir_path)
+            write_local_dut_info(results_dir_path, opts.label)
             results_dir_paths.append(results_dir_path)
             test_statuses.extend(statuses)
 
@@ -953,7 +917,7 @@ def main(argv) -> Optional[int]:
 
     finally:
         crosfleet_dut_abandon()
-        kill_ssh_tunnel(opts.local_port)
+        kill_ssh_helper()
 
 
 if __name__ == "__main__":
