@@ -46,7 +46,7 @@ func CrasDebugDump(ctx context.Context, s *testing.State) {
 	wg.Add(1)
 	go func(ctx context.Context) {
 		defer wg.Done()
-		cmd := exec.CommandContext(ctx, "cras_tests", "capture", "/dev/null", "--effects=0x311")
+		cmd := exec.CommandContext(ctx, "cras_tests", "capture", "/dev/null", "--effects=0x301")
 		if err := cmd.Run(); err != nil && ctx.Err() == nil {
 			s.Fatal("Cannot run cras_tests capture: ", err)
 		}
@@ -60,7 +60,7 @@ func CrasDebugDump(ctx context.Context, s *testing.State) {
 		if got, want := len(debugInfo.Streams), 1; got != want {
 			return errors.Errorf("stream count: got %d; want %d", got, want)
 		}
-		if got, want := debugInfo.Streams[0].Effects, uint(0x311); got != want {
+		if got, want := debugInfo.Streams[0].Effects, uint(0x301); got != want {
 			return errors.Errorf("stream effect incorrect: got 0x%x; want 0x%x", got, want)
 		}
 		return nil
