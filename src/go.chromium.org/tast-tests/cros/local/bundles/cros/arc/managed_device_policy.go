@@ -7,7 +7,7 @@ package arc
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -129,6 +129,11 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		s.Fatal("Failed to wait for provisioning: ", err)
 	}
 
+	lastSyncTimeStamp, err := waitForPolicySync(ctx, a, cr.NormalizedUser(), -1 /*lastSyncTimeStamp*/)
+	if err != nil {
+		s.Fatal("Failed to get policy sync time: ", err)
+	}
+
 	s.Log("Installing app")
 	if err := a.Install(ctx, arc.APKPath(apk)); err != nil {
 		s.Fatal("Failed installing app: ", err)
@@ -167,16 +172,11 @@ func ManagedDevicePolicy(ctx context.Context, s *testing.State) {
 		policies = append(policies, newPolicy)
 	}
 
-	lastSyncTimeStamp, err := getPolicySyncTimestamp(ctx, cr.NormalizedUser())
-	if err != nil {
-		s.Fatal("Failed to get policy sync time: ", err)
-	}
-
 	if err := policyutil.ServeAndRefresh(ctx, fdms, cr, policies); err != nil {
 		s.Fatal("Failed to update policies: ", err)
 	}
 
-	if err := waitForPolicySync(ctx, a, cr.NormalizedUser(), lastSyncTimeStamp); err != nil {
+	if _, err := waitForPolicySync(ctx, a, cr.NormalizedUser(), lastSyncTimeStamp); err != nil {
 		s.Fatal("ARC policy not synced: ", err)
 	}
 
@@ -207,13 +207,15 @@ func createWallpaperPolicy(ctx context.Context, imgPath string) (policy.Policy, 
 	return policy, cleanup, nil
 }
 
-func waitForPolicySync(ctx context.Context, a *arc.ARC, user string, lastSyncTimeStamp int64) error {
+func waitForPolicySync(ctx context.Context, a *arc.ARC, user string, lastSyncTimeStamp int64) (int64, error) {
 	const policySyncTimeout = 30 * time.Second
 
 	testing.ContextLog(ctx, "Waiting for ARC policy to sync")
 
-	return arc.PollWithReadOnlyAndroidData(ctx, user, func(ctx context.Context) error {
-		currentSyncTimeStamp, err := getPolicySyncTimestamp(ctx, user)
+	var currentSyncTimeStamp int64 = -1
+	return currentSyncTimeStamp, arc.PollWithReadOnlyAndroidData(ctx, user, func(ctx context.Context) error {
+		var err error
+		currentSyncTimeStamp, err = getPolicySyncTimestamp(ctx, user)
 		if err != nil {
 			return errors.Wrap(err, "failed to get ARC policy sync time")
 		}
@@ -239,7 +241,7 @@ func getPolicySyncTimestamp(ctx context.Context, user string) (int64, error) {
 	}
 
 	dpcPrefFullPath := filepath.Join(androidDataDir, dpcPrefPath)
-	prefsText, err := ioutil.ReadFile(dpcPrefFullPath)
+	prefsText, err := os.ReadFile(dpcPrefFullPath)
 	if err != nil {
 		return -1, err
 	}
