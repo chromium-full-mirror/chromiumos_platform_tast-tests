@@ -354,9 +354,12 @@ func init() {
 					Effects:     true,
 					BrowserType: browser.TypeAsh,
 				},
-				ExtraAttr:         []string{"group:cuj", "cuj_experimental"},
-				Fixture:           "loggedInToCUJUserWithWebRTCEventLoggingWithSchedRT",
-				ExtraHardwareDeps: hwdep.D(hwdep.HasSchedRTControl()),
+				ExtraAttr: []string{"group:cuj", "cuj_experimental"},
+				Fixture:   "loggedInToCUJUserWithWebRTCEventLoggingWithSchedRT",
+				// b/333429121: ChromeOS Flex (a.k.a. reven) enables integrity mode, which
+				// restricts access to the debugfs.
+				ExtraHardwareDeps: hwdep.D(hwdep.HasSchedRTControl(),
+					hwdep.SkipOnModel("reven")),
 			}, {
 				Name:      "docs_enterprise",
 				Timeout:   meetcuj.DefaultTestTimeout,
